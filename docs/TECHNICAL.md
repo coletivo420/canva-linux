@@ -4,11 +4,11 @@ This document centralizes technical repository notes for the `1.4.8-dev.X` maint
 
 ## Scope
 
-Current DEV6 goals are intentionally non-functional:
+Current DEV7 goals are intentionally non-functional:
 
-- add useful inline comments for runtime readability;
-- preserve existing behavior while documenting shell and diagnostics intent;
-- version/changelog continuity.
+- prepare final release-closure documentation for `1.4.8-dev.X`;
+- preserve existing behavior while documenting release and validation intent;
+- maintain version/changelog continuity.
 
 ## Runtime architecture (summary)
 
@@ -38,4 +38,12 @@ DEV5 removed existing tracked artifacts in those classes and keeps this policy d
 
 ## Known limitation kept unchanged
 
-Linux/Wayland OAuth popup icon replacement remains a known limitation in this branch and is not a DEV6 implementation target.
+Linux/Wayland OAuth popup icon replacement remains a known limitation in this branch and is not a DEV7 implementation target.
+
+
+## DEV7 release closure artifacts
+
+This phase adds two documentation artifacts to close the current DEV cycle without runtime changes:
+
+- `docs/RELEASE_CHECKLIST.md` - release readiness checklist for maintainers/reviewers.
+- `docs/MANUAL_VALIDATION.md` - manual runtime validation sequence used before promoting the next stage.
