@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-dev.5] - 2026-04-23
+
+### Changed
+- Cleaned repository patch leftovers by removing tracked backup/reject artifacts (`*.bak`, `*.orig`, `*.rej`).
+- Added `docs/TECHNICAL.md` to centralize technical repository notes under `/docs`.
+- Updated project version references from `1.4.8-dev.4` to `1.4.8-dev.5`.
+
+### Notes
+- This is a non-functional DEV5 maintenance patch focused on repository hygiene and documentation organization.
+- Linux/Wayland OAuth popup icon behavior remains a known limitation and was intentionally left unchanged.
+
 ## [1.4.8-dev.4] - 2026-04-23
 
 ### Changed

@@ -4,3 +4,8 @@ build-dir/
 repo/
 .flatpak-builder/
 *.log
+
+# Patch leftovers
+*.bak
+*.orig
+*.rej
