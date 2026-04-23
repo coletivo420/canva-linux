@@ -7,6 +7,7 @@ export CHROME_DESKTOP=com.canva.WebApp.desktop
 
 DEBUG_VALUE="${CANVA_DEBUG:-}"
 if [ -n "$DEBUG_VALUE" ] && [ "$DEBUG_VALUE" != "0" ] && [ "$DEBUG_VALUE" != "false" ]; then
+  # Keep Chromium verbose logging on when CANVA_DEBUG uses category filters.
   set -- \
     --enable-logging=stderr \
     --log-level=0 \
@@ -36,6 +37,7 @@ elif [ "${CANVA_FORCE_WAYLAND:-0}" = "1" ]; then
 fi
 
 exec zypak-wrapper.sh /app/main/canva-webapp \
+  # Stable WM class helps DE grouping under both Wayland and X11 sessions.
   --class=com.canva.WebApp \
   --disable-gpu-sandbox \
   "$@"

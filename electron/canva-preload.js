@@ -632,6 +632,7 @@ const LTCodeEyeDropper = EyeDropper;
 
 let activePickerCleanup = null;
 const DEBUG_CATEGORY_ALIASES = {
+  // Legacy alias kept so CANVA_DEBUG=drag still enables dnd instrumentation.
   drag: 'dnd',
 };
 
@@ -805,6 +806,7 @@ function describeBodyUpload(body) {
 
 function rememberUploadIngress(source, info = {}) {
   const scope = globalThis || window;
+  // Persist the last ingress source so network logs can be correlated later.
   const ingress = {
     id: nextUploadIngressId(),
     source,
@@ -867,6 +869,7 @@ function installDragAndUploadDiagnostics() {
     const info = summarizeDataTransfer(event.dataTransfer, event.target);
     let ingress = null;
     if (label === 'drop') {
+      // Drop is the strongest signal that a host file import started.
       ingress = recordIngressFromDataTransfer('drop', info);
     }
     debugLog(
@@ -955,6 +958,7 @@ function installFilePickerDiagnostics() {
     return;
   }
 
+  // Wrap picker API only for observability; keep original behavior untouched.
   const original = scope.showOpenFilePicker.bind(scope);
   const wrapped = async (...args) => {
     debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
@@ -1116,6 +1120,7 @@ async function openLtcodeEyeDropper() {
   debugLog('eyedropper', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
   log('open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 
+  // Main process snapshot keeps eyedropper capture consistent inside sandboxed pages.
   const snapshot = await ipcRenderer.invoke('wrapper:eyedropper-snapshot');
   if (!snapshot || typeof snapshot.dataUrl !== 'string') {
     throw createOperationError('The Canva window snapshot failed.');
