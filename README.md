@@ -23,13 +23,18 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.8-dev.4`.
+Current development version: `1.4.8-dev.5`.
 
 Stable baseline: `1.4.7`.
 
 The `dev` branch currently keeps the stable `1.4.7` debug foundation and adds the `1.4.8-dev.X` diagnostics work for Wayland drag-and-drop, upload ingress, file picker continuation, clipboard-driven imports, OAuth popup retesting, and shell documentation.
 
 The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current DEV4 phase. It is documented as a known limitation and should not block the `1.4.8-dev.X` cleanup work.
+
+## Documentation map
+
+- `README.md` provides project orientation and day-to-day development context.
+- `docs/TECHNICAL.md` centralizes technical repository notes for the current maintenance branch.
 
 ## Architecture overview
 
@@ -127,7 +132,7 @@ Wayland is the preferred path for modern Linux desktops, but some drag-and-drop,
 The current maintenance model uses a stable baseline plus development iterations:
 
 - stable releases use plain version numbers such as `1.4.7`;
-- development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, and `1.4.8-dev.4`;
+- development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, and `1.4.8-dev.5`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
