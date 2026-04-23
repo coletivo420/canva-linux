@@ -35,7 +35,7 @@ The native Linux/Wayland OAuth popup icon experiment is **not an active target**
 
 - `README.md` provides project orientation and day-to-day development context.
 - `docs/TECHNICAL.md` centralizes technical repository notes for the current maintenance branch.
-- `docs/RELEASE_CHECKLIST.md` provides the final DEV-cycle release readiness checklist.
+- `docs/RELEASE_CHECKLIST.md` provides the release-candidate validation checklist before final `1.4.8`.
 - `docs/MANUAL_VALIDATION.md` defines the manual validation routine for non-functional patch closure.
 
 ## Architecture overview
