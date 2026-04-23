@@ -5,11 +5,7 @@
 
 export CHROME_DESKTOP=com.canva.WebApp.desktop
 
-APP_VERSION="1.4.9"
 DEBUG_VALUE="${CANVA_DEBUG:-}"
-
-printf '%s\n' "[canva v${APP_VERSION}] starting debug=${DEBUG_VALUE:-0}" >&2
-
 if [ -n "$DEBUG_VALUE" ] && [ "$DEBUG_VALUE" != "0" ] && [ "$DEBUG_VALUE" != "false" ]; then
   set -- \
     --enable-logging=stderr \
