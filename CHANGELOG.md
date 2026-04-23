@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8] - 2026-04-23
+
+### Changed
+- Promoted the validated 1.4.8 release candidate to the stable 1.4.8 release.
+- Finalized the 1.4.8 stabilization cycle documentation.
+
+### Notes
+- This release includes the documented DEV4–DEV7 consolidation work and the RC validation pass.
+- No runtime behavior is intentionally changed from 1.4.8-rc.1.
+- Known Linux/Wayland limitations remain documented.
+
 ## [1.4.8-rc.1] - 2026-04-23
 
 ### Changed
