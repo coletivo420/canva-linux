@@ -23,6 +23,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 - compatible OAuth providers open in a separate popup window that shares the same persistent session partition
 - OAuth popups now update their window title and icon to reflect the current provider when possible
 - the current build prefers **native Wayland** in Wayland sessions and uses **X11** automatically on non-Wayland sessions
+- startup debug logs now summarize what the current development build corrected, validated, and still keeps under observation
 
 ## Build
 
@@ -59,6 +60,8 @@ For Wayland drag-and-upload troubleshooting, start with:
 ```bash
 CANVA_DEBUG=startup,dnd,upload,permissions,session flatpak run com.canva.WebApp
 ```
+
+Current `1.4.8-dev.2` testing has already validated Linux Wayland startup, the fixed Home tab shell, the working custom eyedropper, and a real host-to-editor file drop on Wayland. The next checks remain the post-drop upload continuation, the host file picker path, and targeted OAuth popup completion retests.
 
 ## Compatibility notes
 

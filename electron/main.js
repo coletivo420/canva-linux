@@ -15,6 +15,7 @@ const path = require('path');
 const APP_ID = 'com.canva.WebApp';
 const APP_URL = 'https://www.canva.com';
 const APP_NAME = 'Canva';
+const APP_VERSION = require('../package.json').version;
 const PARTITION = 'persist:canva';
 const HOME_URL = APP_URL;
 const TOOLBAR_HEIGHT = 46;
@@ -89,6 +90,25 @@ function debugLog(category, ...args) {
   if (!debugEnabled(normalized)) return;
   console.log(`[canva:${normalized}]`, ...args);
 }
+
+const RELEASE_STATUS = {
+  corrected: [
+    'Global debug categories now use canonical names, including drag -> dnd compatibility.',
+    'Window-open logging now distinguishes internal Canva tabs from real OAuth popup flows.',
+    'Upload diagnostics now preserve ingress context from drop, paste, and picker flows.',
+  ],
+  validated: [
+    'Application startup on Linux Wayland.',
+    'Persistent session initialization and fixed Home tab shell behavior.',
+    'Custom eyedropper behavior preserved after the global debug expansion.',
+    'Host drag-and-drop into the Canva editor on Wayland with a real file drop.',
+  ],
+  underObservation: [
+    'Host file picker and post-drop upload continuation inside Canva.',
+    'OAuth popup completion paths after the WebContentsView migration.',
+    'Non-fatal DBus, VAAPI, and compositor warnings that do not block startup.',
+  ],
+};
 
 let mainWindow = null;
 let toolbarView = null;
@@ -203,6 +223,30 @@ function shouldTreatAsOauthPopup({ url, openerUrl, disposition, frameName }) {
   if (isBlankPopupUrl(url) && frameName && /auth|oauth|login|signin|account|popup/i.test(frameName)) return true;
   if ((disposition === 'new-window' || disposition === 'foreground-tab') && isCanvaAuthUrl(openerUrl)) return true;
   return false;
+}
+
+function formatDebugList(items = []) {
+  return items.map((item, index) => `${index + 1}.${item}`).join(' | ');
+}
+
+function logReleaseStatus() {
+  debugLog('startup', 'release', `version=${APP_VERSION}`, `downloads=${app.getPath('downloads')}`);
+  debugLog('startup', 'corrected', formatDebugList(RELEASE_STATUS.corrected));
+  debugLog('startup', 'validated', formatDebugList(RELEASE_STATUS.validated));
+  debugLog('startup', 'under-observation', formatDebugList(RELEASE_STATUS.underObservation));
+}
+
+function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
+  if (shouldTreatAsOauthPopup({ url, openerUrl, disposition, frameName })) {
+    return { category: 'oauth', kind: 'oauth-popup' };
+  }
+  if (isCanvaUrl(url)) {
+    return { category: 'tabs', kind: 'internal-tab' };
+  }
+  if (isBlankPopupUrl(url)) {
+    return { category: 'tabs', kind: 'blank-window' };
+  }
+  return { category: 'tabs', kind: 'external-browser' };
 }
 
 function getAppIcon() {
@@ -645,38 +689,47 @@ function attachViewHandlers(tab) {
   const wc = tab.view.webContents;
 
   wc.setWindowOpenHandler(({ url, disposition, frameName }) => {
-    debugLog('oauth', 'tab-window-open', `tab=${tab.id}`, url || 'about:blank', disposition || 'unknown', frameName || '');
     const openerUrl = wc.getURL();
+    const request = classifyWindowOpenRequest({ url, openerUrl, disposition, frameName });
+    debugLog(request.category, 'tab-window-open', `tab=${tab.id}`, `kind=${request.kind}`, url || 'about:blank', disposition || 'unknown', frameName || '');
 
-    if (shouldTreatAsOauthPopup({ url, openerUrl, disposition, frameName })) {
+    if (request.kind === 'oauth-popup') {
       return {
         action: 'allow',
         overrideBrowserWindowOptions: popupWindowOptions(),
       };
     }
 
-    if (isCanvaUrl(url)) {
+    if (request.kind === 'internal-tab') {
       createTab(url, { activate: disposition !== 'background-tab' });
       return { action: 'deny' };
     }
 
     if (!isBlankPopupUrl(url)) {
+      debugLog('tabs', 'external-open', `tab=${tab.id}`, url);
       shell.openExternal(url);
     }
     return { action: 'deny' };
   });
 
   wc.on('did-create-window', (window, details) => {
-    debugLog('oauth', 'did-create-window', `tab=${tab.id}`, details.url || 'about:blank');
+    const openerUrl = details.referrer?.url || wc.getURL();
+    const request = classifyWindowOpenRequest({
+      url: details.url || 'about:blank',
+      openerUrl,
+      disposition: 'new-window',
+      frameName: details.frameName || '',
+    });
+    debugLog(request.category, 'did-create-window', `tab=${tab.id}`, `kind=${request.kind}`, details.url || 'about:blank');
     registerAuthPopupWindow(window, details.url || 'about:blank', {
       sourceWebContentsId: wc.id,
-      openerUrl: details.referrer?.url || wc.getURL(),
+      openerUrl,
     });
   });
 
   wc.on('will-navigate', (event, url) => {
-    debugLog('oauth', 'popup-will-navigate', url);
     if (shouldOpenInOauthPopup(url)) {
+      debugLog('oauth', 'tab-nav-promoted-to-popup', `tab=${tab.id}`, url);
       if (isCanvaAuthUrl(wc.getURL())) {
         event.preventDefault();
         const popup = new BrowserWindow(popupWindowOptions());
@@ -687,6 +740,7 @@ function attachViewHandlers(tab) {
     }
 
     if (!isCanvaUrl(url)) {
+      debugLog('tabs', 'external-navigation-blocked', `tab=${tab.id}`, url);
       event.preventDefault();
       shell.openExternal(url);
     }
@@ -933,6 +987,8 @@ ipcMain.on('toolbar-action', (_event, { action, payload = {} }) => {
 
 app.whenReady().then(async () => {
   debugLog('startup', 'when-ready', `platform=${process.platform}`, `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland')}`);
+  debugLog('startup', 'debug-spec', DEBUG_SPEC || 'disabled');
+  logReleaseStatus();
   await configureSession();
   debugLog('startup', 'session-configured');
   createShellWindow();

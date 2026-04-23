@@ -1,0 +1,82 @@
+--- electron/canva-preload.js	2026-04-23 18:08:44.554907203 +0000
++++ electron/canva-preload.js	2026-04-23 18:34:55.855682788 +0000
+@@ -847,33 +891,64 @@
+     debugLog('upload', 'document-change', describeDragTarget(event.target));
+     const target = event.target;
+     if (!(target instanceof HTMLInputElement) || target.type !== 'file') return;
+-    logUploadInput('input-change-meta', target);
+-    debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, describeDragTarget(target));
++    logUploadInput('input-change-meta', target, { remember: false });
++    debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, `after=${recentUploadIngressSummary()}`, describeDragTarget(target));
++    rememberUploadIngress('input-change', {
++      files: target.files ? target.files.length : 0,
++      types: 'file-input-change',
++      target: describeDragTarget(target),
++    });
+   }, true);
+ }
+ 
+ function installFilePickerDiagnostics() {
+   const scope = globalThis || window;
+-  if (typeof scope.showOpenFilePicker !== 'function' || scope.showOpenFilePicker.__canvaDebugWrapped) {
++  if (typeof scope.showOpenFilePicker === 'function' && !scope.showOpenFilePicker.__canvaDebugWrapped) {
++    const original = scope.showOpenFilePicker.bind(scope);
++    const wrapped = async (...args) => {
++      rememberUploadIngress('show-open-file-picker', {
++        files: 0,
++        types: 'picker-api',
++        target: 'window.showOpenFilePicker',
++      });
++      debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
++      try {
++        const handles = await original(...args);
++        debugLog('upload', 'show-open-file-picker-result', `handles=${Array.isArray(handles) ? handles.length : 0}`, `after=${recentUploadIngressSummary()}`);
++        return handles;
++      } catch (error) {
++        debugLog('upload', 'show-open-file-picker-error', error?.name || 'Error', error?.message || '', `after=${recentUploadIngressSummary()}`);
++        throw error;
++      }
++    };
++
++    try {
++      wrapped.__canvaDebugWrapped = true;
++      scope.showOpenFilePicker = wrapped;
++    } catch {}
++  }
++
++  const inputProto = scope.HTMLInputElement?.prototype;
++  if (!inputProto || typeof inputProto.showPicker !== 'function' || inputProto.showPicker.__canvaDebugWrapped) {
+     return;
+   }
+ 
+-  const original = scope.showOpenFilePicker.bind(scope);
+-  const wrapped = async (...args) => {
+-    debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
+-    try {
+-      const handles = await original(...args);
+-      debugLog('upload', 'show-open-file-picker-result', `handles=${Array.isArray(handles) ? handles.length : 0}`);
+-      return handles;
+-    } catch (error) {
+-      debugLog('upload', 'show-open-file-picker-error', error?.name || 'Error', error?.message || '');
+-      throw error;
++  const originalShowPicker = inputProto.showPicker;
++  const wrappedShowPicker = function (...args) {
++    if (this?.type === 'file') {
++      rememberUploadIngress('input-show-picker', {
++        files: 0,
++        types: 'file-input-picker',
++        target: describeDragTarget(this),
++      });
++      debugLog('upload', 'input-show-picker', `args=${args.length}`, describeDragTarget(this));
+     }
++    return originalShowPicker.apply(this, args);
+   };
+ 
+   try {
+-    wrapped.__canvaDebugWrapped = true;
+-    scope.showOpenFilePicker = wrapped;
++    wrappedShowPicker.__canvaDebugWrapped = true;
++    inputProto.showPicker = wrappedShowPicker;
+   } catch {}
+ }
+ 

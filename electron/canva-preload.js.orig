@@ -720,29 +720,6 @@ function describeFileInput(target) {
   };
 }
 
-function rememberUploadIngress(source, info = {}) {
-  const scope = globalThis || window;
-  scope.__canvaLastUploadIngress = {
-    source,
-    timestamp: Date.now(),
-    ...info,
-  };
-}
-
-function recentUploadIngressSummary() {
-  const scope = globalThis || window;
-  const ingress = scope.__canvaLastUploadIngress;
-  if (!ingress || !ingress.timestamp) return 'source=none';
-  const ageMs = Math.max(0, Date.now() - ingress.timestamp);
-  return [
-    `source=${ingress.source || 'unknown'}`,
-    `ageMs=${ageMs}`,
-    `files=${ingress.files ?? 0}`,
-    `types=${ingress.types || 'none'}`,
-    ingress.target || 'unknown',
-  ].join(' ');
-}
-
 function installDragAndUploadDiagnostics() {
   const scope = globalThis || window;
   if (scope.__canvaDragDiagnosticsInstalled) return;
@@ -762,21 +739,9 @@ function installDragAndUploadDiagnostics() {
     };
   };
 
-  const recordIngressFromDataTransfer = (source, info) => {
-    if (!info || (info.files < 1 && (!info.items || info.items === 'none'))) return;
-    rememberUploadIngress(source, {
-      files: info.files,
-      types: info.types,
-      target: info.target,
-    });
-  };
-
   const logDrag = (label, event) => {
     if (!debugEnabled('dnd')) return;
     const info = summarizeDataTransfer(event.dataTransfer, event.target);
-    if (label === 'drop') {
-      recordIngressFromDataTransfer('drop', info);
-    }
     debugLog(
       'dnd',
       label,
@@ -789,16 +754,9 @@ function installDragAndUploadDiagnostics() {
     );
   };
 
-  const logUploadInput = (label, target, { remember = true } = {}) => {
+  const logUploadInput = (label, target) => {
     const info = describeFileInput(target);
     if (!info) return;
-    if (remember) {
-      rememberUploadIngress(label, {
-        files: 0,
-        types: 'file-input',
-        target: info.target,
-      });
-    }
     debugLog(
       'upload',
       label,
@@ -824,7 +782,6 @@ function installDragAndUploadDiagnostics() {
   }, true);
   window.addEventListener('drop', (event) => {
     logDrag('drop', event);
-    debugLog('upload', 'drop-ingress', recentUploadIngressSummary());
     queueMicrotask(() => {
       try {
         window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, buttons: 0 }));
@@ -835,7 +792,6 @@ function installDragAndUploadDiagnostics() {
   window.addEventListener('paste', (event) => {
     const info = summarizeDataTransfer(event.clipboardData, event.target);
     if (info.files < 1 && !info.items) return;
-    recordIngressFromDataTransfer('paste', info);
     debugLog('upload', 'paste', `files=${info.files}`, `items=${info.items || 'none'}`, `types=${info.types || 'none'}`, info.target);
   }, true);
 

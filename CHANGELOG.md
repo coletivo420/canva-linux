@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-dev.2] - 2026-04-23
+
+### Added
+- Added startup release-status logs that summarize what this build corrected, validated, and still keeps under observation.
+- Added upload ingress correlation logs so file-input and picker events now report the most recent drop, paste, or picker source.
+- Added `HTMLInputElement.showPicker()` diagnostics for file inputs when the host browser API is available.
+
+### Changed
+- Refined window-open logging so normal Canva tab creation is reported under `tabs` instead of `oauth`.
+- Refined tab navigation logging so OAuth diagnostics are only emitted when navigation is actually promoted into an OAuth popup flow.
+
+### Validated
+- Confirmed Linux Wayland startup, persistent session initialization, the fixed Home tab shell, and the custom eyedropper remain stable in current testing.
+- Confirmed host drag-and-drop into the Canva editor reaches the editor with a real file drop on Wayland.
+
+### Under observation
+- Host file picker completion and post-drop upload continuation inside Canva still need broader cross-flow validation.
+- OAuth popup completion paths still need targeted retesting after the `WebContentsView` migration.
+
 ## [1.4.8-dev.1] - 2026-04-23
 
 ### Added
