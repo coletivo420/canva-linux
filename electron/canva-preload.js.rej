@@ -1,82 +1,241 @@
---- electron/canva-preload.js	2026-04-23 18:08:44.554907203 +0000
-+++ electron/canva-preload.js	2026-04-23 18:34:55.855682788 +0000
-@@ -847,33 +891,64 @@
+--- electron/canva-preload.js	2026-04-23 18:34:55.855682788 +0000
++++ electron/canva-preload.js	2026-04-23 18:51:39.743590953 +0000
+@@ -931,25 +1028,60 @@
+   }, true);
+   window.addEventListener('paste', (event) => {
+     const info = summarizeDataTransfer(event.clipboardData, event.target);
+-    if (info.files < 1 && !info.items) return;
+-    recordIngressFromDataTransfer('paste', info);
+-    debugLog('upload', 'paste', `files=${info.files}`, `items=${info.items || 'none'}`, `types=${info.types || 'none'}`, info.target);
++    if (info.files < 1 && !info.items && !info.types) return;
++    const ingress = recordIngressFromDataTransfer('paste', info);
++    debugLog(
++      'upload',
++      'paste',
++      ingress ? `id=${ingress.id}` : 'id=none',
++      `files=${info.files}`,
++      `fileSummary=${info.fileSummary || 'none'}`,
++      `items=${info.items || 'none'}`,
++      `kinds=${info.kinds || 'none'}`,
++      `types=${info.types || 'none'}`,
++      info.target
++    );
++  }, true);
++
++  document.addEventListener('beforeinput', (event) => {
++    const inputType = event.inputType || 'unknown';
++    if (!/insertFromPaste|insertFromDrop/i.test(inputType)) return;
++    debugLog('upload', 'beforeinput', `type=${inputType}`, `after=${recentUploadIngressSummary()}`, describeDragTarget(event.target));
++  }, true);
++
++  document.addEventListener('input', (event) => {
++    const target = event.target;
++    const tagName = target?.tagName ? String(target.tagName).toLowerCase() : 'node';
++    const interesting = target?.isContentEditable || tagName === 'textarea' || tagName === 'input';
++    if (!interesting) return;
++    const scope = globalThis || window;
++    const ingress = scope.__canvaLastUploadIngress;
++    if (!ingress || Date.now() - ingress.timestamp > 8000) return;
++    debugLog('upload', 'input-event', `after=${recentUploadIngressSummary()}`, describeDragTarget(target));
+   }, true);
+ 
+   document.addEventListener('click', (event) => {
+     logUploadInput('input-click', event.target);
+   }, true);
+ 
++  document.addEventListener('cancel', (event) => {
++    const target = event.target;
++    if (!(target instanceof HTMLInputElement) || target.type !== 'file') return;
++    debugLog('upload', 'input-cancel', `after=${recentUploadIngressSummary()}`, describeDragTarget(target));
++  }, true);
++
+   document.addEventListener('change', (event) => {
      debugLog('upload', 'document-change', describeDragTarget(event.target));
      const target = event.target;
      if (!(target instanceof HTMLInputElement) || target.type !== 'file') return;
--    logUploadInput('input-change-meta', target);
--    debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, describeDragTarget(target));
-+    logUploadInput('input-change-meta', target, { remember: false });
-+    debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, `after=${recentUploadIngressSummary()}`, describeDragTarget(target));
-+    rememberUploadIngress('input-change', {
-+      files: target.files ? target.files.length : 0,
-+      types: 'file-input-change',
-+      target: describeDragTarget(target),
-+    });
+     logUploadInput('input-change-meta', target, { remember: false });
+-    debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, `after=${recentUploadIngressSummary()}`, describeDragTarget(target));
++    const fileSummary = summarizeFiles(target.files);
++    debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, `fileSummary=${fileSummary}`, `after=${recentUploadIngressSummary()}`, describeDragTarget(target));
+     rememberUploadIngress('input-change', {
+       files: target.files ? target.files.length : 0,
+       types: 'file-input-change',
+       target: describeDragTarget(target),
++      fileSummary,
+     });
    }, true);
  }
+@@ -959,18 +1091,18 @@
+   if (typeof scope.showOpenFilePicker === 'function' && !scope.showOpenFilePicker.__canvaDebugWrapped) {
+     const original = scope.showOpenFilePicker.bind(scope);
+     const wrapped = async (...args) => {
+-      rememberUploadIngress('show-open-file-picker', {
++      const ingress = rememberUploadIngress('show-open-file-picker', {
+         files: 0,
+         types: 'picker-api',
+         target: 'window.showOpenFilePicker',
+       });
+-      debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
++      debugLog('upload', 'show-open-file-picker', `id=${ingress.id}`, `args=${args.length}`);
+       try {
+         const handles = await original(...args);
+-        debugLog('upload', 'show-open-file-picker-result', `handles=${Array.isArray(handles) ? handles.length : 0}`, `after=${recentUploadIngressSummary()}`);
++        debugLog('upload', 'show-open-file-picker-result', `id=${ingress.id}`, `handles=${Array.isArray(handles) ? handles.length : 0}`, `after=${recentUploadIngressSummary()}`);
+         return handles;
+       } catch (error) {
+-        debugLog('upload', 'show-open-file-picker-error', error?.name || 'Error', error?.message || '', `after=${recentUploadIngressSummary()}`);
++        debugLog('upload', 'show-open-file-picker-error', `id=${ingress.id}`, error?.name || 'Error', error?.message || '', `after=${recentUploadIngressSummary()}`);
+         throw error;
+       }
+     };
+@@ -982,33 +1114,132 @@
+   }
  
- function installFilePickerDiagnostics() {
-   const scope = globalThis || window;
--  if (typeof scope.showOpenFilePicker !== 'function' || scope.showOpenFilePicker.__canvaDebugWrapped) {
-+  if (typeof scope.showOpenFilePicker === 'function' && !scope.showOpenFilePicker.__canvaDebugWrapped) {
-+    const original = scope.showOpenFilePicker.bind(scope);
-+    const wrapped = async (...args) => {
-+      rememberUploadIngress('show-open-file-picker', {
-+        files: 0,
-+        types: 'picker-api',
-+        target: 'window.showOpenFilePicker',
-+      });
-+      debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
-+      try {
-+        const handles = await original(...args);
-+        debugLog('upload', 'show-open-file-picker-result', `handles=${Array.isArray(handles) ? handles.length : 0}`, `after=${recentUploadIngressSummary()}`);
-+        return handles;
-+      } catch (error) {
-+        debugLog('upload', 'show-open-file-picker-error', error?.name || 'Error', error?.message || '', `after=${recentUploadIngressSummary()}`);
-+        throw error;
+   const inputProto = scope.HTMLInputElement?.prototype;
+-  if (!inputProto || typeof inputProto.showPicker !== 'function' || inputProto.showPicker.__canvaDebugWrapped) {
+-    return;
++  if (inputProto && typeof inputProto.showPicker === 'function' && !inputProto.showPicker.__canvaDebugWrapped) {
++    const originalShowPicker = inputProto.showPicker;
++    const wrappedShowPicker = function (...args) {
++      if (this?.type === 'file') {
++        const ingress = rememberUploadIngress('input-show-picker', {
++          files: 0,
++          types: 'file-input-picker',
++          target: describeDragTarget(this),
++        });
++        debugLog('upload', 'input-show-picker', `id=${ingress.id}`, `args=${args.length}`, describeDragTarget(this));
 +      }
++      return originalShowPicker.apply(this, args);
 +    };
 +
 +    try {
-+      wrapped.__canvaDebugWrapped = true;
-+      scope.showOpenFilePicker = wrapped;
++      wrappedShowPicker.__canvaDebugWrapped = true;
++      inputProto.showPicker = wrappedShowPicker;
++    } catch {}
+   }
++}
+ 
+-  const originalShowPicker = inputProto.showPicker;
+-  const wrappedShowPicker = function (...args) {
+-    if (this?.type === 'file') {
+-      rememberUploadIngress('input-show-picker', {
+-        files: 0,
+-        types: 'file-input-picker',
+-        target: describeDragTarget(this),
+-      });
+-      debugLog('upload', 'input-show-picker', `args=${args.length}`, describeDragTarget(this));
+-    }
+-    return originalShowPicker.apply(this, args);
+-  };
++function installClipboardAndNetworkUploadDiagnostics() {
++  const scope = globalThis || window;
++  if (scope.__canvaClipboardNetworkDiagnosticsInstalled) return;
++  scope.__canvaClipboardNetworkDiagnosticsInstalled = true;
+ 
+-  try {
+-    wrappedShowPicker.__canvaDebugWrapped = true;
+-    inputProto.showPicker = wrappedShowPicker;
+-  } catch {}
++  const formDataProto = scope.FormData?.prototype;
++  if (formDataProto && typeof formDataProto.append === 'function' && !formDataProto.append.__canvaDebugWrapped) {
++    const originalAppend = formDataProto.append;
++    const wrappedAppend = function (name, value, filename) {
++      if (value instanceof Blob || value instanceof File) {
++        const current = this[UPLOAD_DEBUG_META] || { files: 0, fileSummary: [], fieldSummary: [] };
++        current.files += 1;
++        current.fileSummary.push(formatFileDescriptor(value instanceof File ? value : { name: filename || 'blob', type: value.type, size: value.size }));
++        current.fieldSummary.push(String(name || 'unnamed'));
++        this[UPLOAD_DEBUG_META] = current;
++        debugLog('upload', 'formdata-append-file', `field=${String(name || 'unnamed')}`, `file=${current.fileSummary[current.fileSummary.length - 1]}`, `after=${recentUploadIngressSummary()}`);
++      }
++      if (arguments.length >= 3) {
++        return originalAppend.call(this, name, value, filename);
++      }
++      return originalAppend.call(this, name, value);
++    };
++    try {
++      wrappedAppend.__canvaDebugWrapped = true;
++      formDataProto.append = wrappedAppend;
 +    } catch {}
 +  }
 +
-+  const inputProto = scope.HTMLInputElement?.prototype;
-+  if (!inputProto || typeof inputProto.showPicker !== 'function' || inputProto.showPicker.__canvaDebugWrapped) {
-     return;
-   }
- 
--  const original = scope.showOpenFilePicker.bind(scope);
--  const wrapped = async (...args) => {
--    debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
--    try {
--      const handles = await original(...args);
--      debugLog('upload', 'show-open-file-picker-result', `handles=${Array.isArray(handles) ? handles.length : 0}`);
--      return handles;
--    } catch (error) {
--      debugLog('upload', 'show-open-file-picker-error', error?.name || 'Error', error?.message || '');
--      throw error;
-+  const originalShowPicker = inputProto.showPicker;
-+  const wrappedShowPicker = function (...args) {
-+    if (this?.type === 'file') {
-+      rememberUploadIngress('input-show-picker', {
-+        files: 0,
-+        types: 'file-input-picker',
-+        target: describeDragTarget(this),
-+      });
-+      debugLog('upload', 'input-show-picker', `args=${args.length}`, describeDragTarget(this));
-     }
-+    return originalShowPicker.apply(this, args);
-   };
- 
-   try {
--    wrapped.__canvaDebugWrapped = true;
--    scope.showOpenFilePicker = wrapped;
-+    wrappedShowPicker.__canvaDebugWrapped = true;
-+    inputProto.showPicker = wrappedShowPicker;
-   } catch {}
++  if (typeof scope.fetch === 'function' && !scope.fetch.__canvaDebugWrapped) {
++    const originalFetch = scope.fetch.bind(scope);
++    const wrappedFetch = async (input, init = undefined) => {
++      const body = init && 'body' in init ? init.body : undefined;
++      const meta = describeBodyUpload(body);
++      if (meta) {
++        const url = typeof input === 'string' ? input : input?.url || 'unknown';
++        debugLog('upload', 'fetch-upload', `kind=${meta.kind}`, `files=${meta.files}`, `fields=${meta.fieldSummary}`, `fileSummary=${meta.fileSummary}`, `after=${recentUploadIngressSummary()}`, url);
++      }
++      return originalFetch(input, init);
++    };
++    try {
++      wrappedFetch.__canvaDebugWrapped = true;
++      scope.fetch = wrappedFetch;
++    } catch {}
++  }
++
++  const xhrProto = scope.XMLHttpRequest?.prototype;
++  if (xhrProto && typeof xhrProto.open === 'function' && typeof xhrProto.send === 'function' && !xhrProto.send.__canvaDebugWrapped) {
++    const originalOpen = xhrProto.open;
++    const originalSend = xhrProto.send;
++    xhrProto.open = function (method, url, ...rest) {
++      this.__canvaDebugMethod = method;
++      this.__canvaDebugUrl = url;
++      return originalOpen.call(this, method, url, ...rest);
++    };
++    const wrappedSend = function (body) {
++      const meta = describeBodyUpload(body);
++      if (meta) {
++        debugLog('upload', 'xhr-upload', `method=${this.__canvaDebugMethod || 'UNKNOWN'}`, `kind=${meta.kind}`, `files=${meta.files}`, `fields=${meta.fieldSummary}`, `fileSummary=${meta.fileSummary}`, `after=${recentUploadIngressSummary()}`, this.__canvaDebugUrl || 'unknown');
++      }
++      return originalSend.call(this, body);
++    };
++    try {
++      wrappedSend.__canvaDebugWrapped = true;
++      xhrProto.send = wrappedSend;
++    } catch {}
++  }
++
++  if (scope.navigator?.clipboard?.read && !scope.navigator.clipboard.read.__canvaDebugWrapped) {
++    const originalRead = scope.navigator.clipboard.read.bind(scope.navigator.clipboard);
++    const wrappedRead = async (...args) => {
++      debugLog('upload', 'clipboard-read', `args=${args.length}`);
++      const items = await originalRead(...args);
++      const summary = Array.isArray(items)
++        ? items.map((item) => Array.isArray(item.types) ? item.types.join(',') : 'none').join(' | ')
++        : 'none';
++      debugLog('upload', 'clipboard-read-result', `items=${Array.isArray(items) ? items.length : 0}`, `types=${summary}`);
++      return items;
++    };
++    try {
++      wrappedRead.__canvaDebugWrapped = true;
++      scope.navigator.clipboard.read = wrappedRead;
++    } catch {}
++  }
++
++  if (typeof scope.navigator?.sendBeacon === 'function' && !scope.navigator.sendBeacon.__canvaDebugWrapped) {
++    const originalSendBeacon = scope.navigator.sendBeacon.bind(scope.navigator);
++    const wrappedSendBeacon = (url, data) => {
++      const meta = describeBodyUpload(data);
++      if (meta) {
++        debugLog('upload', 'sendBeacon-upload', `kind=${meta.kind}`, `files=${meta.files}`, `fields=${meta.fieldSummary}`, `fileSummary=${meta.fileSummary}`, `after=${recentUploadIngressSummary()}`, url || 'unknown');
++      }
++      return originalSendBeacon(url, data);
++    };
++    try {
++      wrappedSendBeacon.__canvaDebugWrapped = true;
++      scope.navigator.sendBeacon = wrappedSendBeacon;
++    } catch {}
++  }
  }
  
+ debugLog('startup', 'preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
+ log('preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
+ installDragAndUploadDiagnostics();
+ installFilePickerDiagnostics();
++installClipboardAndNetworkUploadDiagnostics();
+ 
+ function removeLtcodeUi() {
+   const overlay = document.getElementById('eyedropper-overlay');

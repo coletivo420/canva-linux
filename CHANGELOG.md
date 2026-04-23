@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-dev.3] - 2026-04-23
+
+### Added
+- Added clipboard ingress diagnostics for paste-heavy workflows, including `beforeinput`, `paste`, `navigator.clipboard.read()`, and MIME summary logging for text, HTML, URLs, images, and files when available.
+- Added upload pipeline correlation IDs so drag, paste, picker, `FormData`, `fetch`, `XMLHttpRequest`, and `sendBeacon` logs can be tied back to the most recent ingress source.
+- Added file picker cancellation diagnostics for `<input type="file">` where Chromium emits a `cancel` event.
+
+### Fixed
+- Fixed OAuth popup diagnostics so popup title and favicon updates no longer reference an undefined tab object during real popup flows.
+- Fixed popup lifecycle logging so real OAuth popup state changes are easier to follow during clean-session retests.
+- Fixed upload observability gaps after drop or paste by logging file-bearing `FormData` and network dispatches when Canva begins an import or upload request.
+
+### Validated in current testing
+- Startup summaries remain available in the terminal and still describe the current development status.
+- The fixed Home tab shell and custom eyedropper continue to load without regression in the development branch.
+
+### Under observation
+- Full clean-session OAuth completion should still be retested after clearing local Flatpak data.
+- Host file picker continuation and clipboard-driven imports should now be tested against the richer upload/network logs introduced in this build.
+
 ## [1.4.8-dev.2] - 2026-04-23
 
 ### Added

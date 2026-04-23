@@ -55,13 +55,13 @@ CANVA_DEBUG=oauth,dnd flatpak run com.canva.WebApp
 
 Available categories include: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`. The legacy alias `drag` is still accepted and maps to `dnd`.
 
-For Wayland drag-and-upload troubleshooting, start with:
+For Wayland drag, picker, upload, and clipboard troubleshooting, start with:
 
 ```bash
-CANVA_DEBUG=startup,dnd,upload,permissions,session flatpak run com.canva.WebApp
+CANVA_DEBUG=startup,dnd,upload,permissions,session,oauth flatpak run com.canva.WebApp
 ```
 
-Current `1.4.8-dev.2` testing has already validated Linux Wayland startup, the fixed Home tab shell, the working custom eyedropper, and a real host-to-editor file drop on Wayland. The next checks remain the post-drop upload continuation, the host file picker path, and targeted OAuth popup completion retests.
+Current `1.4.8-dev.3` testing keeps Linux Wayland startup, the fixed Home tab shell, the working custom eyedropper, and a real host-to-editor file drop as validated baselines. This build expands observability for clipboard paste ingress, host file picker continuation, post-drop upload/network handoff, and clean-session OAuth popup retests.
 
 ## Compatibility notes
 

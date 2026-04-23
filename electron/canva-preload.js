@@ -720,21 +720,108 @@ function describeFileInput(target) {
   };
 }
 
+const UPLOAD_DEBUG_META = Symbol('canvaUploadDebugMeta');
+
+function nextUploadIngressId() {
+  const scope = globalThis || window;
+  scope.__canvaUploadIngressCounter = (scope.__canvaUploadIngressCounter || 0) + 1;
+  return scope.__canvaUploadIngressCounter;
+}
+
+function formatFileDescriptor(file) {
+  if (!file) return 'unknown';
+  const name = typeof file.name === 'string' && file.name ? file.name : 'blob';
+  const type = typeof file.type === 'string' && file.type ? file.type : 'unknown';
+  const size = Number.isFinite(file.size) ? file.size : 0;
+  return `${name}:${type}:${size}`;
+}
+
+function summarizeFiles(files, limit = 3) {
+  if (!files || typeof files.length !== 'number' || files.length < 1) return 'none';
+  return Array.from(files)
+    .slice(0, limit)
+    .map((file) => formatFileDescriptor(file))
+    .join(',');
+}
+
+function summarizeClipboardKinds(dataTransfer) {
+  const kinds = new Set();
+  const types = dataTransfer?.types ? Array.from(dataTransfer.types) : [];
+  const items = dataTransfer?.items ? Array.from(dataTransfer.items) : [];
+  if (dataTransfer?.files?.length) kinds.add('files');
+  for (const item of items) {
+    if (item.kind === 'file') {
+      kinds.add('files');
+      if ((item.type || '').startsWith('image/')) {
+        kinds.add('image');
+      }
+    }
+    if (item.kind === 'string') {
+      if (item.type === 'text/html') kinds.add('html');
+      if (item.type === 'text/plain') kinds.add('text');
+      if (item.type === 'text/uri-list') kinds.add('url');
+    }
+  }
+  for (const type of types) {
+    if (type === 'text/html') kinds.add('html');
+    if (type === 'text/plain') kinds.add('text');
+    if (type === 'text/uri-list') kinds.add('url');
+    if (type.startsWith('image/')) kinds.add('image');
+  }
+  return kinds.size ? Array.from(kinds).join(',') : 'none';
+}
+
+function describeBodyUpload(body) {
+  if (!body) return null;
+  if (body instanceof File) {
+    return {
+      kind: 'file',
+      files: 1,
+      fileSummary: summarizeFiles([body]),
+      fieldSummary: 'direct-file',
+    };
+  }
+  if (body instanceof Blob) {
+    return {
+      kind: 'blob',
+      files: 1,
+      fileSummary: `blob:${body.type || 'unknown'}:${Number.isFinite(body.size) ? body.size : 0}`,
+      fieldSummary: 'direct-blob',
+    };
+  }
+  if (body instanceof FormData) {
+    const meta = body[UPLOAD_DEBUG_META];
+    if (meta?.files > 0) {
+      return {
+        kind: 'formdata',
+        files: meta.files,
+        fileSummary: meta.fileSummary || 'none',
+        fieldSummary: meta.fieldSummary || 'none',
+      };
+    }
+  }
+  return null;
+}
+
 function rememberUploadIngress(source, info = {}) {
   const scope = globalThis || window;
-  scope.__canvaLastUploadIngress = {
+  const ingress = {
+    id: nextUploadIngressId(),
     source,
     timestamp: Date.now(),
     ...info,
   };
+  scope.__canvaLastUploadIngress = ingress;
+  return ingress;
 }
 
 function recentUploadIngressSummary() {
   const scope = globalThis || window;
   const ingress = scope.__canvaLastUploadIngress;
-  if (!ingress || !ingress.timestamp) return 'source=none';
+  if (!ingress || !ingress.timestamp) return 'id=none source=none';
   const ageMs = Math.max(0, Date.now() - ingress.timestamp);
   return [
+    `id=${ingress.id || 'none'}`,
     `source=${ingress.source || 'unknown'}`,
     `ageMs=${ageMs}`,
     `files=${ingress.files ?? 0}`,
@@ -754,7 +841,9 @@ function installDragAndUploadDiagnostics() {
     const types = dataTransfer?.types ? Array.from(dataTransfer.types) : [];
     return {
       files: files.length,
+      fileSummary: summarizeFiles(files),
       items: items.map((item) => `${item.kind}:${item.type || 'unknown'}`).join(','),
+      kinds: summarizeClipboardKinds(dataTransfer),
       types: types.join(','),
       dropEffect: dataTransfer?.dropEffect || 'none',
       effectAllowed: dataTransfer?.effectAllowed || 'none',
@@ -763,25 +852,31 @@ function installDragAndUploadDiagnostics() {
   };
 
   const recordIngressFromDataTransfer = (source, info) => {
-    if (!info || (info.files < 1 && (!info.items || info.items === 'none'))) return;
-    rememberUploadIngress(source, {
+    if (!info || (info.files < 1 && (!info.items || info.items === 'none') && (!info.types || info.types === 'none'))) return null;
+    return rememberUploadIngress(source, {
       files: info.files,
       types: info.types,
       target: info.target,
+      fileSummary: info.fileSummary,
+      kinds: info.kinds,
     });
   };
 
   const logDrag = (label, event) => {
     if (!debugEnabled('dnd')) return;
     const info = summarizeDataTransfer(event.dataTransfer, event.target);
+    let ingress = null;
     if (label === 'drop') {
-      recordIngressFromDataTransfer('drop', info);
+      ingress = recordIngressFromDataTransfer('drop', info);
     }
     debugLog(
       'dnd',
       label,
+      ingress ? `id=${ingress.id}` : 'id=none',
       `files=${info.files}`,
+      `fileSummary=${info.fileSummary || 'none'}`,
       `items=${info.items || 'none'}`,
+      `kinds=${info.kinds || 'none'}`,
       `types=${info.types || 'none'}`,
       `dropEffect=${info.dropEffect}`,
       `effectAllowed=${info.effectAllowed}`,
@@ -792,8 +887,9 @@ function installDragAndUploadDiagnostics() {
   const logUploadInput = (label, target, { remember = true } = {}) => {
     const info = describeFileInput(target);
     if (!info) return;
+    let ingress = null;
     if (remember) {
-      rememberUploadIngress(label, {
+      ingress = rememberUploadIngress(label, {
         files: 0,
         types: 'file-input',
         target: info.target,
@@ -802,6 +898,7 @@ function installDragAndUploadDiagnostics() {
     debugLog(
       'upload',
       label,
+      ingress ? `id=${ingress.id}` : 'id=none',
       `accept=${info.accept}`,
       `multiple=${info.multiple}`,
       `webkitdirectory=${info.webkitdirectory}`,

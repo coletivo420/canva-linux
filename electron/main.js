@@ -95,7 +95,8 @@ const RELEASE_STATUS = {
   corrected: [
     'Global debug categories now use canonical names, including drag -> dnd compatibility.',
     'Window-open logging now distinguishes internal Canva tabs from real OAuth popup flows.',
-    'Upload diagnostics now preserve ingress context from drop, paste, and picker flows.',
+    'Upload diagnostics now preserve ingress context from drop, paste, picker, and file-bearing network handoff.',
+    'OAuth popup diagnostics no longer reference an undefined tab object during popup title or favicon updates.',
   ],
   validated: [
     'Application startup on Linux Wayland.',
@@ -104,8 +105,8 @@ const RELEASE_STATUS = {
     'Host drag-and-drop into the Canva editor on Wayland with a real file drop.',
   ],
   underObservation: [
-    'Host file picker and post-drop upload continuation inside Canva.',
-    'OAuth popup completion paths after the WebContentsView migration.',
+    'Host file picker continuation and clipboard-driven imports inside Canva.',
+    'OAuth popup completion paths after the WebContentsView migration with a clean local session.',
     'Non-fatal DBus, VAAPI, and compositor warnings that do not block startup.',
   ],
 };
@@ -247,6 +248,16 @@ function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
     return { category: 'tabs', kind: 'blank-window' };
   }
   return { category: 'tabs', kind: 'external-browser' };
+}
+
+function summarizeOauthEntry(entry) {
+  if (!entry) return 'popup=unknown';
+  return [
+    `popup=${entry.id}`,
+    `startedOnCanvaAuth=${entry.startedOnCanvaAuth ? 'true' : 'false'}`,
+    `sawExternalProvider=${entry.sawExternalProvider ? 'true' : 'false'}`,
+    `source=${entry.sourceWebContentsId || 'unknown'}`,
+  ].join(' ');
 }
 
 function getAppIcon() {
@@ -576,9 +587,9 @@ function broadcastTabsState() {
   updateWindowTitle();
 }
 
-function closeAuthPopup(popupId, { reloadActiveTab = true } = {}) {
-  debugLog('oauth', 'close-popup', popupId, `reload=${reloadActiveTab}`);
+function closeAuthPopup(popupId, { reloadActiveTab = true, reason = 'manual-close' } = {}) {
   const entry = authPopups.get(popupId);
+  debugLog('oauth', 'close-popup', popupId, `reload=${reloadActiveTab}`, `reason=${reason}`, summarizeOauthEntry(entry));
   if (!entry) return;
   authPopups.delete(popupId);
 
@@ -588,14 +599,15 @@ function closeAuthPopup(popupId, { reloadActiveTab = true } = {}) {
 
   if (reloadActiveTab) {
     const activeTab = tabs.get(activeTabId);
+    debugLog('oauth', 'reload-active-tab-after-popup', popupId, activeTab ? `tab=${activeTab.id}` : 'tab=none');
     activeTab?.view.webContents.reload();
   }
 
   mainWindow?.focus();
 }
 
+
 function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null, openerUrl = '' } = {}) {
-  debugLog('oauth', 'register-popup', startUrl || 'about:blank', `source=${sourceWebContentsId || 'unknown'}`);
   const popupId = nextPopupId++;
   const entry = {
     id: popupId,
@@ -606,18 +618,28 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   };
   authPopups.set(popupId, entry);
 
+  debugLog('oauth', 'register-popup', startUrl || 'about:blank', summarizeOauthEntry(entry), `opener=${openerUrl || 'unknown'}`);
+
   window.setMenuBarVisibility(false);
   updateAuthPopupChrome(window, startUrl || openerUrl);
-  window.once('ready-to-show', () => window.show());
+  window.once('ready-to-show', () => {
+    debugLog('oauth', 'popup-ready', `popup=${popupId}`, windowLabel(window));
+    window.show();
+  });
   window.on('closed', () => {
+    debugLog('oauth', 'popup-closed', summarizeOauthEntry(entry));
     authPopups.delete(popupId);
     mainWindow?.focus();
   });
 
   const wc = window.webContents;
 
+  wc.on('did-finish-load', () => {
+    debugLog('oauth', 'popup-finish-load', `popup=${popupId}`, wc.getURL() || startUrl || 'about:blank');
+  });
+
   wc.on('page-favicon-updated', (_event, favicons) => {
-    debugLog('tabs', 'favicon-updated', `tab=${tab.id}`, favicons?.[0] || 'none');
+    debugLog('oauth', 'popup-favicon-updated', `popup=${popupId}`, favicons?.[0] || 'none');
     const faviconUrl = favicons?.[0];
     if (faviconUrl) {
       trySetPopupIconFromFavicon(window, faviconUrl).catch(() => {});
@@ -625,7 +647,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.on('page-title-updated', (event, title) => {
-    debugLog('tabs', 'title-updated', `tab=${tab.id}`, title || APP_NAME);
+    debugLog('oauth', 'popup-title-updated', `popup=${popupId}`, title || APP_NAME);
     event.preventDefault();
     const providerLabel = detectOauthProviderLabel(wc.getURL() || startUrl || openerUrl);
     const cleanTitle = title && title.trim() ? title.trim() : providerLabel;
@@ -633,8 +655,14 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.setWindowOpenHandler(({ url, openerUrl: childOpenerUrl, disposition, frameName }) => {
-    debugLog('oauth', 'popup-window-open', url || 'about:blank', disposition || 'unknown', frameName || '');
-    if (shouldTreatAsOauthPopup({ url, openerUrl: childOpenerUrl || wc.getURL(), disposition, frameName }) || isCanvaUrl(url)) {
+    const request = classifyWindowOpenRequest({
+      url,
+      openerUrl: childOpenerUrl || wc.getURL(),
+      disposition,
+      frameName,
+    });
+    debugLog(request.category, 'popup-window-open', `popup=${popupId}`, `kind=${request.kind}`, url || 'about:blank', disposition || 'unknown', frameName || '');
+    if (request.kind === 'oauth-popup' || isCanvaUrl(url)) {
       window.focus();
       if (!isBlankPopupUrl(url)) {
         updateAuthPopupChrome(window, url);
@@ -647,7 +675,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.on('will-navigate', (event, url) => {
-    debugLog('oauth', 'popup-will-navigate', url);
+    debugLog('oauth', 'popup-will-navigate', `popup=${popupId}`, url);
     if (shouldOpenInOauthPopup(url) || isCanvaUrl(url) || isBlankPopupUrl(url)) {
       updateAuthPopupChrome(window, url);
       return;
@@ -661,22 +689,25 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
 
     if (isOauthProviderUrl(url)) {
       entry.sawExternalProvider = true;
+      debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, detectOauthProviderLabel(url), url);
       return;
     }
 
     if (isAuthCompletionUrl(url) && (entry.sawExternalProvider || entry.startedOnCanvaAuth)) {
+      debugLog('oauth', 'popup-auth-complete', `popup=${popupId}`, url);
       const ses = session.fromPartition(PARTITION, { cache: true });
       await flushSession(ses).catch(() => {});
-      closeAuthPopup(popupId, { reloadActiveTab: true });
+      debugLog('oauth', 'popup-session-flushed', `popup=${popupId}`);
+      closeAuthPopup(popupId, { reloadActiveTab: true, reason: 'auth-complete' });
     }
   };
 
   wc.on('did-navigate', (_event, url) => {
-    debugLog('oauth', 'popup-did-navigate', url);
+    debugLog('oauth', 'popup-did-navigate', `popup=${popupId}`, url);
     syncPopupState(url).catch(() => {});
   });
   wc.on('did-redirect-navigation', (_event, url) => {
-    debugLog('oauth', 'popup-redirect', url);
+    debugLog('oauth', 'popup-redirect', `popup=${popupId}`, url);
     syncPopupState(url).catch(() => {});
   });
 
