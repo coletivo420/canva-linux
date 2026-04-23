@@ -1,0 +1,44 @@
+app-id: com.canva.WebApp
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '25.08'
+command: run.sh
+separate-locales: false
+
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --device=dri
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --filesystem=xdg-data/fonts:ro
+  - --filesystem=~/.fonts:ro
+  - --filesystem=xdg-config/fontconfig:ro
+  - --filesystem=xdg-run/pipewire-0
+  - --talk-name=org.freedesktop.FileManager1
+  - --filesystem=xdg-download
+  - --filesystem=home
+  - --talk-name=org.freedesktop.ScreenSaver
+  - --talk-name=org.freedesktop.portal.Desktop
+  - --talk-name=org.freedesktop.secrets
+  - --env=ELECTRON_TRASH=gio
+  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
+
+modules:
+  - name: canva-webapp
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/main
+      - cp -a dist/linux-unpacked/* /app/main/
+      - if command -v patch-electron-desktop-filename >/dev/null 2>&1; then patch-electron-desktop-filename /app/main/resources/app.asar; else patch-desktop-filename /app/main/resources/app.asar; fi
+      - install -Dm755 run.sh /app/bin/run.sh
+      - install -Dm644 data/com.canva.WebApp.desktop /app/share/applications/com.canva.WebApp.desktop
+      - install -Dm644 data/com.canva.WebApp.metainfo.xml /app/share/metainfo/com.canva.WebApp.metainfo.xml
+      - |
+        for size in 16 22 24 32 48 64 128 256 512; do           install -Dm644 data/icons/hicolor/${size}x${size}/apps/com.canva.WebApp.png /app/share/icons/hicolor/${size}x${size}/apps/com.canva.WebApp.png;         done
+    sources:
+      - type: dir
+        path: .

@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Name=Canva
+GenericName=Design Tool
+Comment=Unofficial Canva Electron/Chromium wrapper for Linux
+Exec=run.sh
+Icon=com.canva.WebApp
+Categories=Graphics;2DGraphics;
+Keywords=canva;design;graphics;photo;editor;
+StartupNotify=true
+StartupWMClass=com.canva.WebApp
+X-GNOME-WMClass=com.canva.WebApp
+MimeType=
+Actions=X11Fallback;
+
+[Desktop Action X11Fallback]
+Name=Canva (X11 fallback)
+Exec=env CANVA_FORCE_X11=1 run.sh

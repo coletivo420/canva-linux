@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.canva.WebApp</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Canva</name>
+  <summary>Unofficial Canva Electron/Chromium wrapper for Linux</summary>
+  <description>
+    <p>
+      An unofficial Electron/Chromium wrapper for Canva on Linux, packaged with the
+      Flatpak Freedesktop runtime. The project focuses on persistent sessions,
+      internal Canva tabs, OAuth popup support, desktop integration, and continued
+      work toward Windows-like feature parity for Canva workflows.
+    </p>
+    <p>
+      This is an unofficial community project and is not affiliated with Canva Pty Ltd.
+    </p>
+  </description>
+  <launchable type="desktop-id">com.canva.WebApp.desktop</launchable>
+  <url type="homepage">https://www.canva.com/</url>
+  <developer id="io.github.canva-flatpak">Community</developer>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="1.4.4" date="2026-04-23">
+      <description>
+        <p>Made native Wayland the preferred session mode, kept X11 as a manual fallback, merged the fixed Home-tab shell UI, and cleaned the package icon sources.</p>
+      </description>
+    </release>
+    <release version="1.4.3" date="2026-04-23">
+      <description>
+        <p>Made the Home tab fixed and non-closable, removed the new-tab button, updated the shell documentation in English, and switched the project license to GNU GPL v3.0-or-later.</p>
+      </description>
+    </release>
+  </releases>
+</component>

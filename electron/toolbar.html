@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Canva Tabs</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7fb;
+      --line: #d9deea;
+      --tab: #e9edf6;
+      --tab-active: #ffffff;
+      --tab-text: #243043;
+      --muted: #5d6b82;
+      --brand-a: #00c6cc;
+      --brand-b: #7a3bff;
+      --hover: #dde4f2;
+      --bar-start: rgba(255,255,255,0.9);
+      --bar-end: rgba(246,247,251,0.98);
+      --button-hover-fg: #1d2738;
+      --button-hover-bg: rgba(0,0,0,.06);
+    }
+    :root[data-theme='dark'] {
+      --bg: #1f2329;
+      --line: #343b46;
+      --tab: #2a3038;
+      --tab-active: #232932;
+      --tab-text: #eef3fa;
+      --muted: #b6c0cf;
+      --hover: #343b46;
+      --bar-start: rgba(36,41,50,0.98);
+      --bar-end: rgba(31,35,41,0.99);
+      --button-hover-fg: #ffffff;
+      --button-hover-bg: rgba(255,255,255,.10);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Inter, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--tab-text);
+      user-select: none;
+    }
+    .bar {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      width: 100%;
+      height: 100%;
+      padding: 8px 10px 6px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, var(--bar-start), var(--bar-end));
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 116px;
+      padding: 0 8px 0 4px;
+    }
+    .brand img {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      flex: 0 0 auto;
+    }
+    .brand span {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .tabs {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 170px;
+      max-width: 260px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-bottom-color: #cfd6e4;
+      border-radius: 12px 12px 0 0;
+      background: var(--tab);
+      color: var(--tab-text);
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .15s ease;
+    }
+    .tab:hover { background: var(--hover); }
+    .tab.active {
+      background: var(--tab-active);
+      border-color: #cbd6f0;
+      box-shadow: 0 -1px 0 rgba(255,255,255,.8) inset;
+    }
+    .tab-favicon {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      object-fit: cover;
+      flex: 0 0 auto;
+      background: linear-gradient(135deg, var(--brand-a), var(--brand-b));
+    }
+    .tab-title {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      line-height: 1;
+      flex: 1 1 auto;
+    }
+    .tab-close,
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+    .tab-close:hover,
+    .icon-btn:hover { background: var(--button-hover-bg); color: var(--button-hover-fg); }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <div class="brand">
+      <img src="./assets/canva-icon.png" alt="Canva" />
+      <span>Canva</span>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="actions">
+      <button class="icon-btn" id="home" title="Go to Home tab">⌂</button>
+    </div>
+  </div>
+  <script>
+    const tabsEl = document.getElementById('tabs');
+    const homeEl = document.getElementById('home');
+
+    // Apply the system theme to the lightweight shell toolbar.
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+    }
+
+    // Render the tab strip from the shell state sent by the main process.
+    function render(state) {
+      applyTheme(state.theme || window.canvaTabs.getSystemTheme());
+      tabsEl.textContent = '';
+      for (const tab of state.tabs) {
+        const tabEl = document.createElement('button');
+        tabEl.className = 'tab' + (tab.id === state.activeTabId ? ' active' : '');
+        tabEl.title = tab.title || tab.url || 'Canva';
+        tabEl.addEventListener('click', () => window.canvaTabs.send('switch-tab', { id: tab.id }));
+
+        const favicon = document.createElement('img');
+        favicon.className = 'tab-favicon';
+        favicon.alt = '';
+        favicon.src = tab.favicon || './assets/canva-icon.png';
+        favicon.onerror = () => { favicon.src = './assets/canva-icon.png'; };
+
+        const title = document.createElement('span');
+        title.className = 'tab-title';
+        title.textContent = tab.title || 'Canva';
+
+        tabEl.appendChild(favicon);
+        tabEl.appendChild(title);
+
+        if (tab.canClose !== false) {
+          const close = document.createElement('button');
+          close.className = 'tab-close';
+          close.type = 'button';
+          close.title = 'Close tab';
+          close.textContent = '×';
+          close.addEventListener('click', (event) => {
+            event.stopPropagation();
+            window.canvaTabs.send('close-tab', { id: tab.id });
+          });
+          tabEl.appendChild(close);
+        }
+        tabsEl.appendChild(tabEl);
+      }
+    }
+
+    homeEl.addEventListener('click', () => window.canvaTabs.send('go-home'));
+    window.canvaTabs.onState(render);
+  </script>
+</body>
+</html>
