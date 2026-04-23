@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-dev.1] - 2026-04-23
+
+### Added
+- Added richer drag-and-drop diagnostics with `DataTransfer.items`, `dropEffect`, `effectAllowed`, and input metadata logging.
+- Added upload observability for file input clicks, clipboard file pastes, and `showOpenFilePicker()` activity when available.
+- Added compatibility aliases so legacy `drag` debug requests still enable the canonical `dnd` category.
+
+### Fixed
+- Fixed category normalization so `CANVA_DEBUG=dnd` now emits drag-and-drop diagnostics consistently instead of silently depending on an internal `drag` label.
+- Fixed debug prefix normalization so forwarded preload logs use the canonical category names in the main process output.
+
+### Notes
+- This is a development iteration on top of the stable `1.4.7` base.
+- The goal of this build is observability for real Wayland drag-and-upload testing, not UI changes.
+
 ## [1.4.7] - 2026-04-23
 
 ### Added

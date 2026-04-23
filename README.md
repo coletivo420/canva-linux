@@ -52,7 +52,13 @@ You can also filter debug output by category, for example:
 CANVA_DEBUG=oauth,dnd flatpak run com.canva.WebApp
 ```
 
-Available categories include: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`.
+Available categories include: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`. The legacy alias `drag` is still accepted and maps to `dnd`.
+
+For Wayland drag-and-upload troubleshooting, start with:
+
+```bash
+CANVA_DEBUG=startup,dnd,upload,permissions,session flatpak run com.canva.WebApp
+```
 
 ## Compatibility notes
 

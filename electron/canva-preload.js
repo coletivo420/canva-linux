@@ -631,20 +631,30 @@ class EyeDropper {
 const LTCodeEyeDropper = EyeDropper;
 
 let activePickerCleanup = null;
+const DEBUG_CATEGORY_ALIASES = {
+  drag: 'dnd',
+};
+
+function normalizeDebugCategory(category = 'app') {
+  const raw = String(category || 'app').trim().toLowerCase();
+  return DEBUG_CATEGORY_ALIASES[raw] || raw || 'app';
+}
+
 const DEBUG_SPEC = String(process?.env?.CANVA_DEBUG || '').trim();
 const DEBUG_TOKENS = new Set(
   DEBUG_SPEC
     .split(',')
-    .map((item) => item.trim().toLowerCase())
+    .map((item) => normalizeDebugCategory(item))
     .filter(Boolean)
 );
 
 function debugEnabled(category = 'app') {
-  if (!DEBUG_SPEC || DEBUG_SPEC === '0' || DEBUG_SPEC.toLowerCase() === 'false') {
+  const normalizedSpec = DEBUG_SPEC.toLowerCase();
+  if (!normalizedSpec || normalizedSpec === '0' || normalizedSpec === 'false') {
     return false;
   }
-  const normalized = String(category || 'app').toLowerCase();
-  if (['1', 'true', 'all', '*'].includes(DEBUG_SPEC.toLowerCase())) {
+  const normalized = normalizeDebugCategory(category);
+  if (['1', 'true', 'all', '*'].includes(normalizedSpec)) {
     return true;
   }
   return DEBUG_TOKENS.has('all') || DEBUG_TOKENS.has('*') || DEBUG_TOKENS.has(normalized);
@@ -665,11 +675,12 @@ function normalizeHex(value) {
 }
 
 function routeDebug(category, ...args) {
+  const normalized = normalizeDebugCategory(category);
   try {
-    ipcRenderer.send('wrapper:debug-log', { category, args });
+    ipcRenderer.send('wrapper:debug-log', { category: normalized, args });
   } catch {
     try {
-      console.log(`[canva:${String(category).toLowerCase()}]`, ...args);
+      console.log(`[canva:${normalized}]`, ...args);
     } catch {}
   }
 }
@@ -682,8 +693,9 @@ function log(...args) {
 }
 
 function debugLog(category, ...args) {
-  if (!debugEnabled(category)) return;
-  routeDebug(category, ...args);
+  const normalized = normalizeDebugCategory(category);
+  if (!debugEnabled(normalized)) return;
+  routeDebug(normalized, ...args);
 }
 
 function describeDragTarget(target) {
@@ -696,25 +708,63 @@ function describeDragTarget(target) {
   return `${tagName}${id}${className}`;
 }
 
+function describeFileInput(target) {
+  if (!(target instanceof HTMLInputElement) || target.type !== 'file') {
+    return null;
+  }
+  return {
+    accept: target.accept || 'any',
+    multiple: target.multiple ? 'true' : 'false',
+    webkitdirectory: target.webkitdirectory ? 'true' : 'false',
+    target: describeDragTarget(target),
+  };
+}
+
 function installDragAndUploadDiagnostics() {
   const scope = globalThis || window;
   if (scope.__canvaDragDiagnosticsInstalled) return;
   scope.__canvaDragDiagnosticsInstalled = true;
 
-  const summarize = (event) => {
-    const files = event.dataTransfer?.files ? Array.from(event.dataTransfer.files) : [];
-    const types = event.dataTransfer?.types ? Array.from(event.dataTransfer.types) : [];
+  const summarizeDataTransfer = (dataTransfer, target) => {
+    const files = dataTransfer?.files ? Array.from(dataTransfer.files) : [];
+    const items = dataTransfer?.items ? Array.from(dataTransfer.items) : [];
+    const types = dataTransfer?.types ? Array.from(dataTransfer.types) : [];
     return {
       files: files.length,
+      items: items.map((item) => `${item.kind}:${item.type || 'unknown'}`).join(','),
       types: types.join(','),
-      target: describeDragTarget(event.target),
+      dropEffect: dataTransfer?.dropEffect || 'none',
+      effectAllowed: dataTransfer?.effectAllowed || 'none',
+      target: describeDragTarget(target),
     };
   };
 
   const logDrag = (label, event) => {
     if (!debugEnabled('dnd')) return;
-    const info = summarize(event);
-    debugLog('drag', label, `files=${info.files}`, `types=${info.types || 'none'}`, info.target);
+    const info = summarizeDataTransfer(event.dataTransfer, event.target);
+    debugLog(
+      'dnd',
+      label,
+      `files=${info.files}`,
+      `items=${info.items || 'none'}`,
+      `types=${info.types || 'none'}`,
+      `dropEffect=${info.dropEffect}`,
+      `effectAllowed=${info.effectAllowed}`,
+      info.target
+    );
+  };
+
+  const logUploadInput = (label, target) => {
+    const info = describeFileInput(target);
+    if (!info) return;
+    debugLog(
+      'upload',
+      label,
+      `accept=${info.accept}`,
+      `multiple=${info.multiple}`,
+      `webkitdirectory=${info.webkitdirectory}`,
+      info.target
+    );
   };
 
   window.addEventListener('dragenter', (event) => logDrag('enter', event), true);
@@ -739,18 +789,52 @@ function installDragAndUploadDiagnostics() {
       } catch {}
     });
   }, true);
+  window.addEventListener('paste', (event) => {
+    const info = summarizeDataTransfer(event.clipboardData, event.target);
+    if (info.files < 1 && !info.items) return;
+    debugLog('upload', 'paste', `files=${info.files}`, `items=${info.items || 'none'}`, `types=${info.types || 'none'}`, info.target);
+  }, true);
+
+  document.addEventListener('click', (event) => {
+    logUploadInput('input-click', event.target);
+  }, true);
 
   document.addEventListener('change', (event) => {
     debugLog('upload', 'document-change', describeDragTarget(event.target));
     const target = event.target;
     if (!(target instanceof HTMLInputElement) || target.type !== 'file') return;
+    logUploadInput('input-change-meta', target);
     debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, describeDragTarget(target));
   }, true);
+}
+
+function installFilePickerDiagnostics() {
+  const scope = globalThis || window;
+  if (typeof scope.showOpenFilePicker !== 'function' || scope.showOpenFilePicker.__canvaDebugWrapped) {
+    return;
+  }
+
+  const original = scope.showOpenFilePicker.bind(scope);
+  const wrapped = async (...args) => {
+    debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
+    try {
+      const handles = await original(...args);
+      debugLog('upload', 'show-open-file-picker-result', `handles=${Array.isArray(handles) ? handles.length : 0}`);
+      return handles;
+    } catch (error) {
+      debugLog('upload', 'show-open-file-picker-error', error?.name || 'Error', error?.message || '');
+      throw error;
+    }
+  };
+
+  wrapped.__canvaDebugWrapped = true;
+  scope.showOpenFilePicker = wrapped;
 }
 
 debugLog('startup', 'preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 log('preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 installDragAndUploadDiagnostics();
+installFilePickerDiagnostics();
 
 function removeLtcodeUi() {
   const overlay = document.getElementById('eyedropper-overlay');
