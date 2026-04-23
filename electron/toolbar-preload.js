@@ -3,32 +3,43 @@
 // Expose a tiny read-only bridge for the custom tab bar UI.
 const { contextBridge, ipcRenderer } = require('electron');
 
+const DEBUG_CATEGORY_ALIASES = {
+  drag: 'dnd',
+};
+
+function normalizeDebugCategory(category = 'app') {
+  const raw = String(category || 'app').trim().toLowerCase();
+  return DEBUG_CATEGORY_ALIASES[raw] || raw || 'app';
+}
+
 const DEBUG_SPEC = String(process?.env?.CANVA_DEBUG || '').trim();
 const DEBUG_TOKENS = new Set(
   DEBUG_SPEC
     .split(',')
-    .map((item) => item.trim().toLowerCase())
+    .map((item) => normalizeDebugCategory(item))
     .filter(Boolean)
 );
 
 function debugEnabled(category = 'app') {
-  if (!DEBUG_SPEC || DEBUG_SPEC === '0' || DEBUG_SPEC.toLowerCase() === 'false') {
+  const normalizedSpec = DEBUG_SPEC.toLowerCase();
+  if (!normalizedSpec || normalizedSpec === '0' || normalizedSpec === 'false') {
     return false;
   }
-  const normalized = String(category || 'app').toLowerCase();
-  if (['1', 'true', 'all', '*'].includes(DEBUG_SPEC.toLowerCase())) {
+  const normalized = normalizeDebugCategory(category);
+  if (['1', 'true', 'all', '*'].includes(normalizedSpec)) {
     return true;
   }
   return DEBUG_TOKENS.has('all') || DEBUG_TOKENS.has('*') || DEBUG_TOKENS.has(normalized);
 }
 
 function debugLog(category, ...args) {
-  if (!debugEnabled(category)) return;
+  const normalized = normalizeDebugCategory(category);
+  if (!debugEnabled(normalized)) return;
   try {
-    ipcRenderer.send('wrapper:debug-log', { category, args });
+    ipcRenderer.send('wrapper:debug-log', { category: normalized, args });
   } catch {
     try {
-      console.log(`[canva:${String(category).toLowerCase()}]`, ...args);
+      console.log(`[canva:${normalized}]`, ...args);
     } catch {}
   }
 }

@@ -2,6 +2,86 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-dev.5] - 2026-04-23
+
+### Changed
+- Cleaned repository patch leftovers by removing tracked backup/reject artifacts (`*.bak`, `*.orig`, `*.rej`).
+- Added `docs/TECHNICAL.md` to centralize technical repository notes under `/docs`.
+- Updated project version references from `1.4.8-dev.4` to `1.4.8-dev.5`.
+
+### Notes
+- This is a non-functional DEV5 maintenance patch focused on repository hygiene and documentation organization.
+- Linux/Wayland OAuth popup icon behavior remains a known limitation and was intentionally left unchanged.
+
+## [1.4.8-dev.4] - 2026-04-23
+
+### Changed
+- Reworked the README as the main project orientation document for the DEV4 consolidation phase.
+- Documented the current Electron shell architecture, including `WebContentsView`, the fixed Home tab, persistent sessions, OAuth popups, preload scripts, and Flatpak packaging files.
+- Expanded debug category documentation with short descriptions for `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`.
+- Clarified the stable-versus-development version flow for the `1.4.8-dev.X` branch.
+- Added official reference links for `WebContentsView`, Electron sessions, and Electron permission handling.
+
+### Notes
+- This is a documentation-only DEV4 patch and does not intentionally change runtime behavior.
+- Native Linux/Wayland OAuth popup icon replacement is now treated as a known limitation instead of an active `1.4.8-dev.X` target.
+- Stale backup and rejected patch files in the repository are documented as a DEV4 cleanup item to review before promoting the branch.
+
+
+## [1.4.8-dev.3] - 2026-04-23
+
+### Added
+- Added clipboard ingress diagnostics for paste-heavy workflows, including `beforeinput`, `paste`, `navigator.clipboard.read()`, and MIME summary logging for text, HTML, URLs, images, and files when available.
+- Added upload pipeline correlation IDs so drag, paste, picker, `FormData`, `fetch`, `XMLHttpRequest`, and `sendBeacon` logs can be tied back to the most recent ingress source.
+- Added file picker cancellation diagnostics for `<input type="file">` where Chromium emits a `cancel` event.
+
+### Fixed
+- Fixed OAuth popup diagnostics so popup title and favicon updates no longer reference an undefined tab object during real popup flows.
+- Fixed popup lifecycle logging so real OAuth popup state changes are easier to follow during clean-session retests.
+- Fixed upload observability gaps after drop or paste by logging file-bearing `FormData` and network dispatches when Canva begins an import or upload request.
+
+### Validated in current testing
+- Startup summaries remain available in the terminal and still describe the current development status.
+- The fixed Home tab shell and custom eyedropper continue to load without regression in the development branch.
+
+### Under observation
+- Full clean-session OAuth completion should still be retested after clearing local Flatpak data.
+- Host file picker continuation and clipboard-driven imports should now be tested against the richer upload/network logs introduced in this build.
+
+## [1.4.8-dev.2] - 2026-04-23
+
+### Added
+- Added startup release-status logs that summarize what this build corrected, validated, and still keeps under observation.
+- Added upload ingress correlation logs so file-input and picker events now report the most recent drop, paste, or picker source.
+- Added `HTMLInputElement.showPicker()` diagnostics for file inputs when the host browser API is available.
+
+### Changed
+- Refined window-open logging so normal Canva tab creation is reported under `tabs` instead of `oauth`.
+- Refined tab navigation logging so OAuth diagnostics are only emitted when navigation is actually promoted into an OAuth popup flow.
+
+### Validated
+- Confirmed Linux Wayland startup, persistent session initialization, the fixed Home tab shell, and the custom eyedropper remain stable in current testing.
+- Confirmed host drag-and-drop into the Canva editor reaches the editor with a real file drop on Wayland.
+
+### Under observation
+- Host file picker completion and post-drop upload continuation inside Canva still need broader cross-flow validation.
+- OAuth popup completion paths still need targeted retesting after the `WebContentsView` migration.
+
+## [1.4.8-dev.1] - 2026-04-23
+
+### Added
+- Added richer drag-and-drop diagnostics with `DataTransfer.items`, `dropEffect`, `effectAllowed`, and input metadata logging.
+- Added upload observability for file input clicks, clipboard file pastes, and `showOpenFilePicker()` activity when available.
+- Added compatibility aliases so legacy `drag` debug requests still enable the canonical `dnd` category.
+
+### Fixed
+- Fixed category normalization so `CANVA_DEBUG=dnd` now emits drag-and-drop diagnostics consistently instead of silently depending on an internal `drag` label.
+- Fixed debug prefix normalization so forwarded preload logs use the canonical category names in the main process output.
+
+### Notes
+- This is a development iteration on top of the stable `1.4.7` base.
+- The goal of this build is observability for real Wayland drag-and-upload testing, not UI changes.
+
 ## [1.4.7] - 2026-04-23
 
 ### Added

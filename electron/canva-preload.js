@@ -631,20 +631,30 @@ class EyeDropper {
 const LTCodeEyeDropper = EyeDropper;
 
 let activePickerCleanup = null;
+const DEBUG_CATEGORY_ALIASES = {
+  drag: 'dnd',
+};
+
+function normalizeDebugCategory(category = 'app') {
+  const raw = String(category || 'app').trim().toLowerCase();
+  return DEBUG_CATEGORY_ALIASES[raw] || raw || 'app';
+}
+
 const DEBUG_SPEC = String(process?.env?.CANVA_DEBUG || '').trim();
 const DEBUG_TOKENS = new Set(
   DEBUG_SPEC
     .split(',')
-    .map((item) => item.trim().toLowerCase())
+    .map((item) => normalizeDebugCategory(item))
     .filter(Boolean)
 );
 
 function debugEnabled(category = 'app') {
-  if (!DEBUG_SPEC || DEBUG_SPEC === '0' || DEBUG_SPEC.toLowerCase() === 'false') {
+  const normalizedSpec = DEBUG_SPEC.toLowerCase();
+  if (!normalizedSpec || normalizedSpec === '0' || normalizedSpec === 'false') {
     return false;
   }
-  const normalized = String(category || 'app').toLowerCase();
-  if (['1', 'true', 'all', '*'].includes(DEBUG_SPEC.toLowerCase())) {
+  const normalized = normalizeDebugCategory(category);
+  if (['1', 'true', 'all', '*'].includes(normalizedSpec)) {
     return true;
   }
   return DEBUG_TOKENS.has('all') || DEBUG_TOKENS.has('*') || DEBUG_TOKENS.has(normalized);
@@ -665,11 +675,12 @@ function normalizeHex(value) {
 }
 
 function routeDebug(category, ...args) {
+  const normalized = normalizeDebugCategory(category);
   try {
-    ipcRenderer.send('wrapper:debug-log', { category, args });
+    ipcRenderer.send('wrapper:debug-log', { category: normalized, args });
   } catch {
     try {
-      console.log(`[canva:${String(category).toLowerCase()}]`, ...args);
+      console.log(`[canva:${normalized}]`, ...args);
     } catch {}
   }
 }
@@ -682,8 +693,9 @@ function log(...args) {
 }
 
 function debugLog(category, ...args) {
-  if (!debugEnabled(category)) return;
-  routeDebug(category, ...args);
+  const normalized = normalizeDebugCategory(category);
+  if (!debugEnabled(normalized)) return;
+  routeDebug(normalized, ...args);
 }
 
 function describeDragTarget(target) {
@@ -696,25 +708,202 @@ function describeDragTarget(target) {
   return `${tagName}${id}${className}`;
 }
 
+function describeFileInput(target) {
+  if (!(target instanceof HTMLInputElement) || target.type !== 'file') {
+    return null;
+  }
+  return {
+    accept: target.accept || 'any',
+    multiple: target.multiple ? 'true' : 'false',
+    webkitdirectory: target.webkitdirectory ? 'true' : 'false',
+    target: describeDragTarget(target),
+  };
+}
+
+const UPLOAD_DEBUG_META = Symbol('canvaUploadDebugMeta');
+
+function nextUploadIngressId() {
+  const scope = globalThis || window;
+  scope.__canvaUploadIngressCounter = (scope.__canvaUploadIngressCounter || 0) + 1;
+  return scope.__canvaUploadIngressCounter;
+}
+
+function formatFileDescriptor(file) {
+  if (!file) return 'unknown';
+  const name = typeof file.name === 'string' && file.name ? file.name : 'blob';
+  const type = typeof file.type === 'string' && file.type ? file.type : 'unknown';
+  const size = Number.isFinite(file.size) ? file.size : 0;
+  return `${name}:${type}:${size}`;
+}
+
+function summarizeFiles(files, limit = 3) {
+  if (!files || typeof files.length !== 'number' || files.length < 1) return 'none';
+  return Array.from(files)
+    .slice(0, limit)
+    .map((file) => formatFileDescriptor(file))
+    .join(',');
+}
+
+function summarizeClipboardKinds(dataTransfer) {
+  const kinds = new Set();
+  const types = dataTransfer?.types ? Array.from(dataTransfer.types) : [];
+  const items = dataTransfer?.items ? Array.from(dataTransfer.items) : [];
+  if (dataTransfer?.files?.length) kinds.add('files');
+  for (const item of items) {
+    if (item.kind === 'file') {
+      kinds.add('files');
+      if ((item.type || '').startsWith('image/')) {
+        kinds.add('image');
+      }
+    }
+    if (item.kind === 'string') {
+      if (item.type === 'text/html') kinds.add('html');
+      if (item.type === 'text/plain') kinds.add('text');
+      if (item.type === 'text/uri-list') kinds.add('url');
+    }
+  }
+  for (const type of types) {
+    if (type === 'text/html') kinds.add('html');
+    if (type === 'text/plain') kinds.add('text');
+    if (type === 'text/uri-list') kinds.add('url');
+    if (type.startsWith('image/')) kinds.add('image');
+  }
+  return kinds.size ? Array.from(kinds).join(',') : 'none';
+}
+
+function describeBodyUpload(body) {
+  if (!body) return null;
+  if (body instanceof File) {
+    return {
+      kind: 'file',
+      files: 1,
+      fileSummary: summarizeFiles([body]),
+      fieldSummary: 'direct-file',
+    };
+  }
+  if (body instanceof Blob) {
+    return {
+      kind: 'blob',
+      files: 1,
+      fileSummary: `blob:${body.type || 'unknown'}:${Number.isFinite(body.size) ? body.size : 0}`,
+      fieldSummary: 'direct-blob',
+    };
+  }
+  if (body instanceof FormData) {
+    const meta = body[UPLOAD_DEBUG_META];
+    if (meta?.files > 0) {
+      return {
+        kind: 'formdata',
+        files: meta.files,
+        fileSummary: meta.fileSummary || 'none',
+        fieldSummary: meta.fieldSummary || 'none',
+      };
+    }
+  }
+  return null;
+}
+
+function rememberUploadIngress(source, info = {}) {
+  const scope = globalThis || window;
+  const ingress = {
+    id: nextUploadIngressId(),
+    source,
+    timestamp: Date.now(),
+    ...info,
+  };
+  scope.__canvaLastUploadIngress = ingress;
+  return ingress;
+}
+
+function recentUploadIngressSummary() {
+  const scope = globalThis || window;
+  const ingress = scope.__canvaLastUploadIngress;
+  if (!ingress || !ingress.timestamp) return 'id=none source=none';
+  const ageMs = Math.max(0, Date.now() - ingress.timestamp);
+  return [
+    `id=${ingress.id || 'none'}`,
+    `source=${ingress.source || 'unknown'}`,
+    `ageMs=${ageMs}`,
+    `files=${ingress.files ?? 0}`,
+    `types=${ingress.types || 'none'}`,
+    ingress.target || 'unknown',
+  ].join(' ');
+}
+
 function installDragAndUploadDiagnostics() {
   const scope = globalThis || window;
   if (scope.__canvaDragDiagnosticsInstalled) return;
   scope.__canvaDragDiagnosticsInstalled = true;
 
-  const summarize = (event) => {
-    const files = event.dataTransfer?.files ? Array.from(event.dataTransfer.files) : [];
-    const types = event.dataTransfer?.types ? Array.from(event.dataTransfer.types) : [];
+  const summarizeDataTransfer = (dataTransfer, target) => {
+    const files = dataTransfer?.files ? Array.from(dataTransfer.files) : [];
+    const items = dataTransfer?.items ? Array.from(dataTransfer.items) : [];
+    const types = dataTransfer?.types ? Array.from(dataTransfer.types) : [];
     return {
       files: files.length,
+      fileSummary: summarizeFiles(files),
+      items: items.map((item) => `${item.kind}:${item.type || 'unknown'}`).join(','),
+      kinds: summarizeClipboardKinds(dataTransfer),
       types: types.join(','),
-      target: describeDragTarget(event.target),
+      dropEffect: dataTransfer?.dropEffect || 'none',
+      effectAllowed: dataTransfer?.effectAllowed || 'none',
+      target: describeDragTarget(target),
     };
+  };
+
+  const recordIngressFromDataTransfer = (source, info) => {
+    if (!info || (info.files < 1 && (!info.items || info.items === 'none') && (!info.types || info.types === 'none'))) return null;
+    return rememberUploadIngress(source, {
+      files: info.files,
+      types: info.types,
+      target: info.target,
+      fileSummary: info.fileSummary,
+      kinds: info.kinds,
+    });
   };
 
   const logDrag = (label, event) => {
     if (!debugEnabled('dnd')) return;
-    const info = summarize(event);
-    debugLog('drag', label, `files=${info.files}`, `types=${info.types || 'none'}`, info.target);
+    const info = summarizeDataTransfer(event.dataTransfer, event.target);
+    let ingress = null;
+    if (label === 'drop') {
+      ingress = recordIngressFromDataTransfer('drop', info);
+    }
+    debugLog(
+      'dnd',
+      label,
+      ingress ? `id=${ingress.id}` : 'id=none',
+      `files=${info.files}`,
+      `fileSummary=${info.fileSummary || 'none'}`,
+      `items=${info.items || 'none'}`,
+      `kinds=${info.kinds || 'none'}`,
+      `types=${info.types || 'none'}`,
+      `dropEffect=${info.dropEffect}`,
+      `effectAllowed=${info.effectAllowed}`,
+      info.target
+    );
+  };
+
+  const logUploadInput = (label, target, { remember = true } = {}) => {
+    const info = describeFileInput(target);
+    if (!info) return;
+    let ingress = null;
+    if (remember) {
+      ingress = rememberUploadIngress(label, {
+        files: 0,
+        types: 'file-input',
+        target: info.target,
+      });
+    }
+    debugLog(
+      'upload',
+      label,
+      ingress ? `id=${ingress.id}` : 'id=none',
+      `accept=${info.accept}`,
+      `multiple=${info.multiple}`,
+      `webkitdirectory=${info.webkitdirectory}`,
+      info.target
+    );
   };
 
   window.addEventListener('dragenter', (event) => logDrag('enter', event), true);
@@ -732,6 +921,7 @@ function installDragAndUploadDiagnostics() {
   }, true);
   window.addEventListener('drop', (event) => {
     logDrag('drop', event);
+    debugLog('upload', 'drop-ingress', recentUploadIngressSummary());
     queueMicrotask(() => {
       try {
         window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, buttons: 0 }));
@@ -739,18 +929,53 @@ function installDragAndUploadDiagnostics() {
       } catch {}
     });
   }, true);
+  window.addEventListener('paste', (event) => {
+    const info = summarizeDataTransfer(event.clipboardData, event.target);
+    if (info.files < 1 && !info.items) return;
+    recordIngressFromDataTransfer('paste', info);
+    debugLog('upload', 'paste', `files=${info.files}`, `items=${info.items || 'none'}`, `types=${info.types || 'none'}`, info.target);
+  }, true);
+
+  document.addEventListener('click', (event) => {
+    logUploadInput('input-click', event.target);
+  }, true);
 
   document.addEventListener('change', (event) => {
     debugLog('upload', 'document-change', describeDragTarget(event.target));
     const target = event.target;
     if (!(target instanceof HTMLInputElement) || target.type !== 'file') return;
+    logUploadInput('input-change-meta', target);
     debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, describeDragTarget(target));
   }, true);
+}
+
+function installFilePickerDiagnostics() {
+  const scope = globalThis || window;
+  if (typeof scope.showOpenFilePicker !== 'function' || scope.showOpenFilePicker.__canvaDebugWrapped) {
+    return;
+  }
+
+  const original = scope.showOpenFilePicker.bind(scope);
+  const wrapped = async (...args) => {
+    debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
+    try {
+      const handles = await original(...args);
+      debugLog('upload', 'show-open-file-picker-result', `handles=${Array.isArray(handles) ? handles.length : 0}`);
+      return handles;
+    } catch (error) {
+      debugLog('upload', 'show-open-file-picker-error', error?.name || 'Error', error?.message || '');
+      throw error;
+    }
+  };
+
+  wrapped.__canvaDebugWrapped = true;
+  scope.showOpenFilePicker = wrapped;
 }
 
 debugLog('startup', 'preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 log('preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 installDragAndUploadDiagnostics();
+installFilePickerDiagnostics();
 
 function removeLtcodeUi() {
   const overlay = document.getElementById('eyedropper-overlay');

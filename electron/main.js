@@ -15,6 +15,7 @@ const path = require('path');
 const APP_ID = 'com.canva.WebApp';
 const APP_URL = 'https://www.canva.com';
 const APP_NAME = 'Canva';
+const APP_VERSION = require('../package.json').version;
 const PARTITION = 'persist:canva';
 const HOME_URL = APP_URL;
 const TOOLBAR_HEIGHT = 46;
@@ -55,29 +56,60 @@ const PROVIDER_LABELS = [
 const AUTH_PATH_RE = /\/(?:login|signup|register|oauth|sso|auth|signin|account)(?:[/?#]|$)/i;
 const CANVA_AUTH_HINT_RE = /(?:google|facebook|apple|microsoft|oauth|sso|signup|login|continue)/i;
 
+const DEBUG_CATEGORY_ALIASES = {
+  drag: 'dnd',
+};
+
+function normalizeDebugCategory(category = 'app') {
+  const raw = String(category || 'app').trim().toLowerCase();
+  return DEBUG_CATEGORY_ALIASES[raw] || raw || 'app';
+}
+
 const DEBUG_SPEC = String(process.env.CANVA_DEBUG || '').trim();
 const DEBUG_TOKENS = new Set(
   DEBUG_SPEC
     .split(',')
-    .map((item) => item.trim().toLowerCase())
+    .map((item) => normalizeDebugCategory(item))
     .filter(Boolean)
 );
 
 function debugEnabled(category = 'app') {
-  if (!DEBUG_SPEC || DEBUG_SPEC === '0' || DEBUG_SPEC.toLowerCase() === 'false') {
+  const normalizedSpec = DEBUG_SPEC.toLowerCase();
+  if (!normalizedSpec || normalizedSpec === '0' || normalizedSpec === 'false') {
     return false;
   }
-  const normalized = String(category || 'app').toLowerCase();
-  if (['1', 'true', 'all', '*'].includes(DEBUG_SPEC.toLowerCase())) {
+  const normalized = normalizeDebugCategory(category);
+  if (['1', 'true', 'all', '*'].includes(normalizedSpec)) {
     return true;
   }
   return DEBUG_TOKENS.has('all') || DEBUG_TOKENS.has('*') || DEBUG_TOKENS.has(normalized);
 }
 
 function debugLog(category, ...args) {
-  if (!debugEnabled(category)) return;
-  console.log(`[canva:${String(category).toLowerCase()}]`, ...args);
+  const normalized = normalizeDebugCategory(category);
+  if (!debugEnabled(normalized)) return;
+  console.log(`[canva:${normalized}]`, ...args);
 }
+
+const RELEASE_STATUS = {
+  corrected: [
+    'Global debug categories now use canonical names, including drag -> dnd compatibility.',
+    'Window-open logging now distinguishes internal Canva tabs from real OAuth popup flows.',
+    'Upload diagnostics now preserve ingress context from drop, paste, picker, and file-bearing network handoff.',
+    'OAuth popup diagnostics no longer reference an undefined tab object during popup title or favicon updates.',
+  ],
+  validated: [
+    'Application startup on Linux Wayland.',
+    'Persistent session initialization and fixed Home tab shell behavior.',
+    'Custom eyedropper behavior preserved after the global debug expansion.',
+    'Host drag-and-drop into the Canva editor on Wayland with a real file drop.',
+  ],
+  underObservation: [
+    'Host file picker continuation and clipboard-driven imports inside Canva.',
+    'OAuth popup completion paths after the WebContentsView migration with a clean local session.',
+    'Non-fatal DBus, VAAPI, and compositor warnings that do not block startup.',
+  ],
+};
 
 let mainWindow = null;
 let toolbarView = null;
@@ -192,6 +224,40 @@ function shouldTreatAsOauthPopup({ url, openerUrl, disposition, frameName }) {
   if (isBlankPopupUrl(url) && frameName && /auth|oauth|login|signin|account|popup/i.test(frameName)) return true;
   if ((disposition === 'new-window' || disposition === 'foreground-tab') && isCanvaAuthUrl(openerUrl)) return true;
   return false;
+}
+
+function formatDebugList(items = []) {
+  return items.map((item, index) => `${index + 1}.${item}`).join(' | ');
+}
+
+function logReleaseStatus() {
+  debugLog('startup', 'release', `version=${APP_VERSION}`, `downloads=${app.getPath('downloads')}`);
+  debugLog('startup', 'corrected', formatDebugList(RELEASE_STATUS.corrected));
+  debugLog('startup', 'validated', formatDebugList(RELEASE_STATUS.validated));
+  debugLog('startup', 'under-observation', formatDebugList(RELEASE_STATUS.underObservation));
+}
+
+function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
+  if (shouldTreatAsOauthPopup({ url, openerUrl, disposition, frameName })) {
+    return { category: 'oauth', kind: 'oauth-popup' };
+  }
+  if (isCanvaUrl(url)) {
+    return { category: 'tabs', kind: 'internal-tab' };
+  }
+  if (isBlankPopupUrl(url)) {
+    return { category: 'tabs', kind: 'blank-window' };
+  }
+  return { category: 'tabs', kind: 'external-browser' };
+}
+
+function summarizeOauthEntry(entry) {
+  if (!entry) return 'popup=unknown';
+  return [
+    `popup=${entry.id}`,
+    `startedOnCanvaAuth=${entry.startedOnCanvaAuth ? 'true' : 'false'}`,
+    `sawExternalProvider=${entry.sawExternalProvider ? 'true' : 'false'}`,
+    `source=${entry.sourceWebContentsId || 'unknown'}`,
+  ].join(' ');
 }
 
 function getAppIcon() {
@@ -521,9 +587,9 @@ function broadcastTabsState() {
   updateWindowTitle();
 }
 
-function closeAuthPopup(popupId, { reloadActiveTab = true } = {}) {
-  debugLog('oauth', 'close-popup', popupId, `reload=${reloadActiveTab}`);
+function closeAuthPopup(popupId, { reloadActiveTab = true, reason = 'manual-close' } = {}) {
   const entry = authPopups.get(popupId);
+  debugLog('oauth', 'close-popup', popupId, `reload=${reloadActiveTab}`, `reason=${reason}`, summarizeOauthEntry(entry));
   if (!entry) return;
   authPopups.delete(popupId);
 
@@ -533,14 +599,15 @@ function closeAuthPopup(popupId, { reloadActiveTab = true } = {}) {
 
   if (reloadActiveTab) {
     const activeTab = tabs.get(activeTabId);
+    debugLog('oauth', 'reload-active-tab-after-popup', popupId, activeTab ? `tab=${activeTab.id}` : 'tab=none');
     activeTab?.view.webContents.reload();
   }
 
   mainWindow?.focus();
 }
 
+
 function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null, openerUrl = '' } = {}) {
-  debugLog('oauth', 'register-popup', startUrl || 'about:blank', `source=${sourceWebContentsId || 'unknown'}`);
   const popupId = nextPopupId++;
   const entry = {
     id: popupId,
@@ -551,18 +618,28 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   };
   authPopups.set(popupId, entry);
 
+  debugLog('oauth', 'register-popup', startUrl || 'about:blank', summarizeOauthEntry(entry), `opener=${openerUrl || 'unknown'}`);
+
   window.setMenuBarVisibility(false);
   updateAuthPopupChrome(window, startUrl || openerUrl);
-  window.once('ready-to-show', () => window.show());
+  window.once('ready-to-show', () => {
+    debugLog('oauth', 'popup-ready', `popup=${popupId}`, windowLabel(window));
+    window.show();
+  });
   window.on('closed', () => {
+    debugLog('oauth', 'popup-closed', summarizeOauthEntry(entry));
     authPopups.delete(popupId);
     mainWindow?.focus();
   });
 
   const wc = window.webContents;
 
+  wc.on('did-finish-load', () => {
+    debugLog('oauth', 'popup-finish-load', `popup=${popupId}`, wc.getURL() || startUrl || 'about:blank');
+  });
+
   wc.on('page-favicon-updated', (_event, favicons) => {
-    debugLog('tabs', 'favicon-updated', `tab=${tab.id}`, favicons?.[0] || 'none');
+    debugLog('oauth', 'popup-favicon-updated', `popup=${popupId}`, favicons?.[0] || 'none');
     const faviconUrl = favicons?.[0];
     if (faviconUrl) {
       trySetPopupIconFromFavicon(window, faviconUrl).catch(() => {});
@@ -570,7 +647,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.on('page-title-updated', (event, title) => {
-    debugLog('tabs', 'title-updated', `tab=${tab.id}`, title || APP_NAME);
+    debugLog('oauth', 'popup-title-updated', `popup=${popupId}`, title || APP_NAME);
     event.preventDefault();
     const providerLabel = detectOauthProviderLabel(wc.getURL() || startUrl || openerUrl);
     const cleanTitle = title && title.trim() ? title.trim() : providerLabel;
@@ -578,8 +655,14 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.setWindowOpenHandler(({ url, openerUrl: childOpenerUrl, disposition, frameName }) => {
-    debugLog('oauth', 'popup-window-open', url || 'about:blank', disposition || 'unknown', frameName || '');
-    if (shouldTreatAsOauthPopup({ url, openerUrl: childOpenerUrl || wc.getURL(), disposition, frameName }) || isCanvaUrl(url)) {
+    const request = classifyWindowOpenRequest({
+      url,
+      openerUrl: childOpenerUrl || wc.getURL(),
+      disposition,
+      frameName,
+    });
+    debugLog(request.category, 'popup-window-open', `popup=${popupId}`, `kind=${request.kind}`, url || 'about:blank', disposition || 'unknown', frameName || '');
+    if (request.kind === 'oauth-popup' || isCanvaUrl(url)) {
       window.focus();
       if (!isBlankPopupUrl(url)) {
         updateAuthPopupChrome(window, url);
@@ -592,7 +675,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.on('will-navigate', (event, url) => {
-    debugLog('oauth', 'popup-will-navigate', url);
+    debugLog('oauth', 'popup-will-navigate', `popup=${popupId}`, url);
     if (shouldOpenInOauthPopup(url) || isCanvaUrl(url) || isBlankPopupUrl(url)) {
       updateAuthPopupChrome(window, url);
       return;
@@ -606,22 +689,25 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
 
     if (isOauthProviderUrl(url)) {
       entry.sawExternalProvider = true;
+      debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, detectOauthProviderLabel(url), url);
       return;
     }
 
     if (isAuthCompletionUrl(url) && (entry.sawExternalProvider || entry.startedOnCanvaAuth)) {
+      debugLog('oauth', 'popup-auth-complete', `popup=${popupId}`, url);
       const ses = session.fromPartition(PARTITION, { cache: true });
       await flushSession(ses).catch(() => {});
-      closeAuthPopup(popupId, { reloadActiveTab: true });
+      debugLog('oauth', 'popup-session-flushed', `popup=${popupId}`);
+      closeAuthPopup(popupId, { reloadActiveTab: true, reason: 'auth-complete' });
     }
   };
 
   wc.on('did-navigate', (_event, url) => {
-    debugLog('oauth', 'popup-did-navigate', url);
+    debugLog('oauth', 'popup-did-navigate', `popup=${popupId}`, url);
     syncPopupState(url).catch(() => {});
   });
   wc.on('did-redirect-navigation', (_event, url) => {
-    debugLog('oauth', 'popup-redirect', url);
+    debugLog('oauth', 'popup-redirect', `popup=${popupId}`, url);
     syncPopupState(url).catch(() => {});
   });
 
@@ -634,38 +720,47 @@ function attachViewHandlers(tab) {
   const wc = tab.view.webContents;
 
   wc.setWindowOpenHandler(({ url, disposition, frameName }) => {
-    debugLog('oauth', 'tab-window-open', `tab=${tab.id}`, url || 'about:blank', disposition || 'unknown', frameName || '');
     const openerUrl = wc.getURL();
+    const request = classifyWindowOpenRequest({ url, openerUrl, disposition, frameName });
+    debugLog(request.category, 'tab-window-open', `tab=${tab.id}`, `kind=${request.kind}`, url || 'about:blank', disposition || 'unknown', frameName || '');
 
-    if (shouldTreatAsOauthPopup({ url, openerUrl, disposition, frameName })) {
+    if (request.kind === 'oauth-popup') {
       return {
         action: 'allow',
         overrideBrowserWindowOptions: popupWindowOptions(),
       };
     }
 
-    if (isCanvaUrl(url)) {
+    if (request.kind === 'internal-tab') {
       createTab(url, { activate: disposition !== 'background-tab' });
       return { action: 'deny' };
     }
 
     if (!isBlankPopupUrl(url)) {
+      debugLog('tabs', 'external-open', `tab=${tab.id}`, url);
       shell.openExternal(url);
     }
     return { action: 'deny' };
   });
 
   wc.on('did-create-window', (window, details) => {
-    debugLog('oauth', 'did-create-window', `tab=${tab.id}`, details.url || 'about:blank');
+    const openerUrl = details.referrer?.url || wc.getURL();
+    const request = classifyWindowOpenRequest({
+      url: details.url || 'about:blank',
+      openerUrl,
+      disposition: 'new-window',
+      frameName: details.frameName || '',
+    });
+    debugLog(request.category, 'did-create-window', `tab=${tab.id}`, `kind=${request.kind}`, details.url || 'about:blank');
     registerAuthPopupWindow(window, details.url || 'about:blank', {
       sourceWebContentsId: wc.id,
-      openerUrl: details.referrer?.url || wc.getURL(),
+      openerUrl,
     });
   });
 
   wc.on('will-navigate', (event, url) => {
-    debugLog('oauth', 'popup-will-navigate', url);
     if (shouldOpenInOauthPopup(url)) {
+      debugLog('oauth', 'tab-nav-promoted-to-popup', `tab=${tab.id}`, url);
       if (isCanvaAuthUrl(wc.getURL())) {
         event.preventDefault();
         const popup = new BrowserWindow(popupWindowOptions());
@@ -676,6 +771,7 @@ function attachViewHandlers(tab) {
     }
 
     if (!isCanvaUrl(url)) {
+      debugLog('tabs', 'external-navigation-blocked', `tab=${tab.id}`, url);
       event.preventDefault();
       shell.openExternal(url);
     }
@@ -922,6 +1018,8 @@ ipcMain.on('toolbar-action', (_event, { action, payload = {} }) => {
 
 app.whenReady().then(async () => {
   debugLog('startup', 'when-ready', `platform=${process.platform}`, `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland')}`);
+  debugLog('startup', 'debug-spec', DEBUG_SPEC || 'disabled');
+  logReleaseStatus();
   await configureSession();
   debugLog('startup', 'session-configured');
   createShellWindow();
