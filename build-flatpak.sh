@@ -15,11 +15,14 @@ err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
+APP_VERSION="$(node -p "require('./package.json').version")"
+
 SKIP_NPM=false
 for arg in "$@"; do
   [[ "$arg" == "--skip-npm" ]] && SKIP_NPM=true
 done
 
+info "Building Canva WebApp v${APP_VERSION}"
 info "Checking host dependencies..."
 for cmd in flatpak flatpak-builder npm node realpath; do
   command -v "$cmd" >/dev/null 2>&1 || err "'$cmd' not found. Install it before continuing."
@@ -71,7 +74,7 @@ flatpak --user remote-add --no-gpg-verify canva-webapp-repo "file://$(realpath r
 info "Installing/updating the application..."
 flatpak --user install -y --reinstall canva-webapp-repo com.canva.WebApp
 
-ok "Installation completed!"
+ok "Installation completed for Canva WebApp v${APP_VERSION}!"
 echo ""
 echo "Post-install commands:"
 echo "  Run:                        flatpak run com.canva.WebApp"

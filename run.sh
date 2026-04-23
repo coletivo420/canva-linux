@@ -5,11 +5,7 @@
 
 export CHROME_DESKTOP=com.canva.WebApp.desktop
 
-APP_VERSION="1.4.9"
 DEBUG_VALUE="${CANVA_DEBUG:-}"
-
-printf '%s\n' "[canva v${APP_VERSION}] starting debug=${DEBUG_VALUE:-0}" >&2
-
 if [ -n "$DEBUG_VALUE" ] && [ "$DEBUG_VALUE" != "0" ] && [ "$DEBUG_VALUE" != "false" ]; then
   set -- \
     --enable-logging=stderr \
@@ -25,20 +21,21 @@ fi
 if [ "${CANVA_FORCE_X11:-0}" = "1" ]; then
   # Hard-force X11/Xwayland for troubleshooting or user preference.
   unset GDK_BACKEND
-  set --     --ozone-platform=x11     "$@"
+  set -- \
+    --ozone-platform=x11 \
+    "$@"
 elif [ "${CANVA_FORCE_WAYLAND:-0}" = "1" ]; then
   # Hard-force native Wayland when the session exposes a Wayland socket.
   if [ "$WAYLAND_SESSION" != "1" ]; then
     echo "canva-webapp: error: CANVA_FORCE_WAYLAND=1 was set, but no Wayland session was detected." >&2
     exit 1
   fi
-  set --     --ozone-platform=wayland     "$@"
-elif [ "$WAYLAND_SESSION" = "1" ]; then
-  # Prefer native Wayland on modern desktops and fall back automatically when needed.
-  set --     --ozone-platform-hint=auto     "$@"
-else
-  # Use X11 on non-Wayland sessions.
-  set --     --ozone-platform=x11     "$@"
+  set -- \
+    --ozone-platform=wayland \
+    "$@"
 fi
 
-exec zypak-wrapper.sh /app/main/canva-webapp   --class=com.canva.WebApp   --disable-gpu-sandbox   "$@"
+exec zypak-wrapper.sh /app/main/canva-webapp \
+  --class=com.canva.WebApp \
+  --disable-gpu-sandbox \
+  "$@"

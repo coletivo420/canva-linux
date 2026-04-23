@@ -631,24 +631,7 @@ class EyeDropper {
 const LTCodeEyeDropper = EyeDropper;
 
 let activePickerCleanup = null;
-const DEBUG_SPEC = String(process?.env?.CANVA_DEBUG || '').trim();
-const DEBUG_TOKENS = new Set(
-  DEBUG_SPEC
-    .split(',')
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean)
-);
-
-function debugEnabled(category = 'app') {
-  if (!DEBUG_SPEC || DEBUG_SPEC === '0' || DEBUG_SPEC.toLowerCase() === 'false') {
-    return false;
-  }
-  const normalized = String(category || 'app').toLowerCase();
-  if (['1', 'true', 'all', '*'].includes(DEBUG_SPEC.toLowerCase())) {
-    return true;
-  }
-  return DEBUG_TOKENS.has('all') || DEBUG_TOKENS.has('*') || DEBUG_TOKENS.has(normalized);
-}
+const DEBUG = process?.env?.CANVA_DEBUG === '1';
 
 function createAbortError() {
   return new DOMException('The operation was aborted.', 'AbortError');
@@ -664,26 +647,15 @@ function normalizeHex(value) {
   return match ? `#${match[1].toLowerCase()}` : null;
 }
 
-function routeDebug(category, ...args) {
-  try {
-    ipcRenderer.send('wrapper:debug-log', { category, args });
-  } catch {
-    try {
-      console.log(`[canva:${String(category).toLowerCase()}]`, ...args);
-    } catch {}
-  }
-}
-
 function log(...args) {
-  if (!debugEnabled('eyedropper')) return;
   try {
     ipcRenderer.send('wrapper:eyedropper-log', ...args);
   } catch {}
 }
 
-function debugLog(category, ...args) {
-  if (!debugEnabled(category)) return;
-  routeDebug(category, ...args);
+function debugLog(...args) {
+  if (!DEBUG) return;
+  log(...args);
 }
 
 function describeDragTarget(target) {
@@ -712,7 +684,7 @@ function installDragAndUploadDiagnostics() {
   };
 
   const logDrag = (label, event) => {
-    if (!debugEnabled('dnd')) return;
+    if (!DEBUG) return;
     const info = summarize(event);
     debugLog('drag', label, `files=${info.files}`, `types=${info.types || 'none'}`, info.target);
   };
@@ -741,14 +713,12 @@ function installDragAndUploadDiagnostics() {
   }, true);
 
   document.addEventListener('change', (event) => {
-    debugLog('upload', 'document-change', describeDragTarget(event.target));
     const target = event.target;
     if (!(target instanceof HTMLInputElement) || target.type !== 'file') return;
     debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, describeDragTarget(target));
   }, true);
 }
 
-debugLog('startup', 'preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 log('preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 installDragAndUploadDiagnostics();
 
@@ -888,7 +858,6 @@ async function openLtcodeEyeDropper() {
   }
 
   installLtcodeScalingPatch();
-  debugLog('eyedropper', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
   log('open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 
   const snapshot = await ipcRenderer.invoke('wrapper:eyedropper-snapshot');
@@ -963,7 +932,6 @@ async function openLtcodeEyeDropper() {
 
     requestAnimationFrame(() => {
       Promise.resolve(eyedropper.open(canvas)).then((result) => {
-        debugLog('eyedropper', 'open-resolved');
         const hex = normalizeHex(result?.hex || result?.sRGBHex);
         if (!hex) {
           finishReject(createOperationError('The color picker library did not return a valid color.'));
@@ -971,7 +939,6 @@ async function openLtcodeEyeDropper() {
         }
         finishResolve({ sRGBHex: hex });
       }).catch((error) => {
-        debugLog('eyedropper', 'open-rejected', error && error.message ? error.message : 'unknown-error');
         if (error && (error.name === 'AbortError' || /abort/i.test(String(error.message || '')))) {
           finishReject(createAbortError());
           return;

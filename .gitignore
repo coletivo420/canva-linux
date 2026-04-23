@@ -4,5 +4,3 @@ build-dir/
 repo/
 .flatpak-builder/
 *.log
-
-*.bak

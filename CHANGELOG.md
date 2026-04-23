@@ -2,22 +2,6 @@
 
 All notable changes to this project are documented in this file.
 
-## [1.4.8] - 2026-04-23
-
-### Fixed
-- Fixed OAuth popup debug handlers that referenced an undefined `tab` variable during popup title and favicon updates.
-- Fixed drag-and-drop category routing so `CANVA_DEBUG=dnd` now captures drag diagnostics consistently, and `drag` is accepted as a backward-compatible alias.
-- Fixed noisy upload instrumentation so generic document change events are no longer logged unless the target is a real file input.
-
-### Changed
-- Normalized debug category parsing across the main process and both preload scripts.
-- Hardened debug payload serialization for toolbar actions to avoid log-side crashes with unexpected objects.
-- Excluded accidental `.bak` source backups from packaging and added them to `.gitignore`.
-
-### Notes
-- This patch focuses on debug reliability and small runtime cleanup without changing the current shell architecture.
-- The host/runtime warnings seen in Chromium, DBus, Wayland, and VAAPI output still depend on the desktop session and Flatpak environment and are not fully actionable from this wrapper alone.
-
 ## [1.4.7] - 2026-04-23
 
 ### Added
