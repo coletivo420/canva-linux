@@ -2,6 +2,38 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.7] - 2026-04-23
+
+### Added
+- Added structured global debug categories across the application: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`.
+- Added category-filtered debug support through `CANVA_DEBUG=1` or `CANVA_DEBUG=category1,category2`.
+- Added toolbar debug forwarding for tab actions and tab state updates.
+
+### Changed
+- Updated the launcher so debug logging is enabled for any non-empty `CANVA_DEBUG` value, not only `CANVA_DEBUG=1`.
+- Updated post-install instructions to describe full-app debug mode and category filters.
+- Preserved the current Wayland-first shell behavior and the working custom eyedropper while expanding diagnostics to the whole application.
+
+### Notes
+- This release improves observability but does not yet prove that Wayland drag-and-drop from the host is fully fixed.
+- The next validation step is to capture real drag-and-drop and file picker logs using the new global debug categories.
+
+## [1.4.6] - 2026-04-23
+
+### Added
+- Added origin-aware `fileSystem` permission handling for Canva upload and file access flows.
+- Added drag-and-upload debug instrumentation in the Canva preload for Wayland diagnostics.
+- Added a mouse-release safety cleanup after `dragend` and `drop` events to reduce stuck drag states on Wayland.
+
+### Changed
+- Switched the launcher to rely on Electron's native platform auto-selection by default instead of forcing an Ozone hint.
+- Kept explicit `CANVA_FORCE_WAYLAND=1` and `CANVA_FORCE_X11=1` overrides for troubleshooting.
+- Preserved the working eyedropper and `WebContentsView` shell while focusing this release on Wayland drag/upload stability.
+
+### Under observation
+- Native Wayland drag-and-drop can still be affected by compositor and Chromium-side bugs on some desktops, especially KDE Plasma with KWin.
+- Host file uploads should be retested using both drag-and-drop and file picker flows after this release.
+
 ## [1.4.5] - 2026-04-23
 
 ### Added

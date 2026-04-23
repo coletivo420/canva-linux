@@ -37,15 +37,15 @@ class EyeDropper {
    */
   static drawImageToCanvas(img, canvas, options = {}) {
     if (!img || !canvas || !img.naturalWidth || !img.naturalHeight) return;
-    
+
     const ctx = canvas.getContext('2d');
     const { width: canvasW, height: canvasH } = canvas;
     const { naturalWidth: imgW, naturalHeight: imgH } = img;
-    
+
     ctx.clearRect(0, 0, canvasW, canvasH);
-    
+
     let dx, dy, dw, dh;
-    
+
     if (options.cover) {
       // Cover logic (center crop) - optimized calculations
       const ratio = Math.max(canvasW / imgW, canvasH / imgH);
@@ -61,7 +61,7 @@ class EyeDropper {
       dx = (canvasW - dw) * 0.5;
       dy = (canvasH - dh) * 0.5;
     }
-    
+
     ctx.drawImage(img, dx, dy, dw, dh);
   }
   /**
@@ -280,17 +280,17 @@ class EyeDropper {
       // Update magnifier position
       this._magnifier.style.left = `${e.clientX - this._canvasCache.magW / 2}px`;
       this._magnifier.style.top = `${e.clientY - this._canvasCache.magH / 2}px`;
-      
+
       // Draw magnifier content
       this._drawMagnifier(x, y);
-      
+
       // Position preview below magnifier
       const previewRect = { w: this._preview.offsetWidth, h: this._preview.offsetHeight };
       const px = e.clientX - this._canvasCache.magW / 2;
       const py = e.clientY + this._canvasCache.magH / 2 + 8;
       this._preview.style.left = `${px + this._canvasCache.magW / 2 - previewRect.w / 2}px`;
       this._preview.style.top = `${py}px`;
-      
+
       // Store last pixel data
       this._lastPixel = {
         x: x,
@@ -308,9 +308,9 @@ class EyeDropper {
         // Keep magnifier at last position using cached dimensions
         this._magnifier.style.left = `${this._lastPixel.clientX - this._canvasCache.magW / 2}px`;
         this._magnifier.style.top = `${this._lastPixel.clientY - this._canvasCache.magH / 2}px`;
-        
+
         this._drawMagnifier(this._lastPixel.x, this._lastPixel.y);
-        
+
         // Keep preview with last pixel data using proper elements
         if (typeof this.options.renderPreview === 'function') {
           this._preview.innerHTML = this.options.renderPreview(this._lastPixel);
@@ -320,7 +320,7 @@ class EyeDropper {
           this._colorDisplay.textContent = this._lastPixel.hex;
           this._preview.style.display = 'flex';
         }
-        
+
         // Position preview below magnifier
         const previewRect = { w: this._preview.offsetWidth, h: this._preview.offsetHeight };
         const px = this._lastPixel.clientX - this._canvasCache.magW / 2;
@@ -358,7 +358,7 @@ class EyeDropper {
         const [r, g, b] = imageData.data;
         const hex = this._rgbToHex(r, g, b);
         const rgb = [r, g, b];
-        
+
         if (typeof this.options.onPick === 'function') {
           this.options.onPick({ hex, rgb, x: position.x, y: position.y, event: e });
         }
@@ -377,7 +377,7 @@ class EyeDropper {
       }
 
       const { size, zoom } = this._magnifierCache;
-      
+
       // Create or reuse magnifier canvas
       if (!this._magCanvas) {
         this._magCanvas = document.createElement('canvas');
@@ -386,7 +386,7 @@ class EyeDropper {
         // Insert canvas before crosshair to maintain proper z-order
         this._magnifier.insertBefore(this._magCanvas, this._crosshair);
       }
-      
+
       // Only resize if dimensions changed
       const newWidth = size * zoom;
       const newHeight = size * zoom;
@@ -394,13 +394,13 @@ class EyeDropper {
         this._magCanvas.width = newWidth;
         this._magCanvas.height = newHeight;
       }
-      
+
       // Use cached context with willReadFrequently optimization
       if (!this._magCtx) {
         this._magCtx = this._magCanvas.getContext('2d', { willReadFrequently: true });
         this._magCtx.imageSmoothingEnabled = false;
       }
-      
+
       this._magCtx.drawImage(
         this._canvas,
         x - size / 2, y - size / 2, size, size,
@@ -410,7 +410,7 @@ class EyeDropper {
 
     _rgbToHex(r, g, b) {
       // Faster bitwise conversion without array creation
-      return '#' + 
+      return '#' +
         ((1 << 24) + (r << 16) + (g << 8) + b)
           .toString(16)
           .slice(1);
@@ -471,7 +471,7 @@ class EyeDropper {
       // Create temporary image element
       const img = new Image();
       img.crossOrigin = 'anonymous'; // For CORS images
-      
+
       img.onload = () => {
         try {
           // Remove loading overlay
@@ -485,7 +485,7 @@ class EyeDropper {
           canvas.id = 'eyedropper-main-canvas';
           const finalCanvasWidth = canvasOptions.width || img.naturalWidth;
           const finalCanvasHeight = canvasOptions.height || img.naturalHeight;
-          
+
           canvas.width = finalCanvasWidth;
           canvas.height = finalCanvasHeight;
           canvas.style.position = 'fixed';
@@ -496,13 +496,13 @@ class EyeDropper {
           canvas.style.border = '2px solid #333';
           canvas.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
           canvas.style.background = '#fff';
-          
+
           // Draw image to canvas
           EyeDropper.drawImageToCanvas(img, canvas, { cover: canvasOptions.cover });
-          
+
           // Add canvas to body temporarily
           document.body.appendChild(canvas);
-          
+
           // Open eyedropper on this canvas
           this.open(canvas, options).then((color) => {
             // Clean up: remove temporary canvas
@@ -511,7 +511,7 @@ class EyeDropper {
             }
             resolve(color);
           }).catch(reject);
-          
+
         } catch (error) {
           // Remove loading overlay on error
           if (loadingOverlay.parentNode) {
@@ -520,7 +520,7 @@ class EyeDropper {
           reject(error);
         }
       };
-      
+
       img.onerror = () => {
         // Remove loading overlay on error
         if (loadingOverlay.parentNode) {
@@ -528,7 +528,7 @@ class EyeDropper {
         }
         reject(new Error(`Failed to load image from URL: ${imageUrl}`));
       };
-      
+
       img.src = imageUrl;
     });
   }
@@ -576,7 +576,7 @@ class EyeDropper {
     skeleton.id = 'eyedropper-loading-skeleton';
     const skeletonWidth = Math.min(width * 0.7, 200);
     const skeletonHeight = Math.min(height * 0.5, 120);
-    
+
     Object.assign(skeleton.style, {
       width: `${skeletonWidth}px`,
       height: `${skeletonHeight}px`,
@@ -631,6 +631,7 @@ class EyeDropper {
 const LTCodeEyeDropper = EyeDropper;
 
 let activePickerCleanup = null;
+const DEBUG = process?.env?.CANVA_DEBUG === '1';
 
 function createAbortError() {
   return new DOMException('The operation was aborted.', 'AbortError');
@@ -652,7 +653,74 @@ function log(...args) {
   } catch {}
 }
 
+function debugLog(...args) {
+  if (!DEBUG) return;
+  log(...args);
+}
+
+function describeDragTarget(target) {
+  if (!target || typeof target !== 'object') return 'unknown';
+  const tagName = target.tagName ? String(target.tagName).toLowerCase() : 'node';
+  const id = target.id ? `#${target.id}` : '';
+  const className = typeof target.className === 'string' && target.className.trim()
+    ? `.${target.className.trim().split(/\s+/).slice(0, 3).join('.')}`
+    : '';
+  return `${tagName}${id}${className}`;
+}
+
+function installDragAndUploadDiagnostics() {
+  const scope = globalThis || window;
+  if (scope.__canvaDragDiagnosticsInstalled) return;
+  scope.__canvaDragDiagnosticsInstalled = true;
+
+  const summarize = (event) => {
+    const files = event.dataTransfer?.files ? Array.from(event.dataTransfer.files) : [];
+    const types = event.dataTransfer?.types ? Array.from(event.dataTransfer.types) : [];
+    return {
+      files: files.length,
+      types: types.join(','),
+      target: describeDragTarget(event.target),
+    };
+  };
+
+  const logDrag = (label, event) => {
+    if (!DEBUG) return;
+    const info = summarize(event);
+    debugLog('drag', label, `files=${info.files}`, `types=${info.types || 'none'}`, info.target);
+  };
+
+  window.addEventListener('dragenter', (event) => logDrag('enter', event), true);
+  window.addEventListener('dragover', (event) => logDrag('over', event), true);
+  window.addEventListener('dragleave', (event) => logDrag('leave', event), true);
+  window.addEventListener('dragstart', (event) => logDrag('start', event), true);
+  window.addEventListener('dragend', (event) => {
+    logDrag('end', event);
+    queueMicrotask(() => {
+      try {
+        window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, buttons: 0 }));
+        document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, buttons: 0 }));
+      } catch {}
+    });
+  }, true);
+  window.addEventListener('drop', (event) => {
+    logDrag('drop', event);
+    queueMicrotask(() => {
+      try {
+        window.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, buttons: 0 }));
+        document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true, buttons: 0 }));
+      } catch {}
+    });
+  }, true);
+
+  document.addEventListener('change', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement) || target.type !== 'file') return;
+    debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, describeDragTarget(target));
+  }, true);
+}
+
 log('preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
+installDragAndUploadDiagnostics();
 
 function removeLtcodeUi() {
   const overlay = document.getElementById('eyedropper-overlay');
@@ -790,7 +858,6 @@ async function openLtcodeEyeDropper() {
   }
 
   installLtcodeScalingPatch();
-  debugLog('eyedropper', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
   log('open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 
   const snapshot = await ipcRenderer.invoke('wrapper:eyedropper-snapshot');
@@ -865,7 +932,6 @@ async function openLtcodeEyeDropper() {
 
     requestAnimationFrame(() => {
       Promise.resolve(eyedropper.open(canvas)).then((result) => {
-        debugLog('eyedropper', 'open-resolved');
         const hex = normalizeHex(result?.hex || result?.sRGBHex);
         if (!hex) {
           finishReject(createOperationError('The color picker library did not return a valid color.'));
@@ -873,7 +939,6 @@ async function openLtcodeEyeDropper() {
         }
         finishResolve({ sRGBHex: hex });
       }).catch((error) => {
-        debugLog('eyedropper', 'open-rejected', error && error.message ? error.message : 'unknown-error');
         if (error && (error.name === 'AbortError' || /abort/i.test(String(error.message || '')))) {
           finishReject(createAbortError());
           return;

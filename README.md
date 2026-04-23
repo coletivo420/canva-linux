@@ -36,10 +36,23 @@ chmod +x build-flatpak.sh
 ```bash
 flatpak run com.canva.WebApp
 CANVA_DEBUG=1 flatpak run com.canva.WebApp
+CANVA_DEBUG=oauth,dnd flatpak run com.canva.WebApp
 CANVA_FORCE_WAYLAND=1 flatpak run com.canva.WebApp
 CANVA_FORCE_X11=1 flatpak run com.canva.WebApp
 flatpak uninstall --user com.canva.WebApp
 ```
+
+## Debug categories
+
+`CANVA_DEBUG=1` enables full wrapper debug output.
+
+You can also filter debug output by category, for example:
+
+```bash
+CANVA_DEBUG=oauth,dnd flatpak run com.canva.WebApp
+```
+
+Available categories include: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`.
 
 ## Compatibility notes
 

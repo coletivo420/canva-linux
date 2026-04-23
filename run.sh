@@ -1,12 +1,16 @@
 #!/bin/sh
 # run.sh - Canva launcher inside Flatpak.
-# Default mode: prefer native Wayland when available, otherwise fall back to X11.
+# Default mode: prefer native Wayland when available, otherwise let Electron fall back automatically.
 # User overrides: CANVA_FORCE_X11=1 or CANVA_FORCE_WAYLAND=1.
 
 export CHROME_DESKTOP=com.canva.WebApp.desktop
 
-if [ "${CANVA_DEBUG:-0}" = "1" ]; then
-  set --     --enable-logging=stderr     --log-level=0     "$@"
+DEBUG_VALUE="${CANVA_DEBUG:-}"
+if [ -n "$DEBUG_VALUE" ] && [ "$DEBUG_VALUE" != "0" ] && [ "$DEBUG_VALUE" != "false" ]; then
+  set -- \
+    --enable-logging=stderr \
+    --log-level=0 \
+    "$@"
 fi
 
 WAYLAND_SESSION=0
