@@ -1,43 +1,38 @@
-# Release Checklist — 1.4.8-dev.X Finalization
+# Release Checklist — 1.4.8-rc.1 Validation
 
-This checklist is intended for the closing phase of the `1.4.8-dev.X` development cycle.
+This checklist is intended for final manual validation of `1.4.8-rc.1` before promoting the final `1.4.8` release.
 
 ## 1) Version and metadata
 
-- [ ] Confirm `package.json` and `package-lock.json` are set to the same version.
-- [ ] Confirm `CHANGELOG.md` contains an entry for the current DEV patch.
-- [ ] Confirm docs reference the current DEV version where applicable.
+- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.8-rc.1`.
+- [ ] Confirm `CHANGELOG.md` contains the `1.4.8-rc.1` entry.
+- [ ] Confirm release documentation keeps release-candidate scope explicit.
 
-## 2) Documentation integrity
+## 2) Non-functional release-candidate guardrails
 
-- [ ] Confirm `README.md` reflects current branch goals and known limitations.
-- [ ] Confirm `docs/TECHNICAL.md` still matches runtime architecture and maintenance scope.
-- [ ] Confirm no documentation introduces behavior promises not implemented in code.
-
-## 3) Non-functional patch guardrails
-
-- [ ] Confirm there are no intentional runtime behavior changes in the patch.
+- [ ] Confirm there are no intentional runtime behavior changes in this RC.
 - [ ] Confirm OAuth popup native icon behavior was not modified.
 - [ ] Confirm no architecture refactor was introduced.
+
+## 3) Manual validation focus (required before final `1.4.8`)
+
+- [ ] Wayland startup sanity check.
+- [ ] X11 fallback startup sanity check.
+- [ ] Persistent session continuity across restarts.
+- [ ] Home tab behavior.
+- [ ] Tab creation/switch/close behavior.
+- [ ] OAuth popup smoke test (open + completion path).
+- [ ] Custom eyedropper availability and basic use.
+- [ ] Upload ingress observation: drag-and-drop, file picker, and clipboard paths.
 
 ## 4) Repository hygiene
 
 - [ ] Confirm no backup/reject artifacts were added (`*.bak`, `*.orig`, `*.rej`).
 - [ ] Confirm no temporary local test files were committed.
-- [ ] Confirm only relevant files are staged for the release patch.
+- [ ] Confirm only relevant files are staged for the RC patch.
 
-## 5) Manual validation flow
+## 5) Release readiness summary
 
-Run the baseline manual validation described in `docs/MANUAL_VALIDATION.md`:
-
-- [ ] App startup and main shell loading.
-- [ ] Home tab behavior.
-- [ ] OAuth popup opening and completion path.
-- [ ] File ingress paths (drop, picker, clipboard) with diagnostics when needed.
-- [ ] Wayland/X11 startup mode sanity check.
-
-## 6) Release readiness summary
-
-- [ ] Confirm this DEV patch is explicitly documented as non-functional.
-- [ ] Confirm open known limitations are clearly called out.
-- [ ] Confirm final reviewer notes include any deferred functional follow-ups.
+- [ ] Confirm this RC is documented as final manual validation only.
+- [ ] Confirm known limitations from the development series remain documented.
+- [ ] Confirm reviewer notes clearly identify any follow-up items deferred to post-`1.4.8` work.

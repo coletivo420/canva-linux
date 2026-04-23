@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-rc.1] - 2026-04-23
+
+### Changed
+- Promoted the documented `1.4.8-dev.X` stabilization cycle to the first release candidate.
+- Clarified release-candidate validation expectations before the final `1.4.8` release.
+
+### Notes
+- This release candidate is intended for final manual validation only.
+- No runtime behavior is intentionally changed.
+- Known limitations from the development series still apply.
+
 ## [1.4.8-dev.7] - 2026-04-23
 
 ### Changed
