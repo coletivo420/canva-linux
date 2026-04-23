@@ -1,0 +1,50 @@
+{
+  "name": "canva-webapp",
+  "version": "1.4.9",
+  "description": "Unofficial Canva desktop wrapper for Linux using Electron/Chromium inside Flatpak with versioned startup output and main-process JavaScript fixes",
+  "main": "electron/main.js",
+  "author": "Community",
+  "license": "GPL-3.0-or-later",
+  "productName": "Canva",
+  "homepage": "https://www.canva.com/",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --linux dir"
+  },
+  "build": {
+    "appId": "com.canva.WebApp",
+    "productName": "Canva",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build-resources"
+    },
+    "files": [
+      "electron/**/*",
+      "!electron/**/*.bak",
+      "package.json"
+    ],
+    "linux": {
+      "target": "dir",
+      "category": "Graphics",
+      "executableName": "canva-webapp",
+      "desktop": {
+        "Name": "Canva",
+        "StartupWMClass": "com.canva.WebApp",
+        "X-GNOME-WMClass": "com.canva.WebApp"
+      },
+      "icon": "build-resources"
+    },
+    "extraMetadata": {
+      "main": "electron/main.js"
+    }
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "41.3.0",
+    "electron-builder": "^25.1.8"
+  },
+  "desktopName": "com.canva.WebApp.desktop",
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
