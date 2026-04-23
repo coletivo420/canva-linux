@@ -23,18 +23,20 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.8-dev.6`.
+Current development version: `1.4.8-dev.7`.
 
 Stable baseline: `1.4.7`.
 
 The `dev` branch currently keeps the stable `1.4.7` debug foundation and adds the `1.4.8-dev.X` diagnostics work for Wayland drag-and-drop, upload ingress, file picker continuation, clipboard-driven imports, OAuth popup retesting, and shell documentation.
 
-The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current DEV6 phase. It is documented as a known limitation and should not block the `1.4.8-dev.X` maintenance work.
+The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current DEV7 phase. It is documented as a known limitation and should not block the `1.4.8-dev.X` maintenance work.
 
 ## Documentation map
 
 - `README.md` provides project orientation and day-to-day development context.
 - `docs/TECHNICAL.md` centralizes technical repository notes for the current maintenance branch.
+- `docs/RELEASE_CHECKLIST.md` provides the final DEV-cycle release readiness checklist.
+- `docs/MANUAL_VALIDATION.md` defines the manual validation routine for non-functional patch closure.
 
 ## Architecture overview
 
@@ -120,7 +122,7 @@ Wayland is the preferred path for modern Linux desktops, but some drag-and-drop,
 
 ## Known limitations and current observations
 
-- Native OAuth popup window icons on Linux/Wayland are a known limitation for now. Recent attempts to force provider-specific native popup icons did not work reliably in practice and are not a DEV6 target.
+- Native OAuth popup window icons on Linux/Wayland are a known limitation for now. Recent attempts to force provider-specific native popup icons did not work reliably in practice and are not a DEV7 target.
 - Clean-session OAuth completion still needs targeted retesting after removing local Flatpak app data.
 - Host file picker continuation and clipboard-driven imports should continue to be tested with the richer `upload` diagnostics added in the `1.4.8-dev.X` line.
 - Native Wayland drag-and-drop can still depend on compositor and Chromium behavior.
@@ -132,19 +134,19 @@ Wayland is the preferred path for modern Linux desktops, but some drag-and-drop,
 The current maintenance model uses a stable baseline plus development iterations:
 
 - stable releases use plain version numbers such as `1.4.7`;
-- development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, and `1.4.8-dev.6`;
+- development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, `1.4.8-dev.6`, and `1.4.8-dev.7`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
 - functional changes should be proposed only after the documentation and project state are clear.
 
-The DEV6 phase should focus on readability and maintenance:
+The DEV7 phase should focus on release closure documentation and validation guidance:
 
-1. improve `README.md` and `CHANGELOG.md`;
-2. document the current architecture and limitations;
-3. improve useful comments in core files;
+1. close out `1.4.8-dev.X` with a release checklist and manual validation guide;
+2. keep `README.md`, `docs/TECHNICAL.md`, and `CHANGELOG.md` aligned to the current DEV version;
+3. preserve non-functional patch scope and avoid behavior changes;
 4. keep repository hygiene policy enforced (`*.bak`, `*.orig`, `*.rej` remain untracked);
-5. only then consider small functional fixes.
+5. defer any functional fixes to a separate development patch.
 
 ## Build
 

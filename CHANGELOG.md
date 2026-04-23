@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-dev.7] - 2026-04-23
+
+### Changed
+- Updated project version references to `1.4.8-dev.7`.
+- Added `docs/RELEASE_CHECKLIST.md` to formalize final release-readiness checks for the `1.4.8-dev.X` closure.
+- Added `docs/MANUAL_VALIDATION.md` to standardize baseline manual runtime validation before release promotion.
+- Updated `README.md` and `docs/TECHNICAL.md` to reflect DEV7 release-closure scope and documentation map.
+
+### Notes
+- This is a non-functional DEV7 maintenance patch focused on release closure documentation and validation guidance.
+- Linux/Wayland OAuth popup icon behavior remains a known limitation and was intentionally left unchanged.
+
 ## [1.4.8-dev.6] - 2026-04-23
 
 ### Changed
