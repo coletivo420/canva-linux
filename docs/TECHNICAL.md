@@ -4,10 +4,10 @@ This document centralizes technical repository notes for the `1.4.8-dev.X` maint
 
 ## Scope
 
-Current DEV5 goals are intentionally non-functional:
+Current DEV6 goals are intentionally non-functional:
 
-- repository cleanup;
-- technical documentation organization under `/docs`;
+- add useful inline comments for runtime readability;
+- preserve existing behavior while documenting shell and diagnostics intent;
 - version/changelog continuity.
 
 ## Runtime architecture (summary)
@@ -34,8 +34,8 @@ Backup/reject artifacts from local patch attempts must not be kept in tracked so
 - `*.orig`
 - `*.rej`
 
-DEV5 removes existing tracked artifacts in those classes and keeps this policy documented for future patch iterations.
+DEV5 removed existing tracked artifacts in those classes and keeps this policy documented for future patch iterations.
 
 ## Known limitation kept unchanged
 
-Linux/Wayland OAuth popup icon replacement remains a known limitation in this branch and is not a DEV5 implementation target.
+Linux/Wayland OAuth popup icon replacement remains a known limitation in this branch and is not a DEV6 implementation target.

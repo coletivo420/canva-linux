@@ -84,6 +84,7 @@ echo "  Force X11:                  CANVA_FORCE_X11=1 flatpak run com.canva.WebA
 echo "  Uninstall:                  flatpak uninstall --user com.canva.WebApp"
 echo ""
 echo "Run with category filters:"
+# Category filters mirror main/preload debug channels for targeted diagnostics.
 echo "  CANVA_DEBUG=oauth,dnd flatpak run com.canva.WebApp"
 echo "  CANVA_DEBUG=startup,dnd,upload,permissions,session flatpak run com.canva.WebApp"
 echo "  CANVA_DEBUG=startup,tabs,oauth,dnd,upload flatpak run com.canva.WebApp"

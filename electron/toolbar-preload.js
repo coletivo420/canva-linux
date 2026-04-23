@@ -4,6 +4,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 const DEBUG_CATEGORY_ALIASES = {
+  // Match main/preload category aliases so toolbar filters behave consistently.
   drag: 'dnd',
 };
 

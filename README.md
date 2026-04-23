@@ -23,13 +23,13 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.8-dev.5`.
+Current development version: `1.4.8-dev.6`.
 
 Stable baseline: `1.4.7`.
 
 The `dev` branch currently keeps the stable `1.4.7` debug foundation and adds the `1.4.8-dev.X` diagnostics work for Wayland drag-and-drop, upload ingress, file picker continuation, clipboard-driven imports, OAuth popup retesting, and shell documentation.
 
-The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current DEV4 phase. It is documented as a known limitation and should not block the `1.4.8-dev.X` cleanup work.
+The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current DEV6 phase. It is documented as a known limitation and should not block the `1.4.8-dev.X` maintenance work.
 
 ## Documentation map
 
@@ -120,30 +120,30 @@ Wayland is the preferred path for modern Linux desktops, but some drag-and-drop,
 
 ## Known limitations and current observations
 
-- Native OAuth popup window icons on Linux/Wayland are a known limitation for now. Recent attempts to force provider-specific native popup icons did not work reliably in practice and are not a DEV4 target.
+- Native OAuth popup window icons on Linux/Wayland are a known limitation for now. Recent attempts to force provider-specific native popup icons did not work reliably in practice and are not a DEV6 target.
 - Clean-session OAuth completion still needs targeted retesting after removing local Flatpak app data.
 - Host file picker continuation and clipboard-driven imports should continue to be tested with the richer `upload` diagnostics added in the `1.4.8-dev.X` line.
 - Native Wayland drag-and-drop can still depend on compositor and Chromium behavior.
 - GPU, VAAPI, and sandbox warnings may appear depending on host drivers and runtime support.
-- The repository currently contains some backup/rejection files from previous patch attempts. These should be reviewed during DEV4 before the branch is promoted.
+- Repository cleanup completed in DEV5; keep enforcing the no-backup-artifacts policy for future patches.
 
 ## Development flow
 
 The current maintenance model uses a stable baseline plus development iterations:
 
 - stable releases use plain version numbers such as `1.4.7`;
-- development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, and `1.4.8-dev.5`;
+- development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, and `1.4.8-dev.6`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
 - functional changes should be proposed only after the documentation and project state are clear.
 
-The DEV4 phase should focus on consolidation:
+The DEV6 phase should focus on readability and maintenance:
 
 1. improve `README.md` and `CHANGELOG.md`;
 2. document the current architecture and limitations;
 3. improve useful comments in core files;
-4. clean up stale backup or rejected patch files after review;
+4. keep repository hygiene policy enforced (`*.bak`, `*.orig`, `*.rej` remain untracked);
 5. only then consider small functional fixes.
 
 ## Build

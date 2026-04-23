@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-dev.6] - 2026-04-23
+
+### Changed
+- Added focused inline comments in `electron/main.js` to clarify `WebContentsView` shell intent, fixed Home-tab guardrails, persistent partition usage, and OAuth popup completion lifecycle.
+- Added short comments in preload scripts to document debug-category aliases and why drag/upload ingress tracking is correlated across events.
+- Added launcher/build/manifest comments describing Wayland/X11 runtime flags, category-filtered debug logging, and Flatpak permission intent.
+- Updated technical docs and README version references for the DEV6 readability patch.
+
+### Notes
+- This is a non-functional DEV6 maintenance patch focused on code readability and diagnostics clarity.
+- Linux/Wayland OAuth popup icon behavior remains a known limitation and was intentionally left unchanged.
+
 ## [1.4.8-dev.5] - 2026-04-23
 
 ### Changed
