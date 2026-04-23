@@ -1,7 +1,7 @@
 {
   "name": "canva-webapp",
-  "version": "1.4.7",
-  "description": "Unofficial Canva desktop wrapper for Linux using Electron/Chromium inside Flatpak with Wayland-native shell behavior and global app debug instrumentation",
+  "version": "1.4.8",
+  "description": "Unofficial Canva desktop wrapper for Linux using Electron/Chromium inside Flatpak with Wayland-native shell behavior and hardened debug instrumentation and cleanup",
   "main": "electron/main.js",
   "author": "Community",
   "license": "GPL-3.0-or-later",
@@ -20,6 +20,7 @@
     },
     "files": [
       "electron/**/*",
+      "!electron/**/*.bak",
       "package.json"
     ],
     "linux": {

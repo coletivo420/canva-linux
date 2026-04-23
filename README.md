@@ -22,7 +22,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 - normal Canva pages still open in internal tabs
 - compatible OAuth providers open in a separate popup window that shares the same persistent session partition
 - OAuth popups now update their window title and icon to reflect the current provider when possible
-- the current build prefers **native Wayland** in Wayland sessions and uses **X11** automatically on non-Wayland sessions
+- the current build keeps Electron's default platform selection unless you explicitly force **Wayland** or **X11**
 
 ## Build
 
@@ -52,7 +52,7 @@ You can also filter debug output by category, for example:
 CANVA_DEBUG=oauth,dnd flatpak run com.canva.WebApp
 ```
 
-Available categories include: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`.
+Available categories include: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`. The alias `drag` is also accepted and maps to `dnd`.
 
 ## Compatibility notes
 

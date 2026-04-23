@@ -1,81 +1,83 @@
 diff a/electron/canva-preload.js b/electron/canva-preload.js	(rejected hunks)
-@@ -631,7 +631,24 @@
- const LTCodeEyeDropper = EyeDropper;
+@@ -632,10 +632,27 @@
  
  let activePickerCleanup = null;
--const DEBUG = process?.env?.CANVA_DEBUG === '1';
-+const DEBUG_SPEC = String(process?.env?.CANVA_DEBUG || '').trim();
-+const DEBUG_TOKENS = new Set(
-+  DEBUG_SPEC
-+    .split(',')
-+    .map((item) => item.trim().toLowerCase())
-+    .filter(Boolean)
-+);
+ const DEBUG_SPEC = String(process?.env?.CANVA_DEBUG || '').trim();
 +
-+function debugEnabled(category = 'app') {
-+  if (!DEBUG_SPEC || DEBUG_SPEC === '0' || DEBUG_SPEC.toLowerCase() === 'false') {
-+    return false;
++function normalizeDebugCategory(category = 'app') {
++  const normalized = String(category || 'app').trim().toLowerCase();
++  if (!normalized) return 'app';
++
++  switch (normalized) {
++    case 'drag':
++      return 'dnd';
++    case 'tab':
++      return 'tabs';
++    case 'permission':
++      return 'permissions';
++    default:
++      return normalized;
 +  }
-+  const normalized = String(category || 'app').toLowerCase();
-+  if (['1', 'true', 'all', '*'].includes(DEBUG_SPEC.toLowerCase())) {
-+    return true;
-+  }
-+  return DEBUG_TOKENS.has('all') || DEBUG_TOKENS.has('*') || DEBUG_TOKENS.has(normalized);
 +}
++
+ const DEBUG_TOKENS = new Set(
+   DEBUG_SPEC
+     .split(',')
+-    .map((item) => item.trim().toLowerCase())
++    .map((item) => normalizeDebugCategory(item))
+     .filter(Boolean)
+ );
  
- function createAbortError() {
-   return new DOMException('The operation was aborted.', 'AbortError');
-@@ -647,15 +664,26 @@
-   return match ? `#${match[1].toLowerCase()}` : null;
+@@ -643,7 +660,7 @@
+   if (!DEBUG_SPEC || DEBUG_SPEC === '0' || DEBUG_SPEC.toLowerCase() === 'false') {
+     return false;
+   }
+-  const normalized = String(category || 'app').toLowerCase();
++  const normalized = normalizeDebugCategory(category);
+   if (['1', 'true', 'all', '*'].includes(DEBUG_SPEC.toLowerCase())) {
+     return true;
+   }
+@@ -665,11 +682,12 @@
  }
  
-+function routeDebug(category, ...args) {
-+  try {
-+    ipcRenderer.send('wrapper:debug-log', { category, args });
-+  } catch {
-+    try {
-+      console.log(`[canva:${String(category).toLowerCase()}]`, ...args);
-+    } catch {}
-+  }
-+}
-+
- function log(...args) {
-+  if (!debugEnabled('eyedropper')) return;
+ function routeDebug(category, ...args) {
++  const normalized = normalizeDebugCategory(category);
    try {
-     ipcRenderer.send('wrapper:eyedropper-log', ...args);
-   } catch {}
+-    ipcRenderer.send('wrapper:debug-log', { category, args });
++    ipcRenderer.send('wrapper:debug-log', { category: normalized, args });
+   } catch {
+     try {
+-      console.log(`[canva:${String(category).toLowerCase()}]`, ...args);
++      console.log(`[canva:${normalized}]`, ...args);
+     } catch {}
+   }
+ }
+@@ -682,8 +700,9 @@
  }
  
--function debugLog(...args) {
--  if (!DEBUG) return;
--  log(...args);
-+function debugLog(category, ...args) {
-+  if (!debugEnabled(category)) return;
-+  routeDebug(category, ...args);
+ function debugLog(category, ...args) {
+-  if (!debugEnabled(category)) return;
+-  routeDebug(category, ...args);
++  const normalized = normalizeDebugCategory(category);
++  if (!debugEnabled(normalized)) return;
++  routeDebug(normalized, ...args);
  }
  
  function describeDragTarget(target) {
-@@ -684,7 +712,7 @@
+@@ -714,7 +733,7 @@
+   const logDrag = (label, event) => {
+     if (!debugEnabled('dnd')) return;
+     const info = summarize(event);
+-    debugLog('drag', label, `files=${info.files}`, `types=${info.types || 'none'}`, info.target);
++    debugLog('dnd', label, `files=${info.files}`, `types=${info.types || 'none'}`, info.target);
    };
  
-   const logDrag = (label, event) => {
--    if (!DEBUG) return;
-+    if (!debugEnabled('dnd')) return;
-     const info = summarize(event);
-     debugLog('drag', label, `files=${info.files}`, `types=${info.types || 'none'}`, info.target);
-   };
-@@ -713,12 +741,14 @@
+   window.addEventListener('dragenter', (event) => logDrag('enter', event), true);
+@@ -741,7 +760,6 @@
    }, true);
  
    document.addEventListener('change', (event) => {
-+    debugLog('upload', 'document-change', describeDragTarget(event.target));
+-    debugLog('upload', 'document-change', describeDragTarget(event.target));
      const target = event.target;
      if (!(target instanceof HTMLInputElement) || target.type !== 'file') return;
      debugLog('upload', 'input-change', `files=${target.files ? target.files.length : 0}`, describeDragTarget(target));
-   }, true);
- }
- 
-+debugLog('startup', 'preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
- log('preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
- installDragAndUploadDiagnostics();
- 

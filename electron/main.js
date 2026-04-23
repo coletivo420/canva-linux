@@ -56,10 +56,27 @@ const AUTH_PATH_RE = /\/(?:login|signup|register|oauth|sso|auth|signin|account)(
 const CANVA_AUTH_HINT_RE = /(?:google|facebook|apple|microsoft|oauth|sso|signup|login|continue)/i;
 
 const DEBUG_SPEC = String(process.env.CANVA_DEBUG || '').trim();
+
+function normalizeDebugCategory(category = 'app') {
+  const normalized = String(category || 'app').trim().toLowerCase();
+  if (!normalized) return 'app';
+
+  switch (normalized) {
+    case 'drag':
+      return 'dnd';
+    case 'tab':
+      return 'tabs';
+    case 'permission':
+      return 'permissions';
+    default:
+      return normalized;
+  }
+}
+
 const DEBUG_TOKENS = new Set(
   DEBUG_SPEC
     .split(',')
-    .map((item) => item.trim().toLowerCase())
+    .map((item) => normalizeDebugCategory(item))
     .filter(Boolean)
 );
 
@@ -67,7 +84,7 @@ function debugEnabled(category = 'app') {
   if (!DEBUG_SPEC || DEBUG_SPEC === '0' || DEBUG_SPEC.toLowerCase() === 'false') {
     return false;
   }
-  const normalized = String(category || 'app').toLowerCase();
+  const normalized = normalizeDebugCategory(category);
   if (['1', 'true', 'all', '*'].includes(DEBUG_SPEC.toLowerCase())) {
     return true;
   }
@@ -75,8 +92,17 @@ function debugEnabled(category = 'app') {
 }
 
 function debugLog(category, ...args) {
-  if (!debugEnabled(category)) return;
-  console.log(`[canva:${String(category).toLowerCase()}]`, ...args);
+  const normalized = normalizeDebugCategory(category);
+  if (!debugEnabled(normalized)) return;
+  console.log(`[canva:${normalized}]`, ...args);
+}
+
+function safeSerialize(value) {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return '[unserializable-payload]';
+  }
 }
 
 let mainWindow = null;
@@ -517,7 +543,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   const wc = window.webContents;
 
   wc.on('page-favicon-updated', (_event, favicons) => {
-    debugLog('tabs', 'favicon-updated', `tab=${tab.id}`, favicons?.[0] || 'none');
+    debugLog('oauth', 'popup-favicon-updated', `popup=${popupId}`, favicons?.[0] || 'none');
     const faviconUrl = favicons?.[0];
     if (faviconUrl) {
       trySetPopupIconFromFavicon(window, faviconUrl).catch(() => {});
@@ -525,7 +551,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.on('page-title-updated', (event, title) => {
-    debugLog('tabs', 'title-updated', `tab=${tab.id}`, title || APP_NAME);
+    debugLog('oauth', 'popup-title-updated', `popup=${popupId}`, title || APP_NAME);
     event.preventDefault();
     const providerLabel = detectOauthProviderLabel(wc.getURL() || startUrl || openerUrl);
     const cleanTitle = title && title.trim() ? title.trim() : providerLabel;
@@ -547,7 +573,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.on('will-navigate', (event, url) => {
-    debugLog('oauth', 'popup-will-navigate', url);
+    debugLog('view', 'tab-will-navigate', `tab=${tab.id}`, url);
     if (shouldOpenInOauthPopup(url) || isCanvaUrl(url) || isBlankPopupUrl(url)) {
       updateAuthPopupChrome(window, url);
       return;
@@ -653,7 +679,7 @@ function attachViewHandlers(tab) {
   });
 
   wc.on('page-favicon-updated', (_event, favicons) => {
-    debugLog('tabs', 'favicon-updated', `tab=${tab.id}`, favicons?.[0] || 'none');
+    debugLog('oauth', 'popup-favicon-updated', `popup=${popupId}`, favicons?.[0] || 'none');
     tab.favicon = favicons?.[0] || null;
     broadcastTabsState();
   });
@@ -861,7 +887,7 @@ ipcMain.on('wrapper:debug-log', (_event, payload = {}) => {
 });
 
 ipcMain.on('toolbar-action', (_event, { action, payload = {} }) => {
-  debugLog('tabs', 'toolbar-action', action, JSON.stringify(payload));
+  debugLog('tabs', 'toolbar-action', action, safeSerialize(payload));
   if (action === 'switch-tab') {
     switchToTab(payload.id);
     return;
