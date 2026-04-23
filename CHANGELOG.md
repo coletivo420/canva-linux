@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.8-dev.4] - 2026-04-23
+
+### Changed
+- Reworked the README as the main project orientation document for the DEV4 consolidation phase.
+- Documented the current Electron shell architecture, including `WebContentsView`, the fixed Home tab, persistent sessions, OAuth popups, preload scripts, and Flatpak packaging files.
+- Expanded debug category documentation with short descriptions for `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`.
+- Clarified the stable-versus-development version flow for the `1.4.8-dev.X` branch.
+- Added official reference links for `WebContentsView`, Electron sessions, and Electron permission handling.
+
+### Notes
+- This is a documentation-only DEV4 patch and does not intentionally change runtime behavior.
+- Native Linux/Wayland OAuth popup icon replacement is now treated as a known limitation instead of an active `1.4.8-dev.X` target.
+- Stale backup and rejected patch files in the repository are documented as a DEV4 cleanup item to review before promoting the branch.
+
+
 ## [1.4.8-dev.3] - 2026-04-23
 
 ### Added
