@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.3] - 2026-04-23
+
+### Added
+- Added Flathub preparation documentation covering submission requirements, metadata expectations, lint checks, screenshots, and permission review.
+- Added optional Flathub-oriented validation checks for desktop metadata, AppStream metadata, manifest linting, and repository linting.
+
+### Changed
+- Clarified the difference between GitHub release Flatpak bundles and future Flathub submission workflow.
+- Improved local Flatpak validation output for distribution readiness.
+
+### Notes
+- This is a distribution-readiness and documentation pass for the `1.4.9-dev.X` cycle.
+- No unrelated runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.2] - 2026-04-23
 
 ### Added

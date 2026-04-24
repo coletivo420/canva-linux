@@ -1,5 +1,5 @@
 #!/bin/bash
-# scripts/validate-flatpak.sh - Local Flatpak validation helper.
+# scripts/validate-flatpak.sh - Local Flatpak and Flathub-readiness validation helper.
 set -euo pipefail
 
 ## Console helpers
@@ -36,24 +36,46 @@ if command -v flatpak >/dev/null 2>&1; then
     warn "com.canva.WebApp is not installed locally"
   fi
 else
-  warn "flatpak command not found; install checks skipped"
+  warn "flatpak command not found; Flatpak-based checks skipped"
 fi
 
-## Metadata validation (optional tools)
+## Optional desktop file validation
+if command -v desktop-file-validate >/dev/null 2>&1; then
+  info "Running desktop-file-validate"
+  desktop-file-validate data/com.canva.WebApp.desktop
+  ok "Desktop entry validation passed"
+else
+  warn "desktop-file-validate not found; skipping desktop entry validation"
+fi
+
+## Optional AppStream validation
 if command -v appstreamcli >/dev/null 2>&1; then
-  info "Running appstreamcli validation"
-  appstreamcli validate data/com.canva.WebApp.metainfo.xml
+  info "Running appstreamcli validate --explain"
+  appstreamcli validate --explain data/com.canva.WebApp.metainfo.xml
   ok "AppStream metadata validation passed"
 else
-  warn "appstreamcli not found; skipping metadata validation"
+  warn "appstreamcli not found; skipping AppStream metadata validation"
 fi
 
-if command -v flatpak-builder-lint >/dev/null 2>&1; then
-  info "Running flatpak-builder-lint manifest"
-  flatpak-builder-lint manifest com.canva.WebApp.yml
-  ok "Manifest lint passed"
+## Optional Flathub-style lint checks
+if command -v flatpak >/dev/null 2>&1; then
+  if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
+    info "Running Flatpak builder lint for manifest"
+    flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
+    ok "Manifest lint passed"
+
+    if [[ -d repo ]]; then
+      info "Running Flatpak builder lint for repo/"
+      flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
+      ok "Repository lint passed"
+    else
+      warn "repo/ directory not found; skipping repository lint"
+    fi
+  else
+    warn "org.flatpak.Builder is not installed; skipping flatpak-builder-lint checks"
+  fi
 else
-  warn "flatpak-builder-lint not found; skipping manifest lint"
+  warn "flatpak command not found; skipping flatpak-builder-lint checks"
 fi
 
 ## Bundle presence check
