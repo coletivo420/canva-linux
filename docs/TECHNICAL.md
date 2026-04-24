@@ -4,7 +4,7 @@ This document centralizes technical repository notes for the `1.4.9-dev.X` maint
 
 ## Scope
 
-Current `1.4.9-dev.7` goals focus on OAuth popup stability and release documentation quality:
+Current `1.4.9-dev.8` goals focus on provider-neutral OAuth popup stability and release documentation quality:
 
 - remove native OAuth provider popup icon customization attempts on Linux/Wayland;
 - preserve the existing shell architecture and OAuth popup detection rules;
@@ -56,6 +56,8 @@ Canva content stays inside the app tab system. Separate Electron windows are res
 OAuth popups must use the same persistent `persist:canva` session as the main Canva tabs. This allows provider cookies, Canva cookies, and site storage to survive the OAuth flow and app restarts.
 
 OAuth provider-specific native icons are intentionally unsupported. Favicon updates must not change native popup icons or affect popup behavior.
+
+OAuth popup logic is provider-neutral across Google, Facebook/Meta, Apple, Microsoft, and Canva OAuth callbacks. The same popup/session/callback behavior applies to all supported providers, and provider icons/favicons are intentionally not used for native window behavior.
 
 ## Repository hygiene
 

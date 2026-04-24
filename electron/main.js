@@ -21,22 +21,14 @@ const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
 const INTERNAL_HOST_RE = /(?:^|\.)canva\.com$/i;
 const OAUTH_PROVIDER_HOSTS = [
-  /(?:^|\.)google\.com$/i,
-  /(?:^|\.)googleusercontent\.com$/i,
-  /(?:^|\.)gstatic\.com$/i,
-  /(?:^|\.)facebook\.com$/i,
-  /(?:^|\.)fbcdn\.net$/i,
-  /(?:^|\.)appleid\.apple\.com$/i,
-  /(?:^|\.)apple\.com$/i,
-  /(?:^|\.)microsoftonline\.com$/i,
-  /(?:^|\.)live\.com$/i,
-  /(?:^|\.)office\.com$/i,
-  /(?:^|\.)linkedin\.com$/i,
-  /(?:^|\.)twitter\.com$/i,
-  /(?:^|\.)x\.com$/i,
-  /(?:^|\.)github\.com$/i,
-  /(?:^|\.)okta\.com$/i,
-  /(?:^|\.)auth0\.com$/i,
+  // Google OAuth hosts used by Canva login flows.
+  /^(?:accounts\.google\.com|accounts\.google\.com\.br|accounts\.youtube\.com)$/i,
+  // Facebook/Meta OAuth hosts used by Canva login flows.
+  /^(?:facebook\.com|www\.facebook\.com|m\.facebook\.com)$/i,
+  // Apple OAuth host used by Canva login flows.
+  /^appleid\.apple\.com$/i,
+  // Microsoft OAuth hosts used by Canva login flows.
+  /^(?:login\.microsoftonline\.com|login\.live\.com|account\.live\.com)$/i,
 ];
 const AUTH_PATH_RE = /\/(?:login|signup|register|oauth|sso|auth|signin|account)(?:[/?#]|$)/i;
 const CANVA_AUTH_HINT_RE = /(?:google|facebook|apple|microsoft|oauth|sso|signup|login|continue)/i;
@@ -137,7 +129,7 @@ function isCanvaUrl(url) {
   }
 }
 
-function isOauthProviderUrl(url) {
+function isOAuthProviderUrl(url) {
   try {
     const parsed = new URL(url);
     return parsed.protocol === 'https:' && OAUTH_PROVIDER_HOSTS.some((re) => re.test(parsed.hostname));
@@ -193,19 +185,31 @@ function isCanvaAuthUrl(url) {
   }
 }
 
-function shouldOpenInOauthPopup(url) {
-  return isOauthProviderUrl(url) || isCanvaAuthUrl(url);
+function isCanvaOAuthAuthorizedCallback(url) {
+  if (!isCanvaUrl(url)) return false;
+  try {
+    return CANVA_OAUTH_AUTHORIZED_RE.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
 }
 
-function detectCanvaOauthCallback(url) {
-  if (!isCanvaUrl(url)) return null;
+function isCanvaOAuthUrl(url) {
+  if (!isCanvaUrl(url)) return false;
   try {
-    const { pathname } = new URL(url);
-    if (CANVA_OAUTH_AUTHORIZED_RE.test(pathname)) return 'authorized';
-    if (CANVA_OAUTH_RE.test(pathname)) return 'oauth';
+    return CANVA_OAUTH_RE.test(new URL(url).pathname);
   } catch {
-    return null;
+    return false;
   }
+}
+
+function shouldOpenInOauthPopup(url) {
+  return isOAuthProviderUrl(url) || isCanvaAuthUrl(url) || isCanvaOAuthUrl(url);
+}
+
+function detectCanvaOAuthCallback(url) {
+  if (isCanvaOAuthAuthorizedCallback(url)) return 'authorized';
+  if (isCanvaOAuthUrl(url)) return 'oauth';
   return null;
 }
 
@@ -575,7 +579,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
     id: popupId,
     window,
     startedOnCanvaAuth: isCanvaAuthUrl(startUrl) || isCanvaAuthUrl(openerUrl),
-    sawExternalProvider: isOauthProviderUrl(startUrl),
+    sawExternalProvider: isOAuthProviderUrl(startUrl),
     sawAuthorizedCallback: false,
     completionHandled: false,
     pendingCallbackUrl: '',
@@ -588,7 +592,9 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   debugLog('oauth', 'popup-created', summarizeOauthEntry(entry), startUrl || 'about:blank', `opener=${openerUrl || 'unknown'}`);
   debugLog('oauth', 'popup-options', `popup=${popupId}`, JSON.stringify(popupOptionsSummary));
   debugLog('oauth', `popup-session-same-as-canva=${sameAsCanvaSession ? 'true' : 'false'}`, `popup=${popupId}`);
-  debugLog('oauth', 'popup-session-partition', `popup=${popupId}`, popupSessionPartition);
+  if (popupSessionPartition && popupSessionPartition !== 'unknown') {
+    debugLog('oauth', 'popup-session-partition', `popup=${popupId}`, popupSessionPartition);
+  }
 
   window.setMenuBarVisibility(false);
   setAuthPopupTitle(window);
@@ -676,13 +682,13 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   const syncPopupState = async (url) => {
-    if (isOauthProviderUrl(url)) {
+    if (isOAuthProviderUrl(url)) {
       entry.sawExternalProvider = true;
-      debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, url);
+      debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, extractHostname(url) || 'unknown-provider-host');
       return;
     }
 
-    const callbackType = detectCanvaOauthCallback(url);
+    const callbackType = detectCanvaOAuthCallback(url);
     if (!callbackType) {
       return;
     }
