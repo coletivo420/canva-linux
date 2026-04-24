@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.2] - 2026-04-23
+
+### Added
+- Added automatic Flatpak bundle generation to `build-flatpak.sh`.
+- Added `scripts/validate-flatpak.sh` for local Flatpak and metadata validation.
+
+### Changed
+- Updated build documentation to describe the generated `dist/canva-webapp-linux-$VERSION.flatpak` artifact.
+
+### Notes
+- This is a distribution workflow improvement for the `1.4.9-dev.X` cycle.
+- No unrelated runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.1] - 2026-04-24
 
 ### Added

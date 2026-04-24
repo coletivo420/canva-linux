@@ -24,6 +24,7 @@ This document defines project conventions for AI-assisted development and vibeco
 ## Readability conventions
 
 - When touching shell scripts, config-like files, or large source files, use `##` section markers when they improve readability.
+- Keep build and release scripts readable with short `##` section markers.
 - Do not over-comment obvious code paths.
 - Keep section markers short, descriptive, and in English.
 
