@@ -43,6 +43,7 @@ OAuth/authentication flows remain the only exception to the tab-based Canva wind
 
 ```bash
 ./scripts/install-flatpak-local.sh
+./scripts/install-flatpak-local.sh --skip-npm
 ```
 
 This path is optimized for local testing: it builds and installs the app locally without generating a release `.flatpak` bundle.
@@ -51,6 +52,7 @@ This path is optimized for local testing: it builds and installs the app locally
 
 ```bash
 ./scripts/build-flatpak-bundle.sh
+./scripts/build-flatpak-bundle.sh --rebuild-repo
 ```
 
 This generates a distributable artifact at:
@@ -65,9 +67,10 @@ Bundle generation is intended for GitHub releases. Flathub submission is a separ
 ./build-flatpak.sh
 ./build-flatpak.sh --install
 ./build-flatpak.sh --bundle
+./build-flatpak.sh --skip-npm
 ```
 
-`build-flatpak.sh` remains available as a compatibility wrapper that routes to the new split scripts.
+`build-flatpak.sh` remains available as a compatibility wrapper that routes to the new split scripts, including legacy `--skip-npm` pass-through for local installs.
 
 ### Validation helper
 

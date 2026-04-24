@@ -8,8 +8,8 @@ This document explains how to prepare this project for a future Flathub submissi
 
 The Flatpak packaging flow is intentionally split:
 
-- `./scripts/install-flatpak-local.sh` for fast local development/testing install.
-- `./scripts/build-flatpak-bundle.sh` for explicit release bundle generation.
+- `./scripts/install-flatpak-local.sh` for fast local development/testing install (`--skip-npm` available for iterative local rebuilds).
+- `./scripts/build-flatpak-bundle.sh` for explicit release bundle generation (`--rebuild-repo` for clean artifact rebuilds).
 - `./build-flatpak.sh` as a compatibility wrapper:
   - default and `--install` route to local install;
   - `--bundle` routes to bundle generation.

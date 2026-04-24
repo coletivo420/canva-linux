@@ -21,16 +21,49 @@ VERSION="$(node -p "require('./package.json').version")"
 DIST_DIR="dist"
 BUNDLE_PATH="${DIST_DIR}/canva-webapp-linux-${VERSION}.flatpak"
 
+## Usage
+usage() {
+  cat <<'USAGE'
+Usage:
+  ./scripts/build-flatpak-bundle.sh [--rebuild-repo]
+
+Options:
+  --rebuild-repo   Force rebuilding repo/ before creating the bundle
+USAGE
+}
+
+## Flags
+REBUILD_REPO=false
+for arg in "$@"; do
+  case "$arg" in
+    --rebuild-repo)
+      REBUILD_REPO=true
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      usage
+      err "Unknown argument: $arg"
+      ;;
+  esac
+done
+
 info "Generating Flatpak bundle for version ${VERSION}"
 
 ## Dependency checks
-for cmd in flatpak flatpak-builder npm node realpath; do
+for cmd in flatpak flatpak-builder npm node realpath stat; do
   command -v "$cmd" >/dev/null 2>&1 || err "'$cmd' not found. Install it before continuing."
 done
 
-## Ensure Flatpak repository exists
-if [[ ! -d repo ]]; then
-  info "repo/ not found; building Flatpak repository first"
+## Repo helpers
+repo_has_app_ref() {
+  [[ -d repo/refs ]] && find repo/refs -type f -name '*com.canva.WebApp*' | head -1 | grep -q .
+}
+
+build_repo() {
+  info "Building Flatpak repository"
 
   flatpak remote-add --if-not-exists --user flathub \
     https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -68,8 +101,16 @@ if [[ ! -d repo ]]; then
     com.canva.WebApp.yml
 
   flatpak build-update-repo --generate-static-deltas repo
-else
+}
+
+## Ensure valid Flatpak repository exists
+if [[ "$REBUILD_REPO" == true ]]; then
+  build_repo
+elif repo_has_app_ref; then
   info "Using existing repo/ directory"
+else
+  info "repo/ is missing or does not contain com.canva.WebApp refs; rebuilding"
+  build_repo
 fi
 
 ## Create distributable bundle
@@ -77,6 +118,6 @@ mkdir -p "$DIST_DIR"
 flatpak build-bundle repo "$BUNDLE_PATH" com.canva.WebApp \
   --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 
-SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH" 2>/dev/null || echo 'unknown')"
+SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH")"
 ok "Bundle generated: $(realpath "$BUNDLE_PATH")"
 ok "Bundle size: ${SIZE_BYTES} bytes"

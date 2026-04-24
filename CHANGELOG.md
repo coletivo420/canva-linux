@@ -12,6 +12,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 - Changed build-flatpak.sh into a compatibility wrapper for install and bundle workflows.
 - Updated validation and documentation for the split Flatpak workflow.
+- Restored legacy `--skip-npm` compatibility through the wrapper/local install path and improved bundle script repo validation.
 
 ### Notes
 - This is a packaging workflow improvement for the 1.4.10-dev.X cycle.

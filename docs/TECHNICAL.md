@@ -23,9 +23,9 @@ Core runtime files:
 Packaging/runtime support files:
 
 - `run.sh` - Flatpak launcher and Wayland/X11 mode selection.
-- `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing.
-- `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation.
-- `build-flatpak.sh` - compatibility wrapper for install and bundle workflows.
+- `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing (supports `--skip-npm`).
+- `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (supports `--rebuild-repo`).
+- `build-flatpak.sh` - compatibility wrapper for install and bundle workflows, including legacy `--skip-npm` pass-through.
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
 - `com.canva.WebApp.yml` - Flatpak manifest.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` - desktop and appstream metadata.

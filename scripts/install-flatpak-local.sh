@@ -19,6 +19,36 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 
 VERSION="$(node -p "require('./package.json').version")"
+
+## Usage
+usage() {
+  cat <<'USAGE'
+Usage:
+  ./scripts/install-flatpak-local.sh [--skip-npm]
+
+Options:
+  --skip-npm   Skip npm install + npm run dist (requires existing dist/linux-unpacked)
+USAGE
+}
+
+## Flags
+SKIP_NPM=false
+for arg in "$@"; do
+  case "$arg" in
+    --skip-npm)
+      SKIP_NPM=true
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      usage
+      err "Unknown argument: $arg"
+      ;;
+  esac
+done
+
 info "Preparing local Flatpak install for Canva WebApp v${VERSION}"
 
 ## Dependency checks
@@ -40,15 +70,19 @@ flatpak install -y --user flathub \
 ok "Flatpak runtimes are ready"
 
 ## Node/Electron build preparation
-if [[ ! -d node_modules ]]; then
-  info "node_modules missing; running npm install"
-  npm install
-else
-  info "node_modules found; skipping npm install"
-fi
+if [[ "$SKIP_NPM" == false ]]; then
+  if [[ ! -d node_modules ]]; then
+    info "node_modules missing; running npm install"
+    npm install
+  else
+    info "node_modules found; skipping npm install"
+  fi
 
-info "Building Electron app (target: dir)"
-npm run dist
+  info "Building Electron app (target: dir)"
+  npm run dist
+else
+  warn "Skipping npm install + npm run dist (--skip-npm)"
+fi
 
 ## Build output checks
 UNPACKED_DIR="$(find dist -maxdepth 1 -type d -name 'linux-unpacked' 2>/dev/null | head -1)"
