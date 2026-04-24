@@ -4,7 +4,7 @@ This document centralizes technical repository notes for the `1.4.9-dev.X` maint
 
 ## Scope
 
-Current `1.4.9-dev.5` goals focus on OAuth popup stability and release documentation quality:
+Current `1.4.9-dev.7` goals focus on OAuth popup stability and release documentation quality:
 
 - remove native OAuth provider popup icon customization attempts on Linux/Wayland;
 - preserve the existing shell architecture and OAuth popup detection rules;
@@ -48,6 +48,14 @@ Operational notes:
 - OAuth popups must not use a temporary/session-only partition.
 - Clean-session testing can require removing local Flatpak app data.
 - Session flushing is used before quit and after OAuth completion to persist cookies/storage data.
+
+## OAuth popup policy
+
+Canva content stays inside the app tab system. Separate Electron windows are reserved only for OAuth/authentication flows.
+
+OAuth popups must use the same persistent `persist:canva` session as the main Canva tabs. This allows provider cookies, Canva cookies, and site storage to survive the OAuth flow and app restarts.
+
+OAuth provider-specific native icons are intentionally unsupported. Favicon updates must not change native popup icons or affect popup behavior.
 
 ## Repository hygiene
 

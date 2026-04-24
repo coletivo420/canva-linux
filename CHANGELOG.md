@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.7] - 2026-04-23
+
+### Fixed
+- Made OAuth popups explicitly share the same persistent `persist:canva` session as the main Canva tabs.
+- Improved OAuth popup visibility and focus handling on Linux/Wayland.
+
+### Changed
+- Removed favicon/provider-icon behavior from OAuth popup handling.
+- Added diagnostics for OAuth popup session sharing, visibility, focus, bounds, navigation, failures, and authorized callbacks.
+
+### Notes
+- Native OAuth provider icons remain intentionally unsupported.
+- Canva content remains tab-based; separate Electron windows remain reserved for OAuth/authentication only.
+
 ## [1.4.9-dev.6] - 2026-04-23
 
 ### Fixed
