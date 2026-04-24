@@ -1,6 +1,6 @@
 # Screenshots staging directory
 
-This directory is reserved for future real screenshots used by Flathub/AppStream metadata.
+This directory stores the real screenshots used for AppStream metadata and future Flathub submission review.
 
 ## Required files
 
@@ -22,5 +22,5 @@ The maintainer is expected to stage only real local files that actually exist an
 - Avoid emails, avatars, tokens, personal files, and private projects.
 - Use clean demo content.
 - Do not add fake screenshots.
-- Do not add MetaInfo screenshot URLs until stable tag, commit, or release URLs exist.
+- Keep AppStream screenshot URLs pinned to a commit SHA or stable release/tag.
 - Do not use branch-based URLs for screenshot metadata.

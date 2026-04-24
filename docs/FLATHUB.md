@@ -16,13 +16,15 @@ Do not treat local GitHub release bundles as a direct Flathub submission mechani
 
 Current blockers before Flathub submission:
 
-- real public screenshots suitable for AppStream metadata;
+- final Flathub submission and review in `flathub/flathub`;
 - manual OAuth validation beyond Google (Facebook/Meta, Apple, Microsoft).
 
 Additional guidance:
 
 - GitHub `.flatpak` bundle releases and Flathub submission are separate workflows and must stay separate.
-- Real screenshots are now staged locally in `assets/screenshots/`, but stable public URLs are still required before any MetaInfo update.
+- Real screenshots are now staged locally in `assets/screenshots/` and integrated into AppStream metadata with stable direct URLs pinned to a commit SHA.
+- Branch URLs must not be used for AppStream screenshots.
+- `windowpopup.png` is supporting documentation material and not the primary Flathub screenshot.
 - OAuth native provider icons are intentionally unsupported and should not block Flathub unless reviewers explicitly object.
 
 ## Flathub submission expectations
@@ -36,6 +38,8 @@ A future Flathub submission generally requires:
 - real screenshots in AppStream metadata for graphical apps;
 - a permission review with clear justification (tracked in `docs/FLATPAK_PERMISSIONS.md`);
 - a pull request to `flathub/flathub`.
+
+This repository is only preparing the metadata and documentation path for a future submission. It does not mean Flathub submission is complete.
 
 Flathub maintainers review submissions case-by-case and can reject apps depending on policy fit and packaging quality.
 
@@ -56,6 +60,8 @@ For Flathub submission, avoid branch-based or local-only sources. Prefer stable 
 ## Known limitation out of scope
 
 Native OAuth popup icon behavior on Linux/Wayland is a known limitation and is **not** a current development target for this Flathub preparation phase.
+
+Google OAuth was tested during development. Facebook/Meta, Apple, and Microsoft still require manual validation.
 
 ## Permission review companion
 

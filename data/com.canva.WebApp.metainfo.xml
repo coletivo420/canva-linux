@@ -22,7 +22,30 @@
     <name>Felipe Matos (piradopirata)</name>
   </developer>
   <content_rating type="oars-1.1" />
+  <screenshots>
+    <screenshot type="default">
+      <caption>Canva WebApp Linux home screen</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/home.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Canva WebApp Linux tabbed shell</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/tabs.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Upload workflow inside Canva WebApp Linux</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/upload.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Custom eyedropper workflow inside Canva WebApp Linux</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/eyedropper.png</image>
+    </screenshot>
+  </screenshots>
   <releases>
+    <release version="1.4.9-dev.13" date="2026-04-24">
+      <description>
+        <p>Added AppStream screenshot metadata with real repository screenshots pinned to a stable commit SHA, documented the screenshot manifest, and kept Flathub submission guidance separate from GitHub release bundle workflows.</p>
+      </description>
+    </release>
     <release version="1.4.9-dev.12" date="2026-04-24">
       <description>
         <p>Prepared AppStream screenshot integration around the real local screenshot set staged in the repository, updated packaging documentation, and intentionally kept screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.</p>
