@@ -7,13 +7,15 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.3 (Flathub hardening and privacy improvements)
+Next: 1.4.10-dev.4 (credential storage diagnostics and policy cleanup)
 
 ## Development (1.4.10-dev.X)
 
 The current development cycle focuses on Flathub readiness and packaging improvements.
 
 Goal: prepare the project for Flathub submission without introducing new runtime features.
+
+No new runtime feature is introduced in `1.4.10-dev.4`.
 
 ## OAuth Support
 
