@@ -57,6 +57,7 @@ const AUTH_PATH_RE = /\/(?:login|signup|register|oauth|sso|auth|signin|account)(
 const CANVA_AUTH_HINT_RE = /(?:google|facebook|apple|microsoft|oauth|sso|signup|login|continue)/i;
 
 const DEBUG_CATEGORY_ALIASES = {
+  // Keep backward compatibility with older "drag" filter values.
   drag: 'dnd',
 };
 
@@ -396,6 +397,7 @@ function shellBackgroundColor() {
 }
 
 function sharedWebPreferences(extra = {}) {
+  // All Canva surfaces (tabs + OAuth popups) must share the same partition.
   return {
     partition: PARTITION,
     contextIsolation: true,
@@ -475,6 +477,7 @@ function ensureTopLevelView(view) {
 
 function createToolbarView() {
   debugLog('view', 'create-toolbar-view');
+  // WebContentsView keeps toolbar chrome in-process with the tab shell layout.
   toolbarView = new WebContentsView({
     webPreferences: {
       preload: path.join(__dirname, 'toolbar-preload.js'),
@@ -685,6 +688,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   const syncPopupState = async (url) => {
+    // OAuth flow closes only after we return to a non-auth Canva URL.
     updateAuthPopupChrome(window, url);
 
     if (isOauthProviderUrl(url)) {
@@ -840,6 +844,7 @@ function attachViewHandlers(tab) {
 function createTab(url = APP_URL, { activate = true, isHome = false } = {}) {
   debugLog('tabs', 'create', url, `activate=${activate}`, `home=${isHome}`);
   const id = nextTabId++;
+  // Each tab is a WebContentsView so the shell can control visibility/layout per tab.
   const view = new WebContentsView({
     webPreferences: {
       preload: path.join(__dirname, 'canva-preload.js'),
@@ -926,6 +931,7 @@ function closeTab(id) {
   const ordered = getOrderedTabs();
   const index = ordered.findIndex((tab) => tab.id === id);
   const tab = tabs.get(id);
+  // Home is fixed by design and must always remain available.
   if (!tab || tab.isHome) return;
 
   if (activeTabId === id) {
