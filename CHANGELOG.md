@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.6] - 2026-04-24
+
+### Added
+- Added Flathub source strategy documentation for future source-based submission.
+- Added checklist coverage for source archive/tag review and screenshot URL review.
+
+### Changed
+- Cleaned desktop metadata for Flathub readiness.
+- Improved validation documentation around Flathub source strategy and release separation.
+- Reviewed Linux workflow script behavior for packaging-readiness cleanup.
+
+### Notes
+- This is a Flathub source/readiness hardening pass.
+- Runtime and OAuth behavior are intentionally unchanged.
+- GitHub .flatpak release bundles and Flathub source builds remain separate workflows.
 
 ## [1.4.10-dev.5] - 2026-04-24
 

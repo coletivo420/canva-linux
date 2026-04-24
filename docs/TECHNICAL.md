@@ -29,6 +29,7 @@ Packaging/runtime support files:
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
 - `com.canva.WebApp.yml` - Flatpak manifest.
 - `docs/PRIVACY.md` - repository privacy and telemetry policy statement.
+- `docs/FLATHUB_SOURCE.md` - Flathub source strategy notes for the current local manifest and future source-based submission.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` - desktop and appstream metadata.
 
 ## Workflow notes
@@ -36,6 +37,7 @@ Packaging/runtime support files:
 - Local install is for development/testing.
 - Bundle generation is for GitHub release artifacts.
 - Flathub submission and review are separate from bundle publication.
+- Final Flathub source selection and reviewed source URLs/hashes are documented in `docs/FLATHUB_SOURCE.md`.
 - Resetting user data removes login state and OAuth/session cookies.
 
 ## Window and tab policy

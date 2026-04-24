@@ -4,7 +4,7 @@
 
 This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## Canonical workflow command (1.4.10-dev.5)
+## Canonical workflow command (1.4.10-dev.6)
 
 Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
@@ -23,7 +23,7 @@ Notes:
 - Actions can be chained and run in argument order.
 - `--uninstall` can only be combined with `--reset-user-data`.
 
-`1.4.10-dev.5` is a Flathub validation/readiness pass and introduces no runtime feature.
+`1.4.10-dev.6` is a Flathub source/readiness hardening pass and introduces no runtime feature.
 
 ## Validation and lint workflow
 
@@ -60,6 +60,8 @@ The manifest intentionally avoids broad home-directory access and keeps narrower
 - **Flathub submission** is a separate workflow reviewed in `flathub/flathub`.
 
 Do not treat local GitHub release bundles as a direct Flathub submission mechanism.
+
+Source strategy guidance for final Flathub submission lives in `docs/FLATHUB_SOURCE.md`.
 
 ## Flathub checklist
 

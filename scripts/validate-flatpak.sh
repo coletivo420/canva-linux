@@ -24,6 +24,19 @@ require_file() {
   fi
 }
 
+check_optional_command() {
+  local cmd="$1"
+  local label="$2"
+
+  if command -v "${cmd}" >/dev/null 2>&1; then
+    ok "${label} available: ${cmd}"
+    return 0
+  fi
+
+  warn "${label} not found; skipping related validation"
+  return 1
+}
+
 ## Paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -61,6 +74,7 @@ done <<'REQUIRED_FILES'
 docs/SCREENSHOTS.md|screenshot manifest
 docs/PRIVACY.md|privacy documentation
 docs/FLATHUB_CHECKLIST.md|Flathub checklist
+docs/FLATHUB_SOURCE.md|Flathub source strategy documentation
 docs/FLATPAK_PERMISSIONS.md|permission review documentation
 com.canva.WebApp.yml|Flatpak manifest
 data/com.canva.WebApp.metainfo.xml|AppStream metadata
@@ -80,21 +94,17 @@ else
 fi
 
 ## Optional desktop file validation
-if command -v desktop-file-validate >/dev/null 2>&1; then
+if check_optional_command desktop-file-validate "Desktop file validator"; then
   info "Running desktop-file-validate"
   desktop-file-validate data/com.canva.WebApp.desktop
   ok "Desktop entry validation passed"
-else
-  warn "desktop-file-validate not found; skipping desktop entry validation"
 fi
 
 ## Optional AppStream validation
-if command -v appstreamcli >/dev/null 2>&1; then
+if check_optional_command appstreamcli "AppStream validator"; then
   info "Running appstreamcli validate --explain"
   appstreamcli validate --explain data/com.canva.WebApp.metainfo.xml
   ok "AppStream metadata validation passed"
-else
-  warn "appstreamcli not found; skipping AppStream metadata validation"
 fi
 
 ## Optional Flathub-style lint checks

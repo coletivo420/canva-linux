@@ -59,7 +59,7 @@ action_uninstall() {
     flatpak uninstall --user -y "${APP_ID}"
     echo "[ok] Uninstalled local Flatpak app: ${APP_ID}"
   else
-    echo "[info] Local Flatpak app is not installed: ${APP_ID}"
+    echo "[info] Local Flatpak app is not installed: ${APP_ID}" >&2
   fi
 }
 
@@ -69,7 +69,7 @@ action_reset_user_data() {
   read -r -p "Continue? [y/N] " response
 
   if [[ "$response" != "y" && "$response" != "Y" ]]; then
-    echo "[info] Reset canceled."
+    echo "[info] Reset canceled." >&2
     return 0
   fi
 
@@ -84,7 +84,7 @@ validate_action_compatibility() {
   local action_count="$2"
 
   if (( uninstall_count > 0 )) && (( action_count > 2 )); then
-    echo "Incompatible action combination: --uninstall can only be combined with --reset-user-data"
+    echo "Incompatible action combination: --uninstall can only be combined with --reset-user-data" >&2
     show_help
     exit 1
   fi
@@ -92,7 +92,7 @@ validate_action_compatibility() {
   if (( uninstall_count > 0 )); then
     for action in "${ACTIONS[@]}"; do
       if [[ "$action" != "--uninstall" && "$action" != "--reset-user-data" ]]; then
-        echo "Incompatible action combination: --uninstall can only be combined with --reset-user-data"
+        echo "Incompatible action combination: --uninstall can only be combined with --reset-user-data" >&2
         show_help
         exit 1
       fi
@@ -153,7 +153,7 @@ else
         ;;
       --install|--bundle|--validate|--uninstall|--reset-user-data)
         if [[ -n "${SEEN_ACTIONS[$1]:-}" ]]; then
-          echo "Duplicate action: $1"
+          echo "Duplicate action: $1" >&2
           show_help
           exit 1
         fi
@@ -167,7 +167,7 @@ else
         shift
         ;;
       *)
-        echo "Unknown option: $1"
+        echo "Unknown option: $1" >&2
         show_help
         exit 1
         ;;
