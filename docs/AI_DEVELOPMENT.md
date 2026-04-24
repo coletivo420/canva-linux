@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.3` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.4` cycle.
 
 ## Language and communication conventions
 
@@ -43,22 +43,27 @@ Before proposing or applying changes, align with the current state documented in
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.3 = Flathub hardening + packaging + AI-assisted maintenance.`
+`1.4.10-dev.4 = credential-storage diagnostics + branch policy cleanup + AI-assisted maintenance.`
 
+## Development branch naming
 
-## Codex branch naming
+Development branches must use only the target version number.
 
 Format:
 
-`codex/<version>-<purpose>`
+`dev/<version>`
 
-Example:
+Examples:
 
-`codex/1.4.10-dev.3-flathub-hardening`
+- `dev/1.4.10-dev.4`
+- `dev/1.4.10-dev.5`
+- `dev/1.4.10-rc.1`
 
 Rules:
 
-- must include version
-- must target dev
-- must be short-lived
-- must be deleted after merge
+- Use `dev/<version>` for development-cycle branches.
+- Do not use `codex/` for development branches.
+- Do not append purpose suffixes.
+- Development PRs must target `dev`.
+- Branches should remain short-lived during active development.
+- Branches may be kept until the stable release if the maintainer explicitly wants to preserve development history.

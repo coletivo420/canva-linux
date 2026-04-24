@@ -2,6 +2,7 @@
 
 const {
   app,
+  safeStorage,
   BrowserWindow,
   WebContentsView,
   shell,
@@ -71,6 +72,33 @@ function debugLog(category, ...args) {
   console.log(`[canva:${normalized}]`, ...args);
 }
 
+const LOG_COLORS = {
+  ok: '\x1b[32m',
+  warn: '\x1b[33m',
+  critical: '\x1b[31m',
+  reset: '\x1b[0m',
+};
+
+function coloredPrefix(category, level) {
+  const prefix = `[canva:${category}]`;
+  const color = LOG_COLORS[level];
+  if (!color) return prefix;
+  return `${color}${prefix}${LOG_COLORS.reset}`;
+}
+
+function logStatus(category, level, message) {
+  const prefix = coloredPrefix(category, level);
+  if (level === 'critical') {
+    console.error(`${prefix} ${message}`);
+    return;
+  }
+  if (level === 'warn') {
+    console.warn(`${prefix} ${message}`);
+    return;
+  }
+  console.log(`${prefix} ${message}`);
+}
+
 const RELEASE_STATUS = {
   corrected: [
     'Global debug categories now use canonical names, including drag -> dnd compatibility.',
@@ -109,7 +137,6 @@ app.commandLine.appendSwitch('disable-sync');
 app.commandLine.appendSwitch('metrics-recording-only');
 app.commandLine.appendSwitch('no-first-run');
 app.commandLine.appendSwitch('no-default-browser-check');
-app.commandLine.appendSwitch('password-store', 'basic');
 if (process.platform === 'linux') {
   app.setDesktopName(`${APP_ID}.desktop`);
   app.commandLine.appendSwitch('class', WM_CLASS);
@@ -243,6 +270,38 @@ function logReleaseStatus() {
   debugLog('startup', 'corrected', formatDebugList(RELEASE_STATUS.corrected));
   debugLog('startup', 'validated', formatDebugList(RELEASE_STATUS.validated));
   debugLog('startup', 'under-observation', formatDebugList(RELEASE_STATUS.underObservation));
+}
+
+function logCredentialStorageBackend() {
+  if (process.platform !== 'linux') return;
+
+  let backend = 'unknown';
+  try {
+    backend = safeStorage.getSelectedStorageBackend();
+  } catch (error) {
+    logStatus('session', 'warn', `credential-storage-backend-error WARNING: ${error.message}`);
+    return;
+  }
+
+  if (backend === 'basic_text') {
+    logStatus(
+      'session',
+      'critical',
+      'credential-storage-backend basic_text CRITICAL: Electron/Chromium is using the basic plaintext fallback because no supported Linux secret service/keyring was selected. Install or enable KWallet/GNOME Keyring/Secret Service integration for better credential protection.'
+    );
+    return;
+  }
+
+  if (backend === 'unknown') {
+    logStatus(
+      'session',
+      'warn',
+      'credential-storage-backend unknown WARNING: Electron could not verify the selected credential storage backend. This does not prove plaintext storage, but credential protection could not be verified. Check KWallet/GNOME Keyring/Secret Service integration.'
+    );
+    return;
+  }
+
+  logStatus('session', 'ok', `credential-storage-backend ${backend} OK: secure Linux secret storage backend detected.`);
 }
 
 function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
@@ -1061,6 +1120,7 @@ app.whenReady().then(async () => {
   debugLog('startup', 'when-ready', `platform=${process.platform}`, `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland')}`);
   debugLog('startup', 'debug-spec', DEBUG_SPEC || 'disabled');
   logReleaseStatus();
+  logCredentialStorageBackend();
   await configureSession();
   debugLog('startup', 'session-configured');
   createShellWindow();

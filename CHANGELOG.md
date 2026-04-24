@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 
 
+## [1.4.10-dev.4] - 2026-04-24
+
+### Added
+- Added credential storage backend diagnostics on Linux using Electron `safeStorage.getSelectedStorageBackend()`.
+- Added a small color-coded `[canva:session]` prefix system for high-value status/security diagnostics (`OK`, `WARNING`, `CRITICAL`).
+- Added the development branch naming policy `dev/<version>` with explicit rules and examples.
+
+### Changed
+- Removed forced `password-store=basic` so Electron/Chromium can choose the best available Linux credential backend.
+- Updated cycle documentation to `1.4.10-dev.4`.
+- Updated project docs to explicitly state that no new runtime feature is introduced in this cycle.
+
+### Notes
+- Canva/OAuth behavior is preserved.
+- Network access required by Canva and OAuth providers remains enabled.
+- Flatpak Secret Service access (`--talk-name=org.freedesktop.secrets`) remains unchanged.
+
 ## [1.4.10-dev.3] - 2026-04-24
 
 ### Added

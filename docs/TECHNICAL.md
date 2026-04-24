@@ -4,7 +4,7 @@ This document centralizes technical repository notes for the `1.4.10-dev.X` pack
 
 ## Scope
 
-Current `1.4.10-dev.X` goals focus on Flathub readiness and packaging workflow improvements:
+Current `1.4.10-dev.X` goals focus on Flathub readiness, packaging workflow improvements, and security diagnostics:
 
 - keep `canva-linux.sh` as the canonical Linux workflow command;
 - support interactive mode, explicit actions, and chained actions for workflow tasks;
@@ -15,7 +15,7 @@ Current `1.4.10-dev.X` goals focus on Flathub readiness and packaging workflow i
 
 Core runtime files:
 
-- `electron/main.js` - Electron shell entrypoint, tab model, OAuth popup wiring, and persistent session ownership.
+- `electron/main.js` - Electron shell entrypoint, tab model, OAuth popup wiring, persistent session ownership, and credential storage diagnostics.
 - `electron/canva-preload.js` - Canva page preload diagnostics and Linux integration bridges.
 - `electron/toolbar-preload.js` - toolbar IPC bridge.
 - `electron/toolbar.html` - local toolbar UI.
@@ -61,3 +61,11 @@ Main Canva tabs and OAuth popup windows use the same partition, so OAuth cookies
 ## Known limitation kept unchanged
 
 OAuth popup native provider icons remain a known Linux/Wayland limitation for this branch. The popup flow should stay stable without provider-specific native icon customization.
+
+## Security diagnostics note
+
+`1.4.10-dev.4` adds a first-pass colorized status prefix for high-value security/status diagnostics in `electron/main.js`.
+
+This pass is intentionally small and is expected to evolve into a more centralized log-level system in future revisions.
+
+No new runtime feature is introduced by this diagnostics change.

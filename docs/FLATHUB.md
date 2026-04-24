@@ -4,7 +4,7 @@
 
 This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## Canonical workflow command (1.4.10-dev.3)
+## Canonical workflow command (1.4.10-dev.4)
 
 Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
@@ -22,6 +22,8 @@ Notes:
 - No arguments open an interactive workflow menu.
 - Actions can be chained and run in argument order.
 - `--uninstall` can only be combined with `--reset-user-data`.
+
+`1.4.10-dev.4` introduces no new runtime feature. This cycle keeps packaging/runtime behavior stable while improving internal diagnostics and documentation.
 
 
 ## Permissions and portals
