@@ -2,11 +2,23 @@
 
 ## Purpose
 
-This document explains how to prepare this project for a future Flathub submission while keeping the existing GitHub release bundle workflow separate.
+This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
+
+## Workflow split (1.4.10-dev.1)
+
+The Flatpak packaging flow is intentionally split:
+
+- `./scripts/install-flatpak-local.sh` for fast local development/testing install (`--skip-npm` available for iterative local rebuilds).
+- `./scripts/build-flatpak-bundle.sh` for explicit release bundle generation (`--rebuild-repo` for clean artifact rebuilds).
+- `./build-flatpak.sh` as a compatibility wrapper:
+  - default and `--install` route to local install;
+  - `--bundle` routes to bundle generation.
+
+This keeps local iteration fast while preserving release artifact generation when needed.
 
 ## GitHub release bundles vs Flathub submission
 
-- **GitHub releases** use local bundle generation from this repository.
+- **GitHub releases** use local bundle generation from this repository (`./scripts/build-flatpak-bundle.sh`).
 - The generated artifact is `dist/canva-webapp-linux-$VERSION.flatpak`.
 - **Flathub submission** is a separate workflow and is reviewed in the `flathub/flathub` repository.
 
@@ -27,51 +39,11 @@ Additional guidance:
 - `windowpopup.png` is supporting documentation material and not the primary Flathub screenshot.
 - OAuth native provider icons are intentionally unsupported and should not block Flathub unless reviewers explicitly object.
 
-## Flathub submission expectations
-
-A future Flathub submission generally requires:
-
-- a valid Flatpak manifest;
-- valid AppStream metadata (`.metainfo.xml`);
-- a valid desktop entry (`.desktop`);
-- aligned icon assets;
-- real screenshots in AppStream metadata for graphical apps;
-- a permission review with clear justification (tracked in `docs/FLATPAK_PERMISSIONS.md`);
-- a pull request to `flathub/flathub`.
-
-This repository is only preparing the metadata and documentation path for a future submission. It does not mean Flathub submission is complete.
-
-Flathub maintainers review submissions case-by-case and can reject apps depending on policy fit and packaging quality.
-
-## Required identifier alignment
-
-Keep these identifiers aligned as `com.canva.WebApp`:
-
-- App ID (`com.canva.WebApp`);
-- desktop file ID (`com.canva.WebApp.desktop`);
-- metainfo component ID (`com.canva.WebApp`).
-
-Changing only one of these values breaks distribution consistency and review readiness.
-
-## Source policy for Flathub
-
-For Flathub submission, avoid branch-based or local-only sources. Prefer stable upstream tags/releases so the build is reproducible for reviewers.
-
-## Known limitation out of scope
-
-Native OAuth popup icon behavior on Linux/Wayland is a known limitation and is **not** a current development target for this Flathub preparation phase.
-
-Google OAuth was tested during development. Facebook/Meta, Apple, and Microsoft still require manual validation.
-
-## Permission review companion
-
-Use `docs/FLATPAK_PERMISSIONS.md` as the maintainer-facing record of current `finish-args`, review rationale, and future minimization checklist. Keep it aligned with `com.canva.WebApp.yml` for each packaging patch.
-
 ## Recommended local checks
 
-Run these checks before preparing a Flathub submission PR:
-
 ```bash
+./scripts/validate-flatpak.sh
+./scripts/validate-flatpak.sh --release-artifacts
 appstreamcli validate --explain data/com.canva.WebApp.metainfo.xml
 desktop-file-validate data/com.canva.WebApp.desktop
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml

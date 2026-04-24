@@ -16,10 +16,10 @@ The current development cycle focuses on Flathub readiness and packaging improve
 Planned milestones:
 
 - 1.4.10-dev.1  
-  Split Flatpak scripts:
+  Split Flatpak workflow scripts:
   - local install script
   - bundle generation script
-  - validation script
+  - validation updates
 - 1.4.10-dev.2  
   Flathub checklist and submission preparation
 - 1.4.10-dev.3  
@@ -27,8 +27,7 @@ Planned milestones:
 - 1.4.10-dev.4  
   Document OAuth provider support as community-tested
 
-Goal:
-Prepare the project for Flathub submission without introducing new runtime features.
+Goal: prepare the project for Flathub submission without introducing new runtime features.
 
 ## OAuth Support
 
@@ -37,6 +36,50 @@ Google OAuth was tested and is considered stable.
 Other providers (Facebook/Meta, Apple, Microsoft) are supported via the same popup flow but are not individually validated and should be considered community-tested.
 
 OAuth/authentication flows remain the only exception to the tab-based Canva window policy. Normal Canva content stays inside the main tab system.
+
+## Flatpak Workflow
+
+### Local development/testing install
+
+```bash
+./scripts/install-flatpak-local.sh
+./scripts/install-flatpak-local.sh --skip-npm
+```
+
+This path is optimized for local testing: it builds and installs the app locally without generating a release `.flatpak` bundle.
+
+### Optional release bundle generation
+
+```bash
+./scripts/build-flatpak-bundle.sh
+./scripts/build-flatpak-bundle.sh --rebuild-repo
+```
+
+This generates a distributable artifact at:
+
+`dist/canva-webapp-linux-$VERSION.flatpak`
+
+Bundle generation is intended for GitHub releases. Flathub submission is a separate workflow.
+
+### Compatibility wrapper
+
+```bash
+./build-flatpak.sh
+./build-flatpak.sh --install
+./build-flatpak.sh --bundle
+./build-flatpak.sh --skip-npm
+```
+
+`build-flatpak.sh` remains available as a compatibility wrapper that routes to the new split scripts, including legacy `--skip-npm` pass-through for local installs.
+
+### Validation helper
+
+```bash
+./scripts/validate-flatpak.sh
+./scripts/validate-flatpak.sh --release-artifacts
+```
+
+The default validation path does not require a bundle artifact. Use `--release-artifacts` to enforce release bundle checks.
 
 ## Flathub Status
 
@@ -52,18 +95,6 @@ Detailed packaging notes live in:
 - `docs/FLATHUB.md`
 - `docs/SCREENSHOTS.md`
 - `docs/FLATPAK_PERMISSIONS.md`
-
-## Build and Run
-
-```bash
-./build-flatpak.sh
-flatpak run com.canva.WebApp
-CANVA_DEBUG=1 flatpak run com.canva.WebApp
-CANVA_FORCE_WAYLAND=1 flatpak run com.canva.WebApp
-CANVA_FORCE_X11=1 flatpak run com.canva.WebApp
-```
-
-Release bundles are generated at `dist/canva-webapp-linux-$VERSION.flatpak`.
 
 ## Documentation
 

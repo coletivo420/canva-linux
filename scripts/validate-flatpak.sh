@@ -13,9 +13,18 @@ ok()    { echo -e "${GREEN}[ok]${NC}  $*"; }
 warn()  { echo -e "${YELLOW}[warn]${NC} $*"; }
 err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
 
+## Paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
+
+## Flags
+CHECK_RELEASE_ARTIFACTS=false
+if [[ "${1:-}" == "--release-artifacts" ]]; then
+  CHECK_RELEASE_ARTIFACTS=true
+elif [[ -n "${1:-}" ]]; then
+  err "Unknown argument: ${1}. Supported: --release-artifacts"
+fi
 
 ## Version checks
 VERSION="$(node -p "require('./package.json').version")"
@@ -24,9 +33,15 @@ info "Validating Flatpak workflow for version ${VERSION}"
 ok "Package version detected: ${VERSION}"
 
 ## Script syntax checks
-info "Checking build-flatpak.sh syntax"
-bash -n build-flatpak.sh
-ok "build-flatpak.sh syntax OK"
+for script in \
+  build-flatpak.sh \
+  scripts/install-flatpak-local.sh \
+  scripts/build-flatpak-bundle.sh \
+  scripts/validate-flatpak.sh; do
+  info "Checking ${script} syntax"
+  bash -n "$script"
+  ok "${script} syntax OK"
+done
 
 ## Flatpak install status
 if command -v flatpak >/dev/null 2>&1; then
@@ -85,12 +100,20 @@ else
   err "Missing required permission review doc: docs/FLATPAK_PERMISSIONS.md"
 fi
 
-## Bundle presence check
-if [[ -f "$BUNDLE_PATH" ]]; then
-  ok "Bundle found: $BUNDLE_PATH"
+## Optional bundle presence check
+if [[ "$CHECK_RELEASE_ARTIFACTS" == true ]]; then
+  if [[ -f "$BUNDLE_PATH" ]]; then
+    ok "Bundle found: $BUNDLE_PATH"
+  else
+    err "Bundle not found: $BUNDLE_PATH"
+  fi
 else
-  warn "Bundle not found yet: $BUNDLE_PATH"
-  warn "Run ./build-flatpak.sh to generate the Flatpak bundle"
+  if [[ -f "$BUNDLE_PATH" ]]; then
+    ok "Bundle found: $BUNDLE_PATH"
+  else
+    warn "Bundle not found (expected for local install workflow): $BUNDLE_PATH"
+    warn "Run ./scripts/build-flatpak-bundle.sh when preparing release artifacts"
+  fi
 fi
 
 ok "Validation helper completed"
