@@ -4,13 +4,13 @@ This directory is reserved for future real screenshots used by Flathub/AppStream
 
 ## Required files
 
-The maintainer is expected to add these local files when clean captures are ready:
+The maintainer is expected to stage only real local files that actually exist and are approved for release:
 
 - `home.png`
-- `editor.png`
 - `tabs.png`
 - `upload.png`
 - `eyedropper.png`
+- `windowpopup.png`
 
 ## Capture guidance
 
@@ -22,4 +22,5 @@ The maintainer is expected to add these local files when clean captures are read
 - Avoid emails, avatars, tokens, personal files, and private projects.
 - Use clean demo content.
 - Do not add fake screenshots.
-- Do not add MetaInfo screenshot URLs until stable release/tag URLs exist.
+- Do not add MetaInfo screenshot URLs until stable tag, commit, or release URLs exist.
+- Do not use branch-based URLs for screenshot metadata.

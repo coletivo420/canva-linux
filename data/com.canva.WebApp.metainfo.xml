@@ -18,12 +18,14 @@
   </description>
   <launchable type="desktop-id">com.canva.WebApp.desktop</launchable>
   <url type="homepage">https://www.canva.com/</url>
-  <developer id="io.github.canva-flatpak">Community</developer>
+  <developer id="io.github.canva-flatpak">
+    <name>Felipe Matos (piradopirata)</name>
+  </developer>
   <content_rating type="oars-1.1" />
   <releases>
-    <release version="1.4.9-dev.3" date="2026-04-23">
+    <release version="1.4.9-dev.12" date="2026-04-24">
       <description>
-        <p>Documented Flathub preparation guidance, clarified distribution workflow boundaries, and added local metadata and manifest lint validation guidance for release readiness.</p>
+        <p>Prepared AppStream screenshot integration around the real local screenshot set staged in the repository, updated packaging documentation, and intentionally kept screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.</p>
       </description>
     </release>
     <release version="1.4.4" date="2026-04-23">

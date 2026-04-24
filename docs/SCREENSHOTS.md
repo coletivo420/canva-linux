@@ -12,10 +12,10 @@ This file tracks screenshot preparation for future Flathub/AppStream publication
 ## Selected screenshot set
 
 - `home.png` - Home screen
-- `editor.png` - Canva editor
 - `tabs.png` - Toolbar and tabs
 - `upload.png` - Upload or picker flow
 - `eyedropper.png` - Eyedropper flow
+- `windowpopup.png` - Separate window and popup flow
 
 ## Capture policy for future release screenshots
 
@@ -28,7 +28,7 @@ This file tracks screenshot preparation for future Flathub/AppStream publication
 
 ## AppStream/MetaInfo policy
 
-- Do not add screenshot URLs to MetaInfo until final stable URLs exist.
+- Do not add screenshot URLs to MetaInfo until final stable tag, commit, or release URLs exist.
 - Do not use branch URLs for screenshot metadata.
 - Do not publish placeholder or fake screenshots.
 - Stage screenshots locally first and review them before release.

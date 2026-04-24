@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.12] - 2026-04-24
+
+### Changed
+- Bumped project version metadata to `1.4.9-dev.12`.
+- Aligned the screenshot staging documentation with the real local Flathub/AppStream screenshot set in `assets/screenshots/`.
+- Updated AppStream release metadata to reflect the current screenshot-preparation pass while intentionally keeping screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.
+- Added the AppStream developer display name required by `appstreamcli` metadata validation.
+
+### Notes
+- The staged screenshot set currently includes `home.png`, `tabs.png`, `upload.png`, `eyedropper.png`, and `windowpopup.png`.
+- `editor.png` is intentionally not referenced because it does not exist locally.
+- Flathub submission remains separate from GitHub release bundle publication.
+- No runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.10] - 2026-04-24
 
 ### Added
