@@ -4,10 +4,10 @@ This document centralizes technical repository notes for the `1.4.9-dev.X` maint
 
 ## Scope
 
-Current `1.4.9-dev.10` goals focus on OAuth documentation cleanup and Flathub preparation continuity:
+Current `1.4.9-dev.13` goals focus on AppStream screenshot metadata readiness and Flathub preparation continuity:
 
-- remove native OAuth provider popup icon customization attempts on Linux/Wayland;
 - preserve the existing shell architecture and OAuth popup detection rules;
+- publish real AppStream screenshot metadata using commit-pinned direct URLs;
 - document window/tab policy and persistent login behavior clearly;
 - keep changes small, reviewable, and aligned with `CHANGELOG.md`.
 
@@ -60,6 +60,19 @@ OAuth provider-specific native icons are intentionally unsupported. Favicon upda
 OAuth popup logic is provider-neutral across Google, Facebook/Meta, Apple, Microsoft, and Canva OAuth callbacks. The same popup/session/callback behavior applies to all supported providers, and provider icons/favicons are intentionally not used for native window behavior.
 
 Provider coverage note for this cycle: Google was the provider tested during this development cycle. OAuth handling was generalized for other common Canva providers, but Facebook/Meta, Apple, and Microsoft still require manual testing and may expose provider-specific issues.
+
+## AppStream screenshot policy
+
+Real screenshots live in `assets/screenshots/` and are tracked for release readiness in `assets/screenshots/MANIFEST.md`.
+
+The active AppStream screenshot list uses:
+
+- `home.png` as the default screenshot;
+- `tabs.png`, `upload.png`, and `eyedropper.png` as the additional AppStream screenshots.
+
+`windowpopup.png` remains supporting documentation material and is not the primary Flathub screenshot. `editor.png` is intentionally not required.
+
+Stable direct screenshot URLs must stay pinned to a commit SHA or stable release/tag. Do not use branch URLs in AppStream metadata.
 
 ## Repository hygiene
 

@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.13] - 2026-04-24
+
+### Added
+- Added AppStream screenshot metadata using real screenshots and commit-pinned raw GitHub URLs.
+- Added a screenshot manifest documenting AppStream order, privacy review status, and supporting screenshot notes.
+
+### Changed
+- Updated Flathub and screenshot documentation to reflect the active AppStream screenshot integration path.
+- Clarified that `windowpopup.png` is supporting documentation material and not the primary Flathub screenshot.
+
+### Notes
+- Screenshot URLs are pinned to a stable commit SHA, not a branch.
+- Google OAuth was tested during development; Facebook/Meta, Apple, and Microsoft still require manual validation.
+- No runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.12] - 2026-04-24
 
 ### Changed

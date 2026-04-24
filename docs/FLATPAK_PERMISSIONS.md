@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.9-dev.10` documentation cycle.
+This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.9-dev.13` documentation cycle.
 
 Goal for this pass:
 
@@ -99,4 +99,4 @@ Before changing manifest permissions:
 
 - Permission intent is documented and should stay minimal for reviewer trust.
 - GitHub `.flatpak` bundle release and Flathub submission remain separate processes.
-- Current non-permission blockers are real screenshots and OAuth provider validation beyond Google.
+- Current non-permission blockers are final Flathub submission/review work and OAuth provider validation beyond Google.
