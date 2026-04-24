@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 
 
 
+## [1.4.10-dev.3] - 2026-04-24
+
+### Added
+- Added Codex branch naming policy.
+- Added privacy and telemetry documentation.
+
+### Changed
+- Removed deprecated build-flatpak.sh.
+- Hardened Flatpak permissions.
+- Added safe Electron privacy hardening without breaking Canva behavior.
+
+### Notes
+- No runtime behavior is intentionally changed.
+- Networking remains enabled to support Canva and OAuth flows.
+
 ## [1.4.10-dev.2] - 2026-04-24
 
 ### Added

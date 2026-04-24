@@ -6,8 +6,7 @@ This document centralizes technical repository notes for the `1.4.10-dev.X` pack
 
 Current `1.4.10-dev.X` goals focus on Flathub readiness and packaging workflow improvements:
 
-- prefer `canva-linux.sh` as the canonical Linux workflow command;
-- keep `build-flatpak.sh` as a deprecated compatibility wrapper;
+- keep `canva-linux.sh` as the canonical Linux workflow command;
 - support interactive mode, explicit actions, and chained actions for workflow tasks;
 - keep AppStream metadata, screenshot references, and packaging docs aligned;
 - keep runtime behavior unchanged.
@@ -27,9 +26,9 @@ Packaging/runtime support files:
 - `canva-linux.sh` - canonical Linux Flatpak workflow command (`--install`, `--bundle`, `--validate`, `--uninstall`, `--reset-user-data`, and interactive mode).
 - `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing (supports `--skip-npm`).
 - `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (supports `--rebuild-repo`).
-- `build-flatpak.sh` - deprecated compatibility wrapper forwarding to `canva-linux.sh`.
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
 - `com.canva.WebApp.yml` - Flatpak manifest.
+- `docs/PRIVACY.md` - repository privacy and telemetry policy statement.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` - desktop and appstream metadata.
 
 ## Workflow notes

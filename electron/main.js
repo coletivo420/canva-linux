@@ -101,6 +101,15 @@ const authPopups = new Map();
 let canvaSession = null;
 
 app.setName(APP_NAME);
+// ## Privacy hardening (safe subset)
+// Do NOT disable networking to avoid breaking Canva
+app.commandLine.appendSwitch('disable-component-update');
+app.commandLine.appendSwitch('disable-domain-reliability');
+app.commandLine.appendSwitch('disable-sync');
+app.commandLine.appendSwitch('metrics-recording-only');
+app.commandLine.appendSwitch('no-first-run');
+app.commandLine.appendSwitch('no-default-browser-check');
+app.commandLine.appendSwitch('password-store', 'basic');
 if (process.platform === 'linux') {
   app.setDesktopName(`${APP_ID}.desktop`);
   app.commandLine.appendSwitch('class', WM_CLASS);

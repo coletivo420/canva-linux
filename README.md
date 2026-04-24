@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10 (Flathub readiness and packaging improvements)
+Next: 1.4.10-dev.3 (Flathub hardening and privacy improvements)
 
 ## Development (1.4.10-dev.X)
 
@@ -61,10 +61,6 @@ Actions can be chained and run in the order provided:
 - Flathub submission remains a separate process.
 - `--reset-user-data` removes login state and OAuth/session cookies.
 
-### Deprecated compatibility wrapper
-
-`build-flatpak.sh` remains available as a deprecated compatibility wrapper and forwards all arguments to `./canva-linux.sh`.
-
 ## Flathub Status
 
 The project is being prepared for Flathub submission.
@@ -81,6 +77,7 @@ Detailed packaging notes live in:
 - `CHANGELOG.md` tracks released and development changes.
 - `docs/TECHNICAL.md` contains repository technical notes.
 - `docs/AI_DEVELOPMENT.md` documents AI-assisted maintenance conventions.
+- `docs/PRIVACY.md` explains privacy and telemetry scope for this wrapper project.
 - `docs/FLATHUB.md` covers Flathub submission preparation.
 - `docs/FLATHUB_CHECKLIST.md` tracks practical Flathub submission checks.
 - `docs/SCREENSHOTS.md` documents the screenshot workflow.

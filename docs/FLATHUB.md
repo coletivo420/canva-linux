@@ -4,7 +4,7 @@
 
 This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## Canonical workflow command (1.4.10-dev.2)
+## Canonical workflow command (1.4.10-dev.3)
 
 Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
@@ -22,7 +22,13 @@ Notes:
 - No arguments open an interactive workflow menu.
 - Actions can be chained and run in argument order.
 - `--uninstall` can only be combined with `--reset-user-data`.
-- `build-flatpak.sh` remains as a deprecated compatibility wrapper.
+
+
+## Permissions and portals
+
+The app relies on Flatpak portals for file access when possible.
+
+The manifest intentionally avoids broad home-directory access and keeps `xdg-download` for common local export/import workflows.
 
 ## GitHub release bundles vs Flathub submission
 
@@ -61,3 +67,5 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 - Flathub requirements: <https://docs.flathub.org/docs/for-app-authors/requirements/>
 - Flathub metainfo guidelines: <https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/>
 - Flathub builder lint docs: <https://docs.flathub.org/docs/for-app-authors/linter/>
+
+- Project privacy/telemetry note: `docs/PRIVACY.md`
