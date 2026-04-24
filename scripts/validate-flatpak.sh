@@ -35,7 +35,6 @@ ok "Package version detected: ${VERSION}"
 ## Script syntax checks
 for script in \
   canva-linux.sh \
-  build-flatpak.sh \
   scripts/install-flatpak-local.sh \
   scripts/build-flatpak-bundle.sh \
   scripts/validate-flatpak.sh; do

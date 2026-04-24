@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.9-dev.14` documentation cycle.
+This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.3` hardening cycle.
 
 Goal for this pass:
 
@@ -27,7 +27,6 @@ Current manifest permissions:
 - `--filesystem=~/.fonts:ro`
 - `--filesystem=xdg-config/fontconfig:ro`
 - `--filesystem=xdg-download`
-- `--filesystem=home`
 - `--talk-name=org.freedesktop.FileManager1`
 - `--talk-name=org.freedesktop.portal.Desktop`
 - `--talk-name=org.freedesktop.ScreenSaver`
@@ -53,7 +52,6 @@ These are considered required for current behavior:
 
 These should be reviewed in future passes but are currently kept to avoid behavior regressions:
 
-- `--filesystem=home` (**under review**): broad permission that may be reducible after portal/file-flow validation.
 - `--filesystem=xdg-run/pipewire-0` (**under review**): may be optional depending on confirmed runtime media features.
 - `--talk-name=org.freedesktop.FileManager1` (**review-needed**): used for desktop integration flows; verify if fully replaceable via portals.
 - `--talk-name=org.freedesktop.ScreenSaver` (**review-needed**): keep until sleep/idle behavior is validated without it.
@@ -71,7 +69,7 @@ Current manifest state for this repo:
 
 - does **not** use broad session/system bus sockets;
 - includes `wayland` plus `fallback-x11`;
-- still includes broad `--filesystem=home`, which is documented here as an intentional review item.
+- removes broad home-directory filesystem access and relies on portals + narrower paths.
 
 ## Known limitations
 
@@ -100,3 +98,9 @@ Before changing manifest permissions:
 - Permission intent is documented and should stay minimal for reviewer trust.
 - GitHub `.flatpak` bundle release and Flathub submission remain separate processes.
 - Current non-permission blockers are final Flathub submission/review work and OAuth provider validation beyond Google.
+
+
+## Portal-first file access
+
+The manifest prefers Flatpak portal-based file access for uploads/downloads where possible.
+Broad home-directory access is intentionally avoided for Flathub readiness.

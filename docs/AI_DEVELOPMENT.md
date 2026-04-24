@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.9-dev.X` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.3` cycle.
 
 ## Language and communication conventions
 
@@ -43,4 +43,22 @@ Before proposing or applying changes, align with the current state documented in
 
 For this cycle, keep this focus explicit:
 
-`1.4.9-dev.X = distribuição + Flathub + manutenção assistida por IA.`
+`1.4.10-dev.3 = Flathub hardening + packaging + AI-assisted maintenance.`
+
+
+## Codex branch naming
+
+Format:
+
+`codex/<version>-<purpose>`
+
+Example:
+
+`codex/1.4.10-dev.3-flathub-hardening`
+
+Rules:
+
+- must include version
+- must target dev
+- must be short-lived
+- must be deleted after merge
