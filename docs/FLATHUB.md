@@ -22,6 +22,7 @@ Current blockers before Flathub submission:
 Additional guidance:
 
 - GitHub `.flatpak` bundle releases and Flathub submission are separate workflows and must stay separate.
+- Real screenshots are now staged locally in `assets/screenshots/`, but stable public URLs are still required before any MetaInfo update.
 - OAuth native provider icons are intentionally unsupported and should not block Flathub unless reviewers explicitly object.
 
 ## Flathub submission expectations

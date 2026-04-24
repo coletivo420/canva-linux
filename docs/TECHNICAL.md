@@ -4,7 +4,7 @@ This document centralizes technical repository notes for the `1.4.9-dev.X` maint
 
 ## Scope
 
-Current `1.4.9-dev.9` goals focus on OAuth documentation cleanup and Flathub preparation continuity:
+Current `1.4.9-dev.10` goals focus on OAuth documentation cleanup and Flathub preparation continuity:
 
 - remove native OAuth provider popup icon customization attempts on Linux/Wayland;
 - preserve the existing shell architecture and OAuth popup detection rules;

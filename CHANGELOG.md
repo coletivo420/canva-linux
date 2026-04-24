@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.10] - 2026-04-24
+
+### Added
+- Added local screenshot staging workflow for future Flathub/AppStream metadata.
+- Documented the expected real screenshot set for Home, editor, tabs, upload, and eyedropper flows.
+
+### Notes
+- Screenshots are staged locally first and should not be referenced in MetaInfo until stable release/tag URLs exist.
+- No runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.9] - 2026-04-23
 
 ### Changed
