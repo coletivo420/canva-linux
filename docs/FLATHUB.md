@@ -4,7 +4,7 @@
 
 This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## Canonical workflow command (1.4.10-dev.4)
+## Canonical workflow command (1.4.10-dev.5)
 
 Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
@@ -23,14 +23,35 @@ Notes:
 - Actions can be chained and run in argument order.
 - `--uninstall` can only be combined with `--reset-user-data`.
 
-`1.4.10-dev.4` introduces no new runtime feature. This cycle keeps packaging/runtime behavior stable while improving internal diagnostics and documentation.
+`1.4.10-dev.5` is a Flathub validation/readiness pass and introduces no runtime feature.
 
+## Validation and lint workflow
+
+Run the standard validation command first:
+
+```bash
+./canva-linux.sh --validate
+```
+
+Then run lint checks directly when Flatpak Builder is available:
+
+```bash
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
+./canva-linux.sh --bundle
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
+```
+
+If Flatpak Builder is missing locally, install it with:
+
+```bash
+flatpak install flathub org.flatpak.Builder
+```
 
 ## Permissions and portals
 
-The app relies on Flatpak portals for file access when possible.
+The app relies on Flatpak portals for file access where possible.
 
-The manifest intentionally avoids broad home-directory access and keeps `xdg-download` for common local export/import workflows.
+The manifest intentionally avoids broad home-directory access and keeps narrower paths such as `xdg-download` for common local export/import workflows.
 
 ## GitHub release bundles vs Flathub submission
 
@@ -45,29 +66,17 @@ Do not treat local GitHub release bundles as a direct Flathub submission mechani
 See `docs/FLATHUB_CHECKLIST.md` for the practical submission checklist, including:
 
 - AppStream and desktop metadata validation
-- `flatpak-builder-lint` checks
+- `flatpak-builder-lint` checks for manifest and repo
 - screenshot URL review
 - permission review
 - OAuth support notes
 - stable release source requirements
 - final maintainer manual review before submission
 
-## Recommended local checks
+## Submission readiness status
 
-```bash
-./canva-linux.sh --validate
-./scripts/validate-flatpak.sh --release-artifacts
-appstreamcli validate --explain data/com.canva.WebApp.metainfo.xml
-desktop-file-validate data/com.canva.WebApp.desktop
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
-```
+The project is approaching Flathub submission readiness, but final submission should happen only after maintainer review of lint results, permissions, screenshots, and release source.
 
-## References
+## OAuth note
 
-- Flathub submission docs: <https://docs.flathub.org/docs/for-app-authors/submission/>
-- Flathub requirements: <https://docs.flathub.org/docs/for-app-authors/requirements/>
-- Flathub metainfo guidelines: <https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/>
-- Flathub builder lint docs: <https://docs.flathub.org/docs/for-app-authors/linter/>
-
-- Project privacy/telemetry note: `docs/PRIVACY.md`
+Google OAuth was tested during development. Other OAuth providers use the same generalized popup flow, but are community-tested and may require feedback from users.
