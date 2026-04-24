@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.14] - 2026-04-24
+
+### Changed
+- Performed final Flathub and release-readiness documentation pass before `1.4.9-rc.1`.
+- Reviewed AppStream metadata, screenshot documentation, Flatpak permission notes, and validation workflow.
+
+### Notes
+- This is a validation and release-readiness pass.
+- Google OAuth was tested; Facebook/Meta, Apple, and Microsoft still require manual validation.
+- No runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.13] - 2026-04-24
 
 ### Added

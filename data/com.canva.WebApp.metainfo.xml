@@ -41,9 +41,9 @@
     </screenshot>
   </screenshots>
   <releases>
-    <release version="1.4.9-dev.13" date="2026-04-24">
+    <release version="1.4.9-dev.14" date="2026-04-24">
       <description>
-        <p>Added AppStream screenshot metadata with real repository screenshots pinned to a stable commit SHA, documented the screenshot manifest, and kept Flathub submission guidance separate from GitHub release bundle workflows.</p>
+        <p>Performed a final Flathub and release-readiness validation pass, reviewed AppStream metadata and packaging documentation, and intentionally left runtime behavior unchanged before preparing 1.4.9-rc.1.</p>
       </description>
     </release>
     <release version="1.4.9-dev.12" date="2026-04-24">

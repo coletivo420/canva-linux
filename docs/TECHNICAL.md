@@ -4,10 +4,10 @@ This document centralizes technical repository notes for the `1.4.9-dev.X` maint
 
 ## Scope
 
-Current `1.4.9-dev.13` goals focus on AppStream screenshot metadata readiness and Flathub preparation continuity:
+Current `1.4.9-dev.14` goals focus on final Flathub and release-readiness validation before `1.4.9-rc.1`:
 
 - preserve the existing shell architecture and OAuth popup detection rules;
-- publish real AppStream screenshot metadata using commit-pinned direct URLs;
+- keep AppStream metadata, screenshot references, and packaging docs aligned;
 - document window/tab policy and persistent login behavior clearly;
 - keep changes small, reviewable, and aligned with `CHANGELOG.md`.
 

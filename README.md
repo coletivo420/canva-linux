@@ -23,13 +23,13 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.9-dev.13`.
+Current development version: `1.4.9-dev.14`.
 
 Stable baseline: `1.4.8`.
 
 The `dev` branch currently keeps the stable `1.4.8` foundation and adds the `1.4.9-dev.X` distribution, Flathub preparation, and AI-assisted maintenance documentation.
 
-The current development pass adds real AppStream screenshot metadata using the committed screenshot set in `assets/screenshots/`, with active screenshot URLs pinned to a stable commit SHA instead of any branch name.
+The current development pass is a final Flathub and release-readiness validation cycle before preparing `1.4.9-rc.1`, keeping the AppStream screenshot set and packaging documentation aligned without changing runtime behavior.
 
 The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current `1.4.9-dev.X` phase. It is documented as a known limitation and should not block current maintenance work.
 
@@ -151,7 +151,7 @@ The current maintenance model uses a stable baseline plus development iterations
 
 - stable releases use plain version numbers such as `1.4.7`;
 - development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, `1.4.8-dev.6`, and `1.4.8-dev.7`;
-- the current development delivery is `1.4.9-dev.13`;
+- the current development delivery is `1.4.9-dev.14`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
