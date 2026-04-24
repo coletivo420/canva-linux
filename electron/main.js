@@ -106,7 +106,7 @@ let nextTabId = 1;
 let nextPopupId = 1;
 const tabs = new Map();
 const authPopups = new Map();
-const canvaSession = session.fromPartition(PARTITION, { cache: true });
+let canvaSession = null;
 
 app.setName(APP_NAME);
 if (process.platform === 'linux') {
@@ -120,6 +120,13 @@ if (process.platform === 'linux') {
 }
 // Keep persistent browser data inside a stable session directory.
 app.setPath('sessionData', path.join(app.getPath('userData'), 'session'));
+
+function getCanvaSession() {
+  if (!canvaSession) {
+    canvaSession = session.fromPartition(PARTITION, { cache: true });
+  }
+  return canvaSession;
+}
 
 function isCanvaUrl(url) {
   try {
@@ -265,7 +272,7 @@ async function flushSession(ses) {
 
 // Configure the shared session used by the main view and OAuth popups.
 async function configureSession() {
-  const ses = canvaSession;
+  const ses = getCanvaSession();
   debugLog('session', 'configure', PARTITION);
 
   ses.setPermissionRequestHandler((webContents, permission, callback, details = {}) => {
@@ -341,7 +348,7 @@ function shellBackgroundColor() {
 function sharedWebPreferences(extra = {}) {
   // All Canva surfaces (tabs + OAuth popups) must share the same session.
   return {
-    session: canvaSession,
+    session: getCanvaSession(),
     contextIsolation: true,
     sandbox: true,
     nodeIntegration: false,
@@ -557,7 +564,7 @@ function closeAuthPopup(popupId, { reloadActiveTab = true, reason = 'manual-clos
 function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null, openerUrl = '' } = {}) {
   const popupId = nextPopupId++;
   const popupSessionPartition = window.webContents?.session?.partition || 'unknown';
-  const sameAsCanvaSession = window.webContents?.session === canvaSession;
+  const sameAsCanvaSession = window.webContents?.session === getCanvaSession();
   const popupOptionsSummary = {
     partition: popupSessionPartition,
     contextIsolation: Boolean(window.webContents?.getLastWebPreferences()?.contextIsolation),
@@ -621,7 +628,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
     debugLog('oauth', 'popup-finish-load', `popup=${popupId}`, loadedUrl);
     if (entry.sawAuthorizedCallback && entry.pendingCallbackUrl === loadedUrl && !entry.completionHandled) {
       entry.completionHandled = true;
-      flushSession(canvaSession)
+      flushSession(getCanvaSession())
         .catch(() => {})
         .finally(() => {
           debugLog('oauth', 'popup-authorized-callback', `popup=${popupId}`, loadedUrl);
@@ -865,7 +872,7 @@ function createTab(url = APP_URL, { activate = true, isHome = false } = {}) {
       sandbox: false,
       nodeIntegration: false,
       nodeIntegrationInSubFrames: true,
-      session: canvaSession,
+      session: getCanvaSession(),
       spellcheck: true,
     },
   });
@@ -1063,6 +1070,8 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', async () => {
   debugLog('app', 'window-all-closed');
   debugLog('session', 'flush-before-quit', PARTITION);
-  await flushSession(canvaSession).catch(() => {});
+  if (canvaSession) {
+    await flushSession(canvaSession).catch(() => {});
+  }
   if (process.platform !== 'darwin') app.quit();
 });
