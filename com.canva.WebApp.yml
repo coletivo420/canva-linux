@@ -8,23 +8,35 @@ command: run.sh
 separate-locales: false
 
 finish-args:
-  # Sandbox permissions tuned for Canva web workflows (network, file import, portals, audio).
-  - --share=network
-  - --share=ipc
-  - --device=dri
-  - --socket=wayland
-  - --socket=fallback-x11
-  - --socket=pulseaudio
+  ## Core web runtime and rendering permissions
+  - --share=network            # Required for Canva web/API access.
+  - --share=ipc                # Common Electron/Chromium sandbox requirement.
+  - --device=dri               # GPU acceleration via DRI when available.
+
+  ## Display server support
+  - --socket=wayland           # Preferred display path on modern Linux desktops.
+  - --socket=fallback-x11      # Flathub-friendly fallback for X11/XWayland sessions.
+
+  ## Audio and media pipeline
+  - --socket=pulseaudio        # Audio output for editor playback/recording UX.
+  - --filesystem=xdg-run/pipewire-0 # Screen/media pipeline compatibility where used.
+
+  ## Font discovery from host (read-only)
   - --filesystem=xdg-data/fonts:ro
   - --filesystem=~/.fonts:ro
   - --filesystem=xdg-config/fontconfig:ro
-  - --filesystem=xdg-run/pipewire-0
+
+  ## File import and desktop integration
+  - --filesystem=xdg-download  # Narrow path used for common download/import workflows.
+  - --filesystem=home          # Broad access kept for current Canva import behavior (under review).
   - --talk-name=org.freedesktop.FileManager1
-  - --filesystem=xdg-download
-  - --filesystem=home
-  - --talk-name=org.freedesktop.ScreenSaver
+
+  ## Portals and desktop services
   - --talk-name=org.freedesktop.portal.Desktop
+  - --talk-name=org.freedesktop.ScreenSaver
   - --talk-name=org.freedesktop.secrets
+
+  ## Runtime environment tweaks
   - --env=ELECTRON_TRASH=gio
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 

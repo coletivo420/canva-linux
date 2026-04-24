@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.4] - 2026-04-23
+
+### Added
+- Added Flatpak permission documentation for the current manifest and future Flathub review.
+- Added validation coverage for the Flatpak permission documentation.
+
+### Changed
+- Clarified Flatpak manifest permission intent and Flathub lint considerations.
+- Improved distribution documentation around sandbox permissions and future permission changes.
+
+### Notes
+- This is a Flatpak packaging and documentation pass for the `1.4.9-dev.X` cycle.
+- No unrelated runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.3] - 2026-04-23
 
 ### Added

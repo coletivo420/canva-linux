@@ -78,6 +78,13 @@ else
   warn "flatpak command not found; skipping flatpak-builder-lint checks"
 fi
 
+## Permission documentation presence check
+if [[ -f docs/FLATPAK_PERMISSIONS.md ]]; then
+  ok "Permission review doc found: docs/FLATPAK_PERMISSIONS.md"
+else
+  err "Missing required permission review doc: docs/FLATPAK_PERMISSIONS.md"
+fi
+
 ## Bundle presence check
 if [[ -f "$BUNDLE_PATH" ]]; then
   ok "Bundle found: $BUNDLE_PATH"

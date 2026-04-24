@@ -35,7 +35,8 @@ Before proposing or applying changes, align with the current state documented in
 - `README.md`
 - `CHANGELOG.md`
 - `docs/TECHNICAL.md`
-- `docs/FLATHUB.md` (when available)
+- `docs/FLATHUB.md`
+- `docs/FLATPAK_PERMISSIONS.md`
 - `docs/AI_DEVELOPMENT.md`
 
 ## Cycle summary

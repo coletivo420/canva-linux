@@ -4,7 +4,7 @@ This document centralizes technical repository notes for the `1.4.9-dev.X` maint
 
 ## Scope
 
-Current `1.4.9-dev.2` goals are intentionally non-functional:
+Current `1.4.9-dev.4` goals are intentionally non-functional:
 
 - reinforce distribution and Flathub preparation conventions for the current cycle;
 - document AI-assisted development workflow expectations;
@@ -18,7 +18,8 @@ Before landing follow-up patches, align proposals with:
 - `README.md`
 - `CHANGELOG.md`
 - `docs/TECHNICAL.md`
-- `docs/FLATHUB.md` (when available)
+- `docs/FLATHUB.md`
+- `docs/FLATPAK_PERMISSIONS.md`
 - `docs/AI_DEVELOPMENT.md`
 
 ## Runtime architecture (summary)
@@ -58,3 +59,11 @@ This phase adds two documentation artifacts to close the current DEV cycle witho
 
 - `docs/RELEASE_CHECKLIST.md` - release readiness checklist for maintainers/reviewers.
 - `docs/MANUAL_VALIDATION.md` - manual runtime validation sequence used before promoting the next stage.
+
+## Flatpak permission review notes
+
+`1.4.9-dev.4` adds explicit permission review documentation without intentionally changing runtime behavior:
+
+- `com.canva.WebApp.yml` now includes short `finish-args` comments grouped by purpose.
+- `docs/FLATPAK_PERMISSIONS.md` records required permissions, review-needed permissions, and Flathub lint considerations.
+- `scripts/validate-flatpak.sh` now requires the permission review doc to exist.

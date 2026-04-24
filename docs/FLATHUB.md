@@ -21,7 +21,7 @@ A future Flathub submission generally requires:
 - a valid desktop entry (`.desktop`);
 - aligned icon assets;
 - real screenshots in AppStream metadata for graphical apps;
-- a permission review with clear justification;
+- a permission review with clear justification (tracked in `docs/FLATPAK_PERMISSIONS.md`);
 - a pull request to `flathub/flathub`.
 
 Flathub maintainers review submissions case-by-case and can reject apps depending on policy fit and packaging quality.
@@ -43,6 +43,10 @@ For Flathub submission, avoid branch-based or local-only sources. Prefer stable 
 ## Known limitation out of scope
 
 Native OAuth popup icon behavior on Linux/Wayland is a known limitation and is **not** a current development target for this Flathub preparation phase.
+
+## Permission review companion
+
+Use `docs/FLATPAK_PERMISSIONS.md` as the maintainer-facing record of current `finish-args`, review rationale, and future minimization checklist. Keep it aligned with `com.canva.WebApp.yml` for each packaging patch.
 
 ## Recommended local checks
 
