@@ -6,8 +6,9 @@ This document centralizes technical repository notes for the `1.4.10-dev.X` pack
 
 Current `1.4.10-dev.X` goals focus on Flathub readiness and packaging workflow improvements:
 
-- split local Flatpak install and release bundle generation workflows;
-- preserve compatibility via `build-flatpak.sh` wrapper routing;
+- prefer `canva-linux.sh` as the canonical Linux workflow command;
+- keep `build-flatpak.sh` as a deprecated compatibility wrapper;
+- support interactive mode, explicit actions, and chained actions for workflow tasks;
 - keep AppStream metadata, screenshot references, and packaging docs aligned;
 - keep runtime behavior unchanged.
 
@@ -23,12 +24,20 @@ Core runtime files:
 Packaging/runtime support files:
 
 - `run.sh` - Flatpak launcher and Wayland/X11 mode selection.
+- `canva-linux.sh` - canonical Linux Flatpak workflow command (`--install`, `--bundle`, `--validate`, `--uninstall`, `--reset-user-data`, and interactive mode).
 - `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing (supports `--skip-npm`).
 - `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (supports `--rebuild-repo`).
-- `build-flatpak.sh` - compatibility wrapper for install and bundle workflows, including legacy `--skip-npm` pass-through.
+- `build-flatpak.sh` - deprecated compatibility wrapper forwarding to `canva-linux.sh`.
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
 - `com.canva.WebApp.yml` - Flatpak manifest.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` - desktop and appstream metadata.
+
+## Workflow notes
+
+- Local install is for development/testing.
+- Bundle generation is for GitHub release artifacts.
+- Flathub submission and review are separate from bundle publication.
+- Resetting user data removes login state and OAuth/session cookies.
 
 ## Window and tab policy
 

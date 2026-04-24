@@ -4,45 +4,50 @@
 
 This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## Workflow split (1.4.10-dev.1)
+## Canonical workflow command (1.4.10-dev.2)
 
-The Flatpak packaging flow is intentionally split:
+Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
-- `./scripts/install-flatpak-local.sh` for fast local development/testing install (`--skip-npm` available for iterative local rebuilds).
-- `./scripts/build-flatpak-bundle.sh` for explicit release bundle generation (`--rebuild-repo` for clean artifact rebuilds).
-- `./build-flatpak.sh` as a compatibility wrapper:
-  - default and `--install` route to local install;
-  - `--bundle` routes to bundle generation.
+```bash
+./canva-linux.sh --install
+./canva-linux.sh --bundle
+./canva-linux.sh --validate
+./canva-linux.sh --uninstall
+./canva-linux.sh --reset-user-data
+./canva-linux.sh --help
+```
 
-This keeps local iteration fast while preserving release artifact generation when needed.
+Notes:
+
+- No arguments open an interactive workflow menu.
+- Actions can be chained and run in argument order.
+- `--uninstall` can only be combined with `--reset-user-data`.
+- `build-flatpak.sh` remains as a deprecated compatibility wrapper.
 
 ## GitHub release bundles vs Flathub submission
 
-- **GitHub releases** use local bundle generation from this repository (`./scripts/build-flatpak-bundle.sh`).
-- The generated artifact is `dist/canva-webapp-linux-$VERSION.flatpak`.
-- **Flathub submission** is a separate workflow and is reviewed in the `flathub/flathub` repository.
+- **Local install** (`--install`) is for development/testing.
+- **Bundle generation** (`--bundle`) creates `dist/canva-webapp-linux-$VERSION.flatpak` for GitHub releases.
+- **Flathub submission** is a separate workflow reviewed in `flathub/flathub`.
 
 Do not treat local GitHub release bundles as a direct Flathub submission mechanism.
 
-## Current readiness status
+## Flathub checklist
 
-Current blockers before Flathub submission:
+See `docs/FLATHUB_CHECKLIST.md` for the practical submission checklist, including:
 
-- final Flathub submission and review in `flathub/flathub`;
-- manual OAuth validation beyond Google (Facebook/Meta, Apple, Microsoft).
-
-Additional guidance:
-
-- GitHub `.flatpak` bundle releases and Flathub submission are separate workflows and must stay separate.
-- Real screenshots are now staged locally in `assets/screenshots/` and integrated into AppStream metadata with stable direct URLs pinned to a commit SHA.
-- Branch URLs must not be used for AppStream screenshots.
-- `windowpopup.png` is supporting documentation material and not the primary Flathub screenshot.
-- OAuth native provider icons are intentionally unsupported and should not block Flathub unless reviewers explicitly object.
+- AppStream and desktop metadata validation
+- `flatpak-builder-lint` checks
+- screenshot URL review
+- permission review
+- OAuth support notes
+- stable release source requirements
+- final maintainer manual review before submission
 
 ## Recommended local checks
 
 ```bash
-./scripts/validate-flatpak.sh
+./canva-linux.sh --validate
 ./scripts/validate-flatpak.sh --release-artifacts
 appstreamcli validate --explain data/com.canva.WebApp.metainfo.xml
 desktop-file-validate data/com.canva.WebApp.desktop
