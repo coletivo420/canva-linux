@@ -21,6 +21,11 @@
   <developer id="io.github.canva-flatpak">Community</developer>
   <content_rating type="oars-1.1" />
   <releases>
+    <release version="1.4.9-dev.3" date="2026-04-23">
+      <description>
+        <p>Documented Flathub preparation guidance, clarified distribution workflow boundaries, and added local metadata and manifest lint validation guidance for release readiness.</p>
+      </description>
+    </release>
     <release version="1.4.4" date="2026-04-23">
       <description>
         <p>Made native Wayland the preferred session mode, kept X11 as a manual fallback, merged the fixed Home-tab shell UI, and cleaned the package icon sources.</p>

@@ -23,7 +23,7 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.9-dev.2`.
+Current development version: `1.4.9-dev.3`.
 
 Stable baseline: `1.4.8`.
 
@@ -39,6 +39,7 @@ The native Linux/Wayland OAuth popup icon experiment is **not an active target**
 - `docs/AI_DEVELOPMENT.md` documents AI-assisted development and vibecoding conventions for maintainers.
 - `docs/RELEASE_CHECKLIST.md` provides the release-candidate validation checklist before final `1.4.8`.
 - `docs/MANUAL_VALIDATION.md` defines the manual validation routine for non-functional patch closure.
+- `docs/FLATHUB.md` documents Flathub submission preparation as a separate workflow from GitHub release bundles.
 
 ## Architecture overview
 
@@ -137,7 +138,7 @@ The current maintenance model uses a stable baseline plus development iterations
 
 - stable releases use plain version numbers such as `1.4.7`;
 - development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, `1.4.8-dev.6`, and `1.4.8-dev.7`;
-- the current development delivery is `1.4.9-dev.2`;
+- the current development delivery is `1.4.9-dev.3`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
@@ -150,6 +151,12 @@ The DEV7 phase should focus on release closure documentation and validation guid
 3. preserve non-functional patch scope and avoid behavior changes;
 4. keep repository hygiene policy enforced (`*.bak`, `*.orig`, `*.rej` remain untracked);
 5. defer any functional fixes to a separate development patch.
+
+
+## Distribution workflows
+
+- Local `.flatpak` bundles are generated for GitHub releases at `dist/canva-webapp-linux-$VERSION.flatpak`.
+- Flathub submission preparation is documented separately in `docs/FLATHUB.md`.
 
 ## Build
 
