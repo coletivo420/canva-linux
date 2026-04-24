@@ -38,20 +38,6 @@ const OAUTH_PROVIDER_HOSTS = [
   /(?:^|\.)okta\.com$/i,
   /(?:^|\.)auth0\.com$/i,
 ];
-const PROVIDER_LABELS = [
-  { re: /(?:^|\.)google\.com$/i, label: 'Google' },
-  { re: /(?:^|\.)facebook\.com$/i, label: 'Facebook' },
-  { re: /(?:^|\.)appleid\.apple\.com$/i, label: 'Apple' },
-  { re: /(?:^|\.)microsoftonline\.com$/i, label: 'Microsoft' },
-  { re: /(?:^|\.)live\.com$/i, label: 'Microsoft' },
-  { re: /(?:^|\.)office\.com$/i, label: 'Microsoft' },
-  { re: /(?:^|\.)linkedin\.com$/i, label: 'LinkedIn' },
-  { re: /(?:^|\.)x\.com$/i, label: 'X' },
-  { re: /(?:^|\.)twitter\.com$/i, label: 'X' },
-  { re: /(?:^|\.)github\.com$/i, label: 'GitHub' },
-  { re: /(?:^|\.)okta\.com$/i, label: 'Okta' },
-  { re: /(?:^|\.)auth0\.com$/i, label: 'Auth0' },
-];
 const AUTH_PATH_RE = /\/(?:login|signup|register|oauth|sso|auth|signin|account)(?:[/?#]|$)/i;
 const CANVA_AUTH_HINT_RE = /(?:google|facebook|apple|microsoft|oauth|sso|signup|login|continue)/i;
 const CANVA_OAUTH_AUTHORIZED_RE = /^\/oauth\/authorized(?:\/|$)/i;
@@ -120,6 +106,7 @@ let nextTabId = 1;
 let nextPopupId = 1;
 const tabs = new Map();
 const authPopups = new Map();
+const canvaSession = session.fromPartition(PARTITION, { cache: true });
 
 app.setName(APP_NAME);
 if (process.platform === 'linux') {
@@ -149,15 +136,6 @@ function isOauthProviderUrl(url) {
     return parsed.protocol === 'https:' && OAUTH_PROVIDER_HOSTS.some((re) => re.test(parsed.hostname));
   } catch {
     return false;
-  }
-}
-
-function detectOauthProviderLabel(url) {
-  try {
-    const hostname = new URL(url).hostname;
-    return PROVIDER_LABELS.find((entry) => entry.re.test(hostname))?.label || 'Login';
-  } catch {
-    return 'Login';
   }
 }
 
@@ -274,10 +252,9 @@ function getAppIconPath() {
   return path.join(__dirname, 'assets', 'canva-icon.png');
 }
 
-function updateAuthPopupChrome(window, url) {
+function setAuthPopupTitle(window) {
   if (!window || window.isDestroyed()) return;
-  const providerLabel = shouldOpenInOauthPopup(url) ? detectOauthProviderLabel(url) : 'Login';
-  window.setTitle(`${providerLabel} — ${APP_NAME} Login`);
+  window.setTitle(`${APP_NAME} — Login`);
 }
 
 // Flush cookies and storage so OAuth and Canva sessions survive restarts.
@@ -288,7 +265,7 @@ async function flushSession(ses) {
 
 // Configure the shared session used by the main view and OAuth popups.
 async function configureSession() {
-  const ses = session.fromPartition(PARTITION, { cache: true });
+  const ses = canvaSession;
   debugLog('session', 'configure', PARTITION);
 
   ses.setPermissionRequestHandler((webContents, permission, callback, details = {}) => {
@@ -362,9 +339,9 @@ function shellBackgroundColor() {
 }
 
 function sharedWebPreferences(extra = {}) {
-  // All Canva surfaces (tabs + OAuth popups) must share the same partition.
+  // All Canva surfaces (tabs + OAuth popups) must share the same session.
   return {
-    partition: PARTITION,
+    session: canvaSession,
     contextIsolation: true,
     sandbox: true,
     nodeIntegration: false,
@@ -380,10 +357,8 @@ function popupWindowOptions() {
     minWidth: 420,
     minHeight: 560,
     title: `${APP_NAME} — Login`,
-    parent: mainWindow || undefined,
-    modal: false,
     autoHideMenuBar: true,
-    show: false,
+    show: true,
     backgroundColor: shellBackgroundColor(),
     icon: getAppIconPath(),
     webPreferences: sharedWebPreferences(),
@@ -581,8 +556,10 @@ function closeAuthPopup(popupId, { reloadActiveTab = true, reason = 'manual-clos
 
 function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null, openerUrl = '' } = {}) {
   const popupId = nextPopupId++;
+  const popupSessionPartition = window.webContents?.session?.partition || 'unknown';
+  const sameAsCanvaSession = window.webContents?.session === canvaSession;
   const popupOptionsSummary = {
-    partition: window.webContents?.session?.partition || 'unknown',
+    partition: popupSessionPartition,
     contextIsolation: Boolean(window.webContents?.getLastWebPreferences()?.contextIsolation),
     nodeIntegration: Boolean(window.webContents?.getLastWebPreferences()?.nodeIntegration),
     sandbox: Boolean(window.webContents?.getLastWebPreferences()?.sandbox),
@@ -601,14 +578,25 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   };
   authPopups.set(popupId, entry);
 
-  debugLog('oauth', 'register-popup', startUrl || 'about:blank', summarizeOauthEntry(entry), `opener=${openerUrl || 'unknown'}`);
+  debugLog('oauth', 'popup-created', summarizeOauthEntry(entry), startUrl || 'about:blank', `opener=${openerUrl || 'unknown'}`);
   debugLog('oauth', 'popup-options', `popup=${popupId}`, JSON.stringify(popupOptionsSummary));
+  debugLog('oauth', `popup-session-same-as-canva=${sameAsCanvaSession ? 'true' : 'false'}`, `popup=${popupId}`);
+  debugLog('oauth', 'popup-session-partition', `popup=${popupId}`, popupSessionPartition);
 
   window.setMenuBarVisibility(false);
-  updateAuthPopupChrome(window, startUrl || openerUrl);
+  setAuthPopupTitle(window);
+  window.show();
+  debugLog('oauth', 'popup-show', `popup=${popupId}`);
+  window.focus();
+  debugLog('oauth', 'popup-focus', `popup=${popupId}`);
+  debugLog('oauth', 'popup-bounds', `popup=${popupId}`, JSON.stringify(window.getBounds()));
   window.once('ready-to-show', () => {
-    debugLog('oauth', 'popup-ready', `popup=${popupId}`, windowLabel(window));
+    debugLog('oauth', 'popup-ready-to-show', `popup=${popupId}`, windowLabel(window));
     window.show();
+    debugLog('oauth', 'popup-show', `popup=${popupId}`);
+    window.focus();
+    debugLog('oauth', 'popup-focus', `popup=${popupId}`);
+    debugLog('oauth', 'popup-bounds', `popup=${popupId}`, JSON.stringify(window.getBounds()));
   });
   window.on('close', () => {
     if (!entry.allowClose && !entry.completionHandled) {
@@ -627,18 +615,16 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   const wc = window.webContents;
-  debugLog('oauth', 'popup-session-partition', `popup=${popupId}`, wc.session?.partition || 'unknown');
 
   wc.on('did-finish-load', () => {
     const loadedUrl = wc.getURL() || startUrl || 'about:blank';
     debugLog('oauth', 'popup-finish-load', `popup=${popupId}`, loadedUrl);
     if (entry.sawAuthorizedCallback && entry.pendingCallbackUrl === loadedUrl && !entry.completionHandled) {
       entry.completionHandled = true;
-      const ses = session.fromPartition(PARTITION, { cache: true });
-      flushSession(ses)
+      flushSession(canvaSession)
         .catch(() => {})
         .finally(() => {
-          debugLog('oauth', 'popup-auth-complete', `popup=${popupId}`, loadedUrl);
+          debugLog('oauth', 'popup-authorized-callback', `popup=${popupId}`, loadedUrl);
           closeAuthPopup(popupId, { reloadActiveTab: true, reason: 'authorized-callback-loaded' });
         });
     }
@@ -651,9 +637,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   wc.on('page-title-updated', (event, title) => {
     debugLog('oauth', 'popup-title-updated', `popup=${popupId}`, title || APP_NAME);
     event.preventDefault();
-    const providerLabel = detectOauthProviderLabel(wc.getURL() || startUrl || openerUrl);
-    const cleanTitle = title && title.trim() ? title.trim() : providerLabel;
-    window.setTitle(`${cleanTitle} — ${APP_NAME} Login`);
+    setAuthPopupTitle(window);
   });
 
   wc.setWindowOpenHandler(({ url, openerUrl: childOpenerUrl, disposition, frameName }) => {
@@ -667,7 +651,6 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
     if (request.kind === 'oauth-popup' || isCanvaUrl(url)) {
       window.focus();
       if (!isBlankPopupUrl(url)) {
-        updateAuthPopupChrome(window, url);
         window.loadURL(url);
       }
       return { action: 'deny' };
@@ -679,7 +662,6 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   wc.on('will-navigate', (event, url) => {
     debugLog('oauth', 'popup-will-navigate', `popup=${popupId}`, url);
     if (shouldOpenInOauthPopup(url) || isCanvaUrl(url) || isBlankPopupUrl(url)) {
-      updateAuthPopupChrome(window, url);
       return;
     }
     event.preventDefault();
@@ -687,11 +669,9 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   const syncPopupState = async (url) => {
-    updateAuthPopupChrome(window, url);
-
     if (isOauthProviderUrl(url)) {
       entry.sawExternalProvider = true;
-      debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, detectOauthProviderLabel(url), url);
+      debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, url);
       return;
     }
 
@@ -720,7 +700,7 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   wc.on('did-redirect-navigation', (_event, url) => {
-    debugLog('oauth', 'popup-redirect', `popup=${popupId}`, url);
+    debugLog('oauth', 'popup-did-redirect-navigation', `popup=${popupId}`, url);
     syncPopupState(url).catch(() => {});
   });
 
@@ -885,7 +865,7 @@ function createTab(url = APP_URL, { activate = true, isHome = false } = {}) {
       sandbox: false,
       nodeIntegration: false,
       nodeIntegrationInSubFrames: true,
-      partition: PARTITION,
+      session: canvaSession,
       spellcheck: true,
     },
   });
@@ -1082,8 +1062,7 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', async () => {
   debugLog('app', 'window-all-closed');
-  const ses = session.fromPartition(PARTITION, { cache: true });
   debugLog('session', 'flush-before-quit', PARTITION);
-  await flushSession(ses).catch(() => {});
+  await flushSession(canvaSession).catch(() => {});
   if (process.platform !== 'darwin') app.quit();
 });
