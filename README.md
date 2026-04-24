@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.5 (Flathub validation and packaging-readiness pass)
+Next: 1.4.10-dev.6 (Flathub source/readiness hardening pass)
 
 ## Development (1.4.10-dev.X)
 
@@ -15,7 +15,7 @@ The current development cycle focuses on Flathub readiness and packaging improve
 
 Goal: prepare the project for Flathub submission without introducing new runtime features.
 
-No new runtime feature is introduced in `1.4.10-dev.5`.
+No new runtime feature is introduced in `1.4.10-dev.6`.
 
 ## OAuth Support
 
@@ -71,6 +71,7 @@ Detailed packaging notes live in:
 
 - `docs/FLATHUB.md`
 - `docs/FLATHUB_CHECKLIST.md`
+- `docs/FLATHUB_SOURCE.md`
 - `docs/SCREENSHOTS.md`
 - `docs/FLATPAK_PERMISSIONS.md`
 
@@ -82,6 +83,7 @@ Detailed packaging notes live in:
 - `docs/PRIVACY.md` explains privacy and telemetry scope for this wrapper project.
 - `docs/FLATHUB.md` covers Flathub submission preparation.
 - `docs/FLATHUB_CHECKLIST.md` tracks practical Flathub submission checks.
+- `docs/FLATHUB_SOURCE.md` documents the current local manifest source workflow and future Flathub source expectations.
 - `docs/SCREENSHOTS.md` documents the screenshot workflow.
 - `docs/FLATPAK_PERMISSIONS.md` documents Flatpak permissions and review notes.
 

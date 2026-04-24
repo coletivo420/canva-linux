@@ -1,0 +1,58 @@
+# Flathub Source Strategy
+
+## Purpose
+
+This document explains the current local Flatpak manifest source workflow and what must change before a final Flathub submission.
+
+## Current local manifest workflow
+
+The local manifest currently uses:
+
+```yaml
+sources:
+  - type: dir
+    path: .
+```
+
+This works for local development because `flatpak-builder` reads the checked-out repository directly. That is convenient for maintainer testing with `./canva-linux.sh`, local installs, and GitHub `.flatpak` bundle generation.
+
+## Why `type: dir` with `path: .` is not the final Flathub source strategy
+
+Using a local directory source is acceptable for local maintainer workflows, but it is not ideal for final Flathub submission because:
+
+- it depends on the local checkout state;
+- it can accidentally include local-only files or generated artifacts;
+- it does not provide the stable remote source reference expected for reviewable source builds;
+- it is not the right long-term source strategy for a reproducible Flathub submission.
+
+The Flathub package must not rely on local untracked files, generated files, or maintainer-specific workspace state.
+
+## Future Flathub submission expectation
+
+The final Flathub submission should build from a stable release tag or stable source archive selected for that release.
+
+Before submission, the maintainer must review:
+
+- the chosen stable release tag or source archive;
+- all manifest source URLs;
+- all source hashes;
+- whether the source input matches the intended reviewed release contents.
+
+## Screenshot URL review
+
+Screenshot URLs must also be stable and reviewed before final submission. Branch-based screenshot URLs are not acceptable for the final Flathub review path.
+
+The maintainer should verify that screenshot URLs point to the final reviewed release or tag context used for submission.
+
+## Release workflow separation
+
+GitHub `.flatpak` bundle releases and Flathub source builds are separate workflows.
+
+- GitHub bundle releases are generated from the repository workflow for direct distribution.
+- Flathub source builds are reviewed separately and should use stable source URLs appropriate for Flathub submission.
+
+Do not treat the GitHub bundle workflow as a substitute for Flathub source review.
+
+## Maintainer review requirement
+
+Before a final Flathub submission, the maintainer must review source URLs, source hashes, and screenshot URLs against the intended stable release input.
