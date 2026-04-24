@@ -20,3 +20,9 @@ This file tracks screenshot preparation for future Flathub/AppStream publication
 - Do not add screenshot URLs to MetaInfo until final stable URLs exist.
 - Do not use branch URLs for screenshot metadata.
 - Do not publish placeholder or fake screenshots.
+
+## Submission constraints
+
+- Real screenshots are mandatory before Flathub submission.
+- Screenshots must not expose private account data, private project content, or personal identifiers.
+- No screenshot URLs should be added to AppStream metadata until stable, real, review-ready images exist.

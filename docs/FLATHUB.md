@@ -12,6 +12,18 @@ This document explains how to prepare this project for a future Flathub submissi
 
 Do not treat local GitHub release bundles as a direct Flathub submission mechanism.
 
+## Current readiness status
+
+Current blockers before Flathub submission:
+
+- real public screenshots suitable for AppStream metadata;
+- manual OAuth validation beyond Google (Facebook/Meta, Apple, Microsoft).
+
+Additional guidance:
+
+- GitHub `.flatpak` bundle releases and Flathub submission are separate workflows and must stay separate.
+- OAuth native provider icons are intentionally unsupported and should not block Flathub unless reviewers explicitly object.
+
 ## Flathub submission expectations
 
 A future Flathub submission generally requires:

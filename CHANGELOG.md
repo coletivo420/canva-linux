@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.9] - 2026-04-23
+
+### Changed
+- Cleaned up development changelog notes after the OAuth stabilization cycle.
+- Documented OAuth provider test coverage: Google was tested; Facebook/Meta, Apple, and Microsoft still require manual validation.
+- Refocused the `1.4.9-dev.X` cycle on Flathub readiness after the OAuth regression fix.
+
+### Notes
+- This is a documentation and release-readiness cleanup pass.
+- No runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.8] - 2026-04-23
 
 ### Changed
@@ -31,6 +42,9 @@ All notable changes to this project are documented in this file.
 ### Fixed
 - Improved OAuth popup completion handling after provider login redirects.
 
+### Superseded status
+- This intermediate OAuth iteration was superseded by the session-sharing fix in `1.4.9-dev.7` and provider-neutral stabilization in `1.4.9-dev.8`.
+
 ### Changed
 - Added OAuth popup lifecycle diagnostics for session partition, redirect completion, load failures, and unexpected closure.
 
@@ -42,6 +56,9 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 - Removed OAuth popup native provider icon customization attempts to restore stable popup behavior on Linux/Wayland.
+
+### Superseded status
+- Earlier provider-icon experiments are considered failed and superseded by the stable OAuth path documented in `1.4.9-dev.7` and `1.4.9-dev.8`.
 
 ### Added
 - Added screenshot preparation documentation for future Flathub/AppStream metadata.
