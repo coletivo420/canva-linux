@@ -23,7 +23,7 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.9-dev.4`.
+Current development version: `1.4.9-dev.5`.
 
 Stable baseline: `1.4.8`.
 
@@ -56,6 +56,12 @@ Main runtime pieces:
 - `build-flatpak.sh` builds and installs the local Flatpak package for testing and also exports a versioned bundle to `dist/`.
 - `com.canva.WebApp.yml` defines the Flatpak build, runtime, permissions, finish args, and packaging modules.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` provide desktop and software-center metadata.
+
+## Window and tab policy
+
+Canva navigation is handled by the internal tab system. The app should not open arbitrary Electron windows for normal Canva content.
+
+Separate Electron windows are reserved for OAuth/authentication popups only. This keeps the main Canva workflow organized in tabs while preserving provider login flows that require popup-style windows.
 
 ## Shell behavior
 

@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.5] - 2026-04-23
+
+### Fixed
+- Removed OAuth popup native provider icon customization attempts to restore stable popup behavior on Linux/Wayland.
+
+### Added
+- Added screenshot preparation documentation for future Flathub/AppStream metadata.
+- Added a screenshots staging directory with privacy and release guidance.
+
+### Changed
+- Documented the window and tab policy: normal Canva navigation stays in tabs, while separate Electron windows are reserved for OAuth/authentication flows only.
+- Expanded login persistence documentation for the shared `persist:canva` Electron session used by Canva tabs and OAuth popups.
+
+### Notes
+- Real screenshots are intentionally not added yet.
+- OAuth native popup provider icons remain a known Linux/Wayland limitation.
+- No unrelated runtime behavior is intentionally changed.
+
 ## [1.4.9-dev.4] - 2026-04-23
 
 ### Added
