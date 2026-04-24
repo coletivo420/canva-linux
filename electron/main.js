@@ -7,7 +7,6 @@ const {
   shell,
   session,
   ipcMain,
-  nativeImage,
   nativeTheme,
 } = require('electron');
 const path = require('path');
@@ -22,39 +21,19 @@ const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
 const INTERNAL_HOST_RE = /(?:^|\.)canva\.com$/i;
 const OAUTH_PROVIDER_HOSTS = [
-  /(?:^|\.)google\.com$/i,
-  /(?:^|\.)googleusercontent\.com$/i,
-  /(?:^|\.)gstatic\.com$/i,
-  /(?:^|\.)facebook\.com$/i,
-  /(?:^|\.)fbcdn\.net$/i,
-  /(?:^|\.)appleid\.apple\.com$/i,
-  /(?:^|\.)apple\.com$/i,
-  /(?:^|\.)microsoftonline\.com$/i,
-  /(?:^|\.)live\.com$/i,
-  /(?:^|\.)office\.com$/i,
-  /(?:^|\.)linkedin\.com$/i,
-  /(?:^|\.)twitter\.com$/i,
-  /(?:^|\.)x\.com$/i,
-  /(?:^|\.)github\.com$/i,
-  /(?:^|\.)okta\.com$/i,
-  /(?:^|\.)auth0\.com$/i,
-];
-const PROVIDER_LABELS = [
-  { re: /(?:^|\.)google\.com$/i, label: 'Google' },
-  { re: /(?:^|\.)facebook\.com$/i, label: 'Facebook' },
-  { re: /(?:^|\.)appleid\.apple\.com$/i, label: 'Apple' },
-  { re: /(?:^|\.)microsoftonline\.com$/i, label: 'Microsoft' },
-  { re: /(?:^|\.)live\.com$/i, label: 'Microsoft' },
-  { re: /(?:^|\.)office\.com$/i, label: 'Microsoft' },
-  { re: /(?:^|\.)linkedin\.com$/i, label: 'LinkedIn' },
-  { re: /(?:^|\.)x\.com$/i, label: 'X' },
-  { re: /(?:^|\.)twitter\.com$/i, label: 'X' },
-  { re: /(?:^|\.)github\.com$/i, label: 'GitHub' },
-  { re: /(?:^|\.)okta\.com$/i, label: 'Okta' },
-  { re: /(?:^|\.)auth0\.com$/i, label: 'Auth0' },
+  // Google OAuth hosts used by Canva login flows.
+  /^(?:accounts\.google\.com|accounts\.google\.com\.br|accounts\.youtube\.com)$/i,
+  // Facebook/Meta OAuth hosts used by Canva login flows.
+  /^(?:facebook\.com|www\.facebook\.com|m\.facebook\.com)$/i,
+  // Apple OAuth host used by Canva login flows.
+  /^appleid\.apple\.com$/i,
+  // Microsoft OAuth hosts used by Canva login flows.
+  /^(?:login\.microsoftonline\.com|login\.live\.com|account\.live\.com)$/i,
 ];
 const AUTH_PATH_RE = /\/(?:login|signup|register|oauth|sso|auth|signin|account)(?:[/?#]|$)/i;
 const CANVA_AUTH_HINT_RE = /(?:google|facebook|apple|microsoft|oauth|sso|signup|login|continue)/i;
+const CANVA_OAUTH_AUTHORIZED_RE = /^\/oauth\/authorized(?:\/|$)/i;
+const CANVA_OAUTH_RE = /^\/oauth(?:\/|$)/i;
 
 const DEBUG_CATEGORY_ALIASES = {
   // Keep backward compatibility with older "drag" filter values.
@@ -119,6 +98,7 @@ let nextTabId = 1;
 let nextPopupId = 1;
 const tabs = new Map();
 const authPopups = new Map();
+let canvaSession = null;
 
 app.setName(APP_NAME);
 if (process.platform === 'linux') {
@@ -133,6 +113,13 @@ if (process.platform === 'linux') {
 // Keep persistent browser data inside a stable session directory.
 app.setPath('sessionData', path.join(app.getPath('userData'), 'session'));
 
+function getCanvaSession() {
+  if (!canvaSession) {
+    canvaSession = session.fromPartition(PARTITION, { cache: true });
+  }
+  return canvaSession;
+}
+
 function isCanvaUrl(url) {
   try {
     const parsed = new URL(url);
@@ -142,21 +129,12 @@ function isCanvaUrl(url) {
   }
 }
 
-function isOauthProviderUrl(url) {
+function isOAuthProviderUrl(url) {
   try {
     const parsed = new URL(url);
     return parsed.protocol === 'https:' && OAUTH_PROVIDER_HOSTS.some((re) => re.test(parsed.hostname));
   } catch {
     return false;
-  }
-}
-
-function detectOauthProviderLabel(url) {
-  try {
-    const hostname = new URL(url).hostname;
-    return PROVIDER_LABELS.find((entry) => entry.re.test(hostname))?.label || 'Login';
-  } catch {
-    return 'Login';
   }
 }
 
@@ -207,12 +185,32 @@ function isCanvaAuthUrl(url) {
   }
 }
 
-function shouldOpenInOauthPopup(url) {
-  return isOauthProviderUrl(url) || isCanvaAuthUrl(url);
+function isCanvaOAuthAuthorizedCallback(url) {
+  if (!isCanvaUrl(url)) return false;
+  try {
+    return CANVA_OAUTH_AUTHORIZED_RE.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
 }
 
-function isAuthCompletionUrl(url) {
-  return isCanvaUrl(url) && !isCanvaAuthUrl(url);
+function isCanvaOAuthUrl(url) {
+  if (!isCanvaUrl(url)) return false;
+  try {
+    return CANVA_OAUTH_RE.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
+
+function shouldOpenInOauthPopup(url) {
+  return isOAuthProviderUrl(url) || isCanvaAuthUrl(url) || isCanvaOAuthUrl(url);
+}
+
+function detectCanvaOAuthCallback(url) {
+  if (isCanvaOAuthAuthorizedCallback(url)) return 'authorized';
+  if (isCanvaOAuthUrl(url)) return 'oauth';
+  return null;
 }
 
 function isBlankPopupUrl(url) {
@@ -261,58 +259,13 @@ function summarizeOauthEntry(entry) {
   ].join(' ');
 }
 
-function getAppIcon() {
-  const iconPath = path.join(__dirname, 'assets', 'canva-icon.png');
-  return nativeImage.createFromPath(iconPath);
+function getAppIconPath() {
+  return path.join(__dirname, 'assets', 'canva-icon.png');
 }
 
-function createTintedProviderIcon(providerLabel) {
-  const presets = {
-    Google: { bg: '#ffffff', fg: '#4285F4' },
-    Facebook: { bg: '#1877F2', fg: '#ffffff' },
-    Apple: { bg: '#111111', fg: '#ffffff' },
-    Microsoft: { bg: '#2563eb', fg: '#ffffff' },
-    LinkedIn: { bg: '#0a66c2', fg: '#ffffff' },
-    X: { bg: '#111111', fg: '#ffffff' },
-    GitHub: { bg: '#111111', fg: '#ffffff' },
-    Okta: { bg: '#007dc1', fg: '#ffffff' },
-    Auth0: { bg: '#eb5424', fg: '#ffffff' },
-    Login: { bg: '#00c4cc', fg: '#ffffff' },
-  };
-  const preset = presets[providerLabel] || presets.Login;
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-      <rect width="256" height="256" rx="56" fill="${preset.bg}"/>
-      <text x="128" y="150" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="112" font-weight="700" fill="${preset.fg}">${providerLabel.slice(0, 1)}</text>
-    </svg>
-  `;
-  return nativeImage.createFromBuffer(Buffer.from(svg));
-}
-
-async function trySetPopupIconFromFavicon(window, faviconUrl) {
-  if (!window || window.isDestroyed() || !faviconUrl) return false;
-  try {
-    const response = await fetch(faviconUrl, {
-      headers: {
-        'user-agent': 'Mozilla/5.0 Canva Linux Wrapper',
-      },
-    });
-    if (!response.ok) return false;
-    const imageBuffer = Buffer.from(await response.arrayBuffer());
-    const image = nativeImage.createFromBuffer(imageBuffer);
-    if (image.isEmpty()) return false;
-    window.setIcon(image);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function updateAuthPopupChrome(window, url) {
+function setAuthPopupTitle(window) {
   if (!window || window.isDestroyed()) return;
-  const providerLabel = shouldOpenInOauthPopup(url) ? detectOauthProviderLabel(url) : 'Login';
-  window.setTitle(`${providerLabel} — ${APP_NAME} Login`);
-  window.setIcon(createTintedProviderIcon(providerLabel));
+  window.setTitle(`${APP_NAME} — Login`);
 }
 
 // Flush cookies and storage so OAuth and Canva sessions survive restarts.
@@ -323,7 +276,7 @@ async function flushSession(ses) {
 
 // Configure the shared session used by the main view and OAuth popups.
 async function configureSession() {
-  const ses = session.fromPartition(PARTITION, { cache: true });
+  const ses = getCanvaSession();
   debugLog('session', 'configure', PARTITION);
 
   ses.setPermissionRequestHandler((webContents, permission, callback, details = {}) => {
@@ -397,9 +350,9 @@ function shellBackgroundColor() {
 }
 
 function sharedWebPreferences(extra = {}) {
-  // All Canva surfaces (tabs + OAuth popups) must share the same partition.
+  // All Canva surfaces (tabs + OAuth popups) must share the same session.
   return {
-    partition: PARTITION,
+    session: getCanvaSession(),
     contextIsolation: true,
     sandbox: true,
     nodeIntegration: false,
@@ -415,12 +368,10 @@ function popupWindowOptions() {
     minWidth: 420,
     minHeight: 560,
     title: `${APP_NAME} — Login`,
-    parent: mainWindow || undefined,
-    modal: false,
     autoHideMenuBar: true,
-    show: false,
+    show: true,
     backgroundColor: shellBackgroundColor(),
-    icon: getAppIcon(),
+    icon: getAppIconPath(),
     webPreferences: sharedWebPreferences(),
   };
 }
@@ -436,7 +387,7 @@ function createShellWindow() {
     autoHideMenuBar: true,
     backgroundColor: shellBackgroundColor(),
     show: false,
-    icon: getAppIcon(),
+    icon: getAppIconPath(),
     webPreferences: {
       contextIsolation: true,
       sandbox: true,
@@ -592,6 +543,10 @@ function broadcastTabsState() {
 
 function closeAuthPopup(popupId, { reloadActiveTab = true, reason = 'manual-close' } = {}) {
   const entry = authPopups.get(popupId);
+  if (entry) {
+    entry.closeReason = reason;
+    entry.allowClose = true;
+  }
   debugLog('oauth', 'close-popup', popupId, `reload=${reloadActiveTab}`, `reason=${reason}`, summarizeOauthEntry(entry));
   if (!entry) return;
   authPopups.delete(popupId);
@@ -612,25 +567,62 @@ function closeAuthPopup(popupId, { reloadActiveTab = true, reason = 'manual-clos
 
 function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null, openerUrl = '' } = {}) {
   const popupId = nextPopupId++;
+  const popupSessionPartition = window.webContents?.session?.partition || 'unknown';
+  const sameAsCanvaSession = window.webContents?.session === getCanvaSession();
+  const popupOptionsSummary = {
+    partition: popupSessionPartition,
+    contextIsolation: Boolean(window.webContents?.getLastWebPreferences()?.contextIsolation),
+    nodeIntegration: Boolean(window.webContents?.getLastWebPreferences()?.nodeIntegration),
+    sandbox: Boolean(window.webContents?.getLastWebPreferences()?.sandbox),
+  };
   const entry = {
     id: popupId,
     window,
     startedOnCanvaAuth: isCanvaAuthUrl(startUrl) || isCanvaAuthUrl(openerUrl),
-    sawExternalProvider: isOauthProviderUrl(startUrl),
+    sawExternalProvider: isOAuthProviderUrl(startUrl),
+    sawAuthorizedCallback: false,
+    completionHandled: false,
+    pendingCallbackUrl: '',
+    allowClose: false,
+    closeReason: 'unknown',
     sourceWebContentsId,
   };
   authPopups.set(popupId, entry);
 
-  debugLog('oauth', 'register-popup', startUrl || 'about:blank', summarizeOauthEntry(entry), `opener=${openerUrl || 'unknown'}`);
+  debugLog('oauth', 'popup-created', summarizeOauthEntry(entry), startUrl || 'about:blank', `opener=${openerUrl || 'unknown'}`);
+  debugLog('oauth', 'popup-options', `popup=${popupId}`, JSON.stringify(popupOptionsSummary));
+  debugLog('oauth', `popup-session-same-as-canva=${sameAsCanvaSession ? 'true' : 'false'}`, `popup=${popupId}`);
+  if (popupSessionPartition && popupSessionPartition !== 'unknown') {
+    debugLog('oauth', 'popup-session-partition', `popup=${popupId}`, popupSessionPartition);
+  }
 
   window.setMenuBarVisibility(false);
-  updateAuthPopupChrome(window, startUrl || openerUrl);
+  setAuthPopupTitle(window);
+  window.show();
+  debugLog('oauth', 'popup-show', `popup=${popupId}`);
+  window.focus();
+  debugLog('oauth', 'popup-focus', `popup=${popupId}`);
+  debugLog('oauth', 'popup-bounds', `popup=${popupId}`, JSON.stringify(window.getBounds()));
   window.once('ready-to-show', () => {
-    debugLog('oauth', 'popup-ready', `popup=${popupId}`, windowLabel(window));
+    debugLog('oauth', 'popup-ready-to-show', `popup=${popupId}`, windowLabel(window));
     window.show();
+    debugLog('oauth', 'popup-show', `popup=${popupId}`);
+    window.focus();
+    debugLog('oauth', 'popup-focus', `popup=${popupId}`);
+    debugLog('oauth', 'popup-bounds', `popup=${popupId}`, JSON.stringify(window.getBounds()));
+  });
+  window.on('close', () => {
+    if (!entry.allowClose && !entry.completionHandled) {
+      entry.closeReason = 'closed-before-callback';
+      debugLog('oauth', 'popup-close-before-callback', `popup=${popupId}`);
+      return;
+    }
+    if (!entry.closeReason || entry.closeReason === 'unknown') {
+      entry.closeReason = entry.completionHandled ? 'auth-complete' : 'user-or-provider-close';
+    }
   });
   window.on('closed', () => {
-    debugLog('oauth', 'popup-closed', summarizeOauthEntry(entry));
+    debugLog('oauth', 'popup-closed', summarizeOauthEntry(entry), `reason=${entry.closeReason || 'unknown'}`);
     authPopups.delete(popupId);
     mainWindow?.focus();
   });
@@ -638,23 +630,27 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   const wc = window.webContents;
 
   wc.on('did-finish-load', () => {
-    debugLog('oauth', 'popup-finish-load', `popup=${popupId}`, wc.getURL() || startUrl || 'about:blank');
+    const loadedUrl = wc.getURL() || startUrl || 'about:blank';
+    debugLog('oauth', 'popup-finish-load', `popup=${popupId}`, loadedUrl);
+    if (entry.sawAuthorizedCallback && entry.pendingCallbackUrl === loadedUrl && !entry.completionHandled) {
+      entry.completionHandled = true;
+      flushSession(getCanvaSession())
+        .catch(() => {})
+        .finally(() => {
+          debugLog('oauth', 'popup-authorized-callback', `popup=${popupId}`, loadedUrl);
+          closeAuthPopup(popupId, { reloadActiveTab: true, reason: 'authorized-callback-loaded' });
+        });
+    }
   });
 
   wc.on('page-favicon-updated', (_event, favicons) => {
     debugLog('oauth', 'popup-favicon-updated', `popup=${popupId}`, favicons?.[0] || 'none');
-    const faviconUrl = favicons?.[0];
-    if (faviconUrl) {
-      trySetPopupIconFromFavicon(window, faviconUrl).catch(() => {});
-    }
   });
 
   wc.on('page-title-updated', (event, title) => {
     debugLog('oauth', 'popup-title-updated', `popup=${popupId}`, title || APP_NAME);
     event.preventDefault();
-    const providerLabel = detectOauthProviderLabel(wc.getURL() || startUrl || openerUrl);
-    const cleanTitle = title && title.trim() ? title.trim() : providerLabel;
-    window.setTitle(`${cleanTitle} — ${APP_NAME} Login`);
+    setAuthPopupTitle(window);
   });
 
   wc.setWindowOpenHandler(({ url, openerUrl: childOpenerUrl, disposition, frameName }) => {
@@ -668,7 +664,6 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
     if (request.kind === 'oauth-popup' || isCanvaUrl(url)) {
       window.focus();
       if (!isBlankPopupUrl(url)) {
-        updateAuthPopupChrome(window, url);
         window.loadURL(url);
       }
       return { action: 'deny' };
@@ -680,7 +675,6 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   wc.on('will-navigate', (event, url) => {
     debugLog('oauth', 'popup-will-navigate', `popup=${popupId}`, url);
     if (shouldOpenInOauthPopup(url) || isCanvaUrl(url) || isBlankPopupUrl(url)) {
-      updateAuthPopupChrome(window, url);
       return;
     }
     event.preventDefault();
@@ -688,31 +682,63 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
   });
 
   const syncPopupState = async (url) => {
-    // OAuth flow closes only after we return to a non-auth Canva URL.
-    updateAuthPopupChrome(window, url);
-
-    if (isOauthProviderUrl(url)) {
+    if (isOAuthProviderUrl(url)) {
       entry.sawExternalProvider = true;
-      debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, detectOauthProviderLabel(url), url);
+      debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, extractHostname(url) || 'unknown-provider-host');
       return;
     }
 
-    if (isAuthCompletionUrl(url) && (entry.sawExternalProvider || entry.startedOnCanvaAuth)) {
-      debugLog('oauth', 'popup-auth-complete', `popup=${popupId}`, url);
-      const ses = session.fromPartition(PARTITION, { cache: true });
-      await flushSession(ses).catch(() => {});
-      debugLog('oauth', 'popup-session-flushed', `popup=${popupId}`);
-      closeAuthPopup(popupId, { reloadActiveTab: true, reason: 'auth-complete' });
+    const callbackType = detectCanvaOAuthCallback(url);
+    if (!callbackType) {
+      return;
     }
+
+    debugLog('oauth', 'popup-canva-callback-detected', `popup=${popupId}`, `type=${callbackType}`, url);
+    if (callbackType === 'authorized') {
+      entry.sawAuthorizedCallback = true;
+      entry.pendingCallbackUrl = url;
+      return;
+    }
+
+    // Keep tracking /oauth/* redirects and wait for /oauth/authorized/* before completion.
+    entry.pendingCallbackUrl = url;
   };
 
   wc.on('did-navigate', (_event, url) => {
     debugLog('oauth', 'popup-did-navigate', `popup=${popupId}`, url);
     syncPopupState(url).catch(() => {});
   });
+  wc.on('will-redirect', (_event, url, isInPlace, isMainFrame) => {
+    debugLog('oauth', 'popup-will-redirect', `popup=${popupId}`, `mainFrame=${isMainFrame ? 'true' : 'false'}`, `inPlace=${isInPlace ? 'true' : 'false'}`, url);
+  });
+
   wc.on('did-redirect-navigation', (_event, url) => {
-    debugLog('oauth', 'popup-redirect', `popup=${popupId}`, url);
+    debugLog('oauth', 'popup-did-redirect-navigation', `popup=${popupId}`, url);
     syncPopupState(url).catch(() => {});
+  });
+
+  wc.on('did-fail-load', (_event, code, description, validatedURL, isMainFrame) => {
+    debugLog(
+      'oauth',
+      'popup-did-fail-load',
+      `popup=${popupId}`,
+      `mainFrame=${isMainFrame ? 'true' : 'false'}`,
+      `code=${code}`,
+      description || 'no-description',
+      validatedURL || 'unknown-url'
+    );
+  });
+
+  wc.on('render-process-gone', (_event, details) => {
+    debugLog('oauth', 'popup-render-process-gone', `popup=${popupId}`, `reason=${details?.reason || 'unknown'}`, `exitCode=${details?.exitCode ?? 'unknown'}`);
+  });
+
+  wc.on('unresponsive', () => {
+    debugLog('oauth', 'popup-unresponsive', `popup=${popupId}`);
+  });
+
+  wc.on('responsive', () => {
+    debugLog('oauth', 'popup-responsive', `popup=${popupId}`);
   });
 
   return entry;
@@ -852,7 +878,7 @@ function createTab(url = APP_URL, { activate = true, isHome = false } = {}) {
       sandbox: false,
       nodeIntegration: false,
       nodeIntegrationInSubFrames: true,
-      partition: PARTITION,
+      session: getCanvaSession(),
       spellcheck: true,
     },
   });
@@ -1049,8 +1075,9 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', async () => {
   debugLog('app', 'window-all-closed');
-  const ses = session.fromPartition(PARTITION, { cache: true });
   debugLog('session', 'flush-before-quit', PARTITION);
-  await flushSession(ses).catch(() => {});
+  if (canvaSession) {
+    await flushSession(canvaSession).catch(() => {});
+  }
   if (process.platform !== 'darwin') app.quit();
 });

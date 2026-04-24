@@ -19,24 +19,31 @@ The current development line focuses on:
 - a custom eyedropper implementation that works in current Linux testing;
 - readable diagnostics for startup, tabs, OAuth, uploads, permissions, sessions, drag-and-drop, and eyedropper flows.
 
-Feature parity with the official Canva desktop experience remains a long-term goal, but the current `1.4.8-dev.X` branch is primarily a stabilization, diagnostics, and documentation branch.
+Feature parity with the official Canva desktop experience remains a long-term goal, but the current `1.4.9-dev.X` branch is primarily a distribution, Flathub preparation, and AI-assisted maintenance branch.
 
 ## Current development status
 
-Current development version: `1.4.8-dev.7`.
+Current development version: `1.4.9-dev.14`.
 
-Stable baseline: `1.4.7`.
+Stable baseline: `1.4.8`.
 
-The `dev` branch currently keeps the stable `1.4.7` debug foundation and adds the `1.4.8-dev.X` diagnostics work for Wayland drag-and-drop, upload ingress, file picker continuation, clipboard-driven imports, OAuth popup retesting, and shell documentation.
+The `dev` branch currently keeps the stable `1.4.8` foundation and adds the `1.4.9-dev.X` distribution, Flathub preparation, and AI-assisted maintenance documentation.
 
-The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current DEV7 phase. It is documented as a known limitation and should not block the `1.4.8-dev.X` maintenance work.
+The current development pass is a final Flathub and release-readiness validation cycle before preparing `1.4.9-rc.1`, keeping the AppStream screenshot set and packaging documentation aligned without changing runtime behavior.
+
+The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current `1.4.9-dev.X` phase. It is documented as a known limitation and should not block current maintenance work.
 
 ## Documentation map
 
 - `README.md` provides project orientation and day-to-day development context.
+- `CHANGELOG.md` is the authoritative timeline for each dev delivery and must be updated in every development patch.
 - `docs/TECHNICAL.md` centralizes technical repository notes for the current maintenance branch.
+- `docs/AI_DEVELOPMENT.md` documents AI-assisted development and vibecoding conventions for maintainers.
 - `docs/RELEASE_CHECKLIST.md` provides the release-candidate validation checklist before final `1.4.8`.
 - `docs/MANUAL_VALIDATION.md` defines the manual validation routine for non-functional patch closure.
+- `docs/FLATHUB.md` documents Flathub submission preparation as a separate workflow from GitHub release bundles.
+- `docs/SCREENSHOTS.md` documents the real screenshot set and the AppStream publication rules for stable URLs.
+- `docs/FLATPAK_PERMISSIONS.md` documents Flatpak manifest permissions and future minimization guidance.
 
 ## Architecture overview
 
@@ -49,9 +56,17 @@ Main runtime pieces:
 - `electron/toolbar-preload.js` exposes the toolbar IPC bridge used by the local toolbar UI.
 - `electron/toolbar.html` renders the wrapper toolbar and tab controls.
 - `run.sh` launches the app inside Flatpak and selects Wayland, X11, or automatic platform behavior based on environment variables.
-- `build-flatpak.sh` builds and installs the local Flatpak package for testing.
+- `build-flatpak.sh` builds and installs the local Flatpak package for testing and also exports a versioned bundle to `dist/`.
 - `com.canva.WebApp.yml` defines the Flatpak build, runtime, permissions, finish args, and packaging modules.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` provide desktop and software-center metadata.
+
+## Window and tab policy
+
+Canva navigation is handled by the internal tab system. The app should not open arbitrary Electron windows for normal Canva content.
+
+Separate Electron windows are reserved for OAuth/authentication popups only. This keeps the main Canva workflow organized in tabs while preserving provider login flows that require popup-style windows.
+
+Google OAuth was tested during this development cycle. Facebook/Meta, Apple, and Microsoft OAuth support uses the same generalized popup/session logic but still requires manual validation.
 
 ## Shell behavior
 
@@ -62,6 +77,7 @@ Main runtime pieces:
 - Compatible OAuth providers open in separate popup windows.
 - OAuth popups share the same persistent session partition used by the main Canva shell.
 - Startup debug logs summarize the current development state and highlight flows that still need validation.
+- Native OAuth provider icon customization remains intentionally unsupported.
 
 ## Persistent session model
 
@@ -122,8 +138,8 @@ Wayland is the preferred path for modern Linux desktops, but some drag-and-drop,
 
 ## Known limitations and current observations
 
-- Native OAuth popup window icons on Linux/Wayland are a known limitation for now. Recent attempts to force provider-specific native popup icons did not work reliably in practice and are not a DEV7 target.
-- Clean-session OAuth completion still needs targeted retesting after removing local Flatpak app data.
+- Native OAuth popup window icons on Linux/Wayland are a known limitation for now. Recent attempts to force provider-specific native popup icons did not work reliably in practice and are not a current development target.
+- Google OAuth was tested successfully. Facebook/Meta, Apple, and Microsoft still need targeted manual validation after removing local Flatpak app data when doing clean-session retests.
 - Host file picker continuation and clipboard-driven imports should continue to be tested with the richer `upload` diagnostics added in the `1.4.8-dev.X` line.
 - Native Wayland drag-and-drop can still depend on compositor and Chromium behavior.
 - GPU, VAAPI, and sandbox warnings may appear depending on host drivers and runtime support.
@@ -135,6 +151,7 @@ The current maintenance model uses a stable baseline plus development iterations
 
 - stable releases use plain version numbers such as `1.4.7`;
 - development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, `1.4.8-dev.6`, and `1.4.8-dev.7`;
+- the current development delivery is `1.4.9-dev.14`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
@@ -148,11 +165,35 @@ The DEV7 phase should focus on release closure documentation and validation guid
 4. keep repository hygiene policy enforced (`*.bak`, `*.orig`, `*.rej` remain untracked);
 5. defer any functional fixes to a separate development patch.
 
+
+## Flathub preparation status
+
+Flathub readiness is in progress and tracked in:
+
+- `docs/FLATHUB.md`
+- `docs/SCREENSHOTS.md`
+- `docs/FLATPAK_PERMISSIONS.md`
+
+The active AppStream metadata now uses real screenshot URLs pinned to a stable commit SHA. Branch-based screenshot URLs must not be used.
+
+GitHub `.flatpak` release bundles and Flathub submission remain separate workflows.
+
+## Distribution workflows
+
+- Local `.flatpak` bundles are generated for GitHub releases at `dist/canva-webapp-linux-$VERSION.flatpak`.
+- Flathub submission preparation is documented separately in `docs/FLATHUB.md`.
+
 ## Build
 
 ```bash
 chmod +x build-flatpak.sh
 ./build-flatpak.sh
+```
+
+The build helper also generates a versioned Flatpak bundle artifact at:
+
+```
+dist/canva-webapp-linux-$VERSION.flatpak
 ```
 
 ## Run and post-install commands

@@ -18,9 +18,39 @@
   </description>
   <launchable type="desktop-id">com.canva.WebApp.desktop</launchable>
   <url type="homepage">https://www.canva.com/</url>
-  <developer id="io.github.canva-flatpak">Community</developer>
+  <developer id="io.github.canva-flatpak">
+    <name>Felipe Matos (piradopirata)</name>
+  </developer>
   <content_rating type="oars-1.1" />
+  <screenshots>
+    <screenshot type="default">
+      <caption>Canva WebApp Linux home screen</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/home.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Canva WebApp Linux tabbed shell</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/tabs.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Upload workflow inside Canva WebApp Linux</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/upload.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Custom eyedropper workflow inside Canva WebApp Linux</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/eyedropper.png</image>
+    </screenshot>
+  </screenshots>
   <releases>
+    <release version="1.4.9-dev.14" date="2026-04-24">
+      <description>
+        <p>Performed a final Flathub and release-readiness validation pass, reviewed AppStream metadata and packaging documentation, and intentionally left runtime behavior unchanged before preparing 1.4.9-rc.1.</p>
+      </description>
+    </release>
+    <release version="1.4.9-dev.12" date="2026-04-24">
+      <description>
+        <p>Prepared AppStream screenshot integration around the real local screenshot set staged in the repository, updated packaging documentation, and intentionally kept screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.</p>
+      </description>
+    </release>
     <release version="1.4.4" date="2026-04-23">
       <description>
         <p>Made native Wayland the preferred session mode, kept X11 as a manual fallback, merged the fixed Home-tab shell UI, and cleaned the package icon sources.</p>
