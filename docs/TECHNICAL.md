@@ -4,7 +4,7 @@ This document centralizes technical repository notes for the `1.4.9-dev.X` maint
 
 ## Scope
 
-Current `1.4.9-dev.1` goals are intentionally non-functional:
+Current `1.4.9-dev.2` goals are intentionally non-functional:
 
 - reinforce distribution and Flathub preparation conventions for the current cycle;
 - document AI-assisted development workflow expectations;

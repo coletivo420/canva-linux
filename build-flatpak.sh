@@ -4,13 +4,14 @@
 set -euo pipefail
 
 ## Console helpers
-RED='[0;31m'
-GREEN='[0;32m'
-YELLOW='[1;33m'
-NC='[0m'
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
 info()  { echo -e "${YELLOW}[info]${NC} $*"; }
 ok()    { echo -e "${GREEN}[ok]${NC}  $*"; }
+warn()  { echo -e "${YELLOW}[warn]${NC} $*"; }
 err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -76,12 +77,31 @@ info "Generating summary for local repository..."
 flatpak build-update-repo --generate-static-deltas repo
 
 ## Bundle export and local installation
+DIST_DIR="dist"
+BUNDLE_PATH="${DIST_DIR}/canva-webapp-linux-${APP_VERSION}.flatpak"
+
+info "Ensuring bundle output directory exists..."
+mkdir -p "$DIST_DIR"
+
+info "Generating Flatpak bundle for GitHub releases..."
+flatpak build-bundle repo "$BUNDLE_PATH" com.canva.WebApp --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+
 info "Recreating local remote 'canva-webapp-repo'..."
 flatpak --user remote-delete canva-webapp-repo 2>/dev/null || true
 flatpak --user remote-add --no-gpg-verify canva-webapp-repo "file://$(realpath repo)"
 
 info "Installing/updating the application..."
 flatpak --user install -y --reinstall canva-webapp-repo com.canva.WebApp
+
+## Bundle summary
+BUNDLE_REALPATH="$(realpath "$BUNDLE_PATH")"
+if command -v stat >/dev/null 2>&1; then
+  BUNDLE_SIZE="$(stat -c '%s bytes' "$BUNDLE_PATH")"
+else
+  BUNDLE_SIZE="size unavailable (stat not found)"
+  warn "$BUNDLE_SIZE"
+fi
+ok "Bundle generated: ${BUNDLE_REALPATH} (${BUNDLE_SIZE})"
 
 ## Post-install instructions
 ok "Installation completed for Canva WebApp v${APP_VERSION}!"

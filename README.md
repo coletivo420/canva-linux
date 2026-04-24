@@ -23,7 +23,7 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.9-dev.1`.
+Current development version: `1.4.9-dev.2`.
 
 Stable baseline: `1.4.8`.
 
@@ -51,7 +51,7 @@ Main runtime pieces:
 - `electron/toolbar-preload.js` exposes the toolbar IPC bridge used by the local toolbar UI.
 - `electron/toolbar.html` renders the wrapper toolbar and tab controls.
 - `run.sh` launches the app inside Flatpak and selects Wayland, X11, or automatic platform behavior based on environment variables.
-- `build-flatpak.sh` builds and installs the local Flatpak package for testing.
+- `build-flatpak.sh` builds and installs the local Flatpak package for testing and also exports a versioned bundle to `dist/`.
 - `com.canva.WebApp.yml` defines the Flatpak build, runtime, permissions, finish args, and packaging modules.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` provide desktop and software-center metadata.
 
@@ -137,7 +137,7 @@ The current maintenance model uses a stable baseline plus development iterations
 
 - stable releases use plain version numbers such as `1.4.7`;
 - development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, `1.4.8-dev.6`, and `1.4.8-dev.7`;
-- the current development delivery is `1.4.9-dev.1`;
+- the current development delivery is `1.4.9-dev.2`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
@@ -156,6 +156,12 @@ The DEV7 phase should focus on release closure documentation and validation guid
 ```bash
 chmod +x build-flatpak.sh
 ./build-flatpak.sh
+```
+
+The build helper also generates a versioned Flatpak bundle artifact at:
+
+```
+dist/canva-webapp-linux-$VERSION.flatpak
 ```
 
 ## Run and post-install commands
