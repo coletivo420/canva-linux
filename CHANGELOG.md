@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9] - 2026-04-24
+
+### Added
+- Added Flatpak bundle generation and validation workflow.
+- Added Flathub preparation documentation, screenshot workflow, and Flatpak permission documentation.
+- Added real AppStream screenshot metadata using stable commit-pinned screenshot URLs.
+- Added AI-assisted development and repository maintenance documentation.
+
+### Fixed
+- Restored Google OAuth popup login flow on Linux/Wayland.
+- Removed native OAuth provider icon customization attempts that caused popup regressions.
+- Improved OAuth popup session sharing, visibility, focus handling, and authorized callback handling.
+
+### Changed
+- Generalized OAuth popup handling for common Canva authentication providers.
+- Clarified that Canva navigation remains tab-based and separate Electron windows are reserved for OAuth/authentication flows only.
+- Improved project documentation, technical notes, release workflow, and validation scripts.
+
+### Notes
+- Google OAuth was tested during this cycle.
+- Facebook/Meta, Apple, and Microsoft OAuth still require manual validation and may expose provider-specific issues.
+- Native OAuth provider icons remain intentionally unsupported on Linux/Wayland.
+- No release-candidate build was published for this cycle.
+
 ## [1.4.9-dev.14] - 2026-04-24
 
 ### Changed
