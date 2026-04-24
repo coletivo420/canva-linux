@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.6] - 2026-04-23
+
+### Fixed
+- Improved OAuth popup completion handling after provider login redirects.
+
+### Changed
+- Added OAuth popup lifecycle diagnostics for session partition, redirect completion, load failures, and unexpected closure.
+
+### Notes
+- Native OAuth provider icons remain intentionally unsupported.
+- Canva navigation remains tab-based; separate windows remain reserved for OAuth/authentication only.
+
 ## [1.4.9-dev.5] - 2026-04-23
 
 ### Fixed
