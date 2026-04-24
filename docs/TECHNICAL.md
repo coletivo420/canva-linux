@@ -1,14 +1,25 @@
 # Technical Notes
 
-This document centralizes technical repository notes for the `1.4.8-dev.X` maintenance line.
+This document centralizes technical repository notes for the `1.4.9-dev.X` maintenance line.
 
 ## Scope
 
-Current DEV7 goals are intentionally non-functional:
+Current `1.4.9-dev.1` goals are intentionally non-functional:
 
-- prepare final release-closure documentation for `1.4.8-dev.X`;
+- reinforce distribution and Flathub preparation conventions for the current cycle;
+- document AI-assisted development workflow expectations;
 - preserve existing behavior while documenting release and validation intent;
 - maintain version/changelog continuity.
+
+## Documentation grounding
+
+Before landing follow-up patches, align proposals with:
+
+- `README.md`
+- `CHANGELOG.md`
+- `docs/TECHNICAL.md`
+- `docs/FLATHUB.md` (when available)
+- `docs/AI_DEVELOPMENT.md`
 
 ## Runtime architecture (summary)
 

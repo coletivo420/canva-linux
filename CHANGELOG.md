@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.9-dev.1] - 2026-04-24
+
+### Added
+- Added AI-assisted development and vibecoding instructions in `docs/AI_DEVELOPMENT.md`.
+- Added a project convention for `##` section markers in scripts and large source files to improve readability for human and AI maintainers.
+
+### Changed
+- Updated `build-flatpak.sh` with helpful `##` section markers for readability, without changing runtime behavior.
+- Updated repository documentation links to include `docs/AI_DEVELOPMENT.md` and reinforce changelog-first maintenance.
+- Bumped project version metadata to `1.4.9-dev.1` for this development delivery.
+
+### Notes
+- This is a non-functional maintenance patch focused on AI-assisted workflow conventions, documentation alignment, and readability.
+- Native Linux/Wayland OAuth popup icon work remains out of scope unless explicitly requested.
+
 ## [1.4.8] - 2026-04-23
 
 ### Changed
