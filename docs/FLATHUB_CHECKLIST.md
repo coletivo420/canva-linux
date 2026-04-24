@@ -11,7 +11,6 @@ Use this checklist before opening or updating a Flathub submission PR.
 - [ ] Source strategy reviewed
 - [ ] Stable release tag/source archive selected
 - [ ] Manifest source URLs and hashes reviewed
-- [ ] Screenshot URL review
 - [ ] Screenshot URLs reviewed against the final release/tag
 - [ ] Permission review
 - [ ] Local install smoke test
