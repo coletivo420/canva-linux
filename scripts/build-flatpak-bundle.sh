@@ -59,7 +59,7 @@ done
 
 ## Repo helpers
 repo_has_app_ref() {
-  [[ -d repo/refs ]] && find repo/refs -type f -name '*com.canva.WebApp*' | head -1 | grep -q .
+  [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/com\.canva\.WebApp/'
 }
 
 build_repo() {

@@ -52,9 +52,14 @@ done
 info "Preparing local Flatpak install for Canva WebApp v${VERSION}"
 
 ## Dependency checks
-for cmd in flatpak flatpak-builder npm node realpath; do
+BASE_DEPS=(flatpak flatpak-builder node realpath)
+for cmd in "${BASE_DEPS[@]}"; do
   command -v "$cmd" >/dev/null 2>&1 || err "'$cmd' not found. Install it before continuing."
 done
+
+if [[ "$SKIP_NPM" == false ]]; then
+  command -v npm >/dev/null 2>&1 || err "'npm' not found. Install it before continuing."
+fi
 ok "Host dependencies are available"
 
 ## Flathub runtime preparation
