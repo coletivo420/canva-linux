@@ -13,20 +13,6 @@ Next: 1.4.10 (Flathub readiness and packaging improvements)
 
 The current development cycle focuses on Flathub readiness and packaging improvements.
 
-Planned milestones:
-
-- 1.4.10-dev.1  
-  Split Flatpak workflow scripts:
-  - local install script
-  - bundle generation script
-  - validation updates
-- 1.4.10-dev.2  
-  Flathub checklist and submission preparation
-- 1.4.10-dev.3  
-  Run and fix `flatpak-builder-lint` and AppStream issues
-- 1.4.10-dev.4  
-  Document OAuth provider support as community-tested
-
 Goal: prepare the project for Flathub submission without introducing new runtime features.
 
 ## OAuth Support
@@ -35,64 +21,58 @@ Google OAuth was tested and is considered stable.
 
 Other providers (Facebook/Meta, Apple, Microsoft) are supported via the same popup flow but are not individually validated and should be considered community-tested.
 
-OAuth/authentication flows remain the only exception to the tab-based Canva window policy. Normal Canva content stays inside the main tab system.
+## Flatpak Workflow (Canonical Command)
 
-## Flatpak Workflow
-
-### Local development/testing install
+Use `./canva-linux.sh` as the canonical Linux workflow command.
 
 ```bash
-./scripts/install-flatpak-local.sh
-./scripts/install-flatpak-local.sh --skip-npm
+./canva-linux.sh --install
+./canva-linux.sh --bundle
+./canva-linux.sh --validate
+./canva-linux.sh --uninstall
+./canva-linux.sh --reset-user-data
+./canva-linux.sh --help
 ```
 
-This path is optimized for local testing: it builds and installs the app locally without generating a release `.flatpak` bundle.
+### Interactive mode
 
-### Optional release bundle generation
+Running without arguments opens an interactive menu:
 
 ```bash
-./scripts/build-flatpak-bundle.sh
-./scripts/build-flatpak-bundle.sh --rebuild-repo
+./canva-linux.sh
 ```
 
-This generates a distributable artifact at:
+### Chained actions
 
-`dist/canva-webapp-linux-$VERSION.flatpak`
-
-Bundle generation is intended for GitHub releases. Flathub submission is a separate workflow.
-
-### Compatibility wrapper
+Actions can be chained and run in the order provided:
 
 ```bash
-./build-flatpak.sh
-./build-flatpak.sh --install
-./build-flatpak.sh --bundle
-./build-flatpak.sh --skip-npm
+./canva-linux.sh --install --bundle
+./canva-linux.sh --bundle --install
+./canva-linux.sh --validate --bundle
+./canva-linux.sh --reset-user-data --install
+./canva-linux.sh --uninstall --reset-user-data
 ```
 
-`build-flatpak.sh` remains available as a compatibility wrapper that routes to the new split scripts, including legacy `--skip-npm` pass-through for local installs.
+### Workflow intent
 
-### Validation helper
+- `--install` is for local development/testing installs.
+- `--bundle` is for generating GitHub release `.flatpak` artifacts.
+- Flathub submission remains a separate process.
+- `--reset-user-data` removes login state and OAuth/session cookies.
 
-```bash
-./scripts/validate-flatpak.sh
-./scripts/validate-flatpak.sh --release-artifacts
-```
+### Deprecated compatibility wrapper
 
-The default validation path does not require a bundle artifact. Use `--release-artifacts` to enforce release bundle checks.
+`build-flatpak.sh` remains available as a deprecated compatibility wrapper and forwards all arguments to `./canva-linux.sh`.
 
 ## Flathub Status
 
 The project is being prepared for Flathub submission.
 
-- AppStream metadata implemented
-- Screenshots prepared
-- Flatpak manifest functional
-- Final linting and submission pending
-
 Detailed packaging notes live in:
 
 - `docs/FLATHUB.md`
+- `docs/FLATHUB_CHECKLIST.md`
 - `docs/SCREENSHOTS.md`
 - `docs/FLATPAK_PERMISSIONS.md`
 
@@ -102,6 +82,7 @@ Detailed packaging notes live in:
 - `docs/TECHNICAL.md` contains repository technical notes.
 - `docs/AI_DEVELOPMENT.md` documents AI-assisted maintenance conventions.
 - `docs/FLATHUB.md` covers Flathub submission preparation.
+- `docs/FLATHUB_CHECKLIST.md` tracks practical Flathub submission checks.
 - `docs/SCREENSHOTS.md` documents the screenshot workflow.
 - `docs/FLATPAK_PERMISSIONS.md` documents Flatpak permissions and review notes.
 

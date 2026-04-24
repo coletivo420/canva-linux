@@ -3,6 +3,29 @@
 All notable changes to this project are documented in this file.
 
 
+
+## [1.4.10-dev.2] - 2026-04-24
+
+### Added
+- Added `canva-linux.sh` as the canonical Linux workflow command.
+- Added interactive workflow mode when no arguments are provided.
+- Added `--install`, `--bundle`, `--validate`, `--uninstall`, `--reset-user-data`, and `--help` actions.
+- Added support for chained workflow actions executed in the order provided.
+- Added a Flathub submission checklist for validation, screenshots, permissions, release source, and manual review.
+
+### Changed
+- Kept `build-flatpak.sh` as a deprecated compatibility wrapper.
+- Improved CLI help output and argument handling for the Flatpak workflow.
+- Changed unknown-option behavior to show available options and exit non-zero.
+- Improved action parsing to reject incompatible or duplicate action combinations before execution.
+- Simplified the interactive menu by removing duplicated workflow entries.
+- Moved user data reset above uninstall actions for easier OAuth/session testing.
+- Updated documentation to prefer `canva-linux.sh`.
+
+### Notes
+- This is a packaging workflow usability pass for the `1.4.10-dev.X` cycle.
+- No runtime behavior is intentionally changed.
+
 ## [1.4.10-dev.1] - 2026-04-24
 
 ### Added
