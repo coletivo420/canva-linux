@@ -23,15 +23,11 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.9-dev.14`.
+Current development version: `1.4.10-dev.X`.
 
-Stable baseline: `1.4.8`.
+Stable baseline: `1.4.9`.
 
-The `dev` branch currently keeps the stable `1.4.8` foundation and adds the `1.4.9-dev.X` distribution, Flathub preparation, and AI-assisted maintenance documentation.
-
-The current development pass is a final Flathub and release-readiness validation cycle before preparing `1.4.9-rc.1`, keeping the AppStream screenshot set and packaging documentation aligned without changing runtime behavior.
-
-The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current `1.4.9-dev.X` phase. It is documented as a known limitation and should not block current maintenance work.
+The `dev` branch currently keeps the stable `1.4.9` foundation and adds the `1.4.10-dev.X` distribution, Flathub preparation, and AI-assisted maintenance documentation.
 
 ## Documentation map
 
