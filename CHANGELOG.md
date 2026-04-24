@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+
+## [1.4.10-dev.1] - 2026-04-24
+
+### Added
+- Added a dedicated local Flatpak install script.
+- Added a dedicated Flatpak bundle generation script.
+
+### Changed
+- Changed build-flatpak.sh into a compatibility wrapper for install and bundle workflows.
+- Updated validation and documentation for the split Flatpak workflow.
+
+### Notes
+- This is a packaging workflow improvement for the 1.4.10-dev.X cycle.
+- No runtime behavior is intentionally changed.
+
 ## [1.4.9] - 2026-04-24
 
 ### Added
