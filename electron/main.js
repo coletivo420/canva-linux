@@ -7,7 +7,6 @@ const {
   shell,
   session,
   ipcMain,
-  nativeImage,
   nativeTheme,
 } = require('electron');
 const path = require('path');
@@ -261,58 +260,14 @@ function summarizeOauthEntry(entry) {
   ].join(' ');
 }
 
-function getAppIcon() {
-  const iconPath = path.join(__dirname, 'assets', 'canva-icon.png');
-  return nativeImage.createFromPath(iconPath);
-}
-
-function createTintedProviderIcon(providerLabel) {
-  const presets = {
-    Google: { bg: '#ffffff', fg: '#4285F4' },
-    Facebook: { bg: '#1877F2', fg: '#ffffff' },
-    Apple: { bg: '#111111', fg: '#ffffff' },
-    Microsoft: { bg: '#2563eb', fg: '#ffffff' },
-    LinkedIn: { bg: '#0a66c2', fg: '#ffffff' },
-    X: { bg: '#111111', fg: '#ffffff' },
-    GitHub: { bg: '#111111', fg: '#ffffff' },
-    Okta: { bg: '#007dc1', fg: '#ffffff' },
-    Auth0: { bg: '#eb5424', fg: '#ffffff' },
-    Login: { bg: '#00c4cc', fg: '#ffffff' },
-  };
-  const preset = presets[providerLabel] || presets.Login;
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
-      <rect width="256" height="256" rx="56" fill="${preset.bg}"/>
-      <text x="128" y="150" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="112" font-weight="700" fill="${preset.fg}">${providerLabel.slice(0, 1)}</text>
-    </svg>
-  `;
-  return nativeImage.createFromBuffer(Buffer.from(svg));
-}
-
-async function trySetPopupIconFromFavicon(window, faviconUrl) {
-  if (!window || window.isDestroyed() || !faviconUrl) return false;
-  try {
-    const response = await fetch(faviconUrl, {
-      headers: {
-        'user-agent': 'Mozilla/5.0 Canva Linux Wrapper',
-      },
-    });
-    if (!response.ok) return false;
-    const imageBuffer = Buffer.from(await response.arrayBuffer());
-    const image = nativeImage.createFromBuffer(imageBuffer);
-    if (image.isEmpty()) return false;
-    window.setIcon(image);
-    return true;
-  } catch {
-    return false;
-  }
+function getAppIconPath() {
+  return path.join(__dirname, 'assets', 'canva-icon.png');
 }
 
 function updateAuthPopupChrome(window, url) {
   if (!window || window.isDestroyed()) return;
   const providerLabel = shouldOpenInOauthPopup(url) ? detectOauthProviderLabel(url) : 'Login';
   window.setTitle(`${providerLabel} — ${APP_NAME} Login`);
-  window.setIcon(createTintedProviderIcon(providerLabel));
 }
 
 // Flush cookies and storage so OAuth and Canva sessions survive restarts.
@@ -420,7 +375,7 @@ function popupWindowOptions() {
     autoHideMenuBar: true,
     show: false,
     backgroundColor: shellBackgroundColor(),
-    icon: getAppIcon(),
+    icon: getAppIconPath(),
     webPreferences: sharedWebPreferences(),
   };
 }
@@ -436,7 +391,7 @@ function createShellWindow() {
     autoHideMenuBar: true,
     backgroundColor: shellBackgroundColor(),
     show: false,
-    icon: getAppIcon(),
+    icon: getAppIconPath(),
     webPreferences: {
       contextIsolation: true,
       sandbox: true,
@@ -643,10 +598,6 @@ function registerAuthPopupWindow(window, startUrl, { sourceWebContentsId = null,
 
   wc.on('page-favicon-updated', (_event, favicons) => {
     debugLog('oauth', 'popup-favicon-updated', `popup=${popupId}`, favicons?.[0] || 'none');
-    const faviconUrl = favicons?.[0];
-    if (faviconUrl) {
-      trySetPopupIconFromFavicon(window, faviconUrl).catch(() => {});
-    }
   });
 
   wc.on('page-title-updated', (event, title) => {

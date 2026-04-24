@@ -4,29 +4,18 @@ This document centralizes technical repository notes for the `1.4.9-dev.X` maint
 
 ## Scope
 
-Current `1.4.9-dev.4` goals are intentionally non-functional:
+Current `1.4.9-dev.5` goals focus on OAuth popup stability and release documentation quality:
 
-- reinforce distribution and Flathub preparation conventions for the current cycle;
-- document AI-assisted development workflow expectations;
-- preserve existing behavior while documenting release and validation intent;
-- maintain version/changelog continuity.
-
-## Documentation grounding
-
-Before landing follow-up patches, align proposals with:
-
-- `README.md`
-- `CHANGELOG.md`
-- `docs/TECHNICAL.md`
-- `docs/FLATHUB.md`
-- `docs/FLATPAK_PERMISSIONS.md`
-- `docs/AI_DEVELOPMENT.md`
+- remove native OAuth provider popup icon customization attempts on Linux/Wayland;
+- preserve the existing shell architecture and OAuth popup detection rules;
+- document window/tab policy and persistent login behavior clearly;
+- keep changes small, reviewable, and aligned with `CHANGELOG.md`.
 
 ## Runtime architecture (summary)
 
 Core runtime files:
 
-- `electron/main.js` - Electron shell entrypoint, tab model, OAuth popup wiring, persistent session ownership.
+- `electron/main.js` - Electron shell entrypoint, tab model, OAuth popup wiring, and persistent session ownership.
 - `electron/canva-preload.js` - Canva page preload diagnostics and Linux integration bridges.
 - `electron/toolbar-preload.js` - toolbar IPC bridge.
 - `electron/toolbar.html` - local toolbar UI.
@@ -38,6 +27,28 @@ Packaging/runtime support files:
 - `com.canva.WebApp.yml` - Flatpak manifest.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` - desktop and appstream metadata.
 
+## Window and tab policy
+
+Canva navigation is handled by the internal tab system. The app should not open arbitrary Electron windows for normal Canva content.
+
+Separate Electron windows are reserved for OAuth/authentication popups only. This keeps the main Canva workflow organized in tabs while preserving provider login flows that require popup-style windows.
+
+## Login persistence
+
+The app stores Canva login state in Electron's persistent session partition:
+
+`persist:canva`
+
+Main Canva tabs and OAuth popup windows use the same partition, so OAuth cookies, Canva cookies, and site storage survive app restarts. This shared persistent session is what keeps the user logged in.
+
+Do not replace this with a temporary session or an isolated OAuth-only partition unless the login flow is redesigned and fully retested.
+
+Operational notes:
+
+- OAuth popups must not use a temporary/session-only partition.
+- Clean-session testing can require removing local Flatpak app data.
+- Session flushing is used before quit and after OAuth completion to persist cookies/storage data.
+
 ## Repository hygiene
 
 Backup/reject artifacts from local patch attempts must not be kept in tracked sources:
@@ -46,24 +57,6 @@ Backup/reject artifacts from local patch attempts must not be kept in tracked so
 - `*.orig`
 - `*.rej`
 
-DEV5 removed existing tracked artifacts in those classes and keeps this policy documented for future patch iterations.
-
 ## Known limitation kept unchanged
 
-Linux/Wayland OAuth popup icon replacement remains a known limitation in this branch and is not a DEV7 implementation target.
-
-
-## DEV7 release closure artifacts
-
-This phase adds two documentation artifacts to close the current DEV cycle without runtime changes:
-
-- `docs/RELEASE_CHECKLIST.md` - release readiness checklist for maintainers/reviewers.
-- `docs/MANUAL_VALIDATION.md` - manual runtime validation sequence used before promoting the next stage.
-
-## Flatpak permission review notes
-
-`1.4.9-dev.4` adds explicit permission review documentation without intentionally changing runtime behavior:
-
-- `com.canva.WebApp.yml` now includes short `finish-args` comments grouped by purpose.
-- `docs/FLATPAK_PERMISSIONS.md` records required permissions, review-needed permissions, and Flathub lint considerations.
-- `scripts/validate-flatpak.sh` now requires the permission review doc to exist.
+OAuth popup native provider icons remain a known Linux/Wayland limitation for this branch. The popup flow should stay stable without provider-specific native icon customization.
