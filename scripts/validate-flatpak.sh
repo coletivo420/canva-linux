@@ -13,6 +13,17 @@ ok()    { echo -e "${GREEN}[ok]${NC}  $*"; }
 warn()  { echo -e "${YELLOW}[warn]${NC} $*"; }
 err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
 
+require_file() {
+  local file_path="$1"
+  local label="$2"
+
+  if [[ -f "${file_path}" ]]; then
+    ok "${label} found: ${file_path}"
+  else
+    err "Missing required ${label}: ${file_path}"
+  fi
+}
+
 ## Paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -43,30 +54,18 @@ for script in \
   ok "${script} syntax OK"
 done
 
-## Documentation presence checks
-if [[ -f docs/SCREENSHOTS.md ]]; then
-  ok "Screenshot manifest found: docs/SCREENSHOTS.md"
-else
-  err "Missing required screenshot manifest: docs/SCREENSHOTS.md"
-fi
-
-if [[ -f docs/PRIVACY.md ]]; then
-  ok "Privacy documentation found: docs/PRIVACY.md"
-else
-  err "Missing required privacy documentation: docs/PRIVACY.md"
-fi
-
-if [[ -f docs/FLATHUB_CHECKLIST.md ]]; then
-  ok "Flathub checklist found: docs/FLATHUB_CHECKLIST.md"
-else
-  err "Missing required Flathub checklist: docs/FLATHUB_CHECKLIST.md"
-fi
-
-if [[ -f docs/FLATPAK_PERMISSIONS.md ]]; then
-  ok "Permission review doc found: docs/FLATPAK_PERMISSIONS.md"
-else
-  err "Missing required permission review doc: docs/FLATPAK_PERMISSIONS.md"
-fi
+## Required file presence checks
+while IFS='|' read -r path label; do
+  require_file "${path}" "${label}"
+done <<'REQUIRED_FILES'
+docs/SCREENSHOTS.md|screenshot manifest
+docs/PRIVACY.md|privacy documentation
+docs/FLATHUB_CHECKLIST.md|Flathub checklist
+docs/FLATPAK_PERMISSIONS.md|permission review documentation
+com.canva.WebApp.yml|Flatpak manifest
+data/com.canva.WebApp.metainfo.xml|AppStream metadata
+data/com.canva.WebApp.desktop|desktop entry metadata
+REQUIRED_FILES
 
 ## Flatpak install status
 if command -v flatpak >/dev/null 2>&1; then
