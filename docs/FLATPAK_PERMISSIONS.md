@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.3` hardening cycle.
+This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.5` Flathub validation cycle.
 
 Goal for this pass:
 
@@ -10,7 +10,7 @@ Goal for this pass:
 - improve permission traceability for maintainers;
 - prepare future Flathub review with clear, minimal-sandbox intent.
 
-This is a documentation and review pass, not a blind permission-removal pass.
+This is a documentation and review pass, not a blind permission-removal pass. Broad home-directory access (`--filesystem=home`) remains absent in the current manifest.
 
 ## Current finish-args
 
@@ -104,3 +104,8 @@ Before changing manifest permissions:
 
 The manifest prefers Flatpak portal-based file access for uploads/downloads where possible.
 Broad home-directory access is intentionally avoided for Flathub readiness.
+
+
+## OAuth validation scope
+
+Google OAuth remains maintainer-tested. Other OAuth providers use the same generalized popup flow but remain community-tested pending broader user feedback.

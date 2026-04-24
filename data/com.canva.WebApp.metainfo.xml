@@ -41,6 +41,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.4.10-dev.5" date="2026-04-24">
+      <description>
+        <p>Refocused the 1.4.10-dev.X cycle on Flathub validation and packaging-readiness, reviewed metadata and manifest documentation, and intentionally kept runtime behavior unchanged.</p>
+      </description>
+    </release>
     <release version="1.4.9-dev.14" date="2026-04-24">
       <description>
         <p>Performed a final Flathub and release-readiness validation pass, reviewed AppStream metadata and packaging documentation, and intentionally left runtime behavior unchanged before preparing 1.4.9-rc.1.</p>

@@ -43,6 +43,31 @@ for script in \
   ok "${script} syntax OK"
 done
 
+## Documentation presence checks
+if [[ -f docs/SCREENSHOTS.md ]]; then
+  ok "Screenshot manifest found: docs/SCREENSHOTS.md"
+else
+  err "Missing required screenshot manifest: docs/SCREENSHOTS.md"
+fi
+
+if [[ -f docs/PRIVACY.md ]]; then
+  ok "Privacy documentation found: docs/PRIVACY.md"
+else
+  err "Missing required privacy documentation: docs/PRIVACY.md"
+fi
+
+if [[ -f docs/FLATHUB_CHECKLIST.md ]]; then
+  ok "Flathub checklist found: docs/FLATHUB_CHECKLIST.md"
+else
+  err "Missing required Flathub checklist: docs/FLATHUB_CHECKLIST.md"
+fi
+
+if [[ -f docs/FLATPAK_PERMISSIONS.md ]]; then
+  ok "Permission review doc found: docs/FLATPAK_PERMISSIONS.md"
+else
+  err "Missing required permission review doc: docs/FLATPAK_PERMISSIONS.md"
+fi
+
 ## Flatpak install status
 if command -v flatpak >/dev/null 2>&1; then
   if flatpak --user info com.canva.WebApp >/dev/null 2>&1 || flatpak info com.canva.WebApp >/dev/null 2>&1; then
@@ -52,6 +77,7 @@ if command -v flatpak >/dev/null 2>&1; then
   fi
 else
   warn "flatpak command not found; Flatpak-based checks skipped"
+  warn "Install Flatpak and org.flatpak.Builder to run full Flathub lint checks"
 fi
 
 ## Optional desktop file validation
@@ -75,29 +101,22 @@ fi
 ## Optional Flathub-style lint checks
 if command -v flatpak >/dev/null 2>&1; then
   if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
-    info "Running Flatpak builder lint for manifest"
+    info "Running flatpak-builder-lint manifest"
     flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
     ok "Manifest lint passed"
 
     if [[ -d repo ]]; then
-      info "Running Flatpak builder lint for repo/"
+      info "Running flatpak-builder-lint repo repo"
       flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
       ok "Repository lint passed"
     else
-      warn "repo/ directory not found; skipping repository lint"
+      warn "repo/ directory not found; skipping flatpak-builder-lint repo repo"
+      warn "Run ./canva-linux.sh --bundle to generate repo/ before repo lint"
     fi
   else
     warn "org.flatpak.Builder is not installed; skipping flatpak-builder-lint checks"
+    warn "Install with: flatpak install flathub org.flatpak.Builder"
   fi
-else
-  warn "flatpak command not found; skipping flatpak-builder-lint checks"
-fi
-
-## Permission documentation presence check
-if [[ -f docs/FLATPAK_PERMISSIONS.md ]]; then
-  ok "Permission review doc found: docs/FLATPAK_PERMISSIONS.md"
-else
-  err "Missing required permission review doc: docs/FLATPAK_PERMISSIONS.md"
 fi
 
 ## Optional bundle presence check
@@ -112,7 +131,7 @@ else
     ok "Bundle found: $BUNDLE_PATH"
   else
     warn "Bundle not found (expected for local install workflow): $BUNDLE_PATH"
-    warn "Run ./scripts/build-flatpak-bundle.sh when preparing release artifacts"
+    warn "Run ./canva-linux.sh --bundle when preparing release artifacts"
   fi
 fi
 

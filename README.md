@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.4 (credential storage diagnostics and policy cleanup)
+Next: 1.4.10-dev.5 (Flathub validation and packaging-readiness pass)
 
 ## Development (1.4.10-dev.X)
 
@@ -15,13 +15,13 @@ The current development cycle focuses on Flathub readiness and packaging improve
 
 Goal: prepare the project for Flathub submission without introducing new runtime features.
 
-No new runtime feature is introduced in `1.4.10-dev.4`.
+No new runtime feature is introduced in `1.4.10-dev.5`.
 
 ## OAuth Support
 
 Google OAuth was tested and is considered stable.
 
-Other providers (Facebook/Meta, Apple, Microsoft) are supported via the same popup flow but are not individually validated and should be considered community-tested.
+Other providers (Facebook/Meta, Apple, Microsoft) are supported via the same generalized popup flow but are community-tested and may require user feedback.
 
 ## Flatpak Workflow (Canonical Command)
 
@@ -65,7 +65,7 @@ Actions can be chained and run in the order provided:
 
 ## Flathub Status
 
-The project is being prepared for Flathub submission.
+The project is approaching Flathub submission readiness, but final submission should happen only after maintainer review of lint results, permissions, screenshots, and release source.
 
 Detailed packaging notes live in:
 

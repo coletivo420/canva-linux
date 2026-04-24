@@ -46,7 +46,7 @@ Separate Electron windows are reserved for OAuth/authentication popups only.
 
 ## OAuth provider scope
 
-Google OAuth was tested during this cycle. Facebook/Meta, Apple, and Microsoft are community-tested only.
+Google OAuth was tested during development. Facebook/Meta, Apple, and Microsoft are community-tested only.
 
 OAuth popup logic remains provider-neutral, and native OAuth provider icons remain intentionally unsupported.
 
@@ -69,3 +69,8 @@ OAuth popup native provider icons remain a known Linux/Wayland limitation for th
 This pass is intentionally small and is expected to evolve into a more centralized log-level system in future revisions.
 
 No new runtime feature is introduced by this diagnostics change.
+
+
+## Flathub readiness note
+
+The project is approaching Flathub submission readiness. Final Flathub submission should happen only after maintainer review of lint results, permissions, screenshots, and release source.

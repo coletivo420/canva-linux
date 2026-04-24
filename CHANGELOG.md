@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 
 
+## [1.4.10-dev.5] - 2026-04-24
+
+### Changed
+- Refocused the `1.4.10-dev.X` cycle on Flathub validation and submission readiness.
+- Reviewed AppStream metadata, desktop metadata, Flatpak manifest, permissions documentation, and Flathub checklist.
+- Improved validation workflow documentation for `flatpak-builder-lint` manifest and repo checks.
+
+### Notes
+- This is a Flathub validation and packaging-readiness pass.
+- Runtime behavior is not intentionally changed.
+- Google OAuth remains the maintainer-tested provider; other OAuth providers remain community-tested.
+
+
 
 ## [1.4.10-dev.4] - 2026-04-24
 
