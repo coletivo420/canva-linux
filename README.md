@@ -19,22 +19,24 @@ The current development line focuses on:
 - a custom eyedropper implementation that works in current Linux testing;
 - readable diagnostics for startup, tabs, OAuth, uploads, permissions, sessions, drag-and-drop, and eyedropper flows.
 
-Feature parity with the official Canva desktop experience remains a long-term goal, but the current `1.4.8-dev.X` branch is primarily a stabilization, diagnostics, and documentation branch.
+Feature parity with the official Canva desktop experience remains a long-term goal, but the current `1.4.9-dev.X` branch is primarily a distribution, Flathub preparation, and AI-assisted maintenance branch.
 
 ## Current development status
 
-Current development version: `1.4.8-dev.7`.
+Current development version: `1.4.9-dev.1`.
 
-Stable baseline: `1.4.7`.
+Stable baseline: `1.4.8`.
 
-The `dev` branch currently keeps the stable `1.4.7` debug foundation and adds the `1.4.8-dev.X` diagnostics work for Wayland drag-and-drop, upload ingress, file picker continuation, clipboard-driven imports, OAuth popup retesting, and shell documentation.
+The `dev` branch currently keeps the stable `1.4.8` foundation and adds the `1.4.9-dev.X` distribution, Flathub preparation, and AI-assisted maintenance documentation.
 
-The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current DEV7 phase. It is documented as a known limitation and should not block the `1.4.8-dev.X` maintenance work.
+The native Linux/Wayland OAuth popup icon experiment is **not an active target** for the current `1.4.9-dev.X` phase. It is documented as a known limitation and should not block current maintenance work.
 
 ## Documentation map
 
 - `README.md` provides project orientation and day-to-day development context.
+- `CHANGELOG.md` is the authoritative timeline for each dev delivery and must be updated in every development patch.
 - `docs/TECHNICAL.md` centralizes technical repository notes for the current maintenance branch.
+- `docs/AI_DEVELOPMENT.md` documents AI-assisted development and vibecoding conventions for maintainers.
 - `docs/RELEASE_CHECKLIST.md` provides the release-candidate validation checklist before final `1.4.8`.
 - `docs/MANUAL_VALIDATION.md` defines the manual validation routine for non-functional patch closure.
 
@@ -135,6 +137,7 @@ The current maintenance model uses a stable baseline plus development iterations
 
 - stable releases use plain version numbers such as `1.4.7`;
 - development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, `1.4.8-dev.6`, and `1.4.8-dev.7`;
+- the current development delivery is `1.4.9-dev.1`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
