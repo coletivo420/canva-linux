@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.9-dev.4` cycle.
+This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.9-dev.9` documentation cycle.
 
 Goal for this pass:
 
@@ -94,3 +94,9 @@ Before changing manifest permissions:
 3. Prefer narrowing broad filesystem permissions incrementally.
 4. Re-run Flathub lint checks after each permission change.
 5. Record rationale in this document and `CHANGELOG.md`.
+
+## Flathub preparation status tie-in
+
+- Permission intent is documented and should stay minimal for reviewer trust.
+- GitHub `.flatpak` bundle release and Flathub submission remain separate processes.
+- Current non-permission blockers are real screenshots and OAuth provider validation beyond Google.

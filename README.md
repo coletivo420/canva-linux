@@ -23,7 +23,7 @@ Feature parity with the official Canva desktop experience remains a long-term go
 
 ## Current development status
 
-Current development version: `1.4.9-dev.5`.
+Current development version: `1.4.9-dev.9`.
 
 Stable baseline: `1.4.8`.
 
@@ -145,7 +145,7 @@ The current maintenance model uses a stable baseline plus development iterations
 
 - stable releases use plain version numbers such as `1.4.7`;
 - development releases use suffixes such as `1.4.8-dev.1`, `1.4.8-dev.2`, `1.4.8-dev.4`, `1.4.8-dev.5`, `1.4.8-dev.6`, and `1.4.8-dev.7`;
-- the current development delivery is `1.4.9-dev.4`;
+- the current development delivery is `1.4.9-dev.9`;
 - every development patch must update `CHANGELOG.md`;
 - documentation, code comments, and project files should remain in English;
 - patches should stay small, reviewable, and easy to revert;
@@ -159,6 +159,16 @@ The DEV7 phase should focus on release closure documentation and validation guid
 4. keep repository hygiene policy enforced (`*.bak`, `*.orig`, `*.rej` remain untracked);
 5. defer any functional fixes to a separate development patch.
 
+
+## Flathub preparation status
+
+Flathub readiness is in progress and tracked in:
+
+- `docs/FLATHUB.md`
+- `docs/SCREENSHOTS.md`
+- `docs/FLATPAK_PERMISSIONS.md`
+
+GitHub `.flatpak` release bundles and Flathub submission remain separate workflows.
 
 ## Distribution workflows
 
