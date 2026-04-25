@@ -1,10 +1,10 @@
-# Manual Validation — 1.4.10-dev.8
+# Manual Validation — 1.4.10-dev.9
 
 This document defines the manual validation routine for the current development cycle.
 
 ## Validation scope
 
-`1.4.10-dev.8` is a Flathub-readiness and maintainability pass that also restores the custom eyedropper after the preload modularization regression.
+`1.4.10-dev.9` is a Flathub-readiness and maintainability pass that also restores the custom eyedropper after the preload modularization regression.
 
 Expected outcome:
 

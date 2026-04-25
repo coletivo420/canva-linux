@@ -16,7 +16,7 @@ const {
 const APP_VERSION = require('../../package.json').version;
 const { createDebugTools } = require('../shared/debug');
 const {
-  classifyWindowOpenRequest: classifyNavigationRequest,
+  classifyWindowOpenRequest: sharedClassifyWindowOpenRequest,
   detectCanvaOAuthCallback,
   extractHostname,
   isBlankPopupUrl,
@@ -109,7 +109,7 @@ const loggingHelpers = createLoggingHelpers({
 const { summarizeOauthEntry, webContentsLabel, windowLabel } = loggingHelpers;
 
 function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
-  const request = classifyNavigationRequest({ url, openerUrl, disposition, frameName });
+  const request = sharedClassifyWindowOpenRequest({ url, openerUrl, disposition, frameName });
   if (request.kind === 'oauth-popup') {
     return { category: 'oauth', kind: request.kind };
   }
@@ -166,7 +166,7 @@ const oauthHelpers = createOAuthHelpers({
   appName: APP_NAME,
   authPopups,
   BrowserWindow,
-  classifyNavigationRequest,
+  classifyNavigationRequest: sharedClassifyWindowOpenRequest,
   debugLog,
   detectCanvaOAuthCallback,
   extractHostname,
@@ -261,7 +261,7 @@ const tabController = createTabController({
   appName: APP_NAME,
   appUrl: APP_URL,
   broadcastTabsState,
-  classifyNavigationRequest,
+  classifyNavigationRequest: sharedClassifyWindowOpenRequest,
   classifyWindowOpenRequest,
   debugEnabled,
   debugLog,

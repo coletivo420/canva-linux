@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.9] - 2026-04-25
+
+### Changed
+- Renamed the shared `classifyWindowOpenRequest` import alias in `electron/main/index.js` to `sharedClassifyWindowOpenRequest` for clearer main-process navigation hardening flow.
+- Kept runtime behavior unchanged while making the shared-versus-local window-open classification boundary more explicit for review and maintenance.
+
+### Notes
+- This is a small follow-up maintenance patch on top of `1.4.10-dev.8`.
+- No user-facing behavior is intentionally changed.
+
 ## [1.4.10-dev.8] - 2026-04-25
 
 ### Added

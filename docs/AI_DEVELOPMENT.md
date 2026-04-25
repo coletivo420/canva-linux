@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.8` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.9` cycle.
 
 ## Language and communication conventions
 
@@ -73,7 +73,7 @@ After meaningful refactors, update the relevant repository documentation so futu
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.8 = generated Canva preload bundle + restored custom eyedropper + Flathub-readiness documentation.`
+`1.4.10-dev.9 = generated Canva preload bundle + restored custom eyedropper + Flathub-readiness documentation.`
 
 ## Development branch naming
 
@@ -86,7 +86,7 @@ Format:
 Examples:
 
 - `dev/1.4.10-dev.7`
-- `dev/1.4.10-dev.8`
+- `dev/1.4.10-dev.9`
 - `dev/1.4.10-dev.5`
 - `dev/1.4.10-rc.1`
 

@@ -1,11 +1,11 @@
-# Release Checklist — 1.4.10-dev.8
+# Release Checklist — 1.4.10-dev.9
 
-This checklist is intended for maintainer validation of the current `1.4.10-dev.8` development delivery.
+This checklist is intended for maintainer validation of the current `1.4.10-dev.9` development delivery.
 
 ## 1) Version and metadata
 
-- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.10-dev.8`.
-- [ ] Confirm `CHANGELOG.md` contains the `1.4.10-dev.8` entry.
+- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.10-dev.9`.
+- [ ] Confirm `CHANGELOG.md` contains the `1.4.10-dev.9` entry.
 - [ ] Confirm documentation reflects the modular runtime refactor, centralized debug logging, and generated Canva preload bundle.
 
 ## 2) Runtime stability guardrails
