@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.12] - 2026-04-25
+
+### Added
+- Added `node:test` unit coverage for the extracted main-process window-open policy.
+- Added npm test scripts for the first unit-test phase of the `1.4.10-dev.X` testing roadmap.
+
+### Notes
+- This is phase 3 of the planned testing architecture work.
+- Production runtime behavior is intentionally unchanged in this patch.
+
 ## [1.4.10-dev.11] - 2026-04-25
 
 ### Changed

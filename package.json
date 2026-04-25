@@ -1,6 +1,6 @@
 {
   "name": "canva-webapp",
-  "version": "1.4.10-dev.11",
+  "version": "1.4.10-dev.12",
   "description": "Unofficial Canva desktop wrapper for Linux using Electron/Chromium inside Flatpak with Wayland-native shell behavior, validated drag-and-drop diagnostics, and refined OAuth logging",
   "main": "electron/main/index.js",
   "author": "Community",
@@ -11,6 +11,8 @@
     "start": "electron .",
     "dist": "electron-builder --linux dir",
     "lint": "eslint .",
+    "test": "node --test",
+    "test:unit": "node --test test/window-open-policy.test.js",
     "lint:fix": "eslint . --fix",
     "build:preload": "node scripts/build-preload-bundle.js",
     "prestart": "npm run build:preload",
