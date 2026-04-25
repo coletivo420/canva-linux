@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.9` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.10` cycle.
 
 ## Language and communication conventions
 
@@ -73,7 +73,25 @@ After meaningful refactors, update the relevant repository documentation so futu
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.9 = generated Canva preload bundle + restored custom eyedropper + Flathub-readiness documentation.`
+`1.4.10-dev.10 = documentation, AI/vibecoding preparation, and phased testing roadmap alignment.`
+
+## Planned phase roadmap
+
+The `1.4.10-dev.X` cycle now follows an explicit phased plan:
+
+- `1.4.10-dev.10` - preparation: documentation, roadmap, and AI/vibecoding guidance
+- `1.4.10-dev.11` - extract the window-open policy into a testable module
+- `1.4.10-dev.12` - add unit tests with `node:test`
+- `1.4.10-dev.14` - add light wiring/integration tests for the main-process tab flow
+- `1.4.10-dev.15` - add Electron smoke tests with Playwright
+- `1.4.10-dev.16+` - finalize follow-up Flathub adaptations after the testing foundation lands
+
+Patch intent rules for this phased plan:
+
+- `dev.10` is documentation-only and must not intentionally change runtime behavior
+- `dev.11` may move logic without changing user-visible behavior
+- `dev.12` and later test-focused patches should keep production runtime changes minimal unless explicitly required by the test harness
+- update the roadmap and changelog when the planned phase sequence changes
 
 ## Development branch naming
 

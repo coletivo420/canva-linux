@@ -7,13 +7,24 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.8 (preload bundle and custom eyedropper regression fix)
+Next: 1.4.10-dev.10 (phase 1 documentation, AI/vibecoding preparation, and testing roadmap)
 
 ## Development (1.4.10-dev.X)
 
-The current development cycle focuses on Flathub readiness, packaging improvements, and runtime maintainability.
+The current development cycle focuses on Flathub readiness, packaging improvements, runtime maintainability, and a phased testing architecture for future hardening work.
 
-Goal: prepare the project for Flathub submission without introducing new runtime features.
+Goal: prepare the project for Flathub submission while introducing small, reviewable development phases for documentation, extraction, testing, and Electron smoke coverage.
+
+`1.4.10-dev.10` starts the documentation and AI/vibecoding preparation phase for the testing cycle. This phase aligns the repository docs, changelog, and roadmap before code extraction or test harness changes land.
+
+Planned phase map:
+
+- `1.4.10-dev.10` - documentation, AI/vibecoding preparation, and roadmap alignment
+- `1.4.10-dev.11` - extraction of the window-open policy into a testable module
+- `1.4.10-dev.12` - unit tests with `node:test`
+- `1.4.10-dev.14` - light wiring/integration tests for the main-process tab flow
+- `1.4.10-dev.15` - Electron smoke test coverage with Playwright
+- `1.4.10-dev.16+` - Flathub-facing follow-up adjustments after the testing foundation is in place
 
 `1.4.10-dev.8` keeps the modular source layout, but ships the Canva preload as a generated single-file bundle so Electron's sandboxed editor preload can load the custom eyedropper reliably.
 

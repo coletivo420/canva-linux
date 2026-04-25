@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.10] - 2026-04-25
+
+### Changed
+- Prepared the `1.4.10-dev.X` testing cycle with documentation-only updates for AI/vibecoding guidance, roadmap alignment, and phase planning.
+- Aligned the main repository docs with the planned phased sequence for `dev.10`, `dev.11`, `dev.12`, `dev.14`, `dev.15`, and `dev.16+`.
+
+### Notes
+- This is phase 1 of the planned testing architecture work.
+- Runtime behavior is intentionally unchanged in this patch.
+
 ## [1.4.10-dev.9] - 2026-04-25
 
 ### Changed
