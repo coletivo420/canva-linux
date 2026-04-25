@@ -37,11 +37,9 @@
       "category": "Graphics",
       "executableName": "canva-webapp",
       "desktop": {
-        "entry": {
-          "Name": "Canva",
-          "StartupWMClass": "com.canva.WebApp",
-          "X-GNOME-WMClass": "com.canva.WebApp"
-        }
+        "Name": "Canva",
+        "StartupWMClass": "com.canva.WebApp",
+        "X-GNOME-WMClass": "com.canva.WebApp"
       },
       "icon": "build-resources"
     },
