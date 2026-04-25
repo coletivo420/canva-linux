@@ -35,7 +35,8 @@ Core runtime files:
 - `electron/main/tab-controller.js` - tab creation and orchestration layer that connects shell state, tab events, and shared session wiring.
 - `electron/main/tab-events.js` - BrowserView/WebContents event wiring for tab navigation, popups, shortcuts, and shell policy.
 - `electron/main/tabs.js` - tab ordering, selection, closing, and layout helpers shared by the shell entrypoint.
-- `electron/preload/canva.js` - Canva page preload diagnostics and Linux integration bridges.
+- `electron/preload/canva.js` - source Canva page preload diagnostics and Linux integration bridges.
+- `electron/preload/canva.bundle.js` - generated runtime preload consumed by Canva tabs; do not edit directly.
 - `electron/preload/debug.js` - centralized preload debug routing and eyedropper log transport for Canva-facing modules.
 - `electron/preload/custom-eyedropper-flow.js` - snapshot capture and bundled `ltcodedev/eyedropper` lifecycle used by the Canva EyeDropper wrapper.
 - `electron/preload/ltcode-eyedropper.js` - bundled browser-side `ltcodedev/eyedropper` implementation and scaling patch used by the Canva preload wrapper.
@@ -64,6 +65,22 @@ The current main-process split is now the working repository structure:
 
 This split preserves runtime behavior while making future changes safer. `electron/main/index.js` is now primarily a composition root, while the preload delegates debug transport, upload diagnostics, native EyeDropper wrapping, and the bundled `ltcodedev/eyedropper` flow into dedicated modules.
 
+## Preload bundle architecture
+
+The source preload remains modular:
+
+- `electron/preload/canva.js` is the source entrypoint.
+- `electron/preload/debug.js`, `upload-diagnostics.js`, `eyedropper-routing-diagnostics.js`, `custom-eyedropper-flow.js`, `native-eyedropper-wrapper.js`, and `ltcode-eyedropper.js` remain human-maintained modules.
+- `scripts/build-preload-bundle.js` generates `electron/preload/canva.bundle.js`.
+
+Canva tabs load `canva.bundle.js`, not `canva.js`, at runtime.
+
+This is intentional. The Canva editor can run Electron preload code in a packaged/sandboxed context where nested local `require('./module')` calls fail after ASAR packaging. When that happened, the editor preload started but failed before `modules-loaded`, so the custom eyedropper wrapper was never installed and Canva fell back toward Chromium/portal capture behavior.
+
+The bundle keeps the maintainable modular source layout while giving Electron a single preload file that works consistently in the editor. Do not edit `canva.bundle.js` directly; regenerate it with `npm run build:preload`.
+
+`npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts.
+
 ## Debug output
 
 Terminal debug output is now centralized in `electron/main/logging.js`.
@@ -80,6 +97,7 @@ Packaging/runtime support files:
 - `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing (supports `--skip-npm`).
 - `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (supports `--rebuild-repo`).
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
+- `scripts/build-preload-bundle.js` - dependency-free generated-preload builder used before local start and Electron packaging.
 - `com.canva.WebApp.yml` - Flatpak manifest.
 - `docs/PRIVACY.md` - repository privacy and telemetry policy statement.
 - `docs/FLATHUB_SOURCE.md` - Flathub source strategy notes for the current local manifest and future source-based submission.
@@ -119,7 +137,7 @@ OAuth popup native provider icons remain a known Linux/Wayland limitation for th
 
 ## Security diagnostics note
 
-`1.4.10-dev.7` includes the centralized debug/log pipeline used by the current modular runtime.
+`1.4.10-dev.8` adds the preload bundle step required by the current modular runtime.
 
 The current logger writes both terminal output and a per-start `current.log` file for troubleshooting.
 

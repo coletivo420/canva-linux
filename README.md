@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.7 (Flathub source/readiness hardening pass)
+Next: 1.4.10-dev.8 (preload bundle and custom eyedropper regression fix)
 
 ## Development (1.4.10-dev.X)
 
@@ -15,7 +15,9 @@ The current development cycle focuses on Flathub readiness, packaging improvemen
 
 Goal: prepare the project for Flathub submission without introducing new runtime features.
 
-`1.4.10-dev.7` keeps user-facing behavior stable, but it does include a major internal refactor:
+`1.4.10-dev.8` keeps the modular source layout, but ships the Canva preload as a generated single-file bundle so Electron's sandboxed editor preload can load the custom eyedropper reliably.
+
+`1.4.10-dev.7` introduced a major internal refactor:
 
 - modularized `electron/main` and `electron/preload`
 - centralized debug logging in the main process
@@ -33,6 +35,12 @@ Project policy:
 - native browser/system color pickers are not the intended Canva Linux colorpicker path
 - screen-capture, portal, or Chromium picker paths must not replace the bundled custom picker as the primary behavior
 - Wayland and X11 support must preserve the same custom picker behavior
+
+### Preload bundle note
+
+The source preload stays modular under `electron/preload/*.js`, but the runtime tab preload is generated as `electron/preload/canva.bundle.js` before `npm start` and `npm run dist`.
+
+This is required because Canva's editor can execute Electron preload code in a sandboxed context where nested local `require('./module')` calls fail inside the packaged ASAR. The generated bundle preserves maintainable source modules while delivering one preload file to Electron.
 
 ## OAuth Support
 

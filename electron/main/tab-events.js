@@ -145,11 +145,31 @@ function attachTabEventHandlers(tab, helpers) {
     // This is a last-resort safety for the Canva editor's complex loading cycle.
     wc.executeJavaScript(`
       (function() {
-        const installed = typeof ensureWrappedEyeDropperInstalled === 'function';
-        console.log('[canva:eyedropper:check] tab=${tab.id} installed=' + installed);
-        if (installed) {
-          ensureWrappedEyeDropperInstalled();
-        }
+        let ensured = false;
+        let installed = false;
+
+        try {
+          if (typeof ensureWrappedEyeDropperInstalled === 'function') {
+            ensured = ensureWrappedEyeDropperInstalled() !== false;
+          }
+        } catch {}
+
+        try {
+          if (typeof __canvaIsWrappedEyeDropperInstalled === 'function') {
+            installed = __canvaIsWrappedEyeDropperInstalled();
+          } else {
+            const scope = globalThis || window;
+            const ctor = scope.EyeDropper;
+            const wrapped = scope.__canvaWrappedEyeDropper;
+            installed = Boolean(
+              scope.__canvaWrappedEyeDropperInstalled === true
+              || (typeof wrapped === 'function' && ctor === wrapped)
+              || (typeof ctor === 'function' && ctor.name === 'WrappedEyeDropper')
+            );
+          }
+        } catch {}
+
+        console.log('[canva:eyedropper:check] tab=${tab.id} installed=' + installed + ' ensured=' + ensured);
       })();
     `).catch(() => {});
   });

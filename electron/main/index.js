@@ -284,6 +284,7 @@ registerEyeDropperBridge({
   debugLog,
   webContentsLabel,
   findTabByWebContents,
+  getActiveTab: () => tabs.get(activeTabId) || null,
 });
 
 registerMainIpcHandlers({

@@ -29,7 +29,7 @@ function createTabController({
   function createTab(url = appUrl, { activate = true, isHome = false } = {}) {
     debugLog('tabs:navigation', 'create', url, `activate=${activate}`, `home=${isHome}`);
     const id = state.nextTabIdRef();
-    const preloadPath = path.resolve(__dirname, '..', 'preload', 'canva.js');
+    const preloadPath = path.resolve(__dirname, '..', 'preload', 'canva.bundle.js');
     debugLog('tabs:navigation', 'preload-path', preloadPath);
 
     // Each tab stays as its own WebContentsView so the shell can switch

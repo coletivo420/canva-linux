@@ -41,6 +41,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="1.4.10-dev.8" date="2026-04-25">
+      <description>
+        <p>Fixed the custom eyedropper regression after preload modularization by generating a single runtime preload bundle from the modular source files, preserving the bundled custom colorpicker path in the Canva editor.</p>
+      </description>
+    </release>
     <release version="1.4.10-dev.5" date="2026-04-24">
       <description>
         <p>Refocused the 1.4.10-dev.X cycle on Flathub validation and packaging-readiness, reviewed metadata and manifest documentation, and intentionally kept runtime behavior unchanged.</p>

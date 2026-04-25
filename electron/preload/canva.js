@@ -16,7 +16,7 @@ try {
   function installUploadDiagnostics() {
     try {
       return require('./upload-diagnostics').installUploadDiagnostics;
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -114,6 +114,40 @@ try {
     logEyeDropper,
     wrapOpenCall,
   });
+
+  function isWrappedEyeDropperInstalled() {
+    try {
+      const scope = globalThis || window;
+      const ctor = scope.EyeDropper;
+      const wrapped = scope.__canvaWrappedEyeDropper;
+      const installedFlag = scope.__canvaWrappedEyeDropperInstalled === true;
+
+      return Boolean(
+        installedFlag
+        || (typeof wrapped === 'function' && ctor === wrapped)
+        || (typeof ctor === 'function' && ctor.name === 'WrappedEyeDropper')
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  // tab-events.js runs diagnostics through executeJavaScript() after complex
+  // Canva editor navigations. Expose only idempotent helpers so the main
+  // process can verify/reinstall the wrapper without depending on preload
+  // module scope.
+  try {
+    Object.defineProperty(globalThis, 'ensureWrappedEyeDropperInstalled', {
+      configurable: true,
+      enumerable: false,
+      value: ensureWrappedEyeDropperInstalled,
+    });
+    Object.defineProperty(globalThis, '__canvaIsWrappedEyeDropperInstalled', {
+      configurable: true,
+      enumerable: false,
+      value: isWrappedEyeDropperInstalled,
+    });
+  } catch {}
 
   // Install as early as possible.
   ensureWrappedEyeDropperInstalled();

@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.8] - 2026-04-25
+
+### Added
+- Added a dependency-free preload bundling step that generates `electron/preload/canva.bundle.js` from the modular preload source files before local start and Electron Builder packaging.
+- Added documentation for the preload bundle architecture and the custom eyedropper regression it fixes.
+
+### Fixed
+- Fixed the custom Canva eyedropper regression introduced by the preload modularization. The Canva editor could start the preload but fail nested local module resolution inside Electron's packaged/sandboxed preload context, preventing `./debug` and the custom eyedropper modules from loading.
+- Fixed the false `installed=false` eyedropper diagnostic by exposing an idempotent preload-side install probe and checking the actual wrapped `EyeDropper` state instead of only checking local preload function scope.
+- Kept the custom picker routed through the bundled `ltcodedev/eyedropper` implementation instead of falling back to Chromium, portal, or native system color picking.
+
+### Changed
+- The app now points Canva tabs at `electron/preload/canva.bundle.js` while keeping `electron/preload/*.js` as the human-maintained source of truth.
+- The generated preload bundle is ignored by Git and ESLint; it must be regenerated through `npm run build:preload`, `npm start`, or `npm run dist`.
+
+### Validation
+- Verified that the editor tab loads the bundled preload, installs the wrapper, intercepts `EyeDropper.open()`, captures the active Canva tab snapshot, opens the custom picker canvas, picks a color, and resolves the eyedropper promise.
+
 ## [1.4.10-dev.7] - 2026-04-25
 
 ### Changed

@@ -144,6 +144,12 @@ function installNativeEyeDropperWrapper({
     } catch (error) {
       logEyeDropper('eyedropper:wrapper', 'ensure-failed', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href, error && error.message ? error.message : String(error));
     }
+
+    return Boolean(
+      scope.__canvaWrappedEyeDropperInstalled
+      || (typeof scope.__canvaWrappedEyeDropper === 'function' && scope.EyeDropper === scope.__canvaWrappedEyeDropper)
+      || (typeof scope.EyeDropper === 'function' && scope.EyeDropper.name === 'WrappedEyeDropper')
+    );
   }
 
   return {

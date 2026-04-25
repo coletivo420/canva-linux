@@ -9,6 +9,7 @@ module.exports = [
       'dist/**',
       'node_modules/**',
       'repo/**',
+      'electron/preload/canva.bundle.js',
       '.flatpak-builder/**',
     ],
   },
