@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.14] - 2026-04-25
+
+### Added
+- Added a lightweight wiring test for the main-process tab flow using `node:test`.
+- Added a dedicated npm script for the wiring-focused test phase.
+
+### Changed
+- Added a narrow dependency-injection seam in `electron/main/tab-controller.js` so the tab event attachment path can be verified without changing production behavior.
+
+### Notes
+- This is phase 4 of the planned testing architecture work.
+- Production runtime behavior is intentionally unchanged in this patch.
+
 ## [1.4.10-dev.12] - 2026-04-25
 
 ### Added

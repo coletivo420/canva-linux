@@ -26,6 +26,7 @@ function createTabController({
   state,
   tabHelpers,
   WebContentsView,
+  attachTabEventHandlersImpl = attachTabEventHandlers,
 }) {
   function createTab(url = appUrl, { activate = true, isHome = false } = {}) {
     debugLog('tabs:navigation', 'create', url, `activate=${activate}`, `home=${isHome}`);
@@ -59,7 +60,7 @@ function createTabController({
 
     // The per-tab event policy lives in tab-events.js; the controller injects
     // callbacks here so refactors do not duplicate navigation behavior.
-    attachTabEventHandlers(tab, {
+    attachTabEventHandlersImpl(tab, {
       appName,
       appUrl,
       broadcastTabsState,
