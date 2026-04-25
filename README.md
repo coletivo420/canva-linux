@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.15 (phase 5 Electron smoke tests with Playwright)
+Next: 1.4.10-dev.16 (phase 6 Flathub follow-up hardening)
 
 ## Development (1.4.10-dev.X)
 
@@ -23,7 +23,9 @@ Goal: prepare the project for Flathub submission while introducing small, review
 
 `1.4.10-dev.14` adds a lightweight main-process wiring test that verifies the tab controller passes the expected navigation helpers into the tab event layer without changing user-visible behavior.
 
-`1.4.10-dev.15` adds a minimal Playwright smoke test that launches the Electron app in development mode, confirms it is not packaged, and waits for the first BrowserWindow so the project gains real process-level launch coverage without introducing a broad E2E suite.
+`1.4.10-dev.15` added a minimal Playwright smoke test that launches the Electron app in development mode, confirms it is not packaged, and waits for the first BrowserWindow so the project gains real process-level launch coverage without introducing a broad E2E suite.
+
+`1.4.10-dev.16` focuses on Flathub follow-up hardening and packaging resilience after the testing foundation landed.
 
 Planned phase map:
 
@@ -32,7 +34,7 @@ Planned phase map:
 - `1.4.10-dev.12` - unit tests with `node:test`
 - `1.4.10-dev.14` - light wiring/integration tests for the main-process tab flow
 - `1.4.10-dev.15` - Electron smoke test coverage with Playwright
-- `1.4.10-dev.16+` - Flathub-facing follow-up adjustments after the testing foundation is in place
+- `1.4.10-dev.16` - Flathub-facing follow-up adjustments after the testing foundation is in place
 
 `1.4.10-dev.8` keeps the modular source layout, but ships the Canva preload as a generated single-file bundle so Electron's sandboxed editor preload can load the custom eyedropper reliably.
 
@@ -105,9 +107,10 @@ Actions can be chained and run in the order provided:
 ### Workflow intent
 
 - `--install` is for local development/testing installs.
+- `--install` uses `flatpak-builder --install` direct install flow (no `repo/` export and no `.flatpak` bundle generation).
 - `--bundle` is for generating GitHub release `.flatpak` artifacts.
 - `--bundle` rebuilds the Electron output and Flatpak repo before creating the artifact.
-- Flathub submission remains a separate process.
+- Flathub submission remains a separate process and should not require `.flatpak` bundle generation.
 - Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `com.canva.WebApp.yml`.
 - `--reset-user-data` removes login state and OAuth/session cookies.
 

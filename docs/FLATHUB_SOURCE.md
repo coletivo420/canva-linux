@@ -75,8 +75,9 @@ For Flathub-reviewable Node/Electron builds, keep npm dependencies in `packaging
 
 GitHub `.flatpak` bundle releases and Flathub source builds are separate workflows.
 
-- GitHub bundle releases are generated from the repository workflow for direct distribution.
-- Flathub source builds are reviewed separately and should use stable source URLs appropriate for Flathub submission.
+- Local development installs should use direct `flatpak-builder --install` (no repo export, no bundle).
+- GitHub bundle releases are generated from the repository workflow (`repo/` export + `flatpak build-bundle`) for direct distribution.
+- Flathub source builds are reviewed separately, should use stable source URLs appropriate for Flathub submission, and should not require `.flatpak` bundle creation.
 
 Do not treat the GitHub bundle workflow as a substitute for Flathub source review.
 

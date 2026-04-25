@@ -40,8 +40,9 @@ modules:
       - rm -rf dist .npm-cache .npm-offline-cache
       - mkdir -p .npm-cache .npm-offline-cache
       - cp -a /app/flatpak-node/cache/. .npm-offline-cache/
-      - for pkg in .npm-offline-cache/*.tgz; do npm cache add --cache .npm-cache "$pkg"; done
+      - for pkg in .npm-offline-cache/*.tgz; do [ -f "$pkg" ] || continue; npm cache add --cache .npm-cache "$pkg"; done
       - npm install --offline --cache .npm-cache --no-audit
+      - rm -rf /app/flatpak-node/cache .npm-cache .npm-offline-cache
       - npm run build:preload
       - npm run dist -- --linux --dir
       - mkdir -p /app/main
@@ -56,5 +57,5 @@ modules:
         done
     sources:
       - type: archive
-        url: https://codeload.github.com/PirateMaryRead/canva-webapp-linux/tar.gz/e5322ceba64b637680468f98d600f357b30fba88
+        url: https://github.com/PirateMaryRead/canva-webapp-linux/archive/e5322ceba64b637680468f98d600f357b30fba88.tar.gz
         sha256: f52d6dbdb84a1a4936a62cc5a396ae6bd50b00e4e75f1d4d840f57549adf174b

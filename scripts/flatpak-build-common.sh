@@ -60,3 +60,19 @@ build_flatpak_repo() {
   info "Generating repository summary"
   flatpak build-update-repo --generate-static-deltas repo
 }
+
+install_flatpak_direct() {
+  info "Cleaning previous Flatpak build artifacts"
+  rm -rf build-dir
+
+  info "Building and installing Flatpak directly (no repo export, no bundle)"
+  flatpak-builder \
+    --force-clean \
+    --user \
+    --install \
+    --install-deps-from=flathub \
+    build-dir \
+    com.canva.WebApp.yml
+
+  ok "Direct local Flatpak install completed"
+}

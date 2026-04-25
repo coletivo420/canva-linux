@@ -19,7 +19,8 @@
     "lint:fix": "eslint . --fix",
     "build:preload": "node scripts/build-preload-bundle.js",
     "prestart": "npm run build:preload",
-    "predist": "npm run build:preload"
+    "predist": "npm run build:preload",
+    "docs:check-links": "node scripts/check-doc-links.js"
   },
   "build": {
     "appId": "com.canva.WebApp",

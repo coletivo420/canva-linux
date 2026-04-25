@@ -53,7 +53,7 @@ done
 info "Preparing local Flatpak install for Canva WebApp v${VERSION}"
 
 ## Dependency checks
-BASE_DEPS=(flatpak flatpak-builder node realpath)
+BASE_DEPS=(flatpak flatpak-builder node)
 for cmd in "${BASE_DEPS[@]}"; do
   command -v "$cmd" >/dev/null 2>&1 || err "'$cmd' not found. Install it before continuing."
 done
@@ -76,17 +76,8 @@ fi
 ## Build output checks
 ensure_linux_unpacked
 
-## Flatpak repository generation
-build_flatpak_repo
-
-## Local install/reinstall
-info "Refreshing local Flatpak remote 'canva-webapp-repo'"
-flatpak --user remote-delete canva-webapp-repo 2>/dev/null || true
-flatpak --user remote-add --no-gpg-verify canva-webapp-repo "file://$(realpath repo)"
-
-info "Installing/updating com.canva.WebApp locally"
-flatpak --user install -y --reinstall canva-webapp-repo com.canva.WebApp
-ok "Local Flatpak install complete"
+## Local install/reinstall (direct install path)
+install_flatpak_direct
 
 ## Post-install instructions
 cat <<'POSTINSTALL'
