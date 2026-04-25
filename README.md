@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.6 (Flathub source/readiness hardening pass)
+Next: 1.4.10-dev.7 (Flathub source/readiness hardening pass)
 
 ## Development (1.4.10-dev.X)
 
@@ -15,7 +15,7 @@ The current development cycle focuses on Flathub readiness, packaging improvemen
 
 Goal: prepare the project for Flathub submission without introducing new runtime features.
 
-`1.4.10-dev.6` keeps user-facing behavior stable, but it does include a major internal refactor:
+`1.4.10-dev.7` keeps user-facing behavior stable, but it does include a major internal refactor:
 
 - modularized `electron/main` and `electron/preload`
 - centralized debug logging in the main process

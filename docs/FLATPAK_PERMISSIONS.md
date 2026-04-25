@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.6` Flathub validation cycle.
+This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.7` Flathub validation cycle.
 
 Goal for this pass:
 

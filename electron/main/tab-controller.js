@@ -29,12 +29,14 @@ function createTabController({
   function createTab(url = appUrl, { activate = true, isHome = false } = {}) {
     debugLog('tabs:navigation', 'create', url, `activate=${activate}`, `home=${isHome}`);
     const id = state.nextTabIdRef();
+    const preloadPath = path.resolve(__dirname, '..', 'preload', 'canva.js');
+    debugLog('tabs:navigation', 'preload-path', preloadPath);
 
     // Each tab stays as its own WebContentsView so the shell can switch
     // visibility and bounds without changing how the shared session behaves.
     const view = new WebContentsView({
       webPreferences: {
-        preload: path.join(__dirname, '..', 'preload', 'canva.js'),
+        preload: preloadPath,
         contextIsolation: false,
         sandbox: false,
         nodeIntegration: false,

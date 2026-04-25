@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.7] - 2026-04-25
+
+### Changed
+- Further refactored the Electron main process by extracting logging and shell helpers from the entrypoint.
+- Centralized common shell background color logic and shared web preferences into modular helpers.
+- Improved `index.js` readability by focusing it on orchestration and process-wide composition.
+
+### Notes
+- This is a continuation of the maintainability refactor for the `1.4.10-dev.X` cycle.
+- Runtime behavior remains stable and unchanged.
+
 ## [1.4.10-dev.6] - 2026-04-24
 
 ### Added

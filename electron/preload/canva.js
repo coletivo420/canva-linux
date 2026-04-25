@@ -1,147 +1,142 @@
 'use strict';
 
+console.log('[canva:preload] raw-init ' + location.href);
+
 const { createPreloadDebug } = require('./debug');
-const { installUploadDiagnostics } = require('./upload-diagnostics');
-
-function loadEyeDropperRoutingDiagnostics() {
-  try {
-    return require('./eyedropper-routing-diagnostics');
-  } catch (primaryError) {
-    try {
-      return require('./browser-capture-diagnostics');
-    } catch (fallbackError) {
-      return {
-        installEyeDropperRoutingDiagnostics() {},
-        loadError: fallbackError || primaryError,
-      };
-    }
-  }
-}
-
-function loadCustomEyeDropperFlow() {
-  try {
-    return {
-      ...require('./custom-eyedropper-flow'),
-      loadError: null,
-    };
-  } catch (error) {
-    return {
-      createCustomEyeDropperFlow() {
-        return {
-          wrapOpenCall() {
-            const message = error && error.message ? error.message : 'custom-eyedropper-flow unavailable';
-            return Promise.reject(new Error(message));
-          },
-        };
-      },
-      loadError: error,
-    };
-  }
-}
-
-function loadNativeEyeDropperWrapper() {
-  try {
-    return {
-      ...require('./native-eyedropper-wrapper'),
-      loadError: null,
-    };
-  } catch (error) {
-    return {
-      installNativeEyeDropperWrapper() {
-        return {
-          ensureWrappedEyeDropperInstalled() {},
-        };
-      },
-      loadError: error,
-    };
-  }
-}
-
-const {
-  installEyeDropperRoutingDiagnostics,
-  loadError: eyeDropperRoutingLoadError,
-} = loadEyeDropperRoutingDiagnostics();
-const {
-  createCustomEyeDropperFlow,
-  loadError: customEyeDropperFlowLoadError,
-} = loadCustomEyeDropperFlow();
-const {
-  installNativeEyeDropperWrapper,
-  loadError: nativeEyeDropperWrapperLoadError,
-} = loadNativeEyeDropperWrapper();
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
   spec: process?.env?.CANVA_DEBUG,
   source: 'canva-preload',
 });
 
-debugLog('startup', 'preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
-logEyeDropper('eyedropper:wrapper', 'preload-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
-if (eyeDropperRoutingLoadError) {
-  logEyeDropper(
-    'eyedropper:routing',
-    'module-load-failed',
-    process.isMainFrame ? 'main-frame' : 'sub-frame',
-    location.href,
-    eyeDropperRoutingLoadError && eyeDropperRoutingLoadError.message
-      ? eyeDropperRoutingLoadError.message
-      : String(eyeDropperRoutingLoadError)
-  );
-}
-if (customEyeDropperFlowLoadError) {
-  logEyeDropper(
-    'eyedropper:flow',
-    'module-load-failed',
-    process.isMainFrame ? 'main-frame' : 'sub-frame',
-    location.href,
-    customEyeDropperFlowLoadError && customEyeDropperFlowLoadError.message
-      ? customEyeDropperFlowLoadError.message
-      : String(customEyeDropperFlowLoadError)
-  );
-}
-if (nativeEyeDropperWrapperLoadError) {
-  logEyeDropper(
-    'eyedropper:wrapper',
-    'module-load-failed',
-    process.isMainFrame ? 'main-frame' : 'sub-frame',
-    location.href,
-    nativeEyeDropperWrapperLoadError && nativeEyeDropperWrapperLoadError.message
-      ? nativeEyeDropperWrapperLoadError.message
-      : String(nativeEyeDropperWrapperLoadError)
-  );
-}
-installUploadDiagnostics({ debugEnabled, debugLog });
-const { wrapOpenCall } = createCustomEyeDropperFlow({
-  debugLog,
-  logEyeDropper,
-});
-installEyeDropperRoutingDiagnostics({ debugEnabled, debugLog, logEyeDropper, wrapOpenCall });
+// CRITICAL: We need this log to know the preload started at all!
+debugLog('startup', 'preload-init', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 
-const { ensureWrappedEyeDropperInstalled } = installNativeEyeDropperWrapper({
-  logEyeDropper,
-  wrapOpenCall,
-});
+try {
+  function installUploadDiagnostics() {
+    try {
+      return require('./upload-diagnostics').installUploadDiagnostics;
+    } catch (e) {
+      return null;
+    }
+  }
 
-// Install as early as possible so Canva scripts cannot cache the native
-// EyeDropper constructor before the wrapper is in place.
-logEyeDropper('eyedropper:wrapper', 'install-trigger', 'preload-eval', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
-ensureWrappedEyeDropperInstalled();
+  function loadEyeDropperRoutingDiagnostics() {
+    try {
+      return require('./eyedropper-routing-diagnostics');
+    } catch (primaryError) {
+      try {
+        return require('./browser-capture-diagnostics');
+      } catch (fallbackError) {
+        return {
+          installEyeDropperRoutingDiagnostics() {},
+          loadError: fallbackError || primaryError,
+        };
+      }
+    }
+  }
 
-if (document.readyState === 'loading') {
-  window.addEventListener('DOMContentLoaded', () => {
-    logEyeDropper('eyedropper:wrapper', 'install-trigger', 'dom-content-loaded', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
+  function loadCustomEyeDropperFlow() {
+    try {
+      return {
+        ...require('./custom-eyedropper-flow'),
+        loadError: null,
+      };
+    } catch (error) {
+      return {
+        createCustomEyeDropperFlow() {
+          return {
+            wrapOpenCall() {
+              return Promise.reject(new Error('custom-eyedropper-flow unavailable'));
+            },
+          };
+        },
+        loadError: error,
+      };
+    }
+  }
+
+  function loadNativeEyeDropperWrapper() {
+    try {
+      return {
+        ...require('./native-eyedropper-wrapper'),
+        loadError: null,
+      };
+    } catch (error) {
+      return {
+        installNativeEyeDropperWrapper() {
+          return {
+            ensureWrappedEyeDropperInstalled() {},
+          };
+        },
+        loadError: error,
+      };
+    }
+  }
+
+  const {
+    installEyeDropperRoutingDiagnostics,
+    loadError: eyeDropperRoutingLoadError,
+  } = loadEyeDropperRoutingDiagnostics();
+  const {
+    createCustomEyeDropperFlow,
+    loadError: customEyeDropperFlowLoadError,
+  } = loadCustomEyeDropperFlow();
+  const {
+    installNativeEyeDropperWrapper,
+    loadError: nativeEyeDropperWrapperLoadError,
+  } = loadNativeEyeDropperWrapper();
+
+  debugLog('startup', 'modules-loaded');
+
+  if (eyeDropperRoutingLoadError) {
+    logEyeDropper('eyedropper:routing', 'module-load-failed', eyeDropperRoutingLoadError.message);
+  }
+  if (customEyeDropperFlowLoadError) {
+    logEyeDropper('eyedropper:flow', 'module-load-failed', customEyeDropperFlowLoadError.message);
+  }
+  if (nativeEyeDropperWrapperLoadError) {
+    logEyeDropper('eyedropper:wrapper', 'module-load-failed', nativeEyeDropperWrapperLoadError.message);
+  }
+
+  const installer = installUploadDiagnostics();
+  if (typeof installer === 'function') {
+    installer({ debugEnabled, debugLog });
+  }
+
+  const { wrapOpenCall } = createCustomEyeDropperFlow({
+    debugLog,
+    logEyeDropper,
+  });
+  installEyeDropperRoutingDiagnostics({ debugEnabled, debugLog, logEyeDropper, wrapOpenCall });
+
+  const { ensureWrappedEyeDropperInstalled } = installNativeEyeDropperWrapper({
+    logEyeDropper,
+    wrapOpenCall,
+  });
+
+  // Install as early as possible.
+  ensureWrappedEyeDropperInstalled();
+  debugLog('startup', 'eyedropper-installed');
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', () => {
+      ensureWrappedEyeDropperInstalled();
+    }, { once: true });
+  } else {
     ensureWrappedEyeDropperInstalled();
-  }, { once: true });
-} else {
-  logEyeDropper('eyedropper:wrapper', 'install-trigger', 'document-ready', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
-  ensureWrappedEyeDropperInstalled();
-}
+  }
 
-window.addEventListener('pageshow', () => {
-  logEyeDropper('eyedropper:wrapper', 'install-trigger', 'pageshow', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
-  ensureWrappedEyeDropperInstalled();
-}, { passive: true });
-window.addEventListener('focus', () => {
-  logEyeDropper('eyedropper:wrapper', 'install-trigger', 'focus', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
-  ensureWrappedEyeDropperInstalled();
-}, { passive: true });
+  window.addEventListener('pageshow', () => {
+    ensureWrappedEyeDropperInstalled();
+  }, { passive: true });
+  window.addEventListener('focus', () => {
+    ensureWrappedEyeDropperInstalled();
+  }, { passive: true });
+
+} catch (fatalError) {
+  console.error('[canva:canva-preload:fatal]', fatalError);
+  if (typeof debugLog === 'function') {
+    debugLog('startup', 'fatal-error', fatalError.message);
+  }
+}

@@ -1,11 +1,11 @@
-# Release Checklist — 1.4.10-dev.6
+# Release Checklist — 1.4.10-dev.7
 
-This checklist is intended for maintainer validation of the current `1.4.10-dev.6` development delivery.
+This checklist is intended for maintainer validation of the current `1.4.10-dev.7` development delivery.
 
 ## 1) Version and metadata
 
-- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.10-dev.6`.
-- [ ] Confirm `CHANGELOG.md` contains the `1.4.10-dev.6` entry.
+- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.10-dev.7`.
+- [ ] Confirm `CHANGELOG.md` contains the `1.4.10-dev.7` entry.
 - [ ] Confirm documentation reflects the modular runtime refactor and centralized debug logging.
 
 ## 2) Runtime stability guardrails

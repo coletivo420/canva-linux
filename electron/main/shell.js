@@ -6,9 +6,13 @@ function createShellHelpers({
   BrowserWindow,
   debugLog,
   layoutViews,
-  shellBackgroundColor,
+  nativeTheme,
   WebContentsView,
 }) {
+  function shellBackgroundColor() {
+    return nativeTheme.shouldUseDarkColors ? '#1f2329' : '#f6f7fb';
+  }
+
   function createShellWindow({ setMainWindow }) {
     debugLog('app', 'create-shell-window');
     const mainWindow = new BrowserWindow({
@@ -112,6 +116,7 @@ function createShellHelpers({
   return {
     createShellWindow,
     createToolbarView,
+    shellBackgroundColor,
   };
 }
 

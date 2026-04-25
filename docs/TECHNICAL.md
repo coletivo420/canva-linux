@@ -119,7 +119,7 @@ OAuth popup native provider icons remain a known Linux/Wayland limitation for th
 
 ## Security diagnostics note
 
-`1.4.10-dev.6` includes the centralized debug/log pipeline used by the current modular runtime.
+`1.4.10-dev.7` includes the centralized debug/log pipeline used by the current modular runtime.
 
 The current logger writes both terminal output and a per-start `current.log` file for troubleshooting.
 

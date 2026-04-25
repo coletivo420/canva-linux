@@ -92,6 +92,16 @@ function attachTabEventHandlers(tab, helpers) {
     debugLog('view', 'tab-sync-navigation', `tab=${tab.id}`, wc.getURL() || tab.url);
     tab.url = wc.getURL() || tab.url;
     broadcastTabsState();
+
+    // Ensure the eyedropper wrapper is active even if the preload failed to
+    // stick during a complex Canva editor load.
+    wc.executeJavaScript(`
+      try {
+        if (typeof ensureWrappedEyeDropperInstalled === 'function') {
+          ensureWrappedEyeDropperInstalled();
+        }
+      } catch {}
+    `).catch(() => {});
   };
 
   wc.on('did-navigate', syncNavigation);
@@ -122,7 +132,30 @@ function attachTabEventHandlers(tab, helpers) {
     debugLog('view', 'frame-load', `tab=${tab.id}`, isMainFrame ? 'main' : 'sub', processId, routingId);
   });
 
+  wc.on('console-message', (_event, level, message, line, sourceId) => {
+    debugLog(`tabs:view:${tab.id}`, 'console', `level=${level}`, `line=${line}`, sourceId || 'inline', message);
+    if (message.includes('canva-preload') || message.includes('EyeDropper')) {
+      debugLog('eyedropper:diagnostics', 'console-intercept', `tab=${tab.id}`, message);
+    }
+  });
+
+  wc.on('did-finish-load', () => {
+    debugLog('view', 'did-finish-load', `tab=${tab.id}`, wc.getURL());
+    // Force a small delay then check if our preload successfully installed the global.
+    // This is a last-resort safety for the Canva editor's complex loading cycle.
+    wc.executeJavaScript(`
+      (function() {
+        const installed = typeof ensureWrappedEyeDropperInstalled === 'function';
+        console.log('[canva:eyedropper:check] tab=${tab.id} installed=' + installed);
+        if (installed) {
+          ensureWrappedEyeDropperInstalled();
+        }
+      })();
+    `).catch(() => {});
+  });
+
   wc.on('before-input-event', (event, input) => {
+
     debugLog('app', 'before-input', `tab=${tab.id}`, input.type, input.key || '');
     const ctrlOrCmd = input.control || input.meta;
     if (!ctrlOrCmd || input.type !== 'keyDown') return;

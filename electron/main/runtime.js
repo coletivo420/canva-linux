@@ -59,6 +59,18 @@ async function flushSession(ses) {
   await ses.flushStorageData();
 }
 
+function sharedWebPreferences(getCanvaSession, extra = {}) {
+  // All Canva surfaces (tabs + OAuth popups) must share the same session.
+  return {
+    session: getCanvaSession(),
+    contextIsolation: true,
+    sandbox: true,
+    nodeIntegration: false,
+    spellcheck: true,
+    ...extra,
+  };
+}
+
 async function configureSession({
   app,
   debugLog,
@@ -114,4 +126,5 @@ module.exports = {
   configureLinuxRuntime,
   configureSession,
   flushSession,
+  sharedWebPreferences,
 };

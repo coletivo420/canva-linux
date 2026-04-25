@@ -30,6 +30,7 @@ const { registerEyeDropperBridge } = require('./eyedropper-bridge');
 const { registerMainIpcHandlers } = require('./ipc');
 const { registerAppLifecycle } = require('./lifecycle');
 const { createCentralLogger, createStatusLogger } = require('./logging');
+const { createLoggingHelpers } = require('./logging-helpers');
 const { createOAuthHelpers } = require('./oauth');
 const { configureLinuxRuntime, configureSession, flushSession } = require('./runtime');
 const { createShellHelpers } = require('./shell');
@@ -86,6 +87,26 @@ const { logCredentialStorageBackend, logReleaseStatus } = createStatusLogger({
   safeStorage,
 });
 
+const shellHelpers = createShellHelpers({
+  appIconPath: APP_ICON_PATH,
+  appName: APP_NAME,
+  BrowserWindow,
+  debugLog,
+  layoutViews() {
+    return layoutViews();
+  },
+  nativeTheme,
+  WebContentsView,
+});
+const { shellBackgroundColor } = shellHelpers;
+
+const loggingHelpers = createLoggingHelpers({
+  getMainWindow: () => mainWindow,
+  getAuthPopups: () => authPopups,
+  getFindTabByWebContents: () => findTabByWebContents,
+});
+const { summarizeOauthEntry, webContentsLabel, windowLabel } = loggingHelpers;
+
 function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
   const request = classifyNavigationRequest({ url, openerUrl, disposition, frameName });
   if (request.kind === 'oauth-popup') {
@@ -100,16 +121,6 @@ function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
   return { category: 'tabs', kind: 'external-browser' };
 }
 
-function summarizeOauthEntry(entry) {
-  if (!entry) return 'popup=unknown';
-  return [
-    `popup=${entry.id}`,
-    `startedOnCanvaAuth=${entry.startedOnCanvaAuth ? 'true' : 'false'}`,
-    `sawExternalProvider=${entry.sawExternalProvider ? 'true' : 'false'}`,
-    `source=${entry.sourceWebContentsId || 'unknown'}`,
-  ].join(' ');
-}
-
 function makeToolbarUrl() {
   return `file://${path.join(__dirname, '..', 'ui', 'toolbar.html')}`;
 }
@@ -118,39 +129,8 @@ function currentTheme() {
   return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
 }
 
-function windowLabel(window) {
-  if (!window) return 'unknown-window';
-  if (mainWindow && window === mainWindow) return 'main-window';
-  for (const entry of authPopups.values()) {
-    if (entry.window === window) return `oauth-popup-${entry.id}`;
-  }
-  return 'window';
-}
-
-function webContentsLabel(webContents) {
-  if (!webContents) return 'unknown-webcontents';
-  const tab = findTabByWebContents(webContents);
-  if (tab) return `tab-${tab.id}`;
-  for (const entry of authPopups.values()) {
-    if (entry.window.webContents === webContents) return `oauth-popup-${entry.id}`;
-  }
-  return `wc-${webContents.id}`;
-}
-
-function shellBackgroundColor() {
-  return nativeTheme.shouldUseDarkColors ? '#1f2329' : '#f6f7fb';
-}
-
 function sharedWebPreferences(extra = {}) {
-  // All Canva surfaces (tabs + OAuth popups) must share the same session.
-  return {
-    session: getCanvaSession(),
-    contextIsolation: true,
-    sandbox: true,
-    nodeIntegration: false,
-    spellcheck: true,
-    ...extra,
-  };
+  return require('./runtime').sharedWebPreferences(getCanvaSession, extra);
 }
 
 const tabHelpers = createTabHelpers({
@@ -201,15 +181,6 @@ const oauthHelpers = createOAuthHelpers({
   sharedWebPreferences,
   summarizeOauthEntry,
   windowLabel,
-});
-const shellHelpers = createShellHelpers({
-  appIconPath: APP_ICON_PATH,
-  appName: APP_NAME,
-  BrowserWindow,
-  debugLog,
-  layoutViews,
-  shellBackgroundColor,
-  WebContentsView,
 });
 
 function createShellWindow() {

@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.6` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.7` cycle.
 
 ## Language and communication conventions
 
@@ -67,7 +67,7 @@ After meaningful refactors, update the relevant repository documentation so futu
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.6 = modular runtime refactor + centralized debug logging + AI-assisted maintenance.`
+`1.4.10-dev.7 = modular runtime refactor + centralized debug logging + AI-assisted maintenance.`
 
 ## Development branch naming
 
@@ -79,7 +79,7 @@ Format:
 
 Examples:
 
-- `dev/1.4.10-dev.6`
+- `dev/1.4.10-dev.7`
 - `dev/1.4.10-dev.5`
 - `dev/1.4.10-rc.1`
 

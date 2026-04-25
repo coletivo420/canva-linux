@@ -1,10 +1,10 @@
-# Manual Validation — 1.4.10-dev.6
+# Manual Validation — 1.4.10-dev.7
 
 This document defines the manual validation routine for the current development cycle.
 
 ## Validation scope
 
-`1.4.10-dev.6` is primarily a Flathub-readiness and maintainability pass.
+`1.4.10-dev.7` is primarily a Flathub-readiness and maintainability pass.
 
 Expected outcome:
 
