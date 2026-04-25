@@ -6,9 +6,15 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 - Disabled Chromium/Electron `Floss` runtime feature in `configureLinuxRuntime()` to reduce non-fatal Bluetooth/Floss startup noise inside Flatpak sandbox logs.
+- Added a dedicated `packaging/flathub/` submission workspace with a separate Flathub-oriented manifest, `generated-sources.json` npm dependency manifest, and helper scripts to regenerate it from `package-lock.json`.
+- Switched the submission manifest source strategy to a pinned public archive (`type: archive` + `sha256`) and clarified sandbox-only generation of `dist/linux-unpacked`, plus offline npm installation (`npm install --offline`) using generated dependency sources.
+- Added submission automation scripts (`scripts/prepare-flathub-submission.sh`, `scripts/validate-flathub-submission.sh`) and moved submission manifest path to `packaging/flathub/manifest.yml`.
+- Added dedicated submission-path documentation and rationale notes (`docs/FLATHUB_SUBMISSION_PATH.md`, `docs/FLATHUB_SUBMISSION_NOTES.md`), including a material non-triviality rationale against simple-web-wrapper rejection risk.
+- Updated documentation to formalize separation between the repository-root local manifest workflow and Flathub submission assets.
 
 ### Notes
-- This change affects only Electron/Chromium runtime feature flags.
+- The repository-root `com.canva.WebApp.yml` remains the canonical local install/bundle manifest.
+- Flathub submission assets now live under `packaging/flathub/` and should be reviewed independently before submission PRs.
 - System Bluetooth availability and Flatpak DBus/portal permission model are unchanged.
 
 ## [1.4.10-dev.15] - 2026-04-25

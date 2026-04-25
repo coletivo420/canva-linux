@@ -108,6 +108,7 @@ Actions can be chained and run in the order provided:
 - `--bundle` is for generating GitHub release `.flatpak` artifacts.
 - `--bundle` rebuilds the Electron output and Flatpak repo before creating the artifact.
 - Flathub submission remains a separate process.
+- Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `com.canva.WebApp.yml`.
 - `--reset-user-data` removes login state and OAuth/session cookies.
 
 ## Flathub Status
@@ -121,6 +122,9 @@ Detailed packaging notes live in:
 - `docs/FLATHUB_SOURCE.md`
 - `docs/SCREENSHOTS.md`
 - `docs/FLATPAK_PERMISSIONS.md`
+- `docs/FLATHUB_SUBMISSION_PATH.md`
+- `docs/FLATHUB_SUBMISSION_NOTES.md`
+- `packaging/flathub/`
 
 ## Documentation
 
@@ -133,6 +137,8 @@ Detailed packaging notes live in:
 - `docs/FLATHUB_SOURCE.md` documents the current local manifest source workflow and future Flathub source expectations.
 - `docs/SCREENSHOTS.md` documents the screenshot workflow.
 - `docs/FLATPAK_PERMISSIONS.md` documents Flatpak permissions and review notes.
+- `docs/FLATHUB_SUBMISSION_PATH.md` documents the dedicated submission-path workflow and validation commands.
+- `docs/FLATHUB_SUBMISSION_NOTES.md` captures submission rationale, including the response to thin-wrapper objections.
 
 ## License
 

@@ -1,0 +1,60 @@
+app-id: com.canva.WebApp
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node22
+build-options:
+  append-path: /usr/lib/sdk/node22/bin
+  env:
+    XDG_CACHE_HOME: /run/build/canva-webapp/.cache
+    npm_config_nodedir: /usr/lib/sdk/node22
+base: org.electronjs.Electron2.BaseApp
+base-version: '25.08'
+command: run.sh
+separate-locales: false
+
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --device=dri
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --filesystem=xdg-run/pipewire-0
+  - --filesystem=xdg-download
+  - --talk-name=org.freedesktop.FileManager1
+  - --talk-name=org.freedesktop.ScreenSaver
+  - --talk-name=org.freedesktop.secrets
+  - --env=ELECTRON_TRASH=gio
+  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
+
+modules:
+  - generated-sources.json
+
+  - name: canva-webapp
+    buildsystem: simple
+    build-commands:
+      # Build inside sandbox from pinned archive.
+      # dist/linux-unpacked is generated here (never reused from host checkout).
+      - rm -rf dist .npm-cache .npm-offline-cache
+      - mkdir -p .npm-cache .npm-offline-cache
+      - cp -a /app/flatpak-node/cache/. .npm-offline-cache/
+      - for pkg in .npm-offline-cache/*.tgz; do npm cache add --cache .npm-cache "$pkg"; done
+      - npm install --offline --cache .npm-cache --no-audit
+      - npm run build:preload
+      - npm run dist -- --linux --dir
+      - mkdir -p /app/main
+      - cp -a dist/linux-unpacked/* /app/main/
+      - if command -v patch-electron-desktop-filename >/dev/null 2>&1; then patch-electron-desktop-filename /app/main/resources/app.asar; else patch-desktop-filename /app/main/resources/app.asar; fi
+      - install -Dm755 run.sh /app/bin/run.sh
+      - install -Dm644 data/com.canva.WebApp.desktop /app/share/applications/com.canva.WebApp.desktop
+      - install -Dm644 data/com.canva.WebApp.metainfo.xml /app/share/metainfo/com.canva.WebApp.metainfo.xml
+      - |
+        for size in 16 22 24 32 48 64 128 256 512; do
+          install -Dm644 data/icons/hicolor/${size}x${size}/apps/com.canva.WebApp.png /app/share/icons/hicolor/${size}x${size}/apps/com.canva.WebApp.png;
+        done
+    sources:
+      - type: archive
+        url: https://codeload.github.com/PirateMaryRead/canva-webapp-linux/tar.gz/e5322ceba64b637680468f98d600f357b30fba88
+        sha256: f52d6dbdb84a1a4936a62cc5a396ae6bd50b00e4e75f1d4d840f57549adf174b
