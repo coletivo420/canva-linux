@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.11] - 2026-04-25
+
+### Changed
+- Extracted the main-process window-open policy from `electron/main/index.js` into a dedicated module without changing runtime behavior.
+- Kept the shared navigation classifier as the injected source of truth while isolating the local main-process tab/oauth category mapping for future tests.
+
+### Notes
+- This is phase 2 of the planned testing architecture work.
+- Runtime behavior is intentionally unchanged in this patch.
+
 ## [1.4.10-dev.10] - 2026-04-25
 
 ### Changed

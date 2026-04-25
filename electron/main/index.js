@@ -37,6 +37,7 @@ const { configureLinuxRuntime, configureSession, flushSession } = require('./run
 const { createShellHelpers } = require('./shell');
 const { createTabController } = require('./tab-controller');
 const { createTabHelpers } = require('./tabs');
+const { createWindowOpenPolicy } = require('./window-open-policy');
 
 const APP_ID = 'com.canva.WebApp';
 const APP_URL = 'https://www.canva.com';
@@ -108,22 +109,9 @@ const loggingHelpers = createLoggingHelpers({
 });
 const { summarizeOauthEntry, webContentsLabel, windowLabel } = loggingHelpers;
 
-function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
-  const request = sharedClassifyWindowOpenRequest({ url, openerUrl, disposition, frameName });
-  if (request.kind === 'oauth-popup') {
-    return { category: 'oauth', kind: request.kind };
-  }
-  if (request.kind === 'internal-tab') {
-    return { category: 'tabs', kind: request.kind };
-  }
-  if (!url || url === 'about:blank' || url === 'about:srcdoc') {
-    return { category: 'tabs', kind: 'blank-window' };
-  }
-  if (request.kind === 'blocked-external') {
-    return { category: 'tabs', kind: request.kind };
-  }
-  return { category: 'tabs', kind: 'external-browser' };
-}
+const { classifyWindowOpenRequest } = createWindowOpenPolicy({
+  classifyNavigationRequest: sharedClassifyWindowOpenRequest,
+});
 
 function makeToolbarUrl() {
   return `file://${path.join(__dirname, '..', 'ui', 'toolbar.html')}`;

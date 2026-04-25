@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.10` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.11` cycle.
 
 ## Language and communication conventions
 
@@ -73,13 +73,13 @@ After meaningful refactors, update the relevant repository documentation so futu
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.10 = documentation, AI/vibecoding preparation, and phased testing roadmap alignment.`
+`1.4.10-dev.11 = documentation, AI/vibecoding preparation, and phased testing roadmap alignment.`
 
 ## Planned phase roadmap
 
 The `1.4.10-dev.X` cycle now follows an explicit phased plan:
 
-- `1.4.10-dev.10` - preparation: documentation, roadmap, and AI/vibecoding guidance
+- `1.4.10-dev.11` - preparation: documentation, roadmap, and AI/vibecoding guidance
 - `1.4.10-dev.11` - extract the window-open policy into a testable module
 - `1.4.10-dev.12` - add unit tests with `node:test`
 - `1.4.10-dev.14` - add light wiring/integration tests for the main-process tab flow

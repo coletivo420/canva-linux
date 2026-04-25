@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.10 (phase 1 documentation, AI/vibecoding preparation, and testing roadmap)
+Next: 1.4.10-dev.11 (phase 2 extraction of the window-open policy into a testable module)
 
 ## Development (1.4.10-dev.X)
 
@@ -16,6 +16,8 @@ The current development cycle focuses on Flathub readiness, packaging improvemen
 Goal: prepare the project for Flathub submission while introducing small, reviewable development phases for documentation, extraction, testing, and Electron smoke coverage.
 
 `1.4.10-dev.10` starts the documentation and AI/vibecoding preparation phase for the testing cycle. This phase aligns the repository docs, changelog, and roadmap before code extraction or test harness changes land.
+
+`1.4.10-dev.11` extracts the main-process window-open policy from `electron/main/index.js` into a dedicated module so the policy can be tested in isolation before `node:test`, wiring, and Playwright phases land.
 
 Planned phase map:
 
