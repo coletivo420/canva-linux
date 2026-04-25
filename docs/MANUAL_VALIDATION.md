@@ -76,4 +76,11 @@ Expected outcome:
 1. Confirm terminal debug entries include the expected source prefix, such as `main`, `canva-preload`, or `toolbar-preload`.
 2. Confirm the file-backed debug log contains the same run and does not include stale content from a previous launch.
 
+## Bluetooth/Floss runtime-noise check
+
+1. Run:
+   - `CANVA_DEBUG=1 flatpak run com.canva.WebApp 2>&1 | grep -Ei 'floss|bluetooth|bluez'`
+2. Confirm Floss manager warnings are reduced compared with previous builds.
+3. Treat remaining Bluetooth-related lines as diagnostics unless they are tied to a user-facing regression.
+
 Record observable regressions only; do not treat internal module reshaping as a user-facing behavior change by itself.
