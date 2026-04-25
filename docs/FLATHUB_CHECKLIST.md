@@ -14,6 +14,7 @@ Use this checklist before opening or updating a Flathub submission PR.
 - [ ] Screenshot URLs reviewed against the final release/tag
 - [ ] Permission review
 - [ ] Local install smoke test
+- [ ] Generated preload bundle reviewed as a build artifact, with modular preload source files reviewed as source
 - [ ] Bundle generation test
 - [ ] Maintainer final review
 
@@ -21,7 +22,8 @@ Use this checklist before opening or updating a Flathub submission PR.
 
 ```bash
 ./canva-linux.sh --validate
-./canva-linux.sh --bundle
+npm run build:preload
+./canva-linux.sh --install --bundle
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```
@@ -32,5 +34,10 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 - If `org.flatpak.Builder` is missing locally, install it with:
   `flatpak install flathub org.flatpak.Builder`
 - Review `docs/FLATHUB_SOURCE.md` before preparing the final Flathub source definition.
+- The generated `electron/preload/canva.bundle.js` should be regenerated from source during the build and should not replace review of the modular preload source files.
+- Release bundle publication must use the default rebuild path so the `.flatpak` is not created from stale Electron output.
+- Use `scripts/build-flatpak-bundle.sh --use-existing-repo` only for explicit local reuse of an already reviewed `repo/`, not for release publication after source changes.
+- If AppStream validation reports only URL reachability warnings, rerun with normal network access before changing metadata.
+- Local repo lint may report only Flathub screenshot mirror findings until screenshots are mirrored by Flathub infrastructure; treat additional repo-lint findings as blockers.
 - Keep OAuth status explicit in submission notes: Google OAuth is maintainer-tested; other OAuth providers remain community-tested.
 - Final Flathub submission should happen only after maintainer review of lint output, permissions, screenshots, and release source.

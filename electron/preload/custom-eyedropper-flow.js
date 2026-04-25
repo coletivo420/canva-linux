@@ -215,7 +215,12 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
     }
 
     const abortPromise = new Promise((_, reject) => {
-      abortHandler = () => reject(createAbortError());
+      abortHandler = () => {
+        if (activePickerCleanup) {
+          activePickerCleanup();
+        }
+        reject(createAbortError());
+      };
       signal.addEventListener('abort', abortHandler, { once: true });
     });
 

@@ -15,6 +15,7 @@ function attachTabEventHandlers(tab, helpers) {
     isBlankPopupUrl,
     isCanvaAuthUrl,
     isCanvaUrl,
+    isSafeExternalUrl,
     oauthHelpers,
     shell,
     shellBackgroundColor,
@@ -42,7 +43,12 @@ function attachTabEventHandlers(tab, helpers) {
       return { action: 'deny' };
     }
 
-    if (!isBlankPopupUrl(url)) {
+    if (request.kind === 'blocked-external') {
+      debugLog('tabs:navigation', 'external-open-blocked', `tab=${tab.id}`, url || 'about:blank');
+      return { action: 'deny' };
+    }
+
+    if (!isBlankPopupUrl(url) && isSafeExternalUrl(url)) {
       debugLog('tabs:navigation', 'external-open', `tab=${tab.id}`, url);
       shell.openExternal(url);
     }
@@ -82,9 +88,13 @@ function attachTabEventHandlers(tab, helpers) {
     }
 
     if (!isCanvaUrl(url)) {
-      debugLog('tabs:navigation', 'external-navigation-blocked', `tab=${tab.id}`, url);
       event.preventDefault();
-      shell.openExternal(url);
+      if (isSafeExternalUrl(url)) {
+        debugLog('tabs:navigation', 'external-navigation-blocked', `tab=${tab.id}`, url);
+        shell.openExternal(url);
+      } else {
+        debugLog('tabs:navigation', 'unsafe-external-navigation-blocked', `tab=${tab.id}`, url || 'about:blank');
+      }
     }
   });
 

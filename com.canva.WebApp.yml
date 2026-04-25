@@ -21,18 +21,14 @@ finish-args:
   - --socket=pulseaudio        # Audio output for editor playback/recording UX.
   - --filesystem=xdg-run/pipewire-0 # Screen/media pipeline compatibility where used.
 
-  ## Font discovery from host (read-only)
-  - --filesystem=xdg-data/fonts:ro
-  - --filesystem=~/.fonts:ro
-  - --filesystem=xdg-config/fontconfig:ro
-
   ## File import and desktop integration
   - --filesystem=xdg-download  # Narrow path used for common local download/export workflows.
   - --talk-name=org.freedesktop.FileManager1
 
   ## Portals and desktop services
-  # The app relies on Flatpak portals for file access when possible.
-  - --talk-name=org.freedesktop.portal.Desktop
+  # The app relies on Flatpak portals for file access when possible; explicit
+  # portal bus access is intentionally omitted because Flatpak grants portal
+  # mediation without a finish-arg.
   - --talk-name=org.freedesktop.ScreenSaver
   - --talk-name=org.freedesktop.secrets
 

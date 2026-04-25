@@ -4,7 +4,7 @@
 
 This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## Canonical workflow command (1.4.10-dev.7)
+## Canonical workflow command (1.4.10-dev.8)
 
 Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
@@ -23,7 +23,11 @@ Notes:
 - Actions can be chained and run in argument order.
 - `--uninstall` can only be combined with `--reset-user-data`.
 
-`1.4.10-dev.7` is a Flathub source/readiness hardening pass and introduces no runtime feature.
+`1.4.10-dev.8` keeps the Flathub source/readiness focus and adds the generated Canva preload bundle needed to restore the custom eyedropper after the preload modularization regression.
+
+The preload bundle is generated automatically before the Electron build used by `./canva-linux.sh --install` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux.sh --bundle` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
+
+The lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` option exists only for explicit local reuse of an already reviewed `repo/`. It should not be used for release publication after source, preload, metadata, or packaging changes.
 
 ## Validation and lint workflow
 
@@ -37,7 +41,7 @@ Then run lint checks directly when Flatpak Builder is available:
 
 ```bash
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
-./canva-linux.sh --bundle
+./canva-linux.sh --install --bundle
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```
 
@@ -46,6 +50,10 @@ If Flatpak Builder is missing locally, install it with:
 ```bash
 flatpak install flathub org.flatpak.Builder
 ```
+
+If `appstreamcli` reports only remote URL or screenshot reachability warnings in an offline/restricted environment, rerun validation with normal network access before treating the metadata URLs as broken.
+
+Local `flatpak-builder-lint repo repo` can still report screenshot mirror findings for a locally generated OSTree repo because screenshots point to stable upstream URLs and are not mirrored to `https://dl.flathub.org/media` outside Flathub infrastructure. The validation helper treats only `appstream-external-screenshot-url` and `appstream-screenshots-not-mirrored-in-ostree` as a documented local limitation; any additional repo-lint error remains fatal.
 
 ## Permissions and portals
 

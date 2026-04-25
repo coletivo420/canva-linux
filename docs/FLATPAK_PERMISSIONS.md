@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.7` Flathub validation cycle.
+This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.8` Flathub validation cycle.
 
 Goal for this pass:
 
@@ -11,6 +11,8 @@ Goal for this pass:
 - prepare future Flathub review with clear, minimal-sandbox intent.
 
 This remains a documentation and review pass, not a blind permission-removal pass. Broad home-directory access (`--filesystem=home`) remains absent in the current manifest.
+
+The `1.4.10-dev.8` preload bundle and eyedropper fix do not add new Flatpak permissions. The custom picker remains routed through the bundled `ltcodedev/eyedropper` flow using the existing app tab snapshot bridge, not a new desktop portal or native system color picker permission path.
 
 ## Current finish-args
 
@@ -23,12 +25,8 @@ Current manifest permissions:
 - `--socket=fallback-x11`
 - `--socket=pulseaudio`
 - `--filesystem=xdg-run/pipewire-0`
-- `--filesystem=xdg-data/fonts:ro`
-- `--filesystem=~/.fonts:ro`
-- `--filesystem=xdg-config/fontconfig:ro`
 - `--filesystem=xdg-download`
 - `--talk-name=org.freedesktop.FileManager1`
-- `--talk-name=org.freedesktop.portal.Desktop`
 - `--talk-name=org.freedesktop.ScreenSaver`
 - `--talk-name=org.freedesktop.secrets`
 - `--env=ELECTRON_TRASH=gio`
@@ -44,9 +42,7 @@ These are considered required for current behavior:
 - `--socket=wayland`: preferred Linux display path.
 - `--socket=fallback-x11`: X11/XWayland fallback expected by Flathub lint guidance.
 - `--socket=pulseaudio`: audio playback support.
-- font read-only paths (`xdg-data/fonts`, `~/.fonts`, `xdg-config/fontconfig`): host font discovery.
 - `--filesystem=xdg-download`: practical import/export path for common user workflows.
-- `--talk-name=org.freedesktop.portal.Desktop`: portal integration baseline.
 
 ## Optional or review-needed permissions
 
@@ -56,6 +52,8 @@ These should be reviewed in future passes but are currently kept to avoid behavi
 - `--talk-name=org.freedesktop.FileManager1` (**review-needed**): used for desktop integration flows; verify if fully replaceable via portals.
 - `--talk-name=org.freedesktop.ScreenSaver` (**review-needed**): keep until sleep/idle behavior is validated without it.
 - `--talk-name=org.freedesktop.secrets` (**review-needed**): keep for current secret-service compatibility assumptions.
+- host font read-only paths (**removed**): `xdg-data/fonts`, `~/.fonts`, and `xdg-config/fontconfig` were removed because Flathub lint flags them as unnecessary or legacy font access.
+- `--talk-name=org.freedesktop.portal.Desktop` (**removed**): explicit portal bus access was removed because Flatpak portal mediation is available without declaring the portal bus name as a finish-arg.
 
 ## Flathub lint considerations
 
@@ -63,6 +61,8 @@ Flathub lint and policy reviews typically flag broad permissions such as:
 
 - arbitrary `--socket=session-bus` or `--socket=system-bus`;
 - broad host filesystem access (`home`, `host`) without clear justification;
+- explicit `org.freedesktop.portal.Desktop` talk-name access;
+- legacy host font filesystem access;
 - missing `fallback-x11` when `wayland` is used.
 
 Current manifest state for this repo:
@@ -70,6 +70,7 @@ Current manifest state for this repo:
 - does **not** use broad session/system bus sockets;
 - includes `wayland` plus `fallback-x11`;
 - removes broad home-directory filesystem access and relies on portals + narrower paths.
+- omits explicit portal bus access and legacy host font filesystem access.
 
 ## Known limitations
 

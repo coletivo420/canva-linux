@@ -19,6 +19,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 
 VERSION="$(node -p "require('./package.json').version")"
+source "${SCRIPT_DIR}/flatpak-build-common.sh"
 
 ## Usage
 usage() {
@@ -63,60 +64,20 @@ fi
 ok "Host dependencies are available"
 
 ## Flathub runtime preparation
-info "Ensuring Flathub remote is configured"
-flatpak remote-add --if-not-exists --user flathub \
-  https://dl.flathub.org/repo/flathub.flatpakrepo
-
-info "Ensuring required Flatpak runtimes are installed"
-flatpak install -y --user flathub \
-  org.freedesktop.Platform//25.08 \
-  org.freedesktop.Sdk//25.08 \
-  org.electronjs.Electron2.BaseApp//25.08
-ok "Flatpak runtimes are ready"
+ensure_flathub_runtime
 
 ## Node/Electron build preparation
 if [[ "$SKIP_NPM" == false ]]; then
-  if [[ ! -d node_modules ]]; then
-    info "node_modules missing; running npm install"
-    npm install
-  else
-    info "node_modules found; skipping npm install"
-  fi
-
-  info "Building Electron app (target: dir)"
-  npm run dist
+  build_electron_output
 else
   warn "Skipping npm install + npm run dist (--skip-npm)"
 fi
 
 ## Build output checks
-UNPACKED_DIR="$(find dist -maxdepth 1 -type d -name 'linux-unpacked' 2>/dev/null | head -1)"
-if [[ -z "$UNPACKED_DIR" ]]; then
-  UNPACKED_DIR="$(find dist -maxdepth 1 -type d -name 'linux*unpacked' 2>/dev/null | head -1)"
-fi
-[[ -z "$UNPACKED_DIR" ]] && err "Folder 'dist/linux*unpacked' was not found. Did the Electron build fail?"
-
-if [[ "$UNPACKED_DIR" != "dist/linux-unpacked" ]]; then
-  info "Creating symlink dist/linux-unpacked -> $UNPACKED_DIR"
-  ln -sfn "$(basename "$UNPACKED_DIR")" dist/linux-unpacked
-fi
-ok "Electron build output ready: $UNPACKED_DIR"
+ensure_linux_unpacked
 
 ## Flatpak repository generation
-info "Cleaning previous Flatpak build artifacts"
-rm -rf build-dir repo
-
-info "Building Flatpak repository"
-flatpak-builder \
-  --force-clean \
-  --user \
-  --install-deps-from=flathub \
-  --repo=repo \
-  build-dir \
-  com.canva.WebApp.yml
-
-info "Generating repository summary"
-flatpak build-update-repo --generate-static-deltas repo
+build_flatpak_repo
 
 ## Local install/reinstall
 info "Refreshing local Flatpak remote 'canva-webapp-repo'"

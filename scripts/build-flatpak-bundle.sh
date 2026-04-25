@@ -18,6 +18,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 
 VERSION="$(node -p "require('./package.json').version")"
+source "${SCRIPT_DIR}/flatpak-build-common.sh"
 DIST_DIR="dist"
 BUNDLE_PATH="${DIST_DIR}/canva-webapp-linux-${VERSION}.flatpak"
 
@@ -25,19 +26,19 @@ BUNDLE_PATH="${DIST_DIR}/canva-webapp-linux-${VERSION}.flatpak"
 usage() {
   cat <<'USAGE'
 Usage:
-  ./scripts/build-flatpak-bundle.sh [--rebuild-repo]
+  ./scripts/build-flatpak-bundle.sh [--use-existing-repo]
 
 Options:
-  --rebuild-repo   Force rebuilding repo/ before creating the bundle
+  --use-existing-repo   Reuse repo/ instead of rebuilding it first
 USAGE
 }
 
 ## Flags
-REBUILD_REPO=false
+USE_EXISTING_REPO=false
 for arg in "$@"; do
   case "$arg" in
-    --rebuild-repo)
-      REBUILD_REPO=true
+    --use-existing-repo)
+      USE_EXISTING_REPO=true
       ;;
     --help|-h)
       usage
@@ -62,55 +63,15 @@ repo_has_app_ref() {
   [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/com\.canva\.WebApp/'
 }
 
-build_repo() {
-  info "Building Flatpak repository"
-
-  flatpak remote-add --if-not-exists --user flathub \
-    https://dl.flathub.org/repo/flathub.flatpakrepo
-
-  flatpak install -y --user flathub \
-    org.freedesktop.Platform//25.08 \
-    org.freedesktop.Sdk//25.08 \
-    org.electronjs.Electron2.BaseApp//25.08
-
-  if [[ ! -d node_modules ]]; then
-    info "node_modules missing; running npm install"
-    npm install
-  fi
-
-  info "Building Electron app (target: dir)"
-  npm run dist
-
-  UNPACKED_DIR="$(find dist -maxdepth 1 -type d -name 'linux-unpacked' 2>/dev/null | head -1)"
-  if [[ -z "$UNPACKED_DIR" ]]; then
-    UNPACKED_DIR="$(find dist -maxdepth 1 -type d -name 'linux*unpacked' 2>/dev/null | head -1)"
-  fi
-  [[ -z "$UNPACKED_DIR" ]] && err "Folder 'dist/linux*unpacked' was not found. Did the Electron build fail?"
-
-  if [[ "$UNPACKED_DIR" != "dist/linux-unpacked" ]]; then
-    ln -sfn "$(basename "$UNPACKED_DIR")" dist/linux-unpacked
-  fi
-
-  rm -rf build-dir repo
-  flatpak-builder \
-    --force-clean \
-    --user \
-    --install-deps-from=flathub \
-    --repo=repo \
-    build-dir \
-    com.canva.WebApp.yml
-
-  flatpak build-update-repo --generate-static-deltas repo
-}
-
 ## Ensure valid Flatpak repository exists
-if [[ "$REBUILD_REPO" == true ]]; then
-  build_repo
-elif repo_has_app_ref; then
-  info "Using existing repo/ directory"
+if [[ "$USE_EXISTING_REPO" == true ]]; then
+  repo_has_app_ref || err "repo/ is missing or does not contain com.canva.WebApp refs"
+  info "Using existing repo/ directory by explicit request"
 else
-  info "repo/ is missing or does not contain com.canva.WebApp refs; rebuilding"
-  build_repo
+  ensure_flathub_runtime
+  build_electron_output
+  ensure_linux_unpacked
+  build_flatpak_repo
 fi
 
 ## Create distributable bundle

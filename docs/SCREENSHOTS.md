@@ -9,6 +9,7 @@ This file tracks the real screenshot set prepared for AppStream metadata and fut
 - AppStream metadata now references the active screenshot set with stable direct URLs pinned to a commit SHA.
 - Branch URLs must not be used for screenshot metadata.
 - The current screenshot set should still be reviewed before Flathub submission.
+- Locally generated OSTree repos do not mirror screenshots to `dl.flathub.org/media`; that mirror step belongs to Flathub infrastructure during submission review.
 
 ## Selected screenshot set
 
@@ -53,6 +54,7 @@ Active AppStream order:
 - Real screenshots are mandatory before Flathub submission.
 - Screenshots must not expose private account data, private project content, or personal identifiers.
 - Active AppStream screenshot URLs must remain stable and review-ready.
+- Local repo lint screenshot mirror findings are expected until Flathub mirrors accepted screenshots.
 
 ## OAuth and popup notes for screenshots
 

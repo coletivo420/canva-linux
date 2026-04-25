@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.7` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.8` cycle.
 
 ## Language and communication conventions
 
@@ -20,6 +20,9 @@ This document defines project conventions for AI-assisted development and vibeco
 
 - Do not revive native Linux/Wayland OAuth popup icon work unless explicitly requested.
 - Keep runtime behavior unchanged when a patch is documentation/readability-only.
+- Keep `electron/preload/canva.bundle.js` generated-only; edit the modular preload sources and regenerate the bundle with `npm run build:preload`.
+- Do not pass untrusted or unsupported URL schemes to Electron's system opener.
+- Keep eyedropper snapshot IPC scoped to the requesting Canva tab.
 
 ## Custom colorpicker directive
 
@@ -29,6 +32,7 @@ This repository has an explicit runtime directive for Canva color picking:
 - do not introduce or promote native browser color pickers, desktop portals, or Chromium screen-capture flows as the primary Canva colorpicker behavior
 - if a diagnostic or compatibility hook touches `getDisplayMedia`, `getUserMedia`, `showPicker`, or native `EyeDropper`, it must exist only to route Canva back into the bundled custom picker
 - when reviewing regressions, treat divergence away from `ltcodedev/eyedropper` as a bug unless the maintainer explicitly changes this policy
+- remove dormant or not-implemented picker APIs when they are outside the active Canva Linux canvas-based flow
 
 ## Readability conventions
 
@@ -62,12 +66,14 @@ After meaningful refactors, update the relevant repository documentation so futu
 - where runtime responsibilities live now
 - why modules were split the way they were
 - which files still concentrate behavior and are expected next refactor targets
+- when a generated artifact such as the Canva preload bundle is required before runtime or packaging validation
+- when a release bundle must rebuild Electron output and the Flatpak repo instead of reusing stale generated artifacts
 
 ## Cycle summary
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.7 = modular runtime refactor + centralized debug logging + AI-assisted maintenance.`
+`1.4.10-dev.8 = generated Canva preload bundle + restored custom eyedropper + Flathub-readiness documentation.`
 
 ## Development branch naming
 
@@ -80,6 +86,7 @@ Format:
 Examples:
 
 - `dev/1.4.10-dev.7`
+- `dev/1.4.10-dev.8`
 - `dev/1.4.10-dev.5`
 - `dev/1.4.10-rc.1`
 

@@ -23,6 +23,7 @@ const {
   isCanvaAuthUrl,
   isOAuthProviderUrl,
   isCanvaUrl,
+  isSafeExternalUrl,
   shouldGrantRemotePermission,
 } = require('../shared/navigation');
 
@@ -118,6 +119,9 @@ function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
   if (!url || url === 'about:blank' || url === 'about:srcdoc') {
     return { category: 'tabs', kind: 'blank-window' };
   }
+  if (request.kind === 'blocked-external') {
+    return { category: 'tabs', kind: request.kind };
+  }
   return { category: 'tabs', kind: 'external-browser' };
 }
 
@@ -173,6 +177,7 @@ const oauthHelpers = createOAuthHelpers({
   isCanvaAuthUrl,
   isCanvaUrl,
   isOAuthProviderUrl,
+  isSafeExternalUrl,
   mainWindowRef: () => mainWindow,
   nextPopupIdRef() {
     return nextPopupId++;
@@ -265,6 +270,7 @@ const tabController = createTabController({
   isBlankPopupUrl,
   isCanvaAuthUrl,
   isCanvaUrl,
+  isSafeExternalUrl,
   oauthHelpers,
   shell,
   shellBackgroundColor,
@@ -284,7 +290,6 @@ registerEyeDropperBridge({
   debugLog,
   webContentsLabel,
   findTabByWebContents,
-  getActiveTab: () => tabs.get(activeTabId) || null,
 });
 
 registerMainIpcHandlers({

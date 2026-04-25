@@ -16,6 +16,7 @@ function createOAuthHelpers({
   isCanvaAuthUrl,
   isCanvaUrl,
   isOAuthProviderUrl,
+  isSafeExternalUrl,
   mainWindowRef,
   nextPopupIdRef,
   shell,
@@ -170,7 +171,11 @@ function createOAuthHelpers({
         }
         return { action: 'deny' };
       }
-      shell.openExternal(url);
+      if (isSafeExternalUrl(url)) {
+        shell.openExternal(url);
+      } else {
+        debugLog('oauth', 'popup-unsafe-external-blocked', `popup=${popupId}`, url || 'about:blank');
+      }
       return { action: 'deny' };
     });
 
@@ -180,7 +185,11 @@ function createOAuthHelpers({
         return;
       }
       event.preventDefault();
-      shell.openExternal(url);
+      if (isSafeExternalUrl(url)) {
+        shell.openExternal(url);
+      } else {
+        debugLog('oauth', 'popup-unsafe-navigation-blocked', `popup=${popupId}`, url || 'about:blank');
+      }
     });
 
     const syncPopupState = async (url) => {

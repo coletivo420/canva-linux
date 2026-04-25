@@ -8,25 +8,11 @@ function registerEyeDropperBridge({
   debugLog,
   webContentsLabel,
   findTabByWebContents,
-  getActiveTab = () => null,
 }) {
   ipcMain.handle('wrapper:eyedropper-snapshot', async (event) => {
     debugLog('eyedropper:bridge', 'snapshot-request', webContentsLabel(event.sender));
 
-    let tab = findTabByWebContents(event.sender);
-
-    if (!tab) {
-      const activeTab = getActiveTab();
-      if (activeTab?.view?.webContents && !activeTab.view.webContents.isDestroyed()) {
-        debugLog(
-          'eyedropper:bridge',
-          'snapshot-fallback-active-tab',
-          webContentsLabel(event.sender),
-          `tab=${activeTab.id}`
-        );
-        tab = activeTab;
-      }
-    }
+    const tab = findTabByWebContents(event.sender);
 
     if (!tab) {
       debugLog('eyedropper:bridge', 'snapshot-missing-tab', webContentsLabel(event.sender));
