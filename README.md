@@ -11,11 +11,28 @@ Next: 1.4.10-dev.6 (Flathub source/readiness hardening pass)
 
 ## Development (1.4.10-dev.X)
 
-The current development cycle focuses on Flathub readiness and packaging improvements.
+The current development cycle focuses on Flathub readiness, packaging improvements, and runtime maintainability.
 
 Goal: prepare the project for Flathub submission without introducing new runtime features.
 
-No new runtime feature is introduced in `1.4.10-dev.6`.
+`1.4.10-dev.6` keeps user-facing behavior stable, but it does include a major internal refactor:
+
+- modularized `electron/main` and `electron/preload`
+- centralized debug logging in the main process
+- per-start `current.log` creation under the Electron user-data logs directory
+
+## Custom Colorpicker Policy
+
+Canva Linux must always use the bundled custom colorpicker based on `ltcodedev/eyedropper`:
+
+https://github.com/ltcodedev/eyedropper
+
+Project policy:
+
+- the Canva color picking flow must resolve into the bundled `ltcodedev/eyedropper` implementation
+- native browser/system color pickers are not the intended Canva Linux colorpicker path
+- screen-capture, portal, or Chromium picker paths must not replace the bundled custom picker as the primary behavior
+- Wayland and X11 support must preserve the same custom picker behavior
 
 ## OAuth Support
 

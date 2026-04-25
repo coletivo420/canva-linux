@@ -91,13 +91,12 @@
       gap: 8px;
       min-width: 170px;
       max-width: 260px;
-      padding: 0 10px;
+      padding: 0 6px 0 0;
       border: 1px solid var(--line);
       border-bottom-color: #cfd6e4;
       border-radius: 12px 12px 0 0;
       background: var(--tab);
       color: var(--tab-text);
-      cursor: pointer;
       transition: background .15s ease, border-color .15s ease, transform .15s ease;
     }
     .tab:hover { background: var(--hover); }
@@ -122,6 +121,27 @@
       font-size: 12px;
       line-height: 1;
       flex: 1 1 auto;
+    }
+    .tab-activate {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
+      height: 100%;
+      padding: 0 4px 0 10px;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+    }
+    .tab-activate:focus-visible,
+    .tab-close:focus-visible,
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--brand-b);
+      outline-offset: 1px;
     }
     .tab-close,
     .icon-btn {
@@ -150,7 +170,7 @@
 <body>
   <div class="bar">
     <div class="brand">
-      <img src="./assets/canva-icon.png" alt="Canva" />
+      <img src="../assets/canva-icon.png" alt="Canva" />
       <span>Canva</span>
     </div>
     <div class="tabs" id="tabs"></div>
@@ -161,6 +181,17 @@
   <script>
     const tabsEl = document.getElementById('tabs');
     const homeEl = document.getElementById('home');
+    const bridgeAvailable = Boolean(window.canvaTabs);
+    const iconPath = '../assets/canva-icon.png';
+
+    console.log('[toolbar-ui] bootstrap', JSON.stringify({ bridgeAvailable }));
+    window.addEventListener('error', (event) => {
+      console.error('[toolbar-ui] error', event.message || 'unknown-error', event.filename || 'inline', event.lineno || 0);
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+      const reason = event?.reason instanceof Error ? event.reason.stack || event.reason.message : String(event?.reason || 'unknown-rejection');
+      console.error('[toolbar-ui] unhandledrejection', reason);
+    });
 
     // Apply the system theme to the lightweight shell toolbar.
     function applyTheme(theme) {
@@ -169,26 +200,40 @@
 
     // Render the tab strip from the shell state sent by the main process.
     function render(state) {
+      console.log('[toolbar-ui] render', JSON.stringify({
+        activeTabId: state?.activeTabId ?? null,
+        count: state?.tabs?.length || 0,
+      }));
       applyTheme(state.theme || window.canvaTabs.getSystemTheme());
       tabsEl.textContent = '';
       for (const tab of state.tabs) {
-        const tabEl = document.createElement('button');
+        const tabEl = document.createElement('div');
         tabEl.className = 'tab' + (tab.id === state.activeTabId ? ' active' : '');
         tabEl.title = tab.title || tab.url || 'Canva';
-        tabEl.addEventListener('click', () => window.canvaTabs.send('switch-tab', { id: tab.id }));
+        tabEl.setAttribute('role', 'tab');
+        tabEl.setAttribute('aria-selected', tab.id === state.activeTabId ? 'true' : 'false');
+
+        // Keep activation and close as separate controls so the tab strip does
+        // not rely on invalid nested <button> elements.
+        const activate = document.createElement('button');
+        activate.className = 'tab-activate';
+        activate.type = 'button';
+        activate.title = tab.title || tab.url || 'Canva';
+        activate.addEventListener('click', () => window.canvaTabs.send('switch-tab', { id: tab.id }));
 
         const favicon = document.createElement('img');
         favicon.className = 'tab-favicon';
         favicon.alt = '';
-        favicon.src = tab.favicon || './assets/canva-icon.png';
-        favicon.onerror = () => { favicon.src = './assets/canva-icon.png'; };
+        favicon.src = tab.favicon || iconPath;
+        favicon.onerror = () => { favicon.src = iconPath; };
 
         const title = document.createElement('span');
         title.className = 'tab-title';
         title.textContent = tab.title || 'Canva';
 
-        tabEl.appendChild(favicon);
-        tabEl.appendChild(title);
+        activate.appendChild(favicon);
+        activate.appendChild(title);
+        tabEl.appendChild(activate);
 
         if (tab.canClose !== false) {
           const close = document.createElement('button');
@@ -206,8 +251,17 @@
       }
     }
 
-    homeEl.addEventListener('click', () => window.canvaTabs.send('go-home'));
-    window.canvaTabs.onState(render);
+    homeEl.addEventListener('click', () => {
+      console.log('[toolbar-ui] home-click');
+      window.canvaTabs.send('go-home');
+    });
+
+    if (!window.canvaTabs) {
+      console.error('[toolbar-ui] missing-bridge');
+    } else {
+      console.log('[toolbar-ui] subscribe-tabs-state');
+      window.canvaTabs.onState(render);
+    }
   </script>
 </body>
 </html>

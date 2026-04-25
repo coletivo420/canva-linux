@@ -1,12 +1,22 @@
-# Manual Validation — 1.4.8-dev.X
+# Manual Validation — 1.4.10-dev.6
 
-This document defines a lightweight manual validation routine for non-functional DEV maintenance patches.
+This document defines the manual validation routine for the current development cycle.
+
+## Validation scope
+
+`1.4.10-dev.6` is primarily a Flathub-readiness and maintainability pass.
+
+Expected outcome:
+
+- user-facing runtime behavior remains stable
+- internal module boundaries and debug logging are easier to inspect
 
 ## Environment preparation
 
 1. Use the current local branch build.
 2. Ensure the Flatpak package installs and launches successfully.
 3. Keep terminal logs visible when running with `CANVA_DEBUG` filters.
+4. When debugging startup or preload behavior, inspect the generated `current.log` under the Electron user-data logs directory.
 
 ## Baseline startup checks
 
@@ -15,12 +25,14 @@ This document defines a lightweight manual validation routine for non-functional
 2. Launch with startup diagnostics:
    - `CANVA_DEBUG=startup flatpak run com.canva.WebApp`
 3. Confirm the app window renders and loads Canva.
+4. Confirm a fresh `current.log` is created for this run.
 
-## Home tab behavior
+## Home tab and toolbar behavior
 
 1. Confirm Home tab is present at startup.
 2. Attempt to close Home tab and confirm it remains protected.
-3. Click Home from another tab and confirm focus returns to the existing Home tab.
+3. Create, switch, and close non-home tabs.
+4. Click Home from another tab and confirm focus returns to the existing Home tab.
 
 ## OAuth popup flow
 
@@ -38,6 +50,14 @@ This document defines a lightweight manual validation routine for non-functional
 4. When troubleshooting, run:
    - `CANVA_DEBUG=dnd,upload,permissions,session flatpak run com.canva.WebApp`
 
+## Eyedropper behavior
+
+1. Trigger the Canva eyedropper flow.
+2. Confirm the bundled `ltcodedev/eyedropper` custom picker opens.
+3. Confirm `Escape` aborts the picker cleanly.
+4. Confirm a picked color resolves back to Canva without leaving stale overlay UI.
+5. Confirm the flow does not fall back to a native browser/system color picker or a screen-capture picker window.
+
 ## Wayland/X11 mode sanity
 
 1. Default startup:
@@ -47,4 +67,9 @@ This document defines a lightweight manual validation routine for non-functional
 3. Forced X11:
    - `CANVA_FORCE_X11=1 flatpak run com.canva.WebApp`
 
-Record observable regressions only; do not introduce functional fixes in a documentation-only DEV patch.
+## Logging review
+
+1. Confirm terminal debug entries include the expected source prefix, such as `main`, `canva-preload`, or `toolbar-preload`.
+2. Confirm the file-backed debug log contains the same run and does not include stale content from a previous launch.
+
+Record observable regressions only; do not treat internal module reshaping as a user-facing behavior change by itself.

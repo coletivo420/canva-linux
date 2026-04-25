@@ -7,16 +7,21 @@ All notable changes to this project are documented in this file.
 ### Added
 - Added Flathub source strategy documentation for future source-based submission.
 - Added checklist coverage for source archive/tag review and screenshot URL review.
+- Added centralized terminal and file-backed debug logging with a per-start `current.log`.
 
 ### Changed
 - Cleaned desktop metadata for Flathub readiness.
 - Improved validation documentation around Flathub source strategy and release separation.
 - Reviewed Linux workflow script behavior for packaging-readiness cleanup.
+- Refactored the Electron runtime into modular `main`, `preload`, and shared helper directories.
+- Split Canva preload responsibilities into dedicated modules for debug transport, upload diagnostics, native EyeDropper wrapping, and custom picker flow.
+- Documented that Canva Linux must always use the bundled `ltcodedev/eyedropper` implementation as the custom colorpicker path.
 
 ### Notes
-- This is a Flathub source/readiness hardening pass.
-- Runtime and OAuth behavior are intentionally unchanged.
+- This is a Flathub source/readiness hardening pass plus an internal runtime refactor for maintainability.
+- Runtime and OAuth behavior are intentionally kept stable from the user perspective.
 - GitHub .flatpak release bundles and Flathub source builds remain separate workflows.
+- Native/system picker or alternate capture paths are not the intended Canva Linux colorpicker behavior.
 
 ## [1.4.10-dev.5] - 2026-04-24
 

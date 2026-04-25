@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.5` Flathub validation cycle.
+This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.6` Flathub validation cycle.
 
 Goal for this pass:
 
@@ -10,7 +10,7 @@ Goal for this pass:
 - improve permission traceability for maintainers;
 - prepare future Flathub review with clear, minimal-sandbox intent.
 
-This is a documentation and review pass, not a blind permission-removal pass. Broad home-directory access (`--filesystem=home`) remains absent in the current manifest.
+This remains a documentation and review pass, not a blind permission-removal pass. Broad home-directory access (`--filesystem=home`) remains absent in the current manifest.
 
 ## Current finish-args
 

@@ -6,4 +6,6 @@ The application loads Canva inside an Electron shell. Canva itself may collect u
 
 The app stores session data locally to maintain login state.
 
-Version `1.4.10-dev.4` introduces no new runtime feature.
+Version `1.4.10-dev.6` keeps user-facing runtime behavior stable, while centralizing debug logging and internal module structure for maintenance.
+
+The centralized debug log is written locally under the Electron user-data logs directory and is intended for maintainer troubleshooting only.
