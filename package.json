@@ -11,7 +11,7 @@
     "start": "electron .",
     "dist": "electron-builder --linux dir",
     "lint": "eslint .",
-    "test": "node --test",
+    "test": "node --test \"test/**/*.test.js\"",
     "test:unit": "node --test test/window-open-policy.test.js",
     "test:wiring": "node --test test/tab-controller-wiring.test.js",
     "test:smoke": "playwright test",
@@ -37,9 +37,11 @@
       "category": "Graphics",
       "executableName": "canva-webapp",
       "desktop": {
-        "Name": "Canva",
-        "StartupWMClass": "com.canva.WebApp",
-        "X-GNOME-WMClass": "com.canva.WebApp"
+        "entry": {
+          "Name": "Canva",
+          "StartupWMClass": "com.canva.WebApp",
+          "X-GNOME-WMClass": "com.canva.WebApp"
+        }
       },
       "icon": "build-resources"
     },
