@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.15` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.16` cycle.
 
 ## Language and communication conventions
 
@@ -12,6 +12,7 @@ This document defines project conventions for AI-assisted development and vibeco
 
 - Always update `CHANGELOG.md` for each development delivery.
 - Always bump project version metadata for dev deliveries.
+- Run `npm run docs:check-links` when changing markdown files that add or edit local document references.
 - Prefer small, reviewable patches that are easy to revert.
 - Avoid large architecture changes without explicit scope validation.
 - Preserve the stable/dev workflow already used by this repository.
@@ -73,18 +74,18 @@ After meaningful refactors, update the relevant repository documentation so futu
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.15 = minimal Electron smoke coverage with Playwright.`
+`1.4.10-dev.16 = Flathub-facing follow-up hardening after the testing foundation landed.`
 
 ## Planned phase roadmap
 
 The `1.4.10-dev.X` cycle now follows an explicit phased plan:
 
 - `1.4.10-dev.10` - preparation: documentation, roadmap, and AI/vibecoding guidance
-- `1.4.10-dev.15` - extract the window-open policy into a testable module
-- `1.4.10-dev.15` - add unit tests with `node:test`
-- `1.4.10-dev.15` - add light wiring/integration tests for the main-process tab flow
+- `1.4.10-dev.11` - extract the window-open policy into a testable module
+- `1.4.10-dev.12` - add unit tests with `node:test`
+- `1.4.10-dev.14` - add light wiring/integration tests for the main-process tab flow
 - `1.4.10-dev.15` - add Electron smoke tests with Playwright
-- `1.4.10-dev.16+` - finalize follow-up Flathub adaptations after the testing foundation lands
+- `1.4.10-dev.16` - finalize follow-up Flathub adaptations after the testing foundation lands
 
 Patch intent rules for this phased plan:
 

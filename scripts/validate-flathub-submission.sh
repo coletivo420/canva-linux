@@ -19,6 +19,30 @@ SUBMISSION_REPO_DIR="repo"
 
 cd "${REPO_ROOT}"
 
+ARCHIVE_URL="$(node - <<'NODE'
+const fs = require('node:fs');
+const manifest = fs.readFileSync('packaging/flathub/manifest.yml', 'utf8');
+const match = manifest.match(/url:\s*(\S+)/);
+if (!match) {
+  console.error('Unable to find archive url in packaging/flathub/manifest.yml');
+  process.exit(1);
+}
+console.log(match[1]);
+NODE
+)"
+ARCHIVE_SHA256="$(node - <<'NODE'
+const fs = require('node:fs');
+const manifest = fs.readFileSync('packaging/flathub/manifest.yml', 'utf8');
+const match = manifest.match(/sha256:\s*([a-fA-F0-9]{64})/);
+if (!match) {
+  console.error('Unable to find sha256 in packaging/flathub/manifest.yml');
+  process.exit(1);
+}
+console.log(match[1].toLowerCase());
+NODE
+)"
+
+## General local validation (fast checks, no Flatpak runtime required)
 for script in \
   scripts/validate-flathub-submission.sh \
   scripts/prepare-flathub-submission.sh \
@@ -83,6 +107,7 @@ console.log(`generated-sources.json contains ${generated.sources.length} sources
 NODE
 ok "Manifest/source structure checks passed"
 
+## Submission-path validation (Flathub-oriented checks via org.flatpak.Builder)
 if command -v flatpak >/dev/null 2>&1; then
   if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
     info "Cleaning previous submission repo output (${SUBMISSION_REPO_DIR}/)"
@@ -95,6 +120,31 @@ if command -v flatpak >/dev/null 2>&1; then
     info "Running flatpak-builder-lint manifest on submission manifest"
     flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest "${MANIFEST_PATH}"
     ok "flatpak-builder-lint manifest passed"
+
+    info "Preparing pinned source archive for AppStream validation"
+    APPSTREAM_TMP_DIR="$(mktemp -d "${REPO_ROOT}/.tmp-appstream-src.XXXXXX")"
+    cleanup_appstream_tmp() {
+      rm -rf "${APPSTREAM_TMP_DIR}"
+    }
+    trap cleanup_appstream_tmp EXIT
+
+    ARCHIVE_PATH="${APPSTREAM_TMP_DIR}/source.tar.gz"
+    curl -L --fail --silent --show-error "${ARCHIVE_URL}" -o "${ARCHIVE_PATH}"
+    echo "${ARCHIVE_SHA256}  ${ARCHIVE_PATH}" | sha256sum -c >/dev/null
+
+    tar -xzf "${ARCHIVE_PATH}" -C "${APPSTREAM_TMP_DIR}"
+    SOURCE_TREE="$(find "${APPSTREAM_TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n1)"
+    [[ -n "${SOURCE_TREE}" ]] || err "Unable to determine extracted source directory"
+
+    METAINFO_PATH="${SOURCE_TREE}/data/com.canva.WebApp.metainfo.xml"
+    [[ -f "${METAINFO_PATH}" ]] || err "Metainfo file not found in pinned source archive"
+
+    info "Running AppStream metainfo validation (warnings/errors treated as fatal)"
+    flatpak run --filesystem="${APPSTREAM_TMP_DIR}:ro" --command=appstreamcli org.flatpak.Builder validate --pedantic --no-net "${METAINFO_PATH}"
+    ok "AppStream metainfo validation passed"
+
+    cleanup_appstream_tmp
+    trap - EXIT
 
     if [[ -d "${SUBMISSION_REPO_DIR}" ]]; then
       info "Running flatpak-builder-lint repo ${SUBMISSION_REPO_DIR}"

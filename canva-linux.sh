@@ -14,7 +14,7 @@ show_help() {
 Canva WebApp Linux — Flatpak Workflow
 
 Usage:
-  ./canva-linux.sh --install           Build and install locally
+  ./canva-linux.sh --install           Build and install locally (direct install; no repo/bundle)
   ./canva-linux.sh --bundle            Generate .flatpak bundle
   ./canva-linux.sh --validate          Run validation checks
   ./canva-linux.sh --uninstall         Uninstall local Flatpak app
