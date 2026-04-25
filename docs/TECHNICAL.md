@@ -9,7 +9,7 @@ Current `1.4.10-dev.X` goals focus on Flathub readiness, packaging workflow impr
 - keep `canva-linux.sh` as the canonical Linux workflow command;
 - support interactive mode, explicit actions, and chained actions for workflow tasks;
 - keep AppStream metadata, screenshot references, and packaging docs aligned;
-- keep runtime behavior unchanged.
+- preserve intended user-facing behavior, while allowing targeted fixes for regressions such as the custom eyedropper preload loading failure.
 
 ## Custom colorpicker policy
 
@@ -19,6 +19,7 @@ Canva Linux must keep `ltcodedev/eyedropper` as the canonical custom colorpicker
 - `electron/preload/native-eyedropper-wrapper.js` exists to redirect Canva-facing picker calls into that bundled implementation.
 - `electron/preload/custom-eyedropper-flow.js` exists to open the bundled picker from a Canva tab snapshot.
 - any diagnostics around browser picker APIs or media-capture APIs must support tracing and re-routing only; they are not an alternative colorpicker architecture.
+- the bundled eyedropper copy intentionally exposes only the canvas-based path used by Canva Linux; unused image-loading helpers and not-implemented stubs are removed instead of kept as dormant API surface.
 
 ## Runtime architecture (summary)
 
@@ -37,8 +38,10 @@ Core runtime files:
 - `electron/main/tabs.js` - tab ordering, selection, closing, and layout helpers shared by the shell entrypoint.
 - `electron/preload/canva.js` - source Canva page preload diagnostics and Linux integration bridges.
 - `electron/preload/canva.bundle.js` - generated runtime preload consumed by Canva tabs; do not edit directly.
+- `electron/preload/browser-capture-diagnostics.js` - compatibility fallback module for capture-related eyedropper diagnostics.
 - `electron/preload/debug.js` - centralized preload debug routing and eyedropper log transport for Canva-facing modules.
 - `electron/preload/custom-eyedropper-flow.js` - snapshot capture and bundled `ltcodedev/eyedropper` lifecycle used by the Canva EyeDropper wrapper.
+- `electron/preload/eyedropper-routing-diagnostics.js` - diagnostic hooks for tracing and preventing fallback into native/browser picker paths.
 - `electron/preload/ltcode-eyedropper.js` - bundled browser-side `ltcodedev/eyedropper` implementation and scaling patch used by the Canva preload wrapper.
 - `electron/preload/native-eyedropper-wrapper.js` - native EyeDropper replacement layer that redirects Canva calls into the bundled `ltcodedev/eyedropper` flow.
 - `electron/preload/upload-diagnostics.js` - drag, paste, file-input, and file-picker diagnostics isolated from the Canva-specific preload flow.
@@ -70,7 +73,7 @@ This split preserves runtime behavior while making future changes safer. `electr
 The source preload remains modular:
 
 - `electron/preload/canva.js` is the source entrypoint.
-- `electron/preload/debug.js`, `upload-diagnostics.js`, `eyedropper-routing-diagnostics.js`, `custom-eyedropper-flow.js`, `native-eyedropper-wrapper.js`, and `ltcode-eyedropper.js` remain human-maintained modules.
+- `electron/preload/debug.js`, `upload-diagnostics.js`, `browser-capture-diagnostics.js`, `eyedropper-routing-diagnostics.js`, `custom-eyedropper-flow.js`, `native-eyedropper-wrapper.js`, and `ltcode-eyedropper.js` remain human-maintained modules.
 - `scripts/build-preload-bundle.js` generates `electron/preload/canva.bundle.js`.
 
 Canva tabs load `canva.bundle.js`, not `canva.js`, at runtime.
@@ -79,7 +82,14 @@ This is intentional. The Canva editor can run Electron preload code in a package
 
 The bundle keeps the maintainable modular source layout while giving Electron a single preload file that works consistently in the editor. Do not edit `canva.bundle.js` directly; regenerate it with `npm run build:preload`.
 
-`npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts.
+`npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts. The canonical install workflow (`./canva-linux.sh --install`) calls `npm run dist`, so it also generates the bundle before packaging. Bundle publication must use a freshly rebuilt Electron output and Flatpak repo; `./canva-linux.sh --bundle` rebuilds both by default. Reusing an existing `repo/` requires the lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` path and should not be used for release publication after source changes.
+
+## Runtime guardrails
+
+- External navigation is allowed to leave the app only for explicitly supported URL schemes: `https:`, `http:`, and `mailto:`.
+- Other schemes are blocked before reaching Electron's system opener.
+- The eyedropper snapshot IPC bridge only captures the tab whose renderer sent the request; it does not fall back to the currently active tab.
+- Aborting the custom eyedropper flow must remove the overlay and clear the active picker state.
 
 ## Debug output
 
@@ -94,8 +104,9 @@ Packaging/runtime support files:
 
 - `run.sh` - Flatpak launcher and Wayland/X11 mode selection.
 - `canva-linux.sh` - canonical Linux Flatpak workflow command (`--install`, `--bundle`, `--validate`, `--uninstall`, `--reset-user-data`, and interactive mode).
+- `scripts/flatpak-build-common.sh` - shared Flatpak runtime, Electron output, and repository build helpers used by local install and bundle workflows.
 - `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing (supports `--skip-npm`).
-- `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (supports `--rebuild-repo`).
+- `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (rebuilds by default; supports explicit `--use-existing-repo` for non-release reuse).
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
 - `scripts/build-preload-bundle.js` - dependency-free generated-preload builder used before local start and Electron packaging.
 - `com.canva.WebApp.yml` - Flatpak manifest.

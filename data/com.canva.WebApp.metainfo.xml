@@ -18,6 +18,7 @@
   </description>
   <launchable type="desktop-id">com.canva.WebApp.desktop</launchable>
   <url type="homepage">https://www.canva.com/</url>
+  <url type="vcs-browser">https://github.com/PirateMaryRead/canva-webapp-linux</url>
   <developer id="io.github.canva-flatpak">
     <name>Felipe Matos (piradopirata)</name>
   </developer>

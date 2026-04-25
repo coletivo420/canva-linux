@@ -11,6 +11,7 @@ const AUTH_PATH_RE = /\/(?:login|signup|register|oauth|sso|auth|signin|account)(
 const CANVA_AUTH_HINT_RE = /(?:google|facebook|apple|microsoft|oauth|sso|signup|login|continue)/i;
 const CANVA_OAUTH_AUTHORIZED_RE = /^\/oauth\/authorized(?:\/|$)/i;
 const CANVA_OAUTH_RE = /^\/oauth(?:\/|$)/i;
+const EXTERNAL_PROTOCOL_ALLOWLIST = new Set(['https:', 'http:', 'mailto:']);
 
 function isCanvaUrl(url) {
   try {
@@ -112,6 +113,14 @@ function isBlankPopupUrl(url) {
   return !url || url === 'about:blank' || url === 'about:srcdoc';
 }
 
+function isSafeExternalUrl(url) {
+  try {
+    return EXTERNAL_PROTOCOL_ALLOWLIST.has(new URL(url).protocol);
+  } catch {
+    return false;
+  }
+}
+
 function shouldTreatAsOauthPopup({ url, openerUrl, disposition, frameName }) {
   if (shouldOpenInOauthPopup(url)) return true;
   if (isBlankPopupUrl(url) && isCanvaAuthUrl(openerUrl)) return true;
@@ -127,6 +136,9 @@ function classifyWindowOpenRequest({ url, openerUrl, disposition, frameName }) {
   if (isCanvaUrl(url)) {
     return { kind: 'internal-tab', url };
   }
+  if (!isSafeExternalUrl(url)) {
+    return { kind: 'blocked-external', url };
+  }
   return { kind: 'external', url };
 }
 
@@ -138,5 +150,6 @@ module.exports = {
   isCanvaAuthUrl,
   isOAuthProviderUrl,
   isCanvaUrl,
+  isSafeExternalUrl,
   shouldGrantRemotePermission,
 };

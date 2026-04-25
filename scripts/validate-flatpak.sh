@@ -37,6 +37,40 @@ check_optional_command() {
   return 1
 }
 
+repo_lint_has_only_local_screenshot_mirror_findings() {
+  local output_path="$1"
+
+  node - "$output_path" <<'NODE'
+const fs = require('fs');
+
+const outputPath = process.argv[2];
+const allowedErrors = new Set([
+  'appstream-external-screenshot-url',
+  'appstream-screenshots-not-mirrored-in-ostree',
+]);
+
+let parsed;
+try {
+  parsed = JSON.parse(fs.readFileSync(outputPath, 'utf8'));
+} catch {
+  process.exit(1);
+}
+
+const errors = Array.isArray(parsed.errors) ? parsed.errors : [];
+const warnings = Array.isArray(parsed.warnings) ? parsed.warnings : [];
+
+if (
+  errors.length > 0
+  && errors.every((item) => allowedErrors.has(item))
+  && warnings.length === 0
+) {
+  process.exit(0);
+}
+
+process.exit(1);
+NODE
+}
+
 ## Paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -59,6 +93,7 @@ ok "Package version detected: ${VERSION}"
 ## Script syntax checks
 for script in \
   canva-linux.sh \
+  scripts/flatpak-build-common.sh \
   scripts/install-flatpak-local.sh \
   scripts/build-flatpak-bundle.sh \
   scripts/validate-flatpak.sh; do
@@ -116,8 +151,21 @@ if command -v flatpak >/dev/null 2>&1; then
 
     if [[ -d repo ]]; then
       info "Running flatpak-builder-lint repo repo"
-      flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
-      ok "Repository lint passed"
+      repo_lint_output="$(mktemp)"
+      if flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo >"$repo_lint_output" 2>&1; then
+        ok "Repository lint passed"
+      else
+        if repo_lint_has_only_local_screenshot_mirror_findings "$repo_lint_output"; then
+          info "Repository lint only reported local screenshot mirror findings"
+          info "Flathub mirrors screenshots to dl.flathub.org/media during submission review"
+          ok "Repository lint completed with documented local screenshot mirror limitation"
+        else
+          cat "$repo_lint_output"
+          rm -f "$repo_lint_output"
+          exit 1
+        fi
+      fi
+      rm -f "$repo_lint_output"
     else
       warn "repo/ directory not found; skipping flatpak-builder-lint repo repo"
       warn "Run ./canva-linux.sh --bundle to generate repo/ before repo lint"

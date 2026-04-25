@@ -38,9 +38,11 @@ Project policy:
 
 ### Preload bundle note
 
-The source preload stays modular under `electron/preload/*.js`, but the runtime tab preload is generated as `electron/preload/canva.bundle.js` before `npm start` and `npm run dist`.
+The source preload stays modular under `electron/preload/*.js`, but the runtime tab preload is generated as `electron/preload/canva.bundle.js` before `npm start`, `npm run dist`, and any Flatpak workflow path that rebuilds the Electron output.
 
-This is required because Canva's editor can execute Electron preload code in a sandboxed context where nested local `require('./module')` calls fail inside the packaged ASAR. The generated bundle preserves maintainable source modules while delivering one preload file to Electron.
+This is required because Canva's editor can execute Electron preload code in a sandboxed context where nested local `require('./module')` calls fail inside the packaged ASAR. The generated bundle preserves maintainable source modules while delivering one preload file to Electron. Edit the modular source files and regenerate the bundle; do not edit or commit `canva.bundle.js` directly.
+
+Release bundle generation rebuilds the Electron output and Flatpak repo by default so the generated preload bundle and packaged app stay current. Reusing an existing `repo/` requires an explicit `--use-existing-repo` call to `scripts/build-flatpak-bundle.sh` and should not be used for release publication after source changes.
 
 ## OAuth Support
 
@@ -85,6 +87,7 @@ Actions can be chained and run in the order provided:
 
 - `--install` is for local development/testing installs.
 - `--bundle` is for generating GitHub release `.flatpak` artifacts.
+- `--bundle` rebuilds the Electron output and Flatpak repo before creating the artifact.
 - Flathub submission remains a separate process.
 - `--reset-user-data` removes login state and OAuth/session cookies.
 

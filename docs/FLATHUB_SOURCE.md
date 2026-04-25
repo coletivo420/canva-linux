@@ -38,6 +38,12 @@ Before submission, the maintainer must review:
 - all source hashes;
 - whether the source input matches the intended reviewed release contents.
 
+## Generated preload bundle
+
+The Canva editor runtime uses `electron/preload/canva.bundle.js`, but that file is generated from the modular source files before the Electron build.
+
+For source review, treat the maintained files under `electron/preload/*.js`, `electron/shared/*.js`, and `scripts/build-preload-bundle.js` as the source of truth. The final Flathub build path should regenerate the bundle from those sources instead of relying on a local untracked bundle artifact.
+
 ## Screenshot URL review
 
 Screenshot URLs must also be stable and reviewed before final submission. Branch-based screenshot URLs are not acceptable for the final Flathub review path.

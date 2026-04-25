@@ -12,10 +12,19 @@ All notable changes to this project are documented in this file.
 - Fixed the custom Canva eyedropper regression introduced by the preload modularization. The Canva editor could start the preload but fail nested local module resolution inside Electron's packaged/sandboxed preload context, preventing `./debug` and the custom eyedropper modules from loading.
 - Fixed the false `installed=false` eyedropper diagnostic by exposing an idempotent preload-side install probe and checking the actual wrapped `EyeDropper` state instead of only checking local preload function scope.
 - Kept the custom picker routed through the bundled `ltcodedev/eyedropper` implementation instead of falling back to Chromium, portal, or native system color picking.
+- Blocked unsafe external URL schemes from being forwarded to the system opener.
+- Removed the active-tab eyedropper snapshot fallback so snapshot IPC only serves the requesting Canva tab.
+- Cleaned up the custom eyedropper overlay when an `AbortSignal` cancels the pick operation.
 
 ### Changed
 - The app now points Canva tabs at `electron/preload/canva.bundle.js` while keeping `electron/preload/*.js` as the human-maintained source of truth.
 - The generated preload bundle is ignored by Git and ESLint; it must be regenerated through `npm run build:preload`, `npm start`, or `npm run dist`.
+- Clarified validation, release, Flathub, and maintenance documentation for the generated preload bundle and the restored custom eyedropper path.
+- Consolidated duplicated Flatpak build steps into shared script helpers used by local install and bundle generation.
+- Release bundle generation now rebuilds the Electron output and Flatpak repo by default; `--use-existing-repo` is explicit for non-release reuse.
+- Removed unused inherited image-loading helpers from the bundled eyedropper library copy.
+- Removed Flathub-linted legacy host font filesystem access and explicit portal bus talk-name access from the Flatpak manifest.
+- Added AppStream `vcs-browser` metadata and documented the local-only screenshot mirror limitation for repo lint.
 
 ### Validation
 - Verified that the editor tab loads the bundled preload, installs the wrapper, intercepts `EyeDropper.open()`, captures the active Canva tab snapshot, opens the custom picker canvas, picks a color, and resolves the eyedropper promise.
