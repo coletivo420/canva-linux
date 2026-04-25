@@ -1,0 +1,10 @@
+const { defineConfig } = require('@playwright/test');
+
+module.exports = defineConfig({
+  testDir: './test',
+  testMatch: /electron-smoke\.spec\.js$/,
+  timeout: 30000,
+  fullyParallel: false,
+  workers: 1,
+  reporter: 'list',
+});

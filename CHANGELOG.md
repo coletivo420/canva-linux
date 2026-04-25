@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.15] - 2026-04-25
+
+### Added
+- Added Playwright as a dev-only dependency for minimal Electron smoke coverage.
+- Added a smoke test that launches the app in development mode and waits for the first BrowserWindow.
+- Added dedicated npm scripts for Playwright smoke execution.
+
+### Notes
+- This is phase 5 of the planned testing architecture work.
+- Production runtime behavior is intentionally unchanged in this patch.
+
 ## [1.4.10-dev.14] - 2026-04-25
 
 ### Added

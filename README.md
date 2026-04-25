@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.14 (phase 4 light wiring tests for the main-process tab flow)
+Next: 1.4.10-dev.15 (phase 5 Electron smoke tests with Playwright)
 
 ## Development (1.4.10-dev.X)
 
@@ -22,6 +22,8 @@ Goal: prepare the project for Flathub submission while introducing small, review
 `1.4.10-dev.12` adds the first `node:test` unit coverage for the extracted window-open policy, keeping production runtime behavior unchanged while establishing the test harness for the later wiring and Playwright phases.
 
 `1.4.10-dev.14` adds a lightweight main-process wiring test that verifies the tab controller passes the expected navigation helpers into the tab event layer without changing user-visible behavior.
+
+`1.4.10-dev.15` adds a minimal Playwright smoke test that launches the Electron app in development mode, confirms it is not packaged, and waits for the first BrowserWindow so the project gains real process-level launch coverage without introducing a broad E2E suite.
 
 Planned phase map:
 
