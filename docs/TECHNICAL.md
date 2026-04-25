@@ -90,6 +90,7 @@ The bundle keeps the maintainable modular source layout while giving Electron a 
 - Other schemes are blocked before reaching Electron's system opener.
 - The eyedropper snapshot IPC bridge only captures the tab whose renderer sent the request; it does not fall back to the currently active tab.
 - Aborting the custom eyedropper flow must remove the overlay and clear the active picker state.
+- Chromium/Electron runtime startup sets `disable-features=Floss` (merged with any existing disabled features) to reduce non-fatal Bluetooth/Floss noise in Flatpak logs. This does not disable Bluetooth at the OS level and does not change Flatpak permissions.
 
 ## Debug output
 

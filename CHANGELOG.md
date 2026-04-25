@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.16] - 2026-04-25
+
+### Changed
+- Disabled Chromium/Electron `Floss` runtime feature in `configureLinuxRuntime()` to reduce non-fatal Bluetooth/Floss startup noise inside Flatpak sandbox logs.
+
+### Notes
+- This change affects only Electron/Chromium runtime feature flags.
+- System Bluetooth availability and Flatpak DBus/portal permission model are unchanged.
+
 ## [1.4.10-dev.15] - 2026-04-25
 
 ### Added

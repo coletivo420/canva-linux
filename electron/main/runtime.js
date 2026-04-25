@@ -1,5 +1,19 @@
 'use strict';
 
+function appendDisableFeature(app, featureName) {
+  const switchName = 'disable-features';
+  const currentValue = app.commandLine.getSwitchValue(switchName);
+  const features = new Set(
+    String(currentValue || '')
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+  );
+
+  features.add(featureName);
+  app.commandLine.appendSwitch(switchName, Array.from(features).join(','));
+}
+
 function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
   app.setName('Canva');
   app.commandLine.appendSwitch('disable-component-update');
@@ -8,6 +22,8 @@ function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
   app.commandLine.appendSwitch('metrics-recording-only');
   app.commandLine.appendSwitch('no-first-run');
   app.commandLine.appendSwitch('no-default-browser-check');
+  // Reduces non-fatal Bluetooth/Floss log noise in Flatpak; does not disable system Bluetooth.
+  appendDisableFeature(app, 'Floss');
 
   if (process.platform === 'linux') {
     app.setDesktopName(`${appId}.desktop`);
