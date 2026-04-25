@@ -1,13 +1,13 @@
-# Canva WebApp - Flatpak + Electron
+# Canva-Linux - Flatpak + Electron
 
-An unofficial Linux desktop wrapper for Canva built with Electron and packaged as a Flatpak.
+An unofficial Canva-Linux desktop wrapper using Electron/Chromium and Flatpak.
 
 This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.16 (phase 6 Flathub follow-up hardening)
+Next: 1.4.10-dev.17 (project naming alignment and public identity cleanup)
 
 ## Development (1.4.10-dev.X)
 
@@ -25,7 +25,9 @@ Goal: prepare the project for Flathub submission while introducing small, review
 
 `1.4.10-dev.15` added a minimal Playwright smoke test that launches the Electron app in development mode, confirms it is not packaged, and waits for the first BrowserWindow so the project gains real process-level launch coverage without introducing a broad E2E suite.
 
-`1.4.10-dev.16` focuses on Flathub follow-up hardening and packaging resilience after the testing foundation landed.
+`1.4.10-dev.16` focused on Flathub follow-up hardening and packaging resilience after the testing foundation landed.
+
+`1.4.10-dev.17` standardizes the public project identity around **Canva-Linux** and now migrates the Flatpak app-id to `com.canva.Linux`.
 
 Planned phase map:
 
@@ -35,6 +37,11 @@ Planned phase map:
 - `1.4.10-dev.14` - light wiring/integration tests for the main-process tab flow
 - `1.4.10-dev.15` - Electron smoke test coverage with Playwright
 - `1.4.10-dev.16` - Flathub-facing follow-up adjustments after the testing foundation is in place
+- `1.4.10-dev.17` - public naming cleanup to Canva-Linux with app-id migration to `com.canva.Linux`
+- `1.4.10-dev.18` - final permissions pruning/justification pass
+- `1.4.10-dev.19` - branding/trademark/app-id/metainfo finalization strategy
+- `1.4.10-dev.20` - final validation of submission manifest path
+- `1.4.10-dev.21` - RC/stable closure work
 
 `1.4.10-dev.8` keeps the modular source layout, but ships the Canva preload as a generated single-file bundle so Electron's sandboxed editor preload can load the custom eyedropper reliably.
 
@@ -111,8 +118,10 @@ Actions can be chained and run in the order provided:
 - `--bundle` is for generating GitHub release `.flatpak` artifacts.
 - `--bundle` rebuilds the Electron output and Flatpak repo before creating the artifact.
 - Flathub submission remains a separate process and should not require `.flatpak` bundle generation.
-- Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `com.canva.WebApp.yml`.
+- Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `com.canva.Linux.yml`.
 - `--reset-user-data` removes login state and OAuth/session cookies.
+
+Migration note: `com.canva.Linux*` identifiers are now the active app identity across Flatpak metadata, filenames, icons, and WMClass fields. Existing installs using the previous app-id require manual migration/reinstall planning.
 
 ## Flathub Status
 

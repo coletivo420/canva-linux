@@ -20,7 +20,7 @@ cd "$REPO_ROOT"
 VERSION="$(node -p "require('./package.json').version")"
 source "${SCRIPT_DIR}/flatpak-build-common.sh"
 DIST_DIR="dist"
-BUNDLE_PATH="${DIST_DIR}/canva-webapp-linux-${VERSION}.flatpak"
+BUNDLE_PATH="${DIST_DIR}/canva-linux-${VERSION}.flatpak"
 
 ## Usage
 usage() {
@@ -60,12 +60,12 @@ done
 
 ## Repo helpers
 repo_has_app_ref() {
-  [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/com\.canva\.WebApp/'
+  [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/com\.canva\.Linux/'
 }
 
 ## Ensure valid Flatpak repository exists
 if [[ "$USE_EXISTING_REPO" == true ]]; then
-  repo_has_app_ref || err "repo/ is missing or does not contain com.canva.WebApp refs"
+  repo_has_app_ref || err "repo/ is missing or does not contain com.canva.Linux refs"
   info "Using existing repo/ directory by explicit request"
 else
   ensure_flathub_runtime
@@ -76,7 +76,7 @@ fi
 
 ## Create distributable bundle
 mkdir -p "$DIST_DIR"
-flatpak build-bundle repo "$BUNDLE_PATH" com.canva.WebApp \
+flatpak build-bundle repo "$BUNDLE_PATH" com.canva.Linux \
   --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 
 SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH")"

@@ -1,11 +1,11 @@
 {
-  "name": "canva-webapp",
-  "version": "1.4.10-dev.16",
-  "description": "Unofficial Canva desktop wrapper for Linux using Electron/Chromium inside Flatpak with Wayland-native shell behavior, validated drag-and-drop diagnostics, and refined OAuth logging",
+  "name": "canva-linux",
+  "version": "1.4.10-dev.17",
+  "description": "Unofficial Canva-Linux desktop wrapper using Electron/Chromium and Flatpak",
   "main": "electron/main/index.js",
   "author": "Community",
   "license": "GPL-3.0-or-later",
-  "productName": "Canva",
+  "productName": "Canva-Linux",
   "homepage": "https://www.canva.com/",
   "scripts": {
     "start": "electron .",
@@ -23,8 +23,8 @@
     "docs:check-links": "node scripts/check-doc-links.js"
   },
   "build": {
-    "appId": "com.canva.WebApp",
-    "productName": "Canva",
+    "appId": "com.canva.Linux",
+    "productName": "Canva-Linux",
     "directories": {
       "output": "dist",
       "buildResources": "build-resources"
@@ -36,12 +36,12 @@
     "linux": {
       "target": "dir",
       "category": "Graphics",
-      "executableName": "canva-webapp",
+      "executableName": "canva-linux",
       "desktop": {
         "entry": {
-          "Name": "Canva",
-          "StartupWMClass": "com.canva.WebApp",
-          "X-GNOME-WMClass": "com.canva.WebApp"
+          "Name": "Canva-Linux",
+          "StartupWMClass": "com.canva.Linux",
+          "X-GNOME-WMClass": "com.canva.Linux"
         }
       },
       "icon": "build-resources"
@@ -57,7 +57,7 @@
     "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0"
   },
-  "desktopName": "com.canva.WebApp.desktop",
+  "desktopName": "com.canva.Linux.desktop",
   "engines": {
     "node": ">=22.0.0"
   }

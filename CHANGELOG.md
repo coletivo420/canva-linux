@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.17] - 2026-04-25
+
+### Changed
+- Standardized the public project identity as **Canva-Linux** across package metadata, Electron product naming, executable naming, and primary user-facing copy.
+- Standardized Linux bundle artifact naming to `dist/canva-linux-$VERSION.flatpak` in build/validation scripts and related docs.
+- Updated repository-facing metadata links and captions to point to the `canva-linux` project naming.
+- Updated desktop-visible metadata (`data/com.canva.Linux.desktop` and `data/com.canva.Linux.metainfo.xml`) to show **Canva-Linux** naming and desktop-wrapper wording.
+- Aligned core documentation and release/validation checklists to the `1.4.10-dev.17` naming-alignment phase.
+- Added post-dev17 roadmap planning (`dev18` through `dev21`) covering permissions, app-id/branding strategy, submission-manifest final validation, and RC/stable closure.
+- Migrated Flatpak identity to `com.canva.Linux` (app-id, desktop/metainfo filenames, icon identifiers, and WMClass fields) for full branding alignment.
+
+### Notes
+- This patch includes an app-id identity migration and may require manual reinstall or user-data migration handling for environments previously using the old app-id.
+
 ## [1.4.10-dev.16] - 2026-04-25
 
 ### Changed
@@ -13,7 +27,7 @@ All notable changes to this project are documented in this file.
 - Updated documentation to formalize separation between the repository-root local manifest workflow and Flathub submission assets.
 
 ### Notes
-- The repository-root `com.canva.WebApp.yml` remains the canonical local install/bundle manifest.
+- The repository-root `com.canva.Linux.yml` remains the canonical local install/bundle manifest.
 - Flathub submission assets now live under `packaging/flathub/` and should be reviewed independently before submission PRs.
 - System Bluetooth availability and Flatpak DBus/portal permission model are unchanged.
 
@@ -609,7 +623,7 @@ All notable changes to this project are documented in this file.
 - Switched the launcher to prefer native Wayland in Wayland sessions.
 - Kept X11 available as an automatic fallback on non-Wayland sessions and as a manual override with `CANVA_FORCE_X11=1`.
 - Merged the recent shell UI changes into the working eyedropper build.
-- Removed duplicate source icon names so the package now ships only the canonical `com.canva.WebApp` icon assets.
+- Removed duplicate source icon names so the package now ships only the canonical `com.canva.Linux` icon assets.
 
 ### Notes
 - This release focuses on the shell runtime mode and merges the recent Home-tab UI behavior with the now-working custom eyedropper.

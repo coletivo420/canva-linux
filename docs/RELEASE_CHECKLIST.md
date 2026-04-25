@@ -1,12 +1,12 @@
-# Release Checklist — 1.4.10-dev.9
+# Release Checklist — 1.4.10-dev.17
 
-This checklist is intended for maintainer validation of the current `1.4.10-dev.9` development delivery.
+This checklist is intended for maintainer validation of the current `1.4.10-dev.17` development delivery.
 
 ## 1) Version and metadata
 
-- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.10-dev.9`.
-- [ ] Confirm `CHANGELOG.md` contains the `1.4.10-dev.9` entry.
-- [ ] Confirm documentation reflects the modular runtime refactor, centralized debug logging, and generated Canva preload bundle.
+- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.10-dev.17`.
+- [ ] Confirm `CHANGELOG.md` contains the `1.4.10-dev.17` entry.
+- [ ] Confirm documentation reflects the Canva-Linux naming standardization and generated Canva preload bundle workflow.
 
 ## 2) Runtime stability guardrails
 
@@ -53,6 +53,6 @@ This checklist is intended for maintainer validation of the current `1.4.10-dev.
 
 ## 7) Release readiness summary
 
-- [ ] Confirm this delivery is documented as a maintainability and Flathub-readiness pass.
+- [ ] Confirm this delivery is documented as a public naming and documentation-alignment pass with app-id preservation.
 - [ ] Confirm known limitations remain documented.
 - [ ] Confirm reviewer notes identify any follow-up items deferred to the next cycle.

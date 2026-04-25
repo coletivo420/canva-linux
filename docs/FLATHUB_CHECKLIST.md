@@ -32,7 +32,7 @@ npm run build:preload
 ./scripts/validate-flathub-submission.sh
 flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
 ./canva-linux.sh --install --bundle
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.Linux.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```

@@ -86,7 +86,7 @@ fi
 
 ## Version checks
 VERSION="$(node -p "require('./package.json').version")"
-BUNDLE_PATH="dist/canva-webapp-linux-${VERSION}.flatpak"
+BUNDLE_PATH="dist/canva-linux-${VERSION}.flatpak"
 info "Validating Flatpak workflow for version ${VERSION}"
 ok "Package version detected: ${VERSION}"
 
@@ -111,17 +111,17 @@ docs/PRIVACY.md|privacy documentation
 docs/FLATHUB_CHECKLIST.md|Flathub checklist
 docs/FLATHUB_SOURCE.md|Flathub source strategy documentation
 docs/FLATPAK_PERMISSIONS.md|permission review documentation
-com.canva.WebApp.yml|Flatpak manifest
-data/com.canva.WebApp.metainfo.xml|AppStream metadata
-data/com.canva.WebApp.desktop|desktop entry metadata
+com.canva.Linux.yml|Flatpak manifest
+data/com.canva.Linux.metainfo.xml|AppStream metadata
+data/com.canva.Linux.desktop|desktop entry metadata
 REQUIRED_FILES
 
 ## Flatpak install status
 if command -v flatpak >/dev/null 2>&1; then
-  if flatpak --user info com.canva.WebApp >/dev/null 2>&1 || flatpak info com.canva.WebApp >/dev/null 2>&1; then
-    ok "com.canva.WebApp is installed"
+  if flatpak --user info com.canva.Linux >/dev/null 2>&1 || flatpak info com.canva.Linux >/dev/null 2>&1; then
+    ok "com.canva.Linux is installed"
   else
-    warn "com.canva.WebApp is not installed locally"
+    warn "com.canva.Linux is not installed locally"
   fi
 else
   warn "flatpak command not found; Flatpak-based checks skipped"
@@ -131,14 +131,14 @@ fi
 ## Optional desktop file validation
 if check_optional_command desktop-file-validate "Desktop file validator"; then
   info "Running desktop-file-validate"
-  desktop-file-validate data/com.canva.WebApp.desktop
+  desktop-file-validate data/com.canva.Linux.desktop
   ok "Desktop entry validation passed"
 fi
 
 ## Optional AppStream validation
 if check_optional_command appstreamcli "AppStream validator"; then
   info "Running appstreamcli validate --explain"
-  appstreamcli validate --explain data/com.canva.WebApp.metainfo.xml
+  appstreamcli validate --explain data/com.canva.Linux.metainfo.xml
   ok "AppStream metadata validation passed"
 fi
 
@@ -146,7 +146,7 @@ fi
 if command -v flatpak >/dev/null 2>&1; then
   if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
     info "Running flatpak-builder-lint manifest"
-    flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
+    flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.Linux.yml
     ok "Manifest lint passed"
 
     if [[ -d repo ]]; then
