@@ -50,6 +50,27 @@ Screenshot URLs must also be stable and reviewed before final submission. Branch
 
 The maintainer should verify that screenshot URLs point to the final reviewed release or tag context used for submission.
 
+## Submission workspace separation (dev16)
+
+To keep local maintainer workflows and Flathub review workflows separate, this repository now has a dedicated submission workspace at:
+
+- `packaging/flathub/`
+
+That folder contains:
+
+- `manifest.yml` (submission-oriented manifest)
+- `generated-sources.json` (npm dependency manifest for Flathub source builds)
+- `scripts/generate-npm-sources.sh` (helper wrapper) and `scripts/generate-npm-sources.js` (lockfile-to-manifest generator)
+- `scripts/prepare-flathub-submission.sh` and `scripts/validate-flathub-submission.sh` (submission-path automation)
+
+The repository-root `com.canva.WebApp.yml` remains unchanged as the canonical **local** workflow manifest used by `./canva-linux.sh`.
+
+The submission manifest in `packaging/flathub/manifest.yml` uses a pinned public archive (`type: archive` + `sha256`) and generates `dist/linux-unpacked` inside the Flatpak build sandbox.
+
+Using `dist/linux-unpacked` as an **internal build artifact** is acceptable. The important requirement is to avoid consuming a prebuilt `dist/` from the host checkout state.
+
+For Flathub-reviewable Node/Electron builds, keep npm dependencies in `packaging/flathub/generated-sources.json` and run `npm install --offline` inside the sandbox build.
+
 ## Release workflow separation
 
 GitHub `.flatpak` bundle releases and Flathub source builds are separate workflows.
@@ -62,3 +83,5 @@ Do not treat the GitHub bundle workflow as a substitute for Flathub source revie
 ## Maintainer review requirement
 
 Before a final Flathub submission, the maintainer must review source URLs, source hashes, and screenshot URLs against the intended stable release input.
+
+For practical submission-path commands and rationale notes, see `docs/FLATHUB_SUBMISSION_PATH.md` and `docs/FLATHUB_SUBMISSION_NOTES.md`.

@@ -109,10 +109,15 @@ Packaging/runtime support files:
 - `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing (supports `--skip-npm`).
 - `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (rebuilds by default; supports explicit `--use-existing-repo` for non-release reuse).
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
+- `scripts/prepare-flathub-submission.sh` - regenerates submission npm sources and runs submission-path validation checks.
+- `scripts/validate-flathub-submission.sh` - validates submission-manifest structure, offline npm source manifest, and optional Flathub lint.
 - `scripts/build-preload-bundle.js` - dependency-free generated-preload builder used before local start and Electron packaging.
-- `com.canva.WebApp.yml` - Flatpak manifest.
+- `com.canva.WebApp.yml` - Flatpak manifest for local install/bundle/validation workflows.
+- `packaging/flathub/` - Flathub submission workspace (submission manifest, `generated-sources.json`, npm source generator scripts).
 - `docs/PRIVACY.md` - repository privacy and telemetry policy statement.
 - `docs/FLATHUB_SOURCE.md` - Flathub source strategy notes for the current local manifest and future source-based submission.
+- `docs/FLATHUB_SUBMISSION_PATH.md` - dedicated submission-path structure and command flow.
+- `docs/FLATHUB_SUBMISSION_NOTES.md` - submission rationale notes, including thin-wrapper objection response.
 - `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` - desktop and appstream metadata.
 
 ## Workflow notes

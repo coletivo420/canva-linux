@@ -37,9 +37,13 @@ Run the standard validation command first:
 ./canva-linux.sh --validate
 ```
 
-Then run lint checks directly when Flatpak Builder is available:
+Then run submission-path preparation/validation and lint checks when Flatpak Builder is available:
 
 ```bash
+./scripts/prepare-flathub-submission.sh
+./scripts/validate-flathub-submission.sh
+flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
 ./canva-linux.sh --install --bundle
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
@@ -66,10 +70,16 @@ The manifest intentionally avoids broad home-directory access and keeps narrower
 - **Local install** (`--install`) is for development/testing.
 - **Bundle generation** (`--bundle`) creates `dist/canva-webapp-linux-$VERSION.flatpak` for GitHub releases.
 - **Flathub submission** is a separate workflow reviewed in `flathub/flathub`.
+- Submission assets live under `packaging/flathub/` (submission manifest, `generated-sources.json`, and helpers).
 
-Do not treat local GitHub release bundles as a direct Flathub submission mechanism.
+Do not treat local GitHub release bundles as a direct Flathub submission mechanism, and do not replace the repository-root local manifest (`com.canva.WebApp.yml`) when preparing submission files.
 
 Source strategy guidance for final Flathub submission lives in `docs/FLATHUB_SOURCE.md`.
+Submission-path workflow lives in `docs/FLATHUB_SUBMISSION_PATH.md`, and rationale notes (including thin-wrapper objection handling) live in `docs/FLATHUB_SUBMISSION_NOTES.md`.
+
+- Submission manifest builds should come from a pinned public archive source (`type: archive` + `sha256`) and regenerate Electron output inside the sandbox.
+- `dist/linux-unpacked` is acceptable as an internal sandbox build artifact; avoid relying on host-prebuilt `dist/` content.
+- Submission build should use `generated-sources.json` + `npm install --offline` to keep npm dependency resolution inside a reviewable, pinned source path.
 
 ## Flathub checklist
 
