@@ -19,43 +19,7 @@ Canva Linux is a community-maintained open source package for use with Canva. It
 
 The next development line starts at `1.4.11.dev1` and is reserved for TypeScript migration and Canva API integration work.
 
-`1.4.10.dev10` starts the documentation and AI/vibecoding preparation phase for the testing cycle. This phase aligns the repository docs, changelog, and roadmap before code extraction or test harness changes land.
-
-`1.4.10.dev11` extracts the main-process window-open policy from `electron/main/index.js` into a dedicated module so the policy can be tested in isolation before `node:test`, wiring, and Playwright phases land.
-
-`1.4.10.dev12` adds the first `node:test` unit coverage for the extracted window-open policy, keeping production runtime behavior unchanged while establishing the test harness for the later wiring and Playwright phases.
-
-`1.4.10.dev14` adds a lightweight main-process wiring test that verifies the tab controller passes the expected navigation helpers into the tab event layer without changing user-visible behavior.
-
-`1.4.10.dev15` added a minimal Playwright smoke test that launches the Electron app in development mode, confirms it is not packaged, and waits for the first BrowserWindow so the project gains real process-level launch coverage without introducing a broad E2E suite.
-
-`1.4.10.dev16` focused on Flathub follow-up hardening and packaging resilience after the testing foundation landed.
-
-`1.4.10.dev17` standardized the public project identity around **Canva Linux** and migrated the Flatpak app-id to `io.github.PirateMaryRead.canva-linux`.
-
-`1.4.10.dev18` consolidated the Flatpak permission policy with portal-first guardrails and explicit rationale for retained runtime permissions.
-
-`1.4.10.dev18B` standardizes the human-facing phase/branch/documentation nomenclature to the `1.4.10.devX` pattern while keeping npm/package SemVer formatting unchanged.
-
-Planned phase map:
-
-- `1.4.10.dev10` - documentation, AI/vibecoding preparation, and roadmap alignment
-- `1.4.10.dev11` - extraction of the window-open policy into a testable module
-- `1.4.10.dev12` - unit tests with `node:test`
-- `1.4.10.dev14` - light wiring/integration tests for the main-process tab flow
-- `1.4.10.dev15` - Electron smoke test coverage with Playwright
-- `1.4.10.dev16` - Flathub-facing follow-up adjustments after the testing foundation is in place
-- `1.4.10.dev17` - public naming cleanup to Canva Linux with app-id migration to `io.github.PirateMaryRead.canva-linux`
-- `1.4.10.dev18` - final permissions policy consolidation for Canva Linux
-- `1.4.10.dev18B` - nomenclature normalization for phase/branch/documentation identifiers
-- `1.4.10.dev19` - community branding, trademark-safe wording, app-id migration, and MetaInfo finalization
-- `1.4.10.dev20` - quality gates (lint, validation workflow, and docs alignment)
-- `1.4.10.dev21` - submission path final validation
-- `1.4.10.dev22` - RC/stable closure work
-
-`1.4.10.dev8` keeps the modular source layout, but ships the Canva preload as a generated single-file bundle so Electron's sandboxed editor preload can load the custom eyedropper reliably.
-
-`1.4.10.dev7` introduced a major internal refactor:
+## LOGGING SYSTEM
 
 - modularized `electron/main` and `electron/preload`
 - centralized debug logging in the main process
