@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use strict';
 
 // Local copy of the browser-side eyedropper implementation used by the Canva

@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use strict';
 
 console.log('[canva:preload] raw-init ' + location.href);

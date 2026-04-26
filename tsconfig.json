@@ -6,11 +6,13 @@
     "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "strict": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "electron/**/*.js",
@@ -25,8 +27,6 @@
     "repo",
     "build-dir",
     ".flatpak-builder",
-    "electron/main/index.js",
-    "electron/preload/**/*.js",
     "electron/preload/canva.bundle.js"
   ]
 }
