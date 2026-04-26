@@ -39,11 +39,11 @@
       "category": "Graphics",
       "executableName": "canva-linux",
       "desktop": {
-        "entry": {
-          "Name": "Canva Linux",
-          "StartupWMClass": "io.github.PirateMaryRead.canva-linux",
-          "X-GNOME-WMClass": "io.github.PirateMaryRead.canva-linux"
-        }
+      "desktop": {
+        "Name": "Canva Linux",
+        "StartupWMClass": "io.github.PirateMaryRead.canva-linux",
+        "X-GNOME-WMClass": "io.github.PirateMaryRead.canva-linux"
+      },
       },
       "icon": "build-resources"
     },

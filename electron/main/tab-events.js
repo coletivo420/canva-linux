@@ -143,7 +143,7 @@ function attachTabEventHandlers(tab, helpers) {
   });
 
   wc.on('console-message', (_event, level, message, line, sourceId) => {
-    debugLog(`tabs:view:${tab.id}`, 'console', `level=${level}`, `line=${line}`, sourceId || 'inline', message);
+    debugLog(`tabs:console:${tab.id}`, 'console', `level=${level}`, `line=${line}`, sourceId || 'inline', message);
     if (message.includes('canva-preload') || message.includes('EyeDropper')) {
       debugLog('eyedropper:diagnostics', 'console-intercept', `tab=${tab.id}`, message);
     }
@@ -186,7 +186,7 @@ function attachTabEventHandlers(tab, helpers) {
 
   wc.on('before-input-event', (event, input) => {
 
-    debugLog('app', 'before-input', `tab=${tab.id}`, input.type, input.key || '');
+    debugLog(`tabs:input:${tab.id}`, 'before-input', input.type, input.key || '');
     const ctrlOrCmd = input.control || input.meta;
     if (!ctrlOrCmd || input.type !== 'keyDown') return;
 

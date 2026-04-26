@@ -15,7 +15,7 @@ function appendDisableFeature(app, featureName) {
 }
 
 function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
-  app.setName('Canva');
+  app.setName('Canva Linux');
   app.commandLine.appendSwitch('disable-component-update');
   app.commandLine.appendSwitch('disable-domain-reliability');
   app.commandLine.appendSwitch('disable-sync');
