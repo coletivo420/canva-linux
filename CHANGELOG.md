@@ -417,7 +417,7 @@ All notable changes to this project are documented in this file.
 - Added `scripts/validate-flatpak.sh` for local Flatpak and metadata validation.
 
 ### Changed
-- Updated build documentation to describe the generated `dist/canva-webapp-linux-$VERSION.flatpak` artifact.
+- Updated build documentation to describe the generated `dist/canva-linux-$VERSION.flatpak` artifact.
 
 ### Notes
 - This is a distribution workflow improvement for the `1.4.9-dev.X` cycle.
