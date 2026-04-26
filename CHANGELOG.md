@@ -2,6 +2,21 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.20] - 2026-04-26
+
+### Added
+- Added `scripts/validate-project.sh` as a single quality-gate command that runs lint, tests, docs link checks, Flatpak validation, and `git diff --check`.
+- Added `docs/DEVELOPMENT.md` with dev20 scope boundaries and recommended implementation order.
+- Added `docs/VALIDATION.md` with baseline diagnostics and close-out validation steps.
+
+### Changed
+- Updated `README.md` status and phase map for the dev20 quality-gates cycle.
+- Updated `docs/RELEASE_CHECKLIST.md` to a dev20 checklist focused on version alignment, validation automation, and documentation consistency.
+- Added npm script `validate:project` to call `./scripts/validate-project.sh`.
+
+### Notes
+- Large UI redesigns, deep Flatpak rework, framework migration, and aggressive refactors remain intentionally deferred to later phases.
+
 ## [1.4.10-dev.19] - 2026-04-26
 
 ### Changed
