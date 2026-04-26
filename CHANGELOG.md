@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10] - 2026-04-26
+
+### Added
+- Consolidated release closure documentation for the stable `1.4.10` launch, including release checklist and manual validation guidance for the final JavaScript cycle.
+
+### Changed
+- Promoted package versioning from `1.4.10-dev.20` through `1.4.10-rc.1` to stable `1.4.10`.
+- Confirmed release validation workflow for preload bundle generation, lint/tests, Flatpak validation scripts, and Flathub-submission preparatory checks.
+- Updated README release status to mark `1.4.10` as stable and `1.4.11.dev1` as the next planned development line (TypeScript + Canva API).
+
+### Notes
+- This release intentionally freezes scope to consolidation only: no TypeScript migration, no Canva API integration, no major refactors, and no Flathub submission in this tag.
+
+## [1.4.10-rc.1] - 2026-04-26
+
+### Notes
+- Release candidate cut for final stabilization before promoting to `1.4.10`.
+
 ## [1.4.10-dev.20] - 2026-04-26
 
 ### Added

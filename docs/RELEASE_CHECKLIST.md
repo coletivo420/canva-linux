@@ -1,40 +1,39 @@
-# Release Checklist — 1.4.10-dev.20
+# Release Checklist — 1.4.10
 
-This checklist tracks the `1.4.10-dev.20` quality-gates delivery.
+This checklist tracks the stable `1.4.10` release closure.
 
 ## 1) Version alignment
 
-- [ ] Confirm `package.json` and `package-lock.json` use `1.4.10-dev.20`.
-- [ ] Confirm `CHANGELOG.md` includes the `1.4.10-dev.20` section.
-- [ ] Confirm README status text references the dev20 quality-gates phase.
+- [ ] Confirm `package.json` and `package-lock.json` use `1.4.10`.
+- [ ] Confirm `CHANGELOG.md` includes `1.4.10-rc.1` and `1.4.10` entries dated `2026-04-26`.
+- [ ] Confirm README status reports `Stable: 1.4.10` and `Next: 1.4.11.dev1`.
 
-## 2) Validation baseline
+## 2) Final validation commands
 
-- [ ] Run `git status`.
-- [ ] Run `npm run lint`.
-- [ ] Run `npm test`.
-- [ ] Run `./scripts/validate-flatpak.sh`.
+- [ ] `npm run build:preload`
+- [ ] `npm run lint`
+- [ ] `npm test`
+- [ ] `npm run test:smoke`
+- [ ] `./canva-linux.sh --validate`
+- [ ] `git diff --check`
 
-## 3) Project quality gates
+## 3) Optional validator checks (when tools are installed)
 
-- [ ] Ensure `scripts/validate-project.sh` exists and is executable.
-- [ ] Confirm `./scripts/validate-project.sh` runs lint, tests, docs link checks, Flatpak validation, and `git diff HEAD --check`.
-- [ ] Confirm no broken imports or duplicate imports remain in touched files.
+- [ ] `desktop-file-validate data/io.github.PirateMaryRead.canva-linux.desktop`
+- [ ] `appstreamcli validate --explain data/io.github.PirateMaryRead.canva-linux.metainfo.xml`
+- [ ] `./scripts/validate-flatpak.sh`
+- [ ] `./scripts/validate-flathub-submission.sh`
 
-## 4) Documentation quality
+## 4) Manual release closure
 
-- [ ] Confirm `docs/DEVELOPMENT.md` is aligned with dev20 scope and sequencing.
-- [ ] Confirm `docs/VALIDATION.md` documents baseline + close-out commands.
-- [ ] Confirm README links to development and validation docs.
+- [ ] Confirm app launches locally.
+- [ ] Confirm OAuth popup/login flow still works.
+- [ ] Confirm Canva editor opens and custom eyedropper flow remains active.
+- [ ] Confirm local release artifact workflow is documented (`npm run dist` + `./canva-linux.sh --bundle`).
 
-## 5) Repository hygiene
+## 5) Scope freeze confirmation
 
-- [ ] Confirm no backup/reject/temp artifacts were added.
-- [ ] Confirm generated directories (`dist/`, `.flatpak-builder/`) are not staged.
-- [ ] Confirm changes are scoped to quality gates and documentation.
-
-## 6) Handoff readiness
-
-- [ ] Summarize warnings (if any) from Flatpak tooling availability.
-- [ ] Capture deferred items for dev21/dev22 (large UI, deep refactors, publication work).
-- [ ] Ensure commit history remains small and review-friendly.
+- [ ] No TypeScript migration in this release.
+- [ ] No Canva API integration in this release.
+- [ ] No large refactor/new architecture in this release.
+- [ ] No Flathub submission in this release.

@@ -6,18 +6,18 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 
 ## Status
 
-Stable: 1.4.9  
-Next: 1.4.10.dev20 (quality gates: lint, validation workflow, and docs alignment)
+Stable: 1.4.10  
+Next: 1.4.11.dev1 (TypeScript migration + Canva API exploration)
 
 ## Community package status
 
 Canva Linux is a community-maintained open source package for use with Canva. It is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd. References to Canva describe the upstream web service this wrapper is built to access.
 
-## Development (1.4.10.devX)
+## Development (post-1.4.10)
 
-The current development cycle focuses on Flathub readiness, packaging improvements, runtime maintainability, and a phased testing architecture for future hardening work.
+`1.4.10` closes the JavaScript consolidation cycle with community branding, app-id migration, Flatpak permission hardening, preload-bundle stability, OAuth continuity, and documented validation workflows.
 
-Goal: prepare the project for Flathub submission while introducing small, reviewable development phases for documentation, extraction, testing, and Electron smoke coverage.
+The next development line starts at `1.4.11.dev1` and is reserved for TypeScript migration and Canva API integration work.
 
 `1.4.10.dev10` starts the documentation and AI/vibecoding preparation phase for the testing cycle. This phase aligns the repository docs, changelog, and roadmap before code extraction or test harness changes land.
 
