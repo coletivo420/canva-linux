@@ -1,26 +1,41 @@
-# Manual Validation — 1.4.8-dev.X
+# Manual Validation — 1.4.10 Release
 
-This document defines a lightweight manual validation routine for non-functional DEV maintenance patches.
+This document defines the manual validation routine for the current development cycle.
+
+## Validation scope
+
+`1.4.10` is the release-closure validation pass for the consolidated JavaScript cycle.
+
+Expected outcome:
+
+- user-facing runtime behavior remains stable
+- internal module boundaries and debug logging are easier to inspect
+- the Canva editor loads the generated single-file preload bundle and keeps the custom `ltcodedev/eyedropper` path active
 
 ## Environment preparation
 
 1. Use the current local branch build.
 2. Ensure the Flatpak package installs and launches successfully.
 3. Keep terminal logs visible when running with `CANVA_DEBUG` filters.
+4. Before starting from source, run `npm run build:preload` or use `npm start` / `npm run dist`, which run it automatically.
+5. When debugging startup or preload behavior, inspect the generated `current.log` under the Electron user-data logs directory.
 
 ## Baseline startup checks
 
 1. Launch normally:
-   - `flatpak run com.canva.WebApp`
+   - `flatpak run io.github.PirateMaryRead.canva-linux`
 2. Launch with startup diagnostics:
-   - `CANVA_DEBUG=startup flatpak run com.canva.WebApp`
+   - `CANVA_DEBUG=startup,eyedropper flatpak run io.github.PirateMaryRead.canva-linux`
 3. Confirm the app window renders and loads Canva.
+4. Confirm a fresh `current.log` is created for this run.
+5. Confirm startup logs include the Canva preload reaching `modules-loaded` and `eyedropper-installed`.
 
-## Home tab behavior
+## Home tab and toolbar behavior
 
 1. Confirm Home tab is present at startup.
 2. Attempt to close Home tab and confirm it remains protected.
-3. Click Home from another tab and confirm focus returns to the existing Home tab.
+3. Create, switch, and close non-home tabs.
+4. Click Home from another tab and confirm focus returns to the existing Home tab.
 
 ## OAuth popup flow
 
@@ -36,15 +51,36 @@ This document defines a lightweight manual validation routine for non-functional
 2. Use the file picker from Canva upload flow.
 3. Paste clipboard content if applicable.
 4. When troubleshooting, run:
-   - `CANVA_DEBUG=dnd,upload,permissions,session flatpak run com.canva.WebApp`
+   - `CANVA_DEBUG=dnd,upload,permissions,session flatpak run io.github.PirateMaryRead.canva-linux`
+
+## Eyedropper behavior
+
+1. Trigger the Canva eyedropper flow.
+2. Confirm the bundled `ltcodedev/eyedropper` custom picker opens.
+3. Confirm logs show the wrapper intercepting `EyeDropper.open()` without `module-load-failed` entries for `./debug`, `custom-eyedropper-flow`, or `native-eyedropper-wrapper`.
+4. Confirm `Escape` aborts the picker cleanly.
+5. Confirm a picked color resolves back to Canva without leaving stale overlay UI.
+6. Confirm the flow does not fall back to a native browser/system color picker or a screen-capture picker window.
 
 ## Wayland/X11 mode sanity
 
 1. Default startup:
-   - `flatpak run com.canva.WebApp`
+   - `flatpak run io.github.PirateMaryRead.canva-linux`
 2. Forced Wayland:
-   - `CANVA_FORCE_WAYLAND=1 flatpak run com.canva.WebApp`
+   - `CANVA_FORCE_WAYLAND=1 flatpak run io.github.PirateMaryRead.canva-linux`
 3. Forced X11:
-   - `CANVA_FORCE_X11=1 flatpak run com.canva.WebApp`
+   - `CANVA_FORCE_X11=1 flatpak run io.github.PirateMaryRead.canva-linux`
 
-Record observable regressions only; do not introduce functional fixes in a documentation-only DEV patch.
+## Logging review
+
+1. Confirm terminal debug entries include the expected source prefix, such as `main`, `canva-preload`, or `toolbar-preload`.
+2. Confirm the file-backed debug log contains the same run and does not include stale content from a previous launch.
+
+## Bluetooth/Floss runtime-noise check
+
+1. Run:
+   - `CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux 2>&1 | grep -Ei 'floss|bluetooth|bluez'`
+2. Confirm Floss manager warnings are reduced compared with previous builds.
+3. Treat remaining Bluetooth-related lines as diagnostics unless they are tied to a user-facing regression.
+
+Record observable regressions only; do not treat internal module reshaping as a user-facing behavior change by itself.

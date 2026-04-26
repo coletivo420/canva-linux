@@ -2,6 +2,303 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10] - 2026-04-26
+
+### Added
+- Consolidated release closure documentation for the stable `1.4.10` launch, including release checklist and manual validation guidance for the final JavaScript cycle.
+
+### Changed
+- Promoted package versioning from `1.4.10-dev.20` through `1.4.10-rc.1` to stable `1.4.10`.
+- Confirmed release validation workflow for preload bundle generation, lint/tests, Flatpak validation scripts, and Flathub-submission preparatory checks.
+- Updated README release status to mark `1.4.10` as stable and `1.4.11.dev1` as the next planned development line (TypeScript + Canva API).
+
+### Notes
+- This release intentionally freezes scope to consolidation only: no TypeScript migration, no Canva API integration, no major refactors, and no Flathub submission in this tag.
+
+## [1.4.10-rc.1] - 2026-04-26
+
+### Notes
+- Release candidate cut for final stabilization before promoting to `1.4.10`.
+
+## [1.4.10-dev.20] - 2026-04-26
+
+### Added
+- Added `scripts/validate-project.sh` as a single quality-gate command that runs lint, tests, docs link checks, Flatpak validation, and `git diff --check`.
+- Added `docs/DEVELOPMENT.md` with dev20 scope boundaries and recommended implementation order.
+- Added `docs/VALIDATION.md` with baseline diagnostics and close-out validation steps.
+
+### Changed
+- Updated `README.md` status and phase map for the dev20 quality-gates cycle.
+- Updated `docs/RELEASE_CHECKLIST.md` to a dev20 checklist focused on version alignment, validation automation, and documentation consistency.
+- Added npm script `validate:project` to call `./scripts/validate-project.sh`.
+
+### Notes
+- Large UI redesigns, deep Flatpak rework, framework migration, and aggressive refactors remain intentionally deferred to later phases.
+
+## [1.4.10-dev.19] - 2026-04-26
+
+### Changed
+- Migrated active Flatpak app-id, desktop/metainfo filenames, icon identifiers, and runtime WMClass usage from `com.canva.Linux` to `io.github.PirateMaryRead.canva-linux`.
+- Standardized the public project name as `Canva Linux` and aligned package metadata wording to `A community opensource desktop wrapper for use with Canva`.
+- Updated local and Flathub manifests, launch/runtime scripts, validation helpers, and documentation to use the new app-id and naming guidance.
+- Added dev19 branding/app-id validation guardrails in `scripts/validate-flatpak.sh` and `scripts/validate-flathub-submission.sh`.
+- Updated AppStream metadata with an explicit community/non-endorsed disclaimer and added `<replaces><id>com.canva.Linux</id></replaces>` for migration context.
+
+### Notes
+- Development builds before `1.4.10.dev19` used `com.canva.Linux`.
+- The Flathub-facing app-id is now `io.github.PirateMaryRead.canva-linux`; existing local installs should uninstall the old ID before installing the new one.
+- Flatpak permission policy from `1.4.10-dev.18` remains unchanged in this phase.
+
+## [1.4.10-dev.18] - 2026-04-26
+
+### Changed
+- Consolidated Flatpak permission policy for Canva-Linux based on real workflows including login persistence, upload/export, media playback, video editing, microphone/webcam compatibility, and desktop integration.
+- Kept the local and Flathub-submission manifests aligned on the same runtime sandbox permission policy.
+- Removed `--talk-name=org.freedesktop.ScreenSaver` from both Flatpak manifests because no required Canva-Linux runtime flow currently depends on direct ScreenSaver D-Bus access.
+- Documented permissions that must not be added without explicit maintainer review: broad home access, full device access, broad session/system bus sockets, and explicit portal bus access.
+- Added validation guards that fail when forbidden permissions reappear or required runtime permissions are missing in either manifest.
+- Standardized human-facing phase and branch naming to `1.4.10.devX` while preserving SemVer package versions as `1.4.10-dev.X`.
+
+### Notes
+- This is the final permissions consolidation pass before branding/trademark and final submission validation work.
+- Runtime behavior should be manually validated for login, upload, export, video editing, audio, microphone/webcam capture, and custom eyedropper flows.
+
+## [1.4.10-dev.17] - 2026-04-25
+
+### Changed
+- Standardized the public project identity as **Canva-Linux** across package metadata, Electron product naming, executable naming, and primary user-facing copy.
+- Standardized Linux bundle artifact naming to `dist/canva-linux-$VERSION.flatpak` in build/validation scripts and related docs.
+- Updated repository-facing metadata links and captions to point to the `canva-linux` project naming.
+- Updated desktop-visible metadata (`data/com.canva.Linux.desktop` and `data/com.canva.Linux.metainfo.xml`) to show **Canva-Linux** naming and desktop-wrapper wording.
+- Aligned core documentation and release/validation checklists to the `1.4.10-dev.17` naming-alignment phase.
+- Added post-dev17 roadmap planning (`dev18` through `dev21`) covering permissions, app-id/branding strategy, submission-manifest final validation, and RC/stable closure.
+- Migrated Flatpak identity to `com.canva.Linux` (app-id, desktop/metainfo filenames, icon identifiers, and WMClass fields) for full branding alignment.
+- Finalized documentation alignment after the rename, including `README.md` next-phase transition to `1.4.10-dev.18` and AI workflow guidance updates for the dev17→dev18 handoff.
+
+### Notes
+- This patch includes an app-id identity migration and may require manual reinstall or user-data migration handling for environments previously using the old app-id.
+
+## [1.4.10-dev.16] - 2026-04-25
+
+### Changed
+- Disabled Chromium/Electron `Floss` runtime feature in `configureLinuxRuntime()` to reduce non-fatal Bluetooth/Floss startup noise inside Flatpak sandbox logs.
+- Added a dedicated `packaging/flathub/` submission workspace with a separate Flathub-oriented manifest, `generated-sources.json` npm dependency manifest, and helper scripts to regenerate it from `package-lock.json`.
+- Switched the submission manifest source strategy to a pinned public archive (`type: archive` + `sha256`) and clarified sandbox-only generation of `dist/linux-unpacked`, plus offline npm installation (`npm install --offline`) using generated dependency sources.
+- Added submission automation scripts (`scripts/prepare-flathub-submission.sh`, `scripts/validate-flathub-submission.sh`) and moved submission manifest path to `packaging/flathub/manifest.yml`.
+- Added dedicated submission-path documentation and rationale notes (`docs/FLATHUB_SUBMISSION_PATH.md`, `docs/FLATHUB_SUBMISSION_NOTES.md`), including a material non-triviality rationale against simple-web-wrapper rejection risk.
+- Updated documentation to formalize separation between the repository-root local manifest workflow and Flathub submission assets.
+
+### Notes
+- The repository-root `com.canva.Linux.yml` remains the canonical local install/bundle manifest.
+- Flathub submission assets now live under `packaging/flathub/` and should be reviewed independently before submission PRs.
+- System Bluetooth availability and Flatpak DBus/portal permission model are unchanged.
+
+## [1.4.10-dev.15] - 2026-04-25
+
+### Added
+- Added Playwright as a dev-only dependency for minimal Electron smoke coverage.
+- Added a smoke test that launches the app in development mode and waits for the first BrowserWindow.
+- Added dedicated npm scripts for Playwright smoke execution.
+
+### Notes
+- This is phase 5 of the planned testing architecture work.
+- Production runtime behavior is intentionally unchanged in this patch.
+
+## [1.4.10-dev.14] - 2026-04-25
+
+### Added
+- Added a lightweight wiring test for the main-process tab flow using `node:test`.
+- Added a dedicated npm script for the wiring-focused test phase.
+
+### Changed
+- Added a narrow dependency-injection seam in `electron/main/tab-controller.js` so the tab event attachment path can be verified without changing production behavior.
+
+### Notes
+- This is phase 4 of the planned testing architecture work.
+- Production runtime behavior is intentionally unchanged in this patch.
+
+## [1.4.10-dev.12] - 2026-04-25
+
+### Added
+- Added `node:test` unit coverage for the extracted main-process window-open policy.
+- Added npm test scripts for the first unit-test phase of the `1.4.10-dev.X` testing roadmap.
+
+### Notes
+- This is phase 3 of the planned testing architecture work.
+- Production runtime behavior is intentionally unchanged in this patch.
+
+## [1.4.10-dev.11] - 2026-04-25
+
+### Changed
+- Extracted the main-process window-open policy from `electron/main/index.js` into a dedicated module without changing runtime behavior.
+- Kept the shared navigation classifier as the injected source of truth while isolating the local main-process tab/oauth category mapping for future tests.
+
+### Notes
+- This is phase 2 of the planned testing architecture work.
+- Runtime behavior is intentionally unchanged in this patch.
+
+## [1.4.10-dev.10] - 2026-04-25
+
+### Changed
+- Prepared the `1.4.10-dev.X` testing cycle with documentation-only updates for AI/vibecoding guidance, roadmap alignment, and phase planning.
+- Aligned the main repository docs with the planned phased sequence for `dev.10`, `dev.11`, `dev.12`, `dev.14`, `dev.15`, and `dev.16+`.
+
+### Notes
+- This is phase 1 of the planned testing architecture work.
+- Runtime behavior is intentionally unchanged in this patch.
+
+## [1.4.10-dev.9] - 2026-04-25
+
+### Changed
+- Renamed the shared `classifyWindowOpenRequest` import alias in `electron/main/index.js` to `sharedClassifyWindowOpenRequest` for clearer main-process navigation hardening flow.
+- Kept runtime behavior unchanged while making the shared-versus-local window-open classification boundary more explicit for review and maintenance.
+
+### Notes
+- This is a small follow-up maintenance patch on top of `1.4.10-dev.8`.
+- No user-facing behavior is intentionally changed.
+
+## [1.4.10-dev.8] - 2026-04-25
+
+### Added
+- Added a dependency-free preload bundling step that generates `electron/preload/canva.bundle.js` from the modular preload source files before local start and Electron Builder packaging.
+- Added documentation for the preload bundle architecture and the custom eyedropper regression it fixes.
+
+### Fixed
+- Fixed the custom Canva eyedropper regression introduced by the preload modularization. The Canva editor could start the preload but fail nested local module resolution inside Electron's packaged/sandboxed preload context, preventing `./debug` and the custom eyedropper modules from loading.
+- Fixed the false `installed=false` eyedropper diagnostic by exposing an idempotent preload-side install probe and checking the actual wrapped `EyeDropper` state instead of only checking local preload function scope.
+- Kept the custom picker routed through the bundled `ltcodedev/eyedropper` implementation instead of falling back to Chromium, portal, or native system color picking.
+- Blocked unsafe external URL schemes from being forwarded to the system opener.
+- Removed the active-tab eyedropper snapshot fallback so snapshot IPC only serves the requesting Canva tab.
+- Cleaned up the custom eyedropper overlay when an `AbortSignal` cancels the pick operation.
+
+### Changed
+- The app now points Canva tabs at `electron/preload/canva.bundle.js` while keeping `electron/preload/*.js` as the human-maintained source of truth.
+- The generated preload bundle is ignored by Git and ESLint; it must be regenerated through `npm run build:preload`, `npm start`, or `npm run dist`.
+- Clarified validation, release, Flathub, and maintenance documentation for the generated preload bundle and the restored custom eyedropper path.
+- Consolidated duplicated Flatpak build steps into shared script helpers used by local install and bundle generation.
+- Release bundle generation now rebuilds the Electron output and Flatpak repo by default; `--use-existing-repo` is explicit for non-release reuse.
+- Removed unused inherited image-loading helpers from the bundled eyedropper library copy.
+- Removed Flathub-linted legacy host font filesystem access and explicit portal bus talk-name access from the Flatpak manifest.
+- Added AppStream `vcs-browser` metadata and documented the local-only screenshot mirror limitation for repo lint.
+
+### Validation
+- Verified that the editor tab loads the bundled preload, installs the wrapper, intercepts `EyeDropper.open()`, captures the active Canva tab snapshot, opens the custom picker canvas, picks a color, and resolves the eyedropper promise.
+
+## [1.4.10-dev.7] - 2026-04-25
+
+### Changed
+- Further refactored the Electron main process by extracting logging and shell helpers from the entrypoint.
+- Centralized common shell background color logic and shared web preferences into modular helpers.
+- Improved `index.js` readability by focusing it on orchestration and process-wide composition.
+
+### Notes
+- This is a continuation of the maintainability refactor for the `1.4.10-dev.X` cycle.
+- Runtime behavior remains stable and unchanged.
+
+## [1.4.10-dev.6] - 2026-04-24
+
+### Added
+- Added Flathub source strategy documentation for future source-based submission.
+- Added checklist coverage for source archive/tag review and screenshot URL review.
+- Added centralized terminal and file-backed debug logging with a per-start `current.log`.
+
+### Changed
+- Cleaned desktop metadata for Flathub readiness.
+- Improved validation documentation around Flathub source strategy and release separation.
+- Reviewed Linux workflow script behavior for packaging-readiness cleanup.
+- Refactored the Electron runtime into modular `main`, `preload`, and shared helper directories.
+- Split Canva preload responsibilities into dedicated modules for debug transport, upload diagnostics, native EyeDropper wrapping, and custom picker flow.
+- Documented that Canva Linux must always use the bundled `ltcodedev/eyedropper` implementation as the custom colorpicker path.
+
+### Notes
+- This is a Flathub source/readiness hardening pass plus an internal runtime refactor for maintainability.
+- Runtime and OAuth behavior are intentionally kept stable from the user perspective.
+- GitHub .flatpak release bundles and Flathub source builds remain separate workflows.
+- Native/system picker or alternate capture paths are not the intended Canva Linux colorpicker behavior.
+
+## [1.4.10-dev.5] - 2026-04-24
+
+### Changed
+- Refocused the `1.4.10-dev.X` cycle on Flathub validation and submission readiness.
+- Reviewed AppStream metadata, desktop metadata, Flatpak manifest, permissions documentation, and Flathub checklist.
+- Improved validation workflow documentation for `flatpak-builder-lint` manifest and repo checks.
+
+### Notes
+- This is a Flathub validation and packaging-readiness pass.
+- Runtime behavior is not intentionally changed.
+- Google OAuth remains the maintainer-tested provider; other OAuth providers remain community-tested.
+
+
+
+## [1.4.10-dev.4] - 2026-04-24
+
+### Added
+- Added credential storage backend diagnostics on Linux using Electron `safeStorage.getSelectedStorageBackend()`.
+- Added a small color-coded `[canva:session]` prefix system for high-value status/security diagnostics (`OK`, `WARNING`, `CRITICAL`).
+- Added the development branch naming policy `dev/<version>` with explicit rules and examples.
+
+### Changed
+- Removed forced `password-store=basic` so Electron/Chromium can choose the best available Linux credential backend.
+- Updated cycle documentation to `1.4.10-dev.4`.
+- Updated project docs to explicitly state that no new runtime feature is introduced in this cycle.
+
+### Notes
+- Canva/OAuth behavior is preserved.
+- Network access required by Canva and OAuth providers remains enabled.
+- Flatpak Secret Service access (`--talk-name=org.freedesktop.secrets`) remains unchanged.
+
+## [1.4.10-dev.3] - 2026-04-24
+
+### Added
+- Added Codex branch naming policy.
+- Added privacy and telemetry documentation.
+
+### Changed
+- Removed deprecated build-flatpak.sh.
+- Hardened Flatpak permissions.
+- Added safe Electron privacy hardening without breaking Canva behavior.
+
+### Notes
+- No runtime behavior is intentionally changed.
+- Networking remains enabled to support Canva and OAuth flows.
+
+## [1.4.10-dev.2] - 2026-04-24
+
+### Added
+- Added `canva-linux.sh` as the canonical Linux workflow command.
+- Added interactive workflow mode when no arguments are provided.
+- Added `--install`, `--bundle`, `--validate`, `--uninstall`, `--reset-user-data`, and `--help` actions.
+- Added support for chained workflow actions executed in the order provided.
+- Added a Flathub submission checklist for validation, screenshots, permissions, release source, and manual review.
+
+### Changed
+- Kept `build-flatpak.sh` as a deprecated compatibility wrapper.
+- Improved CLI help output and argument handling for the Flatpak workflow.
+- Changed unknown-option behavior to show available options and exit non-zero.
+- Improved action parsing to reject incompatible or duplicate action combinations before execution.
+- Simplified the interactive menu by removing duplicated workflow entries.
+- Moved user data reset above uninstall actions for easier OAuth/session testing.
+- Updated documentation to prefer `canva-linux.sh`.
+
+### Notes
+- This is a packaging workflow usability pass for the `1.4.10-dev.X` cycle.
+- No runtime behavior is intentionally changed.
+
+## [1.4.10-dev.1] - 2026-04-24
+
+### Added
+- Added a dedicated local Flatpak install script.
+- Added a dedicated Flatpak bundle generation script.
+
+### Changed
+- Changed build-flatpak.sh into a compatibility wrapper for install and bundle workflows.
+- Updated validation and documentation for the split Flatpak workflow.
+- Restored legacy `--skip-npm` compatibility through the wrapper/local install path and improved bundle script repo validation.
+
+### Notes
+- This is a packaging workflow improvement for the 1.4.10-dev.X cycle.
+- No runtime behavior is intentionally changed.
+
 ## [1.4.9] - 2026-04-24
 
 ### Added
@@ -182,7 +479,7 @@ All notable changes to this project are documented in this file.
 - Added `scripts/validate-flatpak.sh` for local Flatpak and metadata validation.
 
 ### Changed
-- Updated build documentation to describe the generated `dist/canva-webapp-linux-$VERSION.flatpak` artifact.
+- Updated build documentation to describe the generated `dist/canva-linux-$VERSION.flatpak` artifact.
 
 ### Notes
 - This is a distribution workflow improvement for the `1.4.9-dev.X` cycle.
@@ -388,7 +685,7 @@ All notable changes to this project are documented in this file.
 - Switched the launcher to prefer native Wayland in Wayland sessions.
 - Kept X11 available as an automatic fallback on non-Wayland sessions and as a manual override with `CANVA_FORCE_X11=1`.
 - Merged the recent shell UI changes into the working eyedropper build.
-- Removed duplicate source icon names so the package now ships only the canonical `com.canva.WebApp` icon assets.
+- Removed duplicate source icon names so the package now ships only the canonical `com.canva.Linux` icon assets.
 
 ### Notes
 - This release focuses on the shell runtime mode and merges the recent Home-tab UI behavior with the now-working custom eyedropper.

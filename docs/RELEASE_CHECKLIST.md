@@ -1,38 +1,39 @@
-# Release Checklist — 1.4.8-rc.1 Validation
+# Release Checklist — 1.4.10
 
-This checklist is intended for final manual validation of `1.4.8-rc.1` before promoting the final `1.4.8` release.
+This checklist tracks the stable `1.4.10` release closure.
 
-## 1) Version and metadata
+## 1) Version alignment
 
-- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.8-rc.1`.
-- [ ] Confirm `CHANGELOG.md` contains the `1.4.8-rc.1` entry.
-- [ ] Confirm release documentation keeps release-candidate scope explicit.
+- [ ] Confirm `package.json` and `package-lock.json` use `1.4.10`.
+- [ ] Confirm `CHANGELOG.md` includes `1.4.10-rc.1` and `1.4.10` entries dated `2026-04-26`.
+- [ ] Confirm README status reports `Stable: 1.4.10` and `Next: 1.4.11.dev1`.
 
-## 2) Non-functional release-candidate guardrails
+## 2) Final validation commands
 
-- [ ] Confirm there are no intentional runtime behavior changes in this RC.
-- [ ] Confirm OAuth popup native icon behavior was not modified.
-- [ ] Confirm no architecture refactor was introduced.
+- [ ] `npm run build:preload`
+- [ ] `npm run lint`
+- [ ] `npm test`
+- [ ] `npm run test:smoke`
+- [ ] `./canva-linux.sh --validate`
+- [ ] `git diff --check`
 
-## 3) Manual validation focus (required before final `1.4.8`)
+## 3) Optional validator checks (when tools are installed)
 
-- [ ] Wayland startup sanity check.
-- [ ] X11 fallback startup sanity check.
-- [ ] Persistent session continuity across restarts.
-- [ ] Home tab behavior.
-- [ ] Tab creation/switch/close behavior.
-- [ ] OAuth popup smoke test (open + completion path).
-- [ ] Custom eyedropper availability and basic use.
-- [ ] Upload ingress observation: drag-and-drop, file picker, and clipboard paths.
+- [ ] `desktop-file-validate data/io.github.PirateMaryRead.canva-linux.desktop`
+- [ ] `appstreamcli validate --explain data/io.github.PirateMaryRead.canva-linux.metainfo.xml`
+- [ ] `./scripts/validate-flatpak.sh`
+- [ ] `./scripts/validate-flathub-submission.sh`
 
-## 4) Repository hygiene
+## 4) Manual release closure
 
-- [ ] Confirm no backup/reject artifacts were added (`*.bak`, `*.orig`, `*.rej`).
-- [ ] Confirm no temporary local test files were committed.
-- [ ] Confirm only relevant files are staged for the RC patch.
+- [ ] Confirm app launches locally.
+- [ ] Confirm OAuth popup/login flow still works.
+- [ ] Confirm Canva editor opens and custom eyedropper flow remains active.
+- [ ] Confirm local release artifact workflow is documented (`npm run dist` + `./canva-linux.sh --bundle`).
 
-## 5) Release readiness summary
+## 5) Scope freeze confirmation
 
-- [ ] Confirm this RC is documented as final manual validation only.
-- [ ] Confirm known limitations from the development series remain documented.
-- [ ] Confirm reviewer notes clearly identify any follow-up items deferred to post-`1.4.8` work.
+- [ ] No TypeScript migration in this release.
+- [ ] No Canva API integration in this release.
+- [ ] No large refactor/new architecture in this release.
+- [ ] No Flathub submission in this release.

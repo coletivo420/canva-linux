@@ -9,3 +9,6 @@ repo/
 *.bak
 *.orig
 *.rej
+
+# Generated preload bundle
+/electron/preload/canva.bundle.js

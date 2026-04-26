@@ -1,4 +1,4 @@
-app-id: com.canva.WebApp
+app-id: io.github.PirateMaryRead.canva-linux
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
@@ -21,19 +21,14 @@ finish-args:
   - --socket=pulseaudio        # Audio output for editor playback/recording UX.
   - --filesystem=xdg-run/pipewire-0 # Screen/media pipeline compatibility where used.
 
-  ## Font discovery from host (read-only)
-  - --filesystem=xdg-data/fonts:ro
-  - --filesystem=~/.fonts:ro
-  - --filesystem=xdg-config/fontconfig:ro
-
   ## File import and desktop integration
-  - --filesystem=xdg-download  # Narrow path used for common download/import workflows.
-  - --filesystem=home          # Broad access kept for current Canva import behavior (under review).
+  - --filesystem=xdg-download  # Narrow path used for common local download/export workflows.
   - --talk-name=org.freedesktop.FileManager1
 
   ## Portals and desktop services
-  - --talk-name=org.freedesktop.portal.Desktop
-  - --talk-name=org.freedesktop.ScreenSaver
+  # The app relies on Flatpak portals for file access when possible; explicit
+  # portal bus access is intentionally omitted because Flatpak grants portal
+  # mediation without a finish-arg.
   - --talk-name=org.freedesktop.secrets
 
   ## Runtime environment tweaks
@@ -41,17 +36,17 @@ finish-args:
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 
 modules:
-  - name: canva-webapp
+  - name: canva-linux
     buildsystem: simple
     build-commands:
       - mkdir -p /app/main
       - cp -a dist/linux-unpacked/* /app/main/
       - if command -v patch-electron-desktop-filename >/dev/null 2>&1; then patch-electron-desktop-filename /app/main/resources/app.asar; else patch-desktop-filename /app/main/resources/app.asar; fi
       - install -Dm755 run.sh /app/bin/run.sh
-      - install -Dm644 data/com.canva.WebApp.desktop /app/share/applications/com.canva.WebApp.desktop
-      - install -Dm644 data/com.canva.WebApp.metainfo.xml /app/share/metainfo/com.canva.WebApp.metainfo.xml
+      - install -Dm644 data/io.github.PirateMaryRead.canva-linux.desktop /app/share/applications/io.github.PirateMaryRead.canva-linux.desktop
+      - install -Dm644 data/io.github.PirateMaryRead.canva-linux.metainfo.xml /app/share/metainfo/io.github.PirateMaryRead.canva-linux.metainfo.xml
       - |
-        for size in 16 22 24 32 48 64 128 256 512; do           install -Dm644 data/icons/hicolor/${size}x${size}/apps/com.canva.WebApp.png /app/share/icons/hicolor/${size}x${size}/apps/com.canva.WebApp.png;         done
+        for size in 16 22 24 32 48 64 128 256 512; do           install -Dm644 data/icons/hicolor/${size}x${size}/apps/io.github.PirateMaryRead.canva-linux.png /app/share/icons/hicolor/${size}x${size}/apps/io.github.PirateMaryRead.canva-linux.png;         done
     sources:
       - type: dir
         path: .

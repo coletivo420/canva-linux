@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.PirateMaryRead.canva-linux</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Canva Linux</name>
+  <summary>A community opensource desktop wrapper for use with Canva</summary>
+  <description>
+    <p>
+      <em>Canva Linux is a community-maintained open source package for use with Canva and is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd.</em>
+    </p>
+    <p>
+      Canva Linux provides a Linux desktop wrapper around Canva with persistent sessions,
+      internal tabs, OAuth popup handling, Flatpak packaging, upload/export workflows,
+      media support, and desktop integration.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.PirateMaryRead.canva-linux.desktop</launchable>
+  <url type="homepage">https://www.canva.com/</url>
+  <url type="vcs-browser">https://github.com/PirateMaryRead/canva-linux</url>
+  <developer id="io.github.PirateMaryRead">
+    <name>Felipe Matos (piradopirata)</name>
+  </developer>
+  <replaces>
+    <id>com.canva.Linux</id>
+  </replaces>
+  <content_rating type="oars-1.1" />
+  <screenshots>
+    <screenshot type="default">
+      <caption>Canva Linux home screen</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/home.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Canva Linux tabbed shell</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/tabs.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Upload workflow inside Canva Linux</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/upload.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Custom eyedropper workflow inside Canva Linux</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/eyedropper.png</image>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="1.4.10-dev.8" date="2026-04-25">
+      <description>
+        <p>Fixed the custom eyedropper regression after preload modularization by generating a single runtime preload bundle from the modular source files, preserving the bundled custom colorpicker path in the Canva editor.</p>
+      </description>
+    </release>
+    <release version="1.4.10-dev.5" date="2026-04-24">
+      <description>
+        <p>Refocused the 1.4.10-dev.X cycle on Flathub validation and packaging-readiness, reviewed metadata and manifest documentation, and intentionally kept runtime behavior unchanged.</p>
+      </description>
+    </release>
+    <release version="1.4.9-dev.14" date="2026-04-24">
+      <description>
+        <p>Performed a final Flathub and release-readiness validation pass, reviewed AppStream metadata and packaging documentation, and intentionally left runtime behavior unchanged before preparing 1.4.9-rc.1.</p>
+      </description>
+    </release>
+    <release version="1.4.9-dev.12" date="2026-04-24">
+      <description>
+        <p>Prepared AppStream screenshot integration around the real local screenshot set staged in the repository, updated packaging documentation, and intentionally kept screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.</p>
+      </description>
+    </release>
+    <release version="1.4.4" date="2026-04-23">
+      <description>
+        <p>Made native Wayland the preferred session mode, kept X11 as a manual fallback, merged the fixed Home-tab shell UI, and cleaned the package icon sources.</p>
+      </description>
+    </release>
+    <release version="1.4.3" date="2026-04-23">
+      <description>
+        <p>Made the Home tab fixed and non-closable, removed the new-tab button, updated the shell documentation in English, and switched the project license to GNU GPL v3.0-or-later.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -2,85 +2,102 @@
 
 ## Purpose
 
-This document explains how to prepare this project for a future Flathub submission while keeping the existing GitHub release bundle workflow separate.
+This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## GitHub release bundles vs Flathub submission
+## Canonical workflow command (1.4.10-dev.17)
 
-- **GitHub releases** use local bundle generation from this repository.
-- The generated artifact is `dist/canva-webapp-linux-$VERSION.flatpak`.
-- **Flathub submission** is a separate workflow and is reviewed in the `flathub/flathub` repository.
-
-Do not treat local GitHub release bundles as a direct Flathub submission mechanism.
-
-## Current readiness status
-
-Current blockers before Flathub submission:
-
-- final Flathub submission and review in `flathub/flathub`;
-- manual OAuth validation beyond Google (Facebook/Meta, Apple, Microsoft).
-
-Additional guidance:
-
-- GitHub `.flatpak` bundle releases and Flathub submission are separate workflows and must stay separate.
-- Real screenshots are now staged locally in `assets/screenshots/` and integrated into AppStream metadata with stable direct URLs pinned to a commit SHA.
-- Branch URLs must not be used for AppStream screenshots.
-- `windowpopup.png` is supporting documentation material and not the primary Flathub screenshot.
-- OAuth native provider icons are intentionally unsupported and should not block Flathub unless reviewers explicitly object.
-
-## Flathub submission expectations
-
-A future Flathub submission generally requires:
-
-- a valid Flatpak manifest;
-- valid AppStream metadata (`.metainfo.xml`);
-- a valid desktop entry (`.desktop`);
-- aligned icon assets;
-- real screenshots in AppStream metadata for graphical apps;
-- a permission review with clear justification (tracked in `docs/FLATPAK_PERMISSIONS.md`);
-- a pull request to `flathub/flathub`.
-
-This repository is only preparing the metadata and documentation path for a future submission. It does not mean Flathub submission is complete.
-
-Flathub maintainers review submissions case-by-case and can reject apps depending on policy fit and packaging quality.
-
-## Required identifier alignment
-
-Keep these identifiers aligned as `com.canva.WebApp`:
-
-- App ID (`com.canva.WebApp`);
-- desktop file ID (`com.canva.WebApp.desktop`);
-- metainfo component ID (`com.canva.WebApp`).
-
-Changing only one of these values breaks distribution consistency and review readiness.
-
-## Source policy for Flathub
-
-For Flathub submission, avoid branch-based or local-only sources. Prefer stable upstream tags/releases so the build is reproducible for reviewers.
-
-## Known limitation out of scope
-
-Native OAuth popup icon behavior on Linux/Wayland is a known limitation and is **not** a current development target for this Flathub preparation phase.
-
-Google OAuth was tested during development. Facebook/Meta, Apple, and Microsoft still require manual validation.
-
-## Permission review companion
-
-Use `docs/FLATPAK_PERMISSIONS.md` as the maintainer-facing record of current `finish-args`, review rationale, and future minimization checklist. Keep it aligned with `com.canva.WebApp.yml` for each packaging patch.
-
-## Recommended local checks
-
-Run these checks before preparing a Flathub submission PR:
+Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
 ```bash
-appstreamcli validate --explain data/com.canva.WebApp.metainfo.xml
-desktop-file-validate data/com.canva.WebApp.desktop
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
+./canva-linux.sh --install
+./canva-linux.sh --bundle
+./canva-linux.sh --validate
+./canva-linux.sh --uninstall
+./canva-linux.sh --reset-user-data
+./canva-linux.sh --help
+```
+
+Notes:
+
+- No arguments open an interactive workflow menu.
+- Actions can be chained and run in argument order.
+- `--uninstall` can only be combined with `--reset-user-data`.
+
+`1.4.10-dev.17` keeps the Flathub source/readiness focus while standardizing public project naming as Canva Linux and migrating the app-id to `io.github.PirateMaryRead.canva-linux`.
+
+The preload bundle is generated automatically before the Electron build used by `./canva-linux.sh --install` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux.sh --bundle` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
+
+The lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` option exists only for explicit local reuse of an already reviewed `repo/`. It should not be used for release publication after source, preload, metadata, or packaging changes.
+
+## Validation and lint workflow
+
+Run the standard validation command first:
+
+```bash
+./canva-linux.sh --validate
+```
+
+Then run submission-path preparation/validation and lint checks when Flatpak Builder is available:
+
+```bash
+./scripts/prepare-flathub-submission.sh
+./scripts/validate-flathub-submission.sh
+flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.PirateMaryRead.canva-linux.yml
+./canva-linux.sh --install --bundle
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```
 
-## References
+If Flatpak Builder is missing locally, install it with:
 
-- Flathub submission docs: <https://docs.flathub.org/docs/for-app-authors/submission/>
-- Flathub requirements: <https://docs.flathub.org/docs/for-app-authors/requirements/>
-- Flathub metainfo guidelines: <https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/>
-- Flathub builder lint docs: <https://docs.flathub.org/docs/for-app-authors/linter/>
+```bash
+flatpak install flathub org.flatpak.Builder
+```
+
+If `appstreamcli` reports only remote URL or screenshot reachability warnings in an offline/restricted environment, rerun validation with normal network access before treating the metadata URLs as broken.
+
+Local `flatpak-builder-lint repo repo` can still report screenshot mirror findings for a locally generated OSTree repo because screenshots point to stable upstream URLs and are not mirrored to `https://dl.flathub.org/media` outside Flathub infrastructure. The validation helper treats only `appstream-external-screenshot-url` and `appstream-screenshots-not-mirrored-in-ostree` as a documented local limitation; any additional repo-lint error remains fatal.
+
+## Permissions and portals
+
+The app relies on Flatpak portals for file access where possible.
+
+The manifest intentionally avoids broad home-directory access and keeps narrower paths such as `xdg-download` for common local export/import workflows.
+
+## GitHub release bundles vs Flathub submission
+
+- **Local install** (`--install`) is for development/testing.
+- **Bundle generation** (`--bundle`) creates `dist/canva-linux-$VERSION.flatpak` for GitHub releases.
+- **Flathub submission** is a separate workflow reviewed in `flathub/flathub`.
+- Submission assets live under `packaging/flathub/` (submission manifest, `generated-sources.json`, and helpers).
+- `io.github.PirateMaryRead.canva-linux*` identifiers are now the active canonical identity in this cycle (app-id, filenames, icons, and WMClass fields).
+
+Do not treat local GitHub release bundles as a direct Flathub submission mechanism, and do not replace the repository-root local manifest (`io.github.PirateMaryRead.canva-linux.yml`) when preparing submission files.
+
+Source strategy guidance for final Flathub submission lives in `docs/FLATHUB_SOURCE.md`.
+Submission-path workflow lives in `docs/FLATHUB_SUBMISSION_PATH.md`, and rationale notes (including thin-wrapper objection handling) live in `docs/FLATHUB_SUBMISSION_NOTES.md`.
+
+- Submission manifest builds should come from a pinned public archive source (`type: archive` + `sha256`) and regenerate Electron output inside the sandbox.
+- `dist/linux-unpacked` is acceptable as an internal sandbox build artifact; avoid relying on host-prebuilt `dist/` content.
+- Submission build should use `generated-sources.json` + `npm install --offline` to keep npm dependency resolution inside a reviewable, pinned source path.
+
+## Flathub checklist
+
+See `docs/FLATHUB_CHECKLIST.md` for the practical submission checklist, including:
+
+- AppStream and desktop metadata validation
+- `flatpak-builder-lint` checks for manifest and repo
+- screenshot URL review
+- permission review
+- OAuth support notes
+- stable release source requirements
+- final maintainer manual review before submission
+
+## Submission readiness status
+
+The project is approaching Flathub submission readiness, but final submission should happen only after maintainer review of lint results, permissions, screenshots, and release source.
+
+## OAuth note
+
+Google OAuth was tested during development. Other OAuth providers use the same generalized popup flow, but are community-tested and may require feedback from users.
