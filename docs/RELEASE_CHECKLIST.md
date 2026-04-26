@@ -18,7 +18,7 @@ This checklist tracks the `1.4.10-dev.20` quality-gates delivery.
 ## 3) Project quality gates
 
 - [ ] Ensure `scripts/validate-project.sh` exists and is executable.
-- [ ] Confirm `./scripts/validate-project.sh` runs lint, tests, docs link checks, Flatpak validation, and `git diff --check`.
+- [ ] Confirm `./scripts/validate-project.sh` runs lint, tests, docs link checks, Flatpak validation, and `git diff HEAD --check`.
 - [ ] Confirm no broken imports or duplicate imports remain in touched files.
 
 ## 4) Documentation quality

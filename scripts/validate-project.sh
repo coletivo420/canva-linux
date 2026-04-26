@@ -25,6 +25,6 @@ run_step "npm run lint" npm run lint
 run_step "npm test" npm test
 run_step "docs:check-links" npm run docs:check-links
 run_step "Flatpak validation helper" ./scripts/validate-flatpak.sh
-run_step "git diff --check" git diff --check
+run_step "git diff HEAD --check" git diff HEAD --check
 
 log_ok "Project validation completed"

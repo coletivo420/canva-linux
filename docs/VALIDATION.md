@@ -12,7 +12,7 @@ It runs the following sequence:
 2. `npm test`
 3. `npm run docs:check-links`
 4. `./scripts/validate-flatpak.sh`
-5. `git diff --check`
+5. `git diff HEAD --check` 
 
 ## Baseline diagnostics (before editing)
 
@@ -28,9 +28,7 @@ npm test
 ## Close-out checks (before commit/merge)
 
 ```bash
-npm run lint
 ./scripts/validate-project.sh
-git diff --check
 ```
 
 ## Notes on environment warnings
