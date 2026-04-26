@@ -1,11 +1,11 @@
 {
   "name": "canva-linux",
-  "version": "1.4.10-dev.18",
-  "description": "Unofficial Canva-Linux desktop wrapper using Electron/Chromium and Flatpak",
+  "version": "1.4.10-dev.19",
+  "description": "A community opensource desktop wrapper for use with Canva",
   "main": "electron/main/index.js",
   "author": "Community",
   "license": "GPL-3.0-or-later",
-  "productName": "Canva-Linux",
+  "productName": "Canva Linux",
   "homepage": "https://www.canva.com/",
   "scripts": {
     "start": "electron .",
@@ -23,8 +23,8 @@
     "docs:check-links": "node scripts/check-doc-links.js"
   },
   "build": {
-    "appId": "com.canva.Linux",
-    "productName": "Canva-Linux",
+    "appId": "io.github.PirateMaryRead.canva-linux",
+    "productName": "Canva Linux",
     "directories": {
       "output": "dist",
       "buildResources": "build-resources"
@@ -39,9 +39,9 @@
       "executableName": "canva-linux",
       "desktop": {
         "entry": {
-          "Name": "Canva-Linux",
-          "StartupWMClass": "com.canva.Linux",
-          "X-GNOME-WMClass": "com.canva.Linux"
+          "Name": "Canva Linux",
+          "StartupWMClass": "io.github.PirateMaryRead.canva-linux",
+          "X-GNOME-WMClass": "io.github.PirateMaryRead.canva-linux"
         }
       },
       "icon": "build-resources"
@@ -57,7 +57,7 @@
     "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0"
   },
-  "desktopName": "com.canva.Linux.desktop",
+  "desktopName": "io.github.PirateMaryRead.canva-linux.desktop",
   "engines": {
     "node": ">=22.0.0"
   }

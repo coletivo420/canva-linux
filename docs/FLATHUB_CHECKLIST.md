@@ -18,6 +18,11 @@ Use this checklist before opening or updating a Flathub submission PR.
 - [ ] Screenshot URLs reviewed against the final release/tag
 - [ ] Permission review
 - [ ] Dev18 permission policy completed: kept permissions justified, ScreenSaver removed, broad permissions confirmed absent.
+- [ ] App-id uses `io.github.PirateMaryRead.canva-linux`, not `com.canva.*`.
+- [ ] MetaInfo first paragraph states community/non-verified/non-endorsed status.
+- [ ] Desktop summary uses `A community opensource desktop wrapper for use with Canva`.
+- [ ] Icon does not use official Canva logo or confusing Canva artwork.
+- [ ] Screenshots/captions do not imply official Canva publication.
 - [ ] Local install smoke test
 - [ ] Generated preload bundle reviewed as a build artifact, with modular preload source files reviewed as source
 - [ ] Bundle generation test
@@ -33,7 +38,7 @@ npm run build:preload
 ./scripts/validate-flathub-submission.sh
 flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
 ./canva-linux.sh --install --bundle
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.Linux.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.PirateMaryRead.canva-linux.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```

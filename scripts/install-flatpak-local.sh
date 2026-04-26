@@ -50,7 +50,7 @@ for arg in "$@"; do
   esac
 done
 
-info "Preparing local Flatpak install for Canva-Linux v${VERSION}"
+info "Preparing local Flatpak install for Canva Linux v${VERSION}"
 
 ## Dependency checks
 BASE_DEPS=(flatpak flatpak-builder node)
@@ -83,11 +83,11 @@ install_flatpak_direct
 cat <<'POSTINSTALL'
 
 Run commands:
-  flatpak run com.canva.Linux
-  CANVA_DEBUG=1 flatpak run com.canva.Linux
-  CANVA_DEBUG=oauth,dnd flatpak run com.canva.Linux
-  CANVA_FORCE_WAYLAND=1 flatpak run com.canva.Linux
-  CANVA_FORCE_X11=1 flatpak run com.canva.Linux
+  flatpak run io.github.PirateMaryRead.canva-linux
+  CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+  CANVA_DEBUG=oauth,dnd flatpak run io.github.PirateMaryRead.canva-linux
+  CANVA_FORCE_WAYLAND=1 flatpak run io.github.PirateMaryRead.canva-linux
+  CANVA_FORCE_X11=1 flatpak run io.github.PirateMaryRead.canva-linux
 
 Optional bundle generation (for release artifacts only):
   ./scripts/build-flatpak-bundle.sh

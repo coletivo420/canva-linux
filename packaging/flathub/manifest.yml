@@ -1,4 +1,4 @@
-app-id: com.canva.Linux
+app-id: io.github.PirateMaryRead.canva-linux
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
@@ -48,11 +48,11 @@ modules:
       - cp -a dist/linux-unpacked/* /app/main/
       - if command -v patch-electron-desktop-filename >/dev/null 2>&1; then patch-electron-desktop-filename /app/main/resources/app.asar; else patch-desktop-filename /app/main/resources/app.asar; fi
       - install -Dm755 run.sh /app/bin/run.sh
-      - install -Dm644 data/com.canva.Linux.desktop /app/share/applications/com.canva.Linux.desktop
-      - install -Dm644 data/com.canva.Linux.metainfo.xml /app/share/metainfo/com.canva.Linux.metainfo.xml
+      - install -Dm644 data/io.github.PirateMaryRead.canva-linux.desktop /app/share/applications/io.github.PirateMaryRead.canva-linux.desktop
+      - install -Dm644 data/io.github.PirateMaryRead.canva-linux.metainfo.xml /app/share/metainfo/io.github.PirateMaryRead.canva-linux.metainfo.xml
       - |
         for size in 16 22 24 32 48 64 128 256 512; do
-          install -Dm644 data/icons/hicolor/${size}x${size}/apps/com.canva.Linux.png /app/share/icons/hicolor/${size}x${size}/apps/com.canva.Linux.png;
+          install -Dm644 data/icons/hicolor/${size}x${size}/apps/io.github.PirateMaryRead.canva-linux.png /app/share/icons/hicolor/${size}x${size}/apps/io.github.PirateMaryRead.canva-linux.png;
         done
     sources:
       - type: archive

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document explains the current Canva-Linux local Flatpak manifest source workflow and what must change before a final Flathub submission.
+This document explains the current Canva Linux local Flatpak manifest source workflow and what must change before a final Flathub submission.
 
 ## Current local manifest workflow
 
@@ -63,7 +63,7 @@ That folder contains:
 - `scripts/generate-npm-sources.sh` (helper wrapper) and `scripts/generate-npm-sources.js` (lockfile-to-manifest generator)
 - `scripts/prepare-flathub-submission.sh` and `scripts/validate-flathub-submission.sh` (submission-path automation)
 
-The repository-root `com.canva.Linux.yml` is the canonical **local** workflow manifest used by `./canva-linux.sh`.
+The repository-root `io.github.PirateMaryRead.canva-linux.yml` is the canonical **local** workflow manifest used by `./canva-linux.sh`.
 
 The submission manifest in `packaging/flathub/manifest.yml` uses a pinned public archive (`type: archive` + `sha256`) and generates `dist/linux-unpacked` inside the Flatpak build sandbox.
 

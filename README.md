@@ -1,13 +1,17 @@
-# Canva-Linux - Flatpak + Electron
+# Canva Linux - Flatpak + Electron
 
-An unofficial Canva-Linux desktop wrapper using Electron/Chromium and Flatpak.
+A community opensource desktop wrapper for use with Canva.
 
-This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
+Canva Linux is community-maintained, open source, and not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd.
 
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10.dev19 (branding/trademark/app-id/metainfo finalization strategy)
+Next: 1.4.10.dev19 (community branding, trademark-safe wording, app-id migration, and MetaInfo finalization)
+
+## Community package status
+
+Canva Linux is a community-maintained open source package for use with Canva. It is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd. References to Canva describe the upstream web service this wrapper is built to access.
 
 ## Development (1.4.10.devX)
 
@@ -27,7 +31,7 @@ Goal: prepare the project for Flathub submission while introducing small, review
 
 `1.4.10.dev16` focused on Flathub follow-up hardening and packaging resilience after the testing foundation landed.
 
-`1.4.10.dev17` standardized the public project identity around **Canva-Linux** and migrated the Flatpak app-id to `com.canva.Linux`.
+`1.4.10.dev17` standardized the public project identity around **Canva Linux** and migrated the Flatpak app-id to `io.github.PirateMaryRead.canva-linux`.
 
 `1.4.10.dev18` consolidated the Flatpak permission policy with portal-first guardrails and explicit rationale for retained runtime permissions.
 
@@ -41,10 +45,10 @@ Planned phase map:
 - `1.4.10.dev14` - light wiring/integration tests for the main-process tab flow
 - `1.4.10.dev15` - Electron smoke test coverage with Playwright
 - `1.4.10.dev16` - Flathub-facing follow-up adjustments after the testing foundation is in place
-- `1.4.10.dev17` - public naming cleanup to Canva-Linux with app-id migration to `com.canva.Linux`
-- `1.4.10.dev18` - final permissions policy consolidation for Canva-Linux
+- `1.4.10.dev17` - public naming cleanup to Canva Linux with app-id migration to `io.github.PirateMaryRead.canva-linux`
+- `1.4.10.dev18` - final permissions policy consolidation for Canva Linux
 - `1.4.10.dev18B` - nomenclature normalization for phase/branch/documentation identifiers
-- `1.4.10.dev19` - branding/trademark/app-id/metainfo finalization strategy
+- `1.4.10.dev19` - community branding, trademark-safe wording, app-id migration, and MetaInfo finalization
 - `1.4.10.dev20` - final validation of submission manifest path
 - `1.4.10.dev21` - RC/stable closure work
 
@@ -123,10 +127,15 @@ Actions can be chained and run in the order provided:
 - `--bundle` is for generating GitHub release `.flatpak` artifacts.
 - `--bundle` rebuilds the Electron output and Flatpak repo before creating the artifact.
 - Flathub submission remains a separate process and should not require `.flatpak` bundle generation.
-- Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `com.canva.Linux.yml`.
+- Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `io.github.PirateMaryRead.canva-linux.yml`.
 - `--reset-user-data` removes login state and OAuth/session cookies.
 
-Migration note: `com.canva.Linux*` identifiers are now the active app identity across Flatpak metadata, filenames, icons, and WMClass fields. Existing installs using the previous app-id require manual migration/reinstall planning.
+Migration note: development builds before `1.4.10.dev19` used `com.canva.Linux`. The active Flathub-facing app-id is now `io.github.PirateMaryRead.canva-linux`.
+
+```bash
+flatpak uninstall com.canva.Linux
+flatpak run io.github.PirateMaryRead.canva-linux
+```
 
 ## Flathub Status
 

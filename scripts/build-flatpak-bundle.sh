@@ -65,7 +65,7 @@ repo_has_app_ref() {
 
 ## Ensure valid Flatpak repository exists
 if [[ "$USE_EXISTING_REPO" == true ]]; then
-  repo_has_app_ref || err "repo/ is missing or does not contain com.canva.Linux refs"
+  repo_has_app_ref || err "repo/ is missing or does not contain io.github.PirateMaryRead.canva-linux refs"
   info "Using existing repo/ directory by explicit request"
 else
   ensure_flathub_runtime
@@ -76,7 +76,7 @@ fi
 
 ## Create distributable bundle
 mkdir -p "$DIST_DIR"
-flatpak build-bundle repo "$BUNDLE_PATH" com.canva.Linux \
+flatpak build-bundle repo "$BUNDLE_PATH" io.github.PirateMaryRead.canva-linux \
   --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 
 SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH")"

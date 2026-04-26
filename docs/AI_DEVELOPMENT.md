@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.18` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10.dev19` cycle.
 
 ## Language and communication conventions
 
@@ -27,6 +27,10 @@ This document defines project conventions for AI-assisted development and vibeco
 
 - Do not add broad Flatpak permissions such as `--filesystem=home`, `--device=all`, `--socket=session-bus`, or `--socket=system-bus` without explicit maintainer approval and documented validation rationale.
 - Do not re-add explicit `--talk-name=org.freedesktop.portal.Desktop`; portal access should remain portal-mediated unless a specific technical requirement is documented.
+- Use `Canva Linux` as the public project name and `A community opensource desktop wrapper for use with Canva` as the short descriptive phrase.
+- Do not describe the app as official, verified, endorsed, certified, or supported by Canva Pty Ltd unless the statement is explicitly negated.
+- Do not use the `com.canva.*` namespace for app-id, desktop, metainfo, icon, or WMClass in active packaging files.
+- Keep the Flathub-facing app-id as `io.github.PirateMaryRead.canva-linux` unless the maintainer explicitly changes it.
 
 ## Custom colorpicker directive
 
@@ -77,23 +81,24 @@ After meaningful refactors, update the relevant repository documentation so futu
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.18 = Flatpak permission policy consolidation with portal-first guidance, strict prohibition of broad sandbox access, and explicit runtime-flow justification for retained permissions.`
+`1.4.10.dev19 = community branding, trademark-safe wording, app-id migration, and MetaInfo/documentation finalization while preserving the dev18 permission policy.`
 
 ## Planned phase roadmap
 
-The `1.4.10-dev.X` cycle now follows an explicit phased plan:
+The `1.4.10.devX` human-facing cycle now follows an explicit phased plan:
 
-- `1.4.10-dev.10` - preparation: documentation, roadmap, and AI/vibecoding guidance
-- `1.4.10-dev.11` - extract the window-open policy into a testable module
-- `1.4.10-dev.12` - add unit tests with `node:test`
-- `1.4.10-dev.14` - add light wiring/integration tests for the main-process tab flow
-- `1.4.10-dev.15` - add Electron smoke tests with Playwright
-- `1.4.10-dev.16` - finalize follow-up Flathub adaptations after the testing foundation lands
-- `1.4.10-dev.17` - public naming cleanup and project identity standardization
-- `1.4.10-dev.18` - final permissions policy consolidation for Canva-Linux
-- `1.4.10-dev.19` - branding/trademark/app-id/metainfo finalization strategy
-- `1.4.10-dev.20` - final submission-manifest validation pass
-- `1.4.10-dev.21` - RC/stable closure work
+- `1.4.10.dev10` - preparation: documentation, roadmap, and AI/vibecoding guidance
+- `1.4.10.dev11` - extract the window-open policy into a testable module
+- `1.4.10.dev12` - add unit tests with `node:test`
+- `1.4.10.dev14` - add light wiring/integration tests for the main-process tab flow
+- `1.4.10.dev15` - add Electron smoke tests with Playwright
+- `1.4.10.dev16` - finalize follow-up Flathub adaptations after the testing foundation lands
+- `1.4.10.dev17` - public naming cleanup and project identity standardization
+- `1.4.10.dev18` - final permissions policy consolidation for Canva Linux
+- `1.4.10.dev18B` - nomenclature normalization for phase/branch/documentation identifiers
+- `1.4.10.dev19` - branding/trademark/app-id/metainfo finalization strategy
+- `1.4.10.dev20` - final submission-manifest validation pass
+- `1.4.10.dev21` - RC/stable closure work
 
 Patch intent rules for this phased plan:
 
@@ -105,6 +110,7 @@ Patch intent rules for this phased plan:
 - `dev.16` and later Flathub-facing patches should keep test scaffolding stable unless explicitly required by packaging or CI
 - dev.17 includes naming cleanup work, documentation alignment after the rename, and the Flatpak app-id identity migration
 - dev.18 should focus on permission policy consolidation and explicit rationale updates
+- dev.18B should normalize human-facing phase/branch/documentation naming to `1.4.10.devX` while keeping package SemVer formatting as `1.4.10-dev.X`
 - dev.19 should finalize branding/trademark strategy and verify user-data compatibility after the migration
 - `dev.20` should finalize submission-manifest validation before release-candidate closure
 - `dev.21` should close RC/stable tasks and release documentation
@@ -120,10 +126,10 @@ Format:
 
 Examples:
 
-- `dev/1.4.10-dev.7`
-- `dev/1.4.10-dev.9`
-- `dev/1.4.10-dev.5`
-- `dev/1.4.10-rc.1`
+- `dev/1.4.10.dev19`
+- `dev/1.4.10.dev20`
+- `dev/1.4.10.dev18B`
+- `dev/1.4.10.rc1`
 
 Rules:
 

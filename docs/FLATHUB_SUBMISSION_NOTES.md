@@ -1,10 +1,18 @@
-# Flathub Submission Notes (dev17)
+# Flathub Submission Notes (dev19)
+
+## Community package and trademark position
+
+Canva Linux is submitted as a community-maintained open source desktop wrapper for use with Canva.
+
+The package is not verified by Canva Pty Ltd and does not claim official status, endorsement, certification, or support. The app-id uses the maintainer-controlled GitHub namespace `io.github.PirateMaryRead.canva-linux`, not the `com.canva` namespace.
+
+References to Canva are descriptive and identify the upstream web service the wrapper accesses.
 
 ## Policy context: risk of "simple web wrapper"
 
 Flathub policy rejects **simple web wrappers** that only embed a web engine and load a remote website without meaningful desktop behavior.
 
-This app is web-based, but the Canva-Linux desktop package includes non-trivial Linux/Electron behavior beyond a trivial wrapper.
+This app is web-based, but the Canva Linux desktop package includes non-trivial Linux/Electron behavior beyond a trivial wrapper.
 
 ## Functional rationale (non-trivial behavior)
 

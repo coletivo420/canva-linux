@@ -4,11 +4,11 @@
 
 `1.4.10-dev.18` is a sandbox consolidation and justification phase.
 
-This is **not** an aggressive permission-pruning pass. The goal is to preserve a functional Canva-Linux runtime (login persistence, upload/export, video/audio workflows, webcam/microphone compatibility, and desktop integration) while removing only permissions without a strong functional rationale.
+This is **not** an aggressive permission-pruning pass. The goal is to preserve a functional Canva Linux runtime (login persistence, upload/export, video/audio workflows, webcam/microphone compatibility, and desktop integration) while removing only permissions without a strong functional rationale.
 
 ## Portal-first policy
 
-Canva-Linux remains **portal-first** for user-selected file access and desktop mediation.
+Canva Linux remains **portal-first** for user-selected file access and desktop mediation.
 
 - Keep narrow, workflow-driven permissions.
 - Do not add broad filesystem or broad bus access without explicit maintainer approval.
@@ -17,7 +17,7 @@ Canva-Linux remains **portal-first** for user-selected file access and desktop m
 
 ## Runtime permission baseline (must match in both manifests)
 
-Current policy for both `com.canva.Linux.yml` and `packaging/flathub/manifest.yml`:
+Current policy for both `io.github.PirateMaryRead.canva-linux.yml` and `packaging/flathub/manifest.yml`:
 
 ```yaml
 finish-args:
@@ -81,7 +81,7 @@ After permission updates, run at minimum:
 Optional session-storage diagnostic:
 
 ```bash
-CANVA_DEBUG=session flatpak run com.canva.Linux
+CANVA_DEBUG=session flatpak run io.github.PirateMaryRead.canva-linux
 ```
 
 ## Guardrails
