@@ -34,7 +34,9 @@ else
 fi
 
 if command -v appstreamcli >/dev/null 2>&1; then
-  run_step "appstreamcli validate --explain" appstreamcli validate --explain data/io.github.PirateMaryRead.canva-linux.metainfo.xml
+  run_step "appstreamcli validate --explain" \
+  appstreamcli validate --explain \
+  data/io.github.PirateMaryRead.canva-linux.metainfo.xml
 else
   log_info "appstreamcli not found, skipping"
 fi
