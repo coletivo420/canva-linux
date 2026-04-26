@@ -60,7 +60,7 @@ done
 
 ## Repo helpers
 repo_has_app_ref() {
-  [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/com\.canva\.Linux/'
+  [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/io\.github\.PirateMaryRead\.canva-linux/'
 }
 
 ## Ensure valid Flatpak repository exists
