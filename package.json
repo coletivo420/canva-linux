@@ -1,6 +1,6 @@
 {
   "name": "canva-linux",
-  "version": "1.4.10-dev.20",
+  "version": "1.4.10",
   "description": "A community opensource desktop wrapper for use with Canva",
   "main": "electron/main/index.js",
   "author": "Community",

@@ -1,10 +1,10 @@
-# Manual Validation — 1.4.10-dev.17
+# Manual Validation — 1.4.10 Release
 
 This document defines the manual validation routine for the current development cycle.
 
 ## Validation scope
 
-`1.4.10-dev.17` is a naming-alignment and Flathub-readiness pass that keeps runtime behavior stable while standardizing public project identity as Canva Linux.
+`1.4.10` is the release-closure validation pass for the consolidated JavaScript cycle.
 
 Expected outcome:
 
