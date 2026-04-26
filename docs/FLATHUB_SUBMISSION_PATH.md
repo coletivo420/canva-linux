@@ -2,11 +2,11 @@
 
 ## Objective
 
-Keep local Canva-Linux development/bundle workflow and Flathub submission workflow separate.
+Keep local Canva Linux development/bundle workflow and Flathub submission workflow separate.
 
 The local and Flathub-submission manifests must keep the same runtime permission policy unless a future patch documents a submission-specific exception.
 
-- Local workflow (unchanged): repository-root `com.canva.Linux.yml` + `./canva-linux.sh`.
+- Local workflow (unchanged): repository-root `io.github.PirateMaryRead.canva-linux.yml` + `./canva-linux.sh`.
 - Submission workflow (new path): `packaging/flathub/manifest.yml` + generated npm source manifest + submission scripts.
 
 ## Flow boundaries (dev18)
@@ -49,6 +49,6 @@ The current `packaging/flathub/manifest.yml` should be treated as a **submission
 # validate-flathub-submission.sh runs:
 # flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
 # flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
-# flatpak run --command=appstreamcli org.flatpak.Builder validate --pedantic --no-net data/com.canva.Linux.metainfo.xml
+# flatpak run --command=appstreamcli org.flatpak.Builder validate --pedantic --no-net data/io.github.PirateMaryRead.canva-linux.metainfo.xml
 # flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```

@@ -111,9 +111,9 @@ docs/PRIVACY.md|privacy documentation
 docs/FLATHUB_CHECKLIST.md|Flathub checklist
 docs/FLATHUB_SOURCE.md|Flathub source strategy documentation
 docs/FLATPAK_PERMISSIONS.md|permission review documentation
-com.canva.Linux.yml|Flatpak manifest
-data/com.canva.Linux.metainfo.xml|AppStream metadata
-data/com.canva.Linux.desktop|desktop entry metadata
+io.github.PirateMaryRead.canva-linux.yml|Flatpak manifest
+data/io.github.PirateMaryRead.canva-linux.metainfo.xml|AppStream metadata
+data/io.github.PirateMaryRead.canva-linux.desktop|desktop entry metadata
 REQUIRED_FILES
 
 ## Flatpak permission policy guardrails (dev18)
@@ -121,7 +121,7 @@ node - <<'NODE'
 const fs = require('node:fs');
 
 const manifests = [
-  'com.canva.Linux.yml',
+  'io.github.PirateMaryRead.canva-linux.yml',
   'packaging/flathub/manifest.yml',
 ];
 
@@ -191,12 +191,66 @@ console.log('Permission guardrails passed for both manifests.');
 NODE
 ok "Permission guardrails passed (forbidden absent + required present + manifest parity)"
 
+## Branding/app-id guardrails (dev19)
+node - <<'NODE'
+const fs = require('node:fs');
+
+const checks = [
+  ['io.github.PirateMaryRead.canva-linux.yml', 'app-id: io.github.PirateMaryRead.canva-linux'],
+  ['packaging/flathub/manifest.yml', 'app-id: io.github.PirateMaryRead.canva-linux'],
+  ['data/io.github.PirateMaryRead.canva-linux.desktop', 'Name=Canva Linux'],
+  ['data/io.github.PirateMaryRead.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
+  ['data/io.github.PirateMaryRead.canva-linux.metainfo.xml', '<id>io.github.PirateMaryRead.canva-linux</id>'],
+  ['data/io.github.PirateMaryRead.canva-linux.metainfo.xml', '<summary>A community opensource desktop wrapper for use with Canva</summary>'],
+];
+
+for (const [filePath, token] of checks) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  if (!content.includes(token)) {
+    console.error(`${filePath}: missing required token: ${token}`);
+    process.exit(1);
+  }
+}
+
+const forbiddenActive = [
+  'com.canva.Linux',
+  'com.canva.WebApp',
+];
+
+const activeFiles = [
+  'package.json',
+  'electron/main/index.js',
+  'io.github.PirateMaryRead.canva-linux.yml',
+  'packaging/flathub/manifest.yml',
+  'run.sh',
+  'canva-linux.sh',
+  'scripts/install-flatpak-local.sh',
+  'scripts/build-flatpak-bundle.sh',
+  'scripts/flatpak-build-common.sh',
+  'scripts/prepare-flathub-submission.sh',
+  'data/io.github.PirateMaryRead.canva-linux.desktop',
+];
+
+for (const filePath of activeFiles) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  for (const token of forbiddenActive) {
+    if (content.includes(token)) {
+      console.error(`${filePath}: forbidden legacy token present: ${token}`);
+      process.exit(1);
+    }
+  }
+}
+
+console.log('Branding/app-id guardrails passed for active packaging files.');
+NODE
+ok "Branding/app-id guardrails passed"
+
 ## Flatpak install status
 if command -v flatpak >/dev/null 2>&1; then
-  if flatpak --user info com.canva.Linux >/dev/null 2>&1 || flatpak info com.canva.Linux >/dev/null 2>&1; then
-    ok "com.canva.Linux is installed"
+  if flatpak --user info io.github.PirateMaryRead.canva-linux >/dev/null 2>&1 || flatpak info io.github.PirateMaryRead.canva-linux >/dev/null 2>&1; then
+    ok "io.github.PirateMaryRead.canva-linux is installed"
   else
-    warn "com.canva.Linux is not installed locally"
+    warn "io.github.PirateMaryRead.canva-linux is not installed locally"
   fi
 else
   warn "flatpak command not found; Flatpak-based checks skipped"
@@ -206,14 +260,14 @@ fi
 ## Optional desktop file validation
 if check_optional_command desktop-file-validate "Desktop file validator"; then
   info "Running desktop-file-validate"
-  desktop-file-validate data/com.canva.Linux.desktop
+  desktop-file-validate data/io.github.PirateMaryRead.canva-linux.desktop
   ok "Desktop entry validation passed"
 fi
 
 ## Optional AppStream validation
 if check_optional_command appstreamcli "AppStream validator"; then
   info "Running appstreamcli validate --explain"
-  appstreamcli validate --explain data/com.canva.Linux.metainfo.xml
+  appstreamcli validate --explain data/io.github.PirateMaryRead.canva-linux.metainfo.xml
   ok "AppStream metadata validation passed"
 fi
 
@@ -221,7 +275,7 @@ fi
 if command -v flatpak >/dev/null 2>&1; then
   if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
     info "Running flatpak-builder-lint manifest"
-    flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.Linux.yml
+    flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.PirateMaryRead.canva-linux.yml
     ok "Manifest lint passed"
 
     if [[ -d repo ]]; then

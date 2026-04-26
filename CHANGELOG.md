@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.19] - 2026-04-26
+
+### Changed
+- Migrated active Flatpak app-id, desktop/metainfo filenames, icon identifiers, and runtime WMClass usage from `com.canva.Linux` to `io.github.PirateMaryRead.canva-linux`.
+- Standardized the public project name as `Canva Linux` and aligned package metadata wording to `A community opensource desktop wrapper for use with Canva`.
+- Updated local and Flathub manifests, launch/runtime scripts, validation helpers, and documentation to use the new app-id and naming guidance.
+- Added dev19 branding/app-id validation guardrails in `scripts/validate-flatpak.sh` and `scripts/validate-flathub-submission.sh`.
+- Updated AppStream metadata with an explicit community/non-endorsed disclaimer and added `<replaces><id>com.canva.Linux</id></replaces>` for migration context.
+
+### Notes
+- Development builds before `1.4.10.dev19` used `com.canva.Linux`.
+- The Flathub-facing app-id is now `io.github.PirateMaryRead.canva-linux`; existing local installs should uninstall the old ID before installing the new one.
+- Flatpak permission policy from `1.4.10-dev.18` remains unchanged in this phase.
+
 ## [1.4.10-dev.18] - 2026-04-26
 
 ### Changed
@@ -10,6 +24,7 @@ All notable changes to this project are documented in this file.
 - Removed `--talk-name=org.freedesktop.ScreenSaver` from both Flatpak manifests because no required Canva-Linux runtime flow currently depends on direct ScreenSaver D-Bus access.
 - Documented permissions that must not be added without explicit maintainer review: broad home access, full device access, broad session/system bus sockets, and explicit portal bus access.
 - Added validation guards that fail when forbidden permissions reappear or required runtime permissions are missing in either manifest.
+- Standardized human-facing phase and branch naming to `1.4.10.devX` while preserving SemVer package versions as `1.4.10-dev.X`.
 
 ### Notes
 - This is the final permissions consolidation pass before branding/trademark and final submission validation work.

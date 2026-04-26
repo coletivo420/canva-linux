@@ -1,6 +1,6 @@
 # Screenshots planning
 
-This file tracks the real Canva-Linux screenshot set prepared for AppStream metadata and future Flathub submission review.
+This file tracks the real Canva Linux screenshot set prepared for AppStream metadata and future Flathub submission review.
 
 ## Current status
 

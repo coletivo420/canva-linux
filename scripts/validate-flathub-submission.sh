@@ -61,7 +61,7 @@ node - <<'NODE'
 const fs = require('node:fs');
 
 const manifests = [
-  'com.canva.Linux.yml',
+  'io.github.PirateMaryRead.canva-linux.yml',
   'packaging/flathub/manifest.yml',
 ];
 
@@ -130,6 +130,60 @@ if (localOnly.length || submissionOnly.length) {
 console.log('Permission guardrails passed for both manifests.');
 NODE
 ok "Permission guardrails passed (forbidden absent + required present + manifest parity)"
+
+## Branding/app-id guardrails (dev19)
+node - <<'NODE'
+const fs = require('node:fs');
+
+const checks = [
+  ['io.github.PirateMaryRead.canva-linux.yml', 'app-id: io.github.PirateMaryRead.canva-linux'],
+  ['packaging/flathub/manifest.yml', 'app-id: io.github.PirateMaryRead.canva-linux'],
+  ['data/io.github.PirateMaryRead.canva-linux.desktop', 'Name=Canva Linux'],
+  ['data/io.github.PirateMaryRead.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
+  ['data/io.github.PirateMaryRead.canva-linux.metainfo.xml', '<id>io.github.PirateMaryRead.canva-linux</id>'],
+  ['data/io.github.PirateMaryRead.canva-linux.metainfo.xml', '<summary>A community opensource desktop wrapper for use with Canva</summary>'],
+];
+
+for (const [filePath, token] of checks) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  if (!content.includes(token)) {
+    console.error(`${filePath}: missing required token: ${token}`);
+    process.exit(1);
+  }
+}
+
+const forbiddenActive = [
+  'com.canva.Linux',
+  'com.canva.WebApp',
+];
+
+const activeFiles = [
+  'package.json',
+  'electron/main/index.js',
+  'io.github.PirateMaryRead.canva-linux.yml',
+  'packaging/flathub/manifest.yml',
+  'run.sh',
+  'canva-linux.sh',
+  'scripts/install-flatpak-local.sh',
+  'scripts/build-flatpak-bundle.sh',
+  'scripts/flatpak-build-common.sh',
+  'scripts/prepare-flathub-submission.sh',
+  'data/io.github.PirateMaryRead.canva-linux.desktop',
+];
+
+for (const filePath of activeFiles) {
+  const content = fs.readFileSync(filePath, 'utf8');
+  for (const token of forbiddenActive) {
+    if (content.includes(token)) {
+      console.error(`${filePath}: forbidden legacy token present: ${token}`);
+      process.exit(1);
+    }
+  }
+}
+
+console.log('Branding/app-id guardrails passed for active packaging files.');
+NODE
+ok "Branding/app-id guardrails passed"
 
 node - <<'NODE'
 const fs = require('node:fs');
@@ -211,7 +265,7 @@ if command -v flatpak >/dev/null 2>&1; then
     SOURCE_TREE="$(find "${APPSTREAM_TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n1)"
     [[ -n "${SOURCE_TREE}" ]] || err "Unable to determine extracted source directory"
 
-    METAINFO_PATH="${SOURCE_TREE}/data/com.canva.Linux.metainfo.xml"
+    METAINFO_PATH="${SOURCE_TREE}/data/io.github.PirateMaryRead.canva-linux.metainfo.xml"
     [[ -f "${METAINFO_PATH}" ]] || err "Metainfo file not found in pinned source archive"
 
     info "Running AppStream metainfo validation (warnings/errors treated as fatal)"

@@ -6,7 +6,7 @@ This checklist is intended for maintainer validation of the current `1.4.10-dev.
 
 - [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.10-dev.17`.
 - [ ] Confirm `CHANGELOG.md` contains the `1.4.10-dev.17` entry.
-- [ ] Confirm documentation reflects the Canva-Linux naming standardization and generated Canva preload bundle workflow.
+- [ ] Confirm documentation reflects the Canva Linux naming standardization and generated Canva preload bundle workflow.
 
 ## 2) Runtime stability guardrails
 
