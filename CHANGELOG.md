@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.10-dev.18] - 2026-04-26
+
+### Changed
+- Consolidated Flatpak permission policy for Canva-Linux based on real workflows including login persistence, upload/export, media playback, video editing, microphone/webcam compatibility, and desktop integration.
+- Kept the local and Flathub-submission manifests aligned on the same runtime sandbox permission policy.
+- Removed `--talk-name=org.freedesktop.ScreenSaver` from both Flatpak manifests because no required Canva-Linux runtime flow currently depends on direct ScreenSaver D-Bus access.
+- Documented permissions that must not be added without explicit maintainer review: broad home access, full device access, broad session/system bus sockets, and explicit portal bus access.
+- Added validation guards that fail when forbidden permissions reappear or required runtime permissions are missing in either manifest.
+
+### Notes
+- This is the final permissions consolidation pass before branding/trademark and final submission validation work.
+- Runtime behavior should be manually validated for login, upload, export, video editing, audio, microphone/webcam capture, and custom eyedropper flows.
+
 ## [1.4.10-dev.17] - 2026-04-25
 
 ### Changed
@@ -12,6 +25,7 @@ All notable changes to this project are documented in this file.
 - Aligned core documentation and release/validation checklists to the `1.4.10-dev.17` naming-alignment phase.
 - Added post-dev17 roadmap planning (`dev18` through `dev21`) covering permissions, app-id/branding strategy, submission-manifest final validation, and RC/stable closure.
 - Migrated Flatpak identity to `com.canva.Linux` (app-id, desktop/metainfo filenames, icon identifiers, and WMClass fields) for full branding alignment.
+- Finalized documentation alignment after the rename, including `README.md` next-phase transition to `1.4.10-dev.18` and AI workflow guidance updates for the dev17→dev18 handoff.
 
 ### Notes
 - This patch includes an app-id identity migration and may require manual reinstall or user-data migration handling for environments previously using the old app-id.

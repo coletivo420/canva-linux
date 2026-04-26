@@ -1,112 +1,95 @@
-# Flatpak Permissions
+# Flatpak Permissions (dev18)
 
-## Overview
+## Dev18 objective
 
-This document records the current `finish-args` in `com.canva.Linux.yml` and explains why each permission exists in the `1.4.10-dev.17` Flathub validation cycle.
+`1.4.10-dev.18` is a sandbox consolidation and justification phase.
 
-Goal for this pass:
+This is **not** an aggressive permission-pruning pass. The goal is to preserve a functional Canva-Linux runtime (login persistence, upload/export, video/audio workflows, webcam/microphone compatibility, and desktop integration) while removing only permissions without a strong functional rationale.
 
-- keep current runtime behavior stable;
-- improve permission traceability for maintainers;
-- prepare future Flathub review with clear, minimal-sandbox intent.
+## Portal-first policy
 
-This remains a documentation and review pass, not a blind permission-removal pass. Broad home-directory access (`--filesystem=home`) remains absent in the current manifest.
+Canva-Linux remains **portal-first** for user-selected file access and desktop mediation.
 
-The `1.4.10-dev.17` naming cleanup and prior preload/eyedropper fixes do not add new Flatpak permissions. The custom picker remains routed through the bundled `ltcodedev/eyedropper` flow using the existing app tab snapshot bridge, not a new desktop portal or native system color picker permission path.
+- Keep narrow, workflow-driven permissions.
+- Do not add broad filesystem or broad bus access without explicit maintainer approval.
+- Keep media compatibility paths (PulseAudio/PipeWire) aligned with Chromium/Electron runtime needs.
+- Treat explicit `--talk-name=org.freedesktop.portal.Desktop` as forbidden unless a concrete technical requirement is documented.
 
-## Current finish-args
+## Runtime permission baseline (must match in both manifests)
 
-Current manifest permissions:
+Current policy for both `com.canva.Linux.yml` and `packaging/flathub/manifest.yml`:
 
-- `--share=network`
-- `--share=ipc`
-- `--device=dri`
-- `--socket=wayland`
-- `--socket=fallback-x11`
-- `--socket=pulseaudio`
-- `--filesystem=xdg-run/pipewire-0`
-- `--filesystem=xdg-download`
-- `--talk-name=org.freedesktop.FileManager1`
-- `--talk-name=org.freedesktop.ScreenSaver`
-- `--talk-name=org.freedesktop.secrets`
-- `--env=ELECTRON_TRASH=gio`
-- `--env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons`
+```yaml
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --device=dri
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --filesystem=xdg-run/pipewire-0
+  - --filesystem=xdg-download
+  - --talk-name=org.freedesktop.FileManager1
+  - --talk-name=org.freedesktop.secrets
+  - --env=ELECTRON_TRASH=gio
+  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
+```
 
-## Required permissions
+## Permission decision table
 
-These are considered required for current behavior:
+| Permission | Decision | Functional reason | Validation flow |
+|---|---|---|---|
+| `--share=network` | keep | Canva web/API access for login, editor sync, assets, upload/export APIs | app load, login, editor |
+| `--share=ipc` | keep | Electron/Chromium runtime stability, especially with X11/XWayland fallback | app launch, Wayland/X11 fallback |
+| `--device=dri` | keep | GPU/WebGL/video acceleration for canvas/editor/video flows | editor rendering, video playback |
+| `--socket=wayland` | keep | native Wayland display support | Wayland launch |
+| `--socket=fallback-x11` | keep | X11/XWayland fallback compatibility | X11 fallback launch |
+| `--socket=pulseaudio` | keep | audio playback + microphone compatibility in multimedia flows | video/audio preview, voice recording |
+| `--talk-name=org.freedesktop.secrets` | keep | secure credential/session integration via Secret Service | OAuth, restart session |
+| `--filesystem=xdg-download` | keep | narrow export/download path for generated files | PNG/PDF/MP4 export |
+| `--filesystem=xdg-run/pipewire-0` | keep | PipeWire compatibility for webcam/screencast/WebRTC flows (portal-first) | webcam/screen recorder |
+| `--talk-name=org.freedesktop.FileManager1` | keep | desktop file-manager integration (open export/download location) | open/export location |
+| `--talk-name=org.freedesktop.ScreenSaver` | remove | no required direct runtime dependency confirmed | long playback smoke |
+| `--filesystem=home` | forbidden | broad filesystem access not required | ensure absent |
+| `--device=all` | forbidden | broad device access not required | ensure absent |
+| `--socket=session-bus` | forbidden | broad D-Bus access not required | ensure absent |
+| `--socket=system-bus` | forbidden | broad system-bus access not required | ensure absent |
+| `--talk-name=org.freedesktop.portal.Desktop` | forbidden | explicit portal bus access not required | ensure absent |
 
-- `--share=network`: required for Canva-Linux app traffic and API access.
-- `--share=ipc`: common Chromium/Electron runtime requirement.
-- `--device=dri`: GPU acceleration support where host/runtime allow it.
-- `--socket=wayland`: preferred Linux display path.
-- `--socket=fallback-x11`: X11/XWayland fallback expected by Flathub lint guidance.
-- `--socket=pulseaudio`: audio playback support.
-- `--filesystem=xdg-download`: practical import/export path for common user workflows.
+## Functional rationale by Canva workflow
 
-## Optional or review-needed permissions
+- **Login/session persistence**: requires `--share=network` + `--talk-name=org.freedesktop.secrets`.
+- **Editor rendering/video performance**: requires `--device=dri` + display sockets.
+- **Upload/export flows**: portal-first access with `--filesystem=xdg-download` for practical output handling.
+- **Audio/video/media creation**: `--socket=pulseaudio` and `--filesystem=xdg-run/pipewire-0` preserved for compatibility.
+- **Desktop integration**: `--talk-name=org.freedesktop.FileManager1` kept for open-location interactions.
 
-These should be reviewed in future passes but are currently kept to avoid behavior regressions:
+## Minimal manual validation checklist (dev18)
 
-- `--filesystem=xdg-run/pipewire-0` (**under review**): may be optional depending on confirmed runtime media features.
-- `--talk-name=org.freedesktop.FileManager1` (**review-needed**): used for desktop integration flows; verify if fully replaceable via portals.
-- `--talk-name=org.freedesktop.ScreenSaver` (**review-needed**): keep until sleep/idle behavior is validated without it.
-- `--talk-name=org.freedesktop.secrets` (**review-needed**): keep for current secret-service compatibility assumptions.
-- host font read-only paths (**removed**): `xdg-data/fonts`, `~/.fonts`, and `xdg-config/fontconfig` were removed because Flathub lint flags them as unnecessary or legacy font access.
-- `--talk-name=org.freedesktop.portal.Desktop` (**removed**): explicit portal bus access was removed because Flatpak portal mediation is available without declaring the portal bus name as a finish-arg.
+After permission updates, run at minimum:
 
-## Flathub lint considerations
+- app launch
+- Google/OAuth login
+- restart-session persistence
+- image/video upload
+- PNG/JPG/PDF and MP4 export
+- video/audio playback
+- microphone/webcam/screen-recorder flows where available
+- custom eyedropper flow
+- no new runtime error tied to ScreenSaver permission removal
 
-Flathub lint and policy reviews typically flag broad permissions such as:
+Optional session-storage diagnostic:
 
-- arbitrary `--socket=session-bus` or `--socket=system-bus`;
-- broad host filesystem access (`home`, `host`) without clear justification;
-- explicit `org.freedesktop.portal.Desktop` talk-name access;
-- legacy host font filesystem access;
-- missing `fallback-x11` when `wayland` is used.
+```bash
+CANVA_DEBUG=session flatpak run com.canva.Linux
+```
 
-Current manifest state for this repo:
+## Guardrails
 
-- does **not** use broad session/system bus sockets;
-- includes `wayland` plus `fallback-x11`;
-- removes broad home-directory filesystem access and relies on portals + narrower paths.
-- omits explicit portal bus access and legacy host font filesystem access.
+Do not add these without explicit maintainer approval and documented rationale:
 
-## Known limitations
-
-- Permission minimization is constrained by real Canva web import/export behavior inside sandboxed Electron.
-- Desktop environment differences (Wayland/X11/XWayland, compositor, portals) can affect which permissions are truly removable.
-- This cycle intentionally does not change native OAuth popup icon behavior on Linux/Wayland.
-
-## Local GitHub bundle vs future Flathub packaging
-
-- Local GitHub workflow builds `dist/canva-linux-$VERSION.flatpak` from this repo.
-- Future Flathub submission is a separate review process in `flathub/flathub` with policy and lint scrutiny.
-- A permission accepted for local testing may still require tightening for Flathub acceptance.
-
-## Future review checklist
-
-Before changing manifest permissions:
-
-1. Run `./scripts/validate-flatpak.sh`.
-2. Validate upload/import/export flows in real sandbox sessions.
-3. Prefer narrowing broad filesystem permissions incrementally.
-4. Re-run Flathub lint checks after each permission change.
-5. Record rationale in this document and `CHANGELOG.md`.
-
-## Flathub preparation status tie-in
-
-- Permission intent is documented and should stay minimal for reviewer trust.
-- GitHub `.flatpak` bundle release and Flathub submission remain separate processes.
-- Current non-permission blockers are final Flathub submission/review work and OAuth provider validation beyond Google.
-
-
-## Portal-first file access
-
-The manifest prefers Flatpak portal-based file access for uploads/downloads where possible.
-Broad home-directory access is intentionally avoided for Flathub readiness.
-
-
-## OAuth validation scope
-
-Google OAuth remains maintainer-tested. Other OAuth providers use the same generalized popup flow but remain community-tested pending broader user feedback.
+- `--filesystem=home`
+- `--device=all`
+- `--socket=session-bus`
+- `--socket=system-bus`
+- `--talk-name=org.freedesktop.portal.Desktop`

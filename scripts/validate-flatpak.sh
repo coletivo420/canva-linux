@@ -116,6 +116,81 @@ data/com.canva.Linux.metainfo.xml|AppStream metadata
 data/com.canva.Linux.desktop|desktop entry metadata
 REQUIRED_FILES
 
+## Flatpak permission policy guardrails (dev18)
+node - <<'NODE'
+const fs = require('node:fs');
+
+const manifests = [
+  'com.canva.Linux.yml',
+  'packaging/flathub/manifest.yml',
+];
+
+const forbidden = [
+  '--filesystem=home',
+  '--device=all',
+  '--socket=session-bus',
+  '--socket=system-bus',
+  '--talk-name=org.freedesktop.portal.Desktop',
+  '--talk-name=org.freedesktop.ScreenSaver',
+];
+
+const required = [
+  '--talk-name=org.freedesktop.secrets',
+  '--filesystem=xdg-download',
+  '--filesystem=xdg-run/pipewire-0',
+  '--talk-name=org.freedesktop.FileManager1',
+];
+
+const extractFinishArgs = (content) =>
+  content
+    .split('\n')
+    .filter((line) => line.trimStart().startsWith('- --'))
+    .map((line) => line.trim().replace(/^- /, '').split(/\s+#/)[0].trim());
+
+const byManifest = new Map();
+
+for (const manifestPath of manifests) {
+  const content = fs.readFileSync(manifestPath, 'utf8');
+  const finishArgs = extractFinishArgs(content);
+  byManifest.set(manifestPath, finishArgs);
+
+  for (const token of forbidden) {
+    if (finishArgs.includes(token)) {
+      console.error(`${manifestPath}: forbidden permission present: ${token}`);
+      process.exit(1);
+    }
+  }
+
+  for (const token of required) {
+    if (!finishArgs.includes(token)) {
+      console.error(`${manifestPath}: required permission missing: ${token}`);
+      process.exit(1);
+    }
+  }
+}
+
+const [localManifest, submissionManifest] = manifests;
+const localSet = new Set(byManifest.get(localManifest));
+const submissionSet = new Set(byManifest.get(submissionManifest));
+
+const localOnly = [...localSet].filter((token) => !submissionSet.has(token));
+const submissionOnly = [...submissionSet].filter((token) => !localSet.has(token));
+
+if (localOnly.length || submissionOnly.length) {
+  console.error('Manifest permission policy mismatch detected.');
+  if (localOnly.length) {
+    console.error(`${localManifest} only: ${localOnly.join(', ')}`);
+  }
+  if (submissionOnly.length) {
+    console.error(`${submissionManifest} only: ${submissionOnly.join(', ')}`);
+  }
+  process.exit(1);
+}
+
+console.log('Permission guardrails passed for both manifests.');
+NODE
+ok "Permission guardrails passed (forbidden absent + required present + manifest parity)"
+
 ## Flatpak install status
 if command -v flatpak >/dev/null 2>&1; then
   if flatpak --user info com.canva.Linux >/dev/null 2>&1 || flatpak info com.canva.Linux >/dev/null 2>&1; then

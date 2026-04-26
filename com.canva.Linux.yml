@@ -29,7 +29,6 @@ finish-args:
   # The app relies on Flatpak portals for file access when possible; explicit
   # portal bus access is intentionally omitted because Flatpak grants portal
   # mediation without a finish-arg.
-  - --talk-name=org.freedesktop.ScreenSaver
   - --talk-name=org.freedesktop.secrets
 
   ## Runtime environment tweaks

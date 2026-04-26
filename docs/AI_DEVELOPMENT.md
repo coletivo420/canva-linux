@@ -1,6 +1,6 @@
 # AI-Assisted Development Guidelines
 
-This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.17` cycle.
+This document defines project conventions for AI-assisted development and vibecoding in the `1.4.10-dev.18` cycle.
 
 ## Language and communication conventions
 
@@ -24,6 +24,9 @@ This document defines project conventions for AI-assisted development and vibeco
 - Keep `electron/preload/canva.bundle.js` generated-only; edit the modular preload sources and regenerate the bundle with `npm run build:preload`.
 - Do not pass untrusted or unsupported URL schemes to Electron's system opener.
 - Keep eyedropper snapshot IPC scoped to the requesting Canva tab.
+
+- Do not add broad Flatpak permissions such as `--filesystem=home`, `--device=all`, `--socket=session-bus`, or `--socket=system-bus` without explicit maintainer approval and documented validation rationale.
+- Do not re-add explicit `--talk-name=org.freedesktop.portal.Desktop`; portal access should remain portal-mediated unless a specific technical requirement is documented.
 
 ## Custom colorpicker directive
 
@@ -74,7 +77,7 @@ After meaningful refactors, update the relevant repository documentation so futu
 
 For this cycle, keep this focus explicit:
 
-`1.4.10-dev.17 = public naming cleanup and Canva-Linux identity standardization with Flatpak app-id migration to com.canva.Linux.`
+`1.4.10-dev.18 = Flatpak permission policy consolidation with portal-first guidance, strict prohibition of broad sandbox access, and explicit runtime-flow justification for retained permissions.`
 
 ## Planned phase roadmap
 
@@ -87,7 +90,7 @@ The `1.4.10-dev.X` cycle now follows an explicit phased plan:
 - `1.4.10-dev.15` - add Electron smoke tests with Playwright
 - `1.4.10-dev.16` - finalize follow-up Flathub adaptations after the testing foundation lands
 - `1.4.10-dev.17` - public naming cleanup and project identity standardization
-- `1.4.10-dev.18` - final permissions pruning/justification pass
+- `1.4.10-dev.18` - final permissions policy consolidation for Canva-Linux
 - `1.4.10-dev.19` - branding/trademark/app-id/metainfo finalization strategy
 - `1.4.10-dev.20` - final submission-manifest validation pass
 - `1.4.10-dev.21` - RC/stable closure work
@@ -100,8 +103,8 @@ Patch intent rules for this phased plan:
 - `dev.14` may add narrow dependency-injection seams when required to test existing runtime wiring without changing user-visible behavior
 - `dev.15` may add Playwright config, smoke-only test files, and dev-only dependencies while keeping the production runtime unchanged
 - `dev.16` and later Flathub-facing patches should keep test scaffolding stable unless explicitly required by packaging or CI
-- dev.17 includes naming cleanup work, documentation alignment, and the Flatpak app-id identity migration
-- dev.18 should focus on permission minimization and explicit rationale updates
+- dev.17 includes naming cleanup work, documentation alignment after the rename, and the Flatpak app-id identity migration
+- dev.18 should focus on permission policy consolidation and explicit rationale updates
 - dev.19 should finalize branding/trademark strategy and verify user-data compatibility after the migration
 - `dev.20` should finalize submission-manifest validation before release-candidate closure
 - `dev.21` should close RC/stable tasks and release documentation
