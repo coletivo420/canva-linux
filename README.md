@@ -19,7 +19,7 @@ Canva Linux is a community-maintained open source package for use with Canva. It
 
 The next development line starts at `1.4.11.dev1` and is reserved for TypeScript migration and Canva API integration work.
 
-## LOGGING SYSTEM
+## Log System
 
 - modularized `electron/main` and `electron/preload`
 - centralized debug logging in the main process
