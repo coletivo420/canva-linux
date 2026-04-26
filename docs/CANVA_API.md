@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Document a safe, phased approach for Canva API integration in Canva Linux without destabilizing the desktop wrapper runtime.
+Document a safe, phased approach for Canva API integration in Canva Linux
+without destabilizing the desktop wrapper runtime.
 
 ## API tracks evaluated
 
@@ -10,12 +11,14 @@ Document a safe, phased approach for Canva API integration in Canva Linux withou
 
 - Intended for apps that run inside Canva editor iframes.
 - Uses APIs injected by Canva in that embedded execution context.
-- Relevant when building embedded Canva apps, not as the primary model for this Electron wrapper.
+- Relevant when building embedded Canva apps, not as the primary model for this
+  Electron wrapper.
 
 ### Canva Connect API
 
 - REST API intended for external integrations.
-- Better fit for a desktop wrapper integrating with Canva services from outside editor iframe runtime.
+- Better fit for a desktop wrapper integrating with Canva services from outside
+  editor iframe runtime.
 - Provides OpenAPI descriptions that can be used for typed client generation.
 
 ## Direction for this repository
@@ -31,7 +34,8 @@ For Canva Linux, the current architecture direction is:
 
 - Use OAuth 2.0 Authorization Code Flow with PKCE (S256).
 - Require explicit `state` validation and configured redirect URI.
-- Keep secrets out of the shipped app; public builds should run without embedded client secret.
+- Keep secrets out of the shipped app; public builds should run without embedded
+  client secret.
 - Document backend requirement for flows that need confidential client handling.
 
 ## Planned sequence (high-level)

@@ -2,7 +2,8 @@
 
 ## Objective
 
-Introduce TypeScript infrastructure gradually, preserving runtime behavior for Electron, preload bundling, Flatpak packaging, and existing tests.
+Introduce TypeScript infrastructure gradually, preserving runtime behavior for
+Electron, preload bundling, Flatpak packaging, and existing tests.
 
 ## Phase `1.4.11.dev1` (foundation)
 
@@ -14,7 +15,8 @@ Delivered in this phase:
   - `checkJs: true`
   - `noEmit: true`
 - npm script `typecheck` added (`tsc --noEmit`).
-- `scripts/validate-project.sh` updated so `typecheck` is part of project validation.
+- `scripts/validate-project.sh` updated so `typecheck` is part of project
+  validation.
 
 ## Scope guardrails
 
@@ -27,8 +29,10 @@ Delivered in this phase:
 - `dev2`: JSDoc typing on critical JS modules.
 - `dev3`: migrate maintenance scripts to TypeScript-first workflow.
 - `dev4`: migrate tests to TypeScript.
-- `dev5+`: migrate isolated Electron main modules, then sensitive OAuth/IPC modules.
-- `dev7`: migrate preload source to TypeScript while keeping runtime bundle output as JavaScript.
+- `dev5+`: migrate isolated Electron main modules, then sensitive OAuth/IPC
+  modules.
+- `dev7`: migrate preload source to TypeScript while keeping runtime bundle
+  output as JavaScript.
 
 ## Validation baseline
 
