@@ -53,6 +53,6 @@ This checklist is intended for maintainer validation of the current `1.4.10-dev.
 
 ## 7) Release readiness summary
 
-- [ ] Confirm this delivery is documented as a public naming and documentation-alignment pass with app-id preservation.
+- [ ] Confirm this delivery is documented as a public naming and documentation-alignment pass with app-id identity migration.
 - [ ] Confirm known limitations remain documented.
 - [ ] Confirm reviewer notes identify any follow-up items deferred to the next cycle.

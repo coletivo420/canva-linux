@@ -100,9 +100,9 @@ Patch intent rules for this phased plan:
 - `dev.14` may add narrow dependency-injection seams when required to test existing runtime wiring without changing user-visible behavior
 - `dev.15` may add Playwright config, smoke-only test files, and dev-only dependencies while keeping the production runtime unchanged
 - `dev.16` and later Flathub-facing patches should keep test scaffolding stable unless explicitly required by packaging or CI
-- `dev.17` includes naming cleanup work and documentation alignment while preserving existing Flatpak app identity
-- `dev.18` should focus on permission minimization and explicit rationale updates
-- `dev.19` should plan app-id/branding migration carefully, including user-data compatibility strategy
+- dev.17 includes naming cleanup work, documentation alignment, and the Flatpak app-id identity migration
+- dev.18 should focus on permission minimization and explicit rationale updates
+- dev.19 should finalize branding/trademark strategy and verify user-data compatibility after the migration
 - `dev.20` should finalize submission-manifest validation before release-candidate closure
 - `dev.21` should close RC/stable tasks and release documentation
 - update the roadmap and changelog when the planned phase sequence changes
