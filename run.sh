@@ -3,7 +3,7 @@
 # Default mode: prefer native Wayland when available, otherwise let Electron fall back automatically.
 # User overrides: CANVA_FORCE_X11=1 or CANVA_FORCE_WAYLAND=1.
 
-export CHROME_DESKTOP=com.canva.WebApp.desktop
+export CHROME_DESKTOP=com.canva.Linux.desktop
 
 DEBUG_VALUE="${CANVA_DEBUG:-}"
 if [ -n "$DEBUG_VALUE" ] && [ "$DEBUG_VALUE" != "0" ] && [ "$DEBUG_VALUE" != "false" ]; then
@@ -28,7 +28,7 @@ if [ "${CANVA_FORCE_X11:-0}" = "1" ]; then
 elif [ "${CANVA_FORCE_WAYLAND:-0}" = "1" ]; then
   # Hard-force native Wayland when the session exposes a Wayland socket.
   if [ "$WAYLAND_SESSION" != "1" ]; then
-    echo "canva-webapp: error: CANVA_FORCE_WAYLAND=1 was set, but no Wayland session was detected." >&2
+    echo "canva-linux: error: CANVA_FORCE_WAYLAND=1 was set, but no Wayland session was detected." >&2
     exit 1
   fi
   set -- \
@@ -36,8 +36,8 @@ elif [ "${CANVA_FORCE_WAYLAND:-0}" = "1" ]; then
     "$@"
 fi
 
-exec zypak-wrapper.sh /app/main/canva-webapp \
+exec zypak-wrapper.sh /app/main/canva-linux \
   # Stable WM class helps DE grouping under both Wayland and X11 sessions.
-  --class=com.canva.WebApp \
+  --class=com.canva.Linux \
   --disable-gpu-sandbox \
   "$@"

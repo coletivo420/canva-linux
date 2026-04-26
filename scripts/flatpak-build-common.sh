@@ -55,7 +55,7 @@ build_flatpak_repo() {
     --install-deps-from=flathub \
     --repo=repo \
     build-dir \
-    com.canva.WebApp.yml
+    com.canva.Linux.yml
 
   info "Generating repository summary"
   flatpak build-update-repo --generate-static-deltas repo
@@ -72,7 +72,7 @@ install_flatpak_direct() {
     --install \
     --install-deps-from=flathub \
     build-dir \
-    com.canva.WebApp.yml
+    com.canva.Linux.yml
 
   ok "Direct local Flatpak install completed"
 }

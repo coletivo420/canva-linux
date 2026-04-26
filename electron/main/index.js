@@ -39,7 +39,7 @@ const { createTabController } = require('./tab-controller');
 const { createTabHelpers } = require('./tabs');
 const { createWindowOpenPolicy } = require('./window-open-policy');
 
-const APP_ID = 'com.canva.WebApp';
+const APP_ID = 'com.canva.Linux';
 const APP_URL = 'https://www.canva.com';
 const APP_NAME = 'Canva';
 const PARTITION = 'persist:canva';

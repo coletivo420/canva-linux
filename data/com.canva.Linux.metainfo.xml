@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.canva.WebApp</id>
+  <id>com.canva.Linux</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
-  <name>Canva</name>
-  <summary>Unofficial Canva Electron/Chromium wrapper for Linux</summary>
+  <name>Canva-Linux</name>
+  <summary>Unofficial Canva-Linux desktop wrapper using Electron/Chromium and Flatpak</summary>
   <description>
     <p>
-      An unofficial Electron/Chromium wrapper for Canva on Linux, packaged with the
+      An unofficial Canva-Linux desktop wrapper for Canva on Linux, packaged with the
       Flatpak Freedesktop runtime. The project focuses on persistent sessions,
       internal Canva tabs, OAuth popup support, desktop integration, and continued
       work toward Windows-like feature parity for Canva workflows.
@@ -16,29 +16,29 @@
       This is an unofficial community project and is not affiliated with Canva Pty Ltd.
     </p>
   </description>
-  <launchable type="desktop-id">com.canva.WebApp.desktop</launchable>
+  <launchable type="desktop-id">com.canva.Linux.desktop</launchable>
   <url type="homepage">https://www.canva.com/</url>
-  <url type="vcs-browser">https://github.com/PirateMaryRead/canva-webapp-linux</url>
+  <url type="vcs-browser">https://github.com/PirateMaryRead/canva-linux</url>
   <developer id="io.github.canva-flatpak">
     <name>Felipe Matos (piradopirata)</name>
   </developer>
   <content_rating type="oars-1.1" />
   <screenshots>
     <screenshot type="default">
-      <caption>Canva WebApp Linux home screen</caption>
-      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/home.png</image>
+      <caption>Canva-Linux home screen</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/home.png</image>
     </screenshot>
     <screenshot>
-      <caption>Canva WebApp Linux tabbed shell</caption>
-      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/tabs.png</image>
+      <caption>Canva-Linux tabbed shell</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/tabs.png</image>
     </screenshot>
     <screenshot>
-      <caption>Upload workflow inside Canva WebApp Linux</caption>
-      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/upload.png</image>
+      <caption>Upload workflow inside Canva-Linux</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/upload.png</image>
     </screenshot>
     <screenshot>
-      <caption>Custom eyedropper workflow inside Canva WebApp Linux</caption>
-      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-webapp-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/eyedropper.png</image>
+      <caption>Custom eyedropper workflow inside Canva-Linux</caption>
+      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/eyedropper.png</image>
     </screenshot>
   </screenshots>
   <releases>

@@ -2,7 +2,7 @@
 
 This directory contains assets specific to the **Flathub submission path**.
 
-It is intentionally separate from the repository-root `com.canva.WebApp.yml`, which remains the canonical manifest for the local workflow (`./canva-linux.sh --install|--bundle|--validate`).
+It is intentionally separate from the repository-root `com.canva.Linux.yml`, which remains the canonical manifest for the local workflow (`./canva-linux.sh --install|--bundle|--validate`).
 
 ## Files in this directory
 

@@ -4,7 +4,7 @@
 
 This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## Canonical workflow command (1.4.10-dev.8)
+## Canonical workflow command (1.4.10-dev.17)
 
 Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
@@ -23,7 +23,7 @@ Notes:
 - Actions can be chained and run in argument order.
 - `--uninstall` can only be combined with `--reset-user-data`.
 
-`1.4.10-dev.8` keeps the Flathub source/readiness focus and adds the generated Canva preload bundle needed to restore the custom eyedropper after the preload modularization regression.
+`1.4.10-dev.17` keeps the Flathub source/readiness focus while standardizing public project naming as Canva-Linux and migrating the app-id to `com.canva.Linux`.
 
 The preload bundle is generated automatically before the Electron build used by `./canva-linux.sh --install` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux.sh --bundle` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
 
@@ -44,7 +44,7 @@ Then run submission-path preparation/validation and lint checks when Flatpak Bui
 ./scripts/validate-flathub-submission.sh
 flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.WebApp.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest com.canva.Linux.yml
 ./canva-linux.sh --install --bundle
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```
@@ -68,11 +68,12 @@ The manifest intentionally avoids broad home-directory access and keeps narrower
 ## GitHub release bundles vs Flathub submission
 
 - **Local install** (`--install`) is for development/testing.
-- **Bundle generation** (`--bundle`) creates `dist/canva-webapp-linux-$VERSION.flatpak` for GitHub releases.
+- **Bundle generation** (`--bundle`) creates `dist/canva-linux-$VERSION.flatpak` for GitHub releases.
 - **Flathub submission** is a separate workflow reviewed in `flathub/flathub`.
 - Submission assets live under `packaging/flathub/` (submission manifest, `generated-sources.json`, and helpers).
+- `com.canva.Linux*` identifiers are now the active canonical identity in this cycle (app-id, filenames, icons, and WMClass fields).
 
-Do not treat local GitHub release bundles as a direct Flathub submission mechanism, and do not replace the repository-root local manifest (`com.canva.WebApp.yml`) when preparing submission files.
+Do not treat local GitHub release bundles as a direct Flathub submission mechanism, and do not replace the repository-root local manifest (`com.canva.Linux.yml`) when preparing submission files.
 
 Source strategy guidance for final Flathub submission lives in `docs/FLATHUB_SOURCE.md`.
 Submission-path workflow lives in `docs/FLATHUB_SUBMISSION_PATH.md`, and rationale notes (including thin-wrapper objection handling) live in `docs/FLATHUB_SUBMISSION_NOTES.md`.

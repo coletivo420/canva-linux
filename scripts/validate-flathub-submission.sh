@@ -136,7 +136,7 @@ if command -v flatpak >/dev/null 2>&1; then
     SOURCE_TREE="$(find "${APPSTREAM_TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n1)"
     [[ -n "${SOURCE_TREE}" ]] || err "Unable to determine extracted source directory"
 
-    METAINFO_PATH="${SOURCE_TREE}/data/com.canva.WebApp.metainfo.xml"
+    METAINFO_PATH="${SOURCE_TREE}/data/com.canva.Linux.metainfo.xml"
     [[ -f "${METAINFO_PATH}" ]] || err "Metainfo file not found in pinned source archive"
 
     info "Running AppStream metainfo validation (warnings/errors treated as fatal)"

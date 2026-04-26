@@ -1,10 +1,10 @@
-# Flathub Submission Notes (dev16)
+# Flathub Submission Notes (dev17)
 
 ## Policy context: risk of "simple web wrapper"
 
 Flathub policy rejects **simple web wrappers** that only embed a web engine and load a remote website without meaningful desktop behavior.
 
-This app is web-based, but the desktop package includes non-trivial Linux/Electron behavior beyond a trivial wrapper.
+This app is web-based, but the Canva-Linux desktop package includes non-trivial Linux/Electron behavior beyond a trivial wrapper.
 
 ## Functional rationale (non-trivial behavior)
 

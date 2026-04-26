@@ -3,7 +3,7 @@ set -euo pipefail
 
 ## Configuration
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_ID="com.canva.WebApp"
+APP_ID="com.canva.Linux"
 INSTALL_SCRIPT="${SCRIPT_DIR}/scripts/install-flatpak-local.sh"
 BUNDLE_SCRIPT="${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh"
 VALIDATE_SCRIPT="${SCRIPT_DIR}/scripts/validate-flatpak.sh"
@@ -11,7 +11,7 @@ VALIDATE_SCRIPT="${SCRIPT_DIR}/scripts/validate-flatpak.sh"
 ## Help
 show_help() {
   cat <<'HELP'
-Canva WebApp Linux — Flatpak Workflow
+Canva-Linux — Flatpak Workflow
 
 Usage:
   ./canva-linux.sh --install           Build and install locally (direct install; no repo/bundle)
@@ -65,7 +65,7 @@ action_uninstall() {
 
 action_reset_user_data() {
   local response
-  echo "This will delete Canva WebApp user data, including login/session/cache."
+  echo "This will delete Canva-Linux user data, including login/session/cache."
   read -r -p "Continue? [y/N] " response
 
   if [[ "$response" != "y" && "$response" != "Y" ]]; then

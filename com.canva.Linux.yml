@@ -1,4 +1,4 @@
-app-id: com.canva.WebApp
+app-id: com.canva.Linux
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
@@ -37,17 +37,17 @@ finish-args:
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 
 modules:
-  - name: canva-webapp
+  - name: canva-linux
     buildsystem: simple
     build-commands:
       - mkdir -p /app/main
       - cp -a dist/linux-unpacked/* /app/main/
       - if command -v patch-electron-desktop-filename >/dev/null 2>&1; then patch-electron-desktop-filename /app/main/resources/app.asar; else patch-desktop-filename /app/main/resources/app.asar; fi
       - install -Dm755 run.sh /app/bin/run.sh
-      - install -Dm644 data/com.canva.WebApp.desktop /app/share/applications/com.canva.WebApp.desktop
-      - install -Dm644 data/com.canva.WebApp.metainfo.xml /app/share/metainfo/com.canva.WebApp.metainfo.xml
+      - install -Dm644 data/com.canva.Linux.desktop /app/share/applications/com.canva.Linux.desktop
+      - install -Dm644 data/com.canva.Linux.metainfo.xml /app/share/metainfo/com.canva.Linux.metainfo.xml
       - |
-        for size in 16 22 24 32 48 64 128 256 512; do           install -Dm644 data/icons/hicolor/${size}x${size}/apps/com.canva.WebApp.png /app/share/icons/hicolor/${size}x${size}/apps/com.canva.WebApp.png;         done
+        for size in 16 22 24 32 48 64 128 256 512; do           install -Dm644 data/icons/hicolor/${size}x${size}/apps/com.canva.Linux.png /app/share/icons/hicolor/${size}x${size}/apps/com.canva.Linux.png;         done
     sources:
       - type: dir
         path: .

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records the current `finish-args` in `com.canva.WebApp.yml` and explains why each permission exists in the `1.4.10-dev.8` Flathub validation cycle.
+This document records the current `finish-args` in `com.canva.Linux.yml` and explains why each permission exists in the `1.4.10-dev.17` Flathub validation cycle.
 
 Goal for this pass:
 
@@ -12,7 +12,7 @@ Goal for this pass:
 
 This remains a documentation and review pass, not a blind permission-removal pass. Broad home-directory access (`--filesystem=home`) remains absent in the current manifest.
 
-The `1.4.10-dev.8` preload bundle and eyedropper fix do not add new Flatpak permissions. The custom picker remains routed through the bundled `ltcodedev/eyedropper` flow using the existing app tab snapshot bridge, not a new desktop portal or native system color picker permission path.
+The `1.4.10-dev.17` naming cleanup and prior preload/eyedropper fixes do not add new Flatpak permissions. The custom picker remains routed through the bundled `ltcodedev/eyedropper` flow using the existing app tab snapshot bridge, not a new desktop portal or native system color picker permission path.
 
 ## Current finish-args
 
@@ -36,7 +36,7 @@ Current manifest permissions:
 
 These are considered required for current behavior:
 
-- `--share=network`: required for Canva web app and API traffic.
+- `--share=network`: required for Canva-Linux app traffic and API access.
 - `--share=ipc`: common Chromium/Electron runtime requirement.
 - `--device=dri`: GPU acceleration support where host/runtime allow it.
 - `--socket=wayland`: preferred Linux display path.
@@ -80,7 +80,7 @@ Current manifest state for this repo:
 
 ## Local GitHub bundle vs future Flathub packaging
 
-- Local GitHub workflow builds `dist/canva-webapp-linux-$VERSION.flatpak` from this repo.
+- Local GitHub workflow builds `dist/canva-linux-$VERSION.flatpak` from this repo.
 - Future Flathub submission is a separate review process in `flathub/flathub` with policy and lint scrutiny.
 - A permission accepted for local testing may still require tightening for Flathub acceptance.
 

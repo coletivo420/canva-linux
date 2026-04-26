@@ -13,13 +13,13 @@ Current `1.4.10-dev.X` goals focus on Flathub readiness, packaging workflow impr
 
 ## Custom colorpicker policy
 
-Canva Linux must keep `ltcodedev/eyedropper` as the canonical custom colorpicker implementation.
+Canva-Linux must keep `ltcodedev/eyedropper` as the canonical custom colorpicker implementation.
 
-- `electron/preload/ltcode-eyedropper.js` is the bundled picker implementation used by Canva Linux.
+- `electron/preload/ltcode-eyedropper.js` is the bundled picker implementation used by Canva-Linux.
 - `electron/preload/native-eyedropper-wrapper.js` exists to redirect Canva-facing picker calls into that bundled implementation.
 - `electron/preload/custom-eyedropper-flow.js` exists to open the bundled picker from a Canva tab snapshot.
 - any diagnostics around browser picker APIs or media-capture APIs must support tracing and re-routing only; they are not an alternative colorpicker architecture.
-- the bundled eyedropper copy intentionally exposes only the canvas-based path used by Canva Linux; unused image-loading helpers and not-implemented stubs are removed instead of kept as dormant API surface.
+- the bundled eyedropper copy intentionally exposes only the canvas-based path used by Canva-Linux; unused image-loading helpers and not-implemented stubs are removed instead of kept as dormant API surface.
 
 ## Runtime architecture (summary)
 
@@ -112,13 +112,13 @@ Packaging/runtime support files:
 - `scripts/prepare-flathub-submission.sh` - regenerates submission npm sources and runs submission-path validation checks.
 - `scripts/validate-flathub-submission.sh` - validates submission-manifest structure, offline npm source manifest, and optional Flathub lint.
 - `scripts/build-preload-bundle.js` - dependency-free generated-preload builder used before local start and Electron packaging.
-- `com.canva.WebApp.yml` - Flatpak manifest for local install/bundle/validation workflows.
+- `com.canva.Linux.yml` - Flatpak manifest for local install/bundle/validation workflows.
 - `packaging/flathub/` - Flathub submission workspace (submission manifest, `generated-sources.json`, npm source generator scripts).
 - `docs/PRIVACY.md` - repository privacy and telemetry policy statement.
 - `docs/FLATHUB_SOURCE.md` - Flathub source strategy notes for the current local manifest and future source-based submission.
 - `docs/FLATHUB_SUBMISSION_PATH.md` - dedicated submission-path structure and command flow.
 - `docs/FLATHUB_SUBMISSION_NOTES.md` - submission rationale notes, including thin-wrapper objection response.
-- `data/com.canva.WebApp.desktop` and `data/com.canva.WebApp.metainfo.xml` - desktop and appstream metadata.
+- `data/com.canva.Linux.desktop` and `data/com.canva.Linux.metainfo.xml` - desktop and appstream metadata.
 
 ## Workflow notes
 
