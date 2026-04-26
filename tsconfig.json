@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "strict": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "types": ["node"]
+  },
+  "include": [
+    "electron/**/*.js",
+    "scripts/**/*.js",
+    "test/**/*.js",
+    "playwright.config.js",
+    "eslint.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "repo",
+    "build-dir",
+    ".flatpak-builder",
+    "electron/main/index.js",
+    "electron/preload/**/*.js",
+    "electron/preload/canva.bundle.js"
+  ]
+}

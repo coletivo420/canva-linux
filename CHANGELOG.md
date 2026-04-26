@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.1] - 2026-04-26
+
+### Added
+- Added TypeScript foundation tooling for the `1.4.11.devX` cycle with `typescript`, `@types/node`, and `tsconfig.json` configured to type-check existing JavaScript (`allowJs` + `checkJs`) without emitting build artifacts.
+- Added npm script `typecheck` (`tsc --noEmit`) for local and CI-safe static type validation.
+- Added `docs/TYPESCRIPT.md` to define migration scope, sequencing, and guardrails for future `dev2+` phases.
+- Added `docs/CANVA_API.md` with initial architecture notes comparing Canva Apps SDK and Canva Connect API usage in this desktop wrapper.
+
+### Changed
+- Updated `scripts/validate-project.sh` to include preload build, lint, typecheck, tests, docs link checks, Flatpak checks, Flathub-submission checks, and `git diff --check`.
+- Updated `README.md` status documentation for `1.4.11.dev1`, including the TypeScript foundation scope and new docs references.
+
 ## [1.4.10] - 2026-04-26
 
 ### Added

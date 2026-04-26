@@ -19,6 +19,15 @@ Canva Linux is a community-maintained open source package for use with Canva. It
 
 The next development line starts at `1.4.11.dev1` and is reserved for TypeScript migration and Canva API integration work.
 
+### 1.4.11.dev1 scope (TypeScript foundation)
+
+This phase adds TypeScript tooling without converting runtime modules to `.ts` yet:
+
+- installs `typescript` and `@types/node` as dev dependencies
+- introduces `tsconfig.json` with `allowJs + checkJs` to type-check existing JavaScript
+- adds `npm run typecheck` (`tsc --noEmit`)
+- extends `scripts/validate-project.sh` so type-checking becomes part of the standard validation pipeline
+
 ## Log System
 
 - modularized `electron/main` and `electron/preload`
@@ -123,6 +132,8 @@ Detailed packaging notes live in:
 - `docs/TECHNICAL.md` contains repository technical notes.
 - `docs/AI_DEVELOPMENT.md` documents AI-assisted maintenance conventions.
 - `docs/DEVELOPMENT.md` documents phase scope and recommended execution order.
+- `docs/TYPESCRIPT.md` documents TypeScript migration goals and rules for the `1.4.11.devX` line.
+- `docs/CANVA_API.md` documents Canva API integration architecture planning notes.
 - `docs/VALIDATION.md` defines baseline and close-out quality gate commands.
 - `docs/PRIVACY.md` explains privacy and telemetry scope for this wrapper project.
 - `docs/FLATHUB.md` covers Flathub submission preparation.
