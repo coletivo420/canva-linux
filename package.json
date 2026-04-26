@@ -1,6 +1,6 @@
 {
   "name": "canva-linux",
-  "version": "1.4.10-dev.17",
+  "version": "1.4.10-dev.18",
   "description": "Unofficial Canva-Linux desktop wrapper using Electron/Chromium and Flatpak",
   "main": "electron/main/index.js",
   "author": "Community",

@@ -1,13 +1,15 @@
-# Flathub Submission Path (dev17)
+# Flathub Submission Path (dev18)
 
 ## Objective
 
 Keep local Canva-Linux development/bundle workflow and Flathub submission workflow separate.
 
+The local and Flathub-submission manifests must keep the same runtime permission policy unless a future patch documents a submission-specific exception.
+
 - Local workflow (unchanged): repository-root `com.canva.Linux.yml` + `./canva-linux.sh`.
 - Submission workflow (new path): `packaging/flathub/manifest.yml` + generated npm source manifest + submission scripts.
 
-## Flow boundaries (dev17)
+## Flow boundaries (dev18)
 
 1. **Local development flow**: `./canva-linux.sh --install` uses direct `flatpak-builder --install` for fast iteration.
 2. **GitHub release flow**: `./canva-linux.sh --bundle` exports `repo/` and then creates `.flatpak` via `flatpak build-bundle`.
@@ -22,11 +24,11 @@ Keep local Canva-Linux development/bundle workflow and Flathub submission workfl
 - `scripts/prepare-flathub-submission.sh`
 - `scripts/validate-flathub-submission.sh`
 
-## Draft status (dev17)
+## Draft status (dev18)
 
 The current `packaging/flathub/manifest.yml` should be treated as a **submission draft**, not the final stable manifest.
 
-- The source archive is currently pinned to a GitHub commit tarball plus `sha256` to unblock technical validation of the Flathub pipeline during dev17.
+- The source archive is currently pinned to a GitHub commit tarball plus `sha256` to unblock technical validation of the Flathub pipeline during dev18.
 - This `archive + sha256` pair is an explicit placeholder and is expected to be reviewed/replaced for the stable submission path.
 - Before the stable release track (planned around dev20), switch the source pinning strategy to the release candidate/stable tag material chosen for publication.
 

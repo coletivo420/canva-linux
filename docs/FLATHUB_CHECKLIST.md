@@ -17,6 +17,7 @@ Use this checklist before opening or updating a Flathub submission PR.
 - [ ] Submission manifest source archive URL and sha256 pinned to the exact release input
 - [ ] Screenshot URLs reviewed against the final release/tag
 - [ ] Permission review
+- [ ] Dev18 permission policy completed: kept permissions justified, ScreenSaver removed, broad permissions confirmed absent.
 - [ ] Local install smoke test
 - [ ] Generated preload bundle reviewed as a build artifact, with modular preload source files reviewed as source
 - [ ] Bundle generation test

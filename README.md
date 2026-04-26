@@ -7,7 +7,7 @@ This project is **unofficial** and is **not affiliated with Canva Pty Ltd**.
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10-dev.17 (project naming alignment and public identity cleanup)
+Next: 1.4.10-dev.19 (branding/trademark/app-id/metainfo finalization strategy)
 
 ## Development (1.4.10-dev.X)
 
@@ -27,7 +27,9 @@ Goal: prepare the project for Flathub submission while introducing small, review
 
 `1.4.10-dev.16` focused on Flathub follow-up hardening and packaging resilience after the testing foundation landed.
 
-`1.4.10-dev.17` standardizes the public project identity around **Canva-Linux** and now migrates the Flatpak app-id to `com.canva.Linux`.
+`1.4.10-dev.17` standardized the public project identity around **Canva-Linux** and migrated the Flatpak app-id to `com.canva.Linux`.
+
+`1.4.10-dev.18` consolidated the Flatpak permission policy with portal-first guardrails and explicit rationale for retained runtime permissions.
 
 Planned phase map:
 
@@ -38,7 +40,7 @@ Planned phase map:
 - `1.4.10-dev.15` - Electron smoke test coverage with Playwright
 - `1.4.10-dev.16` - Flathub-facing follow-up adjustments after the testing foundation is in place
 - `1.4.10-dev.17` - public naming cleanup to Canva-Linux with app-id migration to `com.canva.Linux`
-- `1.4.10-dev.18` - final permissions pruning/justification pass
+- `1.4.10-dev.18` - final permissions policy consolidation for Canva-Linux
 - `1.4.10-dev.19` - branding/trademark/app-id/metainfo finalization strategy
 - `1.4.10-dev.20` - final validation of submission manifest path
 - `1.4.10-dev.21` - RC/stable closure work
