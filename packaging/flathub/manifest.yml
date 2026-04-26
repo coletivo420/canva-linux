@@ -56,5 +56,5 @@ modules:
         done
     sources:
       - type: archive
-        url: https://github.com/PirateMaryRead/canva-linux/archive/e5322ceba64b637680468f98d600f357b30fba88.tar.gz
-        sha256: f52d6dbdb84a1a4936a62cc5a396ae6bd50b00e4e75f1d4d840f57549adf174b
+        url: https://github.com/PirateMaryRead/canva-linux/archive/2000e1ae3ae35e62806861be2e52fb2a428d11bb.tar.gz
+        sha256: 53fa429d696f5a957fadd7cc66aaf8109040f07334b8ca494f31498d56691f8e
