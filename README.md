@@ -7,7 +7,7 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 ## Status
 
 Stable: 1.4.9  
-Next: 1.4.10.dev19 (community branding, trademark-safe wording, app-id migration, and MetaInfo finalization)
+Next: 1.4.10.dev20 (quality gates: lint, validation workflow, and docs alignment)
 
 ## Community package status
 
@@ -49,8 +49,9 @@ Planned phase map:
 - `1.4.10.dev18` - final permissions policy consolidation for Canva Linux
 - `1.4.10.dev18B` - nomenclature normalization for phase/branch/documentation identifiers
 - `1.4.10.dev19` - community branding, trademark-safe wording, app-id migration, and MetaInfo finalization
-- `1.4.10.dev20` - final validation of submission manifest path
-- `1.4.10.dev21` - RC/stable closure work
+- `1.4.10.dev20` - quality gates (lint, validation workflow, and docs alignment)
+- `1.4.10.dev21` - submission path final validation
+- `1.4.10.dev22` - RC/stable closure work
 
 `1.4.10.dev8` keeps the modular source layout, but ships the Canva preload as a generated single-file bundle so Electron's sandboxed editor preload can load the custom eyedropper reliably.
 
@@ -157,6 +158,8 @@ Detailed packaging notes live in:
 - `CHANGELOG.md` tracks released and development changes.
 - `docs/TECHNICAL.md` contains repository technical notes.
 - `docs/AI_DEVELOPMENT.md` documents AI-assisted maintenance conventions.
+- `docs/DEVELOPMENT.md` documents phase scope and recommended execution order.
+- `docs/VALIDATION.md` defines baseline and close-out quality gate commands.
 - `docs/PRIVACY.md` explains privacy and telemetry scope for this wrapper project.
 - `docs/FLATHUB.md` covers Flathub submission preparation.
 - `docs/FLATHUB_CHECKLIST.md` tracks practical Flathub submission checks.

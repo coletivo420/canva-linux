@@ -1,58 +1,40 @@
-# Release Checklist — 1.4.10-dev.17
+# Release Checklist — 1.4.10-dev.20
 
-This checklist is intended for maintainer validation of the current `1.4.10-dev.17` development delivery.
+This checklist tracks the `1.4.10-dev.20` quality-gates delivery.
 
-## 1) Version and metadata
+## 1) Version alignment
 
-- [ ] Confirm `package.json` and `package-lock.json` are set to `1.4.10-dev.17`.
-- [ ] Confirm `CHANGELOG.md` contains the `1.4.10-dev.17` entry.
-- [ ] Confirm documentation reflects the Canva Linux naming standardization and generated Canva preload bundle workflow.
+- [ ] Confirm `package.json` and `package-lock.json` use `1.4.10-dev.20`.
+- [ ] Confirm `CHANGELOG.md` includes the `1.4.10-dev.20` section.
+- [ ] Confirm README status text references the dev20 quality-gates phase.
 
-## 2) Runtime stability guardrails
+## 2) Validation baseline
 
-- [ ] Confirm no intentional user-facing behavior regression was introduced.
-- [ ] Confirm OAuth popup native icon behavior was not modified.
-- [ ] Confirm the Home tab, toolbar, tab switching, and upload paths still behave as before.
-- [ ] Confirm the eyedropper fix restores the intended custom picker behavior without introducing a new native/system picker path.
+- [ ] Run `git status`.
+- [ ] Run `npm run lint`.
+- [ ] Run `npm test`.
+- [ ] Run `./scripts/validate-flatpak.sh`.
 
-## 3) Manual validation focus
+## 3) Project quality gates
 
-- [ ] Wayland startup sanity check.
-- [ ] X11 fallback startup sanity check.
-- [ ] Persistent session continuity across restarts.
-- [ ] Home tab behavior.
-- [ ] Tab creation, switching, and closing behavior.
-- [ ] OAuth popup smoke test.
-- [ ] The Canva colorpicker still resolves to the bundled `ltcodedev/eyedropper` custom picker.
-- [ ] The Canva editor loads `electron/preload/canva.bundle.js` and the preload reaches `modules-loaded`.
-- [ ] No native browser/system color picker or alternate capture picker replaced the bundled custom picker flow.
-- [ ] Upload ingress observation: drag-and-drop, file picker, and clipboard paths.
-- [ ] Centralized debug logging check: terminal prefixes and per-start `current.log`.
+- [ ] Ensure `scripts/validate-project.sh` exists and is executable.
+- [ ] Confirm `./scripts/validate-project.sh` runs lint, tests, docs link checks, Flatpak validation, and `git diff HEAD --check`.
+- [ ] Confirm no broken imports or duplicate imports remain in touched files.
 
-## 4) Repository hygiene
+## 4) Documentation quality
 
-- [ ] Confirm no backup/reject artifacts were added (`*.bak`, `*.orig`, `*.rej`).
-- [ ] Confirm no temporary local test files were committed.
-- [ ] Confirm `electron/preload/canva.bundle.js` is regenerated for local testing but not committed as source.
-- [ ] Confirm generated directories such as `dist/` and `.flatpak-builder/` do not drive source-review conclusions.
-- [ ] Confirm only relevant files are staged for this development delivery.
-- [ ] Confirm unused inherited eyedropper helper APIs and not-implemented stubs are not present in the bundled picker copy.
+- [ ] Confirm `docs/DEVELOPMENT.md` is aligned with dev20 scope and sequencing.
+- [ ] Confirm `docs/VALIDATION.md` documents baseline + close-out commands.
+- [ ] Confirm README links to development and validation docs.
 
-## 5) Packaging and Flathub readiness
+## 5) Repository hygiene
 
-- [ ] Confirm the canonical workflow remains `./canva-linux.sh`.
-- [ ] Confirm release bundle publication uses the default rebuild path, not `scripts/build-flatpak-bundle.sh --use-existing-repo`, so the generated preload bundle is current.
-- [ ] Confirm validation and bundle workflows remain separate from Flathub submission.
-- [ ] Confirm permissions, screenshots, and source strategy docs are aligned with the current cycle.
+- [ ] Confirm no backup/reject/temp artifacts were added.
+- [ ] Confirm generated directories (`dist/`, `.flatpak-builder/`) are not staged.
+- [ ] Confirm changes are scoped to quality gates and documentation.
 
-## 6) Security and IPC guardrails
+## 6) Handoff readiness
 
-- [ ] Confirm unsafe external URL schemes are blocked instead of passed to the system opener.
-- [ ] Confirm eyedropper snapshot IPC only serves the requesting Canva tab.
-- [ ] Confirm aborting the custom eyedropper flow clears the picker overlay/state.
-
-## 7) Release readiness summary
-
-- [ ] Confirm this delivery is documented as a public naming and documentation-alignment pass with app-id identity migration.
-- [ ] Confirm known limitations remain documented.
-- [ ] Confirm reviewer notes identify any follow-up items deferred to the next cycle.
+- [ ] Summarize warnings (if any) from Flatpak tooling availability.
+- [ ] Capture deferred items for dev21/dev22 (large UI, deep refactors, publication work).
+- [ ] Ensure commit history remains small and review-friendly.
