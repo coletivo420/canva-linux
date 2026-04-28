@@ -29,6 +29,7 @@ const {
 } = require('../shared/navigation');
 
 const { registerEyeDropperBridge } = require('./eyedropper-bridge');
+const { registerGpuDiagnostics: registerGpuDiagnosticsModule } = require('./gpu-diagnostics');
 const { registerMainIpcHandlers } = require('./ipc');
 const { registerAppLifecycle } = require('./lifecycle');
 const { createCentralLogger, createStatusLogger } = require('./logging');
@@ -310,6 +311,13 @@ registerAppLifecycle({
   },
   partition: PARTITION,
   path,
+  registerGpuDiagnostics() {
+    registerGpuDiagnosticsModule({
+      app,
+      centralLogger,
+      debugLog,
+    });
+  },
   shouldGrantRemotePermission,
   tabController,
 });

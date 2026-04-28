@@ -30,8 +30,12 @@ function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
     app.commandLine.appendSwitch('class', wmClass);
     app.commandLine.appendSwitch('font-render-hinting', 'medium');
     app.commandLine.appendSwitch('enable-font-antialiasing');
-    app.disableHardwareAcceleration();
-    app.commandLine.appendSwitch('disable-gpu-compositing');
+
+    if (process.env.CANVA_DISABLE_GPU === '1') {
+      app.disableHardwareAcceleration();
+      app.commandLine.appendSwitch('disable-gpu');
+      app.commandLine.appendSwitch('disable-gpu-compositing');
+    }
   }
 
   if (shouldEnableCaptureVerboseLogging(debugSpec)) {

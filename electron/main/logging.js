@@ -16,17 +16,22 @@ const RELEASE_STATUS = {
     'Window-open logging now distinguishes internal Canva tabs from real OAuth popup flows.',
     'Upload diagnostics now preserve ingress context from drop, paste, picker, and file-bearing network handoff.',
     'OAuth popup diagnostics no longer reference an undefined tab object during popup title or favicon updates.',
+    'Linux no longer disables Electron hardware acceleration by default.',
+    'GPU diagnostics are centralized in current.log.',
   ],
   validated: [
     'Application startup on Linux Wayland.',
     'Persistent session initialization and fixed Home tab shell behavior.',
     'Custom eyedropper behavior preserved after the global debug expansion.',
     'Host drag-and-drop into the Canva editor on Wayland with a real file drop.',
+    'GPU backend selection with CANVA_GPU_BACKEND=auto,opengl,vulkan,software,force.',
+    'Flatpak DRI access and Chromium GPU feature status logging.',
   ],
   underObservation: [
     'Host file picker continuation and clipboard-driven imports inside Canva.',
     'OAuth popup completion paths after the WebContentsView migration with a clean local session.',
     'Non-fatal DBus, VAAPI, and compositor warnings that do not block startup.',
+    'Vulkan/ANGLE behavior across Intel, AMD, NVIDIA, Wayland, and X11.',
   ],
 };
 
@@ -81,9 +86,9 @@ function createCentralLogger({ app }) {
   }
 
   function initLogFile() {
-    const logsDir = path.join(app.getPath('userData'), 'logs');
-    const currentLogPath = path.join(logsDir, 'current.log');
-    fs.mkdirSync(logsDir, { recursive: true });
+    const logsDirPath = path.join(app.getPath('userData'), 'logs');
+    const currentLogPath = path.join(logsDirPath, 'current.log');
+    fs.mkdirSync(logsDirPath, { recursive: true });
     if (fs.existsSync(currentLogPath)) {
       fs.unlinkSync(currentLogPath);
     }

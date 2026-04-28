@@ -7,7 +7,7 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 ## Status
 
 Stable: 1.4.10  
-Next: 1.4.11.dev2 (preflight hardening + requirements documentation)
+Next: 1.4.11.dev3 (GPU acceleration + diagnostics)
 
 ## Community package status
 
@@ -244,6 +244,30 @@ Detailed packaging notes live in:
 - `docs/FLATHUB_SUBMISSION_PATH.md`
 - `docs/FLATHUB_SUBMISSION_NOTES.md`
 - `packaging/flathub/`
+
+## GPU acceleration
+
+Canva Linux enables GPU acceleration by default when DRI is available.
+
+Available backends:
+
+- `auto`
+- `opengl`
+- `vulkan`
+- `software`
+- `force`
+
+Example:
+
+```bash
+CANVA_GPU_BACKEND=opengl CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
+```
+
+GPU logs are available in:
+
+- `logs/current.log`
+
+See `docs/GPU_ACCELERATION.md`.
 
 ## Documentation
 

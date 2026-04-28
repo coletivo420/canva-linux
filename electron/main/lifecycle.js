@@ -20,6 +20,7 @@ function registerAppLifecycle({
   onThemeUpdated,
   partition,
   path,
+  registerGpuDiagnostics,
   shouldGrantRemotePermission,
   tabController,
 }) {
@@ -28,6 +29,9 @@ function registerAppLifecycle({
     debugLog('startup', 'when-ready', `platform=${process.platform}`, `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland')}`);
     debugLog('startup', 'debug-spec', debugSpec || 'disabled');
     centralLogger.logStatus('startup', 'ok', `debug-log-file ${logFilePath}`);
+    if (typeof registerGpuDiagnostics === 'function') {
+      registerGpuDiagnostics();
+    }
     logReleaseStatus();
     logCredentialStorageBackend();
     await configureSession({
