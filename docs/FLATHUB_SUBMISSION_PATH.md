@@ -25,7 +25,7 @@ Required tools:
 - Node.js >= 22
 - npm
 - flatpak
-- flatpak-builder
+- org.flatpak.Builder runtime
 - appstreamcli
 - desktop-file-validate
 - curl

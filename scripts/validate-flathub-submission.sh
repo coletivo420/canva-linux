@@ -249,7 +249,6 @@ if command -v flatpak >/dev/null 2>&1 && (flatpak info org.flatpak.Builder >/dev
     require_command sha256sum
     require_command tar
     require_command flatpak
-    require_command flatpak-builder
 
     info "Cleaning previous submission repo output (${SUBMISSION_REPO_DIR}/)"
     rm -rf "${SUBMISSION_REPO_DIR}"

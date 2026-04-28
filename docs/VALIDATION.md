@@ -18,7 +18,7 @@ It requires:
 Flatpak validation additionally requires:
 
 - flatpak
-- flatpak-builder
+- org.flatpak.Builder runtime (for `flatpak run --command=... org.flatpak.Builder` checks)
 
 Desktop and AppStream validation use:
 
