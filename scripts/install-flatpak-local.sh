@@ -13,12 +13,12 @@ ok()    { echo -e "${GREEN}[ok]${NC}  $*"; }
 warn()  { echo -e "${YELLOW}[warn]${NC} $*"; }
 err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
 
-## Paths and metadata
+## Paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 
-VERSION="$(node -p "require('./package.json').version")"
+source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/flatpak-build-common.sh"
 
 ## Usage
@@ -50,17 +50,17 @@ for arg in "$@"; do
   esac
 done
 
-info "Preparing local Flatpak install for Canva Linux v${VERSION}"
-
 ## Dependency checks
-BASE_DEPS=(flatpak flatpak-builder node)
-for cmd in "${BASE_DEPS[@]}"; do
-  command -v "$cmd" >/dev/null 2>&1 || err "'$cmd' not found. Install it before continuing."
-done
+require_command flatpak
+require_command flatpak-builder
 
 if [[ "$SKIP_NPM" == false ]]; then
-  command -v npm >/dev/null 2>&1 || err "'npm' not found. Install it before continuing."
+  require_command npm
+  require_node_major 22
 fi
+
+VERSION="$(detect_package_version)"
+info "Preparing local Flatpak install for Canva Linux v${VERSION}"
 ok "Host dependencies are available"
 
 ## Flathub runtime preparation

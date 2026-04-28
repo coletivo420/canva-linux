@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_ID="io.github.PirateMaryRead.canva-linux"
 INSTALL_SCRIPT="${SCRIPT_DIR}/scripts/install-flatpak-local.sh"
 BUNDLE_SCRIPT="${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh"
-VALIDATE_SCRIPT="${SCRIPT_DIR}/scripts/validate-flatpak.sh"
+VALIDATE_SCRIPT="${SCRIPT_DIR}/scripts/validate-project.sh"
 
 ## Help
 show_help() {

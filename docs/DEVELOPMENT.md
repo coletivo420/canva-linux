@@ -1,45 +1,49 @@
-# Development Workflow (1.4.10-dev.20 — Quality Gates)
+# Development Workflow — 1.4.11-dev.2
 
-This cycle prioritizes maintainability foundations and repeatable quality checks.
+This cycle prioritizes preflight hardening in shell scripts and environment requirement documentation.
 
-## Scope for dev20
+## Scope for dev2
 
 In scope:
 
-- Lint and import hygiene.
-- Lightweight script and syntax fixes.
-- Project validation workflow consolidation.
-- Development and release documentation updates.
+- Script preflight ordering before Node/npm/Flatpak usage.
+- Canonical validation workflow alignment.
+- Development and validation requirements documentation.
 
 Out of scope:
 
 - Major UI redesigns.
 - Full app architecture rewrites.
 - Deep Flatpak workflow redesign.
-- Final Flathub publication.
 - Framework migration.
-- Aggressive large-scale refactors.
+
+## Host requirements
+
+The development workflow requires:
+
+- Node.js >= 22
+- npm
+- Git
+- Bash
+- Flatpak
+- flatpak-builder
+
+Optional but recommended for full validation:
+
+- desktop-file-validate
+- appstreamcli
+- curl
+- sha256sum
+- tar
+
+Distribution-specific installation commands are documented in README.md.
 
 ## Recommended execution order
 
-1. Baseline diagnostics:
-
-   ```bash
-   git status
-   npm run lint
-   npm test
-   ./scripts/validate-flatpak.sh
-   ```
-
-2. Lint/import gate improvements.
-3. Small targeted fixes.
-4. Validation script updates.
-5. Documentation updates.
-6. Final closure checks.
-
-## Development guardrails
-
-- Keep changes small and reviewable.
-- Prefer additive scripts/docs over large behavior changes.
-- Keep Flatpak local workflow and Flathub submission workflow separated.
-- Treat this phase as foundation work for dev21/dev22 follow-up cycles.
+1. `npm install`
+2. `npm run build:preload`
+3. `npm run lint`
+4. `npm run typecheck`
+5. `npm test`
+6. `npm run docs:check-links`
+7. `./scripts/validate-project.sh`

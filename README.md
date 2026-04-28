@@ -7,7 +7,7 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 ## Status
 
 Stable: 1.4.10  
-Next: 1.4.11.dev1 (TypeScript migration + Canva API exploration)
+Next: 1.4.11.dev2 (preflight hardening + requirements documentation)
 
 ## Community package status
 
@@ -27,6 +27,125 @@ This phase adds TypeScript tooling without converting runtime modules to `.ts` y
 - introduces `tsconfig.json` with `allowJs + checkJs` to type-check existing JavaScript
 - adds `npm run typecheck` (`tsc --noEmit`)
 - extends `scripts/validate-project.sh` so type-checking becomes part of the standard validation pipeline
+
+
+## Development requirements
+
+Canva Linux development workflows require the following host tools.
+
+### Required
+
+- Node.js >= 22
+- npm
+- Git
+- Bash
+- Flatpak
+- flatpak-builder
+
+### Required for full validation
+
+- desktop-file-validate
+- appstreamcli
+- curl
+- sha256sum
+- tar
+
+### Check your environment
+
+```bash
+node -v
+npm -v
+git --version
+bash --version
+flatpak --version
+flatpak-builder --version
+```
+
+Node.js must be version 22 or newer.
+
+### openSUSE Tumbleweed
+
+```bash
+sudo zypper install \
+  nodejs22 \
+  npm \
+  git \
+  bash \
+  flatpak \
+  flatpak-builder \
+  desktop-file-utils \
+  appstream \
+  curl \
+  tar \
+  coreutils
+```
+
+### Debian / Ubuntu
+
+```bash
+sudo apt install \
+  nodejs \
+  npm \
+  git \
+  bash \
+  flatpak \
+  flatpak-builder \
+  desktop-file-utils \
+  appstream \
+  curl \
+  tar \
+  coreutils
+```
+
+If your distribution provides Node.js older than 22, install Node.js 22 or newer using your preferred method, such as NodeSource, fnm, asdf, nvm, or official Node.js binaries.
+
+### Arch Linux
+
+```bash
+sudo pacman -Syu \
+  nodejs \
+  npm \
+  git \
+  bash \
+  flatpak \
+  flatpak-builder \
+  desktop-file-utils \
+  appstream \
+  curl \
+  tar \
+  coreutils
+```
+
+### Fedora
+
+```bash
+sudo dnf install \
+  nodejs \
+  npm \
+  git \
+  bash \
+  flatpak \
+  flatpak-builder \
+  desktop-file-utils \
+  appstream \
+  curl \
+  tar \
+  coreutils
+```
+
+For Fedora 44 or newer, you can alternatively install:
+
+```bash
+sudo dnf install nodejs22 npm
+```
+
+After installing packages, always verify:
+
+```bash
+node -v
+```
+
+The version must be 22 or newer.
 
 ## Log System
 

@@ -76,6 +76,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 
+source "${SCRIPT_DIR}/preflight-common.sh"
+
+## Preflight
+require_command bash
+require_command node
+require_command flatpak
+require_command flatpak-builder
+require_node_major 22
+
 ## Flags
 CHECK_RELEASE_ARTIFACTS=false
 if [[ "${1:-}" == "--release-artifacts" ]]; then
@@ -85,7 +94,7 @@ elif [[ -n "${1:-}" ]]; then
 fi
 
 ## Version checks
-VERSION="$(node -p "require('./package.json').version")"
+VERSION="$(detect_package_version)"
 BUNDLE_PATH="dist/canva-linux-${VERSION}.flatpak"
 info "Validating Flatpak workflow for version ${VERSION}"
 ok "Package version detected: ${VERSION}"
@@ -246,15 +255,10 @@ NODE
 ok "Branding/app-id guardrails passed"
 
 ## Flatpak install status
-if command -v flatpak >/dev/null 2>&1; then
-  if flatpak --user info io.github.PirateMaryRead.canva-linux >/dev/null 2>&1 || flatpak info io.github.PirateMaryRead.canva-linux >/dev/null 2>&1; then
-    ok "io.github.PirateMaryRead.canva-linux is installed"
-  else
-    warn "io.github.PirateMaryRead.canva-linux is not installed locally"
-  fi
+if flatpak --user info io.github.PirateMaryRead.canva-linux >/dev/null 2>&1 || flatpak info io.github.PirateMaryRead.canva-linux >/dev/null 2>&1; then
+  ok "io.github.PirateMaryRead.canva-linux is installed"
 else
-  warn "flatpak command not found; Flatpak-based checks skipped"
-  warn "Install Flatpak and org.flatpak.Builder to run full Flathub lint checks"
+  warn "io.github.PirateMaryRead.canva-linux is not installed locally"
 fi
 
 ## Optional desktop file validation
@@ -272,8 +276,7 @@ if check_optional_command appstreamcli "AppStream validator"; then
 fi
 
 ## Optional Flathub-style lint checks
-if command -v flatpak >/dev/null 2>&1; then
-  if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
+if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
     info "Running flatpak-builder-lint manifest"
     flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.PirateMaryRead.canva-linux.yml
     ok "Manifest lint passed"
@@ -299,10 +302,9 @@ if command -v flatpak >/dev/null 2>&1; then
       warn "repo/ directory not found; skipping flatpak-builder-lint repo repo"
       warn "Run ./canva-linux.sh --bundle to generate repo/ before repo lint"
     fi
-  else
-    warn "org.flatpak.Builder is not installed; skipping flatpak-builder-lint checks"
-    warn "Install with: flatpak install flathub org.flatpak.Builder"
-  fi
+else
+  warn "org.flatpak.Builder is not installed; skipping flatpak-builder-lint checks"
+  warn "Install with: flatpak install flathub org.flatpak.Builder"
 fi
 
 ## Optional bundle presence check

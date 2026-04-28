@@ -4,6 +4,14 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+source "${ROOT_DIR}/scripts/preflight-common.sh"
+
+require_command bash
+require_command git
+require_command npm
+require_command node
+require_node_major 22
+
 log_info() {
   echo "[info] $*"
 }
@@ -35,8 +43,8 @@ fi
 
 if command -v appstreamcli >/dev/null 2>&1; then
   run_step "appstreamcli validate --explain" \
-  appstreamcli validate --explain \
-  data/io.github.PirateMaryRead.canva-linux.metainfo.xml
+    appstreamcli validate --explain \
+    data/io.github.PirateMaryRead.canva-linux.metainfo.xml
 else
   log_info "appstreamcli not found, skipping"
 fi
