@@ -50,8 +50,7 @@ const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
 const APP_ICON_PATH = path.join(__dirname, '..', 'assets', 'canva-icon.png');
 const centralLogger = createCentralLogger({ app });
-const { debugSpec, debugEnabled, debugLog } = createDebugTools({
-  spec: process.env.CANVA_DEBUG,
+const { debugLevel, debugEnabled, debugLog } = createDebugTools({
   emit(category, args) {
     centralLogger.logDebug(category, args, { source: 'main' });
   },
@@ -71,7 +70,6 @@ let createHomeTab = () => null;
 configureLinuxRuntime({
   app,
   appId: APP_ID,
-  debugSpec,
   path,
   wmClass: WM_CLASS,
 });
@@ -299,7 +297,7 @@ registerAppLifecycle({
   createShellWindow,
   createToolbarView,
   debugLog,
-  debugSpec,
+  debugLevel,
   flushSession,
   getCanvaSession,
   logCredentialStorageBackend,

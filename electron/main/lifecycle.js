@@ -11,7 +11,7 @@ function registerAppLifecycle({
   createShellWindow,
   createToolbarView,
   debugLog,
-  debugSpec,
+  debugLevel,
   flushSession,
   getCanvaSession,
   logCredentialStorageBackend,
@@ -27,7 +27,7 @@ function registerAppLifecycle({
   app.whenReady().then(async () => {
     const logFilePath = centralLogger.initLogFile();
     debugLog('startup', 'when-ready', `platform=${process.platform}`, `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland')}`);
-    debugLog('startup', 'debug-spec', debugSpec || 'disabled');
+    debugLog('startup', 'debug-level', String(debugLevel || 0));
     centralLogger.logStatus('startup', 'ok', `debug-log-file ${logFilePath}`);
     if (typeof registerGpuDiagnostics === 'function') {
       registerGpuDiagnostics();

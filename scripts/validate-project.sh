@@ -11,6 +11,8 @@ require_command git
 require_command npm
 require_command node
 require_node_major 22
+validate_json_file package.json
+validate_json_file package-lock.json
 
 log_info() {
   echo "[info] $*"

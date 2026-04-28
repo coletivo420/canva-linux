@@ -6,7 +6,6 @@ console.log('[canva:preload] raw-init ' + location.href);
 const { createPreloadDebug } = require('./debug');
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
-  spec: process?.env?.CANVA_DEBUG,
   source: 'canva-preload',
 });
 

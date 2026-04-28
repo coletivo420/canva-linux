@@ -14,7 +14,7 @@ function appendDisableFeature(app, featureName) {
   app.commandLine.appendSwitch(switchName, Array.from(features).join(','));
 }
 
-function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
+function configureLinuxRuntime({ app, appId, wmClass, path }) {
   app.setName('Canva Linux');
   app.commandLine.appendSwitch('disable-component-update');
   app.commandLine.appendSwitch('disable-domain-reliability');
@@ -38,7 +38,7 @@ function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
     }
   }
 
-  if (shouldEnableCaptureVerboseLogging(debugSpec)) {
+  if (shouldEnableCaptureVerboseLogging()) {
     app.commandLine.appendSwitch('enable-logging');
     app.commandLine.appendSwitch('v', '1');
     app.commandLine.appendSwitch(
@@ -55,23 +55,12 @@ function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
   app.setPath('sessionData', path.join(app.getPath('userData'), 'session'));
 }
 
-function shouldEnableCaptureVerboseLogging(debugSpec) {
-  const raw = String(debugSpec || '').trim().toLowerCase();
-  if (!raw) return false;
-  return raw.split(',').some((token) => {
-    const value = token.trim();
-    return value === '1'
-      || value === 'all'
-      || value === '*'
-      || value === 'eyedropper'
-      || value === 'routing'
-      || value.startsWith('routing:')
-      || value === 'eyedropper-routing'
-      || value.startsWith('eyedropper:')
-      || value === 'capture'
-      || value.startsWith('capture:')
-      || value === 'debug';
-  });
+function shouldEnableCaptureVerboseLogging() {
+  const level = String(process.env.CANVA_DEBUG_LEVEL || '').trim();
+
+  if (level === '2') return true;
+
+  return String(process.env.CANVA_DEBUG || '').trim() === '2';
 }
 
 async function flushSession(ses) {

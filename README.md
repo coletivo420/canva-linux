@@ -7,7 +7,7 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 ## Status
 
 Stable: 1.4.10  
-Next: 1.4.11.dev3 (GPU acceleration + diagnostics)
+Next: 1.4.11-dev.4 (simplified debug levels + GPU diagnostics polish)
 
 ## Community package status
 
@@ -245,6 +245,27 @@ Detailed packaging notes live in:
 - `docs/FLATHUB_SUBMISSION_NOTES.md`
 - `packaging/flathub/`
 
+## Debugging
+
+Canva Linux uses a single central log file:
+
+```text
+logs/current.log
+```
+
+Debug levels:
+
+```bash
+CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+```
+
+`CANVA_DEBUG=1` shows all internal Canva Linux diagnostics, including GPU acceleration monitoring.
+
+`CANVA_DEBUG=2` shows all internal diagnostics plus verbose Chromium/Electron stderr logs.
+
+Module-specific debug selection is not supported. See `docs/DEBUGGING.md`.
+
 ## GPU acceleration
 
 Canva Linux enables GPU acceleration by default when DRI is available.
@@ -256,16 +277,6 @@ Available backends:
 - `vulkan`
 - `software`
 - `force`
-
-Example:
-
-```bash
-CANVA_GPU_BACKEND=opengl CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
-```
-
-GPU logs are available in:
-
-- `logs/current.log`
 
 See `docs/GPU_ACCELERATION.md`.
 

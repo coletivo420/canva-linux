@@ -16,8 +16,13 @@ ensure_flathub_runtime() {
 
 build_electron_output() {
   if [[ ! -d node_modules ]]; then
-    info "node_modules missing; running npm install"
-    npm install
+    if [[ -f package-lock.json ]]; then
+      info "node_modules missing; running npm ci"
+      npm ci
+    else
+      info "node_modules missing; running npm install"
+      npm install
+    fi
   else
     info "node_modules found; skipping npm install"
   fi

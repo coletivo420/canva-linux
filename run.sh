@@ -3,11 +3,29 @@
 
 export CHROME_DESKTOP=io.github.PirateMaryRead.canva-linux.desktop
 
-debug_enabled() {
+canva_debug_level() {
   case "${CANVA_DEBUG:-}" in
-    ""|0|false|FALSE) return 1 ;;
-    *) return 0 ;;
+    ""|0|false|FALSE)
+      echo "0"
+      ;;
+    1)
+      echo "1"
+      ;;
+    2)
+      echo "2"
+      ;;
+    *)
+      echo "canva-linux: warning: unsupported CANVA_DEBUG='${CANVA_DEBUG}'. Use CANVA_DEBUG=1 or CANVA_DEBUG=2." >&2
+      echo "0"
+      ;;
   esac
+}
+
+CANVA_DEBUG_LEVEL="$(canva_debug_level)"
+export CANVA_DEBUG_LEVEL
+
+debug_enabled() {
+  [ "${CANVA_DEBUG_LEVEL:-0}" = "1" ] || [ "${CANVA_DEBUG_LEVEL:-0}" = "2" ]
 }
 
 launcher_log() {
@@ -50,7 +68,7 @@ detect_display_server() {
   echo "unknown"
 }
 
-if debug_enabled; then
+if [ "$CANVA_DEBUG_LEVEL" = "2" ]; then
   set -- \
     --enable-logging=stderr \
     --log-level=0 \
@@ -81,6 +99,12 @@ elif [ "$DISPLAY_SERVER" = "wayland" ]; then
   set -- --ozone-platform=wayland "$@"
 fi
 
+if [ "${CANVA_DISABLE_WAYLAND_COLOR_MANAGER:-0}" = "1" ]; then
+  set -- \
+    --disable-features=WaylandWpColorManagerV1 \
+    "$@"
+fi
+
 if [ "$GPU_DRI_RENDER_NODE" = "0" ] && [ "$GPU_BACKEND" != "software" ]; then
   launcher_log "no DRI render node found; switching to software fallback"
   GPU_BACKEND="software"
@@ -91,8 +115,6 @@ case "$GPU_BACKEND" in
     set -- \
       --enable-gpu-rasterization \
       --enable-zero-copy \
-      --use-gl=angle \
-      --use-angle=gl \
       "$@"
     ;;
 
