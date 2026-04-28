@@ -1,12 +1,12 @@
 'use strict';
 
 function getDebugLevel() {
-  const explicitLevel = String(process.env.CANVA_DEBUG_LEVEL || '').trim();
+  const explicitLevel = String(process?.env?.CANVA_DEBUG_LEVEL || '').trim();
   if (explicitLevel === '1' || explicitLevel === '2') {
     return Number(explicitLevel);
   }
 
-  const raw = String(process.env.CANVA_DEBUG || '').trim().toLowerCase();
+  const raw = String(process?.env?.CANVA_DEBUG || '').trim().toLowerCase();
   if (raw === '1') return 1;
   if (raw === '2') return 2;
 
