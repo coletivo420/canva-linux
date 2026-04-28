@@ -7,7 +7,7 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 ## Status
 
 Stable: 1.4.10  
-Next: 1.4.11-dev.4 (simplified debug levels + GPU diagnostics polish)
+Next: 1.4.11-dev.5 (AI guardrails + crash-safe logger normalization)
 
 ## Community package status
 
@@ -301,3 +301,16 @@ See `docs/GPU_ACCELERATION.md`.
 ## License
 
 This project is distributed under the **GNU General Public License v3.0 or later**.
+
+## AI-assisted development
+
+This project includes guardrails to prevent regressions in logging, GPU acceleration, Flatpak behavior and Canva-specific features.
+
+Before AI-assisted changes, read:
+
+- `docs/AI_GUARDRAILS.md`
+- `docs/LOGGING_CONTRACT.md`
+- `docs/FEATURES.md`
+- `docs/AI_DEVELOPMENT.md`
+
+Logging changes must use safe argument normalization. The logger must never crash the Electron main process.

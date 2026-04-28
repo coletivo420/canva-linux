@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.5] - 2026-04-28
+
+### Added
+
+- Added crash-safe logger argument normalization.
+- Added safe handling for circular objects, BigInt, Error, Function, Symbol, null and undefined log arguments.
+- Added tests for logger argument normalization.
+- Added `docs/AI_GUARDRAILS.md`.
+- Added `docs/LOGGING_CONTRACT.md`.
+- Added `docs/FEATURES.md`.
+- Added `scripts/check-ai-guardrails.js`.
+- Added `npm run docs:check-ai`.
+
+### Changed
+
+- Logging now normalizes arguments one by one instead of serializing the full args array.
+- Expanded AI development instructions to protect logging, GPU acceleration and Canva-specific features.
+- Project validation now checks AI guardrail documentation.
+
 ## [1.4.11-dev.4] - 2026-04-28
 
 ### Fixed
