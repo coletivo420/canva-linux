@@ -90,8 +90,8 @@ CANVA_GPU_BACKEND=software CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.
 Log checks:
 
 ```bash
-grep -n "feature-status" ~/.var/app/io.github.PirateMaryRead.canva-linux/config/*/logs/gpu.log 2>/dev/null || true
-grep -n "launcher-report" ~/.var/app/io.github.PirateMaryRead.canva-linux/config/*/logs/gpu.log 2>/dev/null || true
+grep -n "feature-status" ~/.var/app/io.github.PirateMaryRead.canva-linux/config/*/logs/current.log 2>/dev/null || true
+grep -n "launcher-report" ~/.var/app/io.github.PirateMaryRead.canva-linux/config/*/logs/current.log 2>/dev/null || true
 ```
 
 Note: The exact `userData` path can vary; the app logs `gpu-log-file` to show the active location.

@@ -14,17 +14,11 @@ function serializeGpuFeatureStatus(status = {}) {
 
 function createGpuLogger({ centralLogger }) {
   function logGpu(level, category, event, ...args) {
-    centralLogger.logStatus(category, level, [event, ...args].join(' '), {
-      source: 'gpu',
-      scope: 'gpu',
-    });
+    centralLogger.logStatus(category, level, [event, ...args].join(' '), { source: 'gpu' });
   }
 
   function debugGpu(category, event, ...args) {
-    centralLogger.logDebug(category, [event, ...args], {
-      source: 'gpu',
-      scope: 'gpu',
-    });
+    centralLogger.logDebug(category, [event, ...args], { source: 'gpu' });
   }
 
   return {
@@ -34,10 +28,10 @@ function createGpuLogger({ centralLogger }) {
 }
 
 function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
-  const gpuLogPath = centralLogger.initScopedLogFile('gpu');
+  const logFilePath = centralLogger.getLogFilePath() || 'unavailable';
   const { logGpu, debugGpu } = createGpuLogger({ centralLogger });
 
-  logGpu('ok', 'gpu:runtime', 'gpu-log-file', gpuLogPath);
+  logGpu('ok', 'gpu:runtime', 'gpu-log-file', logFilePath);
   logGpu('ok', 'gpu:launcher', 'launcher-report', process.env.CANVA_GPU_LAUNCHER_REPORT || 'unavailable');
 
   logGpu(
@@ -96,7 +90,7 @@ function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
     );
   });
 
-  debugLog('gpu:runtime', 'diagnostics-registered', `gpuLog=${gpuLogPath}`);
+  debugLog('gpu:runtime', 'diagnostics-registered', `logFile=${logFilePath}`);
 }
 
 module.exports = {

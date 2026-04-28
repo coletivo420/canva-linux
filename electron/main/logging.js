@@ -17,7 +17,7 @@ const RELEASE_STATUS = {
     'Upload diagnostics now preserve ingress context from drop, paste, picker, and file-bearing network handoff.',
     'OAuth popup diagnostics no longer reference an undefined tab object during popup title or favicon updates.',
     'Linux no longer disables Electron hardware acceleration by default.',
-    'GPU diagnostics now write to both current.log and gpu.log.',
+    'GPU diagnostics are centralized in current.log.',
   ],
   validated: [
     'Application startup on Linux Wayland.',
@@ -52,8 +52,6 @@ function formatDebugList(items = []) {
 
 function createCentralLogger({ app }) {
   let logFilePath = null;
-  let logsDirPath = null;
-  const scopedLogFilePaths = new Map();
 
   function normalizeArgs(args = []) {
     return args.map((value) => {
@@ -75,15 +73,6 @@ function createCentralLogger({ app }) {
     } catch {}
   }
 
-  function appendScopedFileLine(scope, prefix, args) {
-    const scopedPath = scopedLogFilePaths.get(scope);
-    if (!scopedPath) return;
-    const line = `${new Date().toISOString()} ${prefix} ${normalizeArgs(args).join(' ')}\n`;
-    try {
-      fs.appendFileSync(scopedPath, line, 'utf8');
-    } catch {}
-  }
-
   function write(level, prefix, args) {
     if (level === 'critical') {
       console.error(prefix, ...args);
@@ -97,7 +86,7 @@ function createCentralLogger({ app }) {
   }
 
   function initLogFile() {
-    logsDirPath = path.join(app.getPath('userData'), 'logs');
+    const logsDirPath = path.join(app.getPath('userData'), 'logs');
     const currentLogPath = path.join(logsDirPath, 'current.log');
     fs.mkdirSync(logsDirPath, { recursive: true });
     if (fs.existsSync(currentLogPath)) {
@@ -108,52 +97,26 @@ function createCentralLogger({ app }) {
     return currentLogPath;
   }
 
-  function initScopedLogFile(scope) {
-    if (!logsDirPath) {
-      logsDirPath = path.join(app.getPath('userData'), 'logs');
-      fs.mkdirSync(logsDirPath, { recursive: true });
-    }
-    const safeScope = String(scope || 'app').replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
-    const scopedPath = path.join(logsDirPath, `${safeScope}.log`);
-    if (fs.existsSync(scopedPath)) {
-      fs.unlinkSync(scopedPath);
-    }
-    fs.writeFileSync(scopedPath, '', 'utf8');
-    scopedLogFilePaths.set(safeScope, scopedPath);
-    return scopedPath;
-  }
-
-  function logDebug(category, args = [], { source = 'main', level = 'ok', scope = null } = {}) {
+  function logDebug(category, args = [], { source = 'main', level = 'ok' } = {}) {
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
     write(level, terminalPrefix, args);
     appendFileLine(filePrefix, args);
-    if (scope) {
-      appendScopedFileLine(scope, filePrefix, args);
-    }
   }
 
-  function logStatus(category, level, message, { source = 'main', scope = null } = {}) {
+  function logStatus(category, level, message, { source = 'main' } = {}) {
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
     write(level, terminalPrefix, [message]);
     appendFileLine(filePrefix, [message]);
-    if (scope) {
-      appendScopedFileLine(scope, filePrefix, [message]);
-    }
   }
 
   return {
     initLogFile,
-    initScopedLogFile,
     logDebug,
     logStatus,
     getLogFilePath() {
       return logFilePath;
-    },
-    getScopedLogFilePath(scope) {
-      const safeScope = String(scope || 'app').replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
-      return scopedLogFilePaths.get(safeScope) || null;
     },
   };
 }

@@ -15,7 +15,6 @@ Canva Linux 1.4.11-dev.3 enables GPU acceleration by default when a DRI render n
 GPU diagnostics are written to:
 
 - `logs/current.log`
-- `logs/gpu.log`
 
 Enable GPU logs:
 

@@ -266,7 +266,6 @@ CANVA_GPU_BACKEND=opengl CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.ca
 GPU logs are available in:
 
 - `logs/current.log`
-- `logs/gpu.log`
 
 See `docs/GPU_ACCELERATION.md`.
 

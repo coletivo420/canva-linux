@@ -15,7 +15,7 @@ All notable changes to this project are documented in this file.
 - Added OpenGL/ANGLE accelerated mode.
 - Added experimental Vulkan/ANGLE mode.
 - Added dedicated GPU diagnostics category.
-- Added separated `logs/gpu.log` while preserving `logs/current.log`.
+- Added centralized GPU diagnostics logging in `logs/current.log`.
 - Added Electron GPU feature status logging through `gpu-info-update`.
 - Added GPU child-process crash/gone diagnostics.
 
