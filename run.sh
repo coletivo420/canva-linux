@@ -91,7 +91,6 @@ case "$GPU_BACKEND" in
     set -- \
       --enable-gpu-rasterization \
       --enable-zero-copy \
-      --ignore-gpu-blocklist \
       --use-gl=angle \
       --use-angle=gl \
       "$@"
@@ -101,7 +100,6 @@ case "$GPU_BACKEND" in
     set -- \
       --enable-gpu-rasterization \
       --enable-zero-copy \
-      --ignore-gpu-blocklist \
       --use-gl=angle \
       --use-angle=gl \
       "$@"
@@ -111,7 +109,6 @@ case "$GPU_BACKEND" in
     set -- \
       --enable-gpu-rasterization \
       --enable-zero-copy \
-      --ignore-gpu-blocklist \
       --enable-features=Vulkan,VulkanFromANGLE,DefaultANGLEVulkan \
       --use-angle=vulkan \
       "$@"
