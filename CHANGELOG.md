@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.3] - 2026-04-28
+
+### Fixed
+- Fixed invalid `package.json` caused by a broken `lint:fix` script string.
+- Removed unconditional Linux hardware acceleration disablement from Electron runtime.
+
+### Added
+- Added `CANVA_GPU_BACKEND=auto|opengl|vulkan|software|force`.
+- Added GPU vendor detection in `run.sh`.
+- Added DRI render node detection and software fallback.
+- Added OpenGL/ANGLE accelerated mode.
+- Added experimental Vulkan/ANGLE mode.
+- Added dedicated GPU diagnostics category.
+- Added separated `logs/gpu.log` while preserving `logs/current.log`.
+- Added Electron GPU feature status logging through `gpu-info-update`.
+- Added GPU child-process crash/gone diagnostics.
+
+### Changed
+- Linux now prefers hardware acceleration when available.
+- GPU diagnostics use the existing Canva Linux central logger.
+- GPU state is logged through `CANVA_DEBUG=gpu`.
+
+### Documentation
+- Added `docs/GPU_ACCELERATION.md`.
+- Updated README GPU acceleration section.
+- Updated validation docs with GPU backend and log checks.
+
 ## [1.4.11-dev.2] - 2026-04-28
 
 ### Fixed

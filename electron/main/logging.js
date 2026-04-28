@@ -16,17 +16,22 @@ const RELEASE_STATUS = {
     'Window-open logging now distinguishes internal Canva tabs from real OAuth popup flows.',
     'Upload diagnostics now preserve ingress context from drop, paste, picker, and file-bearing network handoff.',
     'OAuth popup diagnostics no longer reference an undefined tab object during popup title or favicon updates.',
+    'Linux no longer disables Electron hardware acceleration by default.',
+    'GPU diagnostics now write to both current.log and gpu.log.',
   ],
   validated: [
     'Application startup on Linux Wayland.',
     'Persistent session initialization and fixed Home tab shell behavior.',
     'Custom eyedropper behavior preserved after the global debug expansion.',
     'Host drag-and-drop into the Canva editor on Wayland with a real file drop.',
+    'GPU backend selection with CANVA_GPU_BACKEND=auto,opengl,vulkan,software,force.',
+    'Flatpak DRI access and Chromium GPU feature status logging.',
   ],
   underObservation: [
     'Host file picker continuation and clipboard-driven imports inside Canva.',
     'OAuth popup completion paths after the WebContentsView migration with a clean local session.',
     'Non-fatal DBus, VAAPI, and compositor warnings that do not block startup.',
+    'Vulkan/ANGLE behavior across Intel, AMD, NVIDIA, Wayland, and X11.',
   ],
 };
 
@@ -47,6 +52,8 @@ function formatDebugList(items = []) {
 
 function createCentralLogger({ app }) {
   let logFilePath = null;
+  let logsDirPath = null;
+  const scopedLogFilePaths = new Map();
 
   function normalizeArgs(args = []) {
     return args.map((value) => {
@@ -68,6 +75,15 @@ function createCentralLogger({ app }) {
     } catch {}
   }
 
+  function appendScopedFileLine(scope, prefix, args) {
+    const scopedPath = scopedLogFilePaths.get(scope);
+    if (!scopedPath) return;
+    const line = `${new Date().toISOString()} ${prefix} ${normalizeArgs(args).join(' ')}\n`;
+    try {
+      fs.appendFileSync(scopedPath, line, 'utf8');
+    } catch {}
+  }
+
   function write(level, prefix, args) {
     if (level === 'critical') {
       console.error(prefix, ...args);
@@ -81,9 +97,9 @@ function createCentralLogger({ app }) {
   }
 
   function initLogFile() {
-    const logsDir = path.join(app.getPath('userData'), 'logs');
-    const currentLogPath = path.join(logsDir, 'current.log');
-    fs.mkdirSync(logsDir, { recursive: true });
+    logsDirPath = path.join(app.getPath('userData'), 'logs');
+    const currentLogPath = path.join(logsDirPath, 'current.log');
+    fs.mkdirSync(logsDirPath, { recursive: true });
     if (fs.existsSync(currentLogPath)) {
       fs.unlinkSync(currentLogPath);
     }
@@ -92,26 +108,52 @@ function createCentralLogger({ app }) {
     return currentLogPath;
   }
 
-  function logDebug(category, args = [], { source = 'main', level = 'ok' } = {}) {
+  function initScopedLogFile(scope) {
+    if (!logsDirPath) {
+      logsDirPath = path.join(app.getPath('userData'), 'logs');
+      fs.mkdirSync(logsDirPath, { recursive: true });
+    }
+    const safeScope = String(scope || 'app').replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
+    const scopedPath = path.join(logsDirPath, `${safeScope}.log`);
+    if (fs.existsSync(scopedPath)) {
+      fs.unlinkSync(scopedPath);
+    }
+    fs.writeFileSync(scopedPath, '', 'utf8');
+    scopedLogFilePaths.set(safeScope, scopedPath);
+    return scopedPath;
+  }
+
+  function logDebug(category, args = [], { source = 'main', level = 'ok', scope = null } = {}) {
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
     write(level, terminalPrefix, args);
     appendFileLine(filePrefix, args);
+    if (scope) {
+      appendScopedFileLine(scope, filePrefix, args);
+    }
   }
 
-  function logStatus(category, level, message, { source = 'main' } = {}) {
+  function logStatus(category, level, message, { source = 'main', scope = null } = {}) {
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
     write(level, terminalPrefix, [message]);
     appendFileLine(filePrefix, [message]);
+    if (scope) {
+      appendScopedFileLine(scope, filePrefix, [message]);
+    }
   }
 
   return {
     initLogFile,
+    initScopedLogFile,
     logDebug,
     logStatus,
     getLogFilePath() {
       return logFilePath;
+    },
+    getScopedLogFilePath(scope) {
+      const safeScope = String(scope || 'app').replace(/[^a-z0-9_-]/gi, '-').toLowerCase();
+      return scopedLogFilePaths.get(safeScope) || null;
     },
   };
 }
