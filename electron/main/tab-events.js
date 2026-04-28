@@ -142,8 +142,13 @@ function attachTabEventHandlers(tab, helpers) {
     debugLog('view', 'frame-load', `tab=${tab.id}`, isMainFrame ? 'main' : 'sub', processId, routingId);
   });
 
-  wc.on('console-message', (_event, level, message, line, sourceId) => {
-    debugLog(`tabs:console:${tab.id}`, 'console', `level=${level}`, `line=${line}`, sourceId || 'inline', message);
+  wc.on('console-message', (event, legacyLevel, legacyMessage, legacyLine, legacySourceId) => {
+    const level = event.level ?? legacyLevel;
+    const message = event.message ?? legacyMessage;
+    const lineNumber = event.lineNumber ?? legacyLine;
+    const sourceId = event.sourceId ?? legacySourceId;
+
+    debugLog(`tabs:console:${tab.id}`, 'console', `level=${level}`, `line=${lineNumber}`, sourceId || 'inline', message);
     if (message.includes('canva-preload') || message.includes('EyeDropper')) {
       debugLog('eyedropper:diagnostics', 'console-intercept', `tab=${tab.id}`, message);
     }

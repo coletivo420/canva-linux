@@ -1,0 +1,104 @@
+# Debugging
+
+Canva Linux writes diagnostics to a single central log file:
+
+```text
+logs/current.log
+```
+
+## Debug levels
+
+### `CANVA_DEBUG=1`
+
+Shows all internal Canva Linux diagnostics:
+
+```bash
+CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+```
+
+Includes:
+
+- startup
+- session
+- app lifecycle
+- tabs
+- toolbar
+- views
+- permissions
+- uploads
+- OAuth
+- drag-and-drop
+- eyedropper
+- preload
+- GPU acceleration monitoring
+
+### `CANVA_DEBUG=2`
+
+Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron stderr logs:
+
+```bash
+CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+```
+
+Use this mode when debugging:
+
+- Chromium startup
+- Electron internals
+- Wayland/X11 behavior
+- GPU process behavior
+- DBus warnings
+- sandbox warnings
+- compositor issues
+- media/capture internals
+
+## No module-specific debug selection
+
+Canva Linux no longer supports selecting debug modules from the command line.
+
+Unsupported examples:
+
+- `CANVA_DEBUG=gpu`
+- `CANVA_DEBUG=oauth`
+- `CANVA_DEBUG=dnd`
+- `CANVA_DEBUG=eyedropper`
+- `CANVA_DEBUG=tabs`
+- `CANVA_DEBUG=toolbar`
+- `CANVA_DEBUG=permissions`
+
+Use `CANVA_DEBUG=1` for all internal Canva Linux diagnostics.
+
+Use `CANVA_DEBUG=2` for all internal diagnostics plus Chromium/Electron verbose logs.
+
+## GPU diagnostics
+
+GPU diagnostics are included in `CANVA_DEBUG=1`.
+
+Expected entries:
+
+- `launcher-report vendor=`
+- `runtime-env backend=`
+- `feature-status acceleration=`
+
+## GPU backend checks
+
+```bash
+CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+```
+
+## Display backend checks
+
+```bash
+CANVA_FORCE_WAYLAND=1 CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_FORCE_X11=1 CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+```
+
+## Wayland color-management workaround
+
+For NVIDIA/KDE/Wayland color-manager warnings:
+
+```bash
+CANVA_DISABLE_WAYLAND_COLOR_MANAGER=1 flatpak run io.github.PirateMaryRead.canva-linux
+```

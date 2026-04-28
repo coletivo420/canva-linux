@@ -25,7 +25,7 @@ Expected outcome:
 1. Launch normally:
    - `flatpak run io.github.PirateMaryRead.canva-linux`
 2. Launch with startup diagnostics:
-   - `CANVA_DEBUG=startup,eyedropper flatpak run io.github.PirateMaryRead.canva-linux`
+   - `CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux`
 3. Confirm the app window renders and loads Canva.
 4. Confirm a fresh `current.log` is created for this run.
 5. Confirm startup logs include the Canva preload reaching `modules-loaded` and `eyedropper-installed`.
@@ -51,7 +51,7 @@ Expected outcome:
 2. Use the file picker from Canva upload flow.
 3. Paste clipboard content if applicable.
 4. When troubleshooting, run:
-   - `CANVA_DEBUG=dnd,upload,permissions,session flatpak run io.github.PirateMaryRead.canva-linux`
+   - `CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux`
 
 ## Eyedropper behavior
 

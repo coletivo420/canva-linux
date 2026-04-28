@@ -1,54 +1,43 @@
 # GPU acceleration
 
-Canva Linux 1.4.11-dev.3 enables GPU acceleration by default when a DRI render node is available.
+Canva Linux 1.4.11-dev.4 enables GPU acceleration by default when a DRI render node is available.
 
 ## Runtime modes
 
-- `CANVA_GPU_BACKEND=auto`: default accelerated OpenGL/ANGLE path.
-- `CANVA_GPU_BACKEND=opengl`: force OpenGL/ANGLE.
-- `CANVA_GPU_BACKEND=vulkan`: experimental Vulkan/ANGLE.
-- `CANVA_GPU_BACKEND=software`: force software fallback.
-- `CANVA_GPU_BACKEND=force`: accelerated path with Chromium GPU blocklist ignored.
+- `CANVA_GPU_BACKEND=auto`: default accelerated mode without forcing ANGLE/OpenGL.
+- `CANVA_GPU_BACKEND=opengl`: force ANGLE/OpenGL.
+- `CANVA_GPU_BACKEND=vulkan`: experimental Vulkan/ANGLE mode.
+- `CANVA_GPU_BACKEND=software`: explicit software fallback.
+- `CANVA_GPU_BACKEND=force`: accelerated test mode with GPU blocklist ignored.
 
-## Logs
+## GPU logs
 
-GPU diagnostics are written to:
+GPU diagnostics are part of the central Canva Linux log:
 
-- `logs/current.log`
-
-Enable GPU logs:
-
-```bash
-CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
+```text
+logs/current.log
 ```
 
-Useful commands:
+Use:
 
 ```bash
-flatpak --gl-drivers
-
-flatpak run --command=sh io.github.PirateMaryRead.canva-linux -c '
-ls -l /dev/dri || true
-cat /.flatpak-info | grep -E "app-extensions|runtime-extensions|Instance" || true
-'
+CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 ```
 
-## Troubleshooting
+Expected GPU entries:
 
-Force software fallback:
+- `launcher-report vendor=`
+- `runtime-env backend=`
+- `feature-status acceleration=`
 
-```bash
-CANVA_GPU_BACKEND=software CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
-```
+Module-specific debug selection, such as `CANVA_DEBUG=gpu`, is no longer supported.
+See `docs/DEBUGGING.md`.
 
-Try OpenGL:
-
-```bash
-CANVA_GPU_BACKEND=opengl CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
-```
-
-Try Vulkan:
+## Backend checks
 
 ```bash
-CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 ```

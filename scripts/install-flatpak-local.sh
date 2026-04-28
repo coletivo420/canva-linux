@@ -84,11 +84,30 @@ cat <<'POSTINSTALL'
 
 Run commands:
   flatpak run io.github.PirateMaryRead.canva-linux
+
+Internal Canva Linux logs:
   CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-  CANVA_DEBUG=oauth,dnd flatpak run io.github.PirateMaryRead.canva-linux
+    Shows all internal Canva Linux diagnostics, including startup, session,
+    tabs, toolbar, permissions, uploads, OAuth, drag-and-drop, eyedropper,
+    preload and GPU acceleration monitoring.
+
+  CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+    Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron
+    stderr logs.
+
+Display backend checks:
   CANVA_FORCE_WAYLAND=1 flatpak run io.github.PirateMaryRead.canva-linux
   CANVA_FORCE_X11=1 flatpak run io.github.PirateMaryRead.canva-linux
 
-Optional bundle generation (for release artifacts only):
+GPU backend checks:
+  CANVA_GPU_BACKEND=auto flatpak run io.github.PirateMaryRead.canva-linux
+  CANVA_GPU_BACKEND=opengl flatpak run io.github.PirateMaryRead.canva-linux
+  CANVA_GPU_BACKEND=vulkan flatpak run io.github.PirateMaryRead.canva-linux
+  CANVA_GPU_BACKEND=software flatpak run io.github.PirateMaryRead.canva-linux
+
+Debugging documentation:
+  docs/DEBUGGING.md
+
+Optional bundle generation:
   ./scripts/build-flatpak-bundle.sh
 POSTINSTALL

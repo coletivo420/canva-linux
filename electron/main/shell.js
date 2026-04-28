@@ -95,8 +95,13 @@ function createShellHelpers({
         validatedURL || 'unknown-url'
       );
     });
-    toolbarView.webContents.on('console-message', (_event, level, message, line, sourceId) => {
-      debugLog('tabs:toolbar', 'toolbar-console', `level=${level}`, `line=${line}`, sourceId || 'inline', message);
+    toolbarView.webContents.on('console-message', (event, legacyLevel, legacyMessage, legacyLine, legacySourceId) => {
+      const level = event.level ?? legacyLevel;
+      const message = event.message ?? legacyMessage;
+      const lineNumber = event.lineNumber ?? legacyLine;
+      const sourceId = event.sourceId ?? legacySourceId;
+
+      debugLog('tabs:toolbar', 'toolbar-console', `level=${level}`, `line=${lineNumber}`, sourceId || 'inline', message);
     });
     toolbarView.webContents.on('render-process-gone', (_event, details) => {
       debugLog('tabs:toolbar', 'toolbar-render-process-gone', `reason=${details?.reason || 'unknown'}`, `exitCode=${details?.exitCode ?? 'unknown'}`);

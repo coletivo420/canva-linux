@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.4] - 2026-04-28
+
+### Fixed
+
+- Fixed remote `package.json` syntax by restoring valid JSON for the `lint:fix` script.
+- Added JSON preflight validation before reading package metadata from shell scripts.
+- Fixed GPU diagnostics wording to use `central-log-file` because diagnostics remain centralized in `logs/current.log`.
+- Migrated Electron `console-message` handlers away from deprecated legacy arguments.
+
+### Changed
+
+- Simplified debug behavior to two levels only.
+- `CANVA_DEBUG=1` now shows all internal Canva Linux diagnostics, including GPU acceleration monitoring.
+- `CANVA_DEBUG=2` now shows all internal diagnostics plus verbose Chromium/Electron stderr logs.
+- Removed module-specific debug selection from command-line behavior.
+- Removed category-specific debug commands from post-install output and documentation as supported runtime modes.
+- Switched local dependency installation to `npm ci` when `package-lock.json` is available.
+- Made `CANVA_GPU_BACKEND=auto` less aggressive by no longer forcing ANGLE/OpenGL.
+- Added runtime GPU acceleration classification such as `accelerated-non-vulkan`, `accelerated-vulkan`, or `software-or-disabled`.
+
+### Documentation
+
+- Added or rewrote `docs/DEBUGGING.md`.
+- Updated README debug-level documentation.
+- Updated GPU acceleration docs for the single-log `current.log` model.
+- Updated validation docs for `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
 ## [1.4.11-dev.3] - 2026-04-28
 
 ### Fixed

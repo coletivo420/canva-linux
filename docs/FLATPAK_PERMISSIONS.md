@@ -81,7 +81,7 @@ After permission updates, run at minimum:
 Optional session-storage diagnostic:
 
 ```bash
-CANVA_DEBUG=session flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 ```
 
 ## Guardrails

@@ -6,7 +6,7 @@ const { createDebugTools } = require('../shared/debug');
 
 // Centralize preload-side debug routing so Canva-specific modules can emit
 // diagnostics without owning the IPC transport details.
-function createPreloadDebug({ spec, source = 'preload' }) {
+function createPreloadDebug({ source = 'preload' }) {
   function routeDebug(category, ...args) {
     try {
       ipcRenderer.send('wrapper:debug-log', { category, args, source });
@@ -18,7 +18,6 @@ function createPreloadDebug({ spec, source = 'preload' }) {
   }
 
   const { debugEnabled, debugLog } = createDebugTools({
-    spec,
     emit(category, args) {
       routeDebug(category, ...args);
     },
@@ -32,7 +31,7 @@ function createPreloadDebug({ spec, source = 'preload' }) {
       category = candidate;
       payload = args.slice(1);
     }
-    if (!debugEnabled(category) && !debugEnabled('eyedropper')) return;
+    if (!debugEnabled()) return;
     routeDebug(category, ...payload);
   }
 

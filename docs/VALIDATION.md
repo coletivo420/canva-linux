@@ -46,52 +46,45 @@ Flathub source validation may require:
 10. git diff --check
 ```
 
-## Baseline diagnostics (before editing)
+## Debug validation
+
+Validate internal logs:
 
 ```bash
-git status
-npm run lint
-npm test
-./scripts/validate-flatpak.sh
+CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 ```
+
+Expected:
+
+- startup logs
+- session logs
+- GPU acceleration monitoring
+- `central-log-file`
+- `feature-status acceleration=`
+
+Validate verbose Chromium/Electron logs:
+
+```bash
+CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+```
+
+Unsupported module-specific debug values must not be documented as valid runtime modes:
+
+- `CANVA_DEBUG=gpu`
+- `CANVA_DEBUG=oauth`
+- `CANVA_DEBUG=dnd`
+- `CANVA_DEBUG=eyedropper`
+- `CANVA_DEBUG=tabs`
+- `CANVA_DEBUG=toolbar`
+- `CANVA_DEBUG=permissions`
 
 ## GPU validation
-
-Host checks:
-
-```bash
-ls -l /dev/dri || true
-
-for f in /sys/class/drm/card*/device/vendor; do
-  [ -r "$f" ] && echo "$f: $(cat "$f")"
-done
-
-flatpak --gl-drivers
-```
-
-Sandbox checks:
-
-```bash
-flatpak run --command=sh io.github.PirateMaryRead.canva-linux -c '
-ls -l /dev/dri || true
-cat /.flatpak-info | grep -E "app-extensions|runtime-extensions|Instance" || true
-'
-```
 
 Runtime checks:
 
 ```bash
-CANVA_GPU_BACKEND=auto CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=opengl CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=software CANVA_DEBUG=gpu flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 ```
-
-Log checks:
-
-```bash
-grep -n "feature-status" ~/.var/app/io.github.PirateMaryRead.canva-linux/config/*/logs/current.log 2>/dev/null || true
-grep -n "launcher-report" ~/.var/app/io.github.PirateMaryRead.canva-linux/config/*/logs/current.log 2>/dev/null || true
-```
-
-Note: The exact `userData` path can vary; the app logs `gpu-log-file` to show the active location.

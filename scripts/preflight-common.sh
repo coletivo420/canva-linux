@@ -11,6 +11,24 @@ require_command() {
   fi
 }
 
+
+validate_json_file() {
+  local file="$1"
+
+  require_command node
+
+  if [[ ! -f "$file" ]]; then
+    echo "[error] JSON file not found: $file" >&2
+    exit 1
+  fi
+
+  node -e "JSON.parse(require('fs').readFileSync(process.argv[1], 'utf8'))" "$file" >/dev/null 2>&1 || {
+    echo "[error] Invalid JSON file: $file" >&2
+    echo "[error] Fix JSON syntax before continuing." >&2
+    exit 1
+  }
+}
+
 require_node_major() {
   local min_major="${1:-22}"
 
@@ -27,6 +45,7 @@ require_node_major() {
 
 detect_package_version() {
   if command -v node >/dev/null 2>&1 && [[ -f package.json ]]; then
+    validate_json_file package.json
     node -p "require('./package.json').version"
   else
     printf 'unknown'

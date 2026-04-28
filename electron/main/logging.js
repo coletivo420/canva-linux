@@ -52,6 +52,7 @@ function formatDebugList(items = []) {
 
 function createCentralLogger({ app }) {
   let logFilePath = null;
+  let lastDebugSignature = null;
 
   function normalizeArgs(args = []) {
     return args.map((value) => {
@@ -98,6 +99,12 @@ function createCentralLogger({ app }) {
   }
 
   function logDebug(category, args = [], { source = 'main', level = 'ok' } = {}) {
+    const signature = JSON.stringify([source, category, level, ...normalizeArgs(args)]);
+    if (signature === lastDebugSignature) {
+      return;
+    }
+    lastDebugSignature = signature;
+
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
     write(level, terminalPrefix, args);

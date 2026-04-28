@@ -12,6 +12,24 @@ function serializeGpuFeatureStatus(status = {}) {
   ];
 }
 
+function classifyGpuAcceleration(status = {}) {
+  const enabled = (value) => String(value || '').startsWith('enabled');
+
+  const accelerated = [
+    status.gpu_compositing,
+    status.webgl,
+    status.webgl2,
+    status.rasterization,
+    status.video_decode,
+  ].some(enabled);
+
+  const vulkanEnabled = enabled(status.vulkan);
+
+  if (accelerated && vulkanEnabled) return 'accelerated-vulkan';
+  if (accelerated) return 'accelerated-non-vulkan';
+  return 'software-or-disabled';
+}
+
 function createGpuLogger({ centralLogger }) {
   function logGpu(level, category, event, ...args) {
     centralLogger.logStatus(category, level, [event, ...args].join(' '), { source: 'gpu' });
@@ -31,7 +49,7 @@ function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
   const logFilePath = centralLogger.getLogFilePath() || 'unavailable';
   const { logGpu, debugGpu } = createGpuLogger({ centralLogger });
 
-  logGpu('ok', 'gpu:runtime', 'gpu-log-file', logFilePath);
+  logGpu('ok', 'gpu:runtime', 'central-log-file', logFilePath);
   logGpu('ok', 'gpu:launcher', 'launcher-report', process.env.CANVA_GPU_LAUNCHER_REPORT || 'unavailable');
 
   logGpu(
@@ -50,10 +68,13 @@ function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
       const featureStatus = app.getGPUFeatureStatus();
       const hardwareAccelerationEnabled = app.isHardwareAccelerationEnabled();
 
+      const acceleration = classifyGpuAcceleration(featureStatus);
+
       logGpu(
         'ok',
         'gpu:features',
         'feature-status',
+        `acceleration=${acceleration}`,
         `hardwareAcceleration=${hardwareAccelerationEnabled}`,
         ...serializeGpuFeatureStatus(featureStatus)
       );
@@ -90,9 +111,10 @@ function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
     );
   });
 
-  debugLog('gpu:runtime', 'diagnostics-registered', `logFile=${logFilePath}`);
+  debugLog('gpu:runtime', 'diagnostics-registered', `centralLog=${logFilePath}`);
 }
 
 module.exports = {
+  classifyGpuAcceleration,
   registerGpuDiagnostics,
 };
