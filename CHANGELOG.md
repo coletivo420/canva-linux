@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.2] - 2026-04-28
+
+### Fixed
+- Fixed local install failure when Node.js is missing by moving dependency checks before package metadata reads.
+- Fixed bundle generation preflight order before reading package metadata with Node.js.
+- Aligned `./canva-linux.sh --validate` with the full project validation workflow.
+- Improved preflight messages for missing host tools.
+
+### Changed
+- Added shared script preflight helpers.
+- Documented development requirements in README and technical docs.
+- Added distribution-specific setup commands for openSUSE, Debian/Ubuntu, Arch Linux, and Fedora.
+- Clarified that Node.js >=22 is required for development workflows.
+
+### Documentation
+- Updated README.md requirements.
+- Updated docs/DEVELOPMENT.md.
+- Updated docs/VALIDATION.md.
+- Updated docs/FLATHUB_SUBMISSION_PATH.md.
+- Updated docs/AI_DEVELOPMENT.md.
+- Added docs/TROUBLESHOOTING.md.
+
 ## [1.4.11-dev.1] - 2026-04-26
 
 ### Added

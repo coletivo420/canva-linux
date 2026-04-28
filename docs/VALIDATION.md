@@ -1,22 +1,52 @@
 # Validation Guide
 
-The canonical project validation entrypoint is:
+## Validation requirements
+
+The canonical validation command is:
 
 ```bash
-./scripts/validate-project.sh
+./canva-linux.sh --validate
 ```
 
-It runs the following sequence:
+It requires:
 
-1. `npm run lint`
-2. `npm test`
-3. `npm run docs:check-links`
-4. `./scripts/validate-flatpak.sh`
-5. `git diff HEAD --check` 
+- Node.js >= 22
+- npm
+- Git
+- Bash
+
+Flatpak validation additionally requires:
+
+- flatpak
+- org.flatpak.Builder runtime (for `flatpak run --command=... org.flatpak.Builder` checks)
+
+Desktop and AppStream validation use:
+
+- desktop-file-validate
+- appstreamcli
+
+Flathub source validation may require:
+
+- curl
+- sha256sum
+- tar
+
+## Validation flow
+
+```text
+1. npm run build:preload
+2. npm run lint
+3. npm run typecheck
+4. npm test
+5. npm run docs:check-links
+6. desktop-file-validate, if available
+7. appstreamcli validate --explain, if available
+8. ./scripts/validate-flatpak.sh
+9. ./scripts/validate-flathub-submission.sh
+10. git diff --check
+```
 
 ## Baseline diagnostics (before editing)
-
-Run these commands before making changes to measure current health:
 
 ```bash
 git status
@@ -24,19 +54,3 @@ npm run lint
 npm test
 ./scripts/validate-flatpak.sh
 ```
-
-## Close-out checks (before commit/merge)
-
-```bash
-./scripts/validate-project.sh
-```
-
-## Notes on environment warnings
-
-Some Flatpak checks are skipped in environments that do not provide:
-
-- `flatpak`
-- `desktop-file-validate`
-- `appstreamcli`
-
-These warnings are expected in minimal CI/sandbox environments and do not block local lint/test verification.

@@ -42,7 +42,6 @@ modules:
       - for pkg in .npm-offline-cache/*.tgz; do [ -f "$pkg" ] || continue; npm cache add --cache .npm-cache "$pkg"; done
       - npm install --offline --cache .npm-cache --no-audit
       - rm -rf /app/flatpak-node/cache .npm-cache .npm-offline-cache
-      - npm run build:preload
       - npm run dist -- --linux --dir
       - mkdir -p /app/main
       - cp -a dist/linux-unpacked/* /app/main/

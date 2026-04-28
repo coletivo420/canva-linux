@@ -139,3 +139,23 @@ Rules:
 - Development PRs must target `dev`.
 - Branches should remain short-lived during active development.
 - Branches may be kept until the stable release if the maintainer explicitly wants to preserve development history.
+
+## Environment assumptions
+
+AI-assisted patches must assume the documented development environment:
+
+- Node.js >= 22
+- npm
+- Bash
+- Git
+- Flatpak
+- flatpak-builder
+
+Scripts must not call external commands before validating that they exist.
+
+When adding a new host dependency, update:
+
+- README.md
+- docs/DEVELOPMENT.md
+- docs/VALIDATION.md
+- CHANGELOG.md
