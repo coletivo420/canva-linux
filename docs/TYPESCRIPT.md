@@ -1,4 +1,4 @@
-# TypeScript Migration Plan (`1.4.11-dev.6+`)
+# TypeScript Migration Plan (`1.4.11-dev.7+`)
 
 ## Current baseline
 
@@ -30,6 +30,18 @@ npm test
 ./canva-linux.sh --validate
 ```
 
+
+## DEV7 scope
+
+`1.4.11-dev.7` expands the strict boundary to GPU diagnostics.
+
+Strict boundary additions:
+
+- `electron/main/gpu-diagnostics.js`
+- `test/gpu-diagnostics.test.js`
+
+The goal is to type GPU feature classification, runtime environment parsing, and GPU process diagnostics without changing runtime behavior.
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:
@@ -57,3 +69,4 @@ These modules are small enough to type strictly and important enough to protect 
 - `dev8`: strict typing for shell/window-open policy and OAuth popup boundaries.
 - `dev9`: strict typing for preload debug/upload/eyedropper source modules.
 - `dev10`: evaluate isolated `.ts` conversion only after JSDoc strict islands are stable.
+- `dev11`: review the TypeScript conversion, clean up stale compatibility code, remove obsolete helpers, and consolidate docs/tests.

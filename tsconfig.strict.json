@@ -12,7 +12,9 @@
   "include": [
     "electron/main/logging-normalize.js",
     "electron/shared/debug.js",
+    "electron/main/gpu-diagnostics.js",
     "test/logging-normalize.test.js",
-    "test/debug-levels.test.js"
+    "test/debug-levels.test.js",
+    "test/gpu-diagnostics.test.js"
   ]
 }

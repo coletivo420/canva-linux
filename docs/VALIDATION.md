@@ -105,3 +105,18 @@ npm run typecheck:strict
 - logging normalization
 - debug levels
 - related tests
+
+## GPU diagnostics type validation
+
+Run:
+
+```bash
+npm run typecheck:strict
+node --test test/gpu-diagnostics.test.js
+```
+
+This validates:
+
+- GPU acceleration classification
+- runtime environment parsing
+- GPU feature status serialization
