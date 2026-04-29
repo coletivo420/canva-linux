@@ -1,44 +1,59 @@
-# TypeScript Migration Plan (`1.4.11.devX`)
+# TypeScript Migration Plan (`1.4.11-dev.6+`)
 
-## Objective
+## Current baseline
 
-Introduce TypeScript infrastructure gradually, preserving runtime behavior for
-Electron, preload bundling, Flatpak packaging, and existing tests.
+The project currently uses TypeScript as a JavaScript type-checking layer:
 
-## Phase `1.4.11.dev1` (foundation)
+- `allowJs: true`
+- `checkJs: true`
+- `noEmit: true`
+- `strict: false`
+- `npm run typecheck`
 
-Delivered in this phase:
+## DEV6 scope
 
-- `typescript` and `@types/node` installed as dev dependencies.
-- `tsconfig.json` created with:
-  - `allowJs: true`
-  - `checkJs: true`
-  - `noEmit: true`
-- npm script `typecheck` added (`tsc --noEmit`).
-- `scripts/validate-project.sh` updated so `typecheck` is part of project
-  validation.
+`1.4.11-dev.6` introduces the first strict TypeScript boundary without converting the whole app to `.ts`.
 
-## Scope guardrails
+Strict boundary files:
 
-- No aggressive conversion to `.ts` in `dev1`.
-- Keep Electron runtime entrypoints and preload bundle contract intact.
-- Do not commit generated preload bundle artifacts as source-of-truth changes.
+- `electron/main/logging-normalize.js`
+- `electron/shared/debug.js`
+- `test/logging-normalize.test.js`
+- `test/debug-levels.test.js`
 
-## Planned progression
-
-- `dev2`: JSDoc typing on critical JS modules.
-- `dev3`: migrate maintenance scripts to TypeScript-first workflow.
-- `dev4`: migrate tests to TypeScript.
-- `dev5+`: migrate isolated Electron main modules, then sensitive OAuth/IPC
-  modules.
-- `dev7`: migrate preload source to TypeScript while keeping runtime bundle
-  output as JavaScript.
-
-## Validation baseline
-
-At minimum for the foundation phase:
+Validation:
 
 ```bash
 npm run typecheck
-npm run validate:project
+npm run typecheck:strict
+npm test
+./canva-linux.sh --validate
 ```
+
+## Why logging/debug first?
+
+Logging and debug behavior are stable contracts after DEV4 and DEV5:
+
+- `CANVA_DEBUG=1`: all internal Canva Linux logs
+- `CANVA_DEBUG=2`: internal logs plus Chromium/Electron verbose logs
+- one central log file: `logs/current.log`
+- no module-specific public debug filters
+- crash-safe argument normalization
+
+These modules are small enough to type strictly and important enough to protect from regression.
+
+## Migration rules
+
+- Do not convert large Electron runtime modules to TypeScript in this phase.
+- Do not emit JavaScript from TypeScript.
+- Do not change preload bundle runtime behavior.
+- Do not rename public environment variables.
+- Do not reintroduce module-specific `CANVA_DEBUG=gpu` style filtering.
+- Prefer JSDoc typing before `.ts` conversion.
+
+## Planned progression
+
+- `dev7`: strict typing for GPU diagnostics and runtime environment parsing.
+- `dev8`: strict typing for shell/window-open policy and OAuth popup boundaries.
+- `dev9`: strict typing for preload debug/upload/eyedropper source modules.
+- `dev10`: evaluate isolated `.ts` conversion only after JSDoc strict islands are stable.

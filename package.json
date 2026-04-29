@@ -1,6 +1,6 @@
 {
   "name": "canva-linux",
-  "version": "1.4.11-dev.5",
+  "version": "1.4.11-dev.6",
   "description": "A community opensource desktop wrapper for use with Canva",
   "main": "electron/main/index.js",
   "author": "Community",
@@ -23,7 +23,8 @@
     "docs:check-links": "node scripts/check-doc-links.js",
     "typecheck": "tsc --noEmit",
     "validate:project": "./scripts/validate-project.sh",
-    "docs:check-ai": "node scripts/check-ai-guardrails.js"
+    "docs:check-ai": "node scripts/check-ai-guardrails.js",
+    "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit"
   },
   "build": {
     "appId": "io.github.PirateMaryRead.canva-linux",

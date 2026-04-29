@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.6] - 2026-04-29
+
+### Added
+
+- Added `tsconfig.strict.json` for the first strict TypeScript boundary.
+- Added `npm run typecheck:strict`.
+- Added strict JSDoc typing for logging normalization and debug-level helpers.
+- Added debug-level tests covering `CANVA_DEBUG=1`, `CANVA_DEBUG=2`, and unsupported module-specific debug values.
+
+### Changed
+
+- Project validation now runs both broad JavaScript type checking and the strict TypeScript boundary check.
+- Updated TypeScript migration documentation for the `1.4.11-dev.6+` sequence.
+
+### Notes
+
+- This phase does not convert the Electron runtime to `.ts`.
+- Runtime behavior is intentionally unchanged.
+- The public debug contract remains level-based only: `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
 ## [1.4.11-dev.5] - 2026-04-28
 
 ### Added
@@ -816,3 +836,4 @@ All notable changes to this project are documented in this file.
 ### Notes
 - Eyedropper work continues in the following iteration.
 - This release focuses on shell UI behavior, documentation, and licensing.
+

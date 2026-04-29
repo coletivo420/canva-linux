@@ -1,5 +1,10 @@
 'use strict';
+// @ts-check
 
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function safeStringify(value) {
   const seen = new WeakSet();
 
@@ -26,34 +31,22 @@ function safeStringify(value) {
 
     return serialized ?? '[Unserializable:undefined-json-result]';
   } catch (error) {
-    return `[Unserializable:${error?.message || String(error)}]`;
+    return `[Unserializable:${error instanceof Error ? error.message : String(error)}]`;
   }
 }
 
+/**
+ * @param {unknown} arg
+ * @returns {string}
+ */
 function normalizeLogArg(arg) {
-  if (arg === null) {
-    return 'null';
-  }
+  if (arg === null) return 'null';
+  if (arg === undefined) return 'undefined';
 
-  if (arg === undefined) {
-    return 'undefined';
-  }
-
-  if (typeof arg === 'string') {
-    return arg;
-  }
-
-  if (typeof arg === 'number' || typeof arg === 'boolean') {
-    return String(arg);
-  }
-
-  if (typeof arg === 'bigint') {
-    return arg.toString();
-  }
-
-  if (typeof arg === 'symbol') {
-    return arg.toString();
-  }
+  if (typeof arg === 'string') return arg;
+  if (typeof arg === 'number' || typeof arg === 'boolean') return String(arg);
+  if (typeof arg === 'bigint') return arg.toString();
+  if (typeof arg === 'symbol') return arg.toString();
 
   if (typeof arg === 'function') {
     return `[Function:${arg.name || 'anonymous'}]`;
@@ -66,6 +59,10 @@ function normalizeLogArg(arg) {
   return safeStringify(arg);
 }
 
+/**
+ * @param {unknown[] | Iterable<unknown> | unknown | null | undefined} args
+ * @returns {string[]}
+ */
 function normalizeArgs(args = []) {
   if (args === null || args === undefined) {
     return [];
@@ -75,13 +72,17 @@ function normalizeArgs(args = []) {
     return args.map(normalizeLogArg);
   }
 
-  if (typeof args[Symbol.iterator] === 'function') {
-    return Array.from(args).map(normalizeLogArg);
+  if (typeof args === 'object' && Symbol.iterator in args) {
+    return Array.from(/** @type {Iterable<unknown>} */ (args)).map(normalizeLogArg);
   }
 
   return [normalizeLogArg(args)];
 }
 
+/**
+ * @param {unknown[] | Iterable<unknown> | unknown | null | undefined} args
+ * @returns {string}
+ */
 function createLogSignature(args = []) {
   return normalizeArgs(args).join(' ');
 }
