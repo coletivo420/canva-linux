@@ -59,6 +59,10 @@
  */
 
 /**
+ * @typedef {string | number | boolean | null | undefined} StatusLogArg
+ */
+
+/**
  * @param {NodeJS.ProcessEnv} [env]
  * @returns {{
  *   backend: string;
@@ -123,11 +127,22 @@ function classifyGpuAcceleration(status = {}) {
  * @param {{ centralLogger: CentralLogger }} param0
  */
 function createGpuLogger({ centralLogger }) {
-  /** @param {LogLevel} level */
+  /**
+   * @param {LogLevel} level
+   * @param {string} category
+   * @param {string} event
+   * @param {...StatusLogArg} args
+   */
   function logGpu(level, category, event, ...args) {
     centralLogger.logStatus(category, level, [event, ...args].join(' '), { source: 'gpu' });
   }
 
+  /**
+   * Use debugGpu for raw objects so central logger normalization can preserve structure safely.
+   * @param {string} category
+   * @param {string} event
+   * @param {...unknown} args
+   */
   function debugGpu(category, event, ...args) {
     centralLogger.logDebug(category, [event, ...args], { source: 'gpu' });
   }
