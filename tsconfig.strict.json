@@ -13,8 +13,15 @@
     "electron/main/logging-normalize.js",
     "electron/shared/debug.js",
     "electron/main/gpu-diagnostics.js",
+    "electron/main/shell.js",
+    "electron/main/window-open-policy.js",
+    "electron/main/oauth.js",
+    "electron/shared/navigation.js",
     "test/logging-normalize.test.js",
     "test/debug-levels.test.js",
-    "test/gpu-diagnostics.test.js"
+    "test/gpu-diagnostics.test.js",
+    "test/window-open-policy.test.js",
+    "test/navigation.test.js",
+    "test/oauth-helpers.test.js"
   ]
 }

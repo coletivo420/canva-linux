@@ -10,6 +10,10 @@ const {
   createDebugTools,
 } = require('../electron/shared/debug');
 
+/**
+ * @param {{ CANVA_DEBUG?: string; CANVA_DEBUG_LEVEL?: string }} env
+ * @param {() => void} fn
+ */
 function withEnv(env, fn) {
   const previousDebug = process.env.CANVA_DEBUG;
   const previousLevel = process.env.CANVA_DEBUG_LEVEL;
@@ -78,6 +82,7 @@ test('normalizes category labels without enabling module filters', () => {
 
 test('debug tools emit all categories when debug is enabled', () => {
   withEnv({ CANVA_DEBUG: '1' }, () => {
+    /** @type {Array<{ category: string; args: unknown[] }>} */
     const seen = [];
 
     const tools = createDebugTools({

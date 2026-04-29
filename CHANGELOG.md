@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.8] - 2026-04-29
+
+### Added
+
+- Added strict JSDoc typing for shared navigation classification.
+- Added strict JSDoc typing for main-process window-open policy.
+- Added strict JSDoc typing for shell/window helper boundaries.
+- Added strict JSDoc typing for OAuth popup boundary helpers.
+- Added tests for shared navigation classification.
+- Added tests for OAuth popup initial state helpers.
+
+### Changed
+
+- Expanded `tsconfig.strict.json` to include shell, navigation, window-open policy and OAuth boundary modules.
+- OAuth diagnostics now pass popup options and bounds objects through the central safe logger instead of manually stringifying them.
+- Updated TypeScript migration docs for the DEV8 boundary and DEV11 cleanup phase.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- OAuth popups remain separate from normal Canva tabs.
+- Public debug behavior remains level-based only: `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
 ## [1.4.11-dev.7] - 2026-04-29
 
 ### Added
@@ -855,4 +878,3 @@ All notable changes to this project are documented in this file.
 ### Notes
 - Eyedropper work continues in the following iteration.
 - This release focuses on shell UI behavior, documentation, and licensing.
-

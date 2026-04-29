@@ -22,6 +22,7 @@ test('normalizes BigInt without throwing', () => {
 });
 
 test('normalizes circular objects without throwing', () => {
+  /** @type {{ name: string; self?: unknown }} */
   const circular = { name: 'root' };
   circular.self = circular;
 
@@ -51,6 +52,7 @@ test('normalizes symbols without throwing', () => {
 });
 
 test('creates signatures without throwing for mixed unsafe args', () => {
+  /** @type {{ self?: unknown }} */
   const circular = {};
   circular.self = circular;
 

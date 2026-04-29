@@ -104,6 +104,11 @@ npm run typecheck:strict
 
 - logging normalization
 - debug levels
+- GPU diagnostics
+- navigation classification
+- window-open policy
+- OAuth popup boundaries
+- shell/window helpers
 - related tests
 
 ## GPU diagnostics type validation
@@ -120,3 +125,22 @@ This validates:
 - GPU acceleration classification
 - runtime environment parsing
 - GPU feature status serialization
+
+## DEV8 TypeScript boundary validation
+
+Run:
+
+```bash
+npm run typecheck
+npm run typecheck:strict
+node --test test/navigation.test.js
+node --test test/window-open-policy.test.js
+node --test test/oauth-helpers.test.js
+```
+
+This validates:
+
+- shared navigation classification
+- main-process window-open policy
+- OAuth popup state helpers
+- shell/OAuth boundary type safety

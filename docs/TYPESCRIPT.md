@@ -1,4 +1,4 @@
-# TypeScript Migration Plan (`1.4.11-dev.7+`)
+# TypeScript Migration Plan (`1.4.11-dev.8+`)
 
 ## Current baseline
 
@@ -42,6 +42,30 @@ Strict boundary additions:
 
 The goal is to type GPU feature classification, runtime environment parsing, and GPU process diagnostics without changing runtime behavior.
 
+## DEV8 scope
+
+`1.4.11-dev.8` expands the strict TypeScript boundary to shell, navigation and OAuth popup boundaries.
+
+Strict boundary additions:
+
+- `electron/shared/navigation.js`
+- `electron/main/window-open-policy.js`
+- `electron/main/shell.js`
+- `electron/main/oauth.js`
+- `test/navigation.test.js`
+- `test/oauth-helpers.test.js`
+- `test/window-open-policy.test.js`
+
+Goals:
+
+- Type URL/navigation classification.
+- Type window-open policy outputs.
+- Type OAuth popup state boundaries.
+- Type shell/toolbar helper interfaces.
+- Remove manual `JSON.stringify()` from OAuth logging where the central logger can safely normalize raw objects.
+
+Runtime behavior must remain unchanged.
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:
@@ -65,8 +89,7 @@ These modules are small enough to type strictly and important enough to protect 
 
 ## Planned progression
 
-- `dev7`: strict typing for GPU diagnostics and runtime environment parsing.
 - `dev8`: strict typing for shell/window-open policy and OAuth popup boundaries.
 - `dev9`: strict typing for preload debug/upload/eyedropper source modules.
 - `dev10`: evaluate isolated `.ts` conversion only after JSDoc strict islands are stable.
-- `dev11`: review the TypeScript conversion, clean up stale compatibility code, remove obsolete helpers, and consolidate docs/tests.
+- `dev11`: review TypeScript conversion, cleanup stale compatibility code, remove obsolete helpers, and consolidate docs/tests.

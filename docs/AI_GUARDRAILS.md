@@ -52,3 +52,25 @@ TypeScript changes must update:
 - `docs/TYPESCRIPT.md`
 - `docs/VALIDATION.md`
 - `CHANGELOG.md`
+
+## OAuth/navigation TypeScript guardrails
+
+AI-generated patches must not weaken OAuth popup behavior.
+
+Do not:
+
+- merge OAuth popups into normal Canva tabs;
+- remove shared `persist:canva` session behavior;
+- remove external URL safety checks;
+- allow unsafe protocols through `shell.openExternal`;
+- remove OAuth callback detection;
+- reintroduce manual `JSON.stringify()` in logging where the central logger can normalize objects safely.
+
+Navigation and OAuth changes must run:
+
+```bash
+npm run typecheck:strict
+node --test test/navigation.test.js
+node --test test/window-open-policy.test.js
+node --test test/oauth-helpers.test.js
+```
