@@ -34,6 +34,7 @@ run_step() {
 run_step "npm run build:preload" npm run build:preload
 run_step "npm run lint" npm run lint
 run_step "npm run typecheck" npm run typecheck
+run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "npm test" npm test
 run_step "npm run docs:check-links" npm run docs:check-links
 run_step "npm run docs:check-ai" npm run docs:check-ai

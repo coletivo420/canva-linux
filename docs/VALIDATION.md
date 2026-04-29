@@ -88,3 +88,20 @@ CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canv
 CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 ```
+
+## TypeScript validation
+
+Run both the broad JavaScript typecheck and the strict boundary typecheck:
+
+```bash
+npm run typecheck
+npm run typecheck:strict
+```
+
+`typecheck` covers the current JavaScript project with `allowJs` and `checkJs`.
+
+`typecheck:strict` covers the current strict TypeScript boundary:
+
+- logging normalization
+- debug levels
+- related tests

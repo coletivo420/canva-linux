@@ -1,9 +1,13 @@
 'use strict';
+// @ts-check
 
+/**
+ * @returns {0 | 1 | 2}
+ */
 function getDebugLevel() {
   const explicitLevel = String(process?.env?.CANVA_DEBUG_LEVEL || '').trim();
   if (explicitLevel === '1' || explicitLevel === '2') {
-    return Number(explicitLevel);
+    return /** @type {1 | 2} */ (Number(explicitLevel));
   }
 
   const raw = String(process?.env?.CANVA_DEBUG || '').trim().toLowerCase();
@@ -13,18 +17,31 @@ function getDebugLevel() {
   return 0;
 }
 
+/**
+ * @returns {boolean}
+ */
 function isDebugEnabled() {
   return getDebugLevel() > 0;
 }
 
+/**
+ * @returns {boolean}
+ */
 function shouldLogDebugCategory() {
   return isDebugEnabled();
 }
 
+/**
+ * @returns {boolean}
+ */
 function isDebugCategoryEnabled() {
   return isDebugEnabled();
 }
 
+/**
+ * @param {string} [category]
+ * @returns {string}
+ */
 function normalizeDebugCategory(category = 'app') {
   const raw = String(category || 'app')
     .trim()
@@ -33,19 +50,39 @@ function normalizeDebugCategory(category = 'app') {
     .replace(/\s+/g, '')
     .replace(/:+/g, ':')
     .replace(/^:+|:+$/g, '');
+
   return raw || 'app';
 }
 
+/**
+ * @typedef {(category: string, args: unknown[]) => void} DebugEmitter
+ */
+
+/**
+ * @param {{ emit: DebugEmitter }} options
+ */
 function createDebugTools({ emit }) {
   const debugLevel = getDebugLevel();
 
+  /**
+   * @returns {boolean}
+   */
   function debugEnabled() {
     return debugLevel > 0;
   }
 
+  /**
+   * @param {string} category
+   * @param {...unknown} args
+   * @returns {boolean}
+   */
   function debugLog(category, ...args) {
     const normalized = normalizeDebugCategory(category);
-    if (!debugEnabled()) return false;
+
+    if (!debugEnabled()) {
+      return false;
+    }
+
     emit(normalized, args);
     return true;
   }
