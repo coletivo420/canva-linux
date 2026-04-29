@@ -60,17 +60,26 @@ function normalizeLogArg(arg) {
   }
 
   if (arg instanceof Error) {
-    return [
-      `${arg.name}: ${arg.message}`,
-      arg.stack || '',
-    ].filter(Boolean).join('\n');
+    return arg.stack || `${arg.name}: ${arg.message}`;
   }
 
   return safeStringify(arg);
 }
 
 function normalizeArgs(args = []) {
-  return Array.from(args).map(normalizeLogArg);
+  if (args === null || args === undefined) {
+    return [];
+  }
+
+  if (Array.isArray(args)) {
+    return args.map(normalizeLogArg);
+  }
+
+  if (typeof args[Symbol.iterator] === 'function') {
+    return Array.from(args).map(normalizeLogArg);
+  }
+
+  return [normalizeLogArg(args)];
 }
 
 function createLogSignature(args = []) {

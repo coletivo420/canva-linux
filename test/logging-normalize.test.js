@@ -33,7 +33,8 @@ test('normalizes Error with message and stack', () => {
   const error = new Error('boom');
   const normalized = normalizeLogArg(error);
 
-  assert.match(normalized, /Error: boom/);
+  assert.match(normalized, /^Error: boom/);
+  assert.equal(normalized.match(/Error: boom/g)?.length, 1);
 });
 
 test('normalizes functions without throwing', () => {
@@ -62,4 +63,13 @@ test('creates signatures without throwing for mixed unsafe args', () => {
       function testFn() {},
     ]);
   });
+});
+
+test('normalizes nullish args collections without throwing', () => {
+  assert.deepEqual(normalizeArgs(null), []);
+  assert.deepEqual(normalizeArgs(undefined), []);
+});
+
+test('normalizes non-iterable args input safely', () => {
+  assert.deepEqual(normalizeArgs(123), ['123']);
 });
