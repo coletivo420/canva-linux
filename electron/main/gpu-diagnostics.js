@@ -1,5 +1,89 @@
 'use strict';
 
+// @ts-check
+
+/**
+ * @typedef {'ok' | 'warn' | 'critical'} LogLevel
+ */
+
+/**
+ * @typedef {'accelerated-vulkan' | 'accelerated-non-vulkan' | 'software-or-disabled'} GpuAccelerationState
+ */
+
+/**
+ * @typedef {{
+ *   gpu_compositing?: unknown;
+ *   webgl?: unknown;
+ *   webgl2?: unknown;
+ *   rasterization?: unknown;
+ *   video_decode?: unknown;
+ *   video_encode?: unknown;
+ *   vulkan?: unknown;
+ * }} GpuFeatureStatus
+ */
+
+/**
+ * @typedef {{
+ *   logStatus(category: string, level: LogLevel, message: string, options?: { source?: string }): void;
+ *   logDebug(category: string, args?: unknown[], options?: { source?: string; level?: LogLevel }): void;
+ *   getLogFilePath(): string | null;
+ * }} CentralLogger
+ */
+
+/**
+ * @typedef {{
+ *   getGPUFeatureStatus(): GpuFeatureStatus;
+ *   isHardwareAccelerationEnabled(): boolean;
+ *   getGPUInfo(infoType: 'basic' | 'complete'): Promise<unknown>;
+ *   on(event: 'gpu-info-update', listener: () => void | Promise<void>): void;
+ *   on(event: 'child-process-gone', listener: (event: unknown, details?: ChildProcessGoneDetails) => void): void;
+ *   on(event: 'render-process-gone', listener: (event: unknown, webContents: { id?: number } | undefined, details?: RenderProcessGoneDetails) => void): void;
+ * }} GpuDiagnosticsApp
+ */
+
+/**
+ * @typedef {{
+ *   type?: string;
+ *   reason?: string;
+ *   exitCode?: number;
+ *   name?: string;
+ *   serviceName?: string;
+ * }} ChildProcessGoneDetails
+ */
+
+/**
+ * @typedef {{
+ *   reason?: string;
+ *   exitCode?: number;
+ * }} RenderProcessGoneDetails
+ */
+
+/**
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {{
+ *   backend: string;
+ *   vendor: string;
+ *   dri: string;
+ *   display: string;
+ *   disableGpu: string;
+ *   launcherReport: string;
+ * }}
+ */
+function getGpuRuntimeEnvironment(env = process.env) {
+  return {
+    backend: env.CANVA_GPU_BACKEND || 'unknown',
+    vendor: env.CANVA_GPU_VENDOR || 'unknown',
+    dri: env.CANVA_GPU_DRI_RENDER_NODE || 'unknown',
+    display: env.CANVA_GPU_DISPLAY_SERVER || 'unknown',
+    disableGpu: env.CANVA_DISABLE_GPU || '0',
+    launcherReport: env.CANVA_GPU_LAUNCHER_REPORT || 'unavailable',
+  };
+}
+
+/**
+ * @param {GpuFeatureStatus} [status]
+ * @returns {string[]}
+ */
 function serializeGpuFeatureStatus(status = {}) {
   return [
     `gpu_compositing=${status.gpu_compositing || 'unknown'}`,
@@ -12,7 +96,12 @@ function serializeGpuFeatureStatus(status = {}) {
   ];
 }
 
+/**
+ * @param {GpuFeatureStatus} [status]
+ * @returns {GpuAccelerationState}
+ */
 function classifyGpuAcceleration(status = {}) {
+  /** @param {unknown} value */
   const enabled = (value) => String(value || '').startsWith('enabled');
 
   const accelerated = [
@@ -30,7 +119,11 @@ function classifyGpuAcceleration(status = {}) {
   return 'software-or-disabled';
 }
 
+/**
+ * @param {{ centralLogger: CentralLogger }} param0
+ */
 function createGpuLogger({ centralLogger }) {
+  /** @param {LogLevel} level */
   function logGpu(level, category, event, ...args) {
     centralLogger.logStatus(category, level, [event, ...args].join(' '), { source: 'gpu' });
   }
@@ -45,22 +138,26 @@ function createGpuLogger({ centralLogger }) {
   };
 }
 
+/**
+ * @param {{ app: GpuDiagnosticsApp; centralLogger: CentralLogger; debugLog: (...args: unknown[]) => void }} param0
+ */
 function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
   const logFilePath = centralLogger.getLogFilePath() || 'unavailable';
   const { logGpu, debugGpu } = createGpuLogger({ centralLogger });
+  const runtimeEnv = getGpuRuntimeEnvironment();
 
   logGpu('ok', 'gpu:runtime', 'central-log-file', logFilePath);
-  logGpu('ok', 'gpu:launcher', 'launcher-report', process.env.CANVA_GPU_LAUNCHER_REPORT || 'unavailable');
+  logGpu('ok', 'gpu:launcher', 'launcher-report', runtimeEnv.launcherReport);
 
   logGpu(
     'ok',
     'gpu:runtime',
     'runtime-env',
-    `backend=${process.env.CANVA_GPU_BACKEND || 'unknown'}`,
-    `vendor=${process.env.CANVA_GPU_VENDOR || 'unknown'}`,
-    `dri=${process.env.CANVA_GPU_DRI_RENDER_NODE || 'unknown'}`,
-    `display=${process.env.CANVA_GPU_DISPLAY_SERVER || 'unknown'}`,
-    `disableGpu=${process.env.CANVA_DISABLE_GPU || '0'}`
+    `backend=${runtimeEnv.backend}`,
+    `vendor=${runtimeEnv.vendor}`,
+    `dri=${runtimeEnv.dri}`,
+    `display=${runtimeEnv.display}`,
+    `disableGpu=${runtimeEnv.disableGpu}`
   );
 
   app.on('gpu-info-update', async () => {
@@ -80,7 +177,7 @@ function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
       );
 
       const gpuInfo = await app.getGPUInfo('basic');
-      debugGpu('gpu:features', 'info-basic', JSON.stringify(gpuInfo));
+      debugGpu('gpu:features', 'info-basic', gpuInfo);
     } catch (error) {
       logGpu('warn', 'gpu:features', 'feature-status-error', error?.message || String(error));
     }
@@ -116,5 +213,7 @@ function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
 
 module.exports = {
   classifyGpuAcceleration,
+  getGpuRuntimeEnvironment,
+  serializeGpuFeatureStatus,
   registerGpuDiagnostics,
 };

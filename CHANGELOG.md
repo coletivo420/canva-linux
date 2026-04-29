@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.7] - 2026-04-29
+
+### Added
+
+- Added strict JSDoc typing for GPU diagnostics.
+- Added GPU diagnostics to the strict TypeScript boundary.
+- Added tests for GPU acceleration classification, runtime environment parsing, and feature status serialization.
+
+### Changed
+
+- GPU diagnostics now pass raw GPU info objects through the central safe logger instead of manually stringifying them.
+- Updated TypeScript migration documentation with DEV7 scope and DEV11 cleanup/review phase.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- GPU acceleration remains controlled by the existing `CANVA_GPU_BACKEND` modes.
+- Public debug behavior remains level-based only: `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
 ## [1.4.11-dev.6] - 2026-04-29
 
 ### Added

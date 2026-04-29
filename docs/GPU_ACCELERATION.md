@@ -41,3 +41,14 @@ CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canv
 CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 ```
+
+## TypeScript validation
+
+GPU diagnostics are part of the strict TypeScript boundary starting in `1.4.11-dev.7`.
+
+Validate with:
+
+```bash
+npm run typecheck:strict
+npm test
+```
