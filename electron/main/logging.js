@@ -3,6 +3,11 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+  normalizeArgs,
+  createLogSignature,
+} = require('./logging-normalize');
+
 const LOG_COLORS = {
   ok: '\x1b[32m',
   warn: '\x1b[33m',
@@ -54,36 +59,27 @@ function createCentralLogger({ app }) {
   let logFilePath = null;
   let lastDebugSignature = null;
 
-  function normalizeArgs(args = []) {
-    return args.map((value) => {
-      if (typeof value === 'string') return value;
-      if (value instanceof Error) return value.stack || value.message || String(value);
-      try {
-        return JSON.stringify(value);
-      } catch {
-        return String(value);
-      }
-    });
-  }
-
   function appendFileLine(prefix, args) {
     if (!logFilePath) return;
-    const line = `${new Date().toISOString()} ${prefix} ${normalizeArgs(args).join(' ')}\n`;
+    const normalizedArgs = normalizeArgs(args);
+    const line = `${new Date().toISOString()} ${prefix} ${normalizedArgs.join(' ')}\n`;
     try {
       fs.appendFileSync(logFilePath, line, 'utf8');
     } catch {}
   }
 
   function write(level, prefix, args) {
+    const normalizedArgs = normalizeArgs(args);
+
     if (level === 'critical') {
-      console.error(prefix, ...args);
+      console.error(prefix, ...normalizedArgs);
       return;
     }
     if (level === 'warn') {
-      console.warn(prefix, ...args);
+      console.warn(prefix, ...normalizedArgs);
       return;
     }
-    console.log(prefix, ...args);
+    console.log(prefix, ...normalizedArgs);
   }
 
   function initLogFile() {
@@ -99,7 +95,7 @@ function createCentralLogger({ app }) {
   }
 
   function logDebug(category, args = [], { source = 'main', level = 'ok' } = {}) {
-    const signature = JSON.stringify([source, category, level, ...normalizeArgs(args)]);
+    const signature = createLogSignature([source, category, level, ...args]);
     if (signature === lastDebugSignature) {
       return;
     }

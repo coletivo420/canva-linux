@@ -159,3 +159,21 @@ When adding a new host dependency, update:
 - docs/DEVELOPMENT.md
 - docs/VALIDATION.md
 - CHANGELOG.md
+
+## Logging changes
+
+Before changing logging code, read:
+
+- `docs/LOGGING_CONTRACT.md`
+- `docs/AI_GUARDRAILS.md`
+- `docs/DEBUGGING.md`
+
+AI patches must not:
+
+- reintroduce module-specific `CANVA_DEBUG` modes
+- create separate log files
+- remove GPU diagnostics from `CANVA_DEBUG=1`
+- use unsafe `JSON.stringify(args)`
+- allow logging errors to crash the main process
+
+When logging arbitrary objects, normalize arguments one by one.
