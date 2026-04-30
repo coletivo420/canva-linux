@@ -13,7 +13,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 
 - Updated development documentation from older dev2/dev12 wording to the dev13 workflow.
-- Clarified that `.ts` runtime source files are validated by TypeScript checks until ESLint gains a TypeScript parser.
+- Added TypeScript-aware ESLint parsing for converted runtime `.ts` files.
 - Clarified that system-scope Flatpak operations may request administrator authorization before or during build dependency preparation.
 
 ### Fixed

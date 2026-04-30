@@ -13,14 +13,16 @@ let runtimeBuildChecked = false;
  */
 function ensureRuntimeBuild(modulePath) {
   const sourceTs = path.join(repoRoot, 'electron', `${modulePath}.ts`);
+  const sourceJs = path.join(repoRoot, 'electron', `${modulePath}.js`);
+  const sourcePath = fs.existsSync(sourceTs) ? sourceTs : sourceJs;
   const builtJs = path.join(repoRoot, '.build', 'electron', `${modulePath}.js`);
 
-  if (!fs.existsSync(sourceTs)) {
+  if (!fs.existsSync(sourcePath)) {
     return;
   }
 
   const buildMissing = !fs.existsSync(builtJs);
-  const buildStale = !buildMissing && fs.statSync(builtJs).mtimeMs < fs.statSync(sourceTs).mtimeMs;
+  const buildStale = !buildMissing && fs.statSync(builtJs).mtimeMs < fs.statSync(sourcePath).mtimeMs;
 
   if (!buildMissing && !buildStale) {
     return;

@@ -18,8 +18,7 @@
     "electron/**/*.js",
     "scripts/**/*.js",
     "test/**/*.js",
-    "playwright.config.js",
-    "eslint.config.js"
+    "playwright.config.js"
   ],
   "exclude": [
     "node_modules",

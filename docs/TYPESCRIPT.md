@@ -192,7 +192,7 @@ Rules:
 - do not change Flatpak behavior as part of type conversion;
 - update tests or test helpers so converted modules remain covered.
 
-DEV13 keeps ESLint focused on JavaScript until a TypeScript-aware parser dependency is added. Converted `.ts` runtime modules are validated by `npm run typecheck`, `npm run typecheck:strict`, `npm run build:runtime`, `npm run build:check` and the runtime module tests.
+DEV13 adds `@typescript-eslint/parser` and `@typescript-eslint/eslint-plugin`, so converted runtime `.ts` modules are covered by `npm run lint` as well as `npm run typecheck`, `npm run typecheck:strict`, `npm run build:runtime`, `npm run build:check` and the runtime module tests.
 
 ## Why logging/debug first?
 
