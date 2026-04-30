@@ -55,8 +55,9 @@ Canva Linux local workflows must not create a duplicate Flathub user remote by d
 Default policy:
 
 - `./canva-linux.sh --install` uses the system Flatpak installation.
-- Required runtimes are installed from the system Flathub remote.
+- Required runtimes and SDK/BaseApp dependencies are installed from the system Flathub remote.
 - The user Flathub remote is never added unless explicitly requested.
+- Local Flatpak artifact ownership is restored to the current user after install, bundle and dev-run workflows.
 - Developers who want a fully user-scoped install may run:
 
 ```bash

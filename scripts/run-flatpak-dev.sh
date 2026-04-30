@@ -10,6 +10,7 @@ NC='\033[0m'
 
 info()  { echo -e "${YELLOW}[info]${NC} $*"; }
 ok()    { echo -e "${GREEN}[ok]${NC}  $*"; }
+warn()  { echo -e "${YELLOW}[warn]${NC} $*"; }
 err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
 
 ## Paths
@@ -19,6 +20,7 @@ cd "$REPO_ROOT"
 
 source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/flatpak-build-common.sh"
+trap 'restore_flatpak_build_artifact_permissions || true' EXIT
 
 ## Dependency checks
 require_command flatpak

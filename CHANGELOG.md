@@ -2,6 +2,34 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.12-hotfix] - 2026-04-30
+
+### Fixed
+
+- Fixed Flatpak Builder permission errors caused by running `flatpak-builder` with administrator privileges in system scope.
+- Fixed root-owned `.flatpak-builder`, `build-dir` and `repo` artifacts blocking subsequent local builds.
+- Deferred administrator authorization to system Flatpak operations instead of the Flatpak build step.
+- Fixed local system installs failing with `ConfigureRemote not allowed for user` by installing from the generated local repo with `sudo flatpak`.
+- Fixed packaged startup failing when the compiled Electron main process tried to load `../../package.json` from inside `.build/`.
+- Fixed default-scope bundle and dev-run workflows by ensuring system Flatpak runtimes are installed before unprivileged `flatpak-builder` runs.
+- Fixed local Flatpak artifact ownership after install, bundle and dev-run workflows.
+
+### Changed
+
+- Local Flatpak builds now run `flatpak-builder` as the current user.
+- System-scope local installs now request administrator authorization before the Flatpak system install step.
+- Local system installs now configure the generated repo remote with an absolute path instead of a `file://` URI.
+- Local Flatpak workflows now restore `build-dir`, `repo` and `.flatpak-builder` ownership before exiting.
+- The installer now explains the difference between system and user Flatpak scopes before installation.
+- The installer now documents the user-scope install command for passwordless per-user installs.
+- Flatpak scope validation now rejects `sudo flatpak-builder`.
+
+### Notes
+
+- System-scope installation remains the default.
+- User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
+- User-scope installs may duplicate Flathub remotes, runtimes, SDKs, BaseApps and apps already installed in system scope.
+
 ## [1.4.11-dev.12] - 2026-04-30
 
 ### Added

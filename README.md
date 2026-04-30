@@ -270,13 +270,21 @@ Canva Linux local workflows must not create a duplicate Flathub user remote by d
 Default policy:
 
 - `./canva-linux.sh --install` uses the system Flatpak installation.
-- Required runtimes are installed from the system Flathub remote.
+- The app is installed for all users on this machine.
+- Required runtimes are installed from the system Flathub remote when missing.
 - The user Flathub remote is never added unless explicitly requested.
+- Administrator authorization may be requested for system Flatpak operations because system installs write under `/var/lib/flatpak`.
+- Local system installs build as the current user, then install from the generated local repo path with administrator authorization.
+- Local Flatpak artifact ownership is restored to the current user after install, bundle and dev-run workflows.
 - Developers who want a fully user-scoped install may run:
 
 ```bash
 CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install
 ```
+
+User-scoped installs are isolated under the current user's home directory and may duplicate Flathub remotes, runtimes, SDKs, BaseApps and the Canva Linux app if those already exist in the system Flatpak installation.
+
+Do not switch the default back to `--user` only to avoid an administrator prompt.
 
 Development smoke tests should prefer:
 
