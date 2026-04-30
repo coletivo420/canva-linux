@@ -7,7 +7,7 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 ## Status
 
 Stable: 1.4.10  
-Next: 1.4.11-dev.11 (strict main orchestration typing + Flatpak scope policy)
+Next: 1.4.11-dev.12 (TypeScript runtime build pipeline)
 
 ## Community package status
 
@@ -168,11 +168,37 @@ Project policy:
 
 ### Preload bundle note
 
-The source preload stays modular under `electron/preload/*.js`, but the runtime tab preload is generated as `electron/preload/canva.bundle.js` before `npm start`, `npm run dist`, and any Flatpak workflow path that rebuilds the Electron output.
+The source preload stays modular under `electron/preload/*.js`, but the runtime tab preload is generated as `.build/electron/preload/canva.bundle.js` before `npm start`, `npm run dist`, and any Flatpak workflow path that rebuilds the Electron output. The legacy `npm run build:preload` command can still generate `electron/preload/canva.bundle.js` from source when needed.
 
 This is required because Canva's editor can execute Electron preload code in a sandboxed context where nested local `require('./module')` calls fail inside the packaged ASAR. The generated bundle preserves maintainable source modules while delivering one preload file to Electron. Edit the modular source files and regenerate the bundle; do not edit or commit `canva.bundle.js` directly.
 
 Release bundle generation rebuilds the Electron output and Flatpak repo by default so the generated preload bundle and packaged app stay current. Reusing an existing `repo/` requires an explicit `--use-existing-repo` call to `scripts/build-flatpak-bundle.sh` and should not be used for release publication after source changes.
+
+## Runtime build
+
+Development now builds the Electron runtime into `.build/electron/` before starting or packaging.
+
+```bash
+npm run build:runtime
+npm start
+```
+
+The source remains in:
+
+```text
+electron/
+```
+
+Generated runtime files include:
+
+```text
+.build/electron/main/index.js
+.build/electron/preload/canva.bundle.js
+```
+
+Do not edit generated files manually.
+
+Project validation remains source-first: lint, typecheck, tests and docs checks run before the runtime build.
 
 ## AI and regression policy
 

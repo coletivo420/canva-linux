@@ -2,6 +2,38 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.12] - 2026-04-30
+
+### Added
+
+- Added `tsconfig.build.json` for emitted Electron runtime builds.
+- Added `.build/electron/` as the compiled runtime output directory.
+- Added `scripts/build-runtime.js`.
+- Added `scripts/clean-runtime-build.js`.
+- Added `scripts/copy-runtime-assets.js`.
+- Added `scripts/check-runtime-build.js`.
+- Added `npm run clean:runtime`.
+- Added `npm run build:runtime`.
+- Added `npm run build:check`.
+
+### Changed
+
+- `npm start` now builds the Electron runtime before launching.
+- `npm run dist` now builds the Electron runtime before packaging.
+- Electron runtime now starts from `.build/electron/main/index.js`.
+- Electron Builder now packages `.build/electron/**/*` instead of raw `electron/**/*`.
+- Preload bundle generation now supports build-output mode for `.build/electron/preload/canva.bundle.js`.
+- Project validation now keeps source checks first and runs runtime build validation after lint, typecheck, tests, docs and AI guardrails.
+- Flatpak build artifact cleanup now handles root-owned `build-dir`/`repo` created by system-scope Flatpak builds.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- No source files are converted to `.ts` in this phase.
+- `.build/` is generated and must not be committed.
+- The source of truth remains `electron/`.
+- This phase prepares DEV13+ for real `.ts` conversion.
+
 ## [1.4.11-dev.11] - 2026-04-30
 
 ### Added
