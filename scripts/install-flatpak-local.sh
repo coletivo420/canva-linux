@@ -59,6 +59,7 @@ print_flatpak_scope_notice() {
     section "System-wide Flatpak installation"
     note "Canva Linux will be installed in the system Flatpak scope."
     note "This makes the app available to all users on this machine."
+    note "Flatpak build dependencies will also use the system scope."
     note "This avoids creating a separate user Flatpak scope, user Flathub remote,"
     note "and duplicated user runtimes when the system scope is already configured."
     note "Administrator authorization may be requested for system Flatpak operations."
@@ -74,6 +75,7 @@ print_flatpak_scope_notice() {
     section "User Flatpak installation"
     note "Canva Linux will be installed only for the current user."
     note "This mode does not require administrator authorization."
+    note "Flatpak build dependencies will also be installed in the user scope."
     note "It may create a separate user Flathub remote and duplicate runtimes/apps"
     note "that are already installed in the system Flatpak scope."
     printf '\n'
@@ -136,6 +138,7 @@ cd "$REPO_ROOT"
 
 source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/flatpak-build-common.sh"
+trap 'restore_flatpak_build_artifact_permissions || true' EXIT
 
 ## Usage
 usage() {

@@ -275,6 +275,7 @@ Default policy:
 - The user Flathub remote is never added unless explicitly requested.
 - Administrator authorization may be requested for system Flatpak operations because system installs write under `/var/lib/flatpak`.
 - Local system installs build as the current user, then install from the generated local repo path with administrator authorization.
+- Local Flatpak artifact ownership is restored to the current user after install, bundle and dev-run workflows.
 - Developers who want a fully user-scoped install may run:
 
 ```bash

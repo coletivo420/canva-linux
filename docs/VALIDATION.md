@@ -249,6 +249,8 @@ Expected policy:
 - no `sudo flatpak-builder`;
 - no `$(flatpak_scope_prefix) flatpak-builder`;
 - `CANVA_FLATPAK_SCOPE=user` is the explicit opt-in for user scope;
+- default build dependencies resolve through system scope, not user scope;
+- local Flatpak artifact ownership is restored before workflow exit;
 - `./canva-linux.sh --run-dev` builds and runs without installing the app.
 
 Targeted regression check:

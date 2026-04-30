@@ -47,6 +47,32 @@ remove_flatpak_build_dir() {
   remove_path_safely .flatpak-builder
 }
 
+restore_path_ownership() {
+  local target="$1"
+  local uid
+  local gid
+  local foreign_path
+
+  [[ -e "${target}" ]] || return 0
+
+  uid="$(id -u)"
+  gid="$(id -g)"
+  foreign_path="$(find "${target}" \( ! -uid "${uid}" -o ! -gid "${gid}" \) -print -quit 2>/dev/null || true)"
+
+  if [[ -z "${foreign_path}" ]]; then
+    return 0
+  fi
+
+  warn "Restoring ownership for ${target} to the current user."
+  sudo chown -R "${uid}:${gid}" "${target}"
+}
+
+restore_flatpak_build_artifact_permissions() {
+  restore_path_ownership build-dir
+  restore_path_ownership repo
+  restore_path_ownership .flatpak-builder
+}
+
 ensure_flathub_runtime() {
   local scope_arg
   scope_arg="$(flatpak_scope_arg)"
@@ -71,7 +97,8 @@ ensure_flathub_runtime() {
   fi
 
   warn "Using user Flatpak scope because CANVA_FLATPAK_SCOPE=user was set."
-  warn "This may create a separate user Flathub remote and duplicate runtimes/apps."
+  warn "This is the only mode that installs Flatpak build dependencies in user scope."
+  warn "It may create a separate user Flathub remote and duplicate runtimes/apps."
 
   flatpak remote-add --if-not-exists "${scope_arg}" flathub \
     https://dl.flathub.org/repo/flathub.flatpakrepo

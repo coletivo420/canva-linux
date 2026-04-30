@@ -149,6 +149,8 @@ Administrator authorization should be deferred to system Flatpak operations when
 
 System-scope local installs should build as the current user, then use `sudo flatpak` only for runtime dependency, local remote and app install operations that write to the system Flatpak installation. Local Flatpak remotes should use absolute repo paths instead of `file://` URIs.
 
+Install, bundle and dev-run workflows must restore local Flatpak artifact ownership to the current user before exiting.
+
 The installer must explain that system-scope installation makes Canva Linux available to all users and avoids creating a duplicate user Flatpak scope.
 
 User scope is allowed only when explicitly requested through:

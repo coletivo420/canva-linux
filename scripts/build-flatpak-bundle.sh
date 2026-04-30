@@ -20,6 +20,7 @@ cd "$REPO_ROOT"
 
 source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/flatpak-build-common.sh"
+trap 'restore_flatpak_build_artifact_permissions || true' EXIT
 
 ## Usage
 usage() {
