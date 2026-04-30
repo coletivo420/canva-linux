@@ -3,15 +3,90 @@
 set -euo pipefail
 
 ## Console helpers
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
+supports_color() {
+  [[ -t 1 ]] || return 1
+  [[ -z "${NO_COLOR:-}" ]] || return 1
+  [[ "${TERM:-dumb}" != "dumb" ]] || return 1
+}
 
-info()  { echo -e "${YELLOW}[info]${NC} $*"; }
-ok()    { echo -e "${GREEN}[ok]${NC}  $*"; }
-warn()  { echo -e "${YELLOW}[warn]${NC} $*"; }
-err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
+if supports_color; then
+  BOLD="$(printf '\033[1m')"
+  DIM="$(printf '\033[2m')"
+  RESET="$(printf '\033[0m')"
+
+  RED="$(printf '\033[31m')"
+  GREEN="$(printf '\033[32m')"
+  YELLOW="$(printf '\033[33m')"
+  BLUE="$(printf '\033[34m')"
+  MAGENTA="$(printf '\033[35m')"
+  CYAN="$(printf '\033[36m')"
+else
+  BOLD=""
+  DIM=""
+  RESET=""
+
+  RED=""
+  GREEN=""
+  YELLOW=""
+  BLUE=""
+  MAGENTA=""
+  CYAN=""
+fi
+
+info()  { printf '%s[info]%s %s\n' "${YELLOW}" "${RESET}" "$*"; }
+ok()    { printf '%s[ok]%s  %s\n' "${GREEN}" "${RESET}" "$*"; }
+warn()  { printf '%s[warn]%s %s\n' "${YELLOW}" "${RESET}" "$*"; }
+err()   { printf '%s[error]%s %s\n' "${RED}" "${RESET}" "$*" >&2; exit 1; }
+
+section() {
+  printf '\n%s%s%s\n' "${BOLD}${CYAN}" "$1" "${RESET}"
+}
+
+cmd() {
+  printf '  %s%s%s\n' "${BOLD}${GREEN}" "$1" "${RESET}"
+}
+
+note() {
+  printf '    %s%s%s\n' "${DIM}" "$1" "${RESET}"
+}
+
+doc_path() {
+  printf '  %s%s%s\n' "${BOLD}${BLUE}" "$1" "${RESET}"
+}
+
+print_post_install_guidance() {
+  section "Run commands:"
+  cmd "flatpak run io.github.PirateMaryRead.canva-linux"
+
+  section "Internal Canva Linux logs:"
+  cmd "CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux"
+  note "Shows all internal Canva Linux diagnostics, including startup, session,"
+  note "tabs, toolbar, permissions, uploads, OAuth, drag-and-drop, eyedropper,"
+  note "preload and GPU acceleration monitoring."
+
+  printf '\n'
+  cmd "CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux"
+  note "Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron"
+  note "stderr logs."
+
+  section "Display backend checks:"
+  cmd "CANVA_FORCE_WAYLAND=1 flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "CANVA_FORCE_X11=1 flatpak run io.github.PirateMaryRead.canva-linux"
+
+  section "GPU backend checks:"
+  cmd "CANVA_GPU_BACKEND=auto flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "CANVA_GPU_BACKEND=opengl flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "CANVA_GPU_BACKEND=vulkan flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "CANVA_GPU_BACKEND=software flatpak run io.github.PirateMaryRead.canva-linux"
+
+  section "Debugging documentation:"
+  doc_path "docs/DEBUGGING.md"
+
+  section "Optional bundle generation:"
+  cmd "./scripts/build-flatpak-bundle.sh"
+
+  printf '\n'
+}
 
 ## Paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -80,34 +155,4 @@ ensure_linux_unpacked
 install_flatpak_direct
 
 ## Post-install instructions
-cat <<'POSTINSTALL'
-
-Run commands:
-  flatpak run io.github.PirateMaryRead.canva-linux
-
-Internal Canva Linux logs:
-  CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-    Shows all internal Canva Linux diagnostics, including startup, session,
-    tabs, toolbar, permissions, uploads, OAuth, drag-and-drop, eyedropper,
-    preload and GPU acceleration monitoring.
-
-  CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
-    Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron
-    stderr logs.
-
-Display backend checks:
-  CANVA_FORCE_WAYLAND=1 flatpak run io.github.PirateMaryRead.canva-linux
-  CANVA_FORCE_X11=1 flatpak run io.github.PirateMaryRead.canva-linux
-
-GPU backend checks:
-  CANVA_GPU_BACKEND=auto flatpak run io.github.PirateMaryRead.canva-linux
-  CANVA_GPU_BACKEND=opengl flatpak run io.github.PirateMaryRead.canva-linux
-  CANVA_GPU_BACKEND=vulkan flatpak run io.github.PirateMaryRead.canva-linux
-  CANVA_GPU_BACKEND=software flatpak run io.github.PirateMaryRead.canva-linux
-
-Debugging documentation:
-  docs/DEBUGGING.md
-
-Optional bundle generation:
-  ./scripts/build-flatpak-bundle.sh
-POSTINSTALL
+print_post_install_guidance

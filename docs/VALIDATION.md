@@ -144,3 +144,31 @@ This validates:
 - main-process window-open policy
 - OAuth popup state helpers
 - shell/OAuth boundary type safety
+
+## DEV9 preload and installer validation
+
+Run:
+
+```bash
+npm run build:preload
+npm run typecheck
+npm run typecheck:strict
+node --test test/preload-debug.test.js
+node --test test/upload-diagnostics.test.js
+node --test test/eyedropper-preload.test.js
+bash -n scripts/install-flatpak-local.sh
+```
+
+Validate post-install output manually after:
+
+```bash
+./canva-linux.sh --install
+```
+
+Expected behavior:
+
+- section titles are highlighted in interactive terminals;
+- commands are highlighted;
+- output remains readable without colors;
+- colors are disabled when `NO_COLOR=1`;
+- no module-specific `CANVA_DEBUG=gpu` style commands appear.

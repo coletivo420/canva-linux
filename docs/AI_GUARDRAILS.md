@@ -74,3 +74,18 @@ node --test test/navigation.test.js
 node --test test/window-open-policy.test.js
 node --test test/oauth-helpers.test.js
 ```
+
+## Post-install output guardrails
+
+The post-install command guidance must remain concise.
+
+Do not reintroduce module-specific debug commands in the installer output.
+
+Allowed public debug commands:
+
+```bash
+CANVA_DEBUG=1
+CANVA_DEBUG=2
+```
+
+The installer may use terminal colors only when stdout is a TTY, `NO_COLOR` is not set, and `TERM` is not `dumb`.

@@ -1,5 +1,7 @@
 'use strict';
 
+// @ts-check
+
 const { ipcRenderer } = require('electron');
 
 const {
@@ -8,20 +10,44 @@ const {
   removeLtcodeUi,
 } = require('./ltcode-eyedropper');
 
+/**
+ * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
+ * @typedef {(...args: unknown[]) => void} EyeDropperLog
+ * @typedef {{ dataUrl: string, width?: number, height?: number, cssWidth?: number, cssHeight?: number }} EyeDropperSnapshot
+ * @typedef {{ sRGBHex: string }} EyeDropperResult
+ * @typedef {{ signal?: AbortSignal }} EyeDropperOpenOptions
+ */
+
+/**
+ * @returns {DOMException}
+ */
 function createAbortError() {
   return new DOMException('The operation was aborted.', 'AbortError');
 }
 
+/**
+ * @param {string} [message]
+ * @returns {DOMException}
+ */
 function createOperationError(message) {
   return new DOMException(message || 'The operation failed.', 'OperationError');
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeHex(value) {
   if (typeof value !== 'string') return null;
   const match = value.trim().match(/^#?([0-9a-fA-F]{6})$/);
-  return match ? `#${match[1].toLowerCase()}` : null;
+  return match && match[1] ? `#${match[1].toLowerCase()}` : null;
 }
 
+/**
+ * @param {EyeDropperSnapshot} snapshot
+ * @param {{ logEyeDropper: EyeDropperLog }} options
+ * @returns {Promise<{ host: HTMLDivElement, canvas: HTMLCanvasElement }>}
+ */
 function createSnapshotCanvas(snapshot, { logEyeDropper }) {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -80,9 +106,17 @@ function createSnapshotCanvas(snapshot, { logEyeDropper }) {
 // Own the bundled ltcodedev/eyedropper snapshot/open lifecycle separately from
 // the wrapper installation so the preload entrypoint stays focused on
 // composition.
+/**
+ * @param {{ debugLog: DebugLog, logEyeDropper: EyeDropperLog }} options
+ * @returns {{ wrapOpenCall: (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult> }}
+ */
 function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
+  /** @type {null | (() => void)} */
   let activePickerCleanup = null;
 
+  /**
+   * @returns {Promise<EyeDropperResult>}
+   */
   async function openLtcodeEyeDropper() {
     if (activePickerCleanup) {
       throw createOperationError('A color picker is already active.');
@@ -92,7 +126,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
     debugLog('eyedropper:flow', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
     logEyeDropper('eyedropper:flow', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 
-    const snapshot = await ipcRenderer.invoke('wrapper:eyedropper-snapshot');
+    const snapshot = /** @type {EyeDropperSnapshot | null | undefined} */ (await ipcRenderer.invoke('wrapper:eyedropper-snapshot'));
     if (!snapshot || typeof snapshot.dataUrl !== 'string') {
       debugLog('eyedropper:flow', 'snapshot-invalid', typeof snapshot);
       throw createOperationError('The Canva window snapshot failed.');
@@ -145,6 +179,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
         window.removeEventListener('keydown', onKeyDown, true);
       };
 
+      /** @param {EyeDropperResult} payload */
       const finishResolve = (payload) => {
         if (settled) return;
         settled = true;
@@ -152,6 +187,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
         resolve(payload);
       };
 
+      /** @param {unknown} error */
       const finishReject = (error) => {
         if (settled) return;
         settled = true;
@@ -159,6 +195,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
         reject(error);
       };
 
+      /** @param {KeyboardEvent} event */
       const onKeyDown = (event) => {
         if (event.key === 'Escape') {
           event.preventDefault();
@@ -191,12 +228,17 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
     });
   }
 
+  /**
+   * @param {EyeDropperOpenOptions} [options]
+   * @returns {Promise<EyeDropperResult>}
+   */
   function wrapOpenCall(options = {}) {
     const signal = options?.signal;
     if (signal?.aborted) {
       return Promise.reject(createAbortError());
     }
 
+    /** @type {undefined | (() => void)} */
     let abortHandler;
     const pickPromise = openLtcodeEyeDropper().then((result) => {
       if (!result || typeof result.sRGBHex !== 'string') {
@@ -235,5 +277,8 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
 }
 
 module.exports = {
+  createAbortError,
+  createOperationError,
+  normalizeHex,
   createCustomEyeDropperFlow,
 };
