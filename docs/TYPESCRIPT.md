@@ -111,6 +111,30 @@ Strict boundary additions:
 
 `electron/main/index.js` remains outside the strict boundary until DEV11.
 
+## DEV11 scope
+
+`1.4.11-dev.11` brings the main Electron orchestration entrypoint into the strict TypeScript boundary and corrects the local Flatpak installation scope policy.
+
+Strict boundary additions:
+
+- `electron/main/index.js`
+
+Flatpak workflow additions:
+
+- `CANVA_FLATPAK_SCOPE=system|user`
+- system scope as the default local install policy
+- `./canva-linux.sh --run-dev` for build-dir development runs without installing
+- validation against unconditional user-scoped Flathub installs
+
+Goals:
+
+- remove `// @ts-nocheck` from `electron/main/index.js`;
+- add `// @ts-check`;
+- type the main process orchestration state with JSDoc;
+- preserve runtime behavior;
+- prevent duplicate user/system Flathub remotes by default;
+- prepare the project for the DEV12 TypeScript build pipeline.
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:

@@ -106,3 +106,31 @@ CANVA_DEBUG=2
 ```
 
 The installer may use terminal colors only when stdout is a TTY, `NO_COLOR` is not set, and `TERM` is not `dumb`.
+
+## Flatpak scope guardrails
+
+AI-generated patches must not reintroduce unconditional user-scoped Flatpak installation.
+
+Forbidden by default:
+
+```bash
+flatpak remote-add --if-not-exists --user flathub
+flatpak install -y --user flathub
+flatpak-builder --user --install
+```
+
+Default local install scope is system.
+
+User scope is allowed only when explicitly requested through:
+
+```bash
+CANVA_FLATPAK_SCOPE=user
+```
+
+Development runs should prefer:
+
+```bash
+./canva-linux.sh --run-dev
+```
+
+to avoid installing local origins during quick testing.

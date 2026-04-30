@@ -2,6 +2,34 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.11] - 2026-04-30
+
+### Added
+
+- Added strict JSDoc typing for the main Electron orchestration entrypoint.
+- Added `electron/main/index.js` to the strict TypeScript boundary.
+- Added typed main-process orchestration state documentation.
+- Added configurable Flatpak install scope through `CANVA_FLATPAK_SCOPE=system|user`.
+- Added `./canva-linux.sh --run-dev` to build and run from `build-dir` without installing the app.
+- Added Flatpak scope validation to prevent unconditional user-scoped Flathub installs.
+
+### Changed
+
+- Removed `// @ts-nocheck` from `electron/main/index.js`.
+- Changed local Flatpak install policy to use system scope by default.
+- Local install no longer creates a user Flathub remote by default.
+- Local uninstall now removes Canva Linux from both user and system Flatpak scopes when present.
+- Updated TypeScript migration documentation for the DEV11 orchestration typing phase.
+- Updated Flatpak workflow documentation to clarify system/user scope policy.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- No `.ts` runtime conversion is performed in this phase.
+- The Electron runtime still executes CommonJS JavaScript directly.
+- `CANVA_FLATPAK_SCOPE=user` remains available for explicit user-scoped installs.
+- The next TypeScript phase is the DEV12 build pipeline.
+
 ## [1.4.11-dev.10] - 2026-04-30
 
 ### Added

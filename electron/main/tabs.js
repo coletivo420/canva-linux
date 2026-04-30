@@ -8,8 +8,8 @@
  *   id: number;
  *   title: string;
  *   url: string;
- *   favicon?: string | null;
- *   isHome?: boolean;
+ *   favicon: string | null;
+ *   isHome: boolean;
  *   createdAt: number;
  *   view: WebContentsViewLike;
  * }} TabEntry

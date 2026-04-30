@@ -1,17 +1,56 @@
 #!/bin/bash
 # Shared Flatpak build helpers for local install and release bundle workflows.
 
-ensure_flathub_runtime() {
-  info "Ensuring Flathub remote is configured"
-  flatpak remote-add --if-not-exists --user flathub \
-    https://dl.flathub.org/repo/flathub.flatpakrepo
+FLATPAK_SCOPE="${CANVA_FLATPAK_SCOPE:-system}"
 
-  info "Ensuring required Flatpak runtimes are installed"
-  flatpak install -y --user flathub \
-    org.freedesktop.Platform//25.08 \
-    org.freedesktop.Sdk//25.08 \
-    org.electronjs.Electron2.BaseApp//25.08
-  ok "Flatpak runtimes are ready"
+validate_flatpak_scope() {
+  case "${FLATPAK_SCOPE}" in
+    system|user)
+      ;;
+    *)
+      err "Invalid CANVA_FLATPAK_SCOPE: ${FLATPAK_SCOPE}. Use 'system' or 'user'."
+      ;;
+  esac
+}
+
+flatpak_scope_arg() {
+  validate_flatpak_scope
+  case "${FLATPAK_SCOPE}" in
+    system) printf '%s' "--system" ;;
+    user) printf '%s' "--user" ;;
+  esac
+}
+
+flatpak_scope_prefix() {
+  validate_flatpak_scope
+  if [[ "${FLATPAK_SCOPE}" == "system" ]]; then
+    printf '%s' "sudo"
+  fi
+}
+
+ensure_flathub_runtime() {
+  local scope_arg
+  scope_arg="$(flatpak_scope_arg)"
+
+  info "Ensuring Flathub remote is configured in ${FLATPAK_SCOPE} scope"
+  if [[ "${FLATPAK_SCOPE}" == "system" ]]; then
+    sudo flatpak remote-add --if-not-exists "${scope_arg}" flathub \
+      https://dl.flathub.org/repo/flathub.flatpakrepo
+    info "Ensuring required Flatpak runtimes are installed in system scope"
+    sudo flatpak install -y "${scope_arg}" flathub \
+      org.freedesktop.Platform//25.08 \
+      org.freedesktop.Sdk//25.08 \
+      org.electronjs.Electron2.BaseApp//25.08
+  else
+    flatpak remote-add --if-not-exists "${scope_arg}" flathub \
+      https://dl.flathub.org/repo/flathub.flatpakrepo
+    info "Ensuring required Flatpak runtimes are installed in user scope"
+    flatpak install -y "${scope_arg}" flathub \
+      org.freedesktop.Platform//25.08 \
+      org.freedesktop.Sdk//25.08 \
+      org.electronjs.Electron2.BaseApp//25.08
+  fi
+  ok "Flatpak runtimes are ready in ${FLATPAK_SCOPE} scope"
 }
 
 build_electron_output() {
@@ -50,13 +89,16 @@ ensure_linux_unpacked() {
 }
 
 build_flatpak_repo() {
+  local scope_arg
+  scope_arg="$(flatpak_scope_arg)"
+
   info "Cleaning previous Flatpak build artifacts"
   rm -rf build-dir repo
 
-  info "Building Flatpak repository"
-  flatpak-builder \
+  info "Building Flatpak repository using ${FLATPAK_SCOPE} dependency scope"
+  $(flatpak_scope_prefix) flatpak-builder \
     --force-clean \
-    --user \
+    "${scope_arg}" \
     --install-deps-from=flathub \
     --repo=repo \
     build-dir \
@@ -67,17 +109,43 @@ build_flatpak_repo() {
 }
 
 install_flatpak_direct() {
+  local scope_arg
+  scope_arg="$(flatpak_scope_arg)"
+
   info "Cleaning previous Flatpak build artifacts"
   rm -rf build-dir
 
-  info "Building and installing Flatpak directly (no repo export, no bundle)"
-  flatpak-builder \
+  info "Building and installing Flatpak directly in ${FLATPAK_SCOPE} scope"
+  $(flatpak_scope_prefix) flatpak-builder \
     --force-clean \
-    --user \
+    "${scope_arg}" \
     --install \
     --install-deps-from=flathub \
     build-dir \
     io.github.PirateMaryRead.canva-linux.yml
 
-  ok "Direct local Flatpak install completed"
+  ok "Direct local Flatpak install completed in ${FLATPAK_SCOPE} scope"
+}
+
+run_flatpak_dev() {
+  local scope_arg
+  scope_arg="$(flatpak_scope_arg)"
+
+  info "Cleaning previous Flatpak build artifacts"
+  rm -rf build-dir
+
+  info "Building Flatpak without installing, using ${FLATPAK_SCOPE} dependency scope"
+  $(flatpak_scope_prefix) flatpak-builder \
+    --force-clean \
+    "${scope_arg}" \
+    --install-deps-from=flathub \
+    build-dir \
+    io.github.PirateMaryRead.canva-linux.yml
+
+  info "Running app from build-dir without installing"
+  flatpak-builder \
+    --run \
+    build-dir \
+    io.github.PirateMaryRead.canva-linux.yml \
+    /app/bin/run.sh
 }

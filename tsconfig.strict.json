@@ -25,6 +25,7 @@
     "electron/main/shell.js",
     "electron/main/window-open-policy.js",
     "electron/main/oauth.js",
+    "electron/main/index.js",
     "electron/shared/navigation.js",
     "electron/preload/debug.js",
     "electron/preload/upload-diagnostics.js",

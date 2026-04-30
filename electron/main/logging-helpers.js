@@ -22,7 +22,7 @@
  * @typedef {{
  *   id: number;
  *   window?: BrowserWindowLike;
- *   sourceWebContentsId?: number;
+ *   sourceWebContentsId?: number | null;
  *   startedOnCanvaAuth?: boolean;
  *   sawExternalProvider?: boolean;
  *   sawAuthorizedCallback?: boolean;
