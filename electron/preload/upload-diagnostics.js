@@ -167,7 +167,7 @@ function errorName(error) {
 function errorMessage(error) {
   return error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
     ? error.message
-    : '';
+    : String(error || '');
 }
 
 // Keep upload diagnostics in a dedicated module so Canva preload logic can stay
