@@ -83,6 +83,35 @@ for (const required of [
   }
 }
 
+const guardrails = fs.existsSync('docs/AI_GUARDRAILS.md')
+  ? fs.readFileSync('docs/AI_GUARDRAILS.md', 'utf8')
+  : '';
+
+for (const required of [
+  'Changelog-backed non-regression rule',
+  'CHANGELOG.md is a source of protected project history',
+  'must not remove, weaken, bypass, rename',
+]) {
+  if (!guardrails.includes(required)) {
+    console.error(`[ai-guardrails] AI_GUARDRAILS missing changelog-backed rule text: ${required}`);
+    failed = true;
+  }
+}
+
+const features = fs.existsSync('docs/FEATURES.md')
+  ? fs.readFileSync('docs/FEATURES.md', 'utf8')
+  : '';
+
+for (const required of [
+  'Changelog-backed features',
+  'Features documented in `CHANGELOG.md` are considered established behavior',
+]) {
+  if (!features.includes(required)) {
+    console.error(`[ai-guardrails] FEATURES missing changelog-backed protection: ${required}`);
+    failed = true;
+  }
+}
+
 if (failed) {
   process.exit(1);
 }

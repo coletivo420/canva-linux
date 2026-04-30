@@ -172,3 +172,40 @@ Expected behavior:
 - output remains readable without colors;
 - colors are disabled when `NO_COLOR=1`;
 - no module-specific `CANVA_DEBUG=gpu` style commands appear.
+
+## DEV10 strict main-process validation
+
+Run:
+
+```bash
+npm run typecheck
+npm run typecheck:strict
+npm test
+```
+
+DEV10 expands strict checking to remaining extracted main-process modules:
+
+- runtime
+- logging
+- logging helpers
+- IPC
+- lifecycle
+- tabs
+- tab controller
+- tab events
+- eyedropper bridge
+
+Run targeted tests:
+
+```bash
+node --test test/runtime.test.js
+node --test test/logging-helpers.test.js
+node --test test/tabs-state.test.js
+node --test test/eyedropper-bridge.test.js
+```
+
+## Changelog-backed regression validation
+
+Before removing or simplifying behavior, search `CHANGELOG.md`.
+
+If the behavior appears in `CHANGELOG.md`, it is protected unless the maintainer explicitly requested the change.

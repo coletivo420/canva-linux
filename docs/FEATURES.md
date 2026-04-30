@@ -21,3 +21,11 @@ Protected features:
 - JSON/package preflight validation
 
 Do not remove feature-specific code because it looks verbose.
+
+## Changelog-backed features
+
+Features documented in `CHANGELOG.md` are considered established behavior.
+
+Do not remove or weaken them during cleanup, TypeScript migration, refactors, documentation passes, or AI-assisted simplification unless explicitly requested by the maintainer.
+
+If a feature appears obsolete but is documented in `CHANGELOG.md`, open a review note instead of deleting it silently.

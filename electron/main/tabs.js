@@ -1,5 +1,52 @@
 'use strict';
 
+// @ts-check
+
+/**
+ * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
+ * @typedef {{
+ *   id: number;
+ *   title: string;
+ *   url: string;
+ *   favicon?: string | null;
+ *   isHome?: boolean;
+ *   createdAt: number;
+ *   view: WebContentsViewLike;
+ * }} TabEntry
+ * @typedef {{ tabs: Map<number, TabEntry>, activeTabId: number | null }} TabStateLike
+ * @typedef {{
+ *   webContents: {
+ *     id?: number;
+ *     isDestroyed(): boolean;
+ *     send(channel: string, payload: unknown): void;
+ *     getURL(): string;
+ *     loadURL(url: string): Promise<void> | void;
+ *     focus(): void;
+ *     destroy(): void;
+ *   };
+ *   setVisible(visible: boolean): void;
+ *   setBounds(bounds: { x: number, y: number, width: number, height: number }): void;
+ * }} WebContentsViewLike
+ * @typedef {{ shouldUseDarkColors: boolean }} NativeThemeLike
+ * @typedef {{ setTitle(title: string): void, getContentSize(): [number, number], contentView: { children?: unknown[], addChildView(view: unknown): void, removeChildView(view: unknown): void } }} BrowserWindowLike
+ */
+
+/**
+ * @param {{
+ *   appName: string;
+ *   broadcastTabsState: () => void;
+ *   createHomeTab: () => void;
+ *   debugLog: DebugLog;
+ *   findTabByWebContentsRef: (fn: (webContents: { id?: number } | null | undefined) => TabEntry | null) => void;
+ *   getHomeUrl: () => string;
+ *   mainWindowRef: () => BrowserWindowLike | null | undefined;
+ *   nativeTheme: NativeThemeLike;
+ *   setActiveTabId: (id: number | null) => void;
+ *   state: TabStateLike;
+ *   toolbarHeight: number;
+ *   toolbarViewRef: () => WebContentsViewLike | null | undefined;
+ * }} options
+ */
 function createTabHelpers({
   appName,
   broadcastTabsState,
@@ -14,20 +61,24 @@ function createTabHelpers({
   toolbarHeight,
   toolbarViewRef,
 }) {
+  /** @returns {TabEntry[]} */
   function getOrderedTabs() {
     return [...state.tabs.values()].sort((a, b) => a.createdAt - b.createdAt);
   }
 
+  /** @returns {TabEntry | null} */
   function getHomeTab() {
     return getOrderedTabs().find((tab) => tab.isHome) || null;
   }
 
+  /** @returns {void} */
   function updateWindowTitle() {
-    const activeTab = state.tabs.get(state.activeTabId);
+    const activeTab = state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
     const title = activeTab?.title || appName;
     mainWindowRef()?.setTitle(title ? `${title} - ${appName}` : appName);
   }
 
+  /** @returns {{ activeTabId: number | null, tabs: Array<{ id: number, title: string, url: string, favicon?: string | null, canClose: boolean }>, theme: string }} */
   function toolbarState() {
     return {
       activeTabId: state.activeTabId,
@@ -42,11 +93,20 @@ function createTabHelpers({
     };
   }
 
+  /**
+   * @param {TabEntry | null | undefined} tab
+   * @param {boolean} visible
+   * @returns {void}
+   */
   function setTabVisibility(tab, visible) {
     if (!tab?.view) return;
     tab.view.setVisible(Boolean(visible));
   }
 
+  /**
+   * @param {unknown} view
+   * @returns {void}
+   */
   function ensureTopLevelView(view) {
     const mainWindow = mainWindowRef();
     if (!mainWindow || !view) return;
@@ -61,6 +121,7 @@ function createTabHelpers({
     mainWindow.contentView.addChildView(view);
   }
 
+  /** @returns {void} */
   function layoutViews() {
     debugLog('view', 'layout-views-start');
     const mainWindow = mainWindowRef();
@@ -82,13 +143,18 @@ function createTabHelpers({
     debugLog('view', 'layout-views-done', `toolbar=${width}x${toolbarHeight}`, `tabs=${state.tabs.size}`);
   }
 
+  /** @returns {void} */
   function detachActiveContentView() {
-    const activeTab = state.tabs.get(state.activeTabId);
+    const activeTab = state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
     if (activeTab) {
       setTabVisibility(activeTab, false);
     }
   }
 
+  /**
+   * @param {{ id?: number } | null | undefined} webContents
+   * @returns {TabEntry | null}
+   */
   function findTabByWebContents(webContents) {
     debugLog('view', 'find-tab-by-webcontents', webContents ? webContents.id : 'none');
     if (!webContents) return null;
@@ -102,6 +168,10 @@ function createTabHelpers({
 
   findTabByWebContentsRef(findTabByWebContents);
 
+  /**
+   * @param {{ resetToHome?: boolean, switchToTab: (id: number) => void }} options
+   * @returns {void}
+   */
   function focusHomeTab({ resetToHome = true, switchToTab }) {
     debugLog('tabs:navigation', 'focus-home', `reset=${resetToHome}`);
     const homeTab = getHomeTab();
@@ -112,11 +182,16 @@ function createTabHelpers({
     switchToTab(homeTab.id);
   }
 
+  /**
+   * @param {number} id
+   * @returns {void}
+   */
   function switchToTab(id) {
     debugLog('tabs:navigation', 'switch-request', id);
     const mainWindow = mainWindowRef();
     if (!state.tabs.has(id) || !mainWindow) return;
     const tab = state.tabs.get(id);
+    if (!tab) return;
 
     if (state.activeTabId === id) {
       tab.view.webContents.focus();
@@ -135,15 +210,24 @@ function createTabHelpers({
     broadcastTabsState();
   }
 
+  /**
+   * @param {number} step
+   * @returns {void}
+   */
   function switchRelativeTab(step) {
     const ordered = getOrderedTabs();
     if (ordered.length < 2) return;
     const currentIndex = ordered.findIndex((tab) => tab.id === state.activeTabId);
     if (currentIndex < 0) return;
     const nextIndex = (currentIndex + step + ordered.length) % ordered.length;
-    switchToTab(ordered[nextIndex].id);
+    const nextTab = ordered[nextIndex];
+    if (nextTab) switchToTab(nextTab.id);
   }
 
+  /**
+   * @param {number} id
+   * @returns {void}
+   */
   function closeTab(id) {
     debugLog('tabs:navigation', 'close-request', id);
     const ordered = getOrderedTabs();
@@ -155,8 +239,9 @@ function createTabHelpers({
       detachActiveContentView();
     }
 
-    if (mainWindowRef()?.contentView?.children.includes(tab.view)) {
-      mainWindowRef().contentView.removeChildView(tab.view);
+    const mainWindow = mainWindowRef();
+    if (mainWindow?.contentView?.children?.includes(tab.view)) {
+      mainWindow.contentView.removeChildView(tab.view);
     }
     if (!tab.view.webContents.isDestroyed()) {
       tab.view.webContents.destroy();

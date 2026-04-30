@@ -1,5 +1,7 @@
 'use strict';
 
+// @ts-check
+
 const fs = require('fs');
 const path = require('path');
 
@@ -40,6 +42,28 @@ const RELEASE_STATUS = {
   ],
 };
 
+/**
+ * @typedef {'ok' | 'warn' | 'critical'} StatusLevel
+ * @typedef {{ source?: string, level?: StatusLevel }} LogOptions
+ * @typedef {{ getPath(name: string): string }} AppLike
+ * @typedef {{ getSelectedStorageBackend(): string }} SafeStorageLike
+ * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
+ */
+
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorMessage(error) {
+  return error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+    ? error.message
+    : String(error);
+}
+
+/**
+ * @param {{ category: string, source?: string, level?: StatusLevel }} options
+ * @returns {string}
+ */
 function formatTerminalPrefix({ category, source = 'main', level = 'ok' }) {
   const prefix = `[canva:${source}:${category}]`;
   const color = LOG_COLORS[level];
@@ -47,18 +71,36 @@ function formatTerminalPrefix({ category, source = 'main', level = 'ok' }) {
   return `${color}${prefix}${LOG_COLORS.reset}`;
 }
 
+/**
+ * @param {{ category: string, source?: string, level?: StatusLevel }} options
+ * @returns {string}
+ */
 function formatFilePrefix({ category, source = 'main', level = 'ok' }) {
   return `[canva:${source}:${category}:${level}]`;
 }
 
+/**
+ * @param {string[]} [items]
+ * @returns {string}
+ */
 function formatDebugList(items = []) {
   return items.map((item, index) => `${index + 1}.${item}`).join(' | ');
 }
 
+/**
+ * @param {{ app: AppLike }} options
+ */
 function createCentralLogger({ app }) {
+  /** @type {string | null} */
   let logFilePath = null;
+  /** @type {string | null} */
   let lastDebugSignature = null;
 
+  /**
+   * @param {string} prefix
+   * @param {string[]} normalizedArgs
+   * @returns {void}
+   */
   function appendFileLine(prefix, normalizedArgs) {
     if (!logFilePath) return;
     const line = `${new Date().toISOString()} ${prefix} ${normalizedArgs.join(' ')}\n`;
@@ -67,6 +109,12 @@ function createCentralLogger({ app }) {
     } catch {}
   }
 
+  /**
+   * @param {StatusLevel} level
+   * @param {string} prefix
+   * @param {string[]} normalizedArgs
+   * @returns {void}
+   */
   function write(level, prefix, normalizedArgs) {
     if (level === 'critical') {
       console.error(prefix, ...normalizedArgs);
@@ -79,6 +127,9 @@ function createCentralLogger({ app }) {
     console.log(prefix, ...normalizedArgs);
   }
 
+  /**
+   * @returns {string}
+   */
   function initLogFile() {
     const logsDirPath = path.join(app.getPath('userData'), 'logs');
     const currentLogPath = path.join(logsDirPath, 'current.log');
@@ -91,6 +142,12 @@ function createCentralLogger({ app }) {
     return currentLogPath;
   }
 
+  /**
+   * @param {string} category
+   * @param {unknown[]} [args]
+   * @param {LogOptions} [options]
+   * @returns {void}
+   */
   function logDebug(category, args = [], { source = 'main', level = 'ok' } = {}) {
     const normalizedArgs = normalizeArgs(args);
     const signature = createLogSignature([source, category, level, ...normalizedArgs]);
@@ -105,6 +162,13 @@ function createCentralLogger({ app }) {
     appendFileLine(filePrefix, normalizedArgs);
   }
 
+  /**
+   * @param {string} category
+   * @param {StatusLevel} level
+   * @param {string} message
+   * @param {{ source?: string }} [options]
+   * @returns {void}
+   */
   function logStatus(category, level, message, { source = 'main' } = {}) {
     const normalizedArgs = normalizeArgs([message]);
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
@@ -123,6 +187,15 @@ function createCentralLogger({ app }) {
   };
 }
 
+/**
+ * @param {{
+ *   app: AppLike;
+ *   safeStorage: SafeStorageLike;
+ *   debugLog: DebugLog;
+ *   logStatus: (category: string, level: StatusLevel, message: string, options?: { source?: string }) => void;
+ *   appVersion: string;
+ * }} options
+ */
 function createStatusLogger({ app, safeStorage, debugLog, logStatus, appVersion }) {
   function logReleaseStatus() {
     debugLog('startup', 'release', `version=${appVersion}`, `downloads=${app.getPath('downloads')}`);
@@ -138,7 +211,7 @@ function createStatusLogger({ app, safeStorage, debugLog, logStatus, appVersion 
     try {
       backend = safeStorage.getSelectedStorageBackend();
     } catch (error) {
-      logStatus('session', 'warn', `credential-storage-backend-error WARNING: ${error.message}`);
+      logStatus('session', 'warn', `credential-storage-backend-error WARNING: ${errorMessage(error)}`);
       return;
     }
 

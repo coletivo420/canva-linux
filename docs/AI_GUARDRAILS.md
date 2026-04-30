@@ -2,6 +2,23 @@
 
 These guardrails exist to prevent regressions in Canva Linux runtime behavior.
 
+## Changelog-backed non-regression rule
+
+CHANGELOG.md is a source of protected project history.
+
+Features, behaviors, workflows, validations, scripts, permissions, logging contracts, debug contracts, packaging decisions, and runtime integrations documented in `CHANGELOG.md` are established project behavior.
+
+AI-generated patches must not remove, weaken, bypass, rename, silently alter, or "simplify away" behavior already established in `CHANGELOG.md` unless the user or maintainer explicitly requests that change.
+
+If a change intentionally replaces or removes a previously established behavior, the patch must:
+
+- state the reason in `CHANGELOG.md`;
+- update the relevant documentation;
+- preserve or replace test coverage;
+- describe the migration path when user-facing behavior changes.
+
+If a feature looks redundant but appears in `CHANGELOG.md`, treat it as intentional until proven otherwise.
+
 ## Protected runtime expectations
 
 - Keep `CANVA_DEBUG=1` and `CANVA_DEBUG=2` as the only public debug modes.

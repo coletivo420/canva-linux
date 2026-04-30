@@ -1,10 +1,56 @@
 'use strict';
 
+// @ts-check
+
+/**
+ * @typedef {{
+ *   id?: number;
+ *   getURL?: () => string;
+ *   isDestroyed?: () => boolean;
+ * }} WebContentsLike
+ */
+
+/**
+ * @typedef {{
+ *   id?: number;
+ *   webContents?: WebContentsLike;
+ *   isDestroyed?: () => boolean;
+ * }} BrowserWindowLike
+ */
+
+/**
+ * @typedef {{
+ *   id: number;
+ *   window?: BrowserWindowLike;
+ *   sourceWebContentsId?: number;
+ *   startedOnCanvaAuth?: boolean;
+ *   sawExternalProvider?: boolean;
+ *   sawAuthorizedCallback?: boolean;
+ *   completionHandled?: boolean;
+ *   closeReason?: string;
+ * }} OAuthPopupEntry
+ */
+
+/**
+ * @typedef {{ id: number }} TabEntryLike
+ */
+
+/**
+ * @param {{
+ *   getMainWindow: () => BrowserWindowLike | null | undefined;
+ *   getAuthPopups: () => Map<number, OAuthPopupEntry>;
+ *   getFindTabByWebContents: () => ((webContents: WebContentsLike) => TabEntryLike | null | undefined) | null | undefined;
+ * }} options
+ */
 function createLoggingHelpers({
   getMainWindow,
   getAuthPopups,
   getFindTabByWebContents,
 }) {
+  /**
+   * @param {OAuthPopupEntry | null | undefined} entry
+   * @returns {string}
+   */
   function summarizeOauthEntry(entry) {
     if (!entry) return 'popup=unknown';
 
@@ -16,6 +62,10 @@ function createLoggingHelpers({
     ].join(' ');
   }
 
+  /**
+   * @param {BrowserWindowLike | null | undefined} window
+   * @returns {string}
+   */
   function windowLabel(window) {
     if (!window) return 'unknown-window';
 
@@ -33,6 +83,10 @@ function createLoggingHelpers({
     return 'window';
   }
 
+  /**
+   * @param {WebContentsLike | null | undefined} webContents
+   * @returns {string}
+   */
   function webContentsLabel(webContents) {
     if (!webContents) return 'unknown-webcontents';
 
@@ -50,7 +104,7 @@ function createLoggingHelpers({
       }
     }
 
-    return `wc-${webContents.id}`;
+    return `wc-${webContents.id || 'unknown'}`;
   }
 
   return {

@@ -174,6 +174,18 @@ This is required because Canva's editor can execute Electron preload code in a s
 
 Release bundle generation rebuilds the Electron output and Flatpak repo by default so the generated preload bundle and packaged app stay current. Reusing an existing `repo/` requires an explicit `--use-existing-repo` call to `scripts/build-flatpak-bundle.sh` and should not be used for release publication after source changes.
 
+## AI and regression policy
+
+This project treats `CHANGELOG.md` as protected project history.
+
+Features and behaviors recorded there must not be removed, weakened, renamed, or bypassed by AI-assisted patches unless explicitly requested by the maintainer.
+
+See:
+
+- `docs/AI_GUARDRAILS.md`
+- `docs/FEATURES.md`
+- `docs/TYPESCRIPT_CONVERSION_REVIEW.md`
+
 ## OAuth Support
 
 Google OAuth was tested and is considered stable.
