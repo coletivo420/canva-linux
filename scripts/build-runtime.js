@@ -33,6 +33,7 @@ const requiredFiles = [
   '.build/electron/main/index.js',
   '.build/electron/preload/canva.bundle.js',
   '.build/electron/ui/toolbar.html',
+  '.build/electron/assets',
 ];
 
 for (const file of requiredFiles) {
