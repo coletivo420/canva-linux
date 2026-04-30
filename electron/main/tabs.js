@@ -74,8 +74,8 @@ function createTabHelpers({
   /** @returns {void} */
   function updateWindowTitle() {
     const activeTab = state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
-    const title = activeTab?.title || appName;
-    mainWindowRef()?.setTitle(title ? `${title} - ${appName}` : appName);
+    const title = activeTab?.title;
+    mainWindowRef()?.setTitle(title && title !== appName ? `${title} - ${appName}` : appName);
   }
 
   /** @returns {{ activeTabId: number | null, tabs: Array<{ id: number, title: string, url: string, favicon?: string | null, canClose: boolean }>, theme: string }} */
