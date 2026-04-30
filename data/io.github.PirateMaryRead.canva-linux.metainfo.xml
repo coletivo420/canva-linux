@@ -16,9 +16,9 @@
     </p>
   </description>
   <launchable type="desktop-id">io.github.PirateMaryRead.canva-linux.desktop</launchable>
-  <url type="homepage">https://www.canva.com/</url>
+  <url type="homepage">https://github.com/PirateMaryRead/canva-linux</url>
   <url type="vcs-browser">https://github.com/PirateMaryRead/canva-linux</url>
-  <developer id="io.github.PirateMaryRead">
+  <developer id="io.github.piratemaryread">
     <name>Felipe Matos (piradopirata)</name>
   </developer>
   <replaces>

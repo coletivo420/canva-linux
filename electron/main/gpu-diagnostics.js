@@ -194,7 +194,7 @@ function registerGpuDiagnostics({ app, centralLogger, debugLog }) {
       const gpuInfo = await app.getGPUInfo('basic');
       debugGpu('gpu:features', 'info-basic', gpuInfo);
     } catch (error) {
-      logGpu('warn', 'gpu:features', 'feature-status-error', error?.message || String(error));
+      logGpu('warn', 'gpu:features', 'feature-status-error', error instanceof Error ? error.message : String(error));
     }
   });
 
