@@ -21,6 +21,7 @@ for (const [from, to] of copies) {
   }
 
   fs.rmSync(target, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(target), { recursive: true });
   fs.cpSync(source, target, { recursive: true });
 
   console.log(`[runtime-build] copied ${from} -> ${to}`);
