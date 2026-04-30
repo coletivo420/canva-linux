@@ -84,24 +84,17 @@ function extractHostname(urlish) {
 }
 
 /**
- * @param {string} urlish
- * @returns {boolean}
- */
-function isTrustedRemoteOrigin(urlish) {
-  const hostname = extractHostname(urlish);
-  if (!hostname) return false;
-  return INTERNAL_HOST_RE.test(hostname) || OAUTH_PROVIDER_HOSTS.some((re) => re.test(hostname));
-}
-
-/**
  * @param {string} permission
  * @param {string} origin
  * @param {PermissionDetails} [details]
  * @returns {boolean}
  */
 function shouldGrantRemotePermission(permission, origin, details = {}) {
-  const trusted = isTrustedRemoteOrigin(origin) || isTrustedRemoteOrigin(details.requestingUrl || '');
-  if (!trusted) return false;
+  const canvaTrusted = isCanvaUrl(origin) || isCanvaUrl(details.requestingUrl || '');
+  const oauthTrusted = isOAuthProviderUrl(origin) || isOAuthProviderUrl(details.requestingUrl || '');
+
+  if (!canvaTrusted && !oauthTrusted) return false;
+  if (oauthTrusted && !canvaTrusted) return false;
 
   switch (permission) {
     // Some trusted Canva flows still probe browser capture permissions, but

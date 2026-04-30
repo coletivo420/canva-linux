@@ -3,12 +3,14 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 const {
   getDebugLevel,
   isDebugEnabled,
   normalizeDebugCategory,
   createDebugTools,
-} = require('../electron/shared/debug');
+} = loadRuntimeModule('shared/debug');
 
 /**
  * @param {{ CANVA_DEBUG?: string; CANVA_DEBUG_LEVEL?: string }} env
@@ -86,6 +88,10 @@ test('debug tools emit all categories when debug is enabled', () => {
     const seen = [];
 
     const tools = createDebugTools({
+      /**
+       * @param {string} category
+       * @param {unknown[]} args
+       */
       emit(category, args) {
         seen.push({ category, args });
       },

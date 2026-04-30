@@ -6,6 +6,8 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 /**
  * @template T
  * @param {() => T} fn
@@ -31,7 +33,7 @@ function withElectronMock(fn) {
   }
 }
 
-const { normalizeEyeDropperCategoryHint } = withElectronMock(() => require('../electron/preload/debug'));
+const { normalizeEyeDropperCategoryHint } = withElectronMock(() => loadRuntimeModule('preload/debug', { preferBuild: true }));
 
 test('normalizes EyeDropper category hints', () => {
   assert.equal(normalizeEyeDropperCategoryHint('bridge'), 'eyedropper:bridge');

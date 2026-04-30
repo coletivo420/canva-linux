@@ -175,6 +175,25 @@ lint -> typecheck -> strict typecheck -> tests -> docs/AI guardrails -> runtime 
 
 Do not move runtime build before source validation.
 
+## DEV13 scope
+
+`1.4.11-dev.13` begins actual `.ts` conversion with low-risk leaf modules.
+
+Initial conversion targets:
+
+- `electron/main/logging-normalize.ts`
+- `electron/shared/debug.ts`
+
+Rules:
+
+- preserve CommonJS runtime behavior after build;
+- do not convert Electron orchestration modules yet;
+- do not convert preload entrypoints yet;
+- do not change Flatpak behavior as part of type conversion;
+- update tests or test helpers so converted modules remain covered.
+
+DEV13 keeps ESLint focused on JavaScript until a TypeScript-aware parser dependency is added. Converted `.ts` runtime modules are validated by `npm run typecheck`, `npm run typecheck:strict`, `npm run build:runtime`, `npm run build:check` and the runtime module tests.
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:
@@ -198,7 +217,7 @@ These modules are small enough to type strictly and important enough to protect 
 
 ## Planned progression
 
-- `dev13`: convert pure shared/logging helpers to `.ts`.
+- `dev13`: convert the first pure shared/logging leaf modules to `.ts`.
 - `dev14`: convert main infrastructure modules to `.ts`.
 - `dev15`: convert shell, tabs and OAuth modules to `.ts`.
 - `dev16`: convert the main process entrypoint to `.ts`.

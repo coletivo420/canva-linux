@@ -110,6 +110,27 @@ test('denies untrusted media permission', () => {
   );
 });
 
+test('denies OAuth provider media permission', () => {
+  assert.equal(
+    shouldGrantRemotePermission('media', 'https://accounts.google.com/', {}),
+    false
+  );
+});
+
+test('denies OAuth provider display capture permission', () => {
+  assert.equal(
+    shouldGrantRemotePermission('display-capture', 'https://accounts.google.com/', {}),
+    false
+  );
+});
+
+test('denies OAuth provider clipboard read permission', () => {
+  assert.equal(
+    shouldGrantRemotePermission('clipboard-read', 'https://accounts.google.com/', {}),
+    false
+  );
+});
+
 test('detects Canva auth URLs', () => {
   assert.equal(isCanvaAuthUrl('https://www.canva.com/login'), true);
   assert.equal(isCanvaAuthUrl('https://www.canva.com/design'), false);

@@ -151,6 +151,8 @@ System-scope local installs should build as the current user, then use `sudo fla
 
 Install, bundle and dev-run workflows must restore local Flatpak artifact ownership to the current user before exiting.
 
+Flatpak build artifact ownership restoration is protected behavior. Do not remove `restore_flatpak_build_artifact_permissions` or the EXIT traps from install, bundle or run-dev workflows.
+
 The installer must explain that system-scope installation makes Canva Linux available to all users and avoids creating a duplicate user Flatpak scope.
 
 User scope is allowed only when explicitly requested through:
@@ -171,3 +173,16 @@ Development runs should prefer:
 ```
 
 to avoid installing local origins during quick testing.
+
+## DEV13 TypeScript conversion guardrails
+
+DOC13 TypeScript conversion must begin with leaf modules only.
+
+Allowed initial conversion targets:
+
+```text
+electron/main/logging-normalize.ts
+electron/shared/debug.ts
+```
+
+Do not convert `electron/main/index.js`, `electron/preload/canva.js`, `electron/preload/ltcode-eyedropper.js`, shell scripts or Flatpak manifests in DEV13.

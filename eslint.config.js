@@ -2,6 +2,8 @@
 
 const importPlugin = require('eslint-plugin-import');
 
+// Runtime .ts files are covered by `tsc` in DEV13. ESLint TS parsing should
+// be enabled after adding a TypeScript-aware parser dependency.
 module.exports = [
   {
     ignores: [
@@ -25,10 +27,10 @@ module.exports = [
       sourceType: 'commonjs',
     },
     settings: {
-      'import/extensions': ['.js'],
+      'import/extensions': ['.js', '.ts'],
       'import/resolver': {
         node: {
-          extensions: ['.js'],
+          extensions: ['.js', '.ts'],
         },
       },
     },

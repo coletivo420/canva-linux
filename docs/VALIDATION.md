@@ -259,6 +259,28 @@ Targeted regression check:
 grep -RIn "sudo[[:space:]]\+flatpak-builder" scripts canva-linux.sh && exit 1 || true
 ```
 
+## DEV13 TypeScript leaf conversion validation
+
+Run:
+
+```bash
+npm run lint
+npm run typecheck
+npm run typecheck:strict
+npm test
+npm run build:runtime
+npm run build:check
+```
+
+Expected:
+
+- converted `.ts` leaf modules compile into `.build/electron/**`;
+- `.build/electron/main/logging-normalize.js` exists after runtime build;
+- `.build/electron/shared/debug.js` exists after runtime build;
+- logging/debug tests still cover converted modules;
+- no generated `.build/` files are committed;
+- Flatpak artifact ownership restoration traps remain present.
+
 ## DEV12 runtime build validation
 
 Validation remains source-first.

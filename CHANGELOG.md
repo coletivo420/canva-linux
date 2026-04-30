@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.13] - 2026-04-30
+
+### Added
+
+- Began the DOC13 TypeScript conversion phase with low-risk shared/logging leaf modules.
+- Added validation guidance for converted `.ts` runtime modules.
+- Added stronger documentation around Flatpak artifact ownership restoration.
+
+### Changed
+
+- Updated development documentation from older dev2/dev12 wording to the dev13 workflow.
+- Clarified that `.ts` runtime source files are validated by TypeScript checks until ESLint gains a TypeScript parser.
+- Clarified that system-scope Flatpak operations may request administrator authorization before or during build dependency preparation.
+
+### Fixed
+
+- Removed unconditional preload raw-init console logging outside `CANVA_DEBUG`.
+- Restricted powerful runtime permissions to Canva origins instead of OAuth provider origins.
+- Preserved Flatpak build artifact ownership restoration after install, bundle and dev-run workflows.
+
+### Notes
+
+- System-scope installation remains the default.
+- User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
+- Password prompts are expected for legitimate system Flatpak operations.
+- `flatpak-builder` must continue running as the current user, never with `sudo`.
+
 ## [1.4.11-dev.12-hotfix] - 2026-04-30
 
 ### Fixed
