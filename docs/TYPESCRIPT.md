@@ -1,4 +1,4 @@
-# TypeScript Migration Plan (`1.4.11-dev.9+`)
+# TypeScript Migration Plan (`1.4.11-dev.10+`)
 
 ## Current baseline
 
@@ -93,6 +93,24 @@ Installer UX additions:
 
 `electron/preload/ltcode-eyedropper.js` remains a library-like module and will be reviewed during DEV11 cleanup.
 
+## DEV10 scope
+
+`1.4.11-dev.10` expands the strict TypeScript boundary to the remaining extracted main-process modules and adds changelog-backed AI non-regression rules.
+
+Strict boundary additions:
+
+- `electron/main/runtime.js`
+- `electron/main/logging.js`
+- `electron/main/logging-helpers.js`
+- `electron/main/ipc.js`
+- `electron/main/lifecycle.js`
+- `electron/main/tabs.js`
+- `electron/main/tab-controller.js`
+- `electron/main/tab-events.js`
+- `electron/main/eyedropper-bridge.js`
+
+`electron/main/index.js` remains outside the strict boundary until DEV11.
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:
@@ -116,5 +134,15 @@ These modules are small enough to type strictly and important enough to protect 
 
 ## Planned progression
 
-- `dev10`: evaluate isolated `.ts` conversion only after JSDoc strict islands are stable.
-- `dev11`: review TypeScript conversion, cleanup stale compatibility code, remove obsolete helpers, consolidate docs/tests, and revisit historical preload compatibility shims.
+- `dev11`: strict typing for `electron/main/index.js`.
+- `dev12`: introduce a real TypeScript build pipeline for Electron runtime output.
+- `dev13`: convert pure shared/logging helpers to `.ts`.
+- `dev14`: convert main infrastructure modules to `.ts`.
+- `dev15`: convert shell, tabs and OAuth modules to `.ts`.
+- `dev16`: convert the main process entrypoint to `.ts`.
+- `dev17`: convert preload source modules to `.ts`.
+- `dev18`: decide whether to convert or isolate `electron/preload/ltcode-eyedropper.js`.
+- `dev19`: convert tests, configs and Node helper scripts where safe.
+- `dev20`: verify full TypeScript conversion.
+- `dev21`: post-TypeScript cleanup and obsolete compatibility removal.
+- `dev22`: TypeScript stabilization and release-candidate readiness.

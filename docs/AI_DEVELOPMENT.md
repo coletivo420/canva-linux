@@ -16,6 +16,7 @@ This document defines project conventions for AI-assisted development and vibeco
 - Prefer small, reviewable patches that are easy to revert.
 - Avoid large architecture changes without explicit scope validation.
 - Preserve the stable/dev workflow already used by this repository.
+- Treat `CHANGELOG.md` as protected project history. Features, behaviors, workflows, validations, scripts, permissions, logging/debug contracts, packaging decisions, and runtime integrations recorded there must not be removed, weakened, renamed, bypassed, or silently altered unless the user explicitly requests it.
 
 ## Scope guardrails
 
@@ -68,6 +69,8 @@ Before proposing or applying changes, align with the current state documented in
 - `docs/FLATHUB.md`
 - `docs/FLATPAK_PERMISSIONS.md`
 - `docs/AI_DEVELOPMENT.md`
+
+Before proposing cleanup or simplification, check `CHANGELOG.md` to verify whether the target behavior is established project behavior.
 
 After meaningful refactors, update the relevant repository documentation so future AI sessions can understand:
 

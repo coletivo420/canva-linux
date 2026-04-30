@@ -62,7 +62,9 @@ test('createTabController forwards navigation helpers into tab event attachment'
     broadcastTabsState() {},
     classifyNavigationRequest,
     classifyWindowOpenRequest,
-    debugLog() {},
+    debugLog() {
+      return true;
+    },
     getCanvaSession() {
       return { partition: 'persist:canva' };
     },
@@ -118,7 +120,9 @@ test('createHomeTab keeps the extracted helpers wired through the controller pat
     broadcastTabsState() {},
     classifyNavigationRequest,
     classifyWindowOpenRequest,
-    debugLog() {},
+    debugLog() {
+      return true;
+    },
     getCanvaSession() {
       return { partition: 'persist:canva' };
     },

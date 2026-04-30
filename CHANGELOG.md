@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.10] - 2026-04-30
+
+### Added
+
+- Added changelog-backed non-regression rules for AI-assisted development.
+- Added strict JSDoc typing coverage for remaining extracted main-process modules.
+- Added targeted tests for runtime, logging helpers, tab state and EyeDropper bridge helpers.
+- Added TypeScript conversion review documentation.
+- Added full TypeScript conversion roadmap through post-conversion cleanup.
+
+### Changed
+
+- Expanded `tsconfig.strict.json` beyond logging, GPU, shell, OAuth, navigation and preload modules to cover the remaining extracted main-process modules.
+- Expanded AI guardrails to treat `CHANGELOG.md` as protected project history.
+- Updated TypeScript migration documentation with DEV10 through DEV22 progression.
+- Clarified that cleanup must happen after full TypeScript conversion, not before it.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- No `.ts` runtime conversion is performed in this phase.
+- `electron/main/index.js` remains the orchestration entrypoint and is deferred to DEV11 strict typing.
+
 ## [1.4.11-dev.9] - 2026-04-30
 
 ### Added

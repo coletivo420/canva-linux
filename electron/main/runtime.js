@@ -1,5 +1,53 @@
 'use strict';
 
+// @ts-check
+
+/**
+ * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
+ */
+
+/**
+ * @typedef {{
+ *   appendSwitch(name: string, value?: string): void;
+ *   getSwitchValue(name: string): string;
+ * }} CommandLineLike
+ */
+
+/**
+ * @typedef {{
+ *   commandLine: CommandLineLike;
+ *   disableHardwareAcceleration?: () => void;
+ *   getPath(name: string): string;
+ *   setDesktopName?: (name: string) => void;
+ *   setName?: (name: string) => void;
+ *   setPath(name: string, path: string): void;
+ *   setAppUserModelId?: (id: string) => void;
+ * }} ElectronAppLike
+ */
+
+/**
+ * @typedef {{
+ *   cookies: { flushStore(): Promise<void> };
+ *   flushStorageData(): Promise<void>;
+ *   setPermissionRequestHandler(handler: (webContents: WebContentsLike | null | undefined, permission: string, callback: (granted: boolean) => void, details?: PermissionDetailsLike) => void): void;
+ *   setPermissionCheckHandler(handler: (webContents: WebContentsLike | null | undefined, permission: string, requestingOrigin?: string, details?: PermissionDetailsLike) => boolean): void;
+ *   webRequest: { onBeforeSendHeaders(handler: (details: BeforeSendHeadersDetailsLike, callback: (response: { requestHeaders: Record<string, string> }) => void) => void): void };
+ *   on(event: 'will-download', listener: (event: unknown, item: DownloadItemLike) => void): void;
+ * }} SessionLike
+ */
+
+/**
+ * @typedef {{ getURL(): string }} WebContentsLike
+ * @typedef {{ requestingOrigin?: string, requestingUrl?: string }} PermissionDetailsLike
+ * @typedef {{ requestHeaders: Record<string, string> }} BeforeSendHeadersDetailsLike
+ * @typedef {{ getFilename(): string, setSavePath(path: string): void }} DownloadItemLike
+ */
+
+/**
+ * @param {ElectronAppLike} app
+ * @param {string} featureName
+ * @returns {void}
+ */
 function appendDisableFeature(app, featureName) {
   const switchName = 'disable-features';
   const currentValue = app.commandLine.getSwitchValue(switchName);
@@ -14,8 +62,12 @@ function appendDisableFeature(app, featureName) {
   app.commandLine.appendSwitch(switchName, Array.from(features).join(','));
 }
 
+/**
+ * @param {{ app: ElectronAppLike, appId: string, wmClass: string, path: Pick<typeof import('node:path'), 'join'> }} options
+ * @returns {void}
+ */
 function configureLinuxRuntime({ app, appId, wmClass, path }) {
-  app.setName('Canva Linux');
+  app.setName?.('Canva Linux');
   app.commandLine.appendSwitch('disable-component-update');
   app.commandLine.appendSwitch('disable-domain-reliability');
   app.commandLine.appendSwitch('disable-sync');
@@ -26,13 +78,13 @@ function configureLinuxRuntime({ app, appId, wmClass, path }) {
   appendDisableFeature(app, 'Floss');
 
   if (process.platform === 'linux') {
-    app.setDesktopName(`${appId}.desktop`);
+    app.setDesktopName?.(`${appId}.desktop`);
     app.commandLine.appendSwitch('class', wmClass);
     app.commandLine.appendSwitch('font-render-hinting', 'medium');
     app.commandLine.appendSwitch('enable-font-antialiasing');
 
     if (process.env.CANVA_DISABLE_GPU === '1') {
-      app.disableHardwareAcceleration();
+      app.disableHardwareAcceleration?.();
       app.commandLine.appendSwitch('disable-gpu');
       app.commandLine.appendSwitch('disable-gpu-compositing');
     }
@@ -55,6 +107,9 @@ function configureLinuxRuntime({ app, appId, wmClass, path }) {
   app.setPath('sessionData', path.join(app.getPath('userData'), 'session'));
 }
 
+/**
+ * @returns {boolean}
+ */
 function shouldEnableCaptureVerboseLogging() {
   const level = String(process.env.CANVA_DEBUG_LEVEL || '').trim();
 
@@ -63,11 +118,20 @@ function shouldEnableCaptureVerboseLogging() {
   return String(process.env.CANVA_DEBUG || '').trim() === '2';
 }
 
+/**
+ * @param {SessionLike} ses
+ * @returns {Promise<void>}
+ */
 async function flushSession(ses) {
   await ses.cookies.flushStore();
   await ses.flushStorageData();
 }
 
+/**
+ * @param {() => SessionLike} getCanvaSession
+ * @param {Record<string, unknown>} [extra]
+ * @returns {Record<string, unknown> & { session: SessionLike, contextIsolation: boolean, sandbox: boolean, nodeIntegration: boolean, spellcheck: boolean }}
+ */
 function sharedWebPreferences(getCanvaSession, extra = {}) {
   // All Canva surfaces (tabs + OAuth popups) must share the same session.
   return {
@@ -80,6 +144,18 @@ function sharedWebPreferences(getCanvaSession, extra = {}) {
   };
 }
 
+/**
+ * @param {{
+ *   app: Pick<ElectronAppLike, 'getPath'>;
+ *   debugLog: DebugLog;
+ *   flushSessionFn?: (session: SessionLike) => Promise<void>;
+ *   getCanvaSession: () => SessionLike;
+ *   path: Pick<typeof import('node:path'), 'join'>;
+ *   partition: string;
+ *   shouldGrantRemotePermission: (permission: string, origin: string, details: PermissionDetailsLike) => boolean;
+ * }} options
+ * @returns {Promise<SessionLike>}
+ */
 async function configureSession({
   app,
   debugLog,
@@ -136,4 +212,5 @@ module.exports = {
   configureSession,
   flushSession,
   sharedWebPreferences,
+  shouldEnableCaptureVerboseLogging,
 };
