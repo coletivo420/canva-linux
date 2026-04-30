@@ -95,6 +95,20 @@ CANVA_FORCE_WAYLAND=1 CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-l
 CANVA_FORCE_X11=1 CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
 ```
 
+## Post-install terminal guidance
+
+After a successful local Flatpak install, the installer prints a compact command reference.
+
+When stdout is an interactive terminal, section titles and commands are color-highlighted.
+
+Colors are disabled automatically when:
+
+- stdout is not a TTY;
+- `NO_COLOR` is set;
+- `TERM=dumb`.
+
+This keeps CI logs and redirected output clean.
+
 ## Wayland color-management workaround
 
 For NVIDIA/KDE/Wayland color-manager warnings:

@@ -17,11 +17,20 @@
     "electron/main/window-open-policy.js",
     "electron/main/oauth.js",
     "electron/shared/navigation.js",
+    "electron/preload/debug.js",
+    "electron/preload/upload-diagnostics.js",
+    "electron/preload/browser-capture-diagnostics.js",
+    "electron/preload/eyedropper-routing-diagnostics.js",
+    "electron/preload/custom-eyedropper-flow.js",
+    "electron/preload/native-eyedropper-wrapper.js",
     "test/logging-normalize.test.js",
     "test/debug-levels.test.js",
     "test/gpu-diagnostics.test.js",
     "test/window-open-policy.test.js",
     "test/navigation.test.js",
-    "test/oauth-helpers.test.js"
+    "test/oauth-helpers.test.js",
+    "test/preload-debug.test.js",
+    "test/upload-diagnostics.test.js",
+    "test/eyedropper-preload.test.js"
   ]
 }

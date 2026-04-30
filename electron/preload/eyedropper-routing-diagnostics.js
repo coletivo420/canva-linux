@@ -1,10 +1,28 @@
 'use strict';
 
+// @ts-check
+
 // Keep eyedropper routing diagnostics isolated here. These hooks exist only to
 // trace and redirect Canva-facing browser/native picker entrypoints back into
 // the bundled ltcodedev/eyedropper path; they must not become an alternative
 // colorpicker implementation.
 
+/**
+ * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
+ * @typedef {(...args: unknown[]) => void} EyeDropperLog
+ * @typedef {(options?: EyeDropperOpenOptions) => Promise<{ sRGBHex?: string, hex?: string }>} WrapOpenCall
+ * @typedef {{ debugEnabled: (category?: string) => boolean, debugLog: DebugLog, logEyeDropper: EyeDropperLog, wrapOpenCall?: WrapOpenCall }} EyeDropperRoutingOptions
+ * @typedef {{ signal?: AbortSignal }} EyeDropperOpenOptions
+ * @typedef {{ getTracks?: () => Array<{ kind?: string, readyState?: string, label?: string }> }} MediaStreamLike
+ * @typedef {{ tagName?: unknown, id?: unknown, className?: unknown }} ElementLike
+ * @typedef {HTMLInputElement & { __canvaCustomColorInputPending?: boolean }} PendingColorInput
+ * @typedef {{ __canvaEyeDropperRoutingDiagnosticsInstalled?: boolean, __canvaLastCaptureActivation?: { event?: string, timestamp?: number, target?: string, active?: string, trusted?: string }, MediaDevices?: { prototype?: Record<string, unknown> }, HTMLInputElement?: { prototype?: Record<string, unknown> }, navigator?: Navigator }} EyeDropperRoutingScope
+ */
+
+/**
+ * @param {EyeDropperRoutingOptions} options
+ * @returns {void}
+ */
 function installEyeDropperRoutingDiagnostics({ debugEnabled, debugLog, logEyeDropper, wrapOpenCall }) {
   const debugActive = debugEnabled('eyedropper') || debugEnabled('eyedropper:routing');
   const interceptActive = typeof wrapOpenCall === 'function';
@@ -12,7 +30,7 @@ function installEyeDropperRoutingDiagnostics({ debugEnabled, debugLog, logEyeDro
     return;
   }
 
-  const scope = globalThis || window;
+  const scope = getEyeDropperRoutingScope();
   if (scope.__canvaEyeDropperRoutingDiagnosticsInstalled) {
     return;
   }
@@ -24,16 +42,31 @@ function installEyeDropperRoutingDiagnostics({ debugEnabled, debugLog, logEyeDro
   installColorInputInterception({ scope, debugLog, logEyeDropper, wrapOpenCall, debugActive });
 }
 
+/**
+ * @returns {EyeDropperRoutingScope}
+ */
+function getEyeDropperRoutingScope() {
+  return /** @type {EyeDropperRoutingScope} */ (/** @type {unknown} */ (globalThis));
+}
+
+/**
+ * @param {{ debugLog: DebugLog, logEyeDropper: EyeDropperLog, debugActive: boolean }} options
+ * @returns {void}
+ */
 function installRecentActivationTrace({ debugLog, logEyeDropper, debugActive }) {
-  const scope = globalThis || window;
+  const scope = getEyeDropperRoutingScope();
+  /**
+   * @param {string} eventName
+   * @param {MouseEvent | KeyboardEvent | PointerEvent} event
+   */
   const update = (eventName, event) => {
     const summary = {
       event: eventName,
       timestamp: Date.now(),
       trusted: event?.isTrusted ? 'true' : 'false',
       target: describeTarget(event?.target),
-      button: Number.isFinite(event?.button) ? event.button : 'na',
-      buttons: Number.isFinite(event?.buttons) ? event.buttons : 'na',
+      button: Number.isFinite(/** @type {{ button?: unknown }} */ (event).button) ? /** @type {{ button: number }} */ (event).button : 'na',
+      buttons: Number.isFinite(/** @type {{ buttons?: unknown }} */ (event).buttons) ? /** @type {{ buttons: number }} */ (event).buttons : 'na',
       detail: Number.isFinite(event?.detail) ? event.detail : 'na',
       active: describeTarget(document.activeElement),
     };
@@ -66,12 +99,16 @@ function installRecentActivationTrace({ debugLog, logEyeDropper, debugActive }) 
   }
 }
 
+/**
+ * @param {{ scope: EyeDropperRoutingScope, debugLog: DebugLog, logEyeDropper: EyeDropperLog, debugActive: boolean }} options
+ * @returns {void}
+ */
 function installMediaDevicesDiagnostics({ scope, debugLog, logEyeDropper, debugActive }) {
   const mediaDevices = scope?.navigator?.mediaDevices;
   const proto = scope?.MediaDevices?.prototype;
 
   const wrappedDisplayInstance = wrapMethod({
-    target: mediaDevices,
+    target: /** @type {Record<string, unknown> | null | undefined} */ (/** @type {unknown} */ (mediaDevices)),
     methodName: 'getDisplayMedia',
     debugLog,
     logEyeDropper,
@@ -87,7 +124,7 @@ function installMediaDevicesDiagnostics({ scope, debugLog, logEyeDropper, debugA
     label: 'MediaDevices.prototype',
   });
   const wrappedUserInstance = wrapMethod({
-    target: mediaDevices,
+    target: /** @type {Record<string, unknown> | null | undefined} */ (/** @type {unknown} */ (mediaDevices)),
     methodName: 'getUserMedia',
     debugLog,
     logEyeDropper,
@@ -111,6 +148,10 @@ function installMediaDevicesDiagnostics({ scope, debugLog, logEyeDropper, debugA
   }
 }
 
+/**
+ * @param {{ scope: EyeDropperRoutingScope, debugLog: DebugLog, logEyeDropper: EyeDropperLog, debugActive: boolean }} options
+ * @returns {void}
+ */
 function installLegacyGetUserMediaDiagnostics({ scope, debugLog, logEyeDropper, debugActive }) {
   wrapLegacyNavigatorMethod({
     scope,
@@ -135,16 +176,20 @@ function installLegacyGetUserMediaDiagnostics({ scope, debugLog, logEyeDropper, 
   });
 }
 
+/**
+ * @param {{ target: Record<string, unknown> | null | undefined, methodName: string, debugLog: DebugLog, logEyeDropper: EyeDropperLog, debugActive: boolean, label: string }} options
+ * @returns {boolean}
+ */
 function wrapMethod({ target, methodName, debugLog, logEyeDropper, debugActive, label }) {
   if (!target || typeof target[methodName] !== 'function') {
     return false;
   }
-  const original = target[methodName];
+  const original = /** @type {((...args: unknown[]) => unknown) & { __canvaDebugWrapped?: boolean }} */ (target[methodName]);
   if (original.__canvaDebugWrapped) {
     return true;
   }
 
-  const wrapped = function wrappedMediaMethod(...args) {
+  const wrapped = /** @type {((this: unknown, ...args: unknown[]) => unknown) & { __canvaDebugWrapped?: boolean }} */ (function wrappedMediaMethod(...args) {
     const activation = lastActivationSummary();
     const serializedArgs = args.length > 0 ? serializeValue(args[0]) : 'args=none';
     if (debugActive) {
@@ -172,15 +217,15 @@ function wrapMethod({ target, methodName, debugLog, logEyeDropper, debugActive, 
     try {
       result = original.apply(this, args);
     } catch (error) {
-      const message = error && error.message ? error.message : String(error);
+      const message = errorMessage(error);
       if (debugActive) {
-        debugLog('eyedropper:routing', `${methodName}-throw`, label, error?.name || 'Error', message);
-        logEyeDropper('eyedropper:routing', `${methodName}-throw`, label, error?.name || 'Error', message);
+        debugLog('eyedropper:routing', `${methodName}-throw`, label, errorName(error), message);
+        logEyeDropper('eyedropper:routing', `${methodName}-throw`, label, errorName(error), message);
       }
       throw error;
     }
 
-    if (!result || typeof result.then !== 'function') {
+    if (!isPromiseLike(result)) {
       if (debugActive) {
         debugLog('eyedropper:routing', `${methodName}-return`, label, typeof result);
         logEyeDropper('eyedropper:routing', `${methodName}-return`, label, typeof result);
@@ -188,22 +233,22 @@ function wrapMethod({ target, methodName, debugLog, logEyeDropper, debugActive, 
       return result;
     }
 
-    return result.then((stream) => {
-      const trackSummary = summarizeStream(stream);
+    return Promise.resolve(result).then((stream) => {
+      const trackSummary = summarizeStream(/** @type {MediaStreamLike | null | undefined} */ (stream));
       if (debugActive) {
         debugLog('eyedropper:routing', `${methodName}-resolved`, label, trackSummary);
         logEyeDropper('eyedropper:routing', `${methodName}-resolved`, label, trackSummary);
       }
       return stream;
     }).catch((error) => {
-      const message = error && error.message ? error.message : String(error);
+      const message = errorMessage(error);
       if (debugActive) {
-        debugLog('eyedropper:routing', `${methodName}-rejected`, label, error?.name || 'Error', message);
-        logEyeDropper('eyedropper:routing', `${methodName}-rejected`, label, error?.name || 'Error', message);
+        debugLog('eyedropper:routing', `${methodName}-rejected`, label, errorName(error), message);
+        logEyeDropper('eyedropper:routing', `${methodName}-rejected`, label, errorName(error), message);
       }
       throw error;
     });
-  };
+  });
 
   wrapped.__canvaDebugWrapped = true;
   Object.defineProperty(wrapped, 'name', {
@@ -234,17 +279,22 @@ function wrapMethod({ target, methodName, debugLog, logEyeDropper, debugActive, 
   return true;
 }
 
+/**
+ * @param {{ scope: EyeDropperRoutingScope, methodName: string, debugLog: DebugLog, logEyeDropper: EyeDropperLog, debugActive: boolean }} options
+ * @returns {void}
+ */
 function wrapLegacyNavigatorMethod({ scope, methodName, debugLog, logEyeDropper, debugActive }) {
   const navigatorObject = scope?.navigator;
-  if (!navigatorObject || typeof navigatorObject[methodName] !== 'function') {
+  const navigatorRecord = /** @type {Record<string, unknown> | null | undefined} */ (/** @type {unknown} */ (navigatorObject));
+  if (!navigatorRecord || typeof navigatorRecord[methodName] !== 'function') {
     return;
   }
-  const original = navigatorObject[methodName];
+  const original = /** @type {((...args: unknown[]) => unknown) & { __canvaDebugWrapped?: boolean }} */ (navigatorRecord[methodName]);
   if (original.__canvaDebugWrapped) {
     return;
   }
 
-  const wrapped = function wrappedLegacyGetUserMedia(...args) {
+  const wrapped = /** @type {((this: unknown, ...args: unknown[]) => unknown) & { __canvaDebugWrapped?: boolean }} */ (function wrappedLegacyGetUserMedia(...args) {
     const serializedArgs = args.length > 0 ? serializeValue(args[0]) : 'args=none';
     const activation = lastActivationSummary();
     if (debugActive) {
@@ -252,15 +302,19 @@ function wrapLegacyNavigatorMethod({ scope, methodName, debugLog, logEyeDropper,
       logEyeDropper('eyedropper:routing', `${methodName}-call`, 'navigator', serializedArgs, activation);
     }
     return original.apply(this, args);
-  };
+  });
 
   wrapped.__canvaDebugWrapped = true;
-  navigatorObject[methodName] = wrapped;
+  navigatorRecord[methodName] = wrapped;
   if (debugActive) {
     logEyeDropper('eyedropper:routing', `${methodName}-wrapped`, 'navigator', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
   }
 }
 
+/**
+ * @param {{ scope: EyeDropperRoutingScope, debugLog: DebugLog, logEyeDropper: EyeDropperLog, wrapOpenCall?: WrapOpenCall, debugActive: boolean }} options
+ * @returns {void}
+ */
 function installColorInputInterception({ scope, debugLog, logEyeDropper, wrapOpenCall, debugActive }) {
   if (typeof wrapOpenCall !== 'function') return;
 
@@ -295,13 +349,17 @@ function installColorInputInterception({ scope, debugLog, logEyeDropper, wrapOpe
   }, true);
 }
 
+/**
+ * @param {{ prototype: Record<string, unknown>, methodName: string, debugLog: DebugLog, logEyeDropper: EyeDropperLog, wrapOpenCall: WrapOpenCall, debugActive: boolean }} options
+ * @returns {void}
+ */
 function wrapColorInputMethod({ prototype, methodName, debugLog, logEyeDropper, wrapOpenCall, debugActive }) {
   if (typeof prototype[methodName] !== 'function') return;
-  const original = prototype[methodName];
+  const original = /** @type {((...args: unknown[]) => unknown) & Record<string, unknown>} */ (prototype[methodName]);
   const marker = `__canvaColorInput${methodName}Wrapped`;
   if (original[marker]) return;
 
-  const wrapped = function wrappedColorInputMethod(...args) {
+  const wrapped = /** @type {((this: HTMLInputElement, ...args: unknown[]) => unknown) & Record<string, unknown>} */ (function wrappedColorInputMethod(...args) {
     if (!isColorInput(this)) {
       return original.apply(this, args);
     }
@@ -316,7 +374,7 @@ function wrapColorInputMethod({ prototype, methodName, debugLog, logEyeDropper, 
     }
     openCustomColorInput({ input: this, wrapOpenCall, debugLog, logEyeDropper, trigger: 'showPicker', debugActive });
     return undefined;
-  };
+  });
 
   wrapped[marker] = true;
   try {
@@ -331,9 +389,14 @@ function wrapColorInputMethod({ prototype, methodName, debugLog, logEyeDropper, 
   }
 }
 
+/**
+ * @param {{ input: HTMLInputElement, wrapOpenCall: WrapOpenCall, debugLog: DebugLog, logEyeDropper: EyeDropperLog, trigger: string, debugActive: boolean }} options
+ * @returns {void}
+ */
 function openCustomColorInput({ input, wrapOpenCall, debugLog, logEyeDropper, trigger, debugActive }) {
-  if (!isColorInput(input) || input.__canvaCustomColorInputPending) return;
-  input.__canvaCustomColorInputPending = true;
+  const pendingInput = /** @type {PendingColorInput} */ (input);
+  if (!isColorInput(input) || pendingInput.__canvaCustomColorInputPending) return;
+  pendingInput.__canvaCustomColorInputPending = true;
   Promise.resolve()
     .then(() => wrapOpenCall({}))
     .then((result) => {
@@ -350,14 +413,14 @@ function openCustomColorInput({ input, wrapOpenCall, debugLog, logEyeDropper, tr
       dispatchSyntheticEvent(input, 'change');
     })
     .catch((error) => {
-      const aborted = error?.name === 'AbortError';
+      const aborted = errorName(error) === 'AbortError';
       if (debugActive) {
         debugLog(
           'eyedropper:wrapper',
           aborted ? 'color-input-abort' : 'color-input-error',
           trigger,
           describeColorInput(input),
-          error?.message || String(error)
+          errorMessage(error)
         );
       }
       if (!aborted) {
@@ -365,19 +428,32 @@ function openCustomColorInput({ input, wrapOpenCall, debugLog, logEyeDropper, tr
       }
     })
     .finally(() => {
-      input.__canvaCustomColorInputPending = false;
+      pendingInput.__canvaCustomColorInputPending = false;
     });
 }
 
+/**
+ * @param {EventTarget} target
+ * @param {string} type
+ * @returns {void}
+ */
 function dispatchSyntheticEvent(target, type) {
   const event = new Event(type, { bubbles: true, cancelable: false, composed: true });
   target.dispatchEvent(event);
 }
 
+/**
+ * @param {unknown} input
+ * @returns {input is HTMLInputElement}
+ */
 function isColorInput(input) {
   return input instanceof HTMLInputElement && String(input.type).toLowerCase() === 'color';
 }
 
+/**
+ * @param {unknown} input
+ * @returns {string}
+ */
 function describeColorInput(input) {
   if (!isColorInput(input)) return 'input:unknown';
   const id = input.id ? `#${input.id}` : '';
@@ -389,12 +465,48 @@ function describeColorInput(input) {
   return `input[type=color]${id}${name}${classes}:${hidden}`;
 }
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
 function normalizeHex(value) {
   if (typeof value !== 'string') return null;
   const match = value.trim().match(/^#?([0-9a-fA-F]{6})$/);
-  return match ? `#${match[1].toLowerCase()}` : null;
+  return match && match[1] ? `#${match[1].toLowerCase()}` : null;
 }
 
+/**
+ * @param {unknown} value
+ * @returns {value is PromiseLike<unknown>}
+ */
+function isPromiseLike(value) {
+  return Boolean(value && typeof /** @type {{ then?: unknown }} */ (value).then === 'function');
+}
+
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorName(error) {
+  return error && typeof error === 'object' && 'name' in error && typeof error.name === 'string'
+    ? error.name
+    : 'Error';
+}
+
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorMessage(error) {
+  return error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+    ? error.message
+    : String(error);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string}
+ */
 function serializeValue(value) {
   if (value === undefined) return 'undefined';
   if (value === null) return 'null';
@@ -405,6 +517,10 @@ function serializeValue(value) {
   }
 }
 
+/**
+ * @param {MediaStreamLike | null | undefined} stream
+ * @returns {string}
+ */
 function summarizeStream(stream) {
   if (!stream || typeof stream.getTracks !== 'function') {
     return 'no-tracks';
@@ -417,18 +533,26 @@ function summarizeStream(stream) {
   }).join(',');
 }
 
+/**
+ * @param {unknown} target
+ * @returns {string}
+ */
 function describeTarget(target) {
   if (!target || typeof target !== 'object') return 'unknown';
-  const tag = target.tagName ? String(target.tagName).toLowerCase() : 'node';
-  const id = target.id ? `#${target.id}` : '';
-  const className = typeof target.className === 'string' && target.className.trim()
-    ? `.${target.className.trim().split(/\s+/).slice(0, 3).join('.')}`
+  const element = /** @type {ElementLike} */ (target);
+  const tag = element.tagName ? String(element.tagName).toLowerCase() : 'node';
+  const id = element.id ? `#${element.id}` : '';
+  const className = typeof element.className === 'string' && element.className.trim()
+    ? `.${element.className.trim().split(/\s+/).slice(0, 3).join('.')}`
     : '';
   return `${tag}${id}${className}`;
 }
 
+/**
+ * @returns {string}
+ */
 function lastActivationSummary() {
-  const scope = globalThis || window;
+  const scope = getEyeDropperRoutingScope();
   const activation = scope.__canvaLastCaptureActivation;
   if (!activation || !activation.timestamp) {
     return 'activation=none';
@@ -443,5 +567,9 @@ function lastActivationSummary() {
 }
 
 module.exports = {
+  describeTarget,
+  normalizeHex,
+  serializeValue,
+  summarizeStream,
   installEyeDropperRoutingDiagnostics,
 };

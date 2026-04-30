@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 
 const {
+  safeStringify,
   normalizeLogArg,
   normalizeArgs,
   createLogSignature,
@@ -36,6 +37,17 @@ test('normalizes Error with message and stack', () => {
 
   assert.match(normalized, /^Error: boom/);
   assert.equal(normalized.match(/Error: boom/g)?.length, 1);
+});
+
+test('safe stringify preserves nested Error and Symbol values', () => {
+  const normalized = safeStringify({
+    error: new Error('nested-boom'),
+    symbol: Symbol('nested-symbol'),
+  });
+
+  assert.match(normalized, /"name":"Error"/);
+  assert.match(normalized, /"message":"nested-boom"/);
+  assert.match(normalized, /"symbol":"Symbol\(nested-symbol\)"/);
 });
 
 test('normalizes functions without throwing', () => {

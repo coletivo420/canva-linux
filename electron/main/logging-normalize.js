@@ -10,12 +10,16 @@ function safeStringify(value) {
 
   try {
     const serialized = JSON.stringify(value, (_key, item) => {
-      if (typeof item === 'bigint') {
+      if (typeof item === 'bigint' || typeof item === 'symbol') {
         return item.toString();
       }
 
       if (typeof item === 'function') {
         return `[Function:${item.name || 'anonymous'}]`;
+      }
+
+      if (item instanceof Error) {
+        return { name: item.name, message: item.message, stack: item.stack };
       }
 
       if (typeof item === 'object' && item !== null) {

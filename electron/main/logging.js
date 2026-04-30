@@ -59,18 +59,15 @@ function createCentralLogger({ app }) {
   let logFilePath = null;
   let lastDebugSignature = null;
 
-  function appendFileLine(prefix, args) {
+  function appendFileLine(prefix, normalizedArgs) {
     if (!logFilePath) return;
-    const normalizedArgs = normalizeArgs(args);
     const line = `${new Date().toISOString()} ${prefix} ${normalizedArgs.join(' ')}\n`;
     try {
       fs.appendFileSync(logFilePath, line, 'utf8');
     } catch {}
   }
 
-  function write(level, prefix, args) {
-    const normalizedArgs = normalizeArgs(args);
-
+  function write(level, prefix, normalizedArgs) {
     if (level === 'critical') {
       console.error(prefix, ...normalizedArgs);
       return;
@@ -95,7 +92,8 @@ function createCentralLogger({ app }) {
   }
 
   function logDebug(category, args = [], { source = 'main', level = 'ok' } = {}) {
-    const signature = createLogSignature([source, category, level, ...args]);
+    const normalizedArgs = normalizeArgs(args);
+    const signature = createLogSignature([source, category, level, ...normalizedArgs]);
     if (signature === lastDebugSignature) {
       return;
     }
@@ -103,15 +101,16 @@ function createCentralLogger({ app }) {
 
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
-    write(level, terminalPrefix, args);
-    appendFileLine(filePrefix, args);
+    write(level, terminalPrefix, normalizedArgs);
+    appendFileLine(filePrefix, normalizedArgs);
   }
 
   function logStatus(category, level, message, { source = 'main' } = {}) {
+    const normalizedArgs = normalizeArgs([message]);
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
-    write(level, terminalPrefix, [message]);
-    appendFileLine(filePrefix, [message]);
+    write(level, terminalPrefix, normalizedArgs);
+    appendFileLine(filePrefix, normalizedArgs);
   }
 
   return {
