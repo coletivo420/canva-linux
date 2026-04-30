@@ -377,7 +377,7 @@ registerAppLifecycle({
     registerGpuDiagnosticsModule({
       app,
       centralLogger,
-      debugLog: /** @type {(...args: unknown[]) => void} */ (debugLog),
+      debugLog: debugLog.bind(null, 'gpu'),
     });
   },
   shouldGrantRemotePermission,
