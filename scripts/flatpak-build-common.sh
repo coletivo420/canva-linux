@@ -135,7 +135,7 @@ run_flatpak_dev() {
   rm -rf build-dir
 
   info "Building Flatpak without installing, using ${FLATPAK_SCOPE} dependency scope"
-  flatpak-builder \
+  $(flatpak_scope_prefix) flatpak-builder \
     --force-clean \
     "${scope_arg}" \
     --install-deps-from=flathub \
