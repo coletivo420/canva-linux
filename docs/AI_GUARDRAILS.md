@@ -70,6 +70,26 @@ TypeScript changes must update:
 - `docs/VALIDATION.md`
 - `CHANGELOG.md`
 
+## TypeScript runtime build guardrails
+
+AI-generated patches must not bypass the TypeScript runtime build pipeline after DEV12.
+
+Rules:
+
+- Do not point `package.json#main` back to `electron/main/index.js`.
+- Do not package raw `electron/**/*` as the primary runtime after DEV12.
+- Do not commit `.build/`.
+- Do not edit generated preload bundles manually.
+- Do not convert files to `.ts` before the build pipeline is validated.
+- Do not move runtime build before source validation in `scripts/validate-project.sh`.
+- Preserve runtime behavior documented in `CHANGELOG.md`.
+
+The runtime entrypoint after DEV12 is:
+
+```text
+.build/electron/main/index.js
+```
+
 ## OAuth/navigation TypeScript guardrails
 
 AI-generated patches must not weaken OAuth popup behavior.

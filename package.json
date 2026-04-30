@@ -1,8 +1,8 @@
 {
   "name": "canva-linux",
-  "version": "1.4.11-dev.11",
+  "version": "1.4.11-dev.12",
   "description": "A community opensource desktop wrapper for use with Canva",
-  "main": "electron/main/index.js",
+  "main": ".build/electron/main/index.js",
   "author": "Community",
   "license": "GPL-3.0-or-later",
   "productName": "Canva Linux",
@@ -18,8 +18,12 @@
     "test:smoke:headed": "playwright test --headed",
     "lint:fix": "eslint . --fix",
     "build:preload": "node scripts/build-preload-bundle.js",
-    "prestart": "npm run build:preload",
-    "predist": "npm run build:preload",
+    "clean:runtime": "node scripts/clean-runtime-build.js",
+    "build:runtime": "node scripts/build-runtime.js",
+    "build:check": "node scripts/check-runtime-build.js",
+    "build": "npm run build:runtime",
+    "prestart": "npm run build:runtime",
+    "predist": "npm run build:runtime",
     "docs:check-links": "node scripts/check-doc-links.js",
     "typecheck": "tsc --noEmit",
     "validate:project": "./scripts/validate-project.sh",
@@ -34,7 +38,7 @@
       "buildResources": "build-resources"
     },
     "files": [
-      "electron/**/*",
+      ".build/electron/**/*",
       "package.json"
     ],
     "linux": {
@@ -49,7 +53,7 @@
       "icon": "build-resources"
     },
     "extraMetadata": {
-      "main": "electron/main/index.js"
+      "main": ".build/electron/main/index.js"
     }
   },
   "devDependencies": {

@@ -5,7 +5,11 @@ const fs = require('fs');
 const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
-const outputFile = path.join(repoRoot, 'electron', 'preload', 'canva.bundle.js');
+const useBuildOutput = process.argv.includes('--build-output');
+const runtimeRoot = useBuildOutput
+  ? path.join(repoRoot, '.build')
+  : repoRoot;
+const outputFile = path.join(runtimeRoot, 'electron', 'preload', 'canva.bundle.js');
 
 const entryModule = 'electron/preload/canva.js';
 const moduleIds = [
@@ -28,7 +32,7 @@ function indentSource(source) {
 }
 
 function moduleWrapper(id) {
-  const source = fs.readFileSync(path.join(repoRoot, id), 'utf8');
+  const source = fs.readFileSync(path.join(runtimeRoot, id), 'utf8');
 
   return [
     `  ${JSON.stringify(id)}: function moduleFactory(module, exports, require) {`,

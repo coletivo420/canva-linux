@@ -135,6 +135,46 @@ Goals:
 - prevent duplicate user/system Flathub remotes by default;
 - prepare the project for the DEV12 TypeScript build pipeline.
 
+## DEV12 scope
+
+`1.4.11-dev.12` introduces the real TypeScript runtime build pipeline.
+
+Runtime source remains in:
+
+```text
+electron/
+```
+
+Compiled runtime output is generated in:
+
+```text
+.build/electron/
+```
+
+The Electron app starts from:
+
+```text
+.build/electron/main/index.js
+```
+
+DEV12 does not convert source files to `.ts` yet. It creates the build infrastructure required for safe `.ts` conversion in DEV13+.
+
+New scripts:
+
+```bash
+npm run clean:runtime
+npm run build:runtime
+npm run build:check
+```
+
+Validation order remains source-first:
+
+```text
+lint -> typecheck -> strict typecheck -> tests -> docs/AI guardrails -> runtime build -> runtime build check
+```
+
+Do not move runtime build before source validation.
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:
@@ -158,8 +198,6 @@ These modules are small enough to type strictly and important enough to protect 
 
 ## Planned progression
 
-- `dev11`: strict typing for `electron/main/index.js`.
-- `dev12`: introduce a real TypeScript build pipeline for Electron runtime output.
 - `dev13`: convert pure shared/logging helpers to `.ts`.
 - `dev14`: convert main infrastructure modules to `.ts`.
 - `dev15`: convert shell, tabs and OAuth modules to `.ts`.

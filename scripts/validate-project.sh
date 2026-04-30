@@ -31,7 +31,8 @@ run_step() {
   log_ok "$label"
 }
 
-run_step "npm run build:preload" npm run build:preload
+# Validation remains source-first. Do not move runtime build before lint,
+# typecheck, tests, docs checks, or AI/Flatpak guardrails.
 run_step "npm run lint" npm run lint
 run_step "npm run typecheck" npm run typecheck
 run_step "npm run typecheck:strict" npm run typecheck:strict
@@ -39,6 +40,8 @@ run_step "npm test" npm test
 run_step "npm run docs:check-links" npm run docs:check-links
 run_step "npm run docs:check-ai" npm run docs:check-ai
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
+run_step "npm run build:runtime" npm run build:runtime
+run_step "npm run build:check" npm run build:check
 
 if command -v desktop-file-validate >/dev/null 2>&1; then
   run_step "desktop-file-validate" desktop-file-validate data/io.github.PirateMaryRead.canva-linux.desktop

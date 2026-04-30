@@ -28,6 +28,24 @@ flatpak_scope_prefix() {
   fi
 }
 
+remove_flatpak_build_artifacts() {
+  validate_flatpak_scope
+  if [[ "${FLATPAK_SCOPE}" == "system" ]]; then
+    sudo rm -rf build-dir repo
+  else
+    rm -rf build-dir repo
+  fi
+}
+
+remove_flatpak_build_dir() {
+  validate_flatpak_scope
+  if [[ "${FLATPAK_SCOPE}" == "system" ]]; then
+    sudo rm -rf build-dir
+  else
+    rm -rf build-dir
+  fi
+}
+
 ensure_flathub_runtime() {
   local scope_arg
   scope_arg="$(flatpak_scope_arg)"
@@ -93,7 +111,7 @@ build_flatpak_repo() {
   scope_arg="$(flatpak_scope_arg)"
 
   info "Cleaning previous Flatpak build artifacts"
-  rm -rf build-dir repo
+  remove_flatpak_build_artifacts
 
   info "Building Flatpak repository using ${FLATPAK_SCOPE} dependency scope"
   $(flatpak_scope_prefix) flatpak-builder \
@@ -113,7 +131,7 @@ install_flatpak_direct() {
   scope_arg="$(flatpak_scope_arg)"
 
   info "Cleaning previous Flatpak build artifacts"
-  rm -rf build-dir
+  remove_flatpak_build_dir
 
   info "Building and installing Flatpak directly in ${FLATPAK_SCOPE} scope"
   $(flatpak_scope_prefix) flatpak-builder \
@@ -132,7 +150,7 @@ run_flatpak_dev() {
   scope_arg="$(flatpak_scope_arg)"
 
   info "Cleaning previous Flatpak build artifacts"
-  rm -rf build-dir
+  remove_flatpak_build_dir
 
   info "Building Flatpak without installing, using ${FLATPAK_SCOPE} dependency scope"
   $(flatpak_scope_prefix) flatpak-builder \

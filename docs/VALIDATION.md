@@ -34,18 +34,20 @@ Flathub source validation may require:
 ## Validation flow
 
 ```text
-1. npm run build:preload
-2. npm run lint
-3. npm run typecheck
+1. npm run lint
+2. npm run typecheck
+3. npm run typecheck:strict
 4. npm test
 5. npm run docs:check-links
 6. npm run docs:check-ai
 7. ./scripts/check-flatpak-scope-policy.sh
-8. desktop-file-validate, if available
-9. appstreamcli validate --explain, if available
-10. ./scripts/validate-flatpak.sh
-11. ./scripts/validate-flathub-submission.sh
-12. git diff --check
+8. npm run build:runtime
+9. npm run build:check
+10. desktop-file-validate, if available
+11. appstreamcli validate --explain, if available
+12. ./scripts/validate-flatpak.sh
+13. ./scripts/validate-flathub-submission.sh
+14. git diff --check
 ```
 
 ## Debug validation
@@ -246,6 +248,51 @@ Expected policy:
 - no unconditional `flatpak-builder --user --install`;
 - `CANVA_FLATPAK_SCOPE=user` is the explicit opt-in for user scope;
 - `./canva-linux.sh --run-dev` builds and runs without installing the app.
+
+## DEV12 runtime build validation
+
+Validation remains source-first.
+
+Do not move runtime build before lint, typecheck, strict typecheck, tests, docs checks, or AI guardrails.
+
+Recommended order:
+
+```bash
+npm run lint
+npm run typecheck
+npm run typecheck:strict
+npm test
+npm run docs:check-links
+npm run docs:check-ai
+./scripts/check-flatpak-scope-policy.sh
+npm run build:runtime
+npm run build:check
+```
+
+Expected generated files:
+
+```text
+.build/electron/main/index.js
+.build/electron/preload/canva.bundle.js
+.build/electron/ui/toolbar.html
+.build/electron/assets/
+```
+
+Full validation:
+
+```bash
+./canva-linux.sh --validate
+```
+
+Manual runtime checks:
+
+```bash
+npm start
+npm run dist
+./canva-linux.sh --run-dev
+./canva-linux.sh --install
+./canva-linux.sh --bundle
+```
 
 ## Changelog-backed regression validation
 
