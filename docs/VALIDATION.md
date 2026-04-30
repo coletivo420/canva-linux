@@ -246,8 +246,16 @@ Expected policy:
 - no unconditional `flatpak remote-add --user flathub`;
 - no unconditional `flatpak install --user flathub`;
 - no unconditional `flatpak-builder --user --install`;
+- no `sudo flatpak-builder`;
+- no `$(flatpak_scope_prefix) flatpak-builder`;
 - `CANVA_FLATPAK_SCOPE=user` is the explicit opt-in for user scope;
 - `./canva-linux.sh --run-dev` builds and runs without installing the app.
+
+Targeted regression check:
+
+```bash
+grep -RIn "sudo[[:space:]]\+flatpak-builder" scripts canva-linux.sh && exit 1 || true
+```
 
 ## DEV12 runtime build validation
 

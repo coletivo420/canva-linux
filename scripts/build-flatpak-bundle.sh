@@ -10,6 +10,7 @@ NC='\033[0m'
 
 info()  { echo -e "${YELLOW}[info]${NC} $*"; }
 ok()    { echo -e "${GREEN}[ok]${NC}  $*"; }
+warn()  { echo -e "${YELLOW}[warn]${NC} $*"; }
 err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
 
 ## Paths

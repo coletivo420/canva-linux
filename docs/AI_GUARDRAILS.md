@@ -137,15 +137,30 @@ Forbidden by default:
 flatpak remote-add --if-not-exists --user flathub
 flatpak install -y --user flathub
 flatpak-builder --user --install
+sudo flatpak-builder
+$(flatpak_scope_prefix) flatpak-builder
 ```
 
 Default local install scope is system.
+
+AI-generated patches must not run `flatpak-builder` with `sudo`.
+
+Administrator authorization should be deferred to system Flatpak operations whenever possible.
+
+System-scope local installs should build as the current user, then use `sudo flatpak` only for the local remote and app install operations that write to the system Flatpak installation.
+
+The installer must explain that system-scope installation makes Canva Linux available to all users and avoids creating a duplicate user Flatpak scope.
 
 User scope is allowed only when explicitly requested through:
 
 ```bash
 CANVA_FLATPAK_SCOPE=user
+CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install
 ```
+
+User-scoped installs may duplicate Flathub remotes, runtimes, SDKs, BaseApps and apps already installed in the system Flatpak scope.
+
+Do not revert the default install flow to `--user` only to avoid an administrator prompt.
 
 Development runs should prefer:
 

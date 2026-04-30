@@ -14,7 +14,6 @@ const {
   nativeTheme,
 } = require('electron');
 
-const APP_VERSION = require('../../package.json').version;
 const { createDebugTools } = require('../shared/debug');
 const {
   classifyWindowOpenRequest: sharedClassifyWindowOpenRequest,
@@ -49,6 +48,7 @@ const HOME_URL = APP_URL;
 const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
 const APP_ICON_PATH = path.join(__dirname, '..', 'assets', 'canva-icon.png');
+const APP_VERSION = app.getVersion();
 const centralLogger = createCentralLogger({ app });
 const { debugLevel, debugEnabled, debugLog } = createDebugTools({
   emit(category, args) {

@@ -54,6 +54,32 @@ doc_path() {
   printf '  %s%s%s\n' "${BOLD}${BLUE}" "$1" "${RESET}"
 }
 
+print_flatpak_scope_notice() {
+  if [[ "${FLATPAK_SCOPE}" == "system" ]]; then
+    section "System-wide Flatpak installation"
+    note "Canva Linux will be installed in the system Flatpak scope."
+    note "This makes the app available to all users on this machine."
+    note "This avoids creating a separate user Flatpak scope, user Flathub remote,"
+    note "and duplicated user runtimes when the system scope is already configured."
+    note "Administrator authorization may be requested for system Flatpak operations."
+    printf '\n'
+    note "To install only for the current user without administrator authorization, run:"
+    cmd "CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install"
+    printf '\n'
+    note "User-scope installs are isolated under your home directory and may duplicate"
+    note "Flathub remotes, runtimes, SDKs, BaseApps and the Canva Linux app if they"
+    note "already exist in the system Flatpak installation."
+    printf '\n'
+  else
+    section "User Flatpak installation"
+    note "Canva Linux will be installed only for the current user."
+    note "This mode does not require administrator authorization."
+    note "It may create a separate user Flathub remote and duplicate runtimes/apps"
+    note "that are already installed in the system Flatpak scope."
+    printf '\n'
+  fi
+}
+
 print_post_install_guidance() {
   section "Run commands:"
   cmd "flatpak run io.github.PirateMaryRead.canva-linux"
@@ -86,9 +112,19 @@ print_post_install_guidance() {
   cmd "./scripts/build-flatpak-bundle.sh"
 
   section "Flatpak install scope:"
-  note "./canva-linux.sh --install uses the system Flatpak installation by default."
-  note "Use CANVA_FLATPAK_SCOPE=user only when a user-scoped install is explicitly desired."
-  cmd "CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install"
+  if [[ "${FLATPAK_SCOPE}" == "system" ]]; then
+    note "This installation used the system Flatpak scope."
+    note "The app is available to all users on this machine."
+    note "No separate user Flatpak scope was created by this installer."
+    printf '\n'
+    note "To install only for the current user without administrator authorization:"
+    cmd "CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install"
+  else
+    note "This installation used the user Flatpak scope."
+    note "The app is available only to the current user."
+    note "This may duplicate remotes, runtimes, SDKs, BaseApps and apps already"
+    note "installed in the system Flatpak scope."
+  fi
 
   printf '\n'
 }
@@ -143,9 +179,14 @@ VERSION="$(detect_package_version)"
 info "Preparing local Flatpak install for Canva Linux v${VERSION}"
 info "Flatpak install scope: ${FLATPAK_SCOPE}"
 ok "Host dependencies are available"
+print_flatpak_scope_notice
+
+## System install authorization
+ensure_system_flatpak_authorization
 
 ## Flathub runtime preparation
 ensure_flathub_runtime
+ensure_system_flatpak_runtime_dependencies
 
 ## Node/Electron build preparation
 if [[ "$SKIP_NPM" == false ]]; then
