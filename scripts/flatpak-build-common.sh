@@ -116,7 +116,7 @@ install_flatpak_direct() {
   rm -rf build-dir
 
   info "Building and installing Flatpak directly in ${FLATPAK_SCOPE} scope"
-  flatpak-builder \
+  $(flatpak_scope_prefix) flatpak-builder \
     --force-clean \
     "${scope_arg}" \
     --install \
