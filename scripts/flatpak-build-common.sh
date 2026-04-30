@@ -96,7 +96,7 @@ build_flatpak_repo() {
   rm -rf build-dir repo
 
   info "Building Flatpak repository using ${FLATPAK_SCOPE} dependency scope"
-  flatpak-builder \
+  $(flatpak_scope_prefix) flatpak-builder \
     --force-clean \
     "${scope_arg}" \
     --install-deps-from=flathub \
