@@ -186,7 +186,7 @@ install_flatpak_direct() {
 
 install_system_flatpak_from_repo() {
   local repo_url
-  repo_url="file://$(pwd -P)/repo"
+  repo_url="$(pwd -P)/repo"
 
   info "Configuring local system Flatpak remote: ${LOCAL_FLATPAK_REMOTE}"
   if flatpak remotes --system | awk '{print $1}' | grep -qx "${LOCAL_FLATPAK_REMOTE}"; then
