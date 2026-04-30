@@ -26,7 +26,7 @@ function requireDir(dir) {
 }
 
 if (pkg.main !== expectedMain) {
-  console.error(`[runtime-build-check] package.json main must be ${expectedMain}, got ${pkg.main}`);
+  console.error(`[runtime-build-check] package.json main must be ${expectedMain}, got: ${pkg.main}`);
   failed = true;
 }
 
