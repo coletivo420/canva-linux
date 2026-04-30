@@ -39,11 +39,13 @@ Flathub source validation may require:
 3. npm run typecheck
 4. npm test
 5. npm run docs:check-links
-6. desktop-file-validate, if available
-7. appstreamcli validate --explain, if available
-8. ./scripts/validate-flatpak.sh
-9. ./scripts/validate-flathub-submission.sh
-10. git diff --check
+6. npm run docs:check-ai
+7. ./scripts/check-flatpak-scope-policy.sh
+8. desktop-file-validate, if available
+9. appstreamcli validate --explain, if available
+10. ./scripts/validate-flatpak.sh
+11. ./scripts/validate-flathub-submission.sh
+12. git diff --check
 ```
 
 ## Debug validation
@@ -203,6 +205,47 @@ node --test test/logging-helpers.test.js
 node --test test/tabs-state.test.js
 node --test test/eyedropper-bridge.test.js
 ```
+
+## DEV11 main orchestration validation
+
+Run:
+
+```bash
+npm run typecheck
+npm run typecheck:strict
+npm test
+```
+
+DEV11 validates:
+
+- `electron/main/index.js` no longer uses `// @ts-nocheck`;
+- the main process orchestration state is typed;
+- all extracted main modules remain in the strict boundary;
+- runtime behavior remains unchanged.
+
+Targeted validation:
+
+```bash
+grep -RIn "@ts-nocheck" electron/main/index.js && exit 1 || true
+npm run typecheck:strict
+```
+
+## DEV11 Flatpak scope validation
+
+Run:
+
+```bash
+./scripts/check-flatpak-scope-policy.sh
+```
+
+Expected policy:
+
+- `./canva-linux.sh --install` uses system scope by default;
+- no unconditional `flatpak remote-add --user flathub`;
+- no unconditional `flatpak install --user flathub`;
+- no unconditional `flatpak-builder --user --install`;
+- `CANVA_FLATPAK_SCOPE=user` is the explicit opt-in for user scope;
+- `./canva-linux.sh --run-dev` builds and runs without installing the app.
 
 ## Changelog-backed regression validation
 

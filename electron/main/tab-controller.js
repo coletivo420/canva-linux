@@ -26,7 +26,7 @@ const { attachTabEventHandlers } = require('./tab-events');
  *   closeTab(id: number): void;
  *   focusHomeTab(options: { resetToHome?: boolean, switchToTab: (id: number) => void }): void;
  * }} TabHelpers
- * @typedef {{ popupWindowOptions?: (backgroundColor: string) => Record<string, unknown>, registerAuthPopupWindow?: Function, openAuthPopupForTab?: Function }} OAuthHelpers
+ * @typedef {{ popupWindowOptions?: (shellBackgroundColor: () => string) => Record<string, unknown>, registerAuthPopupWindow?: Function, openAuthPopupForTab?: Function }} OAuthHelpers
  * @typedef {(tab: TabEntry, helpers: Record<string, unknown>) => void} AttachTabEventHandlersLike
  */
 

@@ -85,6 +85,11 @@ print_post_install_guidance() {
   section "Optional bundle generation:"
   cmd "./scripts/build-flatpak-bundle.sh"
 
+  section "Flatpak install scope:"
+  note "./canva-linux.sh --install uses the system Flatpak installation by default."
+  note "Use CANVA_FLATPAK_SCOPE=user only when a user-scoped install is explicitly desired."
+  cmd "CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install"
+
   printf '\n'
 }
 
@@ -136,6 +141,7 @@ fi
 
 VERSION="$(detect_package_version)"
 info "Preparing local Flatpak install for Canva Linux v${VERSION}"
+info "Flatpak install scope: ${FLATPAK_SCOPE}"
 ok "Host dependencies are available"
 
 ## Flathub runtime preparation

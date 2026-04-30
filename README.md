@@ -7,7 +7,7 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 ## Status
 
 Stable: 1.4.10  
-Next: 1.4.11-dev.5 (AI guardrails + crash-safe logger normalization)
+Next: 1.4.11-dev.11 (strict main orchestration typing + Flatpak scope policy)
 
 ## Community package status
 
@@ -197,6 +197,7 @@ Other providers (Facebook/Meta, Apple, Microsoft) are supported via the same gen
 Use `./canva-linux.sh` as the canonical Linux workflow command.
 
 ```bash
+./canva-linux.sh --run-dev
 ./canva-linux.sh --install
 ./canva-linux.sh --bundle
 ./canva-linux.sh --validate
@@ -227,6 +228,7 @@ Actions can be chained and run in the order provided:
 
 ### Workflow intent
 
+- `--run-dev` builds and runs from `build-dir` without installing the app or creating a local app origin.
 - `--install` is for local development/testing installs.
 - `--install` uses `flatpak-builder --install` direct install flow (no `repo/` export and no `.flatpak` bundle generation).
 - `--bundle` is for generating GitHub release `.flatpak` artifacts.
@@ -234,6 +236,29 @@ Actions can be chained and run in the order provided:
 - Flathub submission remains a separate process and should not require `.flatpak` bundle generation.
 - Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `io.github.PirateMaryRead.canva-linux.yml`.
 - `--reset-user-data` removes login state and OAuth/session cookies.
+
+### Flatpak installation scope policy
+
+Canva Linux local workflows must not create a duplicate Flathub user remote by default.
+
+Default policy:
+
+- `./canva-linux.sh --install` uses the system Flatpak installation.
+- Required runtimes are installed from the system Flathub remote.
+- The user Flathub remote is never added unless explicitly requested.
+- Developers who want a fully user-scoped install may run:
+
+```bash
+CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install
+```
+
+Development smoke tests should prefer:
+
+```bash
+./canva-linux.sh --run-dev
+```
+
+because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
 
 Migration note: development builds before `1.4.10.dev19` used `com.canva.Linux`. The active Flathub-facing app-id is now `io.github.PirateMaryRead.canva-linux`.
 

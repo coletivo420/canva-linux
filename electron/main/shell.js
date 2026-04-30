@@ -38,7 +38,7 @@
  *   loadURL(url: string): Promise<void> | void;
  *   getContentSize(): [number, number];
  *   setBackgroundColor(color: string): void;
- *   contentView: { addChildView(view: unknown): void };
+ *   contentView: { children?: unknown[], addChildView(view: unknown): void, removeChildView(view: unknown): void };
  * }} BrowserWindowLike
  */
 
