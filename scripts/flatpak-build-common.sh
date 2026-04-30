@@ -54,6 +54,8 @@ ensure_flathub_runtime() {
   validate_flatpak_scope
 
   if [[ "${FLATPAK_SCOPE}" == "system" ]]; then
+    ensure_system_flatpak_authorization
+
     if ! flatpak remotes --system | awk '{print $1}' | grep -qx flathub; then
       warn "System Flathub remote is not configured."
       warn "Canva Linux installs to the system Flatpak scope by default, for all users."
@@ -64,7 +66,7 @@ ensure_flathub_runtime() {
       info "System Flathub remote is already configured"
     fi
 
-    info "Required Flatpak runtimes will be resolved through the system scope."
+    ensure_system_flatpak_runtime_dependencies
     return 0
   fi
 
@@ -185,15 +187,15 @@ install_flatpak_direct() {
 }
 
 install_system_flatpak_from_repo() {
-  local repo_url
-  repo_url="$(pwd -P)/repo"
+  local repo_path
+  repo_path="$(pwd -P)/repo"
 
   info "Configuring local system Flatpak remote: ${LOCAL_FLATPAK_REMOTE}"
   if flatpak remotes --system | awk '{print $1}' | grep -qx "${LOCAL_FLATPAK_REMOTE}"; then
     sudo flatpak remote-modify \
       --system \
       --no-gpg-verify \
-      --url="${repo_url}" \
+      --url="${repo_path}" \
       "${LOCAL_FLATPAK_REMOTE}"
   else
     sudo flatpak remote-add \
@@ -201,7 +203,7 @@ install_system_flatpak_from_repo() {
       --no-gpg-verify \
       --if-not-exists \
       "${LOCAL_FLATPAK_REMOTE}" \
-      "${repo_url}"
+      "${repo_path}"
   fi
 
   info "Installing Canva Linux from local repo into system Flatpak scope"

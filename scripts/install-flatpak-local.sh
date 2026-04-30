@@ -181,12 +181,8 @@ info "Flatpak install scope: ${FLATPAK_SCOPE}"
 ok "Host dependencies are available"
 print_flatpak_scope_notice
 
-## System install authorization
-ensure_system_flatpak_authorization
-
 ## Flathub runtime preparation
 ensure_flathub_runtime
-ensure_system_flatpak_runtime_dependencies
 
 ## Node/Electron build preparation
 if [[ "$SKIP_NPM" == false ]]; then

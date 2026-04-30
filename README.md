@@ -271,10 +271,10 @@ Default policy:
 
 - `./canva-linux.sh --install` uses the system Flatpak installation.
 - The app is installed for all users on this machine.
-- Required runtimes are resolved from the system Flathub remote.
+- Required runtimes are installed from the system Flathub remote when missing.
 - The user Flathub remote is never added unless explicitly requested.
 - Administrator authorization may be requested for system Flatpak operations because system installs write under `/var/lib/flatpak`.
-- Local system installs build as the current user, then install from the generated local repo with administrator authorization.
+- Local system installs build as the current user, then install from the generated local repo path with administrator authorization.
 - Developers who want a fully user-scoped install may run:
 
 ```bash
