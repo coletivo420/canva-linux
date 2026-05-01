@@ -23,6 +23,12 @@ flatpak_scope_arg() {
   esac
 }
 
+local_flatpak_repo_uri() {
+  local repo_path="$1"
+
+  node -e 'const { pathToFileURL } = require("url"); console.log(pathToFileURL(process.argv[1]).href);' "${repo_path}"
+}
+
 remove_path_safely() {
   local target="$1"
 
@@ -215,14 +221,16 @@ install_flatpak_direct() {
 
 install_system_flatpak_from_repo() {
   local repo_path
+  local repo_uri
   repo_path="$(pwd -P)/repo"
+  repo_uri="$(local_flatpak_repo_uri "${repo_path}")"
 
   info "Configuring local system Flatpak remote: ${LOCAL_FLATPAK_REMOTE}"
   if flatpak remotes --system | awk '{print $1}' | grep -qx "${LOCAL_FLATPAK_REMOTE}"; then
     sudo flatpak remote-modify \
       --system \
       --no-gpg-verify \
-      --url="${repo_path}" \
+      --url="${repo_uri}" \
       "${LOCAL_FLATPAK_REMOTE}"
   else
     sudo flatpak remote-add \
@@ -230,7 +238,7 @@ install_system_flatpak_from_repo() {
       --no-gpg-verify \
       --if-not-exists \
       "${LOCAL_FLATPAK_REMOTE}" \
-      "${repo_path}"
+      "${repo_uri}"
   fi
 
   info "Installing Canva Linux from local repo into system Flatpak scope"

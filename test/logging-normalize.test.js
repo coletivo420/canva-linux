@@ -3,12 +3,14 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 const {
   safeStringify,
   normalizeLogArg,
   normalizeArgs,
   createLogSignature,
-} = require('../electron/main/logging-normalize');
+} = loadRuntimeModule('main/logging-normalize');
 
 test('normalizes primitive values', () => {
   assert.deepEqual(

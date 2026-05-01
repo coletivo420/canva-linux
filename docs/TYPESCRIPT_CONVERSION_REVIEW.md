@@ -25,7 +25,7 @@ Planned sequence:
 - DEV10: strict typing for extracted main-process modules.
 - DEV11: strict typing for `electron/main/index.js`.
 - DEV12: TypeScript build pipeline.
-- DEV13: convert pure shared/logging helpers to `.ts`.
+- DEV13: convert the first pure shared/logging helper modules to `.ts` and validate the test strategy for converted source modules.
 - DEV14: convert main infrastructure modules to `.ts`.
 - DEV15: convert shell/tabs/OAuth modules to `.ts`.
 - DEV16: convert main entrypoint to `.ts`.

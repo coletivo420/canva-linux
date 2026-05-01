@@ -170,6 +170,8 @@ Project policy:
 
 The source preload stays modular under `electron/preload/*.js`, but the runtime tab preload is generated as `.build/electron/preload/canva.bundle.js` before `npm start`, `npm run dist`, and any Flatpak workflow path that rebuilds the Electron output. The legacy `npm run build:preload` command can still generate `electron/preload/canva.bundle.js` from source when needed.
 
+During TypeScript migration, the source-mode preload bundler must resolve shared modules that have moved from `.js` to `.ts` and transpile them before embedding them in `canva.bundle.js`. Build-output mode continues to bundle the compiled `.build/electron/**/*.js` files.
+
 This is required because Canva's editor can execute Electron preload code in a sandboxed context where nested local `require('./module')` calls fail inside the packaged ASAR. The generated bundle preserves maintainable source modules while delivering one preload file to Electron. Edit the modular source files and regenerate the bundle; do not edit or commit `canva.bundle.js` directly.
 
 Release bundle generation rebuilds the Electron output and Flatpak repo by default so the generated preload bundle and packaged app stay current. Reusing an existing `repo/` requires an explicit `--use-existing-repo` call to `scripts/build-flatpak-bundle.sh` and should not be used for release publication after source changes.
@@ -274,7 +276,7 @@ Default policy:
 - Required runtimes are installed from the system Flathub remote when missing.
 - The user Flathub remote is never added unless explicitly requested.
 - Administrator authorization may be requested for system Flatpak operations because system installs write under `/var/lib/flatpak`.
-- Local system installs build as the current user, then install from the generated local repo path with administrator authorization.
+- Local system installs build as the current user, then install from the generated local repo URI with administrator authorization.
 - Local Flatpak artifact ownership is restored to the current user after install, bundle and dev-run workflows.
 - Developers who want a fully user-scoped install may run:
 

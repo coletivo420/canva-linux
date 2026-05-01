@@ -1,12 +1,18 @@
-# Development Workflow — 1.4.11-dev.2
+# Development Workflow — 1.4.11-dev.13
 
-This cycle prioritizes preflight hardening in shell scripts and environment requirement documentation.
+This cycle begins low-risk TypeScript leaf conversion while preserving the stabilized Flatpak system-wide workflow.
 
-## Scope for dev2
+## Scope for dev13
 
 In scope:
 
-- Script preflight ordering before Node/npm/Flatpak usage.
+- Leaf TypeScript conversion for shared logging/debug helpers.
+- Flatpak system-scope dependency and install policy preservation.
+- Flatpak artifact ownership restoration after local workflows.
+- Local Flatpak repo remote compatibility for system installs.
+- Runtime permission hardening for OAuth providers.
+- Preload logging cleanup outside `CANVA_DEBUG`.
+- Source-mode preload bundling while shared modules move to TypeScript.
 - Canonical validation workflow alignment.
 - Development and validation requirements documentation.
 
@@ -14,7 +20,7 @@ Out of scope:
 
 - Major UI redesigns.
 - Full app architecture rewrites.
-- Deep Flatpak workflow redesign.
+- Deep Flatpak workflow redesign beyond preserving the current system-scope policy.
 - Framework migration.
 
 ## Host requirements
@@ -41,12 +47,15 @@ Distribution-specific installation commands are documented in README.md.
 ## Recommended execution order
 
 1. `npm install`
-2. `npm run build:preload`
-3. `npm run lint`
-4. `npm run typecheck`
+2. `npm run lint`
+3. `npm run typecheck`
+4. `npm run typecheck:strict`
 5. `npm test`
 6. `npm run docs:check-links`
-7. `./scripts/validate-project.sh`
+7. `npm run docs:check-ai`
+8. `./scripts/check-flatpak-scope-policy.sh`
+9. `npm run build:runtime`
+10. `npm run build:check`
 
 ## Flatpak installation scope policy
 
@@ -71,3 +80,9 @@ Development smoke tests should prefer:
 ```
 
 because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
+
+## DEV13 hotfix notes
+
+- System-scope local installs build as the current user, export `repo/`, and configure the system Flatpak local remote with a `file://` URI derived from the absolute repo path. A plain absolute path can make Flatpak fail while fetching `summary.idx`.
+- `npm run build:preload` remains a supported source-mode workflow. While TypeScript conversion is in progress, `scripts/build-preload-bundle.js` must resolve `.ts` source modules when the matching `.js` source no longer exists and transpile them before embedding them in the generated bundle.
+- `npm run build:runtime` remains the packaging path. It compiles TypeScript into `.build/electron/**/*.js` first, then runs the preload bundler in build-output mode against those compiled files.

@@ -10,8 +10,8 @@
     "noUncheckedIndexedAccess": true
   },
   "include": [
-    "electron/main/logging-normalize.js",
-    "electron/shared/debug.js",
+    "electron/main/logging-normalize.ts",
+    "electron/shared/debug.ts",
     "electron/main/gpu-diagnostics.js",
     "electron/main/runtime.js",
     "electron/main/logging.js",
@@ -45,6 +45,7 @@
     "test/oauth-helpers.test.js",
     "test/preload-debug.test.js",
     "test/upload-diagnostics.test.js",
-    "test/eyedropper-preload.test.js"
+    "test/eyedropper-preload.test.js",
+    "test/helpers/runtime-module.js"
   ]
 }

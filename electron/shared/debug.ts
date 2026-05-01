@@ -1,13 +1,12 @@
 'use strict';
-// @ts-check
 
-/**
- * @returns {0 | 1 | 2}
- */
-function getDebugLevel() {
+type DebugLevel = 0 | 1 | 2;
+type DebugEmitter = (category: string, args: unknown[]) => void;
+
+function getDebugLevel(): DebugLevel {
   const explicitLevel = String(process?.env?.CANVA_DEBUG_LEVEL || '').trim();
   if (explicitLevel === '1' || explicitLevel === '2') {
-    return /** @type {1 | 2} */ (Number(explicitLevel));
+    return Number(explicitLevel) as 1 | 2;
   }
 
   const raw = String(process?.env?.CANVA_DEBUG || '').trim().toLowerCase();
@@ -17,32 +16,19 @@ function getDebugLevel() {
   return 0;
 }
 
-/**
- * @returns {boolean}
- */
-function isDebugEnabled() {
+function isDebugEnabled(): boolean {
   return getDebugLevel() > 0;
 }
 
-/**
- * @returns {boolean}
- */
-function shouldLogDebugCategory() {
+function shouldLogDebugCategory(): boolean {
   return isDebugEnabled();
 }
 
-/**
- * @returns {boolean}
- */
-function isDebugCategoryEnabled() {
+function isDebugCategoryEnabled(): boolean {
   return isDebugEnabled();
 }
 
-/**
- * @param {string} [category]
- * @returns {string}
- */
-function normalizeDebugCategory(category = 'app') {
+function normalizeDebugCategory(category = 'app'): string {
   const raw = String(category || 'app')
     .trim()
     .toLowerCase()
@@ -54,29 +40,14 @@ function normalizeDebugCategory(category = 'app') {
   return raw || 'app';
 }
 
-/**
- * @typedef {(category: string, args: unknown[]) => void} DebugEmitter
- */
-
-/**
- * @param {{ emit: DebugEmitter }} options
- */
-function createDebugTools({ emit }) {
+function createDebugTools({ emit }: { emit: DebugEmitter }) {
   const debugLevel = getDebugLevel();
 
-  /**
-   * @returns {boolean}
-   */
-  function debugEnabled() {
+  function debugEnabled(): boolean {
     return debugLevel > 0;
   }
 
-  /**
-   * @param {string} category
-   * @param {...unknown} args
-   * @returns {boolean}
-   */
-  function debugLog(category, ...args) {
+  function debugLog(category: string, ...args: unknown[]): boolean {
     const normalized = normalizeDebugCategory(category);
 
     if (!debugEnabled()) {
@@ -99,6 +70,15 @@ function createDebugTools({ emit }) {
     normalizeDebugCategory,
   };
 }
+
+export {
+  createDebugTools,
+  getDebugLevel,
+  isDebugEnabled,
+  isDebugCategoryEnabled,
+  normalizeDebugCategory,
+  shouldLogDebugCategory,
+};
 
 module.exports = {
   createDebugTools,

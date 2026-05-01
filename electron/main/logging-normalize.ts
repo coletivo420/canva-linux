@@ -1,15 +1,10 @@
 'use strict';
-// @ts-check
 
-/**
- * @param {unknown} value
- * @returns {string}
- */
-function safeStringify(value) {
-  const seen = new WeakSet();
+function safeStringify(value: unknown): string {
+  const seen = new WeakSet<object>();
 
   try {
-    const serialized = JSON.stringify(value, (_key, item) => {
+    const serialized = JSON.stringify(value, (_key: string, item: unknown): unknown => {
       if (typeof item === 'bigint' || typeof item === 'symbol') {
         return item.toString();
       }
@@ -39,11 +34,7 @@ function safeStringify(value) {
   }
 }
 
-/**
- * @param {unknown} arg
- * @returns {string}
- */
-function normalizeLogArg(arg) {
+function normalizeLogArg(arg: unknown): string {
   if (arg === null) return 'null';
   if (arg === undefined) return 'undefined';
 
@@ -63,11 +54,7 @@ function normalizeLogArg(arg) {
   return safeStringify(arg);
 }
 
-/**
- * @param {unknown[] | Iterable<unknown> | unknown | null | undefined} args
- * @returns {string[]}
- */
-function normalizeArgs(args = []) {
+function normalizeArgs(args: unknown[] | Iterable<unknown> | unknown | null | undefined = []): string[] {
   if (args === null || args === undefined) {
     return [];
   }
@@ -77,19 +64,22 @@ function normalizeArgs(args = []) {
   }
 
   if (typeof args === 'object' && Symbol.iterator in args) {
-    return Array.from(/** @type {Iterable<unknown>} */ (args)).map(normalizeLogArg);
+    return Array.from(args as Iterable<unknown>).map(normalizeLogArg);
   }
 
   return [normalizeLogArg(args)];
 }
 
-/**
- * @param {unknown[] | Iterable<unknown> | unknown | null | undefined} args
- * @returns {string}
- */
-function createLogSignature(args = []) {
+function createLogSignature(args: unknown[] | Iterable<unknown> | unknown | null | undefined = []): string {
   return normalizeArgs(args).join(' ');
 }
+
+export {
+  safeStringify,
+  normalizeLogArg,
+  normalizeArgs,
+  createLogSignature,
+};
 
 module.exports = {
   safeStringify,

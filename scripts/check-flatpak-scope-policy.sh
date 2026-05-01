@@ -8,7 +8,6 @@ builder_user_install_pattern="flatpak-builder .*--""user .*--install"
 sudo_builder_pattern="sudo[[:space:]]\\+flatpak-""builder"
 scope_prefix_name="flatpak_scope_""prefix"
 scope_prefix_builder_pattern="${scope_prefix_name}).*flatpak-builder\\|"'$('"${scope_prefix_name}"')[[:space:]]\+flatpak-builder'
-file_repo_pattern="file:""//.*repo"
 
 if grep -RIn "${remote_user_pattern}" scripts canva-linux.sh; then
   echo "[flatpak-scope] forbidden unconditional user Flathub remote"
@@ -35,8 +34,8 @@ if grep -RIn "${scope_prefix_builder_pattern}" scripts canva-linux.sh; then
   failed=true
 fi
 
-if grep -RIn "${file_repo_pattern}" scripts canva-linux.sh; then
-  echo "[flatpak-scope] forbidden file:""// local Flatpak repo remote"
+if ! grep -q "local_flatpak_repo_uri" scripts/flatpak-build-common.sh; then
+  echo "[flatpak-scope] missing file URI conversion for local Flatpak repo remote"
   failed=true
 fi
 

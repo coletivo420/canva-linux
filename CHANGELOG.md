@@ -2,6 +2,37 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.13] - 2026-04-30
+
+### Added
+
+- Began the DOC13 TypeScript conversion phase with low-risk shared/logging leaf modules.
+- Added validation guidance for converted `.ts` runtime modules.
+- Added stronger documentation around Flatpak artifact ownership restoration.
+
+### Changed
+
+- Updated development documentation from older dev2/dev12 wording to the dev13 workflow.
+- Added TypeScript-aware ESLint parsing for converted runtime `.ts` files.
+- Clarified that system-scope Flatpak operations may request administrator authorization before or during build dependency preparation.
+- Simplified remote permission trusted-origin checks so OAuth provider origins do not affect permission grants once Canva origin trust is required.
+
+### Fixed
+
+- Removed unconditional preload raw-init console logging outside `CANVA_DEBUG`.
+- Restricted powerful runtime permissions to Canva origins instead of OAuth provider origins.
+- Preserved Flatpak build artifact ownership restoration after install, bundle and dev-run workflows.
+- Fixed source-mode `npm run build:preload` after `electron/shared/debug.ts` conversion by resolving TypeScript source candidates and transpiling them before bundling.
+- Fixed local system installs failing to fetch `summary.idx` from the generated local Flatpak repo by configuring the local remote with a valid `file://` URI.
+
+### Notes
+
+- System-scope installation remains the default.
+- User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
+- Password prompts are expected for legitimate system Flatpak operations.
+- `flatpak-builder` must continue running as the current user, never with `sudo`.
+- The preload bundler must keep supporting both source mode (`npm run build:preload`) and build-output mode (`npm run build:runtime`) while TypeScript conversion is in progress.
+
 ## [1.4.11-dev.12-hotfix] - 2026-04-30
 
 ### Fixed
@@ -13,12 +44,13 @@ All notable changes to this project are documented in this file.
 - Fixed packaged startup failing when the compiled Electron main process tried to load `../../package.json` from inside `.build/`.
 - Fixed default-scope bundle and dev-run workflows by ensuring system Flatpak runtimes are installed before unprivileged `flatpak-builder` runs.
 - Fixed local Flatpak artifact ownership after install, bundle and dev-run workflows.
+- Fixed local system installs failing to fetch `summary.idx` from the generated local Flatpak repo by configuring the local remote with a valid `file://` URI.
 
 ### Changed
 
 - Local Flatpak builds now run `flatpak-builder` as the current user.
 - System-scope local installs now request administrator authorization before the Flatpak system install step.
-- Local system installs now configure the generated repo remote with an absolute path instead of a `file://` URI.
+- Local system installs now configure the generated repo remote with a `file://` URI derived from the absolute repo path.
 - Local Flatpak workflows now restore `build-dir`, `repo` and `.flatpak-builder` ownership before exiting.
 - The installer now explains the difference between system and user Flatpak scopes before installation.
 - The installer now documents the user-scope install command for passwordless per-user installs.
