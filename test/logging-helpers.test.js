@@ -5,7 +5,9 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
-const { createLoggingHelpers } = require('../electron/main/logging-helpers');
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
+const { createLoggingHelpers } = loadRuntimeModule('main/logging-helpers');
 
 test('labels main window, OAuth popup window and generic windows', () => {
   const mainWindow = { id: 1 };
@@ -28,7 +30,7 @@ test('labels tab, OAuth popup and generic webContents', () => {
   const helpers = createLoggingHelpers({
     getMainWindow: () => null,
     getAuthPopups: () => new Map([[8, { id: 8, window: { webContents: popupWebContents } }]]),
-    getFindTabByWebContents: () => (webContents) => (
+    getFindTabByWebContents: () => (/** @type {{ id?: number }} */ webContents) => (
       webContents === tabWebContents ? { id: 4 } : null
     ),
   });

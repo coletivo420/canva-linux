@@ -303,6 +303,29 @@ Expected:
 - runtime build explicitly generates compiled `.js` output;
 - build check validates compiled `.ts` outputs.
 
+## DEV15 main infrastructure TypeScript validation
+
+Run:
+
+```bash
+rm -rf .build
+npm test
+test ! -d .build
+
+npm run lint
+npm run typecheck
+npm run typecheck:strict
+npm run build:runtime
+npm run build:check
+```
+
+Expected:
+
+- `npm test` does not generate `.build/`;
+- converted main infrastructure modules compile to `.build/electron/main/*.js`;
+- logging, GPU diagnostics, IPC and EyeDropper snapshot tests pass;
+- Flatpak artifact ownership restoration remains protected.
+
 ## DEV12 runtime build validation
 
 Validation remains source-first.

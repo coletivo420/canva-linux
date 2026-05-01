@@ -38,6 +38,7 @@ if (pkg.build?.extraMetadata?.main !== expectedMain) {
 requireFile('.build/electron/main/index.js');
 requireFile('.build/electron/main/logging-normalize.js');
 requireFile('.build/electron/shared/debug.js');
+requireFile('.build/electron/shared/navigation.js');
 requireFile('.build/electron/preload/canva.bundle.js');
 requireFile('.build/electron/ui/toolbar.html');
 requireDir('.build/electron/assets');

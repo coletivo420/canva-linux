@@ -37,7 +37,7 @@ npm test
 
 Strict boundary additions:
 
-- `electron/main/gpu-diagnostics.js`
+- `electron/main/gpu-diagnostics.ts`
 - `test/gpu-diagnostics.test.js`
 
 The goal is to type GPU feature classification, runtime environment parsing, and GPU process diagnostics without changing runtime behavior.
@@ -99,15 +99,15 @@ Installer UX additions:
 
 Strict boundary additions:
 
-- `electron/main/runtime.js`
-- `electron/main/logging.js`
-- `electron/main/logging-helpers.js`
-- `electron/main/ipc.js`
-- `electron/main/lifecycle.js`
+- `electron/main/runtime.ts`
+- `electron/main/logging.ts`
+- `electron/main/logging-helpers.ts`
+- `electron/main/ipc.ts`
+- `electron/main/lifecycle.ts`
 - `electron/main/tabs.js`
 - `electron/main/tab-controller.js`
 - `electron/main/tab-events.js`
-- `electron/main/eyedropper-bridge.js`
+- `electron/main/eyedropper-bridge.ts`
 
 `electron/main/index.js` remains outside the strict boundary until DEV11.
 
@@ -209,6 +209,22 @@ Goals:
 - convert `electron/shared/navigation.ts` only after the test/build strategy is stable;
 - defer larger module conversion until the shared navigation boundary remains covered.
 
+## DEV15 scope
+
+`1.4.11-dev.15` converts main-process infrastructure modules to TypeScript.
+
+Targets:
+
+- `electron/main/logging.ts`
+- `electron/main/logging-helpers.ts`
+- `electron/main/gpu-diagnostics.ts`
+- `electron/main/runtime.ts`
+- `electron/main/ipc.ts`
+- `electron/main/lifecycle.ts`
+- `electron/main/eyedropper-bridge.ts`
+
+Runtime behavior must remain unchanged.
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:
@@ -235,13 +251,14 @@ These modules are small enough to type strictly and important enough to protect 
 
 ## Planned progression
 
-- `dev13`: convert the first pure shared/logging leaf modules to `.ts`.
-- `dev14`: convert main infrastructure modules to `.ts`.
-- `dev15`: convert shell, tabs and OAuth modules to `.ts`.
-- `dev16`: convert the main process entrypoint to `.ts`.
-- `dev17`: convert preload source modules to `.ts`.
-- `dev18`: decide whether to convert or isolate `electron/preload/ltcode-eyedropper.js`.
-- `dev19`: convert tests, configs and Node helper scripts where safe.
-- `dev20`: verify full TypeScript conversion.
-- `dev21`: post-TypeScript cleanup and obsolete compatibility removal.
-- `dev22`: TypeScript stabilization and release-candidate readiness.
+- `dev13`: convert the first pure logging/debug leaf modules to `.ts`.
+- `dev14`: stabilize TypeScript source tests and convert shared navigation to `.ts`.
+- `dev15`: convert main-process infrastructure modules to `.ts`.
+- `dev16`: convert shell, tabs, OAuth and window-open policy modules to `.ts`.
+- `dev17`: convert the main process entrypoint to `.ts`.
+- `dev18`: convert preload source modules and introduce CL-EyeDropper contracts.
+- `dev19`: implement the first-party CanvaLinux EyeDropper in TypeScript.
+- `dev20`: make CL-EyeDropper the default with LTCode as temporary fallback.
+- `dev21`: validate full TypeScript conversion and CL-EyeDropper.
+- `dev22`: remove LTCode legacy fallback and obsolete compatibility code.
+- `dev23`: stabilization and release-candidate readiness.

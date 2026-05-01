@@ -3,11 +3,13 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 const {
   classifyGpuAcceleration,
   getGpuRuntimeEnvironment,
   serializeGpuFeatureStatus,
-} = require('../electron/main/gpu-diagnostics');
+} = loadRuntimeModule('main/gpu-diagnostics');
 
 test('classifies Vulkan accelerated GPU status', () => {
   assert.equal(

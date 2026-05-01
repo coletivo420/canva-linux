@@ -1,54 +1,34 @@
 'use strict';
 
-// @ts-check
+type DebugLog = (category: string, ...args: unknown[]) => boolean;
+type CommandLineLike = {
+  appendSwitch(name: string, value?: string): void;
+  getSwitchValue(name: string): string;
+};
+type ElectronAppLike = {
+  commandLine: CommandLineLike;
+  disableHardwareAcceleration?: () => void;
+  getPath(name: string): string;
+  setDesktopName?: (name: string) => void;
+  setName?: (name: string) => void;
+  setPath(name: string, path: string): void;
+  setAppUserModelId?: (id: string) => void;
+};
+type WebContentsLike = { getURL(): string };
+type PermissionDetailsLike = { requestingOrigin?: string; requestingUrl?: string };
+type BeforeSendHeadersDetailsLike = { requestHeaders: Record<string, string> };
+type DownloadItemLike = { getFilename(): string; setSavePath(path: string): void };
+type SessionLike = {
+  cookies: { flushStore(): Promise<void> };
+  flushStorageData(): Promise<void>;
+  setPermissionRequestHandler(handler: (webContents: WebContentsLike | null | undefined, permission: string, callback: (granted: boolean) => void, details?: PermissionDetailsLike) => void): void;
+  setPermissionCheckHandler(handler: (webContents: WebContentsLike | null | undefined, permission: string, requestingOrigin?: string, details?: PermissionDetailsLike) => boolean): void;
+  webRequest: { onBeforeSendHeaders(handler: (details: BeforeSendHeadersDetailsLike, callback: (response: { requestHeaders: Record<string, string> }) => void) => void): void };
+  on(event: 'will-download', listener: (event: unknown, item: DownloadItemLike) => void): void;
+};
+type PathLike = Pick<typeof import('node:path'), 'join'>;
 
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- */
-
-/**
- * @typedef {{
- *   appendSwitch(name: string, value?: string): void;
- *   getSwitchValue(name: string): string;
- * }} CommandLineLike
- */
-
-/**
- * @typedef {{
- *   commandLine: CommandLineLike;
- *   disableHardwareAcceleration?: () => void;
- *   getPath(name: string): string;
- *   setDesktopName?: (name: string) => void;
- *   setName?: (name: string) => void;
- *   setPath(name: string, path: string): void;
- *   setAppUserModelId?: (id: string) => void;
- * }} ElectronAppLike
- */
-
-/**
- * @typedef {{
- *   cookies: { flushStore(): Promise<void> };
- *   flushStorageData(): Promise<void>;
- *   setPermissionRequestHandler(handler: (webContents: WebContentsLike | null | undefined, permission: string, callback: (granted: boolean) => void, details?: PermissionDetailsLike) => void): void;
- *   setPermissionCheckHandler(handler: (webContents: WebContentsLike | null | undefined, permission: string, requestingOrigin?: string, details?: PermissionDetailsLike) => boolean): void;
- *   webRequest: { onBeforeSendHeaders(handler: (details: BeforeSendHeadersDetailsLike, callback: (response: { requestHeaders: Record<string, string> }) => void) => void): void };
- *   on(event: 'will-download', listener: (event: unknown, item: DownloadItemLike) => void): void;
- * }} SessionLike
- */
-
-/**
- * @typedef {{ getURL(): string }} WebContentsLike
- * @typedef {{ requestingOrigin?: string, requestingUrl?: string }} PermissionDetailsLike
- * @typedef {{ requestHeaders: Record<string, string> }} BeforeSendHeadersDetailsLike
- * @typedef {{ getFilename(): string, setSavePath(path: string): void }} DownloadItemLike
- */
-
-/**
- * @param {ElectronAppLike} app
- * @param {string} featureName
- * @returns {void}
- */
-function appendDisableFeature(app, featureName) {
+function appendDisableFeature(app: ElectronAppLike, featureName: string): void {
   const switchName = 'disable-features';
   const currentValue = app.commandLine.getSwitchValue(switchName);
   const features = new Set(
@@ -62,11 +42,7 @@ function appendDisableFeature(app, featureName) {
   app.commandLine.appendSwitch(switchName, Array.from(features).join(','));
 }
 
-/**
- * @param {{ app: ElectronAppLike, appId: string, wmClass: string, path: Pick<typeof import('node:path'), 'join'> }} options
- * @returns {void}
- */
-function configureLinuxRuntime({ app, appId, wmClass, path }) {
+function configureLinuxRuntime({ app, appId, wmClass, path }: { app: ElectronAppLike; appId: string; wmClass: string; path: PathLike }): void {
   app.setName?.('Canva Linux');
   app.commandLine.appendSwitch('disable-component-update');
   app.commandLine.appendSwitch('disable-domain-reliability');
@@ -107,10 +83,7 @@ function configureLinuxRuntime({ app, appId, wmClass, path }) {
   app.setPath('sessionData', path.join(app.getPath('userData'), 'session'));
 }
 
-/**
- * @returns {boolean}
- */
-function shouldEnableCaptureVerboseLogging() {
+function shouldEnableCaptureVerboseLogging(): boolean {
   const level = String(process.env.CANVA_DEBUG_LEVEL || '').trim();
 
   if (level === '2') return true;
@@ -118,21 +91,15 @@ function shouldEnableCaptureVerboseLogging() {
   return String(process.env.CANVA_DEBUG || '').trim() === '2';
 }
 
-/**
- * @param {SessionLike} ses
- * @returns {Promise<void>}
- */
-async function flushSession(ses) {
+async function flushSession(ses: SessionLike): Promise<void> {
   await ses.cookies.flushStore();
   await ses.flushStorageData();
 }
 
-/**
- * @param {() => SessionLike} getCanvaSession
- * @param {Record<string, unknown>} [extra]
- * @returns {Record<string, unknown> & { session: SessionLike, contextIsolation: boolean, sandbox: boolean, nodeIntegration: boolean, spellcheck: boolean }}
- */
-function sharedWebPreferences(getCanvaSession, extra = {}) {
+function sharedWebPreferences(
+  getCanvaSession: () => SessionLike,
+  extra: Record<string, unknown> = {}
+): Record<string, unknown> & { session: SessionLike; contextIsolation: boolean; sandbox: boolean; nodeIntegration: boolean; spellcheck: boolean } {
   // All Canva surfaces (tabs + OAuth popups) must share the same session.
   return {
     session: getCanvaSession(),
@@ -144,18 +111,6 @@ function sharedWebPreferences(getCanvaSession, extra = {}) {
   };
 }
 
-/**
- * @param {{
- *   app: Pick<ElectronAppLike, 'getPath'>;
- *   debugLog: DebugLog;
- *   flushSessionFn?: (session: SessionLike) => Promise<void>;
- *   getCanvaSession: () => SessionLike;
- *   path: Pick<typeof import('node:path'), 'join'>;
- *   partition: string;
- *   shouldGrantRemotePermission: (permission: string, origin: string, details: PermissionDetailsLike) => boolean;
- * }} options
- * @returns {Promise<SessionLike>}
- */
 async function configureSession({
   app,
   debugLog,
@@ -164,7 +119,15 @@ async function configureSession({
   path,
   partition,
   shouldGrantRemotePermission,
-}) {
+}: {
+  app: Pick<ElectronAppLike, 'getPath'>;
+  debugLog: DebugLog;
+  flushSessionFn?: (session: SessionLike) => Promise<void>;
+  getCanvaSession: () => SessionLike;
+  path: PathLike;
+  partition: string;
+  shouldGrantRemotePermission: (permission: string, origin: string, details: PermissionDetailsLike) => boolean;
+}): Promise<SessionLike> {
   const ses = getCanvaSession();
   debugLog('session', 'configure', partition);
 
@@ -206,6 +169,18 @@ async function configureSession({
   await flushSessionFn(ses).catch(() => {});
   return ses;
 }
+
+export {
+  configureLinuxRuntime,
+  configureSession,
+  flushSession,
+  sharedWebPreferences,
+  shouldEnableCaptureVerboseLogging,
+};
+
+export type {
+  SessionLike,
+};
 
 module.exports = {
   configureLinuxRuntime,
