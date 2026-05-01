@@ -40,7 +40,7 @@ function registerEyeDropperBridge({
 
     const tab = resolveRequestingTab(event.sender, findTabByWebContents);
 
-    if (!validateSnapshotRequester(event.sender, tab) || !tab) {
+    if (!validateSnapshotRequester(event.sender, tab)) {
       debugLog('eyedropper:bridge', 'snapshot-missing-tab', webContentsLabel(event.sender));
       throw new Error('The active Canva tab was not found for the eyedropper snapshot.');
     }
