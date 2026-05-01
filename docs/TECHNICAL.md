@@ -48,7 +48,7 @@ Core runtime files:
 - `electron/preload/toolbar.js` - toolbar IPC bridge.
 - `electron/ui/toolbar.html` - local toolbar UI.
 - `electron/shared/debug.js` - shared debug category parsing and log gating for main/preload entrypoints.
-- `electron/shared/navigation.js` - shared Canva/OAuth URL classification and trusted-origin checks.
+- `electron/shared/navigation.ts` - shared Canva/OAuth URL classification and trusted-origin checks.
 
 ## Main-process structure
 

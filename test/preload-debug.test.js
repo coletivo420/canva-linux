@@ -33,7 +33,7 @@ function withElectronMock(fn) {
   }
 }
 
-const { normalizeEyeDropperCategoryHint } = withElectronMock(() => loadRuntimeModule('preload/debug', { preferBuild: true }));
+const { normalizeEyeDropperCategoryHint } = withElectronMock(() => loadRuntimeModule('preload/debug'));
 
 test('normalizes EyeDropper category hints', () => {
   assert.equal(normalizeEyeDropperCategoryHint('bridge'), 'eyedropper:bridge');

@@ -16,6 +16,7 @@
   },
   "include": [
     "electron/**/*.js",
+    "electron/**/*.ts",
     "scripts/**/*.js",
     "test/**/*.js",
     "playwright.config.js"

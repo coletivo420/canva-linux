@@ -1,18 +1,22 @@
-# Development Workflow — 1.4.11-dev.13
+# Development Workflow — 1.4.11-dev.14
 
-This cycle begins low-risk TypeScript leaf conversion while preserving the stabilized Flatpak system-wide workflow.
+This cycle stabilizes the first TypeScript leaf conversion while preserving the stabilized Flatpak system-wide workflow.
 
-## Scope for dev13
+## Scope for dev14
 
 In scope:
 
+- Broad `npm run typecheck` coverage for converted `.ts` runtime modules.
+- Source-first tests that do not generate `.build/`.
 - Leaf TypeScript conversion for shared logging/debug helpers.
 - Flatpak system-scope dependency and install policy preservation.
 - Flatpak artifact ownership restoration after local workflows.
 - Local Flatpak repo remote compatibility for system installs.
+- Local Flatpak remote cleanup during uninstall.
 - Runtime permission hardening for OAuth providers.
 - Preload logging cleanup outside `CANVA_DEBUG`.
 - Source-mode preload bundling while shared modules move to TypeScript.
+- FedCM / Google One Tap warning classification as upstream page-code diagnostics.
 - Canonical validation workflow alignment.
 - Development and validation requirements documentation.
 
@@ -22,6 +26,7 @@ Out of scope:
 - Full app architecture rewrites.
 - Deep Flatpak workflow redesign beyond preserving the current system-scope policy.
 - Framework migration.
+- Monkeypatching Google Identity Services, Google One Tap, or FedCM page APIs.
 
 ## Host requirements
 
@@ -81,8 +86,10 @@ Development smoke tests should prefer:
 
 because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
 
-## DEV13 hotfix notes
+## DEV14 stabilization notes
 
 - System-scope local installs build as the current user, export `repo/`, and configure the system Flatpak local remote with a `file://` URI derived from the absolute repo path. A plain absolute path can make Flatpak fail while fetching `summary.idx`.
 - `npm run build:preload` remains a supported source-mode workflow. While TypeScript conversion is in progress, `scripts/build-preload-bundle.js` must resolve `.ts` source modules when the matching `.js` source no longer exists and transpile them before embedding them in the generated bundle.
 - `npm run build:runtime` remains the packaging path. It compiles TypeScript into `.build/electron/**/*.js` first, then runs the preload bundler in build-output mode against those compiled files.
+- `npm test` must not call `scripts/build-runtime.js` or create `.build/`; tests load source `.js` directly and transpile source `.ts` modules in memory.
+- `./canva-linux.sh --uninstall` also removes local development remotes: `canva-linux-local`, `canva-linux1-origin`, and `debug1-origin`.

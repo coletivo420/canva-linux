@@ -1,62 +1,63 @@
 'use strict';
 
-const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const ts = require('typescript');
+
 const repoRoot = path.resolve(__dirname, '..', '..');
-let runtimeBuildChecked = false;
+let typeScriptExtensionRegistered = false;
 
 /**
- * @param {string} modulePath
+ * @param {string} file
+ * @param {NodeJS.Module} mod
  * @returns {void}
  */
-function ensureRuntimeBuild(modulePath) {
-  const sourceTs = path.join(repoRoot, 'electron', `${modulePath}.ts`);
-  const sourceJs = path.join(repoRoot, 'electron', `${modulePath}.js`);
-  const sourcePath = fs.existsSync(sourceTs) ? sourceTs : sourceJs;
-  const builtJs = path.join(repoRoot, '.build', 'electron', `${modulePath}.js`);
+function compileTypeScriptModule(file, mod) {
+  const source = fs.readFileSync(file, 'utf8');
+  const output = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+      sourceMap: false,
+    },
+    fileName: file,
+  }).outputText;
 
-  if (!fs.existsSync(sourcePath)) {
+  /** @type {any} */ (mod)._compile(output, file);
+}
+
+function registerTypeScriptExtension() {
+  if (typeScriptExtensionRegistered) {
     return;
   }
 
-  const buildMissing = !fs.existsSync(builtJs);
-  const buildStale = !buildMissing && fs.statSync(builtJs).mtimeMs < fs.statSync(sourcePath).mtimeMs;
-
-  if (!buildMissing && !buildStale) {
-    return;
-  }
-
-  if (runtimeBuildChecked) {
-    throw new Error(`Runtime build did not produce ${path.relative(repoRoot, builtJs)}`);
-  }
-
-  runtimeBuildChecked = true;
-  const result = spawnSync(process.execPath, ['scripts/build-runtime.js'], {
-    cwd: repoRoot,
-    stdio: 'inherit',
-  });
-
-  if (result.status !== 0) {
-    throw new Error(`Runtime build failed while preparing ${modulePath}`);
-  }
+  typeScriptExtensionRegistered = true;
+  /** @type {Record<string, (mod: NodeJS.Module, filename: string) => void>} */ (require.extensions)['.ts'] = (mod, file) => {
+    compileTypeScriptModule(file, mod);
+  };
 }
 
 /**
  * @param {string} modulePath
- * @param {{ preferBuild?: boolean }} [options]
  * @returns {any}
  */
-function loadRuntimeModule(modulePath, options = {}) {
+function loadRuntimeModule(modulePath) {
   const sourceJs = path.join(repoRoot, 'electron', `${modulePath}.js`);
+  const sourceTs = path.join(repoRoot, 'electron', `${modulePath}.ts`);
 
-  if (!options.preferBuild && fs.existsSync(sourceJs)) {
+  registerTypeScriptExtension();
+
+  if (fs.existsSync(sourceJs)) {
     return require(sourceJs);
   }
 
-  ensureRuntimeBuild(modulePath);
-  return require(path.join(repoRoot, '.build', 'electron', `${modulePath}.js`));
+  if (fs.existsSync(sourceTs)) {
+    return require(sourceTs);
+  }
+
+  throw new Error(`Runtime module not found: ${modulePath}`);
 }
 
 module.exports = {

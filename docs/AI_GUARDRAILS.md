@@ -90,6 +90,19 @@ The runtime entrypoint after DEV12 is:
 .build/electron/main/index.js
 ```
 
+## TypeScript test/build guardrails
+
+AI-generated patches must not make `npm test` implicitly run `scripts/build-runtime.js`.
+
+Runtime build must remain explicit through:
+
+```bash
+npm run build:runtime
+npm run build:check
+```
+
+Converted `.ts` modules must remain covered by `npm run typecheck`, `npm run typecheck:strict`, tests, and runtime build checks.
+
 ## OAuth/navigation TypeScript guardrails
 
 AI-generated patches must not weaken OAuth popup behavior.
@@ -153,6 +166,12 @@ Install, bundle and dev-run workflows must restore local Flatpak artifact owners
 
 Flatpak build artifact ownership restoration is protected behavior. Do not remove `restore_flatpak_build_artifact_permissions` or the EXIT traps from install, bundle or run-dev workflows.
 
+Do not remove the EXIT traps from:
+
+- `scripts/install-flatpak-local.sh`
+- `scripts/build-flatpak-bundle.sh`
+- `scripts/run-flatpak-dev.sh`
+
 The installer must explain that system-scope installation makes Canva Linux available to all users and avoids creating a duplicate user Flatpak scope.
 
 User scope is allowed only when explicitly requested through:
@@ -186,3 +205,14 @@ electron/shared/debug.ts
 ```
 
 Do not convert `electron/main/index.js`, `electron/preload/canva.js`, `electron/preload/ltcode-eyedropper.js`, shell scripts or Flatpak manifests in DEV13.
+
+## Google Identity Services / FedCM guardrails
+
+Do not silence or monkeypatch Google Identity Services / FedCM warnings by modifying page APIs. If needed, classify them as upstream console warnings while preserving the log.
+
+Do not:
+
+- override `window.google.accounts.id.prompt`;
+- overwrite `PromptMomentNotification` methods;
+- block scripts from `static.canva.com`;
+- suppress all console warnings from Canva.

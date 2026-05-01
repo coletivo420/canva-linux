@@ -7,7 +7,7 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 ## Status
 
 Stable: 1.4.10  
-Next: 1.4.11-dev.12 (TypeScript runtime build pipeline)
+Next: 1.4.11-dev.14 (TypeScript test stabilization, Flatpak cleanup, and FedCM diagnostics)
 
 ## Community package status
 

@@ -4,6 +4,11 @@ set -euo pipefail
 ## Configuration
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_ID="io.github.PirateMaryRead.canva-linux"
+LOCAL_FLATPAK_REMOTES=(
+  canva-linux-local
+  canva-linux1-origin
+  debug1-origin
+)
 INSTALL_SCRIPT="${SCRIPT_DIR}/scripts/install-flatpak-local.sh"
 BUNDLE_SCRIPT="${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh"
 RUN_DEV_SCRIPT="${SCRIPT_DIR}/scripts/run-flatpak-dev.sh"
@@ -64,6 +69,23 @@ action_validate() {
   "${VALIDATE_SCRIPT}"
 }
 
+remove_flatpak_remote_if_exists() {
+  local scope="$1"
+  local remote="$2"
+
+  if ! flatpak remotes "${scope}" | tail -n +2 | awk '{print $1}' | grep -qx "${remote}"; then
+    return 0
+  fi
+
+  if [[ "${scope}" == "--system" ]]; then
+    sudo flatpak remote-delete --force --system "${remote}"
+  else
+    flatpak remote-delete --force --user "${remote}"
+  fi
+
+  echo "[ok] Removed ${scope#--} Flatpak remote: ${remote}"
+}
+
 action_uninstall() {
   flatpak kill "${APP_ID}" 2>/dev/null || true
 
@@ -84,6 +106,11 @@ action_uninstall() {
   if [[ "$removed" == false ]]; then
     echo "[info] Local Flatpak app is not installed: ${APP_ID}"
   fi
+
+  for remote in "${LOCAL_FLATPAK_REMOTES[@]}"; do
+    remove_flatpak_remote_if_exists --user "${remote}"
+    remove_flatpak_remote_if_exists --system "${remote}"
+  done
 }
 
 action_reset_user_data() {
