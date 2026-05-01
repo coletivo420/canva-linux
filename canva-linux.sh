@@ -73,7 +73,7 @@ remove_flatpak_remote_if_exists() {
   local scope="$1"
   local remote="$2"
 
-  if ! flatpak remotes "${scope}" | awk '{print $1}' | grep -qx "${remote}"; then
+  if ! flatpak remotes "${scope}" | tail -n +2 | awk '{print $1}' | grep -qx "${remote}"; then
     return 0
   fi
 
