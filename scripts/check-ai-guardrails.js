@@ -51,8 +51,8 @@ for (const file of publicDocs) {
 }
 
 const loggingFiles = [
-  'electron/main/logging.js',
-  'electron/main/logging-normalize.js',
+  'electron/main/logging.ts',
+  'electron/main/logging-normalize.ts',
 ].filter((file) => fs.existsSync(file));
 
 for (const file of loggingFiles) {
