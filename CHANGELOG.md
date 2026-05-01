@@ -14,6 +14,7 @@ All notable changes to this project are documented in this file.
 
 - Bumped the development version to `1.4.11-dev.14`.
 - Stabilized the DOC13 TypeScript leaf conversion test strategy before expanding conversion to larger runtime modules.
+- Converted `electron/shared/navigation.ts` as the next small shared TypeScript boundary after test/build stabilization.
 - Kept converted runtime `.ts` modules on CommonJS exports during the migration.
 - Clarified that Flatpak artifact ownership restoration after install, bundle and dev-run workflows is protected behavior.
 - Documented Google One Tap / FedCM console warnings as upstream Canva/Google Identity Services warnings.

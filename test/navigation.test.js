@@ -5,6 +5,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 const {
   classifyWindowOpenRequest,
   detectCanvaOAuthCallback,
@@ -15,7 +17,7 @@ const {
   isOAuthProviderUrl,
   isSafeExternalUrl,
   shouldGrantRemotePermission,
-} = require('../electron/shared/navigation');
+} = loadRuntimeModule('shared/navigation');
 
 test('detects Canva URLs', () => {
   assert.equal(isCanvaUrl('https://www.canva.com/design'), true);

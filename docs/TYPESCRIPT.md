@@ -48,7 +48,7 @@ The goal is to type GPU feature classification, runtime environment parsing, and
 
 Strict boundary additions:
 
-- `electron/shared/navigation.js`
+- `electron/shared/navigation.ts`
 - `electron/main/window-open-policy.js`
 - `electron/main/shell.js`
 - `electron/main/oauth.js`
@@ -206,7 +206,8 @@ Goals:
 - keep `npm test` source-first and free of runtime build side effects;
 - preserve runtime build validation as a separate explicit step;
 - keep CommonJS runtime exports during the transition;
-- defer larger module conversion until the test/build strategy is stable.
+- convert `electron/shared/navigation.ts` only after the test/build strategy is stable;
+- defer larger module conversion until the shared navigation boundary remains covered.
 
 ## Why logging/debug first?
 

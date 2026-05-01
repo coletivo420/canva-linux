@@ -1,36 +1,23 @@
 'use strict';
 
-// @ts-check
+type NavigationKind = 'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external';
+type CanvaOAuthCallbackType = 'authorized' | 'oauth';
 
-/**
- * @typedef {'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external'} NavigationKind
- */
+type NavigationRequestInput = {
+  url?: string;
+  openerUrl?: string;
+  disposition?: string;
+  frameName?: string;
+};
 
-/**
- * @typedef {'authorized' | 'oauth'} CanvaOAuthCallbackType
- */
+type NavigationClassification = {
+  kind: NavigationKind;
+  url?: string;
+};
 
-/**
- * @typedef {{
- *   url?: string;
- *   openerUrl?: string;
- *   disposition?: string;
- *   frameName?: string;
- * }} NavigationRequestInput
- */
-
-/**
- * @typedef {{
- *   kind: NavigationKind;
- *   url?: string;
- * }} NavigationClassification
- */
-
-/**
- * @typedef {{
- *   requestingUrl?: string;
- * }} PermissionDetails
- */
+type PermissionDetails = {
+  requestingUrl?: string;
+};
 
 const INTERNAL_HOST_RE = /(?:^|\.)canva\.com$/i;
 const OAUTH_PROVIDER_HOSTS = [
@@ -45,11 +32,7 @@ const CANVA_OAUTH_AUTHORIZED_RE = /^\/oauth\/authorized(?:\/|$)/i;
 const CANVA_OAUTH_RE = /^\/oauth(?:\/|$)/i;
 const EXTERNAL_PROTOCOL_ALLOWLIST = new Set(['https:', 'http:', 'mailto:']);
 
-/**
- * @param {string} url
- * @returns {boolean}
- */
-function isCanvaUrl(url) {
+function isCanvaUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return parsed.protocol === 'https:' && INTERNAL_HOST_RE.test(parsed.hostname);
@@ -58,11 +41,7 @@ function isCanvaUrl(url) {
   }
 }
 
-/**
- * @param {string} url
- * @returns {boolean}
- */
-function isOAuthProviderUrl(url) {
+function isOAuthProviderUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
     return parsed.protocol === 'https:' && OAUTH_PROVIDER_HOSTS.some((re) => re.test(parsed.hostname));
@@ -71,11 +50,7 @@ function isOAuthProviderUrl(url) {
   }
 }
 
-/**
- * @param {string} urlish
- * @returns {string}
- */
-function extractHostname(urlish) {
+function extractHostname(urlish: string): string {
   try {
     return new URL(urlish).hostname;
   } catch {
@@ -83,13 +58,7 @@ function extractHostname(urlish) {
   }
 }
 
-/**
- * @param {string} permission
- * @param {string} origin
- * @param {PermissionDetails} [details]
- * @returns {boolean}
- */
-function shouldGrantRemotePermission(permission, origin, details = {}) {
+function shouldGrantRemotePermission(permission: string, origin: string, details: PermissionDetails = {}): boolean {
   const canvaTrusted = isCanvaUrl(origin) || isCanvaUrl(details.requestingUrl || '');
 
   if (!canvaTrusted) return false;
@@ -113,11 +82,7 @@ function shouldGrantRemotePermission(permission, origin, details = {}) {
   }
 }
 
-/**
- * @param {string} url
- * @returns {boolean}
- */
-function isCanvaAuthUrl(url) {
+function isCanvaAuthUrl(url: string): boolean {
   if (!isCanvaUrl(url)) return false;
   try {
     const parsed = new URL(url);
@@ -130,11 +95,7 @@ function isCanvaAuthUrl(url) {
   }
 }
 
-/**
- * @param {string} url
- * @returns {boolean}
- */
-function isCanvaOAuthAuthorizedCallback(url) {
+function isCanvaOAuthAuthorizedCallback(url: string): boolean {
   if (!isCanvaUrl(url)) return false;
   try {
     return CANVA_OAUTH_AUTHORIZED_RE.test(new URL(url).pathname);
@@ -143,11 +104,7 @@ function isCanvaOAuthAuthorizedCallback(url) {
   }
 }
 
-/**
- * @param {string} url
- * @returns {boolean}
- */
-function isCanvaOAuthUrl(url) {
+function isCanvaOAuthUrl(url: string): boolean {
   if (!isCanvaUrl(url)) return false;
   try {
     return CANVA_OAUTH_RE.test(new URL(url).pathname);
@@ -156,37 +113,21 @@ function isCanvaOAuthUrl(url) {
   }
 }
 
-/**
- * @param {string} url
- * @returns {boolean}
- */
-function shouldOpenInOauthPopup(url) {
+function shouldOpenInOauthPopup(url: string): boolean {
   return isOAuthProviderUrl(url) || isCanvaAuthUrl(url) || isCanvaOAuthUrl(url);
 }
 
-/**
- * @param {string} url
- * @returns {CanvaOAuthCallbackType | null}
- */
-function detectCanvaOAuthCallback(url) {
+function detectCanvaOAuthCallback(url: string): CanvaOAuthCallbackType | null {
   if (isCanvaOAuthAuthorizedCallback(url)) return 'authorized';
   if (isCanvaOAuthUrl(url)) return 'oauth';
   return null;
 }
 
-/**
- * @param {string} url
- * @returns {boolean}
- */
-function isBlankPopupUrl(url) {
+function isBlankPopupUrl(url: string): boolean {
   return !url || url === 'about:blank' || url === 'about:srcdoc';
 }
 
-/**
- * @param {string} url
- * @returns {boolean}
- */
-function isSafeExternalUrl(url) {
+function isSafeExternalUrl(url: string): boolean {
   try {
     return EXTERNAL_PROTOCOL_ALLOWLIST.has(new URL(url).protocol);
   } catch {
@@ -194,11 +135,12 @@ function isSafeExternalUrl(url) {
   }
 }
 
-/**
- * @param {NavigationRequestInput} input
- * @returns {boolean}
- */
-function shouldTreatAsOauthPopup({ url = '', openerUrl = '', disposition = '', frameName = '' }) {
+function shouldTreatAsOauthPopup({
+  url = '',
+  openerUrl = '',
+  disposition = '',
+  frameName = '',
+}: NavigationRequestInput): boolean {
   if (shouldOpenInOauthPopup(url)) return true;
   if (isBlankPopupUrl(url) && isCanvaAuthUrl(openerUrl)) return true;
   if (isBlankPopupUrl(url) && frameName && /auth|oauth|login|signin|account|popup/i.test(frameName)) return true;
@@ -206,11 +148,12 @@ function shouldTreatAsOauthPopup({ url = '', openerUrl = '', disposition = '', f
   return false;
 }
 
-/**
- * @param {NavigationRequestInput} input
- * @returns {NavigationClassification}
- */
-function classifyWindowOpenRequest({ url = '', openerUrl = '', disposition = '', frameName = '' }) {
+function classifyWindowOpenRequest({
+  url = '',
+  openerUrl = '',
+  disposition = '',
+  frameName = '',
+}: NavigationRequestInput): NavigationClassification {
   if (shouldTreatAsOauthPopup({ url, openerUrl, disposition, frameName })) {
     return { kind: 'oauth-popup', url };
   }
@@ -222,6 +165,18 @@ function classifyWindowOpenRequest({ url = '', openerUrl = '', disposition = '',
   }
   return { kind: 'external', url };
 }
+
+export {
+  classifyWindowOpenRequest,
+  detectCanvaOAuthCallback,
+  extractHostname,
+  isBlankPopupUrl,
+  isCanvaAuthUrl,
+  isOAuthProviderUrl,
+  isCanvaUrl,
+  isSafeExternalUrl,
+  shouldGrantRemotePermission,
+};
 
 module.exports = {
   classifyWindowOpenRequest,
