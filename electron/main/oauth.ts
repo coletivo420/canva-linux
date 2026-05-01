@@ -74,8 +74,8 @@ type CreateOAuthHelpersOptions = {
   debugLog: DebugLog;
   detectCanvaOAuthCallback: (url: string) => 'authorized' | 'oauth' | null;
   extractHostname: (urlish: string) => string;
-  flushSession: (session: unknown) => Promise<void>;
-  getCanvaSession: () => unknown;
+  flushSession: (session: SessionLike) => Promise<void>;
+  getCanvaSession: () => SessionLike;
   isBlankPopupUrl: (url: string) => boolean;
   isCanvaAuthUrl: (url: string) => boolean;
   isCanvaUrl: (url: string) => boolean;
