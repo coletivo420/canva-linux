@@ -5,7 +5,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createWindowOpenPolicy } = require('../electron/main/window-open-policy');
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
+const { createWindowOpenPolicy } = loadRuntimeModule('main/window-open-policy');
 
 /**
  * @param {'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external'} kindToReturn

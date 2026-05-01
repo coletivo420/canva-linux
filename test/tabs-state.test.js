@@ -5,7 +5,9 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
-const { createTabHelpers } = require('../electron/main/tabs');
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
+const { createTabHelpers } = loadRuntimeModule('main/tabs');
 
 /**
  * @param {number} id
@@ -86,7 +88,7 @@ function createHelpers() {
     debugLog() {
       return true;
     },
-    findTabByWebContentsRef(fn) {
+    findTabByWebContentsRef(/** @type {Function} */ fn) {
       void fn;
     },
     getHomeUrl() {
@@ -96,7 +98,7 @@ function createHelpers() {
       return mainWindow;
     },
     nativeTheme: { shouldUseDarkColors: true },
-    setActiveTabId(id) {
+    setActiveTabId(/** @type {number | null} */ id) {
       state.activeTabId = id;
     },
     state,

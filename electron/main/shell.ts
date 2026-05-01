@@ -2,6 +2,55 @@
 
 // @ts-check
 
+export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+export type NativeThemeLike = {
+  shouldUseDarkColors: boolean;
+};
+export type WebContentsLike = {
+  id?: number;
+  loadURL(url: string): Promise<void> | void;
+  getURL(): string;
+  isDestroyed(): boolean;
+  send(channel: string, ...args: unknown[]): void;
+  on(event: string, listener: (...args: any[]) => void): unknown;
+};
+export type WebContentsViewLike = {
+  webContents: WebContentsLike;
+  setVisible(visible: boolean): void;
+};
+export type BrowserWindowLike = {
+  show(): void;
+  once(event: string, listener: (...args: unknown[]) => void): unknown;
+  on(event: string, listener: (...args: unknown[]) => void): unknown;
+  loadURL(url: string): Promise<void> | void;
+  getContentSize(): [number, number];
+  setBackgroundColor(color: string): void;
+  contentView: { children?: unknown[]; addChildView(view: unknown): void; removeChildView(view: unknown): void };
+};
+
+type ShellHelpersOptions = {
+  appIconPath: string;
+  appName: string;
+  BrowserWindow: new (options: Record<string, unknown>) => BrowserWindowLike;
+  debugLog: DebugLog;
+  layoutViews: () => void;
+  nativeTheme: NativeThemeLike;
+  WebContentsView: new (options: Record<string, unknown>) => WebContentsViewLike;
+};
+
+type CreateShellWindowOptions = {
+  setMainWindow(value: BrowserWindowLike | null): void;
+};
+
+type CreateToolbarViewOptions = {
+  broadcastTabsState(): void;
+  ensureTopLevelView(view: WebContentsViewLike): void;
+  layoutViews(): void;
+  makeToolbarUrl(): string;
+  preloadPath: string;
+  setToolbarView(value: WebContentsViewLike): void;
+};
+
 /**
  * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
  */
@@ -53,7 +102,7 @@
  *   WebContentsView: new (options: Record<string, unknown>) => WebContentsViewLike;
  * }} options
  */
-function createShellHelpers({
+export function createShellHelpers({
   appIconPath,
   appName,
   BrowserWindow,
@@ -61,8 +110,8 @@ function createShellHelpers({
   layoutViews,
   nativeTheme,
   WebContentsView,
-}) {
-  function shellBackgroundColor() {
+}: ShellHelpersOptions) {
+  function shellBackgroundColor(): string {
     return nativeTheme.shouldUseDarkColors ? '#1f2329' : '#f6f7fb';
   }
 
@@ -70,7 +119,7 @@ function createShellHelpers({
    * @param {{ setMainWindow(value: BrowserWindowLike | null): void }} options
    * @returns {BrowserWindowLike}
    */
-  function createShellWindow({ setMainWindow }) {
+  function createShellWindow({ setMainWindow }: CreateShellWindowOptions): BrowserWindowLike {
     debugLog('app', 'create-shell-window');
     const mainWindow = new BrowserWindow({
       width: 1280,
@@ -133,7 +182,7 @@ function createShellHelpers({
     makeToolbarUrl,
     preloadPath,
     setToolbarView,
-  }) {
+  }: CreateToolbarViewOptions): WebContentsViewLike {
     debugLog('tabs:toolbar', 'create-toolbar-view');
     const toolbarView = new WebContentsView({
       webPreferences: {
@@ -153,7 +202,7 @@ function createShellHelpers({
       debugLog('tabs:toolbar', 'toolbar-loaded', toolbarView.webContents.getURL() || 'about:blank');
       broadcastTabsState();
     });
-    toolbarView.webContents.on('did-fail-load', (_event, code, description, validatedURL, isMainFrame) => {
+    toolbarView.webContents.on('did-fail-load', (_event: unknown, code: number, description: string, validatedURL: string, isMainFrame: boolean) => {
       debugLog(
         'tabs:toolbar',
         'toolbar-fail-load',
@@ -163,7 +212,7 @@ function createShellHelpers({
         validatedURL || 'unknown-url'
       );
     });
-    toolbarView.webContents.on('console-message', (event, legacyLevel, legacyMessage, legacyLine, legacySourceId) => {
+    toolbarView.webContents.on('console-message', (event: { level?: number; message?: string; lineNumber?: number; sourceId?: string }, legacyLevel: unknown, legacyMessage: string, legacyLine: unknown, legacySourceId: string) => {
       const level = event.level ?? legacyLevel;
       const message = event.message ?? legacyMessage;
       const lineNumber = event.lineNumber ?? legacyLine;
@@ -171,7 +220,7 @@ function createShellHelpers({
 
       debugLog('tabs:toolbar', 'toolbar-console', `level=${level}`, `line=${lineNumber}`, sourceId || 'inline', message);
     });
-    toolbarView.webContents.on('render-process-gone', (_event, details) => {
+    toolbarView.webContents.on('render-process-gone', (_event: unknown, details: any) => {
       debugLog('tabs:toolbar', 'toolbar-render-process-gone', `reason=${details?.reason || 'unknown'}`, `exitCode=${details?.exitCode ?? 'unknown'}`);
     });
     toolbarView.webContents.on('unresponsive', () => {

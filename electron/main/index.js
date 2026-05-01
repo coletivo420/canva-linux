@@ -170,12 +170,18 @@ const tabHelpers = createTabHelpers({
   broadcastTabsState,
   createHomeTab: () => createHomeTab(),
   debugLog,
+  /**
+   * @param {FindTabByWebContents} value
+   */
   findTabByWebContentsRef(value) {
     findTabByWebContents = value;
   },
   getHomeUrl: () => HOME_URL,
   mainWindowRef: () => mainWindow,
   nativeTheme,
+  /**
+   * @param {number | null} value
+   */
   setActiveTabId(value) {
     activeTabId = value;
   },
@@ -294,7 +300,7 @@ function broadcastTabsState() {
       'state-broadcast-toolbar',
       `url=${toolbarView.webContents.getURL() || 'about:blank'}`,
       `theme=${state.theme}`,
-      `titles=${state.tabs.map((tab) => `${tab.id}:${tab.title}`).join(' | ') || 'none'}`
+      `titles=${state.tabs.map((/** @type {{ id: number, title: string }} */ tab) => `${tab.id}:${tab.title}`).join(' | ') || 'none'}`
     );
     toolbarView.webContents.send('tabs-state', state);
   } else {

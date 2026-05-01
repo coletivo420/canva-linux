@@ -326,6 +326,39 @@ Expected:
 - logging, GPU diagnostics, IPC and EyeDropper snapshot tests pass;
 - Flatpak artifact ownership restoration remains protected.
 
+## DEV16 shell/tabs/OAuth TypeScript validation
+
+Run:
+
+```bash
+rm -rf .build
+npm test
+test ! -d .build
+
+node --test test/window-open-policy.test.js
+node --test test/oauth-helpers.test.js
+node --test test/tabs-state.test.js
+node --test test/tab-controller-wiring.test.js
+
+npm run lint
+npm run typecheck
+npm run typecheck:strict
+npm run build:runtime
+npm run build:check
+./canva-linux.sh --validate
+```
+
+Manual checks:
+
+- open Canva home tab;
+- create and switch tabs;
+- close tabs;
+- open OAuth login popup;
+- complete Google login;
+- verify unsafe external protocols are blocked;
+- verify safe external URLs open externally;
+- verify current LTCode EyeDropper path still works.
+
 ## DEV12 runtime build validation
 
 Validation remains source-first.

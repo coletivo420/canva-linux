@@ -2,6 +2,58 @@
 
 // @ts-check
 
+export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+export type TabEntry = {
+  id: number;
+  title: string;
+  url: string;
+  favicon: string | null;
+  isHome: boolean;
+  createdAt: number;
+  view: WebContentsViewLike;
+};
+export type TabStateLike = { tabs: Map<number, TabEntry>; activeTabId: number | null };
+export type WebContentsViewLike = {
+  webContents: {
+    id?: number;
+    isDestroyed(): boolean;
+    send(channel: string, payload: unknown): void;
+    getURL(): string;
+    loadURL(url: string): Promise<void> | void;
+    focus(): void;
+    destroy(): void;
+  };
+  setVisible(visible: boolean): void;
+  setBounds(bounds: { x: number; y: number; width: number; height: number }): void;
+};
+export type NativeThemeLike = { shouldUseDarkColors: boolean };
+export type BrowserWindowLike = {
+  setTitle(title: string): void;
+  getContentSize(): [number, number];
+  contentView: { children?: unknown[]; addChildView(view: unknown): void; removeChildView(view: unknown): void };
+};
+
+type CreateTabHelpersOptions = {
+  appName: string;
+  broadcastTabsState: () => void;
+  createHomeTab: () => void;
+  debugLog: DebugLog;
+  findTabByWebContentsRef: (fn: (webContents: { id?: number } | null | undefined) => TabEntry | null) => void;
+  getHomeUrl: () => string;
+  mainWindowRef: () => BrowserWindowLike | null | undefined;
+  nativeTheme: NativeThemeLike;
+  setActiveTabId: (id: number | null) => void;
+  state: TabStateLike;
+  toolbarHeight: number;
+  toolbarViewRef: () => WebContentsViewLike | null | undefined;
+};
+
+export type ToolbarState = {
+  activeTabId: number | null;
+  tabs: Array<{ id: number; title: string; url: string; favicon?: string | null; canClose: boolean }>;
+  theme: string;
+};
+
 /**
  * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
  * @typedef {{
@@ -47,7 +99,7 @@
  *   toolbarViewRef: () => WebContentsViewLike | null | undefined;
  * }} options
  */
-function createTabHelpers({
+export function createTabHelpers({
   appName,
   broadcastTabsState,
   createHomeTab,
@@ -60,26 +112,26 @@ function createTabHelpers({
   state,
   toolbarHeight,
   toolbarViewRef,
-}) {
+}: CreateTabHelpersOptions) {
   /** @returns {TabEntry[]} */
-  function getOrderedTabs() {
+  function getOrderedTabs(): TabEntry[] {
     return [...state.tabs.values()].sort((a, b) => a.createdAt - b.createdAt);
   }
 
   /** @returns {TabEntry | null} */
-  function getHomeTab() {
+  function getHomeTab(): TabEntry | null {
     return getOrderedTabs().find((tab) => tab.isHome) || null;
   }
 
   /** @returns {void} */
-  function updateWindowTitle() {
+  function updateWindowTitle(): void {
     const activeTab = state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
     const title = activeTab?.title;
     mainWindowRef()?.setTitle(title && title !== appName ? `${title} - ${appName}` : appName);
   }
 
   /** @returns {{ activeTabId: number | null, tabs: Array<{ id: number, title: string, url: string, favicon?: string | null, canClose: boolean }>, theme: string }} */
-  function toolbarState() {
+  function toolbarState(): ToolbarState {
     return {
       activeTabId: state.activeTabId,
       tabs: getOrderedTabs().map((tab) => ({
@@ -98,7 +150,7 @@ function createTabHelpers({
    * @param {boolean} visible
    * @returns {void}
    */
-  function setTabVisibility(tab, visible) {
+  function setTabVisibility(tab: TabEntry | null | undefined, visible: boolean): void {
     if (!tab?.view) return;
     tab.view.setVisible(Boolean(visible));
   }
@@ -107,7 +159,7 @@ function createTabHelpers({
    * @param {unknown} view
    * @returns {void}
    */
-  function ensureTopLevelView(view) {
+  function ensureTopLevelView(view: unknown): void {
     const mainWindow = mainWindowRef();
     if (!mainWindow || !view) return;
     const contentView = mainWindow.contentView;
@@ -122,7 +174,7 @@ function createTabHelpers({
   }
 
   /** @returns {void} */
-  function layoutViews() {
+  function layoutViews(): void {
     debugLog('view', 'layout-views-start');
     const mainWindow = mainWindowRef();
     const toolbarView = toolbarViewRef();
@@ -144,7 +196,7 @@ function createTabHelpers({
   }
 
   /** @returns {void} */
-  function detachActiveContentView() {
+  function detachActiveContentView(): void {
     const activeTab = state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
     if (activeTab) {
       setTabVisibility(activeTab, false);
@@ -155,7 +207,7 @@ function createTabHelpers({
    * @param {{ id?: number } | null | undefined} webContents
    * @returns {TabEntry | null}
    */
-  function findTabByWebContents(webContents) {
+  function findTabByWebContents(webContents: { id?: number } | null | undefined): TabEntry | null {
     debugLog('view', 'find-tab-by-webcontents', webContents ? webContents.id : 'none');
     if (!webContents) return null;
     for (const tab of state.tabs.values()) {
@@ -172,7 +224,7 @@ function createTabHelpers({
    * @param {{ resetToHome?: boolean, switchToTab: (id: number) => void }} options
    * @returns {void}
    */
-  function focusHomeTab({ resetToHome = true, switchToTab }) {
+  function focusHomeTab({ resetToHome = true, switchToTab }: { resetToHome?: boolean; switchToTab: (id: number) => void }): void {
     debugLog('tabs:navigation', 'focus-home', `reset=${resetToHome}`);
     const homeTab = getHomeTab();
     if (!homeTab) return;
@@ -186,7 +238,7 @@ function createTabHelpers({
    * @param {number} id
    * @returns {void}
    */
-  function switchToTab(id) {
+  function switchToTab(id: number): void {
     debugLog('tabs:navigation', 'switch-request', id);
     const mainWindow = mainWindowRef();
     if (!state.tabs.has(id) || !mainWindow) return;
@@ -214,7 +266,7 @@ function createTabHelpers({
    * @param {number} step
    * @returns {void}
    */
-  function switchRelativeTab(step) {
+  function switchRelativeTab(step: number): void {
     const ordered = getOrderedTabs();
     if (ordered.length < 2) return;
     const currentIndex = ordered.findIndex((tab) => tab.id === state.activeTabId);
@@ -228,7 +280,7 @@ function createTabHelpers({
    * @param {number} id
    * @returns {void}
    */
-  function closeTab(id) {
+  function closeTab(id: number): void {
     debugLog('tabs:navigation', 'close-request', id);
     const ordered = getOrderedTabs();
     const index = ordered.findIndex((tab) => tab.id === id);
