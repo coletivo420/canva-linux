@@ -147,7 +147,7 @@ AI-generated patches must not run `flatpak-builder` with `sudo`.
 
 Administrator authorization should be deferred to system Flatpak operations whenever possible.
 
-System-scope local installs should build as the current user, then use `sudo flatpak` only for runtime dependency, local remote and app install operations that write to the system Flatpak installation. Local Flatpak remotes should use absolute repo paths instead of `file://` URIs.
+System-scope local installs should build as the current user, then use `sudo flatpak` only for runtime dependency, local remote and app install operations that write to the system Flatpak installation. Local Flatpak remotes should use `file://` URIs generated from absolute repo paths.
 
 Install, bundle and dev-run workflows must restore local Flatpak artifact ownership to the current user before exiting.
 

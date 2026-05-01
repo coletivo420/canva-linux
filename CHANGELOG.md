@@ -40,12 +40,13 @@ All notable changes to this project are documented in this file.
 - Fixed packaged startup failing when the compiled Electron main process tried to load `../../package.json` from inside `.build/`.
 - Fixed default-scope bundle and dev-run workflows by ensuring system Flatpak runtimes are installed before unprivileged `flatpak-builder` runs.
 - Fixed local Flatpak artifact ownership after install, bundle and dev-run workflows.
+- Fixed local system installs failing to fetch `summary.idx` from the generated local Flatpak repo by configuring the local remote with a valid `file://` URI.
 
 ### Changed
 
 - Local Flatpak builds now run `flatpak-builder` as the current user.
 - System-scope local installs now request administrator authorization before the Flatpak system install step.
-- Local system installs now configure the generated repo remote with an absolute path instead of a `file://` URI.
+- Local system installs now configure the generated repo remote with a `file://` URI derived from the absolute repo path.
 - Local Flatpak workflows now restore `build-dir`, `repo` and `.flatpak-builder` ownership before exiting.
 - The installer now explains the difference between system and user Flatpak scopes before installation.
 - The installer now documents the user-scope install command for passwordless per-user installs.
