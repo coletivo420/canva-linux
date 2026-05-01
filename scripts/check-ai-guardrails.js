@@ -58,7 +58,7 @@ const loggingFiles = [
 for (const file of loggingFiles) {
   const text = fs.readFileSync(file, 'utf8');
 
-  if (file.endsWith('logging.js') && text.includes('JSON.stringify(args)')) {
+  if (file.includes('logging.') && text.includes('JSON.stringify(args)')) {
     console.error(`[ai-guardrails] unsafe JSON.stringify(args) found in ${file}`);
     failed = true;
   }
