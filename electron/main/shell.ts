@@ -212,7 +212,7 @@ export function createShellHelpers({
         validatedURL || 'unknown-url'
       );
     });
-    toolbarView.webContents.on('console-message', (event: any, legacyLevel: unknown, legacyMessage: string, legacyLine: unknown, legacySourceId: string) => {
+    toolbarView.webContents.on('console-message', (event: { level?: number; message?: string; lineNumber?: number; sourceId?: string }, legacyLevel: unknown, legacyMessage: string, legacyLine: unknown, legacySourceId: string) => {
       const level = event.level ?? legacyLevel;
       const message = event.message ?? legacyMessage;
       const lineNumber = event.lineNumber ?? legacyLine;
