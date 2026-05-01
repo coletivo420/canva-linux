@@ -84,6 +84,11 @@ The bundle keeps the maintainable modular source layout while giving Electron a 
 
 `npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts. The canonical install workflow (`./canva-linux.sh --install`) calls `npm run dist`, so it also generates the bundle before packaging. Bundle publication must use a freshly rebuilt Electron output and Flatpak repo; `./canva-linux.sh --bundle` rebuilds both by default. Reusing an existing `repo/` requires the lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` path and should not be used for release publication after source changes.
 
+During the TypeScript migration there are two supported preload bundling modes:
+
+- Source mode: `npm run build:preload` reads from `electron/`, resolves `.js` module IDs, falls back to matching `.ts` source files when needed, and transpiles TypeScript modules before embedding them.
+- Build-output mode: `npm run build:runtime` compiles `electron/**/*.ts` into `.build/electron/**/*.js`, then runs the bundler with `--build-output` so packaging only embeds compiled JavaScript.
+
 ## Runtime guardrails
 
 - External navigation is allowed to leave the app only for explicitly supported URL schemes: `https:`, `http:`, and `mailto:`.
@@ -111,7 +116,7 @@ Packaging/runtime support files:
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
 - `scripts/prepare-flathub-submission.sh` - regenerates submission npm sources and runs submission-path validation checks.
 - `scripts/validate-flathub-submission.sh` - validates submission-manifest structure, offline npm source manifest, and optional Flathub lint.
-- `scripts/build-preload-bundle.js` - dependency-free generated-preload builder used before local start and Electron packaging.
+- `scripts/build-preload-bundle.js` - generated-preload builder used before local start and Electron packaging; source mode also handles converted TypeScript shared modules.
 - `io.github.PirateMaryRead.canva-linux.yml` - Flatpak manifest for local install/bundle/validation workflows.
 - `packaging/flathub/` - Flathub submission workspace (submission manifest, `generated-sources.json`, npm source generator scripts).
 - `docs/PRIVACY.md` - repository privacy and telemetry policy statement.

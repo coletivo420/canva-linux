@@ -15,12 +15,15 @@ All notable changes to this project are documented in this file.
 - Updated development documentation from older dev2/dev12 wording to the dev13 workflow.
 - Added TypeScript-aware ESLint parsing for converted runtime `.ts` files.
 - Clarified that system-scope Flatpak operations may request administrator authorization before or during build dependency preparation.
+- Simplified remote permission trusted-origin checks so OAuth provider origins do not affect permission grants once Canva origin trust is required.
 
 ### Fixed
 
 - Removed unconditional preload raw-init console logging outside `CANVA_DEBUG`.
 - Restricted powerful runtime permissions to Canva origins instead of OAuth provider origins.
 - Preserved Flatpak build artifact ownership restoration after install, bundle and dev-run workflows.
+- Fixed source-mode `npm run build:preload` after `electron/shared/debug.ts` conversion by resolving TypeScript source candidates and transpiling them before bundling.
+- Fixed local system installs failing to fetch `summary.idx` from the generated local Flatpak repo by configuring the local remote with a valid `file://` URI.
 
 ### Notes
 
@@ -28,6 +31,7 @@ All notable changes to this project are documented in this file.
 - User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
 - Password prompts are expected for legitimate system Flatpak operations.
 - `flatpak-builder` must continue running as the current user, never with `sudo`.
+- The preload bundler must keep supporting both source mode (`npm run build:preload`) and build-output mode (`npm run build:runtime`) while TypeScript conversion is in progress.
 
 ## [1.4.11-dev.12-hotfix] - 2026-04-30
 

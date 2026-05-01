@@ -155,6 +155,7 @@ Run:
 
 ```bash
 npm run build:preload
+npm run build:runtime
 npm run typecheck
 npm run typecheck:strict
 node --test test/preload-debug.test.js

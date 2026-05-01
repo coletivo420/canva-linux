@@ -9,8 +9,10 @@ In scope:
 - Leaf TypeScript conversion for shared logging/debug helpers.
 - Flatpak system-scope dependency and install policy preservation.
 - Flatpak artifact ownership restoration after local workflows.
+- Local Flatpak repo remote compatibility for system installs.
 - Runtime permission hardening for OAuth providers.
 - Preload logging cleanup outside `CANVA_DEBUG`.
+- Source-mode preload bundling while shared modules move to TypeScript.
 - Canonical validation workflow alignment.
 - Development and validation requirements documentation.
 
@@ -78,3 +80,9 @@ Development smoke tests should prefer:
 ```
 
 because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
+
+## DEV13 hotfix notes
+
+- System-scope local installs build as the current user, export `repo/`, and configure the system Flatpak local remote with a `file://` URI derived from the absolute repo path. A plain absolute path can make Flatpak fail while fetching `summary.idx`.
+- `npm run build:preload` remains a supported source-mode workflow. While TypeScript conversion is in progress, `scripts/build-preload-bundle.js` must resolve `.ts` source modules when the matching `.js` source no longer exists and transpile them before embedding them in the generated bundle.
+- `npm run build:runtime` remains the packaging path. It compiles TypeScript into `.build/electron/**/*.js` first, then runs the preload bundler in build-output mode against those compiled files.
