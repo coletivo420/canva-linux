@@ -5,10 +5,12 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 const {
   sharedWebPreferences,
   shouldEnableCaptureVerboseLogging,
-} = require('../electron/main/runtime');
+} = loadRuntimeModule('main/runtime');
 
 /**
  * @param {{ CANVA_DEBUG?: string, CANVA_DEBUG_LEVEL?: string }} env

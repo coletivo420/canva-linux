@@ -206,6 +206,23 @@ electron/shared/debug.ts
 
 Do not convert `electron/main/index.js`, `electron/preload/canva.js`, `electron/preload/ltcode-eyedropper.js`, shell scripts or Flatpak manifests in DEV13.
 
+## DEV15 TypeScript conversion guardrails
+
+DEV15 may convert only main infrastructure modules.
+
+Do not convert in DEV15:
+
+- shell
+- tabs
+- OAuth
+- tab controller
+- tab events
+- main entrypoint
+- preload modules
+- LTCode EyeDropper
+
+Do not change IPC channel names, logging contracts, GPU backend behavior, Flatpak scope policy, or EyeDropper snapshot scoping.
+
 ## Google Identity Services / FedCM guardrails
 
 Do not silence or monkeypatch Google Identity Services / FedCM warnings by modifying page APIs. If needed, classify them as upstream console warnings while preserving the log.

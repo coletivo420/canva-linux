@@ -1,50 +1,43 @@
 'use strict';
 
-// @ts-check
-
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- * @typedef {{
- *   whenReady(): Promise<void>;
- *   on(event: string, listener: (...args: any[]) => void): unknown;
- *   quit(): void;
- * }} AppLike
- * @typedef {{
- *   initLogFile(): string;
- *   logStatus(category: string, level: 'ok' | 'warn' | 'critical', message: string): void;
- * }} CentralLoggerLike
- * @typedef {{ getAllWindows(): unknown[] }} BrowserWindowConstructorLike
- * @typedef {{ on(event: 'updated', listener: () => void): unknown }} NativeThemeLike
- * @typedef {{ createHomeTab(): void }} TabControllerLike
- */
+type DebugLog = (category: string, ...args: unknown[]) => boolean;
+type AppLike = {
+  whenReady(): Promise<void>;
+  on(event: string, listener: (...args: any[]) => void): unknown;
+  quit(): void;
+};
+type CentralLoggerLike = {
+  initLogFile(): string;
+  logStatus(category: string, level: 'ok' | 'warn' | 'critical', message: string): void;
+};
+type BrowserWindowConstructorLike = { getAllWindows(): unknown[] };
+type NativeThemeLike = { on(event: 'updated', listener: () => void): unknown };
+type TabControllerLike = { createHomeTab(): void };
+type LifecycleOptions = {
+  app: AppLike;
+  BrowserWindow: BrowserWindowConstructorLike;
+  canvaSessionRef: () => unknown;
+  centralLogger: CentralLoggerLike;
+  configureSession: (options: Record<string, unknown>) => Promise<unknown>;
+  createShellWindow: () => unknown;
+  createToolbarView: () => unknown;
+  debugLog: DebugLog;
+  debugLevel: number;
+  flushSession: (session: any) => Promise<void>;
+  getCanvaSession: () => unknown;
+  logCredentialStorageBackend: () => void;
+  logReleaseStatus: () => void;
+  nativeTheme: NativeThemeLike;
+  onThemeUpdated: () => void;
+  partition: string;
+  path: unknown;
+  registerGpuDiagnostics?: () => void;
+  shouldGrantRemotePermission: (...args: any[]) => boolean;
+  tabController: TabControllerLike;
+};
 
 // Own app startup/shutdown wiring separately from main/index.js so the entry
 // module can focus on assembling the runtime graph.
-/**
- * @param {{
- *   app: AppLike;
- *   BrowserWindow: BrowserWindowConstructorLike;
- *   canvaSessionRef: () => unknown;
- *   centralLogger: CentralLoggerLike;
- *   configureSession: (options: Record<string, unknown>) => Promise<unknown>;
- *   createShellWindow: () => unknown;
- *   createToolbarView: () => unknown;
- *   debugLog: DebugLog;
- *   debugLevel: number;
- *   flushSession: (session: unknown) => Promise<void>;
- *   getCanvaSession: () => unknown;
- *   logCredentialStorageBackend: () => void;
- *   logReleaseStatus: () => void;
- *   nativeTheme: NativeThemeLike;
- *   onThemeUpdated: () => void;
- *   partition: string;
- *   path: unknown;
- *   registerGpuDiagnostics?: () => void;
- *   shouldGrantRemotePermission: (...args: any[]) => boolean;
- *   tabController: TabControllerLike;
- * }} options
- * @returns {void}
- */
 function registerAppLifecycle({
   app,
   BrowserWindow,
@@ -66,7 +59,7 @@ function registerAppLifecycle({
   registerGpuDiagnostics,
   shouldGrantRemotePermission,
   tabController,
-}) {
+}: LifecycleOptions): void {
   app.whenReady().then(async () => {
     const logFilePath = centralLogger.initLogFile();
     debugLog('startup', 'when-ready', `platform=${process.platform}`, `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland')}`);
@@ -114,6 +107,10 @@ function registerAppLifecycle({
     if (process.platform !== 'darwin') app.quit();
   });
 }
+
+export {
+  registerAppLifecycle,
+};
 
 module.exports = {
   registerAppLifecycle,

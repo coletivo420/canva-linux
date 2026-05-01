@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.15] - 2026-05-01
+
+### Added
+
+- Added `docs/CANVA_LINUX_EYEDROPPER.md` to document the planned first-party CL-EyeDropper architecture.
+
+### Changed
+
+- Bumped the development version to `1.4.11-dev.15`.
+- Converted main-process infrastructure modules to TypeScript: logging, logging helpers, GPU diagnostics, runtime setup, IPC routing, lifecycle wiring and the EyeDropper snapshot bridge.
+- Updated runtime build checks to require compiled output for `electron/shared/navigation.ts`.
+- Updated the TypeScript roadmap from DEV15 onward to reflect the stabilized DEV14 and the staged CL-EyeDropper plan.
+
+### Notes
+
+- Logging, GPU backend behavior, IPC channel names and EyeDropper snapshot scoping are intended to remain unchanged.
+- Shell, tabs, OAuth, window-open policy, the main entrypoint and preload modules remain out of scope for DEV15.
+
 ## [1.4.11-dev.14] - 2026-05-01
 
 ### Fixed

@@ -5,17 +5,19 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 const {
   resolveRequestingTab,
   validateSnapshotRequester,
-} = require('../electron/main/eyedropper-bridge');
+} = loadRuntimeModule('main/eyedropper-bridge');
 
 test('resolveRequestingTab scopes lookup to the requesting webContents', () => {
   const sender = { id: 22 };
   const expectedTab = /** @type {any} */ ({ id: 3, view: {} });
 
   assert.equal(
-    resolveRequestingTab(sender, (webContents) => (webContents === sender ? expectedTab : null)),
+    resolveRequestingTab(sender, (/** @type {{ id?: number }} */ webContents) => (webContents === sender ? expectedTab : null)),
     expectedTab
   );
   assert.equal(resolveRequestingTab({ id: 99 }, () => null), null);
