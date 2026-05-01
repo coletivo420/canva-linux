@@ -154,7 +154,7 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
     return { action: 'deny' };
   });
 
-  wc.on('did-create-window', (window: unknown, details: any) => {
+  wc.on('did-create-window', (window: unknown, details: { url: string; frameName: string; referrer?: { url: string } }) => {
     const openerUrl = details.referrer?.url || wc.getURL();
     const request = classifyWindowOpenRequest({
       url: details.url || 'about:blank',
