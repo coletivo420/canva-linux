@@ -2,6 +2,30 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.14] - 2026-05-01
+
+### Fixed
+
+- Fixed broad TypeScript validation so `npm run typecheck` includes converted `.ts` runtime modules.
+- Fixed runtime module tests so `npm test` no longer triggers `scripts/build-runtime.js` or writes `.build/`.
+- Fixed local uninstall cleanup for local Flatpak remotes created by development install flows.
+
+### Changed
+
+- Bumped the development version to `1.4.11-dev.14`.
+- Stabilized the DOC13 TypeScript leaf conversion test strategy before expanding conversion to larger runtime modules.
+- Kept converted runtime `.ts` modules on CommonJS exports during the migration.
+- Clarified that Flatpak artifact ownership restoration after install, bundle and dev-run workflows is protected behavior.
+- Documented Google One Tap / FedCM console warnings as upstream Canva/Google Identity Services warnings.
+- Classified known FedCM console warnings from `static.canva.com` as upstream warnings while preserving the original console log.
+
+### Notes
+
+- System-scope installation remains the default.
+- User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
+- `flatpak-builder` must continue running as the current user, never with `sudo`.
+- Do not monkeypatch Google Identity Services APIs to silence FedCM warnings.
+
 ## [1.4.11-dev.13] - 2026-04-30
 
 ### Added

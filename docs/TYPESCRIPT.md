@@ -196,6 +196,18 @@ DEV13 adds `@typescript-eslint/parser` and `@typescript-eslint/eslint-plugin`, s
 
 DEV13 also preserves the source-mode preload bundle path after `electron/shared/debug.js` moved to `electron/shared/debug.ts`. `scripts/build-preload-bundle.js` must keep accepting `.js` module IDs because runtime `require('../shared/debug')` resolves to the bundled `electron/shared/debug.js` ID, but source mode may read and transpile the corresponding `.ts` file before embedding it.
 
+## DEV14 scope
+
+`1.4.11-dev.14` stabilizes the first `.ts` conversion before expanding the migration.
+
+Goals:
+
+- include converted `.ts` runtime files in broad `npm run typecheck`;
+- keep `npm test` source-first and free of runtime build side effects;
+- preserve runtime build validation as a separate explicit step;
+- keep CommonJS runtime exports during the transition;
+- defer larger module conversion until the test/build strategy is stable.
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:
@@ -214,6 +226,8 @@ These modules are small enough to type strictly and important enough to protect 
 - Do not emit JavaScript from TypeScript.
 - Do not change preload bundle runtime behavior.
 - When converting shared modules imported by preload code, keep both preload bundle modes working: source mode from `electron/` and build-output mode from `.build/electron/`.
+- Do not make `npm test` run `scripts/build-runtime.js`; runtime build must remain explicit.
+- Keep converted `.ts` modules covered by broad typecheck, strict typecheck, source tests, runtime build and build checks.
 - Do not rename public environment variables.
 - Do not reintroduce module-specific `CANVA_DEBUG=gpu` style filtering.
 - Prefer JSDoc typing before `.ts` conversion.

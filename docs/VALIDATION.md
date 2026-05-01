@@ -282,6 +282,27 @@ Expected:
 - no generated `.build/` files are committed;
 - Flatpak artifact ownership restoration traps remain present.
 
+## DEV14 TypeScript test stabilization validation
+
+Run:
+
+```bash
+rm -rf .build
+npm test
+test ! -d .build
+npm run typecheck
+npm run typecheck:strict
+npm run build:runtime
+npm run build:check
+```
+
+Expected:
+
+- tests do not generate `.build/`;
+- converted `.ts` source modules are covered by broad and strict typechecks;
+- runtime build explicitly generates compiled `.js` output;
+- build check validates compiled `.ts` outputs.
+
 ## DEV12 runtime build validation
 
 Validation remains source-first.

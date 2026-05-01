@@ -23,6 +23,23 @@
 // This module exists so tab lifecycle policy can evolve without forcing the
 // main entrypoint to keep every navigation and keyboard branch inline.
 /**
+ * @param {unknown} message
+ * @param {unknown} sourceId
+ * @returns {boolean}
+ */
+function isKnownUpstreamFedCmWarning(message, sourceId) {
+  if (!String(message || '').includes('[GSI_LOGGER]') || !String(message || '').includes('FedCM')) {
+    return false;
+  }
+
+  try {
+    return new URL(String(sourceId || '')).hostname === 'static.canva.com';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * @param {TabEntry} tab
  * @param {{
  *   appName: string;
@@ -194,6 +211,9 @@ function attachTabEventHandlers(tab, helpers) {
     const sourceId = event.sourceId ?? legacySourceId;
 
     debugLog(`tabs:console:${tab.id}`, 'console', `level=${level}`, `line=${lineNumber}`, sourceId || 'inline', message);
+    if (isKnownUpstreamFedCmWarning(message, sourceId)) {
+      debugLog('tabs:console', 'upstream-fedcm-warning', `tab=${tab.id}`, 'source=static.canva.com', message);
+    }
     if (message.includes('canva-preload') || message.includes('EyeDropper')) {
       debugLog('eyedropper:diagnostics', 'console-intercept', `tab=${tab.id}`, message);
     }
