@@ -91,10 +91,8 @@ function extractHostname(urlish) {
  */
 function shouldGrantRemotePermission(permission, origin, details = {}) {
   const canvaTrusted = isCanvaUrl(origin) || isCanvaUrl(details.requestingUrl || '');
-  const oauthTrusted = isOAuthProviderUrl(origin) || isOAuthProviderUrl(details.requestingUrl || '');
 
-  if (!canvaTrusted && !oauthTrusted) return false;
-  if (oauthTrusted && !canvaTrusted) return false;
+  if (!canvaTrusted) return false;
 
   switch (permission) {
     // Some trusted Canva flows still probe browser capture permissions, but
