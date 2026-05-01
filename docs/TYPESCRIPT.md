@@ -1,4 +1,4 @@
-# TypeScript Migration Plan (`1.4.11-dev.10+`)
+# TypeScript Migration Plan (`0.1.4-dev.X`)
 
 ## Current baseline
 
@@ -12,7 +12,7 @@ The project currently uses TypeScript as a JavaScript type-checking layer:
 
 ## DEV6 scope
 
-`1.4.11-dev.6` introduces the first strict TypeScript boundary without converting the whole app to `.ts`.
+`0.1.4-dev.6` introduces the first strict TypeScript boundary without converting the whole app to `.ts`.
 
 Strict boundary files:
 
@@ -33,7 +33,7 @@ npm test
 
 ## DEV7 scope
 
-`1.4.11-dev.7` expands the strict boundary to GPU diagnostics.
+`0.1.4-dev.7` expands the strict boundary to GPU diagnostics.
 
 Strict boundary additions:
 
@@ -44,7 +44,7 @@ The goal is to type GPU feature classification, runtime environment parsing, and
 
 ## DEV8 scope
 
-`1.4.11-dev.8` expands the strict TypeScript boundary to shell, navigation and OAuth popup boundaries.
+`0.1.4-dev.8` expands the strict TypeScript boundary to shell, navigation and OAuth popup boundaries.
 
 Strict boundary additions:
 
@@ -68,7 +68,7 @@ Runtime behavior must remain unchanged.
 
 ## DEV9 scope
 
-`1.4.11-dev.9` expands the strict boundary to preload integration modules and improves the post-install terminal guidance.
+`0.1.4-dev.9` expands the strict boundary to preload integration modules and improves the post-install terminal guidance.
 
 Strict boundary additions:
 
@@ -95,7 +95,7 @@ Installer UX additions:
 
 ## DEV10 scope
 
-`1.4.11-dev.10` expands the strict TypeScript boundary to the remaining extracted main-process modules and adds changelog-backed AI non-regression rules.
+`0.1.4-dev.10` expands the strict TypeScript boundary to the remaining extracted main-process modules and adds changelog-backed AI non-regression rules.
 
 Strict boundary additions:
 
@@ -113,7 +113,7 @@ Strict boundary additions:
 
 ## DEV11 scope
 
-`1.4.11-dev.11` brings the main Electron orchestration entrypoint into the strict TypeScript boundary and corrects the local Flatpak installation scope policy.
+`0.1.4-dev.11` brings the main Electron orchestration entrypoint into the strict TypeScript boundary and corrects the local Flatpak installation scope policy.
 
 Strict boundary additions:
 
@@ -137,7 +137,7 @@ Goals:
 
 ## DEV12 scope
 
-`1.4.11-dev.12` introduces the real TypeScript runtime build pipeline.
+`0.1.4-dev.12` introduces the real TypeScript runtime build pipeline.
 
 Runtime source remains in:
 
@@ -177,7 +177,7 @@ Do not move runtime build before source validation.
 
 ## DEV13 scope
 
-`1.4.11-dev.13` begins actual `.ts` conversion with low-risk leaf modules.
+`0.1.4-dev.13` begins actual `.ts` conversion with low-risk leaf modules.
 
 Initial conversion targets:
 
@@ -198,7 +198,7 @@ DEV13 also preserves the source-mode preload bundle path after `electron/shared/
 
 ## DEV14 scope
 
-`1.4.11-dev.14` stabilizes the first `.ts` conversion before expanding the migration.
+`0.1.4-dev.14` stabilizes the first `.ts` conversion before expanding the migration.
 
 Goals:
 
@@ -211,7 +211,7 @@ Goals:
 
 ## DEV15 scope
 
-`1.4.11-dev.15` converts main-process infrastructure modules to TypeScript.
+`0.1.4-dev.15` converts main-process infrastructure modules to TypeScript.
 
 Targets:
 
@@ -227,7 +227,7 @@ Runtime behavior must remain unchanged.
 
 ## DEV16 scope
 
-`1.4.11-dev.16` converts shell, tabs, OAuth and window-open policy modules to TypeScript.
+`0.1.4-dev.16` converts shell, tabs, OAuth and window-open policy modules to TypeScript.
 
 Targets:
 
@@ -277,10 +277,32 @@ These modules are small enough to type strictly and important enough to protect 
 - `dev14`: stabilize TypeScript source tests and convert shared navigation to `.ts`.
 - `dev15`: convert main-process infrastructure modules to `.ts`.
 - `dev16`: convert shell, tabs, OAuth and window-open policy modules to `.ts`.
-- `dev17`: convert the main process entrypoint to `.ts`.
-- `dev18`: convert preload source modules and introduce CL-EyeDropper contracts.
-- `dev19`: implement the first-party CanvaLinux EyeDropper in TypeScript.
-- `dev20`: make CL-EyeDropper the default with LTCode as temporary fallback.
-- `dev21`: validate full TypeScript conversion and CL-EyeDropper.
-- `dev22`: remove LTCode legacy fallback and obsolete compatibility code.
-- `dev23`: stabilization and release-candidate readiness.
+- `dev17`: realign project versioning to the official `0.1.x` alpha line.
+- `dev18`: convert the main process entrypoint to `.ts`.
+- `dev19`: convert preload source modules and introduce CL-EyeDropper contracts.
+- `dev20`: implement the first-party CanvaLinux EyeDropper in TypeScript.
+- `dev21`: make CL-EyeDropper the default with LTCode as temporary fallback.
+- `dev22`: validate full TypeScript conversion and CL-EyeDropper.
+- `dev23`: remove LTCode legacy fallback and obsolete compatibility code.
+- `dev24`: stabilization and release-candidate readiness.
+
+
+## DEV17 scope
+
+`0.1.4-dev.17` realigns Canva Linux versioning to the official alpha series.
+
+Goals:
+
+- mark Canva Linux as alpha software;
+- replace active `1.4.x` development references with the `0.1.x` alpha line;
+- use `0.1.4-dev.X` as the active development version format;
+- preserve historical changelog context where necessary;
+- avoid runtime behavior changes.
+
+Out of scope:
+
+- converting `electron/main/index.js`;
+- converting preload modules;
+- implementing CL-EyeDropper;
+- changing Flatpak permissions;
+- changing OAuth, tabs, GPU, logging or IPC behavior.
