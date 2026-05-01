@@ -22,7 +22,7 @@ type AttachTabEventHandlersHelpers = {
   classifyNavigationRequest: (request: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => NavigationDecision;
   classifyWindowOpenRequest: (request: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => NavigationDecision;
   closeTab: (id: number) => void;
-  createTab: (url?: string, options?: { activate?: boolean; isHome?: boolean }) => unknown;
+  createTab: (url?: string, options?: { activate?: boolean; isHome?: boolean }) => TabEntry;
   debugLog: DebugLog;
   isBlankPopupUrl: (url: string) => boolean;
   isCanvaAuthUrl: (url: string) => boolean;
