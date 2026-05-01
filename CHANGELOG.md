@@ -1,8 +1,26 @@
 # Changelog
 
+## [0.1.4-dev.17] - 2026-05-01
+
+### Changed
+
+- Realigned Canva Linux versioning to the official alpha series.
+- Replaced the previous `1.4.x` development line with the `0.1.x` alpha line.
+- Updated documentation, roadmap, validation notes and metadata references to use alpha versioning.
+- Shifted the TypeScript roadmap so `electron/main/index.js` conversion moves to DEV18.
+
+### Notes
+
+- Canva Linux is officially in alpha.
+- The previous `1.4.x` references are historical development-line references.
+- The active development line is now `0.1.4-dev.X`.
+- Runtime behavior is intentionally unchanged.
+
 All notable changes to this project are documented in this file.
 
-## [1.4.11-dev.16] - 2026-05-01
+## [0.1.4-dev.16] - 2026-05-01
+
+> Historical mapping: `1.4.11-dev.16` -> `0.1.4-dev.16`.
 
 ### Changed
 
@@ -19,7 +37,7 @@ All notable changes to this project are documented in this file.
 
 ### Notes
 
-- `electron/main/index.js` remains JavaScript until DEV17.
+- `electron/main/index.js` remains JavaScript until DEV18.
 - Preload modules remain JavaScript until DEV18.
 - CL-EyeDropper is planned but not implemented in DEV16.
 - Flatpak system/user scope behavior is unchanged.

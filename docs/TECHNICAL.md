@@ -1,10 +1,10 @@
 # Technical Notes
 
-This document centralizes technical repository notes for the `1.4.10-dev.X` packaging cycle.
+This document centralizes technical repository notes for the `0.1.4-dev.X` packaging cycle.
 
 ## Scope
 
-Current `1.4.10-dev.X` goals focus on Flathub readiness, packaging workflow improvements, and security diagnostics:
+Current `0.1.4-dev.X` goals focus on Flathub readiness, packaging workflow improvements, and security diagnostics:
 
 - keep `canva-linux.sh` as the canonical Linux workflow command;
 - support interactive mode, explicit actions, and chained actions for workflow tasks;

@@ -1,4 +1,4 @@
-# TypeScript Migration Plan (`1.4.11-dev.10+`)
+# TypeScript Migration Plan (`0.1.4-dev.X`)
 
 ## Current baseline
 
@@ -277,10 +277,32 @@ These modules are small enough to type strictly and important enough to protect 
 - `dev14`: stabilize TypeScript source tests and convert shared navigation to `.ts`.
 - `dev15`: convert main-process infrastructure modules to `.ts`.
 - `dev16`: convert shell, tabs, OAuth and window-open policy modules to `.ts`.
-- `dev17`: convert the main process entrypoint to `.ts`.
-- `dev18`: convert preload source modules and introduce CL-EyeDropper contracts.
-- `dev19`: implement the first-party CanvaLinux EyeDropper in TypeScript.
-- `dev20`: make CL-EyeDropper the default with LTCode as temporary fallback.
-- `dev21`: validate full TypeScript conversion and CL-EyeDropper.
-- `dev22`: remove LTCode legacy fallback and obsolete compatibility code.
-- `dev23`: stabilization and release-candidate readiness.
+- `dev17`: realign project versioning to the official `0.1.x` alpha line.
+- `dev18`: convert the main process entrypoint to `.ts`.
+- `dev19`: convert preload source modules and introduce CL-EyeDropper contracts.
+- `dev20`: implement the first-party CanvaLinux EyeDropper in TypeScript.
+- `dev21`: make CL-EyeDropper the default with LTCode as temporary fallback.
+- `dev22`: validate full TypeScript conversion and CL-EyeDropper.
+- `dev23`: remove LTCode legacy fallback and obsolete compatibility code.
+- `dev24`: stabilization and release-candidate readiness.
+
+
+## DEV17 scope
+
+`0.1.4-dev.17` realigns Canva Linux versioning to the official alpha series.
+
+Goals:
+
+- mark Canva Linux as alpha software;
+- replace active `1.4.x` development references with the `0.1.x` alpha line;
+- use `0.1.4-dev.X` as the active development version format;
+- preserve historical changelog context where necessary;
+- avoid runtime behavior changes.
+
+Out of scope:
+
+- converting `electron/main/index.js`;
+- converting preload modules;
+- implementing CL-EyeDropper;
+- changing Flatpak permissions;
+- changing OAuth, tabs, GPU, logging or IPC behavior.

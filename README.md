@@ -6,20 +6,28 @@ Canva Linux is community-maintained, open source, and not published, verified, e
 
 ## Status
 
-Stable: 1.4.10  
-Next: 1.4.11-dev.14 (TypeScript test stabilization, Flatpak cleanup, and FedCM diagnostics)
+Project status: Alpha
+Active development line: 0.1.4-dev.X
 
 ## Community package status
 
 Canva Linux is a community-maintained open source package for use with Canva. It is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd. References to Canva describe the upstream web service this wrapper is built to access.
 
-## Development (post-1.4.10)
+## Project status
 
-`1.4.10` closes the JavaScript consolidation cycle with community branding, app-id migration, Flatpak permission hardening, preload-bundle stability, OAuth continuity, and documented validation workflows.
+Canva Linux is currently alpha software.
 
-The next development line starts at `1.4.11.dev1` and is reserved for TypeScript migration and Canva API integration work.
+Active development line:
 
-### 1.4.11.dev1 scope (TypeScript foundation)
+```text
+0.1.4-dev.X
+```
+
+Historical development references from the previous 1.4.x line map to the alpha line and are kept in the changelog for traceability.
+
+## Development (alpha line)
+
+### 0.1.4-dev.X scope (TypeScript + CL-EyeDropper roadmap)
 
 This phase adds TypeScript tooling without converting runtime modules to `.ts` yet:
 
@@ -359,7 +367,7 @@ See `docs/GPU_ACCELERATION.md`.
 - `docs/TECHNICAL.md` contains repository technical notes.
 - `docs/AI_DEVELOPMENT.md` documents AI-assisted maintenance conventions.
 - `docs/DEVELOPMENT.md` documents phase scope and recommended execution order.
-- `docs/TYPESCRIPT.md` documents TypeScript migration goals and rules for the `1.4.11.devX` line.
+- `docs/TYPESCRIPT.md` documents TypeScript migration goals and rules for the `0.1.4-dev.X` line.
 - `docs/CANVA_API.md` documents Canva API integration architecture planning notes.
 - `docs/VALIDATION.md` defines baseline and close-out quality gate commands.
 - `docs/PRIVACY.md` explains privacy and telemetry scope for this wrapper project.
