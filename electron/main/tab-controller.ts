@@ -6,6 +6,54 @@ const path = require('path');
 
 const { attachTabEventHandlers } = require('./tab-events');
 
+export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+export type NavigationDecision = { kind: string; category?: string };
+export type ClassifyNavigationRequest = (request: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => NavigationDecision;
+export type WindowOpenPolicy = (request: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => NavigationDecision;
+export type WebContentsViewLike = {
+  webContents: Record<string, unknown> & { loadURL(url: string): Promise<void> | void };
+};
+export type WebContentsViewConstructorLike = new (options: Record<string, unknown>) => WebContentsViewLike;
+export type TabEntry = { id: number; view: WebContentsViewLike; createdAt: number; title: string; url: string; favicon: string | null; isHome: boolean };
+export type TabState = { tabs: Map<number, TabEntry>; nextTabIdRef(): number };
+export type TabHelpers = {
+  ensureTopLevelView(view: WebContentsViewLike): void;
+  setTabVisibility(tab: TabEntry, visible: boolean): void;
+  layoutViews(): void;
+  switchToTab(id: number): void;
+  switchRelativeTab(step: number): void;
+  closeTab(id: number): void;
+  focusHomeTab(options: { resetToHome?: boolean; switchToTab: (id: number) => void }): void;
+};
+export type OAuthHelpers = {
+  popupWindowOptions?: (shellBackgroundColor: () => string) => Record<string, unknown>;
+  registerAuthPopupWindow?: Function;
+  openAuthPopupForTab?: Function;
+};
+export type AttachTabEventHandlersLike = (tab: TabEntry, helpers: Record<string, unknown>) => void;
+
+type CreateTabControllerOptions = {
+  appName: string;
+  appUrl: string;
+  broadcastTabsState: () => void;
+  classifyNavigationRequest: ClassifyNavigationRequest;
+  classifyWindowOpenRequest: WindowOpenPolicy;
+  debugLog: DebugLog;
+  getCanvaSession: () => unknown;
+  homeUrl: string;
+  isBlankPopupUrl: (url: string) => boolean;
+  isCanvaAuthUrl: (url: string) => boolean;
+  isCanvaUrl: (url: string) => boolean;
+  isSafeExternalUrl: (url: string) => boolean;
+  oauthHelpers: OAuthHelpers;
+  shell: { openExternal?: (url: string) => unknown };
+  shellBackgroundColor: () => string;
+  state: TabState;
+  tabHelpers: TabHelpers;
+  WebContentsView: WebContentsViewConstructorLike;
+  attachTabEventHandlersImpl?: AttachTabEventHandlersLike;
+};
+
 /**
  * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
  * @typedef {{ kind: string, category?: string }} NavigationDecision
@@ -56,7 +104,7 @@ const { attachTabEventHandlers } = require('./tab-events');
  *   attachTabEventHandlersImpl?: AttachTabEventHandlersLike;
  * }} options
  */
-function createTabController({
+export function createTabController({
   appName,
   appUrl,
   broadcastTabsState,
@@ -76,7 +124,7 @@ function createTabController({
   tabHelpers,
   WebContentsView,
   attachTabEventHandlersImpl,
-}) {
+}: CreateTabControllerOptions) {
   const attachHandlers = attachTabEventHandlersImpl || /** @type {AttachTabEventHandlersLike} */ (/** @type {unknown} */ (attachTabEventHandlers));
 
   /**
@@ -84,7 +132,7 @@ function createTabController({
    * @param {{ activate?: boolean, isHome?: boolean }} [options]
    * @returns {TabEntry}
    */
-  function createTab(url = appUrl, { activate = true, isHome = false } = {}) {
+  function createTab(url = appUrl, { activate = true, isHome = false }: { activate?: boolean; isHome?: boolean } = {}): TabEntry {
     debugLog('tabs:navigation', 'create', url, `activate=${activate}`, `home=${isHome}`);
     const id = state.nextTabIdRef();
     const preloadPath = path.resolve(__dirname, '..', 'preload', 'canva.bundle.js');
@@ -152,27 +200,27 @@ function createTabController({
   }
 
   /** @param {number} id */
-  function switchToTab(id) {
+  function switchToTab(id: number): void {
     return tabHelpers.switchToTab(id);
   }
 
   /** @param {number} step */
-  function switchRelativeTab(step) {
+  function switchRelativeTab(step: number): void {
     return tabHelpers.switchRelativeTab(step);
   }
 
   /** @param {number} id */
-  function closeTab(id) {
+  function closeTab(id: number): void {
     return tabHelpers.closeTab(id);
   }
 
   /** @param {{ resetToHome?: boolean }} [options] */
-  function focusHomeTab({ resetToHome = true } = {}) {
+  function focusHomeTab({ resetToHome = true }: { resetToHome?: boolean } = {}): void {
     return tabHelpers.focusHomeTab({ resetToHome, switchToTab });
   }
 
   /** @returns {TabEntry} */
-  function createHomeTab() {
+  function createHomeTab(): TabEntry {
     return createTab(homeUrl, { activate: true, isHome: true });
   }
 

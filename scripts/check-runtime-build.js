@@ -37,6 +37,19 @@ if (pkg.build?.extraMetadata?.main !== expectedMain) {
 
 requireFile('.build/electron/main/index.js');
 requireFile('.build/electron/main/logging-normalize.js');
+requireFile('.build/electron/main/logging.js');
+requireFile('.build/electron/main/logging-helpers.js');
+requireFile('.build/electron/main/gpu-diagnostics.js');
+requireFile('.build/electron/main/runtime.js');
+requireFile('.build/electron/main/ipc.js');
+requireFile('.build/electron/main/lifecycle.js');
+requireFile('.build/electron/main/eyedropper-bridge.js');
+requireFile('.build/electron/main/shell.js');
+requireFile('.build/electron/main/oauth.js');
+requireFile('.build/electron/main/tabs.js');
+requireFile('.build/electron/main/tab-controller.js');
+requireFile('.build/electron/main/tab-events.js');
+requireFile('.build/electron/main/window-open-policy.js');
 requireFile('.build/electron/shared/debug.js');
 requireFile('.build/electron/shared/navigation.js');
 requireFile('.build/electron/preload/canva.bundle.js');

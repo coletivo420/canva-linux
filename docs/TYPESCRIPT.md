@@ -225,6 +225,28 @@ Targets:
 
 Runtime behavior must remain unchanged.
 
+## DEV16 scope
+
+`1.4.11-dev.16` converts shell, tabs, OAuth and window-open policy modules to TypeScript.
+
+Targets:
+
+- `electron/main/shell.ts`
+- `electron/main/oauth.ts`
+- `electron/main/tabs.ts`
+- `electron/main/tab-controller.ts`
+- `electron/main/tab-events.ts`
+- `electron/main/window-open-policy.ts`
+
+This phase must preserve BrowserWindow, WebContentsView, toolbar, OAuth popup, external navigation, tab-state and current EyeDropper reinjection behavior.
+
+Out of scope:
+
+- `electron/main/index.js`
+- preload modules
+- CL-EyeDropper implementation
+- Flatpak policy changes
+
 ## Why logging/debug first?
 
 Logging and debug behavior are stable contracts after DEV4 and DEV5:

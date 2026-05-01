@@ -5,9 +5,11 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 const {
   createOAuthPopupInitialState,
-} = require('../electron/main/oauth');
+} = loadRuntimeModule('main/oauth');
 
 function fakeWindow() {
   return {
@@ -40,7 +42,7 @@ test('creates OAuth popup initial state for Canva auth opener', () => {
     startUrl: 'about:blank',
     openerUrl: 'https://www.canva.com/login',
     sourceWebContentsId: 10,
-    isCanvaAuthUrl: (url) => url.includes('/login'),
+    isCanvaAuthUrl: (/** @type {string} */ url) => url.includes('/login'),
     isOAuthProviderUrl: () => false,
   });
 
@@ -61,8 +63,8 @@ test('creates OAuth popup initial state for external provider', () => {
     startUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     openerUrl: 'https://www.canva.com/login',
     sourceWebContentsId: null,
-    isCanvaAuthUrl: (url) => url.includes('canva.com/login'),
-    isOAuthProviderUrl: (url) => url.includes('accounts.google.com'),
+    isCanvaAuthUrl: (/** @type {string} */ url) => url.includes('canva.com/login'),
+    isOAuthProviderUrl: (/** @type {string} */ url) => url.includes('accounts.google.com'),
   });
 
   assert.equal(entry.startedOnCanvaAuth, true);

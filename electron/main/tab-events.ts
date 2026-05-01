@@ -2,6 +2,43 @@
 
 // @ts-check
 
+export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+export type NavigationDecision = { category: string; kind: string };
+export type PreventableEvent = { preventDefault(): void };
+export type WebContentsLike = {
+  id: number;
+  getURL(): string;
+  focus(): void;
+  loadURL(url: string): Promise<void> | void;
+  executeJavaScript(code: string): Promise<unknown>;
+  insertCSS(css: string): Promise<unknown>;
+  setWindowOpenHandler(handler: (details: { url: string; disposition?: string; frameName?: string }) => { action: 'allow' | 'deny'; overrideBrowserWindowOptions?: Record<string, unknown> }): void;
+  on(event: string, listener: (...args: any[]) => void): unknown;
+};
+export type TabEntry = { id: number; title: string; url: string; favicon: string | null; view: { webContents: WebContentsLike } };
+type AttachTabEventHandlersHelpers = {
+  appName: string;
+  appUrl: string;
+  classifyNavigationRequest: (request: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => NavigationDecision;
+  classifyWindowOpenRequest: (request: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => NavigationDecision;
+  closeTab: (id: number) => void;
+  createTab: (url?: string, options?: { activate?: boolean; isHome?: boolean }) => unknown;
+  debugLog: DebugLog;
+  isBlankPopupUrl: (url: string) => boolean;
+  isCanvaAuthUrl: (url: string) => boolean;
+  isCanvaUrl: (url: string) => boolean;
+  isSafeExternalUrl: (url: string) => boolean;
+  oauthHelpers: {
+    popupWindowOptions(shellBackgroundColor: () => string): Record<string, unknown>;
+    registerAuthPopupWindow(window: unknown, url: string, options: Record<string, unknown>): void;
+    openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number): void;
+  };
+  shell: { openExternal(url: string): unknown };
+  shellBackgroundColor: () => string;
+  switchRelativeTab: (step: number) => void;
+  broadcastTabsState: () => void;
+};
+
 /**
  * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
  * @typedef {{ category: string, kind: string }} NavigationDecision
@@ -27,7 +64,7 @@
  * @param {unknown} sourceId
  * @returns {boolean}
  */
-function isKnownUpstreamFedCmWarning(message, sourceId) {
+function isKnownUpstreamFedCmWarning(message: unknown, sourceId: unknown): boolean {
   if (!String(message || '').includes('[GSI_LOGGER]') || !String(message || '').includes('FedCM')) {
     return false;
   }
@@ -65,7 +102,7 @@ function isKnownUpstreamFedCmWarning(message, sourceId) {
  * }} helpers
  * @returns {void}
  */
-function attachTabEventHandlers(tab, helpers) {
+export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHandlersHelpers): void {
   const {
     appName,
     appUrl,
@@ -88,7 +125,7 @@ function attachTabEventHandlers(tab, helpers) {
   debugLog('view', 'attach-handlers', `tab=${tab.id}`);
   const wc = tab.view.webContents;
 
-  wc.setWindowOpenHandler(({ url, disposition, frameName }) => {
+  wc.setWindowOpenHandler(({ url, disposition, frameName }: { url: string; disposition?: string; frameName?: string }) => {
     const openerUrl = wc.getURL();
     const request = classifyWindowOpenRequest({ url, openerUrl, disposition, frameName });
     debugLog(request.category, 'tab-window-open', `tab=${tab.id}`, `kind=${request.kind}`, url || 'about:blank', disposition || 'unknown', frameName || '');
@@ -117,7 +154,7 @@ function attachTabEventHandlers(tab, helpers) {
     return { action: 'deny' };
   });
 
-  wc.on('did-create-window', (window, details) => {
+  wc.on('did-create-window', (window: unknown, details: any) => {
     const openerUrl = details.referrer?.url || wc.getURL();
     const request = classifyWindowOpenRequest({
       url: details.url || 'about:blank',
@@ -133,7 +170,7 @@ function attachTabEventHandlers(tab, helpers) {
     });
   });
 
-  wc.on('will-navigate', (event, url) => {
+  wc.on('will-navigate', (event: PreventableEvent, url: string) => {
     const request = classifyNavigationRequest({
       url,
       openerUrl: wc.getURL(),
@@ -179,14 +216,14 @@ function attachTabEventHandlers(tab, helpers) {
   wc.on('did-navigate', syncNavigation);
   wc.on('did-navigate-in-page', syncNavigation);
 
-  wc.on('page-title-updated', (event, title) => {
+  wc.on('page-title-updated', (event: PreventableEvent, title: string) => {
     debugLog('tabs:view', 'title-updated', `tab=${tab.id}`, title || appName);
     event.preventDefault();
     tab.title = title || appName;
     broadcastTabsState();
   });
 
-  wc.on('page-favicon-updated', (_event, favicons) => {
+  wc.on('page-favicon-updated', (_event: unknown, favicons: string[]) => {
     debugLog('tabs:view', 'favicon-updated', `tab=${tab.id}`, favicons?.[0] || 'none');
     tab.favicon = favicons?.[0] || null;
     broadcastTabsState();
@@ -200,11 +237,11 @@ function attachTabEventHandlers(tab, helpers) {
     `).catch(() => {});
   });
 
-  wc.on('did-frame-finish-load', (_event, isMainFrame, processId, routingId) => {
+  wc.on('did-frame-finish-load', (_event: unknown, isMainFrame: boolean, processId: number, routingId: number) => {
     debugLog('view', 'frame-load', `tab=${tab.id}`, isMainFrame ? 'main' : 'sub', processId, routingId);
   });
 
-  wc.on('console-message', (event, legacyLevel, legacyMessage, legacyLine, legacySourceId) => {
+  wc.on('console-message', (event: any, legacyLevel: unknown, legacyMessage: string, legacyLine: unknown, legacySourceId: string) => {
     const level = event.level ?? legacyLevel;
     const message = event.message ?? legacyMessage;
     const lineNumber = event.lineNumber ?? legacyLine;
@@ -254,7 +291,7 @@ function attachTabEventHandlers(tab, helpers) {
     `).catch(() => {});
   });
 
-  wc.on('before-input-event', (event, input) => {
+  wc.on('before-input-event', (event: PreventableEvent, input: any) => {
 
     debugLog(`tabs:input:${tab.id}`, 'before-input', input.type, input.key || '');
     const ctrlOrCmd = input.control || input.meta;

@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.4.11-dev.16] - 2026-05-01
+
+### Changed
+
+- Converted shell, tabs, OAuth and window-open policy main-process modules to TypeScript.
+- Expanded runtime build checks for DEV15 and DEV16 converted modules.
+- Preserved CommonJS runtime exports during the TypeScript migration.
+
+### Fixed
+
+- Preserved OAuth popup navigation and callback handling during TypeScript conversion.
+- Preserved toolbar and tab-state broadcasting during TypeScript conversion.
+- Preserved unsafe external URL blocking after conversion.
+- Preserved current LTCode EyeDropper flow and scoped snapshot/reinjection behavior.
+
+### Notes
+
+- `electron/main/index.js` remains JavaScript until DEV17.
+- Preload modules remain JavaScript until DEV18.
+- CL-EyeDropper is planned but not implemented in DEV16.
+- Flatpak system/user scope behavior is unchanged.
+
 ## [1.4.11-dev.15] - 2026-05-01
 
 ### Added

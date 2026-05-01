@@ -2,6 +2,25 @@
 
 // @ts-check
 
+export type NavigationKind = 'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external';
+export type WindowOpenCategory = 'oauth' | 'tabs';
+export type WindowOpenKind = 'oauth-popup' | 'internal-tab' | 'blank-window' | 'blocked-external' | 'external-browser';
+export type WindowOpenInput = {
+  url?: string;
+  openerUrl?: string;
+  disposition?: string;
+  frameName?: string;
+};
+export type NavigationClassification = {
+  kind: NavigationKind;
+  url?: string;
+};
+export type ClassifyNavigationRequest = (input: WindowOpenInput) => NavigationClassification;
+export type WindowOpenClassification = {
+  category: WindowOpenCategory;
+  kind: WindowOpenKind;
+};
+
 /**
  * @typedef {'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external'} NavigationKind
  */
@@ -46,12 +65,12 @@
 /**
  * @param {{ classifyNavigationRequest: ClassifyNavigationRequest }} options
  */
-function createWindowOpenPolicy({ classifyNavigationRequest }) {
+export function createWindowOpenPolicy({ classifyNavigationRequest }: { classifyNavigationRequest: ClassifyNavigationRequest }) {
   /**
    * @param {WindowOpenInput} input
    * @returns {WindowOpenClassification}
    */
-  function classifyWindowOpenRequest({ url = '', openerUrl = '', disposition = '', frameName = '' }) {
+  function classifyWindowOpenRequest({ url = '', openerUrl = '', disposition = '', frameName = '' }: WindowOpenInput): WindowOpenClassification {
     const request = classifyNavigationRequest({ url, openerUrl, disposition, frameName });
     if (request.kind === 'oauth-popup') {
       return { category: 'oauth', kind: request.kind };

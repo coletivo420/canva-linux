@@ -223,6 +223,21 @@ Do not convert in DEV15:
 
 Do not change IPC channel names, logging contracts, GPU backend behavior, Flatpak scope policy, or EyeDropper snapshot scoping.
 
+## DEV16 shell/tabs/OAuth guardrails
+
+DEV16 must not weaken navigation, OAuth, tab-state, toolbar or EyeDropper reinjection behavior.
+
+Do not:
+
+- merge OAuth popups into normal Canva tabs;
+- remove shared Canva session behavior;
+- allow unsafe external protocols;
+- remove OAuth callback detection;
+- remove toolbar state broadcasting;
+- remove EyeDropper reinjection after tab navigation;
+- change Flatpak install scope policy;
+- start CL-EyeDropper implementation early.
+
 ## Google Identity Services / FedCM guardrails
 
 Do not silence or monkeypatch Google Identity Services / FedCM warnings by modifying page APIs. If needed, classify them as upstream console warnings while preserving the log.

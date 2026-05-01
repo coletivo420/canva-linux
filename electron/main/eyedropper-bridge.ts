@@ -17,7 +17,7 @@ function resolveRequestingTab(sender: WebContentsLike, findTabByWebContents: Fin
   return findTabByWebContents(sender) || null;
 }
 
-function validateSnapshotRequester(sender: WebContentsLike, tab: TabEntry | null | undefined): boolean {
+function validateSnapshotRequester(sender: WebContentsLike, tab: TabEntry | null | undefined): tab is TabEntry {
   return Boolean(sender && tab && tab.view);
 }
 

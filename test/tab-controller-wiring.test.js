@@ -3,7 +3,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createTabController } = require('../electron/main/tab-controller');
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
+const { createTabController } = loadRuntimeModule('main/tab-controller');
 
 class FakeWebContentsView {
   constructor() {
