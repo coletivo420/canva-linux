@@ -31,7 +31,7 @@ type AttachTabEventHandlersHelpers = {
   oauthHelpers: {
     popupWindowOptions(shellBackgroundColor: () => string): Record<string, unknown>;
     registerAuthPopupWindow(window: unknown, url: string, options: Record<string, unknown>): void;
-    openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number): void;
+    openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number | null): void;
   };
   shell: { openExternal(url: string): unknown };
   shellBackgroundColor: () => string;
