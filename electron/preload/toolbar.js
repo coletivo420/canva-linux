@@ -5,20 +5,6 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // This preload runs with sandbox enabled, so it cannot rely on loading local
 // helper modules via relative require(). Keep the debug transport inline here.
-const DEBUG_CATEGORY_ALIASES = {
-  drag: 'dnd',
-  toolbar: 'tabs:toolbar',
-  'tabs-toolbar': 'tabs:toolbar',
-  'toolbar-tabs': 'tabs:toolbar',
-  'tabs-state': 'tabs:state',
-  state: 'tabs:state',
-  'tab-state': 'tabs:state',
-  'tabs-nav': 'tabs:navigation',
-  'tab-nav': 'tabs:navigation',
-  'tabs-view': 'tabs:view',
-  'tab-view': 'tabs:view',
-};
-
 function normalizeDebugCategory(category = 'app') {
   const raw = String(category || 'app')
     .trim()
@@ -27,49 +13,26 @@ function normalizeDebugCategory(category = 'app') {
     .replace(/\s+/g, '')
     .replace(/:+/g, ':')
     .replace(/^:+|:+$/g, '');
-  return DEBUG_CATEGORY_ALIASES[raw] || raw || 'app';
+  return raw || 'app';
 }
 
-function matchesDebugToken(token, category) {
-  if (!token || !category) return false;
-  if (token === 'all' || token === '*') return true;
-  if (token === category) return true;
-  if (category.startsWith(`${token}:`)) return true;
-  if (token.endsWith('*')) {
-    const prefix = token.slice(0, -1);
-    return prefix ? category.startsWith(prefix) : true;
-  }
-  return false;
+function getDebugLevel() {
+  const explicit = String(process?.env?.CANVA_DEBUG_LEVEL || '').trim();
+  if (explicit === '1' || explicit === '2') return Number(explicit);
+
+  const fallback = String(process?.env?.CANVA_DEBUG || '').trim();
+  if (fallback === '1' || fallback === '2') return Number(fallback);
+
+  return 0;
 }
 
-const DEBUG_SPEC = String(process?.env?.CANVA_DEBUG || '').trim();
-const DEBUG_TOKENS = new Set(
-  DEBUG_SPEC
-    .split(',')
-    .map((item) => normalizeDebugCategory(item))
-    .filter(Boolean)
-);
-
-function debugEnabled(category = 'app') {
-  const normalizedSpec = DEBUG_SPEC.toLowerCase();
-  if (!normalizedSpec || normalizedSpec === '0' || normalizedSpec === 'false') {
-    return false;
-  }
-  const normalized = normalizeDebugCategory(category);
-  if (['1', 'true', 'all', '*'].includes(normalizedSpec)) {
-    return true;
-  }
-  for (const token of DEBUG_TOKENS) {
-    if (matchesDebugToken(token, normalized)) {
-      return true;
-    }
-  }
-  return false;
+function debugEnabled() {
+  return getDebugLevel() > 0;
 }
 
 function debugLog(category, ...args) {
   const normalized = normalizeDebugCategory(category);
-  if (!debugEnabled(normalized)) return;
+  if (!debugEnabled()) return;
   try {
     ipcRenderer.send('wrapper:debug-log', { category: normalized, args, source: 'toolbar-preload' });
   } catch {

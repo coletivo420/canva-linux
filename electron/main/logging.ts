@@ -3,6 +3,18 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+  normalizeArgs,
+  createLogSignature,
+} = require('./logging-normalize');
+
+type StatusLevel = 'ok' | 'warn' | 'critical';
+type LogOptions = { source?: string; level?: StatusLevel };
+type AppLike = { getPath(name: string): string };
+type SafeStorageLike = { getSelectedStorageBackend(): string };
+type DebugLog = (category: string, ...args: unknown[]) => boolean;
+type StatusLogger = (category: string, level: StatusLevel, message: string, options?: { source?: string }) => void;
+
 const LOG_COLORS = {
   ok: '\x1b[32m',
   warn: '\x1b[33m',
@@ -16,74 +28,74 @@ const RELEASE_STATUS = {
     'Window-open logging now distinguishes internal Canva tabs from real OAuth popup flows.',
     'Upload diagnostics now preserve ingress context from drop, paste, picker, and file-bearing network handoff.',
     'OAuth popup diagnostics no longer reference an undefined tab object during popup title or favicon updates.',
+    'Linux no longer disables Electron hardware acceleration by default.',
+    'GPU diagnostics are centralized in current.log.',
   ],
   validated: [
     'Application startup on Linux Wayland.',
     'Persistent session initialization and fixed Home tab shell behavior.',
     'Custom eyedropper behavior preserved after the global debug expansion.',
     'Host drag-and-drop into the Canva editor on Wayland with a real file drop.',
+    'GPU backend selection with CANVA_GPU_BACKEND=auto,opengl,vulkan,software,force.',
+    'Flatpak DRI access and Chromium GPU feature status logging.',
   ],
   underObservation: [
     'Host file picker continuation and clipboard-driven imports inside Canva.',
     'OAuth popup completion paths after the WebContentsView migration with a clean local session.',
     'Non-fatal DBus, VAAPI, and compositor warnings that do not block startup.',
+    'Vulkan/ANGLE behavior across Intel, AMD, NVIDIA, Wayland, and X11.',
   ],
 };
 
-function formatTerminalPrefix({ category, source = 'main', level = 'ok' }) {
+function errorMessage(error: unknown): string {
+  return error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+    ? error.message
+    : String(error);
+}
+
+function formatTerminalPrefix({ category, source = 'main', level = 'ok' }: { category: string; source?: string; level?: StatusLevel }): string {
   const prefix = `[canva:${source}:${category}]`;
   const color = LOG_COLORS[level];
   if (!color) return prefix;
   return `${color}${prefix}${LOG_COLORS.reset}`;
 }
 
-function formatFilePrefix({ category, source = 'main', level = 'ok' }) {
+function formatFilePrefix({ category, source = 'main', level = 'ok' }: { category: string; source?: string; level?: StatusLevel }): string {
   return `[canva:${source}:${category}:${level}]`;
 }
 
-function formatDebugList(items = []) {
+function formatDebugList(items: string[] = []): string {
   return items.map((item, index) => `${index + 1}.${item}`).join(' | ');
 }
 
-function createCentralLogger({ app }) {
-  let logFilePath = null;
+function createCentralLogger({ app }: { app: AppLike }) {
+  let logFilePath: string | null = null;
+  let lastDebugSignature: string | null = null;
 
-  function normalizeArgs(args = []) {
-    return args.map((value) => {
-      if (typeof value === 'string') return value;
-      if (value instanceof Error) return value.stack || value.message || String(value);
-      try {
-        return JSON.stringify(value);
-      } catch {
-        return String(value);
-      }
-    });
-  }
-
-  function appendFileLine(prefix, args) {
+  function appendFileLine(prefix: string, normalizedArgs: string[]): void {
     if (!logFilePath) return;
-    const line = `${new Date().toISOString()} ${prefix} ${normalizeArgs(args).join(' ')}\n`;
+    const line = `${new Date().toISOString()} ${prefix} ${normalizedArgs.join(' ')}\n`;
     try {
       fs.appendFileSync(logFilePath, line, 'utf8');
     } catch {}
   }
 
-  function write(level, prefix, args) {
+  function write(level: StatusLevel, prefix: string, normalizedArgs: string[]): void {
     if (level === 'critical') {
-      console.error(prefix, ...args);
+      console.error(prefix, ...normalizedArgs);
       return;
     }
     if (level === 'warn') {
-      console.warn(prefix, ...args);
+      console.warn(prefix, ...normalizedArgs);
       return;
     }
-    console.log(prefix, ...args);
+    console.log(prefix, ...normalizedArgs);
   }
 
-  function initLogFile() {
-    const logsDir = path.join(app.getPath('userData'), 'logs');
-    const currentLogPath = path.join(logsDir, 'current.log');
-    fs.mkdirSync(logsDir, { recursive: true });
+  function initLogFile(): string {
+    const logsDirPath = path.join(app.getPath('userData'), 'logs');
+    const currentLogPath = path.join(logsDirPath, 'current.log');
+    fs.mkdirSync(logsDirPath, { recursive: true });
     if (fs.existsSync(currentLogPath)) {
       fs.unlinkSync(currentLogPath);
     }
@@ -92,18 +104,26 @@ function createCentralLogger({ app }) {
     return currentLogPath;
   }
 
-  function logDebug(category, args = [], { source = 'main', level = 'ok' } = {}) {
+  function logDebug(category: string, args: unknown[] = [], { source = 'main', level = 'ok' }: LogOptions = {}): void {
+    const normalizedArgs = normalizeArgs(args);
+    const signature = createLogSignature([source, category, level, ...normalizedArgs]);
+    if (signature === lastDebugSignature) {
+      return;
+    }
+    lastDebugSignature = signature;
+
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
-    write(level, terminalPrefix, args);
-    appendFileLine(filePrefix, args);
+    write(level, terminalPrefix, normalizedArgs);
+    appendFileLine(filePrefix, normalizedArgs);
   }
 
-  function logStatus(category, level, message, { source = 'main' } = {}) {
+  function logStatus(category: string, level: StatusLevel, message: string, { source = 'main' }: { source?: string } = {}): void {
+    const normalizedArgs = normalizeArgs([message]);
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
-    write(level, terminalPrefix, [message]);
-    appendFileLine(filePrefix, [message]);
+    write(level, terminalPrefix, normalizedArgs);
+    appendFileLine(filePrefix, normalizedArgs);
   }
 
   return {
@@ -116,7 +136,19 @@ function createCentralLogger({ app }) {
   };
 }
 
-function createStatusLogger({ app, safeStorage, debugLog, logStatus, appVersion }) {
+function createStatusLogger({
+  app,
+  safeStorage,
+  debugLog,
+  logStatus,
+  appVersion,
+}: {
+  app: AppLike;
+  safeStorage: SafeStorageLike;
+  debugLog: DebugLog;
+  logStatus: StatusLogger;
+  appVersion: string;
+}) {
   function logReleaseStatus() {
     debugLog('startup', 'release', `version=${appVersion}`, `downloads=${app.getPath('downloads')}`);
     debugLog('startup', 'corrected', formatDebugList(RELEASE_STATUS.corrected));
@@ -131,7 +163,7 @@ function createStatusLogger({ app, safeStorage, debugLog, logStatus, appVersion 
     try {
       backend = safeStorage.getSelectedStorageBackend();
     } catch (error) {
-      logStatus('session', 'warn', `credential-storage-backend-error WARNING: ${error.message}`);
+      logStatus('session', 'warn', `credential-storage-backend-error WARNING: ${errorMessage(error)}`);
       return;
     }
 
@@ -162,6 +194,15 @@ function createStatusLogger({ app, safeStorage, debugLog, logStatus, appVersion 
     logStatus,
   };
 }
+
+export {
+  createCentralLogger,
+  createStatusLogger,
+  errorMessage,
+  formatDebugList,
+  formatFilePrefix,
+  formatTerminalPrefix,
+};
 
 module.exports = {
   createCentralLogger,

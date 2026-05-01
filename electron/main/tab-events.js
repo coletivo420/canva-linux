@@ -1,8 +1,70 @@
 'use strict';
 
+// @ts-check
+
+/**
+ * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
+ * @typedef {{ category: string, kind: string }} NavigationDecision
+ * @typedef {{ preventDefault(): void }} PreventableEvent
+ * @typedef {{
+ *   id: number;
+ *   getURL(): string;
+ *   focus(): void;
+ *   loadURL(url: string): Promise<void> | void;
+ *   executeJavaScript(code: string): Promise<unknown>;
+ *   insertCSS(css: string): Promise<unknown>;
+ *   setWindowOpenHandler(handler: (details: { url: string, disposition?: string, frameName?: string }) => { action: 'allow' | 'deny', overrideBrowserWindowOptions?: Record<string, unknown> }): void;
+ *   on(event: string, listener: (...args: any[]) => void): unknown;
+ * }} WebContentsLike
+ * @typedef {{ id: number, title: string, url: string, favicon: string | null, view: { webContents: WebContentsLike } }} TabEntry
+ */
+
 // Attach all BrowserView/WebContents event wiring for a single Canva tab.
 // This module exists so tab lifecycle policy can evolve without forcing the
 // main entrypoint to keep every navigation and keyboard branch inline.
+/**
+ * @param {unknown} message
+ * @param {unknown} sourceId
+ * @returns {boolean}
+ */
+function isKnownUpstreamFedCmWarning(message, sourceId) {
+  if (!String(message || '').includes('[GSI_LOGGER]') || !String(message || '').includes('FedCM')) {
+    return false;
+  }
+
+  try {
+    return new URL(String(sourceId || '')).hostname === 'static.canva.com';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * @param {TabEntry} tab
+ * @param {{
+ *   appName: string;
+ *   appUrl: string;
+ *   classifyNavigationRequest: (request: { url: string, openerUrl?: string, disposition?: string, frameName?: string }) => NavigationDecision;
+ *   classifyWindowOpenRequest: (request: { url: string, openerUrl?: string, disposition?: string, frameName?: string }) => NavigationDecision;
+ *   closeTab: (id: number) => void;
+ *   createTab: (url?: string, options?: { activate?: boolean, isHome?: boolean }) => unknown;
+ *   debugLog: DebugLog;
+ *   isBlankPopupUrl: (url: string) => boolean;
+ *   isCanvaAuthUrl: (url: string) => boolean;
+ *   isCanvaUrl: (url: string) => boolean;
+ *   isSafeExternalUrl: (url: string) => boolean;
+ *   oauthHelpers: {
+ *     popupWindowOptions(shellBackgroundColor: () => string): Record<string, unknown>;
+ *     registerAuthPopupWindow(window: unknown, url: string, options: Record<string, unknown>): void;
+ *     openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number): void;
+ *   };
+ *   shell: { openExternal(url: string): unknown };
+ *   shellBackgroundColor: () => string;
+ *   switchRelativeTab: (step: number) => void;
+ *   broadcastTabsState: () => void;
+ * }} helpers
+ * @returns {void}
+ */
 function attachTabEventHandlers(tab, helpers) {
   const {
     appName,
@@ -142,8 +204,16 @@ function attachTabEventHandlers(tab, helpers) {
     debugLog('view', 'frame-load', `tab=${tab.id}`, isMainFrame ? 'main' : 'sub', processId, routingId);
   });
 
-  wc.on('console-message', (_event, level, message, line, sourceId) => {
-    debugLog(`tabs:console:${tab.id}`, 'console', `level=${level}`, `line=${line}`, sourceId || 'inline', message);
+  wc.on('console-message', (event, legacyLevel, legacyMessage, legacyLine, legacySourceId) => {
+    const level = event.level ?? legacyLevel;
+    const message = event.message ?? legacyMessage;
+    const lineNumber = event.lineNumber ?? legacyLine;
+    const sourceId = event.sourceId ?? legacySourceId;
+
+    debugLog(`tabs:console:${tab.id}`, 'console', `level=${level}`, `line=${lineNumber}`, sourceId || 'inline', message);
+    if (isKnownUpstreamFedCmWarning(message, sourceId)) {
+      debugLog('tabs:console', 'upstream-fedcm-warning', `tab=${tab.id}`, 'source=static.canva.com', message);
+    }
     if (message.includes('canva-preload') || message.includes('EyeDropper')) {
       debugLog('eyedropper:diagnostics', 'console-intercept', `tab=${tab.id}`, message);
     }

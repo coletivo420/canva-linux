@@ -4,8 +4,14 @@
 const fs = require('fs');
 const path = require('path');
 
+const ts = require('typescript');
+
 const repoRoot = path.resolve(__dirname, '..');
-const outputFile = path.join(repoRoot, 'electron', 'preload', 'canva.bundle.js');
+const useBuildOutput = process.argv.includes('--build-output');
+const runtimeRoot = useBuildOutput
+  ? path.join(repoRoot, '.build')
+  : repoRoot;
+const outputFile = path.join(runtimeRoot, 'electron', 'preload', 'canva.bundle.js');
 
 const entryModule = 'electron/preload/canva.js';
 const moduleIds = [
@@ -20,6 +26,47 @@ const moduleIds = [
   'electron/preload/canva.js',
 ];
 
+function sourceCandidates(id) {
+  if (useBuildOutput || !id.endsWith('.js')) {
+    return [id];
+  }
+
+  return [id, id.replace(/\.js$/, '.ts')];
+}
+
+function resolveSourceModule(id) {
+  for (const candidate of sourceCandidates(id)) {
+    const file = path.join(runtimeRoot, candidate);
+    if (fs.existsSync(file)) {
+      return { id: candidate, file };
+    }
+  }
+
+  return {
+    id,
+    file: path.join(runtimeRoot, id),
+  };
+}
+
+function readModuleSource(id) {
+  const sourceModule = resolveSourceModule(id);
+  const source = fs.readFileSync(sourceModule.file, 'utf8');
+
+  if (!sourceModule.id.endsWith('.ts')) {
+    return source;
+  }
+
+  return ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2022,
+      esModuleInterop: true,
+      sourceMap: false,
+    },
+    fileName: sourceModule.file,
+  }).outputText;
+}
+
 function indentSource(source) {
   return source
     .split('\n')
@@ -28,7 +75,7 @@ function indentSource(source) {
 }
 
 function moduleWrapper(id) {
-  const source = fs.readFileSync(path.join(repoRoot, id), 'utf8');
+  const source = readModuleSource(id);
 
   return [
     `  ${JSON.stringify(id)}: function moduleFactory(module, exports, require) {`,

@@ -1,15 +1,35 @@
 'use strict';
 
+// @ts-check
+
+/**
+ * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
+ * @typedef {{ id: number, source: string, timestamp: number, files?: number, types?: string, target?: string, fileSummary?: string, kinds?: string }} UploadIngress
+ * @typedef {{ files: number, fileSummary: string, items: string, kinds: string, types: string, dropEffect: string, effectAllowed: string, target: string }} DataTransferSummary
+ * @typedef {{ name?: string, type?: string, size?: number }} FileLike
+ * @typedef {{ files?: ArrayLike<FileLike>, items?: ArrayLike<{ kind?: string, type?: string }>, types?: ArrayLike<string>, dropEffect?: string, effectAllowed?: string }} DataTransferLike
+ * @typedef {Window & typeof globalThis & { __canvaUploadIngressCounter?: number, __canvaLastUploadIngress?: UploadIngress, __canvaDragDiagnosticsInstalled?: boolean, showOpenFilePicker?: ((...args: unknown[]) => Promise<unknown>) & { __canvaDebugWrapped?: boolean } }} UploadDiagnosticsScope
+ */
+
+/**
+ * @param {EventTarget | null | undefined | { tagName?: unknown, id?: unknown, className?: unknown }} target
+ * @returns {string}
+ */
 function describeDragTarget(target) {
   if (!target || typeof target !== 'object') return 'unknown';
-  const tagName = target.tagName ? String(target.tagName).toLowerCase() : 'node';
-  const id = target.id ? `#${target.id}` : '';
-  const className = typeof target.className === 'string' && target.className.trim()
-    ? `.${target.className.trim().split(/\s+/).slice(0, 3).join('.')}`
+  const element = /** @type {{ tagName?: unknown, id?: unknown, className?: unknown }} */ (target);
+  const tagName = element.tagName ? String(element.tagName).toLowerCase() : 'node';
+  const id = element.id ? `#${element.id}` : '';
+  const className = typeof element.className === 'string' && element.className.trim()
+    ? `.${element.className.trim().split(/\s+/).slice(0, 3).join('.')}`
     : '';
   return `${tagName}${id}${className}`;
 }
 
+/**
+ * @param {EventTarget | null | undefined} target
+ * @returns {{ accept: string, multiple: string, webkitdirectory: string, target: string } | null}
+ */
 function describeFileInput(target) {
   if (!(target instanceof HTMLInputElement) || target.type !== 'file') {
     return null;
@@ -22,12 +42,26 @@ function describeFileInput(target) {
   };
 }
 
+/**
+ * @returns {UploadDiagnosticsScope}
+ */
+function getUploadDiagnosticsScope() {
+  return /** @type {UploadDiagnosticsScope} */ (globalThis);
+}
+
+/**
+ * @returns {number}
+ */
 function nextUploadIngressId() {
-  const scope = globalThis || window;
+  const scope = getUploadDiagnosticsScope();
   scope.__canvaUploadIngressCounter = (scope.__canvaUploadIngressCounter || 0) + 1;
   return scope.__canvaUploadIngressCounter;
 }
 
+/**
+ * @param {FileLike | null | undefined} file
+ * @returns {string}
+ */
 function formatFileDescriptor(file) {
   if (!file) return 'unknown';
   const name = typeof file.name === 'string' && file.name ? file.name : 'blob';
@@ -36,6 +70,11 @@ function formatFileDescriptor(file) {
   return `${name}:${type}:${size}`;
 }
 
+/**
+ * @param {ArrayLike<FileLike> | null | undefined} files
+ * @param {number} [limit]
+ * @returns {string}
+ */
 function summarizeFiles(files, limit = 3) {
   if (!files || typeof files.length !== 'number' || files.length < 1) return 'none';
   return Array.from(files)
@@ -44,6 +83,10 @@ function summarizeFiles(files, limit = 3) {
     .join(',');
 }
 
+/**
+ * @param {DataTransferLike | null | undefined} dataTransfer
+ * @returns {string}
+ */
 function summarizeClipboardKinds(dataTransfer) {
   const kinds = new Set();
   const types = dataTransfer?.types ? Array.from(dataTransfer.types) : [];
@@ -71,8 +114,13 @@ function summarizeClipboardKinds(dataTransfer) {
   return kinds.size ? Array.from(kinds).join(',') : 'none';
 }
 
+/**
+ * @param {string} source
+ * @param {Partial<UploadIngress>} [info]
+ * @returns {UploadIngress}
+ */
 function rememberUploadIngress(source, info = {}) {
-  const scope = globalThis || window;
+  const scope = getUploadDiagnosticsScope();
   // Persist the last ingress source so network logs can be correlated later.
   const ingress = {
     id: nextUploadIngressId(),
@@ -84,8 +132,11 @@ function rememberUploadIngress(source, info = {}) {
   return ingress;
 }
 
+/**
+ * @returns {string}
+ */
 function recentUploadIngressSummary() {
-  const scope = globalThis || window;
+  const scope = getUploadDiagnosticsScope();
   const ingress = scope.__canvaLastUploadIngress;
   if (!ingress || !ingress.timestamp) return 'id=none source=none';
   const ageMs = Math.max(0, Date.now() - ingress.timestamp);
@@ -99,13 +150,42 @@ function recentUploadIngressSummary() {
   ].join(' ');
 }
 
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorName(error) {
+  return error && typeof error === 'object' && 'name' in error && typeof error.name === 'string'
+    ? error.name
+    : 'Error';
+}
+
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorMessage(error) {
+  return error && typeof error === 'object' && 'message' in error && typeof error.message === 'string'
+    ? error.message
+    : String(error || '');
+}
+
 // Keep upload diagnostics in a dedicated module so Canva preload logic can stay
 // focused on product behavior while this observability layer evolves separately.
+/**
+ * @param {{ debugEnabled: (category?: string) => boolean, debugLog: DebugLog }} options
+ * @returns {void}
+ */
 function installUploadDiagnostics({ debugEnabled, debugLog }) {
-  const scope = globalThis || window;
+  const scope = getUploadDiagnosticsScope();
   if (scope.__canvaDragDiagnosticsInstalled) return;
   scope.__canvaDragDiagnosticsInstalled = true;
 
+  /**
+   * @param {DataTransferLike | null | undefined} dataTransfer
+   * @param {EventTarget | null | undefined} target
+   * @returns {DataTransferSummary}
+   */
   const summarizeDataTransfer = (dataTransfer, target) => {
     const files = dataTransfer?.files ? Array.from(dataTransfer.files) : [];
     const items = dataTransfer?.items ? Array.from(dataTransfer.items) : [];
@@ -122,6 +202,11 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
     };
   };
 
+  /**
+   * @param {string} source
+   * @param {DataTransferSummary} info
+   * @returns {UploadIngress | null}
+   */
   const recordIngressFromDataTransfer = (source, info) => {
     if (!info || (info.files < 1 && (!info.items || info.items === 'none') && (!info.types || info.types === 'none'))) return null;
     return rememberUploadIngress(source, {
@@ -133,6 +218,10 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
     });
   };
 
+  /**
+   * @param {string} label
+   * @param {DragEvent} event
+   */
   const logDrag = (label, event) => {
     if (!debugEnabled('dnd')) return;
     const info = summarizeDataTransfer(event.dataTransfer, event.target);
@@ -155,6 +244,11 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
     );
   };
 
+  /**
+   * @param {string} label
+   * @param {EventTarget | null | undefined} target
+   * @param {{ remember?: boolean }} [options]
+   */
   const logUploadInput = (label, target, { remember = true } = {}) => {
     const info = describeFileInput(target);
     if (!info) return;
@@ -221,6 +315,7 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
 
   if (typeof scope.showOpenFilePicker === 'function' && !scope.showOpenFilePicker.__canvaDebugWrapped) {
     const original = scope.showOpenFilePicker.bind(scope);
+    /** @type {typeof scope.showOpenFilePicker} */
     const wrapped = async (...args) => {
       debugLog('upload', 'show-open-file-picker', `args=${args.length}`);
       try {
@@ -228,7 +323,7 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
         debugLog('upload', 'show-open-file-picker-result', `handles=${Array.isArray(handles) ? handles.length : 0}`);
         return handles;
       } catch (error) {
-        debugLog('upload', 'show-open-file-picker-error', error?.name || 'Error', error?.message || '');
+        debugLog('upload', 'show-open-file-picker-error', errorName(error), errorMessage(error));
         throw error;
       }
     };
@@ -239,5 +334,12 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
 }
 
 module.exports = {
+  describeDragTarget,
+  describeFileInput,
+  formatFileDescriptor,
+  summarizeFiles,
+  summarizeClipboardKinds,
+  rememberUploadIngress,
+  recentUploadIngressSummary,
   installUploadDiagnostics,
 };

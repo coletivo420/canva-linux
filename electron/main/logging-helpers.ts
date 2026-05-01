@@ -1,11 +1,41 @@
 'use strict';
 
+type WebContentsLike = {
+  id?: number;
+  getURL?: () => string;
+  isDestroyed?: () => boolean;
+};
+
+type BrowserWindowLike = {
+  id?: number;
+  webContents?: WebContentsLike;
+  isDestroyed?: () => boolean;
+};
+
+type OAuthPopupEntry = {
+  id: number;
+  window?: BrowserWindowLike;
+  sourceWebContentsId?: number | null;
+  startedOnCanvaAuth?: boolean;
+  sawExternalProvider?: boolean;
+  sawAuthorizedCallback?: boolean;
+  completionHandled?: boolean;
+  closeReason?: string;
+};
+
+type TabEntryLike = { id: number };
+type FindTabByWebContents = (webContents: WebContentsLike) => TabEntryLike | null | undefined;
+
 function createLoggingHelpers({
   getMainWindow,
   getAuthPopups,
   getFindTabByWebContents,
+}: {
+  getMainWindow: () => BrowserWindowLike | null | undefined;
+  getAuthPopups: () => Map<number, OAuthPopupEntry>;
+  getFindTabByWebContents: () => FindTabByWebContents | null | undefined;
 }) {
-  function summarizeOauthEntry(entry) {
+  function summarizeOauthEntry(entry: OAuthPopupEntry | null | undefined): string {
     if (!entry) return 'popup=unknown';
 
     return [
@@ -16,7 +46,7 @@ function createLoggingHelpers({
     ].join(' ');
   }
 
-  function windowLabel(window) {
+  function windowLabel(window: BrowserWindowLike | null | undefined): string {
     if (!window) return 'unknown-window';
 
     const mainWindow = getMainWindow();
@@ -33,7 +63,7 @@ function createLoggingHelpers({
     return 'window';
   }
 
-  function webContentsLabel(webContents) {
+  function webContentsLabel(webContents: WebContentsLike | null | undefined): string {
     if (!webContents) return 'unknown-webcontents';
 
     const findTabByWebContents = getFindTabByWebContents();
@@ -50,7 +80,7 @@ function createLoggingHelpers({
       }
     }
 
-    return `wc-${webContents.id}`;
+    return `wc-${webContents.id || 'unknown'}`;
   }
 
   return {
@@ -59,6 +89,16 @@ function createLoggingHelpers({
     windowLabel,
   };
 }
+
+export {
+  createLoggingHelpers,
+};
+
+export type {
+  BrowserWindowLike,
+  OAuthPopupEntry,
+  WebContentsLike,
+};
 
 module.exports = {
   createLoggingHelpers,

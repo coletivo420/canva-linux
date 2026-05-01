@@ -1,12 +1,38 @@
 'use strict';
 
+// @ts-check
+
 const { ipcRenderer } = require('electron');
 
 const { createDebugTools } = require('../shared/debug');
 
+/**
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+function normalizeEyeDropperCategoryHint(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return null;
+  if (raw.startsWith('eyedropper:')) return raw;
+
+  if (['bridge', 'flow', 'wrapper', 'routing', 'capture', 'library', 'lib'].includes(raw)) {
+    if (raw === 'capture') return 'eyedropper:routing';
+    return `eyedropper:${raw === 'lib' ? 'library' : raw}`;
+  }
+
+  return null;
+}
+
 // Centralize preload-side debug routing so Canva-specific modules can emit
 // diagnostics without owning the IPC transport details.
-function createPreloadDebug({ spec, source = 'preload' }) {
+/**
+ * @param {{ source?: string }} options
+ */
+function createPreloadDebug({ source = 'preload' }) {
+  /**
+   * @param {string} category
+   * @param {...unknown} args
+   */
   function routeDebug(category, ...args) {
     try {
       ipcRenderer.send('wrapper:debug-log', { category, args, source });
@@ -18,33 +44,24 @@ function createPreloadDebug({ spec, source = 'preload' }) {
   }
 
   const { debugEnabled, debugLog } = createDebugTools({
-    spec,
     emit(category, args) {
       routeDebug(category, ...args);
     },
   });
 
+  /**
+   * @param {...unknown} args
+   */
   function logEyeDropper(...args) {
     let category = 'eyedropper';
     let payload = args;
-    const candidate = typeof args[0] === 'string' ? normalizeCategoryHint(args[0]) : null;
+    const candidate = typeof args[0] === 'string' ? normalizeEyeDropperCategoryHint(args[0]) : null;
     if (candidate) {
       category = candidate;
       payload = args.slice(1);
     }
-    if (!debugEnabled(category) && !debugEnabled('eyedropper')) return;
+    if (!debugEnabled()) return;
     routeDebug(category, ...payload);
-  }
-
-  function normalizeCategoryHint(value) {
-    const raw = String(value || '').trim().toLowerCase();
-    if (!raw) return null;
-    if (raw.startsWith('eyedropper:')) return raw;
-    if (['bridge', 'flow', 'wrapper', 'routing', 'capture', 'library', 'lib'].includes(raw)) {
-      if (raw === 'capture') return 'eyedropper:routing';
-      return `eyedropper:${raw === 'lib' ? 'library' : raw}`;
-    }
-    return null;
   }
 
   return {
@@ -56,4 +73,5 @@ function createPreloadDebug({ spec, source = 'preload' }) {
 
 module.exports = {
   createPreloadDebug,
+  normalizeEyeDropperCategoryHint,
 };

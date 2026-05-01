@@ -1,5 +1,58 @@
 'use strict';
 
+// @ts-check
+
+/**
+ * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
+ */
+
+/**
+ * @typedef {{
+ *   shouldUseDarkColors: boolean;
+ * }} NativeThemeLike
+ */
+
+/**
+ * @typedef {{
+ *   id?: number;
+ *   loadURL(url: string): Promise<void> | void;
+ *   getURL(): string;
+ *   isDestroyed(): boolean;
+ *   send(channel: string, ...args: unknown[]): void;
+ *   on(event: string, listener: (...args: any[]) => void): unknown;
+ * }} WebContentsLike
+ */
+
+/**
+ * @typedef {{
+ *   webContents: WebContentsLike;
+ *   setVisible(visible: boolean): void;
+ * }} WebContentsViewLike
+ */
+
+/**
+ * @typedef {{
+ *   show(): void;
+ *   once(event: string, listener: (...args: unknown[]) => void): unknown;
+ *   on(event: string, listener: (...args: unknown[]) => void): unknown;
+ *   loadURL(url: string): Promise<void> | void;
+ *   getContentSize(): [number, number];
+ *   setBackgroundColor(color: string): void;
+ *   contentView: { children?: unknown[], addChildView(view: unknown): void, removeChildView(view: unknown): void };
+ * }} BrowserWindowLike
+ */
+
+/**
+ * @param {{
+ *   appIconPath: string;
+ *   appName: string;
+ *   BrowserWindow: new (options: Record<string, unknown>) => BrowserWindowLike;
+ *   debugLog: DebugLog;
+ *   layoutViews: () => void;
+ *   nativeTheme: NativeThemeLike;
+ *   WebContentsView: new (options: Record<string, unknown>) => WebContentsViewLike;
+ * }} options
+ */
 function createShellHelpers({
   appIconPath,
   appName,
@@ -13,6 +66,10 @@ function createShellHelpers({
     return nativeTheme.shouldUseDarkColors ? '#1f2329' : '#f6f7fb';
   }
 
+  /**
+   * @param {{ setMainWindow(value: BrowserWindowLike | null): void }} options
+   * @returns {BrowserWindowLike}
+   */
   function createShellWindow({ setMainWindow }) {
     debugLog('app', 'create-shell-window');
     const mainWindow = new BrowserWindow({
@@ -58,6 +115,17 @@ function createShellHelpers({
     return mainWindow;
   }
 
+  /**
+   * @param {{
+   *   broadcastTabsState(): void;
+   *   ensureTopLevelView(view: WebContentsViewLike): void;
+   *   layoutViews(): void;
+   *   makeToolbarUrl(): string;
+   *   preloadPath: string;
+   *   setToolbarView(value: WebContentsViewLike): void;
+   * }} options
+   * @returns {WebContentsViewLike}
+   */
   function createToolbarView({
     broadcastTabsState,
     ensureTopLevelView,
@@ -95,8 +163,13 @@ function createShellHelpers({
         validatedURL || 'unknown-url'
       );
     });
-    toolbarView.webContents.on('console-message', (_event, level, message, line, sourceId) => {
-      debugLog('tabs:toolbar', 'toolbar-console', `level=${level}`, `line=${line}`, sourceId || 'inline', message);
+    toolbarView.webContents.on('console-message', (event, legacyLevel, legacyMessage, legacyLine, legacySourceId) => {
+      const level = event.level ?? legacyLevel;
+      const message = event.message ?? legacyMessage;
+      const lineNumber = event.lineNumber ?? legacyLine;
+      const sourceId = event.sourceId ?? legacySourceId;
+
+      debugLog('tabs:toolbar', 'toolbar-console', `level=${level}`, `line=${lineNumber}`, sourceId || 'inline', message);
     });
     toolbarView.webContents.on('render-process-gone', (_event, details) => {
       debugLog('tabs:toolbar', 'toolbar-render-process-gone', `reason=${details?.reason || 'unknown'}`, `exitCode=${details?.exitCode ?? 'unknown'}`);

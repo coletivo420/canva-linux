@@ -26,12 +26,12 @@ Canva Linux must keep `ltcodedev/eyedropper` as the canonical custom colorpicker
 Core runtime files:
 
 - `electron/main/index.js` - Electron shell entrypoint, tab model, OAuth popup wiring, persistent session ownership, and credential storage diagnostics.
-- `electron/main/eyedropper-bridge.js` - main-process bridge between the Canva preload eyedropper and BrowserView snapshot capture.
-- `electron/main/ipc.js` - centralized main-process IPC routing for preload debug forwarding and toolbar actions.
-- `electron/main/lifecycle.js` - startup and shutdown lifecycle wiring for session setup, theme hooks, and shell bootstrap.
-- `electron/main/logging.js` - startup/status logging helpers and credential-storage diagnostics.
+- `electron/main/eyedropper-bridge.ts` - main-process bridge between the Canva preload eyedropper and BrowserView snapshot capture.
+- `electron/main/ipc.ts` - centralized main-process IPC routing for preload debug forwarding and toolbar actions.
+- `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring for session setup, theme hooks, and shell bootstrap.
+- `electron/main/logging.ts` - startup/status logging helpers and credential-storage diagnostics.
 - `electron/main/oauth.js` - OAuth popup lifecycle helpers and callback tracking.
-- `electron/main/runtime.js` - Linux runtime hardening, shared session configuration, and storage flushing.
+- `electron/main/runtime.ts` - Linux runtime hardening, shared session configuration, and storage flushing.
 - `electron/main/shell.js` - top-level window and toolbar shell creation helpers.
 - `electron/main/tab-controller.js` - tab creation and orchestration layer that connects shell state, tab events, and shared session wiring.
 - `electron/main/tab-events.js` - BrowserView/WebContents event wiring for tab navigation, popups, shortcuts, and shell policy.
@@ -48,23 +48,23 @@ Core runtime files:
 - `electron/preload/toolbar.js` - toolbar IPC bridge.
 - `electron/ui/toolbar.html` - local toolbar UI.
 - `electron/shared/debug.js` - shared debug category parsing and log gating for main/preload entrypoints.
-- `electron/shared/navigation.js` - shared Canva/OAuth URL classification and trusted-origin checks.
+- `electron/shared/navigation.ts` - shared Canva/OAuth URL classification and trusted-origin checks.
 
 ## Main-process structure
 
 The current main-process split is now the working repository structure:
 
 - `electron/main/index.js` remains the orchestration layer.
-- `electron/main/runtime.js` owns Linux/runtime and shared session setup.
-- `electron/main/lifecycle.js` owns app startup/shutdown wiring.
-- `electron/main/ipc.js` owns main-process IPC handlers.
-- `electron/main/logging.js` owns status output and startup diagnostics.
+- `electron/main/runtime.ts` owns Linux/runtime and shared session setup.
+- `electron/main/lifecycle.ts` owns app startup/shutdown wiring.
+- `electron/main/ipc.ts` owns main-process IPC handlers.
+- `electron/main/logging.ts` owns status output and startup diagnostics.
 - `electron/main/oauth.js` owns popup lifecycle and OAuth callback tracking.
 - `electron/main/tab-controller.js` owns tab creation and composes `tab-events.js` with the lower-level tab helpers.
 - `electron/main/tab-events.js` owns per-tab `webContents` policy and event wiring.
 - `electron/main/tabs.js` owns tab-state helpers and tab shell behavior.
 - `electron/main/shell.js` owns top-level shell window and toolbar creation.
-- `electron/main/eyedropper-bridge.js` owns the snapshot/log bridge used by the custom eyedropper preload flow.
+- `electron/main/eyedropper-bridge.ts` owns the snapshot/log bridge used by the custom eyedropper preload flow.
 
 This split preserves runtime behavior while making future changes safer. `electron/main/index.js` is now primarily a composition root, while the preload delegates debug transport, upload diagnostics, native EyeDropper wrapping, and the bundled `ltcodedev/eyedropper` flow into dedicated modules.
 
@@ -84,6 +84,11 @@ The bundle keeps the maintainable modular source layout while giving Electron a 
 
 `npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts. The canonical install workflow (`./canva-linux.sh --install`) calls `npm run dist`, so it also generates the bundle before packaging. Bundle publication must use a freshly rebuilt Electron output and Flatpak repo; `./canva-linux.sh --bundle` rebuilds both by default. Reusing an existing `repo/` requires the lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` path and should not be used for release publication after source changes.
 
+During the TypeScript migration there are two supported preload bundling modes:
+
+- Source mode: `npm run build:preload` reads from `electron/`, resolves `.js` module IDs, falls back to matching `.ts` source files when needed, and transpiles TypeScript modules before embedding them.
+- Build-output mode: `npm run build:runtime` compiles `electron/**/*.ts` into `.build/electron/**/*.js`, then runs the bundler with `--build-output` so packaging only embeds compiled JavaScript.
+
 ## Runtime guardrails
 
 - External navigation is allowed to leave the app only for explicitly supported URL schemes: `https:`, `http:`, and `mailto:`.
@@ -94,7 +99,7 @@ The bundle keeps the maintainable modular source layout while giving Electron a 
 
 ## Debug output
 
-Terminal debug output is now centralized in `electron/main/logging.js`.
+Terminal debug output is now centralized in `electron/main/logging.ts`.
 
 - Main-process debug entries are emitted with the source prefix `main`.
 - Preload entries are forwarded over IPC and rendered with source prefixes such as `canva-preload` and `toolbar-preload`.
@@ -111,7 +116,7 @@ Packaging/runtime support files:
 - `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
 - `scripts/prepare-flathub-submission.sh` - regenerates submission npm sources and runs submission-path validation checks.
 - `scripts/validate-flathub-submission.sh` - validates submission-manifest structure, offline npm source manifest, and optional Flathub lint.
-- `scripts/build-preload-bundle.js` - dependency-free generated-preload builder used before local start and Electron packaging.
+- `scripts/build-preload-bundle.js` - generated-preload builder used before local start and Electron packaging; source mode also handles converted TypeScript shared modules.
 - `io.github.PirateMaryRead.canva-linux.yml` - Flatpak manifest for local install/bundle/validation workflows.
 - `packaging/flathub/` - Flathub submission workspace (submission manifest, `generated-sources.json`, npm source generator scripts).
 - `docs/PRIVACY.md` - repository privacy and telemetry policy statement.

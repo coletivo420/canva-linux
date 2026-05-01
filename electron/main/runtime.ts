@@ -1,6 +1,34 @@
 'use strict';
 
-function appendDisableFeature(app, featureName) {
+type DebugLog = (category: string, ...args: unknown[]) => boolean;
+type CommandLineLike = {
+  appendSwitch(name: string, value?: string): void;
+  getSwitchValue(name: string): string;
+};
+type ElectronAppLike = {
+  commandLine: CommandLineLike;
+  disableHardwareAcceleration?: () => void;
+  getPath(name: string): string;
+  setDesktopName?: (name: string) => void;
+  setName?: (name: string) => void;
+  setPath(name: string, path: string): void;
+  setAppUserModelId?: (id: string) => void;
+};
+type WebContentsLike = { getURL(): string };
+type PermissionDetailsLike = { requestingOrigin?: string; requestingUrl?: string };
+type BeforeSendHeadersDetailsLike = { requestHeaders: Record<string, string> };
+type DownloadItemLike = { getFilename(): string; setSavePath(path: string): void };
+type SessionLike = {
+  cookies: { flushStore(): Promise<void> };
+  flushStorageData(): Promise<void>;
+  setPermissionRequestHandler(handler: (webContents: WebContentsLike | null | undefined, permission: string, callback: (granted: boolean) => void, details?: PermissionDetailsLike) => void): void;
+  setPermissionCheckHandler(handler: (webContents: WebContentsLike | null | undefined, permission: string, requestingOrigin?: string, details?: PermissionDetailsLike) => boolean): void;
+  webRequest: { onBeforeSendHeaders(handler: (details: BeforeSendHeadersDetailsLike, callback: (response: { requestHeaders: Record<string, string> }) => void) => void): void };
+  on(event: 'will-download', listener: (event: unknown, item: DownloadItemLike) => void): void;
+};
+type PathLike = Pick<typeof import('node:path'), 'join'>;
+
+function appendDisableFeature(app: ElectronAppLike, featureName: string): void {
   const switchName = 'disable-features';
   const currentValue = app.commandLine.getSwitchValue(switchName);
   const features = new Set(
@@ -14,8 +42,8 @@ function appendDisableFeature(app, featureName) {
   app.commandLine.appendSwitch(switchName, Array.from(features).join(','));
 }
 
-function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
-  app.setName('Canva Linux');
+function configureLinuxRuntime({ app, appId, wmClass, path }: { app: ElectronAppLike; appId: string; wmClass: string; path: PathLike }): void {
+  app.setName?.('Canva Linux');
   app.commandLine.appendSwitch('disable-component-update');
   app.commandLine.appendSwitch('disable-domain-reliability');
   app.commandLine.appendSwitch('disable-sync');
@@ -26,15 +54,19 @@ function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
   appendDisableFeature(app, 'Floss');
 
   if (process.platform === 'linux') {
-    app.setDesktopName(`${appId}.desktop`);
+    app.setDesktopName?.(`${appId}.desktop`);
     app.commandLine.appendSwitch('class', wmClass);
     app.commandLine.appendSwitch('font-render-hinting', 'medium');
     app.commandLine.appendSwitch('enable-font-antialiasing');
-    app.disableHardwareAcceleration();
-    app.commandLine.appendSwitch('disable-gpu-compositing');
+
+    if (process.env.CANVA_DISABLE_GPU === '1') {
+      app.disableHardwareAcceleration?.();
+      app.commandLine.appendSwitch('disable-gpu');
+      app.commandLine.appendSwitch('disable-gpu-compositing');
+    }
   }
 
-  if (shouldEnableCaptureVerboseLogging(debugSpec)) {
+  if (shouldEnableCaptureVerboseLogging()) {
     app.commandLine.appendSwitch('enable-logging');
     app.commandLine.appendSwitch('v', '1');
     app.commandLine.appendSwitch(
@@ -51,31 +83,23 @@ function configureLinuxRuntime({ app, appId, debugSpec, wmClass, path }) {
   app.setPath('sessionData', path.join(app.getPath('userData'), 'session'));
 }
 
-function shouldEnableCaptureVerboseLogging(debugSpec) {
-  const raw = String(debugSpec || '').trim().toLowerCase();
-  if (!raw) return false;
-  return raw.split(',').some((token) => {
-    const value = token.trim();
-    return value === '1'
-      || value === 'all'
-      || value === '*'
-      || value === 'eyedropper'
-      || value === 'routing'
-      || value.startsWith('routing:')
-      || value === 'eyedropper-routing'
-      || value.startsWith('eyedropper:')
-      || value === 'capture'
-      || value.startsWith('capture:')
-      || value === 'debug';
-  });
+function shouldEnableCaptureVerboseLogging(): boolean {
+  const level = String(process.env.CANVA_DEBUG_LEVEL || '').trim();
+
+  if (level === '2') return true;
+
+  return String(process.env.CANVA_DEBUG || '').trim() === '2';
 }
 
-async function flushSession(ses) {
+async function flushSession(ses: SessionLike): Promise<void> {
   await ses.cookies.flushStore();
   await ses.flushStorageData();
 }
 
-function sharedWebPreferences(getCanvaSession, extra = {}) {
+function sharedWebPreferences(
+  getCanvaSession: () => SessionLike,
+  extra: Record<string, unknown> = {}
+): Record<string, unknown> & { session: SessionLike; contextIsolation: boolean; sandbox: boolean; nodeIntegration: boolean; spellcheck: boolean } {
   // All Canva surfaces (tabs + OAuth popups) must share the same session.
   return {
     session: getCanvaSession(),
@@ -95,7 +119,15 @@ async function configureSession({
   path,
   partition,
   shouldGrantRemotePermission,
-}) {
+}: {
+  app: Pick<ElectronAppLike, 'getPath'>;
+  debugLog: DebugLog;
+  flushSessionFn?: (session: SessionLike) => Promise<void>;
+  getCanvaSession: () => SessionLike;
+  path: PathLike;
+  partition: string;
+  shouldGrantRemotePermission: (permission: string, origin: string, details: PermissionDetailsLike) => boolean;
+}): Promise<SessionLike> {
   const ses = getCanvaSession();
   debugLog('session', 'configure', partition);
 
@@ -138,9 +170,22 @@ async function configureSession({
   return ses;
 }
 
+export {
+  configureLinuxRuntime,
+  configureSession,
+  flushSession,
+  sharedWebPreferences,
+  shouldEnableCaptureVerboseLogging,
+};
+
+export type {
+  SessionLike,
+};
+
 module.exports = {
   configureLinuxRuntime,
   configureSession,
   flushSession,
   sharedWebPreferences,
+  shouldEnableCaptureVerboseLogging,
 };
