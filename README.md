@@ -2,26 +2,18 @@
 
 A community opensource desktop wrapper for use with Canva.
 
-Canva Linux is community-maintained, open source, and not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd.
 
 ## Status
 
-Project status: Alpha
-Active development line: 0.1.4-dev.X
-
-## Community package status
-
-Canva Linux is a community-maintained open source package for use with Canva. It is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd. References to Canva describe the upstream web service this wrapper is built to access.
-
-## Project status
-
-Canva Linux is currently alpha software.
+Canva Linux is currently **alpha** software.
 
 Active development line:
 
 ```text
 0.1.4-dev.X
 ```
+
+Canva Linux is a community-maintained open source package for use with Canva. It is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd. References to Canva describe the upstream web service this wrapper is built to access.
 
 Historical development references from the previous 1.4.x line map to the alpha line and are kept in the changelog for traceability.
 
@@ -146,14 +138,6 @@ For Fedora 44 or newer, you can alternatively install:
 ```bash
 sudo dnf install nodejs22 npm
 ```
-
-After installing packages, always verify:
-
-```bash
-node -v
-```
-
-The version must be 22 or newer.
 
 ## Log System
 
