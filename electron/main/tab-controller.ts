@@ -27,8 +27,8 @@ export type TabHelpers = {
 };
 export type OAuthHelpers = {
   popupWindowOptions?: (shellBackgroundColor: () => string) => Record<string, unknown>;
-  registerAuthPopupWindow?: Function;
-  openAuthPopupForTab?: Function;
+  registerAuthPopupWindow?: (window: any, startUrl: string, options: any) => any;
+  openAuthPopupForTab?: (url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number | null) => void;
 };
 export type AttachTabEventHandlersLike = (tab: TabEntry, helpers: Record<string, unknown>) => void;
 
