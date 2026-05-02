@@ -37,10 +37,10 @@ This document defines project conventions for AI-assisted development and vibeco
 
 This repository has an explicit runtime directive for Canva color picking:
 
-- always use the bundled `ltcodedev/eyedropper` implementation as the Canva Linux custom colorpicker
+- always use CL-EyeDropper as the Canva Linux custom colorpicker
 - do not introduce or promote native browser color pickers, desktop portals, or Chromium screen-capture flows as the primary Canva colorpicker behavior
 - if a diagnostic or compatibility hook touches `getDisplayMedia`, `getUserMedia`, `showPicker`, or native `EyeDropper`, it must exist only to route Canva back into the bundled custom picker
-- when reviewing regressions, treat divergence away from `ltcodedev/eyedropper` as a bug unless the maintainer explicitly changes this policy
+- when reviewing regressions, treat divergence away from CL-EyeDropper as a bug unless the maintainer explicitly changes this policy
 - remove dormant or not-implemented picker APIs when they are outside the active Canva Linux canvas-based flow
 
 ## Readability conventions

@@ -45,7 +45,7 @@ const { createTabHelpers } = require('./tabs');
 const { createWindowOpenPolicy } = require('./window-open-policy');
 
 const APP_ID = 'io.github.coletivo420.canva-linux';
-const APP_URL = 'https://coletivo420.github.io/canva-linux/';
+const APP_URL = 'https://www.canva.com/';
 const APP_NAME = 'Canva Linux';
 const PARTITION = 'persist:canva';
 const HOME_URL = APP_URL;

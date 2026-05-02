@@ -10,7 +10,7 @@ Expected outcome:
 
 - user-facing runtime behavior remains stable
 - internal module boundaries and debug logging are easier to inspect
-- the Canva editor loads the generated single-file preload bundle and keeps the custom `ltcodedev/eyedropper` path active
+- the Canva editor loads the generated single-file preload bundle and keeps the CL-EyeDropper path active
 
 ## Environment preparation
 
@@ -56,7 +56,7 @@ Expected outcome:
 ## Eyedropper behavior
 
 1. Trigger the Canva eyedropper flow.
-2. Confirm the bundled `ltcodedev/eyedropper` custom picker opens.
+2. Confirm the CL-EyeDropper custom picker opens.
 3. Confirm logs show the wrapper intercepting `EyeDropper.open()` without `module-load-failed` entries for `./debug`, `custom-eyedropper-flow`, or `native-eyedropper-wrapper`.
 4. Confirm `Escape` aborts the picker cleanly.
 5. Confirm a picked color resolves back to Canva without leaving stale overlay UI.

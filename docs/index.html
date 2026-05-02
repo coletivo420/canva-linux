@@ -208,11 +208,12 @@
     <section class="hero" aria-labelledby="title">
       <div class="hero-inner">
         <div class="hero-copy">
-          <p class="eyebrow">Alpha · 0.1.4-dev.22</p>
+          <p class="eyebrow">Alpha · 0.1.4-dev.23</p>
           <h1 id="title">Canva Linux</h1>
           <p class="summary">
             A community-maintained desktop wrapper for using Canva on Linux with persistent sessions,
-            internal tabs, OAuth handling, custom EyeDropper support, and desktop integration.
+            Flatpak workflows, OAuth handling, CL-EyeDropper support, GPU diagnostics, and
+            upload/export compatibility.
           </p>
           <nav class="actions" aria-label="Project links">
             <a class="button primary" href="https://github.com/coletivo420/canva-linux">Repository</a>
@@ -241,27 +242,31 @@
       <div class="feature-grid">
         <article class="feature">
           <h2>Persistent Sessions</h2>
-          <p>Stay logged in across restarts without repeating the sign-in flow.</p>
+          <p>Stay logged in across restarts using persistent Electron/Chromium session storage.</p>
         </article>
         <article class="feature">
-          <h2>Internal Tabs</h2>
-          <p>Manage multiple designs within a single window while keeping the shell focused.</p>
+          <h2>Flatpak Support</h2>
+          <p>Local install, development runs, validation and bundle generation use the same workflow script.</p>
         </article>
         <article class="feature">
           <h2>OAuth Support</h2>
           <p>Secure login flows work through Google, Facebook and other supported providers.</p>
         </article>
         <article class="feature">
-          <h2>Custom EyeDropper</h2>
-          <p>Integrated color picking works in Linux desktop sessions with the project's custom flow.</p>
+          <h2>CL-EyeDropper</h2>
+          <p>Custom Canva Linux EyeDropper integration provides reliable color picking inside the editor.</p>
         </article>
         <article class="feature">
-          <h2>Wayland &amp; X11</h2>
-          <p>Modern display-server support keeps the wrapper usable across common Linux setups.</p>
+          <h2>GPU Diagnostics</h2>
+          <p>Optional debug modes expose startup and rendering diagnostics when troubleshooting.</p>
         </article>
         <article class="feature">
-          <h2>GPU Acceleration</h2>
-          <p>High-performance rendering is enabled by default for a smoother desktop experience.</p>
+          <h2>Upload/Export</h2>
+          <p>File import, upload and download workflows are preserved through Flatpak-friendly behavior.</p>
+        </article>
+        <article class="feature">
+          <h2>Wayland/X11 Support</h2>
+          <p>Designed for modern Wayland sessions with X11 fallback support.</p>
         </article>
       </div>
       <p class="notice">
