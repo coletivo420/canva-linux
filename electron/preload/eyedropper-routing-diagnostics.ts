@@ -5,8 +5,7 @@
 
 // Keep eyedropper routing diagnostics isolated here. These hooks exist only to
 // trace and redirect Canva-facing browser/native picker entrypoints back into
-// the bundled ltcodedev/eyedropper path; they must not become an alternative
-// colorpicker implementation.
+// CL-EyeDropper; they must not become an alternative colorpicker implementation.
 
 /**
  * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog

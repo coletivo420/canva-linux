@@ -56,7 +56,6 @@ requireFile('.build/electron/preload/debug.js');
 requireFile('.build/electron/preload/upload-diagnostics.js');
 requireFile('.build/electron/preload/browser-capture-diagnostics.js');
 requireFile('.build/electron/preload/eyedropper-routing-diagnostics.js');
-requireFile('.build/electron/preload/eyedropper-implementation.js');
 requireFile('.build/electron/preload/custom-eyedropper-flow.js');
 requireFile('.build/electron/preload/native-eyedropper-wrapper.js');
 requireFile('.build/electron/preload/canva.js');
@@ -72,6 +71,26 @@ if (fs.existsSync(compiledMainPath)) {
   if (compiledMain.includes("require('../../package.json')")) {
     console.error('[runtime-build-check] compiled main must not require ../../package.json from .build/');
     failed = true;
+  }
+}
+
+const bundlePath = path.join(repoRoot, '.build/electron/preload/canva.bundle.js');
+if (fs.existsSync(bundlePath)) {
+  const bundle = fs.readFileSync(bundlePath, 'utf8');
+  const forbidden = [
+    ['ltcode', 'eyedropper'].join('-'),
+    ['LTCode', 'EyeDropper'].join(''),
+    ['install', 'Ltcode', 'ScalingPatch'].join(''),
+    ['remove', 'Ltcode', 'Ui'].join(''),
+    ['CANVA', 'EYEDROPPER', 'IMPL'].join('_'),
+    ['--canva', 'eyedropper', 'impl'].join('-'),
+  ];
+
+  for (const token of forbidden) {
+    if (bundle.includes(token)) {
+      console.error(`[runtime-build-check] legacy EyeDropper token present in preload bundle: ${token}`);
+      failed = true;
+    }
   }
 }
 

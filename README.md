@@ -24,12 +24,13 @@ Canva Linux is currently in **alpha**. It provides a Linux desktop wrapper aroun
 
 ## Features
 
-- **Persistent Sessions:** Stay logged in across restarts.
-- **Internal Tabs:** Manage multiple designs within a single window.
-- **OAuth Support:** Secure login via Google, Facebook, and more.
-- **Custom EyeDropper:** Integrated color picker that works on Linux.
-- **Wayland & X11:** Full support for modern display servers.
-- **GPU Acceleration:** High-performance rendering enabled by default.
+- **Persistent sessions:** Stay logged in across restarts. Canva Linux uses Electron/Chromium persistent session storage and can integrate with the desktop secret storage available on the system, such as KWallet, GNOME Keyring/libsecret, or compatible Secret Service providers, when available.
+- **Flatpak support:** Local install, development runs, validation and bundle generation through `./canva-linux.sh`.
+- **OAuth support:** Google login and other provider popups are handled through a dedicated OAuth popup flow.
+- **CL-EyeDropper:** Custom Canva Linux EyeDropper integration for reliable color picking inside the Canva editor.
+- **GPU diagnostics:** Optional GPU/debug diagnostics through `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+- **Upload/export compatibility:** File import, upload and download/export workflows are preserved through Flatpak-friendly permissions and portal-aware behavior.
+- **Wayland/X11 support:** Designed for modern Wayland sessions with X11 fallback support.
 
 ---
 

@@ -53,25 +53,27 @@ The active Canva runtime path still uses LTCode in DEV20.
 
 ## DEV21 default phase
 
-DEV21 makes CL-EyeDropper the default Canva Linux picker implementation.
+DEV21 made CL-EyeDropper the default Canva Linux picker implementation while keeping the previous picker path available for temporary diagnostics.
 
-The LTCode-backed implementation remains available as a temporary fallback:
+## DEV23 legacy removal
 
-```bash
-CANVA_EYEDROPPER_IMPL=legacy
+`0.1.4-dev.23` removes the LTCode-backed EyeDropper implementation and the temporary implementation selector.
+
+From this phase onward, CL-EyeDropper is the only supported Canva Linux EyeDropper implementation.
+
+Removed:
+
+- `electron/preload/ltcode-eyedropper.js`
+- `electron/preload/eyedropper-implementation.ts`
+- `CANVA_EYEDROPPER_IMPL`
+- `--canva-eyedropper-impl`
+- `legacy` and `ltcode` picker modes
+
+The result contract remains:
+
+```ts
+{ sRGBHex: "#rrggbb" }
 ```
-
-Default behavior uses CL-EyeDropper:
-
-```bash
-CANVA_EYEDROPPER_IMPL=cl
-```
-
-The same default applies when `CANVA_EYEDROPPER_IMPL` is not set.
-
-The main process reads `CANVA_EYEDROPPER_IMPL` and forwards the selected value to Canva preload tabs with `webPreferences.additionalArguments`. The preload must read the forwarded renderer argument, not `process.env`.
-
-DEV21 must not remove LTCode. Removal is deferred until post-validation cleanup.
 
 ## Protected Requirements
 
@@ -97,11 +99,11 @@ The CL-EyeDropper implementation must:
 - DEV20: convert LTCode behavior to CL-EyeDropper TypeScript parity without activating it.
 - DEV21: make CL-EyeDropper the default while keeping LTCode as temporary fallback.
 - DEV22: validate full TypeScript conversion and CL-EyeDropper behavior on Wayland, X11 and Flatpak.
-- DEV23: remove LTCode legacy fallback if validated.
+- DEV23: remove the LTCode fallback and implementation selector.
 - DEV24: stabilization and release-candidate readiness.
 
 DEV19 creates contracts only. It must not replace the active LTCode-backed EyeDropper flow.
 
 DEV20 implements CL-EyeDropper, but it must not replace the active LTCode-backed EyeDropper flow.
 
-DEV21 activates CL-EyeDropper by default and keeps the LTCode-backed implementation available through `CANVA_EYEDROPPER_IMPL=legacy`.
+DEV23 makes CL-EyeDropper the only supported Canva Linux EyeDropper implementation.

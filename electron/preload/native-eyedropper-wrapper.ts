@@ -47,9 +47,8 @@ function errorMessage(error) {
 }
 
 // Own the replacement of Canva's native EyeDropper API separately from the
-// bundled ltcodedev/eyedropper implementation so the preload entrypoint stays
-// thin while preserving the project policy that Canva color picking must flow
-// through the custom picker.
+// CL-EyeDropper flow so the preload entrypoint stays thin while preserving the
+// project policy that Canva color picking must flow through the custom picker.
 /**
  * @param {NativeEyeDropperWrapperOptions} options
  * @returns {{ ensureWrappedEyeDropperInstalled: () => boolean }}

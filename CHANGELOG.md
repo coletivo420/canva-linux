@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.4-dev.23] - 2026-05-02
+
+### Removed
+
+- Removed the legacy LTCode-backed EyeDropper implementation.
+- Removed the temporary EyeDropper implementation selector.
+- Removed `CANVA_EYEDROPPER_IMPL` and renderer argument based picker selection.
+- Removed `legacy` and `ltcode` EyeDropper modes.
+- Removed selector-specific tests and runtime build checks.
+
+### Changed
+
+- Simplified the custom EyeDropper flow to use CL-EyeDropper directly.
+- Simplified tab WebContentsView creation by removing EyeDropper implementation arguments.
+- Updated documentation and guardrails to define CL-EyeDropper as the only supported implementation.
+- Improved the README feature overview, including clearer documentation for persistent sessions and desktop secret storage integration.
+
+### Notes
+
+- CL-EyeDropper is now the only Canva Linux EyeDropper implementation.
+- The result contract remains `{ sRGBHex: "#rrggbb" }`.
+- Flatpak, AppID, OAuth, tabs, GPU and upload behavior are unchanged.
+
 ## [0.1.4-dev.22] - 2026-05-02
 
 ### Changed

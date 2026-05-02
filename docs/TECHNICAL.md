@@ -13,16 +13,13 @@ Current `0.1.4-dev.X` goals focus on Flathub readiness, packaging workflow impro
 
 ## Custom colorpicker policy
 
-Canva Linux now uses CL-EyeDropper as the default custom colorpicker implementation, with `ltcodedev/eyedropper` kept as a temporary fallback.
+Canva Linux uses CL-EyeDropper as its only supported custom colorpicker implementation.
 
-- `electron/preload/cl-eyedropper/cl-eyedropper.ts` is the default picker implementation used by Canva Linux.
-- `electron/preload/ltcode-eyedropper.js` remains available through `CANVA_EYEDROPPER_IMPL=legacy` for temporary diagnostics.
-- `electron/preload/native-eyedropper-wrapper.js` exists to redirect Canva-facing picker calls into the selected bundled implementation.
-- `electron/preload/custom-eyedropper-flow.ts` exists to open the selected picker from a Canva tab snapshot.
-- `electron/preload/eyedropper-implementation.ts` owns CL versus legacy implementation selection.
-- the main process forwards `CANVA_EYEDROPPER_IMPL` into Canva preload tabs with `webPreferences.additionalArguments`; preload code must not depend on `process.env` for picker selection.
+- `electron/preload/cl-eyedropper/cl-eyedropper.ts` is the picker implementation used by Canva Linux.
+- `electron/preload/native-eyedropper-wrapper.js` exists to redirect Canva-facing picker calls into CL-EyeDropper.
+- `electron/preload/custom-eyedropper-flow.ts` exists to open CL-EyeDropper from a Canva tab snapshot.
 - any diagnostics around browser picker APIs or media-capture APIs must support tracing and re-routing only; they are not an alternative colorpicker architecture.
-- the bundled eyedropper implementations intentionally expose only the canvas-based path used by Canva Linux; unused image-loading helpers and not-implemented stubs are removed instead of kept as dormant API surface.
+- the bundled eyedropper implementation intentionally exposes only the canvas-based path used by Canva Linux; unused image-loading helpers and not-implemented stubs are removed instead of kept as dormant API surface.
 
 ## Runtime architecture (summary)
 
@@ -43,12 +40,10 @@ Core runtime files:
 - `electron/preload/canva.bundle.js` - generated runtime preload consumed by Canva tabs; do not edit directly.
 - `electron/preload/browser-capture-diagnostics.js` - compatibility fallback module for capture-related eyedropper diagnostics.
 - `electron/preload/debug.js` - centralized preload debug routing and eyedropper log transport for Canva-facing modules.
-- `electron/preload/custom-eyedropper-flow.ts` - snapshot capture and selected custom eyedropper lifecycle used by the Canva EyeDropper wrapper.
-- `electron/preload/eyedropper-implementation.ts` - CL/default versus LTCode/legacy implementation selection.
-- `electron/preload/cl-eyedropper/cl-eyedropper.ts` - TypeScript parity implementation of the LTCode-compatible custom picker.
+- `electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle used by the Canva EyeDropper wrapper.
+- `electron/preload/cl-eyedropper/cl-eyedropper.ts` - TypeScript custom picker implementation used by Canva Linux.
 - `electron/preload/eyedropper-routing-diagnostics.js` - diagnostic hooks for tracing and preventing fallback into native/browser picker paths.
-- `electron/preload/ltcode-eyedropper.js` - bundled browser-side `ltcodedev/eyedropper` implementation and scaling patch used by the Canva preload wrapper.
-- `electron/preload/native-eyedropper-wrapper.ts` - native EyeDropper replacement layer that redirects Canva calls into the selected custom eyedropper flow.
+- `electron/preload/native-eyedropper-wrapper.ts` - native EyeDropper replacement layer that redirects Canva calls into CL-EyeDropper.
 - `electron/preload/upload-diagnostics.js` - drag, paste, file-input, and file-picker diagnostics isolated from the Canva-specific preload flow.
 - `electron/preload/toolbar.js` - toolbar IPC bridge.
 - `electron/ui/toolbar.html` - local toolbar UI.
@@ -71,14 +66,14 @@ The current main-process split is now the working repository structure:
 - `electron/main/shell.js` owns top-level shell window and toolbar creation.
 - `electron/main/eyedropper-bridge.ts` owns the snapshot/log bridge used by the custom eyedropper preload flow.
 
-This split preserves runtime behavior while making future changes safer. `electron/main/index.ts` is now primarily a composition root, while the preload delegates debug transport, upload diagnostics, native EyeDropper wrapping, and the bundled `ltcodedev/eyedropper` flow into dedicated modules.
+This split preserves runtime behavior while making future changes safer. `electron/main/index.ts` is now primarily a composition root, while the preload delegates debug transport, upload diagnostics, native EyeDropper wrapping, and the CL-EyeDropper flow into dedicated modules.
 
 ## Preload bundle architecture
 
 The source preload remains modular:
 
 - `electron/preload/canva.ts` is the source entrypoint.
-- `electron/preload/debug.ts`, `upload-diagnostics.ts`, `browser-capture-diagnostics.ts`, `eyedropper-routing-diagnostics.ts`, `custom-eyedropper-flow.ts`, `eyedropper-implementation.ts`, `native-eyedropper-wrapper.ts`, `cl-eyedropper/*.ts`, and `ltcode-eyedropper.js` remain human-maintained modules.
+- `electron/preload/debug.ts`, `upload-diagnostics.ts`, `browser-capture-diagnostics.ts`, `eyedropper-routing-diagnostics.ts`, `custom-eyedropper-flow.ts`, `native-eyedropper-wrapper.ts`, and `cl-eyedropper/*.ts` remain human-maintained modules.
 - `scripts/build-preload-bundle.js` generates `electron/preload/canva.bundle.js`.
 
 Canva tabs load `canva.bundle.js`, not `canva.js`, at runtime.

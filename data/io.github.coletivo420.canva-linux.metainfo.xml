@@ -45,6 +45,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.4-dev.23" date="2026-05-02">
+      <description>
+        <p>Removed the legacy EyeDropper fallback and temporary implementation selector so CL-EyeDropper is the only supported Canva Linux EyeDropper implementation.</p>
+      </description>
+    </release>
     <release version="0.1.4-dev.22" date="2026-05-02">
       <description>
         <p>Migrated the canonical repository, GitHub Pages references, Flatpak manifests, desktop metadata, AppStream metadata, launcher scripts, validation guardrails and documentation to the coletivo420 identity and active io.github.coletivo420.canva-linux AppID.</p>
