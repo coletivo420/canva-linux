@@ -374,7 +374,7 @@ export class CLEyeDropper {
     }
 
     if (!this._magCtx) {
-      this._magCtx = this._magCanvas.getContext('2d', { willReadFrequently: true });
+      this._magCtx = this._magCanvas.getContext('2d');
       if (!this._magCtx) return;
       this._magCtx.imageSmoothingEnabled = false;
     }
