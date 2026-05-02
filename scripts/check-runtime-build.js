@@ -56,6 +56,15 @@ requireFile('.build/electron/preload/canva.bundle.js');
 requireFile('.build/electron/ui/toolbar.html');
 requireDir('.build/electron/assets');
 
+const compiledMainPath = path.join(repoRoot, '.build/electron/main/index.js');
+if (fs.existsSync(compiledMainPath)) {
+  const compiledMain = fs.readFileSync(compiledMainPath, 'utf8');
+  if (compiledMain.includes("require('../../package.json')")) {
+    console.error('[runtime-build-check] compiled main must not require ../../package.json from .build/');
+    failed = true;
+  }
+}
+
 if (failed) {
   process.exit(1);
 }

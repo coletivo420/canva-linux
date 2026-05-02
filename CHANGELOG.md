@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.4-dev.18] - 2026-05-01
+
+### Changed
+
+- Converted the main Electron entrypoint from `electron/main/index.js` to `electron/main/index.ts`.
+- Completed the TypeScript conversion of `electron/main` while preserving CommonJS runtime behavior.
+- Kept preload conversion deferred to DEV19.
+- Kept CL-EyeDropper contracts and implementation deferred to later phases.
+
+### Fixed
+
+- Preserved app startup, lifecycle registration, session setup, tab controller wiring, OAuth popup wiring, GPU diagnostics registration and EyeDropper bridge registration during entrypoint conversion.
+- Preserved runtime version detection through `app.getVersion()`.
+- Updated direct build and lint dependencies to their latest available versions and adapted the packaging configuration for `electron-builder` 26.
+- Added dependency freshness guardrails to prevent downgrades and require code/config adaptation for dependency upgrades.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- Preload modules remain JavaScript until DEV19.
+- CL-EyeDropper is planned but not implemented in DEV18.
+- Flatpak system/user scope behavior is unchanged.
+
 ## [0.1.4-dev.17] - 2026-05-01
 
 ### Changed
@@ -38,7 +61,7 @@ All notable changes to this project are documented in this file.
 ### Notes
 
 - `electron/main/index.js` remains JavaScript until DEV18.
-- Preload modules remain JavaScript until DEV18.
+- Preload modules remain JavaScript until DEV19.
 - CL-EyeDropper is planned but not implemented in DEV16.
 - Flatpak system/user scope behavior is unchanged.
 

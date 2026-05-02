@@ -25,7 +25,7 @@ Canva Linux must keep `ltcodedev/eyedropper` as the canonical custom colorpicker
 
 Core runtime files:
 
-- `electron/main/index.js` - Electron shell entrypoint, tab model, OAuth popup wiring, persistent session ownership, and credential storage diagnostics.
+- `electron/main/index.ts` - Electron shell entrypoint, tab model, OAuth popup wiring, persistent session ownership, and credential storage diagnostics.
 - `electron/main/eyedropper-bridge.ts` - main-process bridge between the Canva preload eyedropper and BrowserView snapshot capture.
 - `electron/main/ipc.ts` - centralized main-process IPC routing for preload debug forwarding and toolbar actions.
 - `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring for session setup, theme hooks, and shell bootstrap.
@@ -54,7 +54,7 @@ Core runtime files:
 
 The current main-process split is now the working repository structure:
 
-- `electron/main/index.js` remains the orchestration layer.
+- `electron/main/index.ts` remains the orchestration layer.
 - `electron/main/runtime.ts` owns Linux/runtime and shared session setup.
 - `electron/main/lifecycle.ts` owns app startup/shutdown wiring.
 - `electron/main/ipc.ts` owns main-process IPC handlers.
@@ -66,7 +66,7 @@ The current main-process split is now the working repository structure:
 - `electron/main/shell.js` owns top-level shell window and toolbar creation.
 - `electron/main/eyedropper-bridge.ts` owns the snapshot/log bridge used by the custom eyedropper preload flow.
 
-This split preserves runtime behavior while making future changes safer. `electron/main/index.js` is now primarily a composition root, while the preload delegates debug transport, upload diagnostics, native EyeDropper wrapping, and the bundled `ltcodedev/eyedropper` flow into dedicated modules.
+This split preserves runtime behavior while making future changes safer. `electron/main/index.ts` is now primarily a composition root, while the preload delegates debug transport, upload diagnostics, native EyeDropper wrapping, and the bundled `ltcodedev/eyedropper` flow into dedicated modules.
 
 ## Preload bundle architecture
 
