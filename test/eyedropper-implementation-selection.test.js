@@ -8,7 +8,9 @@ const test = require('node:test');
 const { loadRuntimeModule } = require('./helpers/runtime-module');
 
 const {
+  EYE_DROPPER_IMPLEMENTATION_ARGUMENT,
   normalizeEyeDropperImplementation,
+  readEyeDropperImplementationArgument,
   resolveEyeDropperImplementation,
 } = loadRuntimeModule('preload/eyedropper-implementation');
 
@@ -28,22 +30,20 @@ const {
  * @param {string | undefined} value
  * @param {() => void} fn
  */
-function withImplementationEnv(value, fn) {
-  const previous = process.env.CANVA_EYEDROPPER_IMPL;
+function withImplementationArgument(value, fn) {
+  const previous = process.argv.slice();
+  process.argv = previous.filter((arg) => !arg.startsWith(EYE_DROPPER_IMPLEMENTATION_ARGUMENT));
+
   if (value === undefined) {
-    delete process.env.CANVA_EYEDROPPER_IMPL;
+    process.argv.push(`${EYE_DROPPER_IMPLEMENTATION_ARGUMENT}cl`);
   } else {
-    process.env.CANVA_EYEDROPPER_IMPL = value;
+    process.argv.push(`${EYE_DROPPER_IMPLEMENTATION_ARGUMENT}${value}`);
   }
 
   try {
     fn();
   } finally {
-    if (previous === undefined) {
-      delete process.env.CANVA_EYEDROPPER_IMPL;
-    } else {
-      process.env.CANVA_EYEDROPPER_IMPL = previous;
-    }
+    process.argv = previous;
   }
 }
 
@@ -56,9 +56,15 @@ test('normalizes EyeDropper implementation selection', () => {
   assert.equal(normalizeEyeDropperImplementation('foo'), 'cl');
 });
 
+test('reads EyeDropper implementation selection from renderer arguments', () => {
+  assert.equal(readEyeDropperImplementationArgument(['app', '--canva-eyedropper-impl=legacy']), 'legacy');
+  assert.equal(readEyeDropperImplementationArgument(['app', '--other=value']), undefined);
+  assert.equal(readEyeDropperImplementationArgument(undefined), undefined);
+});
+
 test('resolves CL as the default implementation', () => {
   const logs = [];
-  withImplementationEnv(undefined, () => {
+  withImplementationArgument(undefined, () => {
     const implementation = resolveEyeDropperImplementation({
       logEyeDropper(...args) {
         logs.push(args);
@@ -75,7 +81,7 @@ test('resolves CL as the default implementation', () => {
 });
 
 test('resolves explicit CL implementation', () => {
-  withImplementationEnv('cl', () => {
+  withImplementationArgument('cl', () => {
     const implementation = resolveEyeDropperImplementation({
       logEyeDropper() {},
     });
@@ -87,7 +93,7 @@ test('resolves explicit CL implementation', () => {
 
 test('resolves legacy and ltcode aliases to LTCode implementation', () => {
   for (const value of ['legacy', 'ltcode']) {
-    withImplementationEnv(value, () => {
+    withImplementationArgument(value, () => {
       const implementation = resolveEyeDropperImplementation({
         logEyeDropper() {},
       });
@@ -102,7 +108,7 @@ test('resolves legacy and ltcode aliases to LTCode implementation', () => {
 
 test('invalid implementation values fall back to CL and log the fallback', () => {
   const logs = [];
-  withImplementationEnv('foo', () => {
+  withImplementationArgument('foo', () => {
     const implementation = resolveEyeDropperImplementation({
       logEyeDropper(...args) {
         logs.push(args);

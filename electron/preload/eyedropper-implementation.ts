@@ -21,6 +21,21 @@ type EyeDropperImplementation = {
   removeUi: () => void;
 };
 
+const EYE_DROPPER_IMPLEMENTATION_ARGUMENT = '--canva-eyedropper-impl=';
+
+function readEyeDropperImplementationArgument(argv: unknown): string | undefined {
+  if (!Array.isArray(argv)) return undefined;
+
+  for (const arg of argv) {
+    if (typeof arg !== 'string') continue;
+    if (arg.startsWith(EYE_DROPPER_IMPLEMENTATION_ARGUMENT)) {
+      return arg.slice(EYE_DROPPER_IMPLEMENTATION_ARGUMENT.length);
+    }
+  }
+
+  return undefined;
+}
+
 function normalizeEyeDropperImplementation(value: unknown): EyeDropperImplementationName {
   const raw = String(value || '').trim().toLowerCase();
 
@@ -35,7 +50,8 @@ function resolveEyeDropperImplementation({
 }: {
   logEyeDropper: EyeDropperLog;
 }): EyeDropperImplementation {
-  const raw = process?.env?.CANVA_EYEDROPPER_IMPL;
+  const runtimeProcess = typeof process === 'undefined' ? undefined : process;
+  const raw = readEyeDropperImplementationArgument(runtimeProcess?.argv);
   const selected = normalizeEyeDropperImplementation(raw);
   const normalizedRaw = String(raw || '').trim().toLowerCase();
 
@@ -63,7 +79,9 @@ function resolveEyeDropperImplementation({
 }
 
 export {
+  EYE_DROPPER_IMPLEMENTATION_ARGUMENT,
   normalizeEyeDropperImplementation,
+  readEyeDropperImplementationArgument,
   resolveEyeDropperImplementation,
 };
 
@@ -73,6 +91,8 @@ export type {
 };
 
 module.exports = {
+  EYE_DROPPER_IMPLEMENTATION_ARGUMENT,
   normalizeEyeDropperImplementation,
+  readEyeDropperImplementationArgument,
   resolveEyeDropperImplementation,
 };

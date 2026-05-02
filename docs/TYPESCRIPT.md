@@ -394,6 +394,8 @@ Behavior:
 - `CANVA_EYEDROPPER_IMPL=ltcode`: use LTCode as an alias;
 - invalid values fall back to CL-EyeDropper and log the fallback.
 
+The main process owns reading `CANVA_EYEDROPPER_IMPL` from the host environment and forwards the selected value through `webPreferences.additionalArguments`. Preload modules must not read `process.env` for this setting.
+
 Out of scope:
 
 - removing `electron/preload/ltcode-eyedropper.js`;

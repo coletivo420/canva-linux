@@ -324,4 +324,5 @@ Do not:
 - change `wrapper:eyedropper-snapshot`;
 - change the preload bundle module ID strategy;
 - use directory-style `require('./cl-eyedropper')` in preload bundled code;
+- read `CANVA_EYEDROPPER_IMPL` directly from `process.env` inside preload code;
 - change Flatpak, OAuth, tabs, GPU or upload behavior.

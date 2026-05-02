@@ -69,6 +69,8 @@ CANVA_EYEDROPPER_IMPL=cl
 
 The same default applies when `CANVA_EYEDROPPER_IMPL` is not set.
 
+The main process reads `CANVA_EYEDROPPER_IMPL` and forwards the selected value to Canva preload tabs with `webPreferences.additionalArguments`. The preload must read the forwarded renderer argument, not `process.env`.
+
 DEV21 must not remove LTCode. Removal is deferred until post-validation cleanup.
 
 ## Protected Requirements

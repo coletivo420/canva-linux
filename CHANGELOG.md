@@ -7,6 +7,7 @@
 - Made CL-EyeDropper the default Canva Linux EyeDropper implementation.
 - Kept the LTCode-backed picker as a temporary fallback.
 - Added `CANVA_EYEDROPPER_IMPL=legacy` to force the legacy LTCode path for diagnostics.
+- Passed the selected EyeDropper implementation from the main process to the Canva preload via renderer arguments.
 - Added implementation-selection tests for `cl` and `legacy` picker modes.
 
 ### Notes

@@ -20,6 +20,7 @@ Canva Linux now uses CL-EyeDropper as the default custom colorpicker implementat
 - `electron/preload/native-eyedropper-wrapper.js` exists to redirect Canva-facing picker calls into the selected bundled implementation.
 - `electron/preload/custom-eyedropper-flow.ts` exists to open the selected picker from a Canva tab snapshot.
 - `electron/preload/eyedropper-implementation.ts` owns CL versus legacy implementation selection.
+- the main process forwards `CANVA_EYEDROPPER_IMPL` into Canva preload tabs with `webPreferences.additionalArguments`; preload code must not depend on `process.env` for picker selection.
 - any diagnostics around browser picker APIs or media-capture APIs must support tracing and re-routing only; they are not an alternative colorpicker architecture.
 - the bundled eyedropper implementations intentionally expose only the canvas-based path used by Canva Linux; unused image-loading helpers and not-implemented stubs are removed instead of kept as dormant API surface.
 
