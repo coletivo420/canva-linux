@@ -16,7 +16,7 @@ type EyeDropperLog = (category: string, ...args: unknown[]) => void;
 type EyeDropperImplementationName = 'cl' | 'legacy';
 type EyeDropperImplementation = {
   name: EyeDropperImplementationName;
-  EyeDropperClass: unknown;
+  EyeDropperClass: new (options?: any) => any;
   installScalingPatch: (log: EyeDropperLog) => void;
   removeUi: () => void;
 };
