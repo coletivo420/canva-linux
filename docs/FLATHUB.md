@@ -1,4 +1,15 @@
-# Flathub Preparation Guide
+# Flatpak and Flathub
+
+This is the entry point for packaging documentation.
+
+Related documents:
+
+- `FLATPAK_PERMISSIONS.md`
+- `FLATHUB_CHECKLIST.md`
+- `FLATHUB_SOURCE.md`
+- `FLATHUB_SUBMISSION_PATH.md`
+- `FLATHUB_SUBMISSION_NOTES.md`
+
 
 ## Purpose
 

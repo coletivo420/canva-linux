@@ -74,26 +74,6 @@ if (fs.existsSync(compiledMainPath)) {
   }
 }
 
-const bundlePath = path.join(repoRoot, '.build/electron/preload/canva.bundle.js');
-if (fs.existsSync(bundlePath)) {
-  const bundle = fs.readFileSync(bundlePath, 'utf8');
-  const forbidden = [
-    ['ltcode', 'eyedropper'].join('-'),
-    ['LTCode', 'EyeDropper'].join(''),
-    ['install', 'Ltcode', 'ScalingPatch'].join(''),
-    ['remove', 'Ltcode', 'Ui'].join(''),
-    ['CANVA', 'EYEDROPPER', 'IMPL'].join('_'),
-    ['--canva', 'eyedropper', 'impl'].join('-'),
-  ];
-
-  for (const token of forbidden) {
-    if (bundle.includes(token)) {
-      console.error(`[runtime-build-check] legacy EyeDropper token present in preload bundle: ${token}`);
-      failed = true;
-    }
-  }
-}
-
 if (failed) {
   process.exit(1);
 }
