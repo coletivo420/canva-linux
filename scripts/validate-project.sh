@@ -39,6 +39,7 @@ run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "npm test" npm test
 run_step "npm run docs:check-links" npm run docs:check-links
 run_step "npm run docs:check-ai" npm run docs:check-ai
+run_step "npm run deps:check-policy" npm run deps:check-policy
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
 run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check

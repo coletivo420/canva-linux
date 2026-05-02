@@ -103,6 +103,21 @@ npm run build:check
 
 Converted `.ts` modules must remain covered by `npm run typecheck`, `npm run typecheck:strict`, tests, and runtime build checks.
 
+## Dependency freshness guardrails
+
+AI agents, plugins, skills and automation must not downgrade direct runtime, build, lint or packaging dependencies to avoid code changes.
+
+Rules:
+
+- prefer the latest available direct dependency versions;
+- adapt project code, config and build hooks when newer modules change APIs or schemas;
+- do not keep legacy plugins only to force older core tools;
+- do not add overrides to pin older transitive modules unless the maintainer explicitly approves a temporary emergency exception;
+- regenerate `package-lock.json` and `packaging/flathub/generated-sources.json` after dependency changes;
+- run `npm audit --json`, `npm run deps:check-policy`, `npm run dist` and project validation after dependency upgrades.
+
+The `electron-builder` module collector must stay on the latest compatible builder line. Canva Linux has no production npm dependencies, so the `beforeBuild` hook intentionally returns `false` to skip unnecessary native dependency rebuilds and module collection instead of downgrading `electron-builder`.
+
 ## OAuth/navigation TypeScript guardrails
 
 AI-generated patches must not weaken OAuth popup behavior.

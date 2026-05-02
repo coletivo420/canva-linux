@@ -91,6 +91,9 @@ for (const required of [
   'Changelog-backed non-regression rule',
   'CHANGELOG.md is a source of protected project history',
   'must not remove, weaken, bypass, rename',
+  'Dependency freshness guardrails',
+  'must not downgrade direct runtime, build, lint or packaging dependencies',
+  'adapt project code, config and build hooks',
 ]) {
   if (!guardrails.includes(required)) {
     console.error(`[ai-guardrails] AI_GUARDRAILS missing changelog-backed rule text: ${required}`);

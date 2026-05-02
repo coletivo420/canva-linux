@@ -25,6 +25,7 @@
     "prestart": "npm run build:runtime",
     "predist": "npm run build:runtime",
     "docs:check-links": "node scripts/check-doc-links.js",
+    "deps:check-policy": "node scripts/check-dependency-policy.js",
     "typecheck": "tsc --noEmit",
     "validate:project": "./scripts/validate-project.sh",
     "docs:check-ai": "node scripts/check-ai-guardrails.js",
@@ -37,6 +38,7 @@
       "output": "dist",
       "buildResources": "build-resources"
     },
+    "beforeBuild": "./scripts/electron-builder-before-build.js",
     "files": [
       ".build/electron/**/*",
       "package.json"
@@ -56,17 +58,12 @@
     "@types/node": "^25.6.0",
     "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.1",
-    "electron": "41.3.0",
-    "electron-builder": "^25.1.8",
-    "eslint": "^9.39.4",
-    "eslint-plugin-import": "^2.32.0",
+    "electron": "^41.5.0",
+    "electron-builder": "^26.8.1",
+    "eslint": "^10.3.0",
     "typescript": "^6.0.3"
   },
   "desktopName": "io.github.PirateMaryRead.canva-linux.desktop",
-  "overrides": {
-    "@tootallnate/once": "^3.0.1",
-    "tar": "^7.5.11"
-  },
   "engines": {
     "node": ">=22.0.0"
   }

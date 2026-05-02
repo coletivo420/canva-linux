@@ -3,24 +3,9 @@
 
 const tsParser = require('@typescript-eslint/parser');
 const tsPlugin = require('@typescript-eslint/eslint-plugin');
-const importPlugin = require('eslint-plugin-import');
 
 const commonRules = {
   eqeqeq: ['error', 'always'],
-  'import/no-duplicates': 'error',
-  'import/no-extraneous-dependencies': ['error', {
-    packageDir: ['.'],
-  }],
-  'import/no-unresolved': ['error', {
-    caseSensitive: true,
-    commonjs: true,
-  }],
-  'import/order': ['warn', {
-    groups: ['builtin', 'external', 'parent', 'sibling', 'index'],
-    alphabetize: { caseInsensitive: true, order: 'asc' },
-    'newlines-between': 'always',
-  }],
-  'import/newline-after-import': 'warn',
   'no-var': 'error',
   'prefer-const': 'error',
 };
@@ -54,9 +39,6 @@ module.exports = [
         },
       },
     },
-    plugins: {
-      import: importPlugin,
-    },
     rules: {
       ...commonRules,
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
@@ -69,9 +51,6 @@ module.exports = [
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
-    },
-    plugins: {
-      import: importPlugin,
     },
     rules: {
       eqeqeq: ['error', 'always'],
@@ -101,7 +80,6 @@ module.exports = [
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
-      import: importPlugin,
     },
     rules: {
       ...commonRules,
