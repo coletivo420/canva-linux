@@ -105,33 +105,3 @@ Comprehensive documentation is available in the `docs/` folder:
 ## License
 
 Distributed under the **GNU General Public License v3.0 or later**. See [LICENSE](LICENSE) for details.
-
----
-
-## Repository and AppID migration
-
-The canonical repository is now:
-
-```text
-https://github.com/coletivo420/canva-linux
-```
-
-The active Flatpak AppID is now:
-
-```text
-io.github.coletivo420.canva-linux
-```
-
-Legacy development AppIDs:
-
-```text
-io.github.PirateMaryRead.canva-linux
-com.canva.Linux
-```
-
-Users migrating from earlier development builds may uninstall legacy IDs:
-
-```bash
-flatpak uninstall io.github.PirateMaryRead.canva-linux
-flatpak uninstall com.canva.Linux
-```

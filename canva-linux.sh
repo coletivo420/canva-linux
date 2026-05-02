@@ -4,10 +4,6 @@ set -euo pipefail
 ## Configuration
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_ID="io.github.coletivo420.canva-linux"
-LEGACY_APP_IDS=(
-  "io.github.PirateMaryRead.canva-linux"
-  "com.canva.Linux"
-)
 LOCAL_FLATPAK_REMOTES=(
   canva-linux-local
   canva-linux1-origin
@@ -94,18 +90,6 @@ action_uninstall() {
   flatpak kill "${APP_ID}" 2>/dev/null || true
 
   local removed=false
-
-  echo "[info] Checking legacy Canva Linux app ids..."
-  for legacy_id in "${LEGACY_APP_IDS[@]}"; do
-    if flatpak --user info "${legacy_id}" >/dev/null 2>&1; then
-      flatpak uninstall --user -y "${legacy_id}"
-      echo "[ok] Uninstalled legacy user Flatpak app: ${legacy_id}"
-    fi
-    if flatpak --system info "${legacy_id}" >/dev/null 2>&1; then
-      sudo flatpak uninstall --system -y "${legacy_id}"
-      echo "[ok] Uninstalled legacy system Flatpak app: ${legacy_id}"
-    fi
-  done
 
   if flatpak --user info "${APP_ID}" >/dev/null 2>&1; then
     flatpak uninstall --user -y "${APP_ID}"
