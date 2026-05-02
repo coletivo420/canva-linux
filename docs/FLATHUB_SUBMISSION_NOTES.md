@@ -4,7 +4,7 @@
 
 Canva Linux is submitted as a community-maintained open source desktop wrapper for use with Canva.
 
-The package is not verified by Canva Pty Ltd and does not claim official status, endorsement, certification, or support. The app-id uses the maintainer-controlled GitHub namespace `io.github.PirateMaryRead.canva-linux`, not the `com.canva` namespace.
+The package is not verified by Canva Pty Ltd and does not claim official status, endorsement, certification, or support. The app-id uses the maintainer-controlled GitHub namespace `io.github.coletivo420.canva-linux`, not the `com.canva` namespace.
 
 References to Canva are descriptive and identify the upstream web service the wrapper accesses.
 

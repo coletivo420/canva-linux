@@ -45,7 +45,7 @@ run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check
 
 if command -v desktop-file-validate >/dev/null 2>&1; then
-  run_step "desktop-file-validate" desktop-file-validate data/io.github.PirateMaryRead.canva-linux.desktop
+  run_step "desktop-file-validate" desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
 else
   log_info "desktop-file-validate not found, skipping"
 fi
@@ -53,7 +53,7 @@ fi
 if command -v appstreamcli >/dev/null 2>&1; then
   run_step "appstreamcli validate --explain" \
     appstreamcli validate --explain \
-    data/io.github.PirateMaryRead.canva-linux.metainfo.xml
+    data/io.github.coletivo420.canva-linux.metainfo.xml
 else
   log_info "appstreamcli not found, skipping"
 fi

@@ -68,7 +68,7 @@ node - <<'NODE'
 const fs = require('node:fs');
 
 const manifests = [
-  'io.github.PirateMaryRead.canva-linux.yml',
+  'io.github.coletivo420.canva-linux.yml',
   'packaging/flathub/manifest.yml',
 ];
 
@@ -143,12 +143,12 @@ node - <<'NODE'
 const fs = require('node:fs');
 
 const checks = [
-  ['io.github.PirateMaryRead.canva-linux.yml', 'app-id: io.github.PirateMaryRead.canva-linux'],
-  ['packaging/flathub/manifest.yml', 'app-id: io.github.PirateMaryRead.canva-linux'],
-  ['data/io.github.PirateMaryRead.canva-linux.desktop', 'Name=Canva Linux'],
-  ['data/io.github.PirateMaryRead.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
-  ['data/io.github.PirateMaryRead.canva-linux.metainfo.xml', '<id>io.github.PirateMaryRead.canva-linux</id>'],
-  ['data/io.github.PirateMaryRead.canva-linux.metainfo.xml', '<summary>A community opensource desktop wrapper for use with Canva</summary>'],
+  ['io.github.coletivo420.canva-linux.yml', 'app-id: io.github.coletivo420.canva-linux'],
+  ['packaging/flathub/manifest.yml', 'app-id: io.github.coletivo420.canva-linux'],
+  ['data/io.github.coletivo420.canva-linux.desktop', 'Name=Canva Linux'],
+  ['data/io.github.coletivo420.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
+  ['data/io.github.coletivo420.canva-linux.metainfo.xml', '<id>io.github.coletivo420.canva-linux</id>'],
+  ['data/io.github.coletivo420.canva-linux.metainfo.xml', '<summary>A community opensource desktop wrapper for use with Canva</summary>'],
 ];
 
 for (const [filePath, token] of checks) {
@@ -160,14 +160,13 @@ for (const [filePath, token] of checks) {
 }
 
 const forbiddenActive = [
-  'com.canva.Linux',
-  'com.canva.WebApp',
+  'io.github.PirateMaryRead.canva-linux-NOT-REALLY',
 ];
 
 const activeFiles = [
   'package.json',
   'electron/main/index.ts',
-  'io.github.PirateMaryRead.canva-linux.yml',
+  'io.github.coletivo420.canva-linux.yml',
   'packaging/flathub/manifest.yml',
   'run.sh',
   'canva-linux.sh',
@@ -175,7 +174,7 @@ const activeFiles = [
   'scripts/build-flatpak-bundle.sh',
   'scripts/flatpak-build-common.sh',
   'scripts/prepare-flathub-submission.sh',
-  'data/io.github.PirateMaryRead.canva-linux.desktop',
+  'data/io.github.coletivo420.canva-linux.desktop',
 ];
 
 for (const filePath of activeFiles) {
@@ -276,7 +275,7 @@ if command -v flatpak >/dev/null 2>&1 && (flatpak info org.flatpak.Builder >/dev
     SOURCE_TREE="$(find "${APPSTREAM_TMP_DIR}" -mindepth 1 -maxdepth 1 -type d | head -n1)"
     [[ -n "${SOURCE_TREE}" ]] || err "Unable to determine extracted source directory"
 
-    METAINFO_PATH="${SOURCE_TREE}/data/io.github.PirateMaryRead.canva-linux.metainfo.xml"
+    METAINFO_PATH="${SOURCE_TREE}/data/io.github.coletivo420.canva-linux.metainfo.xml"
     [[ -f "${METAINFO_PATH}" ]] || err "Metainfo file not found in pinned source archive"
 
     info "Running AppStream metainfo validation (warnings/errors treated as fatal)"

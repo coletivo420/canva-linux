@@ -122,13 +122,13 @@ Packaging/runtime support files:
 - `scripts/prepare-flathub-submission.sh` - regenerates submission npm sources and runs submission-path validation checks.
 - `scripts/validate-flathub-submission.sh` - validates submission-manifest structure, offline npm source manifest, and optional Flathub lint.
 - `scripts/build-preload-bundle.js` - generated-preload builder used before local start and Electron packaging; source mode also handles converted TypeScript shared modules.
-- `io.github.PirateMaryRead.canva-linux.yml` - Flatpak manifest for local install/bundle/validation workflows.
+- `io.github.coletivo420.canva-linux.yml` - Flatpak manifest for local install/bundle/validation workflows.
 - `packaging/flathub/` - Flathub submission workspace (submission manifest, `generated-sources.json`, npm source generator scripts).
 - `docs/PRIVACY.md` - repository privacy and telemetry policy statement.
 - `docs/FLATHUB_SOURCE.md` - Flathub source strategy notes for the current local manifest and future source-based submission.
 - `docs/FLATHUB_SUBMISSION_PATH.md` - dedicated submission-path structure and command flow.
 - `docs/FLATHUB_SUBMISSION_NOTES.md` - submission rationale notes, including thin-wrapper objection response.
-- `data/io.github.PirateMaryRead.canva-linux.desktop` and `data/io.github.PirateMaryRead.canva-linux.metainfo.xml` - desktop and appstream metadata.
+- `data/io.github.coletivo420.canva-linux.desktop` and `data/io.github.coletivo420.canva-linux.metainfo.xml` - desktop and appstream metadata.
 
 ## Workflow notes
 

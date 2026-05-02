@@ -55,7 +55,7 @@ Flathub source validation may require:
 Validate internal logs:
 
 ```bash
-CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 Expected:
@@ -69,7 +69,7 @@ Expected:
 Validate verbose Chromium/Electron logs:
 
 ```bash
-CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux
 ```
 
 Unsupported module-specific debug values must not be documented as valid runtime modes:
@@ -87,10 +87,10 @@ Unsupported module-specific debug values must not be documented as valid runtime
 Runtime checks:
 
 ```bash
-CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 ## TypeScript validation

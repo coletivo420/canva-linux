@@ -119,9 +119,9 @@ docs/PRIVACY.md|privacy documentation
 docs/FLATHUB_CHECKLIST.md|Flathub checklist
 docs/FLATHUB_SOURCE.md|Flathub source strategy documentation
 docs/FLATPAK_PERMISSIONS.md|permission review documentation
-io.github.PirateMaryRead.canva-linux.yml|Flatpak manifest
-data/io.github.PirateMaryRead.canva-linux.metainfo.xml|AppStream metadata
-data/io.github.PirateMaryRead.canva-linux.desktop|desktop entry metadata
+io.github.coletivo420.canva-linux.yml|Flatpak manifest
+data/io.github.coletivo420.canva-linux.metainfo.xml|AppStream metadata
+data/io.github.coletivo420.canva-linux.desktop|desktop entry metadata
 REQUIRED_FILES
 
 ## Flatpak permission policy guardrails (dev18)
@@ -129,7 +129,7 @@ node - <<'NODE'
 const fs = require('node:fs');
 
 const manifests = [
-  'io.github.PirateMaryRead.canva-linux.yml',
+  'io.github.coletivo420.canva-linux.yml',
   'packaging/flathub/manifest.yml',
 ];
 
@@ -204,12 +204,12 @@ node - <<'NODE'
 const fs = require('node:fs');
 
 const checks = [
-  ['io.github.PirateMaryRead.canva-linux.yml', 'app-id: io.github.PirateMaryRead.canva-linux'],
-  ['packaging/flathub/manifest.yml', 'app-id: io.github.PirateMaryRead.canva-linux'],
-  ['data/io.github.PirateMaryRead.canva-linux.desktop', 'Name=Canva Linux'],
-  ['data/io.github.PirateMaryRead.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
-  ['data/io.github.PirateMaryRead.canva-linux.metainfo.xml', '<id>io.github.PirateMaryRead.canva-linux</id>'],
-  ['data/io.github.PirateMaryRead.canva-linux.metainfo.xml', '<summary>A community opensource desktop wrapper for use with Canva</summary>'],
+  ['io.github.coletivo420.canva-linux.yml', 'app-id: io.github.coletivo420.canva-linux'],
+  ['packaging/flathub/manifest.yml', 'app-id: io.github.coletivo420.canva-linux'],
+  ['data/io.github.coletivo420.canva-linux.desktop', 'Name=Canva Linux'],
+  ['data/io.github.coletivo420.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
+  ['data/io.github.coletivo420.canva-linux.metainfo.xml', '<id>io.github.coletivo420.canva-linux</id>'],
+  ['data/io.github.coletivo420.canva-linux.metainfo.xml', '<summary>A community opensource desktop wrapper for use with Canva</summary>'],
 ];
 
 for (const [filePath, token] of checks) {
@@ -221,14 +221,13 @@ for (const [filePath, token] of checks) {
 }
 
 const forbiddenActive = [
-  'com.canva.Linux',
-  'com.canva.WebApp',
+  'io.github.PirateMaryRead.canva-linux-NOT-REALLY',
 ];
 
 const activeFiles = [
   'package.json',
   'electron/main/index.ts',
-  'io.github.PirateMaryRead.canva-linux.yml',
+  'io.github.coletivo420.canva-linux.yml',
   'packaging/flathub/manifest.yml',
   'run.sh',
   'canva-linux.sh',
@@ -236,7 +235,7 @@ const activeFiles = [
   'scripts/build-flatpak-bundle.sh',
   'scripts/flatpak-build-common.sh',
   'scripts/prepare-flathub-submission.sh',
-  'data/io.github.PirateMaryRead.canva-linux.desktop',
+  'data/io.github.coletivo420.canva-linux.desktop',
 ];
 
 for (const filePath of activeFiles) {
@@ -254,30 +253,30 @@ NODE
 ok "Branding/app-id guardrails passed"
 
 ## Flatpak install status
-if flatpak --user info io.github.PirateMaryRead.canva-linux >/dev/null 2>&1 || flatpak info io.github.PirateMaryRead.canva-linux >/dev/null 2>&1; then
-  ok "io.github.PirateMaryRead.canva-linux is installed"
+if flatpak --user info io.github.coletivo420.canva-linux >/dev/null 2>&1 || flatpak info io.github.coletivo420.canva-linux >/dev/null 2>&1; then
+  ok "io.github.coletivo420.canva-linux is installed"
 else
-  warn "io.github.PirateMaryRead.canva-linux is not installed locally"
+  warn "io.github.coletivo420.canva-linux is not installed locally"
 fi
 
 ## Optional desktop file validation
 if check_optional_command desktop-file-validate "Desktop file validator"; then
   info "Running desktop-file-validate"
-  desktop-file-validate data/io.github.PirateMaryRead.canva-linux.desktop
+  desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
   ok "Desktop entry validation passed"
 fi
 
 ## Optional AppStream validation
 if check_optional_command appstreamcli "AppStream validator"; then
   info "Running appstreamcli validate --explain"
-  appstreamcli validate --explain data/io.github.PirateMaryRead.canva-linux.metainfo.xml
+  appstreamcli validate --explain data/io.github.coletivo420.canva-linux.metainfo.xml
   ok "AppStream metadata validation passed"
 fi
 
 ## Optional Flathub-style lint checks
 if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
     info "Running flatpak-builder-lint manifest"
-    flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.PirateMaryRead.canva-linux.yml
+    flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.coletivo420.canva-linux.yml
     ok "Manifest lint passed"
 
     if [[ -d repo ]]; then

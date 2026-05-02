@@ -23,7 +23,7 @@ Notes:
 - Actions can be chained and run in argument order.
 - `--uninstall` can only be combined with `--reset-user-data`.
 
-`1.4.10-dev.17` keeps the Flathub source/readiness focus while standardizing public project naming as Canva Linux and migrating the app-id to `io.github.PirateMaryRead.canva-linux`.
+`1.4.10-dev.17` keeps the Flathub source/readiness focus while standardizing public project naming as Canva Linux and migrating the app-id to `io.github.coletivo420.canva-linux`.
 
 The preload bundle is generated automatically before the Electron build used by `./canva-linux.sh --install` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux.sh --bundle` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
 
@@ -44,7 +44,7 @@ Then run submission-path preparation/validation and lint checks when Flatpak Bui
 ./scripts/validate-flathub-submission.sh
 flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.PirateMaryRead.canva-linux.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.coletivo420.canva-linux.yml
 ./canva-linux.sh --install --bundle
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```
@@ -71,9 +71,9 @@ The manifest intentionally avoids broad home-directory access and keeps narrower
 - **Bundle generation** (`--bundle`) creates `dist/canva-linux-$VERSION.flatpak` for GitHub releases.
 - **Flathub submission** is a separate workflow reviewed in `flathub/flathub`.
 - Submission assets live under `packaging/flathub/` (submission manifest, `generated-sources.json`, and helpers).
-- `io.github.PirateMaryRead.canva-linux*` identifiers are now the active canonical identity in this cycle (app-id, filenames, icons, and WMClass fields).
+- `io.github.coletivo420.canva-linux*` identifiers are now the active canonical identity in this cycle (app-id, filenames, icons, and WMClass fields).
 
-Do not treat local GitHub release bundles as a direct Flathub submission mechanism, and do not replace the repository-root local manifest (`io.github.PirateMaryRead.canva-linux.yml`) when preparing submission files.
+Do not treat local GitHub release bundles as a direct Flathub submission mechanism, and do not replace the repository-root local manifest (`io.github.coletivo420.canva-linux.yml`) when preparing submission files.
 
 Source strategy guidance for final Flathub submission lives in `docs/FLATHUB_SOURCE.md`.
 Submission-path workflow lives in `docs/FLATHUB_SUBMISSION_PATH.md`, and rationale notes (including thin-wrapper objection handling) live in `docs/FLATHUB_SUBMISSION_NOTES.md`.

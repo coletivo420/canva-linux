@@ -271,7 +271,7 @@ Actions can be chained and run in the order provided:
 - `--bundle` is for generating GitHub release `.flatpak` artifacts.
 - `--bundle` rebuilds the Electron output and Flatpak repo before creating the artifact.
 - Flathub submission remains a separate process and should not require `.flatpak` bundle generation.
-- Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `io.github.PirateMaryRead.canva-linux.yml`.
+- Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `io.github.coletivo420.canva-linux.yml`.
 - `--reset-user-data` removes login state and OAuth/session cookies.
 
 ### Flatpak installation scope policy
@@ -305,11 +305,12 @@ Development smoke tests should prefer:
 
 because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
 
-Migration note: development builds before `1.4.10.dev19` used `com.canva.Linux`. The active Flathub-facing app-id is now `io.github.PirateMaryRead.canva-linux`.
+Migration note: development builds before `1.4.10.dev19` used `com.canva.Linux`. The project was previously hosted at `PirateMaryRead/canva-linux` with app-id `io.github.PirateMaryRead.canva-linux`. The active Flathub-facing app-id is now `io.github.coletivo420.canva-linux`.
 
 ```bash
 flatpak uninstall com.canva.Linux
-flatpak run io.github.PirateMaryRead.canva-linux
+flatpak uninstall io.github.PirateMaryRead.canva-linux
+flatpak run io.github.coletivo420.canva-linux
 ```
 
 ## Flathub Status
@@ -338,8 +339,8 @@ logs/current.log
 Debug levels:
 
 ```bash
-CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux
 ```
 
 `CANVA_DEBUG=1` shows all internal Canva Linux diagnostics, including GPU acceleration monitoring.

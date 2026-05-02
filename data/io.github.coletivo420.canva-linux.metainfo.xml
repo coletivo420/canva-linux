@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.PirateMaryRead.canva-linux</id>
+  <id>io.github.coletivo420.canva-linux</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>Canva Linux</name>
@@ -15,32 +15,33 @@
       media support, and desktop integration.
     </p>
   </description>
-  <launchable type="desktop-id">io.github.PirateMaryRead.canva-linux.desktop</launchable>
-  <url type="homepage">https://github.com/PirateMaryRead/canva-linux</url>
-  <url type="vcs-browser">https://github.com/PirateMaryRead/canva-linux</url>
-  <developer id="io.github.piratemaryread">
-    <name>Felipe Matos (piradopirata)</name>
+  <launchable type="desktop-id">io.github.coletivo420.canva-linux.desktop</launchable>
+  <url type="homepage">https://github.com/coletivo420/canva-linux</url>
+  <url type="vcs-browser">https://github.com/coletivo420/canva-linux</url>
+  <developer id="io.github.coletivo420">
+    <name>Coletivo 420</name>
   </developer>
   <replaces>
+    <id>io.github.PirateMaryRead.canva-linux</id>
     <id>com.canva.Linux</id>
   </replaces>
   <content_rating type="oars-1.1" />
   <screenshots>
     <screenshot type="default">
       <caption>Canva Linux home screen</caption>
-      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/home.png</image>
+      <image>https://raw.githubusercontent.com/coletivo420/canva-linux/dev/assets/screenshots/home.png</image>
     </screenshot>
     <screenshot>
       <caption>Canva Linux tabbed shell</caption>
-      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/tabs.png</image>
+      <image>https://raw.githubusercontent.com/coletivo420/canva-linux/dev/assets/screenshots/tabs.png</image>
     </screenshot>
     <screenshot>
       <caption>Upload workflow inside Canva Linux</caption>
-      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/upload.png</image>
+      <image>https://raw.githubusercontent.com/coletivo420/canva-linux/dev/assets/screenshots/upload.png</image>
     </screenshot>
     <screenshot>
       <caption>Custom eyedropper workflow inside Canva Linux</caption>
-      <image>https://raw.githubusercontent.com/PirateMaryRead/canva-linux/795e80d5bf7bb4564fb296d4746bc2ea6719bcec/assets/screenshots/eyedropper.png</image>
+      <image>https://raw.githubusercontent.com/coletivo420/canva-linux/dev/assets/screenshots/eyedropper.png</image>
     </screenshot>
   </screenshots>
   <releases>

@@ -31,7 +31,7 @@ This document defines project conventions for AI-assisted development and vibeco
 - Use `Canva Linux` as the public project name and `A community opensource desktop wrapper for use with Canva` as the short descriptive phrase.
 - Do not describe the app as official, verified, endorsed, certified, or supported by Canva Pty Ltd unless the statement is explicitly negated.
 - Do not use the `com.canva.*` namespace for app-id, desktop, metainfo, icon, or WMClass in active packaging files.
-- Keep the Flathub-facing app-id as `io.github.PirateMaryRead.canva-linux` unless the maintainer explicitly changes it.
+- Keep the Flathub-facing app-id as `io.github.coletivo420.canva-linux` unless the maintainer explicitly changes it.
 
 ## Custom colorpicker directive
 
