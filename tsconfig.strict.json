@@ -37,6 +37,7 @@
     "electron/preload/canva.ts",
     "electron/preload/cl-eyedropper/index.ts",
     "electron/preload/cl-eyedropper/types.ts",
+    "electron/preload/cl-eyedropper/cl-eyedropper.ts",
     "test/logging-normalize.test.js",
     "test/debug-levels.test.js",
     "test/gpu-diagnostics.test.js",

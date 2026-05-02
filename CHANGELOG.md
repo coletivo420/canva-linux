@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.4-dev.20] - 2026-05-02
+
+### Added
+
+- Added CL-EyeDropper as a TypeScript parity implementation of the current LTCode-backed picker.
+- Added CL-EyeDropper exports for `CLEyeDropper`, `installClEyeDropperScalingPatch`, and `removeClEyeDropperUi`.
+- Added parity tests for CL-EyeDropper behavior.
+- Expanded runtime build checks for the compiled CL-EyeDropper module.
+
+### Changed
+
+- Updated CanvaLinux EyeDropper documentation to define DEV20 as a parity-first TypeScript conversion phase.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- The active Canva EyeDropper flow still uses the LTCode-backed implementation.
+- CL-EyeDropper is not enabled by default in DEV20.
+- Functional improvements are deferred until after parity validation.
+
 ## [0.1.4-dev.19] - 2026-05-01
 
 ### Added

@@ -293,3 +293,22 @@ Do not:
 - change preload bundle module IDs away from `.js`;
 - break source-mode or build-output-mode preload bundling;
 - alter Flatpak, OAuth, tab or GPU behavior.
+
+## DEV20 CL-EyeDropper parity guardrails
+
+DEV20 must preserve LTCode behavior.
+
+The only goal is a TypeScript parity implementation.
+
+Do not:
+
+- redesign the picker;
+- change UI behavior;
+- alter coordinate math;
+- remove the scaling patch model;
+- remove LTCode;
+- activate CL-EyeDropper as default;
+- introduce `CANVA_EYEDROPPER_IMPL`;
+- change `wrapper:eyedropper-snapshot`;
+- change the active Canva picker flow;
+- change Flatpak, OAuth, tabs, GPU or logging behavior.

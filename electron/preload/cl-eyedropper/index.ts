@@ -1,10 +1,16 @@
 'use strict';
 
+export {
+  CLEyeDropper,
+  installClEyeDropperScalingPatch,
+  removeClEyeDropperUi,
+} from './cl-eyedropper';
+
 export type {
-  CLEyeDropperHex,
-  CLEyeDropperLogger,
   CLEyeDropperOpenOptions,
   CLEyeDropperOpenTarget,
-  CLEyeDropperResult,
-  CLEyeDropperSnapshot,
+  CLEyeDropperOptions,
+  EyeDropperLog,
+  LTCodeCompatibleResult,
+  RgbTuple,
 } from './types';
