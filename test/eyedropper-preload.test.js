@@ -6,17 +6,19 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const test = require('node:test');
 
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
 const {
   describeTarget,
   normalizeHex: normalizeRoutingHex,
   serializeValue,
   summarizeStream,
-} = require('../electron/preload/eyedropper-routing-diagnostics');
+} = loadRuntimeModule('preload/eyedropper-routing-diagnostics');
 
 const {
   installNativeEyeDropperWrapper,
   isWrappedEyeDropperInstalledInScope,
-} = require('../electron/preload/native-eyedropper-wrapper');
+} = loadRuntimeModule('preload/native-eyedropper-wrapper');
 
 /**
  * @template T
@@ -49,7 +51,7 @@ const {
   createAbortError,
   createOperationError,
   normalizeHex: normalizeCustomHex,
-} = withElectronMock(() => require('../electron/preload/custom-eyedropper-flow'));
+} = withElectronMock(() => loadRuntimeModule('preload/custom-eyedropper-flow'));
 
 test('normalizes EyeDropper hex values', () => {
   assert.equal(normalizeRoutingHex('#AABBCC'), '#aabbcc');

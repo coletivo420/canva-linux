@@ -13,7 +13,7 @@ const {
   summarizeClipboardKinds,
   rememberUploadIngress,
   recentUploadIngressSummary,
-} = require('../electron/preload/upload-diagnostics');
+} = require('./helpers/runtime-module').loadRuntimeModule('preload/upload-diagnostics');
 
 class TestHTMLInputElement {
   constructor() {

@@ -438,3 +438,31 @@ npm run dist
 Before removing or simplifying behavior, search `CHANGELOG.md`.
 
 If the behavior appears in `CHANGELOG.md`, it is protected unless the maintainer explicitly requested the change.
+
+## DEV19 preload TypeScript validation
+
+Run:
+
+```bash
+rm -rf .build
+npm test
+test ! -d .build
+
+npm run build:preload
+npm run lint
+npm run typecheck
+npm run typecheck:strict
+npm run build:runtime
+npm run build:check
+./canva-linux.sh --validate
+```
+
+Manual checks:
+
+- Canva preload starts;
+- upload diagnostics still load;
+- EyeDropper wrapper installs;
+- EyeDropper.open() still routes through LTCode path;
+- wrapper:eyedropper-snapshot still works;
+- `{ sRGBHex: "#rrggbb" }` still returns to Canva;
+- `CANVA_DEBUG=1` shows preload and eyedropper diagnostics.

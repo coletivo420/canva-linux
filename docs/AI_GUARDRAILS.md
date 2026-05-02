@@ -279,3 +279,17 @@ Do not:
 - overwrite `PromptMomentNotification` methods;
 - block scripts from `static.canva.com`;
 - suppress all console warnings from Canva.
+
+## DEV19 preload and CL-EyeDropper contract guardrails
+
+DEV19 may convert preload source modules to TypeScript and create CL-EyeDropper contracts only.
+
+Do not:
+
+- implement the CL-EyeDropper picker yet;
+- remove or bypass LTCode;
+- add `CANVA_EYEDROPPER_IMPL`;
+- alter `wrapper:eyedropper-snapshot`;
+- change preload bundle module IDs away from `.js`;
+- break source-mode or build-output-mode preload bundling;
+- alter Flatpak, OAuth, tab or GPU behavior.

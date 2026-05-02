@@ -72,11 +72,12 @@ The future CL-EyeDropper must:
 
 ## Implementation Sequence
 
-- DEV18: convert preload source modules and introduce CL-EyeDropper contracts.
-- DEV19: implement the first-party CanvaLinux EyeDropper in TypeScript.
-- DEV20: make CL-EyeDropper the default while keeping LTCode as temporary fallback.
-- DEV21: validate full TypeScript conversion and CL-EyeDropper behavior.
-- DEV22: remove LTCode legacy fallback and obsolete compatibility code.
+- DEV19: convert preload source modules and introduce CL-EyeDropper contracts.
+- DEV20: implement the first-party CanvaLinux EyeDropper in TypeScript.
+- DEV21: make CL-EyeDropper the default while keeping LTCode as temporary fallback.
+- DEV22: validate full TypeScript conversion and CL-EyeDropper behavior.
+- DEV23: remove LTCode legacy fallback and obsolete compatibility code.
+- DEV24: stabilization and release-candidate readiness.
 
 Starting in DEV20, the expected default is:
 
@@ -91,3 +92,5 @@ CANVA_EYEDROPPER_IMPL=legacy
 ```
 
 `cl` is the default implementation. `legacy` exists only as temporary diagnostics during the transition.
+
+DEV19 creates contracts only. It must not replace the active LTCode-backed EyeDropper flow.
