@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.4-dev.19] - 2026-05-01
+
+### Added
+
+- Added initial CL-EyeDropper TypeScript contract modules under `electron/preload/cl-eyedropper/`.
+- Added validation and documentation for the preload TypeScript conversion phase.
+
+### Changed
+
+- Converted preload source modules to TypeScript while preserving the generated `canva.bundle.js` runtime path.
+- Kept preload bundle module IDs stable as `.js` while allowing `.ts` source modules.
+- Updated the CanvaLinux EyeDropper roadmap after the DEV18 main-entrypoint conversion.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- The active EyeDropper implementation still uses the LTCode-backed flow.
+- CL-EyeDropper contracts are introduced, but the first-party picker is not implemented in DEV19.
+- `CANVA_EYEDROPPER_IMPL` is not introduced yet.
+
 ## [0.1.4-dev.18] - 2026-05-01
 
 ### Changed

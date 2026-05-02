@@ -329,3 +329,27 @@ Out of scope:
 - Flatpak policy changes;
 - CommonJS-to-ESM migration;
 - cleanup of redundant JSDoc in already-converted modules.
+
+## DEV19 scope
+
+`0.1.4-dev.19` converts preload source modules to TypeScript and introduces CL-EyeDropper contracts.
+
+Targets:
+
+- `electron/preload/canva.ts`
+- `electron/preload/debug.ts`
+- `electron/preload/upload-diagnostics.ts`
+- `electron/preload/browser-capture-diagnostics.ts`
+- `electron/preload/eyedropper-routing-diagnostics.ts`
+- `electron/preload/custom-eyedropper-flow.ts`
+- `electron/preload/native-eyedropper-wrapper.ts`
+- `electron/preload/cl-eyedropper/types.ts`
+- `electron/preload/cl-eyedropper/index.ts`
+
+Out of scope:
+
+- implementing CL-EyeDropper;
+- replacing LTCode;
+- changing the current EyeDropper runtime path;
+- adding `CANVA_EYEDROPPER_IMPL`;
+- changing Flatpak, OAuth or tab behavior.
