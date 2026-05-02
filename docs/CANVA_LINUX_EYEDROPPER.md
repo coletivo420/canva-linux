@@ -1,6 +1,6 @@
 # CanvaLinux EyeDropper
 
-This document tracks the planned first-party Canva Linux eyedropper implementation.
+This document tracks the first-party Canva Linux eyedropper implementation.
 
 ## Identity
 
@@ -10,20 +10,13 @@ This document tracks the planned first-party Canva Linux eyedropper implementati
 - TypeScript class name: `CLEyeDropper`
 - Log prefix: `cl-eyedropper:`
 
-## Planned Structure
+## Structure
 
 ```text
 electron/preload/cl-eyedropper/
   index.ts
   cl-eyedropper.ts
   types.ts
-  color.ts
-  canvas-sampler.ts
-  overlay.ts
-  magnifier.ts
-  picker-controller.ts
-  errors.ts
-  cleanup.ts
 ```
 
 ## Contract
@@ -33,64 +26,59 @@ export class CLEyeDropper {
   open(
     canvasOrContext: HTMLCanvasElement | CanvasRenderingContext2D,
     options?: EyeDropperOpenOptions
-  ): Promise<EyeDropperResult>;
+  ): Promise<{ hex: string; rgb: [number, number, number] }>;
 }
 ```
 
+## DEV20 parity phase
+
+DEV20 creates CL-EyeDropper as a TypeScript parity implementation of the current LTCode-backed picker.
+
+The goal is behavior parity, not feature improvement.
+
+CL-EyeDropper must preserve:
+
+- canvas/context input;
+- overlay creation;
+- magnifier;
+- crosshair;
+- preview;
+- mousemove/mouseleave/click flow;
+- last valid pixel behavior;
+- CSS/native scaling patch behavior;
+- `{ hex, rgb }` internal result;
+- final `{ sRGBHex }` conversion remaining in `custom-eyedropper-flow.ts`.
+
+The active Canva runtime path still uses LTCode until DEV21.
+
 ## Protected Requirements
 
-The future CL-EyeDropper must:
+The CL-EyeDropper implementation must:
 
 - accept a canvas or `CanvasRenderingContext2D`;
 - create a temporary DOM overlay;
 - create a magnifier;
 - create a color preview;
-- correct CSS-pixel versus native-pixel scaling;
+- preserve the CSS/native scaling patch behavior;
 - clamp coordinates inside the canvas;
 - read pixels with `getImageData()`;
 - convert RGB values to HEX;
 - preserve the last valid sampled pixel;
-- resolve with `{ sRGBHex: "#rrggbb" }`;
+- resolve internally with `{ hex, rgb }`;
 - remove overlays and listeners on completion;
 - restore the cursor;
-- support `AbortSignal`;
-- raise `AbortError` on abort;
-- raise `OperationError` on failure;
-- emit `cl-eyedropper:` logs.
-
-## Planned Logs
-
-- `cl-eyedropper:open`
-- `cl-eyedropper:overlay`
-- `cl-eyedropper:sampler`
-- `cl-eyedropper:magnifier`
-- `cl-eyedropper:preview`
-- `cl-eyedropper:pick`
-- `cl-eyedropper:cleanup`
-- `cl-eyedropper:abort`
-- `cl-eyedropper:error`
+- keep final `{ sRGBHex }` conversion in `custom-eyedropper-flow.ts`.
 
 ## Implementation Sequence
 
 - DEV19: convert preload source modules and introduce CL-EyeDropper contracts.
-- DEV20: implement the first-party CanvaLinux EyeDropper in TypeScript.
-- DEV21: make CL-EyeDropper the default while keeping LTCode as temporary fallback.
-- DEV22: validate full TypeScript conversion and CL-EyeDropper behavior.
-- DEV23: remove LTCode legacy fallback and obsolete compatibility code.
-- DEV24: stabilization and release-candidate readiness.
-
-Starting in DEV20, the expected default is:
-
-```bash
-CANVA_EYEDROPPER_IMPL=cl
-```
-
-Temporary diagnostic fallback:
-
-```bash
-CANVA_EYEDROPPER_IMPL=legacy
-```
-
-`cl` is the default implementation. `legacy` exists only as temporary diagnostics during the transition.
+- DEV20: convert LTCode behavior to CL-EyeDropper TypeScript parity without activating it.
+- DEV21: introduce controlled implementation selection for legacy versus CL.
+- DEV22: make CL-EyeDropper the default while keeping LTCode as temporary fallback.
+- DEV23: validate full TypeScript conversion and CL-EyeDropper behavior on Wayland, X11 and Flatpak.
+- DEV24: remove LTCode legacy fallback if validated.
+- DEV25: stabilization and release-candidate readiness.
 
 DEV19 creates contracts only. It must not replace the active LTCode-backed EyeDropper flow.
+
+DEV20 implements CL-EyeDropper, but it must not replace the active LTCode-backed EyeDropper flow.

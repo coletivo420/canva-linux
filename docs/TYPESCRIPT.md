@@ -353,3 +353,24 @@ Out of scope:
 - changing the current EyeDropper runtime path;
 - adding `CANVA_EYEDROPPER_IMPL`;
 - changing Flatpak, OAuth or tab behavior.
+
+## DEV20 scope
+
+`0.1.4-dev.20` implements the first-party CanvaLinux EyeDropper in TypeScript as a parity conversion of the current LTCode-backed picker.
+
+This phase creates the implementation but does not activate it as the default runtime picker. The goal is behavior parity, not functional improvement.
+
+Targets:
+
+- `electron/preload/cl-eyedropper/index.ts`
+- `electron/preload/cl-eyedropper/types.ts`
+- `electron/preload/cl-eyedropper/cl-eyedropper.ts`
+
+Out of scope:
+
+- replacing LTCode in the active Canva runtime flow;
+- adding `CANVA_EYEDROPPER_IMPL`;
+- changing `wrapper:eyedropper-snapshot`;
+- redesigning the picker architecture, UI, coordinate math or event flow;
+- changing Flatpak, OAuth, tabs, GPU or logging behavior;
+- removing `// @ts-nocheck` from `electron/preload/canva.ts`.

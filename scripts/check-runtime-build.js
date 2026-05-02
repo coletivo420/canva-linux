@@ -60,6 +60,7 @@ requireFile('.build/electron/preload/custom-eyedropper-flow.js');
 requireFile('.build/electron/preload/native-eyedropper-wrapper.js');
 requireFile('.build/electron/preload/canva.js');
 requireFile('.build/electron/preload/cl-eyedropper/index.js');
+requireFile('.build/electron/preload/cl-eyedropper/cl-eyedropper.js');
 requireFile('.build/electron/preload/canva.bundle.js');
 requireFile('.build/electron/ui/toolbar.html');
 requireDir('.build/electron/assets');

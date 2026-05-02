@@ -1,23 +1,22 @@
 'use strict';
 
-export type CLEyeDropperHex = `#${string}`;
+export type RgbTuple = [number, number, number];
 
-export type CLEyeDropperResult = {
-  sRGBHex: string;
+export type LTCodeCompatibleResult = {
+  hex: string;
+  rgb: RgbTuple;
 };
 
-export type CLEyeDropperOpenOptions = {
-  signal?: AbortSignal;
+export type CLEyeDropperOptions = {
+  overlay?: Record<string, any>;
+  magnifier?: Record<string, any>;
+  preview?: Record<string, any>;
+  renderPreview?: (pixel: unknown) => string;
+  onPick?: (payload: unknown) => void;
 };
 
-export type CLEyeDropperSnapshot = {
-  dataUrl: string;
-  width?: number;
-  height?: number;
-  cssWidth?: number;
-  cssHeight?: number;
-};
+export type CLEyeDropperOpenOptions = Record<string, unknown>;
 
-export type CLEyeDropperLogger = (category: string, ...args: unknown[]) => void;
+export type EyeDropperLog = (...args: unknown[]) => void;
 
 export type CLEyeDropperOpenTarget = HTMLCanvasElement | CanvasRenderingContext2D;
