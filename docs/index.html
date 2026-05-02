@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Canva Linux | Community Desktop Wrapper</title>
     <meta name="description" content="A community-maintained, open-source desktop wrapper for Canva on Linux.">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/inter-ui/inter.css">
     <style>
         :root {
             --bg-color: #0e1318;
@@ -29,87 +30,93 @@
         }
 
         header {
-            padding: 4rem 2rem;
+            padding: 3rem 2rem;
             text-align: center;
             background: linear-gradient(180deg, rgba(0, 196, 204, 0.1) 0%, rgba(14, 19, 24, 0) 100%);
         }
 
         .container {
-            max-width: 900px;
+            max-width: 800px;
             margin: 0 auto;
             padding: 0 2rem;
         }
 
         h1 {
-            font-size: 3.5rem;
-            margin-bottom: 1rem;
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
             letter-spacing: -0.02em;
         }
 
-        .subtitle {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 2.5rem;
-        }
-
-        .cta-buttons {
+        .header-links {
+            margin-top: 1.5rem;
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
             justify-content: center;
-            flex-wrap: wrap;
         }
 
-        .btn {
-            padding: 0.8rem 2rem;
-            border-radius: 8px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background-color: var(--accent);
-            color: var(--bg-color);
-        }
-
-        .btn-primary:hover {
-            background-color: var(--accent-hover);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background-color: transparent;
-            color: var(--text-primary);
-            border: 1px solid var(--text-secondary);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--text-primary);
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-
-        section {
-            padding: 4rem 0;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-        }
-
-        .feature-card {
-            background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .feature-card h3 {
-            margin-top: 0;
+        .header-links a {
             color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
         }
+
+        .header-links a:hover {
+            text-decoration: underline;
+        }
+
+        #content {
+            padding: 2rem 0;
+        }
+
+        /* Markdown Styling */
+        #content h1 { display: none; } /* Hide the redundant title from README */
+        #content h2 { color: var(--accent); margin-top: 2.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
+        #content h3 { margin-top: 1.5rem; color: var(--text-primary); }
+        #content p { color: var(--text-secondary); }
+        #content blockquote {
+            border-left: 4px solid var(--accent);
+            margin: 1.5rem 0;
+            padding: 0.5rem 1.5rem;
+            background: rgba(0, 196, 204, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+        #content blockquote p { font-style: italic; color: var(--text-primary); }
+        #content code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            color: var(--accent);
+            font-size: 0.9em;
+        }
+        #content pre {
+            background: #000;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #content pre code { background: none; padding: 0; color: #e2e8f0; }
+        #content ul { padding-left: 1.5rem; color: var(--text-secondary); }
+        #content li { margin-bottom: 0.5rem; }
+        #content a { color: var(--accent); text-decoration: none; }
+        #content a:hover { text-decoration: underline; }
+        #content hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 3rem 0; }
+
+        #content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        #content th, #content td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        #content th { background: rgba(255,255,255,0.05); color: var(--accent); }
 
         footer {
             margin-top: auto;
@@ -120,22 +127,10 @@
             font-size: 0.9rem;
         }
 
-        .disclaimer {
-            font-style: italic;
-            max-width: 700px;
-            margin: 0 auto 1rem;
-        }
-
-        code {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-family: monospace;
-            color: var(--accent);
-        }
-
-        @media (max-width: 600px) {
-            h1 { font-size: 2.5rem; }
+        .loading {
+            text-align: center;
+            padding: 5rem;
+            color: var(--text-secondary);
         }
     </style>
 </head>
@@ -143,50 +138,48 @@
     <header>
         <div class="container">
             <h1>Canva Linux</h1>
-            <p class="subtitle">A community-maintained open source desktop wrapper for Canva on Linux. Native performance, persistent sessions, and seamless integration.</p>
-            <div class="cta-buttons">
-                <a href="https://github.com/coletivo420/canva-linux" class="btn btn-primary">View on GitHub</a>
-                <a href="#install" class="btn btn-secondary">Installation Guide</a>
+            <div class="header-links">
+                <a href="https://github.com/coletivo420/canva-linux">GitHub Repository</a>
+                <a href="https://github.com/coletivo420/canva-linux/releases">Download Releases</a>
             </div>
         </div>
     </header>
 
     <main class="container">
-        <section id="features">
-            <div class="features-grid">
-                <div class="feature-card">
-                    <h3>Native Feel</h3>
-                    <p>Optimized Electron wrapper with custom styling for a true desktop experience.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Flatpak Support</h3>
-                    <p>Easy installation and sandboxed security via Flathub-ready manifests.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Wayland Ready</h3>
-                    <p>Full support for modern Wayland sessions with X11 fallback if needed.</p>
-                </div>
-                <div class="feature-card">
-                    <h3>EyeDropper</h3>
-                    <p>Includes a custom color picker flow integrated directly into the Canva editor.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="install">
-            <h2>Quick Start</h2>
-            <p>Install the latest development version via Flatpak:</p>
-            <pre><code>git clone https://github.com/coletivo420/canva-linux.git
-cd canva-linux
-./canva-linux.sh --install</code></pre>
-        </section>
+        <div id="content">
+            <div class="loading">Loading project information...</div>
+        </div>
     </main>
 
     <footer>
         <div class="container">
-            <p class="disclaimer">Canva Linux is an independent community project and is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd.</p>
             <p>&copy; 2026 Coletivo 420. Released under GPL-3.0-or-later.</p>
         </div>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        async function loadContent() {
+            const contentDiv = document.getElementById('content');
+            try {
+                // Fetch README.md from the same directory (or parent via relative path)
+                // In GitHub Pages /docs/index.html, README.md is in /README.md
+                const response = await fetch('../README.md');
+                if (!response.ok) throw new Error('Failed to load README.md');
+                const markdown = await response.text();
+
+                // Set options for marked
+                marked.setOptions({
+                    gfm: true,
+                    breaks: true
+                });
+
+                contentDiv.innerHTML = marked.parse(markdown);
+            } catch (err) {
+                contentDiv.innerHTML = `<div class="loading" style="color: #ff4d4d;">Error loading content: ${err.message}</div>`;
+            }
+        }
+        loadContent();
+    </script>
 </body>
 </html>
