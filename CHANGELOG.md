@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.4-dev.22] - 2026-05-02
+
+### Changed
+
+- Migrated the canonical repository from `PirateMaryRead/canva-linux` to `coletivo420/canva-linux`.
+- Updated active Flatpak app-id, desktop/metainfo filenames, icon identifiers, and runtime WMClass usage to `io.github.coletivo420.canva-linux`.
+- Updated the application's landing page and `APP_URL` to `https://coletivo420.github.io/canva-linux/`.
+- Updated package metadata, scripts, and documentation to reflect the new repository and landing page URLs.
+- Added migration cleanup logic to `canva-linux.sh` to optionally uninstall legacy AppIDs.
+- Replaced the `docs/index.html` placeholder with a real landing page.
+
+### Notes
+
+- The previous `PirateMaryRead` and `com.canva.Linux` IDs are preserved only as migration history and cleanup targets.
+- Runtime behavior is unchanged except for repository identity and AppID metadata.
+
 ## [0.1.4-dev.21] - 2026-05-02
 
 ### Changed
