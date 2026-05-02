@@ -54,6 +54,13 @@ type CreateTabControllerOptions = {
   attachTabEventHandlersImpl?: AttachTabEventHandlersLike;
 };
 
+const EYE_DROPPER_IMPLEMENTATION_ARGUMENT = '--canva-eyedropper-impl=';
+
+export function createEyeDropperImplementationArgument(env: Record<string, string | undefined> = process.env): string {
+  const value = String(env.CANVA_EYEDROPPER_IMPL || '').trim();
+  return `${EYE_DROPPER_IMPLEMENTATION_ARGUMENT}${value || 'cl'}`;
+}
+
 /**
  * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
  * @typedef {{ kind: string, category?: string }} NavigationDecision
@@ -147,6 +154,7 @@ export function createTabController({
         sandbox: false,
         nodeIntegration: false,
         nodeIntegrationInSubFrames: true,
+        additionalArguments: [createEyeDropperImplementationArgument()],
         session: getCanvaSession(),
         spellcheck: true,
       },
@@ -235,5 +243,6 @@ export function createTabController({
 }
 
 module.exports = {
+  createEyeDropperImplementationArgument,
   createTabController,
 };

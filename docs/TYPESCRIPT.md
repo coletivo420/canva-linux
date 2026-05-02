@@ -374,3 +374,31 @@ Out of scope:
 - redesigning the picker architecture, UI, coordinate math or event flow;
 - changing Flatpak, OAuth, tabs, GPU or logging behavior;
 - removing `// @ts-nocheck` from `electron/preload/canva.ts`.
+
+## DEV21 scope
+
+`0.1.4-dev.21` makes CL-EyeDropper the default picker implementation while keeping LTCode as a temporary fallback.
+
+Targets:
+
+- `electron/preload/eyedropper-implementation.ts`
+- `electron/preload/custom-eyedropper-flow.ts`
+- `electron/preload/cl-eyedropper/index.ts`
+- `electron/preload/cl-eyedropper/cl-eyedropper.ts`
+
+Behavior:
+
+- no `CANVA_EYEDROPPER_IMPL`: use CL-EyeDropper;
+- `CANVA_EYEDROPPER_IMPL=cl`: use CL-EyeDropper;
+- `CANVA_EYEDROPPER_IMPL=legacy`: use LTCode;
+- `CANVA_EYEDROPPER_IMPL=ltcode`: use LTCode as an alias;
+- invalid values fall back to CL-EyeDropper and log the fallback.
+
+The main process owns reading `CANVA_EYEDROPPER_IMPL` from the host environment and forwards the selected value through `webPreferences.additionalArguments`. Preload modules must not read `process.env` for this setting.
+
+Out of scope:
+
+- removing `electron/preload/ltcode-eyedropper.js`;
+- changing `wrapper:eyedropper-snapshot`;
+- changing `native-eyedropper-wrapper.ts` or `canva.ts`;
+- changing Flatpak, OAuth, tabs, GPU, upload or IPC behavior.

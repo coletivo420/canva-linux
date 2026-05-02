@@ -466,3 +466,35 @@ Manual checks:
 - wrapper:eyedropper-snapshot still works;
 - `{ sRGBHex: "#rrggbb" }` still returns to Canva;
 - `CANVA_DEBUG=1` shows preload and eyedropper diagnostics.
+
+## DEV21 CL-EyeDropper default validation
+
+Run:
+
+```bash
+npm run lint
+npm run typecheck
+npm run typecheck:strict
+npm test
+npm run build:preload
+npm run build:runtime
+npm run build:check
+./canva-linux.sh --validate
+```
+
+Manual checks:
+
+```bash
+CANVA_DEBUG=1 npm start
+CANVA_DEBUG=1 CANVA_EYEDROPPER_IMPL=cl npm start
+CANVA_DEBUG=1 CANVA_EYEDROPPER_IMPL=legacy npm start
+```
+
+Expected:
+
+- no variable: CL-EyeDropper is selected;
+- `CANVA_EYEDROPPER_IMPL=cl`: CL-EyeDropper is selected;
+- `CANVA_EYEDROPPER_IMPL=legacy`: LTCode path is selected;
+- color picking returns `{ sRGBHex: "#rrggbb" }`;
+- Escape still aborts;
+- tab navigation still reinjects wrapper.

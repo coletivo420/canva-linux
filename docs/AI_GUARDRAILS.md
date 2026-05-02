@@ -312,3 +312,17 @@ Do not:
 - change `wrapper:eyedropper-snapshot`;
 - change the active Canva picker flow;
 - change Flatpak, OAuth, tabs, GPU or logging behavior.
+
+## DEV21 CL-EyeDropper default guardrails
+
+DEV21 may make CL-EyeDropper the default, but must keep LTCode fallback.
+
+Do not:
+
+- remove `electron/preload/ltcode-eyedropper.js`;
+- remove `CANVA_EYEDROPPER_IMPL=legacy`;
+- change `wrapper:eyedropper-snapshot`;
+- change the preload bundle module ID strategy;
+- use directory-style `require('./cl-eyedropper')` in preload bundled code;
+- read `CANVA_EYEDROPPER_IMPL` directly from `process.env` inside preload code;
+- change Flatpak, OAuth, tabs, GPU or upload behavior.

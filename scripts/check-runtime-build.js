@@ -56,6 +56,7 @@ requireFile('.build/electron/preload/debug.js');
 requireFile('.build/electron/preload/upload-diagnostics.js');
 requireFile('.build/electron/preload/browser-capture-diagnostics.js');
 requireFile('.build/electron/preload/eyedropper-routing-diagnostics.js');
+requireFile('.build/electron/preload/eyedropper-implementation.js');
 requireFile('.build/electron/preload/custom-eyedropper-flow.js');
 requireFile('.build/electron/preload/native-eyedropper-wrapper.js');
 requireFile('.build/electron/preload/canva.js');
