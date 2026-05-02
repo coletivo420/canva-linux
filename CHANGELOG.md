@@ -13,7 +13,7 @@
 
 - Preserved app startup, lifecycle registration, session setup, tab controller wiring, OAuth popup wiring, GPU diagnostics registration and EyeDropper bridge registration during entrypoint conversion.
 - Preserved runtime version detection through `app.getVersion()`.
-- Updated `electron-builder` to `26.8.1` to clear the npm audit vulnerability chain in packaging dependencies.
+- Kept the compatible `electron-builder` 25 line and added npm overrides for vulnerable transitive packaging dependencies.
 
 ### Notes
 

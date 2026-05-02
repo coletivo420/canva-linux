@@ -9,7 +9,7 @@
   "homepage": "https://www.canva.com/",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --linux dir",
+    "dist": "NODE_OPTIONS=--no-deprecation electron-builder --linux dir",
     "lint": "eslint .",
     "test": "node --test \"test/**/*.test.js\"",
     "test:unit": "node --test test/window-open-policy.test.js",
@@ -45,11 +45,6 @@
       "target": "dir",
       "category": "Graphics",
       "executableName": "canva-linux",
-      "desktop": {
-        "Name": "Canva Linux",
-        "StartupWMClass": "io.github.PirateMaryRead.canva-linux",
-        "X-GNOME-WMClass": "io.github.PirateMaryRead.canva-linux"
-      },
       "icon": "build-resources"
     },
     "extraMetadata": {
@@ -62,12 +57,16 @@
     "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.1",
     "electron": "41.3.0",
-    "electron-builder": "^26.8.1",
+    "electron-builder": "^25.1.8",
     "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0",
     "typescript": "^6.0.3"
   },
   "desktopName": "io.github.PirateMaryRead.canva-linux.desktop",
+  "overrides": {
+    "@tootallnate/once": "^3.0.1",
+    "tar": "^7.5.11"
+  },
   "engines": {
     "node": ">=22.0.0"
   }
