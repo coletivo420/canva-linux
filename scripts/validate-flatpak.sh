@@ -221,7 +221,9 @@ for (const [filePath, token] of checks) {
 }
 
 const forbiddenActive = [
-  'io.github.PirateMaryRead.canva-linux-NOT-REALLY',
+  'io.github.PirateMaryRead.canva-linux',
+  'com.canva.Linux',
+  'com.canva.WebApp',
 ];
 
 const activeFiles = [
@@ -242,6 +244,9 @@ for (const filePath of activeFiles) {
   const content = fs.readFileSync(filePath, 'utf8');
   for (const token of forbiddenActive) {
     if (content.includes(token)) {
+      if (filePath === 'canva-linux.sh' && (token === 'io.github.PirateMaryRead.canva-linux' || token === 'com.canva.Linux')) {
+        continue;
+      }
       console.error(`${filePath}: forbidden legacy token present: ${token}`);
       process.exit(1);
     }
