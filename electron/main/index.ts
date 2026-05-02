@@ -1,4 +1,3 @@
-// @ts-check
 'use strict';
 
 const path = require('path');
@@ -34,7 +33,12 @@ const { registerAppLifecycle } = require('./lifecycle');
 const { createCentralLogger, createStatusLogger } = require('./logging');
 const { createLoggingHelpers } = require('./logging-helpers');
 const { createOAuthHelpers } = require('./oauth');
-const { configureLinuxRuntime, configureSession, flushSession } = require('./runtime');
+const {
+  configureLinuxRuntime,
+  configureSession,
+  flushSession,
+  sharedWebPreferences: createSharedWebPreferences,
+} = require('./runtime');
 const { createShellHelpers } = require('./shell');
 const { createTabController } = require('./tab-controller');
 const { createTabHelpers } = require('./tabs');
@@ -51,48 +55,35 @@ const APP_ICON_PATH = path.join(__dirname, '..', 'assets', 'canva-icon.png');
 const APP_VERSION = app.getVersion();
 const centralLogger = createCentralLogger({ app });
 const { debugLevel, debugEnabled, debugLog } = createDebugTools({
-  emit(category, args) {
+  emit(category: string, args: unknown[]) {
     centralLogger.logDebug(category, args, { source: 'main' });
   },
 });
 
-/**
- * @typedef {import('./shell').BrowserWindowLike & import('./oauth').BrowserWindowLike & import('./logging-helpers').BrowserWindowLike} BrowserWindowInstance
- * @typedef {import('./tabs').WebContentsViewLike & import('./shell').WebContentsViewLike} WebContentsViewInstance
- * @typedef {import('./runtime').SessionLike} ElectronSession
- * @typedef {import('electron').WebContents} ElectronWebContents
- */
-/**
- * @typedef {import('./tabs').TabEntry} TabEntry
- */
-/**
- * @typedef {import('./oauth').OAuthPopupEntry} AuthPopupEntry
- */
-/**
- * @typedef {(webContents: { id?: number } | null | undefined) => TabEntry | null} FindTabByWebContents
- * @typedef {() => TabEntry | null} CreateHomeTab
- */
+type BrowserWindowInstance =
+  import('./shell').BrowserWindowLike &
+  import('./oauth').BrowserWindowLike &
+  import('./logging-helpers').BrowserWindowLike;
+type WebContentsViewInstance =
+  import('./tabs').WebContentsViewLike &
+  import('./shell').WebContentsViewLike;
+type ElectronSession = import('./runtime').SessionLike;
+type ElectronWebContents = import('electron').WebContents;
+type TabEntry = import('./tabs').TabEntry;
+type AuthPopupEntry = import('./oauth').OAuthPopupEntry;
+type FindTabByWebContents = (webContents: Partial<Pick<ElectronWebContents, 'id'>> | null | undefined) => TabEntry | null;
+type CreateHomeTab = () => TabEntry | null;
 
-/** @type {BrowserWindowInstance | null} */
-let mainWindow = null;
-/** @type {WebContentsViewInstance | null} */
-let toolbarView = null;
-/** @type {number | null} */
-let activeTabId = null;
-/** @type {number} */
+let mainWindow: BrowserWindowInstance | null = null;
+let toolbarView: WebContentsViewInstance | null = null;
+let activeTabId: number | null = null;
 let nextTabId = 1;
-/** @type {number} */
 let nextPopupId = 1;
-/** @type {Map<number, TabEntry>} */
-const tabs = new Map();
-/** @type {Map<number, AuthPopupEntry>} */
-const authPopups = new Map();
-/** @type {ElectronSession | null} */
-let canvaSession = null;
-/** @type {FindTabByWebContents} */
-let findTabByWebContents = () => null;
-/** @type {CreateHomeTab} */
-let createHomeTab = () => null;
+const tabs = new Map<number, TabEntry>();
+const authPopups = new Map<number, AuthPopupEntry>();
+let canvaSession: ElectronSession | null = null;
+let findTabByWebContents: FindTabByWebContents = () => null;
+let createHomeTab: CreateHomeTab = () => null;
 
 configureLinuxRuntime({
   app,
@@ -101,12 +92,9 @@ configureLinuxRuntime({
   wmClass: WM_CLASS,
 });
 
-/**
- * @returns {ElectronSession}
- */
-function getCanvaSession() {
+function getCanvaSession(): ElectronSession {
   if (!canvaSession) {
-    canvaSession = /** @type {ElectronSession} */ (/** @type {unknown} */ (session.fromPartition(PARTITION, { cache: true })));
+    canvaSession = session.fromPartition(PARTITION, { cache: true }) as unknown as ElectronSession;
   }
   return canvaSession;
 }
@@ -122,19 +110,19 @@ const { logCredentialStorageBackend, logReleaseStatus } = createStatusLogger({
 const shellHelpers = createShellHelpers({
   appIconPath: APP_ICON_PATH,
   appName: APP_NAME,
-  BrowserWindow: /** @type {new (options: Record<string, unknown>) => import('./shell').BrowserWindowLike} */ (/** @type {unknown} */ (BrowserWindow)),
+  BrowserWindow: BrowserWindow as unknown as new (options: Record<string, unknown>) => import('./shell').BrowserWindowLike,
   debugLog,
   layoutViews() {
     return layoutViews();
   },
   nativeTheme,
-  WebContentsView: /** @type {new (options: Record<string, unknown>) => import('./shell').WebContentsViewLike} */ (/** @type {unknown} */ (WebContentsView)),
+  WebContentsView: WebContentsView as unknown as new (options: Record<string, unknown>) => import('./shell').WebContentsViewLike,
 });
 const { shellBackgroundColor } = shellHelpers;
 
 const loggingHelpers = createLoggingHelpers({
   getMainWindow: () => mainWindow,
-  getAuthPopups: () => /** @type {Map<number, import('./logging-helpers').OAuthPopupEntry>} */ (/** @type {unknown} */ (authPopups)),
+  getAuthPopups: () => authPopups as unknown as Map<number, import('./logging-helpers').OAuthPopupEntry>,
   getFindTabByWebContents: () => findTabByWebContents,
 });
 const { summarizeOauthEntry, webContentsLabel, windowLabel } = loggingHelpers;
@@ -143,26 +131,16 @@ const { classifyWindowOpenRequest } = createWindowOpenPolicy({
   classifyNavigationRequest: sharedClassifyWindowOpenRequest,
 });
 
-/**
- * @returns {string}
- */
-function makeToolbarUrl() {
+function makeToolbarUrl(): string {
   return `file://${path.join(__dirname, '..', 'ui', 'toolbar.html')}`;
 }
 
-/**
- * @returns {'dark' | 'light'}
- */
-function currentTheme() {
+function currentTheme(): 'dark' | 'light' {
   return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
 }
 
-/**
- * @param {Record<string, unknown>} [extra]
- * @returns {Record<string, unknown>}
- */
-function sharedWebPreferences(extra = {}) {
-  return require('./runtime').sharedWebPreferences(getCanvaSession, extra);
+function sharedWebPreferences(extra: Record<string, unknown> = {}): Record<string, unknown> {
+  return createSharedWebPreferences(getCanvaSession, extra);
 }
 
 const tabHelpers = createTabHelpers({
@@ -170,19 +148,13 @@ const tabHelpers = createTabHelpers({
   broadcastTabsState,
   createHomeTab: () => createHomeTab(),
   debugLog,
-  /**
-   * @param {FindTabByWebContents} value
-   */
-  findTabByWebContentsRef(value) {
+  findTabByWebContentsRef(value: FindTabByWebContents) {
     findTabByWebContents = value;
   },
   getHomeUrl: () => HOME_URL,
   mainWindowRef: () => mainWindow,
   nativeTheme,
-  /**
-   * @param {number | null} value
-   */
-  setActiveTabId(value) {
+  setActiveTabId(value: number | null) {
     activeTabId = value;
   },
   state: {
@@ -199,13 +171,13 @@ const oauthHelpers = createOAuthHelpers({
   appIconPath: APP_ICON_PATH,
   appName: APP_NAME,
   authPopups,
-  BrowserWindow: /** @type {new (options: Record<string, unknown>) => import('./oauth').BrowserWindowLike} */ (/** @type {unknown} */ (BrowserWindow)),
+  BrowserWindow: BrowserWindow as unknown as new (options: Record<string, unknown>) => import('./oauth').BrowserWindowLike,
   classifyNavigationRequest: sharedClassifyWindowOpenRequest,
   debugLog,
   detectCanvaOAuthCallback,
   extractHostname,
-  flushSession: /** @type {(session: unknown) => Promise<void>} */ (/** @type {unknown} */ (flushSession)),
-  getActiveTab: () => /** @type {import('./oauth').CanvaTabEntry | undefined} */ (/** @type {unknown} */ (activeTabId === null ? undefined : tabs.get(activeTabId))),
+  flushSession: flushSession as unknown as (session: unknown) => Promise<void>,
+  getActiveTab: () => (activeTabId === null ? undefined : tabs.get(activeTabId)) as unknown as import('./oauth').CanvaTabEntry | undefined,
   getCanvaSession,
   isBlankPopupUrl,
   isCanvaAuthUrl,
@@ -222,62 +194,40 @@ const oauthHelpers = createOAuthHelpers({
   windowLabel,
 });
 
-/**
- * @returns {BrowserWindowInstance}
- */
-function createShellWindow() {
-  return /** @type {BrowserWindowInstance} */ (/** @type {unknown} */ (shellHelpers.createShellWindow({
-    /**
-     * @param {import('./shell').BrowserWindowLike | null} value
-     */
-    setMainWindow(value) {
-      mainWindow = /** @type {BrowserWindowInstance | null} */ (/** @type {unknown} */ (value));
+function createShellWindow(): BrowserWindowInstance {
+  return shellHelpers.createShellWindow({
+    setMainWindow(value: import('./shell').BrowserWindowLike | null) {
+      mainWindow = value as unknown as BrowserWindowInstance | null;
       if (!value) {
         toolbarView = null;
       }
     },
-  })));
+  }) as unknown as BrowserWindowInstance;
 }
 
-/**
- * @param {WebContentsViewInstance | null | undefined} view
- * @returns {void}
- */
-function ensureTopLevelView(view) {
+function ensureTopLevelView(view: WebContentsViewInstance | null | undefined): void {
   if (!mainWindow || !view) return;
   mainWindow.contentView.addChildView(view);
 }
 
-/**
- * @returns {WebContentsViewInstance}
- */
-function createToolbarView() {
-  return /** @type {WebContentsViewInstance} */ (/** @type {unknown} */ (shellHelpers.createToolbarView({
+function createToolbarView(): WebContentsViewInstance {
+  return shellHelpers.createToolbarView({
     broadcastTabsState,
-    ensureTopLevelView: /** @type {(view: import('./shell').WebContentsViewLike) => void} */ (ensureTopLevelView),
+    ensureTopLevelView: ensureTopLevelView as unknown as (view: import('./shell').WebContentsViewLike) => void,
     layoutViews,
     makeToolbarUrl,
     preloadPath: path.join(__dirname, '..', 'preload', 'toolbar.js'),
-    /**
-     * @param {import('./shell').WebContentsViewLike} value
-     */
-    setToolbarView(value) {
-      toolbarView = /** @type {WebContentsViewInstance} */ (/** @type {unknown} */ (value));
+    setToolbarView(value: import('./shell').WebContentsViewLike) {
+      toolbarView = value as unknown as WebContentsViewInstance;
     },
-  })));
+  }) as unknown as WebContentsViewInstance;
 }
 
-/**
- * @returns {void}
- */
-function layoutViews() {
+function layoutViews(): void {
   return tabHelpers.layoutViews();
 }
 
-/**
- * @returns {void}
- */
-function applyThemeToShell() {
+function applyThemeToShell(): void {
   debugLog('app', 'theme-updated', currentTheme());
   if (!mainWindow) return;
   mainWindow.setBackgroundColor(shellBackgroundColor());
@@ -288,10 +238,7 @@ function applyThemeToShell() {
   }
 }
 
-/**
- * @returns {void}
- */
-function broadcastTabsState() {
+function broadcastTabsState(): void {
   debugLog('tabs:state', 'state-broadcast', `active=${activeTabId}`, `count=${tabs.size}`);
   if (toolbarView && !toolbarView.webContents.isDestroyed()) {
     const state = tabHelpers.toolbarState();
@@ -300,7 +247,7 @@ function broadcastTabsState() {
       'state-broadcast-toolbar',
       `url=${toolbarView.webContents.getURL() || 'about:blank'}`,
       `theme=${state.theme}`,
-      `titles=${state.tabs.map((/** @type {{ id: number, title: string }} */ tab) => `${tab.id}:${tab.title}`).join(' | ') || 'none'}`
+      `titles=${state.tabs.map((tab: { id: number; title: string }) => `${tab.id}:${tab.title}`).join(' | ') || 'none'}`
     );
     toolbarView.webContents.send('tabs-state', state);
   } else {
@@ -338,16 +285,16 @@ const tabController = createTabController({
     },
     tabs,
   },
-  tabHelpers: /** @type {import('./tab-controller').TabHelpers} */ (/** @type {unknown} */ (tabHelpers)),
-  WebContentsView: /** @type {import('./tab-controller').WebContentsViewConstructorLike} */ (/** @type {unknown} */ (WebContentsView)),
+  tabHelpers: tabHelpers as unknown as import('./tab-controller').TabHelpers,
+  WebContentsView: WebContentsView as unknown as import('./tab-controller').WebContentsViewConstructorLike,
 });
-createHomeTab = /** @type {CreateHomeTab} */ (/** @type {unknown} */ (tabController.createHomeTab));
+createHomeTab = tabController.createHomeTab as unknown as CreateHomeTab;
 
 registerEyeDropperBridge({
   ipcMain,
   debugLog,
   webContentsLabel,
-  findTabByWebContents: /** @type {import('./eyedropper-bridge').FindTabByWebContentsFn} */ (/** @type {unknown} */ (findTabByWebContents)),
+  findTabByWebContents: findTabByWebContents as unknown as import('./eyedropper-bridge').FindTabByWebContentsFn,
 });
 
 registerMainIpcHandlers({
@@ -363,12 +310,12 @@ registerAppLifecycle({
   BrowserWindow,
   canvaSessionRef: () => canvaSession,
   centralLogger,
-  configureSession: /** @type {(options: Record<string, unknown>) => Promise<unknown>} */ (/** @type {unknown} */ (configureSession)),
+  configureSession: configureSession as unknown as (options: Record<string, unknown>) => Promise<unknown>,
   createShellWindow,
   createToolbarView,
   debugLog,
   debugLevel,
-  flushSession: /** @type {(session: unknown) => Promise<void>} */ (/** @type {unknown} */ (flushSession)),
+  flushSession: flushSession as unknown as (session: unknown) => Promise<void>,
   getCanvaSession,
   logCredentialStorageBackend,
   logReleaseStatus,

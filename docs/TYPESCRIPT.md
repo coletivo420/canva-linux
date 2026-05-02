@@ -306,3 +306,26 @@ Out of scope:
 - implementing CL-EyeDropper;
 - changing Flatpak permissions;
 - changing OAuth, tabs, GPU, logging or IPC behavior.
+
+## DEV18 scope
+
+`0.1.4-dev.18` converts the main Electron entrypoint to TypeScript.
+
+Target:
+
+- `electron/main/index.ts`
+
+Goals:
+
+- complete TypeScript conversion for `electron/main`;
+- preserve CommonJS runtime behavior;
+- preserve app startup, lifecycle, session, OAuth, tabs, toolbar, GPU diagnostics and EyeDropper bridge behavior;
+- keep preload conversion deferred to DEV19.
+
+Out of scope:
+
+- preload conversion;
+- CL-EyeDropper contracts;
+- Flatpak policy changes;
+- CommonJS-to-ESM migration;
+- cleanup of redundant JSDoc in already-converted modules.

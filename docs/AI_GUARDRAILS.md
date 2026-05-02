@@ -238,6 +238,22 @@ Do not:
 - change Flatpak install scope policy;
 - start CL-EyeDropper implementation early.
 
+## DEV18 main entrypoint guardrails
+
+DEV18 may convert only `electron/main/index.js` to `electron/main/index.ts`.
+
+Do not:
+
+- convert preload modules;
+- start CL-EyeDropper implementation;
+- remove LTCode fallback;
+- change Flatpak scope behavior;
+- change OAuth popup behavior;
+- change tab-state behavior;
+- change `APP_VERSION = app.getVersion()`;
+- reintroduce `require('../../package.json')` in runtime code;
+- move runtime build before source validation.
+
 ## Google Identity Services / FedCM guardrails
 
 Do not silence or monkeypatch Google Identity Services / FedCM warnings by modifying page APIs. If needed, classify them as upstream console warnings while preserving the log.

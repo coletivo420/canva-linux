@@ -359,6 +359,35 @@ Manual checks:
 - verify safe external URLs open externally;
 - verify current LTCode EyeDropper path still works.
 
+## DEV18 main entrypoint TypeScript validation
+
+Run:
+
+```bash
+rm -rf .build
+npm test
+test ! -d .build
+
+npm run lint
+npm run typecheck
+npm run typecheck:strict
+npm run build:runtime
+npm run build:check
+./canva-linux.sh --validate
+```
+
+Manual checks:
+
+- app starts;
+- main window opens;
+- toolbar loads;
+- home tab loads Canva;
+- session persists;
+- Google/OAuth popup still works;
+- tab creation/switch/close still works;
+- current LTCode EyeDropper still works;
+- `CANVA_DEBUG=1` logs startup, tabs, OAuth and GPU diagnostics.
+
 ## DEV12 runtime build validation
 
 Validation remains source-first.

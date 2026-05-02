@@ -166,7 +166,7 @@ const forbiddenActive = [
 
 const activeFiles = [
   'package.json',
-  'electron/main/index.js',
+  'electron/main/index.ts',
   'io.github.PirateMaryRead.canva-linux.yml',
   'packaging/flathub/manifest.yml',
   'run.sh',
