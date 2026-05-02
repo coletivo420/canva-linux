@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.4-dev.21] - 2026-05-02
+
+### Changed
+
+- Made CL-EyeDropper the default Canva Linux EyeDropper implementation.
+- Kept the LTCode-backed picker as a temporary fallback.
+- Added `CANVA_EYEDROPPER_IMPL=legacy` to force the legacy LTCode path for diagnostics.
+- Added implementation-selection tests for `cl` and `legacy` picker modes.
+
+### Notes
+
+- Default behavior now uses CL-EyeDropper.
+- LTCode remains available as a temporary fallback.
+- LTCode removal is deferred until post-validation cleanup.
+- Flatpak, OAuth, tabs, GPU and upload behavior are unchanged.
+
 ## [0.1.4-dev.20] - 2026-05-02
 
 ### Added

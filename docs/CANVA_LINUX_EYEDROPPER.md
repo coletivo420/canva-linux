@@ -49,7 +49,27 @@ CL-EyeDropper must preserve:
 - `{ hex, rgb }` internal result;
 - final `{ sRGBHex }` conversion remaining in `custom-eyedropper-flow.ts`.
 
-The active Canva runtime path still uses LTCode until DEV21.
+The active Canva runtime path still uses LTCode in DEV20.
+
+## DEV21 default phase
+
+DEV21 makes CL-EyeDropper the default Canva Linux picker implementation.
+
+The LTCode-backed implementation remains available as a temporary fallback:
+
+```bash
+CANVA_EYEDROPPER_IMPL=legacy
+```
+
+Default behavior uses CL-EyeDropper:
+
+```bash
+CANVA_EYEDROPPER_IMPL=cl
+```
+
+The same default applies when `CANVA_EYEDROPPER_IMPL` is not set.
+
+DEV21 must not remove LTCode. Removal is deferred until post-validation cleanup.
 
 ## Protected Requirements
 
@@ -73,12 +93,13 @@ The CL-EyeDropper implementation must:
 
 - DEV19: convert preload source modules and introduce CL-EyeDropper contracts.
 - DEV20: convert LTCode behavior to CL-EyeDropper TypeScript parity without activating it.
-- DEV21: introduce controlled implementation selection for legacy versus CL.
-- DEV22: make CL-EyeDropper the default while keeping LTCode as temporary fallback.
-- DEV23: validate full TypeScript conversion and CL-EyeDropper behavior on Wayland, X11 and Flatpak.
-- DEV24: remove LTCode legacy fallback if validated.
-- DEV25: stabilization and release-candidate readiness.
+- DEV21: make CL-EyeDropper the default while keeping LTCode as temporary fallback.
+- DEV22: validate full TypeScript conversion and CL-EyeDropper behavior on Wayland, X11 and Flatpak.
+- DEV23: remove LTCode legacy fallback if validated.
+- DEV24: stabilization and release-candidate readiness.
 
 DEV19 creates contracts only. It must not replace the active LTCode-backed EyeDropper flow.
 
 DEV20 implements CL-EyeDropper, but it must not replace the active LTCode-backed EyeDropper flow.
+
+DEV21 activates CL-EyeDropper by default and keeps the LTCode-backed implementation available through `CANVA_EYEDROPPER_IMPL=legacy`.

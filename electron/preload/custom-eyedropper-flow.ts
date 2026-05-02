@@ -6,10 +6,8 @@
 const { ipcRenderer } = require('electron');
 
 const {
-  LTCodeEyeDropper,
-  installLtcodeScalingPatch,
-  removeLtcodeUi,
-} = require('./ltcode-eyedropper');
+  resolveEyeDropperImplementation,
+} = require('./eyedropper-implementation');
 
 /**
  * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
@@ -118,12 +116,13 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
   /**
    * @returns {Promise<EyeDropperResult>}
    */
-  async function openLtcodeEyeDropper() {
+  async function openSelectedEyeDropper() {
     if (activePickerCleanup) {
       throw createOperationError('A color picker is already active.');
     }
 
-    installLtcodeScalingPatch(logEyeDropper);
+    const implementation = resolveEyeDropperImplementation({ logEyeDropper });
+    implementation.installScalingPatch(logEyeDropper);
     debugLog('eyedropper:flow', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
     logEyeDropper('eyedropper:flow', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 
@@ -141,7 +140,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
     );
 
     const { host, canvas } = await createSnapshotCanvas(snapshot, { logEyeDropper });
-    const eyedropper = new LTCodeEyeDropper({
+    const eyedropper = new implementation.EyeDropperClass({
       overlay: {
         background: 'rgba(0,0,0,0)',
         zIndex: 2147483647,
@@ -175,7 +174,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
         if (activePickerCleanup === cleanup) {
           activePickerCleanup = null;
         }
-        removeLtcodeUi();
+        implementation.removeUi();
         host.remove();
         window.removeEventListener('keydown', onKeyDown, true);
       };
@@ -241,7 +240,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
 
     /** @type {undefined | (() => void)} */
     let abortHandler;
-    const pickPromise = openLtcodeEyeDropper().then((result) => {
+    const pickPromise = openSelectedEyeDropper().then((result) => {
       if (!result || typeof result.sRGBHex !== 'string') {
         throw createOperationError('The wrapper eye dropper did not return a valid color.');
       }

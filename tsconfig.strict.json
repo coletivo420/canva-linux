@@ -32,6 +32,7 @@
     "electron/preload/upload-diagnostics.ts",
     "electron/preload/browser-capture-diagnostics.ts",
     "electron/preload/eyedropper-routing-diagnostics.ts",
+    "electron/preload/eyedropper-implementation.ts",
     "electron/preload/custom-eyedropper-flow.ts",
     "electron/preload/native-eyedropper-wrapper.ts",
     "electron/preload/canva.ts",
