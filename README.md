@@ -4,6 +4,23 @@ A community opensource desktop wrapper for use with Canva.
 
 Canva Linux is community-maintained, open source, and not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd.
 
+## GitHub Pages
+
+A GitHub Pages test page is available in [`docs/index.html`](docs/index.html).
+
+To publish it:
+
+1. Open **Settings** → **Pages**.
+2. Under **Build and deployment**, choose **Deploy from a branch**.
+3. Select branch **main** and folder **/docs**.
+4. Save.
+
+Expected URL after GitHub finishes deployment:
+
+```text
+https://coletivo420.github.io/canva-linux/
+```
+
 ## Status
 
 Stable: 1.4.10  
