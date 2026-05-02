@@ -2,16 +2,6 @@
 
 A community-maintained open source desktop wrapper for use with Canva.
 
-[Website](https://coletivo420.github.io/canva-linux/) | [GitHub](https://github.com/coletivo420/canva-linux)
-
----
-
-## Identity
-
-- Active AppID: `io.github.coletivo420.canva-linux`
-- Canonical repository: `https://github.com/coletivo420/canva-linux`
-- GitHub Pages: `https://coletivo420.github.io/canva-linux/`
-
 ---
 
 ## Status: Alpha
