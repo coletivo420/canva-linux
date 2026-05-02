@@ -251,8 +251,8 @@ export class CLEyeDropper {
     }
 
     const rect = this._canvas.getBoundingClientRect();
-    const x = Math.floor(event.clientX - rect.left);
-    const y = Math.floor(event.clientY - rect.top);
+    const x = Math.max(0, Math.min(this._canvasCache.width - 1, Math.floor((event.clientX - rect.left) * this._canvasCache.scaleX)));
+    const y = Math.max(0, Math.min(this._canvasCache.height - 1, Math.floor((event.clientY - rect.top) * this._canvasCache.scaleY)));
 
     const imageData = this._canvasCache.ctx.getImageData(x, y, 1, 1);
     const [r = 0, g = 0, b = 0] = imageData.data;
