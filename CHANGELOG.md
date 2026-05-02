@@ -6,7 +6,8 @@
 
 - Migrated the canonical repository identity to `coletivo420/canva-linux`.
 - Migrated the active Flatpak/AppStream/Electron AppID to `io.github.coletivo420.canva-linux`.
-- Updated package metadata, Flatpak manifests, desktop entry, AppStream metadata, launcher scripts, validation guardrails and documentation for the new repository identity.
+- Updated package metadata, Flatpak manifests, desktop entry, AppStream metadata, launcher scripts and documentation for the new repository identity.
+- Removed redundant legacy-name guardrails from the Flatpak validation helpers.
 - Updated GitHub Pages references to `https://coletivo420.github.io/canva-linux/`.
 - Replaced the placeholder GitHub Pages test file with a real Canva Linux landing page.
 - Added explicit migration notes for legacy AppIDs.

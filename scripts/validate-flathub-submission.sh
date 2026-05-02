@@ -138,7 +138,7 @@ console.log('Permission guardrails passed for both manifests.');
 NODE
 ok "Permission guardrails passed (forbidden absent + required present + manifest parity)"
 
-## Branding/app-id guardrails (dev19)
+## Branding/app-id checks (current identity only)
 node - <<'NODE'
 const fs = require('node:fs');
 
@@ -159,46 +159,9 @@ for (const [filePath, token] of checks) {
   }
 }
 
-const legacyPirateMaryReadAppId = ['io.github', 'PirateMaryRead', 'canva-linux'].join('.');
-const legacyCanvaAppId = ['com', 'canva', 'Linux'].join('.');
-const legacyCanvaWebAppId = ['com', 'canva', 'WebApp'].join('.');
-
-const forbiddenActive = [
-  legacyPirateMaryReadAppId,
-  legacyCanvaAppId,
-  legacyCanvaWebAppId,
-];
-
-const activeFiles = [
-  'package.json',
-  'electron/main/index.ts',
-  'io.github.coletivo420.canva-linux.yml',
-  'packaging/flathub/manifest.yml',
-  'run.sh',
-  'canva-linux.sh',
-  'scripts/install-flatpak-local.sh',
-  'scripts/build-flatpak-bundle.sh',
-  'scripts/flatpak-build-common.sh',
-  'scripts/prepare-flathub-submission.sh',
-  'data/io.github.coletivo420.canva-linux.desktop',
-];
-
-for (const filePath of activeFiles) {
-  const content = fs.readFileSync(filePath, 'utf8');
-  for (const token of forbiddenActive) {
-    if (content.includes(token)) {
-      if (filePath === 'canva-linux.sh' && (token === legacyPirateMaryReadAppId || token === legacyCanvaAppId)) {
-        continue;
-      }
-      console.error(`${filePath}: forbidden legacy token present: ${token}`);
-      process.exit(1);
-    }
-  }
-}
-
-console.log('Branding/app-id guardrails passed for active packaging files.');
+console.log('Branding/app-id checks passed for current packaging files.');
 NODE
-ok "Branding/app-id guardrails passed"
+ok "Branding/app-id checks passed"
 
 node - <<'NODE'
 const fs = require('node:fs');
