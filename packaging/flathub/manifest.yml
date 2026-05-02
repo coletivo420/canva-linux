@@ -1,4 +1,4 @@
-app-id: io.github.PirateMaryRead.canva-linux
+app-id: io.github.coletivo420.canva-linux
 runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
@@ -47,13 +47,14 @@ modules:
       - cp -a dist/linux-unpacked/* /app/main/
       - if command -v patch-electron-desktop-filename >/dev/null 2>&1; then patch-electron-desktop-filename /app/main/resources/app.asar; else patch-desktop-filename /app/main/resources/app.asar; fi
       - install -Dm755 run.sh /app/bin/run.sh
-      - install -Dm644 data/io.github.PirateMaryRead.canva-linux.desktop /app/share/applications/io.github.PirateMaryRead.canva-linux.desktop
-      - install -Dm644 data/io.github.PirateMaryRead.canva-linux.metainfo.xml /app/share/metainfo/io.github.PirateMaryRead.canva-linux.metainfo.xml
+      - install -Dm644 data/io.github.coletivo420.canva-linux.desktop /app/share/applications/io.github.coletivo420.canva-linux.desktop
+      - install -Dm644 data/io.github.coletivo420.canva-linux.metainfo.xml /app/share/metainfo/io.github.coletivo420.canva-linux.metainfo.xml
       - |
         for size in 16 22 24 32 48 64 128 256 512; do
-          install -Dm644 data/icons/hicolor/${size}x${size}/apps/io.github.PirateMaryRead.canva-linux.png /app/share/icons/hicolor/${size}x${size}/apps/io.github.PirateMaryRead.canva-linux.png;
+          install -Dm644 data/icons/hicolor/${size}x${size}/apps/io.github.coletivo420.canva-linux.png /app/share/icons/hicolor/${size}x${size}/apps/io.github.coletivo420.canva-linux.png;
         done
     sources:
       - type: archive
-        url: https://github.com/PirateMaryRead/canva-linux/archive/2000e1ae3ae35e62806861be2e52fb2a428d11bb.tar.gz
+        url: https://github.com/coletivo420/canva-linux/archive/2000e1ae3ae35e62806861be2e52fb2a428d11bb.tar.gz
+        # NOTE: Regenerate sha256 when pinning a new release/commit from the new repository.
         sha256: 53fa429d696f5a957fadd7cc66aaf8109040f07334b8ca494f31498d56691f8e

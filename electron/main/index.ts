@@ -44,9 +44,9 @@ const { createTabController } = require('./tab-controller');
 const { createTabHelpers } = require('./tabs');
 const { createWindowOpenPolicy } = require('./window-open-policy');
 
-const APP_ID = 'io.github.PirateMaryRead.canva-linux';
-const APP_URL = 'https://www.canva.com';
-const APP_NAME = 'Canva';
+const APP_ID = 'io.github.coletivo420.canva-linux';
+const APP_URL = 'https://www.canva.com/';
+const APP_NAME = 'Canva Linux';
 const PARTITION = 'persist:canva';
 const HOME_URL = APP_URL;
 const TOOLBAR_HEIGHT = 46;

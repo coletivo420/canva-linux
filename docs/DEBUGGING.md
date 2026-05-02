@@ -13,7 +13,7 @@ logs/current.log
 Shows all internal Canva Linux diagnostics:
 
 ```bash
-CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 Includes:
@@ -37,7 +37,7 @@ Includes:
 Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron stderr logs:
 
 ```bash
-CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux
 ```
 
 Use this mode when debugging:
@@ -82,17 +82,17 @@ Expected entries:
 ## GPU backend checks
 
 ```bash
-CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 ## Display backend checks
 
 ```bash
-CANVA_FORCE_WAYLAND=1 CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_FORCE_X11=1 CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_FORCE_WAYLAND=1 CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_FORCE_X11=1 CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 ## Post-install terminal guidance
@@ -114,7 +114,7 @@ This keeps CI logs and redirected output clean.
 For NVIDIA/KDE/Wayland color-manager warnings:
 
 ```bash
-CANVA_DISABLE_WAYLAND_COLOR_MANAGER=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DISABLE_WAYLAND_COLOR_MANAGER=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 ## Google One Tap / FedCM warning

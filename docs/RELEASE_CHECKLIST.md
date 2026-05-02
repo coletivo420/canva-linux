@@ -19,8 +19,8 @@ This checklist tracks the stable `1.4.10` release closure.
 
 ## 3) Optional validator checks (when tools are installed)
 
-- [ ] `desktop-file-validate data/io.github.PirateMaryRead.canva-linux.desktop`
-- [ ] `appstreamcli validate --explain data/io.github.PirateMaryRead.canva-linux.metainfo.xml`
+- [ ] `desktop-file-validate data/io.github.coletivo420.canva-linux.desktop`
+- [ ] `appstreamcli validate --explain data/io.github.coletivo420.canva-linux.metainfo.xml`
 - [ ] `./scripts/validate-flatpak.sh`
 - [ ] `./scripts/validate-flathub-submission.sh`
 

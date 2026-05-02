@@ -6,8 +6,10 @@
 const { ipcRenderer } = require('electron');
 
 const {
-  resolveEyeDropperImplementation,
-} = require('./eyedropper-implementation');
+  CLEyeDropper,
+  installClEyeDropperScalingPatch,
+  removeClEyeDropperUi,
+} = require('./cl-eyedropper/index');
 
 /**
  * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
@@ -102,9 +104,8 @@ function createSnapshotCanvas(snapshot, { logEyeDropper }) {
   });
 }
 
-// Own the bundled ltcodedev/eyedropper snapshot/open lifecycle separately from
-// the wrapper installation so the preload entrypoint stays focused on
-// composition.
+// Own the custom EyeDropper snapshot/open lifecycle separately from the wrapper
+// installation so the preload entrypoint stays focused on composition.
 /**
  * @param {{ debugLog: DebugLog, logEyeDropper: EyeDropperLog }} options
  * @returns {{ wrapOpenCall: (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult> }}
@@ -116,13 +117,12 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
   /**
    * @returns {Promise<EyeDropperResult>}
    */
-  async function openSelectedEyeDropper() {
+  async function openClEyeDropper() {
     if (activePickerCleanup) {
       throw createOperationError('A color picker is already active.');
     }
 
-    const implementation = resolveEyeDropperImplementation({ logEyeDropper });
-    implementation.installScalingPatch(logEyeDropper);
+    installClEyeDropperScalingPatch(logEyeDropper);
     debugLog('eyedropper:flow', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
     logEyeDropper('eyedropper:flow', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
 
@@ -140,7 +140,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
     );
 
     const { host, canvas } = await createSnapshotCanvas(snapshot, { logEyeDropper });
-    const eyedropper = new implementation.EyeDropperClass({
+    const eyedropper = new CLEyeDropper({
       overlay: {
         background: 'rgba(0,0,0,0)',
         zIndex: 2147483647,
@@ -174,7 +174,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
         if (activePickerCleanup === cleanup) {
           activePickerCleanup = null;
         }
-        implementation.removeUi();
+        removeClEyeDropperUi();
         host.remove();
         window.removeEventListener('keydown', onKeyDown, true);
       };
@@ -240,7 +240,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
 
     /** @type {undefined | (() => void)} */
     let abortHandler;
-    const pickPromise = openSelectedEyeDropper().then((result) => {
+    const pickPromise = openClEyeDropper().then((result) => {
       if (!result || typeof result.sRGBHex !== 'string') {
         throw createOperationError('The wrapper eye dropper did not return a valid color.');
       }

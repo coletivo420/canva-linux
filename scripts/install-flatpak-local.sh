@@ -84,28 +84,28 @@ print_flatpak_scope_notice() {
 
 print_post_install_guidance() {
   section "Run commands:"
-  cmd "flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "flatpak run io.github.coletivo420.canva-linux"
 
   section "Internal Canva Linux logs:"
-  cmd "CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux"
   note "Shows all internal Canva Linux diagnostics, including startup, session,"
   note "tabs, toolbar, permissions, uploads, OAuth, drag-and-drop, eyedropper,"
   note "preload and GPU acceleration monitoring."
 
   printf '\n'
-  cmd "CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux"
   note "Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron"
   note "stderr logs."
 
   section "Display backend checks:"
-  cmd "CANVA_FORCE_WAYLAND=1 flatpak run io.github.PirateMaryRead.canva-linux"
-  cmd "CANVA_FORCE_X11=1 flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "CANVA_FORCE_WAYLAND=1 flatpak run io.github.coletivo420.canva-linux"
+  cmd "CANVA_FORCE_X11=1 flatpak run io.github.coletivo420.canva-linux"
 
   section "GPU backend checks:"
-  cmd "CANVA_GPU_BACKEND=auto flatpak run io.github.PirateMaryRead.canva-linux"
-  cmd "CANVA_GPU_BACKEND=opengl flatpak run io.github.PirateMaryRead.canva-linux"
-  cmd "CANVA_GPU_BACKEND=vulkan flatpak run io.github.PirateMaryRead.canva-linux"
-  cmd "CANVA_GPU_BACKEND=software flatpak run io.github.PirateMaryRead.canva-linux"
+  cmd "CANVA_GPU_BACKEND=auto flatpak run io.github.coletivo420.canva-linux"
+  cmd "CANVA_GPU_BACKEND=opengl flatpak run io.github.coletivo420.canva-linux"
+  cmd "CANVA_GPU_BACKEND=vulkan flatpak run io.github.coletivo420.canva-linux"
+  cmd "CANVA_GPU_BACKEND=software flatpak run io.github.coletivo420.canva-linux"
 
   section "Debugging documentation:"
   doc_path "docs/DEBUGGING.md"

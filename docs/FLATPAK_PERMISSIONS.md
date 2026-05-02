@@ -17,7 +17,7 @@ Canva Linux remains **portal-first** for user-selected file access and desktop m
 
 ## Runtime permission baseline (must match in both manifests)
 
-Current policy for both `io.github.PirateMaryRead.canva-linux.yml` and `packaging/flathub/manifest.yml`:
+Current policy for both `io.github.coletivo420.canva-linux.yml` and `packaging/flathub/manifest.yml`:
 
 ```yaml
 finish-args:
@@ -81,7 +81,7 @@ After permission updates, run at minimum:
 Optional session-storage diagnostic:
 
 ```bash
-CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 ## Guardrails

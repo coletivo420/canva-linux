@@ -219,7 +219,7 @@ electron/main/logging-normalize.ts
 electron/shared/debug.ts
 ```
 
-Do not convert `electron/main/index.js`, `electron/preload/canva.js`, `electron/preload/ltcode-eyedropper.js`, shell scripts or Flatpak manifests in DEV13.
+Do not convert `electron/main/index.js`, `electron/preload/canva.js`, the former third-party picker module, shell scripts or Flatpak manifests in DEV13.
 
 ## DEV15 TypeScript conversion guardrails
 
@@ -288,7 +288,7 @@ Do not:
 
 - implement the CL-EyeDropper picker yet;
 - remove or bypass LTCode;
-- add `CANVA_EYEDROPPER_IMPL`;
+- add an implementation selector;
 - alter `wrapper:eyedropper-snapshot`;
 - change preload bundle module IDs away from `.js`;
 - break source-mode or build-output-mode preload bundling;
@@ -308,21 +308,46 @@ Do not:
 - remove the scaling patch model;
 - remove LTCode;
 - activate CL-EyeDropper as default;
-- introduce `CANVA_EYEDROPPER_IMPL`;
+- introduce an implementation selector;
 - change `wrapper:eyedropper-snapshot`;
 - change the active Canva picker flow;
 - change Flatpak, OAuth, tabs, GPU or logging behavior.
 
-## DEV21 CL-EyeDropper default guardrails
+## DEV21 CL-EyeDropper default guardrails (historical)
 
-DEV21 may make CL-EyeDropper the default, but must keep LTCode fallback.
+DEV21 made CL-EyeDropper the default while preserving the previous fallback during that phase.
 
-Do not:
+Historical DEV21 constraints were:
 
-- remove `electron/preload/ltcode-eyedropper.js`;
-- remove `CANVA_EYEDROPPER_IMPL=legacy`;
+- remove the temporary fallback implementation;
+- remove the temporary fallback selector mode;
 - change `wrapper:eyedropper-snapshot`;
 - change the preload bundle module ID strategy;
 - use directory-style `require('./cl-eyedropper')` in preload bundled code;
-- read `CANVA_EYEDROPPER_IMPL` directly from `process.env` inside preload code;
+- read implementation selection directly from `process.env` inside preload code;
 - change Flatpak, OAuth, tabs, GPU or upload behavior.
+
+## DEV23 EyeDropper legacy removal guardrails
+
+Do not reintroduce:
+
+- LTCodeEyeDropper
+- ltcode-eyedropper.js
+- installLtcodeScalingPatch
+- removeLtcodeUi
+- CANVA_EYEDROPPER_IMPL
+- --canva-eyedropper-impl
+- legacy or ltcode picker modes
+- electron/preload/eyedropper-implementation.ts
+
+CL-EyeDropper is the only supported EyeDropper implementation.
+
+## README feature documentation guardrails
+
+When documenting persistent sessions:
+
+- explain persistent login through Electron/Chromium persistent session storage;
+- mention KWallet, GNOME Keyring/libsecret, or compatible Secret Service providers only as possible desktop secret storage integrations when available;
+- do not claim that KWallet is required;
+- do not claim that credentials are stored in a single guaranteed backend;
+- do not claim that passwords are stored in plain text.

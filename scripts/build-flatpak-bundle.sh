@@ -68,12 +68,12 @@ info "Generating Flatpak bundle for version ${VERSION}"
 
 ## Repo helpers
 repo_has_app_ref() {
-  [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/io\.github\.PirateMaryRead\.canva-linux/'
+  [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/io\.github\.coletivo420\.canva-linux/'
 }
 
 ## Ensure valid Flatpak repository exists
 if [[ "$USE_EXISTING_REPO" == true ]]; then
-  repo_has_app_ref || err "repo/ is missing or does not contain io.github.PirateMaryRead.canva-linux refs"
+  repo_has_app_ref || err "repo/ is missing or does not contain io.github.coletivo420.canva-linux refs"
   info "Using existing repo/ directory by explicit request"
 else
   ensure_flathub_runtime
@@ -84,7 +84,7 @@ fi
 
 ## Create distributable bundle
 mkdir -p "$DIST_DIR"
-flatpak build-bundle repo "$BUNDLE_PATH" io.github.PirateMaryRead.canva-linux \
+flatpak build-bundle repo "$BUNDLE_PATH" io.github.coletivo420.canva-linux \
   --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 
 SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH")"

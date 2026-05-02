@@ -3,7 +3,7 @@ set -euo pipefail
 
 ## Configuration
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_ID="io.github.PirateMaryRead.canva-linux"
+APP_ID="io.github.coletivo420.canva-linux"
 LOCAL_FLATPAK_REMOTES=(
   canva-linux-local
   canva-linux1-origin

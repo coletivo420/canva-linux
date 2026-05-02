@@ -1,7 +1,7 @@
 #!/bin/sh
 # run.sh - Canva Linux launcher inside Flatpak.
 
-export CHROME_DESKTOP=io.github.PirateMaryRead.canva-linux.desktop
+export CHROME_DESKTOP=io.github.coletivo420.canva-linux.desktop
 
 canva_debug_level() {
   case "${CANVA_DEBUG:-}" in
@@ -170,6 +170,6 @@ export CANVA_GPU_LAUNCHER_REPORT="vendor=$GPU_VENDOR backend=$GPU_BACKEND dri=$G
 launcher_log "$CANVA_GPU_LAUNCHER_REPORT"
 
 exec zypak-wrapper.sh /app/main/canva-linux \
-  --class=io.github.PirateMaryRead.canva-linux \
+  --class=io.github.coletivo420.canva-linux \
   --disable-gpu-sandbox \
   "$@"

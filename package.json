@@ -1,12 +1,19 @@
 {
   "name": "canva-linux",
-  "version": "0.1.4-dev.21",
+  "version": "0.1.4-dev.23",
   "description": "A community opensource desktop wrapper for use with Canva",
   "main": ".build/electron/main/index.js",
   "author": "Community",
   "license": "GPL-3.0-or-later",
   "productName": "Canva Linux",
-  "homepage": "https://www.canva.com/",
+  "homepage": "https://coletivo420.github.io/canva-linux/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coletivo420/canva-linux.git"
+  },
+  "bugs": {
+    "url": "https://github.com/coletivo420/canva-linux/issues"
+  },
   "scripts": {
     "start": "electron .",
     "dist": "NODE_OPTIONS=--no-deprecation electron-builder --linux dir",
@@ -32,7 +39,7 @@
     "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit"
   },
   "build": {
-    "appId": "io.github.PirateMaryRead.canva-linux",
+    "appId": "io.github.coletivo420.canva-linux",
     "productName": "Canva Linux",
     "directories": {
       "output": "dist",
@@ -63,7 +70,7 @@
     "eslint": "^10.3.0",
     "typescript": "^6.0.3"
   },
-  "desktopName": "io.github.PirateMaryRead.canva-linux.desktop",
+  "desktopName": "io.github.coletivo420.canva-linux.desktop",
   "engines": {
     "node": ">=22.0.0"
   }

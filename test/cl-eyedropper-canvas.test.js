@@ -129,7 +129,7 @@ function createFakeDom(context) {
   return { body, document };
 }
 
-test('CLEyeDropper exports LTCode-compatible API surface', () => {
+test('CLEyeDropper exports the Canva Linux picker API surface', () => {
   const cl = loadRuntimeModule('preload/cl-eyedropper/index');
   const eyedropper = new cl.CLEyeDropper({ overlay: { zIndex: 7 } });
 
@@ -140,7 +140,7 @@ test('CLEyeDropper exports LTCode-compatible API surface', () => {
   assert.equal(eyedropper._rgbToHex(255, 0, 128), '#ff0080');
 });
 
-test('CLEyeDropper rejects non-browser environments like LTCode', () => {
+test('CLEyeDropper rejects non-browser environments', () => {
   const { CLEyeDropper } = loadRuntimeModule('preload/cl-eyedropper/index');
   const previousDocument = globalThis.document;
   const previousWindow = globalThis.window;
@@ -158,7 +158,7 @@ test('CLEyeDropper rejects non-browser environments like LTCode', () => {
   }
 });
 
-test('removeClEyeDropperUi removes the LTCode-compatible overlay id', () => {
+test('removeClEyeDropperUi removes the overlay id', () => {
   const context = {
     imageSmoothingEnabled: true,
     clearRect() {},
@@ -183,7 +183,7 @@ test('removeClEyeDropperUi removes the LTCode-compatible overlay id', () => {
   }
 });
 
-test('CLEyeDropper preserves the LTCode canvas event model and scaled picking', async () => {
+test('CLEyeDropper preserves the canvas event model and scaled picking', async () => {
   const reads = [];
   const logs = [];
   const context = {

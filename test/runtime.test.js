@@ -3,6 +3,8 @@
 // @ts-check
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const test = require('node:test');
 
 const { loadRuntimeModule } = require('./helpers/runtime-module');
@@ -11,6 +13,8 @@ const {
   sharedWebPreferences,
   shouldEnableCaptureVerboseLogging,
 } = loadRuntimeModule('main/runtime');
+
+const repoRoot = path.resolve(__dirname, '..');
 
 /**
  * @param {{ CANVA_DEBUG?: string, CANVA_DEBUG_LEVEL?: string }} env
@@ -65,4 +69,11 @@ test('sharedWebPreferences keeps secure defaults', () => {
   assert.equal(preferences.sandbox, true);
   assert.equal(preferences.nodeIntegration, false);
   assert.equal(preferences.spellcheck, true);
+});
+
+test('main runtime opens Canva, not the project website, as the app home URL', () => {
+  const mainSource = fs.readFileSync(path.join(repoRoot, 'electron/main/index.ts'), 'utf8');
+
+  assert.match(mainSource, /const APP_URL = 'https:\/\/www\.canva\.com\/';/);
+  assert.doesNotMatch(mainSource, /const APP_URL = 'https:\/\/coletivo420\.github\.io\/canva-linux\/';/);
 });

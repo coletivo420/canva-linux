@@ -30,7 +30,7 @@ Planned sequence:
 - DEV15: convert shell/tabs/OAuth modules to `.ts`.
 - DEV16: convert main entrypoint to `.ts`.
 - DEV17: convert preload source modules to `.ts`.
-- DEV18: decide conversion/isolation strategy for `ltcode-eyedropper`.
+- DEV18: decide conversion/isolation strategy for the former third-party picker module.
 - DEV19: convert tests/config/scripts when safe.
 - DEV20: verify full TypeScript conversion.
 - DEV21: post-conversion cleanup.
@@ -53,6 +53,6 @@ Do not convert yet:
 - `electron/main/index.js`;
 - `electron/preload/canva.js`;
 - `electron/preload/canva.bundle.js`;
-- `electron/preload/ltcode-eyedropper.js`;
+- the former third-party picker module;
 - shell scripts;
 - Flatpak manifests.

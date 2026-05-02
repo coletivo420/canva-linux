@@ -2,7 +2,7 @@
 # Shared Flatpak build helpers for local install and release bundle workflows.
 
 FLATPAK_SCOPE="${CANVA_FLATPAK_SCOPE:-system}"
-FLATPAK_APP_ID="io.github.PirateMaryRead.canva-linux"
+FLATPAK_APP_ID="io.github.coletivo420.canva-linux"
 LOCAL_FLATPAK_REMOTE="canva-linux-local"
 
 validate_flatpak_scope() {
@@ -188,7 +188,7 @@ build_flatpak_repo() {
     --install-deps-from=flathub \
     --repo=repo \
     build-dir \
-    io.github.PirateMaryRead.canva-linux.yml
+    io.github.coletivo420.canva-linux.yml
 
   info "Generating repository summary"
   flatpak build-update-repo --generate-static-deltas repo
@@ -214,7 +214,7 @@ install_flatpak_direct() {
     --install \
     --install-deps-from=flathub \
     build-dir \
-    io.github.PirateMaryRead.canva-linux.yml
+    io.github.coletivo420.canva-linux.yml
 
   ok "Direct local Flatpak install completed in ${FLATPAK_SCOPE} scope"
 }
@@ -260,12 +260,12 @@ run_flatpak_dev() {
     "${scope_arg}" \
     --install-deps-from=flathub \
     build-dir \
-    io.github.PirateMaryRead.canva-linux.yml
+    io.github.coletivo420.canva-linux.yml
 
   info "Running app from build-dir without installing"
   flatpak-builder \
     --run \
     build-dir \
-    io.github.PirateMaryRead.canva-linux.yml \
+    io.github.coletivo420.canva-linux.yml \
     /app/bin/run.sh
 }

@@ -55,7 +55,7 @@ Flathub source validation may require:
 Validate internal logs:
 
 ```bash
-CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 Expected:
@@ -69,7 +69,7 @@ Expected:
 Validate verbose Chromium/Electron logs:
 
 ```bash
-CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux
 ```
 
 Unsupported module-specific debug values must not be documented as valid runtime modes:
@@ -87,10 +87,10 @@ Unsupported module-specific debug values must not be documented as valid runtime
 Runtime checks:
 
 ```bash
-CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
-CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
 ```
 
 ## TypeScript validation
@@ -467,7 +467,7 @@ Manual checks:
 - `{ sRGBHex: "#rrggbb" }` still returns to Canva;
 - `CANVA_DEBUG=1` shows preload and eyedropper diagnostics.
 
-## DEV21 CL-EyeDropper default validation
+## DEV23 EyeDropper legacy removal validation
 
 Run:
 
@@ -476,25 +476,23 @@ npm run lint
 npm run typecheck
 npm run typecheck:strict
 npm test
-npm run build:preload
 npm run build:runtime
 npm run build:check
 ./canva-linux.sh --validate
 ```
 
-Manual checks:
+Legacy grep:
 
 ```bash
-CANVA_DEBUG=1 npm start
-CANVA_DEBUG=1 CANVA_EYEDROPPER_IMPL=cl npm start
-CANVA_DEBUG=1 CANVA_EYEDROPPER_IMPL=legacy npm start
+grep -RIn \
+  "LTCodeEyeDropper\|ltcode-eyedropper\|installLtcodeScalingPatch\|removeLtcodeUi\|CANVA_EYEDROPPER_IMPL\|canva-eyedropper-impl\|eyedropper-implementation" \
+  electron test scripts docs README.md package.json package-lock.json
 ```
 
 Expected:
 
-- no variable: CL-EyeDropper is selected;
-- `CANVA_EYEDROPPER_IMPL=cl`: CL-EyeDropper is selected;
-- `CANVA_EYEDROPPER_IMPL=legacy`: LTCode path is selected;
+- no active code references;
+- historical mentions allowed only in `CHANGELOG.md` or explicit migration notes;
 - color picking returns `{ sRGBHex: "#rrggbb" }`;
 - Escape still aborts;
 - tab navigation still reinjects wrapper.

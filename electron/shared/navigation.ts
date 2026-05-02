@@ -65,8 +65,8 @@ function shouldGrantRemotePermission(permission: string, origin: string, details
 
   switch (permission) {
     // Some trusted Canva flows still probe browser capture permissions, but
-    // Canva Linux color picking must continue to resolve through the bundled
-    // ltcodedev/eyedropper path instead of browser/native capture UI.
+    // Canva Linux color picking must continue to resolve through CL-EyeDropper
+    // instead of browser/native capture UI.
     case 'display-capture':
     case 'fullscreen':
     case 'media':

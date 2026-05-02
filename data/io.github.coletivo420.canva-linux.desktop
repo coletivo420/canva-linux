@@ -4,12 +4,12 @@ Name=Canva Linux
 GenericName=Design Tool
 Comment=A community opensource desktop wrapper for use with Canva
 Exec=run.sh
-Icon=io.github.PirateMaryRead.canva-linux
+Icon=io.github.coletivo420.canva-linux
 Categories=Graphics;2DGraphics;
 Keywords=canva;design;graphics;photo;editor;
 StartupNotify=true
-StartupWMClass=io.github.PirateMaryRead.canva-linux
-X-GNOME-WMClass=io.github.PirateMaryRead.canva-linux
+StartupWMClass=io.github.coletivo420.canva-linux
+X-GNOME-WMClass=io.github.coletivo420.canva-linux
 Actions=X11Fallback;
 
 [Desktop Action X11Fallback]

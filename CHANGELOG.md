@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.1.4-dev.23] - 2026-05-02
+
+### Removed
+
+- Removed the legacy LTCode-backed EyeDropper implementation.
+- Removed the temporary EyeDropper implementation selector.
+- Removed `CANVA_EYEDROPPER_IMPL` and renderer argument based picker selection.
+- Removed `legacy` and `ltcode` EyeDropper modes.
+- Removed selector-specific tests and runtime build checks.
+
+### Changed
+
+- Simplified the custom EyeDropper flow to use CL-EyeDropper directly.
+- Simplified tab WebContentsView creation by removing EyeDropper implementation arguments.
+- Updated documentation and guardrails to define CL-EyeDropper as the only supported implementation.
+- Improved the README feature overview, including clearer documentation for persistent sessions and desktop secret storage integration.
+
+### Notes
+
+- CL-EyeDropper is now the only Canva Linux EyeDropper implementation.
+- The result contract remains `{ sRGBHex: "#rrggbb" }`.
+- Flatpak, AppID, OAuth, tabs, GPU and upload behavior are unchanged.
+
+## [0.1.4-dev.22] - 2026-05-02
+
+### Changed
+
+- Migrated the canonical repository identity to `coletivo420/canva-linux`.
+- Migrated the active Flatpak/AppStream/Electron AppID to `io.github.coletivo420.canva-linux`.
+- Updated package metadata, Flatpak manifests, desktop entry, AppStream metadata, launcher scripts and documentation for the new repository identity.
+- Removed redundant legacy-name guardrails from the Flatpak validation helpers.
+- Updated GitHub Pages references to `https://coletivo420.github.io/canva-linux/`.
+- Replaced the placeholder GitHub Pages test file with a real Canva Linux landing page.
+- Added explicit migration notes for legacy AppIDs.
+
+### Notes
+
+- Runtime behavior is unchanged except for repository identity and AppID metadata.
+- Legacy IDs are kept only as migration history, AppStream replacement metadata, or optional local cleanup targets.
+- LTCode fallback removal is deferred to `0.1.4-dev.23`.
+
 ## [0.1.4-dev.21] - 2026-05-02
 
 ### Changed

@@ -6,7 +6,7 @@ Keep local Canva Linux development/bundle workflow and Flathub submission workfl
 
 The local and Flathub-submission manifests must keep the same runtime permission policy unless a future patch documents a submission-specific exception.
 
-- Local workflow (unchanged): repository-root `io.github.PirateMaryRead.canva-linux.yml` + `./canva-linux.sh`.
+- Local workflow (unchanged): repository-root `io.github.coletivo420.canva-linux.yml` + `./canva-linux.sh`.
 - Submission workflow (new path): `packaging/flathub/manifest.yml` + generated npm source manifest + submission scripts.
 
 ## Flathub submission requirements

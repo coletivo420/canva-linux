@@ -10,7 +10,7 @@ Expected outcome:
 
 - user-facing runtime behavior remains stable
 - internal module boundaries and debug logging are easier to inspect
-- the Canva editor loads the generated single-file preload bundle and keeps the custom `ltcodedev/eyedropper` path active
+- the Canva editor loads the generated single-file preload bundle and keeps the CL-EyeDropper path active
 
 ## Environment preparation
 
@@ -23,9 +23,9 @@ Expected outcome:
 ## Baseline startup checks
 
 1. Launch normally:
-   - `flatpak run io.github.PirateMaryRead.canva-linux`
+   - `flatpak run io.github.coletivo420.canva-linux`
 2. Launch with startup diagnostics:
-   - `CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux`
+   - `CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux`
 3. Confirm the app window renders and loads Canva.
 4. Confirm a fresh `current.log` is created for this run.
 5. Confirm startup logs include the Canva preload reaching `modules-loaded` and `eyedropper-installed`.
@@ -51,12 +51,12 @@ Expected outcome:
 2. Use the file picker from Canva upload flow.
 3. Paste clipboard content if applicable.
 4. When troubleshooting, run:
-   - `CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux`
+   - `CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux`
 
 ## Eyedropper behavior
 
 1. Trigger the Canva eyedropper flow.
-2. Confirm the bundled `ltcodedev/eyedropper` custom picker opens.
+2. Confirm the CL-EyeDropper custom picker opens.
 3. Confirm logs show the wrapper intercepting `EyeDropper.open()` without `module-load-failed` entries for `./debug`, `custom-eyedropper-flow`, or `native-eyedropper-wrapper`.
 4. Confirm `Escape` aborts the picker cleanly.
 5. Confirm a picked color resolves back to Canva without leaving stale overlay UI.
@@ -65,11 +65,11 @@ Expected outcome:
 ## Wayland/X11 mode sanity
 
 1. Default startup:
-   - `flatpak run io.github.PirateMaryRead.canva-linux`
+   - `flatpak run io.github.coletivo420.canva-linux`
 2. Forced Wayland:
-   - `CANVA_FORCE_WAYLAND=1 flatpak run io.github.PirateMaryRead.canva-linux`
+   - `CANVA_FORCE_WAYLAND=1 flatpak run io.github.coletivo420.canva-linux`
 3. Forced X11:
-   - `CANVA_FORCE_X11=1 flatpak run io.github.PirateMaryRead.canva-linux`
+   - `CANVA_FORCE_X11=1 flatpak run io.github.coletivo420.canva-linux`
 
 ## Logging review
 
@@ -79,7 +79,7 @@ Expected outcome:
 ## Bluetooth/Floss runtime-noise check
 
 1. Run:
-   - `CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux 2>&1 | grep -Ei 'floss|bluetooth|bluez'`
+   - `CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux 2>&1 | grep -Ei 'floss|bluetooth|bluez'`
 2. Confirm Floss manager warnings are reduced compared with previous builds.
 3. Treat remaining Bluetooth-related lines as diagnostics unless they are tied to a user-facing regression.
 
