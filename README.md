@@ -83,13 +83,15 @@ Logs are stored in `logs/current.log` within the application's data directory.
 
 Comprehensive documentation is available in the `docs/` folder:
 
-- [Features & Roadmap](docs/FEATURES.md)
+- [Documentation Index](docs/README.md)
+- [Validation](docs/VALIDATION.md)
 - [Development Guide](docs/DEVELOPMENT.md)
-- [Debugging & Logs](docs/DEBUGGING.md)
-- [GPU Acceleration](docs/GPU_ACCELERATION.md)
+- [TypeScript](docs/TYPESCRIPT.md)
+- [CL-EyeDropper](docs/CANVA_LINUX_EYEDROPPER.md)
+- [AI Maintenance Notes](docs/AI_GUARDRAILS.md)
 - [Flatpak & Flathub Packaging](docs/FLATHUB.md)
-- [Technical Architecture](docs/TECHNICAL.md)
-- [Privacy Policy](docs/PRIVACY.md)
+
+Project website: https://coletivo420.github.io/canva-linux/
 
 ---
 

@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.4-dev.24] - 2026-05-02
+
+### Changed
+
+- Reorganized active documentation around the current project state instead of historical development phases.
+- Rewrote validation documentation to focus on the current validation flow.
+- Simplified AI maintenance notes by removing obsolete phase-specific guardrails.
+- Simplified runtime build checks by removing obsolete legacy-name token checks.
+- Added a documentation index for easier navigation.
+- Updated EyeDropper documentation to describe the current CL-EyeDropper-only architecture.
+- Updated TypeScript documentation to describe the current migration state and active commands.
+
+### Removed
+
+- Removed obsolete DEV-phase guardrail sections from active maintenance documentation.
+- Removed obsolete legacy EyeDropper token checks from runtime build validation.
+- Removed stale historical validation sections from the active validation guide.
+
+### Notes
+
+- Runtime behavior is unchanged.
+- CL-EyeDropper remains the only supported EyeDropper implementation.
+- Historical details remain in `CHANGELOG.md`.
+
 ## [0.1.4-dev.23] - 2026-05-02
 
 ### Removed
