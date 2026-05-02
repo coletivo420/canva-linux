@@ -150,8 +150,8 @@ export class CLEyeDropper {
       ctx,
       width: this._canvas.width,
       height: this._canvas.height,
-      scaleX: this._canvas.width / this._canvas.getBoundingClientRect().width,
-      scaleY: this._canvas.height / this._canvas.getBoundingClientRect().height,
+      scaleX: this._canvas.width / Math.max(1, this._canvas.getBoundingClientRect().width),
+      scaleY: this._canvas.height / Math.max(1, this._canvas.getBoundingClientRect().height),
       magW: parseInt(magOpt.width || '80', 10),
       magH: parseInt(magOpt.height || '80', 10),
     };
