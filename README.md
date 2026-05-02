@@ -2,24 +2,6 @@
 
 A community opensource desktop wrapper for use with Canva.
 
-
-## GitHub Pages
-
-A GitHub Pages test page is available in [`docs/index.html`](docs/index.html).
-
-To publish it:
-
-1. Open **Settings** → **Pages**.
-2. Under **Build and deployment**, choose **Deploy from a branch**.
-3. Select branch **main** and folder **/docs**.
-4. Save.
-
-Expected URL after GitHub finishes deployment:
-
-```text
-https://coletivo420.github.io/canva-linux/
-```
-
 ## Status
 
 Canva Linux is currently **alpha** software.
