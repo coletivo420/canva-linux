@@ -94,7 +94,7 @@ configureLinuxRuntime({
 
 function getCanvaSession(): ElectronSession {
   if (!canvaSession) {
-    canvaSession = session.fromPartition(PARTITION, { cache: true }) as unknown as ElectronSession;
+    canvaSession = session.fromPartition(PARTITION, { cache: true }) as ElectronSession;
   }
   return canvaSession;
 }
