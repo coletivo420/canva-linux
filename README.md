@@ -2,7 +2,6 @@
 
 A community opensource desktop wrapper for use with Canva.
 
-Canva Linux is community-maintained, open source, and not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd.
 
 ## GitHub Pages
 
@@ -23,18 +22,139 @@ https://coletivo420.github.io/canva-linux/
 
 ## Status
 
-Stable: 1.4.10  
-Next: 1.4.11.dev1 (TypeScript migration + Canva API exploration)
+Canva Linux is currently **alpha** software.
 
-## Community package status
+Active development line:
+
+```text
+0.1.4-dev.X
+```
 
 Canva Linux is a community-maintained open source package for use with Canva. It is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd. References to Canva describe the upstream web service this wrapper is built to access.
 
-## Development (post-1.4.10)
+Historical development references from the previous 1.4.x line map to the alpha line and are kept in the changelog for traceability.
 
-`1.4.10` closes the JavaScript consolidation cycle with community branding, app-id migration, Flatpak permission hardening, preload-bundle stability, OAuth continuity, and documented validation workflows.
+## Development (alpha line)
 
-The next development line starts at `1.4.11.dev1` and is reserved for TypeScript migration and Canva API integration work.
+### 0.1.4-dev.X scope (TypeScript + CL-EyeDropper roadmap)
+
+This phase adds TypeScript tooling without converting runtime modules to `.ts` yet:
+
+- installs `typescript` and `@types/node` as dev dependencies
+- introduces `tsconfig.json` with `allowJs + checkJs` to type-check existing JavaScript
+- adds `npm run typecheck` (`tsc --noEmit`)
+- extends `scripts/validate-project.sh` so type-checking becomes part of the standard validation pipeline
+
+
+## Development requirements
+
+Canva Linux development workflows require the following host tools.
+
+### Required
+
+- Node.js >= 22
+- npm
+- Git
+- Bash
+- Flatpak
+- flatpak-builder
+
+### Required for full validation
+
+- desktop-file-validate
+- appstreamcli
+- curl
+- sha256sum
+- tar
+
+### Check your environment
+
+```bash
+node -v
+npm -v
+git --version
+bash --version
+flatpak --version
+flatpak-builder --version
+```
+
+Node.js must be version 22 or newer.
+
+### openSUSE Tumbleweed
+
+```bash
+sudo zypper install \
+  nodejs22 \
+  npm \
+  git \
+  bash \
+  flatpak \
+  flatpak-builder \
+  desktop-file-utils \
+  appstream \
+  curl \
+  tar \
+  coreutils
+```
+
+### Debian / Ubuntu
+
+```bash
+sudo apt install \
+  nodejs \
+  npm \
+  git \
+  bash \
+  flatpak \
+  flatpak-builder \
+  desktop-file-utils \
+  appstream \
+  curl \
+  tar \
+  coreutils
+```
+
+If your distribution provides Node.js older than 22, install Node.js 22 or newer using your preferred method, such as NodeSource, fnm, asdf, nvm, or official Node.js binaries.
+
+### Arch Linux
+
+```bash
+sudo pacman -Syu \
+  nodejs \
+  npm \
+  git \
+  bash \
+  flatpak \
+  flatpak-builder \
+  desktop-file-utils \
+  appstream \
+  curl \
+  tar \
+  coreutils
+```
+
+### Fedora
+
+```bash
+sudo dnf install \
+  nodejs \
+  npm \
+  git \
+  bash \
+  flatpak \
+  flatpak-builder \
+  desktop-file-utils \
+  appstream \
+  curl \
+  tar \
+  coreutils
+```
+
+For Fedora 44 or newer, you can alternatively install:
+
+```bash
+sudo dnf install nodejs22 npm
+```
 
 ## Log System
 
@@ -57,11 +177,51 @@ Project policy:
 
 ### Preload bundle note
 
-The source preload stays modular under `electron/preload/*.js`, but the runtime tab preload is generated as `electron/preload/canva.bundle.js` before `npm start`, `npm run dist`, and any Flatpak workflow path that rebuilds the Electron output.
+The source preload stays modular under `electron/preload/*.js`, but the runtime tab preload is generated as `.build/electron/preload/canva.bundle.js` before `npm start`, `npm run dist`, and any Flatpak workflow path that rebuilds the Electron output. The legacy `npm run build:preload` command can still generate `electron/preload/canva.bundle.js` from source when needed.
+
+During TypeScript migration, the source-mode preload bundler must resolve shared modules that have moved from `.js` to `.ts` and transpile them before embedding them in `canva.bundle.js`. Build-output mode continues to bundle the compiled `.build/electron/**/*.js` files.
 
 This is required because Canva's editor can execute Electron preload code in a sandboxed context where nested local `require('./module')` calls fail inside the packaged ASAR. The generated bundle preserves maintainable source modules while delivering one preload file to Electron. Edit the modular source files and regenerate the bundle; do not edit or commit `canva.bundle.js` directly.
 
 Release bundle generation rebuilds the Electron output and Flatpak repo by default so the generated preload bundle and packaged app stay current. Reusing an existing `repo/` requires an explicit `--use-existing-repo` call to `scripts/build-flatpak-bundle.sh` and should not be used for release publication after source changes.
+
+## Runtime build
+
+Development now builds the Electron runtime into `.build/electron/` before starting or packaging.
+
+```bash
+npm run build:runtime
+npm start
+```
+
+The source remains in:
+
+```text
+electron/
+```
+
+Generated runtime files include:
+
+```text
+.build/electron/main/index.js
+.build/electron/preload/canva.bundle.js
+```
+
+Do not edit generated files manually.
+
+Project validation remains source-first: lint, typecheck, tests and docs checks run before the runtime build.
+
+## AI and regression policy
+
+This project treats `CHANGELOG.md` as protected project history.
+
+Features and behaviors recorded there must not be removed, weakened, renamed, or bypassed by AI-assisted patches unless explicitly requested by the maintainer.
+
+See:
+
+- `docs/AI_GUARDRAILS.md`
+- `docs/FEATURES.md`
+- `docs/TYPESCRIPT_CONVERSION_REVIEW.md`
 
 ## OAuth Support
 
@@ -74,6 +234,7 @@ Other providers (Facebook/Meta, Apple, Microsoft) are supported via the same gen
 Use `./canva-linux.sh` as the canonical Linux workflow command.
 
 ```bash
+./canva-linux.sh --run-dev
 ./canva-linux.sh --install
 ./canva-linux.sh --bundle
 ./canva-linux.sh --validate
@@ -104,6 +265,7 @@ Actions can be chained and run in the order provided:
 
 ### Workflow intent
 
+- `--run-dev` builds and runs from `build-dir` without installing the app or creating a local app origin.
 - `--install` is for local development/testing installs.
 - `--install` uses `flatpak-builder --install` direct install flow (no `repo/` export and no `.flatpak` bundle generation).
 - `--bundle` is for generating GitHub release `.flatpak` artifacts.
@@ -111,6 +273,37 @@ Actions can be chained and run in the order provided:
 - Flathub submission remains a separate process and should not require `.flatpak` bundle generation.
 - Submission-specific assets live in `packaging/flathub/`; local workflows continue to use `io.github.PirateMaryRead.canva-linux.yml`.
 - `--reset-user-data` removes login state and OAuth/session cookies.
+
+### Flatpak installation scope policy
+
+Canva Linux local workflows must not create a duplicate Flathub user remote by default.
+
+Default policy:
+
+- `./canva-linux.sh --install` uses the system Flatpak installation.
+- The app is installed for all users on this machine.
+- Required runtimes are installed from the system Flathub remote when missing.
+- The user Flathub remote is never added unless explicitly requested.
+- Administrator authorization may be requested for system Flatpak operations because system installs write under `/var/lib/flatpak`.
+- Local system installs build as the current user, then install from the generated local repo URI with administrator authorization.
+- Local Flatpak artifact ownership is restored to the current user after install, bundle and dev-run workflows.
+- Developers who want a fully user-scoped install may run:
+
+```bash
+CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install
+```
+
+User-scoped installs are isolated under the current user's home directory and may duplicate Flathub remotes, runtimes, SDKs, BaseApps and the Canva Linux app if those already exist in the system Flatpak installation.
+
+Do not switch the default back to `--user` only to avoid an administrator prompt.
+
+Development smoke tests should prefer:
+
+```bash
+./canva-linux.sh --run-dev
+```
+
+because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
 
 Migration note: development builds before `1.4.10.dev19` used `com.canva.Linux`. The active Flathub-facing app-id is now `io.github.PirateMaryRead.canva-linux`.
 
@@ -134,12 +327,49 @@ Detailed packaging notes live in:
 - `docs/FLATHUB_SUBMISSION_NOTES.md`
 - `packaging/flathub/`
 
+## Debugging
+
+Canva Linux uses a single central log file:
+
+```text
+logs/current.log
+```
+
+Debug levels:
+
+```bash
+CANVA_DEBUG=1 flatpak run io.github.PirateMaryRead.canva-linux
+CANVA_DEBUG=2 flatpak run io.github.PirateMaryRead.canva-linux
+```
+
+`CANVA_DEBUG=1` shows all internal Canva Linux diagnostics, including GPU acceleration monitoring.
+
+`CANVA_DEBUG=2` shows all internal diagnostics plus verbose Chromium/Electron stderr logs.
+
+Module-specific debug selection is not supported. See `docs/DEBUGGING.md`.
+
+## GPU acceleration
+
+Canva Linux enables GPU acceleration by default when DRI is available.
+
+Available backends:
+
+- `auto`
+- `opengl`
+- `vulkan`
+- `software`
+- `force`
+
+See `docs/GPU_ACCELERATION.md`.
+
 ## Documentation
 
 - `CHANGELOG.md` tracks released and development changes.
 - `docs/TECHNICAL.md` contains repository technical notes.
 - `docs/AI_DEVELOPMENT.md` documents AI-assisted maintenance conventions.
 - `docs/DEVELOPMENT.md` documents phase scope and recommended execution order.
+- `docs/TYPESCRIPT.md` documents TypeScript migration goals and rules for the `0.1.4-dev.X` line.
+- `docs/CANVA_API.md` documents Canva API integration architecture planning notes.
 - `docs/VALIDATION.md` defines baseline and close-out quality gate commands.
 - `docs/PRIVACY.md` explains privacy and telemetry scope for this wrapper project.
 - `docs/FLATHUB.md` covers Flathub submission preparation.
@@ -153,3 +383,16 @@ Detailed packaging notes live in:
 ## License
 
 This project is distributed under the **GNU General Public License v3.0 or later**.
+
+## AI-assisted development
+
+This project includes guardrails to prevent regressions in logging, GPU acceleration, Flatpak behavior and Canva-specific features.
+
+Before AI-assisted changes, read:
+
+- `docs/AI_GUARDRAILS.md`
+- `docs/LOGGING_CONTRACT.md`
+- `docs/FEATURES.md`
+- `docs/AI_DEVELOPMENT.md`
+
+Logging changes must use safe argument normalization. The logger must never crash the Electron main process.

@@ -1,12 +1,23 @@
 'use strict';
 
+// @ts-check
+
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createWindowOpenPolicy } = require('../electron/main/window-open-policy');
+const { loadRuntimeModule } = require('./helpers/runtime-module');
 
+const { createWindowOpenPolicy } = loadRuntimeModule('main/window-open-policy');
+
+/**
+ * @param {'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external'} kindToReturn
+ */
 function createPolicyWithStub(kindToReturn) {
+  /** @type {Array<{ url?: string; openerUrl?: string; disposition?: string; frameName?: string }>} */
   const calls = [];
+  /**
+   * @param {{ url?: string; openerUrl?: string; disposition?: string; frameName?: string }} input
+   */
   const classifyNavigationRequest = (input) => {
     calls.push(input);
     return { kind: kindToReturn, url: input.url };

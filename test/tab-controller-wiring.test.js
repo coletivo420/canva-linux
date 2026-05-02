@@ -3,10 +3,16 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { createTabController } = require('../electron/main/tab-controller');
+const { loadRuntimeModule } = require('./helpers/runtime-module');
+
+const {
+  createEyeDropperImplementationArgument,
+  createTabController,
+} = loadRuntimeModule('main/tab-controller');
 
 class FakeWebContentsView {
-  constructor() {
+  constructor(options = {}) {
+    this.options = options;
     this.webContents = {
       loadedUrl: null,
       loadURL: (url) => {
@@ -15,6 +21,35 @@ class FakeWebContentsView {
     };
   }
 }
+
+/**
+ * @param {string | undefined} value
+ * @param {() => void} fn
+ */
+function withImplementationEnv(value, fn) {
+  const previous = process.env.CANVA_EYEDROPPER_IMPL;
+  if (value === undefined) {
+    delete process.env.CANVA_EYEDROPPER_IMPL;
+  } else {
+    process.env.CANVA_EYEDROPPER_IMPL = value;
+  }
+
+  try {
+    fn();
+  } finally {
+    if (previous === undefined) {
+      delete process.env.CANVA_EYEDROPPER_IMPL;
+    } else {
+      process.env.CANVA_EYEDROPPER_IMPL = previous;
+    }
+  }
+}
+
+test('createEyeDropperImplementationArgument normalizes the main-process env value for renderer args', () => {
+  assert.equal(createEyeDropperImplementationArgument({}), '--canva-eyedropper-impl=cl');
+  assert.equal(createEyeDropperImplementationArgument({ CANVA_EYEDROPPER_IMPL: 'legacy' }), '--canva-eyedropper-impl=legacy');
+  assert.equal(createEyeDropperImplementationArgument({ CANVA_EYEDROPPER_IMPL: '  ltcode  ' }), '--canva-eyedropper-impl=ltcode');
+});
 
 test('createTabController forwards navigation helpers into tab event attachment', () => {
   const attached = [];
@@ -62,7 +97,9 @@ test('createTabController forwards navigation helpers into tab event attachment'
     broadcastTabsState() {},
     classifyNavigationRequest,
     classifyWindowOpenRequest,
-    debugLog() {},
+    debugLog() {
+      return true;
+    },
     getCanvaSession() {
       return { partition: 'persist:canva' };
     },
@@ -106,6 +143,76 @@ test('createTabController forwards navigation helpers into tab event attachment'
   assert.equal(layoutCalls.length, 1);
 });
 
+test('createTabController passes EyeDropper selection through additionalArguments', () => {
+  withImplementationEnv('legacy', () => {
+    const state = {
+      tabs: new Map(),
+      nextTabIdRef() {
+        return 3;
+      },
+    };
+
+    const controller = createTabController({
+      appName: 'Canva',
+      appUrl: 'https://www.canva.com',
+      broadcastTabsState() {},
+      classifyNavigationRequest() {
+        return { kind: 'external' };
+      },
+      classifyWindowOpenRequest() {
+        return { category: 'tabs', kind: 'external-browser' };
+      },
+      debugLog() {
+        return true;
+      },
+      getCanvaSession() {
+        return { partition: 'persist:canva' };
+      },
+      homeUrl: 'https://www.canva.com',
+      isBlankPopupUrl() {
+        return false;
+      },
+      isCanvaAuthUrl() {
+        return false;
+      },
+      isCanvaUrl() {
+        return true;
+      },
+      isSafeExternalUrl() {
+        return true;
+      },
+      oauthHelpers: {},
+      shell: {},
+      shellBackgroundColor() {
+        return '#000000';
+      },
+      state,
+      tabHelpers: {
+        ensureTopLevelView() {},
+        setTabVisibility() {},
+        layoutViews() {},
+        switchToTab(id) {
+          return id;
+        },
+        switchRelativeTab(step) {
+          return step;
+        },
+        closeTab(id) {
+          return id;
+        },
+        focusHomeTab({ resetToHome, switchToTab }) {
+          return { resetToHome, switchToTab: typeof switchToTab };
+        },
+      },
+      WebContentsView: FakeWebContentsView,
+      attachTabEventHandlersImpl() {},
+    });
+
+    const tab = controller.createTab('https://www.canva.com/design', { activate: false });
+    assert.deepEqual(tab.view.options.webPreferences.additionalArguments, ['--canva-eyedropper-impl=legacy']);
+  });
+});
+
 test('createHomeTab keeps the extracted helpers wired through the controller path', () => {
   const attached = [];
 
@@ -118,7 +225,9 @@ test('createHomeTab keeps the extracted helpers wired through the controller pat
     broadcastTabsState() {},
     classifyNavigationRequest,
     classifyWindowOpenRequest,
-    debugLog() {},
+    debugLog() {
+      return true;
+    },
     getCanvaSession() {
       return { partition: 'persist:canva' };
     },

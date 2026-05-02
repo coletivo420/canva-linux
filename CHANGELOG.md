@@ -1,6 +1,507 @@
 # Changelog
 
+## [0.1.4-dev.21] - 2026-05-02
+
+### Changed
+
+- Made CL-EyeDropper the default Canva Linux EyeDropper implementation.
+- Kept the LTCode-backed picker as a temporary fallback.
+- Added `CANVA_EYEDROPPER_IMPL=legacy` to force the legacy LTCode path for diagnostics.
+- Passed the selected EyeDropper implementation from the main process to the Canva preload via renderer arguments.
+- Added implementation-selection tests for `cl` and `legacy` picker modes.
+
+### Notes
+
+- Default behavior now uses CL-EyeDropper.
+- LTCode remains available as a temporary fallback.
+- LTCode removal is deferred until post-validation cleanup.
+- Flatpak, OAuth, tabs, GPU and upload behavior are unchanged.
+
+## [0.1.4-dev.20] - 2026-05-02
+
+### Added
+
+- Added CL-EyeDropper as a TypeScript parity implementation of the current LTCode-backed picker.
+- Added CL-EyeDropper exports for `CLEyeDropper`, `installClEyeDropperScalingPatch`, and `removeClEyeDropperUi`.
+- Added parity tests for CL-EyeDropper behavior.
+- Expanded runtime build checks for the compiled CL-EyeDropper module.
+
+### Changed
+
+- Updated CanvaLinux EyeDropper documentation to define DEV20 as a parity-first TypeScript conversion phase.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- The active Canva EyeDropper flow still uses the LTCode-backed implementation.
+- CL-EyeDropper is not enabled by default in DEV20.
+- Functional improvements are deferred until after parity validation.
+
+## [0.1.4-dev.19] - 2026-05-01
+
+### Added
+
+- Added initial CL-EyeDropper TypeScript contract modules under `electron/preload/cl-eyedropper/`.
+- Added validation and documentation for the preload TypeScript conversion phase.
+
+### Changed
+
+- Converted preload source modules to TypeScript while preserving the generated `canva.bundle.js` runtime path.
+- Kept preload bundle module IDs stable as `.js` while allowing `.ts` source modules.
+- Updated the CanvaLinux EyeDropper roadmap after the DEV18 main-entrypoint conversion.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- The active EyeDropper implementation still uses the LTCode-backed flow.
+- CL-EyeDropper contracts are introduced, but the first-party picker is not implemented in DEV19.
+- `CANVA_EYEDROPPER_IMPL` is not introduced yet.
+
+## [0.1.4-dev.18] - 2026-05-01
+
+### Changed
+
+- Converted the main Electron entrypoint from `electron/main/index.js` to `electron/main/index.ts`.
+- Completed the TypeScript conversion of `electron/main` while preserving CommonJS runtime behavior.
+- Kept preload conversion deferred to DEV19.
+- Kept CL-EyeDropper contracts and implementation deferred to later phases.
+
+### Fixed
+
+- Preserved app startup, lifecycle registration, session setup, tab controller wiring, OAuth popup wiring, GPU diagnostics registration and EyeDropper bridge registration during entrypoint conversion.
+- Preserved runtime version detection through `app.getVersion()`.
+- Updated direct build and lint dependencies to their latest available versions and adapted the packaging configuration for `electron-builder` 26.
+- Added dependency freshness guardrails to prevent downgrades and require code/config adaptation for dependency upgrades.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- Preload modules remain JavaScript until DEV19.
+- CL-EyeDropper is planned but not implemented in DEV18.
+- Flatpak system/user scope behavior is unchanged.
+
+## [0.1.4-dev.17] - 2026-05-01
+
+### Changed
+
+- Realigned Canva Linux versioning to the official alpha series.
+- Replaced the previous `1.4.x` development line with the `0.1.x` alpha line.
+- Updated documentation, roadmap, validation notes and metadata references to use alpha versioning.
+- Shifted the TypeScript roadmap so `electron/main/index.js` conversion moves to DEV18.
+
+### Notes
+
+- Canva Linux is officially in alpha.
+- The previous `1.4.x` references are historical development-line references.
+- The active development line is now `0.1.4-dev.X`.
+- Runtime behavior is intentionally unchanged.
+
 All notable changes to this project are documented in this file.
+
+## [0.1.4-dev.16] - 2026-05-01
+
+> Historical mapping: `0.1.4-dev.16` -> `0.1.4-dev.16`.
+
+### Changed
+
+- Converted shell, tabs, OAuth and window-open policy main-process modules to TypeScript.
+- Expanded runtime build checks for DEV15 and DEV16 converted modules.
+- Preserved CommonJS runtime exports during the TypeScript migration.
+
+### Fixed
+
+- Preserved OAuth popup navigation and callback handling during TypeScript conversion.
+- Preserved toolbar and tab-state broadcasting during TypeScript conversion.
+- Preserved unsafe external URL blocking after conversion.
+- Preserved current LTCode EyeDropper flow and scoped snapshot/reinjection behavior.
+
+### Notes
+
+- `electron/main/index.js` remains JavaScript until DEV18.
+- Preload modules remain JavaScript until DEV19.
+- CL-EyeDropper is planned but not implemented in DEV16.
+- Flatpak system/user scope behavior is unchanged.
+
+## [0.1.4-dev.15] - 2026-05-01
+
+### Added
+
+- Added `docs/CANVA_LINUX_EYEDROPPER.md` to document the planned first-party CL-EyeDropper architecture.
+
+### Changed
+
+- Bumped the development version to `0.1.4-dev.15`.
+- Converted main-process infrastructure modules to TypeScript: logging, logging helpers, GPU diagnostics, runtime setup, IPC routing, lifecycle wiring and the EyeDropper snapshot bridge.
+- Updated runtime build checks to require compiled output for `electron/shared/navigation.ts`.
+- Updated the TypeScript roadmap from DEV15 onward to reflect the stabilized DEV14 and the staged CL-EyeDropper plan.
+
+### Notes
+
+- Logging, GPU backend behavior, IPC channel names and EyeDropper snapshot scoping are intended to remain unchanged.
+- Shell, tabs, OAuth, window-open policy, the main entrypoint and preload modules remain out of scope for DEV15.
+
+## [0.1.4-dev.14] - 2026-05-01
+
+### Fixed
+
+- Fixed broad TypeScript validation so `npm run typecheck` includes converted `.ts` runtime modules.
+- Fixed runtime module tests so `npm test` no longer triggers `scripts/build-runtime.js` or writes `.build/`.
+- Fixed local uninstall cleanup for local Flatpak remotes created by development install flows.
+
+### Changed
+
+- Bumped the development version to `0.1.4-dev.14`.
+- Stabilized the DOC13 TypeScript leaf conversion test strategy before expanding conversion to larger runtime modules.
+- Converted `electron/shared/navigation.ts` as the next small shared TypeScript boundary after test/build stabilization.
+- Kept converted runtime `.ts` modules on CommonJS exports during the migration.
+- Clarified that Flatpak artifact ownership restoration after install, bundle and dev-run workflows is protected behavior.
+- Documented Google One Tap / FedCM console warnings as upstream Canva/Google Identity Services warnings.
+- Classified known FedCM console warnings from `static.canva.com` as upstream warnings while preserving the original console log.
+
+### Notes
+
+- System-scope installation remains the default.
+- User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
+- `flatpak-builder` must continue running as the current user, never with `sudo`.
+- Do not monkeypatch Google Identity Services APIs to silence FedCM warnings.
+
+## [0.1.4-dev.13] - 2026-04-30
+
+### Added
+
+- Began the DOC13 TypeScript conversion phase with low-risk shared/logging leaf modules.
+- Added validation guidance for converted `.ts` runtime modules.
+- Added stronger documentation around Flatpak artifact ownership restoration.
+
+### Changed
+
+- Updated development documentation from older dev2/dev12 wording to the dev13 workflow.
+- Added TypeScript-aware ESLint parsing for converted runtime `.ts` files.
+- Clarified that system-scope Flatpak operations may request administrator authorization before or during build dependency preparation.
+- Simplified remote permission trusted-origin checks so OAuth provider origins do not affect permission grants once Canva origin trust is required.
+
+### Fixed
+
+- Removed unconditional preload raw-init console logging outside `CANVA_DEBUG`.
+- Restricted powerful runtime permissions to Canva origins instead of OAuth provider origins.
+- Preserved Flatpak build artifact ownership restoration after install, bundle and dev-run workflows.
+- Fixed source-mode `npm run build:preload` after `electron/shared/debug.ts` conversion by resolving TypeScript source candidates and transpiling them before bundling.
+- Fixed local system installs failing to fetch `summary.idx` from the generated local Flatpak repo by configuring the local remote with a valid `file://` URI.
+
+### Notes
+
+- System-scope installation remains the default.
+- User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
+- Password prompts are expected for legitimate system Flatpak operations.
+- `flatpak-builder` must continue running as the current user, never with `sudo`.
+- The preload bundler must keep supporting both source mode (`npm run build:preload`) and build-output mode (`npm run build:runtime`) while TypeScript conversion is in progress.
+
+## [0.1.4-dev.12-hotfix] - 2026-04-30
+
+### Fixed
+
+- Fixed Flatpak Builder permission errors caused by running `flatpak-builder` with administrator privileges in system scope.
+- Fixed root-owned `.flatpak-builder`, `build-dir` and `repo` artifacts blocking subsequent local builds.
+- Deferred administrator authorization to system Flatpak operations instead of the Flatpak build step.
+- Fixed local system installs failing with `ConfigureRemote not allowed for user` by installing from the generated local repo with `sudo flatpak`.
+- Fixed packaged startup failing when the compiled Electron main process tried to load `../../package.json` from inside `.build/`.
+- Fixed default-scope bundle and dev-run workflows by ensuring system Flatpak runtimes are installed before unprivileged `flatpak-builder` runs.
+- Fixed local Flatpak artifact ownership after install, bundle and dev-run workflows.
+- Fixed local system installs failing to fetch `summary.idx` from the generated local Flatpak repo by configuring the local remote with a valid `file://` URI.
+
+### Changed
+
+- Local Flatpak builds now run `flatpak-builder` as the current user.
+- System-scope local installs now request administrator authorization before the Flatpak system install step.
+- Local system installs now configure the generated repo remote with a `file://` URI derived from the absolute repo path.
+- Local Flatpak workflows now restore `build-dir`, `repo` and `.flatpak-builder` ownership before exiting.
+- The installer now explains the difference between system and user Flatpak scopes before installation.
+- The installer now documents the user-scope install command for passwordless per-user installs.
+- Flatpak scope validation now rejects `sudo flatpak-builder`.
+
+### Notes
+
+- System-scope installation remains the default.
+- User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
+- User-scope installs may duplicate Flathub remotes, runtimes, SDKs, BaseApps and apps already installed in system scope.
+
+## [0.1.4-dev.12] - 2026-04-30
+
+### Added
+
+- Added `tsconfig.build.json` for emitted Electron runtime builds.
+- Added `.build/electron/` as the compiled runtime output directory.
+- Added `scripts/build-runtime.js`.
+- Added `scripts/clean-runtime-build.js`.
+- Added `scripts/copy-runtime-assets.js`.
+- Added `scripts/check-runtime-build.js`.
+- Added `npm run clean:runtime`.
+- Added `npm run build:runtime`.
+- Added `npm run build:check`.
+
+### Changed
+
+- `npm start` now builds the Electron runtime before launching.
+- `npm run dist` now builds the Electron runtime before packaging.
+- Electron runtime now starts from `.build/electron/main/index.js`.
+- Electron Builder now packages `.build/electron/**/*` instead of raw `electron/**/*`.
+- Preload bundle generation now supports build-output mode for `.build/electron/preload/canva.bundle.js`.
+- Project validation now keeps source checks first and runs runtime build validation after lint, typecheck, tests, docs and AI guardrails.
+- Flatpak build artifact cleanup now handles root-owned `build-dir`/`repo` created by system-scope Flatpak builds.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- No source files are converted to `.ts` in this phase.
+- `.build/` is generated and must not be committed.
+- The source of truth remains `electron/`.
+- This phase prepares DEV13+ for real `.ts` conversion.
+
+## [0.1.4-dev.11] - 2026-04-30
+
+### Added
+
+- Added strict JSDoc typing for the main Electron orchestration entrypoint.
+- Added `electron/main/index.js` to the strict TypeScript boundary.
+- Added typed main-process orchestration state documentation.
+- Added configurable Flatpak install scope through `CANVA_FLATPAK_SCOPE=system|user`.
+- Added `./canva-linux.sh --run-dev` to build and run from `build-dir` without installing the app.
+- Added Flatpak scope validation to prevent unconditional user-scoped Flathub installs.
+
+### Changed
+
+- Removed `// @ts-nocheck` from `electron/main/index.js`.
+- Changed local Flatpak install policy to use system scope by default.
+- Local install no longer creates a user Flathub remote by default.
+- Local uninstall now removes Canva Linux from both user and system Flatpak scopes when present.
+- Updated TypeScript migration documentation for the DEV11 orchestration typing phase.
+- Updated Flatpak workflow documentation to clarify system/user scope policy.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- No `.ts` runtime conversion is performed in this phase.
+- The Electron runtime still executes CommonJS JavaScript directly.
+- `CANVA_FLATPAK_SCOPE=user` remains available for explicit user-scoped installs.
+- The next TypeScript phase is the DEV12 build pipeline.
+
+## [0.1.4-dev.10] - 2026-04-30
+
+### Added
+
+- Added changelog-backed non-regression rules for AI-assisted development.
+- Added strict JSDoc typing coverage for remaining extracted main-process modules.
+- Added targeted tests for runtime, logging helpers, tab state and EyeDropper bridge helpers.
+- Added TypeScript conversion review documentation.
+- Added full TypeScript conversion roadmap through post-conversion cleanup.
+
+### Changed
+
+- Expanded `tsconfig.strict.json` beyond logging, GPU, shell, OAuth, navigation and preload modules to cover the remaining extracted main-process modules.
+- Expanded AI guardrails to treat `CHANGELOG.md` as protected project history.
+- Updated TypeScript migration documentation with DEV10 through DEV22 progression.
+- Clarified that cleanup must happen after full TypeScript conversion, not before it.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- No `.ts` runtime conversion is performed in this phase.
+- `electron/main/index.js` remains the orchestration entrypoint and is deferred to DEV11 strict typing.
+
+## [0.1.4-dev.9] - 2026-04-30
+
+### Added
+
+- Added strict JSDoc typing for preload debug routing.
+- Added strict JSDoc typing for upload diagnostics helpers.
+- Added strict JSDoc typing for EyeDropper routing diagnostics.
+- Added strict JSDoc typing for custom EyeDropper flow helpers.
+- Added strict JSDoc typing for native EyeDropper wrapper helpers.
+- Added unit tests for preload debug helpers, upload diagnostics helpers and EyeDropper preload helpers.
+- Added colorized post-install command guidance for interactive terminals.
+
+### Changed
+
+- Expanded `tsconfig.strict.json` to include selected preload integration modules.
+- Improved post-install command readability with highlighted sections and commands.
+- Post-install colors are disabled automatically for non-TTY output, `TERM=dumb`, or `NO_COLOR`.
+- Documented `electron/preload/ltcode-eyedropper.js` as a library-like module reserved for DEV11 review.
+- Preserved `electron/preload/canva.js` as the preload orchestration entrypoint without forcing full strict typing in this phase.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- `electron/preload/canva.bundle.js` remains generated by `npm run build:preload`.
+- Public debug behavior remains level-based only: `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
+## [0.1.4-dev.8] - 2026-04-29
+
+### Added
+
+- Added strict JSDoc typing for shared navigation classification.
+- Added strict JSDoc typing for main-process window-open policy.
+- Added strict JSDoc typing for shell/window helper boundaries.
+- Added strict JSDoc typing for OAuth popup boundary helpers.
+- Added tests for shared navigation classification.
+- Added tests for OAuth popup initial state helpers.
+
+### Changed
+
+- Expanded `tsconfig.strict.json` to include shell, navigation, window-open policy and OAuth boundary modules.
+- OAuth diagnostics now pass popup options and bounds objects through the central safe logger instead of manually stringifying them.
+- Updated TypeScript migration docs for the DEV8 boundary and DEV11 cleanup phase.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- OAuth popups remain separate from normal Canva tabs.
+- Public debug behavior remains level-based only: `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
+## [0.1.4-dev.7] - 2026-04-29
+
+### Added
+
+- Added strict JSDoc typing for GPU diagnostics.
+- Added GPU diagnostics to the strict TypeScript boundary.
+- Added tests for GPU acceleration classification, runtime environment parsing, and feature status serialization.
+
+### Changed
+
+- GPU diagnostics now pass raw GPU info objects through the central safe logger instead of manually stringifying them.
+- Updated TypeScript migration documentation with DEV7 scope and DEV11 cleanup/review phase.
+
+### Notes
+
+- Runtime behavior is intentionally unchanged.
+- GPU acceleration remains controlled by the existing `CANVA_GPU_BACKEND` modes.
+- Public debug behavior remains level-based only: `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
+## [0.1.4-dev.6] - 2026-04-29
+
+### Added
+
+- Added `tsconfig.strict.json` for the first strict TypeScript boundary.
+- Added `npm run typecheck:strict`.
+- Added strict JSDoc typing for logging normalization and debug-level helpers.
+- Added debug-level tests covering `CANVA_DEBUG=1`, `CANVA_DEBUG=2`, and unsupported module-specific debug values.
+
+### Changed
+
+- Project validation now runs both broad JavaScript type checking and the strict TypeScript boundary check.
+- Updated TypeScript migration documentation for the `0.1.4-dev.6+` sequence.
+
+### Notes
+
+- This phase does not convert the Electron runtime to `.ts`.
+- Runtime behavior is intentionally unchanged.
+- The public debug contract remains level-based only: `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
+## [0.1.4-dev.5] - 2026-04-28
+
+### Added
+
+- Added crash-safe logger argument normalization.
+- Added safe handling for circular objects, BigInt, Error, Function, Symbol, null and undefined log arguments.
+- Added tests for logger argument normalization.
+- Added `docs/AI_GUARDRAILS.md`.
+- Added `docs/LOGGING_CONTRACT.md`.
+- Added `docs/FEATURES.md`.
+- Added `scripts/check-ai-guardrails.js`.
+- Added `npm run docs:check-ai`.
+
+### Changed
+
+- Logging now normalizes arguments one by one instead of serializing the full args array.
+- Expanded AI development instructions to protect logging, GPU acceleration and Canva-specific features.
+- Project validation now checks AI guardrail documentation.
+
+## [0.1.4-dev.4] - 2026-04-28
+
+### Fixed
+
+- Fixed remote `package.json` syntax by restoring valid JSON for the `lint:fix` script.
+- Added JSON preflight validation before reading package metadata from shell scripts.
+- Fixed GPU diagnostics wording to use `central-log-file` because diagnostics remain centralized in `logs/current.log`.
+- Migrated Electron `console-message` handlers away from deprecated legacy arguments.
+
+### Changed
+
+- Simplified debug behavior to two levels only.
+- `CANVA_DEBUG=1` now shows all internal Canva Linux diagnostics, including GPU acceleration monitoring.
+- `CANVA_DEBUG=2` now shows all internal diagnostics plus verbose Chromium/Electron stderr logs.
+- Removed module-specific debug selection from command-line behavior.
+- Removed category-specific debug commands from post-install output and documentation as supported runtime modes.
+- Switched local dependency installation to `npm ci` when `package-lock.json` is available.
+- Made `CANVA_GPU_BACKEND=auto` less aggressive by no longer forcing ANGLE/OpenGL.
+- Added runtime GPU acceleration classification such as `accelerated-non-vulkan`, `accelerated-vulkan`, or `software-or-disabled`.
+
+### Documentation
+
+- Added or rewrote `docs/DEBUGGING.md`.
+- Updated README debug-level documentation.
+- Updated GPU acceleration docs for the single-log `current.log` model.
+- Updated validation docs for `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
+
+## [0.1.4-dev.3] - 2026-04-28
+
+### Fixed
+- Fixed invalid `package.json` caused by a broken `lint:fix` script string.
+- Removed unconditional Linux hardware acceleration disablement from Electron runtime.
+
+### Added
+- Added `CANVA_GPU_BACKEND=auto|opengl|vulkan|software|force`.
+- Added GPU vendor detection in `run.sh`.
+- Added DRI render node detection and software fallback.
+- Added OpenGL/ANGLE accelerated mode.
+- Added experimental Vulkan/ANGLE mode.
+- Added dedicated GPU diagnostics category.
+- Added centralized GPU diagnostics logging in `logs/current.log`.
+- Added Electron GPU feature status logging through `gpu-info-update`.
+- Added GPU child-process crash/gone diagnostics.
+
+### Changed
+- Linux now prefers hardware acceleration when available.
+- GPU diagnostics use the existing Canva Linux central logger.
+- GPU state is logged through `CANVA_DEBUG=gpu`.
+
+### Documentation
+- Added `docs/GPU_ACCELERATION.md`.
+- Updated README GPU acceleration section.
+- Updated validation docs with GPU backend and log checks.
+
+## [0.1.4-dev.2] - 2026-04-28
+
+### Fixed
+- Fixed local install failure when Node.js is missing by moving dependency checks before package metadata reads.
+- Fixed bundle generation preflight order before reading package metadata with Node.js.
+- Aligned `./canva-linux.sh --validate` with the full project validation workflow.
+- Improved preflight messages for missing host tools.
+
+### Changed
+- Added shared script preflight helpers.
+- Documented development requirements in README and technical docs.
+- Added distribution-specific setup commands for openSUSE, Debian/Ubuntu, Arch Linux, and Fedora.
+- Clarified that Node.js >=22 is required for development workflows.
+
+### Documentation
+- Updated README.md requirements.
+- Updated docs/DEVELOPMENT.md.
+- Updated docs/VALIDATION.md.
+- Updated docs/FLATHUB_SUBMISSION_PATH.md.
+- Updated docs/AI_DEVELOPMENT.md.
+- Added docs/TROUBLESHOOTING.md.
+
+## [0.1.4-dev.1] - 2026-04-26
+
+### Added
+- Added TypeScript foundation tooling for the `0.1.4-dev.X` cycle with `typescript`, `@types/node`, and `tsconfig.json` configured to type-check existing JavaScript (`allowJs` + `checkJs`) without emitting build artifacts.
+- Added npm script `typecheck` (`tsc --noEmit`) for local and CI-safe static type validation.
+- Added `docs/TYPESCRIPT.md` to define migration scope, sequencing, and guardrails for future `dev2+` phases.
+- Added `docs/CANVA_API.md` with initial architecture notes comparing Canva Apps SDK and Canva Connect API usage in this desktop wrapper.
+
+### Changed
+- Updated `scripts/validate-project.sh` to include preload build, lint, typecheck, tests, docs link checks, Flatpak checks, Flathub-submission checks, and `git diff --check`.
+- Updated `README.md` status documentation for `0.1.4-dev.1`, including the TypeScript foundation scope and new docs references.
 
 ## [1.4.10] - 2026-04-26
 
@@ -10,7 +511,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 - Promoted package versioning from `1.4.10-dev.20` through `1.4.10-rc.1` to stable `1.4.10`.
 - Confirmed release validation workflow for preload bundle generation, lint/tests, Flatpak validation scripts, and Flathub-submission preparatory checks.
-- Updated README release status to mark `1.4.10` as stable and `1.4.11.dev1` as the next planned development line (TypeScript + Canva API).
+- Updated README release status to mark `1.4.10` as stable and `0.1.4-dev.1` as the next planned development line (TypeScript + Canva API).
 
 ### Notes
 - This release intentionally freezes scope to consolidation only: no TypeScript migration, no Canva API integration, no major refactors, and no Flathub submission in this tag.

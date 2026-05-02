@@ -19,6 +19,13 @@ SUBMISSION_REPO_DIR="repo"
 
 cd "${REPO_ROOT}"
 
+source "${SCRIPT_DIR}/preflight-common.sh"
+
+## Preflight
+require_command bash
+require_command node
+require_node_major 22
+
 ARCHIVE_URL="$(node - <<'NODE'
 const fs = require('node:fs');
 const manifest = fs.readFileSync('packaging/flathub/manifest.yml', 'utf8');
@@ -159,7 +166,7 @@ const forbiddenActive = [
 
 const activeFiles = [
   'package.json',
-  'electron/main/index.js',
+  'electron/main/index.ts',
   'io.github.PirateMaryRead.canva-linux.yml',
   'packaging/flathub/manifest.yml',
   'run.sh',
@@ -237,8 +244,12 @@ NODE
 ok "Manifest/source structure checks passed"
 
 ## Submission-path validation (Flathub-oriented checks via org.flatpak.Builder)
-if command -v flatpak >/dev/null 2>&1; then
-  if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1; then
+if command -v flatpak >/dev/null 2>&1 && (flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.flatpak.Builder >/dev/null 2>&1); then
+    require_command curl
+    require_command sha256sum
+    require_command tar
+    require_command flatpak
+
     info "Cleaning previous submission repo output (${SUBMISSION_REPO_DIR}/)"
     rm -rf "${SUBMISSION_REPO_DIR}"
 
@@ -282,11 +293,8 @@ if command -v flatpak >/dev/null 2>&1; then
     else
       err "Expected ${SUBMISSION_REPO_DIR}/ after flathub-build, but it was not created"
     fi
-  else
-    warn "org.flatpak.Builder not installed; skipping flathub-build and lint checks"
-  fi
 else
-  warn "flatpak command not found; skipping flathub-build and lint checks"
+  warn "org.flatpak.Builder not installed; skipping flathub-build and lint checks"
 fi
 
 ok "Flathub submission validation completed"

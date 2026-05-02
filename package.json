@@ -1,15 +1,15 @@
 {
   "name": "canva-linux",
-  "version": "1.4.10",
+  "version": "0.1.4-dev.21",
   "description": "A community opensource desktop wrapper for use with Canva",
-  "main": "electron/main/index.js",
+  "main": ".build/electron/main/index.js",
   "author": "Community",
   "license": "GPL-3.0-or-later",
   "productName": "Canva Linux",
   "homepage": "https://www.canva.com/",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --linux dir",
+    "dist": "NODE_OPTIONS=--no-deprecation electron-builder --linux dir",
     "lint": "eslint .",
     "test": "node --test \"test/**/*.test.js\"",
     "test:unit": "node --test test/window-open-policy.test.js",
@@ -18,10 +18,18 @@
     "test:smoke:headed": "playwright test --headed",
     "lint:fix": "eslint . --fix",
     "build:preload": "node scripts/build-preload-bundle.js",
-    "prestart": "npm run build:preload",
-    "predist": "npm run build:preload",
+    "clean:runtime": "node scripts/clean-runtime-build.js",
+    "build:runtime": "node scripts/build-runtime.js",
+    "build:check": "node scripts/check-runtime-build.js",
+    "build": "npm run build:runtime",
+    "prestart": "npm run build:runtime",
+    "predist": "npm run build:runtime",
     "docs:check-links": "node scripts/check-doc-links.js",
-    "validate:project": "./scripts/validate-project.sh"
+    "deps:check-policy": "node scripts/check-dependency-policy.js",
+    "typecheck": "tsc --noEmit",
+    "validate:project": "./scripts/validate-project.sh",
+    "docs:check-ai": "node scripts/check-ai-guardrails.js",
+    "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit"
   },
   "build": {
     "appId": "io.github.PirateMaryRead.canva-linux",
@@ -30,33 +38,30 @@
       "output": "dist",
       "buildResources": "build-resources"
     },
+    "beforeBuild": "./scripts/electron-builder-before-build.js",
     "files": [
-      "electron/**/*",
+      ".build/electron/**/*",
       "package.json"
     ],
     "linux": {
       "target": "dir",
       "category": "Graphics",
       "executableName": "canva-linux",
-      "desktop": {
-      "desktop": {
-        "Name": "Canva Linux",
-        "StartupWMClass": "io.github.PirateMaryRead.canva-linux",
-        "X-GNOME-WMClass": "io.github.PirateMaryRead.canva-linux"
-      },
-      },
       "icon": "build-resources"
     },
     "extraMetadata": {
-      "main": "electron/main/index.js"
+      "main": ".build/electron/main/index.js"
     }
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
-    "electron": "41.3.0",
-    "electron-builder": "^25.1.8",
-    "eslint": "^9.39.4",
-    "eslint-plugin-import": "^2.32.0"
+    "@types/node": "^25.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.1",
+    "@typescript-eslint/parser": "^8.59.1",
+    "electron": "^41.5.0",
+    "electron-builder": "^26.8.1",
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3"
   },
   "desktopName": "io.github.PirateMaryRead.canva-linux.desktop",
   "engines": {

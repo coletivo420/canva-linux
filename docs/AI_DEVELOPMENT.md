@@ -16,6 +16,7 @@ This document defines project conventions for AI-assisted development and vibeco
 - Prefer small, reviewable patches that are easy to revert.
 - Avoid large architecture changes without explicit scope validation.
 - Preserve the stable/dev workflow already used by this repository.
+- Treat `CHANGELOG.md` as protected project history. Features, behaviors, workflows, validations, scripts, permissions, logging/debug contracts, packaging decisions, and runtime integrations recorded there must not be removed, weakened, renamed, bypassed, or silently altered unless the user explicitly requests it.
 
 ## Scope guardrails
 
@@ -68,6 +69,8 @@ Before proposing or applying changes, align with the current state documented in
 - `docs/FLATHUB.md`
 - `docs/FLATPAK_PERMISSIONS.md`
 - `docs/AI_DEVELOPMENT.md`
+
+Before proposing cleanup or simplification, check `CHANGELOG.md` to verify whether the target behavior is established project behavior.
 
 After meaningful refactors, update the relevant repository documentation so future AI sessions can understand:
 
@@ -139,3 +142,41 @@ Rules:
 - Development PRs must target `dev`.
 - Branches should remain short-lived during active development.
 - Branches may be kept until the stable release if the maintainer explicitly wants to preserve development history.
+
+## Environment assumptions
+
+AI-assisted patches must assume the documented development environment:
+
+- Node.js >= 22
+- npm
+- Bash
+- Git
+- Flatpak
+- flatpak-builder
+
+Scripts must not call external commands before validating that they exist.
+
+When adding a new host dependency, update:
+
+- README.md
+- docs/DEVELOPMENT.md
+- docs/VALIDATION.md
+- CHANGELOG.md
+
+## Logging changes
+
+Before changing logging code, read:
+
+- `docs/LOGGING_CONTRACT.md`
+- `docs/AI_GUARDRAILS.md`
+- `docs/DEBUGGING.md`
+
+AI patches must not:
+
+- reintroduce module-specific `CANVA_DEBUG` modes
+- create separate log files
+- remove GPU diagnostics from `CANVA_DEBUG=1`
+- use unsafe `JSON.stringify(args)`
+- allow logging errors to crash the main process
+
+When logging arbitrary objects, normalize arguments one by one.

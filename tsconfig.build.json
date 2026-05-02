@@ -1,0 +1,35 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": false,
+    "declaration": false,
+    "sourceMap": false,
+    "removeComments": false,
+    "outDir": ".build",
+    "rootDir": ".",
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "types": [
+      "node"
+    ],
+    "moduleDetection": "force"
+  },
+  "include": [
+    "electron/**/*.js",
+    "electron/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "repo",
+    "build-dir",
+    ".flatpak-builder",
+    ".build",
+    "electron/preload/canva.bundle.js"
+  ]
+}

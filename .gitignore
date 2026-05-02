@@ -2,6 +2,7 @@ node_modules/
 dist/
 build-dir/
 repo/
+.build/
 .flatpak-builder/
 *.log
 

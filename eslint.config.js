@@ -1,12 +1,21 @@
 'use strict';
+// @ts-nocheck
 
-const importPlugin = require('eslint-plugin-import');
+const tsParser = require('@typescript-eslint/parser');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
+
+const commonRules = {
+  eqeqeq: ['error', 'always'],
+  'no-var': 'error',
+  'prefer-const': 'error',
+};
 
 module.exports = [
   {
     ignores: [
       'build-dir/**',
       'dist/**',
+      '.build/**',
       'node_modules/**',
       'repo/**',
       'electron/preload/canva.bundle.js',
@@ -17,42 +26,65 @@ module.exports = [
     files: [
       'electron/**/*.js',
       'scripts/**/*.js',
-      'eslint.config.js',
     ],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'commonjs',
     },
     settings: {
-      'import/extensions': ['.js'],
+      'import/extensions': ['.js', '.ts'],
       'import/resolver': {
         node: {
-          extensions: ['.js'],
+          extensions: ['.js', '.ts'],
+        },
+      },
+    },
+    rules: {
+      ...commonRules,
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: [
+      'eslint.config.js',
+    ],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'commonjs',
+    },
+    rules: {
+      eqeqeq: ['error', 'always'],
+      'no-var': 'error',
+      'prefer-const': 'error',
+      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    files: [
+      'electron/**/*.ts',
+    ],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      parser: tsParser,
+      parserOptions: {
+        sourceType: 'module',
+      },
+    },
+    settings: {
+      'import/extensions': ['.js', '.ts'],
+      'import/resolver': {
+        node: {
+          extensions: ['.js', '.ts'],
         },
       },
     },
     plugins: {
-      import: importPlugin,
+      '@typescript-eslint': tsPlugin,
     },
     rules: {
-      eqeqeq: ['error', 'always'],
-      'import/no-duplicates': 'error',
-      'import/no-extraneous-dependencies': ['error', {
-        packageDir: ['.'],
-      }],
-      'import/no-unresolved': ['error', {
-        caseSensitive: true,
-        commonjs: true,
-      }],
-      'import/order': ['warn', {
-        groups: ['builtin', 'external', 'parent', 'sibling', 'index'],
-        alphabetize: { caseInsensitive: true, order: 'asc' },
-        'newlines-between': 'always',
-      }],
-      'import/newline-after-import': 'warn',
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      'no-var': 'error',
-      'prefer-const': 'error',
+      ...commonRules,
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
   },
 ];
