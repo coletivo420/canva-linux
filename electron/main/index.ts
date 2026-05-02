@@ -294,7 +294,10 @@ registerEyeDropperBridge({
   ipcMain,
   debugLog,
   webContentsLabel,
-  findTabByWebContents: findTabByWebContents as unknown as import('./eyedropper-bridge').FindTabByWebContentsFn,
+  findTabByWebContents: (wc: any) => {
+    const tab = findTabByWebContents(wc);
+    return tab ? { id: tab.id, webContents: tab.view.webContents as any } : null;
+  },
 });
 
 registerMainIpcHandlers({
