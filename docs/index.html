@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Canva Linux</title>
   <meta name="description" content="Canva Linux is a community-maintained desktop wrapper for using Canva on Linux.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/inter-ui/inter.css">
   <style>
     :root {
       color-scheme: dark;
@@ -210,8 +211,8 @@
           <p class="eyebrow">Alpha · 0.1.4-dev.22</p>
           <h1 id="title">Canva Linux</h1>
           <p class="summary">
-            A community-maintained desktop wrapper for using Canva on Linux with Flatpak packaging,
-            a TypeScript runtime, OAuth popup handling, GPU diagnostics and CL-EyeDropper support.
+            A community-maintained desktop wrapper for using Canva on Linux with persistent sessions,
+            internal tabs, OAuth handling, custom EyeDropper support, and desktop integration.
           </p>
           <nav class="actions" aria-label="Project links">
             <a class="button primary" href="https://github.com/coletivo420/canva-linux">Repository</a>
@@ -239,28 +240,28 @@
     <section class="content" aria-label="Features">
       <div class="feature-grid">
         <article class="feature">
-          <h2>Flatpak</h2>
-          <p>Local install, bundle generation, AppStream metadata and Flathub-oriented validation workflows.</p>
+          <h2>Persistent Sessions</h2>
+          <p>Stay logged in across restarts without repeating the sign-in flow.</p>
         </article>
         <article class="feature">
-          <h2>TypeScript runtime</h2>
-          <p>Electron runtime modules are progressively converted and checked before packaged builds.</p>
+          <h2>Internal Tabs</h2>
+          <p>Manage multiple designs within a single window while keeping the shell focused.</p>
         </article>
         <article class="feature">
-          <h2>OAuth</h2>
-          <p>External login popups are handled inside the desktop shell while preserving session state.</p>
+          <h2>OAuth Support</h2>
+          <p>Secure login flows work through Google, Facebook and other supported providers.</p>
         </article>
         <article class="feature">
-          <h2>GPU diagnostics</h2>
-          <p>Debug modes expose rendering backend selection and diagnostics for Wayland and X11 sessions.</p>
+          <h2>Custom EyeDropper</h2>
+          <p>Integrated color picking works in Linux desktop sessions with the project's custom flow.</p>
         </article>
         <article class="feature">
-          <h2>CL-EyeDropper</h2>
-          <p>The active custom picker path uses the first-party CL-EyeDropper implementation.</p>
+          <h2>Wayland &amp; X11</h2>
+          <p>Modern display-server support keeps the wrapper usable across common Linux setups.</p>
         </article>
         <article class="feature">
-          <h2>Community maintained</h2>
-          <p>Canva Linux is not affiliated with, endorsed, certified or officially supported by Canva Pty Ltd.</p>
+          <h2>GPU Acceleration</h2>
+          <p>High-performance rendering is enabled by default for a smoother desktop experience.</p>
         </article>
       </div>
       <p class="notice">
