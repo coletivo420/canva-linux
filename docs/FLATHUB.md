@@ -4,7 +4,7 @@
 
 This document explains how to prepare this project for a future Flathub submission while keeping the GitHub release bundle workflow separate.
 
-## Canonical workflow command (1.4.10-dev.17)
+## Canonical workflow command
 
 Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
 
@@ -23,7 +23,7 @@ Notes:
 - Actions can be chained and run in argument order.
 - `--uninstall` can only be combined with `--reset-user-data`.
 
-`1.4.10-dev.17` keeps the Flathub source/readiness focus while standardizing public project naming as Canva Linux and migrating the app-id to `io.github.coletivo420.canva-linux`.
+`0.1.4-dev.22` keeps the Flathub source/readiness focus while standardizing the canonical repository as `coletivo420/canva-linux` and the active app-id as `io.github.coletivo420.canva-linux`.
 
 The preload bundle is generated automatically before the Electron build used by `./canva-linux.sh --install` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux.sh --bundle` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
 

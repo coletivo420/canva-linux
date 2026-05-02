@@ -4,18 +4,19 @@
 
 ### Changed
 
-- Migrated the canonical repository from `PirateMaryRead/canva-linux` to `coletivo420/canva-linux`.
-- Updated active Flatpak app-id, desktop/metainfo filenames, icon identifiers, and runtime WMClass usage to `io.github.coletivo420.canva-linux`.
-- Updated the application's landing page and `APP_URL` to `https://coletivo420.github.io/canva-linux/`.
-- Updated `APP_NAME` to `Canva Linux` for full branding alignment.
-- Updated package metadata, scripts, and documentation to reflect the new repository and landing page URLs.
-- Added migration cleanup logic to `canva-linux.sh` to optionally uninstall legacy AppIDs.
-- Replaced the `docs/index.html` placeholder with a real landing page.
+- Migrated the canonical repository identity to `coletivo420/canva-linux`.
+- Migrated the active Flatpak/AppStream/Electron AppID to `io.github.coletivo420.canva-linux`.
+- Updated package metadata, Flatpak manifests, desktop entry, AppStream metadata, launcher scripts and documentation for the new repository identity.
+- Removed redundant legacy-name guardrails from the Flatpak validation helpers.
+- Updated GitHub Pages references to `https://coletivo420.github.io/canva-linux/`.
+- Replaced the placeholder GitHub Pages test file with a real Canva Linux landing page.
+- Added explicit migration notes for legacy AppIDs.
 
 ### Notes
 
-- The previous `PirateMaryRead` and `com.canva.Linux` IDs are preserved only as migration history and cleanup targets.
 - Runtime behavior is unchanged except for repository identity and AppID metadata.
+- Legacy IDs are kept only as migration history, AppStream replacement metadata, or optional local cleanup targets.
+- LTCode fallback removal is deferred to `0.1.4-dev.23`.
 
 ## [0.1.4-dev.21] - 2026-05-02
 

@@ -6,6 +6,14 @@ A community-maintained open source desktop wrapper for use with Canva.
 
 ---
 
+## Identity
+
+- Active AppID: `io.github.coletivo420.canva-linux`
+- Canonical repository: `https://github.com/coletivo420/canva-linux`
+- GitHub Pages: `https://coletivo420.github.io/canva-linux/`
+
+---
+
 ## Status: Alpha
 
 Canva Linux is currently in **alpha**. It provides a Linux desktop wrapper around Canva with persistent sessions, internal tabs, OAuth handling, and system integration.
@@ -97,14 +105,3 @@ Comprehensive documentation is available in the `docs/` folder:
 ## License
 
 Distributed under the **GNU General Public License v3.0 or later**. See [LICENSE](LICENSE) for details.
-
----
-
-## Migration Note
-
-If you have older versions installed:
-
-```bash
-flatpak uninstall com.canva.Linux
-flatpak uninstall io.github.PirateMaryRead.canva-linux
-```
