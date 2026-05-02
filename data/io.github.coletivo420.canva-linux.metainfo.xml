@@ -45,6 +45,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.4-dev.22" date="2026-05-02">
+      <description>
+        <p>Migrated the canonical repository, GitHub Pages references, Flatpak manifests, desktop metadata, AppStream metadata, launcher scripts, validation guardrails and documentation to the coletivo420 identity and active io.github.coletivo420.canva-linux AppID.</p>
+      </description>
+    </release>
     <release version="0.1.4-dev.18" date="2026-05-01">
       <description>
         <p>Converted the main Electron entrypoint to TypeScript while preserving CommonJS runtime behavior, startup wiring, tabs, OAuth, GPU diagnostics, session handling, and the current EyeDropper bridge.</p>

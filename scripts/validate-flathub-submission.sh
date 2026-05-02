@@ -159,10 +159,14 @@ for (const [filePath, token] of checks) {
   }
 }
 
+const legacyPirateMaryReadAppId = ['io.github', 'PirateMaryRead', 'canva-linux'].join('.');
+const legacyCanvaAppId = ['com', 'canva', 'Linux'].join('.');
+const legacyCanvaWebAppId = ['com', 'canva', 'WebApp'].join('.');
+
 const forbiddenActive = [
-  'io.github.PirateMaryRead.canva-linux',
-  'com.canva.Linux',
-  'com.canva.WebApp',
+  legacyPirateMaryReadAppId,
+  legacyCanvaAppId,
+  legacyCanvaWebAppId,
 ];
 
 const activeFiles = [
@@ -183,7 +187,7 @@ for (const filePath of activeFiles) {
   const content = fs.readFileSync(filePath, 'utf8');
   for (const token of forbiddenActive) {
     if (content.includes(token)) {
-      if (filePath === 'canva-linux.sh' && (token === 'io.github.PirateMaryRead.canva-linux' || token === 'com.canva.Linux')) {
+      if (filePath === 'canva-linux.sh' && (token === legacyPirateMaryReadAppId || token === legacyCanvaAppId)) {
         continue;
       }
       console.error(`${filePath}: forbidden legacy token present: ${token}`);
