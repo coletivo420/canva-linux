@@ -67,8 +67,6 @@ export class CLEyeDropper {
 
   _mouseThrottle = false;
 
-  _imageDataCache: ImageData | null = null;
-
   _onMouseMoveBound?: BoundMouseHandler;
 
   _onMouseLeaveBound?: BoundMouseHandler;
@@ -415,7 +413,6 @@ export class CLEyeDropper {
     this._magCanvas = null;
     this._magCtx = null;
     this._mouseThrottle = false;
-    this._imageDataCache = null;
     this._onMouseMoveBound = undefined;
     this._onMouseLeaveBound = undefined;
     this._onMouseEnterBound = undefined;
