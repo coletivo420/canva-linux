@@ -112,7 +112,20 @@ Development
 11) Prepare AUR/PKGBUILD [planned]
 0) Back
 M
-read -r -p "Choose an option: " c; case "$c" in 1) run_script "${ROOT_DIR}/scripts/build-runtime.sh";;2) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh";;3) run_script "${ROOT_DIR}/scripts/validate-project.sh";;4) run_script "${ROOT_DIR}/scripts/validate-appimage.sh";;5) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" --extract-check;;6) run_script "${ROOT_DIR}/scripts/doctor.sh";;7) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh";;8) run_script "${ROOT_DIR}/scripts/build-appimage.sh";;9|10|11) ui_planned "Not implemented in this phase.";;*) ;; esac; }
+read -r -p "Choose an option: " c
+case "$c" in
+  1) run_script "${ROOT_DIR}/scripts/build-runtime.sh" ;;
+  2) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh" ;;
+  3) run_script "${ROOT_DIR}/scripts/validate-project.sh" ;;
+  4) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" ;;
+  5) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" --extract-check ;;
+  6) run_script "${ROOT_DIR}/scripts/doctor.sh" ;;
+  7) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh" ;;
+  8) run_script "${ROOT_DIR}/scripts/build-appimage.sh" ;;
+  9|10|11) ui_planned "Not implemented in this phase." ;;
+  *) ;;
+esac
+}
 menu_maint(){ cat <<'M'
 Maintenance & Uninstall
 1) Clean generated artifacts
