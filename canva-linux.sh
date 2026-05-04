@@ -203,7 +203,7 @@ for arg in "$@"; do case "$arg" in -y|--yes|--force) FORCE=true;; esac; done
 for arg in "$@"; do
   case "$arg" in
     --help|-h) show_help; exit 0 ;;
-    --tui) run_tui_mode ;;
+    --tui) run_tui_mode; exit 0 ;;
     --no-tui) run_interactive_mode ;;
     -y|--yes|--force) ;;
     --install-native) run_script "${ROOT_DIR}/scripts/install-native.sh" ;;
