@@ -15,7 +15,7 @@
 
 ### Fixed
 
-- Ensured changelog structure starts with `# Changelog` and keeps newest entries in chronological order.
+- Ensured changelog structure starts with # Changelog and keeps newest entries in reverse chronological order.
 
 ## [0.1.4.11-dev.30] - 2026-05-04
 
