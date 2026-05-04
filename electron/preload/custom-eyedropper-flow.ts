@@ -160,9 +160,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
       `${snapshot.cssWidth || 'unknown'}x${snapshot.cssHeight || 'unknown'}`
     );
 
-    const snapshotCanvasResult: any = await createSnapshotCanvas(snapshot, { logEyeDropper });
-    const host = snapshotCanvasResult.host;
-    const canvas = snapshotCanvasResult.canvas;
+    const { host, canvas } = await createSnapshotCanvas(snapshot, { logEyeDropper });
     const eyedropper = new CLEyeDropper({
       overlay: {
         background: 'rgba(0,0,0,0)',
