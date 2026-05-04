@@ -136,7 +136,7 @@ Validation:
 11) Doctor / check host tools
 0) Back
 M
-if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; return; fi
+if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
 case "$c" in
   1) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh" ;;
   2) run_script "${ROOT_DIR}/scripts/build-appimage.sh" ;;
