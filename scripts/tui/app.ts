@@ -27,6 +27,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let running = false;
   let currentChild: ChildProcess | null = null;
   let renderScheduled = false;
+  let logBuffer = '';
 
   function scheduleRender() {
     if (renderScheduled) return;
