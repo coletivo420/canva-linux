@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "${SCRIPT_DIR}"
 FORCE=false
 source "${SCRIPT_DIR}/scripts/app-identity-common.sh"
 source "${SCRIPT_DIR}/scripts/ui-common.sh"
