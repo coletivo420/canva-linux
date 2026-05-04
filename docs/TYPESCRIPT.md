@@ -50,6 +50,23 @@ npm run build:check
 - Do not edit generated `electron/preload/canva.bundle.js` manually.
 - Keep runtime behavior stable during type-only changes.
 - Prefer small module conversions and targeted tests.
+- In preload/runtime TypeScript files, always provide explicit Promise generic types when resolving structured objects that are destructured/consumed by shape.
+
+Example:
+
+```ts
+return new Promise<SnapshotCanvas>((resolve, reject) => {
+  resolve({ host, canvas });
+});
+```
+
+Avoid:
+
+```ts
+return new Promise((resolve, reject) => {
+  resolve({ host, canvas });
+});
+```
 
 ## Future cleanup
 
