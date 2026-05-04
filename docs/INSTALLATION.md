@@ -38,6 +38,9 @@ User scope installs to:
 
 Security note: Native Install runs outside the Flatpak sandbox.
 
+Native Install, AppImage, future deb/rpm and AUR follow XDG/FHS-style host paths.
+Flatpak Install follows Flatpak sandbox paths and stores data under `~/.var/app/<APP_ID>`.
+
 Native user data cleanup is XDG-aware. Purge/removal checks the configured XDG homes when available and falls back to standard locations:
 
 - `${XDG_CONFIG_HOME:-~/.config}`

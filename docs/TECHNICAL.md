@@ -189,3 +189,17 @@ Do not use four numeric version segments in `package.json#version`.
 
 Invalid: `0.1.4.11-dev.29`
 Valid: `0.1.4-dev.11.29`
+
+
+## Shared installer architecture
+
+Installer scripts are split into common helpers:
+
+- `app-identity-common.sh`
+- `xdg-common.sh`
+- `install-layout-common.sh`
+- `desktop-integration-common.sh`
+- `runtime-guidance-common.sh`
+- `user-data-common.sh`
+
+Format-specific scripts should be thin adapters.
