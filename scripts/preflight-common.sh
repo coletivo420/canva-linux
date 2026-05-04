@@ -90,7 +90,7 @@ ensure_npm_dependencies() {
 
   if [[ "${CANVA_NPM_REPAIR:-}" == "clean" ]]; then
     echo "[info] Forcing clean npm dependency repair (CANVA_NPM_REPAIR=clean)"
-    "${install_cmd[@]}"
+    "${install_cmd[@]}" || exit 1
     return 0
   fi
 
