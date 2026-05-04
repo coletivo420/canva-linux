@@ -149,3 +149,12 @@ Valid: `0.1.4-dev.11.29`
 
 bash -n scripts/ui-common.sh
 bash -n scripts/install-detection-common.sh
+
+
+Additional detection check:
+
+```bash
+./canva-linux.sh --bundle-appimage
+./canva-linux.sh
+# Maintenance & Uninstall -> Show detected installs/artifacts
+```

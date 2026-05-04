@@ -17,7 +17,7 @@ ui_init() {
   fi
 }
 
-ui_divider(){ printf '%s\n' "${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}${UI_DIVIDER_CHAR}"; }
+ui_divider(){ local line; printf -v line "%*s" 48 ""; printf '%s\n' "${line// /${UI_DIVIDER_CHAR}}"; }
 ui_title(){ ui_divider; printf '%s%s%s\n' "${BOLD}" "$1" "${RESET}"; [[ $# -gt 1 ]] && printf '%s%s%s\n' "${DIM}" "$2" "${RESET}"; ui_divider; }
 ui_section(){ printf '\n%s%s%s\n' "${BOLD}${CYAN}" "$1" "${RESET}"; }
 ui_subsection(){ printf '%s%s%s\n' "${BOLD}${MAGENTA}" "$1" "${RESET}"; }
@@ -29,3 +29,4 @@ ui_planned(){ printf '%s[planned]%s %s\n' "${MAGENTA}" "${RESET}" "$*"; }
 ui_dim(){ printf '%s%s%s\n' "${DIM}" "$*" "${RESET}"; }
 ui_cmd(){ printf '  %s%s%s\n' "${BOLD}${GREEN}" "$*" "${RESET}"; }
 ui_prompt(){ printf '%s[info]%s %s' "${BLUE}" "${RESET}" "$*"; }
+ui_read_choice(){ local prompt="${1:-Choose an option: }" choice; ui_prompt "$prompt" >&2; read -r choice; printf '%s\n' "$choice"; }

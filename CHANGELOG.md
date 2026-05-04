@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.1.4.11-dev.33] - 2026-05-04
+
+### Fixed
+
+- Fixed AppImage artifact detection consistency in `install-detection-common.sh`.
+- Fixed `has_detected_installations` so generated AppImage artifacts are not ignored when reporting detected items.
+- Fixed the direct CLI argument parser in `canva-linux.sh`.
+- Fixed an invalid dangling `--reset-user-data` case entry in `canva-linux.sh`.
+- Added confirmation before resetting user data from the interactive menu.
+- Clarified that AppImage artifacts are generated package files and are removed by `--clean`, not by uninstall.
+
+### Changed
+
+- Split detection semantics between installed variants and generated artifacts.
+- Improved detected-installation output for Native Install, Flatpak Install and AppImage artifacts.
+- Expanded `--help` output with full command descriptions.
+- Improved runtime guidance parity text for Native Install, Flatpak Install and AppImage.
+
+### Notes
+
+- Runtime Electron behavior is unchanged.
+- AppImage remains experimental.
+- `.deb`, `.rpm`, and AUR remain planned.
+
+
 ## [0.1.4.11-dev.31] - 2026-05-04
 
 ### Added

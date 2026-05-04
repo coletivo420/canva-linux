@@ -230,3 +230,14 @@ Format-specific scripts should be thin adapters.
 Native Install, Flatpak Install and AppImage must share the same Electron runtime behavior.
 
 Packaging-specific differences are limited to sandbox model, install paths, launch command and host integration.
+
+
+## Detection model
+
+The installer distinguishes installed variants from generated artifacts:
+
+- Native Install system/user
+- Flatpak Install system/user
+- AppImage artifacts under `dist/*.AppImage`
+
+AppImage artifacts are generated files, not installed variants. Use `--clean` to remove generated artifacts.

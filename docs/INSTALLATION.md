@@ -156,6 +156,8 @@ Future package formats should use the same diagnostic command structure:
 
 AUR/PKGBUILD builds a native Arch package and runs outside the Flatpak sandbox after installation.
 
+AppImage artifacts are portable generated files. They are not removed by `--uninstall`; use `--clean` to remove generated package artifacts.
+
 ## Uninstall
 
 ```bash
