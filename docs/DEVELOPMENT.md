@@ -10,6 +10,8 @@
 - desktop-file-utils
 - appstreamcli
 
+Flatpak-related tools are required for Flatpak Install and `.flatpak` package generation. Native Install and AppImage packaging still require Node.js, npm, Git and the Electron build toolchain.
+
 ## Setup
 
 ```bash
@@ -18,17 +20,18 @@ cd canva-linux
 npm ci
 ```
 
-## Run
+## Doctor
+
+```bash
+./canva-linux.sh --doctor
+```
+
+## Run during development
 
 ```bash
 npm start
-./canva-linux.sh --install-flatpak
-```
-
-## Validate
-
-```bash
-./canva-linux.sh --validate
+CANVA_DEBUG=1 npm start
+CANVA_DEBUG=2 npm start
 ```
 
 ## Build
@@ -36,13 +39,70 @@ npm start
 ```bash
 npm run build:runtime
 npm run build:check
+./canva-linux.sh --build-dir
+```
+
+## Install from source
+
+### Native Install
+
+```bash
+./canva-linux.sh --install-native
+```
+
+Native Install uses system scope by default and runs outside the Flatpak sandbox.
+
+For user scope:
+
+```bash
+CANVA_NATIVE_SCOPE=user ./canva-linux.sh --install-native
+```
+
+### Flatpak Install
+
+```bash
+./canva-linux.sh --install-flatpak
+```
+
+For user scope:
+
+```bash
+CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak
+```
+
+## Package generation
+
+```bash
 ./canva-linux.sh --bundle-flatpak
+./canva-linux.sh --bundle-appimage
+```
+
+AppImage packaging is experimental in this development line and runs outside the Flatpak sandbox.
+
+Planned package targets:
+
+- `.deb`
+- `.rpm`
+- AUR / PKGBUILD
+
+## Validate
+
+```bash
+./canva-linux.sh --validate
+```
+
+## Maintenance
+
+```bash
+./canva-linux.sh --clean
+./canva-linux.sh --uninstall
+./canva-linux.sh --purge
 ```
 
 ## Patch checklist
 
 - update code;
 - update docs if behavior changes;
-- update CHANGELOG for user-facing or architecture changes;
+- update `CHANGELOG.md` for user-facing or architecture changes;
 - run validation;
 - do not commit generated build outputs.
