@@ -117,3 +117,15 @@ Planned package targets:
 - run validation;
 - do not commit generated build outputs.
 - for TypeScript preload/runtime Promise constructors, prefer explicit generics (e.g. `new Promise<MyType>(...)`) whenever resolved values are consumed structurally.
+
+
+## Versioning policy
+
+Canva Linux may use project phase labels such as `0.1.4.11-dev.29`.
+
+Package metadata consumed by npm, electron-builder and future Linux package targets must use valid SemVer: `0.1.4-dev.11.29`.
+
+Do not use four numeric version segments in `package.json#version`.
+
+Invalid: `0.1.4.11-dev.29`
+Valid: `0.1.4-dev.11.29`

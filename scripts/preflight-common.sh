@@ -111,3 +111,22 @@ detect_package_version() {
     printf 'unknown'
   fi
 }
+
+validate_package_version_semver() {
+  validate_json_file package.json
+
+  local version
+  version="$(node -p "require('./package.json').version")"
+
+  node - "$version" <<'NODE'
+const version = process.argv[2];
+const semverPattern =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+
+if (!semverPattern.test(version)) {
+  console.error(`[error] package.json version is not valid SemVer: ${version}`);
+  console.error('[error] Use a SemVer-compatible package version, for example: 0.1.4-dev.11.29');
+  process.exit(1);
+}
+NODE
+}

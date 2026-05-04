@@ -10,22 +10,20 @@ source "${SCRIPT_DIR}/preflight-common.sh"
 require_command node
 require_command npm
 require_node_major 22
+validate_package_version_semver
 ensure_npm_dependencies
+
+echo "[info] Cleaning previous AppImage artifacts"
+rm -f dist/*.AppImage dist/*.AppImage.sha256 dist/SHA256SUMS
 
 echo "[info] Building AppImage with electron-builder"
 npm run dist:appimage
 
-mapfile -t appimages < <(find dist -maxdepth 1 -type f -name '*.AppImage' | sort)
-if (( ${#appimages[@]} == 0 )); then
-  echo "[error] No AppImage artifact was generated under dist/" >&2
-  exit 1
-fi
+"${SCRIPT_DIR}/validate-appimage.sh"
+sha256sum dist/*.AppImage > dist/SHA256SUMS
+echo "[ok] SHA256 manifest generated: dist/SHA256SUMS"
 
-for artifact in "${appimages[@]}"; do
-  chmod +x "${artifact}"
-  size_bytes="$(stat -c '%s' "${artifact}")"
-  echo "[ok] AppImage generated: ${artifact} (${size_bytes} bytes)"
-done
+mapfile -t appimages < <(find dist -maxdepth 1 -type f -name '*.AppImage' | sort)
 
 cat <<'GUIDANCE'
 
@@ -34,7 +32,7 @@ AppImage notes:
   Depending on the distribution, running AppImage files may require FUSE support.
 
 Run:
-  ./dist/<artifact>.AppImage
+  ${appimages[0]}
 
 Debug:
   CANVA_DEBUG=1 ./dist/<artifact>.AppImage

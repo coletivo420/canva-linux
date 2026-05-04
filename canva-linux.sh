@@ -46,6 +46,7 @@ Build:
 
 Validation:
   --validate             Run full project validation
+  --validate-appimage    Validate generated AppImage artifacts
   --doctor               Check host tools
 
 Maintenance:
@@ -88,14 +89,17 @@ Validation:
   11) Doctor / check host tools
 
 Maintenance:
-  12) Clean generated artifacts
+  12) Validate AppImage artifacts
+
+Maintenance:
+  13) Clean generated artifacts
 
 Uninstall:
-  13) Uninstall detected installations
-  14) Uninstall detected installations and remove user data
+  14) Uninstall detected installations
+  15) Uninstall detected installations and remove user data
 
 Other:
-  15) Help
+  16) Help
   0) Exit
 MENU
   local c
@@ -113,14 +117,16 @@ MENU
     9) "${SCRIPT_DIR}/scripts/build-electron-dir.sh" ;;
     10) "${SCRIPT_DIR}/scripts/validate-project.sh" ;;
     11) "${SCRIPT_DIR}/scripts/doctor.sh" ;;
-    12) "${SCRIPT_DIR}/scripts/clean-artifacts.sh" ;;
-    13) action_uninstall ;;
-    14) action_purge ;;
-    15) show_help ;;
+    12) "${SCRIPT_DIR}/scripts/validate-appimage.sh" ;;
+    13) "${SCRIPT_DIR}/scripts/clean-artifacts.sh" ;;
+    14) action_uninstall ;;
+    15) action_purge ;;
+    16) show_help ;;
     *) echo "[info] Exit." ;;
   esac
   exit 0
 }
+
 confirm_or_exit() { local prompt="$1"; if [[ "${FORCE}" == "true" ]]; then return 0; fi; local answer; read -r -p "${prompt} [y/N] " answer; [[ "${answer}" =~ ^[Yy]$ ]] || { echo "[info] Canceled."; exit 0; }; }
 
 action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
@@ -192,6 +198,7 @@ for a in "$@"; do case "$a" in
  --build-runtime) "${SCRIPT_DIR}/scripts/build-runtime.sh";;
  --build-dir) "${SCRIPT_DIR}/scripts/build-electron-dir.sh";;
  --validate) "${SCRIPT_DIR}/scripts/validate-project.sh";;
+ --validate-appimage) "${SCRIPT_DIR}/scripts/validate-appimage.sh";;
  --doctor) "${SCRIPT_DIR}/scripts/doctor.sh";;
  --clean) "${SCRIPT_DIR}/scripts/clean-artifacts.sh";;
  --uninstall-native) "${SCRIPT_DIR}/scripts/uninstall-native.sh";;

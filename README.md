@@ -96,6 +96,7 @@ CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
 | `--bundle-appimage` | Create an experimental AppImage package. |
 | `--build-runtime` | Build the compiled Electron runtime. |
 | `--build-dir` | Build `dist/linux-unpacked`. |
+| `--validate-appimage` | Validate generated AppImage artifacts. |
 | `--doctor` | Check host tools. |
 | `--clean` | Remove generated build/package artifacts. |
 | `--validate` | Run full project validation. |
