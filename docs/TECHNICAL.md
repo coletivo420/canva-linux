@@ -1,180 +1,179 @@
 # Technical Notes
 
-This document centralizes technical repository notes for the `0.1.4-dev.X` packaging cycle.
+This document summarizes the current Canva Linux runtime, build and packaging architecture.
 
-## Scope
+## Runtime architecture
 
-Current `0.1.4-dev.X` goals focus on Flathub readiness, packaging workflow improvements, and security diagnostics:
-
-- keep `canva-linux.sh` as the canonical Linux workflow command;
-- support interactive mode, explicit actions, and chained actions for workflow tasks;
-- keep AppStream metadata, screenshot references, and packaging docs aligned;
-- preserve intended user-facing behavior, while allowing targeted fixes for regressions such as the custom eyedropper preload loading failure.
-
-## Custom colorpicker policy
-
-Canva Linux uses CL-EyeDropper as its only supported custom colorpicker implementation.
-
-- `electron/preload/cl-eyedropper/cl-eyedropper.ts` is the picker implementation used by Canva Linux.
-- `electron/preload/native-eyedropper-wrapper.js` exists to redirect Canva-facing picker calls into CL-EyeDropper.
-- `electron/preload/custom-eyedropper-flow.ts` exists to open CL-EyeDropper from a Canva tab snapshot.
-- any diagnostics around browser picker APIs or media-capture APIs must support tracing and re-routing only; they are not an alternative colorpicker architecture.
-- the bundled eyedropper implementation intentionally exposes only the canvas-based path used by Canva Linux; unused image-loading helpers and not-implemented stubs are removed instead of kept as dormant API surface.
-
-## Runtime architecture (summary)
+Canva Linux is an Electron desktop wrapper around Canva.
 
 Core runtime files:
 
-- `electron/main/index.ts` - Electron shell entrypoint, tab model, OAuth popup wiring, persistent session ownership, and credential storage diagnostics.
-- `electron/main/eyedropper-bridge.ts` - main-process bridge between the Canva preload eyedropper and BrowserView snapshot capture.
-- `electron/main/ipc.ts` - centralized main-process IPC routing for preload debug forwarding and toolbar actions.
-- `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring for session setup, theme hooks, and shell bootstrap.
-- `electron/main/logging.ts` - startup/status logging helpers and credential-storage diagnostics.
-- `electron/main/oauth.ts` - OAuth popup lifecycle helpers and callback tracking.
-- `electron/main/runtime.ts` - Linux runtime hardening, shared session configuration, and storage flushing.
-- `electron/main/shell.ts` - top-level window and toolbar shell creation helpers.
-- `electron/main/tab-controller.ts` - tab creation and orchestration layer that connects shell state, tab events, and shared session wiring.
-- `electron/main/tab-events.ts` - BrowserView/WebContents event wiring for tab navigation, popups, shortcuts, and shell policy.
-- `electron/main/tabs.ts` - tab ordering, selection, closing, and layout helpers shared by the shell entrypoint.
-- `electron/preload/canva.ts` - source Canva page preload diagnostics and Linux integration bridges.
-- `electron/preload/canva.bundle.js` - generated runtime preload consumed by Canva tabs; do not edit directly.
-- `electron/preload/browser-capture-diagnostics.ts` - compatibility fallback module for capture-related eyedropper diagnostics.
-- `electron/preload/debug.js` - centralized preload debug routing and eyedropper log transport for Canva-facing modules.
-- `electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle used by the Canva EyeDropper wrapper.
-- `electron/preload/cl-eyedropper/cl-eyedropper.ts` - TypeScript custom picker implementation used by Canva Linux.
-- `electron/preload/eyedropper-routing-diagnostics.ts` - diagnostic hooks for tracing and preventing fallback into native/browser picker paths.
-- `electron/preload/native-eyedropper-wrapper.ts` - native EyeDropper replacement layer that redirects Canva calls into CL-EyeDropper.
-- `electron/preload/upload-diagnostics.ts` - drag, paste, file-input, and file-picker diagnostics isolated from the Canva-specific preload flow.
-- `electron/preload/toolbar.js` - toolbar IPC bridge.
-- `electron/ui/toolbar.html` - local toolbar UI.
-- `electron/shared/debug.ts` - shared debug category parsing and log gating for main/preload entrypoints.
-- `electron/shared/navigation.ts` - shared Canva/OAuth URL classification and trusted-origin checks.
+- `electron/main/index.ts` - Electron shell entrypoint and composition root.
+- `electron/main/runtime.ts` - Linux runtime setup, shared session configuration and storage flushing.
+- `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring.
+- `electron/main/ipc.ts` - centralized main-process IPC routing.
+- `electron/main/logging.ts` - status output, startup diagnostics and credential-storage diagnostics.
+- `electron/main/oauth.ts` - OAuth popup lifecycle and callback tracking.
+- `electron/main/shell.ts` - top-level window and toolbar shell helpers.
+- `electron/main/tab-controller.ts` - tab creation and orchestration.
+- `electron/main/tab-events.ts` - per-tab `webContents` policy and event wiring.
+- `electron/main/tabs.ts` - tab ordering, selection, closing and layout helpers.
+- `electron/main/eyedropper-bridge.ts` - scoped tab snapshot bridge for CL-EyeDropper.
+- `electron/preload/canva.ts` - source Canva page preload entrypoint.
+- `electron/preload/canva.bundle.js` - generated preload bundle; do not edit directly.
+- `electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle.
+- `electron/preload/native-eyedropper-wrapper.ts` - Canva-facing EyeDropper replacement layer.
+- `electron/preload/cl-eyedropper/*.ts` - TypeScript CL-EyeDropper implementation and contracts.
+- `electron/shared/debug.ts` - shared debug parsing and log gating.
+- `electron/shared/navigation.ts` - shared Canva/OAuth URL classification.
 
-## Main-process structure
+## CL-EyeDropper policy
 
-The current main-process split is now the working repository structure:
+Canva Linux uses CL-EyeDropper as its only supported custom colorpicker implementation.
 
-- `electron/main/index.ts` remains the orchestration layer.
-- `electron/main/runtime.ts` owns Linux/runtime and shared session setup.
-- `electron/main/lifecycle.ts` owns app startup/shutdown wiring.
-- `electron/main/ipc.ts` owns main-process IPC handlers.
-- `electron/main/logging.ts` owns status output and startup diagnostics.
-- `electron/main/oauth.ts` owns popup lifecycle and OAuth callback tracking.
-- `electron/main/tab-controller.ts` owns tab creation and composes `tab-events.js` with the lower-level tab helpers.
-- `electron/main/tab-events.ts` owns per-tab `webContents` policy and event wiring.
-- `electron/main/tabs.ts` owns tab-state helpers and tab shell behavior.
-- `electron/main/shell.ts` owns top-level shell window and toolbar creation.
-- `electron/main/eyedropper-bridge.ts` owns the snapshot/log bridge used by the custom eyedropper preload flow.
+The result contract remains:
 
-This split preserves runtime behavior while making future changes safer. `electron/main/index.ts` is now primarily a composition root, while the preload delegates debug transport, upload diagnostics, native EyeDropper wrapping, and the CL-EyeDropper flow into dedicated modules.
+```ts
+{ sRGBHex: "#rrggbb" }
+```
 
-## Preload bundle architecture
+The eyedropper snapshot IPC bridge only captures the tab whose renderer sent the request; it does not fall back to the active tab.
 
-The source preload remains modular:
+## Build pipeline
 
-- `electron/preload/canva.ts` is the source entrypoint.
-- `electron/preload/debug.ts`, `upload-diagnostics.ts`, `browser-capture-diagnostics.ts`, `eyedropper-routing-diagnostics.ts`, `custom-eyedropper-flow.ts`, `native-eyedropper-wrapper.ts`, and `cl-eyedropper/*.ts` remain human-maintained modules.
-- `scripts/build-preload-bundle.js` generates `electron/preload/canva.bundle.js`.
+The runtime build is intentionally split:
 
-Canva tabs load `canva.bundle.js`, not `canva.js`, at runtime.
+1. `tsc` compiles Electron runtime source into `.build/`.
+2. esbuild bundles the preload entrypoint into `canva.bundle.js`.
+3. electron-builder packages `.build/`.
+4. Packaging scripts consume the generated Electron output.
 
-This is intentional. The Canva editor can run Electron preload code in a packaged/sandboxed context where nested local `require('./module')` calls fail after ASAR packaging. When that happened, the editor preload started but failed before `modules-loaded`, so the custom eyedropper wrapper was never installed and Canva fell back toward Chromium/portal capture behavior.
+Commands:
 
-The bundle keeps the maintainable modular source layout while giving Electron a single preload file that works consistently in the editor. Do not edit `canva.bundle.js` directly; regenerate it with `npm run build:preload`.
-
-`npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts. The canonical install workflow (`./canva-linux.sh --install`) calls `npm run dist`, so it also generates the bundle before packaging. Bundle publication must use a freshly rebuilt Electron output and Flatpak repo; `./canva-linux.sh --bundle-flatpak` rebuilds both by default. Reusing an existing `repo/` requires the lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` path and should not be used for release publication after source changes.
-
-Build pipeline summary:
-
-- `tsc` compiles Electron runtime into `.build/`.
-- esbuild bundles preload into `canva.bundle.js`.
-- electron-builder packages `.build/`.
-- Flatpak consumes `dist/linux-unpacked`.
+```bash
+npm run build:preload
+npm run build:runtime
+npm run build:check
+```
 
 Preload bundling modes:
 
-- Source mode: `npm run build:preload` bundles `electron/preload/canva.ts` (fallback: `canva.js`) into `electron/preload/canva.bundle.js`.
-- Build-output mode: `npm run build:runtime` compiles `electron/**/*.ts` into `.build/electron/**/*.js`, then runs the bundler with `--build-output` to bundle `.build/electron/preload/canva.js` into `.build/electron/preload/canva.bundle.js`.
+- Source mode: `npm run build:preload` bundles `electron/preload/canva.ts` into `electron/preload/canva.bundle.js`.
+- Build-output mode: `npm run build:runtime` compiles `electron/**/*.ts` into `.build/electron/**/*.js`, then bundles `.build/electron/preload/canva.js` into `.build/electron/preload/canva.bundle.js`.
 
-## Runtime guardrails
+The preload bundle output remains CommonJS for Electron compatibility.
 
-- External navigation is allowed to leave the app only for explicitly supported URL schemes: `https:`, `http:`, and `mailto:`.
-- Other schemes are blocked before reaching Electron's system opener.
-- The eyedropper snapshot IPC bridge only captures the tab whose renderer sent the request; it does not fall back to the currently active tab.
-- Aborting the custom eyedropper flow must remove the overlay and clear the active picker state.
-- Chromium/Electron runtime startup sets `disable-features=Floss` (merged with any existing disabled features) to reduce non-fatal Bluetooth/Floss noise in Flatpak logs. This does not disable Bluetooth at the OS level and does not change Flatpak permissions.
-- The custom eyedropper preload flow relies on typed contracts across async boundaries: `EyeDropperSnapshot`, `SnapshotCanvas`, and `EyeDropperResult`.
-- For preload/runtime TypeScript Promise constructors that resolve structured values, explicit generic typing is required to avoid `{}` inference and destructuring/typecheck regressions.
+## Package factory workflow
+
+`canva-linux.sh` is the canonical Linux workflow command for build, install, package, validation and uninstall operations.
+
+Current install/package commands:
+
+```bash
+./canva-linux.sh --install-native
+./canva-linux.sh --install-flatpak
+./canva-linux.sh --bundle-flatpak
+./canva-linux.sh --bundle-appimage
+./canva-linux.sh --build-runtime
+./canva-linux.sh --build-dir
+./canva-linux.sh --doctor
+./canva-linux.sh --clean
+./canva-linux.sh --uninstall
+./canva-linux.sh --purge
+```
+
+Planned package commands:
+
+```bash
+./canva-linux.sh --bundle-deb
+./canva-linux.sh --bundle-rpm
+./canva-linux.sh --prepare-aur
+```
+
+## Native Install
+
+Native Install runs outside the Flatpak sandbox.
+
+Native Install scopes:
+
+| Scope | App files | Launcher | Desktop/icon integration |
+| --- | --- | --- | --- |
+| system | `/opt/canva-linux` | `/usr/local/bin/canva-linux` | `/usr/local/share` |
+| user | `~/.local/opt/canva-linux` | `~/.local/bin/canva-linux` | `~/.local/share` |
+
+Native Install user-data cleanup is XDG-aware and checks:
+
+- `${XDG_CONFIG_HOME:-~/.config}`
+- `${XDG_CACHE_HOME:-~/.cache}`
+- `${XDG_DATA_HOME:-~/.local/share}`
+- `${XDG_STATE_HOME:-~/.local/state}`
+
+## Flatpak Install
+
+Flatpak Install runs inside the Flatpak sandbox and uses the active AppID:
+
+```text
+io.github.coletivo420.canva-linux
+```
+
+Flatpak scopes are controlled with:
+
+```bash
+CANVA_FLATPAK_SCOPE=system
+CANVA_FLATPAK_SCOPE=user
+```
+
+## AppImage package
+
+AppImage packaging is experimental in this development line.
+
+Command:
+
+```bash
+./canva-linux.sh --bundle-appimage
+```
+
+Implementation:
+
+- `npm run dist:appimage`
+- `scripts/build-appimage.sh`
+- electron-builder target: `AppImage`
+- artifact name: `canva-linux-${version}-${arch}.AppImage`
+
+AppImage artifacts run outside the Flatpak sandbox and may require FUSE support depending on the distribution.
 
 ## Debug output
 
-Terminal debug output is now centralized in `electron/main/logging.ts`.
+Debug output is centralized in `electron/main/logging.ts` and mirrored into the per-start `current.log` file under Electron user data.
 
-- Main-process debug entries are emitted with the source prefix `main`.
-- Preload entries are forwarded over IPC and rendered with source prefixes such as `canva-preload` and `toolbar-preload`.
-- A fresh `current.log` file is created on each app start under the Electron user-data logs directory, replacing the previous startup log.
-- New instrumentation should use the shared debug helpers instead of adding direct `console.log` calls so terminal output stays consistent, deduplicated, and mirrored into the startup log file.
+Public debug levels:
 
-Packaging/runtime support files:
+```bash
+CANVA_DEBUG=1
+CANVA_DEBUG=2
+```
 
-- `run.sh` - Flatpak launcher and Wayland/X11 mode selection.
-- `canva-linux.sh` - canonical Linux workflow command (`--install-native`, `--install-flatpak`, `--bundle-flatpak`, `--validate`, `--uninstall`, and interactive mode).
-- `scripts/flatpak-build-common.sh` - shared Flatpak runtime, Electron output, and repository build helpers used by local install and bundle workflows.
-- `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing (supports `--skip-npm`).
-- `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (rebuilds by default; supports explicit `--use-existing-repo` for non-release reuse).
-- `scripts/validate-flatpak.sh` - workflow and metadata validation helper.
-- `scripts/prepare-flathub-submission.sh` - regenerates submission npm sources and runs submission-path validation checks.
-- `scripts/validate-flathub-submission.sh` - validates submission-manifest structure, offline npm source manifest, and optional Flathub lint.
-- `scripts/build-preload-bundle.js` - generated-preload builder used before local start and Electron packaging; source mode also handles converted TypeScript shared modules.
-- `io.github.coletivo420.canva-linux.yml` - Flatpak manifest for local install/bundle/validation workflows.
-- `packaging/flathub/` - Flathub submission workspace (submission manifest, `generated-sources.json`, npm source generator scripts).
-- `docs/PRIVACY.md` - repository privacy and telemetry policy statement.
-- `docs/FLATHUB_SOURCE.md` - Flathub source strategy notes for the current local manifest and future source-based submission.
-- `docs/FLATHUB_SUBMISSION_PATH.md` - dedicated submission-path structure and command flow.
-- `docs/FLATHUB_SUBMISSION_NOTES.md` - submission rationale notes, including thin-wrapper objection response.
-- `data/io.github.coletivo420.canva-linux.desktop` and `data/io.github.coletivo420.canva-linux.metainfo.xml` - desktop and appstream metadata.
+Display backend checks:
+
+```bash
+CANVA_FORCE_WAYLAND=1
+CANVA_FORCE_X11=1
+```
+
+GPU backend checks:
+
+```bash
+CANVA_GPU_BACKEND=auto
+CANVA_GPU_BACKEND=opengl
+CANVA_GPU_BACKEND=vulkan
+CANVA_GPU_BACKEND=software
+```
 
 ## Workflow notes
 
-- Local install is for development/testing.
-- Bundle generation is for GitHub release artifacts.
-- Flathub submission and review are separate from bundle publication.
-- Final Flathub source selection and reviewed source URLs/hashes are documented in `docs/FLATHUB_SOURCE.md`.
-- Resetting user data removes login state and OAuth/session cookies.
-
-## Window and tab policy
-
-Canva navigation is handled by the internal tab system. The app should not open arbitrary Electron windows for normal Canva content.
-
-Separate Electron windows are reserved for OAuth/authentication popups only.
-
-## OAuth provider scope
-
-Google OAuth was tested during development. Facebook/Meta, Apple, and Microsoft are community-tested only.
-
-OAuth popup logic remains provider-neutral, and native OAuth provider icons remain intentionally unsupported.
-
-## Login persistence
-
-The app stores Canva login state in Electron's persistent session partition:
-
-`persist:canva`
-
-Main Canva tabs and OAuth popup windows use the same partition, so OAuth cookies, Canva cookies, and site storage survive app restarts.
-
-## Known limitation kept unchanged
-
-OAuth popup native provider icons remain a known Linux/Wayland limitation for this branch. The popup flow should stay stable without provider-specific native icon customization.
-
-## Security diagnostics note
-
-`1.4.10-dev.8` adds the preload bundle step required by the current modular runtime.
-
-The current logger writes both terminal output and a per-start `current.log` file for troubleshooting.
-
-This is a maintainability and diagnostics improvement, not a user-facing feature addition.
-
-
-## Flathub readiness note
-
-The project is approaching Flathub submission readiness. Final Flathub submission should happen only after maintainer review of lint results, permissions, screenshots, and release source.
+- Native Install and AppImage are not sandboxed by Flatpak.
+- Flatpak Install is sandboxed by Flatpak.
+- `.flatpak` bundle generation is intended for distributable artifacts.
+- AppImage generation is currently experimental.
+- `.deb`, `.rpm`, and AUR/PKGBUILD packaging are planned future package targets.
+- Generated outputs such as `.build/`, `dist/`, `build-dir/`, `repo/`, and `.flatpak-builder/` must not be committed.
