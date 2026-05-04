@@ -4,6 +4,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_ID="io.github.coletivo420.canva-linux"
 FORCE=false
 
+xdg_config_home() { printf '%s\n' "${XDG_CONFIG_HOME:-${HOME}/.config}"; }
+xdg_cache_home() { printf '%s\n' "${XDG_CACHE_HOME:-${HOME}/.cache}"; }
+xdg_data_home() { printf '%s\n' "${XDG_DATA_HOME:-${HOME}/.local/share}"; }
+xdg_state_home() { printf '%s\n' "${XDG_STATE_HOME:-${HOME}/.local/state}"; }
+
 show_help(){ cat <<'H'
 Canva Linux — Install, Package and Build Workflow
 
@@ -120,7 +125,19 @@ confirm_or_exit() { local prompt="$1"; if [[ "${FORCE}" == "true" ]]; then retur
 
 action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
 
-action_reset_user_data(){ rm -rf "$HOME/.var/app/$APP_ID" "$HOME/.config/Canva Linux" "$HOME/.config/canva-linux" "$HOME/.cache/Canva Linux" "$HOME/.cache/canva-linux" "$HOME/.local/share/Canva Linux" "$HOME/.local/share/canva-linux" "$HOME/.local/state/Canva Linux" "$HOME/.local/state/canva-linux"; echo "[ok] User data removed for Flatpak and Native paths"; }
+action_reset_user_data(){
+  rm -rf \
+    "$HOME/.var/app/$APP_ID" \
+    "$(xdg_config_home)/Canva Linux" \
+    "$(xdg_config_home)/canva-linux" \
+    "$(xdg_cache_home)/Canva Linux" \
+    "$(xdg_cache_home)/canva-linux" \
+    "$(xdg_data_home)/Canva Linux" \
+    "$(xdg_data_home)/canva-linux" \
+    "$(xdg_state_home)/Canva Linux" \
+    "$(xdg_state_home)/canva-linux"
+  echo "[ok] User data removed for Flatpak and Native paths"
+}
 
 detect_installations(){
   DETECTED_NATIVE_SYSTEM=false
