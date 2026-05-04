@@ -112,8 +112,8 @@ MENU
     8) run_script "${SCRIPT_DIR}/scripts/build-runtime.sh" ;;
     9) run_script "${SCRIPT_DIR}/scripts/build-electron-dir.sh" ;;
     10) run_script "${SCRIPT_DIR}/scripts/validate-project.sh" ;;
-    11) run_script "${SCRIPT_DIR}/scripts/doctor.sh" ;;
-    12) run_script "${SCRIPT_DIR}/scripts/validate-appimage.sh" ;;
+    11) run_script "${SCRIPT_DIR}/scripts/validate-appimage.sh" ;;
+    12) run_script "${SCRIPT_DIR}/scripts/doctor.sh" ;;
     13) run_script "${SCRIPT_DIR}/scripts/clean-artifacts.sh" ;;
     14) action_uninstall ;;
     15) action_purge ;;
