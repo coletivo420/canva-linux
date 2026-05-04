@@ -159,6 +159,14 @@ Additional detection check:
 # Maintenance & Uninstall -> Show detected installs/artifacts
 ```
 
+UI fallback checks:
+
+```bash
+NO_COLOR=1 ./canva-linux.sh --help
+TERM=dumb ./canva-linux.sh --help
+./canva-linux.sh --help | cat
+```
+
 
 ## AppImage hardening validation
 

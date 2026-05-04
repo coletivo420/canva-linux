@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.4.11-dev.35] - 2026-05-04
+
+### Added
+
+- Added Canva Linux ASCII startup logo to the interactive menu.
+- Added colored package version and project phase display to the startup screen.
+- Added shared visual guidance for installer/package scripts through `ui-common.sh`.
+
+### Changed
+
+- Reordered the Development submenu so package generation actions appear before build and validation actions.
+- Migrated AppImage/build validation and guidance scripts to `ui-common.sh` messaging.
+- Improved Native Install scope messaging and interactive choice prompts.
+
+### Fixed
+
+- Fixed potential Native system icon installation permission issue with system-aware icon installation.
+- Reduced remaining raw `[info]` / `[ok]` / `[warn]` output duplication in interactive shell scripts.
+
+### Notes
+
+- Runtime Electron behavior is unchanged.
+- AUR/PKGBUILD remains the next planned package target after this cleanup phase.
+
 ## [0.1.4.11-dev.34] - 2026-05-04
 
 ### Added

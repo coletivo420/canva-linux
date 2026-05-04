@@ -226,6 +226,18 @@ Format-specific scripts should be thin adapters.
 - `user-data-common.sh`
 - `install-detection-common.sh`
 
+## Installer UI
+
+`canva-linux.sh` uses `scripts/ui-common.sh` for colored terminal output.
+
+The UI must respect:
+
+- `NO_COLOR`
+- `TERM=dumb`
+- non-TTY output
+
+All interactive shell scripts should use `ui-common.sh` for user-facing messages.
+
 ## Runtime behavior parity
 
 Native Install, Flatpak Install and AppImage must share the same Electron runtime behavior.

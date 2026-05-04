@@ -8,6 +8,8 @@ cd "${REPO_ROOT}"
 source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/runtime-guidance-common.sh"
 source "${SCRIPT_DIR}/package-guidance-common.sh"
+source "${SCRIPT_DIR}/ui-common.sh"
+ui_init
 
 require_command node
 require_command npm
@@ -18,17 +20,17 @@ ensure_npm_dependencies
 
 print_appimage_bundle_notice
 
-echo "[info] Cleaning previous AppImage artifacts"
+ui_info "Cleaning previous AppImage artifacts"
 rm -f dist/*.AppImage dist/*.AppImage.sha256 dist/SHA256SUMS
 
-echo "[info] Building AppImage with electron-builder"
+ui_info "Building AppImage with electron-builder"
 npm run dist:appimage
 
 (
   cd dist
   sha256sum ./*.AppImage > SHA256SUMS
 )
-echo "[ok] SHA256 manifest generated: dist/SHA256SUMS"
+ui_ok "SHA256 manifest generated: dist/SHA256SUMS"
 
 bash "${SCRIPT_DIR}/validate-appimage.sh"
 
