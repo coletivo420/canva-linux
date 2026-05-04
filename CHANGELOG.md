@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.1.4.11-dev.37] - 2026-05-04
+
+### Added
+
+- Added a TUI action registry for Blessed-based navigation.
+- Added explicit TUI view state tracking.
+- Added a faster TUI launcher that rebuilds only when needed.
+- Added throttled TUI rendering for high-volume logs.
+- Added UTF-8-safe subprocess output decoding with `StringDecoder`.
+
+### Changed
+
+- Replaced fragile Blessed menu selection logic with explicit `currentView` state.
+- Replaced hardcoded `developmentActions[0]` execution with selected action resolution from the current action list.
+- Improved TUI process handling to avoid excessive rendering during command output.
+- Improved TUI startup performance by avoiding `npm run build:tui` on every launch.
+
+### Fixed
+
+- Fixed Development menu reload bug caused by using `index === 1` outside the main-menu context.
+- Fixed action selection so the chosen action is executed instead of always running the first Development action.
+- Fixed raw stream decoding that could corrupt split UTF-8 sequences.
+- Fixed TUI logo parity with the shell launcher.
+
+### Notes
+
+- TUI remains experimental.
+- Shell menu and direct CLI commands remain supported.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.36] - 2026-05-04
 
 ### Added

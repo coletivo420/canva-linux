@@ -23,8 +23,7 @@ run_tui_mode(){
     ui_info "Use ./canva-linux.sh --no-tui for the shell menu."
     exit 1
   fi
-  CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:tui
-  CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/tui/index.js
+  CANVA_PROJECT_PHASE="" node scripts/run-tui.js
 }
 
 show_help(){ cat <<'H'

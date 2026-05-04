@@ -143,15 +143,15 @@ The menu is organized into:
 In the **Development** submenu, package generation actions are listed before build and validation tasks.
 
 
-## Experimental TUI
-
-Canva Linux includes an experimental Blessed-based terminal UI:
+## Experimental Blessed TUI
 
 ```bash
 ./canva-linux.sh --tui
 ```
 
-The shell menu remains available:
+The TUI is experimental and uses the existing shell scripts as backend actions.
+
+The classic shell menu remains available:
 
 ```bash
 ./canva-linux.sh --no-tui

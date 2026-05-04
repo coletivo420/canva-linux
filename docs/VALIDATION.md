@@ -191,6 +191,12 @@ Expected:
 
 ```bash
 npm run build:tui
+node scripts/run-tui.js --help
 ./canva-linux.sh --tui
 ./canva-linux.sh --no-tui
 ```
+
+Manual checks:
+
+- Open TUI -> Development -> Doctor
+- Open TUI -> Development -> Validate AppImage artifacts

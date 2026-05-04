@@ -273,3 +273,9 @@ AppImage artifacts are generated package files, not installed variants. They are
 The TUI is a Node/TypeScript interface over the existing shell backend.
 
 The TUI must not duplicate install/package logic. It launches existing scripts and streams logs into the terminal interface.
+
+## TUI action registry
+
+The Blessed TUI uses `scripts/tui/action-registry.ts` as the canonical source for visible TUI actions.
+
+The TUI must not duplicate install, package or cleanup logic. It launches existing shell scripts and streams logs into the TUI log panel.

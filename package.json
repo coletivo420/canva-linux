@@ -1,6 +1,6 @@
 {
   "name": "canva-linux",
-  "version": "0.1.4-dev.11.36",
+  "version": "0.1.4-dev.11.37",
   "description": "A community open-source desktop wrapper for use with Canva",
   "main": ".build/electron/main/index.js",
   "author": "Community",
@@ -39,7 +39,7 @@
     "docs:check-ai": "node scripts/check-ai-guardrails.js",
     "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit",
     "build:tui": "esbuild scripts/tui/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/scripts/tui/index.js",
-    "tui": "npm run build:tui && node .build/scripts/tui/index.js",
+    "tui": "node scripts/run-tui.js",
     "check:tui": "node .build/scripts/tui/index.js --help"
   },
   "build": {
