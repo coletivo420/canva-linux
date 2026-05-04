@@ -15,4 +15,4 @@ DESKTOP
 }
 install_icon_file(){ install -Dm644 "$1" "$2"; }
 install_icons(){ local src_root="$1" target_icon_root="$2"; local size src; for size in 16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512; do src=""; [[ -f "${src_root}/${size}.png" ]] && src="${src_root}/${size}.png"; [[ -z "$src" && -f "${src_root}/${size}/apps/${APP_ID}.png" ]] && src="${src_root}/${size}/apps/${APP_ID}.png"; [[ -n "$src" ]] && install_icon_file "$src" "${target_icon_root}/${size}/apps/${APP_ID}.png"; done }
-update_desktop_caches(){ local scope="$1"; if command -v update-desktop-database >/dev/null 2>&1; then [[ "$scope" == system ]] && sudo update-desktop-database /usr/local/share/applications >/dev/null 2>&1 || update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true; fi; }
+update_desktop_caches(){ local scope="$1"; if command -v update-desktop-database >/dev/null 2>&1; then if [[ "$scope" == "system" ]]; then sudo update-desktop-database /usr/local/share/applications >/dev/null 2>&1 || true; else update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true; fi; fi; }
