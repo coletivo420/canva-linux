@@ -73,7 +73,7 @@ If AppImage execution still fails with permission issues, check whether your use
 sudo pacman -S fuse2
 ```
 
-If you see a `fusermount: mount failed: Operation not permitted` error, check AppImage FUSE troubleshooting notes and local `fusermount` permissions.
+If you see a fusermount: mount failed: Operation not permitted error, check the [AppImage FUSE troubleshooting notes](https://github.com/AppImage/AppImageKit/wiki/FUSE) and local fusermount permissions.
 
 ## Fallback without FUSE
 
