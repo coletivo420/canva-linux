@@ -53,11 +53,14 @@ test('custom EyeDropper flow loads without the removed selector module', () => {
   assert.equal(typeof withElectronMock(() => loadRuntimeModule('preload/custom-eyedropper-flow')).createCustomEyeDropperFlow, 'function');
 });
 
-test('source preload bundle excludes the removed picker modules', () => {
-  const bundlePath = path.join(repoRoot, 'electron/preload/canva.bundle.js');
-  const bundle = fs.readFileSync(bundlePath, 'utf8');
+test('source preload modules do not reference removed picker tokens', () => {
+  const sourceFiles = [
+    'electron/preload/custom-eyedropper-flow.ts',
+    'electron/preload/native-eyedropper-wrapper.ts',
+    'electron/preload/canva.ts',
+  ];
 
-  const removedBundleTokens = [
+  const removedTokens = [
     ['ltcode', 'eyedropper'].join('-'),
     ['LTCode', 'EyeDropper'].join(''),
     ['install', 'Ltcode', 'ScalingPatch'].join(''),
@@ -66,7 +69,10 @@ test('source preload bundle excludes the removed picker modules', () => {
     ['--canva', 'eyedropper', 'impl'].join('-'),
   ];
 
-  for (const token of removedBundleTokens) {
-    assert.equal(bundle.includes(token), false, `${token} should not appear in preload bundle`);
+  for (const file of sourceFiles) {
+    const source = fs.readFileSync(path.join(repoRoot, file), 'utf8');
+    for (const token of removedTokens) {
+      assert.equal(source.includes(token), false, `${token} should not appear in ${file}`);
+    }
   }
 });
