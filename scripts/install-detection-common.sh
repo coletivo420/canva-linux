@@ -5,8 +5,8 @@ source "${SCRIPT_DIR}/app-identity-common.sh"
 
 DETECTED_NATIVE_SYSTEM=false; DETECTED_NATIVE_USER=false; DETECTED_FLATPAK_SYSTEM=false; DETECTED_FLATPAK_USER=false; DETECTED_APPIMAGE_ARTIFACTS=false
 
-detect_native_system_install(){ [[ -d /opt/canva-linux || -L /usr/local/bin/canva-linux || -f /usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME} ]]; }
-detect_native_user_install(){ [[ -d "${HOME}/.local/opt/canva-linux" || -L "${HOME}/.local/bin/canva-linux" || -f "${HOME}/.local/share/applications/${APP_NATIVE_DESKTOP_NAME}" ]]; }
+detect_native_system_install(){ [[ -d /opt/canva-linux || -L /usr/local/bin/${APP_EXECUTABLE} || -f /usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME} ]]; }
+detect_native_user_install(){ [[ -d "${HOME}/.local/opt/canva-linux" || -L "${HOME}/.local/bin/${APP_EXECUTABLE}" || -f "${HOME}/.local/share/applications/${APP_NATIVE_DESKTOP_NAME}" ]]; }
 detect_flatpak_system_install(){ command -v flatpak >/dev/null 2>&1 && flatpak --system info "${APP_ID}" >/dev/null 2>&1; }
 detect_flatpak_user_install(){ command -v flatpak >/dev/null 2>&1 && flatpak --user info "${APP_ID}" >/dev/null 2>&1; }
 detect_appimage_artifacts(){ compgen -G "dist/*.AppImage" >/dev/null; }
