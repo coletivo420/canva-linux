@@ -12,7 +12,6 @@
 - `build:runtime` = `tsc` + runtime asset copy + esbuild build-output mode (`.build/electron/preload/canva.js` -> `.build/electron/preload/canva.bundle.js`).
 - `build:check` = validation of final runtime artifacts.
 
-
 ```bash
 rm -rf .build
 npm test
@@ -32,25 +31,65 @@ npm run build:check
 git diff --check
 ```
 
+## Installer and package workflow checks
+
+```bash
+bash -n canva-linux.sh
+bash -n scripts/install-native.sh
+bash -n scripts/native-install-common.sh
+bash -n scripts/uninstall-native.sh
+bash -n scripts/build-electron-dir.sh
+bash -n scripts/build-appimage.sh
+bash -n scripts/doctor.sh
+bash -n scripts/clean-artifacts.sh
+bash -n scripts/install-flatpak-local.sh
+bash -n scripts/build-flatpak-bundle.sh
+
+./canva-linux.sh --help
+./canva-linux.sh --doctor
+./canva-linux.sh --build-runtime
+./canva-linux.sh --build-dir
+```
+
 ## Runtime smoke checks
 
 ```bash
 npm start
 CANVA_DEBUG=1 npm start
 CANVA_DEBUG=2 npm start
-./canva-linux.sh --install-flatpak
 ```
+
+## Native Install checks
+
+```bash
+./canva-linux.sh --install-native
+CANVA_NATIVE_SCOPE=user ./canva-linux.sh --install-native
+./canva-linux.sh --uninstall-native
+CANVA_NATIVE_SCOPE=user ./canva-linux.sh --uninstall-native
+```
+
+Native Install runs outside the Flatpak sandbox. User-data cleanup is XDG-aware and checks `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_DATA_HOME`, and `XDG_STATE_HOME` with standard fallbacks.
 
 ## Flatpak checks
 
 ```bash
 desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
 appstreamcli validate --explain data/io.github.coletivo420.canva-linux.metainfo.xml
-bash -n canva-linux.sh
 bash -n run.sh
 bash -n scripts/flatpak-build-common.sh
 bash -n scripts/validate-flatpak.sh
+./canva-linux.sh --install-flatpak
+./canva-linux.sh --bundle-flatpak
 ```
+
+## AppImage checks
+
+```bash
+./canva-linux.sh --bundle-appimage
+find dist -maxdepth 1 -type f -name '*.AppImage' -print
+```
+
+AppImage packaging is experimental in this development line. AppImage artifacts run outside the Flatpak sandbox and may require FUSE support depending on the distribution.
 
 ## Feature smoke checklist
 
@@ -64,15 +103,17 @@ bash -n scripts/validate-flatpak.sh
 - CL-EyeDropper returns `{ sRGBHex: "#rrggbb" }`;
 - Escape cancels EyeDropper;
 - debug logs are written when `CANVA_DEBUG=1`;
-- verbose Chromium logs appear when `CANVA_DEBUG=2`.
+- verbose Chromium/Electron logs appear when `CANVA_DEBUG=2`.
 
 ## Release-candidate readiness
 
 Before creating an RC:
 
 - validation command passes;
+- Native Install validates in system and user scopes;
 - Flatpak metadata validates;
 - AppStream metadata validates;
+- package artifacts are generated intentionally and not committed;
 - README is current;
 - CHANGELOG has the release entry;
 - GitHub Pages page is current;
