@@ -50,6 +50,19 @@ Maintenance & Uninstall:
   --purge                Uninstall detected variants and remove user data
 H
 }
+get_package_version(){ node -p "require('./package.json').version" 2>/dev/null || printf 'unknown'; }
+print_main_screen(){
+  ui_logo
+  ui_version_line "$(get_package_version)" "${PROJECT_PHASE}"
+  echo
+  cat <<'M'
+1) Install
+2) Development
+3) Maintenance & Uninstall
+4) Help
+0) Exit
+M
+}
 confirm_reset_user_data(){ [[ "$FORCE" == true ]] && return 0; local a; read -r -p "This will erase login, session, cookies, cache and local Canva Linux data. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]]; }
 action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
 action_uninstall(){
@@ -96,33 +109,38 @@ Install
 2) Flatpak Install
 0) Back
 M
-read -r -p "Choose an option: " c; case "$c" in 1) run_script "${ROOT_DIR}/scripts/install-native.sh";;2) run_script "${ROOT_DIR}/scripts/install-flatpak-local.sh";;*) ;; esac; }
+if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; return; fi; case "$c" in 1) run_script "${ROOT_DIR}/scripts/install-native.sh";;2) run_script "${ROOT_DIR}/scripts/install-flatpak-local.sh";;*) ;; esac; }
 menu_dev(){ cat <<'M'
 Development
-1) Build runtime
-2) Build Electron linux-unpacked dir
-3) Validate project
-4) Validate AppImage artifacts
-5) Validate AppImage extraction [optional]
-6) Doctor / check host tools
-7) Create .flatpak package
-8) Create AppImage
-9) Create .deb package [planned]
-10) Create .rpm package [planned]
-11) Prepare AUR/PKGBUILD [planned]
+Package generation:
+1) Create .flatpak package
+2) Create AppImage
+3) Prepare AUR/PKGBUILD [planned]
+4) Create .deb package [planned]
+5) Create .rpm package [planned]
+
+Build:
+6) Build runtime
+7) Build Electron linux-unpacked dir
+
+Validation:
+8) Validate project
+9) Validate AppImage artifacts
+10) Validate AppImage extraction [optional]
+11) Doctor / check host tools
 0) Back
 M
-read -r -p "Choose an option: " c
+if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; return; fi
 case "$c" in
-  1) run_script "${ROOT_DIR}/scripts/build-runtime.sh" ;;
-  2) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh" ;;
-  3) run_script "${ROOT_DIR}/scripts/validate-project.sh" ;;
-  4) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" ;;
-  5) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" --extract-check ;;
-  6) run_script "${ROOT_DIR}/scripts/doctor.sh" ;;
-  7) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh" ;;
-  8) run_script "${ROOT_DIR}/scripts/build-appimage.sh" ;;
-  9|10|11) ui_planned "Not implemented in this phase." ;;
+  1) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh" ;;
+  2) run_script "${ROOT_DIR}/scripts/build-appimage.sh" ;;
+  3|4|5) ui_planned "Not implemented in this phase." ;;
+  6) run_script "${ROOT_DIR}/scripts/build-runtime.sh" ;;
+  7) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh" ;;
+  8) run_script "${ROOT_DIR}/scripts/validate-project.sh" ;;
+  9) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" ;;
+  10) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" --extract-check ;;
+  11) run_script "${ROOT_DIR}/scripts/doctor.sh" ;;
   *) ;;
 esac
 }
@@ -138,15 +156,8 @@ Maintenance & Uninstall
 8) Uninstall detected installations and remove user data
 0) Back
 M
-read -r -p "Choose an option: " c; case "$c" in 1) run_script "${ROOT_DIR}/scripts/clean-artifacts.sh";;2) if confirm_reset_user_data; then cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; else ui_info "Canceled."; fi;;3) detect_installations; print_detected_installations;;4) show_version_info;;5) action_uninstall;;6) run_script "${ROOT_DIR}/scripts/uninstall-native.sh";;7) action_uninstall_flatpak;;8) action_purge;;*) ;; esac; }
-run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do ui_title "Canva Linux" "Install, Package and Build Workflow"; cat <<'M'
-1) Install
-2) Development
-3) Maintenance & Uninstall
-4) Help
-0) Exit
-M
-read -r -p "Choose an option: " c; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;0) exit 0;; esac; done; }
+if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; return; fi; case "$c" in 1) run_script "${ROOT_DIR}/scripts/clean-artifacts.sh";;2) if confirm_reset_user_data; then cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; else ui_info "Canceled."; fi;;3) detect_installations; print_detected_installations;;4) show_version_info;;5) action_uninstall;;6) run_script "${ROOT_DIR}/scripts/uninstall-native.sh";;7) action_uninstall_flatpak;;8) action_purge;;*) ;; esac; }
+run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
 
 if [[ $# -eq 0 ]]; then run_interactive_mode; fi
 for arg in "$@"; do case "$arg" in -y|--yes|--force) FORCE=true;; esac; done

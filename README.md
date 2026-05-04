@@ -139,4 +139,5 @@ The menu is organized into:
 - Install
 - Development
 - Maintenance & Uninstall
-- Show detected installs/artifacts
+
+In the **Development** submenu, package generation actions are listed before build and validation tasks.
