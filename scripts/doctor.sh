@@ -16,7 +16,7 @@ else
 fi
 for req in npm git; do command -v "$req" >/dev/null 2>&1 && echo "[ok] $req" || { echo "[error] $req missing"; failed=1; }; done
 
-for dep in esbuild typescript electron electron-builder eslint; do
+for dep in "${CANVA_REQUIRED_NPM_DEPS[@]}"; do
   if check_npm_dependency "$dep"; then
     echo "[ok] npm dependency: $dep"
   else
