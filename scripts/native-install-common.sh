@@ -15,6 +15,22 @@ NATIVE_USER_BIN="${HOME}/.local/bin/canva-linux"
 NATIVE_USER_DESKTOP="${HOME}/.local/share/applications/${APP_ID}.native.desktop"
 NATIVE_USER_ICON_ROOT="${HOME}/.local/share/icons/hicolor"
 
+xdg_config_home() {
+  printf '%s\n' "${XDG_CONFIG_HOME:-${HOME}/.config}"
+}
+
+xdg_cache_home() {
+  printf '%s\n' "${XDG_CACHE_HOME:-${HOME}/.cache}"
+}
+
+xdg_data_home() {
+  printf '%s\n' "${XDG_DATA_HOME:-${HOME}/.local/share}"
+}
+
+xdg_state_home() {
+  printf '%s\n' "${XDG_STATE_HOME:-${HOME}/.local/state}"
+}
+
 validate_native_scope() {
   case "${NATIVE_SCOPE}" in
     system|user) ;;
@@ -76,19 +92,50 @@ DESKTOP
   rm -f "${tmp}"
 }
 
+install_icon_file() {
+  local src="$1"
+  local dst="$2"
+  if [[ "${NATIVE_SCOPE}" == "system" ]]; then
+    sudo install -Dm644 "${src}" "${dst}"
+  else
+    install -Dm644 "${src}" "${dst}"
+  fi
+}
+
 install_native_icons() {
   local src_root="$1"
   local size
   for size in 16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512; do
-    local src="${src_root}/${size}.png"
     local dst="${NATIVE_ICON_ROOT}/${size}/apps/${APP_ID}.png"
-    [[ -f "${src}" ]] || continue
-    if [[ "${NATIVE_SCOPE}" == "system" ]]; then
-      sudo install -Dm644 "${src}" "${dst}"
-    else
-      install -Dm644 "${src}" "${dst}"
+    local src=""
+
+    if [[ -f "${src_root}/${size}.png" ]]; then
+      src="${src_root}/${size}.png"
+    elif [[ -f "${src_root}/${size}/apps/${APP_ID}.png" ]]; then
+      src="${src_root}/${size}/apps/${APP_ID}.png"
     fi
+
+    [[ -n "${src}" ]] || continue
+    install_icon_file "${src}" "${dst}"
   done
+}
+
+update_native_desktop_caches() {
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    if [[ "${NATIVE_SCOPE}" == "system" ]]; then
+      sudo update-desktop-database /usr/local/share/applications >/dev/null 2>&1 || true
+    else
+      update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true
+    fi
+  fi
+
+  if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    if [[ "${NATIVE_SCOPE}" == "system" ]]; then
+      sudo gtk-update-icon-cache -q -t -f /usr/local/share/icons/hicolor >/dev/null 2>&1 || true
+    else
+      gtk-update-icon-cache -q -t -f "${HOME}/.local/share/icons/hicolor" >/dev/null 2>&1 || true
+    fi
+  fi
 }
 
 uninstall_native_scope() {
@@ -126,5 +173,13 @@ uninstall_native_user() {
 }
 
 cleanup_native_user_data() {
-  rm -rf "$HOME/.config/${APP_NAME}" "$HOME/.cache/${APP_NAME}" "$HOME/.local/share/${APP_NAME}"
+  rm -rf \
+    "$(xdg_config_home)/${APP_NAME}" \
+    "$(xdg_config_home)/canva-linux" \
+    "$(xdg_cache_home)/${APP_NAME}" \
+    "$(xdg_cache_home)/canva-linux" \
+    "$(xdg_data_home)/${APP_NAME}" \
+    "$(xdg_data_home)/canva-linux" \
+    "$(xdg_state_home)/${APP_NAME}" \
+    "$(xdg_state_home)/canva-linux"
 }
