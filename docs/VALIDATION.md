@@ -158,3 +158,22 @@ Additional detection check:
 ./canva-linux.sh
 # Maintenance & Uninstall -> Show detected installs/artifacts
 ```
+
+
+## AppImage hardening validation
+
+```bash
+./canva-linux.sh --bundle-appimage
+./canva-linux.sh --validate-appimage
+./canva-linux.sh --validate-appimage-extract
+test -f dist/SHA256SUMS
+(cd dist && sha256sum -c SHA256SUMS)
+```
+
+Expected:
+
+- one AppImage artifact under `dist/`;
+- executable bit set;
+- non-empty file;
+- SHA256SUMS validates;
+- optional extraction check warns but does not fail unless explicitly configured later.

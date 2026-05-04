@@ -118,3 +118,20 @@ CANVA_GPU_BACKEND=opengl ./dist/<artifact>.AppImage
 CANVA_GPU_BACKEND=vulkan ./dist/<artifact>.AppImage
 CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
 ```
+
+
+## Validation
+
+Basic validation:
+
+```bash
+./canva-linux.sh --validate-appimage
+```
+
+Optional extraction check:
+
+```bash
+./canva-linux.sh --validate-appimage-extract
+```
+
+The extraction check does not replace a runtime test with FUSE. It only verifies that the AppImage can be unpacked with the AppImage runtime.

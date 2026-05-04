@@ -30,6 +30,7 @@ Development:
   --build-dir            Build Electron dist/linux-unpacked output
   --validate             Run full project validation
   --validate-appimage    Validate generated AppImage artifacts
+  --validate-appimage-extract Validate AppImage artifacts with optional extraction check
   --doctor               Check host tools
 
 Package generation:
@@ -102,15 +103,16 @@ Development
 2) Build Electron linux-unpacked dir
 3) Validate project
 4) Validate AppImage artifacts
-5) Doctor / check host tools
-6) Create .flatpak package
-7) Create AppImage
-8) Create .deb package [planned]
-9) Create .rpm package [planned]
-10) Prepare AUR/PKGBUILD [planned]
+5) Validate AppImage extraction [optional]
+6) Doctor / check host tools
+7) Create .flatpak package
+8) Create AppImage
+9) Create .deb package [planned]
+10) Create .rpm package [planned]
+11) Prepare AUR/PKGBUILD [planned]
 0) Back
 M
-read -r -p "Choose an option: " c; case "$c" in 1) run_script "${ROOT_DIR}/scripts/build-runtime.sh";;2) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh";;3) run_script "${ROOT_DIR}/scripts/validate-project.sh";;4) run_script "${ROOT_DIR}/scripts/validate-appimage.sh";;5) run_script "${ROOT_DIR}/scripts/doctor.sh";;6) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh";;7) run_script "${ROOT_DIR}/scripts/build-appimage.sh";;8|9|10) ui_planned "Not implemented in this phase.";;*) ;; esac; }
+read -r -p "Choose an option: " c; case "$c" in 1) run_script "${ROOT_DIR}/scripts/build-runtime.sh";;2) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh";;3) run_script "${ROOT_DIR}/scripts/validate-project.sh";;4) run_script "${ROOT_DIR}/scripts/validate-appimage.sh";;5) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" --extract-check;;6) run_script "${ROOT_DIR}/scripts/doctor.sh";;7) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh";;8) run_script "${ROOT_DIR}/scripts/build-appimage.sh";;9|10|11) ui_planned "Not implemented in this phase.";;*) ;; esac; }
 menu_maint(){ cat <<'M'
 Maintenance & Uninstall
 1) Clean generated artifacts
@@ -145,6 +147,7 @@ for arg in "$@"; do
     --build-dir) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh" ;;
     --validate) run_script "${ROOT_DIR}/scripts/validate-project.sh" ;;
     --validate-appimage) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" ;;
+    --validate-appimage-extract) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" --extract-check ;;
     --doctor) run_script "${ROOT_DIR}/scripts/doctor.sh" ;;
     --bundle-flatpak|--bundle) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh" ;;
     --bundle-appimage) run_script "${ROOT_DIR}/scripts/build-appimage.sh" ;;

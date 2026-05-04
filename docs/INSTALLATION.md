@@ -67,9 +67,14 @@ CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak
 ```bash
 ./canva-linux.sh --bundle-appimage
 ./canva-linux.sh --validate-appimage
+./canva-linux.sh --validate-appimage-extract
 ```
 
 AppImage packaging is experimental in this development line. It creates a portable artifact under `dist/` using electron-builder.
+
+AppImage generation can take several minutes depending on system performance and compression time.
+
+AppImage artifacts are not installed by default. They are portable package files generated under `dist/`.
 
 AppImage does not use the Flatpak sandbox. Depending on the distribution, running AppImage files may require FUSE support.
 
@@ -131,13 +136,14 @@ CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
 ./canva-linux.sh --bundle-flatpak
 ./canva-linux.sh --bundle-appimage
 ./canva-linux.sh --validate-appimage
+./canva-linux.sh --validate-appimage-extract
 ```
 
 Planned package targets:
 
+- AUR / PKGBUILD
 - `.deb`
 - `.rpm`
-- AUR / PKGBUILD
 
 ## Planned package post-install guidance
 
