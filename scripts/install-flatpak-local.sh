@@ -65,7 +65,7 @@ print_flatpak_scope_notice() {
     note "Administrator authorization may be requested for system Flatpak operations."
     printf '\n'
     note "To install only for the current user without administrator authorization, run:"
-    cmd "CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install"
+    cmd "CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak"
     printf '\n'
     note "User-scope installs are isolated under your home directory and may duplicate"
     note "Flathub remotes, runtimes, SDKs, BaseApps and the Canva Linux app if they"
@@ -110,17 +110,23 @@ print_post_install_guidance() {
   section "Debugging documentation:"
   doc_path "docs/DEBUGGING.md"
 
-  section "Optional bundle generation:"
-  cmd "./scripts/build-flatpak-bundle.sh"
+  section "Package generation:"
+  cmd "./canva-linux.sh --bundle-flatpak"
 
-  section "Flatpak install scope:"
+
+  section "Alternative installation mode:"
+  cmd "./canva-linux.sh --install-native"
+  note "Native Install runs outside the Flatpak sandbox."
+  note "Flatpak Install runs inside the Flatpak sandbox."
+
+  section "Flatpak scope:"
   if [[ "${FLATPAK_SCOPE}" == "system" ]]; then
-    note "This installation used the system Flatpak scope."
+    note "This installation used system Flatpak scope."
     note "The app is available to all users on this machine."
     note "No separate user Flatpak scope was created by this installer."
     printf '\n'
-    note "To install only for the current user without administrator authorization:"
-    cmd "CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install"
+    note "To install only for the current user:"
+    cmd "CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak"
   else
     note "This installation used the user Flatpak scope."
     note "The app is available only to the current user."
@@ -180,7 +186,7 @@ fi
 
 VERSION="$(detect_package_version)"
 info "Preparing local Flatpak install for Canva Linux v${VERSION}"
-info "Flatpak install scope: ${FLATPAK_SCOPE}"
+info "Flatpak scope: ${FLATPAK_SCOPE}"
 ok "Host dependencies are available"
 print_flatpak_scope_notice
 

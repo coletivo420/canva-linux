@@ -4,33 +4,47 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 source "${SCRIPT_DIR}/native-install-common.sh"
 
+print_native_post_install_guidance(){
+  echo "Native Install completed."
+  echo
+  echo "Native Install runs outside the Flatpak sandbox."
+  echo "It uses the normal permissions of the user running the application."
+  echo
+  echo "Run commands:"; echo "  canva-linux"; echo
+  echo "Internal Canva Linux logs:"
+  echo "  CANVA_DEBUG=1 canva-linux"
+  echo "    Shows all internal Canva Linux diagnostics, including startup, session,"
+  echo "    tabs, toolbar, permissions, uploads, OAuth, drag-and-drop, eyedropper,"
+  echo "    preload and GPU acceleration monitoring."
+  echo
+  echo "  CANVA_DEBUG=2 canva-linux"
+  echo "    Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron"
+  echo "    stderr logs."
+  echo
+  echo "Display backend checks:"; echo "  CANVA_FORCE_WAYLAND=1 canva-linux"; echo "  CANVA_FORCE_X11=1 canva-linux"; echo
+  echo "GPU backend checks:"; echo "  CANVA_GPU_BACKEND=auto canva-linux"; echo "  CANVA_GPU_BACKEND=opengl canva-linux"; echo "  CANVA_GPU_BACKEND=vulkan canva-linux"; echo "  CANVA_GPU_BACKEND=software canva-linux"; echo
+  echo "Debugging documentation:"; echo "  docs/DEBUGGING.md"; echo
+  echo "Sandbox note:"; echo "  Native Install is not sandboxed by Flatpak."; echo "  For a sandboxed installation, use:"; echo "    ./canva-linux.sh --install-flatpak"; echo
+  echo "Native scope:"
+  if [[ "${NATIVE_SCOPE}" == "system" ]]; then
+    echo "  This installation used system scope."; echo "  Installed path:"; echo "    /opt/canva-linux"; echo "  Command:"; echo "    /usr/local/bin/canva-linux"
+  else
+    echo "  This installation used user scope."; echo "  Installed path:"; echo "    ~/.local/opt/canva-linux"; echo "  Command:"; echo "    ~/.local/bin/canva-linux"
+  fi
+}
 validate_native_scope
 resolve_native_paths
-
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then
-  cat <<MSG
-A Instalação Nativa será feita no escopo system.
-O app ficará disponível para todos os usuários desta máquina.
-Será solicitada autorização de administrador para gravar em /opt, /usr/local/bin e /usr/local/share.
-MSG
+  echo "Native Install will use system scope."
+  echo "The app will be available to all users on this machine."
+  echo "Administrator authorization will be requested to write to /opt, /usr/local/bin and /usr/local/share."
 else
-  cat <<MSG
-A Instalação Nativa será feita no escopo user.
-O app ficará disponível apenas para o usuário atual.
-Não deve ser necessária autorização de administrador.
-MSG
+  echo "Native Install will use user scope."
+  echo "The app will be available only to the current user."
+  echo "Administrator authorization should not be required."
 fi
-
 "${SCRIPT_DIR}/build-electron-dir.sh"
 install_native_from_dist "${REPO_ROOT}/dist/linux-unpacked"
 write_desktop_file "${NATIVE_PREFIX}/canva-linux"
 install_native_icons "${REPO_ROOT}/build-resources/icons/hicolor"
-
-echo "Instalação Nativa concluída."
-echo
-echo "A Instalação Nativa roda fora do sandbox Flatpak."
-echo "Ela usa as permissões normais do usuário que executa o aplicativo."
-echo
-echo "Para executar:"
-echo "  canva-linux"
-echo
+print_native_post_install_guidance

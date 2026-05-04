@@ -1,5 +1,56 @@
 # Changelog
 
+## [0.1.4.11-dev.28] - 2026-05-04
+
+### Removed
+
+- Removed the public Flatpak development run workflow from `canva-linux.sh`.
+- Removed `--run-flatpak-dev` and the legacy `--run-dev` compatibility alias.
+- Removed the obsolete Flatpak development run path from documentation.
+
+### Changed
+
+- Standardized installer, scripts, README and docs terminology in English.
+- Rebuilt the `canva-linux.sh` help output around Native Install, Flatpak Install, package generation, build, validation, maintenance and uninstall workflows.
+- Updated Native Install post-install guidance with run, debug, Wayland/X11 and GPU backend commands.
+- Updated Flatpak Install post-install guidance to use the new package workflow commands.
+- Updated README and installation documentation to remove the old Flatpak-dev-run workflow.
+- Improved uninstall detection for Native and Flatpak installations.
+- Improved generated artifact cleanup for root-owned build artifacts.
+
+### Notes
+
+- Runtime behavior is unchanged.
+- Native Install remains available in system and user scopes.
+- Flatpak Install remains available in system and user scopes.
+- Native Install runs outside the Flatpak sandbox.
+- Flatpak Install runs inside the Flatpak sandbox.
+- AppImage, `.deb`, `.rpm`, and AUR packaging remain planned but not implemented in this phase.
+
+## [0.1.4.11-dev.27] - 2026-05-04
+
+### Added
+
+- Added Native Install support through `./canva-linux.sh --install-native`.
+- Added `CANVA_NATIVE_SCOPE=system|user`, with system scope as the default.
+- Added system-scope Native Install under `/opt/canva-linux`.
+- Added user-scope Native Install under `~/.local/opt/canva-linux`.
+- Added native desktop integration for system and user scopes.
+- Added explicit Flatpak commands: `--install-flatpak` and `--bundle-flatpak`.
+- Added `--build-runtime` and `--build-dir` workflow commands.
+- Added `--doctor` for host tooling checks.
+- Added `--clean` for generated build/package artifact cleanup.
+- Added installation detection for Native and Flatpak installs.
+- Added explicit uninstall commands for Native and Flatpak installs.
+- Added `--purge` to uninstall and remove user data.
+- Added roadmap placeholders for future AppImage, `.deb`, `.rpm`, and AUR/PKGBUILD packaging.
+
+### Notes
+
+- Runtime behavior is unchanged.
+- Native Install runs outside the Flatpak sandbox.
+- Flatpak behavior is unchanged.
+
 ## [0.1.4.11-dev.26] - 2026-05-04
 
 ### Changed

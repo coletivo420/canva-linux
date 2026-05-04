@@ -79,7 +79,7 @@ Deliverables:
 - keep `CANVA_FLATPAK_SCOPE=user` as explicit opt-in;
 - keep `flatpak-builder` running as the current user, never with `sudo`;
 - preserve artifact ownership restoration for `build-dir`, `repo` and `.flatpak-builder`;
-- validate `--run-dev`, `--install`, `--bundle`, `--uninstall` and `--reset-user-data`.
+- validate `--install-flatpak`, `--install-flatpak`, `--bundle-flatpak`, `--uninstall` and `--reset-user-data`.
 
 ## 0.1.5.dev5 — debug/log support polish
 

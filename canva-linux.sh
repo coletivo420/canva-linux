@@ -6,48 +6,146 @@ FORCE=false
 
 show_help(){ cat <<'H'
 Canva Linux — Install, Package and Build Workflow
+
 Usage:
   ./canva-linux.sh [actions] [--yes]
 
 Global options:
   -y, --yes              Non-interactive confirmation for uninstall/purge prompts
+  -h, --help             Show this help
+
+Installation:
+  --install-native       Run Native Install
+  --install-flatpak      Build and install Flatpak locally
+  --install              Compatibility alias for --install-flatpak
+
+Native install scope:
+  CANVA_NATIVE_SCOPE=system   Install system-wide, default
+  CANVA_NATIVE_SCOPE=user     Install only for the current user
+
+Flatpak install scope:
+  CANVA_FLATPAK_SCOPE=system  Install system-wide, default
+  CANVA_FLATPAK_SCOPE=user    Install only for the current user
+
+Packaging:
+  --bundle-flatpak       Create distributable .flatpak package
+  --bundle               Compatibility alias for --bundle-flatpak
+  --bundle-appimage      Planned
+  --bundle-deb           Planned
+  --bundle-rpm           Planned
+  --prepare-aur          Planned
+
+Build:
+  --build-runtime        Build compiled Electron runtime
+  --build-dir            Build Electron dist/linux-unpacked output
+
+Validation:
+  --validate             Run full project validation
+  --doctor               Check host tools
+
+Maintenance:
+  --clean                Remove generated build/package artifacts
+
+Uninstall:
+  --uninstall            Detect and uninstall installed variants
+  --uninstall-native     Uninstall Native Install
+  --uninstall-flatpak    Uninstall Flatpak Install
+  --reset-user-data      Delete login/session/cache data
+  --purge                Uninstall detected variants and remove user data
 H
 }
 
-run_interactive_mode(){ show_help; exit 0; }
-confirm_or_exit() {
-  local prompt="$1"
-  if [[ "${FORCE}" == "true" ]]; then
-    return 0
-  fi
-  local answer
-  read -r -p "${prompt} [y/N] " answer
-  [[ "${answer}" =~ ^[Yy]$ ]] || { echo "[info] Canceled."; exit 0; }
-}
-
-action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
-
-action_reset_user_data(){
-  rm -rf "$HOME/.var/app/$APP_ID" "$HOME/.config/Canva Linux" "$HOME/.cache/Canva Linux" "$HOME/.local/share/Canva Linux"
-  echo "[ok] User data removed for Flatpak and Native paths"
-}
-
-action_uninstall(){
-  if [[ "${FORCE}" == "true" ]]; then
-    "${SCRIPT_DIR}/scripts/uninstall-native.sh" all
-    action_uninstall_flatpak
-    return
-  fi
-
+run_interactive_mode(){
   cat <<'MENU'
-Detected installations:
-  1) Remove Native installations only
-  2) Remove Flatpak installations only
-  3) Remove all detected installations
-  0) Cancel
+Canva Linux — Install, Package and Build
+
+Installation:
+  1) Native Install
+  2) Flatpak Install
+
+Packaging:
+  3) Create .flatpak package
+  4) Create AppImage [planned]
+  5) Create .deb package [planned]
+  6) Create .rpm package [planned]
+  7) Prepare AUR/PKGBUILD [planned]
+
+Build:
+  8) Build runtime
+  9) Build Electron linux-unpacked dir
+
+Validation:
+  10) Validate project
+  11) Doctor / check host tools
+
+Maintenance:
+  12) Clean generated artifacts
+
+Uninstall:
+  13) Uninstall detected installations
+  14) Uninstall detected installations and remove user data
+
+Other:
+  15) Help
+  0) Exit
 MENU
   local c
   read -r -p "Choose an option: " c
+  case "$c" in
+    1) "${SCRIPT_DIR}/scripts/install-native.sh" ;;
+    2) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh" ;;
+    3) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh" ;;
+    4|5|6|7) echo "[planned] Not implemented in this phase." ;;
+    8) npm run build:runtime ;;
+    9) "${SCRIPT_DIR}/scripts/build-electron-dir.sh" ;;
+    10) "${SCRIPT_DIR}/scripts/validate-project.sh" ;;
+    11) "${SCRIPT_DIR}/scripts/doctor.sh" ;;
+    12) "${SCRIPT_DIR}/scripts/clean-artifacts.sh" ;;
+    13) action_uninstall ;;
+    14) action_purge ;;
+    15) show_help ;;
+    *) echo "[info] Exit." ;;
+  esac
+  exit 0
+}
+confirm_or_exit() { local prompt="$1"; if [[ "${FORCE}" == "true" ]]; then return 0; fi; local answer; read -r -p "${prompt} [y/N] " answer; [[ "${answer}" =~ ^[Yy]$ ]] || { echo "[info] Canceled."; exit 0; }; }
+
+action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
+
+action_reset_user_data(){ rm -rf "$HOME/.var/app/$APP_ID" "$HOME/.config/Canva Linux" "$HOME/.cache/Canva Linux" "$HOME/.local/share/Canva Linux"; echo "[ok] User data removed for Flatpak and Native paths"; }
+
+detect_installations(){
+  DETECTED_NATIVE_SYSTEM=false
+  DETECTED_NATIVE_USER=false
+  DETECTED_FLATPAK_SYSTEM=false
+  DETECTED_FLATPAK_USER=false
+  [[ -d /opt/canva-linux || -L /usr/local/bin/canva-linux || -f /usr/local/share/applications/${APP_ID}.native.desktop ]] && DETECTED_NATIVE_SYSTEM=true
+  [[ -d "$HOME/.local/opt/canva-linux" || -L "$HOME/.local/bin/canva-linux" || -f "$HOME/.local/share/applications/${APP_ID}.native.desktop" ]] && DETECTED_NATIVE_USER=true
+  command -v flatpak >/dev/null 2>&1 && flatpak --system info "$APP_ID" >/dev/null 2>&1 && DETECTED_FLATPAK_SYSTEM=true || true
+  command -v flatpak >/dev/null 2>&1 && flatpak --user info "$APP_ID" >/dev/null 2>&1 && DETECTED_FLATPAK_USER=true || true
+}
+
+action_uninstall(){
+  detect_installations
+  if [[ "${DETECTED_NATIVE_SYSTEM}" == false && "${DETECTED_NATIVE_USER}" == false && "${DETECTED_FLATPAK_SYSTEM}" == false && "${DETECTED_FLATPAK_USER}" == false ]]; then
+    echo "[info] No Canva Linux installation detected."
+    return
+  fi
+  echo "Detected installations:"; echo
+  [[ "${DETECTED_NATIVE_SYSTEM}" == true ]] && echo "[1] Native Install — system" && echo "    /opt/canva-linux" && echo
+  [[ "${DETECTED_NATIVE_USER}" == true ]] && echo "[2] Native Install — user" && echo "    ~/.local/opt/canva-linux" && echo
+  [[ "${DETECTED_FLATPAK_SYSTEM}" == true ]] && echo "[3] Flatpak Install — system" && echo "    ${APP_ID}" && echo
+  [[ "${DETECTED_FLATPAK_USER}" == true ]] && echo "[4] Flatpak Install — user" && echo "    ${APP_ID}" && echo
+
+  if [[ "${FORCE}" == "true" ]]; then "${SCRIPT_DIR}/scripts/uninstall-native.sh" all; action_uninstall_flatpak; return; fi
+  cat <<'MENU'
+Choose:
+  1) Remove Native Install only
+  2) Remove Flatpak Install only
+  3) Remove all detected installations
+  0) Cancel
+MENU
+  local c; read -r -p "Choose an option: " c
   case "$c" in
     1) "${SCRIPT_DIR}/scripts/uninstall-native.sh" all ;;
     2) action_uninstall_flatpak ;;
@@ -56,28 +154,15 @@ MENU
   esac
 }
 
-action_purge(){
-  confirm_or_exit "This will erase login, session, cookies, cache and local Canva Linux data. Continue?"
-  "${SCRIPT_DIR}/scripts/uninstall-native.sh" all --purge-data || true
-  action_uninstall_flatpak || true
-  action_reset_user_data
-}
+action_purge(){ confirm_or_exit "This will erase login, session, cookies, cache and local Canva Linux data. Continue?"; "${SCRIPT_DIR}/scripts/uninstall-native.sh" all --purge-data || true; action_uninstall_flatpak || true; action_reset_user_data; }
 
 if [[ $# -eq 0 ]]; then run_interactive_mode; fi
-for a in "$@"; do
-  case "$a" in
-    -y|--yes|--force) FORCE=true ;;
-  esac
-done
-
-for a in "$@"; do
-case "$a" in
- --help|-h) show_help; exit 0;;
- -y|--yes|--force) ;;
+for a in "$@"; do case "$a" in -y|--yes|--force) FORCE=true ;; esac; done
+for a in "$@"; do case "$a" in
+ --help|-h) show_help; exit 0;; -y|--yes|--force) ;;
  --install-native) "${SCRIPT_DIR}/scripts/install-native.sh";;
  --install-flatpak|--install) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh";;
  --bundle-flatpak|--bundle) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh";;
- --run-flatpak-dev|--run-dev) "${SCRIPT_DIR}/scripts/run-flatpak-dev.sh";;
  --build-runtime) npm run build:runtime;;
  --build-dir) "${SCRIPT_DIR}/scripts/build-electron-dir.sh";;
  --validate) "${SCRIPT_DIR}/scripts/validate-project.sh";;
@@ -85,10 +170,6 @@ case "$a" in
  --clean) "${SCRIPT_DIR}/scripts/clean-artifacts.sh";;
  --uninstall-native) "${SCRIPT_DIR}/scripts/uninstall-native.sh";;
  --uninstall-flatpak) action_uninstall_flatpak;;
- --uninstall) action_uninstall;;
- --reset-user-data) action_reset_user_data;;
- --purge) action_purge;;
+ --uninstall) action_uninstall;; --reset-user-data) action_reset_user_data;; --purge) action_purge;;
  --bundle-appimage|--bundle-deb|--bundle-rpm|--prepare-aur) echo "[planned] $a";;
- *) echo "Unknown option: $a"; exit 1;;
-esac
-done
+ *) echo "Unknown option: $a"; exit 1;; esac; done

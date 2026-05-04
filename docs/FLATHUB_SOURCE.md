@@ -76,7 +76,7 @@ For Flathub-reviewable Node/Electron builds, keep npm dependencies in `packaging
 GitHub `.flatpak` bundle releases and Flathub source builds are separate workflows.
 
 - Local development installs default to the system Flatpak scope, build as the current user, export `repo/`, then install from that local repo with administrator authorization.
-- Development smoke tests should prefer `./canva-linux.sh --run-dev` because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
+- Development smoke tests should prefer `./canva-linux.sh --install-flatpak-flatpak` because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
 - GitHub bundle releases are generated from the repository workflow (`repo/` export + `flatpak build-bundle`) for direct distribution.
 - Flathub source builds are reviewed separately, should use stable source URLs appropriate for Flathub submission, and should not require `.flatpak` bundle creation.
 
@@ -88,14 +88,14 @@ Canva Linux local workflows must not create a duplicate Flathub user remote by d
 
 Default policy:
 
-- `./canva-linux.sh --install` uses the system Flatpak installation.
+- `./canva-linux.sh --install-flatpak` uses the system Flatpak installation.
 - Required runtimes and SDK/BaseApp dependencies are installed from the system Flathub remote.
 - The user Flathub remote is never added unless explicitly requested.
 - Local Flatpak artifact ownership is restored to the current user after install, bundle and dev-run workflows.
 - Developers who want a fully user-scoped install may run:
 
 ```bash
-CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install
+CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak
 ```
 
 ## Maintainer review requirement

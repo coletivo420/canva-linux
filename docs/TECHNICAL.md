@@ -82,7 +82,7 @@ This is intentional. The Canva editor can run Electron preload code in a package
 
 The bundle keeps the maintainable modular source layout while giving Electron a single preload file that works consistently in the editor. Do not edit `canva.bundle.js` directly; regenerate it with `npm run build:preload`.
 
-`npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts. The canonical install workflow (`./canva-linux.sh --install`) calls `npm run dist`, so it also generates the bundle before packaging. Bundle publication must use a freshly rebuilt Electron output and Flatpak repo; `./canva-linux.sh --bundle` rebuilds both by default. Reusing an existing `repo/` requires the lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` path and should not be used for release publication after source changes.
+`npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts. The canonical install workflow (`./canva-linux.sh --install`) calls `npm run dist`, so it also generates the bundle before packaging. Bundle publication must use a freshly rebuilt Electron output and Flatpak repo; `./canva-linux.sh --bundle-flatpak` rebuilds both by default. Reusing an existing `repo/` requires the lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` path and should not be used for release publication after source changes.
 
 Build pipeline summary:
 
@@ -116,7 +116,7 @@ Terminal debug output is now centralized in `electron/main/logging.ts`.
 Packaging/runtime support files:
 
 - `run.sh` - Flatpak launcher and Wayland/X11 mode selection.
-- `canva-linux.sh` - canonical Linux Flatpak workflow command (`--install`, `--bundle`, `--validate`, `--uninstall`, `--reset-user-data`, and interactive mode).
+- `canva-linux.sh` - canonical Linux workflow command (`--install-native`, `--install-flatpak`, `--bundle-flatpak`, `--validate`, `--uninstall`, and interactive mode).
 - `scripts/flatpak-build-common.sh` - shared Flatpak runtime, Electron output, and repository build helpers used by local install and bundle workflows.
 - `scripts/install-flatpak-local.sh` - local Flatpak build/install for development and testing (supports `--skip-npm`).
 - `scripts/build-flatpak-bundle.sh` - on-demand distributable `.flatpak` bundle generation (rebuilds by default; supports explicit `--use-existing-repo` for non-release reuse).

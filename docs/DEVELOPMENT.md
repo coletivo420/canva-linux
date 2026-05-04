@@ -22,7 +22,7 @@ npm ci
 
 ```bash
 npm start
-./canva-linux.sh --run-dev
+./canva-linux.sh --install-flatpak
 ```
 
 ## Validate
@@ -36,7 +36,7 @@ npm start
 ```bash
 npm run build:runtime
 npm run build:check
-./canva-linux.sh --bundle
+./canva-linux.sh --bundle-flatpak
 ```
 
 ## Patch checklist
