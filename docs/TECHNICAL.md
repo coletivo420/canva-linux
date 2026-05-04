@@ -84,10 +84,17 @@ The bundle keeps the maintainable modular source layout while giving Electron a 
 
 `npm start` and `npm run dist` regenerate the bundle automatically through npm lifecycle scripts. The canonical install workflow (`./canva-linux.sh --install`) calls `npm run dist`, so it also generates the bundle before packaging. Bundle publication must use a freshly rebuilt Electron output and Flatpak repo; `./canva-linux.sh --bundle` rebuilds both by default. Reusing an existing `repo/` requires the lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` path and should not be used for release publication after source changes.
 
-During the TypeScript migration there are two supported preload bundling modes:
+Build pipeline summary:
 
-- Source mode: `npm run build:preload` reads from `electron/`, resolves `.js` module IDs, falls back to matching `.ts` source files when needed, and transpiles TypeScript modules before embedding them.
-- Build-output mode: `npm run build:runtime` compiles `electron/**/*.ts` into `.build/electron/**/*.js`, then runs the bundler with `--build-output` so packaging only embeds compiled JavaScript.
+- `tsc` compiles Electron runtime into `.build/`.
+- esbuild bundles preload into `canva.bundle.js`.
+- electron-builder packages `.build/`.
+- Flatpak consumes `dist/linux-unpacked`.
+
+Preload bundling modes:
+
+- Source mode: `npm run build:preload` bundles `electron/preload/canva.ts` (fallback: `canva.js`) into `electron/preload/canva.bundle.js`.
+- Build-output mode: `npm run build:runtime` compiles `electron/**/*.ts` into `.build/electron/**/*.js`, then runs the bundler with `--build-output` to bundle `.build/electron/preload/canva.js` into `.build/electron/preload/canva.bundle.js`.
 
 ## Runtime guardrails
 

@@ -31,3 +31,20 @@ npm run build:check
 - Remove stale `@ts-nocheck` directives where possible.
 - Improve type coverage in preload modules.
 - Consider ESM only as a separate future architecture decision.
+
+
+## Preload bundling
+
+The preload bundle is generated with esbuild.
+
+- Source mode: `npm run build:preload`
+- Runtime mode: `npm run build:runtime`
+
+The output remains CommonJS and is written to:
+
+```text
+electron/preload/canva.bundle.js
+.build/electron/preload/canva.bundle.js
+```
+
+Electron is treated as an external runtime dependency.

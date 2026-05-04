@@ -8,6 +8,9 @@
 
 ## Manual validation flow
 
+`npm run build:preload` now uses esbuild to generate `canva.bundle.js` before runtime packaging checks.
+
+
 ```bash
 rm -rf .build
 npm test
@@ -19,6 +22,7 @@ npm run typecheck:strict
 npm run docs:check-links
 npm run docs:check-ai
 ./scripts/check-flatpak-scope-policy.sh
+npm run build:preload
 npm run build:runtime
 npm run build:check
 ./scripts/validate-flatpak.sh
