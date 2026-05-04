@@ -63,18 +63,16 @@ fi
 if [[ "$EXTRACT_CHECK" == true ]]; then
   echo "[info] Optional AppImage extraction check enabled."
   tmpdir="$(mktemp -d)"
-  trap 'rm -rf "$tmpdir"' RETURN
-  cp "${appimages[0]}" "$tmpdir/"
+  trap 'rm -rf "$tmpdir"' EXIT
   if (
     cd "$tmpdir"
-    "./$(basename "${appimages[0]}")" --appimage-extract >/dev/null 2>&1
+    "${appimages[0]}" --appimage-extract >/dev/null 2>&1
   ); then
     echo "[ok] AppImage extraction check passed."
   else
     echo "[warn] AppImage extraction check failed. The artifact may still run normally with FUSE."
     echo "[info] See docs/APPIMAGE_FUSE.md"
   fi
-  rm -rf "$tmpdir"
 fi
 
 echo "[info] FUSE runtime check:"
