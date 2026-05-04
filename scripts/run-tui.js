@@ -42,7 +42,7 @@ if (needsBuild()) {
 
 const run = spawnSync('node', ['.build/scripts/tui/index.js', ...process.argv.slice(2)], {
   stdio: 'inherit',
-  env: { ...process.env, CANVA_PROJECT_PHASE: process.env.CANVA_PROJECT_PHASE ?? readProjectPhaseFromShell() },
+  env: { ...process.env, CANVA_PROJECT_PHASE: process.env.CANVA_PROJECT_PHASE || readProjectPhaseFromShell() },
 });
 
 process.exit(run.status ?? 0);
