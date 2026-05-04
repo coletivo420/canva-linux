@@ -185,3 +185,12 @@ Expected:
 - non-empty file;
 - SHA256SUMS validates;
 - optional extraction check warns but does not fail unless explicitly configured later.
+
+
+## TUI validation
+
+```bash
+npm run build:tui
+./canva-linux.sh --tui
+./canva-linux.sh --no-tui
+```

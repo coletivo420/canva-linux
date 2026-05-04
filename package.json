@@ -1,6 +1,6 @@
 {
   "name": "canva-linux",
-  "version": "0.1.4-dev.11.35",
+  "version": "0.1.4-dev.11.36",
   "description": "A community open-source desktop wrapper for use with Canva",
   "main": ".build/electron/main/index.js",
   "author": "Community",
@@ -37,7 +37,10 @@
     "typecheck": "tsc --noEmit",
     "validate:project": "./scripts/validate-project.sh",
     "docs:check-ai": "node scripts/check-ai-guardrails.js",
-    "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit"
+    "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit",
+    "build:tui": "esbuild scripts/tui/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/scripts/tui/index.js",
+    "tui": "npm run build:tui && node .build/scripts/tui/index.js",
+    "check:tui": "node .build/scripts/tui/index.js --help"
   },
   "build": {
     "appId": "io.github.coletivo420.canva-linux",
@@ -73,7 +76,8 @@
     "electron-builder": "^26.8.1",
     "esbuild": "^0.28.0",
     "eslint": "^10.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "blessed": "^0.1.81"
   },
   "desktopName": "io.github.coletivo420.canva-linux.desktop",
   "engines": {

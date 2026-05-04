@@ -141,3 +141,18 @@ The menu is organized into:
 - Maintenance & Uninstall
 
 In the **Development** submenu, package generation actions are listed before build and validation tasks.
+
+
+## Experimental TUI
+
+Canva Linux includes an experimental Blessed-based terminal UI:
+
+```bash
+./canva-linux.sh --tui
+```
+
+The shell menu remains available:
+
+```bash
+./canva-linux.sh --no-tui
+```

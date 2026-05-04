@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.4.11-dev.36] - 2026-05-04
+
+### Added
+
+- Added an experimental Blessed-based Node/TypeScript TUI foundation under `scripts/tui/`.
+- Added `--tui` and `--no-tui` launcher flags in `canva-linux.sh`.
+- Added `build:tui`, `tui`, and `check:tui` package scripts.
+- Added `blessed` as a development dependency.
+
+### Changed
+
+- Bumped package SemVer to `0.1.4-dev.11.36`.
+- Updated `PROJECT_PHASE` to `0.1.4.11-dev.36` for phase/version alignment.
+- Kept shell menus and direct backend commands as the default/fallback workflow.
+
+### Notes
+
+- TUI currently focuses on menu navigation + Development Doctor execution with streamed logs.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.35] - 2026-05-04
 
 ### Added

@@ -10,6 +10,23 @@ source "${ROOT_DIR}/scripts/install-detection-common.sh"
 ui_init
 run_script(){ local script="$1"; shift; [[ -f "$script" ]] || { ui_error "Script not found: $script"; exit 1; }; bash "$script" "$@"; }
 
+can_run_tui(){
+  [[ -t 0 ]] || return 1
+  [[ -t 1 ]] || return 1
+  [[ "${TERM:-dumb}" != "dumb" ]] || return 1
+  command -v node >/dev/null 2>&1 || return 1
+}
+
+run_tui_mode(){
+  if ! can_run_tui; then
+    ui_error "TUI requires an interactive terminal and Node.js."
+    ui_info "Use ./canva-linux.sh --no-tui for the shell menu."
+    exit 1
+  fi
+  CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:tui
+  CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/tui/index.js
+}
+
 show_help(){ cat <<'H'
 Canva Linux — Install, Package and Build Workflow
 
@@ -19,6 +36,8 @@ Usage:
 Global options:
   -y, --yes              Non-interactive confirmation for uninstall/purge prompts
   -h, --help             Show this help
+  --tui                  Run experimental Blessed TUI
+  --no-tui               Force shell interactive menu
 
 Installation:
   --install-native       Run Native Install
@@ -177,11 +196,15 @@ esac
 }
 run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
 
+if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then run_interactive_mode; fi
+if [[ "${CANVA_TUI:-0}" == "1" ]]; then run_tui_mode; exit 0; fi
 if [[ $# -eq 0 ]]; then run_interactive_mode; fi
 for arg in "$@"; do case "$arg" in -y|--yes|--force) FORCE=true;; esac; done
 for arg in "$@"; do
   case "$arg" in
     --help|-h) show_help; exit 0 ;;
+    --tui) run_tui_mode; exit 0 ;;
+    --no-tui) run_interactive_mode ;;
     -y|--yes|--force) ;;
     --install-native) run_script "${ROOT_DIR}/scripts/install-native.sh" ;;
     --install-flatpak|--install) run_script "${ROOT_DIR}/scripts/install-flatpak-local.sh" ;;
