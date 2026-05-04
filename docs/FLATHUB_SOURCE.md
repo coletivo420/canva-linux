@@ -76,7 +76,7 @@ For Flathub-reviewable Node/Electron builds, keep npm dependencies in `packaging
 GitHub `.flatpak` bundle releases and Flathub source builds are separate workflows.
 
 - Local development installs default to the system Flatpak scope, build as the current user, export `repo/`, then install from that local repo with administrator authorization.
-- Development smoke tests should prefer `./canva-linux.sh --install-flatpak-flatpak` because it builds and runs from `build-dir` without installing the app or creating local origin remotes.
+- Development smoke tests should prefer `./canva-linux.sh --install-flatpak` to verify the full package workflow.
 - GitHub bundle releases are generated from the repository workflow (`repo/` export + `flatpak build-bundle`) for direct distribution.
 - Flathub source builds are reviewed separately, should use stable source URLs appropriate for Flathub submission, and should not require `.flatpak` bundle creation.
 
