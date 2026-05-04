@@ -118,3 +118,17 @@ CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
 - [Flatpak & Flathub Packaging](docs/FLATHUB.md)
 
 Project website: https://coletivo420.github.io/canva-linux/
+
+## Interactive menu
+
+Run without arguments to open the interactive menu:
+
+```bash
+./canva-linux.sh
+```
+
+The menu is organized into:
+
+- Install
+- Development
+- Maintenance & Uninstall
