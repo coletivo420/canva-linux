@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.1.4.11-dev.29] - 2026-05-04
+
+### Fixed
+
+- Fixed Native Install failure caused by the invalid non-SemVer package version `0.1.4.11-dev.28`.
+- Changed package metadata versioning to a SemVer-compatible format for npm and electron-builder.
+- Added SemVer validation before Electron package builds to prevent late electron-builder failures.
+- Fixed the package workflow so Native Install, Electron dir builds and AppImage builds fail early with actionable version errors.
+
+### Changed
+
+- Documented the distinction between project phase labels and package SemVer versions.
+- Standardized the current package SemVer format as `0.1.4-dev.11.29` for the `0.1.4.11-dev.29` project phase.
+
+### Notes
+
+- Project planning may still refer to the phase as `0.1.4.11-dev.29`.
+- `package.json#version` must remain valid SemVer.
+- Runtime behavior is unchanged.
+
 ## [0.1.4.11-dev.28] - 2026-05-04
 
 ### Removed
@@ -25,7 +45,8 @@
 - Flatpak Install remains available in system and user scopes.
 - Native Install runs outside the Flatpak sandbox.
 - Flatpak Install runs inside the Flatpak sandbox.
-- AppImage, `.deb`, `.rpm`, and AUR packaging remain planned but not implemented in this phase.
+- AppImage packaging is experimental in this development phase.
+- `.deb`, `.rpm`, and AUR packaging remain planned but not implemented in this phase.
 
 ## [0.1.4.11-dev.27] - 2026-05-04
 
