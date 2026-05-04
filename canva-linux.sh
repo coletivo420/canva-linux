@@ -71,7 +71,7 @@ action_uninstall(){
   run_script "${ROOT_DIR}/scripts/uninstall-native.sh" all
   action_uninstall_flatpak
 }
-action_purge(){ [[ "$FORCE" == true ]] || { read -r -p "This will erase login, session, cookies, cache and local Canva Linux data. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || return; }; action_uninstall || true; cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; }
+action_purge(){ confirm_reset_user_data || return; action_uninstall || true; cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; }
 show_version_info(){ local version; version="$(node -p "require('./package.json').version" 2>/dev/null || true)"; [[ -n "$version" ]] || version="unknown"; cat <<V
 Project phase:
   ${PROJECT_PHASE}
