@@ -56,6 +56,10 @@ H
 }
 
 run_interactive_mode(){
+  if [[ ! -t 0 ]]; then
+    show_help
+    exit 0
+  fi
   cat <<'MENU'
 Canva Linux — Install, Package and Build
 
@@ -90,7 +94,10 @@ Other:
   0) Exit
 MENU
   local c
-  read -r -p "Choose an option: " c
+  if ! read -r -p "Choose an option: " c; then
+    echo "[info] No interactive input detected."
+    exit 0
+  fi
   case "$c" in
     1) "${SCRIPT_DIR}/scripts/install-native.sh" ;;
     2) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh" ;;
