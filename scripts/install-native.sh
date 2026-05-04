@@ -24,6 +24,7 @@ print_native_post_install_guidance(){
   echo "Display backend checks:"; echo "  CANVA_FORCE_WAYLAND=1 canva-linux"; echo "  CANVA_FORCE_X11=1 canva-linux"; echo
   echo "GPU backend checks:"; echo "  CANVA_GPU_BACKEND=auto canva-linux"; echo "  CANVA_GPU_BACKEND=opengl canva-linux"; echo "  CANVA_GPU_BACKEND=vulkan canva-linux"; echo "  CANVA_GPU_BACKEND=software canva-linux"; echo
   echo "Debugging documentation:"; echo "  docs/DEBUGGING.md"; echo
+  echo "XDG data cleanup paths:"; echo "  Config: ${XDG_CONFIG_HOME:-${HOME}/.config}"; echo "  Cache:  ${XDG_CACHE_HOME:-${HOME}/.cache}"; echo "  Data:   ${XDG_DATA_HOME:-${HOME}/.local/share}"; echo "  State:  ${XDG_STATE_HOME:-${HOME}/.local/state}"; echo
   echo "Sandbox note:"; echo "  Native Install is not sandboxed by Flatpak."; echo "  For a sandboxed installation, use:"; echo "    ./canva-linux.sh --install-flatpak"; echo
   echo "Native scope:"
   if [[ "${NATIVE_SCOPE}" == "system" ]]; then
@@ -47,4 +48,5 @@ fi
 install_native_from_dist "${REPO_ROOT}/dist/linux-unpacked"
 write_desktop_file "${NATIVE_PREFIX}/canva-linux"
 install_native_icons "${REPO_ROOT}/build-resources/icons/hicolor"
+update_native_desktop_caches
 print_native_post_install_guidance
