@@ -1,6 +1,6 @@
 # Canva Linux
 
-A community-maintained open source desktop wrapper for use with Canva.
+A community-maintained open-source desktop wrapper for use with Canva.
 
 ## Quick Start
 
