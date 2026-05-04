@@ -24,12 +24,13 @@ rm -f dist/*.AppImage dist/*.AppImage.sha256 dist/SHA256SUMS
 echo "[info] Building AppImage with electron-builder"
 npm run dist:appimage
 
-bash "${SCRIPT_DIR}/validate-appimage.sh"
 (
   cd dist
   sha256sum ./*.AppImage > SHA256SUMS
 )
 echo "[ok] SHA256 manifest generated: dist/SHA256SUMS"
+
+bash "${SCRIPT_DIR}/validate-appimage.sh"
 
 mapfile -t appimages < <(find dist -maxdepth 1 -type f -name '*.AppImage' | sort)
 
