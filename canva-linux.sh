@@ -109,7 +109,13 @@ Install
 2) Flatpak Install
 0) Back
 M
-if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; return; fi; case "$c" in 1) run_script "${ROOT_DIR}/scripts/install-native.sh";;2) run_script "${ROOT_DIR}/scripts/install-flatpak-local.sh";;*) ;; esac; }
+if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
+case "$c" in
+  1) run_script "${ROOT_DIR}/scripts/install-native.sh" ;;
+  2) run_script "${ROOT_DIR}/scripts/install-flatpak-local.sh" ;;
+  *) ;;
+esac
+}
 menu_dev(){ cat <<'M'
 Development
 Package generation:
