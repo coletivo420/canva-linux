@@ -197,7 +197,7 @@ esac
 run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
 
 if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then run_interactive_mode; fi
-if [[ "${CANVA_TUI:-0}" == "1" ]]; then run_tui_mode; fi
+if [[ "${CANVA_TUI:-0}" == "1" ]]; then run_tui_mode; exit 0; fi
 if [[ $# -eq 0 ]]; then run_interactive_mode; fi
 for arg in "$@"; do case "$arg" in -y|--yes|--force) FORCE=true;; esac; done
 for arg in "$@"; do
