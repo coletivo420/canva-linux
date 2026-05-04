@@ -93,9 +93,35 @@ install_native_icons() {
 
 uninstall_native_scope() {
   if [[ "${NATIVE_SCOPE}" == "system" ]]; then
-    sudo rm -rf "${NATIVE_SYSTEM_PREFIX}" "${NATIVE_SYSTEM_DESKTOP}" "${NATIVE_SYSTEM_BIN}"
+    uninstall_native_system
   else
+    uninstall_native_user
+  fi
+}
+
+native_system_installed() {
+  [[ -d "${NATIVE_SYSTEM_PREFIX}" || -L "${NATIVE_SYSTEM_BIN}" || -f "${NATIVE_SYSTEM_DESKTOP}" ]]
+}
+
+native_user_installed() {
+  [[ -d "${NATIVE_USER_PREFIX}" || -L "${NATIVE_USER_BIN}" || -f "${NATIVE_USER_DESKTOP}" ]]
+}
+
+uninstall_native_system() {
+  if native_system_installed; then
+    sudo rm -rf "${NATIVE_SYSTEM_PREFIX}" "${NATIVE_SYSTEM_DESKTOP}" "${NATIVE_SYSTEM_BIN}"
+    echo "[ok] Native system install removed"
+  else
+    echo "[info] No Native system install detected"
+  fi
+}
+
+uninstall_native_user() {
+  if native_user_installed; then
     rm -rf "${NATIVE_USER_PREFIX}" "${NATIVE_USER_DESKTOP}" "${NATIVE_USER_BIN}"
+    echo "[ok] Native user install removed"
+  else
+    echo "[info] No Native user install detected"
   fi
 }
 

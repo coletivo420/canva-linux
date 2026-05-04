@@ -1,28 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-check() {
-  if command -v "$1" >/dev/null 2>&1; then
-    echo "[ok] $1"
-  else
-    echo "[missing] $1"
-  fi
-}
-
-check node
+failed=0
 if command -v node >/dev/null 2>&1; then
-  node -e 'const v=process.versions.node.split(".")[0]; if(Number(v)<22){process.exit(1)}' || echo "[warn] node < 22"
+  nv="$(node -p 'process.version')"; echo "[ok] node: ${nv}"
+  node -e 'const v=Number(process.versions.node.split(".")[0]);process.exit(v>=22?0:1)' || { echo "[error] Node.js >= 22 is required"; failed=1; }
+else
+  echo "[error] node missing"; failed=1
 fi
-check npm
-check git
-check bash
-check realpath
-check stat
-check flatpak
-check flatpak-builder
-check desktop-file-validate
-check appstreamcli
-
-echo "AppImage: planned"
-echo "deb/rpm: planned"
-echo "AUR/PKGBUILD: planned"
+for req in npm git; do command -v "$req" >/dev/null 2>&1 && echo "[ok] $req" || { echo "[error] $req missing"; failed=1; }; done
+command -v flatpak >/dev/null 2>&1 || echo "[warn] flatpak missing — Flatpak Install and .flatpak package generation will not work"
+command -v flatpak-builder >/dev/null 2>&1 || echo "[warn] flatpak-builder missing — Flatpak package generation will not work"
+command -v desktop-file-validate >/dev/null 2>&1 || echo "[warn] desktop-file-validate missing — desktop metadata validation will not work"
+command -v appstreamcli >/dev/null 2>&1 || echo "[warn] appstreamcli missing — AppStream validation will not work"
+echo "[info] AppImage packaging: planned"
+echo "[info] deb/rpm packaging: planned"
+echo "[info] AUR/PKGBUILD packaging: planned"
+exit $failed

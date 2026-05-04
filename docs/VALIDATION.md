@@ -38,7 +38,7 @@ git diff --check
 npm start
 CANVA_DEBUG=1 npm start
 CANVA_DEBUG=2 npm start
-./canva-linux.sh --run-dev
+./canva-linux.sh --install-flatpak
 ```
 
 ## Flatpak checks
