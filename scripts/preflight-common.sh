@@ -100,7 +100,7 @@ ensure_npm_dependencies() {
   fi
 
   echo "[info] Installing npm dependencies with ${install_cmd[*]}"
-  "${install_cmd[@]}"
+  "${install_cmd[@]}" || exit 1
 }
 
 detect_package_version() {
