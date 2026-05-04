@@ -5,13 +5,18 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 source "${SCRIPT_DIR}/preflight-common.sh"
 
-require_cmd node
-require_cmd npm
+require_command node
+require_command npm
+require_node_major 22
 
 cd "${REPO_ROOT}"
 
 if [[ ! -d node_modules ]]; then
-  npm ci
+  if [[ -f package-lock.json ]]; then
+    npm ci
+  else
+    npm install
+  fi
 fi
 
 npm run dist
