@@ -35,6 +35,12 @@ git diff --check
 
 ```bash
 bash -n canva-linux.sh
+bash -n scripts/app-identity-common.sh
+bash -n scripts/xdg-common.sh
+bash -n scripts/install-layout-common.sh
+bash -n scripts/desktop-integration-common.sh
+bash -n scripts/runtime-guidance-common.sh
+bash -n scripts/user-data-common.sh
 bash -n scripts/install-native.sh
 bash -n scripts/native-install-common.sh
 bash -n scripts/uninstall-native.sh

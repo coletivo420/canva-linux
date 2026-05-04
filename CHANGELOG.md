@@ -1,3 +1,25 @@
+## [0.1.4.11-dev.30] - 2026-05-04
+
+### Fixed
+
+- Fixed AppImage menu execution failing when `scripts/build-appimage.sh` is not executable.
+- Fixed duplicated `Maintenance` section in the interactive installer menu.
+- Fixed AppImage post-build guidance so the generated artifact path is printed correctly.
+
+### Changed
+
+- Introduced shared installer helper architecture for app identity, XDG paths, install layouts, desktop integration, runtime guidance and user-data cleanup.
+- Centralized XDG user-data cleanup instead of duplicating path functions across scripts.
+- Centralized runtime debug guidance for Native Install, Flatpak Install and AppImage.
+- Reworked `canva-linux.sh` into a thin workflow router over shared installer helpers.
+
+### Notes
+
+- Runtime Electron behavior is unchanged.
+- Native Install remains outside the Flatpak sandbox.
+- AppImage remains experimental.
+- `.deb`, `.rpm`, and AUR remain planned.
+
 # Changelog
 
 ## [0.1.4.11-dev.29] - 2026-05-04

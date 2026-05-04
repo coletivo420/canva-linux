@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-APP_ID="io.github.coletivo420.canva-linux"
 FORCE=false
+source "${SCRIPT_DIR}/scripts/app-identity-common.sh"
+source "${SCRIPT_DIR}/scripts/user-data-common.sh"
 
-xdg_config_home() { printf '%s\n' "${XDG_CONFIG_HOME:-${HOME}/.config}"; }
-xdg_cache_home() { printf '%s\n' "${XDG_CACHE_HOME:-${HOME}/.cache}"; }
-xdg_data_home() { printf '%s\n' "${XDG_DATA_HOME:-${HOME}/.local/share}"; }
-xdg_state_home() { printf '%s\n' "${XDG_STATE_HOME:-${HOME}/.local/state}"; }
+run_script(){ local script="$1"; shift; [[ -f "$script" ]] || { echo "[error] Script not found: $script" >&2; exit 1; }; bash "$script" "$@"; }
 
 show_help(){ cat <<'H'
 Canva Linux — Install, Package and Build Workflow
@@ -86,10 +84,8 @@ Build:
 
 Validation:
   10) Validate project
-  11) Doctor / check host tools
-
-Maintenance:
-  12) Validate AppImage artifacts
+  11) Validate AppImage artifacts
+  12) Doctor / check host tools
 
 Maintenance:
   13) Clean generated artifacts
@@ -108,17 +104,17 @@ MENU
     exit 0
   fi
   case "$c" in
-    1) "${SCRIPT_DIR}/scripts/install-native.sh" ;;
-    2) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh" ;;
-    3) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh" ;;
-    4) "${SCRIPT_DIR}/scripts/build-appimage.sh" ;;
+    1) run_script "${SCRIPT_DIR}/scripts/install-native.sh" ;;
+    2) run_script "${SCRIPT_DIR}/scripts/install-flatpak-local.sh" ;;
+    3) run_script "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh" ;;
+    4) run_script "${SCRIPT_DIR}/scripts/build-appimage.sh" ;;
     5|6|7) echo "[planned] Not implemented in this phase." ;;
-    8) "${SCRIPT_DIR}/scripts/build-runtime.sh" ;;
-    9) "${SCRIPT_DIR}/scripts/build-electron-dir.sh" ;;
-    10) "${SCRIPT_DIR}/scripts/validate-project.sh" ;;
-    11) "${SCRIPT_DIR}/scripts/doctor.sh" ;;
-    12) "${SCRIPT_DIR}/scripts/validate-appimage.sh" ;;
-    13) "${SCRIPT_DIR}/scripts/clean-artifacts.sh" ;;
+    8) run_script "${SCRIPT_DIR}/scripts/build-runtime.sh" ;;
+    9) run_script "${SCRIPT_DIR}/scripts/build-electron-dir.sh" ;;
+    10) run_script "${SCRIPT_DIR}/scripts/validate-project.sh" ;;
+    11) run_script "${SCRIPT_DIR}/scripts/doctor.sh" ;;
+    12) run_script "${SCRIPT_DIR}/scripts/validate-appimage.sh" ;;
+    13) run_script "${SCRIPT_DIR}/scripts/clean-artifacts.sh" ;;
     14) action_uninstall ;;
     15) action_purge ;;
     16) show_help ;;
@@ -130,20 +126,6 @@ MENU
 confirm_or_exit() { local prompt="$1"; if [[ "${FORCE}" == "true" ]]; then return 0; fi; local answer; read -r -p "${prompt} [y/N] " answer; [[ "${answer}" =~ ^[Yy]$ ]] || { echo "[info] Canceled."; exit 0; }; }
 
 action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
-
-action_reset_user_data(){
-  rm -rf \
-    "$HOME/.var/app/$APP_ID" \
-    "$(xdg_config_home)/Canva Linux" \
-    "$(xdg_config_home)/canva-linux" \
-    "$(xdg_cache_home)/Canva Linux" \
-    "$(xdg_cache_home)/canva-linux" \
-    "$(xdg_data_home)/Canva Linux" \
-    "$(xdg_data_home)/canva-linux" \
-    "$(xdg_state_home)/Canva Linux" \
-    "$(xdg_state_home)/canva-linux"
-  echo "[ok] User data removed for Flatpak and Native paths"
-}
 
 detect_installations(){
   DETECTED_NATIVE_SYSTEM=false
@@ -168,7 +150,7 @@ action_uninstall(){
   [[ "${DETECTED_FLATPAK_SYSTEM}" == true ]] && echo "[3] Flatpak Install — system" && echo "    ${APP_ID}" && echo
   [[ "${DETECTED_FLATPAK_USER}" == true ]] && echo "[4] Flatpak Install — user" && echo "    ${APP_ID}" && echo
 
-  if [[ "${FORCE}" == "true" ]]; then "${SCRIPT_DIR}/scripts/uninstall-native.sh" all; action_uninstall_flatpak; return; fi
+  if [[ "${FORCE}" == "true" ]]; then run_script "${SCRIPT_DIR}/scripts/uninstall-native.sh" all; action_uninstall_flatpak; return; fi
   cat <<'MENU'
 Choose:
   1) Remove Native Install only
@@ -178,31 +160,31 @@ Choose:
 MENU
   local c; read -r -p "Choose an option: " c
   case "$c" in
-    1) "${SCRIPT_DIR}/scripts/uninstall-native.sh" all ;;
+    1) run_script "${SCRIPT_DIR}/scripts/uninstall-native.sh" all ;;
     2) action_uninstall_flatpak ;;
-    3) "${SCRIPT_DIR}/scripts/uninstall-native.sh" all; action_uninstall_flatpak ;;
+    3) run_script "${SCRIPT_DIR}/scripts/uninstall-native.sh" all; action_uninstall_flatpak ;;
     *) echo "[info] Canceled." ;;
   esac
 }
 
-action_purge(){ confirm_or_exit "This will erase login, session, cookies, cache and local Canva Linux data. Continue?"; "${SCRIPT_DIR}/scripts/uninstall-native.sh" all --purge-data || true; action_uninstall_flatpak || true; action_reset_user_data; }
+action_purge(){ confirm_or_exit "This will erase login, session, cookies, cache and local Canva Linux data. Continue?"; run_script "${SCRIPT_DIR}/scripts/uninstall-native.sh" all --purge-data || true; action_uninstall_flatpak || true; cleanup_all_user_data; echo "[ok] User data removed for Flatpak and Native paths"; }
 
 if [[ $# -eq 0 ]]; then run_interactive_mode; fi
 for a in "$@"; do case "$a" in -y|--yes|--force) FORCE=true ;; esac; done
 for a in "$@"; do case "$a" in
  --help|-h) show_help; exit 0;; -y|--yes|--force) ;;
- --install-native) "${SCRIPT_DIR}/scripts/install-native.sh";;
- --install-flatpak|--install) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh";;
- --bundle-flatpak|--bundle) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh";;
- --bundle-appimage) "${SCRIPT_DIR}/scripts/build-appimage.sh";;
- --build-runtime) "${SCRIPT_DIR}/scripts/build-runtime.sh";;
- --build-dir) "${SCRIPT_DIR}/scripts/build-electron-dir.sh";;
- --validate) "${SCRIPT_DIR}/scripts/validate-project.sh";;
- --validate-appimage) "${SCRIPT_DIR}/scripts/validate-appimage.sh";;
- --doctor) "${SCRIPT_DIR}/scripts/doctor.sh";;
- --clean) "${SCRIPT_DIR}/scripts/clean-artifacts.sh";;
- --uninstall-native) "${SCRIPT_DIR}/scripts/uninstall-native.sh";;
+ --install-native) run_script "${SCRIPT_DIR}/scripts/install-native.sh";;
+ --install-flatpak|--install) run_script "${SCRIPT_DIR}/scripts/install-flatpak-local.sh";;
+ --bundle-flatpak|--bundle) run_script "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh";;
+ --bundle-appimage) run_script "${SCRIPT_DIR}/scripts/build-appimage.sh";;
+ --build-runtime) run_script "${SCRIPT_DIR}/scripts/build-runtime.sh";;
+ --build-dir) run_script "${SCRIPT_DIR}/scripts/build-electron-dir.sh";;
+ --validate) run_script "${SCRIPT_DIR}/scripts/validate-project.sh";;
+ --validate-appimage) run_script "${SCRIPT_DIR}/scripts/validate-appimage.sh";;
+ --doctor) run_script "${SCRIPT_DIR}/scripts/doctor.sh";;
+ --clean) run_script "${SCRIPT_DIR}/scripts/clean-artifacts.sh";;
+ --uninstall-native) run_script "${SCRIPT_DIR}/scripts/uninstall-native.sh";;
  --uninstall-flatpak) action_uninstall_flatpak;;
- --uninstall) action_uninstall;; --reset-user-data) action_reset_user_data;; --purge) action_purge;;
+ --uninstall) action_uninstall;; --reset-user-data) cleanup_all_user_data; echo "[ok] User data removed for Flatpak and Native paths";; --purge) action_purge;;
  --bundle-deb|--bundle-rpm|--prepare-aur) echo "[planned] $a";;
  *) echo "Unknown option: $a"; exit 1;; esac; done

@@ -35,6 +35,13 @@ command -v appstreamcli >/dev/null 2>&1 || echo "[warn] appstreamcli missing —
 echo "[info] AppImage packaging: experimental"
 echo "[info] AppImage command: ./canva-linux.sh --bundle-appimage"
 echo "[info] AppImage runtime may require FUSE support on some distributions"
+if command -v fusermount3 >/dev/null 2>&1; then
+  echo "[ok] fusermount3 found"
+elif command -v fusermount >/dev/null 2>&1; then
+  echo "[ok] fusermount found"
+else
+  echo "[warn] fusermount/fusermount3 not found — AppImage execution may require additional host support"
+fi
 echo "[info] deb/rpm packaging: planned"
 echo "[info] AUR/PKGBUILD packaging: planned"
 exit $failed
