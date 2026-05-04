@@ -183,7 +183,8 @@ CANVA_GPU_BACKEND=software
 - Flatpak Install is sandboxed by Flatpak.
 - `.flatpak` bundle generation is intended for distributable artifacts.
 - AppImage generation is currently experimental.
-- `.deb`, `.rpm`, and AUR/PKGBUILD packaging are planned future package targets.
+- AUR/PKGBUILD is planned as the first new package target after AppImage hardening.
+- `.deb` and `.rpm` packaging remain planned for later phases.
 - Generated outputs such as `.build/`, `dist/`, `build-dir/`, `repo/`, and `.flatpak-builder/` must not be committed.
 
 
@@ -241,3 +242,15 @@ The installer distinguishes installed variants from generated artifacts:
 - AppImage artifacts under `dist/*.AppImage`
 
 AppImage artifacts are generated files, not installed variants. Use `--clean` to remove generated artifacts.
+
+
+## AppImage artifact policy
+
+AppImage is currently experimental.
+
+The build workflow removes old AppImage artifacts before generating a new one. A successful build should leave:
+
+- one canonical `dist/*.AppImage`;
+- `dist/SHA256SUMS`.
+
+AppImage artifacts are generated package files, not installed variants. They are reported by installation detection for visibility, but they are removed by `--clean`, not by `--uninstall`.

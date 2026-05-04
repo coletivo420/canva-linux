@@ -30,3 +30,5 @@ ui_dim(){ printf '%s%s%s\n' "${DIM}" "$*" "${RESET}"; }
 ui_cmd(){ printf '  %s%s%s\n' "${BOLD}${GREEN}" "$*" "${RESET}"; }
 ui_prompt(){ printf '%s[info]%s %s' "${BLUE}" "${RESET}" "$*"; }
 ui_read_choice(){ local prompt="${1:-Choose an option: }" choice; ui_prompt "$prompt" >&2; read -r choice; printf '%s\n' "$choice"; }
+
+ui_die(){ ui_error "$*"; exit 1; }

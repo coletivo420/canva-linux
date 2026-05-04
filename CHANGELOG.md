@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.1.4.11-dev.34] - 2026-05-04
+
+### Added
+
+- Added long-build notices before `.flatpak` and AppImage package generation.
+- Added AppImage checksum validation through `dist/SHA256SUMS`.
+- Added optional AppImage extraction validation.
+- Added `--validate-appimage-extract` for deeper AppImage artifact checks.
+- Added AppImage artifact policy documentation.
+- Added clearer user guidance that package generation can take several minutes depending on the system.
+
+### Changed
+
+- Hardened the experimental AppImage packaging workflow.
+- Standardized package-generation patience messages across `.flatpak` and AppImage builds.
+- Updated AppImage documentation to distinguish generation, checksum validation, extraction validation and runtime execution.
+- Updated roadmap to make AUR/PKGBUILD the first new package target after AppImage hardening.
+
+### Fixed
+
+- Ensured AppImage checksum manifests are generated and validated consistently.
+- Improved generated artifact messaging so users understand that AppImage files are removed by `--clean`, not by `--uninstall`.
+
+### Notes
+
+- Runtime Electron behavior is unchanged.
+- AppImage remains experimental but is now more strongly validated.
+- AUR/PKGBUILD is planned as the first new package target in `0.1.4.11-dev.35`.
+- `.deb` and `.rpm` remain planned for later phases.
+
 ## [0.1.4.11-dev.33] - 2026-05-04
 
 ### Fixed

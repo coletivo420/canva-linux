@@ -38,7 +38,13 @@ Flatpak Install builds and installs the sandboxed Flatpak package.
 
 ```bash
 ./canva-linux.sh --bundle-appimage
+./canva-linux.sh --validate-appimage
+./canva-linux.sh --validate-appimage-extract
 ```
+
+AppImage generation may take several minutes depending on your system. Keep the terminal open until the process finishes.
+
+The extraction validation is optional and may take additional time.
 
 AppImage packaging is experimental in this development line. It creates a portable artifact under `dist/` and runs outside the Flatpak sandbox.
 
@@ -99,6 +105,7 @@ CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
 | `--build-runtime` | Build the compiled Electron runtime. |
 | `--build-dir` | Build `dist/linux-unpacked`. |
 | `--validate-appimage` | Validate generated AppImage artifacts. |
+| `--validate-appimage-extract` | Validate AppImage artifacts and run optional extraction check. |
 | `--doctor` | Check host tools. |
 | `--clean` | Remove generated build/package artifacts. |
 | `--validate` | Run full project validation. |
