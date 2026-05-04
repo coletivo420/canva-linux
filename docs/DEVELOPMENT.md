@@ -129,3 +129,13 @@ Do not use four numeric version segments in `package.json#version`.
 
 Invalid: `0.1.4.11-dev.29`
 Valid: `0.1.4-dev.11.29`
+
+
+## Experimental Blessed TUI workflow
+
+```bash
+npm run build:tui
+./canva-linux.sh --tui
+```
+
+Use `./canva-linux.sh --no-tui` to force the shell menu fallback.

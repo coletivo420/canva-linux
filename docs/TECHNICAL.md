@@ -266,3 +266,10 @@ The build workflow removes old AppImage artifacts before generating a new one. A
 - `dist/SHA256SUMS`.
 
 AppImage artifacts are generated package files, not installed variants. They are reported by installation detection for visibility, but they are removed by `--clean`, not by `--uninstall`.
+
+
+## Blessed TUI architecture
+
+The TUI is a Node/TypeScript interface over the existing shell backend.
+
+The TUI must not duplicate install/package logic. It launches existing scripts and streams logs into the terminal interface.
