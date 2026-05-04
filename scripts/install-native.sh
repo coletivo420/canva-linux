@@ -19,7 +19,7 @@ fi
 bash "${SCRIPT_DIR}/build-electron-dir.sh"
 install_native_from_dist "${REPO_ROOT}/dist/linux-unpacked"
 tmp="$(mktemp)"
-write_desktop_file "${tmp}" "${INSTALL_PREFIX}/canva-linux" "${APP_ID}"
+write_desktop_file "${tmp}" "${INSTALL_PREFIX}/${APP_EXECUTABLE}" "${APP_ID}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then sudo install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; else install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; fi
 rm -f "${tmp}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then
