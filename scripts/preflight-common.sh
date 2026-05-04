@@ -43,6 +43,16 @@ require_node_major() {
   fi
 }
 
+CANVA_REQUIRED_NPM_DEPS=(
+  esbuild
+  typescript
+  electron
+  electron-builder
+  eslint
+  @typescript-eslint/parser
+  @typescript-eslint/eslint-plugin
+)
+
 check_npm_dependency() {
   local dep="$1"
 
