@@ -32,3 +32,12 @@ for artifact in "${appimages[@]}"; do
 done
 
 echo "[info] Primary AppImage artifact: ${appimages[0]}"
+
+
+echo "[info] FUSE runtime check:"
+if command -v fusermount3 >/dev/null 2>&1 || command -v fusermount >/dev/null 2>&1; then
+  echo "[ok] FUSE mount helper found"
+else
+  echo "[warn] FUSE mount helper not found. AppImage execution may fail."
+  echo "[info] See docs/APPIMAGE_FUSE.md"
+fi

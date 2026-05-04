@@ -1,3 +1,22 @@
+# Changelog
+
+## [0.1.4.11-dev.31] - 2026-05-04
+
+### Added
+
+- Added `docs/APPIMAGE_FUSE.md` with FUSE requirements, distro-specific setup, extraction fallback, and AppImage runtime diagnostics.
+
+### Changed
+
+- Bumped package SemVer metadata to `0.1.4-dev.11.31` in `package.json` and `package-lock.json`.
+- Updated README and documentation set to link AppImage FUSE guidance and clarify that AppImage is experimental while `.deb`, `.rpm`, and AUR are planned.
+- Clarified AppImage packaging vs runtime behavior in technical and validation documentation.
+- Added non-fatal FUSE host checks to `scripts/doctor.sh` and `scripts/validate-appimage.sh`.
+
+### Fixed
+
+- Ensured changelog structure starts with # Changelog and keeps newest entries in reverse chronological order.
+
 ## [0.1.4.11-dev.30] - 2026-05-04
 
 ### Fixed
@@ -19,8 +38,6 @@
 - Native Install remains outside the Flatpak sandbox.
 - AppImage remains experimental.
 - `.deb`, `.rpm`, and AUR remain planned.
-
-# Changelog
 
 ## [0.1.4.11-dev.29] - 2026-05-04
 

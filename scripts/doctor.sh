@@ -40,7 +40,8 @@ if command -v fusermount3 >/dev/null 2>&1; then
 elif command -v fusermount >/dev/null 2>&1; then
   echo "[ok] fusermount found"
 else
-  echo "[warn] fusermount/fusermount3 not found — AppImage execution may require additional host support"
+  echo "[warn] fusermount/fusermount3 not found — AppImage execution may require FUSE support"
+  echo "[info] See docs/APPIMAGE_FUSE.md"
 fi
 echo "[info] deb/rpm packaging: planned"
 echo "[info] AUR/PKGBUILD packaging: planned"

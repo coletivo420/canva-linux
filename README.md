@@ -42,6 +42,8 @@ Flatpak Install builds and installs the sandboxed Flatpak package.
 
 AppImage packaging is experimental in this development line. It creates a portable artifact under `dist/` and runs outside the Flatpak sandbox.
 
+Some systems require FUSE support to run AppImage artifacts. See [AppImage FUSE Requirements](docs/APPIMAGE_FUSE.md).
+
 ## Usage
 
 ### Native Install
@@ -110,6 +112,7 @@ CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
 - [Validation](docs/VALIDATION.md)
 - [Development Guide](docs/DEVELOPMENT.md)
 - [Technical Notes](docs/TECHNICAL.md)
+- [AppImage FUSE Requirements](docs/APPIMAGE_FUSE.md)
 - [TypeScript](docs/TYPESCRIPT.md)
 - [CL-EyeDropper](docs/CANVA_LINUX_EYEDROPPER.md)
 - [Flatpak & Flathub Packaging](docs/FLATHUB.md)
