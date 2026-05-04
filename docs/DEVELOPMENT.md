@@ -17,7 +17,7 @@ Flatpak-related tools are required for Flatpak Install and `.flatpak` package ge
 ```bash
 git clone https://github.com/coletivo420/canva-linux.git
 cd canva-linux
-npm ci
+npm ci --include=dev
 ```
 
 ## Doctor
@@ -36,10 +36,20 @@ CANVA_DEBUG=2 npm start
 
 ## Build
 
+All source-build workflows must bootstrap npm dependencies before invoking npm build scripts. Use the wrapper commands instead of calling `npm run build:runtime` directly.
+
 ```bash
-npm run build:runtime
+./canva-linux.sh --build-runtime
 npm run build:check
 ./canva-linux.sh --build-dir
+```
+
+Repair commands:
+
+```bash
+npm ci --include=dev
+CANVA_NPM_REPAIR=clean ./canva-linux.sh --install-native
+CANVA_SKIP_NPM_INSTALL=1 ./canva-linux.sh --install-native
 ```
 
 ## Install from source

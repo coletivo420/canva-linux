@@ -4,7 +4,19 @@
 const fs = require('fs');
 const path = require('path');
 
-const esbuild = require('esbuild');
+let esbuild;
+try {
+  esbuild = require('esbuild');
+} catch (error) {
+  if (error && error.code === 'MODULE_NOT_FOUND') {
+    console.error('[preload-bundle] Missing npm dependency: esbuild');
+    console.error('[preload-bundle] Run: npm ci --include=dev');
+    console.error('[preload-bundle] Or use: ./canva-linux.sh --build-runtime');
+    process.exit(1);
+  }
+
+  throw error;
+}
 
 const repoRoot = path.resolve(__dirname, '..');
 const useBuildOutput = process.argv.includes('--build-output');

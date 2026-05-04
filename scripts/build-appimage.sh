@@ -10,16 +10,7 @@ source "${SCRIPT_DIR}/preflight-common.sh"
 require_command node
 require_command npm
 require_node_major 22
-
-if [[ ! -d node_modules ]]; then
-  if [[ -f package-lock.json ]]; then
-    echo "[info] node_modules missing; running npm ci"
-    npm ci
-  else
-    echo "[info] node_modules missing; running npm install"
-    npm install
-  fi
-fi
+ensure_npm_dependencies
 
 echo "[info] Building AppImage with electron-builder"
 npm run dist:appimage

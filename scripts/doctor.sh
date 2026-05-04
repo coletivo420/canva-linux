@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+source "${SCRIPT_DIR}/preflight-common.sh"
+
+cd "${REPO_ROOT}"
+
 failed=0
 if command -v node >/dev/null 2>&1; then
   nv="$(node -p 'process.version')"; echo "[ok] node: ${nv}"
@@ -8,6 +15,16 @@ else
   echo "[error] node missing"; failed=1
 fi
 for req in npm git; do command -v "$req" >/dev/null 2>&1 && echo "[ok] $req" || { echo "[error] $req missing"; failed=1; }; done
+
+for dep in "${CANVA_REQUIRED_NPM_DEPS[@]}"; do
+  if check_npm_dependency "$dep"; then
+    echo "[ok] npm dependency: $dep"
+  else
+    echo "[warn] npm dependency missing: $dep — run: npm ci --include=dev"
+    failed=1
+  fi
+done
+
 command -v flatpak >/dev/null 2>&1 || echo "[warn] flatpak missing — Flatpak Install and .flatpak package generation will not work"
 command -v flatpak-builder >/dev/null 2>&1 || echo "[warn] flatpak-builder missing — Flatpak package generation will not work"
 command -v desktop-file-validate >/dev/null 2>&1 || echo "[warn] desktop-file-validate missing — desktop metadata validation will not work"
