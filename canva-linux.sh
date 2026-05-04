@@ -44,7 +44,7 @@ H
 }
 action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
 action_uninstall(){ detect_installations; has_detected_installations || { ui_info "No Canva Linux installation detected."; return; }; print_detected_installations; run_script "${SCRIPT_DIR}/scripts/uninstall-native.sh" all; action_uninstall_flatpak; }
-action_purge(){ [[ "$FORCE" == true ]] || { read -r -p "This will erase login, session, cookies, cache and local Canva Linux data. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || exit 0; }; action_uninstall || true; cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; }
+action_purge(){ [[ "$FORCE" == true ]] || { read -r -p "This will erase login, session, cookies, cache and local Canva Linux data. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || return; }; action_uninstall || true; cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; }
 menu_install(){ cat <<'M'
 Install
 1) Native Install
