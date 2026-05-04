@@ -70,28 +70,18 @@ ensure_npm_dependencies() {
     return 0
   fi
 
-  local required=(
-    esbuild
-    typescript
-    electron
-    electron-builder
-    eslint
-    @typescript-eslint/parser
-    @typescript-eslint/eslint-plugin
-  )
-
   local missing=0
   if [[ ! -d node_modules ]]; then
     missing=1
+  else
+    local dep
+    for dep in "${CANVA_REQUIRED_NPM_DEPS[@]}"; do
+      if ! check_npm_dependency "$dep"; then
+        missing=1
+        break
+      fi
+    done
   fi
-
-  local dep
-  for dep in "${required[@]}"; do
-    if ! check_npm_dependency "$dep"; then
-      missing=1
-      break
-    fi
-  done
 
   local install_cmd=(npm install --include=dev)
   if [[ -f package-lock.json ]]; then
