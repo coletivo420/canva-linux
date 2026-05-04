@@ -106,3 +106,4 @@ Planned package targets:
 - update `CHANGELOG.md` for user-facing or architecture changes;
 - run validation;
 - do not commit generated build outputs.
+- for TypeScript preload/runtime Promise constructors, prefer explicit generics (e.g. `new Promise<MyType>(...)`) whenever resolved values are consumed structurally.

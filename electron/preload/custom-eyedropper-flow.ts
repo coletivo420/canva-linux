@@ -18,6 +18,10 @@ type EyeDropperSnapshot = {
   cssWidth?: number;
   cssHeight?: number;
 };
+type SnapshotCanvas = {
+  host: HTMLDivElement;
+  canvas: HTMLCanvasElement;
+};
 type EyeDropperResult = { sRGBHex: string };
 type EyeDropperOpenOptions = { signal?: AbortSignal };
 
@@ -48,12 +52,13 @@ function normalizeHex(value: unknown) {
 }
 
 /**
- * @param {EyeDropperSnapshot} snapshot
- * @param {{ logEyeDropper: EyeDropperLog }} options
- * @returns {Promise<{ host: HTMLDivElement, canvas: HTMLCanvasElement }>}
+ * Creates an overlay host and a canvas containing the captured Canva window snapshot.
  */
-function createSnapshotCanvas(snapshot: EyeDropperSnapshot, { logEyeDropper }: { logEyeDropper: EyeDropperLog }) {
-  return new Promise((resolve, reject) => {
+function createSnapshotCanvas(
+  snapshot: EyeDropperSnapshot,
+  { logEyeDropper }: { logEyeDropper: EyeDropperLog }
+): Promise<SnapshotCanvas> {
+  return new Promise<SnapshotCanvas>((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
       const cssWidth = Math.max(1, Number(snapshot?.cssWidth) || window.innerWidth || image.naturalWidth || 1);
@@ -110,11 +115,6 @@ function createSnapshotCanvas(snapshot: EyeDropperSnapshot, { logEyeDropper }: {
 // Own the custom EyeDropper snapshot/open lifecycle separately from the wrapper
 // installation so the preload entrypoint stays focused on composition.
 /**
- * @param {{ debugLog: DebugLog, logEyeDropper: EyeDropperLog }} options
- * @returns {{ wrapOpenCall: (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult> }}
- */
-
-/**
  * @param {unknown} error
  * @returns {string | null}
  */
@@ -131,6 +131,10 @@ function isAbortLikeError(error: unknown) {
   return error.name === 'AbortError' || /abort/i.test(String(error.message || ''));
 }
 
+/**
+ * @param {{ debugLog: DebugLog, logEyeDropper: EyeDropperLog }} options
+ * @returns {{ wrapOpenCall: (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult> }}
+ */
 function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: DebugLog, logEyeDropper: EyeDropperLog }) {
   /** @type {null | (() => void)} */
   let activePickerCleanup: null | (() => void) = null;
@@ -138,7 +142,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
   /**
    * @returns {Promise<EyeDropperResult>}
    */
-  async function openClEyeDropper() {
+  async function openCLEyeDropper() {
     if (activePickerCleanup) {
       throw createOperationError('A color picker is already active.');
     }
@@ -188,7 +192,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
       },
     });
 
-    return await new Promise((resolve, reject) => {
+    return await new Promise<EyeDropperResult>((resolve, reject) => {
       let settled = false;
 
       const cleanup = () => {
@@ -265,7 +269,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
 
     /** @type {undefined | (() => void)} */
     let abortHandler: undefined | (() => void);
-    const pickPromise = openClEyeDropper().then((result) => {
+    const pickPromise = openCLEyeDropper().then((result) => {
       const typedResult: any = result;
       if (!typedResult || typeof typedResult.sRGBHex !== 'string') {
         throw createOperationError('The wrapper eye dropper did not return a valid color.');

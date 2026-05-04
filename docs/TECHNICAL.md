@@ -103,6 +103,8 @@ Preload bundling modes:
 - The eyedropper snapshot IPC bridge only captures the tab whose renderer sent the request; it does not fall back to the currently active tab.
 - Aborting the custom eyedropper flow must remove the overlay and clear the active picker state.
 - Chromium/Electron runtime startup sets `disable-features=Floss` (merged with any existing disabled features) to reduce non-fatal Bluetooth/Floss noise in Flatpak logs. This does not disable Bluetooth at the OS level and does not change Flatpak permissions.
+- The custom eyedropper preload flow relies on typed contracts across async boundaries: `EyeDropperSnapshot`, `SnapshotCanvas`, and `EyeDropperResult`.
+- For preload/runtime TypeScript Promise constructors that resolve structured values, explicit generic typing is required to avoid `{}` inference and destructuring/typecheck regressions.
 
 ## Debug output
 
