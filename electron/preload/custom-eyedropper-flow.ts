@@ -142,7 +142,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
   /**
    * @returns {Promise<EyeDropperResult>}
    */
-  async function openClEyeDropper() {
+  async function openCLEyeDropper() {
     if (activePickerCleanup) {
       throw createOperationError('A color picker is already active.');
     }
@@ -269,7 +269,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
 
     /** @type {undefined | (() => void)} */
     let abortHandler: undefined | (() => void);
-    const pickPromise = openClEyeDropper().then((result) => {
+    const pickPromise = openCLEyeDropper().then((result) => {
       const typedResult: any = result;
       if (!typedResult || typeof typedResult.sRGBHex !== 'string') {
         throw createOperationError('The wrapper eye dropper did not return a valid color.');
