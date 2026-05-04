@@ -132,3 +132,4 @@ The menu is organized into:
 - Install
 - Development
 - Maintenance & Uninstall
+- Show detected installs/artifacts

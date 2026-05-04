@@ -3,7 +3,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/app-identity-common.sh"
 
-DETECTED_NATIVE_SYSTEM=false; DETECTED_NATIVE_USER=false; DETECTED_FLATPAK_SYSTEM=false; DETECTED_FLATPAK_USER=false; DETECTED_APPIMAGE_ARTIFACTS=false
+DETECTED_NATIVE_SYSTEM=false
+DETECTED_NATIVE_USER=false
+DETECTED_FLATPAK_SYSTEM=false
+DETECTED_FLATPAK_USER=false
+DETECTED_APPIMAGE_ARTIFACTS=false
 
 detect_native_system_install(){ [[ -d /opt/canva-linux || -L /usr/local/bin/${APP_EXECUTABLE} || -f /usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME} ]]; }
 detect_native_user_install(){ [[ -d "${HOME}/.local/opt/canva-linux" || -L "${HOME}/.local/bin/${APP_EXECUTABLE}" || -f "${HOME}/.local/share/applications/${APP_NATIVE_DESKTOP_NAME}" ]]; }
@@ -19,11 +23,27 @@ detect_installations(){
   detect_appimage_artifacts && DETECTED_APPIMAGE_ARTIFACTS=true || DETECTED_APPIMAGE_ARTIFACTS=false
 }
 
-has_detected_installations(){ [[ "$DETECTED_NATIVE_SYSTEM" == true || "$DETECTED_NATIVE_USER" == true || "$DETECTED_FLATPAK_SYSTEM" == true || "$DETECTED_FLATPAK_USER" == true ]]; }
+has_detected_installed_variants(){ [[ "$DETECTED_NATIVE_SYSTEM" == true || "$DETECTED_NATIVE_USER" == true || "$DETECTED_FLATPAK_SYSTEM" == true || "$DETECTED_FLATPAK_USER" == true ]]; }
+has_detected_installations(){ [[ "$DETECTED_NATIVE_SYSTEM" == true || "$DETECTED_NATIVE_USER" == true || "$DETECTED_FLATPAK_SYSTEM" == true || "$DETECTED_FLATPAK_USER" == true || "$DETECTED_APPIMAGE_ARTIFACTS" == true ]]; }
+
 print_detected_installations(){
-  [[ "$DETECTED_NATIVE_SYSTEM" == true ]] && echo "[1] Native Install — system" && echo "    /opt/canva-linux" && echo
-  [[ "$DETECTED_NATIVE_USER" == true ]] && echo "[2] Native Install — user" && echo "    ~/.local/opt/canva-linux" && echo
-  [[ "$DETECTED_FLATPAK_SYSTEM" == true ]] && echo "[3] Flatpak Install — system" && echo "    ${APP_ID}" && echo
-  [[ "$DETECTED_FLATPAK_USER" == true ]] && echo "[4] Flatpak Install — user" && echo "    ${APP_ID}" && echo
-  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && echo "[info] AppImage artifacts detected in dist/*.AppImage" && echo
+  if has_detected_installed_variants; then
+    echo "Detected installed variants:"
+    echo
+    [[ "$DETECTED_NATIVE_SYSTEM" == true ]] && echo "[1] Native Install — system" && echo "    /opt/canva-linux" && echo
+    [[ "$DETECTED_NATIVE_USER" == true ]] && echo "[2] Native Install — user" && echo "    ~/.local/opt/canva-linux" && echo
+    [[ "$DETECTED_FLATPAK_SYSTEM" == true ]] && echo "[3] Flatpak Install — system" && echo "    ${APP_ID}" && echo
+    [[ "$DETECTED_FLATPAK_USER" == true ]] && echo "[4] Flatpak Install — user" && echo "    ${APP_ID}" && echo
+  else
+    echo "No Native or Flatpak installations detected."
+    echo
+  fi
+
+  if [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]]; then
+    echo "Detected generated artifacts:"
+    echo
+    find dist -maxdepth 1 -type f -name '*.AppImage' | sort | sed 's/^/  /'
+    echo
+    echo "Use --clean to remove generated package artifacts."
+  fi
 }
