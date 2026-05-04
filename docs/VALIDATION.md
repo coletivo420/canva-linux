@@ -8,7 +8,9 @@
 
 ## Manual validation flow
 
-`npm run build:preload` now uses esbuild to generate `canva.bundle.js` before runtime packaging checks.
+- `build:preload` = esbuild source mode (`electron/preload/canva.ts` -> `electron/preload/canva.bundle.js`).
+- `build:runtime` = `tsc` + runtime asset copy + esbuild build-output mode (`.build/electron/preload/canva.js` -> `.build/electron/preload/canva.bundle.js`).
+- `build:check` = validation of final runtime artifacts.
 
 
 ```bash

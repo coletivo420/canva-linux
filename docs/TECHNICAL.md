@@ -30,24 +30,24 @@ Core runtime files:
 - `electron/main/ipc.ts` - centralized main-process IPC routing for preload debug forwarding and toolbar actions.
 - `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring for session setup, theme hooks, and shell bootstrap.
 - `electron/main/logging.ts` - startup/status logging helpers and credential-storage diagnostics.
-- `electron/main/oauth.js` - OAuth popup lifecycle helpers and callback tracking.
+- `electron/main/oauth.ts` - OAuth popup lifecycle helpers and callback tracking.
 - `electron/main/runtime.ts` - Linux runtime hardening, shared session configuration, and storage flushing.
-- `electron/main/shell.js` - top-level window and toolbar shell creation helpers.
-- `electron/main/tab-controller.js` - tab creation and orchestration layer that connects shell state, tab events, and shared session wiring.
-- `electron/main/tab-events.js` - BrowserView/WebContents event wiring for tab navigation, popups, shortcuts, and shell policy.
-- `electron/main/tabs.js` - tab ordering, selection, closing, and layout helpers shared by the shell entrypoint.
+- `electron/main/shell.ts` - top-level window and toolbar shell creation helpers.
+- `electron/main/tab-controller.ts` - tab creation and orchestration layer that connects shell state, tab events, and shared session wiring.
+- `electron/main/tab-events.ts` - BrowserView/WebContents event wiring for tab navigation, popups, shortcuts, and shell policy.
+- `electron/main/tabs.ts` - tab ordering, selection, closing, and layout helpers shared by the shell entrypoint.
 - `electron/preload/canva.ts` - source Canva page preload diagnostics and Linux integration bridges.
 - `electron/preload/canva.bundle.js` - generated runtime preload consumed by Canva tabs; do not edit directly.
-- `electron/preload/browser-capture-diagnostics.js` - compatibility fallback module for capture-related eyedropper diagnostics.
+- `electron/preload/browser-capture-diagnostics.ts` - compatibility fallback module for capture-related eyedropper diagnostics.
 - `electron/preload/debug.js` - centralized preload debug routing and eyedropper log transport for Canva-facing modules.
 - `electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle used by the Canva EyeDropper wrapper.
 - `electron/preload/cl-eyedropper/cl-eyedropper.ts` - TypeScript custom picker implementation used by Canva Linux.
-- `electron/preload/eyedropper-routing-diagnostics.js` - diagnostic hooks for tracing and preventing fallback into native/browser picker paths.
+- `electron/preload/eyedropper-routing-diagnostics.ts` - diagnostic hooks for tracing and preventing fallback into native/browser picker paths.
 - `electron/preload/native-eyedropper-wrapper.ts` - native EyeDropper replacement layer that redirects Canva calls into CL-EyeDropper.
-- `electron/preload/upload-diagnostics.js` - drag, paste, file-input, and file-picker diagnostics isolated from the Canva-specific preload flow.
+- `electron/preload/upload-diagnostics.ts` - drag, paste, file-input, and file-picker diagnostics isolated from the Canva-specific preload flow.
 - `electron/preload/toolbar.js` - toolbar IPC bridge.
 - `electron/ui/toolbar.html` - local toolbar UI.
-- `electron/shared/debug.js` - shared debug category parsing and log gating for main/preload entrypoints.
+- `electron/shared/debug.ts` - shared debug category parsing and log gating for main/preload entrypoints.
 - `electron/shared/navigation.ts` - shared Canva/OAuth URL classification and trusted-origin checks.
 
 ## Main-process structure
@@ -59,11 +59,11 @@ The current main-process split is now the working repository structure:
 - `electron/main/lifecycle.ts` owns app startup/shutdown wiring.
 - `electron/main/ipc.ts` owns main-process IPC handlers.
 - `electron/main/logging.ts` owns status output and startup diagnostics.
-- `electron/main/oauth.js` owns popup lifecycle and OAuth callback tracking.
-- `electron/main/tab-controller.js` owns tab creation and composes `tab-events.js` with the lower-level tab helpers.
-- `electron/main/tab-events.js` owns per-tab `webContents` policy and event wiring.
-- `electron/main/tabs.js` owns tab-state helpers and tab shell behavior.
-- `electron/main/shell.js` owns top-level shell window and toolbar creation.
+- `electron/main/oauth.ts` owns popup lifecycle and OAuth callback tracking.
+- `electron/main/tab-controller.ts` owns tab creation and composes `tab-events.js` with the lower-level tab helpers.
+- `electron/main/tab-events.ts` owns per-tab `webContents` policy and event wiring.
+- `electron/main/tabs.ts` owns tab-state helpers and tab shell behavior.
+- `electron/main/shell.ts` owns top-level shell window and toolbar creation.
 - `electron/main/eyedropper-bridge.ts` owns the snapshot/log bridge used by the custom eyedropper preload flow.
 
 This split preserves runtime behavior while making future changes safer. `electron/main/index.ts` is now primarily a composition root, while the preload delegates debug transport, upload diagnostics, native EyeDropper wrapping, and the CL-EyeDropper flow into dedicated modules.
