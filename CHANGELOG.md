@@ -1425,3 +1425,21 @@ All notable changes to this project are documented in this file.
 ### Notes
 - Eyedropper work continues in the following iteration.
 - This release focuses on shell UI behavior, documentation, and licensing.
+
+## [0.1.4.11-dev.32] - 2026-05-04
+
+### Added
+- Added colored interactive menu support to `canva-linux.sh`.
+- Added submenu-based installer navigation.
+- Added shared UI helper functions for status messages, sections, commands and prompts.
+- Added shared installation detection helpers.
+
+### Changed
+- Simplified the interactive menu into focused submenus.
+- Moved package generation actions from Install to Development.
+- Merged Maintenance and Uninstall into a single menu.
+- Refactored `canva-linux.sh` into a thinner visual workflow router.
+
+### Notes
+- Runtime Electron behavior is unchanged.
+- `.deb`, `.rpm`, and AUR remain planned.

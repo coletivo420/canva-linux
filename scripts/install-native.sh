@@ -18,7 +18,14 @@ else
 fi
 bash "${SCRIPT_DIR}/build-electron-dir.sh"
 install_native_from_dist "${REPO_ROOT}/dist/linux-unpacked"
-write_desktop_file "${NATIVE_PREFIX}/canva-linux"
-install_native_icons "${REPO_ROOT}/build-resources/icons/hicolor"
-update_native_desktop_caches
+tmp="$(mktemp)"
+write_desktop_file "${tmp}" "${INSTALL_PREFIX}/${APP_EXECUTABLE}" "${APP_ID}"
+if [[ "${NATIVE_SCOPE}" == "system" ]]; then sudo install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; else install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; fi
+rm -f "${tmp}"
+if [[ "${NATIVE_SCOPE}" == "system" ]]; then
+  install_icons "${REPO_ROOT}/build-resources/icons/hicolor" "/usr/local/share/icons/hicolor"
+else
+  install_icons "${REPO_ROOT}/build-resources/icons/hicolor" "${HOME}/.local/share/icons/hicolor"
+fi
+update_desktop_caches "${NATIVE_SCOPE}"
 print_native_post_install_guidance

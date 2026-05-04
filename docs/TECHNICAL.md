@@ -211,3 +211,22 @@ Installer scripts are split into common helpers:
 - `user-data-common.sh`
 
 Format-specific scripts should be thin adapters.
+
+## Shared installer core
+
+`canva-linux.sh` is a visual workflow router. Shared behavior lives in:
+
+- `ui-common.sh`
+- `app-identity-common.sh`
+- `xdg-common.sh`
+- `install-layout-common.sh`
+- `desktop-integration-common.sh`
+- `runtime-guidance-common.sh`
+- `user-data-common.sh`
+- `install-detection-common.sh`
+
+## Runtime behavior parity
+
+Native Install, Flatpak Install and AppImage must share the same Electron runtime behavior.
+
+Packaging-specific differences are limited to sandbox model, install paths, launch command and host integration.
