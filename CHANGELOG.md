@@ -1,6 +1,29 @@
 # Changelog
 
-## [0.1.4-dev.25] - 2026-05-02
+## [0.1.4.11-dev.26] - 2026-05-04
+
+### Changed
+
+- Consolidated the esbuild-based preload bundle pipeline introduced in `0.1.4.11-dev.25`.
+- Cleaned up remaining preload TypeScript checking directive leftovers.
+- Improved minimal typing around the custom CL-EyeDropper preload flow without changing runtime behavior.
+- Clarified TypeScript documentation for the current `tsc` + esbuild build model.
+- Updated technical documentation to reflect the current TypeScript source layout.
+
+### Fixed
+
+- Fixed version metadata drift after the esbuild preload migration.
+- Removed contradictory `@ts-nocheck` / `@ts-check` usage from `electron/preload/custom-eyedropper-flow.ts`.
+
+### Notes
+
+- Runtime behavior is unchanged.
+- esbuild remains limited to preload bundling.
+- Electron main runtime is still compiled by `tsc`.
+- The preload bundle output remains CommonJS.
+- Scripts and tests remain JavaScript in this phase.
+
+## [0.1.4.11-dev.25] - 2026-05-02
 
 ### Changed
 
