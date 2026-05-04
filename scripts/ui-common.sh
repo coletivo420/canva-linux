@@ -29,7 +29,7 @@ ui_planned(){ printf '%s[planned]%s %s\n' "${MAGENTA}" "${RESET}" "$*"; }
 ui_dim(){ printf '%s%s%s\n' "${DIM}" "$*" "${RESET}"; }
 ui_cmd(){ printf '  %s%s%s\n' "${BOLD}${GREEN}" "$*" "${RESET}"; }
 ui_prompt(){ printf '%s[info]%s %s' "${BLUE}" "${RESET}" "$*"; }
-ui_read_choice(){ local prompt="${1:-Choose an option: }" choice; ui_prompt "$prompt" >&2; if ! read -r choice; then printf '\n'; return 1; fi; printf '%s\n' "$choice"; }
+ui_read_choice(){ local prompt="${1:-Choose an option: }" choice; ui_prompt "$prompt" >&2; if ! read -r choice; then printf '\n' >&2; return 1; fi; printf '%s\n' "$choice"; }
 ui_logo(){
   printf '%s' "${BOLD}${CYAN}"
   cat <<'LOGO'
