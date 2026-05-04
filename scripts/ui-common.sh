@@ -17,7 +17,7 @@ ui_init() {
   fi
 }
 
-ui_divider(){ local line="" i; for i in $(seq 1 48); do line="${line}${UI_DIVIDER_CHAR}"; done; printf '%s\n' "$line"; }
+ui_divider(){ local line; printf -v line "%*s" 48 ""; printf '%s\n' "${line// /${UI_DIVIDER_CHAR}}"; }
 ui_title(){ ui_divider; printf '%s%s%s\n' "${BOLD}" "$1" "${RESET}"; [[ $# -gt 1 ]] && printf '%s%s%s\n' "${DIM}" "$2" "${RESET}"; ui_divider; }
 ui_section(){ printf '\n%s%s%s\n' "${BOLD}${CYAN}" "$1" "${RESET}"; }
 ui_subsection(){ printf '%s%s%s\n' "${BOLD}${MAGENTA}" "$1" "${RESET}"; }
