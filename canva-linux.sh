@@ -30,7 +30,7 @@ Flatpak install scope:
 Packaging:
   --bundle-flatpak       Create distributable .flatpak package
   --bundle               Compatibility alias for --bundle-flatpak
-  --bundle-appimage      Planned
+  --bundle-appimage      Create experimental AppImage package
   --bundle-deb           Planned
   --bundle-rpm           Planned
   --prepare-aur          Planned
@@ -69,7 +69,7 @@ Installation:
 
 Packaging:
   3) Create .flatpak package
-  4) Create AppImage [planned]
+  4) Create AppImage
   5) Create .deb package [planned]
   6) Create .rpm package [planned]
   7) Prepare AUR/PKGBUILD [planned]
@@ -102,7 +102,8 @@ MENU
     1) "${SCRIPT_DIR}/scripts/install-native.sh" ;;
     2) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh" ;;
     3) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh" ;;
-    4|5|6|7) echo "[planned] Not implemented in this phase." ;;
+    4) "${SCRIPT_DIR}/scripts/build-appimage.sh" ;;
+    5|6|7) echo "[planned] Not implemented in this phase." ;;
     8) npm run build:runtime ;;
     9) "${SCRIPT_DIR}/scripts/build-electron-dir.sh" ;;
     10) "${SCRIPT_DIR}/scripts/validate-project.sh" ;;
@@ -119,7 +120,7 @@ confirm_or_exit() { local prompt="$1"; if [[ "${FORCE}" == "true" ]]; then retur
 
 action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
 
-action_reset_user_data(){ rm -rf "$HOME/.var/app/$APP_ID" "$HOME/.config/Canva Linux" "$HOME/.cache/Canva Linux" "$HOME/.local/share/Canva Linux"; echo "[ok] User data removed for Flatpak and Native paths"; }
+action_reset_user_data(){ rm -rf "$HOME/.var/app/$APP_ID" "$HOME/.config/Canva Linux" "$HOME/.config/canva-linux" "$HOME/.cache/Canva Linux" "$HOME/.cache/canva-linux" "$HOME/.local/share/Canva Linux" "$HOME/.local/share/canva-linux" "$HOME/.local/state/Canva Linux" "$HOME/.local/state/canva-linux"; echo "[ok] User data removed for Flatpak and Native paths"; }
 
 detect_installations(){
   DETECTED_NATIVE_SYSTEM=false
@@ -170,6 +171,7 @@ for a in "$@"; do case "$a" in
  --install-native) "${SCRIPT_DIR}/scripts/install-native.sh";;
  --install-flatpak|--install) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh";;
  --bundle-flatpak|--bundle) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh";;
+ --bundle-appimage) "${SCRIPT_DIR}/scripts/build-appimage.sh";;
  --build-runtime) npm run build:runtime;;
  --build-dir) "${SCRIPT_DIR}/scripts/build-electron-dir.sh";;
  --validate) "${SCRIPT_DIR}/scripts/validate-project.sh";;
@@ -178,5 +180,5 @@ for a in "$@"; do case "$a" in
  --uninstall-native) "${SCRIPT_DIR}/scripts/uninstall-native.sh";;
  --uninstall-flatpak) action_uninstall_flatpak;;
  --uninstall) action_uninstall;; --reset-user-data) action_reset_user_data;; --purge) action_purge;;
- --bundle-appimage|--bundle-deb|--bundle-rpm|--prepare-aur) echo "[planned] $a";;
+ --bundle-deb|--bundle-rpm|--prepare-aur) echo "[planned] $a";;
  *) echo "Unknown option: $a"; exit 1;; esac; done
