@@ -54,7 +54,7 @@ action_purge(){ echo "Isso apagará login, sessão, cookies, cache e dados locai
 if [[ $# -eq 0 ]]; then run_interactive_mode; fi
 for a in "$@"; do
 case "$a" in
- --help|-h) show_help;;
+ --help|-h) show_help; exit 0;;
  --install-native) "${SCRIPT_DIR}/scripts/install-native.sh";;
  --install-flatpak|--install) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh";;
  --bundle-flatpak|--bundle) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh";;
