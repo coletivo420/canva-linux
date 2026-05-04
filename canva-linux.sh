@@ -78,7 +78,7 @@ Maintenance & Uninstall
 8) Uninstall detected installations and remove user data
 0) Back
 M
-read -r -p "Choose an option: " c; case "$c" in 1) run_script "${SCRIPT_DIR}/scripts/clean-artifacts.sh";;2) action_purge;;3) detect_installations; print_detected_installations;;4) node -p "require('./package.json').version";;5) action_uninstall;;6) run_script "${SCRIPT_DIR}/scripts/uninstall-native.sh";;7) action_uninstall_flatpak;;8) action_purge;;*) ;; esac; }
+read -r -p "Choose an option: " c; case "$c" in 1) run_script "${SCRIPT_DIR}/scripts/clean-artifacts.sh";;2) cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths";;3) detect_installations; print_detected_installations;;4) ui_info "Version: $(node -p "require('./package.json').version")";;5) action_uninstall;;6) run_script "${SCRIPT_DIR}/scripts/uninstall-native.sh";;7) action_uninstall_flatpak;;8) action_purge;;*) ;; esac; }
 run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do ui_title "Canva Linux" "Install, Package and Build Workflow"; cat <<'M'
 1) Install
 2) Development
