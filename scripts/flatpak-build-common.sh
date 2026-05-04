@@ -140,17 +140,7 @@ ensure_system_flatpak_runtime_dependencies() {
 }
 
 build_electron_output() {
-  if [[ ! -d node_modules ]]; then
-    if [[ -f package-lock.json ]]; then
-      info "node_modules missing; running npm ci"
-      npm ci
-    else
-      info "node_modules missing; running npm install"
-      npm install
-    fi
-  else
-    info "node_modules found; skipping npm install"
-  fi
+  ensure_npm_dependencies
 
   info "Building Electron app (target: dir)"
   npm run dist

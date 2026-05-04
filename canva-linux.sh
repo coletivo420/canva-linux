@@ -109,7 +109,7 @@ MENU
     3) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh" ;;
     4) "${SCRIPT_DIR}/scripts/build-appimage.sh" ;;
     5|6|7) echo "[planned] Not implemented in this phase." ;;
-    8) npm run build:runtime ;;
+    8) "${SCRIPT_DIR}/scripts/build-runtime.sh" ;;
     9) "${SCRIPT_DIR}/scripts/build-electron-dir.sh" ;;
     10) "${SCRIPT_DIR}/scripts/validate-project.sh" ;;
     11) "${SCRIPT_DIR}/scripts/doctor.sh" ;;
@@ -189,7 +189,7 @@ for a in "$@"; do case "$a" in
  --install-flatpak|--install) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh";;
  --bundle-flatpak|--bundle) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh";;
  --bundle-appimage) "${SCRIPT_DIR}/scripts/build-appimage.sh";;
- --build-runtime) npm run build:runtime;;
+ --build-runtime) "${SCRIPT_DIR}/scripts/build-runtime.sh";;
  --build-dir) "${SCRIPT_DIR}/scripts/build-electron-dir.sh";;
  --validate) "${SCRIPT_DIR}/scripts/validate-project.sh";;
  --doctor) "${SCRIPT_DIR}/scripts/doctor.sh";;

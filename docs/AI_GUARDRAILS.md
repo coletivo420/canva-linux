@@ -20,6 +20,9 @@ This document keeps only current maintenance expectations for Canva Linux.
 ## Maintenance rules
 
 - Prefer small, reviewable patches.
+- All source-build workflows must call the shared npm bootstrap before npm build scripts (`ensure_npm_dependencies`).
+- Do not trust only `node_modules/` existence; verify required build dependencies via `require.resolve()` or run `npm ci --include=dev`.
+
 - Update docs when behavior changes.
 - Update `CHANGELOG.md` for user-facing or architecture changes.
 - Do not commit generated `.build/`, `dist/`, `build-dir/`, `.flatpak-builder/` or `repo/`.
