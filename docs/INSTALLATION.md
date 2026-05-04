@@ -66,11 +66,20 @@ CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak
 
 ```bash
 ./canva-linux.sh --bundle-appimage
+./canva-linux.sh --validate-appimage
 ```
 
 AppImage packaging is experimental in this development line. It creates a portable artifact under `dist/` using electron-builder.
 
 AppImage does not use the Flatpak sandbox. Depending on the distribution, running AppImage files may require FUSE support.
+
+Some systems require FUSE support to run AppImage artifacts. If the AppImage does not start, check:
+
+```bash
+command -v fusermount3 || command -v fusermount || true
+```
+
+See [AppImage FUSE Requirements](APPIMAGE_FUSE.md).
 
 ## Runtime commands
 
@@ -121,6 +130,7 @@ CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
 ```bash
 ./canva-linux.sh --bundle-flatpak
 ./canva-linux.sh --bundle-appimage
+./canva-linux.sh --validate-appimage
 ```
 
 Planned package targets:

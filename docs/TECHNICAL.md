@@ -142,6 +142,14 @@ Implementation:
 
 AppImage artifacts run outside the Flatpak sandbox and may require FUSE support depending on the distribution.
 
+AppImage packaging and AppImage execution are separate concerns:
+
+- `./canva-linux.sh --bundle-appimage` generates the artifact.
+- `./canva-linux.sh --validate-appimage` validates generated files.
+- Running the AppImage may require host FUSE support.
+
+See `docs/APPIMAGE_FUSE.md`.
+
 ## Debug output
 
 Debug output is centralized in `electron/main/logging.ts` and mirrored into the per-start `current.log` file under Electron user data.

@@ -97,6 +97,16 @@ find dist -maxdepth 1 -type f -name '*.AppImage' -print
 
 AppImage packaging is experimental in this development line. AppImage artifacts run outside the Flatpak sandbox and may require FUSE support depending on the distribution.
 
+## AppImage FUSE host check
+
+```bash
+command -v fusermount3 || command -v fusermount || true
+```
+
+FUSE is not required to generate the AppImage artifact, but it may be required to run it on some systems.
+
+See `docs/APPIMAGE_FUSE.md`.
+
 ## Feature smoke checklist
 
 - app starts;

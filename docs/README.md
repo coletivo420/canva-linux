@@ -6,6 +6,7 @@
 - [Validation](VALIDATION.md)
 - [Development](DEVELOPMENT.md)
 - [Technical architecture](TECHNICAL.md)
+- [AppImage FUSE requirements](APPIMAGE_FUSE.md)
 
 ## Runtime
 
