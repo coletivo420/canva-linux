@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.4-dev.25] - 2026-05-02
+
+### Changed
+
+- Replaced the manual preload bundler with esbuild.
+- Kept the preload bundle output as CommonJS for Electron compatibility.
+- Preserved source-mode and build-output-mode preload bundle generation.
+- Kept `electron` external in the preload bundle.
+- Updated build documentation for the new esbuild-based preload pipeline.
+
+### Notes
+
+- Runtime behavior is unchanged.
+- Electron main runtime is still compiled by TypeScript through `tsc`.
+- Flatpak, AppID, OAuth, tabs, GPU and CL-EyeDropper behavior are unchanged.
+
 ## [0.1.4-dev.24] - 2026-05-02
 
 ### Changed

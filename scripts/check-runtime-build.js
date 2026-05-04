@@ -65,6 +65,12 @@ requireFile('.build/electron/preload/canva.bundle.js');
 requireFile('.build/electron/ui/toolbar.html');
 requireDir('.build/electron/assets');
 
+const preloadBundlePath = path.join(repoRoot, '.build/electron/preload/canva.bundle.js');
+if (fs.existsSync(preloadBundlePath) && fs.statSync(preloadBundlePath).size === 0) {
+  console.error('[runtime-build-check] preload bundle is empty');
+  failed = true;
+}
+
 const compiledMainPath = path.join(repoRoot, '.build/electron/main/index.js');
 if (fs.existsSync(compiledMainPath)) {
   const compiledMain = fs.readFileSync(compiledMainPath, 'utf8');
