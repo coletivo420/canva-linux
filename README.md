@@ -98,3 +98,25 @@ Project website: https://coletivo420.github.io/canva-linux/
 ## License
 
 Distributed under the **GNU General Public License v3.0 or later**. See [LICENSE](LICENSE) for details.
+
+## Installation options
+
+### Instalação Nativa
+
+```bash
+./canva-linux.sh --install-native
+```
+
+By default uses system scope under /opt/canva-linux.
+
+```bash
+CANVA_NATIVE_SCOPE=user ./canva-linux.sh --install-native
+```
+
+Security note: Instalação Nativa runs outside the Flatpak sandbox.
+
+### Instalação Flatpak
+
+```bash
+./canva-linux.sh --install-flatpak
+```

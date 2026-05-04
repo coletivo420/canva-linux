@@ -1,242 +1,75 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-## Configuration
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_ID="io.github.coletivo420.canva-linux"
-LOCAL_FLATPAK_REMOTES=(
-  canva-linux-local
-  canva-linux1-origin
-  debug1-origin
-)
-INSTALL_SCRIPT="${SCRIPT_DIR}/scripts/install-flatpak-local.sh"
-BUNDLE_SCRIPT="${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh"
-RUN_DEV_SCRIPT="${SCRIPT_DIR}/scripts/run-flatpak-dev.sh"
-VALIDATE_SCRIPT="${SCRIPT_DIR}/scripts/validate-project.sh"
 
-## Help
-show_help() {
-  cat <<'HELP'
-Canva Linux — Flatpak Workflow
-
+show_help(){ cat <<'H'
+Canva Linux — Install, Package and Build Workflow
 Usage:
-  ./canva-linux.sh --run-dev           Build and run from build-dir without installing
-  ./canva-linux.sh --install           Build and install locally (direct install; no repo/bundle)
-  ./canva-linux.sh --bundle            Generate .flatpak bundle
-  ./canva-linux.sh --validate          Run validation checks
-  ./canva-linux.sh --uninstall         Uninstall local Flatpak app
-  ./canva-linux.sh --reset-user-data   Delete local app data/session/cache
-  ./canva-linux.sh --help              Show this help
-
-No arguments:
-  Interactive mode
-
-Chained actions:
-  Actions can be chained and are executed in the order provided.
-
-Examples:
-  ./canva-linux.sh --run-dev
-  ./canva-linux.sh --install --bundle
-  ./canva-linux.sh --bundle --install
-  ./canva-linux.sh --reset-user-data --install
-  ./canva-linux.sh --uninstall --reset-user-data
-  CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install
-
-Flatpak scope:
-  --install uses system scope by default.
-  Set CANVA_FLATPAK_SCOPE=user for explicit user-scoped installs.
-
-Action compatibility:
-  --uninstall can only be combined with --reset-user-data.
-  Duplicate actions are rejected.
-HELP
+  ./canva-linux.sh [actions]
+Installation:
+  --install-native
+  --install-flatpak
+  --install
+Native installation scope:
+  CANVA_NATIVE_SCOPE=system
+  CANVA_NATIVE_SCOPE=user
+Flatpak installation scope:
+  CANVA_FLATPAK_SCOPE=system
+  CANVA_FLATPAK_SCOPE=user
+Packaging:
+  --bundle-flatpak
+  --bundle
+  --bundle-appimage      Planned
+  --bundle-deb           Planned
+  --bundle-rpm           Planned
+  --prepare-aur          Planned
+Build:
+  --build-runtime
+  --build-dir
+Development:
+  --run-flatpak-dev
+  --run-dev
+Validation:
+  --validate
+  --doctor
+Maintenance:
+  --clean
+Uninstall:
+  --uninstall
+  --uninstall-native
+  --uninstall-flatpak
+  --reset-user-data
+  --purge
+H
 }
 
-## Actions
-action_install() {
-  "${INSTALL_SCRIPT}"
-}
+run_interactive_mode(){ show_help; exit 0; }
 
-action_run_dev() {
-  "${RUN_DEV_SCRIPT}"
-}
+action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
+action_uninstall_native(){ "${SCRIPT_DIR}/scripts/uninstall-native.sh"; }
+action_uninstall(){ echo "Instalações detectadas:"; echo "1) Remover apenas Instalação Nativa"; echo "2) Remover apenas Flatpak"; echo "3) Remover todas"; echo "0) Cancelar"; read -r -p "Escolha: " c; case "$c" in 1) "${SCRIPT_DIR}/scripts/uninstall-native.sh" all;; 2) action_uninstall_flatpak;; 3) "${SCRIPT_DIR}/scripts/uninstall-native.sh" all; action_uninstall_flatpak;; *) echo cancelado;; esac; }
+action_purge(){ echo "Isso apagará login, sessão, cookies, cache e dados locais do Canva Linux."; read -r -p "Continuar? [y/N] " y; [[ "$y" =~ ^[Yy]$ ]] || exit 0; "${SCRIPT_DIR}/scripts/uninstall-native.sh" all || true; action_uninstall_flatpak || true; rm -rf "$HOME/.var/app/$APP_ID" "$HOME/.config/Canva Linux" "$HOME/.cache/Canva Linux" "$HOME/.local/share/Canva Linux"; }
 
-action_bundle() {
-  "${BUNDLE_SCRIPT}"
-}
-
-action_validate() {
-  "${VALIDATE_SCRIPT}"
-}
-
-remove_flatpak_remote_if_exists() {
-  local scope="$1"
-  local remote="$2"
-
-  if ! flatpak remotes "${scope}" | tail -n +2 | awk '{print $1}' | grep -qx "${remote}"; then
-    return 0
-  fi
-
-  if [[ "${scope}" == "--system" ]]; then
-    sudo flatpak remote-delete --force --system "${remote}"
-  else
-    flatpak remote-delete --force --user "${remote}"
-  fi
-
-  echo "[ok] Removed ${scope#--} Flatpak remote: ${remote}"
-}
-
-action_uninstall() {
-  flatpak kill "${APP_ID}" 2>/dev/null || true
-
-  local removed=false
-
-  if flatpak --user info "${APP_ID}" >/dev/null 2>&1; then
-    flatpak uninstall --user -y "${APP_ID}"
-    echo "[ok] Uninstalled user Flatpak app: ${APP_ID}"
-    removed=true
-  fi
-
-  if flatpak --system info "${APP_ID}" >/dev/null 2>&1; then
-    sudo flatpak uninstall --system -y "${APP_ID}"
-    echo "[ok] Uninstalled system Flatpak app: ${APP_ID}"
-    removed=true
-  fi
-
-  if [[ "$removed" == false ]]; then
-    echo "[info] Local Flatpak app is not installed: ${APP_ID}"
-  fi
-
-  for remote in "${LOCAL_FLATPAK_REMOTES[@]}"; do
-    remove_flatpak_remote_if_exists --user "${remote}"
-    remove_flatpak_remote_if_exists --system "${remote}"
-  done
-}
-
-action_reset_user_data() {
-  local response
-  echo "This will delete Canva Linux user data, including login/session/cache."
-  read -r -p "Continue? [y/N] " response
-
-  if [[ "$response" != "y" && "$response" != "Y" ]]; then
-    echo "[info] Reset canceled."
-    return 0
-  fi
-
-  flatpak kill "${APP_ID}" 2>/dev/null || true
-  rm -rf "$HOME/.var/app/${APP_ID}"
-  echo "[ok] User data removed. Login state and OAuth/session cookies were deleted."
-}
-
-## Validation
-validate_action_compatibility() {
-  local uninstall_count="$1"
-  local action_count="$2"
-
-  if (( uninstall_count > 0 )) && (( action_count > 2 )); then
-    echo "[error] Incompatible action combination: --uninstall can only be combined with --reset-user-data" >&2
-    show_help
-    exit 1
-  fi
-
-  if (( uninstall_count > 0 )); then
-    for action in "${ACTIONS[@]}"; do
-      if [[ "$action" != "--uninstall" && "$action" != "--reset-user-data" ]]; then
-        echo "[error] Incompatible action combination: --uninstall can only be combined with --reset-user-data" >&2
-        show_help
-        exit 1
-      fi
-    done
-  fi
-}
-
-## Interactive mode
-run_interactive_mode() {
-  cat <<'MENU'
-1) Run dev build without installing
-2) Install locally
-3) Build Flatpak bundle
-4) Validate project
-5) Install locally + build bundle
-6) Reset user data
-7) Uninstall local app
-8) Uninstall local app + reset user data
-9) Help
-0) Exit
-MENU
-
-  local choice
-  read -r -p "Select an option: " choice
-
-  case "$choice" in
-    1) ACTIONS=("--run-dev") ;;
-    2) ACTIONS=("--install") ;;
-    3) ACTIONS=("--bundle") ;;
-    4) ACTIONS=("--validate") ;;
-    5) ACTIONS=("--install" "--bundle") ;;
-    6) ACTIONS=("--reset-user-data") ;;
-    7) ACTIONS=("--uninstall") ;;
-    8) ACTIONS=("--uninstall" "--reset-user-data") ;;
-    9)
-      show_help
-      exit 0
-      ;;
-    0) exit 0 ;;
-    *)
-      echo "[error] Invalid menu option: ${choice}" >&2
-      exit 1
-      ;;
-  esac
-}
-
-## Argument parsing
-ACTIONS=()
-declare -A SEEN_ACTIONS=()
-uninstall_count=0
-
-if [[ $# -eq 0 ]]; then
-  run_interactive_mode
-else
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --help|-h)
-        show_help
-        exit 0
-        ;;
-      --run-dev|--install|--bundle|--validate|--uninstall|--reset-user-data)
-        if [[ -n "${SEEN_ACTIONS[$1]:-}" ]]; then
-          echo "[error] Duplicate action: $1" >&2
-          show_help
-          exit 1
-        fi
-
-        SEEN_ACTIONS[$1]=1
-        ACTIONS+=("$1")
-
-        if [[ "$1" == "--uninstall" ]]; then
-          uninstall_count=$((uninstall_count + 1))
-        fi
-        shift
-        ;;
-      *)
-        echo "[error] Unknown option: $1" >&2
-        show_help
-        exit 1
-        ;;
-    esac
-  done
-fi
-
-validate_action_compatibility "$uninstall_count" "${#ACTIONS[@]}"
-
-## Execution
-for action in "${ACTIONS[@]}"; do
-  case "$action" in
-    --run-dev) action_run_dev ;;
-    --install) action_install ;;
-    --bundle) action_bundle ;;
-    --validate) action_validate ;;
-    --uninstall) action_uninstall ;;
-    --reset-user-data) action_reset_user_data ;;
-  esac
+if [[ $# -eq 0 ]]; then run_interactive_mode; fi
+for a in "$@"; do
+case "$a" in
+ --help|-h) show_help;;
+ --install-native) "${SCRIPT_DIR}/scripts/install-native.sh";;
+ --install-flatpak|--install) "${SCRIPT_DIR}/scripts/install-flatpak-local.sh";;
+ --bundle-flatpak|--bundle) "${SCRIPT_DIR}/scripts/build-flatpak-bundle.sh";;
+ --run-flatpak-dev|--run-dev) "${SCRIPT_DIR}/scripts/run-flatpak-dev.sh";;
+ --build-runtime) npm run build:runtime;;
+ --build-dir) "${SCRIPT_DIR}/scripts/build-electron-dir.sh";;
+ --validate) "${SCRIPT_DIR}/scripts/validate-project.sh";;
+ --doctor) "${SCRIPT_DIR}/scripts/doctor.sh";;
+ --clean) "${SCRIPT_DIR}/scripts/clean-artifacts.sh";;
+ --uninstall-native) "${SCRIPT_DIR}/scripts/uninstall-native.sh";;
+ --uninstall-flatpak) action_uninstall_flatpak;;
+ --uninstall) action_uninstall;;
+ --reset-user-data) rm -rf "$HOME/.var/app/$APP_ID";;
+ --purge) action_purge;;
+ --bundle-appimage|--bundle-deb|--bundle-rpm|--prepare-aur) echo "[planned] $a";;
+ *) echo "Unknown option: $a"; exit 1;;
+esac
 done
