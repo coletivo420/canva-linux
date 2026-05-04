@@ -162,7 +162,19 @@ Maintenance & Uninstall
 8) Uninstall detected installations and remove user data
 0) Back
 M
-if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; return; fi; case "$c" in 1) run_script "${ROOT_DIR}/scripts/clean-artifacts.sh";;2) if confirm_reset_user_data; then cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; else ui_info "Canceled."; fi;;3) detect_installations; print_detected_installations;;4) show_version_info;;5) action_uninstall;;6) run_script "${ROOT_DIR}/scripts/uninstall-native.sh";;7) action_uninstall_flatpak;;8) action_purge;;*) ;; esac; }
+if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
+case "$c" in
+  1) run_script "${ROOT_DIR}/scripts/clean-artifacts.sh" ;;
+  2) if confirm_reset_user_data; then cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; else ui_info "Canceled."; fi ;;
+  3) detect_installations; print_detected_installations ;;
+  4) show_version_info ;;
+  5) action_uninstall ;;
+  6) run_script "${ROOT_DIR}/scripts/uninstall-native.sh" ;;
+  7) action_uninstall_flatpak ;;
+  8) action_purge ;;
+  *) ;;
+esac
+}
 run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
 
 if [[ $# -eq 0 ]]; then run_interactive_mode; fi
