@@ -17,6 +17,7 @@
   "scripts": {
     "start": "electron .",
     "dist": "NODE_OPTIONS=--no-deprecation electron-builder --linux dir",
+    "dist:appimage": "npm run build:runtime && NODE_OPTIONS=--no-deprecation electron-builder --linux AppImage --publish=never",
     "lint": "eslint .",
     "test": "node --test \"test/**/*.test.js\"",
     "test:unit": "node --test test/window-open-policy.test.js",
@@ -55,6 +56,9 @@
       "category": "Graphics",
       "executableName": "canva-linux",
       "icon": "build-resources"
+    },
+    "appImage": {
+      "artifactName": "canva-linux-${version}-${arch}.AppImage"
     },
     "extraMetadata": {
       "main": ".build/electron/main/index.js"
