@@ -56,7 +56,7 @@ export function confirmDialog(screen: blessed.Widgets.Screen, options: ConfirmOp
       right: 2,
       height: 1,
       tags: true,
-      content: `{cyan-fg}[y/Enter]{/cyan-fg} ${options.confirmLabel ?? 'Confirm'}    {cyan-fg}[Esc/n]{/cyan-fg} ${options.cancelLabel ?? 'Cancel'}`,
+      content: `{${tuiTheme.colors.lightBlue}-fg}[y/Enter]{/${tuiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? 'Confirm'}    {${tuiTheme.colors.lightBlue}-fg}[Esc/n]{/${tuiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? 'Cancel'}`,
     });
 
     const close = (confirmed: boolean) => {
