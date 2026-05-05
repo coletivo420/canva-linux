@@ -1,7 +1,7 @@
 [
   {
     "id": "install-native-system",
-    "label": "Native Install \u2014 System Wide",
+    "label": "Native Install — System Wide",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -23,7 +23,7 @@
   },
   {
     "id": "install-native-user",
-    "label": "Native Install \u2014 Current User",
+    "label": "Native Install — Current User",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -41,7 +41,7 @@
   },
   {
     "id": "install-flatpak-system",
-    "label": "Flatpak Install \u2014 System Wide",
+    "label": "Flatpak Install — System Wide",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -64,7 +64,7 @@
   },
   {
     "id": "install-flatpak-user",
-    "label": "Flatpak Install \u2014 Current User",
+    "label": "Flatpak Install — Current User",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -163,7 +163,8 @@
     "cli": [
       "--build-runtime"
     ],
-    "longRunning": true
+    "longRunning": true,
+    "description": "Build the Electron runtime artifacts for local development workflows."
   },
   {
     "id": "build-dir",
@@ -178,7 +179,8 @@
     "cli": [
       "--build-dir"
     ],
-    "longRunning": true
+    "longRunning": true,
+    "description": "Build the Electron linux-unpacked directory for packaging steps."
   },
   {
     "id": "validate-project",
@@ -193,7 +195,8 @@
     "cli": [
       "--validate"
     ],
-    "longRunning": true
+    "longRunning": true,
+    "description": "Run the full project validation pipeline for code, docs, and packaging checks."
   },
   {
     "id": "validate-appimage",
@@ -207,7 +210,8 @@
     ],
     "cli": [
       "--validate-appimage"
-    ]
+    ],
+    "description": "Run AppImage artifact validation checks."
   },
   {
     "id": "validate-appimage-extract",
@@ -223,7 +227,8 @@
     "cli": [
       "--validate-appimage-extract"
     ],
-    "longRunning": true
+    "longRunning": true,
+    "description": "Run AppImage artifact validation including extraction checks."
   },
   {
     "id": "doctor",
@@ -237,7 +242,8 @@
     ],
     "cli": [
       "--doctor"
-    ]
+    ],
+    "description": "Check host tooling and environment prerequisites."
   },
   {
     "id": "clean",
@@ -251,7 +257,8 @@
     ],
     "cli": [
       "--clean"
-    ]
+    ],
+    "description": "Remove generated build and packaging artifacts."
   },
   {
     "id": "show-detected",
@@ -264,7 +271,8 @@
       "scripts/show-detected-installations.sh"
     ],
     "cli": [],
-    "hidden": true
+    "hidden": true,
+    "description": "Show detected installation variants and generated artifacts."
   },
   {
     "id": "version-info",
@@ -277,7 +285,8 @@
       "scripts/show-version-info.sh"
     ],
     "cli": [],
-    "hidden": true
+    "hidden": true,
+    "description": "Display project identity, version, and phase information."
   },
   {
     "id": "reset-user-data",
@@ -315,7 +324,7 @@
     "confirmationTitle": "Confirm Uninstall Native Install (System Wide)",
     "confirmationMessage": "This will uninstall the system-wide Native Install variant.",
     "id": "uninstall-native-system",
-    "label": "Uninstall Native Install \u2014 System Wide",
+    "label": "Uninstall Native Install — System Wide",
     "requiresRoot": true,
     "scope": "system",
     "env": {
@@ -337,7 +346,7 @@
     "confirmationTitle": "Confirm Uninstall Native Install (Current User)",
     "confirmationMessage": "This will uninstall the current-user Native Install variant.",
     "id": "uninstall-native-user",
-    "label": "Uninstall Native Install \u2014 Current User",
+    "label": "Uninstall Native Install — Current User",
     "requiresRoot": false,
     "scope": "user",
     "env": {
@@ -361,7 +370,7 @@
     "confirmationTitle": "Confirm Uninstall Flatpak Install (System Wide)",
     "confirmationMessage": "This will uninstall the system-wide Flatpak Install variant.",
     "id": "uninstall-flatpak-system",
-    "label": "Uninstall Flatpak Install \u2014 System Wide",
+    "label": "Uninstall Flatpak Install — System Wide",
     "requiresRoot": true,
     "scope": "system",
     "env": {
@@ -383,7 +392,7 @@
     "confirmationTitle": "Confirm Uninstall Flatpak Install (Current User)",
     "confirmationMessage": "This will uninstall the current-user Flatpak Install variant.",
     "id": "uninstall-flatpak-user",
-    "label": "Uninstall Flatpak Install \u2014 Current User",
+    "label": "Uninstall Flatpak Install — Current User",
     "requiresRoot": false,
     "scope": "user",
     "env": {
