@@ -3,6 +3,12 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+if ! command -v rg >/dev/null 2>&1; then
+  echo "[error] ripgrep (rg) is required by scripts/check-shell-ui-api.sh" >&2
+  echo "[error] Install ripgrep and rerun validation." >&2
+  exit 1
+fi
+
 matches=$(rg -n --glob '*.sh' '^\s*(warn|info|ok|err)\s+"' scripts canva-linux.sh || true)
 [[ -z "$matches" ]] && { echo "[ok] Shell UI helper API check passed"; exit 0; }
 
