@@ -139,7 +139,7 @@ export function loadActions(rootDir = findProjectRoot()): CanvaAction[] {
 
 function shellQuote(part: string) {
   if (part.length === 0) return "''";
-  if (/[^A-Za-z0-9_/:=+,.@-]/.test(part)) return `'${part.replace(/'/g, `'\\''`)}'`;
+  if (/[^A-Za-z0-9_/:=+,.@-]/.test(part)) return `'${part.replace(/'/g, "'\\''")}'`;
   return part;
 }
 
