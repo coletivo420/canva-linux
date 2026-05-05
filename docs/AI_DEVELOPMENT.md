@@ -6,6 +6,7 @@ This document defines project conventions for AI-assisted development and vibeco
 
 - Human-facing assistant responses should be written in Portuguese.
 - Source code, inline code comments, and repository documentation must stay in English.
+- AI-generated code and AI-generated comments must always be written in English, including newly added files and patch updates.
 - Keep technical wording precise and consistent with existing project terminology.
 
 ## Development workflow expectations

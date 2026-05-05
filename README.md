@@ -42,9 +42,7 @@ Supports scoped system/user install modes for Native and Flatpak, plus package a
 Includes doctor checks, validation pipeline, cleanup, uninstall and purge workflows.
 
 ## Documentation
-- [Requirements](docs/REQUIREMENTS.md)
-- [Install by Linux distribution](docs/INSTALL_BY_DISTRIBUTION.md)
-- [Installation](docs/INSTALLATION.md)
+- [Requirements / Install Instructions](docs/INSTALLATION.md#requirements--install-instructions)
 - [CLI Reference](docs/CLI.md)
 - [Features](docs/FEATURES.md)
 - [Debugging](docs/DEBUGGING.md)

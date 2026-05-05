@@ -9,11 +9,6 @@ DETECTED_FLATPAK_SYSTEM=false
 DETECTED_FLATPAK_USER=false
 DETECTED_APPIMAGE_ARTIFACTS=false
 
-DETECTED_NATIVE_SYSTEM_VERSION=""
-DETECTED_NATIVE_USER_VERSION=""
-DETECTED_FLATPAK_SYSTEM_VERSION=""
-DETECTED_FLATPAK_USER_VERSION=""
-DETECTED_APPIMAGE_VERSION=""
 
 detect_native_system_install(){ [[ -d /opt/canva-linux || -L /usr/local/bin/${APP_EXECUTABLE} || -f /usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME} ]]; }
 detect_native_user_install(){ [[ -d "${HOME}/.local/opt/canva-linux" || -L "${HOME}/.local/bin/${APP_EXECUTABLE}" || -f "${HOME}/.local/share/applications/${APP_NATIVE_DESKTOP_NAME}" ]]; }
@@ -40,11 +35,6 @@ detect_installations(){
   DETECTED_FLATPAK_USER_VERSION="$(detect_flatpak_user_version)"
   DETECTED_APPIMAGE_VERSION="$(detect_appimage_version)"
 
-DETECTED_NATIVE_SYSTEM_VERSION=""
-DETECTED_NATIVE_USER_VERSION=""
-DETECTED_FLATPAK_SYSTEM_VERSION=""
-DETECTED_FLATPAK_USER_VERSION=""
-DETECTED_APPIMAGE_VERSION=""
 }
 
 has_detected_installed_variants(){ [[ "$DETECTED_NATIVE_SYSTEM" == true || "$DETECTED_NATIVE_USER" == true || "$DETECTED_FLATPAK_SYSTEM" == true || "$DETECTED_FLATPAK_USER" == true ]]; }
