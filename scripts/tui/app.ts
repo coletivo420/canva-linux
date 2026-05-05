@@ -154,13 +154,12 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   function renderActionHelp(view: View, selectedIndex: number) {
     if (!['install', 'development', 'maintenance'].includes(view)) return;
     const selected = currentActions[selectedIndex] ?? null;
-    const group = view as 'install' | 'development' | 'maintenance';
-    const base = [`{${tuiTheme.colors.blue}-fg}${view[0].toUpperCase() + view.slice(1)} Actions{/${tuiTheme.colors.blue}-fg}`];
+    const base = [`{${tuiTheme.colors.helpTitle}-fg}${view[0].toUpperCase() + view.slice(1)} Actions{/${tuiTheme.colors.helpTitle}-fg}`];
     if (!selected) return content.setContent(base.join('\n'));
         const warningBlock = selected.warning
-      ? ['', `{${tuiTheme.colors.selectedActionTitle}-fg}Warning:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
+      ? ['', `{${tuiTheme.colors.infoItemTitle}-fg}Warning:{/${tuiTheme.colors.infoItemTitle}-fg}`, `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
       : [];
-    content.setContent([...base, '', `{${tuiTheme.colors.selectedActionTitle}-fg}Selected action:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.selectedActionLabel}-fg}${selected.label}{/${tuiTheme.colors.selectedActionLabel}-fg}`, '', `{${tuiTheme.colors.selectedActionTitle}-fg}Description:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.selectedActionLabel}-fg}${selected.description ?? 'No description available.'}{/${tuiTheme.colors.selectedActionLabel}-fg}`, ...warningBlock].join('\n'));
+    content.setContent([...base, '', `{${tuiTheme.colors.infoItemTitle}-fg}Selected action:{/${tuiTheme.colors.infoItemTitle}-fg}`, `  {${tuiTheme.colors.infoText}-fg}${selected.label}{/${tuiTheme.colors.infoText}-fg}`, '', `{${tuiTheme.colors.infoItemTitle}-fg}Description:{/${tuiTheme.colors.infoItemTitle}-fg}`, `  {${tuiTheme.colors.descriptionText}-fg}${selected.description ?? 'No description available.'}{/${tuiTheme.colors.descriptionText}-fg}`, ...warningBlock].join('\n'));
   }
 
 
@@ -180,7 +179,6 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     currentView = view;
     clearProgressOnNavigation();
     if (view === 'main') {
-      const status = overviewStatus;
       if (!overviewStatus) refreshDetectedInstallations("enter-overview");
       renderDiagnosticsBox();
       currentActions = [];
@@ -198,7 +196,32 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       currentActions = [];
       menu.setItems(['Back to Main']);
       content.setLabel('Help');
-      content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Confirm exit\n  q          Quit\n  F4         Switch to Shell Tool\n\nPanels:\n  Alt+↑/↓ or Shift+PgUp/PgDn scroll action panel\n\nLogs:\n  F5         Copy logs to clipboard\n  PageUp/PageDown/Home/End\n\nClipboard order:\n  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel');
+      content.setContent([
+        `{${tuiTheme.colors.helpTitle}-fg}Help{/${tuiTheme.colors.helpTitle}-fg}`,
+        '',
+        `{${tuiTheme.colors.helpSectionTitle}-fg}Navigation{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  Up/Down        Move selection{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  Enter          Select action{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  Esc            Confirm exit{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  q              Quit{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  F4             Switch to Shell Tool{/${tuiTheme.colors.descriptionText}-fg}`,
+        '',
+        `{${tuiTheme.colors.helpSectionTitle}-fg}Panels{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  Alt+Up/Down or Shift+PgUp/PgDn scroll action panel{/${tuiTheme.colors.descriptionText}-fg}`,
+        '',
+        `{${tuiTheme.colors.helpSectionTitle}-fg}Logs{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${tuiTheme.colors.descriptionText}-fg}`,
+        '',
+        `{${tuiTheme.colors.helpSectionTitle}-fg}Status colors{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+        `  {${tuiTheme.colors.statusDetected}-fg}Detected / Completed{/${tuiTheme.colors.statusDetected}-fg}`,
+        `  {${tuiTheme.colors.statusNotDetected}-fg}Not detected{/${tuiTheme.colors.statusNotDetected}-fg}`,
+        `  {${tuiTheme.colors.warning}-fg}Running{/${tuiTheme.colors.warning}-fg}`,
+        `  {${tuiTheme.colors.error}-fg}Error / Canceled{/${tuiTheme.colors.error}-fg}`,
+        '',
+        `{${tuiTheme.colors.helpSectionTitle}-fg}Clipboard order{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+        `{${tuiTheme.colors.descriptionText}-fg}  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel{/${tuiTheme.colors.descriptionText}-fg}`,
+      ].join('\n'));
       screen.render();
       return;
     }
@@ -206,26 +229,6 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     currentActions = getActionsByGroup(group, opts.rootDir);
     menu.setItems(currentActions.map((a) => a.label));
     content.setLabel(view[0].toUpperCase() + view.slice(1));
-    const infoByView: Record<'install' | 'development' | 'maintenance', string[]> = {
-      install: [
-        'Install actions',
-        '- Native Install: installs outside Flatpak sandbox (system/user).',
-        '- Flatpak Install: local sandboxed installation (system/user).',
-        '- Review action description before running.',
-      ],
-      development: [
-        'Development actions',
-        '- Build runtime and linux-unpacked artifacts.',
-        '- Generate Flatpak/AppImage packages.',
-        '- Run validations and doctor diagnostics.',
-      ],
-      maintenance: [
-        'Maintenance actions',
-        '- Clean build artifacts and reset user data.',
-        '- Uninstall Native/Flatpak variants.',
-        '- Purge removes installs and user data (dangerous).',
-      ],
-    };
     renderActionHelp(view, menu.selected);
     screen.render();
   }
@@ -287,7 +290,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       refreshDetectedInstallations(`action:${action.id}`);
       renderActionHelp(currentView, menu.selected);
       screen.render();
-    }, action.env ?? {});
+    }, { cwd: opts.rootDir, env: action.env ?? {} });
   });
 
   const confirmExit = async () => {

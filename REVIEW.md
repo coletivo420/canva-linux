@@ -1,188 +1,41 @@
-./.codex
-./.github/workflows/jekyll-gh-pages.yml
-./.github/workflows/static.yml
-./.gitignore
-./CHANGELOG.md
-./CLAUDE.md
-./LICENSE
-./README.md
-./REVIEW.md
-./assets/screenshots/.gitkeep
-./assets/screenshots/MANIFEST.md
-./assets/screenshots/README.md
-./assets/screenshots/eyedropper.png
-./assets/screenshots/home.png
-./assets/screenshots/tabs.png
-./assets/screenshots/upload.png
-./assets/screenshots/windowpopup.png
-./build-resources/icon.png
-./canva-linux.sh
-./data/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png
-./data/icons/hicolor/16x16/apps/io.github.coletivo420.canva-linux.png
-./data/icons/hicolor/22x22/apps/io.github.coletivo420.canva-linux.png
-./data/icons/hicolor/24x24/apps/io.github.coletivo420.canva-linux.png
-./data/icons/hicolor/256x256/apps/io.github.coletivo420.canva-linux.png
-./data/icons/hicolor/32x32/apps/io.github.coletivo420.canva-linux.png
-./data/icons/hicolor/48x48/apps/io.github.coletivo420.canva-linux.png
-./data/icons/hicolor/512x512/apps/io.github.coletivo420.canva-linux.png
-./data/icons/hicolor/64x64/apps/io.github.coletivo420.canva-linux.png
-./data/io.github.coletivo420.canva-linux.desktop
-./data/io.github.coletivo420.canva-linux.metainfo.xml
-./docs/.nojekyll
-./docs/AI_DEVELOPMENT.md
-./docs/AI_GUARDRAILS.md
-./docs/APPIMAGE_FUSE.md
-./docs/CANVA_API.md
-./docs/CANVA_LINUX_EYEDROPPER.md
-./docs/CLI.md
-./docs/DEBUGGING.md
-./docs/DEVELOPMENT.md
-./docs/FEATURES.md
-./docs/FLATHUB.md
-./docs/FLATHUB_CHECKLIST.md
-./docs/FLATHUB_SOURCE.md
-./docs/FLATHUB_SUBMISSION_NOTES.md
-./docs/FLATHUB_SUBMISSION_PATH.md
-./docs/FLATPAK_PERMISSIONS.md
-./docs/GPU_ACCELERATION.md
-./docs/INSTALLATION.md
-./docs/LOGGING_CONTRACT.md
-./docs/MANUAL_VALIDATION.md
-./docs/PRIVACY.md
-./docs/README.md
-./docs/RELEASE_CHECKLIST.md
-./docs/ROADMAP_0.1.5.md
-./docs/ROADMAP_0.1.6.md
-./docs/SCREENSHOTS.md
-./docs/TECHNICAL.md
-./docs/TROUBLESHOOTING.md
-./docs/TYPESCRIPT.md
-./docs/TYPESCRIPT_CONVERSION_REVIEW.md
-./docs/VALIDATION.md
-./docs/index.html
-./docs/pages-refresh.txt
-./electron/assets/canva-icon.png
-./electron/main/eyedropper-bridge.ts
-./electron/main/gpu-diagnostics.ts
-./electron/main/index.ts
-./electron/main/ipc.ts
-./electron/main/lifecycle.ts
-./electron/main/logging-helpers.ts
-./electron/main/logging-normalize.ts
-./electron/main/logging.ts
-./electron/main/oauth.ts
-./electron/main/runtime.ts
-./electron/main/shell.ts
-./electron/main/tab-controller.ts
-./electron/main/tab-events.ts
-./electron/main/tabs.ts
-./electron/main/window-open-policy.ts
-./electron/preload/browser-capture-diagnostics.ts
-./electron/preload/canva.ts
-./electron/preload/cl-eyedropper/cl-eyedropper.ts
-./electron/preload/cl-eyedropper/index.ts
-./electron/preload/cl-eyedropper/types.ts
-./electron/preload/custom-eyedropper-flow.ts
-./electron/preload/debug.ts
-./electron/preload/eyedropper-routing-diagnostics.ts
-./electron/preload/native-eyedropper-wrapper.ts
-./electron/preload/toolbar.js
-./electron/preload/upload-diagnostics.ts
-./electron/shared/debug.ts
-./electron/shared/navigation.ts
-./electron/ui/toolbar.html
-./eslint.config.js
-./io.github.coletivo420.canva-linux.yml
-./package-lock.json
-./package.json
-./packaging/flathub/README.md
-./packaging/flathub/generated-sources.json
-./packaging/flathub/manifest.yml
-./packaging/flathub/scripts/generate-npm-sources.js
-./packaging/flathub/scripts/generate-npm-sources.sh
-./playwright.config.js
-./run.sh
-./scripts/action-registry.js
-./scripts/action-runner.js
-./scripts/actions.json
-./scripts/app-identity-common.sh
-./scripts/build-appimage.sh
-./scripts/build-electron-dir.sh
-./scripts/build-flatpak-bundle.sh
-./scripts/build-preload-bundle.js
-./scripts/build-runtime.js
-./scripts/build-runtime.sh
-./scripts/check-ai-guardrails.js
-./scripts/check-dependency-policy.js
-./scripts/check-doc-links.js
-./scripts/check-flatpak-scope-policy.sh
-./scripts/check-runtime-build.js
-./scripts/clean-artifacts.sh
-./scripts/clean-runtime-build.js
-./scripts/copy-runtime-assets.js
-./scripts/desktop-integration-common.sh
-./scripts/doctor.sh
-./scripts/electron-builder-before-build.js
-./scripts/ensure-npm-dependencies.sh
-./scripts/fix-build-permissions.sh
-./scripts/flatpak-build-common.sh
-./scripts/install-detection-common.sh
-./scripts/install-flatpak-local.sh
-./scripts/install-layout-common.sh
-./scripts/install-native.sh
-./scripts/native-install-common.sh
-./scripts/overview-status.js
-./scripts/package-guidance-common.sh
-./scripts/preflight-common.sh
-./scripts/prepare-flathub-submission.sh
-./scripts/project-ui.json
-./scripts/purge-installations.sh
-./scripts/reset-user-data.sh
-./scripts/run-tui.js
-./scripts/runtime-guidance-common.sh
-./scripts/show-detected-installations.sh
-./scripts/show-version-info.sh
-./scripts/theme.json
-./scripts/tui/action-registry.ts
-./scripts/tui/actions.ts
-./scripts/tui/app.ts
-./scripts/tui/clipboard.ts
-./scripts/tui/index.ts
-./scripts/tui/logo.ts
-./scripts/tui/modal.ts
-./scripts/tui/process-runner.ts
-./scripts/tui/theme.ts
-./scripts/ui-common.sh
-./scripts/uninstall-detected.sh
-./scripts/uninstall-flatpak.sh
-./scripts/uninstall-native.sh
-./scripts/user-data-common.sh
-./scripts/validate-actions.js
-./scripts/validate-appimage.sh
-./scripts/validate-flathub-submission.sh
-./scripts/validate-flatpak.sh
-./scripts/validate-project.sh
-./scripts/xdg-common.sh
-./test/cl-eyedropper-canvas.test.js
-./test/cl-eyedropper-contracts.test.js
-./test/cl-eyedropper-runtime.test.js
-./test/debug-levels.test.js
-./test/electron-smoke.spec.js
-./test/eyedropper-bridge.test.js
-./test/eyedropper-preload.test.js
-./test/gpu-diagnostics.test.js
-./test/helpers/runtime-module.js
-./test/logging-helpers.test.js
-./test/logging-normalize.test.js
-./test/navigation.test.js
-./test/oauth-helpers.test.js
-./test/preload-debug.test.js
-./test/runtime.test.js
-./test/tab-controller-wiring.test.js
-./test/tabs-state.test.js
-./test/upload-diagnostics.test.js
-./test/window-open-policy.test.js
-./tsconfig.build.json
-./tsconfig.json
-./tsconfig.strict.json
-./types/blessed.d.ts
+# Review Checklist
+
+## Logging review checklist
+
+Reject or request changes if a PR:
+
+- uses `JSON.stringify(args)` without safe wrapping
+- serializes arbitrary logger arguments as a whole array
+- removes `normalizeLogArg`
+- removes `normalizeArgs`
+- removes circular-object handling
+- removes BigInt handling
+- allows logging to throw from the main process
+- reintroduces `CANVA_DEBUG=gpu` or other module-specific public debug modes
+- creates a second log file without explicit request
+
+## Changelog-backed regression review
+
+Request changes if a PR:
+
+- removes behavior documented in `CHANGELOG.md`;
+- weakens behavior documented in `CHANGELOG.md`;
+- renames public commands, environment variables, scripts, or files documented in `CHANGELOG.md` without migration notes;
+- removes tests for behavior documented in `CHANGELOG.md`;
+- removes documentation for behavior documented in `CHANGELOG.md`;
+- describes a behavior as obsolete only because it looks verbose or complex.
+
+Accept removal only when the user or maintainer explicitly requested it and the PR updates `CHANGELOG.md`.
+
+## CL-EyeDropper review checklist
+
+Request changes if a PR:
+
+- bypasses the bundled CL-EyeDropper snapshot canvas flow;
+- replaces typed `EyeDropperOpenOptions` signal handling with `any` casts;
+- removes cleanup of the snapshot host, CL-EyeDropper UI, or Escape/abort listeners;
+- removes regression tests for snapshot picking and cleanup.
+
+## Repository inventory
+
+The generated file inventory belongs in `docs/REPOSITORY_INVENTORY.md`. Do not replace this checklist with generated inventory output.

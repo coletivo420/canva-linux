@@ -44,9 +44,7 @@ run_step "npm run docs:check-ai" npm run docs:check-ai
 run_step "npm run deps:check-policy" npm run deps:check-policy
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
 run_step "bash scripts/check-shell-ui-api.sh" bash scripts/check-shell-ui-api.sh
-run_step "node scripts/check-shell-action-ids.js" node scripts/check-shell-action-ids.js
-run_step "node scripts/check-version-consistency.js" node scripts/check-version-consistency.js
-run_step "node scripts/check-detection-contract.js" node scripts/check-detection-contract.js
+run_step "npm run check:scripts-core" npm run check:scripts-core
 run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check
 

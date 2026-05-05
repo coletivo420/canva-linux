@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.4.11-dev.53] - 2026-05-05
+
+### Added
+- Added a typed `scripts/core` action and detection core with compatibility wrappers for existing JS entrypoints.
+- Added scripts-core validation for action registry, detection JSON, version consistency, review checklist preservation, and shell action IDs.
+- Added `docs/REPOSITORY_INVENTORY.md` so generated inventories no longer replace `REVIEW.md`.
+- Added CL-EyeDropper regression coverage for snapshot canvas picking, cleanup, and typed `EyeDropperOpenOptions`.
+
+### Changed
+- Updated technical version and phase identity to `0.1.4-dev.11.53` / `0.1.4.11-dev.53`.
+- Changed the TUI action registry to use the shared TypeScript action contract.
+- Changed TUI process execution to pass an explicit root cwd and typed action environment.
+
+### Fixed
+- Fixed `scripts/overview-status.js` so it always emits valid JSON to stdout and keeps detector warnings on stderr.
+- Fixed shell detection formatting to avoid fragile conditional echo chains and preserve `detected version unknown`.
+- Fixed Flatpak version detection to prefer installed marker files before falling back to `flatpak info --show-version`.
+- Fixed Flatpak scope validation to stop requiring the removed `scripts/run-flatpak-dev.sh` workflow script.
+- Fixed the custom CL-EyeDropper preload flow typing so `wrapOpenCall()` uses the real `EyeDropperOpenOptions` contract without `any` bypasses.
+- Restored the `REVIEW.md` checklist and added guardrails to prevent replacing it with generated inventory.
+
 ## [0.1.4.11-dev.52] - 2026-05-05
 
 ### Fixed

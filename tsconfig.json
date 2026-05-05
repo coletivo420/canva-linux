@@ -19,6 +19,7 @@
     "electron/**/*.js",
     "electron/**/*.ts",
     "scripts/**/*.js",
+    "scripts/**/*.ts",
     "test/**/*.js",
     "playwright.config.js"
   ],
