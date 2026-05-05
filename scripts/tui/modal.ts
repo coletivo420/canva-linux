@@ -87,3 +87,22 @@ export async function messageDialog(screen: blessed.Widgets.Screen, title: strin
     cancelLabel: 'Close',
   });
 }
+
+
+export function inputDialog(screen: blessed.Widgets.Screen, title: string, prompt: string): Promise<string | null> {
+  return new Promise((resolve) => {
+    const previousFocus = screen.focused;
+    const { overlay, modal } = createModalShell(screen, title, false);
+    const label = blessed.box({ parent: modal, top: 1, left: 2, right: 2, height: 2, content: prompt });
+    const input = blessed.textbox({ parent: modal, top: 4, left: 2, right: 2, height: 3, border: 'line', inputOnFocus: true, censor: true });
+    const footer = blessed.box({ parent: modal, bottom: 1, left: 2, right: 2, height: 1, tags: true, content: `{${tuiTheme.colors.lightBlue}-fg}[Enter]{/${tuiTheme.colors.lightBlue}-fg} Submit  {${tuiTheme.colors.lightBlue}-fg}[Esc]{/${tuiTheme.colors.lightBlue}-fg} Cancel` });
+    const close = (value: string | null) => { label.destroy(); input.destroy(); footer.destroy(); modal.destroy(); overlay.destroy(); if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus(); screen.render(); resolve(value); };
+    overlay.key(['escape'], () => close(null));
+    input.key(['enter'], () => input.submit());
+    input.on('submit', (value) => close(String(value ?? '')));
+    overlay.focus();
+    input.focus();
+    input.readInput();
+    screen.render();
+  });
+}
