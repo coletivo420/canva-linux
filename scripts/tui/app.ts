@@ -31,6 +31,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let currentAction: TuiAction | null = null;
   let currentChild: ChildProcess | null = null;
   let renderScheduled = false;
+  let modalActive = false;
   type LogSource = 'stdout' | 'stderr' | 'system';
   const logBuffers: Record<LogSource, string> = { stdout: '', stderr: '', system: '' };
 
@@ -71,15 +72,20 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   }
 
   async function requestCancelCurrentProcess(reason = 'Cancel running action') {
-    if (!currentChild || !running) return;
-    const confirmed = await confirmDialog(screen, { title: reason, message: `Cancel "${currentAction?.label ?? 'current action'}"?\n\nThis will send SIGINT to the running process.`, dangerous: true, confirmLabel: 'Cancel action', cancelLabel: 'Keep running' });
-    if (!confirmed) return;
-    processState = 'cancel-requested';
-    appendLogText('[warn] Cancellation requested. Sending SIGINT...\n', 'system');
-    updateActionStatus(currentAction!, processState);
-    currentChild.kill('SIGINT');
-    setTimeout(() => { if (running && currentChild) { appendLogText('[warn] Process did not exit after SIGINT. Sending SIGTERM...\n', 'system'); currentChild.kill('SIGTERM'); } }, 5000);
-    scheduleRender();
+    if (!currentChild || !running || modalActive) return;
+    modalActive = true;
+    try {
+      const confirmed = await confirmDialog(screen, { title: reason, message: `Cancel "${currentAction?.label ?? 'current action'}"?\n\nThis will send SIGINT to the running process.`, dangerous: true, confirmLabel: 'Cancel action', cancelLabel: 'Keep running' });
+      if (!confirmed) return;
+      processState = 'cancel-requested';
+      appendLogText('[warn] Cancellation requested. Sending SIGINT...\n', 'system');
+      if (currentAction) updateActionStatus(currentAction, processState);
+      currentChild.kill('SIGINT');
+      setTimeout(() => { if (running && currentChild) { appendLogText('[warn] Process did not exit after SIGINT. Sending SIGTERM...\n', 'system'); currentChild.kill('SIGTERM'); } }, 5000);
+      scheduleRender();
+    } finally {
+      modalActive = false;
+    }
   }
 
   async function runTuiAction(action: TuiAction) {
@@ -87,8 +93,14 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     if (!action.command) return;
     if (running) { appendLogText('[warn] Another action is already running.\n', 'system'); return; }
     if (action.dangerous) {
-      const confirmed = await confirmDialog(screen, { title: action.confirmationTitle ?? 'Confirm destructive action', message: action.confirmationMessage ?? action.description ?? 'This action is destructive. Continue?', dangerous: true, confirmLabel: 'Yes, continue', cancelLabel: 'Cancel' });
-      if (!confirmed) { appendLogText('[info] Action canceled by user.\n', 'system'); return; }
+      if (modalActive) return;
+      modalActive = true;
+      try {
+        const confirmed = await confirmDialog(screen, { title: action.confirmationTitle ?? 'Confirm destructive action', message: action.confirmationMessage ?? action.description ?? 'This action is destructive. Continue?', dangerous: true, confirmLabel: 'Yes, continue', cancelLabel: 'Cancel' });
+        if (!confirmed) { appendLogText('[info] Action canceled by user.\n', 'system'); return; }
+      } finally {
+        modalActive = false;
+      }
     }
 
     running = true; processState = 'running'; currentAction = action;
