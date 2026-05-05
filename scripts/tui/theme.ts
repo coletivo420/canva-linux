@@ -4,7 +4,7 @@ type BlessedColor = string;
 const supportsTrueColor = process.env.COLORTERM === 'truecolor' || process.env.COLORTERM === '24bit';
 const colors = {
   lightBlue: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.primary,
-  blue: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,
+  blue: supportsTrueColor ? themeConfig.palette.canvaBlue : themeConfig.ansiFallback.secondary,
   purple: supportsTrueColor ? themeConfig.palette.canvaPurple : themeConfig.ansiFallback.accent,
   success: supportsTrueColor ? themeConfig.palette.success : themeConfig.ansiFallback.success,
   warning: supportsTrueColor ? themeConfig.palette.warning : themeConfig.ansiFallback.warning,
@@ -18,7 +18,7 @@ const colors = {
   footerFg: 'white',
   statusDetected: supportsTrueColor ? themeConfig.palette.success : themeConfig.ansiFallback.success,
   statusNotDetected: supportsTrueColor ? themeConfig.palette.canvaPurple : themeConfig.ansiFallback.accent,
-  selectedActionTitle: supportsTrueColor ? themeConfig.palette.canvaPurple : themeConfig.ansiFallback.accent,
+  selectedActionTitle: supportsTrueColor ? themeConfig.palette.success : themeConfig.ansiFallback.success,
   selectedActionLabel: supportsTrueColor ? themeConfig.palette.canvaPurple : themeConfig.ansiFallback.accent,
   logo: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,
   version: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,

@@ -97,6 +97,22 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     });
   }
 
+  function getInstallDetectionKey(actionId: string): keyof NonNullable<any['installations']> | null {
+    switch (actionId) {
+      case 'install-native-system': return 'nativeSystem';
+      case 'install-native-user': return 'nativeUser';
+      case 'install-flatpak-system': return 'flatpakSystem';
+      case 'install-flatpak-user': return 'flatpakUser';
+      default: return null;
+    }
+  }
+
+  function detectInstallationStatusNow(): any | null {
+    const result = spawnSync('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, encoding: 'utf8' });
+    if ((result.status ?? 1) !== 0 || !result.stdout?.trim()) return null;
+    try { return JSON.parse(result.stdout.trim()); } catch { return null; }
+  }
+
   function appendLogLine(line: string, source: LogSource) {
     writeSession(`[${source}] ${line}`);
     logHistory.push(line);
@@ -138,12 +154,12 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     if (!['install', 'development', 'maintenance'].includes(view)) return;
     const selected = currentActions[selectedIndex] ?? null;
     const group = view as 'install' | 'development' | 'maintenance';
-    const base = [`${view[0].toUpperCase() + view.slice(1)} actions`];
+    const base = [`{${tuiTheme.colors.blue}-fg}${view[0].toUpperCase() + view.slice(1)} Actions{/${tuiTheme.colors.blue}-fg}`];
     if (!selected) return content.setContent(base.join('\n'));
         const warningBlock = selected.warning
-      ? ['', 'Warning:', `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
+      ? ['', `{${tuiTheme.colors.selectedActionTitle}-fg}Warning:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
       : [];
-    content.setContent([...base, '', `{${tuiTheme.colors.selectedActionTitle}-fg}Selected action:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.selectedActionLabel}-fg}${selected.label}{/${tuiTheme.colors.selectedActionLabel}-fg}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, ...warningBlock].join('\n'));
+    content.setContent([...base, '', `{${tuiTheme.colors.selectedActionTitle}-fg}Selected action:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.selectedActionLabel}-fg}${selected.label}{/${tuiTheme.colors.selectedActionLabel}-fg}`, '', `{${tuiTheme.colors.selectedActionTitle}-fg}Description:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.selectedActionLabel}-fg}${selected.description ?? 'No description available.'}{/${tuiTheme.colors.selectedActionLabel}-fg}`, ...warningBlock].join('\n'));
   }
 
 
@@ -253,8 +269,18 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     currentChild = runAction(action.command, action.args ?? [], (txt, src) => appendLogText(txt, src), ({ code, signal }) => {
       running = false;
       currentChild = null;
-      if (code === 0) setProgressSuccess('Completed');
-      else if (signal === 'SIGINT') setProgressCanceled();
+      const installAction = action.id.startsWith('install-');
+      let detectedNow = false;
+      if (installAction) {
+        const detectionKey = getInstallDetectionKey(action.id);
+        if (detectionKey) {
+          const latestStatus = detectInstallationStatusNow();
+          if (latestStatus) overviewStatus = latestStatus;
+          detectedNow = Boolean(latestStatus?.installations?.[detectionKey]);
+        }
+      }
+      if (signal === 'SIGINT') setProgressCanceled();
+      else if (code === 0 || (installAction && detectedNow)) setProgressSuccess('Completed');
       else setProgressError(signal ?? `exit code ${code ?? 'unknown'}`);
       appendLogText(`[info] Action finished (${signal ?? code ?? 'unknown'}).\n`, 'system');
       refreshDetectedInstallations(`action:${action.id}`);

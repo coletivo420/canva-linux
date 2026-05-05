@@ -1,9 +1,12 @@
 # AI Guardrails
 
+- All source code comments, README, docs, changelog, and AI maintenance instructions must be written in English.
 - README is the public entry point; long command references belong in `docs/CLI.md`.
 - Every behavior change must update `CHANGELOG.md`.
 - TUI/Shell/CLI actions must be sourced from `scripts/actions.json`.
 - Do not duplicate action logic in TUI/shell code.
+- Do not ignore `action.env` from `scripts/actions.json`.
+- Any `system`/`user` scope action must behave the same in TUI, shell, and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
 - System-wide actions must declare `requiresRoot`.
@@ -14,19 +17,20 @@
 - Maintenance must keep installation detection visible at the top.
 - Active docs must match current version/phase and validation flow.
 
+## Mandatory color semantics
 
-## TUI UX Guardrails (dev.49)
-- Do not render internal action metadata (`risk`, `longRunning`, `command`, `notes`) in the action information panel.
-- Keep installation detection in a dedicated fixed box below the left menu across all primary views.
-- Refresh detected installations after any state-changing maintenance or installation action.
-- Keep completed progress result visible until the user navigates; clear only on navigation when idle.
-- When no AppImage artifact exists, show `not detected` (never `loading...`).
+- detected/completed = green
+- in progress = yellow
+- error/canceled = red
+- not detected = purple
+- selected action value = purple
+- information box main titles = dark blue
+- information item titles = green
+- description text = purple
 
-- `detected` must be green in TUI and shell status outputs.
-- `not detected` must be purple in TUI and shell status outputs.
-- `Selected action` title and selected label must use purple emphasis in TUI.
-- README must only keep clone/cd/./canva-linux.sh commands on the landing page.
-- System-wide uninstall actions must use TUI root-auth popup and declare `requiresRoot: true`.
-- Session log must reset on each new TUI session start.
+Additional rules:
+- Do not color the entire `Selected action` block purple; only the selected action value is purple.
 - Detection refresh must not clear/override progress results.
-- Detection should render installed version when available.
+- Progress refresh must not convert a completed action into an error.
+- Installed-version detection must be updated whenever install layout changes.
+- Docs must reflect the current phase only; historical details belong in `CHANGELOG.md`.

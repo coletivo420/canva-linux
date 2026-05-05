@@ -13,7 +13,7 @@ ui_init() {
   if supports_color; then
     BOLD=$'\033[1m'; DIM=$'\033[2m'; RESET=$'\033[0m'
     RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; BLUE=$'\033[34m'; MAGENTA=$'\033[35m'; CYAN=$'\033[36m'
-    UI_PRIMARY="${BLUE}"; UI_SECONDARY="${CYAN}"; UI_ACCENT="${MAGENTA}"; UI_SUCCESS="${BLUE}"; UI_WARNING="${YELLOW}"; UI_ERROR="${RED}"
+    UI_PRIMARY="${BLUE}"; UI_SECONDARY="${CYAN}"; UI_ACCENT="${MAGENTA}"; UI_SUCCESS="${GREEN}"; UI_WARNING="${YELLOW}"; UI_ERROR="${RED}"
     UI_DIVIDER_CHAR='━'
   fi
 }
@@ -21,7 +21,7 @@ ui_init() {
 ui_divider(){ local line; printf -v line "%*s" 48 ""; printf '%s\n' "${line// /${UI_DIVIDER_CHAR}}"; }
 ui_title(){ ui_divider; printf '%s%s%s\n' "${BOLD}" "$1" "${RESET}"; [[ $# -gt 1 ]] && printf '%s%s%s\n' "${DIM}" "$2" "${RESET}"; ui_divider; }
 ui_section(){ printf '\n%s%s%s\n' "${BOLD}${UI_PRIMARY}" "$1" "${RESET}"; }
-ui_subsection(){ printf '%s%s%s\n' "${BOLD}${UI_ACCENT}" "$1" "${RESET}"; }
+ui_subsection(){ printf '%s%s%s\n' "${BOLD}${UI_SUCCESS}" "$1" "${RESET}"; }
 ui_info(){ printf '%s[info]%s %s\n' "${UI_SECONDARY}" "${RESET}" "$*"; }
 ui_ok(){ printf '%s[ok]%s %s\n' "${UI_SUCCESS}" "${RESET}" "$*"; }
 ui_warn(){ printf '%s[warn]%s %s\n' "${UI_WARNING}" "${RESET}" "$*"; }
@@ -50,6 +50,6 @@ ui_logo(){
 LOGO
   printf '%s' "${RESET}"
 }
-ui_version_line(){ local version="$1" phase="$2"; printf '%sVersion:%s %s%s%s\n' "${DIM}" "${RESET}" "${BOLD}${UI_SUCCESS}" "${version}" "${RESET}"; printf '%sPhase:%s   %s%s%s\n' "${DIM}" "${RESET}" "${BOLD}${UI_WARNING}" "${phase}" "${RESET}"; }
+ui_version_line(){ local version="$1" phase="$2"; printf '%sVersion:%s %s%s%s\n' "${DIM}" "${RESET}" "${BOLD}${UI_SUCCESS}" "${version}" "${RESET}"; printf '%sPhase:%s   %s%s%s\n' "${DIM}" "${RESET}" "${BOLD}${UI_ACCENT}" "${phase}" "${RESET}"; }
 
 ui_die(){ ui_error "$*"; exit 1; }
