@@ -75,7 +75,7 @@ print_detected_installations_compact(){
   fmt_status(){
     local detected="$1" version="$2"
     if [[ "$detected" == true ]]; then
-      local ver="version unknown"; [[ -n "${version}" ]] && ver="v${version}"
+      local ver="version unknown"; [[ -n "${version}" ]] && ver="v${version#v}"
       printf '%sdetected%s      %s' "${color_green}" "${color_reset}" "${ver}"
     else
       printf '%snot detected%s' "${color_purple}" "${color_reset}"
