@@ -26,7 +26,7 @@ detect_native_system_version(){ read_version_file "/opt/canva-linux/CANVA_LINUX_
 detect_native_user_version(){ read_version_file "${HOME}/.local/opt/canva-linux/CANVA_LINUX_VERSION"; }
 detect_flatpak_system_version(){ command -v flatpak >/dev/null 2>&1 || return 0; flatpak --system info "${APP_ID}" --show-version 2>/dev/null || true; }
 detect_flatpak_user_version(){ command -v flatpak >/dev/null 2>&1 || return 0; flatpak --user info "${APP_ID}" --show-version 2>/dev/null || true; }
-detect_appimage_version(){ local file; file=$(find dist -maxdepth 1 -type f -name '*.AppImage' | sort | tail -n1 || true); [[ -n "$file" ]] || return 0; basename "$file" | sed -E 's/.*(v?[0-9]+\.[0-9]+\.[0-9]+([-a-zA-Z0-9\.]*)?).*//'; }
+detect_appimage_version(){ local file; file=$(find dist -maxdepth 1 -type f -name '*.AppImage' | sort | tail -n1 || true); [[ -n "$file" ]] || return 0; basename "$file" | sed -E 's/.*(v?[0-9]+\.[0-9]+\.[0-9]+([-a-zA-Z0-9\.]*)?).*/\1/'; }
 
 detect_installations(){
   detect_native_system_install && DETECTED_NATIVE_SYSTEM=true || DETECTED_NATIVE_SYSTEM=false
