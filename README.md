@@ -2,7 +2,7 @@
 
 A community-maintained open-source desktop wrapper for use with Canva.
 
-Current release line: **0.1.4.11 (Alpha)** / phase **0.1.4.11-dev.46**.
+Current release line: **0.1.4.11 (Alpha)** / phase **0.1.4.11-dev.49**.
 
 ## Quick Start
 

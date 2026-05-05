@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.4.11-dev.49] - 2026-05-05
+
+### Changed
+- Updated project technical version to `0.1.4-dev.11.49` and phase identity to `0.1.4.11-dev.49`.
+- Reworked TUI layout with a fixed `Detected Installations` box below the left menu and reduced menu height.
+- Simplified TUI action details to show only action title, description and warnings.
+- Standardized progress behavior: success/cancel/error states persist until next navigation and clear on idle navigation.
+- Added explicit detection refresh flow after action completion and startup refresh logging.
+- Updated validation and AI guardrail documentation with new TUI regression requirements.
+
 ## [0.1.4.11-dev.48] - 2026-05-05
 
 ### Added
