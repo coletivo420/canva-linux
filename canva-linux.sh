@@ -14,19 +14,39 @@ can_run_tui(){
   [[ -t 0 ]] || return 1
   [[ -t 1 ]] || return 1
   [[ "${TERM:-dumb}" != "dumb" ]] || return 1
+  [[ "${CANVA_NO_TUI:-0}" != "1" ]] || return 1
   command -v node >/dev/null 2>&1 || return 1
+  command -v npm >/dev/null 2>&1 || return 1
+  [[ -f "${ROOT_DIR}/scripts/run-tui.js" ]] || return 1
+  [[ -f "${ROOT_DIR}/package.json" ]] || return 1
 }
 
 run_tui_mode(){
+  local allow_fallback="${1:-no}"
   if ! can_run_tui; then
-    ui_error "TUI requires an interactive terminal and Node.js."
+    if [[ "$allow_fallback" == "yes" ]]; then
+      ui_warn "TUI is unavailable. Falling back to shell menu."
+      run_interactive_mode
+      return
+    fi
+    ui_error "TUI requires an interactive terminal, Node.js and npm dependencies."
     ui_info "Use ./canva-linux.sh --no-tui for the shell menu."
     exit 1
   fi
+  local status=0
   if [[ -n "${PROJECT_PHASE:-}" ]]; then
-    CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js
+    CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js || status=$?
   else
-    node scripts/run-tui.js
+    node scripts/run-tui.js || status=$?
+  fi
+  if [[ "$status" -ne 0 ]]; then
+    if [[ "$allow_fallback" == "yes" ]]; then
+      ui_warn "TUI failed to start. Falling back to shell menu."
+      ui_info "You can retry the TUI later with ./canva-linux.sh --tui."
+      run_interactive_mode
+      return
+    fi
+    exit "$status"
   fi
 }
 
@@ -39,8 +59,13 @@ Usage:
 Global options:
   -y, --yes              Non-interactive confirmation for uninstall/purge prompts
   -h, --help             Show this help
-  --tui                  Run experimental Blessed TUI
-  --no-tui               Force shell interactive menu
+  --tui                  Force Blessed TUI
+  --no-tui               Force shell menu fallback
+
+Interactive behavior:
+  ./canva-linux.sh opens the Blessed TUI by default when available.
+  If TUI dependencies are missing, Canva Linux will try to install them automatically.
+  Use --no-tui or CANVA_NO_TUI=1 to use the shell menu.
 
 Installation:
   --install-native       Run Native Install
@@ -199,14 +224,23 @@ esac
 }
 run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
 
-if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then run_interactive_mode; fi
-if [[ "${CANVA_TUI:-0}" == "1" ]]; then run_tui_mode; exit 0; fi
-if [[ $# -eq 0 ]]; then run_interactive_mode; fi
+if [[ $# -eq 0 ]]; then
+  if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then
+    run_interactive_mode
+    exit 0
+  fi
+  if [[ "${CANVA_TUI:-0}" == "1" ]]; then
+    run_tui_mode no
+    exit 0
+  fi
+  run_tui_mode yes
+  exit 0
+fi
 for arg in "$@"; do case "$arg" in -y|--yes|--force) FORCE=true;; esac; done
 for arg in "$@"; do
   case "$arg" in
     --help|-h) show_help; exit 0 ;;
-    --tui) run_tui_mode; exit 0 ;;
+    --tui) run_tui_mode no; exit 0 ;;
     --no-tui) run_interactive_mode ;;
     -y|--yes|--force) ;;
     --install-native) run_script "${ROOT_DIR}/scripts/install-native.sh" ;;

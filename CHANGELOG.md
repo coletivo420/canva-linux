@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.1.4.11-dev.40] - 2026-05-04
+
+### Added
+
+- Enabled the Blessed TUI as the default interactive launcher when available.
+- Added automatic npm dependency bootstrap for TUI startup.
+- Added `scripts/ensure-npm-dependencies.sh` as a shared npm dependency bootstrap entrypoint.
+- Added `blessed` to the required npm dependency preflight list.
+- Added shell menu fallback when TUI startup fails in default mode.
+
+### Changed
+
+- Changed `./canva-linux.sh` without arguments to open the Blessed TUI when supported.
+- Changed `--tui` to explicitly force the Blessed TUI.
+- Changed `--no-tui` to explicitly force the shell menu fallback.
+- Changed `npm run check:tui` to use `scripts/run-tui.js`.
+- Improved npm dependency bootstrap messaging for long-running installs.
+
+### Fixed
+
+- Fixed first-run TUI startup when `node_modules` is missing.
+- Fixed missing Blessed runtime dependency detection in shared npm preflight.
+- Prevented TUI startup attempts in non-interactive or dumb terminal environments.
+- Preserved direct CLI command behavior without launching the TUI.
+
+### Notes
+
+- Shell menu fallback remains supported.
+- Direct commands remain non-interactive.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.39] - 2026-05-04
 
 ### Added

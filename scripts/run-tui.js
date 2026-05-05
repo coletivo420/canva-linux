@@ -4,6 +4,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const rootDir = path.resolve(__dirname, '..');
+process.chdir(rootDir);
 const outFile = path.join(rootDir, '.build/scripts/tui/index.js');
 const tuiDir = path.join(rootDir, 'scripts/tui');
 const identityFile = path.join(rootDir, 'scripts/app-identity-common.sh');
@@ -42,6 +43,25 @@ function resolveProjectPhase() {
   if (fromEnv) return fromEnv;
   return readProjectPhaseFromShell();
 }
+
+function ensureNpmDependencies() {
+  const script = path.join(rootDir, 'scripts/ensure-npm-dependencies.sh');
+  if (!fs.existsSync(script)) {
+    console.error(`[error] Missing dependency bootstrap script: ${script}`);
+    process.exit(1);
+  }
+  const result = spawnSync('bash', [script], {
+    cwd: rootDir,
+    stdio: 'inherit',
+    env: process.env,
+    shell: false,
+  });
+  if ((result.status ?? 1) !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
+ensureNpmDependencies();
 
 if (needsBuild()) {
   const result = spawnSync('npm', ['run', 'build:tui'], {
