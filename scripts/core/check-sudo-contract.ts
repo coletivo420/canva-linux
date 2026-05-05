@@ -24,6 +24,7 @@ export function main(): number {
     if (!fs.existsSync(fullPath)) continue;
     const lines = fs.readFileSync(fullPath, 'utf8').split(/\r?\n/);
     lines.forEach((line, index) => {
+      if (line.trim().startsWith('#')) return;
       if (/(^|[^A-Za-z0-9_])sudo(\s|$)/.test(line)) {
         failures.push(`${file}:${index + 1}: raw sudo is forbidden; use scripts/sudo-common.sh`);
       }
