@@ -1,5 +1,8 @@
 {
+  "displayVersion": "0.1.4.11",
+  "status": "Alpha",
+  "phase": "0.1.4.11-dev.46",
   "toolTitle": "Canva Linux — Install and Development Tool",
   "tuiTitle": "Canva Linux Terminal Assistant",
-  "versionReleaseNotes": "TUI theme, selected-item highlight and installer identity polish."
+  "versionReleaseNotes": "Version identity split, blue-first status colors, submenu action guidance and TUI/Shell exit handling polish."
 }

@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.4.11-dev.46] - 2026-05-05
+
+### Added
+- Added display-version identity fields (`displayVersion`, `status`, `phase`) for UI-facing version output.
+- Added dedicated CLI reference document at `docs/CLI.md`.
+
+### Changed
+- Updated TUI and shell version display to show `0.1.4.11 (Alpha)` and phase `0.1.4.11-dev.46`.
+- Updated TUI semantic theme tokens to separate selection/footer/logo/detection colors.
+- Updated maintenance/development/install panels to show contextual guidance and selected-action details.
+- Updated shell success/identity palette to blue-first visual semantics.
+- Updated README to keep public overview concise and point command details to docs.
+
+### Fixed
+- Fixed TUI footer readability by using dedicated footer colors instead of selection colors.
+- Fixed shell fallback flow so exiting TUI from `Use TUI Tool` exits the app instead of returning to the shell loop.
+- Fixed detection status semantics to avoid green and use blue/light-blue status tones.
+
+### Notes
+- `package.json` technical version remains SemVer-compatible and independent from display-version identity.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.45] - 2026-05-04
 
 ### Added

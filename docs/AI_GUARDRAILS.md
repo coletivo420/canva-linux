@@ -52,3 +52,7 @@ This document keeps only current maintenance expectations for Canva Linux.
 - README is the public entry point.
 - `docs/VALIDATION.md` describes current validation only.
 - Historical phase details belong in `CHANGELOG.md`, not in active maintenance docs.
+
+- Do not reintroduce green as the detected/success primary status color in installer UX; use blue-first identity.
+- Do not reuse selection colors for the footer; keep dedicated footer tokens for readability.
+- Do not duplicate action execution logic outside the shared Action Registry layers.
