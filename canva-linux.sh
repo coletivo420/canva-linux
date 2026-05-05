@@ -18,8 +18,8 @@ ensure_action_runner_available(){
   ui_info "Tip: --no-tui shell mode also requires Node.js in dev41+."
   exit 1
 }
-run_action_by_cli_flag(){ local flag="$1"; ensure_action_runner_available; local yes_args=(); [[ "$FORCE" == true ]] && yes_args=(--yes); node scripts/action-runner.js --cli "$flag" "${yes_args[@]}"; }
-run_action_by_id(){ local id="$1"; ensure_action_runner_available; local yes_args=(); [[ "$FORCE" == true ]] && yes_args=(--yes); node scripts/action-runner.js --id "$id" "${yes_args[@]}"; }
+run_action_by_cli_flag(){ local flag="$1"; ensure_action_runner_available; local yes_args=(); if node scripts/action-runner.js --cli "$flag" --requires-confirmation >/dev/null 2>&1; then [[ "$FORCE" != true ]] && { local a; read -r -p "This action requires confirmation. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; }; yes_args=(--yes); elif [[ "$FORCE" == true ]]; then yes_args=(--yes); fi; node scripts/action-runner.js --cli "$flag" "${yes_args[@]}"; }
+run_action_by_id(){ local id="$1"; ensure_action_runner_available; local yes_args=(); if node scripts/action-runner.js --id "$id" --requires-confirmation >/dev/null 2>&1; then [[ "$FORCE" != true ]] && { local a; read -r -p "This action requires confirmation. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; }; yes_args=(--yes); elif [[ "$FORCE" == true ]]; then yes_args=(--yes); fi; node scripts/action-runner.js --id "$id" "${yes_args[@]}"; }
 
 can_run_tui(){
   [[ -t 0 ]] || return 1
@@ -121,45 +121,7 @@ print_main_screen(){
 0) Exit
 M
 }
-confirm_reset_user_data(){ [[ "$FORCE" == true ]] && return 0; local a; read -r -p "This will erase login, session, cookies, cache and local Canva Linux data. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]]; }
-action_uninstall(){
-  detect_installations
-  if ! has_detected_installations; then
-    ui_info "No Canva Linux installation or generated package artifact detected."
-    return
-  fi
-  print_detected_installations
-  if ! has_detected_installed_variants; then
-    ui_info "AppImage artifacts are generated package files and are not removed by uninstall."
-    ui_info "Use --clean to remove generated artifacts."
-    return
-  fi
-  if [[ "$FORCE" != true ]]; then
-    local a
-    read -r -p "Remove detected Native and Flatpak installations? AppImage artifacts are not removed by uninstall. Continue? [y/N] " a
-    [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }
-  fi
-  run_script "${ROOT_DIR}/scripts/uninstall-native.sh" all
-  action_uninstall_flatpak
-}
-action_purge(){ confirm_reset_user_data || return; action_uninstall || true; cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; }
-show_version_info(){ local version; version="$(node -p "require('./package.json').version" 2>/dev/null || true)"; [[ -n "$version" ]] || version="unknown"; cat <<V
-Project phase:
-  ${PROJECT_PHASE}
 
-Package SemVer:
-  ${version}
-
-AppID:
-  ${APP_ID}
-
-Executable:
-  ${APP_EXECUTABLE}
-
-Repository:
-  https://github.com/coletivo420/canva-linux
-V
-}
 menu_install(){ cat <<'M'
 Install
 1) Native Install
@@ -168,8 +130,8 @@ Install
 M
 if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
 case "$c" in
-  1) run_script "${ROOT_DIR}/scripts/install-native.sh" ;;
-  2) run_script "${ROOT_DIR}/scripts/install-flatpak-local.sh" ;;
+  1) run_action_by_id "install-native" ;;
+  2) run_action_by_id "install-flatpak" ;;
   *) ;;
 esac
 }
@@ -195,15 +157,17 @@ Validation:
 M
 if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
 case "$c" in
-  1) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh" ;;
-  2) run_script "${ROOT_DIR}/scripts/build-appimage.sh" ;;
-  3|4|5) ui_planned "Not implemented in this phase." ;;
-  6) run_script "${ROOT_DIR}/scripts/build-runtime.sh" ;;
-  7) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh" ;;
-  8) run_script "${ROOT_DIR}/scripts/validate-project.sh" ;;
-  9) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" ;;
-  10) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" --extract-check ;;
-  11) run_script "${ROOT_DIR}/scripts/doctor.sh" ;;
+  1) run_action_by_id "bundle-flatpak" ;;
+  2) run_action_by_id "bundle-appimage" ;;
+  3) run_action_by_id "prepare-aur" ;;
+  4) run_action_by_id "bundle-deb" ;;
+  5) run_action_by_id "bundle-rpm" ;;
+  6) run_action_by_id "build-runtime" ;;
+  7) run_action_by_id "build-dir" ;;
+  8) run_action_by_id "validate-project" ;;
+  9) run_action_by_id "validate-appimage" ;;
+  10) run_action_by_id "validate-appimage-extract" ;;
+  11) run_action_by_id "doctor" ;;
   *) ;;
 esac
 }
@@ -221,14 +185,14 @@ Maintenance & Uninstall
 M
 if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
 case "$c" in
-  1) run_script "${ROOT_DIR}/scripts/clean-artifacts.sh" ;;
-  2) if confirm_reset_user_data; then cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; else ui_info "Canceled."; fi ;;
-  3) detect_installations; print_detected_installations ;;
+  1) run_action_by_id "clean" ;;
+  2) run_action_by_id "reset-user-data" ;;
+  3) run_action_by_id "show-detected" ;;
   4) run_action_by_id "version-info" ;;
-  5) action_uninstall ;;
-  6) run_script "${ROOT_DIR}/scripts/uninstall-native.sh" ;;
-  7) if [[ "$FORCE" != true ]]; then read -r -p "Uninstall Flatpak Install? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; fi; FORCE=true run_action_by_id "uninstall-flatpak" ;;
-  8) action_purge ;;
+  5) run_action_by_id "uninstall-detected" ;;
+  6) run_action_by_id "uninstall-native" ;;
+  7) run_action_by_id "uninstall-flatpak" ;;
+  8) run_action_by_id "purge" ;;
   *) ;;
 esac
 }
@@ -263,12 +227,12 @@ for arg in "$@"; do
     --doctor) run_action_by_cli_flag "$arg" ;;
     --bundle-flatpak|--bundle) run_action_by_cli_flag "$arg" ;;
     --bundle-appimage) run_action_by_cli_flag "$arg" ;;
-    --bundle-deb|--bundle-rpm|--prepare-aur) ui_planned "$arg is not implemented in this phase." ;;
+    --bundle-deb|--bundle-rpm|--prepare-aur) run_action_by_cli_flag "$arg" ;;
     --clean) run_action_by_cli_flag "$arg" ;;
     --uninstall) run_action_by_cli_flag "$arg" ;;
     --uninstall-native) run_action_by_cli_flag "$arg" ;;
     --uninstall-flatpak) run_action_by_cli_flag "$arg" ;;
-    --reset-user-data) if confirm_reset_user_data; then cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; else ui_info "Canceled."; fi ;;
+    --reset-user-data) run_action_by_cli_flag "$arg" ;;
     --purge) run_action_by_cli_flag "$arg" ;;
     *) ui_error "Unknown option: $arg"; exit 1 ;;
   esac

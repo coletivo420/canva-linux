@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.1.4.11-dev.42] - 2026-05-04
+
+### Added
+- Added review hardening for the shared Action Registry workflow.
+- Added stronger Action Registry validation.
+- Added clearer action-runner help, dry-run and confirmation metadata checks.
+
+### Changed
+- Consolidated shell fallback menu actions through the shared Action Registry.
+- Reduced duplicated workflow action logic in `canva-linux.sh`.
+- Improved Action Registry validation and documentation.
+- Updated documentation to prepare the next release line for AUR/PKGBUILD experimental work.
+
+### Fixed
+- Fixed stale shell uninstall logic that referenced an undefined Flatpak uninstall function.
+- Fixed remaining shell menu paths that bypassed `scripts/actions.json`.
+- Fixed planned action handling to come from the Action Registry instead of hardcoded shell branches.
+- Fixed documentation references that treated the TypeScript TUI registry as the canonical action source.
+
+### Removed
+- Removed obsolete shell helper functions superseded by backend scripts and `action-runner.js`.
+
+### Notes
+- `0.1.4.11-dev.42` is a review/cleanup phase.
+- The next release line is `0.1.4.12-dev.1 — AUR/PKGBUILD experimental`.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.41] - 2026-05-04
 
 ### Added
