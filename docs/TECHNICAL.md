@@ -303,3 +303,36 @@ Process hardening rules:
 - destructive actions require confirmation dialogs;
 - logs remain visible until the user starts another action or clears them;
 - stdout/stderr are decoded and rendered separately.
+
+
+## TUI default launcher
+
+`canva-linux.sh` opens the Blessed TUI by default when:
+
+- stdin is a TTY;
+- stdout is a TTY;
+- `TERM` is not `dumb`;
+- Node.js is available;
+- npm is available;
+- `CANVA_NO_TUI` is not set.
+
+The shell menu remains available with:
+
+```bash
+./canva-linux.sh --no-tui
+CANVA_NO_TUI=1 ./canva-linux.sh
+```
+
+## TUI dependency bootstrap
+
+The TUI launcher uses `scripts/run-tui.js`.
+
+Before starting the TUI, the launcher ensures that npm development dependencies are installed by calling:
+
+```bash
+scripts/ensure-npm-dependencies.sh
+```
+
+The dependency policy is centralized in `scripts/preflight-common.sh`.
+
+`blessed` must be part of `CANVA_REQUIRED_NPM_DEPS` because the TUI bundle treats it as an external runtime dependency.

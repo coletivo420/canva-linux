@@ -223,3 +223,43 @@ TUI logs:
   PageUp/PageDown scroll
   Home/End work
   Ctrl+L clear logs when idle
+
+
+## TUI default and dependency bootstrap validation
+
+```bash
+./canva-linux.sh
+./canva-linux.sh --tui
+./canva-linux.sh --no-tui
+CANVA_NO_TUI=1 ./canva-linux.sh
+CANVA_TUI=1 ./canva-linux.sh
+TERM=dumb ./canva-linux.sh
+./canva-linux.sh | cat
+./canva-linux.sh --doctor
+npm run check:tui
+```
+
+First-run tests:
+
+```bash
+rm -rf node_modules
+./canva-linux.sh
+```
+
+Expected:
+
+- npm dependencies are installed automatically;
+- TUI is built if needed;
+- TUI starts.
+
+Also test:
+
+```bash
+rm -rf node_modules
+CANVA_SKIP_NPM_INSTALL=1 ./canva-linux.sh
+```
+
+Expected:
+
+- npm dependency bootstrap is skipped;
+- default mode falls back to the shell menu if TUI cannot start.

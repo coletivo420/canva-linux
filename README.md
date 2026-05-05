@@ -126,35 +126,44 @@ CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
 
 Project website: https://coletivo420.github.io/canva-linux/
 
-## Interactive menu
+## Terminal UI
 
-Run without arguments to open the interactive menu:
+Running without arguments opens the Blessed TUI when available:
 
 ```bash
 ./canva-linux.sh
 ```
 
-The menu is organized into:
+On first launch, Canva Linux may automatically install the Node development dependencies required by the TUI:
 
-- Install
-- Development
-- Maintenance & Uninstall
+```bash
+npm ci --include=dev
+```
 
-In the **Development** submenu, package generation actions are listed before build and validation tasks.
+This may take several minutes depending on your system.
 
-
-## Experimental Blessed TUI
+Force the TUI:
 
 ```bash
 ./canva-linux.sh --tui
 ```
 
-The TUI is experimental and uses the existing shell scripts as backend actions.
-
-The TUI supports process-aware execution, confirmation dialogs for destructive actions, scrollable logs and safe cancellation prompts.
-
-The classic shell menu remains available:
+Use the shell menu fallback:
 
 ```bash
 ./canva-linux.sh --no-tui
+CANVA_NO_TUI=1 ./canva-linux.sh
+```
+
+Skip automatic npm dependency bootstrap:
+
+```bash
+CANVA_SKIP_NPM_INSTALL=1 ./canva-linux.sh
+```
+
+Direct commands remain non-interactive and do not open the TUI:
+
+```bash
+./canva-linux.sh --doctor
+./canva-linux.sh --bundle-appimage
 ```

@@ -51,6 +51,7 @@ CANVA_REQUIRED_NPM_DEPS=(
   eslint
   @typescript-eslint/parser
   @typescript-eslint/eslint-plugin
+  blessed
 )
 
 check_npm_dependency() {
@@ -100,6 +101,8 @@ ensure_npm_dependencies() {
   fi
 
   echo "[info] Installing npm dependencies with ${install_cmd[*]}"
+  echo "[info] This may take several minutes depending on your system."
+  echo "[info] Please be patient and keep this terminal open until the process finishes."
   "${install_cmd[@]}" || exit 1
 }
 
