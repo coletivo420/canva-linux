@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 
 function has(command: string): boolean {
-  return spawnSync('bash', ['-lc', `command -v ${command}`]).status === 0;
+  return spawnSync('bash', ['-c', `command -v ${command}`]).status === 0;
 }
 
 function runWithInput(command: string, args: string[], input: string): boolean {
