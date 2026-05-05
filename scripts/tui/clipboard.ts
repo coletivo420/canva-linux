@@ -20,7 +20,7 @@ export function copyTextToClipboard(text: string): { ok: boolean; message: strin
     if (has('qdbus6') && runWithInput('bash', ['-c', 'input=$(cat); qdbus6 org.kde.klipper /klipper setClipboardContents "$input"'], text)) {
       return { ok: true, message: 'Logs copied to clipboard via KDE Klipper (qdbus6).' };
     }
-    if (has('qdbus') && runWithInput('bash', ['-lc', 'input=$(cat); qdbus org.kde.klipper /klipper setClipboardContents "$input"'], text)) {
+    if (has('qdbus') && runWithInput('bash', ['-c', 'input=$(cat); qdbus org.kde.klipper /klipper setClipboardContents "$input"'], text)) {
       return { ok: true, message: 'Logs copied to clipboard via KDE Klipper (qdbus).' };
     }
   }
