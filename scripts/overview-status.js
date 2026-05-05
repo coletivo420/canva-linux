@@ -14,26 +14,30 @@ function readPhase() {
 function parseKeyValueLines(text) {
   const result = {};
   for (const line of text.split(/\r?\n/)) {
-const bash = `source scripts/install-detection-common.sh; detect_installations;\n` +
-  `echo DETECTED_NATIVE_SYSTEM=$DETECTED_NATIVE_SYSTEM;\n` +
-  `echo DETECTED_NATIVE_USER=$DETECTED_NATIVE_USER;\n` +
-  `echo DETECTED_FLATPAK_SYSTEM=$DETECTED_FLATPAK_SYSTEM;\n` +
-  `echo DETECTED_FLATPAK_USER=$DETECTED_FLATPAK_USER;\n` +
-  `echo DETECTED_APPIMAGE_ARTIFACTS=$DETECTED_APPIMAGE_ARTIFACTS;\n` +
-  `echo DETECTED_NATIVE_SYSTEM_VERSION=$DETECTED_NATIVE_SYSTEM_VERSION;\n` +
-  `echo DETECTED_NATIVE_USER_VERSION=$DETECTED_NATIVE_USER_VERSION;\n` +
-  `echo DETECTED_FLATPAK_SYSTEM_VERSION=$DETECTED_FLATPAK_SYSTEM_VERSION;\n` +
-  `echo DETECTED_FLATPAK_USER_VERSION=$DETECTED_FLATPAK_USER_VERSION;\n` +
-  `echo DETECTED_APPIMAGE_VERSION=$DETECTED_APPIMAGE_VERSION;\n`;
-if (out.status !== 0) {
-  const stderr = (out.stderr || '').trim();
-  const stdout = (out.stdout || '').trim();
-  const details = stderr || stdout || 'unknown detection failure';
-  console.error(`overview-status: install detection failed (exit ${out.status}): ${details}`);
+    const parts = line.split('=');
+    if (parts.length >= 2) {
+      const key = parts[0].trim();
+      result[key] = parts.slice(1).join('=');
+    }
+
+const bash = `source scripts/install-detection-common.sh; detect_installations;
+echo DETECTED_NATIVE_SYSTEM=$DETECTED_NATIVE_SYSTEM
+echo DETECTED_NATIVE_USER=$DETECTED_NATIVE_USER
+echo DETECTED_FLATPAK_SYSTEM=$DETECTED_FLATPAK_SYSTEM
+echo DETECTED_FLATPAK_USER=$DETECTED_FLATPAK_USER
+echo DETECTED_APPIMAGE_ARTIFACTS=$DETECTED_APPIMAGE_ARTIFACTS
+echo DETECTED_NATIVE_SYSTEM_VERSION=$DETECTED_NATIVE_SYSTEM_VERSION
+echo DETECTED_NATIVE_USER_VERSION=$DETECTED_NATIVE_USER_VERSION
+echo DETECTED_FLATPAK_SYSTEM_VERSION=$DETECTED_FLATPAK_SYSTEM_VERSION
+echo DETECTED_FLATPAK_USER_VERSION=$DETECTED_FLATPAK_USER_VERSION
+echo DETECTED_APPIMAGE_VERSION=$DETECTED_APPIMAGE_VERSION
+`;
+
   process.exit(out.status || 1);
 }
 
 const lines = parseKeyValueLines(out.stdout);
+
   `echo DETECTED_NATIVE_SYSTEM_VERSION=$DETECTED_NATIVE_SYSTEM_VERSION;
 ` +
   `echo DETECTED_NATIVE_USER_VERSION=$DETECTED_NATIVE_USER_VERSION;
