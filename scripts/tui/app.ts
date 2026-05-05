@@ -2,7 +2,7 @@ import blessed from 'blessed';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { CANVA_LOGO_LINES } from './logo';
 import { getActionsByGroup, type TuiAction } from './action-registry';
-import { confirmDialog, inputDialog } from './modal';
+import { confirmDialog } from './modal';
 import { runAction } from './process-runner';
 import { tuiTheme } from './theme';
 import { copyTextToClipboard } from './clipboard';
@@ -46,6 +46,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
   const writeSession = (line: string) => fs.appendFileSync(sessionLogPath, `${line}\n`);
   writeSession('[mode] tui');
+  process.on('exit', () => { writeSession('[session] ended'); });
 
   let overviewStatus: any = null;
   let overviewLoading = false;
@@ -194,7 +195,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     if (!action.command) return;
     running = true;
     processState = 'running';
-    setProgress(5, 'Iniciando');
+    setProgress(5, 'Starting');
     logs.setContent('');
     logHistory.length = 0;
     appendLogText(`$ ${action.command} ${(action.args ?? []).join(' ')}\n`, 'system');
@@ -203,9 +204,9 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       running = false;
       currentChild = null;
       processState = code === 0 ? 'success' : processState === 'cancel-requested' ? 'canceled' : 'failed';
-      if (processState === 'success') setProgress(100, 'Concluído');
-      else if (processState === 'canceled') setProgress(0, 'Cancelado', true);
-      else setProgress(0, 'Erro', true);
+      if (processState === 'success') setProgress(100, 'Completed');
+      else if (processState === 'canceled') setProgress(0, 'Canceled', true);
+      else setProgress(0, 'Error', true);
       appendLogText(`[info] Action finished (${signal ?? code ?? 'unknown'}).\n`, 'system');
       setView(currentView);
     });
@@ -235,7 +236,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       processState = 'cancel-requested';
       currentChild.kill('SIGINT');
       appendLogText('[warn] Interrupt requested. Press Ctrl+C again to exit application.\n', 'system');
-      setProgress(0, 'Cancelado', true);
+      setProgress(0, 'Canceled', true);
       return;
     }
     void confirmExit();

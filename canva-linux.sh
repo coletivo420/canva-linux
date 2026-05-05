@@ -14,6 +14,7 @@ mkdir -p "$(dirname "${SESSION_LOG}")"
 session_log(){ printf '%s\n' "$1" >> "${SESSION_LOG}"; }
 session_log "[session] started"
 session_log "[identity] version=${PROJECT_DISPLAY_VERSION:-unknown} phase=${PROJECT_PHASE:-unknown}"
+trap 'session_log "[session] ended"' EXIT
 ensure_action_runner_available(){
   if command -v node >/dev/null 2>&1; then
     return 0
