@@ -1,5 +1,5 @@
 import blessed from 'blessed';
-import { spawnSync, type ChildProcess } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { CANVA_LOGO_LINES } from './logo';
 import { getActionsByGroup, type TuiAction } from './action-registry';
 import { confirmDialog, inputDialog } from './modal';
@@ -50,7 +50,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   process.on('exit', () => { writeSession('[session] ended'); });
 
   let overviewStatus: any = null;
-  let overviewLoading = false;
+  let overviewDetectionPromise: Promise<any | null> | null = null;
   let overviewDetectionError: string | null = null;
 
   const detectedSummary = (s: any) => {
@@ -82,22 +82,26 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     diagnostics.setContent(detectedSummary(overviewStatus).join("\n"));
   }
 
-  function refreshDetectedInstallations(reason = "unknown"): any | null {
-    if (overviewLoading) return overviewStatus;
+  function refreshDetectedInstallations(reason = "unknown"): Promise<any | null> {
+    if (overviewDetectionPromise) return overviewDetectionPromise;
     appendLogText(`[info] Refreshing detected installations (${reason}).\n`, "system");
-    overviewLoading = true;
-    const latestStatus = detectInstallationStatusNow();
-    overviewLoading = false;
-    if (latestStatus) {
-      overviewStatus = latestStatus;
-      overviewDetectionError = null;
-    } else {
-      overviewDetectionError = 'Unable to parse status output';
-      appendLogText('[error] Detection status parsing failed.\n', 'system');
-    }
-    renderDiagnosticsBox();
-    renderCurrentContentPreservingProgress();
-    return overviewStatus;
+    overviewDetectionPromise = detectInstallationStatusNow()
+      .then((latestStatus) => {
+        if (latestStatus) {
+          overviewStatus = latestStatus;
+          overviewDetectionError = null;
+        } else {
+          overviewDetectionError = 'Unable to parse status output';
+          appendLogText('[error] Detection status parsing failed.\n', 'system');
+        }
+        renderDiagnosticsBox();
+        renderCurrentContentPreservingProgress();
+        return overviewStatus;
+      })
+      .finally(() => {
+        overviewDetectionPromise = null;
+      });
+    return overviewDetectionPromise;
   }
 
   function getInstallDetectionKey(actionId: string): keyof NonNullable<any['installations']> | null {
@@ -110,17 +114,46 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     }
   }
 
-  function actionNeedsRootForDetectedSystem(action: TuiAction): boolean {
+  async function actionNeedsRootForDetectedSystem(action: TuiAction): Promise<boolean> {
     if (!['purge', 'uninstall-detected'].includes(action.id)) return false;
-    const latestStatus = refreshDetectedInstallations(`root-check:${action.id}`) ?? overviewStatus;
+    const latestStatus = (await refreshDetectedInstallations(`root-check:${action.id}`)) ?? overviewStatus;
     return Boolean(latestStatus?.installations?.nativeSystem || latestStatus?.installations?.flatpakSystem);
   }
 
-  function detectInstallationStatusNow(): any | null {
-    const result = spawnSync('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, encoding: 'utf8' });
-    if (result.stderr?.trim()) appendLogText(result.stderr, 'system');
-    if ((result.status ?? 1) !== 0 || !result.stdout?.trim()) return null;
-    try { return JSON.parse(result.stdout.trim()); } catch { return null; }
+  function parseOverviewStatusOutput(output: string): any | null {
+    const trimmed = output.trim();
+    if (!trimmed) return null;
+    try { return JSON.parse(trimmed); } catch { return null; }
+  }
+
+  function detectInstallationStatusNow(): Promise<any | null> {
+    return new Promise((resolve) => {
+      const child = spawn('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, stdio: ['ignore', 'pipe', 'pipe'] });
+      let stdout = '';
+      let stderr = '';
+      let settled = false;
+      const finish = (status: any | null) => {
+        if (settled) return;
+        settled = true;
+        resolve(status);
+      };
+      child.stdout?.on('data', (chunk) => { stdout += String(chunk); });
+      child.stderr?.on('data', (chunk) => { stderr += String(chunk); });
+      child.on('error', (error) => {
+        appendLogText(`[error] Detection status failed to start: ${error instanceof Error ? error.message : String(error)}\n`, 'system');
+        finish(null);
+      });
+      child.on('close', (code) => {
+        if (settled) return;
+        if (stderr.trim()) appendLogText(stderr, 'system');
+        if ((code ?? 1) !== 0) {
+          appendLogText(`[warn] Detection status exited with code ${code ?? 'unknown'}.\n`, 'system');
+          finish(null);
+          return;
+        }
+        finish(parseOverviewStatusOutput(stdout));
+      });
+    });
   }
 
   function appendLogLine(line: string, source: LogSource) {
@@ -189,7 +222,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     currentView = view;
     clearProgressOnNavigation();
     if (view === 'main') {
-      if (!overviewStatus) refreshDetectedInstallations("enter-overview");
+      if (!overviewStatus) void refreshDetectedInstallations("enter-overview");
       renderDiagnosticsBox();
       currentActions = [];
       menu.setItems(mainItems.map((item) => item.label));
@@ -255,7 +288,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       if (!ok) return;
     }
 
-    const rootRequired = action.requiresRoot || actionNeedsRootForDetectedSystem(action);
+    const rootRequired = action.requiresRoot || await actionNeedsRootForDetectedSystem(action);
     if (rootRequired) {
       modalActive = true;
       const password = await inputDialog(screen, 'Administrator authentication', 'Enter root password (30s timeout):', 30000);
@@ -280,15 +313,14 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     logHistory.length = 0;
     appendLogText(`$ ${action.command} ${(action.args ?? []).join(' ')}\n`, 'system');
     writeSession(`[action] ${action.id} ${action.label}`);
-    currentChild = runAction(action.command, action.args ?? [], (txt, src) => appendLogText(txt, src), ({ code, signal }) => {
-      running = false;
+    currentChild = runAction(action.command, action.args ?? [], (txt, src) => appendLogText(txt, src), async ({ code, signal }) => {
       currentChild = null;
       const installAction = action.id.startsWith('install-');
       let detectedNow = false;
       if (installAction) {
         const detectionKey = getInstallDetectionKey(action.id);
         if (detectionKey) {
-          const latestStatus = detectInstallationStatusNow();
+          const latestStatus = await detectInstallationStatusNow();
           if (latestStatus) overviewStatus = latestStatus;
           detectedNow = Boolean(latestStatus?.installations?.[detectionKey]);
         }
@@ -298,7 +330,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       else if (code === 0 || (installAction && detectedNow)) setProgressSuccess('Completed');
       else setProgressError(signal ?? `exit code ${code ?? 'unknown'}`);
       appendLogText(`[info] Action finished (${signal ?? code ?? 'unknown'}).\n`, 'system');
-      refreshDetectedInstallations(`action:${action.id}`);
+      await refreshDetectedInstallations(`action:${action.id}`);
+      running = false;
       renderActionHelp(currentView, menu.selected);
       screen.render();
     }, { cwd: opts.rootDir, env: { ...(action.env ?? {}), ...(rootRequired ? { CANVA_TUI_ROOT_AUTH: '1' } : {}) } });
@@ -344,7 +377,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   menu.on('select item', () => { if (['install', 'development', 'maintenance'].includes(currentView)) { clearProgressOnNavigation(); renderActionHelp(currentView, menu.selected); screen.render(); } });
 
   setView('main');
-  refreshDetectedInstallations("startup");
+  void refreshDetectedInstallations("startup");
   renderDiagnosticsBox();
   menu.focus();
   return screen;
