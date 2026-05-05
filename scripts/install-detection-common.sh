@@ -58,9 +58,22 @@ print_detected_installations_compact(){
   if [[ "$DETECTED_FLATPAK_SYSTEM" == true && "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="system+user";
   elif [[ "$DETECTED_FLATPAK_SYSTEM" == true ]]; then flatpak="system";
   elif [[ "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="user"; fi
-  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && appimage="yes"
+  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && appimage="detected" || appimage="loading..."
+
+  local color_reset="${RESET:-}" color_light_blue="${CYAN:-}" color_purple="${MAGENTA:-}" color_yellow="${YELLOW:-}"
+  local native_line="${native}" flatpak_line="${flatpak}" appimage_line="${appimage}"
+  if [[ "$native" != "none" ]]; then
+    native_line="${color_light_blue}${native}${color_reset}"
+  fi
+  if [[ "$flatpak" == "none" ]]; then
+    flatpak_line="${color_purple}not detected${color_reset}"
+  fi
+  if [[ "$appimage" == "loading..." ]]; then
+    appimage_line="${color_yellow}loading...${color_reset}"
+  fi
+
   echo "Detected Installation State:"
-  echo "  Native: ${native}"
-  echo "  Flatpak: ${flatpak}"
-  echo "  AppImage artifacts: ${appimage}"
+  echo "  Native Install: ${native_line}"
+  echo "  Flatpak Install: ${flatpak_line}"
+  echo "  AppImage artifacts: ${appimage_line}"
 }
