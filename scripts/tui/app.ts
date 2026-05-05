@@ -97,6 +97,22 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     });
   }
 
+  function getInstallDetectionKey(actionId: string): keyof NonNullable<any['installations']> | null {
+    switch (actionId) {
+      case 'install-native-system': return 'nativeSystem';
+      case 'install-native-user': return 'nativeUser';
+      case 'install-flatpak-system': return 'flatpakSystem';
+      case 'install-flatpak-user': return 'flatpakUser';
+      default: return null;
+    }
+  }
+
+  function detectInstallationStatusNow(): any | null {
+    const result = spawnSync('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, encoding: 'utf8' });
+    if ((result.status ?? 1) !== 0 || !result.stdout?.trim()) return null;
+    try { return JSON.parse(result.stdout.trim()); } catch { return null; }
+  }
+
   function appendLogLine(line: string, source: LogSource) {
     writeSession(`[${source}] ${line}`);
     logHistory.push(line);
@@ -254,7 +270,15 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       running = false;
       currentChild = null;
       const installAction = action.id.startsWith('install-');
-      const detectedNow = overviewStatus?.installations && (overviewStatus.installations.nativeSystem || overviewStatus.installations.nativeUser || overviewStatus.installations.flatpakSystem || overviewStatus.installations.flatpakUser);
+      let detectedNow = false;
+      if (installAction) {
+        const detectionKey = getInstallDetectionKey(action.id);
+        if (detectionKey) {
+          const latestStatus = detectInstallationStatusNow();
+          if (latestStatus) overviewStatus = latestStatus;
+          detectedNow = Boolean(latestStatus?.installations?.[detectionKey]);
+        }
+      }
       if (signal === 'SIGINT') setProgressCanceled();
       else if (code === 0 || (installAction && detectedNow)) setProgressSuccess('Completed');
       else setProgressError(signal ?? `exit code ${code ?? 'unknown'}`);
