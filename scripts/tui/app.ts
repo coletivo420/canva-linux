@@ -2,9 +2,11 @@ import blessed from 'blessed';
 import type { ChildProcess } from 'node:child_process';
 import { CANVA_LOGO_LINES } from './logo';
 import { getActionsByGroup, type TuiAction } from './action-registry';
+import { confirmDialog } from './modal';
 import { runAction } from './process-runner';
 
 type View = 'main' | 'install' | 'development' | 'maintenance' | 'help' | 'logs';
+type ProcessState = 'idle' | 'running' | 'cancel-requested' | 'success' | 'failed' | 'canceled';
 
 export function createApp(opts: { version: string; phase: string; rootDir: string }) {
   const screen = blessed.screen({ smartCSR: true, title: 'Canva Linux TUI', fullUnicode: true });
@@ -25,144 +27,98 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let currentView: View = 'main';
   let currentActions: TuiAction[] = [];
   let running = false;
+  let processState: ProcessState = 'idle';
+  let currentAction: TuiAction | null = null;
   let currentChild: ChildProcess | null = null;
   let renderScheduled = false;
   type LogSource = 'stdout' | 'stderr' | 'system';
   const logBuffers: Record<LogSource, string> = { stdout: '', stderr: '', system: '' };
 
-  function scheduleRender() {
-    if (renderScheduled) return;
-    renderScheduled = true;
-    setTimeout(() => { renderScheduled = false; screen.render(); }, 50);
-  }
+  function scheduleRender() { if (!renderScheduled) { renderScheduled = true; setTimeout(() => { renderScheduled = false; screen.render(); }, 50); } }
+  function escapeBlessedTags(text: string) { return text.replace(/[{}]/g, (char) => (char === '{' ? '\\{' : '\\}')); }
+  function appendLogLine(line: string, source: LogSource) { const escaped = escapeBlessedTags(line); if (source === 'stderr') return logs.log(`{red-fg}${escaped}{/red-fg}`); if (source === 'system') return logs.log(`{cyan-fg}${escaped}{/cyan-fg}`); logs.log(escaped); }
+  function appendLogText(text: string, source: LogSource = 'stdout') { logBuffers[source] += text; while (true) { const match = logBuffers[source].match(/\r?\n/); if (!match || match.index === undefined) break; const i = match.index; const n = match[0].length; appendLogLine(logBuffers[source].slice(0, i), source); logBuffers[source] = logBuffers[source].slice(i + n);} scheduleRender(); }
+  function flushLogBuffer(source: LogSource) { if (logBuffers[source].length > 0) { appendLogLine(logBuffers[source], source); logBuffers[source] = ''; }}
+  function flushAllLogBuffers() { flushLogBuffer('stdout'); flushLogBuffer('stderr'); flushLogBuffer('system'); }
+  function resetLogBuffers() { logBuffers.stdout = ''; logBuffers.stderr = ''; logBuffers.system = ''; }
+  function appendCommandPreview(action: TuiAction) { appendLogText(`$ ${action.command} ${(action.args ?? []).join(' ')}\n`, 'system'); scheduleRender(); }
+  function ensureIdleForNavigation() { if (!running) return true; appendLogText('[warn] An action is running. Cancel or wait before navigating.\n', 'system'); return false; }
 
-  function escapeBlessedTags(text: string): string {
-    return text.replace(/[{}]/g, (char) => (char === '{' ? '\\{' : '\\}'));
-  }
-
-  function appendLogLine(line: string, source: LogSource) {
-    const escaped = escapeBlessedTags(line);
-    if (source === 'stderr') return logs.log(`{red-fg}${escaped}{/red-fg}`);
-    if (source === 'system') return logs.log(`{cyan-fg}${escaped}{/cyan-fg}`);
-    logs.log(escaped);
-  }
-
-  function appendLogText(text: string, source: LogSource = 'stdout') {
-    logBuffers[source] += text;
-    while (true) {
-      const match = logBuffers[source].match(/\r?\n/);
-      if (!match || match.index === undefined) break;
-      const newlineIndex = match.index;
-      const newlineLength = match[0].length;
-      const line = logBuffers[source].slice(0, newlineIndex);
-      logBuffers[source] = logBuffers[source].slice(newlineIndex + newlineLength);
-      appendLogLine(line, source);
-    }
-    scheduleRender();
-  }
-
-  function flushLogBuffer(source: LogSource) {
-    if (logBuffers[source].length > 0) {
-      appendLogLine(logBuffers[source], source);
-      logBuffers[source] = '';
-    }
-  }
-
-  function flushAllLogBuffers() {
-    flushLogBuffer('stdout');
-    flushLogBuffer('stderr');
-    flushLogBuffer('system');
-  }
-
-  function resetLogBuffers() {
-    logBuffers.stdout = '';
-    logBuffers.stderr = '';
-    logBuffers.system = '';
-  }
-
-  function appendCommandPreview(action: TuiAction) {
-    appendLogText(`$ ${action.command} ${(action.args ?? []).join(' ')}\n`, 'system');
-    scheduleRender();
+  function updateActionStatus(action: TuiAction, status: ProcessState, detail?: string) {
+    content.setLabel(`Canva Linux — ${action.label}`);
+    content.setContent([
+      `Action: ${action.label}`,
+      '',
+      `Status: ${status}`,
+      detail ? `Detail: ${detail}` : '',
+      '',
+      `Command: ${action.command} ${(action.args ?? []).join(' ')}`,
+      '',
+      'Hints:',
+      '  Ctrl+C cancel running action',
+      '  q cancel/quit',
+      '  PageUp/PageDown scroll logs',
+      '  Esc returns when idle',
+    ].filter(Boolean).join('\n'));
   }
 
   function setView(view: View) {
     currentView = view;
-    if (view === 'main') {
-      currentActions = [];
-      menu.setItems(mainItems.map((item) => item.label));
-      content.setLabel('Overview');
-      content.setContent(CANVA_LOGO_LINES.join('\n'));
-      screen.render();
-      return;
-    }
-    if (view === 'help') {
-      currentActions = [];
-      menu.setItems(['Back to Main']);
-      content.setLabel('Help');
-      content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Back to main menu\n  q          Quit\n  Ctrl+C     Quit / interrupt running action\n  ?          Help\n\nLogs:\n  stdout     normal color\n  stderr     red\n  system     cyan\n\nNotes:\n  Destructive actions are visible but not executable in the TUI yet.\n  Use the shell CLI for purge/reset/uninstall until confirmation dialogs are implemented.');
-      screen.render();
-      return;
-    }
+    if (view === 'main') { currentActions = []; menu.setItems(mainItems.map((item) => item.label)); content.setLabel('Overview'); content.setContent(CANVA_LOGO_LINES.join('\n')); screen.render(); return; }
+    if (view === 'help') { currentActions = []; menu.setItems(['Back to Main']); content.setLabel('Help'); content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Back to main menu when idle\n  q          Quit when idle / cancel prompt when running\n  Ctrl+C     Request cancellation when running\n  ?          Help\n\nLogs:\n  PageUp     Scroll logs up\n  PageDown   Scroll logs down\n  Home       Top of logs\n  End        Bottom of logs\n  Ctrl+L     Clear logs when idle\n\nProcess:\n  Running actions block navigation.\n  Canceling sends SIGINT first.\n  Some actions may take several minutes.'); screen.render(); return; }
     const group = view === 'install' ? 'install' : view === 'maintenance' ? 'maintenance' : 'development';
-    currentActions = getActionsByGroup(group);
-    menu.setItems(currentActions.map((action) => action.label));
-    content.setLabel(view[0].toUpperCase() + view.slice(1));
-    content.setContent('Select an action and press Enter.');
-    screen.render();
+    currentActions = getActionsByGroup(group); menu.setItems(currentActions.map((action) => action.label)); content.setLabel(view[0].toUpperCase() + view.slice(1)); content.setContent('Select an action and press Enter.'); screen.render();
   }
 
-  function runTuiAction(action: TuiAction) {
-    if (action.kind === 'planned' || action.planned) {
-      content.setLabel(action.label);
-      content.setContent(action.description ?? 'This action is planned and not implemented in this phase.');
-      screen.render();
-      return;
-    }
-    if (action.dangerous) {
-      content.setLabel(action.label);
-      content.setContent(action.description ?? 'This action is destructive and requires a confirmation dialog. Use the shell CLI for now.');
-      screen.render();
-      return;
-    }
+  async function requestCancelCurrentProcess(reason = 'Cancel running action') {
+    if (!currentChild || !running) return;
+    const confirmed = await confirmDialog(screen, { title: reason, message: `Cancel "${currentAction?.label ?? 'current action'}"?\n\nThis will send SIGINT to the running process.`, dangerous: true, confirmLabel: 'Cancel action', cancelLabel: 'Keep running' });
+    if (!confirmed) return;
+    processState = 'cancel-requested';
+    appendLogText('[warn] Cancellation requested. Sending SIGINT...\n', 'system');
+    updateActionStatus(currentAction!, processState);
+    currentChild.kill('SIGINT');
+    setTimeout(() => { if (running && currentChild) { appendLogText('[warn] Process did not exit after SIGINT. Sending SIGTERM...\n', 'system'); currentChild.kill('SIGTERM'); } }, 5000);
+    scheduleRender();
+  }
+
+  async function runTuiAction(action: TuiAction) {
+    if (action.kind === 'planned' || action.planned) { content.setLabel(action.label); content.setContent(action.description ?? 'This action is planned and not implemented in this phase.'); screen.render(); return; }
     if (!action.command) return;
-    if (running) {
-      appendLogText('[warn] Another action is already running.\n', 'system');
-      return;
+    if (running) { appendLogText('[warn] Another action is already running.\n', 'system'); return; }
+    if (action.dangerous) {
+      const confirmed = await confirmDialog(screen, { title: action.confirmationTitle ?? 'Confirm destructive action', message: action.confirmationMessage ?? action.description ?? 'This action is destructive. Continue?', dangerous: true, confirmLabel: 'Yes, continue', cancelLabel: 'Cancel' });
+      if (!confirmed) { appendLogText('[info] Action canceled by user.\n', 'system'); return; }
     }
-    running = true;
-    content.setLabel(`Canva Linux — ${action.label}`);
-    content.setContent('Status: Running');
-    logs.setContent('');
-    resetLogBuffers();
-    appendCommandPreview(action);
-    currentChild = runAction(action.command, action.args ?? [], (text, source) => appendLogText(text, source), (code) => {
-      flushAllLogBuffers();
-      running = false;
-      currentChild = null;
-      content.setContent(code === 0 ? 'Status: Success' : `Status: Failed (${code ?? 'null'})`);
+
+    running = true; processState = 'running'; currentAction = action;
+    updateActionStatus(action, processState); logs.setContent(''); resetLogBuffers(); appendCommandPreview(action);
+    currentChild = runAction(action.command, action.args ?? [], (text, source) => appendLogText(text, source), (result) => {
+      flushAllLogBuffers(); running = false; currentChild = null;
+      if (result.signal) { processState = 'canceled'; updateActionStatus(action, processState, result.signal); }
+      else if (result.code === 0) { processState = 'success'; updateActionStatus(action, processState); }
+      else { processState = 'failed'; updateActionStatus(action, processState, `${result.code ?? 'null'}`); }
       screen.render();
     });
   }
 
   menu.on('select', (_, index) => {
-    if (currentView === 'main') {
-      const selected = mainItems[index];
-      if (selected) setView(selected.view);
-      return;
-    }
-    if (currentView === 'help') {
-      setView('main');
-      return;
-    }
-    const action = currentActions[index];
-    if (action) runTuiAction(action);
+    if (currentView === 'main') { if (!ensureIdleForNavigation()) return; const selected = mainItems[index]; if (selected) setView(selected.view); return; }
+    if (currentView === 'help') { if (!ensureIdleForNavigation()) return; setView('main'); return; }
+    if (!ensureIdleForNavigation()) return;
+    const action = currentActions[index]; if (action) void runTuiAction(action);
   });
 
-  screen.key(['q', 'C-c'], () => { if (currentChild && running) currentChild.kill('SIGINT'); screen.destroy(); process.exit(0); });
-  screen.key(['escape'], () => setView('main'));
-  screen.key(['?'], () => setView('help'));
+  screen.key(['q'], async () => { if (running) { await requestCancelCurrentProcess('Cancel running action'); return; } screen.destroy(); process.exit(0); });
+  screen.key(['C-c'], async () => { if (running) { await requestCancelCurrentProcess('Ctrl+C requested. Confirm cancellation?'); return; } screen.destroy(); process.exit(0); });
+  screen.key(['escape'], () => { if (!ensureIdleForNavigation()) return; setView('main'); });
+  screen.key(['?'], () => { if (!ensureIdleForNavigation()) return; setView('help'); });
+  screen.key(['pageup'], () => { logs.scroll(-10); screen.render(); });
+  screen.key(['pagedown'], () => { logs.scroll(10); screen.render(); });
+  screen.key(['home'], () => { logs.setScrollPerc(0); screen.render(); });
+  screen.key(['end'], () => { logs.setScrollPerc(100); screen.render(); });
+  screen.key(['C-l'], () => { if (running) { appendLogText('[warn] Cannot clear logs while an action is running.\n', 'system'); return; } logs.setContent(''); resetLogBuffers(); screen.render(); });
+  screen.on('resize', () => screen.render());
 
-  setView('main');
-  menu.focus();
-  return screen;
+  setView('main'); menu.focus(); return screen;
 }

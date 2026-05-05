@@ -13,6 +13,10 @@ export type TuiAction = {
   dangerous?: boolean;
   planned?: boolean;
   description?: string;
+  requiresConfirmation?: boolean;
+  confirmationTitle?: string;
+  confirmationMessage?: string;
+  confirmationPhrase?: string;
 };
 
 export const tuiActions: TuiAction[] = [
@@ -31,12 +35,12 @@ export const tuiActions: TuiAction[] = [
   { id: 'doctor', label: '[Validation] Doctor / check host tools', group: 'development', kind: 'command', command: 'bash', args: ['scripts/doctor.sh'] },
   { id: 'clean', label: 'Clean generated artifacts', group: 'maintenance', kind: 'command', command: 'bash', args: ['scripts/clean-artifacts.sh'], dangerous: false },
   { id: 'show-detected', label: 'Show detected installs/artifacts', group: 'maintenance', kind: 'command', command: 'bash', args: ['-lc', 'source scripts/app-identity-common.sh && source scripts/ui-common.sh && source scripts/install-detection-common.sh && ui_init && detect_installations && print_detected_installations'] },
-  { id: 'version-info', label: 'Show package/version information', group: 'maintenance', kind: 'command', command: 'bash', args: ['-lc', 'source scripts/app-identity-common.sh && node -p "\"Package SemVer: \" + require(\"./package.json\").version" && printf "Project phase:\\n  %s\\nAppID:\\n  %s\\nExecutable:\\n  %s\\n" "$PROJECT_PHASE" "$APP_ID" "$APP_EXECUTABLE"'] },
-  { id: 'reset-user-data', label: 'Reset user data [confirmation required]', group: 'maintenance', kind: 'planned', dangerous: true, description: 'Use ./canva-linux.sh --reset-user-data for now.' },
-  { id: 'uninstall-native', label: 'Uninstall Native Install [confirmation required]', group: 'maintenance', kind: 'planned', dangerous: true, description: 'Use ./canva-linux.sh --uninstall-native for now.' },
-  { id: 'uninstall-flatpak', label: 'Uninstall Flatpak Install [confirmation required]', group: 'maintenance', kind: 'planned', dangerous: true, description: 'Destructive TUI confirmation dialogs are planned for the next phase. Use ./canva-linux.sh --uninstall-flatpak for now.' },
-  { id: 'uninstall-detected', label: 'Uninstall detected installations [confirmation required]', group: 'maintenance', kind: 'planned', dangerous: true, description: 'Use ./canva-linux.sh --uninstall for now.' },
-  { id: 'purge', label: 'Uninstall detected installations and remove user data [confirmation required]', group: 'maintenance', kind: 'planned', dangerous: true, description: 'Use ./canva-linux.sh --purge for now.' },
+  { id: 'version-info', label: 'Show package/version information', group: 'maintenance', kind: 'command', command: 'bash', args: ['-lc', 'source scripts/app-identity-common.sh && node -p "\"Package SemVer: \" + require(\"./package.json\").version" && printf "Project phase:\n  %s\nAppID:\n  %s\nExecutable:\n  %s\n" "$PROJECT_PHASE" "$APP_ID" "$APP_EXECUTABLE"'] },
+  { id: 'reset-user-data', label: 'Reset user data', group: 'maintenance', kind: 'command', command: 'bash', args: ['-lc', 'source scripts/app-identity-common.sh && source scripts/user-data-common.sh && cleanup_all_user_data'], dangerous: true, requiresConfirmation: true, description: 'This will erase login, session, cookies, cache and local Canva Linux data.' },
+  { id: 'uninstall-native', label: 'Uninstall Native Install', group: 'maintenance', kind: 'command', command: 'bash', args: ['scripts/uninstall-native.sh'], dangerous: true, requiresConfirmation: true, description: 'This will remove the Native Install from this system/user scope.' },
+  { id: 'uninstall-flatpak', label: 'Uninstall Flatpak Install', group: 'maintenance', kind: 'command', command: 'bash', args: ['-lc', './canva-linux.sh --uninstall-flatpak --yes'], dangerous: true, requiresConfirmation: true, description: 'This will remove the Flatpak Install if present.' },
+  { id: 'uninstall-detected', label: 'Uninstall detected installations', group: 'maintenance', kind: 'command', command: 'bash', args: ['-lc', './canva-linux.sh --uninstall --yes'], dangerous: true, requiresConfirmation: true, description: 'This will remove detected Native and Flatpak installations. AppImage artifacts are removed by --clean, not uninstall.' },
+  { id: 'purge', label: 'Uninstall detected installations and remove user data', group: 'maintenance', kind: 'command', command: 'bash', args: ['-lc', './canva-linux.sh --purge --yes'], dangerous: true, requiresConfirmation: true, description: 'This will uninstall detected variants and remove login/session/cache/user data.' },
 ];
 
 export function getActionsByGroup(group: TuiActionGroup): TuiAction[] {
