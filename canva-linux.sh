@@ -98,10 +98,6 @@ tui_unavailable_reason() {
     return 0
   fi
 
-  if [[ "${force}" != "yes" && "${CANVA_NO_TUI:-0}" == "1" ]]; then
-    printf '%s\n' "TUI is disabled by CANVA_NO_TUI=1."
-    return 0
-  fi
 
   if ! command -v node >/dev/null 2>&1; then
     printf '%s\n' "TUI requires Node.js, but node was not found in PATH."
@@ -220,19 +216,15 @@ Canva Linux — Install and Development Tool
 
 Usage:
   ./canva-linux.sh
-  ./canva-linux.sh --tui
   ./canva-linux.sh [direct action] [--yes]
 
 Global options:
   -y, --yes              Non-interactive confirmation for uninstall/purge prompts
   -h, --help             Show this help
-  --tui                  Force Blessed TUI
-  --no-tui               Deprecated compatibility flag; never opens a shell menu
 
 Interactive behavior:
   ./canva-linux.sh opens the Blessed TUI by default when available.
-  The interactive shell menu was removed. Use --help or a direct action flag.
-  CANVA_NO_TUI=1 prevents automatic TUI startup and requires a direct action flag.
+  Use --help or a direct action flag to run non-interactively.
 
 Installation:
   --install-native       Run Native Install
@@ -266,11 +258,6 @@ Maintenance & Uninstall:
 H
 }
 
-show_no_tui_removed() {
-  ui_warn "Interactive shell menu was removed."
-  ui_info "Use ./canva-linux.sh --help or run a direct action flag."
-}
-
 has_direct_action=false
 for arg in "$@"; do
   case "${arg}" in
@@ -281,11 +268,6 @@ for arg in "$@"; do
 done
 
 if [[ $# -eq 0 ]]; then
-  if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then
-    show_no_tui_removed
-    show_help
-    exit 1
-  fi
   run_tui_mode no
   exit 0
 fi
@@ -303,17 +285,6 @@ for arg in "$@"; do
     --help|-h)
       show_help
       exit 0
-      ;;
-    --tui)
-      run_tui_mode yes
-      exit 0
-      ;;
-    --no-tui)
-      if [[ "${has_direct_action}" != true ]]; then
-        show_no_tui_removed
-        show_help
-        exit 1
-      fi
       ;;
     -y|--yes|--force)
       ;;

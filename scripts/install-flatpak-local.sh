@@ -32,4 +32,5 @@ ensure_flathub_runtime
 if [[ "$SKIP_NPM" == false ]]; then build_electron_output; else ui_warn "Skipping npm install + npm run dist (--skip-npm)"; fi
 ensure_linux_unpacked
 install_flatpak_direct
-print_flatpak_post_install_guidance
+print_flatpak_post_install_guidance || true
+ui_ok "Flatpak ${FLATPAK_SCOPE} install completed"
