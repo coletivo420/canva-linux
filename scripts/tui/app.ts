@@ -201,12 +201,17 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       modalActive = true;
       const password = await inputDialog(screen, 'Administrator authentication', 'Enter root password (30s timeout):', 30000);
       modalActive = false;
-      if (!password) { appendLogText('[warn] Root authentication canceled.
-', 'system'); setProgress(0, 'Error: root auth canceled', true); return; }
-      const auth = spawnSync('sudo', ['-S', '-v', '-p', ''], { input: `${password}
-`, encoding: 'utf8' });
-      if ((auth.status ?? 1) !== 0) { appendLogText('[error] Invalid root password.
-', 'system'); setProgress(0, 'Error: invalid root password', true); return; }
+      if (!password) {
+        appendLogText('[warn] Root authentication canceled.\n', 'system');
+        setProgress(0, 'Error: root auth canceled', true);
+        return;
+      }
+      const auth = spawnSync('sudo', ['-S', '-v', '-p', ''], { input: `${password}\n`, encoding: 'utf8' });
+      if ((auth.status ?? 1) !== 0) {
+        appendLogText('[error] Invalid root password.\n', 'system');
+        setProgress(0, 'Error: invalid root password', true);
+        return;
+      }
     }
     if (!action.command) return;
     running = true;
