@@ -63,7 +63,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const i = s.installations;
     const fmt = (detected: boolean, version: string | undefined) => {
       if (!detected) return `{${tuiTheme.colors.statusNotDetected}-fg}not detected{/${tuiTheme.colors.statusNotDetected}-fg}`;
-      const v = version && version.trim() ? `v${version.trim()}` : 'version unknown';
+      const v = version && version.trim() ? `v${version.trim().replace(/^v/, '')}` : 'version unknown';
       return `{${tuiTheme.colors.statusDetected}-fg}detected{/${tuiTheme.colors.statusDetected}-fg}      ${v}`;
     };
     return [
