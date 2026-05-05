@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
-const rootDir = process.cwd();
+const rootDir = path.resolve(__dirname, '..');
 const outFile = path.join(rootDir, '.build/scripts/tui/index.js');
 const tuiDir = path.join(rootDir, 'scripts/tui');
 const identityFile = path.join(rootDir, 'scripts/app-identity-common.sh');

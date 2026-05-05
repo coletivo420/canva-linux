@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.1.4.11-dev.39] - 2026-05-04
+
+### Added
+
+- Added TUI confirmation dialogs for destructive actions.
+- Added controlled cancellation flow for running TUI actions.
+- Added process status states for idle, running, cancel-requested, success, failed and canceled.
+- Added scroll shortcuts for the TUI log panel.
+- Added resize re-render handling for the Blessed TUI.
+- Added process close metadata handling for exit code and signal.
+
+### Changed
+
+- Changed TUI quit/Ctrl+C behavior to avoid immediately destroying the screen while an action is running.
+- Changed destructive TUI actions to run only after explicit confirmation.
+- Changed TUI navigation to block view changes while an action is running.
+- Improved action status display with command, status and hints.
+- Improved `scripts/run-tui.js` root directory resolution.
+
+### Fixed
+
+- Fixed potential log truncation when quitting during a running process.
+- Fixed unsafe immediate process kill behavior in the TUI.
+- Fixed accidental navigation away from running actions.
+- Fixed lack of signal-aware process status reporting.
+
+### Notes
+
+- TUI remains experimental and is not yet the default launcher.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.38] - 2026-05-04
 
 ### Added

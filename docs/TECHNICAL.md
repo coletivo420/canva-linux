@@ -289,3 +289,17 @@ The Blessed TUI uses a line-buffered log pipeline.
 - empty lines are preserved;
 - stderr is highlighted;
 - remaining buffered text is flushed when the process closes.
+
+
+## TUI process hardening
+
+The Blessed TUI runs shell backend actions through a process runner.
+
+Process hardening rules:
+
+- long-running actions block navigation;
+- Ctrl+C requests cancellation instead of exiting immediately;
+- cancellation sends SIGINT first;
+- destructive actions require confirmation dialogs;
+- logs remain visible until the user starts another action or clears them;
+- stdout/stderr are decoded and rendered separately.

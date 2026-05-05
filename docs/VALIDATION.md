@@ -204,3 +204,22 @@ Manual checks:
 - Open TUI -> Development -> Create AppImage
 - Open TUI -> Maintenance & Uninstall -> Show detected installs/artifacts
 - Open TUI -> Maintenance & Uninstall -> Reset user data [confirmation required]
+
+
+TUI cancellation:
+  Start Create AppImage
+  Press Ctrl+C
+  Confirm cancellation
+  Verify status Canceled
+
+TUI destructive confirmation:
+  Select Reset user data
+  Cancel
+  Verify no action runs
+  Select again
+  Confirm only in safe test environment
+
+TUI logs:
+  PageUp/PageDown scroll
+  Home/End work
+  Ctrl+L clear logs when idle

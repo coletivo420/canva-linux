@@ -3,11 +3,16 @@ import { StringDecoder } from 'node:string_decoder';
 
 export type StreamSource = 'stdout' | 'stderr';
 
+export type ProcessCloseResult = {
+  code: number | null;
+  signal: NodeJS.Signals | null;
+};
+
 export function runAction(
   command: string,
   args: string[],
   onData: (text: string, source: StreamSource) => void,
-  onClose: (code: number | null) => void,
+  onClose: (result: ProcessCloseResult) => void,
 ): ChildProcess {
   const child = spawn(command, args, { cwd: process.cwd(), env: process.env, shell: false });
   const stdoutDecoder = new StringDecoder('utf8');
@@ -26,7 +31,7 @@ export function runAction(
     if (remaining) onData(remaining, 'stderr');
   });
 
-  child.on('close', (code) => onClose(code));
+  child.on('close', (code, signal) => onClose({ code, signal }));
   child.on('error', (err) => onData(`[error] ${String(err)}\n`, 'stderr'));
 
   return child;

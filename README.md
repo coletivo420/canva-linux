@@ -151,9 +151,7 @@ In the **Development** submenu, package generation actions are listed before bui
 
 The TUI is experimental and uses the existing shell scripts as backend actions.
 
-The TUI covers current safe install, package generation, build, validation and maintenance actions.
-
-Destructive actions are listed but remain guarded until confirmation dialogs are implemented.
+The TUI supports process-aware execution, confirmation dialogs for destructive actions, scrollable logs and safe cancellation prompts.
 
 The classic shell menu remains available:
 
