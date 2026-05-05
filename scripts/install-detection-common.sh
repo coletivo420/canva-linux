@@ -33,7 +33,7 @@ find_flatpak_version_marker(){
   local scope_root="$1" marker
   marker="${scope_root}/app/${APP_ID}/current/active/files/share/canva-linux/version"
   if [[ -f "$marker" ]]; then printf '%s\n' "$marker"; return 0; fi
-  marker="$(find "${scope_root}/app/${APP_ID}" -path '*/active/files/share/canva-linux/version' -type f 2>/dev/null | sort | tail -n1 || true)"
+  marker="$( [[ -d "${scope_root}/app/${APP_ID}" ]] && find "${scope_root}/app/${APP_ID}" -maxdepth 8 -path '*/active/files/share/canva-linux/version' -type f 2>/dev/null | sort | tail -n1 || true)"
   [[ -n "$marker" ]] && printf '%s\n' "$marker"
 }
 read_flatpak_version_marker(){
