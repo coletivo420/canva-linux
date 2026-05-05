@@ -1,5 +1,5 @@
 import blessed from 'blessed';
-import { spawnSync, type ChildProcess } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { CANVA_LOGO_LINES } from './logo';
 import { getActionsByGroup, type TuiAction } from './action-registry';
 import { confirmDialog, inputDialog } from './modal';
@@ -38,18 +38,29 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   const logBuffers: Record<LogSource, string> = { stdout: '', stderr: '', system: '' };
   const logHistory: string[] = [];
 
-  const detectStatus = () => {
-    const run = spawnSync('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, encoding: 'utf8' });
-    if (run.status !== 0) return null;
-    try { return JSON.parse(run.stdout.trim()); } catch { return null; }
-  };
+  let overviewStatus: any = null;
+  let overviewLoading = false;
+
   const detectedSummary = (s: any) => {
-    if (!s) return ['  Native Install: unknown', '  Flatpak Install: unknown', '  AppImage artifacts: unknown'];
+    if (!s) return ['  Native Install: loading...', '  Flatpak Install: loading...', '  AppImage artifacts: loading...'];
     const i = s.installations;
     const native = i.nativeSystem && i.nativeUser ? 'detected (system + user)' : i.nativeSystem ? 'detected (system)' : i.nativeUser ? 'detected (user)' : 'not detected';
     const flatpak = i.flatpakSystem && i.flatpakUser ? 'detected (system + user)' : i.flatpakSystem ? 'detected (system)' : i.flatpakUser ? 'detected (user)' : 'not detected';
     return [`  Native Install: ${native}`, `  Flatpak Install: ${flatpak}`, `  AppImage artifacts: ${i.appImageArtifacts ? 'detected' : 'not detected'}`];
   };
+
+  function refreshOverviewStatus(): void {
+    if (overviewLoading) return;
+    overviewLoading = true;
+    const child = spawn('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, stdio: ['ignore', 'pipe', 'ignore'] });
+    let out = '';
+    child.stdout?.on('data', (chunk) => { out += String(chunk); });
+    child.on('close', () => {
+      overviewLoading = false;
+      try { overviewStatus = JSON.parse(out.trim()); } catch {}
+      if (currentView === 'main' || currentView === 'maintenance') setView(currentView);
+    });
+  }
 
   function appendLogLine(line: string, source: LogSource) {
     logHistory.push(line);
@@ -82,7 +93,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   function setView(view: View) {
     currentView = view;
     if (view === 'main') {
-      const status = detectStatus();
+      const status = overviewStatus;
+      if (!overviewStatus) refreshOverviewStatus();
       currentActions = [];
       menu.setItems(mainItems.map((item) => item.label));
       content.setLabel('Overview');
@@ -106,7 +118,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     currentActions = getActionsByGroup(group, opts.rootDir);
     menu.setItems(currentActions.map((a) => a.label));
     content.setLabel(view[0].toUpperCase() + view.slice(1));
-    content.setContent(view === 'maintenance' ? ['Select an action and press Enter.', '', 'Detected Installation State:', ...detectedSummary(detectStatus())].join('\n') : 'Select an action and press Enter.');
+    content.setContent(view === 'maintenance' ? ['Select an action and press Enter.', '', 'Detected Installation State:', ...detectedSummary(overviewStatus)].join('\n') : 'Select an action and press Enter.');
     screen.render();
   }
 
@@ -143,7 +155,17 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     if (ok) { screen.destroy(); process.exit(0); }
   };
 
-  screen.key(['q', 'escape'], () => { void confirmExit(); });
+  screen.key(['q'], () => { void confirmExit(); });
+  screen.key(['escape'], () => {
+    if (modalActive) return;
+    if (running) { void confirmExit(); return; }
+    if (currentView === 'main') { void confirmExit(); return; }
+    setView('main');
+  });
+  screen.key(['C-c'], () => {
+    screen.destroy();
+    process.exit(130);
+  });
   screen.key(['f4'], () => {
     if (modalActive) return;
     if (running) { appendLogText('[warn] Cannot switch tools while an action is running.\n', 'system'); return; }
@@ -157,6 +179,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   screen.key(['?'], () => { if (!running && !modalActive) setView('help'); });
 
   setView('main');
+  refreshOverviewStatus();
   menu.focus();
   return screen;
 }
