@@ -29,3 +29,23 @@ node scripts/action-runner.js --cli --prepare-aur
 ```
 
 Expected: registry validates; real actions resolve to backend commands; planned actions print planned status; dangerous actions require confirmation.
+
+
+## TUI theme validation
+
+```bash
+npm run build:tui
+./canva-linux.sh --tui
+```
+
+Manual checks:
+- Header shows Canva Linux — Install and Development Tool;
+- Header shows Phase: 0.1.4.11-dev.44;
+- Overview shows logo;
+- Overview shows Version below the logo;
+- Overview shows Phase below Version;
+- Overview shows Version Release Notes;
+- selected menu item is visibly highlighted;
+- stderr remains red in the log panel;
+- dangerous modals are visually distinct;
+- shell fallback still respects NO_COLOR=1.

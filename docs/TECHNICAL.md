@@ -47,3 +47,22 @@ The TUI runner streams stdout/stderr separately, decodes UTF-8 safely, buffers p
 
 - `prepare-aur` is planned for `0.1.4.12-dev.1`.
 - `.deb`/`.rpm` remain planned after AUR stabilization.
+
+
+## Terminal theme
+
+The shell fallback and Blessed TUI use a shared Canva-inspired visual language.
+
+Reference palette:
+- Light Blue: `#07B9CE`
+- Blue: `#3969E7`
+- Purple: `#7D2AE7`
+
+The TUI uses `scripts/tui/theme.ts`.
+The shell fallback uses ANSI-safe approximations through `scripts/ui-common.sh`.
+
+The theme must remain readable with:
+- truecolor terminals;
+- xterm-256color;
+- `TERM=dumb` shell fallback;
+- `NO_COLOR=1` shell fallback.

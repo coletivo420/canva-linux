@@ -61,7 +61,7 @@ run_tui_mode(){
 }
 
 show_help(){ cat <<'H'
-Canva Linux — Install, Package and Build Workflow
+Canva Linux — Install and Development Tool
 
 Usage:
   ./canva-linux.sh [actions] [--yes]
@@ -111,6 +111,7 @@ get_package_version(){ node -p "require('./package.json').version" 2>/dev/null |
 print_main_screen(){
   ui_logo
   ui_version_line "$(get_package_version)" "${PROJECT_PHASE}"
+  printf '%s%s%s\n' "${BOLD}${UI_PRIMARY}" "${APP_TOOL_TITLE}" "${RESET}"
   echo
   cat <<'M'
 1) Install

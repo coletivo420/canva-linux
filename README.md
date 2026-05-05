@@ -15,13 +15,15 @@ On first launch, the assistant may install Node development dependencies and bui
 
 ## Canva Linux Terminal Assistant
 
-The default workflow is the Blessed-based Terminal Assistant:
+The default workflow is the Blessed-based Terminal Assistant for Canva Linux — Install and Development Tool:
 
 ```bash
 ./canva-linux.sh
 ```
 
 Guided sections include Native/Flatpak install, package generation, validation, doctor checks, cleanup and uninstall workflows.
+
+The Terminal Assistant uses a Canva-inspired terminal theme with light blue, blue and purple accents. The selected menu item is highlighted for keyboard navigation.
 
 ```bash
 ./canva-linux.sh --tui
