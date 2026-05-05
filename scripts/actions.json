@@ -1,7 +1,7 @@
 [
   {
-    "id": "install-native",
-    "label": "Native Install",
+    "id": "install-native-system",
+    "label": "Native Install — System Wide",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -13,11 +13,35 @@
       "--install-native"
     ],
     "longRunning": true,
-    "description": "Install Canva Linux natively outside the Flatpak sandbox."
+    "description": "Install Canva Linux natively outside the Flatpak sandbox.",
+    "requiresRoot": true,
+    "scope": "system",
+    "env": {
+      "CANVA_NATIVE_SCOPE": "system"
+    },
+    "warning": "Administrator authorization is required before the process starts."
   },
   {
-    "id": "install-flatpak",
-    "label": "Flatpak Install",
+    "id": "install-native-user",
+    "label": "Native Install — Current User",
+    "group": "install",
+    "section": "Install",
+    "kind": "command",
+    "command": "bash",
+    "args": [
+      "scripts/install-native.sh"
+    ],
+    "longRunning": true,
+    "description": "Install Canva Linux natively for the current user.",
+    "scope": "user",
+    "requiresRoot": false,
+    "env": {
+      "CANVA_NATIVE_SCOPE": "user"
+    }
+  },
+  {
+    "id": "install-flatpak-system",
+    "label": "Flatpak Install — System Wide",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -30,7 +54,32 @@
       "--install"
     ],
     "longRunning": true,
-    "description": "Build and install Canva Linux locally as a Flatpak."
+    "description": "Build and install Canva Linux locally as a Flatpak.",
+    "requiresRoot": true,
+    "scope": "system",
+    "env": {
+      "CANVA_FLATPAK_SCOPE": "system"
+    },
+    "warning": "Administrator authorization is required before the process starts."
+  },
+  {
+    "id": "install-flatpak-user",
+    "label": "Flatpak Install — Current User",
+    "group": "install",
+    "section": "Install",
+    "kind": "command",
+    "command": "bash",
+    "args": [
+      "scripts/install-flatpak-local.sh"
+    ],
+    "longRunning": true,
+    "description": "Build and install Canva Linux locally as a Flatpak for the current user.",
+    "scope": "user",
+    "requiresRoot": false,
+    "env": {
+      "CANVA_FLATPAK_SCOPE": "user"
+    },
+    "warning": "User-scope Flatpak install may duplicate desktop entries, runtimes or app visibility."
   },
   {
     "id": "bundle-flatpak",
@@ -325,5 +374,18 @@
     "confirmationTitle": "Purge Canva Linux",
     "confirmationMessage": "This will uninstall detected variants and remove login/session/cache/user data.",
     "description": "Uninstall Native/Flatpak variants and remove user data. Generated package artifacts are not installation variants."
+  },
+  {
+    "id": "fix-build-permissions",
+    "label": "Fix build directory permissions",
+    "group": "maintenance",
+    "section": "Maintenance",
+    "kind": "command",
+    "command": "bash",
+    "args": [
+      "scripts/fix-build-permissions.sh"
+    ],
+    "requiresRoot": true,
+    "description": "Restore ownership of generated build directories to the current user."
   }
 ]

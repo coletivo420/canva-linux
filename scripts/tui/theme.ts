@@ -4,7 +4,7 @@ type BlessedColor = string;
 const supportsTrueColor = process.env.COLORTERM === 'truecolor' || process.env.COLORTERM === '24bit';
 const colors = {
   lightBlue: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.primary,
-  blue: supportsTrueColor ? themeConfig.palette.canvaBlue : themeConfig.ansiFallback.secondary,
+  blue: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,
   purple: supportsTrueColor ? themeConfig.palette.canvaPurple : themeConfig.ansiFallback.accent,
   success: supportsTrueColor ? themeConfig.palette.success : themeConfig.ansiFallback.success,
   warning: supportsTrueColor ? themeConfig.palette.warning : themeConfig.ansiFallback.warning,
@@ -12,14 +12,14 @@ const colors = {
   text: supportsTrueColor ? themeConfig.palette.text : 'white', muted: supportsTrueColor ? themeConfig.palette.muted : 'gray',
   background: supportsTrueColor ? themeConfig.palette.background : 'black', surface: supportsTrueColor ? themeConfig.palette.surface : 'black',
   surfaceAlt: supportsTrueColor ? themeConfig.palette.surfaceAlt : 'black',
-  selectionBg: supportsTrueColor ? themeConfig.palette.canvaBlue : 'blue',
+  selectionBg: supportsTrueColor ? themeConfig.palette.canvaLightBlue : 'blue',
   selectionFg: 'white',
-  footerBg: supportsTrueColor ? themeConfig.palette.canvaBlue : 'blue',
+  footerBg: supportsTrueColor ? themeConfig.palette.canvaLightBlue : 'blue',
   footerFg: 'white',
-  logo: supportsTrueColor ? themeConfig.palette.canvaBlue : themeConfig.ansiFallback.secondary,
-  version: supportsTrueColor ? themeConfig.palette.canvaBlue : themeConfig.ansiFallback.secondary,
+  logo: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,
+  version: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,
   phase: supportsTrueColor ? themeConfig.palette.warning : themeConfig.ansiFallback.warning,
-  nativeDetected: supportsTrueColor ? themeConfig.palette.canvaBlue : themeConfig.ansiFallback.secondary,
+  nativeDetected: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,
   flatpakNotDetected: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.primary,
   appImageLoading: supportsTrueColor ? themeConfig.palette.warning : themeConfig.ansiFallback.warning,
 };

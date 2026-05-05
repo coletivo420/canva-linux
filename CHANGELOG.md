@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.4.11-dev.48] - 2026-05-05
+
+### Added
+- Added scoped TUI/Shell install entries for Native and Flatpak system/user workflows.
+- Added proactive TUI administrator authentication before actions marked with `requiresRoot`.
+- Added maintenance action and script to repair build directory ownership.
+
+### Changed
+- Reworked docs and validation references for dev.48.
+- Changed ASCII logo color back to light blue in TUI and shell tool.
+- Updated project identity to `0.1.4-dev.11.48` / `0.1.4.11-dev.48`.
+
+### Fixed
+- Restored visible system/user install selection in the shell menu and action registry.
+- Refreshed maintenance detection after action completion in TUI.
+
 ## [0.1.4.11-dev.46] - 2026-05-05
 
 ### Added

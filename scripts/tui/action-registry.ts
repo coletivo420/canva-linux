@@ -22,6 +22,10 @@ export type TuiAction = {
   confirmationMessage?: string;
   confirmationPhrase?: string;
   hidden?: boolean;
+  requiresRoot?: boolean;
+  scope?: "system" | "user";
+  warning?: string;
+  env?: Record<string, string>;
 };
 
 function actionsPath(rootDir = process.cwd()) {

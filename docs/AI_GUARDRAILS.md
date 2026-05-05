@@ -1,58 +1,15 @@
-# AI Maintenance Notes
+# AI Guardrails
 
-This document keeps only current maintenance expectations for Canva Linux.
-
-## Current project identity
-
-- Repository: `coletivo420/canva-linux`
-- App ID: `io.github.coletivo420.canva-linux`
-- Website: `https://coletivo420.github.io/canva-linux/`
-- Status: alpha
-
-## Current runtime architecture
-
-- Electron main/preload source lives in `electron/`.
-- Runtime output is generated in `.build/`.
-- `package.json#main` points to `.build/electron/main/index.js`.
-- `electron/preload/canva.bundle.js` is generated and must not be edited manually.
-- CL-EyeDropper is the current custom EyeDropper implementation.
-
-## Maintenance rules
-
-- Prefer small, reviewable patches.
-- All source-build workflows must call the shared npm bootstrap before npm build scripts (`ensure_npm_dependencies`).
-- Do not trust only `node_modules/` existence; verify required build dependencies via `require.resolve()` or run `npm ci --include=dev`.
-
-- Update docs when behavior changes.
-- Update `CHANGELOG.md` for user-facing or architecture changes.
-- Do not commit generated `.build/`, `dist/`, `build-dir/`, `.flatpak-builder/` or `repo/`.
-- Keep validation source-first: lint, typecheck, tests, docs, then runtime build.
-
-## Logging
-
-- Keep `CANVA_DEBUG=1` and `CANVA_DEBUG=2` as public debug modes.
-- Logging must not throw.
-- Do not use unsafe raw `JSON.stringify(args)` on arbitrary log arguments.
-
-## Flatpak
-
-- Keep `io.github.coletivo420.canva-linux` as active AppID.
-- Keep Flatpak workflows in `./canva-linux.sh`.
-- `flatpak-builder` must run as the current user, not through `sudo`.
-- System install may request administrator authorization for system Flatpak operations.
-
-## TypeScript
-
-- Keep incremental TypeScript migration.
-- Preserve CommonJS runtime compatibility until the project intentionally changes module format.
-- Do not bypass `npm run typecheck` or `npm run typecheck:strict`.
-
-## Documentation
-
-- README is the public entry point.
-- `docs/VALIDATION.md` describes current validation only.
-- Historical phase details belong in `CHANGELOG.md`, not in active maintenance docs.
-
-- Do not reintroduce green as the detected/success primary status color in installer UX; use blue-first identity.
-- Do not reuse selection colors for the footer; keep dedicated footer tokens for readability.
-- Do not duplicate action execution logic outside the shared Action Registry layers.
+- README is the public entry point; long command references belong in `docs/CLI.md`.
+- Every behavior change must update `CHANGELOG.md`.
+- TUI/Shell/CLI actions must be sourced from `scripts/actions.json`.
+- Do not duplicate action logic in TUI/shell code.
+- Native and Flatpak install flows must expose `system` and `user` scopes.
+- Flatpak user scope must always show a duplication warning.
+- System-wide actions must declare `requiresRoot`.
+- TUI must ask for root authentication before privileged execution.
+- Do not log passwords.
+- Prefer shared sudo helpers over direct sudo calls.
+- Keep ASCII logo light blue.
+- Maintenance must keep installation detection visible at the top.
+- Active docs must match current version/phase and validation flow.
