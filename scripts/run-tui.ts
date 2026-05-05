@@ -74,7 +74,7 @@ export function main(): void {
     if ((result.status ?? 1) !== 0) process.exit(result.status ?? 1);
   }
 
-  const run = spawnSync('node', ['.build/scripts/tui/index.js', ...process.argv.slice(2)], {
+  const run = spawnSync(process.execPath, ['.build/scripts/tui/index.js', ...process.argv.slice(2)], {
     stdio: 'inherit',
     env: { ...process.env, CANVA_PROJECT_PHASE: resolveProjectPhase() },
   });
