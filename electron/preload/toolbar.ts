@@ -49,7 +49,7 @@ contextBridge.exposeInMainWorld('canvaTabs', {
     debugLog('tabs:toolbar', 'toolbar-send', action, JSON.stringify(payload));
     ipcRenderer.send('toolbar-action', { action, payload });
   },
-  onState(callback: (state: any) => void) {
+  onState(callback: (state: unknown) => void) {
     ipcRenderer.removeAllListeners('tabs-state');
     ipcRenderer.on('tabs-state', (_event, state) => {
       debugLog('tabs:state', 'toolbar-state', `count=${state?.tabs?.length || 0}`, `active=${state?.activeTabId || 'none'}`);
