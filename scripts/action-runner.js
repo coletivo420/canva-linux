@@ -14,5 +14,9 @@ else if(args.includes('--cli')) action=getActionByCliFlag(val('--cli'));
 if(!action){console.error('[error] Action not found.');process.exit(1);} 
 if(action.kind==='planned'||action.planned){console.log(`[planned] ${action.description||`${action.label} is not implemented in this phase.`}`);process.exit(0);} 
 if(action.dangerous&&!yes){console.error(`[error] Action requires confirmation: ${action.label}`);console.error('[info] Re-run with --yes after confirming intent.');process.exit(1);} 
-const r=spawnSync(action.command,action.args||[],{cwd:rootDir,stdio:'inherit',env:process.env,shell:false});
+const r=spawnSync(action.command,action.args||[],{cwd:rootDir,stdio:"inherit",env:process.env,shell:false});
+if (r.error) {
+  console.error("[error] Failed to start process: " + r.error.message);
+  process.exit(1);
+}
 process.exit(r.status??1);
