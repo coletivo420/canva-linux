@@ -19,7 +19,7 @@
     "dist": "NODE_OPTIONS=--no-deprecation electron-builder --linux dir",
     "dist:appimage": "npm run build:runtime && NODE_OPTIONS=--no-deprecation electron-builder --linux AppImage --publish=never",
     "lint": "eslint .",
-    "test": "node --test \"test/**/*.test.js\"",
+    "test": "node scripts/run-node-tests.js",
     "test:unit": "node --test test/window-open-policy.test.js",
     "test:wiring": "node --test test/tab-controller-wiring.test.js",
     "test:smoke": "playwright test",
