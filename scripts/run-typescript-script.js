@@ -50,7 +50,7 @@ function runTypeScriptScript(wrapperFilename) {
   const result = main();
   if (result && typeof result.then === 'function') {
     result.catch((error) => {
-      console.error(error && error.message ? error.message : error);
+      console.error(error instanceof Error ? error.message : error);
       process.exit(1);
     });
   }
