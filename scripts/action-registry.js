@@ -17,9 +17,16 @@ function loadActions() {
   return _actions;
 }
 
+function shellQuote(part) {
+  const text = String(part);
+  if (text.length === 0) return "''";
+  if (/[^A-Za-z0-9_/:=+,.@-]/.test(text)) return `'${text.replace(/'/g, `\'\\''`)}'`;
+  return text;
+}
+
 function formatActionCommand(action) {
   if (!action?.command) return '';
-  return [action.command, ...(Array.isArray(action.args) ? action.args : [])].join(' ');
+  return [action.command, ...(Array.isArray(action.args) ? action.args : [])].map(shellQuote).join(' ');
 }
 
 function actionRequiresConfirmation(action) {
