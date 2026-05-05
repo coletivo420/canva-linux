@@ -1,4 +1,5 @@
 import blessed from 'blessed';
+import { tuiTheme } from './theme';
 
 export type ConfirmOptions = {
   title: string;
@@ -15,7 +16,7 @@ function createModalShell(screen: blessed.Widgets.Screen, title: string, dangero
     left: 0,
     width: '100%',
     height: '100%',
-    style: { bg: 'black', transparent: true },
+    style: { bg: tuiTheme.colors.background, transparent: true },
   });
 
   const modal = blessed.box({
@@ -26,8 +27,8 @@ function createModalShell(screen: blessed.Widgets.Screen, title: string, dangero
     height: 11,
     border: 'line',
     tags: true,
-    label: dangerous ? `{red-fg}${title}{/red-fg}` : title,
-    style: dangerous ? { border: { fg: 'red' } } : undefined,
+    label: dangerous ? `{${tuiTheme.colors.error}-fg}${title}{/${tuiTheme.colors.error}-fg}` : `{${tuiTheme.colors.lightBlue}-fg}${title}{/${tuiTheme.colors.lightBlue}-fg}`,
+    style: { fg: tuiTheme.modal.text, bg: tuiTheme.modal.background, border: { fg: dangerous ? tuiTheme.modal.dangerousBorder : tuiTheme.modal.normalBorder } },
   });
 
   return { overlay, modal };
@@ -54,7 +55,8 @@ export function confirmDialog(screen: blessed.Widgets.Screen, options: ConfirmOp
       left: 2,
       right: 2,
       height: 1,
-      content: `[y/Enter] ${options.confirmLabel ?? 'Confirm'}    [Esc/n] ${options.cancelLabel ?? 'Cancel'}`,
+      tags: true,
+      content: `{${tuiTheme.colors.lightBlue}-fg}[y/Enter]{/${tuiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? 'Confirm'}    {${tuiTheme.colors.lightBlue}-fg}[Esc/n]{/${tuiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? 'Cancel'}`,
     });
 
     const close = (confirmed: boolean) => {

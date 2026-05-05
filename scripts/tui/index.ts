@@ -1,5 +1,6 @@
 import { createApp } from './app';
 import path from 'node:path';
+import projectUi from '../project-ui.json';
 
 function getPackageVersion(): string {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -17,7 +18,14 @@ function getProjectPhase(): string {
 }
 
 try {
-  const screen = createApp({ version: getPackageVersion(), phase: getProjectPhase(), rootDir: process.cwd() });
+  const screen = createApp({
+    version: getPackageVersion(),
+    phase: getProjectPhase(),
+    rootDir: process.cwd(),
+    title: projectUi.tuiTitle,
+    toolTitle: projectUi.toolTitle,
+    releaseNotes: projectUi.versionReleaseNotes,
+  });
   process.on('uncaughtException', (err) => { try { screen.destroy(); } catch {} console.error(err); process.exit(1); });
 } catch (error) {
   console.error(error);

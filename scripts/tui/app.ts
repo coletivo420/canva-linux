@@ -4,17 +4,18 @@ import { CANVA_LOGO_LINES } from './logo';
 import { getActionsByGroup, type TuiAction } from './action-registry';
 import { confirmDialog } from './modal';
 import { runAction } from './process-runner';
+import { tuiTheme } from './theme';
 
 type View = 'main' | 'install' | 'development' | 'maintenance' | 'help' | 'logs';
 type ProcessState = 'idle' | 'running' | 'cancel-requested' | 'success' | 'failed' | 'canceled';
 
-export function createApp(opts: { version: string; phase: string; rootDir: string }) {
-  const screen = blessed.screen({ smartCSR: true, title: 'Canva Linux TUI', fullUnicode: true });
-  const header = blessed.box({ top: 0, height: 2, width: '100%', tags: true, content: `{bold}Canva Linux{/bold}  ${opts.version}\nPhase: ${opts.phase}` });
-  const menu = blessed.list({ top: 2, left: 0, width: '35%', height: '85%', keys: true, mouse: true, border: 'line', label: 'Main Menu' });
-  const content = blessed.box({ top: 2, left: '35%', width: '65%', height: '55%', border: 'line', label: 'Overview', tags: true });
-  const logs = blessed.log({ top: '57%', left: '35%', width: '65%', height: '30%', border: 'line', label: 'Logs', keys: true, mouse: true, scrollback: 5000, tags: true });
-  const footer = blessed.box({ bottom: 0, height: 1, width: '100%', content: 'q Quit | Enter Select | Esc Back | ? Help | PageUp/PageDown Logs' });
+export function createApp(opts: { version: string; phase: string; rootDir: string; title: string; toolTitle: string; releaseNotes: string }) {
+  const screen = blessed.screen({ smartCSR: true, title: opts.title, fullUnicode: true });
+  const header = blessed.box({ top: 0, height: 2, width: '100%', tags: true, content: `{bold}${opts.toolTitle}{/bold}\nPhase: ${opts.phase}`, style: tuiTheme.header });
+  const menu = blessed.list({ top: 2, left: 0, width: '35%', height: '85%', keys: true, mouse: true, border: 'line', label: 'Main Menu', style: tuiTheme.menu });
+  const content = blessed.box({ top: 2, left: '35%', width: '65%', height: '55%', border: 'line', label: 'Overview', tags: true, style: tuiTheme.content });
+  const logs = blessed.log({ top: '57%', left: '35%', width: '65%', height: '30%', border: 'line', label: 'Logs', keys: true, mouse: true, scrollback: 5000, tags: true, style: tuiTheme.logs });
+  const footer = blessed.box({ bottom: 0, height: 1, width: '100%', tags: true, content: `{bold}q{/bold} Quit | {bold}Enter{/bold} Select | {bold}Esc{/bold} Back | {bold}?{/bold} Help | PageUp/PageDown Logs`, style: tuiTheme.footer });
   screen.append(header); screen.append(menu); screen.append(content); screen.append(logs); screen.append(footer);
 
   const mainItems: Array<{ label: string; view: View }> = [
@@ -66,7 +67,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
 
   function setView(view: View) {
     currentView = view;
-    if (view === 'main') { currentActions = []; menu.setItems(mainItems.map((item) => item.label)); content.setLabel('Overview'); content.setContent([CANVA_LOGO_LINES.join('\n'),'','Canva Linux Terminal Assistant','Use this assistant to install, package, validate and maintain Canva Linux.','','Main sections:','  Install','  Development','  Maintenance & Uninstall','','Direct CLI commands and this assistant use the same Shared Action Registry:','  scripts/actions.json'].join('\n')); screen.render(); return; }
+    if (view === 'main') { currentActions = []; menu.setItems(mainItems.map((item) => item.label)); content.setLabel('Overview'); content.setContent([CANVA_LOGO_LINES.join('\n'), '', `{bold}{${tuiTheme.colors.lightBlue}-fg}Version:{/${tuiTheme.colors.lightBlue}-fg}{/bold}`, `  ${opts.version}`, '', `{bold}{${tuiTheme.colors.purple}-fg}Phase:{/${tuiTheme.colors.purple}-fg}{/bold}`, `  ${opts.phase}`, '', `{bold}{${tuiTheme.colors.lightBlue}-fg}Version Release Notes:{/${tuiTheme.colors.lightBlue}-fg}{/bold}`, `  ${opts.releaseNotes}`].join('\n')); screen.render(); return; }
     if (view === 'help') { currentActions = []; menu.setItems(['Back to Main']); content.setLabel('Help'); content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Back to main menu when idle\n  q          Quit when idle / cancel prompt when running\n  Ctrl+C     Request cancellation when running\n  ?          Help\n\nLogs:\n  PageUp     Scroll logs up\n  PageDown   Scroll logs down\n  Home       Top of logs\n  End        Bottom of logs\n  Ctrl+L     Clear logs when idle\n\nProcess:\n  Running actions block navigation.\n  Canceling sends SIGINT first.\n  Some actions may take several minutes.'); screen.render(); return; }
     const group = view === 'install' ? 'install' : view === 'maintenance' ? 'maintenance' : 'development';
     currentActions = getActionsByGroup(group, opts.rootDir); menu.setItems(currentActions.map((action) => action.label)); content.setLabel(view[0].toUpperCase() + view.slice(1)); content.setContent('Select an action and press Enter.'); screen.render();
@@ -132,6 +133,9 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   screen.key(['end'], () => { logs.setScrollPerc(100); screen.render(); });
   screen.key(['C-l'], () => { if (running) { appendLogText('[warn] Cannot clear logs while an action is running.\n', 'system'); return; } logs.setContent(''); resetLogBuffers(); screen.render(); });
   screen.on('resize', () => screen.render());
+
+  menu.on('focus', () => { menu.style.border = { fg: tuiTheme.colors.lightBlue }; screen.render(); });
+  menu.on('blur', () => { menu.style.border = { fg: tuiTheme.colors.blue }; screen.render(); });
 
   setView('main'); menu.focus(); return screen;
 }

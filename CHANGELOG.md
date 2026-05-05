@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.1.4.11-dev.44] - 2026-05-04
+
+### Added
+- Added a Canva-inspired Blessed TUI theme.
+- Added visible selected-menu highlighting in the TUI.
+- Added `Version`, `Phase` and `Version Release Notes` below the logo in the TUI Overview screen.
+- Added canonical installer identity: `Canva Linux — Install and Development Tool`.
+
+### Changed
+- Updated the TUI header to show the installer title and project phase.
+- Updated the TUI Overview layout to show logo, version, phase and release notes.
+- Aligned shell fallback naming with the TUI installer title.
+- Added shared theme planning between shell fallback and TUI.
+
+### Fixed
+- Fixed TUI menu selection visibility by adding explicit selected-item styling.
+- Fixed missing Overview version/release information.
+- Fixed inconsistent installer naming between shell fallback and TUI.
+
+### Notes
+- Theme colors are Canva-inspired terminal adaptations.
+- Runtime Electron behavior is unchanged.
+- AUR/PKGBUILD remains planned for `0.1.4.12-dev.1`.
+
 ## [0.1.4.11-dev.43] - 2026-05-04
 
 ### Changed
