@@ -139,3 +139,17 @@ npm run build:tui
 ```
 
 Use `./canva-linux.sh --no-tui` to force the shell menu fallback.
+
+## Adding a new workflow action
+
+1. Create or update a backend script under `scripts/`.
+2. Add an entry to `scripts/actions.json`.
+3. Run:
+
+```bash
+npm run actions:validate
+./canva-linux.sh --no-tui
+./canva-linux.sh --tui
+```
+
+Do not add separate hardcoded action lists in the shell menu or TUI.

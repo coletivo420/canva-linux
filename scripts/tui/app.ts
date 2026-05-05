@@ -32,7 +32,6 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let currentChild: ChildProcess | null = null;
   let renderScheduled = false;
   let modalActive = false;
-  let modalActive = false;
   type LogSource = 'stdout' | 'stderr' | 'system';
   const logBuffers: Record<LogSource, string> = { stdout: '', stderr: '', system: '' };
 
@@ -69,7 +68,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     if (view === 'main') { currentActions = []; menu.setItems(mainItems.map((item) => item.label)); content.setLabel('Overview'); content.setContent(CANVA_LOGO_LINES.join('\n')); screen.render(); return; }
     if (view === 'help') { currentActions = []; menu.setItems(['Back to Main']); content.setLabel('Help'); content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Back to main menu when idle\n  q          Quit when idle / cancel prompt when running\n  Ctrl+C     Request cancellation when running\n  ?          Help\n\nLogs:\n  PageUp     Scroll logs up\n  PageDown   Scroll logs down\n  Home       Top of logs\n  End        Bottom of logs\n  Ctrl+L     Clear logs when idle\n\nProcess:\n  Running actions block navigation.\n  Canceling sends SIGINT first.\n  Some actions may take several minutes.'); screen.render(); return; }
     const group = view === 'install' ? 'install' : view === 'maintenance' ? 'maintenance' : 'development';
-    currentActions = getActionsByGroup(group); menu.setItems(currentActions.map((action) => action.label)); content.setLabel(view[0].toUpperCase() + view.slice(1)); content.setContent('Select an action and press Enter.'); screen.render();
+    currentActions = getActionsByGroup(group, opts.rootDir); menu.setItems(currentActions.map((action) => action.label)); content.setLabel(view[0].toUpperCase() + view.slice(1)); content.setContent('Select an action and press Enter.'); screen.render();
   }
 
   async function requestCancelCurrentProcess(reason = 'Cancel running action') {

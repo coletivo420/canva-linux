@@ -263,3 +263,15 @@ Expected:
 
 - npm dependency bootstrap is skipped;
 - default mode falls back to the shell menu if TUI cannot start.
+
+```bash
+npm run actions:validate
+node scripts/action-runner.js --list
+node scripts/action-runner.js --group development
+node scripts/action-runner.js --cli --doctor
+node scripts/action-runner.js --id doctor
+./canva-linux.sh --doctor
+./canva-linux.sh --bundle-appimage
+./canva-linux.sh --no-tui
+./canva-linux.sh --tui
+```
