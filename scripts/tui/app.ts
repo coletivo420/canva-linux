@@ -122,10 +122,10 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const action = currentActions[index]; if (action) void runTuiAction(action);
   });
 
-  screen.key(['q'], async () => { if (running) { await requestCancelCurrentProcess('Cancel running action'); return; } screen.destroy(); process.exit(0); });
-  screen.key(['C-c'], async () => { if (running) { await requestCancelCurrentProcess('Ctrl+C requested. Confirm cancellation?'); return; } screen.destroy(); process.exit(0); });
-  screen.key(['escape'], () => { if (!ensureIdleForNavigation()) return; setView('main'); });
-  screen.key(['?'], () => { if (!ensureIdleForNavigation()) return; setView('help'); });
+  screen.key(['q'], async () => { if (modalActive) return; if (running) { await requestCancelCurrentProcess('Cancel running action'); return; } screen.destroy(); process.exit(0); });
+  screen.key(['C-c'], async () => { if (modalActive) return; if (running) { await requestCancelCurrentProcess('Ctrl+C requested. Confirm cancellation?'); return; } screen.destroy(); process.exit(0); });
+  screen.key(['escape'], () => { if (modalActive || !ensureIdleForNavigation()) return; setView('main'); });
+  screen.key(['?'], () => { if (modalActive || !ensureIdleForNavigation()) return; setView('help'); });
   screen.key(['pageup'], () => { logs.scroll(-10); screen.render(); });
   screen.key(['pagedown'], () => { logs.scroll(10); screen.render(); });
   screen.key(['home'], () => { logs.setScrollPerc(0); screen.render(); });
