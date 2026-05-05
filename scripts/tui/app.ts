@@ -48,6 +48,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   function updateActionStatus(action: TuiAction, status: ProcessState, detail?: string) {
     content.setLabel(`Canva Linux — ${action.label}`);
     content.setContent([
+      `Section: ${action.section}`,
       `Action: ${action.label}`,
       '',
       `Status: ${status}`,

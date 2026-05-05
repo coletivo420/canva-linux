@@ -168,7 +168,7 @@ Direct commands remain non-interactive and do not open the TUI:
 ./canva-linux.sh --bundle-appimage
 ```
 
-## Shared workflow actions
+## Shared Action Registry
 
 The shell menu, direct CLI flags and Blessed TUI use a shared action registry:
 
@@ -176,4 +176,6 @@ The shell menu, direct CLI flags and Blessed TUI use a shared action registry:
 scripts/actions.json
 ```
 
-This keeps package generation, install, validation and maintenance actions consistent across interfaces.
+The Blessed TUI, shell fallback menu and direct CLI actions must resolve workflow actions through this registry.
+
+Backend scripts remain under `scripts/`.

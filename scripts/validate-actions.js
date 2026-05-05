@@ -1,4 +1,18 @@
 #!/usr/bin/env node
-const fs=require('node:fs');const path=require('node:path');const actions=JSON.parse(fs.readFileSync(path.join(__dirname,'actions.json'),'utf8'));const ids=new Set(),cli=new Set();
-for(const a of actions){if(ids.has(a.id)) throw new Error(`Duplicate action id: ${a.id}`); ids.add(a.id); if(a.kind==='command'){if(!a.command||!Array.isArray(a.args)) throw new Error(`Invalid command action: ${a.id}`); if(a.command==='bash'&&a.args[0]?.endsWith('.sh')&&!fs.existsSync(path.join(__dirname,'..',a.args[0]))) throw new Error(`Missing script for action: ${a.id}`);} if(Array.isArray(a.cli)) for(const f of a.cli){if(cli.has(f)) throw new Error(`Duplicate cli alias: ${f}`); cli.add(f);} if(a.dangerous && !(a.description||a.confirmationMessage)) throw new Error(`Dangerous action missing description/confirmationMessage: ${a.id}`);}
+const fs = require('node:fs');
+const path = require('node:path');
+const { loadActions, validateActions } = require('./action-registry');
+
+const rootDir = path.resolve(__dirname, '..');
+const actions = loadActions();
+validateActions(actions);
+
+for (const a of actions) {
+  if (a.kind === 'command' && a.command === 'bash' && a.args?.[0]?.endsWith('.sh')) {
+    const scriptPath = path.join(rootDir, a.args[0]);
+    if (!fs.existsSync(scriptPath)) throw new Error(`Missing script for action: ${a.id}`);
+    fs.accessSync(scriptPath, fs.constants.X_OK);
+  }
+}
+
 console.log('actions.json validation OK');
