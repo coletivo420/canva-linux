@@ -10,7 +10,7 @@ validate_flatpak_scope() {
     system|user)
       ;;
     *)
-      err "Invalid CANVA_FLATPAK_SCOPE: ${FLATPAK_SCOPE}. Use 'system' or 'user'."
+      ui_die "Invalid CANVA_FLATPAK_SCOPE: ${FLATPAK_SCOPE}. Use 'system' or 'user'."
       ;;
   esac
 }
@@ -38,7 +38,7 @@ remove_path_safely() {
     return 0
   fi
 
-  warn "Could not remove ${target} as the current user; retrying with administrator authorization."
+  ui_warn "Could not remove ${target} as the current user; retrying with administrator authorization."
   sudo rm -rf "${target}"
 }
 
@@ -69,7 +69,7 @@ restore_path_ownership() {
     return 0
   fi
 
-  warn "Restoring ownership for ${target} to the current user."
+  ui_warn "Restoring ownership for ${target} to the current user."
   sudo chown -R "${uid}:${gid}" "${target}"
 }
 
@@ -89,22 +89,22 @@ ensure_flathub_runtime() {
     ensure_system_flatpak_authorization
 
     if ! flatpak remotes --system | awk '{print $1}' | grep -qx flathub; then
-      warn "System Flathub remote is not configured."
-      warn "Canva Linux installs to the system Flatpak scope by default, for all users."
-      warn "Adding the system Flathub remote requires administrator authorization."
+      ui_warn "System Flathub remote is not configured."
+      ui_warn "Canva Linux installs to the system Flatpak scope by default, for all users."
+      ui_warn "Adding the system Flathub remote requires administrator authorization."
       sudo flatpak remote-add --if-not-exists --system flathub \
         https://dl.flathub.org/repo/flathub.flatpakrepo
     else
-      info "System Flathub remote is already configured"
+      ui_info "System Flathub remote is already configured"
     fi
 
     ensure_system_flatpak_runtime_dependencies
     return 0
   fi
 
-  warn "Using user Flatpak scope because CANVA_FLATPAK_SCOPE=user was set."
-  warn "This is the only mode that installs Flatpak build dependencies in user scope."
-  warn "It may create a separate user Flathub remote and duplicate runtimes/apps."
+  ui_warn "Using user Flatpak scope because CANVA_FLATPAK_SCOPE=user was set."
+  ui_warn "This is the only mode that installs Flatpak build dependencies in user scope."
+  ui_warn "It may create a separate user Flathub remote and duplicate runtimes/apps."
 
   flatpak remote-add --if-not-exists "${scope_arg}" flathub \
     https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -114,15 +114,15 @@ ensure_flathub_runtime() {
     org.freedesktop.Sdk//25.08 \
     org.electronjs.Electron2.BaseApp//25.08
 
-  ok "Flatpak runtimes are ready in user scope"
+  ui_ok "Flatpak runtimes are ready in user scope"
 }
 
 ensure_system_flatpak_authorization() {
   validate_flatpak_scope
   [[ "${FLATPAK_SCOPE}" == "system" ]] || return 0
 
-  warn "Administrator authorization is required for system Flatpak installation."
-  warn "Canva Linux will write to the system Flatpak scope for all users."
+  ui_warn "Administrator authorization is required for system Flatpak installation."
+  ui_warn "Canva Linux will write to the system Flatpak scope for all users."
   sudo -v
 }
 
@@ -130,19 +130,19 @@ ensure_system_flatpak_runtime_dependencies() {
   validate_flatpak_scope
   [[ "${FLATPAK_SCOPE}" == "system" ]] || return 0
 
-  info "Ensuring required Flatpak runtimes are installed in system scope"
+  ui_info "Ensuring required Flatpak runtimes are installed in system scope"
   sudo flatpak install -y --system flathub \
     org.freedesktop.Platform//25.08 \
     org.freedesktop.Sdk//25.08 \
     org.electronjs.Electron2.BaseApp//25.08
 
-  ok "Flatpak runtimes are ready in system scope"
+  ui_ok "Flatpak runtimes are ready in system scope"
 }
 
 build_electron_output() {
   ensure_npm_dependencies
 
-  info "Building Electron app (target: dir)"
+  ui_info "Building Electron app (target: dir)"
   npm run dist
 }
 
@@ -154,24 +154,24 @@ ensure_linux_unpacked() {
     unpacked_dir="$(find dist -maxdepth 1 -type d -name 'linux*unpacked' 2>/dev/null | head -1)"
   fi
 
-  [[ -z "$unpacked_dir" ]] && err "Folder 'dist/linux*unpacked' was not found. Did the Electron build fail?"
+  [[ -z "$unpacked_dir" ]] && ui_die "Folder 'dist/linux*unpacked' was not found. Did the Electron build fail?"
 
   if [[ "$unpacked_dir" != "dist/linux-unpacked" ]]; then
-    info "Creating symlink dist/linux-unpacked -> $unpacked_dir"
+    ui_info "Creating symlink dist/linux-unpacked -> $unpacked_dir"
     ln -sfn "$(basename "$unpacked_dir")" dist/linux-unpacked
   fi
 
-  ok "Electron build output ready: $unpacked_dir"
+  ui_ok "Electron build output ready: $unpacked_dir"
 }
 
 build_flatpak_repo() {
   local scope_arg
   scope_arg="$(flatpak_scope_arg)"
 
-  info "Cleaning previous Flatpak build artifacts"
+  ui_info "Cleaning previous Flatpak build artifacts"
   remove_flatpak_build_artifacts
 
-  info "Building Flatpak repository using ${FLATPAK_SCOPE} dependency scope"
+  ui_info "Building Flatpak repository using ${FLATPAK_SCOPE} dependency scope"
   flatpak-builder \
     --force-clean \
     "${scope_arg}" \
@@ -180,7 +180,7 @@ build_flatpak_repo() {
     build-dir \
     io.github.coletivo420.canva-linux.yml
 
-  info "Generating repository summary"
+  ui_info "Generating repository summary"
   flatpak build-update-repo --generate-static-deltas repo
 }
 
@@ -194,10 +194,10 @@ install_flatpak_direct() {
     return 0
   fi
 
-  info "Cleaning previous Flatpak build artifacts"
+  ui_info "Cleaning previous Flatpak build artifacts"
   remove_flatpak_build_dir
 
-  info "Building and installing Flatpak directly in ${FLATPAK_SCOPE} scope"
+  ui_info "Building and installing Flatpak directly in ${FLATPAK_SCOPE} scope"
   flatpak-builder \
     --force-clean \
     "${scope_arg}" \
@@ -206,7 +206,7 @@ install_flatpak_direct() {
     build-dir \
     io.github.coletivo420.canva-linux.yml
 
-  ok "Direct local Flatpak install completed in ${FLATPAK_SCOPE} scope"
+  ui_ok "Direct local Flatpak install completed in ${FLATPAK_SCOPE} scope"
 }
 
 install_system_flatpak_from_repo() {
@@ -215,7 +215,7 @@ install_system_flatpak_from_repo() {
   repo_path="$(pwd -P)/repo"
   repo_uri="$(local_flatpak_repo_uri "${repo_path}")"
 
-  info "Configuring local system Flatpak remote: ${LOCAL_FLATPAK_REMOTE}"
+  ui_info "Configuring local system Flatpak remote: ${LOCAL_FLATPAK_REMOTE}"
   if flatpak remotes --system | awk '{print $1}' | grep -qx "${LOCAL_FLATPAK_REMOTE}"; then
     sudo flatpak remote-modify \
       --system \
@@ -231,20 +231,20 @@ install_system_flatpak_from_repo() {
       "${repo_uri}"
   fi
 
-  info "Installing Canva Linux from local repo into system Flatpak scope"
+  ui_info "Installing Canva Linux from local repo into system Flatpak scope"
   sudo flatpak install -y --system --reinstall "${LOCAL_FLATPAK_REMOTE}" "${FLATPAK_APP_ID}"
 
-  ok "Direct local Flatpak install completed in system scope"
+  ui_ok "Direct local Flatpak install completed in system scope"
 }
 
 run_flatpak_dev() {
   local scope_arg
   scope_arg="$(flatpak_scope_arg)"
 
-  info "Cleaning previous Flatpak build artifacts"
+  ui_info "Cleaning previous Flatpak build artifacts"
   remove_flatpak_build_dir
 
-  info "Building Flatpak without installing, using ${FLATPAK_SCOPE} dependency scope"
+  ui_info "Building Flatpak without installing, using ${FLATPAK_SCOPE} dependency scope"
   flatpak-builder \
     --force-clean \
     "${scope_arg}" \
@@ -252,7 +252,7 @@ run_flatpak_dev() {
     build-dir \
     io.github.coletivo420.canva-linux.yml
 
-  info "Running app from build-dir without installing"
+  ui_info "Running app from build-dir without installing"
   flatpak-builder \
     --run \
     build-dir \
