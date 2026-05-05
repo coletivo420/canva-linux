@@ -93,7 +93,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `electron/preload/debug.ts`
 - `electron/preload/eyedropper-routing-diagnostics.ts`
 - `electron/preload/native-eyedropper-wrapper.ts`
-- `electron/preload/toolbar.js`
+- `electron/preload/toolbar.ts`
 - `electron/preload/upload-diagnostics.ts`
 - `electron/shared/debug.ts`
 - `electron/shared/navigation.ts`
@@ -116,8 +116,8 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/build-appimage.sh`
 - `scripts/build-electron-dir.sh`
 - `scripts/build-flatpak-bundle.sh`
-- `scripts/build-preload-bundle.js`
-- `scripts/build-runtime.js`
+- `scripts/build-preload-bundle.js` (Node wrapper) / `scripts/build-preload-bundle.ts`
+- `scripts/build-runtime.js` (Node wrapper) / `scripts/build-runtime.ts`
 - `scripts/build-runtime.sh`
 - `scripts/check-ai-guardrails.js`
 - `scripts/check-dependency-policy.js`
@@ -129,8 +129,8 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/check-shell-action-ids.js`
 - `scripts/check-version-consistency.js`
 - `scripts/clean-artifacts.sh`
-- `scripts/clean-runtime-build.js`
-- `scripts/copy-runtime-assets.js`
+- `scripts/clean-runtime-build.js` (Node wrapper) / `scripts/clean-runtime-build.ts`
+- `scripts/copy-runtime-assets.js` (Node wrapper) / `scripts/copy-runtime-assets.ts`
 - `scripts/core-wrapper.js`
 - `scripts/core/action-registry.ts`
 - `scripts/core/action-runner.ts`
@@ -143,7 +143,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/core/validate-actions.ts`
 - `scripts/desktop-integration-common.sh`
 - `scripts/doctor.sh`
-- `scripts/electron-builder-before-build.js`
+- `scripts/electron-builder-before-build.js` (Node wrapper) / `scripts/electron-builder-before-build.ts`
 - `scripts/ensure-npm-dependencies.sh`
 - `scripts/fix-build-permissions.sh`
 - `scripts/flatpak-build-common.sh`
@@ -159,7 +159,8 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/project-ui.json`
 - `scripts/purge-installations.sh`
 - `scripts/reset-user-data.sh`
-- `scripts/run-tui.js`
+- `scripts/run-tui.js` (Node wrapper) / `scripts/run-tui.ts`
+- `scripts/run-typescript-script.js`
 - `scripts/runtime-guidance-common.sh`
 - `scripts/show-detected-installations.sh`
 - `scripts/show-version-info.sh`

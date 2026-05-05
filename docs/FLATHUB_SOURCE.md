@@ -42,7 +42,7 @@ Before submission, the maintainer must review:
 
 The Canva editor runtime uses `electron/preload/canva.bundle.js`, but that file is generated from the modular source files before the Electron build.
 
-For source review, treat the maintained files under `electron/preload/*.js`, `electron/shared/*.js`, and `scripts/build-preload-bundle.js` as the source of truth. The final Flathub build path should regenerate the bundle from those sources instead of relying on a local untracked bundle artifact.
+For source review, treat the maintained files under `electron/preload/*.ts`, `electron/shared/*.ts`, and `scripts/build-preload-bundle.ts` as the source of truth. The final Flathub build path should regenerate the bundle from those sources instead of relying on a local untracked bundle artifact.
 
 ## Screenshot URL review
 
