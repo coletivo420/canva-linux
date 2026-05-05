@@ -42,11 +42,23 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let overviewLoading = false;
 
   const detectedSummary = (s: any) => {
-    if (!s) return ['  Native Install: loading...', '  Flatpak Install: loading...', '  AppImage artifacts: loading...'];
+    if (!s) return [
+      `  Native Install: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
+      `  Flatpak Install: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
+      `  AppImage artifacts: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
+    ];
     const i = s.installations;
     const native = i.nativeSystem && i.nativeUser ? 'detected (system + user)' : i.nativeSystem ? 'detected (system)' : i.nativeUser ? 'detected (user)' : 'not detected';
     const flatpak = i.flatpakSystem && i.flatpakUser ? 'detected (system + user)' : i.flatpakSystem ? 'detected (system)' : i.flatpakUser ? 'detected (user)' : 'not detected';
-    return [`  Native Install: ${native}`, `  Flatpak Install: ${flatpak}`, `  AppImage artifacts: ${i.appImageArtifacts ? 'detected' : 'not detected'}`];
+    const nativeColor = native.startsWith('detected') ? tuiTheme.colors.nativeDetected : tuiTheme.colors.flatpakNotDetected;
+    const flatpakColor = flatpak.startsWith('not detected') ? tuiTheme.colors.flatpakNotDetected : tuiTheme.colors.nativeDetected;
+    const appImageValue = i.appImageArtifacts ? 'detected' : 'not detected';
+    const appImageColor = i.appImageArtifacts ? tuiTheme.colors.nativeDetected : tuiTheme.colors.flatpakNotDetected;
+    return [
+      `  Native Install: {${nativeColor}-fg}${native}{/${nativeColor}-fg}`,
+      `  Flatpak Install: {${flatpakColor}-fg}${flatpak}{/${flatpakColor}-fg}`,
+      `  AppImage artifacts: {${appImageColor}-fg}${appImageValue}{/${appImageColor}-fg}`,
+    ];
   };
 
   function refreshOverviewStatus(): void {
@@ -99,7 +111,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       menu.setItems(mainItems.map((item) => item.label));
       content.setLabel('Overview');
       content.setContent([
-        CANVA_LOGO_LINES.join('\n'), '', 'Version:', `  ${opts.version}`, '', 'Phase:', `  ${opts.phase}`, '', 'Version Release Notes:', `  ${opts.releaseNotes}`,
+        `{${tuiTheme.colors.logo}-fg}${CANVA_LOGO_LINES.join('\n')}{/${tuiTheme.colors.logo}-fg}`, '', 'Version:', `  {${tuiTheme.colors.version}-fg}${opts.version}{/${tuiTheme.colors.version}-fg}`, '', 'Phase:', `  {${tuiTheme.colors.phase}-fg}${opts.phase}{/${tuiTheme.colors.phase}-fg}`, '', 'Version Release Notes:', `  ${opts.releaseNotes}`,
         '', 'Package / Version Information:', '  App ID: io.github.coletivo420.canva-linux', '  Executable: canva-linux', '  Repository: https://github.com/coletivo420/canva-linux',
         '', 'Detected Installation State:', ...detectedSummary(status),
       ].join('\n'));
@@ -118,7 +130,32 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     currentActions = getActionsByGroup(group, opts.rootDir);
     menu.setItems(currentActions.map((a) => a.label));
     content.setLabel(view[0].toUpperCase() + view.slice(1));
-    content.setContent(view === 'maintenance' ? ['Select an action and press Enter.', '', 'Detected Installation State:', ...detectedSummary(overviewStatus)].join('\n') : 'Select an action and press Enter.');
+    const infoByView: Record<'install' | 'development' | 'maintenance', string[]> = {
+      install: [
+        'Install actions',
+        '- Native Install: installs outside Flatpak sandbox (system/user).',
+        '- Flatpak Install: local sandboxed installation (system/user).',
+        '- Review action description before running.',
+      ],
+      development: [
+        'Development actions',
+        '- Build runtime and linux-unpacked artifacts.',
+        '- Generate Flatpak/AppImage packages.',
+        '- Run validations and doctor diagnostics.',
+      ],
+      maintenance: [
+        'Maintenance actions',
+        '- Clean build artifacts and reset user data.',
+        '- Uninstall Native/Flatpak variants.',
+        '- Purge removes installs and user data (dangerous).',
+      ],
+    };
+    const selected = currentActions[menu.selected] ?? null;
+    const selectedInfo = selected
+      ? ['', 'Selected action:', `  ${selected.label}`, `  ${selected.description ?? 'No description available.'}`, `  Risk: ${selected.dangerous ? 'high' : 'normal'}`, `  Long running: ${selected.longRunning ? 'yes' : 'no'}`, `  Command: ${selected.command ? `${selected.command} ${(selected.args ?? []).join(' ')}`.trim() : 'planned / unavailable'}`]
+      : [];
+    const maintenanceState = view === 'maintenance' ? ['', 'Detected Installation State:', ...detectedSummary(overviewStatus)] : [];
+    content.setContent([...infoByView[group as 'install' | 'development' | 'maintenance'], ...selectedInfo, ...maintenanceState].join('\n'));
     screen.render();
   }
 

@@ -53,17 +53,18 @@ run_tui_mode(){
   fi
   if [[ "$status" -eq "$TUI_SWITCH_TO_SHELL_EXIT_CODE" ]]; then
     run_interactive_mode
-    return
+    return 0
   fi
   if [[ "$status" -ne 0 ]]; then
     if [[ "$allow_fallback" == "yes" ]]; then
       ui_warn "TUI failed to start. Falling back to shell menu."
       ui_info "You can retry the TUI later with ./canva-linux.sh --tui."
       run_interactive_mode
-      return
+      return 0
     fi
-    exit "$status"
+    return "$status"
   fi
+  return 0
 }
 
 show_help(){ cat <<'H'
@@ -116,7 +117,13 @@ H
 get_package_version(){ node -p "require('./package.json').version" 2>/dev/null || printf 'unknown'; }
 print_main_screen(){
   ui_logo
-  ui_version_line "$(get_package_version)" "${PROJECT_PHASE}"
+  local display_version="${PROJECT_DISPLAY_VERSION:-$(get_package_version)}"
+  local display_status="${PROJECT_STATUS:-}"
+  if [[ -n "${display_status}" ]]; then
+    ui_version_line "${display_version} (${display_status})" "${PROJECT_PHASE}"
+  else
+    ui_version_line "${display_version}" "${PROJECT_PHASE}"
+  fi
   printf '%s%s%s\n' "${BOLD}${UI_PRIMARY}" "${APP_TOOL_TITLE}" "${RESET}"
   echo
   echo 'Package / Version Information:'
@@ -202,7 +209,7 @@ case "$c" in
   *) ;;
 esac
 }
-run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;5) if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then ui_warn "CANVA_NO_TUI=1 is set. Unset it to use the TUI Tool."; else run_tui_mode no; fi;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
+run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;5) if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then ui_warn "CANVA_NO_TUI=1 is set. Unset it to use the TUI Tool."; else run_tui_mode no; return $?; fi;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
 
 if [[ $# -eq 0 ]]; then
   if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then

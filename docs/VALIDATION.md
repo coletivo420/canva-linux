@@ -40,9 +40,9 @@ npm run build:tui
 
 Manual checks:
 - Header shows Canva Linux — Install and Development Tool;
-- Header shows Phase: 0.1.4.11-dev.44;
+- Header shows Phase: 0.1.4.11-dev.46;
 - Overview shows logo;
-- Overview shows Version below the logo;
+- Overview shows Version `0.1.4.11 (Alpha)` below the logo;
 - Overview shows Phase below Version;
 - Overview shows Version Release Notes;
 - selected menu item is visibly highlighted;
@@ -51,9 +51,12 @@ Manual checks:
 - shell fallback still respects NO_COLOR=1.
 
 
-## dev45 UX validation
+## dev46 UX validation
 
 Run `./canva-linux.sh --tui` and validate: F4 switches to Shell Tool, Shell `Use TUI Tool` returns to TUI, Overview shows package/version + detection, maintenance hides manual detect/uninstall-detected, logs are larger, native scrollbar appears, F5 copies logs or warns.
 
 Clipboard tool check:
 `command -v wl-copy || command -v qdbus6 || command -v qdbus || command -v gpaste-client || command -v gpaste || command -v xclip || command -v xsel`.
+
+
+Manual regression: shell -> `Use TUI Tool` -> press `q`/`Esc` and confirm exit; app must terminate (must not return to shell menu).

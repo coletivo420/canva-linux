@@ -2,6 +2,8 @@
 
 A community-maintained open-source desktop wrapper for use with Canva.
 
+Current release line: **0.1.4.11 (Alpha)** / phase **0.1.4.11-dev.46**.
+
 ## Quick Start
 
 ```bash
@@ -82,33 +84,9 @@ flatpak run io.github.coletivo420.canva-linux
 ./dist/<artifact>.AppImage
 ```
 
-## Management / direct CLI commands
+## Command reference
 
-All direct commands are resolved through `scripts/actions.json`.
-
-| Command | Description |
-| --- | --- |
-| `--tui` | Force Blessed TUI assistant. |
-| `--no-tui` | Force shell fallback menu. |
-| `--install-native` | Run Native Install. |
-| `--install-flatpak` | Build and install Flatpak locally. |
-| `--bundle-flatpak` | Create distributable `.flatpak`. |
-| `--bundle-appimage` | Create AppImage package. |
-| `--prepare-aur` | Planned for `0.1.4.12-dev.1`. |
-| `--bundle-deb` | Planned after AUR stabilization. |
-| `--bundle-rpm` | Planned after AUR stabilization. |
-| `--build-runtime` | Build compiled Electron runtime. |
-| `--build-dir` | Build `dist/linux-unpacked`. |
-| `--validate` | Run project validation. |
-| `--validate-appimage` | Validate AppImage artifacts. |
-| `--validate-appimage-extract` | Validate AppImage + extraction checks. |
-| `--doctor` | Check host tools. |
-| `--clean` | Remove generated artifacts. |
-| `--uninstall` | Detect and uninstall variants. |
-| `--uninstall-native` | Uninstall Native variant. |
-| `--uninstall-flatpak` | Uninstall Flatpak variant. |
-| `--reset-user-data` | Remove user data only. |
-| `--purge` | Uninstall + remove user data. |
+See [docs/CLI.md](docs/CLI.md) for direct flags, examples and environment variables.
 
 ## Documentation links
 
@@ -118,6 +96,9 @@ All direct commands are resolved through `scripts/actions.json`.
 - [Development Guide](docs/DEVELOPMENT.md)
 - [Technical Notes](docs/TECHNICAL.md)
 - [AppImage FUSE Requirements](docs/APPIMAGE_FUSE.md)
+- [TypeScript](docs/TYPESCRIPT.md)
+- [CL-EyeDropper](docs/CANVA_LINUX_EYEDROPPER.md)
+- [AI Guardrails](docs/AI_GUARDRAILS.md)
 
 
 ## TUI and Shell Tool switching

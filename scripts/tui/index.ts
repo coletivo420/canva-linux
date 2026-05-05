@@ -14,12 +14,12 @@ if (process.argv.includes('--help')) {
 }
 
 function getProjectPhase(): string {
-  return process.env.CANVA_PROJECT_PHASE?.trim() || 'unknown';
+  return process.env.CANVA_PROJECT_PHASE?.trim() || projectUi.phase || 'unknown';
 }
 
 try {
   const screen = createApp({
-    version: getPackageVersion(),
+    version: `${projectUi.displayVersion ?? getPackageVersion()}${projectUi.status ? ` (${projectUi.status})` : ''}`,
     phase: getProjectPhase(),
     rootDir: process.cwd(),
     title: projectUi.tuiTitle,
