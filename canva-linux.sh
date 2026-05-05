@@ -218,8 +218,20 @@ if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
 case "$c" in
   1) run_action_by_id "clean" ;;
   2) run_action_by_id "reset-user-data" ;;
-  3) run_action_by_id "uninstall-native" ;;
-  4) run_action_by_id "uninstall-flatpak" ;;
+  3)
+    echo "1) System Wide"
+    echo "2) Current User"
+    c2="$(ui_read_choice "Choose native uninstall scope: ")" || return
+    [[ "$c2" == "1" ]] && run_action_by_id "uninstall-native-system"
+    [[ "$c2" == "2" ]] && run_action_by_id "uninstall-native-user"
+    ;;
+  4)
+    echo "1) System Wide"
+    echo "2) Current User"
+    c2="$(ui_read_choice "Choose Flatpak uninstall scope: ")" || return
+    [[ "$c2" == "1" ]] && run_action_by_id "uninstall-flatpak-system"
+    [[ "$c2" == "2" ]] && run_action_by_id "uninstall-flatpak-user"
+    ;;
   5) run_action_by_id "fix-build-permissions" ;;
   6) run_action_by_id "purge" ;;
   *) ;;

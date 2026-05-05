@@ -24,8 +24,8 @@ detect_appimage_artifacts(){ compgen -G "dist/*.AppImage" >/dev/null; }
 read_version_file(){ local version_file="$1"; [[ -f "$version_file" ]] && tr -d '[:space:]' < "$version_file" || true; }
 detect_native_system_version(){ read_version_file "/opt/canva-linux/CANVA_LINUX_VERSION"; }
 detect_native_user_version(){ read_version_file "${HOME}/.local/opt/canva-linux/CANVA_LINUX_VERSION"; }
-detect_flatpak_system_version(){ command -v flatpak >/dev/null 2>&1 || return 0; flatpak --system info "${APP_ID}" --show-version 2>/dev/null || true; }
-detect_flatpak_user_version(){ command -v flatpak >/dev/null 2>&1 || return 0; flatpak --user info "${APP_ID}" --show-version 2>/dev/null || true; }
+detect_flatpak_system_version(){ command -v flatpak >/dev/null 2>&1 || return 0; local v; v=$(flatpak --system info "${APP_ID}" --show-version 2>/dev/null || true); [[ -n "${v}" ]] && { echo "${v}"; return 0; }; local d="/var/lib/flatpak/app/${APP_ID}/current/active/files/share/canva-linux/version"; [[ -f "$d" ]] && sed -n 's/.*"version": "\([^\"]*\)".*/\1/p' "$d" | head -n1 || true; }
+detect_flatpak_user_version(){ command -v flatpak >/dev/null 2>&1 || return 0; local v; v=$(flatpak --user info "${APP_ID}" --show-version 2>/dev/null || true); [[ -n "${v}" ]] && { echo "${v}"; return 0; }; local d="${HOME}/.local/share/flatpak/app/${APP_ID}/current/active/files/share/canva-linux/version"; [[ -f "$d" ]] && sed -n 's/.*"version": "\([^\"]*\)".*/\1/p' "$d" | head -n1 || true; }
 detect_appimage_version(){ local file; file=$(find dist -maxdepth 1 -type f -name '*.AppImage' | sort | tail -n1 || true); [[ -n "$file" ]] || return 0; basename "$file" | sed -E 's/.*(v?[0-9]+\.[0-9]+\.[0-9]+([-a-zA-Z0-9\.]*)?).*/\1/'; }
 
 detect_installations(){
@@ -70,37 +70,22 @@ print_detected_installations(){
 
 print_detected_installations_compact(){
   detect_installations
-  local native="not detected" flatpak="not detected" appimage="not detected"
-  if [[ "$DETECTED_NATIVE_SYSTEM" == true && "$DETECTED_NATIVE_USER" == true ]]; then native="detected (system + user)";
-  elif [[ "$DETECTED_NATIVE_SYSTEM" == true ]]; then native="detected (system)";
-  elif [[ "$DETECTED_NATIVE_USER" == true ]]; then native="detected (user)"; fi
-  if [[ "$DETECTED_FLATPAK_SYSTEM" == true && "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="detected (system + user)";
-  elif [[ "$DETECTED_FLATPAK_SYSTEM" == true ]]; then flatpak="detected (system)";
-  elif [[ "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="detected (user)"; fi
-  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && appimage="detected" || appimage="not detected"
-
-  local color_reset="${RESET:-}" color_green="${GREEN:-}" color_purple="${MAGENTA:-}" color_yellow="${YELLOW:-}"
-  local native_line="${native}" flatpak_line="${flatpak}" appimage_line="${appimage}"
-  if [[ "$native" == detected* ]]; then
-    native_line="${color_green}${native}${color_reset}"
-  fi
-  if [[ "$flatpak" == "not detected" ]]; then
-    flatpak_line="${color_purple}not detected${color_reset}"
-  fi
-  if [[ "$appimage" == "not detected" ]]; then
-    appimage_line="${color_purple}not detected${color_reset}"
-  fi
-
-  echo "Detected Installation State:"
-  if [[ "$native" == "not detected" ]]; then native_line="${color_purple}not detected${color_reset}"; fi
-  if [[ "$flatpak" == detected* ]]; then flatpak_line="${color_green}${flatpak}${color_reset}"; fi
-  if [[ "$appimage" == detected* ]]; then appimage_line="${color_green}${appimage}${color_reset}"; fi
-  echo "  Native Install: ${native_line}"
-  [[ "$DETECTED_NATIVE_SYSTEM" == true ]] && echo "    Native System version: ${DETECTED_NATIVE_SYSTEM_VERSION:-version unknown}"
-  [[ "$DETECTED_NATIVE_USER" == true ]] && echo "    Native User version: ${DETECTED_NATIVE_USER_VERSION:-version unknown}"
-  echo "  Flatpak Install: ${flatpak_line}"
-  [[ "$DETECTED_FLATPAK_SYSTEM" == true ]] && echo "    Flatpak System version: ${DETECTED_FLATPAK_SYSTEM_VERSION:-version unknown}"
-  [[ "$DETECTED_FLATPAK_USER" == true ]] && echo "    Flatpak User version: ${DETECTED_FLATPAK_USER_VERSION:-version unknown}"
-  echo "  AppImage artifacts: ${appimage_line}"
-  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && echo "    AppImage version: ${DETECTED_APPIMAGE_VERSION:-version unknown}"
+  local color_reset="${RESET:-}" color_green="${GREEN:-}" color_purple="${MAGENTA:-}"
+  local fmt_status
+  fmt_status(){
+    local detected="$1" version="$2"
+    if [[ "$detected" == true ]]; then
+      local ver="version unknown"; [[ -n "${version}" ]] && ver="v${version}"
+      printf '%sdetected%s      %s' "${color_green}" "${color_reset}" "${ver}"
+    else
+      printf '%snot detected%s' "${color_purple}" "${color_reset}"
+    fi
+  }
+  echo "Detected Installations"
+  echo "  Native System:   $(fmt_status "$DETECTED_NATIVE_SYSTEM" "$DETECTED_NATIVE_SYSTEM_VERSION")"
+  echo "  Native User:     $(fmt_status "$DETECTED_NATIVE_USER" "$DETECTED_NATIVE_USER_VERSION")"
+  echo "  Flatpak System:  $(fmt_status "$DETECTED_FLATPAK_SYSTEM" "$DETECTED_FLATPAK_SYSTEM_VERSION")"
+  echo "  Flatpak User:    $(fmt_status "$DETECTED_FLATPAK_USER" "$DETECTED_FLATPAK_USER_VERSION")"
+  echo "  AppImage:        $(fmt_status "$DETECTED_APPIMAGE_ARTIFACTS" "$DETECTED_APPIMAGE_VERSION")"
 }
+

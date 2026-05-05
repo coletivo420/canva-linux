@@ -19,7 +19,7 @@ const colors = {
   statusDetected: supportsTrueColor ? themeConfig.palette.success : themeConfig.ansiFallback.success,
   statusNotDetected: supportsTrueColor ? themeConfig.palette.canvaPurple : themeConfig.ansiFallback.accent,
   selectedActionTitle: supportsTrueColor ? themeConfig.palette.success : themeConfig.ansiFallback.success,
-  selectedActionLabel: supportsTrueColor ? themeConfig.palette.canvaPurple : themeConfig.ansiFallback.accent,
+  selectedActionLabel: supportsTrueColor ? themeConfig.palette.text : "white",
   logo: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,
   version: supportsTrueColor ? themeConfig.palette.canvaLightBlue : themeConfig.ansiFallback.secondary,
   phase: supportsTrueColor ? themeConfig.palette.warning : themeConfig.ansiFallback.warning,

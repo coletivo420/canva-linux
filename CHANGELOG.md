@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.4.11-dev.52] - 2026-05-05
+
+### Fixed
+- Fixed installed version rendering in TUI and shell detected-installation output.
+- Fixed Flatpak uninstall scope handling so system/user actions do not remove both scopes.
+- Fixed shell Maintenance uninstall menu entries to use scoped uninstall action ids.
+
+### Changed
+- Changed selected-action values, description text, and help descriptions back to default readable text colors.
+- Kept purple only for `not detected` status/accent usage.
+- Updated technical version and phase identity to `0.1.4-dev.11.52` / `0.1.4.11-dev.52`.
+
 ## [0.1.4.11-dev.51] - 2026-05-05
 
 ### Fixed
