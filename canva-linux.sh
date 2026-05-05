@@ -9,8 +9,17 @@ source "${ROOT_DIR}/scripts/user-data-common.sh"
 source "${ROOT_DIR}/scripts/install-detection-common.sh"
 ui_init
 run_script(){ local script="$1"; shift; [[ -f "$script" ]] || { ui_error "Script not found: $script"; exit 1; }; bash "$script" "$@"; }
-run_action_by_cli_flag(){ local flag="$1"; local yes_args=(); [[ "$FORCE" == true ]] && yes_args=(--yes); node scripts/action-runner.js --cli "$flag" "${yes_args[@]}"; }
-run_action_by_id(){ local id="$1"; local yes_args=(); [[ "$FORCE" == true ]] && yes_args=(--yes); node scripts/action-runner.js --id "$id" "${yes_args[@]}"; }
+ensure_action_runner_available(){
+  if command -v node >/dev/null 2>&1; then
+    return 0
+  fi
+  ui_error "Node.js is required for shared Action Registry commands and shell menu actions."
+  ui_info "Install Node.js, then retry."
+  ui_info "Tip: --no-tui shell mode also requires Node.js in dev41+."
+  exit 1
+}
+run_action_by_cli_flag(){ local flag="$1"; ensure_action_runner_available; local yes_args=(); [[ "$FORCE" == true ]] && yes_args=(--yes); node scripts/action-runner.js --cli "$flag" "${yes_args[@]}"; }
+run_action_by_id(){ local id="$1"; ensure_action_runner_available; local yes_args=(); [[ "$FORCE" == true ]] && yes_args=(--yes); node scripts/action-runner.js --id "$id" "${yes_args[@]}"; }
 
 can_run_tui(){
   [[ -t 0 ]] || return 1
@@ -218,7 +227,7 @@ case "$c" in
   4) run_action_by_id "version-info" ;;
   5) action_uninstall ;;
   6) run_script "${ROOT_DIR}/scripts/uninstall-native.sh" ;;
-  7) run_action_by_id "uninstall-flatpak" ;;
+  7) if [[ "$FORCE" != true ]]; then read -r -p "Uninstall Flatpak Install? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; fi; FORCE=true run_action_by_id "uninstall-flatpak" ;;
   8) action_purge ;;
   *) ;;
 esac
