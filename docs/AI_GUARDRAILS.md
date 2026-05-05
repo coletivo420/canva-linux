@@ -21,3 +21,12 @@
 - Refresh detected installations after any state-changing maintenance or installation action.
 - Keep completed progress result visible until the user navigates; clear only on navigation when idle.
 - When no AppImage artifact exists, show `not detected` (never `loading...`).
+
+- `detected` must be green in TUI and shell status outputs.
+- `not detected` must be purple in TUI and shell status outputs.
+- `Selected action` title and selected label must use purple emphasis in TUI.
+- README must only keep clone/cd/./canva-linux.sh commands on the landing page.
+- System-wide uninstall actions must use TUI root-auth popup and declare `requiresRoot: true`.
+- Session log must reset on each new TUI session start.
+- Detection refresh must not clear/override progress results.
+- Detection should render installed version when available.

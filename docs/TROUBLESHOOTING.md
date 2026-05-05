@@ -1,6 +1,6 @@
 # Troubleshooting
 
-## `node: comando não encontrado`
+## `node: command not found`
 
 This error means Node.js is missing from the host system or is not available in `PATH`.
 

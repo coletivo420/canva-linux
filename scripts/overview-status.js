@@ -9,7 +9,7 @@ function readPhase() {
   return m ? m[1] : 'unknown';
 }
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-const bash = `source scripts/install-detection-common.sh; detect_installations; printf '{"nativeSystem":%s,"nativeUser":%s,"flatpakSystem":%s,"flatpakUser":%s,"appImageArtifacts":%s}' "$DETECTED_NATIVE_SYSTEM" "$DETECTED_NATIVE_USER" "$DETECTED_FLATPAK_SYSTEM" "$DETECTED_FLATPAK_USER" "$DETECTED_APPIMAGE_ARTIFACTS"`;
+const bash = `source scripts/install-detection-common.sh; detect_installations; printf '{"nativeSystem":%s,"nativeUser":%s,"flatpakSystem":%s,"flatpakUser":%s,"appImageArtifacts":%s,"nativeSystemVersion":"%s","nativeUserVersion":"%s","flatpakSystemVersion":"%s","flatpakUserVersion":"%s","appImageVersion":"%s"}' "$DETECTED_NATIVE_SYSTEM" "$DETECTED_NATIVE_USER" "$DETECTED_FLATPAK_SYSTEM" "$DETECTED_FLATPAK_USER" "$DETECTED_APPIMAGE_ARTIFACTS" "$DETECTED_NATIVE_SYSTEM_VERSION" "$DETECTED_NATIVE_USER_VERSION" "$DETECTED_FLATPAK_SYSTEM_VERSION" "$DETECTED_FLATPAK_USER_VERSION" "$DETECTED_APPIMAGE_VERSION"`;
 const out = spawnSync('bash', ['-c', bash], { cwd: root, encoding: 'utf8' });
 let installations = { nativeSystem: false, nativeUser: false, flatpakSystem: false, flatpakUser: false, appImageArtifacts: false };
 if (out.status === 0) {
