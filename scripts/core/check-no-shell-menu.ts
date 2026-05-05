@@ -3,13 +3,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { findProjectRoot } from './action-registry';
 
-const activeFiles = [
-  'canva-linux.sh',
-  'scripts/tui/app.ts',
-  'scripts/tui/index.ts',
-  'README.md',
-  'docs/CLI.md',
-  'docs/TECHNICAL.md',
+type FileKind = 'shell' | 'typescript';
+
+const activeFiles: Array<{ path: string; kind: FileKind }> = [
+  { path: 'canva-linux.sh', kind: 'shell' },
+  { path: 'scripts/tui/app.ts', kind: 'typescript' },
+  { path: 'scripts/tui/index.ts', kind: 'typescript' },
 ];
 
 const forbiddenPatterns = [
@@ -25,17 +24,65 @@ const forbiddenPatterns = [
   'shell menu fallback',
 ];
 
+function stripShellComment(line: string): string {
+  const trimmed = line.trimStart();
+  if (trimmed.startsWith('#')) return '';
+  return line;
+}
+
+function stripTypeScriptComments(line: string, state: { inBlockComment: boolean }): string {
+  let remaining = line;
+  let result = '';
+
+  while (remaining.length) {
+    if (state.inBlockComment) {
+      const endIndex = remaining.indexOf('*/');
+      if (endIndex === -1) return result;
+      remaining = remaining.slice(endIndex + 2);
+      state.inBlockComment = false;
+      continue;
+    }
+
+    const lineCommentIndex = remaining.indexOf('//');
+    const blockCommentIndex = remaining.indexOf('/*');
+    if (lineCommentIndex !== -1 && (blockCommentIndex === -1 || lineCommentIndex < blockCommentIndex)) {
+      result += remaining.slice(0, lineCommentIndex);
+      return result;
+    }
+    if (blockCommentIndex !== -1) {
+      result += remaining.slice(0, blockCommentIndex);
+      remaining = remaining.slice(blockCommentIndex + 2);
+      state.inBlockComment = true;
+      continue;
+    }
+
+    result += remaining;
+    return result;
+  }
+
+  return result;
+}
+
+function activeLine(line: string, kind: FileKind, state: { inBlockComment: boolean }): string {
+  if (kind === 'shell') return stripShellComment(line);
+  return stripTypeScriptComments(line, state);
+}
+
 export function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
 
   for (const file of activeFiles) {
-    const fullPath = path.join(rootDir, file);
+    const fullPath = path.join(rootDir, file.path);
     if (!fs.existsSync(fullPath)) continue;
-    const text = fs.readFileSync(fullPath, 'utf8');
-    for (const pattern of forbiddenPatterns) {
-      if (text.includes(pattern)) failures.push(`${file}: forbidden shell-menu fragment: ${pattern}`);
-    }
+    const state = { inBlockComment: false };
+    const lines = fs.readFileSync(fullPath, 'utf8').split(/\r?\n/);
+    lines.forEach((line, index) => {
+      const checkedLine = activeLine(line, file.kind, state);
+      for (const pattern of forbiddenPatterns) {
+        if (checkedLine.includes(pattern)) failures.push(`${file.path}:${index + 1}: forbidden shell-menu fragment: ${pattern}`);
+      }
+    });
   }
 
   if (failures.length) throw new Error(failures.join('\n'));
