@@ -1,5 +1,25 @@
 # Development
 
+## Requirements
+
+- Node.js >= 22
+- npm
+- Git
+- Flatpak
+- flatpak-builder
+- desktop-file-utils
+- appstreamcli
+
+Flatpak-related tools are required for Flatpak install and `.flatpak` package generation. Native install and AppImage packaging still require Node.js, npm, Git and Electron build toolchain dependencies.
+
+## Setup
+
+```bash
+git clone https://github.com/coletivo420/canva-linux.git
+cd canva-linux
+npm ci --include=dev
+```
+
 ## Adding workflow actions
 
 All workflow actions must be registered in:

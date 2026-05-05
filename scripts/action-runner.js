@@ -41,7 +41,7 @@ function printSummary() {
     for (const a of items.filter((x)=>x.group===g)) {
       const flags=[]; if (a.planned||a.kind==='planned') flags.push('planned'); if (a.dangerous) flags.push('dangerous');
       const suffix=flags.length?` [${flags.join(', ')}]`:'';
-      console.log(`  ${a.id.padEnd(20)} ${a.label}${suffix}`);
+      console.log(`  ${a.id.padEnd(30)} ${a.label}${suffix}`);
     }
   }
 }

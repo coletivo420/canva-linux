@@ -2,6 +2,30 @@
 
 ## Workflow architecture
 
+## Runtime architecture
+
+Canva Linux is an Electron desktop wrapper around Canva.
+
+Core runtime files:
+
+- `electron/main/index.ts` - Electron shell entrypoint and composition root.
+- `electron/main/runtime.ts` - Linux runtime setup and shared session configuration.
+- `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring.
+- `electron/main/ipc.ts` - centralized main-process IPC routing.
+- `electron/main/logging.ts` - status output and startup diagnostics.
+- `electron/main/oauth.ts` - OAuth popup lifecycle and callback tracking.
+- `electron/main/shell.ts` - top-level window and toolbar shell helpers.
+- `electron/main/tab-controller.ts` - tab creation and orchestration.
+- `electron/main/tab-events.ts` - per-tab `webContents` policy and event wiring.
+- `electron/main/tabs.ts` - tab ordering, selection, closing and layout helpers.
+- `electron/main/eyedropper-bridge.ts` - scoped tab snapshot bridge for CL-EyeDropper.
+- `electron/preload/canva.ts` - source Canva page preload entrypoint.
+- `electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle.
+- `electron/preload/native-eyedropper-wrapper.ts` - Canva-facing EyeDropper replacement layer.
+- `electron/preload/cl-eyedropper/*.ts` - CL-EyeDropper TypeScript implementation.
+- `electron/shared/debug.ts` - shared debug parsing and log gating.
+- `electron/shared/navigation.ts` - shared Canva/OAuth URL classification.
+
 Canva Linux workflow actions are split into four layers:
 
 1. `scripts/actions.json` (canonical registry)
