@@ -32,12 +32,27 @@ function resolveAction() {
   }
   return null;
 }
+
+function printSummary() {
+  const groups = ['install','development','maintenance'];
+  const items = loadActions();
+  for (const g of groups) {
+    console.log(`${g[0].toUpperCase()+g.slice(1)}:`);
+    for (const a of items.filter((x)=>x.group===g)) {
+      const flags=[]; if (a.planned||a.kind==='planned') flags.push('planned'); if (a.dangerous) flags.push('dangerous');
+      const suffix=flags.length?` [${flags.join(', ')}]`:'';
+      console.log(`  ${a.id.padEnd(30)} ${a.label}${suffix}`);
+    }
+  }
+}
+
 function printHelp() { console.log(`Canva Linux Action Runner\n\nUsage:\n  node scripts/action-runner.js --list\n  node scripts/action-runner.js --list-ids\n  node scripts/action-runner.js --group <name>\n  node scripts/action-runner.js --id <action-id> [--dry-run] [--yes]\n  node scripts/action-runner.js --cli <flag> [--dry-run] [--yes]\n  node scripts/action-runner.js --id <action-id> --requires-confirmation\n\nOptions:\n  --help                    Show this help\n  --list                    List full actions JSON\n  --list-ids                List action ids\n  --group <name>            List actions by group\n  --id <action-id>          Resolve action by id\n  --cli <flag>              Resolve action by CLI flag\n  --dry-run                 Print resolved action and command\n  --requires-confirmation   Exit 0 if action requires confirmation, else 1\n  --yes                     Confirm dangerous action execution\n`); }
 
 if (has('--help')) { printHelp(); process.exit(0); }
 if (has('--list')) { console.log(JSON.stringify(loadActions(), null, 2)); process.exit(0); }
 if (has('--list-ids')) { console.log(loadActions().map((a) => a.id).join('\n')); process.exit(0); }
 if (has('--group')) { const group = value('--group'); console.log(JSON.stringify(loadActions().filter((a) => a.group === group), null, 2)); process.exit(0); }
+if (has('--summary')) { printSummary(); process.exit(0); }
 
 const action = resolveAction();
 if (!action) { printHelp(); process.exit(1); }

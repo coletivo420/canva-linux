@@ -7,161 +7,30 @@ A community-maintained open-source desktop wrapper for use with Canva.
 ```bash
 git clone https://github.com/coletivo420/canva-linux.git
 cd canva-linux
-./canva-linux.sh --doctor
+./canva-linux.sh
 ```
 
-### Native Install
+Running `./canva-linux.sh` opens the Canva Linux Terminal Assistant when the terminal supports it.
+On first launch, the assistant may install Node development dependencies and build the TUI bundle automatically.
 
-```bash
-./canva-linux.sh --install-native
-```
+## Canva Linux Terminal Assistant
 
-Native Install uses system scope by default and installs Canva Linux under `/opt/canva-linux`.
-
-To install only for the current user:
-
-```bash
-CANVA_NATIVE_SCOPE=user ./canva-linux.sh --install-native
-```
-
-Native Install runs outside the Flatpak sandbox and follows XDG/FHS-style paths for desktop integration and user-data cleanup.
-
-### Flatpak Install
-
-```bash
-./canva-linux.sh --install-flatpak
-```
-
-Flatpak Install builds and installs the sandboxed Flatpak package.
-
-### AppImage package
-
-```bash
-./canva-linux.sh --bundle-appimage
-./canva-linux.sh --validate-appimage
-./canva-linux.sh --validate-appimage-extract
-```
-
-AppImage generation may take several minutes depending on your system. Keep the terminal open until the process finishes.
-
-The extraction validation is optional and may take additional time.
-
-AppImage packaging is experimental in this development line. It creates a portable artifact under `dist/` and runs outside the Flatpak sandbox.
-
-Some systems require FUSE support to run AppImage artifacts. See [AppImage FUSE Requirements](docs/APPIMAGE_FUSE.md).
-
-## Usage
-
-### Native Install
-
-```bash
-canva-linux
-CANVA_DEBUG=1 canva-linux
-CANVA_DEBUG=2 canva-linux
-CANVA_FORCE_WAYLAND=1 canva-linux
-CANVA_FORCE_X11=1 canva-linux
-CANVA_GPU_BACKEND=auto canva-linux
-CANVA_GPU_BACKEND=opengl canva-linux
-CANVA_GPU_BACKEND=vulkan canva-linux
-CANVA_GPU_BACKEND=software canva-linux
-```
-
-### Flatpak Install
-
-```bash
-flatpak run io.github.coletivo420.canva-linux
-CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux
-CANVA_FORCE_WAYLAND=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_FORCE_X11=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=auto flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=opengl flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=vulkan flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=software flatpak run io.github.coletivo420.canva-linux
-```
-
-### AppImage
-
-```bash
-./dist/<artifact>.AppImage
-CANVA_DEBUG=1 ./dist/<artifact>.AppImage
-CANVA_DEBUG=2 ./dist/<artifact>.AppImage
-CANVA_FORCE_WAYLAND=1 ./dist/<artifact>.AppImage
-CANVA_FORCE_X11=1 ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=auto ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=opengl ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=vulkan ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
-```
-
-## Management Script
-
-| Command | Description |
-| --- | --- |
-| `--install-native` | Run Native Install. |
-| `--install-flatpak` | Build and install the Flatpak package locally. |
-| `--bundle-flatpak` | Create a distributable `.flatpak` package. |
-| `--bundle-appimage` | Create an experimental AppImage package. |
-| `--build-runtime` | Build the compiled Electron runtime. |
-| `--build-dir` | Build `dist/linux-unpacked`. |
-| `--validate-appimage` | Validate generated AppImage artifacts. |
-| `--validate-appimage-extract` | Validate AppImage artifacts and run optional extraction check. |
-| `--doctor` | Check host tools. |
-| `--clean` | Remove generated build/package artifacts. |
-| `--validate` | Run full project validation. |
-| `--uninstall` | Detect and remove installed variants. |
-| `--purge` | Uninstall and remove user data. |
-
-## Documentation
-
-- [Installation](docs/INSTALLATION.md)
-- [Documentation Index](docs/README.md)
-- [Validation](docs/VALIDATION.md)
-- [Development Guide](docs/DEVELOPMENT.md)
-- [Technical Notes](docs/TECHNICAL.md)
-- [AppImage FUSE Requirements](docs/APPIMAGE_FUSE.md)
-- [TypeScript](docs/TYPESCRIPT.md)
-- [CL-EyeDropper](docs/CANVA_LINUX_EYEDROPPER.md)
-- [Flatpak & Flathub Packaging](docs/FLATHUB.md)
-
-Project website: https://coletivo420.github.io/canva-linux/
-
-## Terminal UI
-
-Running without arguments opens the Blessed TUI when available:
+The default workflow is the Blessed-based Terminal Assistant:
 
 ```bash
 ./canva-linux.sh
 ```
 
-On first launch, Canva Linux may automatically install the Node development dependencies required by the TUI:
-
-```bash
-npm ci --include=dev
-```
-
-This may take several minutes depending on your system.
-
-Force the TUI:
+Guided sections include Native/Flatpak install, package generation, validation, doctor checks, cleanup and uninstall workflows.
 
 ```bash
 ./canva-linux.sh --tui
-```
-
-Use the shell menu fallback:
-
-```bash
 ./canva-linux.sh --no-tui
 CANVA_NO_TUI=1 ./canva-linux.sh
-```
-
-Skip automatic npm dependency bootstrap:
-
-```bash
 CANVA_SKIP_NPM_INSTALL=1 ./canva-linux.sh
 ```
 
-Direct commands remain non-interactive and do not open the TUI:
+Direct commands remain available and do not open the TUI:
 
 ```bash
 ./canva-linux.sh --doctor
@@ -170,12 +39,80 @@ Direct commands remain non-interactive and do not open the TUI:
 
 ## Shared Action Registry
 
-The shell menu, direct CLI flags and Blessed TUI use a shared action registry:
+Canva Linux uses a shared workflow registry:
 
 ```text
 scripts/actions.json
 ```
 
-The Blessed TUI, shell fallback menu and direct CLI actions must resolve workflow actions through this registry.
+The Terminal Assistant, shell fallback menu and direct CLI flags resolve actions through this file. Backend implementations remain in `scripts/`.
 
-Backend scripts remain under `scripts/`.
+## Installation options
+
+### Native Install
+
+```bash
+./canva-linux.sh --install-native
+CANVA_NATIVE_SCOPE=user ./canva-linux.sh --install-native
+```
+
+### Flatpak Install
+
+```bash
+./canva-linux.sh --install-flatpak
+```
+
+## Package generation
+
+```bash
+./canva-linux.sh --bundle-flatpak
+./canva-linux.sh --bundle-appimage
+./canva-linux.sh --prepare-aur
+./canva-linux.sh --bundle-deb
+./canva-linux.sh --bundle-rpm
+```
+
+## Runtime usage
+
+```bash
+canva-linux
+flatpak run io.github.coletivo420.canva-linux
+./dist/<artifact>.AppImage
+```
+
+## Management / direct CLI commands
+
+All direct commands are resolved through `scripts/actions.json`.
+
+| Command | Description |
+| --- | --- |
+| `--tui` | Force Blessed TUI assistant. |
+| `--no-tui` | Force shell fallback menu. |
+| `--install-native` | Run Native Install. |
+| `--install-flatpak` | Build and install Flatpak locally. |
+| `--bundle-flatpak` | Create distributable `.flatpak`. |
+| `--bundle-appimage` | Create AppImage package. |
+| `--prepare-aur` | Planned for `0.1.4.12-dev.1`. |
+| `--bundle-deb` | Planned after AUR stabilization. |
+| `--bundle-rpm` | Planned after AUR stabilization. |
+| `--build-runtime` | Build compiled Electron runtime. |
+| `--build-dir` | Build `dist/linux-unpacked`. |
+| `--validate` | Run project validation. |
+| `--validate-appimage` | Validate AppImage artifacts. |
+| `--validate-appimage-extract` | Validate AppImage + extraction checks. |
+| `--doctor` | Check host tools. |
+| `--clean` | Remove generated artifacts. |
+| `--uninstall` | Detect and uninstall variants. |
+| `--uninstall-native` | Uninstall Native variant. |
+| `--uninstall-flatpak` | Uninstall Flatpak variant. |
+| `--reset-user-data` | Remove user data only. |
+| `--purge` | Uninstall + remove user data. |
+
+## Documentation links
+
+- [Installation](docs/INSTALLATION.md)
+- [Documentation Index](docs/README.md)
+- [Validation](docs/VALIDATION.md)
+- [Development Guide](docs/DEVELOPMENT.md)
+- [Technical Notes](docs/TECHNICAL.md)
+- [AppImage FUSE Requirements](docs/APPIMAGE_FUSE.md)

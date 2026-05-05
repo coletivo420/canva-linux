@@ -8,7 +8,6 @@ source "${ROOT_DIR}/scripts/ui-common.sh"
 source "${ROOT_DIR}/scripts/user-data-common.sh"
 source "${ROOT_DIR}/scripts/install-detection-common.sh"
 ui_init
-run_script(){ local script="$1"; shift; [[ -f "$script" ]] || { ui_error "Script not found: $script"; exit 1; }; bash "$script" "$@"; }
 ensure_action_runner_available(){
   if command -v node >/dev/null 2>&1; then
     return 0
