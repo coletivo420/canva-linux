@@ -66,3 +66,12 @@ The theme must remain readable with:
 - xterm-256color;
 - `TERM=dumb` shell fallback;
 - `NO_COLOR=1` shell fallback.
+
+
+## Automatic overview status
+
+The TUI Overview automatically displays package/version information and detected installation state. Manual detection actions are not exposed as normal user-facing actions.
+
+## Clipboard integration
+
+The TUI `F5` shortcut copies logs to the desktop clipboard. Preferred backends: `wl-copy`, KDE Klipper (`qdbus6`/`qdbus`), GPaste, `xclip`, then `xsel`.

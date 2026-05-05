@@ -21,8 +21,17 @@ export type TuiAction = {
   confirmationTitle?: string;
   confirmationMessage?: string;
   confirmationPhrase?: string;
+  hidden?: boolean;
 };
 
-function actionsPath(rootDir = process.cwd()) { return path.join(rootDir, 'scripts/actions.json'); }
-export function loadTuiActions(rootDir = process.cwd()): TuiAction[] { return JSON.parse(fs.readFileSync(actionsPath(rootDir), 'utf8')) as TuiAction[]; }
-export function getActionsByGroup(group: TuiActionGroup, rootDir = process.cwd()): TuiAction[] { return loadTuiActions(rootDir).filter((a) => a.group === group); }
+function actionsPath(rootDir = process.cwd()) {
+  return path.join(rootDir, 'scripts/actions.json');
+}
+
+export function loadTuiActions(rootDir = process.cwd()): TuiAction[] {
+  return JSON.parse(fs.readFileSync(actionsPath(rootDir), 'utf8')) as TuiAction[];
+}
+
+export function getActionsByGroup(group: TuiActionGroup, rootDir = process.cwd()): TuiAction[] {
+  return loadTuiActions(rootDir).filter((action) => action.group === group && !action.hidden);
+}

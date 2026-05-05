@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.1.4.11-dev.45] - 2026-05-04
+
+### Added
+- Added F4 shortcut in the TUI to switch to the Shell Tool.
+- Added Shell Tool menu option to return to the TUI Tool.
+- Added automatic package/version and installation-state information in the TUI Overview.
+- Added larger native-scrollable TUI log panel.
+- Added F5 shortcut to copy TUI logs to the desktop clipboard.
+- Added desktop-aware clipboard backend detection for Wayland, KDE, GNOME and X11 tools.
+
+### Changed
+- Improved selected menu item contrast in the TUI.
+- Removed manual detection as a visible workflow action.
+- Hid detected-uninstall from visual menus while preserving CLI compatibility.
+- Moved package/version information from a manual action into the Overview.
+- Simplified Maintenance & Uninstall visible actions.
+- Updated TUI footer and help shortcuts.
+
+### Fixed
+- Fixed poor selected-item readability on the light blue selection background.
+- Fixed redundant user-facing detection workflow.
+- Fixed cramped TUI log panel.
+
+### Notes
+- Clipboard support depends on desktop/session tools such as `wl-copy`, KDE Klipper/qdbus, GPaste, `xclip` or `xsel`.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.44] - 2026-05-04
 
 ### Added

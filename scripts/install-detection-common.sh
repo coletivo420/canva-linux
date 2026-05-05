@@ -47,3 +47,20 @@ print_detected_installations(){
     echo "Use --clean to remove generated package artifacts."
   fi
 }
+
+
+print_detected_installations_compact(){
+  detect_installations
+  local native="none" flatpak="none" appimage="no"
+  if [[ "$DETECTED_NATIVE_SYSTEM" == true && "$DETECTED_NATIVE_USER" == true ]]; then native="system+user";
+  elif [[ "$DETECTED_NATIVE_SYSTEM" == true ]]; then native="system";
+  elif [[ "$DETECTED_NATIVE_USER" == true ]]; then native="user"; fi
+  if [[ "$DETECTED_FLATPAK_SYSTEM" == true && "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="system+user";
+  elif [[ "$DETECTED_FLATPAK_SYSTEM" == true ]]; then flatpak="system";
+  elif [[ "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="user"; fi
+  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && appimage="yes"
+  echo "Detected Installation State:"
+  echo "  Native: ${native}"
+  echo "  Flatpak: ${flatpak}"
+  echo "  AppImage artifacts: ${appimage}"
+}
