@@ -11,7 +11,7 @@ if (visibleMissingDescription.length) {
   process.exit(1);
 }
 const shell = fs.readFileSync(path.join(root, 'canva-linux.sh'), 'utf8');
-const ids = [...shell.matchAll(/run_action_by_id\s+"([^"]+)"/g)].map((m) => m[1]);
+const ids = [...shell.matchAll(/run_action_by_id\s+["']([^"']+)["']/g)].map((m) => m[1]);
 const missing = ids.filter((id) => !actionIds.has(id));
 if (missing.length) {
   console.error('[error] Shell references unknown action IDs:', [...new Set(missing)].join(', '));
