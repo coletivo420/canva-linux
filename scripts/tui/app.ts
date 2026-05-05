@@ -52,8 +52,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const flatpak = i.flatpakSystem && i.flatpakUser ? 'detected (system + user)' : i.flatpakSystem ? 'detected (system)' : i.flatpakUser ? 'detected (user)' : 'not detected';
     const nativeColor = native.startsWith('detected') ? tuiTheme.colors.nativeDetected : tuiTheme.colors.flatpakNotDetected;
     const flatpakColor = flatpak.startsWith('not detected') ? tuiTheme.colors.flatpakNotDetected : tuiTheme.colors.nativeDetected;
-    const appImageValue = i.appImageArtifacts ? 'detected' : 'loading...';
-    const appImageColor = i.appImageArtifacts ? tuiTheme.colors.nativeDetected : tuiTheme.colors.appImageLoading;
+    const appImageValue = i.appImageArtifacts ? 'detected' : 'not detected';
+    const appImageColor = i.appImageArtifacts ? tuiTheme.colors.nativeDetected : tuiTheme.colors.flatpakNotDetected;
     return [
       `  Native Install: {${nativeColor}-fg}${native}{/${nativeColor}-fg}`,
       `  Flatpak Install: {${flatpakColor}-fg}${flatpak}{/${flatpakColor}-fg}`,
