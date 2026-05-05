@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 type View = 'main' | 'install' | 'development' | 'maintenance' | 'help';
-type ProcessState = 'idle' | 'running' | 'cancel-requested' | 'success' | 'failed' | 'canceled';
+type ProgressState = 'idle' | 'running' | 'success' | 'failed' | 'canceled';
 type LogSource = 'stdout' | 'stderr' | 'system';
 
 const SWITCH_TO_SHELL_EXIT_CODE = 42;
@@ -19,12 +19,13 @@ const MAX_LOG_HISTORY_LINES = 5000;
 export function createApp(opts: { version: string; phase: string; rootDir: string; title: string; toolTitle: string; releaseNotes: string }) {
   const screen = blessed.screen({ smartCSR: true, title: opts.title, fullUnicode: true });
   const header = blessed.box({ top: 0, height: 2, width: '100%', tags: true, content: `{bold}${opts.toolTitle}{/bold}\nPhase: ${opts.phase}`, style: tuiTheme.header });
-  const menu = blessed.list({ top: 2, left: 0, width: '32%', height: '100%-3', keys: true, mouse: true, border: 'line', label: 'Main Menu', style: tuiTheme.menu });
-  const content = blessed.box({ top: 2, left: '32%', width: '68%', height: '36%', border: 'line', label: 'Overview', tags: true, scrollable: true, alwaysScroll: true, style: tuiTheme.content });
+  const menu = blessed.list({ top: 2, left: 0, width: '32%', height: '40%', keys: true, mouse: true, border: 'line', label: 'Main Menu', style: tuiTheme.menu });
+  const diagnostics = blessed.box({ top: '42%', left: 0, width: '32%', height: '55%-2', border: 'line', label: 'Detected Installations', tags: true, scrollable: true, alwaysScroll: true, style: tuiTheme.content });
+  const content = blessed.box({ top: 2, left: '32%', width: '68%', height: '36%', border: 'line', label: 'Overview', tags: true, scrollable: true, alwaysScroll: true, keys: true, mouse: true, style: tuiTheme.content });
   const logs = blessed.log({ top: '38%', left: '32%', width: '68%', height: '59%', border: 'line', label: 'Logs', keys: true, mouse: true, scrollable: true, alwaysScroll: true, scrollbar: { ch: ' ', track: { bg: tuiTheme.colors.surfaceAlt }, style: { bg: tuiTheme.colors.lightBlue } }, scrollback: MAX_LOG_HISTORY_LINES, tags: true, style: tuiTheme.logs });
   const footer = blessed.box({ bottom: 0, height: 1, width: '100%', tags: true, content: '{bold}q{/bold} Quit | {bold}Esc{/bold} Back | {bold}Enter{/bold} Select | {bold}F4{/bold} Shell Tool | {bold}F5{/bold} Copy Logs | {bold}?{/bold} Help', style: tuiTheme.footer });
   const progress = blessed.box({ bottom: 1, height: 1, left: '32%', width: '68%', tags: true, content: '', style: { fg: 'white', bg: 'black' } });
-  screen.append(header); screen.append(menu); screen.append(content); screen.append(logs); screen.append(progress); screen.append(footer);
+  screen.append(header); screen.append(menu); screen.append(diagnostics); screen.append(content); screen.append(logs); screen.append(progress); screen.append(footer);
 
   const mainItems: Array<{ label: string; view: View }> = [
     { label: 'Install', view: 'install' },
@@ -38,7 +39,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let running = false;
   let modalActive = false;
   let currentChild: ChildProcess | null = null;
-  let processState: ProcessState = 'idle';
+  let progressState: ProgressState = 'idle';
   let lastCtrlCAt = 0;
   const logBuffers: Record<LogSource, string> = { stdout: '', stderr: '', system: '' };
   const logHistory: string[] = [];
@@ -72,8 +73,13 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     ];
   };
 
-  function refreshOverviewStatus(): void {
+  function renderDiagnosticsBox() {
+    diagnostics.setContent(detectedSummary(overviewStatus).join("\n"));
+  }
+
+  function refreshDetectedInstallations(reason = "unknown"): void {
     if (overviewLoading) return;
+    appendLogText(`[info] Refreshing detected installations (${reason}).\n`, "system");
     overviewLoading = true;
     const child = spawn('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, stdio: ['ignore', 'pipe', 'ignore'] });
     let out = '';
@@ -81,6 +87,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     child.on('close', () => {
       overviewLoading = false;
       try { overviewStatus = JSON.parse(out.trim()); } catch {}
+      renderDiagnosticsBox();
       if (currentView === 'main' || currentView === 'maintenance') setView(currentView);
     });
   }
@@ -107,6 +114,13 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     screen.render();
   }
 
+  function clearProgress() { progress.setContent(''); progressState = 'idle'; }
+  function setProgressRunning(percent: number, label: string) { progressState = 'running'; setProgress(percent, label, false); }
+  function setProgressSuccess(label = 'Completed') { progressState = 'success'; setProgress(100, label, false); }
+  function setProgressError(label: string) { progressState = 'failed'; setProgress(0, `Error: ${label}`, true); }
+  function setProgressCanceled() { progressState = 'canceled'; setProgress(0, 'Canceled', true); }
+  function clearProgressOnNavigation() { if (!running) clearProgress(); }
+
   function setProgress(percent: number, label: string, isError = false) {
     const barWidth = 20;
     const fill = Math.max(0, Math.min(barWidth, Math.round((percent / 100) * barWidth)));
@@ -120,30 +134,26 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const group = view as 'install' | 'development' | 'maintenance';
     const base = [`${view[0].toUpperCase() + view.slice(1)} actions`];
     if (!selected) return content.setContent(base.join('\n'));
-    const notes = [
-      selected.planned ? 'planned' : 'executes command',
-      selected.dangerous ? 'destructive' : 'normal',
-      selected.requiresRoot ? 'requires root' : 'no root',
-      selected.longRunning ? 'creates artifacts' : 'quick action',
-    ];
-    const warningBlock = selected.warning
+        const warningBlock = selected.warning
       ? ['', 'Warning:', `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
       : [];
-    content.setContent([...base, '', 'Selected action:', `  ${selected.label}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, '', 'Risk:', `  ${selected.dangerous ? 'high' : 'normal'}`, '', 'Long running:', `  ${selected.longRunning ? 'yes' : 'no'}`, '', 'Command:', `  ${selected.command ? `${selected.command} ${(selected.args ?? []).join(' ')}`.trim() : 'planned / unavailable'}`, ...warningBlock, '', 'Notes:', `  ${notes.join(' / ')}`, ...(group === 'maintenance' ? ['', 'Detected Installation State:', ...detectedSummary(overviewStatus)] : [])].join('\n'));
+    content.setContent([...base, '', 'Selected action:', `  ${selected.label}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, ...warningBlock].join('\n'));
   }
 
   function setView(view: View) {
     currentView = view;
+    clearProgressOnNavigation();
     if (view === 'main') {
       const status = overviewStatus;
-      if (!overviewStatus) refreshOverviewStatus();
+      if (!overviewStatus) refreshDetectedInstallations("enter-overview");
+      renderDiagnosticsBox();
       currentActions = [];
       menu.setItems(mainItems.map((item) => item.label));
       content.setLabel('Overview');
       content.setContent([
         `{${tuiTheme.colors.logo}-fg}${CANVA_LOGO_LINES.join('\n')}{/${tuiTheme.colors.logo}-fg}`, '', 'Version:', `  {${tuiTheme.colors.version}-fg}${opts.version}{/${tuiTheme.colors.version}-fg}`, '', 'Phase:', `  {${tuiTheme.colors.phase}-fg}${opts.phase}{/${tuiTheme.colors.phase}-fg}`, '', 'Version Release Notes:', `  ${opts.releaseNotes}`,
         '', 'Package / Version Information:', '  App ID: io.github.coletivo420.canva-linux', '  Executable: canva-linux', '  Repository: https://github.com/coletivo420/canva-linux',
-        '', 'Detected Installation State:', ...detectedSummary(status),
+        
       ].join('\n'));
       screen.render();
       return;
@@ -152,7 +162,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       currentActions = [];
       menu.setItems(['Back to Main']);
       content.setLabel('Help');
-      content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Confirm exit\n  q          Quit\n  F4         Switch to Shell Tool\n\nLogs:\n  F5         Copy logs to clipboard\n  PageUp/PageDown/Home/End\n\nClipboard order:\n  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel');
+      content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Confirm exit\n  q          Quit\n  F4         Switch to Shell Tool\n\nPanels:\n  Alt+↑/↓ or Shift+PgUp/PgDn scroll action panel\n\nLogs:\n  F5         Copy logs to clipboard\n  PageUp/PageDown/Home/End\n\nClipboard order:\n  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel');
       screen.render();
       return;
     }
@@ -215,8 +225,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     }
     if (!action.command) return;
     running = true;
-    processState = 'running';
-    setProgress(5, 'Starting');
+    progressState = 'running';
+    setProgressRunning(5, 'Starting');
     logs.setContent('');
     logHistory.length = 0;
     appendLogText(`$ ${action.command} ${(action.args ?? []).join(' ')}\n`, 'system');
@@ -224,13 +234,13 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     currentChild = runAction(action.command, action.args ?? [], (txt, src) => appendLogText(txt, src), ({ code, signal }) => {
       running = false;
       currentChild = null;
-      processState = code === 0 ? 'success' : processState === 'cancel-requested' ? 'canceled' : 'failed';
-      if (processState === 'success') setProgress(100, 'Completed');
-      else if (processState === 'canceled') setProgress(0, 'Canceled', true);
-      else setProgress(0, 'Error', true);
+      if (code === 0) setProgressSuccess('Completed');
+      else if (signal === 'SIGINT') setProgressCanceled();
+      else setProgressError(signal ?? `exit code ${code ?? 'unknown'}`);
       appendLogText(`[info] Action finished (${signal ?? code ?? 'unknown'}).\n`, 'system');
-      refreshOverviewStatus();
-      setView(currentView);
+      refreshDetectedInstallations(`action:${action.id}`);
+      renderActionHelp(currentView, menu.selected);
+      screen.render();
     }, action.env ?? {});
   });
 
@@ -255,10 +265,9 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     if (running && currentChild) {
       if (now - lastCtrlCAt < 1500) { void confirmExit(); return; }
       lastCtrlCAt = now;
-      processState = 'cancel-requested';
       currentChild.kill('SIGINT');
       appendLogText('[warn] Interrupt requested. Press Ctrl+C again to exit application.\n', 'system');
-      setProgress(0, 'Canceled', true);
+      setProgressCanceled();
       return;
     }
     void confirmExit();
@@ -269,16 +278,19 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     screen.destroy(); process.exit(SWITCH_TO_SHELL_EXIT_CODE);
   });
   screen.key(['f5'], () => { const result = copyTextToClipboard(logHistory.join('\n')); appendLogText(`${result.ok ? '[ok]' : '[warn]'} ${result.message}\n`, 'system'); });
+  screen.key(['S-pageup','M-up'], () => { content.scroll(-5); screen.render(); });
+  screen.key(['S-pagedown','M-down'], () => { content.scroll(5); screen.render(); });
   screen.key(['pageup'], () => { logs.scroll(-10); screen.render(); });
   screen.key(['pagedown'], () => { logs.scroll(10); screen.render(); });
   screen.key(['home'], () => { logs.setScrollPerc(0); screen.render(); });
   screen.key(['end'], () => { logs.setScrollPerc(100); screen.render(); });
   screen.key(['?'], () => { if (!running && !modalActive) setView('help'); });
-  menu.on('keypress', (_, key) => { if ((key.name === 'up' || key.name === 'down') && ['install', 'development', 'maintenance'].includes(currentView)) { renderActionHelp(currentView, menu.selected); screen.render(); } });
-  menu.on('select item', () => { if (['install', 'development', 'maintenance'].includes(currentView)) { renderActionHelp(currentView, menu.selected); screen.render(); } });
+  menu.on('keypress', (_, key) => { if ((key.name === 'up' || key.name === 'down') && ['install', 'development', 'maintenance'].includes(currentView)) { clearProgressOnNavigation(); renderActionHelp(currentView, menu.selected); screen.render(); } });
+  menu.on('select item', () => { if (['install', 'development', 'maintenance'].includes(currentView)) { clearProgressOnNavigation(); renderActionHelp(currentView, menu.selected); screen.render(); } });
 
   setView('main');
-  refreshOverviewStatus();
+  refreshDetectedInstallations("startup");
+  renderDiagnosticsBox();
   menu.focus();
   return screen;
 }

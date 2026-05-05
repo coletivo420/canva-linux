@@ -13,3 +13,11 @@
 - Keep ASCII logo light blue.
 - Maintenance must keep installation detection visible at the top.
 - Active docs must match current version/phase and validation flow.
+
+
+## TUI UX Guardrails (dev.49)
+- Do not render internal action metadata (`risk`, `longRunning`, `command`, `notes`) in the action information panel.
+- Keep installation detection in a dedicated fixed box below the left menu across all primary views.
+- Refresh detected installations after any state-changing maintenance or installation action.
+- Keep completed progress result visible until the user navigates; clear only on navigation when idle.
+- When no AppImage artifact exists, show `not detected` (never `loading...`).

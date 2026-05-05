@@ -51,25 +51,25 @@ print_detected_installations(){
 
 print_detected_installations_compact(){
   detect_installations
-  local native="none" flatpak="none" appimage="no"
-  if [[ "$DETECTED_NATIVE_SYSTEM" == true && "$DETECTED_NATIVE_USER" == true ]]; then native="system+user";
-  elif [[ "$DETECTED_NATIVE_SYSTEM" == true ]]; then native="system";
-  elif [[ "$DETECTED_NATIVE_USER" == true ]]; then native="user"; fi
-  if [[ "$DETECTED_FLATPAK_SYSTEM" == true && "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="system+user";
-  elif [[ "$DETECTED_FLATPAK_SYSTEM" == true ]]; then flatpak="system";
-  elif [[ "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="user"; fi
-  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && appimage="detected" || appimage="loading..."
+  local native="not detected" flatpak="not detected" appimage="not detected"
+  if [[ "$DETECTED_NATIVE_SYSTEM" == true && "$DETECTED_NATIVE_USER" == true ]]; then native="detected (system + user)";
+  elif [[ "$DETECTED_NATIVE_SYSTEM" == true ]]; then native="detected (system)";
+  elif [[ "$DETECTED_NATIVE_USER" == true ]]; then native="detected (user)"; fi
+  if [[ "$DETECTED_FLATPAK_SYSTEM" == true && "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="detected (system + user)";
+  elif [[ "$DETECTED_FLATPAK_SYSTEM" == true ]]; then flatpak="detected (system)";
+  elif [[ "$DETECTED_FLATPAK_USER" == true ]]; then flatpak="detected (user)"; fi
+  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && appimage="detected" || appimage="not detected"
 
   local color_reset="${RESET:-}" color_light_blue="${CYAN:-}" color_purple="${MAGENTA:-}" color_yellow="${YELLOW:-}"
   local native_line="${native}" flatpak_line="${flatpak}" appimage_line="${appimage}"
-  if [[ "$native" != "none" ]]; then
+  if [[ "$native" == detected* ]]; then
     native_line="${color_light_blue}${native}${color_reset}"
   fi
-  if [[ "$flatpak" == "none" ]]; then
+  if [[ "$flatpak" == "not detected" ]]; then
     flatpak_line="${color_purple}not detected${color_reset}"
   fi
-  if [[ "$appimage" == "loading..." ]]; then
-    appimage_line="${color_yellow}loading...${color_reset}"
+  if [[ "$appimage" == "not detected" ]]; then
+    appimage_line="${color_purple}not detected${color_reset}"
   fi
 
   echo "Detected Installation State:"
