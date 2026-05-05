@@ -6,7 +6,7 @@ Phase: **0.1.4.11-dev.50**
 
 Independent community project. Not affiliated with Canva.
 
-## O que é o Canva Linux?
+## What is Canva Linux?
 Canva Linux is an open-source desktop wrapper/tooling project for running Canva with Linux-oriented integration, packaging, diagnostics, and maintenance workflows.
 
 ## Quick Start
