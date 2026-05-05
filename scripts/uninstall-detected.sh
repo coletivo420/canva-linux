@@ -12,8 +12,8 @@ if ! has_detected_installed_variants; then
   exit 0
 fi
 
-if [[ "${DETECTED_NATIVE_SYSTEM}" == true ]]; then CANVA_NATIVE_SCOPE=system bash "${ROOT_DIR}/scripts/uninstall-native.sh" scope; fi
-if [[ "${DETECTED_NATIVE_USER}" == true ]]; then CANVA_NATIVE_SCOPE=user bash "${ROOT_DIR}/scripts/uninstall-native.sh" scope; fi
+if [[ "${DETECTED_NATIVE_SYSTEM}" == true ]]; then CANVA_NATIVE_SCOPE=system bash "${ROOT_DIR}/scripts/uninstall-native.sh" system; fi
+if [[ "${DETECTED_NATIVE_USER}" == true ]]; then CANVA_NATIVE_SCOPE=user bash "${ROOT_DIR}/scripts/uninstall-native.sh" user; fi
 if [[ "${DETECTED_FLATPAK_SYSTEM}" == true ]]; then CANVA_FLATPAK_SCOPE=system bash "${ROOT_DIR}/scripts/uninstall-flatpak.sh"; fi
 if [[ "${DETECTED_FLATPAK_USER}" == true ]]; then CANVA_FLATPAK_SCOPE=user bash "${ROOT_DIR}/scripts/uninstall-flatpak.sh"; fi
 
