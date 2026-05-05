@@ -8,6 +8,12 @@ source "${ROOT_DIR}/scripts/ui-common.sh"
 source "${ROOT_DIR}/scripts/user-data-common.sh"
 source "${ROOT_DIR}/scripts/install-detection-common.sh"
 ui_init
+SESSION_LOG="${CANVA_TOOL_SESSION_LOG:-${XDG_STATE_HOME:-$HOME/.local/state}/canva-linux/tool-session.log}"
+mkdir -p "$(dirname "${SESSION_LOG}")"
+: > "${SESSION_LOG}"
+session_log(){ printf '%s\n' "$1" >> "${SESSION_LOG}"; }
+session_log "[session] started"
+session_log "[identity] version=${PROJECT_DISPLAY_VERSION:-unknown} phase=${PROJECT_PHASE:-unknown}"
 ensure_action_runner_available(){
   if command -v node >/dev/null 2>&1; then
     return 0
@@ -17,8 +23,8 @@ ensure_action_runner_available(){
   ui_info "Tip: --no-tui shell mode also requires Node.js in dev41+."
   exit 1
 }
-run_action_by_cli_flag(){ local flag="$1"; ensure_action_runner_available; local yes_args=(); if node scripts/action-runner.js --cli "$flag" --requires-confirmation >/dev/null 2>&1; then [[ "$FORCE" != true ]] && { local a; read -r -p "This action requires confirmation. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; }; yes_args=(--yes); elif [[ "$FORCE" == true ]]; then yes_args=(--yes); fi; node scripts/action-runner.js --cli "$flag" "${yes_args[@]}"; }
-run_action_by_id(){ local id="$1"; ensure_action_runner_available; local yes_args=(); if node scripts/action-runner.js --id "$id" --requires-confirmation >/dev/null 2>&1; then [[ "$FORCE" != true ]] && { local a; read -r -p "This action requires confirmation. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; }; yes_args=(--yes); elif [[ "$FORCE" == true ]]; then yes_args=(--yes); fi; node scripts/action-runner.js --id "$id" "${yes_args[@]}"; }
+run_action_by_cli_flag(){ local flag="$1"; ensure_action_runner_available; local yes_args=(); if node scripts/action-runner.js --cli "$flag" --requires-confirmation >/dev/null 2>&1; then [[ "$FORCE" != true ]] && { local a; read -r -p "This action requires confirmation. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; }; yes_args=(--yes); elif [[ "$FORCE" == true ]]; then yes_args=(--yes); fi; session_log "[action] cli=${flag}"; node scripts/action-runner.js --cli "$flag" "${yes_args[@]}" 2>&1 | tee -a "${SESSION_LOG}"; }
+run_action_by_id(){ local id="$1"; ensure_action_runner_available; local yes_args=(); if node scripts/action-runner.js --id "$id" --requires-confirmation >/dev/null 2>&1; then [[ "$FORCE" != true ]] && { local a; read -r -p "This action requires confirmation. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; }; yes_args=(--yes); elif [[ "$FORCE" == true ]]; then yes_args=(--yes); fi; session_log "[action] id=${id}"; node scripts/action-runner.js --id "$id" "${yes_args[@]}" 2>&1 | tee -a "${SESSION_LOG}"; }
 
 can_run_tui(){
   [[ -t 0 ]] || return 1
