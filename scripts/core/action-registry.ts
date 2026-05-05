@@ -19,14 +19,18 @@ const allowedScopes = new Set<string>(INSTALL_SCOPES);
 let cachedRoot: string | null = null;
 let cachedActions: CanvaAction[] | null = null;
 
-export function findProjectRoot(startDir = process.cwd()): string {
+function defaultRootSearchDir(): string {
+  return path.resolve(__dirname, '../..');
+}
+
+export function findProjectRoot(startDir = defaultRootSearchDir()): string {
   let current = path.resolve(startDir);
   while (true) {
     if (fs.existsSync(path.join(current, 'package.json')) && fs.existsSync(path.join(current, 'scripts/actions.json'))) {
       return current;
     }
     const parent = path.dirname(current);
-    if (parent === current) return path.resolve(startDir);
+    if (parent === current) return defaultRootSearchDir();
     current = parent;
   }
 }
