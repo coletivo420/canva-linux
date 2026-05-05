@@ -27,7 +27,7 @@ function createModalShell(screen: blessed.Widgets.Screen, title: string, dangero
     height: 11,
     border: 'line',
     tags: true,
-    label: dangerous ? `{red-fg}${title}{/red-fg}` : `{cyan-fg}${title}{/cyan-fg}`,
+    label: dangerous ? `{${tuiTheme.colors.error}-fg}${title}{/${tuiTheme.colors.error}-fg}` : `{${tuiTheme.colors.lightBlue}-fg}${title}{/${tuiTheme.colors.lightBlue}-fg}`,
     style: { fg: tuiTheme.modal.text, bg: tuiTheme.modal.background, border: { fg: dangerous ? tuiTheme.modal.dangerousBorder : tuiTheme.modal.normalBorder } },
   });
 
