@@ -44,7 +44,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   const logHistory: string[] = [];
   const sessionLogPath = process.env.CANVA_TOOL_SESSION_LOG || path.join(process.env.XDG_STATE_HOME || path.join(process.env.HOME || '.', '.local/state'), 'canva-linux', 'tool-session.log');
   fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
-  const writeSession = (line: string) => fs.appendFileSync(sessionLogPath, `${line}\n`);
+  const sessionStream = fs.createWriteStream(sessionLogPath, { flags: 'a' });
+  const writeSession = (line: string) => sessionStream.write(`${line}\n`);
   writeSession('[mode] tui');
   process.on('exit', () => { writeSession('[session] ended'); });
 
