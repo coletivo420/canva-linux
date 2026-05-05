@@ -18,6 +18,11 @@ else
 fi
 bash "${SCRIPT_DIR}/build-electron-dir.sh"
 install_native_from_dist "${REPO_ROOT}/dist/linux-unpacked"
+if [[ "${NATIVE_SCOPE}" == "system" ]]; then
+  printf "%s\n" "${PROJECT_VERSION}" | sudo tee "${INSTALL_PREFIX}/CANVA_LINUX_VERSION" >/dev/null
+else
+  printf "%s\n" "${PROJECT_VERSION}" > "${INSTALL_PREFIX}/CANVA_LINUX_VERSION"
+fi
 tmp="$(mktemp)"
 write_desktop_file "${tmp}" "${INSTALL_PREFIX}/${APP_EXECUTABLE}" "${APP_ID}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then sudo install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; else install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; fi

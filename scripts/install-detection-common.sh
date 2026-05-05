@@ -96,6 +96,11 @@ print_detected_installations_compact(){
   if [[ "$flatpak" == detected* ]]; then flatpak_line="${color_green}${flatpak}${color_reset}"; fi
   if [[ "$appimage" == detected* ]]; then appimage_line="${color_green}${appimage}${color_reset}"; fi
   echo "  Native Install: ${native_line}"
+  [[ "$DETECTED_NATIVE_SYSTEM" == true ]] && echo "    Native System version: ${DETECTED_NATIVE_SYSTEM_VERSION:-version unknown}"
+  [[ "$DETECTED_NATIVE_USER" == true ]] && echo "    Native User version: ${DETECTED_NATIVE_USER_VERSION:-version unknown}"
   echo "  Flatpak Install: ${flatpak_line}"
+  [[ "$DETECTED_FLATPAK_SYSTEM" == true ]] && echo "    Flatpak System version: ${DETECTED_FLATPAK_SYSTEM_VERSION:-version unknown}"
+  [[ "$DETECTED_FLATPAK_USER" == true ]] && echo "    Flatpak User version: ${DETECTED_FLATPAK_USER_VERSION:-version unknown}"
   echo "  AppImage artifacts: ${appimage_line}"
+  [[ "$DETECTED_APPIMAGE_ARTIFACTS" == true ]] && echo "    AppImage version: ${DETECTED_APPIMAGE_VERSION:-version unknown}"
 }

@@ -1,7 +1,7 @@
 {
   "displayVersion": "0.1.4.11",
   "status": "Alpha",
-  "phase": "0.1.4.11-dev.50",
+  "phase": "0.1.4.11-dev.51",
   "toolTitle": "Canva Linux \u2014 Install and Development Tool",
   "tuiTitle": "Canva Linux Terminal Assistant",
   "versionReleaseNotes": "Green/purple detection semantics, uninstall scope split, root-auth hardening, detection version rendering, and README/docs overhaul."

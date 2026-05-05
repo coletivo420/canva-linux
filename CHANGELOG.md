@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.4.11-dev.51] - 2026-05-05
+
+### Fixed
+- Fixed installed-version detection output for Native, Flatpak, and AppImage variants.
+- Fixed action environment propagation alignment in TUI/CLI execution paths.
+- Fixed progress final-state handling for successful installs with non-fatal post-install warnings.
+- Fixed selected-action coloring so only selected values are purple.
+- Fixed stale validation and guardrail documentation from older phases.
+
+### Changed
+- Updated technical version and phase identity to `0.1.4-dev.11.51` / `0.1.4.11-dev.51`.
+- Updated TUI and shell color semantics: green detected/completed, yellow in-progress, red error/canceled, purple not-detected/selected values.
+- Updated Help screen structure and semantic color guidance.
+
+### Added
+- Added installed package version display in compact detection output.
+
 ## [0.1.4.11-dev.50] - 2026-05-05
 
 ### Added
