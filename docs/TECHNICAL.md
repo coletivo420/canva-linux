@@ -279,3 +279,13 @@ The TUI must not duplicate install/package logic. It launches existing scripts a
 The Blessed TUI uses `scripts/tui/action-registry.ts` as the canonical source for visible TUI actions.
 
 The TUI must not duplicate install, package or cleanup logic. It launches existing shell scripts and streams logs into the TUI log panel.
+
+## TUI log pipeline
+
+The Blessed TUI uses a line-buffered log pipeline.
+
+- stdout and stderr are decoded with `StringDecoder`;
+- partial chunks are buffered until newline;
+- empty lines are preserved;
+- stderr is highlighted;
+- remaining buffered text is flushed when the process closes.

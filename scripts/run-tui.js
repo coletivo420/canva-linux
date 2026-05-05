@@ -19,7 +19,12 @@ function listTsFiles(dir) {
 function needsBuild() {
   if (!fs.existsSync(outFile)) return true;
   const outMtime = fs.statSync(outFile).mtimeMs;
-  return listTsFiles(tuiDir).some((file) => fs.statSync(file).mtimeMs > outMtime);
+  const inputs = [
+    ...listTsFiles(tuiDir),
+    path.join(rootDir, 'package.json'),
+    path.join(rootDir, 'package-lock.json'),
+  ].filter((file) => fs.existsSync(file));
+  return inputs.some((file) => fs.statSync(file).mtimeMs > outMtime);
 }
 
 function readProjectPhaseFromShell() {
@@ -32,17 +37,25 @@ function readProjectPhaseFromShell() {
   }
 }
 
+function resolveProjectPhase() {
+  const fromEnv = process.env.CANVA_PROJECT_PHASE?.trim();
+  if (fromEnv) return fromEnv;
+  return readProjectPhaseFromShell();
+}
+
 if (needsBuild()) {
-  const esbuildBin = path.join(rootDir, 'node_modules', '.bin', process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild');
-  const result = spawnSync(esbuildBin, [
-    'scripts/tui/index.ts', '--bundle', '--platform=node', '--format=cjs', '--external:blessed', '--outfile=.build/scripts/tui/index.js',
-  ], { stdio: 'inherit' });
+  const result = spawnSync('npm', ['run', 'build:tui'], {
+    cwd: rootDir,
+    stdio: 'inherit',
+    env: process.env,
+    shell: false,
+  });
   if ((result.status ?? 1) !== 0) process.exit(result.status ?? 1);
 }
 
 const run = spawnSync('node', ['.build/scripts/tui/index.js', ...process.argv.slice(2)], {
   stdio: 'inherit',
-  env: { ...process.env, CANVA_PROJECT_PHASE: process.env.CANVA_PROJECT_PHASE || readProjectPhaseFromShell() },
+  env: { ...process.env, CANVA_PROJECT_PHASE: resolveProjectPhase() },
 });
 
 process.exit(run.status ?? 0);

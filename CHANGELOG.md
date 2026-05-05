@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.1.4.11-dev.38] - 2026-05-04
+
+### Added
+
+- Added full TUI action coverage for current safe install, package generation, build, validation and maintenance actions.
+- Added line-buffered TUI log rendering with partial chunk buffering.
+- Added stdout/stderr-aware TUI log rendering.
+- Added colored stderr output in the TUI log panel.
+- Added final log buffer flushing when a spawned process closes.
+- Added stale-build-aware TUI launcher using the existing `npm run build:tui` script.
+
+### Changed
+
+- Changed TUI package/build/validation actions to run through the Action Registry.
+- Changed `scripts/run-tui.js` to invoke `npm run build:tui` instead of duplicating the esbuild command.
+- Changed project phase resolution to fall back when `CANVA_PROJECT_PHASE` is empty.
+- Changed the TUI log panel to preserve empty output lines.
+
+### Fixed
+
+- Fixed TUI streamed output rendering where partial chunks were treated as complete lines.
+- Fixed lost empty lines in TUI logs.
+- Fixed missing final partial log output on process close.
+- Fixed blank phase display when `CANVA_PROJECT_PHASE` is set to an empty string.
+- Fixed maintainability issue caused by duplicating esbuild build arguments in `scripts/run-tui.js`.
+
+### Notes
+
+- TUI remains experimental and is not yet the default launcher.
+- Destructive TUI actions remain guarded until confirmation dialogs are implemented.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.37] - 2026-05-04
 
 ### Added

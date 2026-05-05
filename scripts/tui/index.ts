@@ -12,8 +12,12 @@ if (process.argv.includes('--help')) {
   process.exit(0);
 }
 
+function getProjectPhase(): string {
+  return process.env.CANVA_PROJECT_PHASE?.trim() || 'unknown';
+}
+
 try {
-  const screen = createApp({ version: getPackageVersion(), phase: process.env.CANVA_PROJECT_PHASE ?? 'unknown', rootDir: process.cwd() });
+  const screen = createApp({ version: getPackageVersion(), phase: getProjectPhase(), rootDir: process.cwd() });
   process.on('uncaughtException', (err) => { try { screen.destroy(); } catch {} console.error(err); process.exit(1); });
 } catch (error) {
   console.error(error);
