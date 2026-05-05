@@ -126,7 +126,10 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       selected.requiresRoot ? 'requires root' : 'no root',
       selected.longRunning ? 'creates artifacts' : 'quick action',
     ];
-    content.setContent([...base, '', 'Selected action:', `  ${selected.label}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, '', 'Risk:', `  ${selected.dangerous ? 'high' : 'normal'}`, '', 'Long running:', `  ${selected.longRunning ? 'yes' : 'no'}`, '', 'Command:', `  ${selected.command ? `${selected.command} ${(selected.args ?? []).join(' ')}`.trim() : 'planned / unavailable'}`, '', 'Notes:', `  ${notes.join(' / ')}`, ...(group === 'maintenance' ? ['', 'Detected Installation State:', ...detectedSummary(overviewStatus)] : [])].join('\n'));
+    const warningBlock = selected.warning
+      ? ['', 'Warning:', `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
+      : [];
+    content.setContent([...base, '', 'Selected action:', `  ${selected.label}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, '', 'Risk:', `  ${selected.dangerous ? 'high' : 'normal'}`, '', 'Long running:', `  ${selected.longRunning ? 'yes' : 'no'}`, '', 'Command:', `  ${selected.command ? `${selected.command} ${(selected.args ?? []).join(' ')}`.trim() : 'planned / unavailable'}`, ...warningBlock, '', 'Notes:', `  ${notes.join(' / ')}`, ...(group === 'maintenance' ? ['', 'Detected Installation State:', ...detectedSummary(overviewStatus)] : [])].join('\n'));
   }
 
   function setView(view: View) {
