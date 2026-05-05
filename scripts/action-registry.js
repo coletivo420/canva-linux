@@ -55,6 +55,7 @@ function validateActions(actions) {
     if (action.group === 'maintenance' && !['Maintenance', 'Uninstall'].includes(action.section)) throw new Error(`Group/section mismatch: ${action.id}`);
 
     if (action.args !== undefined && !Array.isArray(action.args)) throw new Error(`Action args must be an array: ${action.id}`);
+    if (action.hidden !== undefined && typeof action.hidden !== 'boolean') throw new Error(`Action hidden must be boolean: ${action.id}`);
 
     if (action.kind === 'planned') {
       if (action.command || action.args) throw new Error(`Planned action must not define command/args: ${action.id}`);
@@ -77,7 +78,7 @@ function validateActions(actions) {
   }
 }
 
-const getActionsByGroup = (group) => loadActions().filter((a) => a.group === group);
+const getActionsByGroup = (group) => loadActions().filter((a) => a.group === group && !a.hidden);
 const getActionById = (id) => loadActions().find((a) => a.id === id);
 const getActionByCliFlag = (flag) => loadActions().find((a) => Array.isArray(a.cli) && a.cli.includes(flag));
 

@@ -118,3 +118,21 @@ All direct commands are resolved through `scripts/actions.json`.
 - [Development Guide](docs/DEVELOPMENT.md)
 - [Technical Notes](docs/TECHNICAL.md)
 - [AppImage FUSE Requirements](docs/APPIMAGE_FUSE.md)
+
+
+## TUI and Shell Tool switching
+
+Inside the Terminal Assistant: `F4 -> Use Shell Tool`.
+
+Inside the Shell Tool: choose `Use TUI Tool` in the main menu.
+
+### Automatic status overview
+
+The Overview panel automatically shows package/version info, phase, release notes and detected Native/Flatpak/AppImage state. Manual detection actions are hidden from normal workflows.
+
+### Logs and clipboard
+
+The TUI includes a larger native-scrollable log panel.
+
+Shortcuts: `PageUp`/`PageDown`, `Home`/`End`, `F5` copy logs to clipboard.
+Clipboard preference order: `wl-copy`, KDE Klipper (`qdbus6`/`qdbus`), GPaste, `xclip`, `xsel`.

@@ -31,6 +31,8 @@ can_run_tui(){
   [[ -f "${ROOT_DIR}/package.json" ]] || return 1
 }
 
+TUI_SWITCH_TO_SHELL_EXIT_CODE=42
+
 run_tui_mode(){
   local allow_fallback="${1:-no}"
   if ! can_run_tui; then
@@ -48,6 +50,10 @@ run_tui_mode(){
     CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js || status=$?
   else
     node scripts/run-tui.js || status=$?
+  fi
+  if [[ "$status" -eq "$TUI_SWITCH_TO_SHELL_EXIT_CODE" ]]; then
+    run_interactive_mode
+    return
   fi
   if [[ "$status" -ne 0 ]]; then
     if [[ "$allow_fallback" == "yes" ]]; then
@@ -113,11 +119,17 @@ print_main_screen(){
   ui_version_line "$(get_package_version)" "${PROJECT_PHASE}"
   printf '%s%s%s\n' "${BOLD}${UI_PRIMARY}" "${APP_TOOL_TITLE}" "${RESET}"
   echo
+  echo 'Package / Version Information:'
+  echo '  App ID: io.github.coletivo420.canva-linux'
+  echo '  Executable: canva-linux'
+  print_detected_installations_compact
+  echo
   cat <<'M'
 1) Install
 2) Development
 3) Maintenance & Uninstall
 4) Help
+5) Use TUI Tool
 0) Exit
 M
 }
@@ -175,28 +187,22 @@ menu_maint(){ cat <<'M'
 Maintenance & Uninstall
 1) Clean generated artifacts
 2) Reset user data
-3) Show detected installs/artifacts
-4) Show package/version information
-5) Uninstall detected installations
-6) Uninstall Native Install
-7) Uninstall Flatpak Install
-8) Uninstall detected installations and remove user data
+3) Uninstall Native Install
+4) Uninstall Flatpak Install
+5) Purge all installations and user data
 0) Back
 M
 if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
 case "$c" in
   1) run_action_by_id "clean" ;;
   2) run_action_by_id "reset-user-data" ;;
-  3) run_action_by_id "show-detected" ;;
-  4) run_action_by_id "version-info" ;;
-  5) run_action_by_id "uninstall-detected" ;;
-  6) run_action_by_id "uninstall-native" ;;
-  7) run_action_by_id "uninstall-flatpak" ;;
-  8) run_action_by_id "purge" ;;
+  3) run_action_by_id "uninstall-native" ;;
+  4) run_action_by_id "uninstall-flatpak" ;;
+  5) run_action_by_id "purge" ;;
   *) ;;
 esac
 }
-run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
+run_interactive_mode(){ [[ -t 0 ]] || { show_help; exit 0; }; while true; do print_main_screen; if ! c="$(ui_read_choice "Choose an option: ")"; then ui_info "No input detected."; exit 0; fi; case "$c" in 1) menu_install;;2) menu_dev;;3) menu_maint;;4) show_help;;5) if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then ui_warn "CANVA_NO_TUI=1 is set. Unset it to use the TUI Tool."; else run_tui_mode no; fi;;0) exit 0;;*) ui_warn "Unknown option: $c";; esac; done; }
 
 if [[ $# -eq 0 ]]; then
   if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then

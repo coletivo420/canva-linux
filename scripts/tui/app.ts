@@ -5,6 +5,7 @@ import { getActionsByGroup, type TuiAction } from './action-registry';
 import { confirmDialog } from './modal';
 import { runAction } from './process-runner';
 import { tuiTheme } from './theme';
+import { copyTextToClipboard } from './clipboard';
 
 type View = 'main' | 'install' | 'development' | 'maintenance' | 'help' | 'logs';
 type ProcessState = 'idle' | 'running' | 'cancel-requested' | 'success' | 'failed' | 'canceled';
@@ -12,9 +13,9 @@ type ProcessState = 'idle' | 'running' | 'cancel-requested' | 'success' | 'faile
 export function createApp(opts: { version: string; phase: string; rootDir: string; title: string; toolTitle: string; releaseNotes: string }) {
   const screen = blessed.screen({ smartCSR: true, title: opts.title, fullUnicode: true });
   const header = blessed.box({ top: 0, height: 2, width: '100%', tags: true, content: `{bold}${opts.toolTitle}{/bold}\nPhase: ${opts.phase}`, style: tuiTheme.header });
-  const menu = blessed.list({ top: 2, left: 0, width: '35%', height: '85%', keys: true, mouse: true, border: 'line', label: 'Main Menu', style: tuiTheme.menu });
-  const content = blessed.box({ top: 2, left: '35%', width: '65%', height: '55%', border: 'line', label: 'Overview', tags: true, style: tuiTheme.content });
-  const logs = blessed.log({ top: '57%', left: '35%', width: '65%', height: '30%', border: 'line', label: 'Logs', keys: true, mouse: true, scrollback: 5000, tags: true, style: tuiTheme.logs });
+  const menu = blessed.list({ top: 2, left: 0, width: '32%', height: '100%-3', keys: true, mouse: true, border: 'line', label: 'Main Menu', style: tuiTheme.menu });
+  const content = blessed.box({ top: 2, left: '32%', width: '68%', height: '36%', border: 'line', label: 'Overview', tags: true, style: tuiTheme.content });
+  const logs = blessed.log({ top: '38%', left: '32%', width: '68%', height: '59%', border: 'line', label: 'Logs', keys: true, mouse: true, scrollable: true, alwaysScroll: true, scrollbar: { ch: ' ', track: { bg: tuiTheme.colors.surfaceAlt }, style: { bg: tuiTheme.colors.lightBlue } }, scrollback: 5000, tags: true, style: tuiTheme.logs });
   const footer = blessed.box({ bottom: 0, height: 1, width: '100%', tags: true, content: `{bold}q{/bold} Quit | {bold}Enter{/bold} Select | {bold}Esc{/bold} Back | {bold}?{/bold} Help | PageUp/PageDown Logs`, style: tuiTheme.footer });
   screen.append(header); screen.append(menu); screen.append(content); screen.append(logs); screen.append(footer);
 
@@ -35,10 +36,13 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let modalActive = false;
   type LogSource = 'stdout' | 'stderr' | 'system';
   const logBuffers: Record<LogSource, string> = { stdout: '', stderr: '', system: '' };
+  const logHistory: string[] = [];
+  const MAX_LOG_HISTORY_LINES = 5000;
+  const SWITCH_TO_SHELL_EXIT_CODE = 42;
 
   function scheduleRender() { if (!renderScheduled) { renderScheduled = true; setTimeout(() => { renderScheduled = false; screen.render(); }, 50); } }
   function escapeBlessedTags(text: string) { return text.replace(/[{}]/g, (char) => (char === '{' ? '\\{' : '\\}')); }
-  function appendLogLine(line: string, source: LogSource) { const escaped = escapeBlessedTags(line); if (source === 'stderr') return logs.log(`{red-fg}${escaped}{/red-fg}`); if (source === 'system') return logs.log(`{cyan-fg}${escaped}{/cyan-fg}`); logs.log(escaped); }
+  function appendLogLine(line: string, source: LogSource) { logHistory.push(line); if (logHistory.length > MAX_LOG_HISTORY_LINES) logHistory.shift(); const escaped = escapeBlessedTags(line); if (source === 'stderr') return logs.log(`{red-fg}${escaped}{/red-fg}`); if (source === 'system') return logs.log(`{cyan-fg}${escaped}{/cyan-fg}`); logs.log(escaped); }
   function appendLogText(text: string, source: LogSource = 'stdout') { logBuffers[source] += text; while (true) { const match = logBuffers[source].match(/\r?\n/); if (!match || match.index === undefined) break; const i = match.index; const n = match[0].length; appendLogLine(logBuffers[source].slice(0, i), source); logBuffers[source] = logBuffers[source].slice(i + n);} scheduleRender(); }
   function flushLogBuffer(source: LogSource) { if (logBuffers[source].length > 0) { appendLogLine(logBuffers[source], source); logBuffers[source] = ''; }}
   function flushAllLogBuffers() { flushLogBuffer('stdout'); flushLogBuffer('stderr'); flushLogBuffer('system'); }
@@ -67,7 +71,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
 
   function setView(view: View) {
     currentView = view;
-    if (view === 'main') { currentActions = []; menu.setItems(mainItems.map((item) => item.label)); content.setLabel('Overview'); content.setContent([CANVA_LOGO_LINES.join('\n'), '', `{bold}{${tuiTheme.colors.lightBlue}-fg}Version:{/${tuiTheme.colors.lightBlue}-fg}{/bold}`, `  ${opts.version}`, '', `{bold}{${tuiTheme.colors.purple}-fg}Phase:{/${tuiTheme.colors.purple}-fg}{/bold}`, `  ${opts.phase}`, '', `{bold}{${tuiTheme.colors.lightBlue}-fg}Version Release Notes:{/${tuiTheme.colors.lightBlue}-fg}{/bold}`, `  ${opts.releaseNotes}`].join('\n')); screen.render(); return; }
+    if (view === 'main') { currentActions = []; menu.setItems(mainItems.map((item) => item.label)); content.setLabel('Overview'); content.setContent([CANVA_LOGO_LINES.join('\n'), '', `Version:`, `  ${opts.version}`, '', `Phase:`, `  ${opts.phase}`, '', `Version Release Notes:`, `  ${opts.releaseNotes}`, '', 'Package / Version Information:', '  App ID: io.github.coletivo420.canva-linux', '  Executable: canva-linux', '  Repository: https://github.com/coletivo420/canva-linux', '', 'Detected Installation State:', '  Native Install: auto-detected in shell/TUI backend', '  Flatpak Install: auto-detected in shell/TUI backend', '  AppImage artifacts: auto-detected in shell/TUI backend'].join('\n')); screen.render(); return; }
     if (view === 'help') { currentActions = []; menu.setItems(['Back to Main']); content.setLabel('Help'); content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Back to main menu when idle\n  q          Quit when idle / cancel prompt when running\n  Ctrl+C     Request cancellation when running\n  ?          Help\n\nLogs:\n  PageUp     Scroll logs up\n  PageDown   Scroll logs down\n  Home       Top of logs\n  End        Bottom of logs\n  Ctrl+L     Clear logs when idle\n\nProcess:\n  Running actions block navigation.\n  Canceling sends SIGINT first.\n  Some actions may take several minutes.'); screen.render(); return; }
     const group = view === 'install' ? 'install' : view === 'maintenance' ? 'maintenance' : 'development';
     currentActions = getActionsByGroup(group, opts.rootDir); menu.setItems(currentActions.map((action) => action.label)); content.setLabel(view[0].toUpperCase() + view.slice(1)); content.setContent('Select an action and press Enter.'); screen.render();
@@ -106,7 +110,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     }
 
     running = true; processState = 'running'; currentAction = action;
-    updateActionStatus(action, processState); logs.setContent(''); resetLogBuffers(); appendCommandPreview(action);
+    updateActionStatus(action, processState); logs.setContent(''); logHistory.length = 0; resetLogBuffers(); appendCommandPreview(action);
     currentChild = runAction(action.command, action.args ?? [], (text, source) => appendLogText(text, source), (result) => {
       flushAllLogBuffers(); running = false; currentChild = null;
       if (result.signal) { processState = 'canceled'; updateActionStatus(action, processState, result.signal); }
@@ -131,7 +135,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   screen.key(['pagedown'], () => { logs.scroll(10); screen.render(); });
   screen.key(['home'], () => { logs.setScrollPerc(0); screen.render(); });
   screen.key(['end'], () => { logs.setScrollPerc(100); screen.render(); });
-  screen.key(['C-l'], () => { if (running) { appendLogText('[warn] Cannot clear logs while an action is running.\n', 'system'); return; } logs.setContent(''); resetLogBuffers(); screen.render(); });
+  screen.key(['C-l'], () => { if (running) { appendLogText('[warn] Cannot clear logs while an action is running.\n', 'system'); return; } logs.setContent(''); logHistory.length = 0; resetLogBuffers(); screen.render(); });
   screen.on('resize', () => screen.render());
 
   menu.on('focus', () => { menu.style.border = { fg: tuiTheme.colors.lightBlue }; screen.render(); });

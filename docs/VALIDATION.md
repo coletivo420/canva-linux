@@ -49,3 +49,11 @@ Manual checks:
 - stderr remains red in the log panel;
 - dangerous modals are visually distinct;
 - shell fallback still respects NO_COLOR=1.
+
+
+## dev45 UX validation
+
+Run `./canva-linux.sh --tui` and validate: F4 switches to Shell Tool, Shell `Use TUI Tool` returns to TUI, Overview shows package/version + detection, maintenance hides manual detect/uninstall-detected, logs are larger, native scrollbar appears, F5 copies logs or warns.
+
+Clipboard tool check:
+`command -v wl-copy || command -v qdbus6 || command -v qdbus || command -v gpaste-client || command -v gpaste || command -v xclip || command -v xsel`.
