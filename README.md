@@ -1,119 +1,66 @@
 # Canva Linux
 
-A community-maintained open-source desktop wrapper for use with Canva.
+Status: **Alpha**  
+Version line: **0.1.4.11**  
+Phase: **0.1.4.11-dev.50**
 
-Current release line: **0.1.4.11 (Alpha)** / phase **0.1.4.11-dev.49**.
+Independent community project. Not affiliated with Canva.
+
+## O que é o Canva Linux?
+Canva Linux is an open-source desktop wrapper/tooling project for running Canva with Linux-oriented integration, packaging, diagnostics, and maintenance workflows.
 
 ## Quick Start
-
 ```bash
 git clone https://github.com/coletivo420/canva-linux.git
 cd canva-linux
 ./canva-linux.sh
 ```
 
-Running `./canva-linux.sh` opens the Canva Linux Terminal Assistant when the terminal supports it.
-On first launch, the assistant may install Node development dependencies and build the TUI bundle automatically.
+## Canva Linux Install and Development Tool
+The launcher opens the Terminal Assistant by default (when supported), with Install, Development, and Maintenance workflows.
 
-## Canva Linux Terminal Assistant
+## Feature Matrix
+- **Desktop App**: dedicated window, persistent session, desktop integration.
+- **Editor**: CL-EyeDropper, upload/export flows, OAuth popup, internal tabs.
+- **System**: Native Install, Flatpak Install, experimental AppImage.
+- **Development**: runtime build, package generation, validation, doctor checks.
+- **TUI**: guided sections, logs, progress bar, root-auth popup for privileged actions.
+- **Maintenance**: uninstall, purge, reset user data, permissions recovery.
+- **Diagnostics**: GPU, upload, browser capture diagnostics.
+- **Future**: AUR/PKGBUILD (`0.1.4.12-dev.1`), then `.deb`/`.rpm`.
 
-The default workflow is the Blessed-based Terminal Assistant for Canva Linux — Install and Development Tool:
+## Desktop Integration
+Native and Flatpak flows provide desktop entry integration for Linux environments.
 
-```bash
-./canva-linux.sh
-```
+## Editor Compatibility
+Project includes compatibility layers for Canva editor workflows, including EyeDropper and OAuth handling.
 
-Guided sections include Native/Flatpak install, package generation, validation, doctor checks, cleanup and uninstall workflows.
+## Packaging and Install Modes
+Supports scoped system/user install modes for Native and Flatpak, plus package artifact workflows.
 
-The Terminal Assistant uses a Canva-inspired terminal theme with light blue, blue and purple accents. The selected menu item is highlighted for keyboard navigation.
+## Diagnostics and Maintenance
+Includes doctor checks, validation pipeline, cleanup, uninstall and purge workflows.
 
-```bash
-./canva-linux.sh --tui
-./canva-linux.sh --no-tui
-CANVA_NO_TUI=1 ./canva-linux.sh
-CANVA_SKIP_NPM_INSTALL=1 ./canva-linux.sh
-```
-
-Direct commands remain available and do not open the TUI:
-
-```bash
-./canva-linux.sh --doctor
-./canva-linux.sh --bundle-appimage
-```
-
-## Shared Action Registry
-
-Canva Linux uses a shared workflow registry:
-
-```text
-scripts/actions.json
-```
-
-The Terminal Assistant, shell fallback menu and direct CLI flags resolve actions through this file. Backend implementations remain in `scripts/`.
-
-## Installation options
-
-### Native Install
-
-```bash
-./canva-linux.sh --install-native
-CANVA_NATIVE_SCOPE=user ./canva-linux.sh --install-native
-```
-
-### Flatpak Install
-
-```bash
-./canva-linux.sh --install-flatpak
-```
-
-## Package generation
-
-```bash
-./canva-linux.sh --bundle-flatpak
-./canva-linux.sh --bundle-appimage
-./canva-linux.sh --prepare-aur
-./canva-linux.sh --bundle-deb
-./canva-linux.sh --bundle-rpm
-```
-
-## Runtime usage
-
-```bash
-canva-linux
-flatpak run io.github.coletivo420.canva-linux
-./dist/<artifact>.AppImage
-```
-
-## Command reference
-
-See [docs/CLI.md](docs/CLI.md) for direct flags, examples and environment variables.
-
-## Documentation links
-
+## Documentation
+- [Requirements](docs/REQUIREMENTS.md)
+- [Install by Linux distribution](docs/INSTALL_BY_DISTRIBUTION.md)
 - [Installation](docs/INSTALLATION.md)
-- [Documentation Index](docs/README.md)
+- [CLI Reference](docs/CLI.md)
+- [Features](docs/FEATURES.md)
+- [Debugging](docs/DEBUGGING.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Validation](docs/VALIDATION.md)
-- [Development Guide](docs/DEVELOPMENT.md)
-- [Technical Notes](docs/TECHNICAL.md)
-- [AppImage FUSE Requirements](docs/APPIMAGE_FUSE.md)
-- [TypeScript](docs/TYPESCRIPT.md)
-- [CL-EyeDropper](docs/CANVA_LINUX_EYEDROPPER.md)
+- [Development](docs/DEVELOPMENT.md)
 - [AI Guardrails](docs/AI_GUARDRAILS.md)
 
+## Security / Privacy Notes
+Use only trusted build/dependency sources and review privileged actions before execution.
 
-## TUI and Shell Tool switching
+## Limitations
+Some packaging targets remain planned and may depend on host tooling availability.
 
-Inside the Terminal Assistant: `F4 -> Use Shell Tool`.
+## Contributing
+Issues and pull requests are welcome.
 
-Inside the Shell Tool: choose `Use TUI Tool` in the main menu.
-
-### Automatic status overview
-
-The Overview panel automatically shows package/version info, phase, release notes and detected Native/Flatpak/AppImage state. Manual detection actions are hidden from normal workflows.
-
-### Logs and clipboard
-
-The TUI includes a larger native-scrollable log panel.
-
-Shortcuts: `PageUp`/`PageDown`, `Home`/`End`, `F5` copy logs to clipboard.
-Clipboard preference order: `wl-copy`, KDE Klipper (`qdbus6`/`qdbus`), GPaste, `xclip`, `xsel`.
+## License
+GPL-3.0

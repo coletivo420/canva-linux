@@ -45,7 +45,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   const logHistory: string[] = [];
   const sessionLogPath = process.env.CANVA_TOOL_SESSION_LOG || path.join(process.env.XDG_STATE_HOME || path.join(process.env.HOME || '.', '.local/state'), 'canva-linux', 'tool-session.log');
   fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
-  const sessionStream = fs.createWriteStream(sessionLogPath, { flags: 'a' });
+  const sessionStream = fs.createWriteStream(sessionLogPath, { flags: 'w' });
   const writeSession = (line: string) => sessionStream.write(`${line}\n`);
   writeSession('[mode] tui');
   process.on('exit', () => { writeSession('[session] ended'); });
@@ -63,10 +63,10 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const i = s.installations;
     const native = i.nativeSystem && i.nativeUser ? 'detected (system + user)' : i.nativeSystem ? 'detected (system)' : i.nativeUser ? 'detected (user)' : 'not detected';
     const flatpak = i.flatpakSystem && i.flatpakUser ? 'detected (system + user)' : i.flatpakSystem ? 'detected (system)' : i.flatpakUser ? 'detected (user)' : 'not detected';
-    const nativeColor = native.startsWith('detected') ? tuiTheme.colors.nativeDetected : tuiTheme.colors.purple;
-    const flatpakColor = flatpak.startsWith('detected') ? tuiTheme.colors.nativeDetected : tuiTheme.colors.purple;
+    const nativeColor = native.startsWith('detected') ? tuiTheme.colors.statusDetected : tuiTheme.colors.statusNotDetected;
+    const flatpakColor = flatpak.startsWith('detected') ? tuiTheme.colors.statusDetected : tuiTheme.colors.statusNotDetected;
     const appImageValue = i.appImageArtifacts ? 'detected' : 'not detected';
-    const appImageColor = i.appImageArtifacts ? tuiTheme.colors.nativeDetected : tuiTheme.colors.purple;
+    const appImageColor = i.appImageArtifacts ? tuiTheme.colors.statusDetected : tuiTheme.colors.statusNotDetected;
     return [
       `  Native Install: {${nativeColor}-fg}${native}{/${nativeColor}-fg}`,
       `  Flatpak Install: {${flatpakColor}-fg}${flatpak}{/${flatpakColor}-fg}`,
@@ -93,7 +93,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       overviewLoading = false;
       try { overviewStatus = JSON.parse(out.trim()); overviewDetectionError = null; } catch { overviewDetectionError = 'Unable to parse status output'; appendLogText('[error] Detection status parsing failed.\n', 'system'); }
       renderDiagnosticsBox();
-      if (currentView === 'main' || currentView === 'maintenance') setView(currentView);
+      renderCurrentContentPreservingProgress();
     });
   }
 
@@ -143,7 +143,20 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
         const warningBlock = selected.warning
       ? ['', 'Warning:', `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
       : [];
-    content.setContent([...base, '', 'Selected action:', `  ${selected.label}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, ...warningBlock].join('\n'));
+    content.setContent([...base, '', `{${tuiTheme.colors.selectedActionTitle}-fg}Selected action:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.selectedActionLabel}-fg}${selected.label}{/${tuiTheme.colors.selectedActionLabel}-fg}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, ...warningBlock].join('\n'));
+  }
+
+
+  function renderCurrentContentPreservingProgress() {
+    if (currentView === 'main') {
+      renderDiagnosticsBox();
+      screen.render();
+      return;
+    }
+    if (['install','development','maintenance'].includes(currentView)) {
+      renderActionHelp(currentView, menu.selected);
+      screen.render();
+    }
   }
 
   function setView(view: View) {
@@ -219,13 +232,13 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       modalActive = false;
       if (!password) {
         appendLogText('[warn] Root authentication canceled.\n', 'system');
-        setProgress(0, 'Error: root auth canceled', true);
+        setProgressError('root auth canceled');
         return;
       }
-      const auth = spawnSync('sudo', ['-S', '-v', '-p', ''], { input: `${password}\n`, encoding: 'utf8' });
+      const auth = spawnSync('sudo', ['-S', '-v', '-p', ''], { input: `${password}\n`, encoding: 'utf8', timeout: 30000 });
       if ((auth.status ?? 1) !== 0) {
         appendLogText('[error] Invalid root password.\n', 'system');
-        setProgress(0, 'Error: invalid root password', true);
+        setProgressError('invalid root password');
         return;
       }
     }

@@ -1,7 +1,7 @@
 [
   {
     "id": "install-native-system",
-    "label": "Native Install — System Wide",
+    "label": "Native Install \u2014 System Wide",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -23,7 +23,7 @@
   },
   {
     "id": "install-native-user",
-    "label": "Native Install — Current User",
+    "label": "Native Install \u2014 Current User",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -41,7 +41,7 @@
   },
   {
     "id": "install-flatpak-system",
-    "label": "Flatpak Install — System Wide",
+    "label": "Flatpak Install \u2014 System Wide",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -64,7 +64,7 @@
   },
   {
     "id": "install-flatpak-user",
-    "label": "Flatpak Install — Current User",
+    "label": "Flatpak Install \u2014 Current User",
     "group": "install",
     "section": "Install",
     "kind": "command",
@@ -299,8 +299,6 @@
     "description": "Erase login/session/cache and local Canva Linux data."
   },
   {
-    "id": "uninstall-native",
-    "label": "Uninstall Native Install",
     "group": "maintenance",
     "section": "Uninstall",
     "kind": "command",
@@ -313,13 +311,40 @@
     ],
     "dangerous": true,
     "requiresConfirmation": true,
-    "description": "Uninstall Native Install variant.",
-    "confirmationTitle": "Confirm Uninstall Native Install",
-    "confirmationMessage": "Uninstall Native Install variant."
+    "description": "Uninstall Native Install variant from system-wide scope.",
+    "confirmationTitle": "Confirm Uninstall Native Install (System Wide)",
+    "confirmationMessage": "This will uninstall the system-wide Native Install variant.",
+    "id": "uninstall-native-system",
+    "label": "Uninstall Native Install \u2014 System Wide",
+    "requiresRoot": true,
+    "scope": "system",
+    "env": {
+      "CANVA_NATIVE_SCOPE": "system"
+    }
   },
   {
-    "id": "uninstall-flatpak",
-    "label": "Uninstall Flatpak Install",
+    "group": "maintenance",
+    "section": "Uninstall",
+    "kind": "command",
+    "command": "bash",
+    "args": [
+      "scripts/uninstall-native.sh"
+    ],
+    "cli": [],
+    "dangerous": true,
+    "requiresConfirmation": true,
+    "description": "Uninstall Native Install variant for current user.",
+    "confirmationTitle": "Confirm Uninstall Native Install (Current User)",
+    "confirmationMessage": "This will uninstall the current-user Native Install variant.",
+    "id": "uninstall-native-user",
+    "label": "Uninstall Native Install \u2014 Current User",
+    "requiresRoot": false,
+    "scope": "user",
+    "env": {
+      "CANVA_NATIVE_SCOPE": "user"
+    }
+  },
+  {
     "group": "maintenance",
     "section": "Uninstall",
     "kind": "command",
@@ -332,9 +357,38 @@
     ],
     "dangerous": true,
     "requiresConfirmation": true,
-    "description": "Uninstall Flatpak variant.",
-    "confirmationTitle": "Confirm Uninstall Flatpak Install",
-    "confirmationMessage": "Uninstall Flatpak variant."
+    "description": "Uninstall Flatpak Install variant from system-wide scope.",
+    "confirmationTitle": "Confirm Uninstall Flatpak Install (System Wide)",
+    "confirmationMessage": "This will uninstall the system-wide Flatpak Install variant.",
+    "id": "uninstall-flatpak-system",
+    "label": "Uninstall Flatpak Install \u2014 System Wide",
+    "requiresRoot": true,
+    "scope": "system",
+    "env": {
+      "CANVA_FLATPAK_SCOPE": "system"
+    }
+  },
+  {
+    "group": "maintenance",
+    "section": "Uninstall",
+    "kind": "command",
+    "command": "bash",
+    "args": [
+      "scripts/uninstall-flatpak.sh"
+    ],
+    "cli": [],
+    "dangerous": true,
+    "requiresConfirmation": true,
+    "description": "Uninstall Flatpak Install variant for current user.",
+    "confirmationTitle": "Confirm Uninstall Flatpak Install (Current User)",
+    "confirmationMessage": "This will uninstall the current-user Flatpak Install variant.",
+    "id": "uninstall-flatpak-user",
+    "label": "Uninstall Flatpak Install \u2014 Current User",
+    "requiresRoot": false,
+    "scope": "user",
+    "env": {
+      "CANVA_FLATPAK_SCOPE": "user"
+    }
   },
   {
     "id": "uninstall-detected",

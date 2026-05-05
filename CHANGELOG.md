@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.4.11-dev.50] - 2026-05-05
+
+### Added
+- Added green `detected` and purple `not detected` status semantics across TUI/shell detection output.
+- Added installed-version fields for Native/Flatpak/AppImage detection data.
+- Added scoped uninstall actions for Native/Flatpak system and user flows.
+
+### Changed
+- Updated technical version to `0.1.4-dev.11.50` and phase identity to `0.1.4.11-dev.50`.
+- Reworked README to keep only clone/cd/run commands and move command-heavy content to docs.
+- Updated TUI selection and action-help purple emphasis semantics.
+
+### Fixed
+- Fixed shell compact detection color parity for `not detected` (including Native).
+- Fixed TUI privileged auth errors to use progress error state consistently.
+- Fixed session log mode to reset per new TUI session.
+- Fixed detection refresh to re-render current content without view-reset progress side effects.
+
+
 ## [0.1.4.11-dev.49] - 2026-05-05
 
 ### Changed
