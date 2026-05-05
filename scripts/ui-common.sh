@@ -32,7 +32,7 @@ ui_cmd(){ printf '  %s%s%s\n' "${BOLD}${UI_SUCCESS}" "$*" "${RESET}"; }
 ui_prompt(){ printf '%s[info]%s %s' "${UI_SECONDARY}" "${RESET}" "$*"; }
 ui_read_choice(){ local prompt="${1:-Choose an option: }" choice; ui_prompt "$prompt" >&2; if ! read -r choice; then printf '\n' >&2; return 1; fi; printf '%s\n' "$choice"; }
 ui_logo(){
-  printf '%s' "${BOLD}${UI_PRIMARY}"
+  printf '%s' "${BOLD}${UI_SECONDARY}"
   cat <<'LOGO'
 ┌──────────────────────────────┐
 │ .::==++**########**++==:::.  │

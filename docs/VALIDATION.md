@@ -1,62 +1,27 @@
-# Validation
+# Validation Checklist (0.1.4.11-dev.48)
 
-## Terminal Assistant validation
+Current target:
+- Version: `0.1.4.11 (Alpha)`
+- Phase: `0.1.4.11-dev.48`
 
-```bash
-./canva-linux.sh
-./canva-linux.sh --tui
-./canva-linux.sh --no-tui
-CANVA_NO_TUI=1 ./canva-linux.sh
-CANVA_TUI=1 ./canva-linux.sh
-TERM=dumb ./canva-linux.sh
-./canva-linux.sh | cat
-```
+## Automated
+- npm run build:tui
+- npm run check:tui
+- npm run actions:validate
+- npm run lint
+- npm run typecheck
+- npm run typecheck:strict
+- npm test
+- npm run docs:check-links
+- npm run docs:check-ai
+- npm run validate:project
+- bash -n canva-linux.sh scripts/*.sh
 
-Expected: interactive terminal opens TUI by default; `--no-tui`/`CANVA_NO_TUI=1` use shell fallback; `TERM=dumb` and piped mode do not open TUI.
-
-## Shared Action Registry validation
-
-```bash
-npm run actions:validate
-node scripts/action-runner.js --help
-node scripts/action-runner.js --list-ids
-node scripts/action-runner.js --group install
-node scripts/action-runner.js --group development
-node scripts/action-runner.js --group maintenance
-node scripts/action-runner.js --id doctor --dry-run
-node scripts/action-runner.js --cli --doctor --dry-run
-node scripts/action-runner.js --cli --prepare-aur
-```
-
-Expected: registry validates; real actions resolve to backend commands; planned actions print planned status; dangerous actions require confirmation.
-
-
-## TUI theme validation
-
-```bash
-npm run build:tui
-./canva-linux.sh --tui
-```
-
-Manual checks:
-- Header shows Canva Linux — Install and Development Tool;
-- Header shows Phase: 0.1.4.11-dev.46;
-- Overview shows logo;
-- Overview shows Version `0.1.4.11 (Alpha)` below the logo;
-- Overview shows Phase below Version;
-- Overview shows Version Release Notes;
-- selected menu item is visibly highlighted;
-- stderr remains red in the log panel;
-- dangerous modals are visually distinct;
-- shell fallback still respects NO_COLOR=1.
-
-
-## dev46 UX validation
-
-Run `./canva-linux.sh --tui` and validate: F4 switches to Shell Tool, Shell `Use TUI Tool` returns to TUI, Overview shows package/version + detection, maintenance hides manual detect/uninstall-detected, logs are larger, native scrollbar appears, F5 copies logs or warns.
-
-Clipboard tool check:
-`command -v wl-copy || command -v qdbus6 || command -v qdbus || command -v gpaste-client || command -v gpaste || command -v xclip || command -v xsel`.
-
-
-Manual regression: shell -> `Use TUI Tool` -> press `q`/`Esc` and confirm exit; app must terminate (must not return to shell menu).
+## Manual
+- Verify TUI header version and phase.
+- Verify light-blue ASCII logo in TUI and shell tool.
+- Verify install scope choices for Native/Flatpak (system/user).
+- Verify Flatpak user warning appears in red.
+- Verify maintenance detection is visible before action details.
+- Verify root prompt is requested before privileged actions.
+- Verify `Fix build directory permissions` exists and executes.

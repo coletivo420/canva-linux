@@ -1,8 +1,8 @@
 import blessed from 'blessed';
-import { spawn, type ChildProcess } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { CANVA_LOGO_LINES } from './logo';
 import { getActionsByGroup, type TuiAction } from './action-registry';
-import { confirmDialog } from './modal';
+import { confirmDialog, inputDialog } from './modal';
 import { runAction } from './process-runner';
 import { tuiTheme } from './theme';
 import { copyTextToClipboard } from './clipboard';
@@ -126,7 +126,10 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       selected.requiresRoot ? 'requires root' : 'no root',
       selected.longRunning ? 'creates artifacts' : 'quick action',
     ];
-    content.setContent([...base, '', 'Selected action:', `  ${selected.label}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, '', 'Risk:', `  ${selected.dangerous ? 'high' : 'normal'}`, '', 'Long running:', `  ${selected.longRunning ? 'yes' : 'no'}`, '', 'Command:', `  ${selected.command ? `${selected.command} ${(selected.args ?? []).join(' ')}`.trim() : 'planned / unavailable'}`, '', 'Notes:', `  ${notes.join(' / ')}`, ...(group === 'maintenance' ? ['', 'Detected Installation State:', ...detectedSummary(overviewStatus)] : [])].join('\n'));
+    const warningBlock = selected.warning
+      ? ['', 'Warning:', `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
+      : [];
+    content.setContent([...base, '', 'Selected action:', `  ${selected.label}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, '', 'Risk:', `  ${selected.dangerous ? 'high' : 'normal'}`, '', 'Long running:', `  ${selected.longRunning ? 'yes' : 'no'}`, '', 'Command:', `  ${selected.command ? `${selected.command} ${(selected.args ?? []).join(' ')}`.trim() : 'planned / unavailable'}`, ...warningBlock, '', 'Notes:', `  ${notes.join(' / ')}`, ...(group === 'maintenance' ? ['', 'Detected Installation State:', ...detectedSummary(overviewStatus)] : [])].join('\n'));
   }
 
   function setView(view: View) {
@@ -193,6 +196,23 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       modalActive = false;
       if (!ok) return;
     }
+
+    if (action.requiresRoot) {
+      modalActive = true;
+      const password = await inputDialog(screen, 'Administrator authentication', 'Enter root password (30s timeout):', 30000);
+      modalActive = false;
+      if (!password) {
+        appendLogText('[warn] Root authentication canceled.\n', 'system');
+        setProgress(0, 'Error: root auth canceled', true);
+        return;
+      }
+      const auth = spawnSync('sudo', ['-S', '-v', '-p', ''], { input: `${password}\n`, encoding: 'utf8' });
+      if ((auth.status ?? 1) !== 0) {
+        appendLogText('[error] Invalid root password.\n', 'system');
+        setProgress(0, 'Error: invalid root password', true);
+        return;
+      }
+    }
     if (!action.command) return;
     running = true;
     processState = 'running';
@@ -209,8 +229,9 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       else if (processState === 'canceled') setProgress(0, 'Canceled', true);
       else setProgress(0, 'Error', true);
       appendLogText(`[info] Action finished (${signal ?? code ?? 'unknown'}).\n`, 'system');
+      refreshOverviewStatus();
       setView(currentView);
-    });
+    }, action.env ?? {});
   });
 
   const confirmExit = async () => {

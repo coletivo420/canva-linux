@@ -13,8 +13,9 @@ export function runAction(
   args: string[],
   onData: (text: string, source: StreamSource) => void,
   onClose: (result: ProcessCloseResult) => void,
+  extraEnv: Record<string, string> = {},
 ): ChildProcess {
-  const child = spawn(command, args, { cwd: process.cwd(), env: process.env, shell: false });
+  const child = spawn(command, args, { cwd: process.cwd(), env: { ...process.env, ...extraEnv }, shell: false });
   const stdoutDecoder = new StringDecoder('utf8');
   const stderrDecoder = new StringDecoder('utf8');
 

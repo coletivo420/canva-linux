@@ -150,14 +150,21 @@ M
 
 menu_install(){ cat <<'M'
 Install
-1) Native Install
-2) Flatpak Install
+Native Install:
+1) System Wide (default)
+2) Current User
+
+Flatpak Install:
+3) System Wide (default)
+4) Current User (warning: may duplicate entries/runtimes/apps)
 0) Back
 M
 if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
 case "$c" in
-  1) run_action_by_id "install-native" ;;
-  2) run_action_by_id "install-flatpak" ;;
+  1) run_action_by_id "install-native-system" ;;
+  2) run_action_by_id "install-native-user" ;;
+  3) run_action_by_id "install-flatpak-system" ;;
+  4) ui_warn "User-scope Flatpak install may duplicate desktop entries, runtimes or app visibility."; run_action_by_id "install-flatpak-user" ;;
   *) ;;
 esac
 }
@@ -203,7 +210,8 @@ Maintenance & Uninstall
 2) Reset user data
 3) Uninstall Native Install
 4) Uninstall Flatpak Install
-5) Purge all installations and user data
+5) Fix build directory permissions
+6) Purge all installations and user data
 0) Back
 M
 if ! c="$(ui_read_choice "Choose an option: ")"; then return; fi
@@ -212,7 +220,8 @@ case "$c" in
   2) run_action_by_id "reset-user-data" ;;
   3) run_action_by_id "uninstall-native" ;;
   4) run_action_by_id "uninstall-flatpak" ;;
-  5) run_action_by_id "purge" ;;
+  5) run_action_by_id "fix-build-permissions" ;;
+  6) run_action_by_id "purge" ;;
   *) ;;
 esac
 }
