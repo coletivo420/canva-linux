@@ -50,7 +50,11 @@ run_action_by_cli_flag(){
     yes_args=(--yes)
   fi
   session_log "[action] cli=${flag}"
-  node scripts/action-runner.js --cli "$flag" "${yes_args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
+  if [[ "$SESSION_LOG_ENABLED" == true ]]; then
+    node scripts/action-runner.js --cli "$flag" "${yes_args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
+  else
+    node scripts/action-runner.js --cli "$flag" "${yes_args[@]}" 2>&1
+  fi
 }
 
 can_run_tui(){
