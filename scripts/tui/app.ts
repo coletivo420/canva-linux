@@ -52,6 +52,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
 
   let overviewStatus: any = null;
   let overviewLoading = false;
+  let overviewDetectionError: string | null = null;
 
   const detectedSummary = (s: any) => {
     if (!s) return [
@@ -62,10 +63,10 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const i = s.installations;
     const native = i.nativeSystem && i.nativeUser ? 'detected (system + user)' : i.nativeSystem ? 'detected (system)' : i.nativeUser ? 'detected (user)' : 'not detected';
     const flatpak = i.flatpakSystem && i.flatpakUser ? 'detected (system + user)' : i.flatpakSystem ? 'detected (system)' : i.flatpakUser ? 'detected (user)' : 'not detected';
-    const nativeColor = native.startsWith('detected') ? tuiTheme.colors.nativeDetected : tuiTheme.colors.flatpakNotDetected;
-    const flatpakColor = flatpak.startsWith('not detected') ? tuiTheme.colors.flatpakNotDetected : tuiTheme.colors.nativeDetected;
+    const nativeColor = native.startsWith('detected') ? tuiTheme.colors.nativeDetected : tuiTheme.colors.purple;
+    const flatpakColor = flatpak.startsWith('detected') ? tuiTheme.colors.nativeDetected : tuiTheme.colors.purple;
     const appImageValue = i.appImageArtifacts ? 'detected' : 'not detected';
-    const appImageColor = i.appImageArtifacts ? tuiTheme.colors.nativeDetected : tuiTheme.colors.flatpakNotDetected;
+    const appImageColor = i.appImageArtifacts ? tuiTheme.colors.nativeDetected : tuiTheme.colors.purple;
     return [
       `  Native Install: {${nativeColor}-fg}${native}{/${nativeColor}-fg}`,
       `  Flatpak Install: {${flatpakColor}-fg}${flatpak}{/${flatpakColor}-fg}`,
@@ -74,6 +75,10 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   };
 
   function renderDiagnosticsBox() {
+    if (overviewDetectionError) {
+      diagnostics.setContent(`  {${tuiTheme.colors.error}-fg}Detection error{/${tuiTheme.colors.error}-fg}\n  ${overviewDetectionError}`);
+      return;
+    }
     diagnostics.setContent(detectedSummary(overviewStatus).join("\n"));
   }
 
@@ -86,7 +91,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     child.stdout?.on('data', (chunk) => { out += String(chunk); });
     child.on('close', () => {
       overviewLoading = false;
-      try { overviewStatus = JSON.parse(out.trim()); } catch {}
+      try { overviewStatus = JSON.parse(out.trim()); overviewDetectionError = null; } catch { overviewDetectionError = 'Unable to parse status output'; appendLogText('[error] Detection status parsing failed.\n', 'system'); }
       renderDiagnosticsBox();
       if (currentView === 'main' || currentView === 'maintenance') setView(currentView);
     });
@@ -125,7 +130,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const barWidth = 20;
     const fill = Math.max(0, Math.min(barWidth, Math.round((percent / 100) * barWidth)));
     const bar = `${'█'.repeat(fill)}${'░'.repeat(barWidth - fill)}`;
-    progress.setContent(`Progress: [${isError ? `{red-fg}${bar}{/red-fg}` : bar}] ${percent}% - ${label}`);
+    const color = isError ? 'red-fg' : progressState === 'success' ? 'green-fg' : progressState === 'running' ? 'yellow-fg' : 'white-fg';
+    progress.setContent(`Progress: [{${color}}${bar}{/${color}}] ${percent}% - ${label}`);
   }
 
   function renderActionHelp(view: View, selectedIndex: number) {
