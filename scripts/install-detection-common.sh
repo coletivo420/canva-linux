@@ -40,11 +40,6 @@ detect_installations(){
   DETECTED_FLATPAK_USER_VERSION="$(detect_flatpak_user_version)"
   DETECTED_APPIMAGE_VERSION="$(detect_appimage_version)"
 
-DETECTED_NATIVE_SYSTEM_VERSION=""
-DETECTED_NATIVE_USER_VERSION=""
-DETECTED_FLATPAK_SYSTEM_VERSION=""
-DETECTED_FLATPAK_USER_VERSION=""
-DETECTED_APPIMAGE_VERSION=""
 }
 
 has_detected_installed_variants(){ [[ "$DETECTED_NATIVE_SYSTEM" == true || "$DETECTED_NATIVE_USER" == true || "$DETECTED_FLATPAK_SYSTEM" == true || "$DETECTED_FLATPAK_USER" == true ]]; }

@@ -1,5 +1,18 @@
 # Installation
 
+## Requirements / Install Instructions
+
+Install support varies by Linux distribution. Use the platform guidance below before selecting the installation mode:
+
+- Native Install and Flatpak Install are the primary supported flows for day-to-day use.
+- AppImage packaging is experimental in this development phase and may require additional host setup (for example FUSE support).
+- If your distribution-specific setup is missing dependencies, complete the required host tooling from the Development guide before running install commands.
+
+See also:
+
+- [Development guide (host dependencies)](DEVELOPMENT.md#requirements)
+- [AppImage FUSE requirements](APPIMAGE_FUSE.md)
+
 ## Installation modes
 
 | Mode | Scope | Sandbox | Default |
