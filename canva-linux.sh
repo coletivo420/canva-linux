@@ -81,6 +81,10 @@ tui_needs_dev_tty_redirect() {
   ! tui_has_attached_stdio && tui_has_dev_tty
 }
 
+tui_has_entrypoint() {
+  [[ -f "${ROOT_DIR}/scripts/run-tui.js" || -f "${ROOT_DIR}/scripts/tui/index.ts" || -f "${ROOT_DIR}/.build/scripts/tui/index.js" ]]
+}
+
 tui_unavailable_reason() {
   local force="${1:-no}"
 
@@ -104,13 +108,13 @@ tui_unavailable_reason() {
     return 0
   fi
 
-  if [[ ! -f "${ROOT_DIR}/scripts/run-tui.js" ]]; then
-    printf '%s\n' "TUI launcher is missing: scripts/run-tui.js."
+  if [[ ! -f "${ROOT_DIR}/package.json" ]]; then
+    printf '%s\n' "Project metadata is missing: package.json."
     return 0
   fi
 
-  if [[ ! -f "${ROOT_DIR}/package.json" ]]; then
-    printf '%s\n' "Project metadata is missing: package.json."
+  if ! tui_has_entrypoint; then
+    printf '%s\n' "TUI entrypoint is missing. Expected scripts/run-tui.js, scripts/tui/index.ts or .build/scripts/tui/index.js."
     return 0
   fi
 
@@ -121,22 +125,80 @@ can_run_tui() {
   ! tui_unavailable_reason "$@" >/dev/null
 }
 
-run_tui_node() {
-  if tui_needs_dev_tty_redirect; then
-    session_log "[tui] stdio is not a tty; redirecting TUI to /dev/tty"
+ensure_tui_npm_dependencies() {
+  if [[ -x "${ROOT_DIR}/scripts/ensure-npm-dependencies.sh" || -f "${ROOT_DIR}/scripts/ensure-npm-dependencies.sh" ]]; then
+    bash "${ROOT_DIR}/scripts/ensure-npm-dependencies.sh"
+    return $?
+  fi
+
+  if ! command -v npm >/dev/null 2>&1; then
+    ui_error "TUI fallback requires npm because scripts/ensure-npm-dependencies.sh is missing."
+    exit 1
+  fi
+
+  if [[ ! -d "${ROOT_DIR}/node_modules" ]]; then
+    ui_info "Installing npm dependencies with npm install --include=dev"
+    npm install --include=dev
+  fi
+}
+
+build_tui_direct() {
+  ensure_tui_npm_dependencies
+
+  if [[ -f "${ROOT_DIR}/scripts/tui/index.ts" ]]; then
+    npm run build:tui
+    return $?
+  fi
+
+  if [[ -f "${ROOT_DIR}/.build/scripts/tui/index.js" ]]; then
+    return 0
+  fi
+
+  ui_error "Cannot build TUI: scripts/tui/index.ts is missing."
+  exit 1
+}
+
+run_built_tui() {
+  local built_tui="${ROOT_DIR}/.build/scripts/tui/index.js"
+  if [[ ! -f "${built_tui}" ]]; then
+    ui_error "Built TUI entrypoint is missing: .build/scripts/tui/index.js"
+    exit 1
+  fi
+
+  if [[ -n "${PROJECT_PHASE:-}" ]]; then
+    CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node "${built_tui}"
+  else
+    node "${built_tui}"
+  fi
+}
+
+run_tui_direct() {
+  session_log "[tui] scripts/run-tui.js missing; using direct TUI bootstrap fallback"
+  build_tui_direct
+  run_built_tui
+}
+
+run_tui_entrypoint() {
+  if [[ -f "${ROOT_DIR}/scripts/run-tui.js" ]]; then
     if [[ -n "${PROJECT_PHASE:-}" ]]; then
-      CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js </dev/tty >/dev/tty 2>/dev/tty
+      CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js
     else
-      node scripts/run-tui.js </dev/tty >/dev/tty 2>/dev/tty
+      node scripts/run-tui.js
     fi
     return $?
   fi
 
-  if [[ -n "${PROJECT_PHASE:-}" ]]; then
-    CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js
-  else
-    node scripts/run-tui.js
+  run_tui_direct
+}
+
+run_tui_node() {
+  if tui_needs_dev_tty_redirect; then
+    session_log "[tui] stdio is not a tty; redirecting TUI to /dev/tty"
+    run_tui_entrypoint </dev/tty >/dev/tty 2>/dev/tty
+    return $?
   fi
+
+  run_tui_entrypoint
 }
 
 run_tui_mode() {
