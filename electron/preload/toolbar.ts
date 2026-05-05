@@ -1,11 +1,9 @@
-'use strict';
-
 // Expose a tiny read-only bridge for the custom tab bar UI.
-const { contextBridge, ipcRenderer } = require('electron');
+import { contextBridge, ipcRenderer } from 'electron';
 
 // This preload runs with sandbox enabled, so it cannot rely on loading local
 // helper modules via relative require(). Keep the debug transport inline here.
-function normalizeDebugCategory(category = 'app') {
+function normalizeDebugCategory(category: unknown = 'app'): string {
   const raw = String(category || 'app')
     .trim()
     .toLowerCase()
@@ -16,7 +14,7 @@ function normalizeDebugCategory(category = 'app') {
   return raw || 'app';
 }
 
-function getDebugLevel() {
+function getDebugLevel(): number {
   const explicit = String(process?.env?.CANVA_DEBUG_LEVEL || '').trim();
   if (explicit === '1' || explicit === '2') return Number(explicit);
 
@@ -26,11 +24,11 @@ function getDebugLevel() {
   return 0;
 }
 
-function debugEnabled() {
+function debugEnabled(): boolean {
   return getDebugLevel() > 0;
 }
 
-function debugLog(category, ...args) {
+function debugLog(category: unknown, ...args: unknown[]): void {
   const normalized = normalizeDebugCategory(category);
   if (!debugEnabled()) return;
   try {
@@ -38,25 +36,27 @@ function debugLog(category, ...args) {
   } catch {
     try {
       console.log(`[canva:toolbar-preload:${normalized}]`, ...args);
-    } catch {}
+    } catch {
+      // Logging must never break toolbar boot.
+    }
   }
 }
 
 debugLog('tabs:toolbar', 'toolbar-preload-loaded');
 
 contextBridge.exposeInMainWorld('canvaTabs', {
-  send(action, payload = {}) {
+  send(action: string, payload: Record<string, unknown> = {}) {
     debugLog('tabs:toolbar', 'toolbar-send', action, JSON.stringify(payload));
     ipcRenderer.send('toolbar-action', { action, payload });
   },
-  onState(callback) {
+  onState(callback: (state: unknown) => void) {
     ipcRenderer.removeAllListeners('tabs-state');
     ipcRenderer.on('tabs-state', (_event, state) => {
       debugLog('tabs:state', 'toolbar-state', `count=${state?.tabs?.length || 0}`, `active=${state?.activeTabId || 'none'}`);
       callback(state);
     });
   },
-  getSystemTheme() {
+  getSystemTheme(): 'dark' | 'light' {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
 });

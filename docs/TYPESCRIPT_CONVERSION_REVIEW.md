@@ -4,13 +4,14 @@ This project is migrating to TypeScript incrementally.
 
 ## Current mode
 
-The runtime still executes CommonJS JavaScript directly.
+The app runtime is compiled from TypeScript, while a small set of CommonJS wrappers remains for Node and electron-builder entrypoint compatibility.
 
 TypeScript is currently used through:
 
 - broad `npm run typecheck`;
 - strict JSDoc islands through `npm run typecheck:strict`;
-- no emitted TypeScript build output.
+- emitted Electron runtime output through `npm run build:runtime`;
+- bundled script entrypoints that keep `.js` CLI wrappers thin while moving implementation logic to `.ts`.
 
 ## DEV10 expansion
 
@@ -31,7 +32,7 @@ Planned sequence:
 - DEV16: convert main entrypoint to `.ts`.
 - DEV17: convert preload source modules to `.ts`.
 - DEV18: decide conversion/isolation strategy for the former third-party picker module.
-- DEV19: convert tests/config/scripts when safe.
+- DEV19: convert tests/config/scripts when safe. Runtime build, preload bundling, asset copy, clean, electron-builder hook, TUI launcher and toolbar preload now have TypeScript implementations with thin compatibility wrappers where Node tooling still needs `.js` entrypoints.
 - DEV20: verify full TypeScript conversion.
 - DEV21: post-conversion cleanup.
 - DEV22: stabilization and RC readiness.
@@ -41,7 +42,7 @@ Planned sequence:
 A file may be converted to `.ts` only when:
 
 - it is already covered by strict JSDoc or tests;
-- conversion does not require unplanned runtime loader changes;
+- conversion keeps loader changes explicit and constrained to thin compatibility wrappers when Node tooling still requires `.js` entrypoints;
 - conversion does not affect Flatpak packaging unexpectedly;
 - conversion does not change public behavior;
 - behavior is checked against `CHANGELOG.md`.
@@ -50,8 +51,7 @@ A file may be converted to `.ts` only when:
 
 Do not convert yet:
 
-- `electron/main/index.js`;
-- `electron/preload/canva.js`;
+- legacy `.js` wrappers that are still referenced directly by npm scripts or electron-builder;
 - `electron/preload/canva.bundle.js`;
 - the former third-party picker module;
 - shell scripts;
