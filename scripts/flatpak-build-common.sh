@@ -39,6 +39,10 @@ remove_path_safely() {
     return 0
   fi
 
+  if [[ "${FLATPAK_SCOPE:-}" == "user" ]]; then
+    ui_die "Could not remove ${target} as the current user; refusing sudo in user Flatpak scope. Run Fix build directory permissions first."
+  fi
+
   ui_warn "Could not remove ${target} as the current user; retrying with administrator authorization."
   canva_sudo_rm -rf "${target}"
 }
@@ -67,6 +71,11 @@ restore_path_ownership() {
   foreign_path="$(find "${target}" \( ! -uid "${uid}" -o ! -gid "${gid}" \) -print -quit 2>/dev/null || true)"
 
   if [[ -z "${foreign_path}" ]]; then
+    return 0
+  fi
+
+  if [[ "${FLATPAK_SCOPE:-}" == "user" ]]; then
+    ui_warn "Ownership restore for ${target} needs administrator authorization; refusing sudo in user Flatpak scope."
     return 0
   fi
 

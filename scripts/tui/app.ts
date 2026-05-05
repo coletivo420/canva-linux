@@ -1,5 +1,5 @@
 import blessed from 'blessed';
-import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { spawnSync, type ChildProcess } from 'node:child_process';
 import { CANVA_LOGO_LINES } from './logo';
 import { getActionsByGroup, type TuiAction } from './action-registry';
 import { confirmDialog, inputDialog } from './modal';
@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 type View = 'main' | 'install' | 'development' | 'maintenance' | 'help';
-type ProgressState = 'idle' | 'running' | 'success' | 'failed' | 'canceled';
+type ProgressState = 'idle' | 'running' | 'success' | 'warning' | 'failed' | 'canceled';
 type LogSource = 'stdout' | 'stderr' | 'system';
 
 const MAX_LOG_HISTORY_LINES = 5000;
@@ -82,19 +82,22 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     diagnostics.setContent(detectedSummary(overviewStatus).join("\n"));
   }
 
-  function refreshDetectedInstallations(reason = "unknown"): void {
-    if (overviewLoading) return;
+  function refreshDetectedInstallations(reason = "unknown"): any | null {
+    if (overviewLoading) return overviewStatus;
     appendLogText(`[info] Refreshing detected installations (${reason}).\n`, "system");
     overviewLoading = true;
-    const child = spawn('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, stdio: ['ignore', 'pipe', 'ignore'] });
-    let out = '';
-    child.stdout?.on('data', (chunk) => { out += String(chunk); });
-    child.on('close', () => {
-      overviewLoading = false;
-      try { overviewStatus = JSON.parse(out.trim()); overviewDetectionError = null; } catch { overviewDetectionError = 'Unable to parse status output'; appendLogText('[error] Detection status parsing failed.\n', 'system'); }
-      renderDiagnosticsBox();
-      renderCurrentContentPreservingProgress();
-    });
+    const latestStatus = detectInstallationStatusNow();
+    overviewLoading = false;
+    if (latestStatus) {
+      overviewStatus = latestStatus;
+      overviewDetectionError = null;
+    } else {
+      overviewDetectionError = 'Unable to parse status output';
+      appendLogText('[error] Detection status parsing failed.\n', 'system');
+    }
+    renderDiagnosticsBox();
+    renderCurrentContentPreservingProgress();
+    return overviewStatus;
   }
 
   function getInstallDetectionKey(actionId: string): keyof NonNullable<any['installations']> | null {
@@ -107,8 +110,15 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     }
   }
 
+  function actionNeedsRootForDetectedSystem(action: TuiAction): boolean {
+    if (!['purge', 'uninstall-detected'].includes(action.id)) return false;
+    const latestStatus = refreshDetectedInstallations(`root-check:${action.id}`) ?? overviewStatus;
+    return Boolean(latestStatus?.installations?.nativeSystem || latestStatus?.installations?.flatpakSystem);
+  }
+
   function detectInstallationStatusNow(): any | null {
     const result = spawnSync('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, encoding: 'utf8' });
+    if (result.stderr?.trim()) appendLogText(result.stderr, 'system');
     if ((result.status ?? 1) !== 0 || !result.stdout?.trim()) return null;
     try { return JSON.parse(result.stdout.trim()); } catch { return null; }
   }
@@ -138,6 +148,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   function clearProgress() { progress.setContent(''); progressState = 'idle'; }
   function setProgressRunning(percent: number, label: string) { progressState = 'running'; setProgress(percent, label, false); }
   function setProgressSuccess(label = 'Completed') { progressState = 'success'; setProgress(100, label, false); }
+  function setProgressWarning(label = 'Completed with warnings') { progressState = 'warning'; setProgress(100, label, false); }
   function setProgressError(label: string) { progressState = 'failed'; setProgress(0, `Error: ${label}`, true); }
   function setProgressCanceled() { progressState = 'canceled'; setProgress(0, 'Canceled', true); }
   function clearProgressOnNavigation() { if (!running) clearProgress(); }
@@ -146,7 +157,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const barWidth = 20;
     const fill = Math.max(0, Math.min(barWidth, Math.round((percent / 100) * barWidth)));
     const bar = `${'█'.repeat(fill)}${'░'.repeat(barWidth - fill)}`;
-    const color = isError ? 'red-fg' : progressState === 'success' ? 'green-fg' : progressState === 'running' ? 'yellow-fg' : 'white-fg';
+    const color = isError || progressState === 'failed' || progressState === 'canceled' ? 'red-fg' : progressState === 'success' || progressState === 'warning' ? 'green-fg' : progressState === 'running' ? 'yellow-fg' : 'white-fg';
     progress.setContent(`Progress: [{${color}}${bar}{/${color}}] ${percent}% - ${label}`);
   }
 
@@ -244,7 +255,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       if (!ok) return;
     }
 
-    if (action.requiresRoot) {
+    const rootRequired = action.requiresRoot || actionNeedsRootForDetectedSystem(action);
+    if (rootRequired) {
       modalActive = true;
       const password = await inputDialog(screen, 'Administrator authentication', 'Enter root password (30s timeout):', 30000);
       modalActive = false;
@@ -253,9 +265,9 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
         setProgressError('root auth canceled');
         return;
       }
-      const auth = spawnSync('sudo', ['-S', '-v', '-p', ''], { input: `${password}\n`, encoding: 'utf8', timeout: 30000 });
+      const auth = spawnSync('bash', ['scripts/sudo-common.sh', '--validate-stdin'], { cwd: opts.rootDir, input: `${password}\n`, encoding: 'utf8', timeout: 30000, env: { ...process.env, ...(action.env ?? {}) } });
       if ((auth.status ?? 1) !== 0) {
-        appendLogText('[error] Invalid root password.\n', 'system');
+        appendLogText(auth.stderr || '[error] Invalid root password.\n', 'system');
         setProgressError('invalid root password');
         return;
       }
@@ -282,13 +294,14 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
         }
       }
       if (signal === 'SIGINT') setProgressCanceled();
+      else if (installAction && detectedNow && code !== 0) setProgressWarning('Completed with warnings');
       else if (code === 0 || (installAction && detectedNow)) setProgressSuccess('Completed');
       else setProgressError(signal ?? `exit code ${code ?? 'unknown'}`);
       appendLogText(`[info] Action finished (${signal ?? code ?? 'unknown'}).\n`, 'system');
       refreshDetectedInstallations(`action:${action.id}`);
       renderActionHelp(currentView, menu.selected);
       screen.render();
-    }, { cwd: opts.rootDir, env: { ...(action.env ?? {}), ...(action.requiresRoot ? { CANVA_TUI_ROOT_AUTH: '1' } : {}) } });
+    }, { cwd: opts.rootDir, env: { ...(action.env ?? {}), ...(rootRequired ? { CANVA_TUI_ROOT_AUTH: '1' } : {}) } });
   });
 
   const confirmExit = async () => {

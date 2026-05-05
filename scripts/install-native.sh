@@ -11,6 +11,7 @@ if [[ "${NATIVE_SCOPE}" == "system" ]]; then
   ui_section "Native system install"
   ui_info "The app will be available to all users on this machine."
   ui_warn "Administrator authorization will be requested to write to /opt, /usr/local/bin and /usr/local/share."
+  canva_sudo_validate
 else
   ui_section "Native user install"
   ui_info "The app will be available only to the current user."
@@ -29,9 +30,10 @@ write_desktop_file "${tmp}" "${INSTALL_PREFIX}/${APP_EXECUTABLE}" "${APP_ID}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then canva_sudo_install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; else install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; fi
 rm -f "${tmp}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then
-  install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/build-resources/icons/hicolor" "/usr/local/share/icons/hicolor"
+  install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/data/icons/hicolor" "/usr/local/share/icons/hicolor"
 else
-  install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/build-resources/icons/hicolor" "${HOME}/.local/share/icons/hicolor"
+  install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/data/icons/hicolor" "${HOME}/.local/share/icons/hicolor"
 fi
-update_desktop_caches "${NATIVE_SCOPE}"
-print_native_post_install_guidance
+update_desktop_caches "${NATIVE_SCOPE}" || true
+print_native_post_install_guidance || true
+ui_ok "Native ${NATIVE_SCOPE} install completed"

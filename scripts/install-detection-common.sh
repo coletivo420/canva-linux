@@ -28,6 +28,14 @@ read_package_json_version(){
   command -v node >/dev/null 2>&1 || return 0
   node -e 'try { const pkg = require(process.argv[1]); if (pkg.version) console.log(pkg.version); } catch {}' "$package_file" 2>/dev/null || true
 }
+
+find_flatpak_version_marker(){
+  local scope_root="$1" marker
+  marker="${scope_root}/app/${APP_ID}/current/active/files/share/canva-linux/version"
+  if [[ -f "$marker" ]]; then printf '%s\n' "$marker"; return 0; fi
+  marker="$(find "${scope_root}/app/${APP_ID}" -path '*/active/files/share/canva-linux/version' -type f 2>/dev/null | sort | tail -n1 || true)"
+  [[ -n "$marker" ]] && printf '%s\n' "$marker"
+}
 read_flatpak_version_marker(){
   local marker_file="$1"
   [[ -f "$marker_file" ]] || return 0
@@ -55,7 +63,7 @@ detect_native_user_version(){
 }
 detect_flatpak_system_version(){
   local marker version
-  marker="/var/lib/flatpak/app/${APP_ID}/current/active/files/share/canva-linux/version"
+  marker="$(find_flatpak_version_marker "/var/lib/flatpak" || true)"
   version="$(read_flatpak_version_marker "$marker")"
   [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
   command -v flatpak >/dev/null 2>&1 || return 0
@@ -63,7 +71,7 @@ detect_flatpak_system_version(){
 }
 detect_flatpak_user_version(){
   local marker version
-  marker="${HOME}/.local/share/flatpak/app/${APP_ID}/current/active/files/share/canva-linux/version"
+  marker="$(find_flatpak_version_marker "${HOME}/.local/share/flatpak" || true)"
   version="$(read_flatpak_version_marker "$marker")"
   [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
   command -v flatpak >/dev/null 2>&1 || return 0

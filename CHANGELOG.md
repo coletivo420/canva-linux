@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.4.11-dev.56] - 2026-05-05
+
+### Fixed
+- Stabilized Native install preflight by using `data/icons/hicolor`, preserving missing-icon tolerance, validating system sudo before writes, and keeping post-install warnings non-fatal.
+- Stabilized Flatpak system/user install and uninstall scope behavior, including user-scope sudo refusal and system-scope sudo-common usage.
+- Made TUI action finalization use synchronous overview-status detection so successful installs with warnings finish green instead of red.
+- Hardened sudo-common with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
+
+### Changed
+- Updated technical version and phase identity to `0.1.4-dev.11.56` / `0.1.4.11-dev.56`.
+
 ## [0.1.4.11-dev.55] - 2026-05-05
 
 ### Removed
