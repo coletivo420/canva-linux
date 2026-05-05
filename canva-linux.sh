@@ -9,6 +9,17 @@ source "${ROOT_DIR}/scripts/user-data-common.sh"
 source "${ROOT_DIR}/scripts/install-detection-common.sh"
 ui_init
 run_script(){ local script="$1"; shift; [[ -f "$script" ]] || { ui_error "Script not found: $script"; exit 1; }; bash "$script" "$@"; }
+ensure_action_runner_available(){
+  if command -v node >/dev/null 2>&1; then
+    return 0
+  fi
+  ui_error "Node.js is required for shared Action Registry commands and shell menu actions."
+  ui_info "Install Node.js, then retry."
+  ui_info "Tip: --no-tui shell mode also requires Node.js in dev41+."
+  exit 1
+}
+run_action_by_cli_flag(){ local flag="$1"; ensure_action_runner_available; local yes_args=(); [[ "$FORCE" == true ]] && yes_args=(--yes); node scripts/action-runner.js --cli "$flag" "${yes_args[@]}"; }
+run_action_by_id(){ local id="$1"; ensure_action_runner_available; local yes_args=(); [[ "$FORCE" == true ]] && yes_args=(--yes); node scripts/action-runner.js --id "$id" "${yes_args[@]}"; }
 
 can_run_tui(){
   [[ -t 0 ]] || return 1
@@ -111,7 +122,6 @@ print_main_screen(){
 M
 }
 confirm_reset_user_data(){ [[ "$FORCE" == true ]] && return 0; local a; read -r -p "This will erase login, session, cookies, cache and local Canva Linux data. Continue? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]]; }
-action_uninstall_flatpak(){ flatpak kill "$APP_ID" 2>/dev/null || true; flatpak uninstall --user -y "$APP_ID" 2>/dev/null || true; sudo flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true; }
 action_uninstall(){
   detect_installations
   if ! has_detected_installations; then
@@ -214,10 +224,10 @@ case "$c" in
   1) run_script "${ROOT_DIR}/scripts/clean-artifacts.sh" ;;
   2) if confirm_reset_user_data; then cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; else ui_info "Canceled."; fi ;;
   3) detect_installations; print_detected_installations ;;
-  4) show_version_info ;;
+  4) run_action_by_id "version-info" ;;
   5) action_uninstall ;;
   6) run_script "${ROOT_DIR}/scripts/uninstall-native.sh" ;;
-  7) action_uninstall_flatpak ;;
+  7) if [[ "$FORCE" != true ]]; then read -r -p "Uninstall Flatpak Install? [y/N] " a; [[ "$a" =~ ^[Yy]$ ]] || { ui_info "Canceled."; return; }; fi; FORCE=true run_action_by_id "uninstall-flatpak" ;;
   8) action_purge ;;
   *) ;;
 esac
@@ -243,23 +253,23 @@ for arg in "$@"; do
     --tui) run_tui_mode no; exit 0 ;;
     --no-tui) run_interactive_mode ;;
     -y|--yes|--force) ;;
-    --install-native) run_script "${ROOT_DIR}/scripts/install-native.sh" ;;
-    --install-flatpak|--install) run_script "${ROOT_DIR}/scripts/install-flatpak-local.sh" ;;
-    --build-runtime) run_script "${ROOT_DIR}/scripts/build-runtime.sh" ;;
-    --build-dir) run_script "${ROOT_DIR}/scripts/build-electron-dir.sh" ;;
-    --validate) run_script "${ROOT_DIR}/scripts/validate-project.sh" ;;
-    --validate-appimage) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" ;;
-    --validate-appimage-extract) run_script "${ROOT_DIR}/scripts/validate-appimage.sh" --extract-check ;;
-    --doctor) run_script "${ROOT_DIR}/scripts/doctor.sh" ;;
-    --bundle-flatpak|--bundle) run_script "${ROOT_DIR}/scripts/build-flatpak-bundle.sh" ;;
-    --bundle-appimage) run_script "${ROOT_DIR}/scripts/build-appimage.sh" ;;
+    --install-native) run_action_by_cli_flag "$arg" ;;
+    --install-flatpak|--install) run_action_by_cli_flag "$arg" ;;
+    --build-runtime) run_action_by_cli_flag "$arg" ;;
+    --build-dir) run_action_by_cli_flag "$arg" ;;
+    --validate) run_action_by_cli_flag "$arg" ;;
+    --validate-appimage) run_action_by_cli_flag "$arg" ;;
+    --validate-appimage-extract) run_action_by_cli_flag "$arg" ;;
+    --doctor) run_action_by_cli_flag "$arg" ;;
+    --bundle-flatpak|--bundle) run_action_by_cli_flag "$arg" ;;
+    --bundle-appimage) run_action_by_cli_flag "$arg" ;;
     --bundle-deb|--bundle-rpm|--prepare-aur) ui_planned "$arg is not implemented in this phase." ;;
-    --clean) run_script "${ROOT_DIR}/scripts/clean-artifacts.sh" ;;
-    --uninstall) action_uninstall ;;
-    --uninstall-native) run_script "${ROOT_DIR}/scripts/uninstall-native.sh" ;;
-    --uninstall-flatpak) action_uninstall_flatpak ;;
+    --clean) run_action_by_cli_flag "$arg" ;;
+    --uninstall) run_action_by_cli_flag "$arg" ;;
+    --uninstall-native) run_action_by_cli_flag "$arg" ;;
+    --uninstall-flatpak) run_action_by_cli_flag "$arg" ;;
     --reset-user-data) if confirm_reset_user_data; then cleanup_all_user_data; ui_ok "User data removed for Flatpak and Native paths"; else ui_info "Canceled."; fi ;;
-    --purge) action_purge ;;
+    --purge) run_action_by_cli_flag "$arg" ;;
     *) ui_error "Unknown option: $arg"; exit 1 ;;
   esac
 done

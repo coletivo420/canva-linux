@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.4.11-dev.41] - 2026-05-04
+
+### Added
+- Added shared `scripts/actions.json` Action Registry.
+- Added `scripts/action-registry.js` and `scripts/action-runner.js`.
+- Added backend scripts for detected installs/version info/reset user data/uninstall/purge workflows.
+- Added `npm run actions:validate`.
+
+### Changed
+- Changed Blessed TUI to load actions from `scripts/actions.json`.
+- Changed shell CLI actions to resolve through the shared Action Registry.
+
+### Fixed
+- Fixed duplicate `modalActive` declaration in `scripts/tui/app.ts`.
+
+
 ## [0.1.4.11-dev.40] - 2026-05-04
 
 ### Added

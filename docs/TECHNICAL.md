@@ -276,7 +276,11 @@ The TUI must not duplicate install/package logic. It launches existing scripts a
 
 ## TUI action registry
 
-The Blessed TUI uses `scripts/tui/action-registry.ts` as the canonical source for visible TUI actions.
+Canva Linux uses `scripts/actions.json` as the shared Action Registry for shell and TUI workflows.
+
+## Shared Action Registry
+
+`scripts/actions.json` is the canonical source for workflow actions.
 
 The TUI must not duplicate install, package or cleanup logic. It launches existing shell scripts and streams logs into the TUI log panel.
 
