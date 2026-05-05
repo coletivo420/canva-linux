@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.4.11-dev.43] - 2026-05-04
+
+### Changed
+- Improved README documentation for the default Terminal Assistant workflow.
+- Clarified that `./canva-linux.sh` opens the Blessed TUI assistant by default when available.
+- Expanded documentation for the Shared Action Registry workflow.
+- Consolidated technical documentation around `scripts/actions.json`, `action-runner.js`, the TUI assistant and shell fallback.
+- Updated planned package notes to point AUR/PKGBUILD work to `0.1.4.12-dev.1`.
+
+### Fixed
+- Cleaned remaining documentation inconsistencies from the TUI migration.
+- Reduced duplicated or overlapping TUI architecture notes in technical documentation.
+- Improved consistency between shell menu labels, direct CLI commands and `scripts/actions.json`.
+- Clarified planned AUR/deb/rpm action behavior.
+
+### Removed
+- Removed or documented remaining obsolete references from older shell-only and pre-registry workflows.
+
+### Notes
+- `0.1.4.11-dev.43` is still a cleanup/review phase.
+- The next development line is `0.1.4.12-dev.1 — AUR/PKGBUILD experimental`.
+- Runtime Electron behavior is unchanged.
+
 ## [0.1.4.11-dev.42] - 2026-05-04
 
 ### Added

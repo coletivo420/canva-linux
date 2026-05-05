@@ -14,7 +14,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   const menu = blessed.list({ top: 2, left: 0, width: '35%', height: '85%', keys: true, mouse: true, border: 'line', label: 'Main Menu' });
   const content = blessed.box({ top: 2, left: '35%', width: '65%', height: '55%', border: 'line', label: 'Overview', tags: true });
   const logs = blessed.log({ top: '57%', left: '35%', width: '65%', height: '30%', border: 'line', label: 'Logs', keys: true, mouse: true, scrollback: 5000, tags: true });
-  const footer = blessed.box({ bottom: 0, height: 1, width: '100%', content: 'q Quit | Enter Select | Esc Back | Tab Focus | ? Help' });
+  const footer = blessed.box({ bottom: 0, height: 1, width: '100%', content: 'q Quit | Enter Select | Esc Back | ? Help | PageUp/PageDown Logs' });
   screen.append(header); screen.append(menu); screen.append(content); screen.append(logs); screen.append(footer);
 
   const mainItems: Array<{ label: string; view: View }> = [
@@ -66,7 +66,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
 
   function setView(view: View) {
     currentView = view;
-    if (view === 'main') { currentActions = []; menu.setItems(mainItems.map((item) => item.label)); content.setLabel('Overview'); content.setContent(CANVA_LOGO_LINES.join('\n')); screen.render(); return; }
+    if (view === 'main') { currentActions = []; menu.setItems(mainItems.map((item) => item.label)); content.setLabel('Overview'); content.setContent([CANVA_LOGO_LINES.join('\n'),'','Canva Linux Terminal Assistant','Use this assistant to install, package, validate and maintain Canva Linux.','','Main sections:','  Install','  Development','  Maintenance & Uninstall','','Direct CLI commands and this assistant use the same Shared Action Registry:','  scripts/actions.json'].join('\n')); screen.render(); return; }
     if (view === 'help') { currentActions = []; menu.setItems(['Back to Main']); content.setLabel('Help'); content.setContent('Navigation:\n  ↑/↓        Move selection\n  Enter      Select action\n  Esc        Back to main menu when idle\n  q          Quit when idle / cancel prompt when running\n  Ctrl+C     Request cancellation when running\n  ?          Help\n\nLogs:\n  PageUp     Scroll logs up\n  PageDown   Scroll logs down\n  Home       Top of logs\n  End        Bottom of logs\n  Ctrl+L     Clear logs when idle\n\nProcess:\n  Running actions block navigation.\n  Canceling sends SIGINT first.\n  Some actions may take several minutes.'); screen.render(); return; }
     const group = view === 'install' ? 'install' : view === 'maintenance' ? 'maintenance' : 'development';
     currentActions = getActionsByGroup(group, opts.rootDir); menu.setItems(currentActions.map((action) => action.label)); content.setLabel(view[0].toUpperCase() + view.slice(1)); content.setContent('Select an action and press Enter.'); screen.render();
