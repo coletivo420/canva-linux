@@ -32,6 +32,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let currentChild: ChildProcess | null = null;
   let renderScheduled = false;
   let modalActive = false;
+  let modalActive = false;
   type LogSource = 'stdout' | 'stderr' | 'system';
   const logBuffers: Record<LogSource, string> = { stdout: '', stderr: '', system: '' };
 
