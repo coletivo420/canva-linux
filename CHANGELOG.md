@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.1.4.11-dev.55] - 2026-05-05
+
+### Removed
+- Removed legacy interactive shell menu from `canva-linux.sh`.
+- Removed `--tui` and `--no-tui` flags.
+- Removed `CANVA_NO_TUI` and `CANVA_TUI` environment variable support.
+- Removed "F4 Shell Tool" and "Use TUI Tool" references.
+
+### Added
+- Centralized sudo usage via `scripts/sudo-common.sh` across all privileged scripts.
+- Consolidated TypeScript core for scripts and validations.
+- Hardened `check-no-shell-menu` and `check-sudo-contract` guardrails.
+
+### Changed
+- Updated technical version and phase identity to `0.1.4-dev.11.55` / `0.1.4.11-dev.55`.
+- Refactored `canva-linux.sh` to a direct TUI/CLI router.
+- Cleaned up `scripts/core-wrapper.js` to remove redundant fallbacks.
+- Updated documentation to reflect the final architecture.
+
 ## [0.1.4.11-dev.54] - 2026-05-05
 
 ### Removed

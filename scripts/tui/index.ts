@@ -8,7 +8,7 @@ function getPackageVersion(): string {
 }
 
 if (process.argv.includes('--help')) {
-  console.log('Canva Linux TUI (experimental)\n\nUsage:\n  npm run tui\n  ./canva-linux.sh --tui');
+  console.log('Canva Linux TUI (experimental)\n\nUsage:\n  npm run tui\n  ./canva-linux.sh');
   process.exit(0);
 }
 

@@ -36,7 +36,21 @@ Recommended flow:
 2. Add entry in `scripts/actions.json`.
 3. Run `npm run actions:validate`.
 4. Test direct CLI: `node scripts/action-runner.js --id <action-id> --dry-run`.
-5. Test direct CLI and TUI: `./canva-linux.sh --doctor` and `./canva-linux.sh --tui`.
+5. Test direct CLI and TUI: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
+
+## Sudo and Privileged Actions
+
+If your action requires root privileges, set `requiresRoot: true` in `scripts/actions.json` and use `scripts/sudo-common.sh` helpers in your backend script.
+
+## Core Validation
+
+All project contracts are checked by:
+
+```bash
+npm run check:scripts-core
+```
+
+This command automatically compiles the TypeScript core scripts if necessary.
 
 ## Next packaging target
 

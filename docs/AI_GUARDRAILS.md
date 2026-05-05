@@ -15,8 +15,8 @@
 - Prefer shared sudo helpers over direct sudo calls.
 - The interactive shell menu has been removed. Do not reintroduce `run_interactive_mode`, `menu_install`, `menu_dev`, `menu_maint`, or tool switching.
 - The project exposes only TUI and direct CLI actions.
-- F4 Shell Tool must not return to the TUI footer or keybindings.
-- `--no-tui` must not open an interactive shell menu.
+- `--no-tui` and `--tui` flags are removed. Launcher opens TUI if no args, otherwise CLI.
+- `CANVA_NO_TUI` and `CANVA_TUI` environment variables are ignored for interface routing.
 - Backend shell scripts may remain shell scripts, but shell UI menus are forbidden.
 - System-wide actions must use scripts/sudo-common.sh.
 - Raw sudo calls are forbidden outside scripts/sudo-common.sh.

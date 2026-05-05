@@ -22,6 +22,14 @@ const forbiddenPatterns = [
   'TUI_SWITCH_TO_SHELL_EXIT_CODE',
   'shell fallback menu',
   'shell menu fallback',
+  '--tui',
+  '--no-tui',
+  'CANVA_NO_TUI',
+  'CANVA_TUI',
+  'F4 Shell Tool',
+  'fallback para shell',
+  'shell menu interativo',
+  'opção “Use TUI Tool”',
 ];
 
 function stripShellComment(line: string): string {
@@ -80,7 +88,14 @@ export function main(): number {
     lines.forEach((line, index) => {
       const checkedLine = activeLine(line, file.kind, state);
       for (const pattern of forbiddenPatterns) {
-        if (checkedLine.includes(pattern)) failures.push(`${file.path}:${index + 1}: forbidden shell-menu fragment: ${pattern}`);
+        if (checkedLine.includes(pattern)) {
+          // Special case: CANVA_TUI is a substring of CANVA_TUI_ROOT_AUTH and CANVA_TUI_TITLE (which are allowed)
+          if (pattern === 'CANVA_TUI' && (checkedLine.includes('CANVA_TUI_ROOT_AUTH') || checkedLine.includes('CANVA_TUI_TITLE'))) {
+            const sanitized = checkedLine.replace(/CANVA_TUI_ROOT_AUTH/g, '').replace(/CANVA_TUI_TITLE/g, '');
+            if (!sanitized.includes('CANVA_TUI')) continue;
+          }
+          failures.push(`${file.path}:${index + 1}: forbidden shell-menu fragment: ${pattern}`);
+        }
       }
     });
   }

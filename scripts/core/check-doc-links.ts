@@ -1,13 +1,11 @@
-#!/usr/bin/env node
+import fs from 'node:fs';
+import path from 'node:path';
+import { findProjectRoot } from './action-registry';
 
-const fs = require('node:fs');
-const path = require('node:path');
+const skipDirs = new Set(['.git', 'node_modules', 'dist', 'repo', '.flatpak-builder', '.build']);
+const markdownFiles: string[] = [];
 
-const repoRoot = path.resolve(__dirname, '..');
-const skipDirs = new Set(['.git', 'node_modules', 'dist', 'repo', '.flatpak-builder']);
-const markdownFiles = [];
-
-function walk(dir) {
+function walk(dir: string) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     if (skipDirs.has(entry.name)) {
       continue;
@@ -25,7 +23,7 @@ function walk(dir) {
   }
 }
 
-function skipWhitespace(text, startIndex) {
+function skipWhitespace(text: string, startIndex: number) {
   let index = startIndex;
   while (index < text.length && /\s/.test(text[index])) {
     index += 1;
@@ -33,8 +31,8 @@ function skipWhitespace(text, startIndex) {
   return index;
 }
 
-function parseMarkdownInlineLinks(text) {
-  const links = [];
+function parseMarkdownInlineLinks(text: string) {
+  const links: string[] = [];
 
   for (let i = 0; i < text.length; i += 1) {
     if (text[i] !== ']') {
@@ -116,7 +114,6 @@ function parseMarkdownInlineLinks(text) {
 
     cursor = skipWhitespace(text, cursor);
 
-    // Optional title: "...", '...', or (...)
     if (text[cursor] === '"' || text[cursor] === "'" || text[cursor] === '(') {
       const opener = text[cursor];
       const closer = opener === '(' ? ')' : opener;
@@ -160,45 +157,57 @@ function parseMarkdownInlineLinks(text) {
   return links;
 }
 
-walk(repoRoot);
+export function main(): number {
+  const repoRoot = findProjectRoot();
+  walk(repoRoot);
 
-const missingLinks = [];
+  const missingLinks: Array<{ file: string; link: string; target: string }> = [];
 
-for (const markdownFile of markdownFiles) {
-  const content = fs.readFileSync(markdownFile, 'utf8');
-  const links = parseMarkdownInlineLinks(content);
+  for (const markdownFile of markdownFiles) {
+    const content = fs.readFileSync(markdownFile, 'utf8');
+    const links = parseMarkdownInlineLinks(content);
 
-  for (const rawLink of links) {
-    if (!rawLink || rawLink.startsWith('#') || rawLink.startsWith('http://') || rawLink.startsWith('https://') || rawLink.startsWith('mailto:')) {
-      continue;
-    }
+    for (const rawLink of links) {
+      if (!rawLink || rawLink.startsWith('#') || rawLink.startsWith('http://') || rawLink.startsWith('https://') || rawLink.startsWith('mailto:')) {
+        continue;
+      }
 
-    const linkPath = rawLink.split('#', 1)[0].trim();
-    if (!linkPath) {
-      continue;
-    }
+      const linkPath = rawLink.split('#', 1)[0].trim();
+      if (!linkPath) {
+        continue;
+      }
 
-    const resolvedPath = linkPath.startsWith('/')
-      ? path.resolve(repoRoot, linkPath.slice(1))
-      : path.resolve(path.dirname(markdownFile), linkPath);
+      const resolvedPath = linkPath.startsWith('/')
+        ? path.resolve(repoRoot, linkPath.slice(1))
+        : path.resolve(path.dirname(markdownFile), linkPath);
 
-    if (!fs.existsSync(resolvedPath)) {
-      missingLinks.push({
-        file: path.relative(repoRoot, markdownFile),
-        link: rawLink,
-        target: path.relative(repoRoot, resolvedPath),
-      });
+      if (!fs.existsSync(resolvedPath)) {
+        missingLinks.push({
+          file: path.relative(repoRoot, markdownFile),
+          link: rawLink,
+          target: path.relative(repoRoot, resolvedPath),
+        });
+      }
     }
   }
+
+  if (missingLinks.length === 0) {
+    console.log(`[doc-links] OK: checked ${markdownFiles.length} markdown files`);
+    return 0;
+  }
+
+  console.error(`Found ${missingLinks.length} broken local markdown link(s):`);
+  for (const item of missingLinks) {
+    console.error(`- ${item.file}: ${item.link} -> ${item.target}`);
+  }
+  return 1;
 }
 
-if (missingLinks.length === 0) {
-  console.log(`OK: checked ${markdownFiles.length} markdown files, no broken local links found.`);
-  process.exit(0);
+if (require.main === module && /check-doc-links\.js$/.test(process.argv[1] || '')) {
+  try {
+    process.exit(main());
+  } catch (error) {
+    console.error(`[doc-links] ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  }
 }
-
-console.error(`Found ${missingLinks.length} broken local markdown link(s):`);
-for (const item of missingLinks) {
-  console.error(`- ${item.file}: ${item.link} -> ${item.target}`);
-}
-process.exit(1);

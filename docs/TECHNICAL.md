@@ -35,13 +35,23 @@ Canva Linux workflow actions are split into four layers:
 
 ## Terminal Assistant / Blessed TUI
 
-`./canva-linux.sh` opens the Blessed TUI by default when stdin/stdout are TTY, `TERM` is not `dumb`, Node.js/npm are available, and `CANVA_NO_TUI` is not set. The interactive shell menu has been removed; non-TUI usage must use direct CLI action flags.
+`./canva-linux.sh` opens the Blessed TUI by default when stdin/stdout are TTY, `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection flags and environment variables have been removed.
 
-The TUI is a visual assistant over shared backend actions; it does not duplicate install/package logic.
+The TUI is a visual assistant over shared backend actions; it does not duplicate install/package logic. It provides guided sections, log monitoring, and a progress bar.
 
-## TUI process and log handling
+## Sudo Contract
 
-The TUI runner streams stdout/stderr separately, decodes UTF-8 safely, buffers partial lines, preserves empty lines, highlights stderr, blocks navigation while running, asks confirmation for destructive actions, and sends SIGINT first on cancellation.
+Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
+
+1. Actions with `requiresRoot: true` in `scripts/actions.json` are identified by the TUI.
+2. The TUI requests root password via a secure prompt before starting the action.
+3. The TUI validates the password and then passes `CANVA_TUI_ROOT_AUTH=1` to the child process.
+4. `scripts/sudo-common.sh` detects this environment variable and uses `sudo -n` for non-interactive execution.
+5. In direct CLI mode, `sudo` prompts for the password as usual in the terminal.
+
+## TypeScript Script Core
+
+The project validations and contracts are implemented in TypeScript under `scripts/core/`. These are compiled into `.build/scripts/core/` and managed through `scripts/core-wrapper.js`. All project validations are integrated into the `npm run check:scripts-core` quality gate.
 
 ## Packaging roadmap notes
 

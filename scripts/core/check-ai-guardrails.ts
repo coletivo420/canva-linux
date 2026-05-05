@@ -23,8 +23,8 @@ const readmeRefs = [
 const requiredGuardrails = [
   'The interactive shell menu has been removed.',
   'The project exposes only TUI and direct CLI actions.',
-  'F4 Shell Tool must not return to the TUI footer or keybindings.',
-  '`--no-tui` must not open an interactive shell menu.',
+  '`--no-tui` and `--tui` flags are removed. Launcher opens TUI if no args, otherwise CLI.',
+  '`CANVA_NO_TUI` and `CANVA_TUI` environment variables are ignored for interface routing.',
   'System-wide actions must use scripts/sudo-common.sh.',
   'Raw sudo calls are forbidden outside scripts/sudo-common.sh.',
   'User-scope actions must never call sudo.',

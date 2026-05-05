@@ -21,19 +21,26 @@ Canva Linux is TypeScript-first in the Electron runtime, but it is not a 100% Ty
 - Node.js maintenance scripts remain JavaScript for now.
 - Shell, Flatpak manifests, AppStream XML, desktop entries and JSON metadata remain in their native formats.
 
-## Planned scripts migration
+## Script Core
 
-A future phase may introduce `tsconfig.scripts.json` for selected Node.js maintenance scripts.
+Project validations, contracts, and registries are implemented in TypeScript under `scripts/core/`.
 
-Initial candidates:
+- These are compiled using `esbuild` to `.build/scripts/core/`.
+- `scripts/core-wrapper.js` provides a thin loader that triggers an automatic build if artifacts are missing.
+- All core validations are integrated into `npm run check:scripts-core`.
 
-- `scripts/check-ai-guardrails.js`
-- `scripts/check-doc-links.js`
-- `scripts/check-dependency-policy.js`
-- `scripts/clean-runtime-build.js`
-- `scripts/copy-runtime-assets.js`
-
-Bootstrap-critical scripts should remain JavaScript until a safe launcher strategy is implemented.
+Migrated scripts:
+- `action-registry.ts`
+- `action-runner.ts`
+- `validate-actions.ts`
+- `overview-status.ts`
+- `check-ai-guardrails.ts`
+- `check-no-shell-menu.ts`
+- `check-sudo-contract.ts`
+- `check-doc-links.ts`
+- `check-dependency-policy.ts`
+- `check-runtime-build.ts`
+- ... and other core contracts.
 
 ## Commands
 
@@ -41,7 +48,8 @@ Bootstrap-critical scripts should remain JavaScript until a safe launcher strate
 npm run typecheck
 npm run typecheck:strict
 npm run build:runtime
-npm run build:check
+npm run build:scripts-core
+npm run check:scripts-core
 ```
 
 ## Rules

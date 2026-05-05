@@ -58,11 +58,9 @@ run_action_by_cli_flag(){
 }
 
 can_run_tui(){
-  local force="${1:-no}"
   [[ -t 0 ]] || return 1
   [[ -t 1 ]] || return 1
   [[ "${TERM:-dumb}" != "dumb" ]] || return 1
-  [[ "$force" == "yes" || "${CANVA_NO_TUI:-0}" != "1" ]] || return 1
   command -v node >/dev/null 2>&1 || return 1
   command -v npm >/dev/null 2>&1 || return 1
   [[ -f "${ROOT_DIR}/scripts/run-tui.js" ]] || return 1
@@ -70,8 +68,7 @@ can_run_tui(){
 }
 
 run_tui_mode(){
-  local force="${1:-no}"
-  if ! can_run_tui "$force"; then
+  if ! can_run_tui; then
     ui_error "TUI requires an interactive terminal, Node.js and npm dependencies."
     ui_info "Use ./canva-linux.sh --help to list direct CLI actions."
     exit 1
@@ -89,19 +86,15 @@ Canva Linux — Install and Development Tool
 
 Usage:
   ./canva-linux.sh
-  ./canva-linux.sh --tui
   ./canva-linux.sh [direct action] [--yes]
 
 Global options:
   -y, --yes              Non-interactive confirmation for uninstall/purge prompts
   -h, --help             Show this help
-  --tui                  Force Blessed TUI
-  --no-tui               Deprecated compatibility flag; never opens a shell menu
 
 Interactive behavior:
-  ./canva-linux.sh opens the Blessed TUI by default when available.
-  The interactive shell menu was removed. Use --help or a direct action flag.
-  CANVA_NO_TUI=1 prevents automatic TUI startup and requires a direct action flag.
+  ./canva-linux.sh opens the Terminal Assistant (Blessed TUI) by default.
+  There is no interactive shell menu. Use --help or a direct action flag for CLI.
 
 Installation:
   --install-native       Run Native Install
@@ -134,65 +127,26 @@ Maintenance & Uninstall:
 H
 }
 
-show_no_tui_removed(){
-  ui_warn "Interactive shell menu was removed."
-  ui_info "Use ./canva-linux.sh --help or run a direct action flag."
-}
-
-has_direct_action=false
-for arg in "$@"; do
-  case "$arg" in
-    --install-native|--install-flatpak|--install|--build-runtime|--build-dir|--validate|--validate-appimage|--validate-appimage-extract|--doctor|--bundle-flatpak|--bundle|--bundle-appimage|--bundle-deb|--bundle-rpm|--prepare-aur|--clean|--uninstall|--uninstall-native|--uninstall-flatpak|--reset-user-data|--purge)
-      has_direct_action=true
-      ;;
-  esac
-done
-
 if [[ $# -eq 0 ]]; then
-  if [[ "${CANVA_NO_TUI:-0}" == "1" ]]; then
-    show_no_tui_removed
-    show_help
-    exit 1
-  fi
-  run_tui_mode no
+  run_tui_mode
   exit 0
 fi
 
+# Parse global options first
 for arg in "$@"; do
   case "$arg" in
     -y|--yes|--force) FORCE=true ;;
+    -h|--help) show_help; exit 0 ;;
   esac
 done
 
+# Route direct actions
 for arg in "$@"; do
   case "$arg" in
-    --help|-h) show_help; exit 0 ;;
-    --tui) run_tui_mode yes; exit 0 ;;
-    --no-tui)
-      if [[ "$has_direct_action" != true ]]; then
-        show_no_tui_removed
-        show_help
-        exit 1
-      fi
+    --install-native|--install-flatpak|--install|--build-runtime|--build-dir|--validate|--validate-appimage|--validate-appimage-extract|--doctor|--bundle-flatpak|--bundle|--bundle-appimage|--bundle-deb|--bundle-rpm|--prepare-aur|--clean|--uninstall|--uninstall-native|--uninstall-flatpak|--reset-user-data|--purge)
+      run_action_by_cli_flag "$arg"
       ;;
     -y|--yes|--force) ;;
-    --install-native) run_action_by_cli_flag "$arg" ;;
-    --install-flatpak|--install) run_action_by_cli_flag "$arg" ;;
-    --build-runtime) run_action_by_cli_flag "$arg" ;;
-    --build-dir) run_action_by_cli_flag "$arg" ;;
-    --validate) run_action_by_cli_flag "$arg" ;;
-    --validate-appimage) run_action_by_cli_flag "$arg" ;;
-    --validate-appimage-extract) run_action_by_cli_flag "$arg" ;;
-    --doctor) run_action_by_cli_flag "$arg" ;;
-    --bundle-flatpak|--bundle) run_action_by_cli_flag "$arg" ;;
-    --bundle-appimage) run_action_by_cli_flag "$arg" ;;
-    --bundle-deb|--bundle-rpm|--prepare-aur) run_action_by_cli_flag "$arg" ;;
-    --clean) run_action_by_cli_flag "$arg" ;;
-    --uninstall) run_action_by_cli_flag "$arg" ;;
-    --uninstall-native) run_action_by_cli_flag "$arg" ;;
-    --uninstall-flatpak) run_action_by_cli_flag "$arg" ;;
-    --reset-user-data) run_action_by_cli_flag "$arg" ;;
-    --purge) run_action_by_cli_flag "$arg" ;;
-    *) ui_error "Unknown option: $arg"; exit 1 ;;
+    *) ui_error "Unknown option: $arg"; ui_info "Use --help for usage."; exit 1 ;;
   esac
 done

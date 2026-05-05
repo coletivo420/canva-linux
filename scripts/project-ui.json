@@ -1,7 +1,7 @@
 {
   "displayVersion": "0.1.4.11",
   "status": "Alpha",
-  "phase": "0.1.4.11-dev.54",
+  "phase": "0.1.4.11-dev.55",
   "toolTitle": "Canva Linux \u2014 Install and Development Tool",
   "tuiTitle": "Canva Linux Terminal Assistant",
   "versionReleaseNotes": "TUI and direct CLI only, shared privileged helper contract, shell-menu guardrails, and hardened action checks."

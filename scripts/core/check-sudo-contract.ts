@@ -3,30 +3,34 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { findProjectRoot } from './action-registry';
 
-const checkedFiles = [
-  'scripts/flatpak-build-common.sh',
-  'scripts/native-install-common.sh',
-  'scripts/install-native.sh',
-  'scripts/desktop-integration-common.sh',
-  'scripts/uninstall-flatpak.sh',
-  'scripts/fix-build-permissions.sh',
-  'scripts/clean-artifacts.sh',
-  'scripts/purge-installations.sh',
-  'scripts/uninstall-detected.sh',
-];
+function findShellScripts(dir: string): string[] {
+  const results: string[] = [];
+  const list = fs.readdirSync(dir);
+  for (const file of list) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat && stat.isDirectory()) {
+      results.push(...findShellScripts(fullPath));
+    } else if (file.endsWith('.sh')) {
+      results.push(fullPath);
+    }
+  }
+  return results;
+}
 
 export function main(): number {
   const rootDir = findProjectRoot();
+  const scriptsDir = path.join(rootDir, 'scripts');
+  const checkedFiles = [...findShellScripts(scriptsDir), path.join(rootDir, 'canva-linux.sh')].filter(f => !f.endsWith('sudo-common.sh'));
   const failures: string[] = [];
 
-  for (const file of checkedFiles) {
-    const fullPath = path.join(rootDir, file);
-    if (!fs.existsSync(fullPath)) continue;
+  for (const fullPath of checkedFiles) {
+    const relativePath = path.relative(rootDir, fullPath);
     const lines = fs.readFileSync(fullPath, 'utf8').split(/\r?\n/);
     lines.forEach((line, index) => {
       if (line.trim().startsWith('#')) return;
       if (/(^|[^A-Za-z0-9_])sudo(\s|$)/.test(line)) {
-        failures.push(`${file}:${index + 1}: raw sudo is forbidden; use scripts/sudo-common.sh`);
+        failures.push(`${relativePath}:${index + 1}: raw sudo is forbidden; use scripts/sudo-common.sh`);
       }
     });
   }

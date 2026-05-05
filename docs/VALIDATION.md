@@ -25,11 +25,12 @@ Current target:
 - bash scripts/show-detected-installations.sh
 
 ## Manual
-- Open `./canva-linux.sh --tui`.
-- Confirm `Phase: 0.1.4.11-dev.54`.
+- Open `./canva-linux.sh`.
+- Confirm `Phase: 0.1.4.11-dev.55`.
 - Confirm `./canva-linux.sh` opens the TUI by default.
-- Confirm `./canva-linux.sh --no-tui` does not open an interactive menu.
-- Confirm `CANVA_NO_TUI=1 ./canva-linux.sh` shows CLI help and does not open an interactive menu.
+- Confirm `./canva-linux.sh --help` shows CLI help.
+- Confirm `./canva-linux.sh --tui` is not supported (or treated as CLI flag).
+- Confirm `CANVA_NO_TUI=1 ./canva-linux.sh` still opens the TUI (env var ignored).
 - Confirm direct CLI actions still work, for example `./canva-linux.sh --doctor`.
 - Confirm detected installs are green and not detected is purple.
 - Confirm detected installs show installed versions (or `version unknown` when unreadable).
