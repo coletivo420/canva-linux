@@ -69,11 +69,23 @@ run_action_by_cli_flag() {
   fi
 }
 
+tui_has_attached_stdio() {
+  [[ -t 0 && -t 1 ]]
+}
+
+tui_has_dev_tty() {
+  [[ -r /dev/tty && -w /dev/tty ]]
+}
+
+tui_needs_dev_tty_redirect() {
+  ! tui_has_attached_stdio && tui_has_dev_tty
+}
+
 tui_unavailable_reason() {
   local force="${1:-no}"
 
-  if [[ ! -t 0 || ! -t 1 ]]; then
-    printf '%s\n' "TUI requires an interactive terminal attached to stdin and stdout."
+  if ! tui_has_attached_stdio && ! tui_has_dev_tty; then
+    printf '%s\n' "TUI requires an interactive terminal or an accessible /dev/tty."
     return 0
   fi
 
@@ -109,6 +121,24 @@ can_run_tui() {
   ! tui_unavailable_reason "$@" >/dev/null
 }
 
+run_tui_node() {
+  if tui_needs_dev_tty_redirect; then
+    session_log "[tui] stdio is not a tty; redirecting TUI to /dev/tty"
+    if [[ -n "${PROJECT_PHASE:-}" ]]; then
+      CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js </dev/tty >/dev/tty 2>/dev/tty
+    else
+      node scripts/run-tui.js </dev/tty >/dev/tty 2>/dev/tty
+    fi
+    return $?
+  fi
+
+  if [[ -n "${PROJECT_PHASE:-}" ]]; then
+    CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js
+  else
+    node scripts/run-tui.js
+  fi
+}
+
 run_tui_mode() {
   local force="${1:-no}"
   local reason
@@ -119,11 +149,7 @@ run_tui_mode() {
     exit 1
   fi
 
-  if [[ -n "${PROJECT_PHASE:-}" ]]; then
-    CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js
-  else
-    node scripts/run-tui.js
-  fi
+  run_tui_node
 }
 
 show_help() {
