@@ -20,13 +20,13 @@ bash "${SCRIPT_DIR}/build-electron-dir.sh"
 install_native_from_dist "${REPO_ROOT}/dist/linux-unpacked"
 VERSION_MARKER="${PROJECT_PHASE:-${PROJECT_DISPLAY_VERSION:-unknown}}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then
-  printf "%s\n" "${VERSION_MARKER}" | sudo tee "${INSTALL_PREFIX}/CANVA_LINUX_VERSION" >/dev/null
+  printf "%s\n" "${VERSION_MARKER}" | canva_sudo tee "${INSTALL_PREFIX}/CANVA_LINUX_VERSION" >/dev/null
 else
   printf "%s\n" "${VERSION_MARKER}" > "${INSTALL_PREFIX}/CANVA_LINUX_VERSION"
 fi
 tmp="$(mktemp)"
 write_desktop_file "${tmp}" "${INSTALL_PREFIX}/${APP_EXECUTABLE}" "${APP_ID}"
-if [[ "${NATIVE_SCOPE}" == "system" ]]; then sudo install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; else install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; fi
+if [[ "${NATIVE_SCOPE}" == "system" ]]; then canva_sudo_install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; else install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; fi
 rm -f "${tmp}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then
   install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/build-resources/icons/hicolor" "/usr/local/share/icons/hicolor"

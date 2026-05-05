@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.4.11-dev.54] - 2026-05-05
+
+### Removed
+- Removed the interactive shell menu interface from `canva-linux.sh`.
+- Removed TUI-to-shell switching and the F4 shell shortcut.
+- Removed shell fallback menus from the default launcher flow.
+
+### Added
+- Added `scripts/sudo-common.sh` as the shared privileged-command contract.
+- Added anti-regression checks for removed shell menus, sudo helper usage, and action metadata contracts.
+- Added TypeScript guardrail checks for AI maintenance rules.
+
+### Changed
+- Updated technical version and phase identity to `0.1.4-dev.11.54` / `0.1.4.11-dev.54`.
+- Changed `canva-linux.sh` to expose only TUI startup and direct CLI actions.
+- Changed `--no-tui` into a non-interactive compatibility flag that requires a direct action.
+- Changed system-wide Native and Flatpak flows to use the shared sudo helper contract.
+
+### Fixed
+- Hardened system/user action scope validation.
+- Hardened TUI privileged execution so validated root sessions are reused without child-process sudo prompts.
+- Hardened guardrails to prevent reintroducing interactive shell menus or raw sudo in critical scripts.
+
 ## [0.1.4.11-dev.53] - 2026-05-05
 
 ### Added

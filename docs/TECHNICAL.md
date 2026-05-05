@@ -30,12 +30,12 @@ Canva Linux workflow actions are split into four layers:
 
 1. `scripts/actions.json` (canonical registry)
 2. `scripts/action-runner.js` (action resolution/execution)
-3. Interfaces (Blessed TUI, shell fallback, direct CLI flags)
+3. Interfaces (Blessed TUI and direct CLI flags)
 4. Backend scripts under `scripts/`
 
 ## Terminal Assistant / Blessed TUI
 
-`./canva-linux.sh` opens the Blessed TUI by default when stdin/stdout are TTY, `TERM` is not `dumb`, Node.js/npm are available, and `CANVA_NO_TUI` is not set.
+`./canva-linux.sh` opens the Blessed TUI by default when stdin/stdout are TTY, `TERM` is not `dumb`, Node.js/npm are available, and `CANVA_NO_TUI` is not set. The interactive shell menu has been removed; non-TUI usage must use direct CLI action flags.
 
 The TUI is a visual assistant over shared backend actions; it does not duplicate install/package logic.
 
@@ -51,7 +51,7 @@ The TUI runner streams stdout/stderr separately, decodes UTF-8 safely, buffers p
 
 ## Terminal theme
 
-The shell fallback and Blessed TUI use a shared Canva-inspired visual language.
+The Blessed TUI and direct CLI output use a shared Canva-inspired visual language.
 
 Reference palette:
 - Light Blue: `#07B9CE`
@@ -59,13 +59,13 @@ Reference palette:
 - Purple: `#7D2AE7`
 
 The TUI uses `scripts/tui/theme.ts`.
-The shell fallback uses ANSI-safe approximations through `scripts/ui-common.sh`.
+Direct CLI output uses ANSI-safe approximations through `scripts/ui-common.sh`.
 
 The theme must remain readable with:
 - truecolor terminals;
 - xterm-256color;
-- `TERM=dumb` shell fallback;
-- `NO_COLOR=1` shell fallback.
+- `TERM=dumb` direct CLI output;
+- `NO_COLOR=1` direct CLI output.
 
 
 ## Automatic overview status

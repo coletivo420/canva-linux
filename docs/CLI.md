@@ -5,7 +5,7 @@ Direct commands are resolved through the shared Action Registry (`scripts/action
 | Command | Description |
 | --- | --- |
 | `--tui` | Force Blessed TUI assistant. |
-| `--no-tui` | Force shell fallback menu. |
+| `--no-tui` | Deprecated compatibility flag. It prevents automatic TUI startup and requires a direct action flag; it never opens an interactive shell menu. |
 | `--install-native` | Run Native Install. |
 | `--install-flatpak` | Build and install Flatpak locally. |
 | `--bundle-flatpak` | Create distributable `.flatpak`. |
