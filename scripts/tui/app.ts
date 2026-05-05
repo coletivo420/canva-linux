@@ -2,10 +2,12 @@ import blessed from 'blessed';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { CANVA_LOGO_LINES } from './logo';
 import { getActionsByGroup, type TuiAction } from './action-registry';
-import { confirmDialog, inputDialog } from './modal';
+import { confirmDialog } from './modal';
 import { runAction } from './process-runner';
 import { tuiTheme } from './theme';
 import { copyTextToClipboard } from './clipboard';
+import fs from 'node:fs';
+import path from 'node:path';
 
 type View = 'main' | 'install' | 'development' | 'maintenance' | 'help';
 type ProcessState = 'idle' | 'running' | 'cancel-requested' | 'success' | 'failed' | 'canceled';
@@ -21,7 +23,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   const content = blessed.box({ top: 2, left: '32%', width: '68%', height: '36%', border: 'line', label: 'Overview', tags: true, scrollable: true, alwaysScroll: true, style: tuiTheme.content });
   const logs = blessed.log({ top: '38%', left: '32%', width: '68%', height: '59%', border: 'line', label: 'Logs', keys: true, mouse: true, scrollable: true, alwaysScroll: true, scrollbar: { ch: ' ', track: { bg: tuiTheme.colors.surfaceAlt }, style: { bg: tuiTheme.colors.lightBlue } }, scrollback: MAX_LOG_HISTORY_LINES, tags: true, style: tuiTheme.logs });
   const footer = blessed.box({ bottom: 0, height: 1, width: '100%', tags: true, content: '{bold}q{/bold} Quit | {bold}Esc{/bold} Back | {bold}Enter{/bold} Select | {bold}F4{/bold} Shell Tool | {bold}F5{/bold} Copy Logs | {bold}?{/bold} Help', style: tuiTheme.footer });
-  screen.append(header); screen.append(menu); screen.append(content); screen.append(logs); screen.append(footer);
+  const progress = blessed.box({ bottom: 1, height: 1, left: '32%', width: '68%', tags: true, content: '', style: { fg: 'white', bg: 'black' } });
+  screen.append(header); screen.append(menu); screen.append(content); screen.append(logs); screen.append(progress); screen.append(footer);
 
   const mainItems: Array<{ label: string; view: View }> = [
     { label: 'Install', view: 'install' },
@@ -35,8 +38,16 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   let running = false;
   let modalActive = false;
   let currentChild: ChildProcess | null = null;
+  let processState: ProcessState = 'idle';
+  let lastCtrlCAt = 0;
   const logBuffers: Record<LogSource, string> = { stdout: '', stderr: '', system: '' };
   const logHistory: string[] = [];
+  const sessionLogPath = process.env.CANVA_TOOL_SESSION_LOG || path.join(process.env.XDG_STATE_HOME || path.join(process.env.HOME || '.', '.local/state'), 'canva-linux', 'tool-session.log');
+  fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
+  const sessionStream = fs.createWriteStream(sessionLogPath, { flags: 'a' });
+  const writeSession = (line: string) => sessionStream.write(`${line}\n`);
+  writeSession('[mode] tui');
+  process.on('exit', () => { writeSession('[session] ended'); });
 
   let overviewStatus: any = null;
   let overviewLoading = false;
@@ -75,19 +86,13 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   }
 
   function appendLogLine(line: string, source: LogSource) {
+    writeSession(`[${source}] ${line}`);
     logHistory.push(line);
     if (logHistory.length > MAX_LOG_HISTORY_LINES) logHistory.shift();
     const msg = line.replace(/[{}]/g, (c) => (c === '{' ? '\\{' : '\\}'));
     if (source === 'stderr') logs.log(`{red-fg}${msg}{/red-fg}`);
     else if (source === 'system') logs.log(`{cyan-fg}${msg}{/cyan-fg}`);
     else logs.log(msg);
-    if (source !== 'stderr' && /\[sudo\].*password/i.test(line) && currentChild?.stdin && !modalActive) {
-      modalActive = true;
-      void inputDialog(screen, 'Root password required', 'Please enter your root password:').then((value) => {
-        if (value === null) appendLogText('[warn] Root password prompt canceled.\n', 'system');
-        else currentChild?.stdin?.write(`${value}\n`);
-      }).finally(() => { modalActive = false; screen.render(); });
-    }
   }
   function appendLogText(text: string, source: LogSource = 'stdout') {
     logBuffers[source] += text;
@@ -100,6 +105,28 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       logBuffers[source] = logBuffers[source].slice(i + n);
     }
     screen.render();
+  }
+
+  function setProgress(percent: number, label: string, isError = false) {
+    const barWidth = 20;
+    const fill = Math.max(0, Math.min(barWidth, Math.round((percent / 100) * barWidth)));
+    const bar = `${'█'.repeat(fill)}${'░'.repeat(barWidth - fill)}`;
+    progress.setContent(`Progress: [${isError ? `{red-fg}${bar}{/red-fg}` : bar}] ${percent}% - ${label}`);
+  }
+
+  function renderActionHelp(view: View, selectedIndex: number) {
+    if (!['install', 'development', 'maintenance'].includes(view)) return;
+    const selected = currentActions[selectedIndex] ?? null;
+    const group = view as 'install' | 'development' | 'maintenance';
+    const base = [`${view[0].toUpperCase() + view.slice(1)} actions`];
+    if (!selected) return content.setContent(base.join('\n'));
+    const notes = [
+      selected.planned ? 'planned' : 'executes command',
+      selected.dangerous ? 'destructive' : 'normal',
+      selected.requiresRoot ? 'requires root' : 'no root',
+      selected.longRunning ? 'creates artifacts' : 'quick action',
+    ];
+    content.setContent([...base, '', 'Selected action:', `  ${selected.label}`, '', 'Description:', `  ${selected.description ?? 'No description available.'}`, '', 'Risk:', `  ${selected.dangerous ? 'high' : 'normal'}`, '', 'Long running:', `  ${selected.longRunning ? 'yes' : 'no'}`, '', 'Command:', `  ${selected.command ? `${selected.command} ${(selected.args ?? []).join(' ')}`.trim() : 'planned / unavailable'}`, '', 'Notes:', `  ${notes.join(' / ')}`, ...(group === 'maintenance' ? ['', 'Detected Installation State:', ...detectedSummary(overviewStatus)] : [])].join('\n'));
   }
 
   function setView(view: View) {
@@ -150,12 +177,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
         '- Purge removes installs and user data (dangerous).',
       ],
     };
-    const selected = currentActions[menu.selected] ?? null;
-    const selectedInfo = selected
-      ? ['', 'Selected action:', `  ${selected.label}`, `  ${selected.description ?? 'No description available.'}`, `  Risk: ${selected.dangerous ? 'high' : 'normal'}`, `  Long running: ${selected.longRunning ? 'yes' : 'no'}`, `  Command: ${selected.command ? `${selected.command} ${(selected.args ?? []).join(' ')}`.trim() : 'planned / unavailable'}`]
-      : [];
-    const maintenanceState = view === 'maintenance' ? ['', 'Detected Installation State:', ...detectedSummary(overviewStatus)] : [];
-    content.setContent([...infoByView[group as 'install' | 'development' | 'maintenance'], ...selectedInfo, ...maintenanceState].join('\n'));
+    renderActionHelp(view, menu.selected);
     screen.render();
   }
 
@@ -173,12 +195,19 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     }
     if (!action.command) return;
     running = true;
+    processState = 'running';
+    setProgress(5, 'Starting');
     logs.setContent('');
     logHistory.length = 0;
     appendLogText(`$ ${action.command} ${(action.args ?? []).join(' ')}\n`, 'system');
+    writeSession(`[action] ${action.id} ${action.label}`);
     currentChild = runAction(action.command, action.args ?? [], (txt, src) => appendLogText(txt, src), ({ code, signal }) => {
       running = false;
       currentChild = null;
+      processState = code === 0 ? 'success' : processState === 'cancel-requested' ? 'canceled' : 'failed';
+      if (processState === 'success') setProgress(100, 'Completed');
+      else if (processState === 'canceled') setProgress(0, 'Canceled', true);
+      else setProgress(0, 'Error', true);
       appendLogText(`[info] Action finished (${signal ?? code ?? 'unknown'}).\n`, 'system');
       setView(currentView);
     });
@@ -200,8 +229,18 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     setView('main');
   });
   screen.key(['C-c'], () => {
-    screen.destroy();
-    process.exit(130);
+    if (modalActive) return;
+    const now = Date.now();
+    if (running && currentChild) {
+      if (now - lastCtrlCAt < 1500) { void confirmExit(); return; }
+      lastCtrlCAt = now;
+      processState = 'cancel-requested';
+      currentChild.kill('SIGINT');
+      appendLogText('[warn] Interrupt requested. Press Ctrl+C again to exit application.\n', 'system');
+      setProgress(0, 'Canceled', true);
+      return;
+    }
+    void confirmExit();
   });
   screen.key(['f4'], () => {
     if (modalActive) return;
@@ -214,6 +253,8 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   screen.key(['home'], () => { logs.setScrollPerc(0); screen.render(); });
   screen.key(['end'], () => { logs.setScrollPerc(100); screen.render(); });
   screen.key(['?'], () => { if (!running && !modalActive) setView('help'); });
+  menu.on('keypress', (_, key) => { if ((key.name === 'up' || key.name === 'down') && ['install', 'development', 'maintenance'].includes(currentView)) { renderActionHelp(currentView, menu.selected); screen.render(); } });
+  menu.on('select item', () => { if (['install', 'development', 'maintenance'].includes(currentView)) { renderActionHelp(currentView, menu.selected); screen.render(); } });
 
   setView('main');
   refreshOverviewStatus();
