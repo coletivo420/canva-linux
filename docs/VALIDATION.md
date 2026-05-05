@@ -1,8 +1,8 @@
-# Validation Checklist (0.1.4.11-dev.51)
+# Validation Checklist (0.1.4.11-dev.52)
 
 Current target:
 - Version: `0.1.4.11 (Alpha)`
-- Phase: `0.1.4.11-dev.51`
+- Phase: `0.1.4.11-dev.52`
 
 ## Automated
 - npm run build:tui
@@ -19,7 +19,7 @@ Current target:
 
 ## Manual
 - Open `./canva-linux.sh --tui`.
-- Confirm `Phase: 0.1.4.11-dev.51`.
+- Confirm `Phase: 0.1.4.11-dev.52`.
 - Confirm detected installs are green and not detected is purple.
 - Confirm detected installs show installed versions (or `version unknown` when unreadable).
 - Confirm successful installs finish with `100% - Completed` in green.

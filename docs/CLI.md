@@ -21,7 +21,7 @@ Direct commands are resolved through the shared Action Registry (`scripts/action
 | `--doctor` | Check host tools. |
 | `--clean` | Remove generated artifacts. |
 | `--uninstall` | Detect and uninstall variants. |
-| `--uninstall-native` | Uninstall Native variant. |
-| `--uninstall-flatpak` | Uninstall Flatpak variant. |
+| `--uninstall-native` | Uninstall Native variant (scope chosen in prompt: system/user). |
+| `--uninstall-flatpak` | Uninstall Flatpak variant (scope chosen in prompt: system/user). |
 | `--reset-user-data` | Remove user data only. |
 | `--purge` | Uninstall + remove user data. |

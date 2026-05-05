@@ -23,13 +23,13 @@
 - in progress = yellow
 - error/canceled = red
 - not detected = purple
-- selected action value = purple
+- selected action value = default readable text color
+- description/help text = default readable text color
 - information box main titles = dark blue
 - information item titles = green
-- description text = purple
 
 Additional rules:
-- Do not color the entire `Selected action` block purple; only the selected action value is purple.
+- Only `not detected` should use purple in status output and optional accent usage.
 - Detection refresh must not clear/override progress results.
 - Progress refresh must not convert a completed action into an error.
 - Installed-version detection must be updated whenever install layout changes.

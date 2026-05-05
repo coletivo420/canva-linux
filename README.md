@@ -2,7 +2,7 @@
 
 Status: **Alpha**  
 Version line: **0.1.4.11**  
-Phase: **0.1.4.11-dev.51**
+Phase: **0.1.4.11-dev.52**
 
 Independent community project. Not affiliated with Canva.
 
@@ -50,6 +50,9 @@ Includes doctor checks, validation pipeline, cleanup, uninstall and purge workfl
 - [Validation](docs/VALIDATION.md)
 - [Development](docs/DEVELOPMENT.md)
 - [AI Guardrails](docs/AI_GUARDRAILS.md)
+- [Project README (docs)](docs/README.md)
+- [TypeScript Notes](docs/TYPESCRIPT.md)
+- [CL EyeDropper](docs/CANVA_LINUX_EYEDROPPER.md)
 
 ## Security / Privacy Notes
 Use only trusted build/dependency sources and review privileged actions before execution.

@@ -61,16 +61,17 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       `  AppImage artifacts: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
     ];
     const i = s.installations;
-    const native = i.nativeSystem && i.nativeUser ? 'detected (system + user)' : i.nativeSystem ? 'detected (system)' : i.nativeUser ? 'detected (user)' : 'not detected';
-    const flatpak = i.flatpakSystem && i.flatpakUser ? 'detected (system + user)' : i.flatpakSystem ? 'detected (system)' : i.flatpakUser ? 'detected (user)' : 'not detected';
-    const nativeColor = native.startsWith('detected') ? tuiTheme.colors.statusDetected : tuiTheme.colors.statusNotDetected;
-    const flatpakColor = flatpak.startsWith('detected') ? tuiTheme.colors.statusDetected : tuiTheme.colors.statusNotDetected;
-    const appImageValue = i.appImageArtifacts ? 'detected' : 'not detected';
-    const appImageColor = i.appImageArtifacts ? tuiTheme.colors.statusDetected : tuiTheme.colors.statusNotDetected;
+    const fmt = (detected: boolean, version: string | undefined) => {
+      if (!detected) return `{${tuiTheme.colors.statusNotDetected}-fg}not detected{/${tuiTheme.colors.statusNotDetected}-fg}`;
+      const v = version && version.trim() ? `v${version.trim().replace(/^v/, '')}` : 'version unknown';
+      return `{${tuiTheme.colors.statusDetected}-fg}detected{/${tuiTheme.colors.statusDetected}-fg}      ${v}`;
+    };
     return [
-      `  Native Install: {${nativeColor}-fg}${native}{/${nativeColor}-fg}`,
-      `  Flatpak Install: {${flatpakColor}-fg}${flatpak}{/${flatpakColor}-fg}`,
-      `  AppImage artifacts: {${appImageColor}-fg}${appImageValue}{/${appImageColor}-fg}`,
+      `  Native System: ${fmt(Boolean(i.nativeSystem), i.nativeSystemVersion)}`,
+      `  Native User: ${fmt(Boolean(i.nativeUser), i.nativeUserVersion)}`,
+      `  Flatpak System: ${fmt(Boolean(i.flatpakSystem), i.flatpakSystemVersion)}`,
+      `  Flatpak User: ${fmt(Boolean(i.flatpakUser), i.flatpakUserVersion)}`,
+      `  AppImage: ${fmt(Boolean(i.appImageArtifacts), i.appImageVersion)}`,
     ];
   };
 
