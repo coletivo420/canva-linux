@@ -13,7 +13,6 @@ type View = 'main' | 'install' | 'development' | 'maintenance' | 'help';
 type ProgressState = 'idle' | 'running' | 'success' | 'failed' | 'canceled';
 type LogSource = 'stdout' | 'stderr' | 'system';
 
-const SWITCH_TO_SHELL_EXIT_CODE = 42;
 const MAX_LOG_HISTORY_LINES = 5000;
 
 export function createApp(opts: { version: string; phase: string; rootDir: string; title: string; toolTitle: string; releaseNotes: string }) {
@@ -23,7 +22,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
   const diagnostics = blessed.box({ top: '42%', left: 0, width: '32%', height: '55%-2', border: 'line', label: 'Detected Installations', tags: true, scrollable: true, alwaysScroll: true, style: tuiTheme.content });
   const content = blessed.box({ top: 2, left: '32%', width: '68%', height: '36%', border: 'line', label: 'Overview', tags: true, scrollable: true, alwaysScroll: true, keys: true, mouse: true, style: tuiTheme.content });
   const logs = blessed.log({ top: '38%', left: '32%', width: '68%', height: '59%', border: 'line', label: 'Logs', keys: true, mouse: true, scrollable: true, alwaysScroll: true, scrollbar: { ch: ' ', track: { bg: tuiTheme.colors.surfaceAlt }, style: { bg: tuiTheme.colors.lightBlue } }, scrollback: MAX_LOG_HISTORY_LINES, tags: true, style: tuiTheme.logs });
-  const footer = blessed.box({ bottom: 0, height: 1, width: '100%', tags: true, content: '{bold}q{/bold} Quit | {bold}Esc{/bold} Back | {bold}Enter{/bold} Select | {bold}F4{/bold} Shell Tool | {bold}F5{/bold} Copy Logs | {bold}?{/bold} Help', style: tuiTheme.footer });
+  const footer = blessed.box({ bottom: 0, height: 1, width: '100%', tags: true, content: '{bold}q{/bold} Quit | {bold}Esc{/bold} Back | {bold}Enter{/bold} Select | {bold}F5{/bold} Copy Logs | {bold}?{/bold} Help', style: tuiTheme.footer });
   const progress = blessed.box({ bottom: 1, height: 1, left: '32%', width: '68%', tags: true, content: '', style: { fg: 'white', bg: 'black' } });
   screen.append(header); screen.append(menu); screen.append(diagnostics); screen.append(content); screen.append(logs); screen.append(progress); screen.append(footer);
 
@@ -204,7 +203,6 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
         `{${tuiTheme.colors.descriptionText}-fg}  Enter          Select action{/${tuiTheme.colors.descriptionText}-fg}`,
         `{${tuiTheme.colors.descriptionText}-fg}  Esc            Confirm exit{/${tuiTheme.colors.descriptionText}-fg}`,
         `{${tuiTheme.colors.descriptionText}-fg}  q              Quit{/${tuiTheme.colors.descriptionText}-fg}`,
-        `{${tuiTheme.colors.descriptionText}-fg}  F4             Switch to Shell Tool{/${tuiTheme.colors.descriptionText}-fg}`,
         '',
         `{${tuiTheme.colors.helpSectionTitle}-fg}Panels{/${tuiTheme.colors.helpSectionTitle}-fg}`,
         `{${tuiTheme.colors.descriptionText}-fg}  Alt+Up/Down or Shift+PgUp/PgDn scroll action panel{/${tuiTheme.colors.descriptionText}-fg}`,
@@ -290,7 +288,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       refreshDetectedInstallations(`action:${action.id}`);
       renderActionHelp(currentView, menu.selected);
       screen.render();
-    }, { cwd: opts.rootDir, env: action.env ?? {} });
+    }, { cwd: opts.rootDir, env: { ...(action.env ?? {}), ...(action.requiresRoot ? { CANVA_TUI_ROOT_AUTH: '1' } : {}) } });
   });
 
   const confirmExit = async () => {
@@ -320,11 +318,6 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
       return;
     }
     void confirmExit();
-  });
-  screen.key(['f4'], () => {
-    if (modalActive) return;
-    if (running) { appendLogText('[warn] Cannot switch tools while an action is running.\n', 'system'); return; }
-    screen.destroy(); process.exit(SWITCH_TO_SHELL_EXIT_CODE);
   });
   screen.key(['f5'], () => { const result = copyTextToClipboard(logHistory.join('\n')); appendLogText(`${result.ok ? '[ok]' : '[warn]'} ${result.message}\n`, 'system'); });
   screen.key(['S-pageup','M-up'], () => { content.scroll(-5); screen.render(); });

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 const { loadCore } = require('./core-wrapper');
 
-const core = loadCore('check-ai-guardrails');
+const core = loadCore('check-no-shell-menu');
 if (!core) process.exit(1);
 
 try {
   process.exit(core.main());
 } catch (error) {
-  console.error(`[ai-guardrails] ${error instanceof Error ? error.message : String(error)}`);
+  console.error(`[error] ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);
 }

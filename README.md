@@ -2,7 +2,7 @@
 
 Status: **Alpha**  
 Version line: **0.1.4.11**  
-Phase: **0.1.4.11-dev.52**
+Phase: **0.1.4.11-dev.54**
 
 Independent community project. Not affiliated with Canva.
 
@@ -17,7 +17,7 @@ cd canva-linux
 ```
 
 ## Canva Linux Install and Development Tool
-The launcher opens the Terminal Assistant by default (when supported), with Install, Development, and Maintenance workflows.
+The launcher opens the Terminal Assistant by default (when supported), with Install, Development, and Maintenance workflows. Direct CLI action flags are available for automation.
 
 ## Feature Matrix
 - **Desktop App**: dedicated window, persistent session, desktop integration.

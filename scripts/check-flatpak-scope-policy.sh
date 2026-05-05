@@ -25,7 +25,7 @@ if grep -RIn "${builder_user_install_pattern}" scripts canva-linux.sh; then
 fi
 
 if grep -RIn "${sudo_builder_pattern}" scripts canva-linux.sh; then
-  echo "[flatpak-scope] forbidden sudo flatpak-""builder"
+  echo "[flatpak-scope] forbidden sudo-flatpak-builder pattern"
   failed=true
 fi
 

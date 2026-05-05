@@ -1,8 +1,8 @@
-# Validation Checklist (0.1.4.11-dev.53)
+# Validation Checklist (0.1.4.11-dev.54)
 
 Current target:
 - Version: `0.1.4.11 (Alpha)`
-- Phase: `0.1.4.11-dev.53`
+- Phase: `0.1.4.11-dev.54`
 
 ## Automated
 - npm run build:scripts-core
@@ -16,6 +16,9 @@ Current target:
 - npm test
 - npm run docs:check-links
 - npm run docs:check-ai
+- node scripts/check-no-shell-menu.js
+- node scripts/check-sudo-contract.js
+- node scripts/check-action-contract.js
 - npm run validate:project
 - bash -n canva-linux.sh scripts/*.sh
 - node scripts/overview-status.js
@@ -23,7 +26,11 @@ Current target:
 
 ## Manual
 - Open `./canva-linux.sh --tui`.
-- Confirm `Phase: 0.1.4.11-dev.53`.
+- Confirm `Phase: 0.1.4.11-dev.54`.
+- Confirm `./canva-linux.sh` opens the TUI by default.
+- Confirm `./canva-linux.sh --no-tui` does not open an interactive menu.
+- Confirm `CANVA_NO_TUI=1 ./canva-linux.sh` shows CLI help and does not open an interactive menu.
+- Confirm direct CLI actions still work, for example `./canva-linux.sh --doctor`.
 - Confirm detected installs are green and not detected is purple.
 - Confirm detected installs show installed versions (or `version unknown` when unreadable).
 - Confirm the detection panel does not show `Detection error` after a successful Flatpak install.
@@ -31,6 +38,7 @@ Current target:
 - Confirm real failures finish with `0% - Error` in red.
 - Confirm Ctrl+C cancellation shows `0% - Canceled` in red.
 - Confirm help screen uses the same semantic colors.
-- Confirm shell mode uses the same semantic colors.
 - Confirm user/system action scopes are applied through `action.env`.
+- Confirm user-scope actions do not request sudo.
+- Confirm system-scope actions use `scripts/sudo-common.sh`.
 - Confirm `REVIEW.md` still starts with `# Review Checklist`.

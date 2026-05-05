@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/app-identity-common.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/sudo-common.sh"
 write_desktop_file(){ local desktop_path="$1" exec_path="$2" icon_name="$3"; cat > "$desktop_path" <<DESKTOP
 [Desktop Entry]
 Type=Application
@@ -13,7 +14,7 @@ Categories=Graphics;
 StartupWMClass=${APP_ID}
 DESKTOP
 }
-install_icon_file(){ local scope="$1" src="$2" dst="$3"; if [[ "$scope" == "system" ]]; then sudo install -Dm644 "$src" "$dst"; else install -Dm644 "$src" "$dst"; fi; }
+install_icon_file(){ local scope="$1" src="$2" dst="$3"; if [[ "$scope" == "system" ]]; then canva_sudo_install -Dm644 "$src" "$dst"; else install -Dm644 "$src" "$dst"; fi; }
 install_icons(){
   local scope="$1" src_root="$2" target_icon_root="$3"
   local size src
@@ -24,4 +25,4 @@ install_icons(){
     [[ -n "$src" ]] && install_icon_file "$scope" "$src" "${target_icon_root}/${size}/apps/${APP_ID}.png"
   done
 }
-update_desktop_caches(){ local scope="$1"; if command -v update-desktop-database >/dev/null 2>&1; then if [[ "$scope" == "system" ]]; then sudo update-desktop-database /usr/local/share/applications >/dev/null 2>&1 || true; else update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true; fi; fi; }
+update_desktop_caches(){ local scope="$1"; if command -v update-desktop-database >/dev/null 2>&1; then if [[ "$scope" == "system" ]]; then canva_sudo update-desktop-database /usr/local/share/applications >/dev/null 2>&1 || true; else update-desktop-database "${HOME}/.local/share/applications" >/dev/null 2>&1 || true; fi; fi; }

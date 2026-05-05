@@ -3,16 +3,31 @@
 - All source code comments, README, docs, changelog, and AI maintenance instructions must be written in English.
 - README is the public entry point; long command references belong in `docs/CLI.md`.
 - Every behavior change must update `CHANGELOG.md`.
-- TUI/Shell/CLI actions must be sourced from `scripts/actions.json`.
-- Do not duplicate action logic in TUI/shell code.
+- TUI/CLI actions must be sourced from `scripts/actions.json`.
+- Do not duplicate action logic in TUI or launcher code.
 - Do not ignore `action.env` from `scripts/actions.json`.
-- Any `system`/`user` scope action must behave the same in TUI, shell, and direct CLI.
+- Any `system`/`user` scope action must behave the same in TUI and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
 - System-wide actions must declare `requiresRoot`.
 - TUI must ask for root authentication before privileged execution.
 - Do not log passwords.
 - Prefer shared sudo helpers over direct sudo calls.
+- The interactive shell menu has been removed. Do not reintroduce `run_interactive_mode`, `menu_install`, `menu_dev`, `menu_maint`, or tool switching.
+- The project exposes only TUI and direct CLI actions.
+- F4 Shell Tool must not return to the TUI footer or keybindings.
+- `--no-tui` must not open an interactive shell menu.
+- Backend shell scripts may remain shell scripts, but shell UI menus are forbidden.
+- System-wide actions must use scripts/sudo-common.sh.
+- Raw sudo calls are forbidden outside scripts/sudo-common.sh.
+- User-scope actions must never call sudo.
+- TUI root authentication must happen before privileged execution.
+- Passwords must never be logged.
+- overview-status must always emit valid JSON.
+- Detection errors must not break the TUI layout.
+- Action metadata must come from scripts/actions.json.
+- TUI and CLI must share the same TypeScript action contract.
+- REVIEW.md must preserve the Review Checklist.
 - Keep ASCII logo light blue.
 - Maintenance must keep installation detection visible at the top.
 - Active docs must match current version/phase and validation flow.
