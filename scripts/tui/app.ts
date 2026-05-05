@@ -157,7 +157,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
     const base = [`{${tuiTheme.colors.blue}-fg}${view[0].toUpperCase() + view.slice(1)} Actions{/${tuiTheme.colors.blue}-fg}`];
     if (!selected) return content.setContent(base.join('\n'));
         const warningBlock = selected.warning
-      ? ['', 'Warning:', `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
+      ? ['', `{${tuiTheme.colors.selectedActionTitle}-fg}Warning:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`]
       : [];
     content.setContent([...base, '', `{${tuiTheme.colors.selectedActionTitle}-fg}Selected action:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.selectedActionLabel}-fg}${selected.label}{/${tuiTheme.colors.selectedActionLabel}-fg}`, '', `{${tuiTheme.colors.selectedActionTitle}-fg}Description:{/${tuiTheme.colors.selectedActionTitle}-fg}`, `  {${tuiTheme.colors.selectedActionLabel}-fg}${selected.description ?? 'No description available.'}{/${tuiTheme.colors.selectedActionLabel}-fg}`, ...warningBlock].join('\n'));
   }
