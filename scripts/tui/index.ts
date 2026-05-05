@@ -3,7 +3,6 @@ import path from 'node:path';
 import projectUi from '../project-ui.json';
 
 function getPackageVersion(): string {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const pkg = require(path.join(process.cwd(), 'package.json')) as { version?: string };
   return pkg.version ?? 'unknown';
 }

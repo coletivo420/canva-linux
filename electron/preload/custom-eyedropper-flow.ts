@@ -261,8 +261,8 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
    * @param {EyeDropperOpenOptions} [options]
    * @returns {Promise<EyeDropperResult>}
    */
-  function wrapOpenCall(options = {}) {
-    const signal: any = options ? (options as any).signal : undefined;
+  function wrapOpenCall(options: EyeDropperOpenOptions = {}): Promise<EyeDropperResult> {
+    const signal = options.signal;
     if (signal?.aborted) {
       return Promise.reject(createAbortError());
     }
@@ -270,16 +270,15 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
     /** @type {undefined | (() => void)} */
     let abortHandler: undefined | (() => void);
     const pickPromise = openCLEyeDropper().then((result) => {
-      const typedResult: any = result;
-      if (!typedResult || typeof typedResult.sRGBHex !== 'string') {
+      if (!result || typeof result.sRGBHex !== 'string') {
         throw createOperationError('The wrapper eye dropper did not return a valid color.');
       }
-      return { sRGBHex: typedResult.sRGBHex };
-    }).catch((error) => {
-      if (error instanceof Error && error.name === 'AbortError') {
+      return { sRGBHex: result.sRGBHex };
+    }).catch((error: unknown) => {
+      if (isAbortLikeError(error)) {
         throw createAbortError();
       }
-      throw createOperationError(error && error.message ? error.message : 'The wrapper eye dropper failed.');
+      throw createOperationError(getErrorMessage(error) || 'The wrapper eye dropper failed.');
     });
 
     if (!signal) {
@@ -287,7 +286,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }: { debugLog: Deb
     }
 
     /** @type {Promise<never>} */
-    const abortPromise = new Promise((_, reject) => {
+    const abortPromise: Promise<never> = new Promise((_, reject) => {
       abortHandler = () => {
         if (activePickerCleanup) {
           activePickerCleanup();

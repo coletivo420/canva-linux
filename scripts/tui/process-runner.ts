@@ -8,14 +8,19 @@ export type ProcessCloseResult = {
   signal: NodeJS.Signals | null;
 };
 
+export type RunActionOptions = {
+  cwd?: string;
+  env?: Record<string, string>;
+};
+
 export function runAction(
   command: string,
   args: string[],
   onData: (text: string, source: StreamSource) => void,
   onClose: (result: ProcessCloseResult) => void,
-  extraEnv: Record<string, string> = {},
+  options: RunActionOptions = {},
 ): ChildProcess {
-  const child = spawn(command, args, { cwd: process.cwd(), env: { ...process.env, ...extraEnv }, shell: false });
+  const child = spawn(command, args, { cwd: options.cwd ?? process.cwd(), env: { ...process.env, ...(options.env ?? {}) }, shell: false });
   const stdoutDecoder = new StringDecoder('utf8');
   const stderrDecoder = new StringDecoder('utf8');
 

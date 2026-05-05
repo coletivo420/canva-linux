@@ -1,41 +1,26 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import {
+  getActionById as getSharedActionById,
+  getActionsByGroup as getSharedActionsByGroup,
+  loadActions,
+  type ActionGroup,
+  type ActionKind,
+  type CanvaAction,
+} from '../core/action-registry';
 
-export type TuiActionGroup = 'install' | 'development' | 'maintenance';
-export type TuiActionKind = 'command' | 'planned' | 'internal';
+export type TuiActionGroup = ActionGroup;
+export type TuiActionKind = ActionKind;
+export type TuiAction = CanvaAction;
 
-export type TuiAction = {
-  id: string;
-  label: string;
-  group: TuiActionGroup;
-  section: string;
-  kind: TuiActionKind;
-  command?: string;
-  args?: string[];
-  cli?: string[];
-  longRunning?: boolean;
-  dangerous?: boolean;
-  planned?: boolean;
-  description?: string;
-  requiresConfirmation?: boolean;
-  confirmationTitle?: string;
-  confirmationMessage?: string;
-  confirmationPhrase?: string;
-  hidden?: boolean;
-  requiresRoot?: boolean;
-  scope?: "system" | "user";
-  warning?: string;
-  env?: Record<string, string>;
-};
-
-function actionsPath(rootDir = process.cwd()) {
-  return path.join(rootDir, 'scripts/actions.json');
-}
+export const tuiActions: TuiAction[] = [];
 
 export function loadTuiActions(rootDir = process.cwd()): TuiAction[] {
-  return JSON.parse(fs.readFileSync(actionsPath(rootDir), 'utf8')) as TuiAction[];
+  return loadActions(rootDir);
 }
 
 export function getActionsByGroup(group: TuiActionGroup, rootDir = process.cwd()): TuiAction[] {
-  return loadTuiActions(rootDir).filter((action) => action.group === group && !action.hidden);
+  return getSharedActionsByGroup(group, rootDir);
+}
+
+export function getActionById(id: string, rootDir = process.cwd()): TuiAction | undefined {
+  return getSharedActionById(id, rootDir);
 }
