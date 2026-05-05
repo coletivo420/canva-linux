@@ -1,10 +1,6 @@
+import esbuild from 'esbuild';
 import fs from 'node:fs';
 import path from 'node:path';
-type Esbuild = {
-  build(options: Record<string, unknown>): Promise<unknown>;
-};
-
-const esbuild = require('esbuild') as Esbuild;
 
 const repoRoot = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, '..');
 const useBuildOutput = process.argv.includes('--build-output');
