@@ -34,7 +34,7 @@ export function main(): number {
     const lines = fs.readFileSync(fullPath, 'utf8').split(/\r?\n/);
     lines.forEach((line, index) => {
       if (line.trim().startsWith('#')) return;
-      if (/^\s*sudo(\s|$)/.test(line) || /[|&;()]\s*sudo(\s|$)/.test(line) || /['\"]sudo['\"]/.test(line)) {
+      if (/(^|[^A-Za-z0-9_])sudo(\s|$)/.test(line) || /['"]sudo['"]/.test(line)) {
         failures.push(`${relativePath}:${index + 1}: raw sudo is forbidden; use scripts/sudo-common.sh`);
       }
     });
