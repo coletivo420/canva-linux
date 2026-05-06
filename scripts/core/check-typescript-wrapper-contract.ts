@@ -2,6 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { findProjectRoot } from './action-registry';
 
+type PackageJson = {
+  scripts?: Record<string, string>;
+};
+
 const removedWrappers = [
   'scripts/build-runtime.js',
   'scripts/build-preload-bundle.js',
@@ -13,16 +17,25 @@ const removedWrappers = [
   'scripts/run-typescript-script.js',
 ] as const;
 
-const requiredTypeScriptEntrypoints = [
-  'scripts/build-runtime.ts',
-  'scripts/build-preload-bundle.ts',
-  'scripts/copy-runtime-assets.ts',
-  'scripts/clean-runtime-build.ts',
-  'scripts/electron-builder-before-build.ts',
-  'scripts/run-node-tests.ts',
-  'scripts/run-tui.ts',
-  'scripts/run-typescript-script.ts',
+const requiredStandaloneEntrypoints = [
+  { source: 'scripts/build-runtime.ts', artifact: '.build/scripts/build-runtime.js' },
+  { source: 'scripts/build-preload-bundle.ts', artifact: '.build/scripts/build-preload-bundle.js' },
+  { source: 'scripts/copy-runtime-assets.ts', artifact: '.build/scripts/copy-runtime-assets.js' },
+  { source: 'scripts/clean-runtime-build.ts', artifact: '.build/scripts/clean-runtime-build.js' },
+  { source: 'scripts/electron-builder-before-build.ts', artifact: '.build/scripts/electron-builder-before-build.js' },
+  { source: 'scripts/run-node-tests.ts', artifact: '.build/scripts/run-node-tests.js' },
+  { source: 'scripts/run-tui.ts', artifact: '.build/scripts/run-tui.js' },
+  { source: 'scripts/run-typescript-script.ts', artifact: '.build/scripts/run-typescript-script.js' },
 ] as const;
+
+const requiredArtifactScripts = {
+  test: '.build/scripts/run-node-tests.js',
+  'build:preload': '.build/scripts/build-preload-bundle.js',
+  'clean:runtime': '.build/scripts/clean-runtime-build.js',
+  'build:runtime': '.build/scripts/build-runtime.js',
+  tui: '.build/scripts/run-tui.js',
+  'check:tui': '.build/scripts/run-tui.js',
+} as const;
 
 export function main(): number {
   const rootDir = findProjectRoot();
@@ -32,8 +45,24 @@ export function main(): number {
     if (fs.existsSync(path.join(rootDir, wrapper))) failures.push(`${wrapper}: compatibility JavaScript wrappers are no longer allowed`);
   }
 
-  for (const entrypoint of requiredTypeScriptEntrypoints) {
-    if (!fs.existsSync(path.join(rootDir, entrypoint))) failures.push(`${entrypoint}: missing TypeScript-first entrypoint`);
+  const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as PackageJson;
+  const packageScripts = packageJson.scripts ?? {};
+  const standaloneBuild = packageScripts['build:scripts-standalone'] ?? '';
+
+  for (const entrypoint of requiredStandaloneEntrypoints) {
+    if (!fs.existsSync(path.join(rootDir, entrypoint.source))) failures.push(`${entrypoint.source}: missing TypeScript-first entrypoint`);
+    if (!standaloneBuild.includes(entrypoint.source)) failures.push(`package.json build:scripts-standalone: must compile ${entrypoint.source}`);
+  }
+
+  if (!standaloneBuild.includes('--outdir=.build/scripts') || !standaloneBuild.includes('--entry-names=[name]')) {
+    failures.push('package.json build:scripts-standalone: must emit generated entrypoints directly under .build/scripts');
+  }
+
+  for (const [scriptName, artifact] of Object.entries(requiredArtifactScripts)) {
+    const command = packageScripts[scriptName] ?? '';
+    if (!command.includes('build:scripts-standalone') || !command.includes(artifact)) {
+      failures.push(`package.json scripts.${scriptName}: must build standalone TypeScript artifacts and run ${artifact}`);
+    }
   }
 
   if (failures.length) {

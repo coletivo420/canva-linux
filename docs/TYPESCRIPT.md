@@ -46,8 +46,10 @@ Project validations, contracts, and registries are implemented in TypeScript und
 
 - `npm run build:scripts-core` compiles core entries with esbuild into `.build/scripts/core/`.
 - `scripts/run-core-entry.sh` builds the core on demand when compiled artifacts are missing, then runs the generated `.build/scripts/core/<entry>.js` artifact.
-- `npm run build:typescript-runner` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js`.
-- `npm run run:ts -- <entry.ts>` runs standalone TypeScript entrypoints through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
+- `npm run build:scripts-standalone` compiles top-level script entrypoints such as `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and `scripts/run-tui.ts` directly into `.build/scripts/*.js`.
+- Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts-standalone`; maintained `scripts/*.js` wrappers are forbidden.
+- `npm run build:typescript-runner` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
+- `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
 - `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks.
 
 Migrated core entries include:
