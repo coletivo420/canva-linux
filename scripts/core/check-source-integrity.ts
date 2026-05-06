@@ -43,6 +43,12 @@ const criticalMultilineFiles = [
 ] as const;
 
 const maxDocumentationLineLength = 2000;
+const strictDocumentationLineLength = 160;
+
+const strictDocumentationLineLengthFiles = new Set([
+  'README.md',
+  'docs/TYPESCRIPT.md',
+]);
 
 const forbiddenCompatibilityCliAliases = [
   '--install',
@@ -151,9 +157,12 @@ function validateCriticalTextShape(rootDir: string, relativePath: string, failur
   }
 
   if (relativePath.endsWith('.md')) {
+    const lineLengthLimit = strictDocumentationLineLengthFiles.has(relativePath)
+      ? strictDocumentationLineLength
+      : maxDocumentationLineLength;
     const longestLine = Math.max(...lines.map((line) => line.length), 0);
-    if (longestLine > maxDocumentationLineLength) {
-      failures.push(`${relativePath}:${lineNumberOfLongestLine(lines)}: documentation line is too long (${longestLine} characters); avoid giant one-line blocks`);
+    if (longestLine > lineLengthLimit) {
+      failures.push(`${relativePath}:${lineNumberOfLongestLine(lines)}: documentation line is too long (${longestLine} characters); limit is ${lineLengthLimit}; avoid giant one-line blocks`);
     }
   }
 }
