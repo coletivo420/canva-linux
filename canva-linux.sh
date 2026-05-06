@@ -258,15 +258,6 @@ Maintenance & Uninstall:
 H
 }
 
-has_direct_action=false
-for arg in "$@"; do
-  case "${arg}" in
-    --install-native|--install-flatpak|--install|--build-runtime|--build-dir|--validate|--validate-appimage|--validate-appimage-extract|--doctor|--bundle-flatpak|--bundle|--bundle-appimage|--bundle-deb|--bundle-rpm|--prepare-aur|--clean|--uninstall|--uninstall-native|--uninstall-flatpak|--reset-user-data|--purge)
-      has_direct_action=true
-      ;;
-  esac
-done
-
 if [[ $# -eq 0 ]]; then
   run_tui_mode no
   exit 0

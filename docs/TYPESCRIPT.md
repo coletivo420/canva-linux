@@ -58,7 +58,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts`; maintained `scripts/*.js` wrappers are forbidden.
 - `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
-- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-no-source-javascript`.
+- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-no-source-javascript` and `check-source-integrity`.
 
 Migrated core entries include:
 
@@ -80,6 +80,7 @@ Migrated core entries include:
 - `check-typescript-wrapper-contract.ts`
 - `check-typescript-first.ts`
 - `check-no-source-javascript.ts`
+- `check-source-integrity.ts`
 
 Standalone TypeScript script entrypoints include:
 
@@ -122,6 +123,7 @@ npm run check:scripts-core
 npm run check:typescript-wrappers
 npm run check:typescript-first
 npm run check:no-source-javascript
+npm run check:source-integrity
 ```
 
 ## Final architecture

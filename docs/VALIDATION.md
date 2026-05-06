@@ -6,8 +6,9 @@ Current target:
 
 ## Automated
 - npm run build:scripts-core
-- npm run check:scripts-core (includes `check-no-source-javascript`)
+- npm run check:scripts-core (includes `check-no-source-javascript` and `check-source-integrity`)
 - npm run check:no-source-javascript
+- npm run check:source-integrity
 - npm run build:tui
 - npm run check:tui
 - npm run actions:validate
