@@ -50,7 +50,8 @@
 - Do not add `scripts/*.js` as maintained source.
 - Do not add `test/*.js`.
 - Do not add JavaScript config files when TypeScript config is supported.
-- JavaScript may exist only as generated output under `.build`, package-managed dependencies under `node_modules`, generated coverage output under `coverage`, or distributable output under `dist`.
+- JavaScript may exist only as project-generated output under `.build`, package-managed dependencies under `node_modules`, generated coverage output under `coverage`, or distributable output under `dist`.
+- Project-generated JavaScript belongs in `.build` only; do not place maintained or project-generated script artifacts elsewhere.
 - Shell scripts are allowed only for Linux host operations, launcher glue, Flatpak/native install, sudo, purge, XDG and validation that must run before Node.
 - JSON/YAML/XML/Desktop files remain native data formats and must be validated by TypeScript checks where appropriate.
 - Flathub source generation must be TypeScript-backed.

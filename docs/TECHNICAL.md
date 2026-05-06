@@ -33,7 +33,7 @@ Canva Linux workflow actions are split into four layers:
 3. Interfaces (Blessed TUI and direct CLI flags)
 4. Backend scripts under `scripts/`
 
-All maintained Node.js source code is TypeScript. JavaScript is generated output only under build, coverage, distribution, or dependency directories. Shell remains shell for host operations such as launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node validation glue.
+All maintained Node.js source code is TypeScript. Project-generated JavaScript belongs in `.build/` only; `dist/`, `coverage/`, and `node_modules/` may contain package, report, or dependency JavaScript, but they are not maintained source locations. Shell remains shell for host operations such as launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node validation glue.
 
 ## Terminal Assistant / Blessed TUI
 
