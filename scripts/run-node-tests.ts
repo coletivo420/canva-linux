@@ -6,6 +6,46 @@ const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, '.
 const testDir = path.join(rootDir, 'test');
 const compiledTestDir = path.join(rootDir, '.build', 'test');
 
+type TestSelection = {
+  nodeArgs: string[];
+  selectedRelativeTests: Set<string> | null;
+};
+
+function normalizePathForNodeTest(filePath: string): string {
+  return filePath.replace(/\\/g, '/');
+}
+
+function maybeRelativeTestPath(argument: string): string | null {
+  if (argument.startsWith('-')) return null;
+
+  const normalized = normalizePathForNodeTest(argument);
+  const withoutBuildPrefix = normalized.startsWith('.build/test/') ? normalized.slice('.build/test/'.length) : normalized;
+  const withoutTestPrefix = withoutBuildPrefix.startsWith('test/') ? withoutBuildPrefix.slice('test/'.length) : withoutBuildPrefix;
+
+  if (!withoutTestPrefix.endsWith('.test.ts') && !withoutTestPrefix.endsWith('.test.js')) return null;
+
+  return withoutTestPrefix.replace(/\.js$/, '.ts');
+}
+
+function splitNodeArgsAndTestSelectors(args: string[]): TestSelection {
+  const selectedRelativeTests = new Set<string>();
+  const nodeArgs: string[] = [];
+
+  for (const arg of args) {
+    const relativeTestPath = maybeRelativeTestPath(arg);
+    if (relativeTestPath) {
+      selectedRelativeTests.add(relativeTestPath);
+    } else {
+      nodeArgs.push(arg);
+    }
+  }
+
+  return {
+    nodeArgs,
+    selectedRelativeTests: selectedRelativeTests.size > 0 ? selectedRelativeTests : null,
+  };
+}
+
 function collectTypeScriptTestFiles(directory: string, predicate: (entryName: string) => boolean): string[] {
   const discovered: string[] = [];
 
@@ -47,9 +87,20 @@ export function main(): void {
     process.exit(1);
   }
 
-  const relativeTestFiles = testFiles.map((file) => path.relative(testDir, file));
-  const relativeCompileInputs = compiledInputs.map((file) => path.relative(rootDir, file));
-  const compiledTestFiles = relativeTestFiles.map((file) => path.join('.build/test', file.replace(/\.ts$/, '.js')));
+  const relativeTestFiles = testFiles.map((file) => normalizePathForNodeTest(path.relative(testDir, file)));
+  const relativeCompileInputs = compiledInputs.map((file) => normalizePathForNodeTest(path.relative(rootDir, file)));
+  const { nodeArgs, selectedRelativeTests } = splitNodeArgsAndTestSelectors(process.argv.slice(2));
+
+  if (selectedRelativeTests) {
+    const missingSelections = [...selectedRelativeTests].filter((file) => !relativeTestFiles.includes(file));
+    if (missingSelections.length) {
+      console.error(`[error] Selected test file(s) were not found: ${missingSelections.join(', ')}`);
+      process.exit(1);
+    }
+  }
+
+  const selectedTestFiles = selectedRelativeTests ? relativeTestFiles.filter((file) => selectedRelativeTests.has(file)) : relativeTestFiles;
+  const compiledTestFiles = selectedTestFiles.map((file) => path.join('.build/test', file.replace(/\.ts$/, '.js')));
   console.error(`[info] Compiling ${relativeCompileInputs.length} TypeScript test file(s) into .build/test.`);
 
   fs.rmSync(compiledTestDir, { recursive: true, force: true });
@@ -79,7 +130,7 @@ export function main(): void {
 
   console.error(`[info] Running ${compiledTestFiles.length} compiled Node test file(s).`);
 
-  const testResult = spawnSync(process.execPath, ['--enable-source-maps', '--test', ...process.argv.slice(2), ...compiledTestFiles], {
+  const testResult = spawnSync(process.execPath, ['--enable-source-maps', '--test', ...nodeArgs, ...compiledTestFiles], {
     cwd: rootDir,
     stdio: 'inherit',
     shell: false,
