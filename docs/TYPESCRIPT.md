@@ -46,7 +46,7 @@ Forbidden maintained JavaScript source:
 - `eslint.config.js`
 - `playwright.config.js`
 
-`check-typescript-first.ts` enforces the wider TypeScript migration contract. `check-no-source-javascript.ts` enforces the no-source-JavaScript rule directly and fails if `.js` files appear outside `.build/`, `node_modules/`, `coverage/`, or `dist/`. Within maintained project output, generated JavaScript is expected under `.build/` only.
+`check-typescript-first.ts` enforces the wider TypeScript migration contract. `check-gitignore-policy.ts` keeps generated outputs ignored without hiding TypeScript source, tests, Flathub submission files, or source JavaScript probes. `check-no-source-javascript.ts` enforces the no-source-JavaScript rule directly and fails if `.js` files appear outside `.build/`, `node_modules/`, `coverage/`, or `dist/`. Within maintained project output, generated JavaScript is expected under `.build/` only.
 
 ## Script Core
 
@@ -59,7 +59,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
 - `npm run bootstrap:electron-builder` compiles `scripts/electron-builder-before-build.ts` into `.build/scripts/bootstrap/electron-builder-before-build.js` for the electron-builder `beforeBuild` hook.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
-- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-no-source-javascript` and `check-source-integrity`.
+- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-gitignore-policy`, `check-no-source-javascript`, and `check-source-integrity`.
 
 Migrated core entries include:
 
@@ -80,6 +80,7 @@ Migrated core entries include:
 - `check-runtime-build.ts`
 - `check-typescript-wrapper-contract.ts`
 - `check-typescript-first.ts`
+- `check-gitignore-policy.ts`
 - `check-no-source-javascript.ts`
 - `check-source-integrity.ts`
 
@@ -125,6 +126,7 @@ npm run build:scripts-core
 npm run check:scripts-core
 npm run check:typescript-wrappers
 npm run check:typescript-first
+npm run check:gitignore-policy
 npm run check:no-source-javascript
 npm run check:source-integrity
 ```

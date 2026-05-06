@@ -128,6 +128,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/core/check-no-shell-menu.ts`
 - `scripts/core/check-review-checklist.ts`
 - `scripts/core/check-runtime-build.ts`
+- `scripts/core/check-gitignore-policy.ts`
 - `scripts/core/check-shell-action-ids.ts`
 - `scripts/core/check-sudo-contract.ts`
 - `scripts/core/check-typescript-wrapper-contract.ts`
@@ -143,6 +144,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/core/check-doc-links.ts`
 - `scripts/core/check-dependency-policy.ts`
 - `scripts/core/check-runtime-build.ts`
+- `scripts/core/check-gitignore-policy.ts`
 - `scripts/core/check-ai-guardrails.ts`
 - `scripts/core/check-action-contract.ts`
 - `scripts/core/check-no-shell-menu.ts`
