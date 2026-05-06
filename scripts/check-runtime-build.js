@@ -1,12 +1,4 @@
 #!/usr/bin/env node
-const { loadCore } = require('./core-wrapper');
+const { runCore } = require('./core-wrapper');
 
-const core = loadCore('check-runtime-build');
-if (!core) process.exit(1);
-
-try {
-  process.exit(core.main());
-} catch (error) {
-  console.error(`[runtime-build-check] ${error instanceof Error ? error.message : String(error)}`);
-  process.exit(1);
-}
+runCore('check-runtime-build', 'runtime-build-check');
