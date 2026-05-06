@@ -6,7 +6,7 @@ const path = require('node:path');
 
 const ts = require('typescript');
 
-const repoRoot = path.resolve(__dirname, '..', '..');
+const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..', '..');
 let typeScriptExtensionRegistered = false;
 
 /**
@@ -45,14 +45,9 @@ function registerTypeScriptExtension() {
  * @returns {any}
  */
 function loadRuntimeModule(modulePath) {
-  const sourceJs = path.join(repoRoot, 'electron', `${modulePath}.js`);
   const sourceTs = path.join(repoRoot, 'electron', `${modulePath}.ts`);
 
   registerTypeScriptExtension();
-
-  if (fs.existsSync(sourceJs)) {
-    return require(sourceJs);
-  }
 
   if (fs.existsSync(sourceTs)) {
     return require(sourceTs);

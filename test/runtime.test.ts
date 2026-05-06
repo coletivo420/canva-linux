@@ -15,7 +15,7 @@ const {
   shouldEnableCaptureVerboseLogging,
 } = loadRuntimeModule('main/runtime');
 
-const repoRoot = path.resolve(__dirname, '..');
+const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..');
 
 /**
  * @param {{ CANVA_DEBUG?: string, CANVA_DEBUG_LEVEL?: string }} env

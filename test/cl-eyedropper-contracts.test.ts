@@ -8,7 +8,7 @@ const test = require('node:test');
 
 const { loadRuntimeModule } = require('./helpers/runtime-module');
 
-const repoRoot = path.resolve(__dirname, '..');
+const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..');
 
 test('CL-EyeDropper module loads without runtime side effects', () => {
   const before = Object.keys(globalThis);

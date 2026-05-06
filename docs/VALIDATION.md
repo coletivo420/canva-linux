@@ -13,7 +13,7 @@ Current target:
 - npm run lint
 - npm run typecheck
 - npm run typecheck:strict
-- npm test
+- npm test (compiles `test/**/*.ts` to `.build/test/` before `node --test`)
 - npm run docs:check-links
 - npm run docs:check-ai
 - scripts/run-core-entry.sh check-no-shell-menu

@@ -6,7 +6,7 @@ Canva Linux is TypeScript-first for Electron runtime code, Node.js maintenance l
 
 - Electron main and preload source modules are TypeScript.
 - Node.js maintenance scripts use TypeScript source files and shell bootstraps where Node cannot execute TypeScript directly.
-- Tests live under `test/**/*.ts` and run through a generated TypeScript require hook in `.build/`.
+- Tests live under `test/**/*.ts`; `npm test` compiles them into `.build/test/` with inline source maps before running `node --test` on generated JavaScript.
 - ESLint and Playwright use `eslint.config.ts` and `playwright.config.ts`.
 - Runtime output remains CommonJS-compatible generated JavaScript under `.build/`.
 - JavaScript is not maintained as source code in `scripts/`, `test/`, configs, or `packaging/flathub/scripts/`.
@@ -81,6 +81,12 @@ Standalone TypeScript script entrypoints include:
 - `run-tui.ts`
 - `register-typescript.ts`
 - `run-typescript-script.ts`
+
+Test execution:
+
+- `scripts/run-node-tests.ts` compiles `test/**/*.ts` to `.build/test/**/*.js` with inline source maps.
+- `npm test` runs `node --test` against `.build/test/**/*.test.js`; Node does not execute TypeScript test files directly.
+- `test/helpers/runtime-module.ts` loads Electron runtime TypeScript sources for module-level tests and no longer falls back to JavaScript source files.
 
 Flathub source generation:
 

@@ -9,7 +9,7 @@ const test = require('node:test');
 
 const { loadRuntimeModule } = require('./helpers/runtime-module');
 
-const repoRoot = path.resolve(__dirname, '..');
+const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..');
 
 /**
  * @template T

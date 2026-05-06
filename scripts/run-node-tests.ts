@@ -4,8 +4,9 @@ import path from 'node:path';
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, '..');
 const testDir = path.join(rootDir, 'test');
+const compiledTestDir = path.join(rootDir, '.build', 'test');
 
-function collectNodeTestFiles(directory: string): string[] {
+function collectTypeScriptTestFiles(directory: string, predicate: (entryName: string) => boolean): string[] {
   const discovered: string[] = [];
 
   function walk(currentDirectory: string): void {
@@ -27,7 +28,7 @@ function collectNodeTestFiles(directory: string): string[] {
           return;
         }
 
-        if (entry.isFile() && entry.name.endsWith('.test.ts')) {
+        if (entry.isFile() && predicate(entry.name)) {
           discovered.push(absolutePath);
         }
       });
@@ -38,34 +39,51 @@ function collectNodeTestFiles(directory: string): string[] {
 }
 
 export function main(): void {
-  const testFiles = collectNodeTestFiles(testDir);
+  const testFiles = collectTypeScriptTestFiles(testDir, (entryName) => entryName.endsWith('.test.ts'));
+  const compiledInputs = collectTypeScriptTestFiles(testDir, (entryName) => entryName.endsWith('.ts'));
 
   if (testFiles.length === 0) {
     console.error('[error] No Node test files were found. Expected at least one *.test.ts file under test/.');
     process.exit(1);
   }
 
-  const relativeTestFiles = testFiles.map((file) => path.relative(rootDir, file));
-  console.error(`[info] Running ${relativeTestFiles.length} Node test file(s).`);
+  const relativeTestFiles = testFiles.map((file) => path.relative(testDir, file));
+  const relativeCompileInputs = compiledInputs.map((file) => path.relative(rootDir, file));
+  const compiledTestFiles = relativeTestFiles.map((file) => path.join('.build/test', file.replace(/\.ts$/, '.js')));
+  console.error(`[info] Compiling ${relativeCompileInputs.length} TypeScript test file(s) into .build/test.`);
 
-  const registerHook = path.join(rootDir, '.build/scripts/bootstrap/register-typescript.js');
-  const result = spawnSync('npx', ['esbuild', 'scripts/register-typescript.ts', '--bundle', '--platform=node', '--target=node20', '--format=cjs', '--external:typescript', `--outfile=${registerHook}`, '--log-level=warning'], {
+  fs.rmSync(compiledTestDir, { recursive: true, force: true });
+  fs.mkdirSync(compiledTestDir, { recursive: true });
+
+  const result = spawnSync('npx', [
+    'esbuild',
+    ...relativeCompileInputs,
+    '--platform=node',
+    '--target=node20',
+    '--format=cjs',
+    '--outbase=test',
+    '--outdir=.build/test',
+    '--sourcemap=inline',
+    '--log-level=warning',
+  ], {
     cwd: rootDir,
     stdio: 'inherit',
     shell: false,
-    env: process.env,
+    env: { ...process.env, CANVA_TEST_REPO_ROOT: rootDir },
   });
 
   if (result.error || result.status !== 0) {
-    console.error(`[error] Failed to build TypeScript test hook${result.error ? `: ${result.error.message}` : ''}`);
+    console.error(`[error] Failed to compile TypeScript tests${result.error ? `: ${result.error.message}` : ''}`);
     process.exit(result.status || 1);
   }
 
-  const testResult = spawnSync(process.execPath, ['--require', registerHook, '--test', ...process.argv.slice(2), ...relativeTestFiles], {
+  console.error(`[info] Running ${compiledTestFiles.length} compiled Node test file(s).`);
+
+  const testResult = spawnSync(process.execPath, ['--enable-source-maps', '--test', ...process.argv.slice(2), ...compiledTestFiles], {
     cwd: rootDir,
     stdio: 'inherit',
     shell: false,
-    env: process.env,
+    env: { ...process.env, CANVA_TEST_REPO_ROOT: rootDir },
   });
 
   if (testResult.error) {
