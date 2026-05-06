@@ -244,7 +244,7 @@ function validateTypescriptDocs(rootDir: string, buildEntries: string[], summari
   const content = readText(rootDir, docPath);
 
   for (const entry of buildEntries) {
-    if (!content.includes(`${entry}.ts`)) {
+    if (!new RegExp("\\\\b" + entry + "\\\\.ts\\\\b").test(content)) {
       failures.push(`${docPath}: missing migrated scripts/core entry ${entry}.ts`);
     }
   }
