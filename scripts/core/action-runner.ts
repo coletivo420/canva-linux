@@ -14,12 +14,12 @@ function printHelp() {
   console.log(`Canva Linux Action Runner
 
 Usage:
-  node scripts/action-runner.js --list
-  node scripts/action-runner.js --list-ids
-  node scripts/action-runner.js --group <name>
-  node scripts/action-runner.js --id <action-id> [--dry-run] [--yes]
-  node scripts/action-runner.js --cli <flag> [--dry-run] [--yes]
-  node scripts/action-runner.js --id <action-id> --requires-confirmation
+  scripts/run-core-entry.sh action-runner --list
+  scripts/run-core-entry.sh action-runner --list-ids
+  scripts/run-core-entry.sh action-runner --group <name>
+  scripts/run-core-entry.sh action-runner --id <action-id> [--dry-run] [--yes]
+  scripts/run-core-entry.sh action-runner --cli <flag> [--dry-run] [--yes]
+  scripts/run-core-entry.sh action-runner --id <action-id> --requires-confirmation
 
 Options:
   --help                    Show this help

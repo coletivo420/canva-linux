@@ -98,44 +98,44 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `electron/shared/debug.ts`
 - `electron/shared/navigation.ts`
 - `electron/ui/toolbar.html`
-- `eslint.config.js`
+- `eslint.config.ts`
 - `io.github.coletivo420.canva-linux.yml`
 - `package-lock.json`
 - `package.json`
 - `packaging/flathub/README.md`
 - `packaging/flathub/generated-sources.json`
 - `packaging/flathub/manifest.yml`
-- `packaging/flathub/scripts/generate-npm-sources.js`
+- `packaging/flathub/scripts/generate-npm-sources.ts`
 - `packaging/flathub/scripts/generate-npm-sources.sh`
-- `playwright.config.js`
+- `playwright.config.ts`
 - `run.sh`
-- `scripts/action-registry.js` (core compatibility wrapper)
-- `scripts/action-runner.js` (core compatibility wrapper)
+- `scripts/core/action-registry.ts`
+- `scripts/core/action-runner.ts`
 - `scripts/actions.json`
 - `scripts/app-identity-common.sh`
 - `scripts/build-appimage.sh`
 - `scripts/build-electron-dir.sh`
 - `scripts/build-flatpak-bundle.sh`
-- `scripts/build-preload-bundle.js` (Node wrapper) / `scripts/build-preload-bundle.ts`
-- `scripts/build-runtime.js` (Node wrapper) / `scripts/build-runtime.ts`
+- `scripts/build-preload-bundle.ts`
+- `scripts/build-runtime.ts`
 - `scripts/build-runtime.sh`
-- `scripts/check-action-contract.js` (core compatibility wrapper)
-- `scripts/check-ai-guardrails.js` (core compatibility wrapper)
-- `scripts/check-dependency-policy.js` (core compatibility wrapper)
-- `scripts/check-detection-contract.js` (core compatibility wrapper)
-- `scripts/check-doc-links.js` (core compatibility wrapper)
+- `scripts/core/check-action-contract.ts`
+- `scripts/core/check-ai-guardrails.ts`
+- `scripts/core/check-dependency-policy.ts`
+- `scripts/core/check-detection-contract.ts`
+- `scripts/core/check-doc-links.ts`
 - `scripts/check-flatpak-scope-policy.sh`
-- `scripts/check-no-shell-menu.js` (core compatibility wrapper)
-- `scripts/check-review-checklist.js` (core compatibility wrapper)
-- `scripts/check-runtime-build.js` (core compatibility wrapper)
-- `scripts/check-shell-action-ids.js` (core compatibility wrapper)
-- `scripts/check-sudo-contract.js` (core compatibility wrapper)
-- `scripts/check-typescript-wrapper-contract.js` (core compatibility wrapper)
-- `scripts/check-version-consistency.js` (core compatibility wrapper)
+- `scripts/core/check-no-shell-menu.ts`
+- `scripts/core/check-review-checklist.ts`
+- `scripts/core/check-runtime-build.ts`
+- `scripts/core/check-shell-action-ids.ts`
+- `scripts/core/check-sudo-contract.ts`
+- `scripts/core/check-typescript-wrapper-contract.ts`
+- `scripts/core/check-version-consistency.ts`
 - `scripts/clean-artifacts.sh`
-- `scripts/clean-runtime-build.js` (Node wrapper) / `scripts/clean-runtime-build.ts`
-- `scripts/copy-runtime-assets.js` (Node wrapper) / `scripts/copy-runtime-assets.ts`
-- `scripts/core-wrapper.js`
+- `scripts/clean-runtime-build.ts`
+- `scripts/copy-runtime-assets.ts`
+- `scripts/run-core-entry.sh`
 - `scripts/core/action-registry.ts`
 - `scripts/core/action-runner.ts`
 - `scripts/core/action-types.ts`
@@ -155,7 +155,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/core/validate-actions.ts`
 - `scripts/desktop-integration-common.sh`
 - `scripts/doctor.sh`
-- `scripts/electron-builder-before-build.js` (Node wrapper) / `scripts/electron-builder-before-build.ts`
+- `scripts/electron-builder-before-build.ts`
 - `scripts/ensure-npm-dependencies.sh`
 - `scripts/fix-build-permissions.sh`
 - `scripts/flatpak-build-common.sh`
@@ -164,15 +164,15 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/install-layout-common.sh`
 - `scripts/install-native.sh`
 - `scripts/native-install-common.sh`
-- `scripts/overview-status.js` (core compatibility wrapper)
+- `scripts/core/overview-status.ts`
 - `scripts/package-guidance-common.sh`
 - `scripts/preflight-common.sh`
 - `scripts/prepare-flathub-submission.sh`
 - `scripts/project-ui.json`
 - `scripts/purge-installations.sh`
 - `scripts/reset-user-data.sh`
-- `scripts/run-tui.js` (Node wrapper) / `scripts/run-tui.ts`
-- `scripts/run-typescript-script.js`
+- `scripts/run-tui.ts`
+- `scripts/run-typescript-script.ts`
 - `scripts/runtime-guidance-common.sh`
 - `scripts/show-detected-installations.sh`
 - `scripts/show-version-info.sh`
@@ -191,31 +191,31 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/uninstall-flatpak.sh`
 - `scripts/uninstall-native.sh`
 - `scripts/user-data-common.sh`
-- `scripts/validate-actions.js` (core compatibility wrapper)
+- `scripts/core/validate-actions.ts`
 - `scripts/validate-appimage.sh`
 - `scripts/validate-flathub-submission.sh`
 - `scripts/validate-flatpak.sh`
 - `scripts/validate-project.sh`
 - `scripts/xdg-common.sh`
-- `test/cl-eyedropper-canvas.test.js`
-- `test/cl-eyedropper-contracts.test.js`
-- `test/cl-eyedropper-runtime.test.js`
-- `test/debug-levels.test.js`
-- `test/electron-smoke.spec.js`
-- `test/eyedropper-bridge.test.js`
-- `test/eyedropper-preload.test.js`
-- `test/gpu-diagnostics.test.js`
-- `test/helpers/runtime-module.js`
-- `test/logging-helpers.test.js`
-- `test/logging-normalize.test.js`
-- `test/navigation.test.js`
-- `test/oauth-helpers.test.js`
-- `test/preload-debug.test.js`
-- `test/runtime.test.js`
-- `test/tab-controller-wiring.test.js`
-- `test/tabs-state.test.js`
-- `test/upload-diagnostics.test.js`
-- `test/window-open-policy.test.js`
+- `test/cl-eyedropper-canvas.test.ts`
+- `test/cl-eyedropper-contracts.test.ts`
+- `test/cl-eyedropper-runtime.test.ts`
+- `test/debug-levels.test.ts`
+- `test/electron-smoke.spec.ts`
+- `test/eyedropper-bridge.test.ts`
+- `test/eyedropper-preload.test.ts`
+- `test/gpu-diagnostics.test.ts`
+- `test/helpers/runtime-module.ts`
+- `test/logging-helpers.test.ts`
+- `test/logging-normalize.test.ts`
+- `test/navigation.test.ts`
+- `test/oauth-helpers.test.ts`
+- `test/preload-debug.test.ts`
+- `test/runtime.test.ts`
+- `test/tab-controller-wiring.test.ts`
+- `test/tabs-state.test.ts`
+- `test/upload-diagnostics.test.ts`
+- `test/window-open-policy.test.ts`
 - `tsconfig.build.json`
 - `tsconfig.json`
 - `tsconfig.strict.json`

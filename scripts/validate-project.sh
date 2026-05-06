@@ -44,20 +44,20 @@ run_step "npm run docs:check-ai" npm run docs:check-ai
 run_step "npm run deps:check-policy" npm run deps:check-policy
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
 run_step "bash scripts/check-shell-ui-api.sh" bash scripts/check-shell-ui-api.sh
-run_step "node scripts/check-no-shell-menu.js" node scripts/check-no-shell-menu.js
-run_step "node scripts/check-sudo-contract.js" node scripts/check-sudo-contract.js
-run_step "node scripts/check-action-contract.js" node scripts/check-action-contract.js
+run_step "scripts/run-core-entry.sh check-no-shell-menu" scripts/run-core-entry.sh check-no-shell-menu
+run_step "scripts/run-core-entry.sh check-sudo-contract" scripts/run-core-entry.sh check-sudo-contract
+run_step "scripts/run-core-entry.sh check-action-contract" scripts/run-core-entry.sh check-action-contract
 run_step "npm run check:scripts-core" npm run check:scripts-core
 run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check
 
-if command -v desktop-file-validate >/dev/null 2>&1; then
+if command -v desktop-file-validate > /dev/null 2>&1; then
   run_step "desktop-file-validate" desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
 else
   log_info "desktop-file-validate not found, skipping"
 fi
 
-if command -v appstreamcli >/dev/null 2>&1; then
+if command -v appstreamcli > /dev/null 2>&1; then
   run_step "appstreamcli validate --explain" \
     appstreamcli validate --explain \
     data/io.github.coletivo420.canva-linux.metainfo.xml

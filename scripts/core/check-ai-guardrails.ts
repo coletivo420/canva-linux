@@ -31,6 +31,23 @@ const requiredGuardrails = [
   'overview-status must always emit valid JSON.',
   'TUI and CLI must share the same TypeScript action contract.',
   'REVIEW.md must preserve the Review Checklist.',
+  'TypeScript is mandatory for all Node.js source code.',
+  'All maintained Node.js source code is TypeScript.',
+  'JavaScript is generated output only.',
+  'Shell remains shell for host operations.',
+  'New scripts must be TypeScript unless they are shell scripts for host operations.',
+  'New tests must be TypeScript.',
+  'New configs should be TypeScript when tool-supported.',
+  'Do not create new JavaScript source files.',
+  'Do not add `scripts/*.js` as maintained source.',
+  'Do not add `test/*.js`.',
+  'Do not add JavaScript config files when TypeScript config is supported.',
+  'JavaScript may exist only as project-generated output under `.build`, package-managed dependencies under `node_modules`, generated coverage output under `coverage`, or distributable output under `dist`.',
+  'Project-generated JavaScript belongs in `.build` only; do not place maintained or project-generated script artifacts elsewhere.',
+  'Shell scripts are allowed only for Linux host operations, launcher glue, Flatpak/native install, sudo, purge, XDG and validation that must run before Node.',
+  'JSON/YAML/XML/Desktop files remain native data formats and must be validated by TypeScript checks where appropriate.',
+  'Flathub source generation must be TypeScript-backed.',
+  'If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.',
 ];
 
 export function main(): number {

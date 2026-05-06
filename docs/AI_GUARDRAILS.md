@@ -39,14 +39,29 @@
 
 ## TypeScript-first Node.js rules
 
-- New Node.js logic must be written in TypeScript by default.
-- JavaScript files under `scripts/` are allowed only as thin compatibility wrappers or accepted test/config/bootstrap files.
-- A JavaScript wrapper must not contain business logic, validation logic, action routing, detection logic, parsing logic, or build orchestration logic.
-- If a new script needs logic, create it under `scripts/core/*.ts` or as a typed script-specific `.ts` file, then expose a minimal `.js` wrapper only when an existing Node entrypoint requires it.
-- Do not add new JavaScript implementation files unless the file is an accepted config file, test file, bootstrap helper, or compatibility wrapper.
+- TypeScript is mandatory for all Node.js source code.
+- All maintained Node.js source code is TypeScript.
+- JavaScript is generated output only.
+- Shell remains shell for host operations.
+- New scripts must be TypeScript unless they are shell scripts for host operations.
+- New tests must be TypeScript.
+- New configs should be TypeScript when tool-supported.
+- Do not create new JavaScript source files.
+- Do not add `scripts/*.js` as maintained source.
+- Do not add `test/*.js`.
+- Do not add JavaScript config files when TypeScript config is supported.
+- JavaScript may exist only as project-generated output under `.build`, package-managed dependencies under `node_modules`, generated coverage output under `coverage`, or distributable output under `dist`.
+- Project-generated JavaScript belongs in `.build` only; do not place maintained or project-generated script artifacts elsewhere.
+- Shell scripts are allowed only for Linux host operations, launcher glue, Flatpak/native install, sudo, purge, XDG and validation that must run before Node.
+- JSON/YAML/XML/Desktop files remain native data formats and must be validated by TypeScript checks where appropriate.
+- Flathub source generation must be TypeScript-backed.
+- If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.
+- Shell bootstraps may invoke TypeScript entrypoints, but JavaScript wrappers must not be reintroduced.
+- If a new script needs logic, create it under `scripts/core/*.ts` or as a typed script-specific `.ts` file.
+- Do not add maintained JavaScript implementation, test, config, bootstrap, or compatibility-wrapper files.
 - Do not duplicate TypeScript core logic in JavaScript fallbacks.
-- `scripts/core-wrapper.js` must only load or build compiled TypeScript core entries; it must not contain fallback implementations of status, registry, runner, validation, or detection contracts.
-- Flathub/npm source generation logic lives in TypeScript; keep `packaging/flathub/scripts/generate-npm-sources.js` as a thin compatibility wrapper only.
+- `scripts/run-core-entry.sh` must only build or run compiled TypeScript core entries; it must not contain fallback implementations of status, registry, runner, validation, or detection contracts.
+- Flathub/npm source generation logic lives in TypeScript; `packaging/flathub/scripts/generate-npm-sources.sh` invokes `generate-npm-sources.ts` through the TypeScript entry runner.
 
 ## Mandatory color semantics
 
@@ -60,6 +75,7 @@
 - information item titles = green
 
 Additional rules:
+
 - Only `not detected` should use purple in status output and optional accent usage.
 - Detection refresh must not clear/override progress results.
 - Progress refresh must not convert a completed action into an error.

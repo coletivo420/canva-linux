@@ -4,309 +4,146 @@ import { findProjectRoot } from './action-registry';
 
 type PackageJson = {
   scripts?: Record<string, string>;
+  build?: { beforeBuild?: string };
 };
 
-type WrapperKind = 'core' | 'typescript-script' | 'support';
-
-type WrapperSummary = {
-  relativePath: string;
-  kind: WrapperKind;
-  coreEntries: string[];
-  tsImplementation?: string;
-};
-
-const supportJavaScriptFiles = new Set([
-  'scripts/core-wrapper.js',
-  'scripts/run-typescript-script.js',
-]);
-
-const acceptedJavaScriptFiles = new Set([
-  ...supportJavaScriptFiles,
-]);
-
-const forbiddenCoreWrapperPatterns = [
-  /fallback[A-Z0-9_]/,
-  /function\s+fallback/i,
-  /const\s+fallback/i,
-  /let\s+fallback/i,
-  /var\s+fallback/i,
-  /overviewStatus/i,
-  /statusItems/i,
-  /detect(?:ion|ed)/i,
+const allowedJavaScriptPrefixes = [
+  '.build/',
+  'node_modules/',
 ] as const;
 
-function readText(rootDir: string, relativePath: string): string {
-  return fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+const sourceJavaScriptAllowlist = new Set([
+  'electron/preload/canva.bundle.js',
+]);
+
+const nativeSourceExtensions = new Set([
+  '.sh',
+  '.json',
+  '.yml',
+  '.yaml',
+  '.xml',
+  '.desktop',
+  '.html',
+]);
+
+const forbiddenSourceRoots = [
+  'scripts/',
+  'test/',
+  'packaging/flathub/scripts/',
+] as const;
+
+const forbiddenConfigFiles = new Set([
+  'eslint.config.js',
+  'playwright.config.js',
+]);
+
+function toRelative(rootDir: string, absolutePath: string): string {
+  return path.relative(rootDir, absolutePath).replace(/\\/g, '/');
 }
 
-function pathExists(rootDir: string, relativePath: string): boolean {
-  return fs.existsSync(path.join(rootDir, relativePath));
-}
-
-function listTopLevelScriptJavaScript(rootDir: string): string[] {
-  const scriptsDir = path.join(rootDir, 'scripts');
-  return fs
-    .readdirSync(scriptsDir, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith('.js'))
-    .map((entry) => `scripts/${entry.name}`)
-    .sort((left, right) => left.localeCompare(right));
-}
-
-function parsePackageJson(rootDir: string): PackageJson {
-  return JSON.parse(readText(rootDir, 'package.json')) as PackageJson;
-}
-
-function extractCoreEntriesFromWrapper(content: string): string[] {
-  const entries = new Set<string>();
-  for (const match of content.matchAll(/\b(?:loadCore|runCore)\(\s*['"]([a-z0-9-]+)['"]/g)) {
-    entries.add(match[1]);
-  }
-  return [...entries].sort((left, right) => left.localeCompare(right));
-}
-
-function typeScriptScriptImplementation(relativePath: string): string {
-  return relativePath.replace(/\.js$/, '.ts');
-}
-
-function classifyWrapper(content: string, relativePath: string): WrapperSummary {
-  const coreEntries = extractCoreEntriesFromWrapper(content);
-
-  if (supportJavaScriptFiles.has(relativePath)) {
-    return { relativePath, kind: 'support', coreEntries };
+function walkFiles(rootDir: string, directory: string, output: string[]): void {
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(directory, { withFileTypes: true });
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return;
+    throw error;
   }
 
-  if (content.includes('runTypeScriptScript(__filename)') || content.includes('loadTypeScriptScript(__filename)')) {
-    return {
-      relativePath,
-      kind: 'typescript-script',
-      coreEntries,
-      tsImplementation: typeScriptScriptImplementation(relativePath),
-    };
-  }
-
-  if (coreEntries.length > 0) {
-    return { relativePath, kind: 'core', coreEntries };
-  }
-
-  return { relativePath, kind: 'support', coreEntries };
-}
-
-function nonEmptyNonCommentLines(content: string): string[] {
-  return content
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line && !line.startsWith('#!') && !line.startsWith('//') && line !== "'use strict';");
-}
-
-function validateTopLevelScriptWrappers(rootDir: string, failures: string[]): WrapperSummary[] {
-  const summaries: WrapperSummary[] = [];
-
-  for (const relativePath of listTopLevelScriptJavaScript(rootDir)) {
-    const content = readText(rootDir, relativePath);
-    const summary = classifyWrapper(content, relativePath);
-    summaries.push(summary);
-
-    if (summary.kind === 'support') {
-      if (!acceptedJavaScriptFiles.has(relativePath)) {
-        failures.push(`${relativePath}: JavaScript implementation files under scripts/ are not allowed; move logic to TypeScript and keep only a thin wrapper`);
-      }
+  for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
+    const absolutePath = path.join(directory, entry.name);
+    const relativePath = toRelative(rootDir, absolutePath);
+    if (entry.isDirectory()) {
+      if (relativePath === '.git' || relativePath === 'node_modules' || relativePath === 'dist' || relativePath === 'repo' || relativePath === 'build-dir' || relativePath === '.flatpak-builder') continue;
+      walkFiles(rootDir, absolutePath, output);
       continue;
     }
-
-    if (summary.kind === 'core') {
-      if (!content.includes("require('./core-wrapper')")) {
-        failures.push(`${relativePath}: core wrapper must load ./core-wrapper`);
-      }
-      if (!content.includes('loadCore(') && !content.includes('runCore(')) {
-        failures.push(`${relativePath}: core wrapper must delegate through loadCore(...) or runCore(...)`);
-      }
-      if (nonEmptyNonCommentLines(content).length > 12) {
-        failures.push(`${relativePath}: core wrapper must stay thin; found ${nonEmptyNonCommentLines(content).length} non-empty code lines`);
-      }
-      for (const coreEntry of summary.coreEntries) {
-        const tsPath = `scripts/core/${coreEntry}.ts`;
-        if (!pathExists(rootDir, tsPath)) {
-          failures.push(`${relativePath}: references missing TypeScript core implementation ${tsPath}`);
-        }
-      }
-    }
-
-    if (summary.kind === 'typescript-script') {
-      if (!summary.tsImplementation || !pathExists(rootDir, summary.tsImplementation)) {
-        failures.push(`${relativePath}: TypeScript-backed wrapper is missing ${summary.tsImplementation ?? typeScriptScriptImplementation(relativePath)}`);
-      }
-      if (nonEmptyNonCommentLines(content).length > 5) {
-        failures.push(`${relativePath}: TypeScript-backed wrapper must stay thin; found ${nonEmptyNonCommentLines(content).length} non-empty code lines`);
-      }
-    }
-  }
-
-  return summaries;
-}
-
-function validateCheckWrappers(rootDir: string, summaries: WrapperSummary[], failures: string[]): void {
-  for (const summary of summaries) {
-    if (!/^scripts\/check-.+\.js$/.test(summary.relativePath)) continue;
-
-    const content = readText(rootDir, summary.relativePath);
-    const lines = nonEmptyNonCommentLines(content);
-
-    if (summary.kind !== 'core') {
-      failures.push(`${summary.relativePath}: check entrypoints must be thin core wrappers`);
-    }
-    if (summary.coreEntries.length !== 1) {
-      failures.push(`${summary.relativePath}: check wrapper must reference exactly one scripts/core entry`);
-    }
-    if (!content.includes('runCore(')) {
-      failures.push(`${summary.relativePath}: check wrapper must delegate through runCore(...) instead of carrying local main/error handling`);
-    }
-    if (content.includes('loadCore(')) {
-      failures.push(`${summary.relativePath}: check wrapper must not call loadCore(...) directly; use runCore(...)`);
-    }
-    if (lines.length > 2) {
-      failures.push(`${summary.relativePath}: check wrapper must stay minimal; expected only core-wrapper import plus runCore(...) call, found ${lines.length} non-empty code lines`);
-    }
+    if (entry.isFile()) output.push(relativePath);
   }
 }
 
-function validateCoreWrapper(rootDir: string, failures: string[]): void {
-  const relativePath = 'scripts/core-wrapper.js';
-  const content = readText(rootDir, relativePath);
+function allRepositoryFiles(rootDir: string): string[] {
+  const files: string[] = [];
+  walkFiles(rootDir, rootDir, files);
+  return files.sort((left, right) => left.localeCompare(right));
+}
 
-  if (!/module\.exports\s*=\s*\{\s*loadCore\s*,\s*runCore,?\s*\}/.test(content)) {
-    failures.push(`${relativePath}: must only expose loadCore and runCore loader helpers`);
-  }
+function isAllowedGeneratedJavaScript(relativePath: string): boolean {
+  return allowedJavaScriptPrefixes.some((prefix) => relativePath.startsWith(prefix));
+}
 
-  for (const pattern of forbiddenCoreWrapperPatterns) {
-    if (pattern.test(content)) {
-      failures.push(`${relativePath}: contains possible fallback or detection business logic matching ${pattern}`);
-    }
+function validateNoMaintainedJavaScript(files: string[], failures: string[]): void {
+  for (const file of files) {
+    if (!file.endsWith('.js')) continue;
+    if (sourceJavaScriptAllowlist.has(file)) continue;
+    if (isAllowedGeneratedJavaScript(file)) continue;
+    failures.push(`${file}: maintained JavaScript source is not allowed; migrate it to TypeScript or generated .build output`);
   }
 }
 
-function extractBuildCoreEntries(packageJson: PackageJson): string[] {
-  const buildCommand = packageJson.scripts?.['build:scripts-core'] ?? '';
-  const entries = new Set<string>();
-  for (const match of buildCommand.matchAll(/scripts\/core\/([a-z0-9-]+)\.ts/g)) {
-    entries.add(match[1]);
-  }
-  return [...entries].sort((left, right) => left.localeCompare(right));
-}
+function validateRequiredTypeScriptEntrypoints(rootDir: string, failures: string[]): void {
+  const required = [
+    'eslint.config.ts',
+    'playwright.config.ts',
+    'scripts/run-node-tests.ts',
+    'scripts/run-typescript-script.ts',
+    'scripts/run-core-entry.sh',
+    'packaging/flathub/scripts/generate-npm-sources.ts',
+    'packaging/flathub/scripts/generate-npm-sources.sh',
+  ] as const;
 
-function extractBuiltCoreCommands(packageJson: PackageJson): string[] {
-  const entries = new Set<string>();
-  for (const command of Object.values(packageJson.scripts ?? {})) {
-    for (const match of command.matchAll(/\.build\/scripts\/core\/([a-z0-9-]+)\.js/g)) {
-      entries.add(match[1]);
-    }
-  }
-  return [...entries].sort((left, right) => left.localeCompare(right));
-}
-
-function validatePackageCoreEntries(rootDir: string, packageJson: PackageJson, failures: string[]): string[] {
-  const buildEntries = extractBuildCoreEntries(packageJson);
-  const buildEntrySet = new Set(buildEntries);
-
-  for (const entry of buildEntries) {
-    const tsPath = `scripts/core/${entry}.ts`;
-    if (!pathExists(rootDir, tsPath)) {
-      failures.push(`package.json build:scripts-core: references missing ${tsPath}`);
-    }
-  }
-
-  for (const entry of extractBuiltCoreCommands(packageJson)) {
-    const tsPath = `scripts/core/${entry}.ts`;
-    if (!pathExists(rootDir, tsPath)) {
-      failures.push(`package.json: references missing compiled core source ${tsPath}`);
-    }
-    if (!buildEntrySet.has(entry)) {
-      failures.push(`package.json: .build/scripts/core/${entry}.js is used but scripts/core/${entry}.ts is not in build:scripts-core`);
-    }
-  }
-
-  return buildEntries;
-}
-
-function validateWrapperBuildCoverage(buildEntries: string[], summaries: WrapperSummary[], failures: string[]): void {
-  const buildEntrySet = new Set(buildEntries);
-  for (const summary of summaries) {
-    for (const entry of summary.coreEntries) {
-      if (!buildEntrySet.has(entry)) {
-        failures.push(`${summary.relativePath}: references scripts/core/${entry}.ts but build:scripts-core does not compile it`);
-      }
-    }
+  for (const file of required) {
+    if (!fs.existsSync(path.join(rootDir, file))) failures.push(`${file}: required TypeScript migration entrypoint is missing`);
   }
 }
 
+function validateForbiddenConfigs(rootDir: string, failures: string[]): void {
+  for (const file of forbiddenConfigFiles) {
+    if (fs.existsSync(path.join(rootDir, file))) failures.push(`${file}: JavaScript config is forbidden; use the .ts config`);
+  }
+}
 
-function validateFlathubSourceGenerator(rootDir: string, failures: string[]): void {
-  const jsPath = 'packaging/flathub/scripts/generate-npm-sources.js';
-  const tsPath = 'packaging/flathub/scripts/generate-npm-sources.ts';
+function validatePackageScripts(rootDir: string, failures: string[]): void {
+  const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as PackageJson;
+  const scripts = pkg.scripts ?? {};
+  for (const [name, command] of Object.entries(scripts)) {
+    const forbidden = command.match(/(?:^|\s)(?:node\s+)?(?:scripts|test|packaging\/flathub\/scripts)\/[^\s]+\.js\b/);
+    if (forbidden) failures.push(`package.json scripts.${name}: invokes maintained JavaScript source (${forbidden[0].trim()})`);
+  }
+
+  if (pkg.build?.beforeBuild !== './.build/scripts/bootstrap/electron-builder-before-build.js') {
+    failures.push('package.json build.beforeBuild: must point at generated .build TypeScript output');
+  }
+}
+
+function validateFlathubShell(rootDir: string, failures: string[]): void {
   const shellPath = 'packaging/flathub/scripts/generate-npm-sources.sh';
-
-  if (!pathExists(rootDir, jsPath)) {
-    failures.push(`${jsPath}: missing compatibility wrapper`);
-    return;
-  }
-  if (!pathExists(rootDir, tsPath)) {
-    failures.push(`${tsPath}: missing TypeScript implementation for Flathub npm source generation`);
-  }
-
-  const jsContent = readText(rootDir, jsPath);
-  const jsLines = nonEmptyNonCommentLines(jsContent);
-  if (!jsContent.includes("require('../../../scripts/run-typescript-script').runTypeScriptScript(__filename)")) {
-    failures.push(`${jsPath}: must delegate to the shared TypeScript script runner`);
-  }
-  if (jsLines.length > 3) {
-    failures.push(`${jsPath}: wrapper must stay thin; found ${jsLines.length} non-empty code lines`);
-  }
-
-  const shellContent = readText(rootDir, shellPath);
-  if (!shellContent.includes('generate-npm-sources.js')) {
-    failures.push(`${shellPath}: must invoke the TypeScript-backed generate-npm-sources.js wrapper`);
-  }
-
-  const docsContent = readText(rootDir, 'docs/TYPESCRIPT.md');
-  if (!docsContent.includes('generate-npm-sources.ts') || !docsContent.includes('generate-npm-sources.js')) {
-    failures.push('docs/TYPESCRIPT.md: missing Flathub source generator TypeScript migration status');
+  const shellContent = fs.readFileSync(path.join(rootDir, shellPath), 'utf8');
+  if (!shellContent.includes('generate-npm-sources.ts')) {
+    failures.push(`${shellPath}: must invoke the TypeScript npm source generator`);
   }
 }
 
-function validateTypescriptDocs(rootDir: string, buildEntries: string[], summaries: WrapperSummary[], failures: string[]): void {
-  const docPath = 'docs/TYPESCRIPT.md';
-  const content = readText(rootDir, docPath);
-
-  for (const entry of buildEntries) {
-    if (!new RegExp("\\b" + entry + "\\.ts\\b").test(content)) {
-      failures.push(`${docPath}: missing migrated scripts/core entry ${entry}.ts`);
-    }
-  }
-
-  for (const summary of summaries) {
-    if (summary.kind !== 'typescript-script' || !summary.tsImplementation) continue;
-    const jsName = path.basename(summary.relativePath);
-    const tsName = path.basename(summary.tsImplementation);
-    if (!content.includes(jsName)) {
-      failures.push(`${docPath}: missing TypeScript-backed wrapper ${jsName}`);
-    }
-    if (!content.includes(tsName)) {
-      failures.push(`${docPath}: missing TypeScript implementation ${tsName}`);
-    }
+function validateSourceRootExtensions(files: string[], failures: string[]): void {
+  for (const file of files) {
+    if (!forbiddenSourceRoots.some((root) => file.startsWith(root))) continue;
+    const extension = path.extname(file);
+    if (extension === '.ts' || nativeSourceExtensions.has(extension)) continue;
+    failures.push(`${file}: unsupported maintained source extension under TypeScript-first roots`);
   }
 }
 
 export function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
-  const packageJson = parsePackageJson(rootDir);
+  const files = allRepositoryFiles(rootDir);
 
-  const summaries = validateTopLevelScriptWrappers(rootDir, failures);
-  validateCheckWrappers(rootDir, summaries, failures);
-  validateCoreWrapper(rootDir, failures);
-  const buildEntries = validatePackageCoreEntries(rootDir, packageJson, failures);
-  validateWrapperBuildCoverage(buildEntries, summaries, failures);
-  validateFlathubSourceGenerator(rootDir, failures);
-  validateTypescriptDocs(rootDir, buildEntries, summaries, failures);
+  validateNoMaintainedJavaScript(files, failures);
+  validateSourceRootExtensions(files, failures);
+  validateForbiddenConfigs(rootDir, failures);
+  validateRequiredTypeScriptEntrypoints(rootDir, failures);
+  validatePackageScripts(rootDir, failures);
+  validateFlathubShell(rootDir, failures);
 
   if (failures.length) {
     console.error('[typescript-first] FAILED:');
@@ -314,11 +151,11 @@ export function main(): number {
     return 1;
   }
 
-  console.log('[ok] TypeScript-first guardrail check passed');
+  console.log('[ok] TypeScript-first source policy passed');
   return 0;
 }
 
-if (require.main === module && /check-typescript-first\.js$/.test(process.argv[1] || '')) {
+if (require.main === module) {
   try {
     process.exit(main());
   } catch (error) {

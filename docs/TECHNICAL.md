@@ -29,9 +29,11 @@ Core runtime files:
 Canva Linux workflow actions are split into four layers:
 
 1. `scripts/actions.json` (canonical registry)
-2. `scripts/action-runner.js` (action resolution/execution)
+2. `scripts/core/action-runner.ts` (action resolution/execution, compiled to `.build/scripts/core/action-runner.js`)
 3. Interfaces (Blessed TUI and direct CLI flags)
 4. Backend scripts under `scripts/`
+
+All maintained Node.js source code is TypeScript. Project-generated JavaScript belongs in `.build/` only; `dist/`, `coverage/`, and `node_modules/` may contain package, report, or dependency JavaScript, but they are not maintained source locations. Shell remains shell for host operations such as launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node validation glue.
 
 ## Terminal Assistant / Blessed TUI
 
@@ -51,19 +53,19 @@ Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
 
 ## TypeScript Script Core
 
-The project validations and contracts are implemented in TypeScript under `scripts/core/`. These are compiled into `.build/scripts/core/` and managed through `scripts/core-wrapper.js`. All project validations are integrated into the `npm run check:scripts-core` quality gate.
+The project validations and contracts are implemented in TypeScript under `scripts/core/`. These are compiled into `.build/scripts/core/` and executed through `scripts/run-core-entry.sh`. All project validations are integrated into the `npm run check:scripts-core` quality gate. The gate includes `check-no-source-javascript`, so maintained `.js` files under script, test, config, or Flathub helper paths fail validation.
 
 ## Packaging roadmap notes
 
 - `prepare-aur` is planned for `0.1.4.12-dev.1`.
 - `.deb`/`.rpm` remain planned after AUR stabilization.
 
-
 ## Terminal theme
 
 The Blessed TUI and direct CLI output use a shared Canva-inspired visual language.
 
 Reference palette:
+
 - Light Blue: `#07B9CE`
 - Blue: `#3969E7`
 - Purple: `#7D2AE7`
@@ -72,11 +74,11 @@ The TUI uses `scripts/tui/theme.ts`.
 Direct CLI output uses ANSI-safe approximations through `scripts/ui-common.sh`.
 
 The theme must remain readable with:
+
 - truecolor terminals;
 - xterm-256color;
 - `TERM=dumb` direct CLI output;
 - `NO_COLOR=1` direct CLI output.
-
 
 ## Automatic overview status
 

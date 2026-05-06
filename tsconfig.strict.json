@@ -1,8 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
+    "allowJs": false,
     "noEmit": true,
     "strict": true,
     "noImplicitAny": true,
@@ -38,19 +37,19 @@
     "electron/preload/cl-eyedropper/index.ts",
     "electron/preload/cl-eyedropper/types.ts",
     "electron/preload/cl-eyedropper/cl-eyedropper.ts",
-    "test/logging-normalize.test.js",
-    "test/debug-levels.test.js",
-    "test/gpu-diagnostics.test.js",
-    "test/runtime.test.js",
-    "test/logging-helpers.test.js",
-    "test/tabs-state.test.js",
-    "test/eyedropper-bridge.test.js",
-    "test/window-open-policy.test.js",
-    "test/navigation.test.js",
-    "test/oauth-helpers.test.js",
-    "test/preload-debug.test.js",
-    "test/upload-diagnostics.test.js",
-    "test/eyedropper-preload.test.js",
-    "test/helpers/runtime-module.js"
+    "test/logging-normalize.test.ts",
+    "test/debug-levels.test.ts",
+    "test/gpu-diagnostics.test.ts",
+    "test/runtime.test.ts",
+    "test/logging-helpers.test.ts",
+    "test/tabs-state.test.ts",
+    "test/eyedropper-bridge.test.ts",
+    "test/window-open-policy.test.ts",
+    "test/navigation.test.ts",
+    "test/oauth-helpers.test.ts",
+    "test/preload-debug.test.ts",
+    "test/upload-diagnostics.test.ts",
+    "test/eyedropper-preload.test.ts",
+    "test/helpers/runtime-module.ts"
   ]
 }

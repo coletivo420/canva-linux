@@ -94,6 +94,17 @@ Submission-path workflow lives in `docs/FLATHUB_SUBMISSION_PATH.md`, and rationa
 - `dist/linux-unpacked` is acceptable as an internal sandbox build artifact; avoid relying on host-prebuilt `dist/` content.
 - Submission build should use `generated-sources.json` + `npm install --offline` to keep npm dependency resolution inside a reviewable, pinned source path.
 
+### npm source generation
+
+`packaging/flathub/scripts/generate-npm-sources.ts` is the maintained source for `generated-sources.json`; the adjacent `.sh` file is only a shell bootstrap. The TypeScript generator reads `package-lock.json`, emits deterministic `npm-cache` tarball sources, converts npm integrity values to Flatpak hash fields, rejects local/workspace/link and `node_modules` path sources, requires HTTPS `.tgz` URLs, checks duplicate URL/hash consistency, and verifies the submission manifest includes `generated-sources.json`.
+
+Run it after every lockfile change:
+
+```bash
+./packaging/flathub/scripts/generate-npm-sources.sh
+```
+
+
 ## Flathub checklist
 
 See `docs/FLATHUB_CHECKLIST.md` for the practical submission checklist, including:

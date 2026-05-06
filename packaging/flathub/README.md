@@ -8,7 +8,7 @@ It is intentionally separate from the repository-root `io.github.coletivo420.can
 
 - `manifest.yml` — submission-oriented manifest using a pinned public archive source (`type: archive` + `sha256`) and offline npm install flow.
 - `generated-sources.json` — npm dependency manifest consumed by the submission manifest for offline installation.
-- `scripts/generate-npm-sources.js` and `scripts/generate-npm-sources.sh` — helper scripts to regenerate `generated-sources.json` from `package-lock.json`.
+- `scripts/generate-npm-sources.ts` and `scripts/generate-npm-sources.sh` — helper scripts to regenerate `generated-sources.json` from `package-lock.json`.
 
 ## Maintainer notes
 

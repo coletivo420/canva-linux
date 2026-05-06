@@ -57,13 +57,13 @@ export function main(): number {
     }
   }
 
-  if (pkg.build?.beforeBuild !== './scripts/electron-builder-before-build.js') {
-    console.error('[dependency-policy] electron-builder beforeBuild hook must remain enabled');
+  if (pkg.build?.beforeBuild !== './.build/scripts/bootstrap/electron-builder-before-build.js') {
+    console.error('[dependency-policy] electron-builder beforeBuild hook must point at generated TypeScript output');
     failed = true;
   }
 
-  if (!fs.existsSync(path.join(rootDir, 'scripts/electron-builder-before-build.js'))) {
-    console.error('[dependency-policy] missing scripts/electron-builder-before-build.js');
+  if (!fs.existsSync(path.join(rootDir, 'scripts/electron-builder-before-build.ts'))) {
+    console.error('[dependency-policy] missing scripts/electron-builder-before-build.ts');
     failed = true;
   }
 

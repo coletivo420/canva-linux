@@ -20,6 +20,16 @@ cd canva-linux
 npm ci --include=dev
 ```
 
+## TypeScript source rules
+
+- All maintained Node.js source code is TypeScript.
+- JavaScript is generated output only; do not add maintained `.js` files under `scripts/`, `test/`, configs, or Flathub helper script paths.
+- Shell remains shell for host operations such as launcher glue, native/Flatpak install, sudo, purge, XDG integration, and validation that must run before Node.
+- New scripts must be TypeScript unless they are shell scripts for those host operations.
+- New tests must be TypeScript.
+- New configs should be TypeScript when tool-supported.
+- Run `npm run check:no-source-javascript` or `npm run check:scripts-core` after adding script, test, config, or packaging helper files.
+
 ## Adding workflow actions
 
 All workflow actions must be registered in:
@@ -32,10 +42,10 @@ Do not add hardcoded action lists directly in TUI or launcher code.
 
 Recommended flow:
 
-1. Create backend script under `scripts/`.
+1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.
 2. Add entry in `scripts/actions.json`.
 3. Run `npm run actions:validate`.
-4. Test direct CLI: `node scripts/action-runner.js --id <action-id> --dry-run`.
+4. Test direct CLI: `scripts/run-core-entry.sh action-runner --id <action-id> --dry-run`.
 5. Test direct CLI and TUI: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
 
 ## Sudo and Privileged Actions
