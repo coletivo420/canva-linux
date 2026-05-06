@@ -128,7 +128,7 @@ export function createApp(opts: { version: string; phase: string; rootDir: strin
 
   function detectInstallationStatusNow(): Promise<any | null> {
     return new Promise((resolve) => {
-      const child = spawn('node', ['scripts/overview-status.js'], { cwd: opts.rootDir, stdio: ['ignore', 'pipe', 'pipe'] });
+      const child = spawn('scripts/run-core-entry.sh', ['overview-status'], { cwd: opts.rootDir, stdio: ['ignore', 'pipe', 'pipe'] });
       let stdout = '';
       let stderr = '';
       let settled = false;

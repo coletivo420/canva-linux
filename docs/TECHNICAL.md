@@ -29,7 +29,7 @@ Core runtime files:
 Canva Linux workflow actions are split into four layers:
 
 1. `scripts/actions.json` (canonical registry)
-2. `scripts/action-runner.js` (action resolution/execution)
+2. `scripts/core/action-runner.ts` (action resolution/execution, compiled to `.build/scripts/core/action-runner.js`)
 3. Interfaces (Blessed TUI and direct CLI flags)
 4. Backend scripts under `scripts/`
 
@@ -51,7 +51,7 @@ Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
 
 ## TypeScript Script Core
 
-The project validations and contracts are implemented in TypeScript under `scripts/core/`. These are compiled into `.build/scripts/core/` and managed through `scripts/core-wrapper.js`. All project validations are integrated into the `npm run check:scripts-core` quality gate.
+The project validations and contracts are implemented in TypeScript under `scripts/core/`. These are compiled into `.build/scripts/core/` and executed through `scripts/run-core-entry.sh`. All project validations are integrated into the `npm run check:scripts-core` quality gate.
 
 ## Packaging roadmap notes
 

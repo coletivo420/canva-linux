@@ -60,7 +60,7 @@ That folder contains:
 
 - `manifest.yml` (submission-oriented manifest)
 - `generated-sources.json` (npm dependency manifest for Flathub source builds)
-- `scripts/generate-npm-sources.sh` (helper wrapper) and `scripts/generate-npm-sources.js` (lockfile-to-manifest generator)
+- `scripts/generate-npm-sources.sh` (shell bootstrap) and `scripts/generate-npm-sources.ts` (lockfile-to-manifest generator)
 - `scripts/prepare-flathub-submission.sh` and `scripts/validate-flathub-submission.sh` (submission-path automation)
 
 The repository-root `io.github.coletivo420.canva-linux.yml` is the canonical **local** workflow manifest used by `./canva-linux.sh`.

@@ -47,7 +47,7 @@ run_action_by_cli_flag() {
   ensure_action_runner_available
 
   local yes_args=()
-  if node scripts/action-runner.js --cli "${flag}" --requires-confirmation >/dev/null 2>&1; then
+  if scripts/run-core-entry.sh action-runner --cli "${flag}" --requires-confirmation >/dev/null 2>&1; then
     if [[ "${FORCE}" != true ]]; then
       local answer
       read -r -p "This action requires confirmation. Continue? [y/N] " answer
@@ -63,9 +63,9 @@ run_action_by_cli_flag() {
 
   session_log "[action] cli=${flag}"
   if [[ "${SESSION_LOG_ENABLED}" == true ]]; then
-    node scripts/action-runner.js --cli "${flag}" "${yes_args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
+    scripts/run-core-entry.sh action-runner --cli "${flag}" "${yes_args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
   else
-    node scripts/action-runner.js --cli "${flag}" "${yes_args[@]}" 2>&1
+    scripts/run-core-entry.sh action-runner --cli "${flag}" "${yes_args[@]}" 2>&1
   fi
 }
 
@@ -82,7 +82,7 @@ tui_needs_dev_tty_redirect() {
 }
 
 tui_has_entrypoint() {
-  [[ -f "${ROOT_DIR}/scripts/run-tui.js" || -f "${ROOT_DIR}/scripts/tui/index.ts" || -f "${ROOT_DIR}/.build/scripts/tui/index.js" ]]
+  [[ -f "${ROOT_DIR}/scripts/run-tui.ts" || -f "${ROOT_DIR}/scripts/tui/index.ts" || -f "${ROOT_DIR}/.build/scripts/tui/index.js" ]]
 }
 
 tui_unavailable_reason() {
@@ -110,7 +110,7 @@ tui_unavailable_reason() {
   fi
 
   if ! tui_has_entrypoint; then
-    printf '%s\n' "TUI entrypoint is missing. Expected scripts/run-tui.js, scripts/tui/index.ts or .build/scripts/tui/index.js."
+    printf '%s\n' "TUI entrypoint is missing. Expected scripts/run-tui.ts, scripts/tui/index.ts or .build/scripts/tui/index.js."
     return 0
   fi
 
@@ -169,17 +169,17 @@ run_built_tui() {
 }
 
 run_tui_direct() {
-  session_log "[tui] scripts/run-tui.js missing; using direct TUI bootstrap fallback"
+  session_log "[tui] scripts/run-tui.ts missing; using direct TUI bootstrap fallback"
   build_tui_direct
   run_built_tui
 }
 
 run_tui_entrypoint() {
-  if [[ -f "${ROOT_DIR}/scripts/run-tui.js" ]]; then
+  if [[ -f "${ROOT_DIR}/scripts/run-tui.ts" ]]; then
     if [[ -n "${PROJECT_PHASE:-}" ]]; then
-      CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node scripts/run-tui.js
+      CANVA_PROJECT_PHASE="${PROJECT_PHASE}" scripts/run-ts-entry.sh scripts/run-tui.ts
     else
-      node scripts/run-tui.js
+      scripts/run-ts-entry.sh scripts/run-tui.ts
     fi
     return $?
   fi

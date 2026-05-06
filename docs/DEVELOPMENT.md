@@ -35,7 +35,7 @@ Recommended flow:
 1. Create backend script under `scripts/`.
 2. Add entry in `scripts/actions.json`.
 3. Run `npm run actions:validate`.
-4. Test direct CLI: `node scripts/action-runner.js --id <action-id> --dry-run`.
+4. Test direct CLI: `scripts/run-core-entry.sh action-runner --id <action-id> --dry-run`.
 5. Test direct CLI and TUI: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
 
 ## Sudo and Privileged Actions

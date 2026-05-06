@@ -21,11 +21,13 @@ function run(label: string, command: string, args: CommandArgs): void {
 }
 
 export function main(): void {
-  run('clean .build', process.execPath, ['scripts/clean-runtime-build.js']);
+  run('clean .build', 'bash', ['scripts/run-ts-entry.sh', 'scripts/clean-runtime-build.ts']);
   run('compile electron runtime', 'npx', ['tsc', '-p', 'tsconfig.build.json']);
-  run('copy runtime assets', process.execPath, ['scripts/copy-runtime-assets.js']);
-  run('build preload bundle in .build', process.execPath, [
-    'scripts/build-preload-bundle.js',
+  run('copy runtime assets', 'bash', ['scripts/run-ts-entry.sh', 'scripts/copy-runtime-assets.ts']);
+  run('build electron-builder beforeBuild hook', 'npx', ['esbuild', 'scripts/electron-builder-before-build.ts', '--bundle', '--platform=node', '--target=node20', '--format=cjs', '--external:electron', '--external:esbuild', '--outfile=.build/scripts/bootstrap/electron-builder-before-build.js']);
+  run('build preload bundle in .build', 'bash', [
+    'scripts/run-ts-entry.sh',
+    'scripts/build-preload-bundle.ts',
     '--build-output',
   ]);
 

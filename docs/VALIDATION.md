@@ -1,8 +1,8 @@
-# Validation Checklist (0.1.4.11-dev.54)
+# Validation Checklist (0.1.4.11-dev.58)
 
 Current target:
 - Version: `0.1.4.11 (Alpha)`
-- Phase: `0.1.4.11-dev.54`
+- Phase: `0.1.4.11-dev.58`
 
 ## Automated
 - npm run build:scripts-core
@@ -16,17 +16,17 @@ Current target:
 - npm test
 - npm run docs:check-links
 - npm run docs:check-ai
-- node scripts/check-no-shell-menu.js
-- node scripts/check-sudo-contract.js
-- node scripts/check-action-contract.js
+- scripts/run-core-entry.sh check-no-shell-menu
+- scripts/run-core-entry.sh check-sudo-contract
+- scripts/run-core-entry.sh check-action-contract
 - npm run validate:project
 - bash -n canva-linux.sh scripts/*.sh
-- node scripts/overview-status.js
+- scripts/run-core-entry.sh overview-status
 - bash scripts/show-detected-installations.sh
 
 ## Manual
 - Open `./canva-linux.sh`.
-- Confirm `Phase: 0.1.4.11-dev.55`.
+- Confirm `Phase: 0.1.4.11-dev.58`.
 - Confirm `./canva-linux.sh` opens the TUI by default.
 - Confirm `./canva-linux.sh --help` shows CLI help.
 - Confirm `./canva-linux.sh --tui` is not supported (or treated as CLI flag).

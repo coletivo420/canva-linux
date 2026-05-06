@@ -27,7 +27,7 @@ function collectNodeTestFiles(directory: string): string[] {
           return;
         }
 
-        if (entry.isFile() && entry.name.endsWith('.test.js')) {
+        if (entry.isFile() && entry.name.endsWith('.test.ts')) {
           discovered.push(absolutePath);
         }
       });
@@ -41,31 +41,44 @@ export function main(): void {
   const testFiles = collectNodeTestFiles(testDir);
 
   if (testFiles.length === 0) {
-    console.error('[error] No Node test files were found. Expected at least one *.test.js file under test/.');
+    console.error('[error] No Node test files were found. Expected at least one *.test.ts file under test/.');
     process.exit(1);
   }
 
   const relativeTestFiles = testFiles.map((file) => path.relative(rootDir, file));
   console.error(`[info] Running ${relativeTestFiles.length} Node test file(s).`);
 
-  const result = spawnSync(process.execPath, ['--test', ...relativeTestFiles], {
+  const registerHook = path.join(rootDir, '.build/scripts/bootstrap/register-typescript.js');
+  const result = spawnSync('npx', ['esbuild', 'scripts/register-typescript.ts', '--bundle', '--platform=node', '--target=node20', '--format=cjs', '--external:typescript', `--outfile=${registerHook}`, '--log-level=warning'], {
     cwd: rootDir,
     stdio: 'inherit',
     shell: false,
     env: process.env,
   });
 
-  if (result.error) {
-    console.error(`[error] Failed to start node --test: ${result.error.message}`);
+  if (result.error || result.status !== 0) {
+    console.error(`[error] Failed to build TypeScript test hook${result.error ? `: ${result.error.message}` : ''}`);
+    process.exit(result.status || 1);
+  }
+
+  const testResult = spawnSync(process.execPath, ['--require', registerHook, '--test', ...relativeTestFiles, ...process.argv.slice(2)], {
+    cwd: rootDir,
+    stdio: 'inherit',
+    shell: false,
+    env: process.env,
+  });
+
+  if (testResult.error) {
+    console.error(`[error] Failed to start node --test: ${testResult.error.message}`);
     process.exit(1);
   }
 
-  if (typeof result.status === 'number') {
-    process.exit(result.status);
+  if (typeof testResult.status === 'number') {
+    process.exit(testResult.status);
   }
 
-  if (result.signal) {
-    console.error(`[error] node --test was terminated by ${result.signal}.`);
+  if (testResult.signal) {
+    console.error(`[error] node --test was terminated by ${testResult.signal}.`);
   }
   process.exit(1);
 }

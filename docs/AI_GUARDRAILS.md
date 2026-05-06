@@ -40,13 +40,13 @@
 ## TypeScript-first Node.js rules
 
 - New Node.js logic must be written in TypeScript by default.
-- JavaScript files under `scripts/` are allowed only as thin compatibility wrappers or accepted test/config/bootstrap files.
-- A JavaScript wrapper must not contain business logic, validation logic, action routing, detection logic, parsing logic, or build orchestration logic.
-- If a new script needs logic, create it under `scripts/core/*.ts` or as a typed script-specific `.ts` file, then expose a minimal `.js` wrapper only when an existing Node entrypoint requires it.
-- Do not add new JavaScript implementation files unless the file is an accepted config file, test file, bootstrap helper, or compatibility wrapper.
+- JavaScript files under `scripts/` are forbidden as maintained source; only generated `.build/**/*.js` artifacts are allowed.
+- Shell bootstraps may invoke TypeScript entrypoints, but JavaScript wrappers must not be reintroduced.
+- If a new script needs logic, create it under `scripts/core/*.ts` or as a typed script-specific `.ts` file.
+- Do not add maintained JavaScript implementation, test, config, bootstrap, or compatibility-wrapper files.
 - Do not duplicate TypeScript core logic in JavaScript fallbacks.
-- `scripts/core-wrapper.js` must only load or build compiled TypeScript core entries; it must not contain fallback implementations of status, registry, runner, validation, or detection contracts.
-- Flathub/npm source generation logic lives in TypeScript; keep `packaging/flathub/scripts/generate-npm-sources.js` as a thin compatibility wrapper only.
+- `scripts/run-core-entry.sh` must only build or run compiled TypeScript core entries; it must not contain fallback implementations of status, registry, runner, validation, or detection contracts.
+- Flathub/npm source generation logic lives in TypeScript; `packaging/flathub/scripts/generate-npm-sources.sh` invokes `generate-npm-sources.ts` through the TypeScript entry runner.
 
 ## Mandatory color semantics
 
