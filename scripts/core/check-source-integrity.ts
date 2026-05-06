@@ -4,8 +4,28 @@ import path from 'node:path';
 import { findProjectRoot } from './action-registry';
 
 type PackageJson = {
+  name?: string;
+  version?: string;
   scripts?: Record<string, string>;
 };
+
+type PackageLockJson = {
+  name?: string;
+  version?: string;
+  lockfileVersion?: number;
+  packages?: { '': { name?: string; version?: string } };
+};
+
+const requiredJsonFiles = [
+  'package.json',
+  'package-lock.json',
+] as const;
+
+const requiredShellFiles = [
+  'canva-linux.sh',
+  'scripts/validate-project.sh',
+  'scripts/run-core-entry.sh',
+] as const;
 
 const skippedDirectories = new Set([
   '.build',
@@ -52,15 +72,19 @@ function allSourceFiles(rootDir: string): string[] {
   return files.sort((left, right) => left.localeCompare(right));
 }
 
-function validateJsonFile(rootDir: string, relativePath: string, failures: string[]): void {
-  const absolutePath = path.join(rootDir, relativePath);
-  let parsed: unknown;
+function readJsonFile<T>(rootDir: string, relativePath: string, failures: string[]): T | null {
   try {
-    parsed = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+    return JSON.parse(fs.readFileSync(path.join(rootDir, relativePath), 'utf8')) as T;
   } catch (error) {
     failures.push(`${relativePath}: invalid JSON (${error instanceof Error ? error.message : String(error)})`);
-    return;
+    return null;
   }
+}
+
+function validateJsonFile(rootDir: string, relativePath: string, failures: string[]): void {
+  const absolutePath = path.join(rootDir, relativePath);
+  const parsed = readJsonFile<unknown>(rootDir, relativePath, failures);
+  if (parsed === null) return;
 
   if (relativePath === 'package.json' || relativePath === 'package-lock.json') {
     const expected = `${JSON.stringify(parsed, null, 2)}\n`;
@@ -69,15 +93,61 @@ function validateJsonFile(rootDir: string, relativePath: string, failures: strin
   }
 }
 
+function validateRequiredFiles(rootDir: string, failures: string[]): void {
+  for (const file of [...requiredJsonFiles, ...requiredShellFiles]) {
+    if (!fs.existsSync(path.join(rootDir, file))) failures.push(`${file}: required validation target is missing`);
+  }
+}
+
+function validatePackageLockConsistency(rootDir: string, failures: string[]): void {
+  const packageJson = readJsonFile<PackageJson>(rootDir, 'package.json', failures);
+  const packageLock = readJsonFile<PackageLockJson>(rootDir, 'package-lock.json', failures);
+  if (!packageJson || !packageLock) return;
+
+  if (typeof packageLock.lockfileVersion !== 'number') failures.push('package-lock.json: missing numeric lockfileVersion');
+  if (packageJson.name && packageLock.name && packageJson.name !== packageLock.name) failures.push('package-lock.json: root name must match package.json');
+  if (packageJson.version && packageLock.version && packageJson.version !== packageLock.version) failures.push('package-lock.json: root version must match package.json');
+
+  const rootPackage = packageLock.packages?.[''];
+  if (!rootPackage) {
+    failures.push('package-lock.json: missing packages[""] root package metadata');
+    return;
+  }
+
+  if (packageJson.name && rootPackage.name !== packageJson.name) failures.push('package-lock.json packages[""].name must match package.json');
+  if (packageJson.version && rootPackage.version !== packageJson.version) failures.push('package-lock.json packages[""].version must match package.json');
+}
+
 function validatePackageScripts(rootDir: string, failures: string[]): void {
-  const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as PackageJson;
+  const packageJson = readJsonFile<PackageJson>(rootDir, 'package.json', failures);
+  if (!packageJson) return;
   for (const [scriptName, command] of Object.entries(packageJson.scripts ?? {})) {
     if (/\r|\n/.test(command)) failures.push(`package.json scripts.${scriptName}: command must stay on one line`);
     if (/(?:^|\s)(?:node\s+)?scripts\/[^\s]+\.js\b/.test(command)) failures.push(`package.json scripts.${scriptName}: must not call maintained scripts/*.js source`);
   }
 }
 
+function validateShellShape(rootDir: string, relativePath: string, failures: string[]): void {
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  if (content.startsWith('#!') && content.length > 200 && lines.length < 5) {
+    failures.push(`${relativePath}: shell file appears collapsed; expected multiple lines with command separators/heredocs preserved`);
+  }
+
+  lines.forEach((line, index) => {
+    const heredocMatch = line.match(/<<-?\s*['"]?([A-Za-z_][A-Za-z0-9_]*)['"]?/);
+    if (!heredocMatch) return;
+
+    const delimiter = heredocMatch[1];
+    const hasTerminator = lines.slice(index + 1).some((candidate) => candidate.trim() === delimiter);
+    if (!hasTerminator) failures.push(`${relativePath}:${index + 1}: heredoc delimiter ${delimiter} has no terminator line`);
+  });
+}
+
 function validateShellFile(rootDir: string, relativePath: string, failures: string[]): void {
+  validateShellShape(rootDir, relativePath, failures);
+
   const result = spawnSync('bash', ['-n', relativePath], {
     cwd: rootDir,
     encoding: 'utf8',
@@ -100,11 +170,14 @@ export function main(): number {
   const failures: string[] = [];
   const files = allSourceFiles(rootDir);
 
+  validateRequiredFiles(rootDir, failures);
+
   for (const file of files) {
     if (file.endsWith('.json')) validateJsonFile(rootDir, file, failures);
     if (file.endsWith('.sh')) validateShellFile(rootDir, file, failures);
   }
 
+  validatePackageLockConsistency(rootDir, failures);
   validatePackageScripts(rootDir, failures);
 
   if (failures.length) {
