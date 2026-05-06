@@ -130,6 +130,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/check-runtime-build.js` (core compatibility wrapper)
 - `scripts/check-shell-action-ids.js` (core compatibility wrapper)
 - `scripts/check-sudo-contract.js` (core compatibility wrapper)
+- `scripts/check-typescript-wrapper-contract.js` (core compatibility wrapper)
 - `scripts/check-version-consistency.js` (core compatibility wrapper)
 - `scripts/clean-artifacts.sh`
 - `scripts/clean-runtime-build.js` (Node wrapper) / `scripts/clean-runtime-build.ts`
@@ -146,6 +147,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/core/check-action-contract.ts`
 - `scripts/core/check-no-shell-menu.ts`
 - `scripts/core/check-sudo-contract.ts`
+- `scripts/core/check-typescript-wrapper-contract.ts`
 - `scripts/core/check-review-checklist.ts`
 - `scripts/core/check-shell-action-ids.ts`
 - `scripts/core/check-version-consistency.ts`

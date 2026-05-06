@@ -3,6 +3,7 @@
 ## [0.1.4.11-dev.56] - 2026-05-05
 
 ### Added
+- Added a TypeScript wrapper contract check covering build-runtime, preload bundling, runtime asset copying, runtime cleanup, electron-builder beforeBuild, and TUI startup wrappers.
 - Added thin compatibility wrappers for AI-guardrails, doc-link, dependency-policy, and runtime-build checks so `scripts/*.js` entrypoints consistently delegate to `scripts/core/*.ts`.
 
 ### Fixed
@@ -12,6 +13,7 @@
 - Hardened sudo-common with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
 
 ### Changed
+- Documented the build/TUI wrapper-to-TypeScript implementation map and exposed `npm run check:typescript-wrappers`.
 - Pointed validation package scripts at thin compatibility wrappers instead of inline `node -e` loader snippets.
 - Removed the legacy overview-status fallback export from `scripts/core-wrapper.js` so missing core builds fail clearly or trigger the standard auto-build path.
 - Updated technical version and phase identity to `0.1.4-dev.11.56` / `0.1.4.11-dev.56`.
