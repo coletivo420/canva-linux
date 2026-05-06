@@ -177,9 +177,9 @@ run_tui_direct() {
 run_tui_entrypoint() {
   if [[ -f "${ROOT_DIR}/scripts/run-tui.ts" ]]; then
     if [[ -n "${PROJECT_PHASE:-}" ]]; then
-      CANVA_PROJECT_PHASE="${PROJECT_PHASE}" scripts/run-ts-entry.sh scripts/run-tui.ts
+      CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run run:ts -- scripts/run-tui.ts
     else
-      scripts/run-ts-entry.sh scripts/run-tui.ts
+      npm run run:ts -- scripts/run-tui.ts
     fi
     return $?
   fi

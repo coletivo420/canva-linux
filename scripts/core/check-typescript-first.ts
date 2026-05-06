@@ -86,7 +86,7 @@ function validateRequiredTypeScriptEntrypoints(rootDir: string, failures: string
     'eslint.config.ts',
     'playwright.config.ts',
     'scripts/run-node-tests.ts',
-    'scripts/run-ts-entry.sh',
+    'scripts/run-typescript-script.ts',
     'scripts/run-core-entry.sh',
     'packaging/flathub/scripts/generate-npm-sources.ts',
     'packaging/flathub/scripts/generate-npm-sources.sh',

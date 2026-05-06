@@ -46,8 +46,9 @@ Project validations, contracts, and registries are implemented in TypeScript und
 
 - `npm run build:scripts-core` compiles core entries with esbuild into `.build/scripts/core/`.
 - `scripts/run-core-entry.sh` builds the core on demand when compiled artifacts are missing, then runs the generated `.build/scripts/core/<entry>.js` artifact.
+- `npm run build:typescript-runner` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js`.
+- `npm run run:ts -- <entry.ts>` runs standalone TypeScript entrypoints through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
 - `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks.
-- `scripts/run-ts-entry.sh` bundles standalone TypeScript script entrypoints into `.build/scripts/bootstrap/` and runs the generated JavaScript artifact.
 
 Migrated core entries include:
 
@@ -79,11 +80,12 @@ Standalone TypeScript script entrypoints include:
 - `run-node-tests.ts`
 - `run-tui.ts`
 - `register-typescript.ts`
+- `run-typescript-script.ts`
 
 Flathub source generation:
 
 - `packaging/flathub/scripts/generate-npm-sources.ts` owns package-lock parsing, npm source list generation, integrity hash conversion, and `generated-sources.json` writing.
-- `packaging/flathub/scripts/generate-npm-sources.sh` invokes the TypeScript generator through `scripts/run-ts-entry.sh`.
+- `packaging/flathub/scripts/generate-npm-sources.sh` invokes the TypeScript generator through `npm run run:ts`, which uses the generated runner bootstrap.
 
 ## Commands
 

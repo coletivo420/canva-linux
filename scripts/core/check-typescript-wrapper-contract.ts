@@ -21,7 +21,7 @@ const requiredTypeScriptEntrypoints = [
   'scripts/electron-builder-before-build.ts',
   'scripts/run-node-tests.ts',
   'scripts/run-tui.ts',
-  'scripts/run-ts-entry.sh',
+  'scripts/run-typescript-script.ts',
 ] as const;
 
 export function main(): number {

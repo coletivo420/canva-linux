@@ -61,7 +61,7 @@ export function main(): void {
     process.exit(result.status || 1);
   }
 
-  const testResult = spawnSync(process.execPath, ['--require', registerHook, '--test', ...relativeTestFiles, ...process.argv.slice(2)], {
+  const testResult = spawnSync(process.execPath, ['--require', registerHook, '--test', ...process.argv.slice(2), ...relativeTestFiles], {
     cwd: rootDir,
     stdio: 'inherit',
     shell: false,
