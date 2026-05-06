@@ -10,7 +10,7 @@ Current target:
 - npm run build:scripts-core
 - npm run check:scripts-core (includes `check-gitignore-policy`, `check-no-source-javascript`, and `check-source-integrity`)
 - npm run check:no-source-javascript
-- npm run check:source-integrity
+- npm run check:source-integrity (validates formatted package JSON, shell heredocs, and readable shell/docs shapes)
 - npm run build:tui
 - npm run check:tui
 - npm run actions:validate

@@ -59,7 +59,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
 - `npm run bootstrap:electron-builder` compiles `scripts/electron-builder-before-build.ts` into `.build/scripts/bootstrap/electron-builder-before-build.js` for the electron-builder `beforeBuild` hook.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
-- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-gitignore-policy`, `check-no-source-javascript`, and `check-source-integrity`.
+- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-gitignore-policy`, `check-no-source-javascript`, and `check-source-integrity`. The source-integrity check also rejects malformed or unformatted `package.json`, collapsed critical shell/docs files, giant one-line documentation blocks, and inline heredoc syntax in shell scripts.
 
 Migrated core entries include:
 

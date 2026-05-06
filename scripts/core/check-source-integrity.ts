@@ -27,6 +27,23 @@ const requiredShellFiles = [
   'scripts/run-core-entry.sh',
 ] as const;
 
+const centralDocumentationFiles = [
+  'README.md',
+  'CHANGELOG.md',
+  'REVIEW.md',
+  'docs/README.md',
+  'docs/TYPESCRIPT.md',
+  'docs/VALIDATION.md',
+  'docs/FLATHUB.md',
+] as const;
+
+const criticalMultilineFiles = [
+  ...requiredShellFiles,
+  ...centralDocumentationFiles,
+] as const;
+
+const maxDocumentationLineLength = 2000;
+
 const skippedDirectories = new Set([
   '.build',
   '.flatpak-builder',
@@ -94,8 +111,39 @@ function validateJsonFile(rootDir: string, relativePath: string, failures: strin
 }
 
 function validateRequiredFiles(rootDir: string, failures: string[]): void {
-  for (const file of [...requiredJsonFiles, ...requiredShellFiles]) {
+  for (const file of [...requiredJsonFiles, ...requiredShellFiles, ...centralDocumentationFiles]) {
     if (!fs.existsSync(path.join(rootDir, file))) failures.push(`${file}: required validation target is missing`);
+  }
+}
+
+function lineNumberOfLongestLine(lines: string[]): number {
+  let longestLine = 0;
+  let longestLength = -1;
+
+  lines.forEach((line, index) => {
+    if (line.length > longestLength) {
+      longestLine = index + 1;
+      longestLength = line.length;
+    }
+  });
+
+  return longestLine;
+}
+
+function validateCriticalTextShape(rootDir: string, relativePath: string, failures: string[]): void {
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const lines = content.split(/\r?\n/);
+  const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+
+  if (content.length > 500 && nonEmptyLines.length < 3) {
+    failures.push(`${relativePath}: critical shell/doc file appears collapsed or minified; expected readable multiline content`);
+  }
+
+  if (relativePath.endsWith('.md')) {
+    const longestLine = Math.max(...lines.map((line) => line.length), 0);
+    if (longestLine > maxDocumentationLineLength) {
+      failures.push(`${relativePath}:${lineNumberOfLongestLine(lines)}: documentation line is too long (${longestLine} characters); avoid giant one-line blocks`);
+    }
   }
 }
 
@@ -140,6 +188,9 @@ function validateShellShape(rootDir: string, relativePath: string, failures: str
     if (!heredocMatch) return;
 
     const delimiter = heredocMatch[1];
+    const afterDelimiter = line.slice((heredocMatch.index ?? 0) + heredocMatch[0].length).trim();
+    if (afterDelimiter.length > 0) failures.push(`${relativePath}:${index + 1}: heredoc delimiter ${delimiter} must be the final token on its own command line`);
+
     const hasTerminator = lines.slice(index + 1).some((candidate) => candidate.trim() === delimiter);
     if (!hasTerminator) failures.push(`${relativePath}:${index + 1}: heredoc delimiter ${delimiter} has no terminator line`);
   });
@@ -175,6 +226,12 @@ export function main(): number {
   for (const file of files) {
     if (file.endsWith('.json')) validateJsonFile(rootDir, file, failures);
     if (file.endsWith('.sh')) validateShellFile(rootDir, file, failures);
+    if (file.endsWith('.md')) validateCriticalTextShape(rootDir, file, failures);
+  }
+
+  for (const file of criticalMultilineFiles) {
+    if (!files.includes(file)) continue;
+    if (!file.endsWith('.md')) validateCriticalTextShape(rootDir, file, failures);
   }
 
   validatePackageLockConsistency(rootDir, failures);
