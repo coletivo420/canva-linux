@@ -28,7 +28,7 @@
     "test:wiring": "npm run test -- test/tab-controller-wiring.test.ts",
     "test:smoke": "playwright test --config=playwright.config.ts",
     "test:smoke:headed": "playwright test --config=playwright.config.ts --headed",
-    "lint:fix": "eslint --config eslint.config.ts . --fix",
+    "lint:fix": "eslint --config eslint.config.ts --fix .",
     "build:preload": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/build-preload-bundle.js",
     "clean:runtime": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/clean-runtime-build.js",
     "build:runtime": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/build-runtime.js",
