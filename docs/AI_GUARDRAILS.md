@@ -37,6 +37,17 @@
 - The custom EyeDropper flow must route through bundled CL-EyeDropper snapshot canvas picking.
 - Do not replace typed `EyeDropperOpenOptions` handling with `any` casts or untyped signal extraction.
 
+## TypeScript-first Node.js rules
+
+- New Node.js logic must be written in TypeScript by default.
+- JavaScript files under `scripts/` are allowed only as thin compatibility wrappers or accepted test/config/bootstrap files.
+- A JavaScript wrapper must not contain business logic, validation logic, action routing, detection logic, parsing logic, or build orchestration logic.
+- If a new script needs logic, create it under `scripts/core/*.ts` or as a typed script-specific `.ts` file, then expose a minimal `.js` wrapper only when an existing Node entrypoint requires it.
+- Do not add new JavaScript implementation files unless the file is an accepted config file, test file, bootstrap helper, or compatibility wrapper.
+- Do not duplicate TypeScript core logic in JavaScript fallbacks.
+- `scripts/core-wrapper.js` must only load or build compiled TypeScript core entries; it must not contain fallback implementations of status, registry, runner, validation, or detection contracts.
+- Flathub/npm source generation logic must move to TypeScript before being treated as release/submission-critical.
+
 ## Mandatory color semantics
 
 - detected/completed = green
