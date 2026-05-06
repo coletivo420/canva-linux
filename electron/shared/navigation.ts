@@ -30,7 +30,7 @@ const AUTH_PATH_RE = /\/(?:login|signup|register|oauth|sso|auth|signin|account)(
 const CANVA_AUTH_HINT_RE = /(?:google|facebook|apple|microsoft|oauth|sso|signup|login|continue)/i;
 const CANVA_OAUTH_AUTHORIZED_RE = /^\/oauth\/authorized(?:\/|$)/i;
 const CANVA_OAUTH_RE = /^\/oauth(?:\/|$)/i;
-const EXTERNAL_PROTOCOL_ALLOWLIST = new Set(['https:', 'http:', 'mailto:']);
+const EXTERNAL_PROTOCOL_ALLOWLIST = new Set(['https:']);
 
 function isCanvaUrl(url: string): boolean {
   try {

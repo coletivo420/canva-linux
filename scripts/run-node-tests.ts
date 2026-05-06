@@ -5,36 +5,42 @@ import path from 'node:path';
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, '..');
 const testDir = path.join(rootDir, 'test');
 const compiledTestDir = path.join(rootDir, '.build', 'test');
+const nodeTestSuffix = '.test.ts';
+const playwrightSpecSuffix = '.spec.ts';
 
 type TestSelection = {
   nodeArgs: string[];
   selectedRelativeTests: Set<string> | null;
+  playwrightSpecSelections: string[];
 };
 
 function normalizePathForNodeTest(filePath: string): string {
   return filePath.replace(/\\/g, '/');
 }
 
-function maybeRelativeTestPath(argument: string): string | null {
+function normalizeTestSelector(argument: string): string | null {
   if (argument.startsWith('-')) return null;
 
   const normalized = normalizePathForNodeTest(argument);
   const withoutBuildPrefix = normalized.startsWith('.build/test/') ? normalized.slice('.build/test/'.length) : normalized;
   const withoutTestPrefix = withoutBuildPrefix.startsWith('test/') ? withoutBuildPrefix.slice('test/'.length) : withoutBuildPrefix;
 
-  if (!withoutTestPrefix.endsWith('.test.ts') && !withoutTestPrefix.endsWith('.test.js')) return null;
+  if (!withoutTestPrefix.endsWith(nodeTestSuffix) && !withoutTestPrefix.endsWith(playwrightSpecSuffix)) return null;
 
-  return withoutTestPrefix.replace(/\.js$/, '.ts');
+  return withoutTestPrefix;
 }
 
 function splitNodeArgsAndTestSelectors(args: string[]): TestSelection {
   const selectedRelativeTests = new Set<string>();
+  const playwrightSpecSelections: string[] = [];
   const nodeArgs: string[] = [];
 
   for (const arg of args) {
-    const relativeTestPath = maybeRelativeTestPath(arg);
-    if (relativeTestPath) {
-      selectedRelativeTests.add(relativeTestPath);
+    const testSelector = normalizeTestSelector(arg);
+    if (testSelector?.endsWith(nodeTestSuffix)) {
+      selectedRelativeTests.add(testSelector);
+    } else if (testSelector?.endsWith(playwrightSpecSuffix)) {
+      playwrightSpecSelections.push(testSelector);
     } else {
       nodeArgs.push(arg);
     }
@@ -42,6 +48,7 @@ function splitNodeArgsAndTestSelectors(args: string[]): TestSelection {
 
   return {
     nodeArgs,
+    playwrightSpecSelections,
     selectedRelativeTests: selectedRelativeTests.size > 0 ? selectedRelativeTests : null,
   };
 }
@@ -79,8 +86,14 @@ function collectTypeScriptTestFiles(directory: string, predicate: (entryName: st
 }
 
 export function main(): void {
-  const testFiles = collectTypeScriptTestFiles(testDir, (entryName) => entryName.endsWith('.test.ts'));
-  const supportFiles = collectTypeScriptTestFiles(testDir, (entryName) => entryName.endsWith('.ts') && !entryName.endsWith('.test.ts'));
+  const isNodeTest = (entryName: string): boolean => entryName.endsWith(nodeTestSuffix);
+  const isPlaywrightSpec = (entryName: string): boolean => entryName.endsWith(playwrightSpecSuffix);
+  const isTypeScriptSupportFile = (entryName: string): boolean => {
+    return entryName.endsWith('.ts') && !isNodeTest(entryName) && !isPlaywrightSpec(entryName);
+  };
+
+  const testFiles = collectTypeScriptTestFiles(testDir, isNodeTest);
+  const supportFiles = collectTypeScriptTestFiles(testDir, isTypeScriptSupportFile);
 
   if (testFiles.length === 0) {
     console.error('[error] No Node test files were found. Expected at least one *.test.ts file under test/.');
@@ -88,7 +101,14 @@ export function main(): void {
   }
 
   const relativeTestFiles = testFiles.map((file) => normalizePathForNodeTest(path.relative(testDir, file)));
-  const { nodeArgs, selectedRelativeTests } = splitNodeArgsAndTestSelectors(process.argv.slice(2));
+  const { nodeArgs, playwrightSpecSelections, selectedRelativeTests } = splitNodeArgsAndTestSelectors(process.argv.slice(2));
+
+  if (playwrightSpecSelections.length) {
+    console.error(
+      `[error] Playwright spec file(s) are not Node tests: ${playwrightSpecSelections.join(', ')}. Run them with npm run test:smoke instead.`,
+    );
+    process.exit(1);
+  }
 
   if (selectedRelativeTests) {
     const missingSelections = [...selectedRelativeTests].filter((file) => !relativeTestFiles.includes(file));

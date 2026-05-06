@@ -80,10 +80,3 @@ export {
   normalizeArgs,
   createLogSignature,
 };
-
-module.exports = {
-  safeStringify,
-  normalizeLogArg,
-  normalizeArgs,
-  createLogSignature,
-};

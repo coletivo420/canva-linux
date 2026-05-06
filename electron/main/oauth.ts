@@ -368,8 +368,9 @@ export function createOAuthHelpers({
       debugLog('oauth', 'popup-focus', `popup=${popupId}`);
       debugLog('oauth', 'popup-bounds', `popup=${popupId}`, window.getBounds());
     });
-    window.on('close', () => {
+    window.on('close', (event?: { preventDefault?: () => void }) => {
       if (!entry.allowClose && !entry.completionHandled) {
+        event?.preventDefault?.();
         entry.closeReason = 'closed-before-callback';
         debugLog('oauth', 'popup-close-before-callback', `popup=${popupId}`);
         return;
@@ -522,9 +523,3 @@ export function createOAuthHelpers({
     setAuthPopupTitle,
   };
 }
-
-module.exports = {
-  createOAuthHelpers,
-  createOAuthPopupInitialState,
-  createOAuthPopupOptionsSummary,
-};

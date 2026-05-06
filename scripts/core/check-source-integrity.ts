@@ -42,6 +42,17 @@ const criticalMultilineFiles = [
   ...centralDocumentationFiles,
 ] as const;
 
+const criticalReadableSourceFiles = [
+  'eslint.config.ts',
+  'playwright.config.ts',
+  'scripts/run-node-tests.ts',
+  'scripts/run-typescript-script.ts',
+  'scripts/core/check-no-source-javascript.ts',
+  'scripts/core/check-typescript-first.ts',
+  'scripts/core/check-source-integrity.ts',
+  'electron/ui/toolbar.html',
+] as const;
+
 const maxDocumentationLineLength = 2000;
 const strictDocumentationLineLength = 160;
 
@@ -134,7 +145,7 @@ function validateJsonFile(rootDir: string, relativePath: string, failures: strin
 }
 
 function validateRequiredFiles(rootDir: string, failures: string[]): void {
-  for (const file of [...requiredJsonFiles, ...requiredShellFiles, ...centralDocumentationFiles]) {
+  for (const file of [...requiredJsonFiles, ...requiredShellFiles, ...centralDocumentationFiles, ...criticalReadableSourceFiles]) {
     if (!fs.existsSync(path.join(rootDir, file))) failures.push(`${file}: required validation target is missing`);
   }
 }
@@ -170,6 +181,44 @@ function validateCriticalTextShape(rootDir: string, relativePath: string, failur
     if (longestLine > lineLengthLimit) {
       failures.push(`${relativePath}:${lineNumberOfLongestLine(lines)}: documentation line is too long (${longestLine} characters); limit is ${lineLengthLimit}; avoid giant one-line blocks`);
     }
+  }
+}
+
+function validateReadableSourceShape(rootDir: string, relativePath: string, failures: string[]): void {
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const lines = content.split(/\r?\n/);
+  const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+  const longestLine = Math.max(...lines.map((line) => line.length), 0);
+
+  if (content.length > 500 && nonEmptyLines.length < 5) {
+    failures.push(`${relativePath}: critical source/config file appears collapsed or minified; expected readable multiline content`);
+  }
+
+  if (longestLine > 500) {
+    failures.push(`${relativePath}:${lineNumberOfLongestLine(lines)}: source/config line is too long (${longestLine} characters); avoid collapsed or minified source`);
+  }
+}
+
+function validateToolbarContentSecurityPolicy(rootDir: string, failures: string[]): void {
+  const relativePath = 'electron/ui/toolbar.html';
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const requiredDirectives = [
+    "default-src 'none'",
+    "img-src 'self' file: data:",
+    "style-src 'unsafe-inline'",
+    "script-src 'unsafe-inline'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "object-src 'none'",
+  ] as const;
+
+  if (!content.includes('http-equiv="Content-Security-Policy"')) {
+    failures.push(`${relativePath}: toolbar loaded from file:// must define a Content-Security-Policy meta tag`);
+    return;
+  }
+
+  for (const directive of requiredDirectives) {
+    if (!content.includes(directive)) failures.push(`${relativePath}: Content-Security-Policy missing directive ${directive}`);
   }
 }
 
@@ -348,6 +397,12 @@ export function main(): number {
     if (!file.endsWith('.md')) validateCriticalTextShape(rootDir, file, failures);
   }
 
+  for (const file of criticalReadableSourceFiles) {
+    if (!files.includes(file)) continue;
+    validateReadableSourceShape(rootDir, file, failures);
+  }
+
+  validateToolbarContentSecurityPolicy(rootDir, failures);
   validateNoMaintainedJavaScriptFiles(rootDir, failures);
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);

@@ -2,6 +2,7 @@
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type AppLike = {
+  requestSingleInstanceLock(): boolean;
   whenReady(): Promise<void>;
   on(event: string, listener: (...args: any[]) => void): unknown;
   quit(): void;
@@ -24,6 +25,7 @@ type LifecycleOptions = {
   debugLog: DebugLog;
   debugLevel: number;
   flushSession: (session: any) => Promise<void>;
+  focusMainWindow: () => void;
   getCanvaSession: () => unknown;
   logCredentialStorageBackend: () => void;
   logReleaseStatus: () => void;
@@ -49,6 +51,7 @@ function registerAppLifecycle({
   debugLog,
   debugLevel,
   flushSession,
+  focusMainWindow,
   getCanvaSession,
   logCredentialStorageBackend,
   logReleaseStatus,
@@ -60,6 +63,17 @@ function registerAppLifecycle({
   shouldGrantRemotePermission,
   tabController,
 }: LifecycleOptions): void {
+  if (!app.requestSingleInstanceLock()) {
+    debugLog('app', 'single-instance-lock-denied');
+    app.quit();
+    return;
+  }
+
+  app.on('second-instance', () => {
+    debugLog('app', 'second-instance');
+    focusMainWindow();
+  });
+
   app.whenReady().then(async () => {
     const logFilePath = centralLogger.initLogFile();
     debugLog('startup', 'when-ready', `platform=${process.platform}`, `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland')}`);
@@ -109,9 +123,5 @@ function registerAppLifecycle({
 }
 
 export {
-  registerAppLifecycle,
-};
-
-module.exports = {
   registerAppLifecycle,
 };

@@ -99,7 +99,3 @@ export type {
   OAuthPopupEntry,
   WebContentsLike,
 };
-
-module.exports = {
-  createLoggingHelpers,
-};

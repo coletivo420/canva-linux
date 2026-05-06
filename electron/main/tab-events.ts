@@ -33,7 +33,7 @@ type AttachTabEventHandlersHelpers = {
     registerAuthPopupWindow(window: unknown, url: string, options: Record<string, unknown>): void;
     openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number | null): void;
   };
-  shell: { openExternal(url: string): unknown };
+  shell: { openExternal?: (url: string) => unknown };
   shellBackgroundColor: () => string;
   switchRelativeTab: (step: number) => void;
   broadcastTabsState: () => void;
@@ -59,6 +59,11 @@ type AttachTabEventHandlersHelpers = {
 // Attach all BrowserView/WebContents event wiring for a single Canva tab.
 // This module exists so tab lifecycle policy can evolve without forcing the
 // main entrypoint to keep every navigation and keyboard branch inline.
+function closeCreatedWindowIfPossible(window: unknown): void {
+  const candidate = window as { close?: () => void } | null | undefined;
+  if (typeof candidate?.close === 'function') candidate.close();
+}
+
 /**
  * @param {unknown} message
  * @param {unknown} sourceId
@@ -95,7 +100,7 @@ function isKnownUpstreamFedCmWarning(message: unknown, sourceId: unknown): boole
  *     registerAuthPopupWindow(window: unknown, url: string, options: Record<string, unknown>): void;
  *     openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number): void;
  *   };
- *   shell: { openExternal(url: string): unknown };
+ *   shell: { openExternal?: (url: string) => unknown };
  *   shellBackgroundColor: () => string;
  *   switchRelativeTab: (step: number) => void;
  *   broadcastTabsState: () => void;
@@ -149,7 +154,7 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
 
     if (!isBlankPopupUrl(url) && isSafeExternalUrl(url)) {
       debugLog('tabs:navigation', 'external-open', `tab=${tab.id}`, url);
-      shell.openExternal(url);
+      shell.openExternal?.(url);
     }
     return { action: 'deny' };
   });
@@ -163,11 +168,26 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
       frameName: details.frameName || '',
     });
     debugLog(request.category, 'did-create-window', `tab=${tab.id}`, `kind=${request.kind}`, details.url || 'about:blank');
-    oauthHelpers.registerAuthPopupWindow(window, details.url || 'about:blank', {
-      shellBackgroundColor,
-      sourceWebContentsId: wc.id,
-      openerUrl,
-    });
+
+    if (request.kind === 'oauth-popup') {
+      oauthHelpers.registerAuthPopupWindow(window, details.url || 'about:blank', {
+        shellBackgroundColor,
+        sourceWebContentsId: wc.id,
+        openerUrl,
+      });
+      return;
+    }
+
+    closeCreatedWindowIfPossible(window);
+
+    if (request.kind === 'internal-tab') {
+      createTab(details.url, { activate: true });
+      return;
+    }
+
+    if (request.kind === 'external-browser' && !isBlankPopupUrl(details.url) && isSafeExternalUrl(details.url)) {
+      shell.openExternal?.(details.url);
+    }
   });
 
   wc.on('will-navigate', (event: PreventableEvent, url: string) => {
@@ -190,7 +210,7 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
       event.preventDefault();
       if (isSafeExternalUrl(url)) {
         debugLog('tabs:navigation', 'external-navigation-blocked', `tab=${tab.id}`, url);
-        shell.openExternal(url);
+        shell.openExternal?.(url);
       } else {
         debugLog('tabs:navigation', 'unsafe-external-navigation-blocked', `tab=${tab.id}`, url || 'about:blank');
       }
@@ -286,7 +306,7 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
           }
         } catch {}
 
-        console.log('[canva:eyedropper:check] tab=${tab.id} installed=' + installed + ' ensured=' + ensured);
+        console.log('[canva:eyedropper:check] tab=' + ${tab.id} + ' installed=' + installed + ' ensured=' + ensured);
       })();
     `).catch(() => {});
   });
@@ -313,7 +333,3 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
     }
   });
 }
-
-module.exports = {
-  attachTabEventHandlers,
-};

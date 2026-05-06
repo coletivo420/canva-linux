@@ -241,7 +241,3 @@ export function createShellHelpers({
     shellBackgroundColor,
   };
 }
-
-module.exports = {
-  createShellHelpers,
-};

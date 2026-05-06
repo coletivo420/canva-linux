@@ -127,8 +127,12 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
 function validateBuildTypeScriptConfig(rootDir: string, failures: string[]): void {
   const configPath = 'tsconfig.build.json';
   const config = JSON.parse(fs.readFileSync(path.join(rootDir, configPath), 'utf8')) as TsConfigJson;
-  if (config.compilerOptions?.allowJs === true) failures.push(`${configPath}: compilerOptions.allowJs must not be enabled for the TypeScript-only Electron runtime build`);
-  if (config.compilerOptions?.checkJs === true) failures.push(`${configPath}: compilerOptions.checkJs must not be enabled when JavaScript runtime source is forbidden`);
+  if (Object.hasOwn(config.compilerOptions ?? {}, 'allowJs')) {
+    failures.push(`${configPath}: compilerOptions.allowJs must be omitted for the TypeScript-only Electron runtime build`);
+  }
+  if (Object.hasOwn(config.compilerOptions ?? {}, 'checkJs')) {
+    failures.push(`${configPath}: compilerOptions.checkJs must be omitted when JavaScript runtime source is forbidden`);
+  }
   if (config.include?.includes('electron/**/*.js')) failures.push(`${configPath}: must not include electron/**/*.js because runtime source must be TypeScript`);
 }
 
@@ -137,6 +141,17 @@ function validateEslintTypeScriptOnlyConfig(rootDir: string, failures: string[])
   const config = fs.readFileSync(path.join(rootDir, configPath), 'utf8');
   if (config.includes("'electron/**/*.js'") || config.includes('"electron/**/*.js"')) {
     failures.push(`${configPath}: must not include a dedicated electron/**/*.js lint block after the TypeScript migration`);
+  }
+}
+
+
+function validateNoCommonJsRuntimeExports(rootDir: string, files: string[], failures: string[]): void {
+  for (const file of files) {
+    if (!file.startsWith('electron/main/') || !file.endsWith('.ts')) continue;
+    const content = fs.readFileSync(path.join(rootDir, file), 'utf8');
+    if (content.includes('module.exports')) {
+      failures.push(`${file}: use ESM exports only; duplicate module.exports blocks are forbidden in Electron main TypeScript`);
+    }
   }
 }
 
@@ -169,6 +184,7 @@ export function main(): number {
   validatePackageScripts(rootDir, failures);
   validateBuildTypeScriptConfig(rootDir, failures);
   validateEslintTypeScriptOnlyConfig(rootDir, failures);
+  validateNoCommonJsRuntimeExports(rootDir, files, failures);
   validateFlathubShell(rootDir, failures);
 
   if (failures.length) {

@@ -18,9 +18,9 @@ const skippedDirectories = new Set([
 ]);
 
 const explicitlyBlockedJavaScript = [
-  /^scripts\/[^/]+\.js$/,
-  /^test\/[^/]+\.js$/,
-  /^packaging\/flathub\/scripts\/[^/]+\.js$/,
+  /^scripts\/.+\.js$/,
+  /^test\/.+\.js$/,
+  /^packaging\/flathub\/scripts\/.+\.js$/,
   /^eslint\.config\.js$/,
   /^playwright\.config\.js$/,
 ] as const;

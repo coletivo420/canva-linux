@@ -11,6 +11,8 @@ const test = require('node:test');
 const { loadRuntimeModule } = require('./helpers/runtime-module');
 
 const {
+  configureSession,
+  sanitizeDownloadFilename,
   sharedWebPreferences,
   shouldEnableCaptureVerboseLogging,
 } = loadRuntimeModule('main/runtime');
@@ -77,4 +79,58 @@ test('main runtime opens Canva, not the project website, as the app home URL', (
 
   assert.match(mainSource, /const APP_URL = 'https:\/\/www\.canva\.com\/';/);
   assert.doesNotMatch(mainSource, /const APP_URL = 'https:\/\/coletivo420\.github\.io\/canva-linux\/';/);
+});
+
+test('sanitizes download filenames before choosing save paths', async () => {
+  let downloadListener = null;
+  let savePath = null;
+  const fakeSession = {
+    cookies: { flushStore: async () => {} },
+    flushStorageData: async () => {},
+    setPermissionRequestHandler() {},
+    setPermissionCheckHandler() {},
+    webRequest: { onBeforeSendHeaders() {} },
+    on(event, listener) {
+      if (event === 'will-download') downloadListener = listener;
+    },
+  };
+
+  await configureSession({
+    app: {
+      getPath(name) {
+        assert.equal(name, 'downloads');
+        return '/home/user/Downloads';
+      },
+    },
+    debugLog() {
+      return true;
+    },
+    flushSessionFn: async () => {},
+    getCanvaSession() {
+      return fakeSession;
+    },
+    path,
+    partition: 'persist:canva',
+    shouldGrantRemotePermission() {
+      return false;
+    },
+  });
+
+  assert.equal(typeof downloadListener, 'function');
+  downloadListener(null, {
+    getFilename() {
+      return '../../bad:name?.png';
+    },
+    setSavePath(nextPath) {
+      savePath = nextPath;
+    },
+  });
+
+  assert.equal(savePath, path.join('/home/user/Downloads', 'bad_name_.png'));
+});
+
+test('download filename sanitizer falls back for empty or directory-only names', () => {
+  assert.equal(sanitizeDownloadFilename('../../../', path), 'download');
+  assert.equal(sanitizeDownloadFilename('safe-name.png', path), 'safe-name.png');
+  assert.equal(sanitizeDownloadFilename('bad<name>|*.png', path), 'bad_name___.png');
 });

@@ -1,5 +1,5 @@
 // Expose a tiny read-only bridge for the custom tab bar UI.
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 
 // This preload runs with sandbox enabled, so it cannot rely on loading local
 // helper modules via relative require(). Keep the debug transport inline here.
@@ -44,17 +44,24 @@ function debugLog(category: unknown, ...args: unknown[]): void {
 
 debugLog('tabs:toolbar', 'toolbar-preload-loaded');
 
+let tabsStateListener: ((event: IpcRendererEvent, state: unknown) => void) | null = null;
+
 contextBridge.exposeInMainWorld('canvaTabs', {
   send(action: string, payload: Record<string, unknown> = {}) {
     debugLog('tabs:toolbar', 'toolbar-send', action, JSON.stringify(payload));
     ipcRenderer.send('toolbar-action', { action, payload });
   },
   onState(callback: (state: unknown) => void) {
-    ipcRenderer.removeAllListeners('tabs-state');
-    ipcRenderer.on('tabs-state', (_event, state) => {
-      debugLog('tabs:state', 'toolbar-state', `count=${state?.tabs?.length || 0}`, `active=${state?.activeTabId || 'none'}`);
+    if (tabsStateListener) {
+      ipcRenderer.removeListener('tabs-state', tabsStateListener);
+    }
+
+    tabsStateListener = (_event, state) => {
+      const toolbarState = state as { tabs?: unknown[]; activeTabId?: unknown } | null | undefined;
+      debugLog('tabs:state', 'toolbar-state', `count=${toolbarState?.tabs?.length || 0}`, `active=${toolbarState?.activeTabId || 'none'}`);
       callback(state);
-    });
+    };
+    ipcRenderer.on('tabs-state', tabsStateListener);
   },
   getSystemTheme(): 'dark' | 'light' {
     return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';

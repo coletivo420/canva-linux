@@ -46,9 +46,9 @@ and `node_modules/` directories are never maintained source locations.
 
 Forbidden maintained JavaScript source:
 
-- `scripts/*.js`
+- `scripts/**/*.js`
 - `test/**/*.js`
-- `packaging/flathub/scripts/*.js`
+- `packaging/flathub/scripts/**/*.js`
 - `eslint.config.js`
 - `playwright.config.js`
 
@@ -56,7 +56,8 @@ Repository-root `eslint.config.js` and `playwright.config.js` must not exist; th
 maintained configs are `eslint.config.ts` and `playwright.config.ts`.
 
 The historical `scripts/run-typescript-script.js` bootstrap must also not exist as
-maintained source. `scripts/run-typescript-script.ts` is compiled to
+maintained source. No JavaScript wrapper or bootstrap belongs under `scripts/`;
+`scripts/run-typescript-script.ts` is compiled to
 `.build/scripts/bootstrap/run-typescript-script.js` when needed.
 
 `check-typescript-first.ts` enforces the wider TypeScript migration contract.
@@ -78,7 +79,9 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run build:scripts` compiles top-level script entrypoints such as
   `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
   `scripts/run-tui.ts` directly into `.build/scripts/*.js`.
-- Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts`; maintained `scripts/*.js` wrappers are forbidden.
+- Package entrypoints run those generated `.build/scripts/*.js` artifacts after
+  `build:scripts`; maintained `scripts/**/*.js` wrappers, bootstrap files, and
+  validation outputs are forbidden.
 - `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts`
   into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript
   entrypoints such as Flathub source generation.
@@ -89,6 +92,11 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
   generated bootstrap and writes per-entry generated JavaScript under
   `.build/scripts/typescript/`.
+- `tsconfig.build.json` emits the Electron runtime from `electron/**/*.ts`
+  only; it must not set `allowJs`, must not set `checkJs`, and must not include
+  `electron/**/*.js`.
+- Electron main TypeScript modules use ESM `export` declarations only; do not
+  add duplicate `module.exports` blocks to `electron/main/**/*.ts`.
 - `npm run check:scripts-core` runs the generated core validation artifacts and
   includes the TypeScript-first closure checks, including `check-gitignore-policy`,
   `check-no-source-javascript`, and `check-source-integrity`.
@@ -135,11 +143,16 @@ Bootstrap TypeScript entrypoints compiled by dedicated scripts include:
 
 Test execution:
 
-- `scripts/run-node-tests.ts` compiles all tests for full-suite runs, or only
-  selected `*.test.ts` files plus shared support files when test paths are passed
-  on the CLI, to `.build/test/**/*.js` with inline source maps.
-- `npm test` runs `node --test` against `.build/test/**/*.test.js`; Node does
-  not execute TypeScript test files directly.
+- `scripts/run-node-tests.ts` collects Node tests from `test/**/*.test.ts`,
+  compiles all Node tests for full-suite runs, or only selected `*.test.ts`
+  files plus shared support files when test paths are passed on the CLI, to
+  `.build/test/**/*.js` with inline source maps.
+- Playwright specs stay separate as `test/**/*.spec.ts` and run through
+  `npm run test:smoke`; the Node test runner rejects spec-file selectors so
+  Playwright tests are not compiled as Node support files by accident.
+- `npm test` runs `node --test` against the generated
+  `.build/test/**/*.test.js` outputs; Node does not execute TypeScript test
+  files directly.
 - `test/helpers/runtime-module.ts` loads Electron runtime TypeScript sources for
   module-level tests and no longer falls back to JavaScript source files.
 

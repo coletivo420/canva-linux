@@ -82,9 +82,10 @@ test('blocks unsafe external protocols', () => {
   );
 });
 
-test('allows safe external protocols', () => {
+test('allows only HTTPS external protocol', () => {
   assert.equal(isSafeExternalUrl('https://example.com'), true);
-  assert.equal(isSafeExternalUrl('mailto:test@example.com'), true);
+  assert.equal(isSafeExternalUrl('http://example.com'), false);
+  assert.equal(isSafeExternalUrl('mailto:test@example.com'), false);
   assert.equal(isSafeExternalUrl('file:///etc/passwd'), false);
 });
 

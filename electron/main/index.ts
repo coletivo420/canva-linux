@@ -316,6 +316,9 @@ registerAppLifecycle({
   debugLog,
   debugLevel,
   flushSession: flushSession as unknown as (session: unknown) => Promise<void>,
+  focusMainWindow() {
+    mainWindow?.focus();
+  },
   getCanvaSession,
   logCredentialStorageBackend,
   logReleaseStatus,
