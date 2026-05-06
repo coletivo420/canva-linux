@@ -20,11 +20,15 @@ const readmeRefs = [
   'docs/AI_GUARDRAILS.md',
 ];
 
+function normalizeWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
 const requiredGuardrails = [
   'The interactive shell menu has been removed.',
   'The project exposes only TUI and direct CLI actions.',
-  '`--no-tui` and `--tui` flags are removed. Launcher opens TUI if no args, otherwise CLI.',
-  '`CANVA_NO_TUI` and `CANVA_TUI` environment variables are ignored for interface routing.',
+  '`--no-tui` and `--tui` flags are removed. The launcher opens TUI when called without args; any argument is resolved as direct CLI.',
+  '`CANVA_NO_TUI` and `CANVA_TUI` environment variables are removed and must not be read for interface routing.',
   'System-wide actions must use scripts/sudo-common.sh.',
   'Raw sudo calls are forbidden outside scripts/sudo-common.sh.',
   'User-scope actions must never call sudo.',
@@ -44,7 +48,7 @@ const requiredGuardrails = [
   'Do not add JavaScript config files when TypeScript config is supported.',
   'JavaScript may exist only as project-generated output under `.build`, package-managed dependencies under `node_modules`, generated coverage output under `coverage`, or distributable output under `dist`.',
   'Project-generated JavaScript belongs in `.build` only; do not place maintained or project-generated script artifacts elsewhere.',
-  'Shell scripts are allowed only for Linux host operations, launcher glue, Flatpak/native install, sudo, purge, XDG and validation that must run before Node.',
+  'Shell scripts are allowed only for Linux host operations, launcher glue, Flatpak/native install, sudo, purge, XDG, and validation that must run before Node.',
   'JSON/YAML/XML/Desktop files remain native data formats and must be validated by TypeScript checks where appropriate.',
   'Flathub source generation must be TypeScript-backed.',
   'If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.',
@@ -65,8 +69,9 @@ export function main(): number {
   if (readme.includes('Shell Tool')) failures.push('README must not mention Shell Tool');
 
   const guardrails = fs.existsSync(path.join(rootDir, 'docs/AI_GUARDRAILS.md')) ? fs.readFileSync(path.join(rootDir, 'docs/AI_GUARDRAILS.md'), 'utf8') : '';
+  const normalizedGuardrails = normalizeWhitespace(guardrails);
   for (const fragment of requiredGuardrails) {
-    if (!guardrails.includes(fragment)) failures.push(`AI_GUARDRAILS missing rule: ${fragment}`);
+    if (!normalizedGuardrails.includes(normalizeWhitespace(fragment))) failures.push(`AI_GUARDRAILS missing rule: ${fragment}`);
   }
 
   const review = fs.existsSync(path.join(rootDir, 'REVIEW.md')) ? fs.readFileSync(path.join(rootDir, 'REVIEW.md'), 'utf8') : '';

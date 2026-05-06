@@ -47,7 +47,13 @@ const strictDocumentationLineLength = 160;
 
 const strictDocumentationLineLengthFiles = new Set([
   'README.md',
+  'CHANGELOG.md',
+  'docs/AI_GUARDRAILS.md',
+  'docs/CLI.md',
+  'docs/DEVELOPMENT.md',
+  'docs/TECHNICAL.md',
   'docs/TYPESCRIPT.md',
+  'docs/VALIDATION.md',
 ]);
 
 const forbiddenCompatibilityCliAliases = [

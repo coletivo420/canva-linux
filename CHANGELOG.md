@@ -3,9 +3,13 @@
 ## [0.1.4.11-dev.58] - 2026-05-06
 
 ### Changed
-- Documented the final TypeScript status across development, validation, technical, guardrail, and README docs: all maintained Node.js source is TypeScript, JavaScript is generated output only, and shell remains shell for host operations.
-- Closed the TypeScript migration as the general project rule: maintained JavaScript source is no longer allowed outside generated `.build/` artifacts and dependencies.
-- Migrated Node test, lint, Playwright, Flathub, TUI, core-runner, and build entrypoints to TypeScript-first execution through shell bootstraps or generated `.build/` JavaScript.
+- Documented the final TypeScript status across development, validation, technical, guardrail, and README docs: all
+  maintained Node.js source is TypeScript, JavaScript is generated output only, and shell remains shell for host
+  operations.
+- Closed the TypeScript migration as the general project rule: maintained JavaScript source is no longer allowed outside
+  generated `.build/` artifacts and dependencies.
+- Migrated Node test, lint, Playwright, Flathub, TUI, core-runner, and build entrypoints to TypeScript-first execution
+  through shell bootstraps or generated `.build/` JavaScript.
 - Updated project version and phase identity to `0.1.4-dev.11.58` / `0.1.4.11-dev.58`.
 
 ## [0.1.4.11-dev.57] - 2026-05-06
@@ -21,18 +25,23 @@
 ## [0.1.4.11-dev.56] - 2026-05-05
 
 ### Added
-- Added a TypeScript-first script guardrail check that blocks real JavaScript logic under `scripts/`, validates core wrapper coverage, and keeps TypeScript migration docs current.
-- Added a TypeScript wrapper contract check covering build-runtime, preload bundling, runtime asset copying, runtime cleanup, electron-builder beforeBuild, and TUI startup wrappers.
-- Added thin compatibility wrappers for AI-guardrails, doc-link, dependency-policy, and runtime-build checks so `scripts/*.js` entrypoints consistently delegate to `scripts/core/*.ts`.
+- Added a TypeScript-first script guardrail check that blocks real JavaScript logic under `scripts/`, validates core
+  wrapper coverage, and keeps TypeScript migration docs current.
+- Added a TypeScript wrapper contract check covering build-runtime, preload bundling, runtime asset copying, runtime
+  cleanup, electron-builder beforeBuild, and TUI startup wrappers.
+- Added thin compatibility wrappers for AI-guardrails, doc-link, dependency-policy, and runtime-build checks so
+  `scripts/*.js` entrypoints consistently delegate to `scripts/core/*.ts`.
 
 ### Fixed
-- Stabilized Native install preflight by using `data/icons/hicolor`, preserving missing-icon tolerance, validating system sudo before writes, and keeping post-install warnings non-fatal.
+- Stabilized Native install preflight by using `data/icons/hicolor`, preserving missing-icon tolerance, validating
+  system sudo before writes, and keeping post-install warnings non-fatal.
 - Stabilized Flatpak system/user install and uninstall scope behavior, including user-scope sudo refusal and system-scope sudo-common usage.
 - Made TUI action finalization use synchronous overview-status detection so successful installs with warnings finish green instead of red.
 - Hardened sudo-common with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
 
 ### Changed
-- Normalized every `scripts/check-*.js` entrypoint to a minimal `runCore(...)` compatibility wrapper and tightened the TypeScript-first guardrail to enforce that shape.
+- Normalized every `scripts/check-*.js` entrypoint to a minimal `runCore(...)` compatibility wrapper and tightened the
+  TypeScript-first guardrail to enforce that shape.
 - Documented explicit TypeScript-first Node.js guardrails for future script work.
 - Documented the build/TUI wrapper-to-TypeScript implementation map and exposed `npm run check:typescript-wrappers`.
 - Pointed validation package scripts at thin compatibility wrappers instead of inline `node -e` loader snippets.
@@ -821,7 +830,8 @@
 
 ### Fixed
 
-- Preserved app startup, lifecycle registration, session setup, tab controller wiring, OAuth popup wiring, GPU diagnostics registration and EyeDropper bridge registration during entrypoint conversion.
+- Preserved app startup, lifecycle registration, session setup, tab controller wiring, OAuth popup wiring, GPU
+  diagnostics registration and EyeDropper bridge registration during entrypoint conversion.
 - Preserved runtime version detection through `app.getVersion()`.
 - Updated direct build and lint dependencies to their latest available versions and adapted the packaging configuration for `electron-builder` 26.
 - Added dependency freshness guardrails to prevent downgrades and require code/config adaptation for dependency upgrades.
@@ -884,7 +894,8 @@ All notable changes to this project are documented in this file.
 ### Changed
 
 - Bumped the development version to `0.1.4-dev.15`.
-- Converted main-process infrastructure modules to TypeScript: logging, logging helpers, GPU diagnostics, runtime setup, IPC routing, lifecycle wiring and the EyeDropper snapshot bridge.
+- Converted main-process infrastructure modules to TypeScript: logging, logging helpers, GPU diagnostics, runtime setup,
+  IPC routing, lifecycle wiring and the EyeDropper snapshot bridge.
 - Updated runtime build checks to require compiled output for `electron/shared/navigation.ts`.
 - Updated the TypeScript roadmap from DEV15 onward to reflect the stabilized DEV14 and the staged CL-EyeDropper plan.
 
@@ -938,7 +949,8 @@ All notable changes to this project are documented in this file.
 - Removed unconditional preload raw-init console logging outside `CANVA_DEBUG`.
 - Restricted powerful runtime permissions to Canva origins instead of OAuth provider origins.
 - Preserved Flatpak build artifact ownership restoration after install, bundle and dev-run workflows.
-- Fixed source-mode `npm run build:preload` after `electron/shared/debug.ts` conversion by resolving TypeScript source candidates and transpiling them before bundling.
+- Fixed source-mode `npm run build:preload` after `electron/shared/debug.ts` conversion by resolving TypeScript source
+  candidates and transpiling them before bundling.
 - Fixed local system installs failing to fetch `summary.idx` from the generated local Flatpak repo by configuring the local remote with a valid `file://` URI.
 
 ### Notes
@@ -947,7 +959,8 @@ All notable changes to this project are documented in this file.
 - User-scope installation remains available with `CANVA_FLATPAK_SCOPE=user`.
 - Password prompts are expected for legitimate system Flatpak operations.
 - `flatpak-builder` must continue running as the current user, never with `sudo`.
-- The preload bundler must keep supporting both source mode (`npm run build:preload`) and build-output mode (`npm run build:runtime`) while TypeScript conversion is in progress.
+- The preload bundler must keep supporting both source mode (`npm run build:preload`) and build-output mode (`npm run
+  build:runtime`) while TypeScript conversion is in progress.
 
 ## [0.1.4-dev.12-hotfix] - 2026-04-30
 
@@ -1247,19 +1260,22 @@ All notable changes to this project are documented in this file.
 ## [0.1.4-dev.1] - 2026-04-26
 
 ### Added
-- Added TypeScript foundation tooling for the `0.1.4-dev.X` cycle with `typescript`, `@types/node`, and `tsconfig.json` configured to type-check existing JavaScript (`allowJs` + `checkJs`) without emitting build artifacts.
+- Added TypeScript foundation tooling for the `0.1.4-dev.X` cycle with `typescript`, `@types/node`, and `tsconfig.json`
+  configured to type-check existing JavaScript (`allowJs` + `checkJs`) without emitting build artifacts.
 - Added npm script `typecheck` (`tsc --noEmit`) for local and CI-safe static type validation.
 - Added `docs/TYPESCRIPT.md` to define migration scope, sequencing, and guardrails for future `dev2+` phases.
 - Added `docs/CANVA_API.md` with initial architecture notes comparing Canva Apps SDK and Canva Connect API usage in this desktop wrapper.
 
 ### Changed
-- Updated `scripts/validate-project.sh` to include preload build, lint, typecheck, tests, docs link checks, Flatpak checks, Flathub-submission checks, and `git diff --check`.
+- Updated `scripts/validate-project.sh` to include preload build, lint, typecheck, tests, docs link checks, Flatpak
+  checks, Flathub-submission checks, and `git diff --check`.
 - Updated `README.md` status documentation for `0.1.4-dev.1`, including the TypeScript foundation scope and new docs references.
 
 ## [1.4.10] - 2026-04-26
 
 ### Added
-- Consolidated release closure documentation for the stable `1.4.10` launch, including release checklist and manual validation guidance for the final JavaScript cycle.
+- Consolidated release closure documentation for the stable `1.4.10` launch, including release checklist and manual
+  validation guidance for the final JavaScript cycle.
 
 ### Changed
 - Promoted package versioning from `1.4.10-dev.20` through `1.4.10-rc.1` to stable `1.4.10`.
@@ -1267,7 +1283,8 @@ All notable changes to this project are documented in this file.
 - Updated README release status to mark `1.4.10` as stable and `0.1.4-dev.1` as the next planned development line (TypeScript + Canva API).
 
 ### Notes
-- This release intentionally freezes scope to consolidation only: no TypeScript migration, no Canva API integration, no major refactors, and no Flathub submission in this tag.
+- This release intentionally freezes scope to consolidation only: no TypeScript migration, no Canva API integration, no
+  major refactors, and no Flathub submission in this tag.
 
 ## [1.4.10-rc.1] - 2026-04-26
 
@@ -1292,7 +1309,8 @@ All notable changes to this project are documented in this file.
 ## [1.4.10-dev.19] - 2026-04-26
 
 ### Changed
-- Migrated active Flatpak app-id, desktop/metainfo filenames, icon identifiers, and runtime WMClass usage from `com.canva.Linux` to `io.github.PirateMaryRead.canva-linux`.
+- Migrated active Flatpak app-id, desktop/metainfo filenames, icon identifiers, and runtime WMClass usage from
+  `com.canva.Linux` to `io.github.PirateMaryRead.canva-linux`.
 - Standardized the public project name as `Canva Linux` and aligned package metadata wording to `A community opensource desktop wrapper for use with Canva`.
 - Updated local and Flathub manifests, launch/runtime scripts, validation helpers, and documentation to use the new app-id and naming guidance.
 - Added dev19 branding/app-id validation guardrails in `scripts/validate-flatpak.sh` and `scripts/validate-flathub-submission.sh`.
@@ -1306,10 +1324,13 @@ All notable changes to this project are documented in this file.
 ## [1.4.10-dev.18] - 2026-04-26
 
 ### Changed
-- Consolidated Flatpak permission policy for Canva-Linux based on real workflows including login persistence, upload/export, media playback, video editing, microphone/webcam compatibility, and desktop integration.
+- Consolidated Flatpak permission policy for Canva-Linux based on real workflows including login persistence,
+  upload/export, media playback, video editing, microphone/webcam compatibility, and desktop integration.
 - Kept the local and Flathub-submission manifests aligned on the same runtime sandbox permission policy.
-- Removed `--talk-name=org.freedesktop.ScreenSaver` from both Flatpak manifests because no required Canva-Linux runtime flow currently depends on direct ScreenSaver D-Bus access.
-- Documented permissions that must not be added without explicit maintainer review: broad home access, full device access, broad session/system bus sockets, and explicit portal bus access.
+- Removed `--talk-name=org.freedesktop.ScreenSaver` from both Flatpak manifests because no required Canva-Linux runtime
+  flow currently depends on direct ScreenSaver D-Bus access.
+- Documented permissions that must not be added without explicit maintainer review: broad home access, full device
+  access, broad session/system bus sockets, and explicit portal bus access.
 - Added validation guards that fail when forbidden permissions reappear or required runtime permissions are missing in either manifest.
 - Standardized human-facing phase and branch naming to `1.4.10.devX` while preserving SemVer package versions as `1.4.10-dev.X`.
 
@@ -1323,23 +1344,33 @@ All notable changes to this project are documented in this file.
 - Standardized the public project identity as **Canva-Linux** across package metadata, Electron product naming, executable naming, and primary user-facing copy.
 - Standardized Linux bundle artifact naming to `dist/canva-linux-$VERSION.flatpak` in build/validation scripts and related docs.
 - Updated repository-facing metadata links and captions to point to the `canva-linux` project naming.
-- Updated desktop-visible metadata (`data/com.canva.Linux.desktop` and `data/com.canva.Linux.metainfo.xml`) to show **Canva-Linux** naming and desktop-wrapper wording.
+- Updated desktop-visible metadata (`data/com.canva.Linux.desktop` and `data/com.canva.Linux.metainfo.xml`) to show
+  **Canva-Linux** naming and desktop-wrapper wording.
 - Aligned core documentation and release/validation checklists to the `1.4.10-dev.17` naming-alignment phase.
-- Added post-dev17 roadmap planning (`dev18` through `dev21`) covering permissions, app-id/branding strategy, submission-manifest final validation, and RC/stable closure.
+- Added post-dev17 roadmap planning (`dev18` through `dev21`) covering permissions, app-id/branding strategy,
+  submission-manifest final validation, and RC/stable closure.
 - Migrated Flatpak identity to `com.canva.Linux` (app-id, desktop/metainfo filenames, icon identifiers, and WMClass fields) for full branding alignment.
-- Finalized documentation alignment after the rename, including `README.md` next-phase transition to `1.4.10-dev.18` and AI workflow guidance updates for the dev17→dev18 handoff.
+- Finalized documentation alignment after the rename, including `README.md` next-phase transition to `1.4.10-dev.18` and
+  AI workflow guidance updates for the dev17→dev18 handoff.
 
 ### Notes
-- This patch includes an app-id identity migration and may require manual reinstall or user-data migration handling for environments previously using the old app-id.
+- This patch includes an app-id identity migration and may require manual reinstall or user-data migration handling for
+  environments previously using the old app-id.
 
 ## [1.4.10-dev.16] - 2026-04-25
 
 ### Changed
 - Disabled Chromium/Electron `Floss` runtime feature in `configureLinuxRuntime()` to reduce non-fatal Bluetooth/Floss startup noise inside Flatpak sandbox logs.
-- Added a dedicated `packaging/flathub/` submission workspace with a separate Flathub-oriented manifest, `generated-sources.json` npm dependency manifest, and helper scripts to regenerate it from `package-lock.json`.
-- Switched the submission manifest source strategy to a pinned public archive (`type: archive` + `sha256`) and clarified sandbox-only generation of `dist/linux-unpacked`, plus offline npm installation (`npm install --offline`) using generated dependency sources.
-- Added submission automation scripts (`scripts/prepare-flathub-submission.sh`, `scripts/validate-flathub-submission.sh`) and moved submission manifest path to `packaging/flathub/manifest.yml`.
-- Added dedicated submission-path documentation and rationale notes (`docs/FLATHUB_SUBMISSION_PATH.md`, `docs/FLATHUB_SUBMISSION_NOTES.md`), including a material non-triviality rationale against simple-web-wrapper rejection risk.
+- Added a dedicated `packaging/flathub/` submission workspace with a separate Flathub-oriented manifest,
+  `generated-sources.json` npm dependency manifest, and helper scripts to regenerate it from `package-lock.json`.
+- Switched the submission manifest source strategy to a pinned public archive (`type: archive` + `sha256`) and clarified
+  sandbox-only generation of `dist/linux-unpacked`, plus offline npm installation (`npm install --offline`) using
+  generated dependency sources.
+- Added submission automation scripts (`scripts/prepare-flathub-submission.sh`,
+  `scripts/validate-flathub-submission.sh`) and moved submission manifest path to `packaging/flathub/manifest.yml`.
+- Added dedicated submission-path documentation and rationale notes (`docs/FLATHUB_SUBMISSION_PATH.md`,
+  `docs/FLATHUB_SUBMISSION_NOTES.md`), including a material non-triviality rationale against simple-web-wrapper
+  rejection risk.
 - Updated documentation to formalize separation between the repository-root local manifest workflow and Flathub submission assets.
 
 ### Notes
@@ -1365,7 +1396,8 @@ All notable changes to this project are documented in this file.
 - Added a dedicated npm script for the wiring-focused test phase.
 
 ### Changed
-- Added a narrow dependency-injection seam in `electron/main/tab-controller.js` so the tab event attachment path can be verified without changing production behavior.
+- Added a narrow dependency-injection seam in `electron/main/tab-controller.js` so the tab event attachment path can be
+  verified without changing production behavior.
 
 ### Notes
 - This is phase 4 of the planned testing architecture work.
@@ -1404,7 +1436,8 @@ All notable changes to this project are documented in this file.
 ## [1.4.10-dev.9] - 2026-04-25
 
 ### Changed
-- Renamed the shared `classifyWindowOpenRequest` import alias in `electron/main/index.js` to `sharedClassifyWindowOpenRequest` for clearer main-process navigation hardening flow.
+- Renamed the shared `classifyWindowOpenRequest` import alias in `electron/main/index.js` to
+  `sharedClassifyWindowOpenRequest` for clearer main-process navigation hardening flow.
 - Kept runtime behavior unchanged while making the shared-versus-local window-open classification boundary more explicit for review and maintenance.
 
 ### Notes
@@ -1414,13 +1447,18 @@ All notable changes to this project are documented in this file.
 ## [1.4.10-dev.8] - 2026-04-25
 
 ### Added
-- Added a dependency-free preload bundling step that generates `electron/preload/canva.bundle.js` from the modular preload source files before local start and Electron Builder packaging.
+- Added a dependency-free preload bundling step that generates `electron/preload/canva.bundle.js` from the modular
+  preload source files before local start and Electron Builder packaging.
 - Added documentation for the preload bundle architecture and the custom eyedropper regression it fixes.
 
 ### Fixed
-- Fixed the custom Canva eyedropper regression introduced by the preload modularization. The Canva editor could start the preload but fail nested local module resolution inside Electron's packaged/sandboxed preload context, preventing `./debug` and the custom eyedropper modules from loading.
-- Fixed the false `installed=false` eyedropper diagnostic by exposing an idempotent preload-side install probe and checking the actual wrapped `EyeDropper` state instead of only checking local preload function scope.
-- Kept the custom picker routed through the bundled `ltcodedev/eyedropper` implementation instead of falling back to Chromium, portal, or native system color picking.
+- Fixed the custom Canva eyedropper regression introduced by the preload modularization. The Canva editor could start
+  the preload but fail nested local module resolution inside Electron's packaged/sandboxed preload context, preventing
+  `./debug` and the custom eyedropper modules from loading.
+- Fixed the false `installed=false` eyedropper diagnostic by exposing an idempotent preload-side install probe and
+  checking the actual wrapped `EyeDropper` state instead of only checking local preload function scope.
+- Kept the custom picker routed through the bundled `ltcodedev/eyedropper` implementation instead of falling back to
+  Chromium, portal, or native system color picking.
 - Blocked unsafe external URL schemes from being forwarded to the system opener.
 - Removed the active-tab eyedropper snapshot fallback so snapshot IPC only serves the requesting Canva tab.
 - Cleaned up the custom eyedropper overlay when an `AbortSignal` cancels the pick operation.
@@ -1436,7 +1474,8 @@ All notable changes to this project are documented in this file.
 - Added AppStream `vcs-browser` metadata and documented the local-only screenshot mirror limitation for repo lint.
 
 ### Validation
-- Verified that the editor tab loads the bundled preload, installs the wrapper, intercepts `EyeDropper.open()`, captures the active Canva tab snapshot, opens the custom picker canvas, picks a color, and resolves the eyedropper promise.
+- Verified that the editor tab loads the bundled preload, installs the wrapper, intercepts `EyeDropper.open()`, captures
+  the active Canva tab snapshot, opens the custom picker canvas, picks a color, and resolves the eyedropper promise.
 
 ## [1.4.10-dev.7] - 2026-04-25
 
@@ -1608,7 +1647,8 @@ All notable changes to this project are documented in this file.
 ### Changed
 - Bumped project version metadata to `1.4.9-dev.12`.
 - Aligned the screenshot staging documentation with the real local Flathub/AppStream screenshot set in `assets/screenshots/`.
-- Updated AppStream release metadata to reflect the current screenshot-preparation pass while intentionally keeping screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.
+- Updated AppStream release metadata to reflect the current screenshot-preparation pass while intentionally keeping
+  screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.
 - Added the AppStream developer display name required by `appstreamcli` metadata validation.
 
 ### Notes
@@ -1791,7 +1831,8 @@ All notable changes to this project are documented in this file.
 ## [1.4.8-dev.6] - 2026-04-23
 
 ### Changed
-- Added focused inline comments in `electron/main.js` to clarify `WebContentsView` shell intent, fixed Home-tab guardrails, persistent partition usage, and OAuth popup completion lifecycle.
+- Added focused inline comments in `electron/main.js` to clarify `WebContentsView` shell intent, fixed Home-tab
+  guardrails, persistent partition usage, and OAuth popup completion lifecycle.
 - Added short comments in preload scripts to document debug-category aliases and why drag/upload ingress tracking is correlated across events.
 - Added launcher/build/manifest comments describing Wayland/X11 runtime flags, category-filtered debug logging, and Flatpak permission intent.
 - Updated technical docs and README version references for the DEV6 readability patch.
@@ -1815,8 +1856,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 - Reworked the README as the main project orientation document for the DEV4 consolidation phase.
-- Documented the current Electron shell architecture, including `WebContentsView`, the fixed Home tab, persistent sessions, OAuth popups, preload scripts, and Flatpak packaging files.
-- Expanded debug category documentation with short descriptions for `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`.
+- Documented the current Electron shell architecture, including `WebContentsView`, the fixed Home tab, persistent
+  sessions, OAuth popups, preload scripts, and Flatpak packaging files.
+- Expanded debug category documentation with short descriptions for `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`,
+  `upload`, `permissions`, `session`, and `eyedropper`.
 - Clarified the stable-versus-development version flow for the `1.4.8-dev.X` branch.
 - Added official reference links for `WebContentsView`, Electron sessions, and Electron permission handling.
 
@@ -1829,8 +1872,10 @@ All notable changes to this project are documented in this file.
 ## [1.4.8-dev.3] - 2026-04-23
 
 ### Added
-- Added clipboard ingress diagnostics for paste-heavy workflows, including `beforeinput`, `paste`, `navigator.clipboard.read()`, and MIME summary logging for text, HTML, URLs, images, and files when available.
-- Added upload pipeline correlation IDs so drag, paste, picker, `FormData`, `fetch`, `XMLHttpRequest`, and `sendBeacon` logs can be tied back to the most recent ingress source.
+- Added clipboard ingress diagnostics for paste-heavy workflows, including `beforeinput`, `paste`,
+  `navigator.clipboard.read()`, and MIME summary logging for text, HTML, URLs, images, and files when available.
+- Added upload pipeline correlation IDs so drag, paste, picker, `FormData`, `fetch`, `XMLHttpRequest`, and `sendBeacon`
+  logs can be tied back to the most recent ingress source.
 - Added file picker cancellation diagnostics for `<input type="file">` where Chromium emits a `cancel` event.
 
 ### Fixed
@@ -1883,7 +1928,8 @@ All notable changes to this project are documented in this file.
 ## [1.4.7] - 2026-04-23
 
 ### Added
-- Added structured global debug categories across the application: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`, `upload`, `permissions`, `session`, and `eyedropper`.
+- Added structured global debug categories across the application: `startup`, `app`, `tabs`, `view`, `oauth`, `dnd`,
+  `upload`, `permissions`, `session`, and `eyedropper`.
 - Added category-filtered debug support through `CANVA_DEBUG=1` or `CANVA_DEBUG=category1,category2`.
 - Added toolbar debug forwarding for tab actions and tab state updates.
 
@@ -1926,7 +1972,9 @@ All notable changes to this project are documented in this file.
 - Preserved the Wayland-first launcher behavior with manual X11 and Wayland overrides.
 
 ### Potential bugs under observation
-- Wayland drag-and-drop may still hit compositor-side issues in some environments. Current logs showed `Invalid state when trying to start drag. source=kMouse` during Wayland usage, so drag workflows should be retested after this shell migration.
+- Wayland drag-and-drop may still hit compositor-side issues in some environments. Current logs showed `Invalid state
+  when trying to start drag. source=kMouse` during Wayland usage, so drag workflows should be retested after this shell
+  migration.
 - GPU and VAAPI warnings may still appear on NVIDIA systems depending on host drivers and compositor support.
 
 ## [1.4.4] - 2026-04-23
