@@ -14,6 +14,7 @@
 - Hardened sudo-common with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
 
 ### Changed
+- Normalized every `scripts/check-*.js` entrypoint to a minimal `runCore(...)` compatibility wrapper and tightened the TypeScript-first guardrail to enforce that shape.
 - Documented explicit TypeScript-first Node.js guardrails for future script work.
 - Documented the build/TUI wrapper-to-TypeScript implementation map and exposed `npm run check:typescript-wrappers`.
 - Pointed validation package scripts at thin compatibility wrappers instead of inline `node -e` loader snippets.

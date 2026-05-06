@@ -146,14 +146,27 @@ function validateTopLevelScriptWrappers(rootDir: string, failures: string[]): Wr
   return summaries;
 }
 
-function validateCheckWrappers(summaries: WrapperSummary[], failures: string[]): void {
+function validateCheckWrappers(rootDir: string, summaries: WrapperSummary[], failures: string[]): void {
   for (const summary of summaries) {
     if (!/^scripts\/check-.+\.js$/.test(summary.relativePath)) continue;
+
+    const content = readText(rootDir, summary.relativePath);
+    const lines = nonEmptyNonCommentLines(content);
+
     if (summary.kind !== 'core') {
       failures.push(`${summary.relativePath}: check entrypoints must be thin core wrappers`);
     }
     if (summary.coreEntries.length !== 1) {
       failures.push(`${summary.relativePath}: check wrapper must reference exactly one scripts/core entry`);
+    }
+    if (!content.includes('runCore(')) {
+      failures.push(`${summary.relativePath}: check wrapper must delegate through runCore(...) instead of carrying local main/error handling`);
+    }
+    if (content.includes('loadCore(')) {
+      failures.push(`${summary.relativePath}: check wrapper must not call loadCore(...) directly; use runCore(...)`);
+    }
+    if (lines.length > 2) {
+      failures.push(`${summary.relativePath}: check wrapper must stay minimal; expected only core-wrapper import plus runCore(...) call, found ${lines.length} non-empty code lines`);
     }
   }
 }
@@ -256,7 +269,7 @@ export function main(): number {
   const packageJson = parsePackageJson(rootDir);
 
   const summaries = validateTopLevelScriptWrappers(rootDir, failures);
-  validateCheckWrappers(summaries, failures);
+  validateCheckWrappers(rootDir, summaries, failures);
   validateCoreWrapper(rootDir, failures);
   const buildEntries = validatePackageCoreEntries(rootDir, packageJson, failures);
   validateWrapperBuildCoverage(buildEntries, summaries, failures);

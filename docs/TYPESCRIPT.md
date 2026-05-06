@@ -27,8 +27,8 @@ Project validations, contracts, and registries are implemented in TypeScript und
 
 - These are compiled using `esbuild` to `.build/scripts/core/`.
 - `scripts/core-wrapper.js` provides a thin loader that triggers an automatic build if artifacts are missing and fails clearly when the build cannot be produced.
-- `scripts/*.js` compatibility entrypoints for core validations must stay thin: load `scripts/core/*.ts` output through `loadCore(...)` or `runCore(...)`, call `main()`, and avoid duplicating validation or status logic.
-- `check-typescript-first.ts` enforces TypeScript-first script guardrails, wrapper thinness, package-script core entry coverage, and documentation coverage for migrated core entries.
+- `scripts/*.js` compatibility entrypoints for core validations must stay thin: delegate to `scripts/core/*.ts` output through `runCore(...)`, call `main()` in the compiled TypeScript core, and avoid duplicating validation or status logic.
+- `check-typescript-first.ts` enforces TypeScript-first script guardrails, minimal `scripts/check-*.js` wrappers, package-script core entry coverage, and documentation coverage for migrated core entries.
 - All core validations are integrated into `npm run check:scripts-core`.
 - Build/TUI wrappers (`build-runtime`, `build-preload-bundle`, `copy-runtime-assets`, `clean-runtime-build`, `electron-builder-before-build`, and `run-tui`) are enforced by `check-typescript-wrapper-contract.ts` so the `.js` files stay as compatibility entrypoints and the `.ts` files remain the real implementations.
 
