@@ -14,6 +14,7 @@ require_node_major 22
 validate_package_version_semver
 validate_json_file package.json
 validate_json_file package-lock.json
+validate_package_scripts
 ensure_npm_dependencies
 
 log_info() {
