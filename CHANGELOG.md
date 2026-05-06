@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.1.4.11-dev.57] - 2026-05-06
+
+### Added
+- Added TypeScript implementations for Flathub npm source generation and the Node test runner, leaving JavaScript files as thin compatibility wrappers.
+- Added TypeScript-first guardrail coverage for the Flathub npm source generator wrapper, TypeScript implementation, shell entrypoint, and documentation status.
+
+### Changed
+- Updated TypeScript migration documentation and AI guardrails to mark the 0.1.4.11 TypeScript migration closure state.
+- Updated technical version and phase identity to `0.1.4-dev.11.57` / `0.1.4.11-dev.57`.
+
 ## [0.1.4.11-dev.56] - 2026-05-05
 
 ### Added
