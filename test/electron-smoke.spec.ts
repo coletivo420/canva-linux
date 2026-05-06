@@ -1,8 +1,8 @@
-import { test, expect, _electron as electron } from '@playwright/test';
+import { test, expect, _electron as electron } from "@playwright/test";
 
-test('launches Electron in development mode and opens the first window', async () => {
+test("launches Electron in development mode and opens the first window", async () => {
   const electronApp = await electron.launch({
-    args: ['.'],
+    args: ["."],
   });
 
   try {

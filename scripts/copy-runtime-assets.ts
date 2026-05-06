@@ -1,10 +1,11 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from "node:fs";
+import path from "node:path";
 
-const repoRoot = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, '..');
+const repoRoot =
+  process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 const copies: ReadonlyArray<readonly [from: string, to: string]> = [
-  ['electron/assets', '.build/electron/assets'],
-  ['electron/ui', '.build/electron/ui'],
+  ["electron/assets", ".build/electron/assets"],
+  ["electron/ui", ".build/electron/ui"],
 ];
 
 export function main(): void {

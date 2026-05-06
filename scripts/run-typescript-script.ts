@@ -1,22 +1,25 @@
-import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
-import { createRequire } from 'node:module';
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import { createRequire } from "node:module";
 
 const requireFromHere = createRequire(__filename);
-const esbuild = requireFromHere('esbuild') as typeof import('esbuild');
+const esbuild = requireFromHere("esbuild") as typeof import("esbuild");
 
 function findProjectRoot(): string {
   const candidates = [
     process.env.CANVA_SCRIPT_REPO_ROOT,
-    path.resolve(__dirname, '..', '..', '..'),
+    path.resolve(__dirname, "..", "..", ".."),
     process.cwd(),
   ].filter(Boolean) as string[];
 
   for (const candidate of candidates) {
     let current = path.resolve(candidate);
     while (true) {
-      if (fs.existsSync(path.join(current, 'package.json')) && fs.existsSync(path.join(current, 'scripts/actions.json'))) {
+      if (
+        fs.existsSync(path.join(current, "package.json")) &&
+        fs.existsSync(path.join(current, "scripts/actions.json"))
+      ) {
         return current;
       }
       const parent = path.dirname(current);
@@ -25,20 +28,29 @@ function findProjectRoot(): string {
     }
   }
 
-  throw new Error('Unable to locate project root from TypeScript runner bootstrap');
+  throw new Error(
+    "Unable to locate project root from TypeScript runner bootstrap",
+  );
 }
 
 function usage(): never {
-  console.error('usage: node .build/scripts/bootstrap/run-typescript-script.js <entry.ts> [args...]');
+  console.error(
+    "usage: node .build/scripts/bootstrap/run-typescript-script.js <entry.ts> [args...]",
+  );
   process.exit(64);
 }
 
-function resolveEntryPoint(rootDir: string, rawEntry: string | undefined): string {
+function resolveEntryPoint(
+  rootDir: string,
+  rawEntry: string | undefined,
+): string {
   if (!rawEntry) usage();
 
   const entryPoint = path.resolve(rootDir, rawEntry);
-  if (!entryPoint.endsWith('.ts')) {
-    throw new Error(`TypeScript runner entrypoint must end with .ts: ${rawEntry}`);
+  if (!entryPoint.endsWith(".ts")) {
+    throw new Error(
+      `TypeScript runner entrypoint must end with .ts: ${rawEntry}`,
+    );
   }
   if (!fs.existsSync(entryPoint)) {
     throw new Error(`TypeScript runner entrypoint does not exist: ${rawEntry}`);
@@ -47,9 +59,11 @@ function resolveEntryPoint(rootDir: string, rawEntry: string | undefined): strin
 }
 
 function outputPathForEntry(rootDir: string, entryPoint: string): string {
-  const relative = path.relative(rootDir, entryPoint).replace(/\\/g, '/');
-  const flatName = relative.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/\.ts$/, '.js');
-  return path.join(rootDir, '.build', 'scripts', 'typescript', flatName);
+  const relative = path.relative(rootDir, entryPoint).replace(/\\/g, "/");
+  const flatName = relative
+    .replace(/[^a-zA-Z0-9._-]/g, "-")
+    .replace(/\.ts$/, ".js");
+  return path.join(rootDir, ".build", "scripts", "typescript", flatName);
 }
 
 function buildEntry(rootDir: string, entryPoint: string): string {
@@ -60,23 +74,28 @@ function buildEntry(rootDir: string, entryPoint: string): string {
     entryPoints: [entryPoint],
     outfile,
     bundle: true,
-    platform: 'node',
-    target: 'node20',
-    format: 'cjs',
-    external: ['electron', 'blessed', 'esbuild', 'typescript'],
+    platform: "node",
+    target: "node20",
+    format: "cjs",
+    external: ["electron", "blessed", "esbuild", "typescript"],
     sourcemap: false,
     minify: false,
-    legalComments: 'none',
-    logLevel: 'warning',
+    legalComments: "none",
+    logLevel: "warning",
   });
 
   return outfile;
 }
 
-function runBuiltEntry(rootDir: string, entryPoint: string, outfile: string, args: string[]): number {
+function runBuiltEntry(
+  rootDir: string,
+  entryPoint: string,
+  outfile: string,
+  args: string[],
+): number {
   const result = spawnSync(process.execPath, [outfile, ...args], {
     cwd: rootDir,
-    stdio: 'inherit',
+    stdio: "inherit",
     shell: false,
     env: {
       ...process.env,
@@ -86,14 +105,18 @@ function runBuiltEntry(rootDir: string, entryPoint: string, outfile: string, arg
   });
 
   if (result.error) {
-    console.error(`[run-typescript-script] failed to start ${path.relative(rootDir, entryPoint)}: ${result.error.message}`);
+    console.error(
+      `[run-typescript-script] failed to start ${path.relative(rootDir, entryPoint)}: ${result.error.message}`,
+    );
     return 1;
   }
 
-  if (typeof result.status === 'number') return result.status;
+  if (typeof result.status === "number") return result.status;
 
   if (result.signal) {
-    console.error(`[run-typescript-script] ${path.relative(rootDir, entryPoint)} terminated by ${result.signal}`);
+    console.error(
+      `[run-typescript-script] ${path.relative(rootDir, entryPoint)} terminated by ${result.signal}`,
+    );
     return 1;
   }
 
@@ -112,7 +135,9 @@ if (require.main === module) {
   try {
     process.exit(main());
   } catch (error) {
-    console.error(`[run-typescript-script] ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `[run-typescript-script] ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exit(1);
   }
 }

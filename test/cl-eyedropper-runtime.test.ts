@@ -1,15 +1,16 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const Module = require('node:module');
-const path = require('node:path');
-const test = require('node:test');
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const Module = require("node:module");
+const path = require("node:path");
+const test = require("node:test");
 
-const { loadRuntimeModule } = require('./helpers/runtime-module');
+const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..');
+const repoRoot =
+  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
 
 /**
  * @template T
@@ -17,10 +18,11 @@ const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..
  * @returns {T}
  */
 function withElectronMock(fn) {
-  const moduleLoader = /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ (Module);
+  const moduleLoader =
+    /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ Module;
   const originalLoad = moduleLoader._load;
   moduleLoader._load = function mockElectron(request, parent, isMain) {
-    if (request === 'electron') {
+    if (request === "electron") {
       return {
         ipcRenderer: {
           invoke() {
@@ -39,18 +41,19 @@ function withElectronMock(fn) {
 }
 
 function withFreshCustomFlowElectronMock(invoke, fn) {
-  const moduleLoader = /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ (Module);
+  const moduleLoader =
+    /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ Module;
   const originalLoad = moduleLoader._load;
   const runtimeFiles = [
-    'electron/preload/custom-eyedropper-flow.ts',
-    'electron/preload/cl-eyedropper/index.ts',
-    'electron/preload/cl-eyedropper/cl-eyedropper.ts',
+    "electron/preload/custom-eyedropper-flow.ts",
+    "electron/preload/cl-eyedropper/index.ts",
+    "electron/preload/cl-eyedropper/cl-eyedropper.ts",
   ];
   for (const file of runtimeFiles) {
     delete require.cache[require.resolve(path.join(repoRoot, file))];
   }
   moduleLoader._load = function mockElectron(request, parent, isMain) {
-    if (request === 'electron') {
+    if (request === "electron") {
       return { ipcRenderer: { invoke } };
     }
     return originalLoad.call(this, request, parent, isMain);
@@ -63,16 +66,16 @@ function withFreshCustomFlowElectronMock(invoke, fn) {
 }
 
 class FakeElement {
-  constructor(tagName = 'div') {
+  constructor(tagName = "div") {
     this.tagName = tagName.toUpperCase();
     this.children = [];
     this.parentNode = null;
     this.style = {};
     this.attributes = {};
-    this.className = '';
-    this.id = '';
-    this.textContent = '';
-    this.innerHTML = '';
+    this.className = "";
+    this.id = "";
+    this.textContent = "";
+    this.innerHTML = "";
     this.offsetWidth = 96;
     this.offsetHeight = 40;
     this.listeners = new Map();
@@ -80,7 +83,7 @@ class FakeElement {
 
   setAttribute(name, value) {
     this.attributes[name] = String(value);
-    if (name === 'id') this.id = String(value);
+    if (name === "id") this.id = String(value);
   }
 
   appendChild(child) {
@@ -124,7 +127,7 @@ class FakeElement {
 
 class FakeCanvas extends FakeElement {
   constructor(context, rect = { left: 10, top: 20, width: 100, height: 50 }) {
-    super('canvas');
+    super("canvas");
     this.width = 200;
     this.height = 100;
     this.context = context;
@@ -146,7 +149,7 @@ class FakeImage {
     this.naturalHeight = 100;
     this.onload = null;
     this.onerror = null;
-    this._src = '';
+    this._src = "";
   }
 
   set src(value) {
@@ -181,12 +184,12 @@ function createCustomFlowDom() {
       return { data: new Uint8ClampedArray([17, 34, 51, 255]) };
     },
   };
-  const body = new FakeElement('body');
+  const body = new FakeElement("body");
   const document = {
     body,
     documentElement: body,
     createElement(tagName) {
-      if (tagName === 'canvas') return new FakeCanvas(context);
+      if (tagName === "canvas") return new FakeCanvas(context);
       return new FakeElement(tagName);
     },
     getElementById(id) {
@@ -212,33 +215,50 @@ async function flushMicrotasks() {
   await Promise.resolve();
 }
 
-test('CL-EyeDropper runtime exports the only picker surface', () => {
-  const cl = loadRuntimeModule('preload/cl-eyedropper/index');
+test("CL-EyeDropper runtime exports the only picker surface", () => {
+  const cl = loadRuntimeModule("preload/cl-eyedropper/index");
 
-  assert.equal(typeof cl.CLEyeDropper, 'function');
-  assert.equal(typeof cl.installClEyeDropperScalingPatch, 'function');
-  assert.equal(typeof cl.removeClEyeDropperUi, 'function');
+  assert.equal(typeof cl.CLEyeDropper, "function");
+  assert.equal(typeof cl.installClEyeDropperScalingPatch, "function");
+  assert.equal(typeof cl.removeClEyeDropperUi, "function");
 });
 
-test('custom EyeDropper flow loads without the removed selector module', () => {
-  const selectorModule = ['eye', 'dropper-implementation'].join('');
-  const source = fs.readFileSync(path.join(repoRoot, 'electron/preload/custom-eyedropper-flow.ts'), 'utf8');
+test("custom EyeDropper flow loads without the removed selector module", () => {
+  const selectorModule = ["eye", "dropper-implementation"].join("");
+  const source = fs.readFileSync(
+    path.join(repoRoot, "electron/preload/custom-eyedropper-flow.ts"),
+    "utf8",
+  );
 
   assert.equal(source.includes(selectorModule), false);
-  assert.equal(typeof withElectronMock(() => loadRuntimeModule('preload/custom-eyedropper-flow')).createCustomEyeDropperFlow, 'function');
+  assert.equal(
+    typeof withElectronMock(() =>
+      loadRuntimeModule("preload/custom-eyedropper-flow"),
+    ).createCustomEyeDropperFlow,
+    "function",
+  );
 });
 
-test('custom EyeDropper flow keeps typed CL-EyeDropper open options', () => {
-  const source = fs.readFileSync(path.join(repoRoot, 'electron/preload/custom-eyedropper-flow.ts'), 'utf8');
+test("custom EyeDropper flow keeps typed CL-EyeDropper open options", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "electron/preload/custom-eyedropper-flow.ts"),
+    "utf8",
+  );
 
-  assert.match(source, /type EyeDropperOpenOptions = \{ signal\?: AbortSignal \}/);
-  assert.match(source, /function wrapOpenCall\(options: EyeDropperOpenOptions = \{\}\): Promise<EyeDropperResult>/);
-  assert.equal(source.includes('const signal: any'), false);
-  assert.equal(source.includes('typedResult: any'), false);
-  assert.equal(source.includes('as any).signal'), false);
+  assert.match(
+    source,
+    /type EyeDropperOpenOptions = \{ signal\?: AbortSignal \}/,
+  );
+  assert.match(
+    source,
+    /function\s+wrapOpenCall\(\s*options:\s*EyeDropperOpenOptions\s*=\s*\{\},?\s*\):\s*Promise<EyeDropperResult>/,
+  );
+  assert.equal(source.includes("const signal: any"), false);
+  assert.equal(source.includes("typedResult: any"), false);
+  assert.equal(source.includes("as any).signal"), false);
 });
 
-test('custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and cleans up', async () => {
+test("custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and cleans up", async () => {
   const dom = createCustomFlowDom();
   const previousDocument = globalThis.document;
   const previousWindow = globalThis.window;
@@ -247,20 +267,29 @@ test('custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and 
   const previousLocation = globalThis.location;
   const previousRequestAnimationFrame = globalThis.requestAnimationFrame;
 
-  /** @type {any} */ (globalThis).document = dom.document;
-  /** @type {any} */ (globalThis).window = dom.window;
-  /** @type {any} */ (globalThis).HTMLCanvasElement = FakeCanvas;
-  /** @type {any} */ (globalThis).Image = FakeImage;
-  /** @type {any} */ (globalThis).location = { href: 'https://www.canva.com/design/test' };
-  /** @type {any} */ (globalThis).requestAnimationFrame = (callback) => {
+  /** @type {any} */ globalThis.document = dom.document;
+  /** @type {any} */ globalThis.window = dom.window;
+  /** @type {any} */ globalThis.HTMLCanvasElement = FakeCanvas;
+  /** @type {any} */ globalThis.Image = FakeImage;
+  /** @type {any} */ globalThis.location = {
+    href: "https://www.canva.com/design/test",
+  };
+  /** @type {any} */ globalThis.requestAnimationFrame = (callback) => {
     callback(0);
     return 1;
   };
 
   try {
     const custom = withFreshCustomFlowElectronMock(
-      () => Promise.resolve({ dataUrl: 'data:image/png;base64,test', width: 200, height: 100, cssWidth: 100, cssHeight: 50 }),
-      () => loadRuntimeModule('preload/custom-eyedropper-flow')
+      () =>
+        Promise.resolve({
+          dataUrl: "data:image/png;base64,test",
+          width: 200,
+          height: 100,
+          cssWidth: 100,
+          cssHeight: 50,
+        }),
+      () => loadRuntimeModule("preload/custom-eyedropper-flow"),
     );
     const flow = custom.createCustomEyeDropperFlow({
       debugLog() {
@@ -273,52 +302,59 @@ test('custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and 
     await flushMicrotasks();
 
     assert.equal(dom.body.children.length, 2);
-    const snapshotHost = dom.body.children.find((child) => child.attributes['data-canva-eyedropper-host'] === 'true');
+    const snapshotHost = dom.body.children.find(
+      (child) => child.attributes["data-canva-eyedropper-host"] === "true",
+    );
     assert.ok(snapshotHost);
-    assert.equal(snapshotHost.attributes['data-canva-eyedropper-host'], 'true');
+    assert.equal(snapshotHost.attributes["data-canva-eyedropper-host"], "true");
     const snapshotCanvas = snapshotHost.children[0];
     assert.equal(snapshotCanvas.width, 200);
     assert.equal(snapshotCanvas.height, 100);
 
-    snapshotCanvas.dispatch('mouseenter');
-    snapshotCanvas.dispatch('mousemove', { clientX: 60, clientY: 45 });
-    snapshotCanvas.dispatch('click', { clientX: 60, clientY: 45 });
+    snapshotCanvas.dispatch("mouseenter");
+    snapshotCanvas.dispatch("mousemove", { clientX: 60, clientY: 45 });
+    snapshotCanvas.dispatch("click", { clientX: 60, clientY: 45 });
 
-    assert.deepEqual(await resultPromise, { sRGBHex: '#112233' });
+    assert.deepEqual(await resultPromise, { sRGBHex: "#112233" });
     assert.deepEqual(dom.reads[0], { x: 100, y: 50, width: 1, height: 1 });
     assert.equal(dom.body.children.length, 0);
     assert.equal(snapshotCanvas.listeners.size, 0);
     assert.equal(dom.windowListeners.size, 0);
   } finally {
-    /** @type {any} */ (globalThis).document = previousDocument;
-    /** @type {any} */ (globalThis).window = previousWindow;
-    /** @type {any} */ (globalThis).HTMLCanvasElement = previousHtmlCanvasElement;
-    /** @type {any} */ (globalThis).Image = previousImage;
-    /** @type {any} */ (globalThis).location = previousLocation;
-    /** @type {any} */ (globalThis).requestAnimationFrame = previousRequestAnimationFrame;
+    /** @type {any} */ globalThis.document = previousDocument;
+    /** @type {any} */ globalThis.window = previousWindow;
+    /** @type {any} */ globalThis.HTMLCanvasElement = previousHtmlCanvasElement;
+    /** @type {any} */ globalThis.Image = previousImage;
+    /** @type {any} */ globalThis.location = previousLocation;
+    /** @type {any} */ globalThis.requestAnimationFrame =
+      previousRequestAnimationFrame;
   }
 });
 
-test('source preload modules do not reference removed picker tokens', () => {
+test("source preload modules do not reference removed picker tokens", () => {
   const sourceFiles = [
-    'electron/preload/custom-eyedropper-flow.ts',
-    'electron/preload/native-eyedropper-wrapper.ts',
-    'electron/preload/canva.ts',
+    "electron/preload/custom-eyedropper-flow.ts",
+    "electron/preload/native-eyedropper-wrapper.ts",
+    "electron/preload/canva.ts",
   ];
 
   const removedTokens = [
-    ['ltcode', 'eyedropper'].join('-'),
-    ['LTCode', 'EyeDropper'].join(''),
-    ['install', 'Ltcode', 'ScalingPatch'].join(''),
-    ['remove', 'Ltcode', 'Ui'].join(''),
-    ['CANVA', 'EYEDROPPER', 'IMPL'].join('_'),
-    ['--canva', 'eyedropper', 'impl'].join('-'),
+    ["ltcode", "eyedropper"].join("-"),
+    ["LTCode", "EyeDropper"].join(""),
+    ["install", "Ltcode", "ScalingPatch"].join(""),
+    ["remove", "Ltcode", "Ui"].join(""),
+    ["CANVA", "EYEDROPPER", "IMPL"].join("_"),
+    ["--canva", "eyedropper", "impl"].join("-"),
   ];
 
   for (const file of sourceFiles) {
-    const source = fs.readFileSync(path.join(repoRoot, file), 'utf8');
+    const source = fs.readFileSync(path.join(repoRoot, file), "utf8");
     for (const token of removedTokens) {
-      assert.equal(source.includes(token), false, `${token} should not appear in ${file}`);
+      assert.equal(
+        source.includes(token),
+        false,
+        `${token} should not appear in ${file}`,
+      );
     }
   }
 });

@@ -1,14 +1,14 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
 // @ts-check
 
-const assert = require('node:assert/strict');
-const test = require('node:test');
+const assert = require("node:assert/strict");
+const test = require("node:test");
 
-const { loadRuntimeModule } = require('./helpers/runtime-module');
+const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const { createTabHelpers } = loadRuntimeModule('main/tabs');
+const { createTabHelpers } = loadRuntimeModule("main/tabs");
 
 /**
  * @param {number} id
@@ -22,7 +22,7 @@ function createView(id) {
       id,
       focused: false,
       destroyed: false,
-      url: 'https://www.canva.com/',
+      url: "https://www.canva.com/",
       getURL() {
         return this.url;
       },
@@ -59,7 +59,7 @@ function createHelpers() {
     activeTabId: null,
   };
   const mainWindow = {
-    title: '',
+    title: "",
     contentView: {
       /** @type {unknown[]} */
       children: [],
@@ -83,7 +83,7 @@ function createHelpers() {
   };
   const toolbarView = createView(100);
   const helpers = createTabHelpers({
-    appName: 'Canva Linux',
+    appName: "Canva Linux",
     broadcastTabsState() {},
     createHomeTab() {},
     debugLog() {
@@ -93,7 +93,7 @@ function createHelpers() {
       void fn;
     },
     getHomeUrl() {
-      return 'https://www.canva.com/';
+      return "https://www.canva.com/";
     },
     mainWindowRef() {
       return mainWindow;
@@ -112,23 +112,23 @@ function createHelpers() {
   return { helpers, mainWindow, state, toolbarView };
 }
 
-test('toolbarState orders tabs and marks home tab as non-closable', () => {
+test("toolbarState orders tabs and marks home tab as non-closable", () => {
   const { helpers, state } = createHelpers();
   state.activeTabId = 2;
   state.tabs.set(2, {
     id: 2,
     createdAt: 20,
-    title: 'Design',
-    url: 'https://www.canva.com/design',
-    favicon: 'icon.png',
+    title: "Design",
+    url: "https://www.canva.com/design",
+    favicon: "icon.png",
     isHome: false,
     view: createView(2),
   });
   state.tabs.set(1, {
     id: 1,
     createdAt: 10,
-    title: 'Home',
-    url: 'https://www.canva.com/',
+    title: "Home",
+    url: "https://www.canva.com/",
     favicon: null,
     isHome: true,
     view: createView(1),
@@ -137,37 +137,49 @@ test('toolbarState orders tabs and marks home tab as non-closable', () => {
   assert.deepEqual(helpers.toolbarState(), {
     activeTabId: 2,
     tabs: [
-      { id: 1, title: 'Home', url: 'https://www.canva.com/', favicon: null, canClose: false },
-      { id: 2, title: 'Design', url: 'https://www.canva.com/design', favicon: 'icon.png', canClose: true },
+      {
+        id: 1,
+        title: "Home",
+        url: "https://www.canva.com/",
+        favicon: null,
+        canClose: false,
+      },
+      {
+        id: 2,
+        title: "Design",
+        url: "https://www.canva.com/design",
+        favicon: "icon.png",
+        canClose: true,
+      },
     ],
-    theme: 'dark',
+    theme: "dark",
   });
 });
 
-test('updateWindowTitle reflects the active tab', () => {
+test("updateWindowTitle reflects the active tab", () => {
   const { helpers, mainWindow, state } = createHelpers();
   state.activeTabId = 1;
   state.tabs.set(1, {
     id: 1,
     createdAt: 1,
-    title: 'Design',
-    url: 'https://www.canva.com/design',
+    title: "Design",
+    url: "https://www.canva.com/design",
     favicon: null,
     isHome: false,
     view: createView(1),
   });
 
   helpers.updateWindowTitle();
-  assert.equal(mainWindow.title, 'Design - Canva Linux');
+  assert.equal(mainWindow.title, "Design - Canva Linux");
 });
 
-test('findTabByWebContents resolves by webContents id', () => {
+test("findTabByWebContents resolves by webContents id", () => {
   const { helpers, state } = createHelpers();
   state.tabs.set(1, {
     id: 1,
     createdAt: 1,
-    title: 'Design',
-    url: 'https://www.canva.com/design',
+    title: "Design",
+    url: "https://www.canva.com/design",
     favicon: null,
     isHome: false,
     view: createView(55),

@@ -1,8 +1,15 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { findProjectRoot } from './action-registry';
+import fs from "node:fs";
+import path from "node:path";
+import { findProjectRoot } from "./action-registry";
 
-const skipDirs = new Set(['.git', 'node_modules', 'dist', 'repo', '.flatpak-builder', '.build']);
+const skipDirs = new Set([
+  ".git",
+  "node_modules",
+  "dist",
+  "repo",
+  ".flatpak-builder",
+  ".build",
+]);
 const markdownFiles: string[] = [];
 
 function walk(dir: string) {
@@ -17,7 +24,7 @@ function walk(dir: string) {
       continue;
     }
 
-    if (entry.isFile() && entry.name.endsWith('.md')) {
+    if (entry.isFile() && entry.name.endsWith(".md")) {
       markdownFiles.push(fullPath);
     }
   }
@@ -35,24 +42,24 @@ function parseMarkdownInlineLinks(text: string) {
   const links: string[] = [];
 
   for (let i = 0; i < text.length; i += 1) {
-    if (text[i] !== ']') {
+    if (text[i] !== "]") {
       continue;
     }
 
     let cursor = i + 1;
-    if (text[cursor] !== '(') {
+    if (text[cursor] !== "(") {
       continue;
     }
 
     cursor = skipWhitespace(text, cursor + 1);
 
-    let destination = '';
+    let destination = "";
 
-    if (text[cursor] === '<') {
+    if (text[cursor] === "<") {
       cursor += 1;
       const start = cursor;
 
-      while (cursor < text.length && text[cursor] !== '>') {
+      while (cursor < text.length && text[cursor] !== ">") {
         cursor += 1;
       }
 
@@ -76,19 +83,19 @@ function parseMarkdownInlineLinks(text: string) {
           continue;
         }
 
-        if (char === '\\') {
+        if (char === "\\") {
           escaped = true;
           cursor += 1;
           continue;
         }
 
-        if (char === '(') {
+        if (char === "(") {
           parenDepth += 1;
           cursor += 1;
           continue;
         }
 
-        if (char === ')') {
+        if (char === ")") {
           if (parenDepth === 0) {
             break;
           }
@@ -114,9 +121,9 @@ function parseMarkdownInlineLinks(text: string) {
 
     cursor = skipWhitespace(text, cursor);
 
-    if (text[cursor] === '"' || text[cursor] === "'" || text[cursor] === '(') {
+    if (text[cursor] === '"' || text[cursor] === "'" || text[cursor] === "(") {
       const opener = text[cursor];
-      const closer = opener === '(' ? ')' : opener;
+      const closer = opener === "(" ? ")" : opener;
       cursor += 1;
 
       let escaped = false;
@@ -129,7 +136,7 @@ function parseMarkdownInlineLinks(text: string) {
           continue;
         }
 
-        if (char === '\\') {
+        if (char === "\\") {
           escaped = true;
           cursor += 1;
           continue;
@@ -146,7 +153,7 @@ function parseMarkdownInlineLinks(text: string) {
       cursor = skipWhitespace(text, cursor);
     }
 
-    if (text[cursor] !== ')') {
+    if (text[cursor] !== ")") {
       continue;
     }
 
@@ -161,23 +168,30 @@ export function main(): number {
   const repoRoot = findProjectRoot();
   walk(repoRoot);
 
-  const missingLinks: Array<{ file: string; link: string; target: string }> = [];
+  const missingLinks: Array<{ file: string; link: string; target: string }> =
+    [];
 
   for (const markdownFile of markdownFiles) {
-    const content = fs.readFileSync(markdownFile, 'utf8');
+    const content = fs.readFileSync(markdownFile, "utf8");
     const links = parseMarkdownInlineLinks(content);
 
     for (const rawLink of links) {
-      if (!rawLink || rawLink.startsWith('#') || rawLink.startsWith('http://') || rawLink.startsWith('https://') || rawLink.startsWith('mailto:')) {
+      if (
+        !rawLink ||
+        rawLink.startsWith("#") ||
+        rawLink.startsWith("http://") ||
+        rawLink.startsWith("https://") ||
+        rawLink.startsWith("mailto:")
+      ) {
         continue;
       }
 
-      const linkPath = rawLink.split('#', 1)[0].trim();
+      const linkPath = rawLink.split("#", 1)[0].trim();
       if (!linkPath) {
         continue;
       }
 
-      const resolvedPath = linkPath.startsWith('/')
+      const resolvedPath = linkPath.startsWith("/")
         ? path.resolve(repoRoot, linkPath.slice(1))
         : path.resolve(path.dirname(markdownFile), linkPath);
 
@@ -192,7 +206,9 @@ export function main(): number {
   }
 
   if (missingLinks.length === 0) {
-    console.log(`[doc-links] OK: checked ${markdownFiles.length} markdown files`);
+    console.log(
+      `[doc-links] OK: checked ${markdownFiles.length} markdown files`,
+    );
     return 0;
   }
 
@@ -203,11 +219,16 @@ export function main(): number {
   return 1;
 }
 
-if (require.main === module && /check-doc-links\.js$/.test(process.argv[1] || '')) {
+if (
+  require.main === module &&
+  /check-doc-links\.js$/.test(process.argv[1] || "")
+) {
   try {
     process.exit(main());
   } catch (error) {
-    console.error(`[doc-links] ${error instanceof Error ? error.message : String(error)}`);
+    console.error(
+      `[doc-links] ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exit(1);
   }
 }

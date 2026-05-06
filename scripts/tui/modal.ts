@@ -1,5 +1,5 @@
-import blessed from 'blessed';
-import { tuiTheme } from './theme';
+import blessed from "blessed";
+import { tuiTheme } from "./theme";
 
 export type ConfirmOptions = {
   title: string;
@@ -9,35 +9,56 @@ export type ConfirmOptions = {
   dangerous?: boolean;
 };
 
-function createModalShell(screen: blessed.Widgets.Screen, title: string, dangerous = false) {
+function createModalShell(
+  screen: blessed.Widgets.Screen,
+  title: string,
+  dangerous = false,
+) {
   const overlay = blessed.box({
     parent: screen,
     top: 0,
     left: 0,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     style: { bg: tuiTheme.colors.background, transparent: true },
   });
 
   const modal = blessed.box({
     parent: overlay,
-    top: 'center',
-    left: 'center',
-    width: '70%',
+    top: "center",
+    left: "center",
+    width: "70%",
     height: 11,
-    border: 'line',
+    border: "line",
     tags: true,
-    label: dangerous ? `{${tuiTheme.colors.error}-fg}${title}{/${tuiTheme.colors.error}-fg}` : `{${tuiTheme.colors.lightBlue}-fg}${title}{/${tuiTheme.colors.lightBlue}-fg}`,
-    style: { fg: tuiTheme.modal.text, bg: tuiTheme.modal.background, border: { fg: dangerous ? tuiTheme.modal.dangerousBorder : tuiTheme.modal.normalBorder } },
+    label: dangerous
+      ? `{${tuiTheme.colors.error}-fg}${title}{/${tuiTheme.colors.error}-fg}`
+      : `{${tuiTheme.colors.lightBlue}-fg}${title}{/${tuiTheme.colors.lightBlue}-fg}`,
+    style: {
+      fg: tuiTheme.modal.text,
+      bg: tuiTheme.modal.background,
+      border: {
+        fg: dangerous
+          ? tuiTheme.modal.dangerousBorder
+          : tuiTheme.modal.normalBorder,
+      },
+    },
   });
 
   return { overlay, modal };
 }
 
-export function confirmDialog(screen: blessed.Widgets.Screen, options: ConfirmOptions): Promise<boolean> {
+export function confirmDialog(
+  screen: blessed.Widgets.Screen,
+  options: ConfirmOptions,
+): Promise<boolean> {
   return new Promise((resolve) => {
     const previousFocus = screen.focused;
-    const { overlay, modal } = createModalShell(screen, options.title, options.dangerous);
+    const { overlay, modal } = createModalShell(
+      screen,
+      options.title,
+      options.dangerous,
+    );
 
     const message = blessed.box({
       parent: modal,
@@ -56,7 +77,7 @@ export function confirmDialog(screen: blessed.Widgets.Screen, options: ConfirmOp
       right: 2,
       height: 1,
       tags: true,
-      content: `{${tuiTheme.colors.lightBlue}-fg}[y/Enter]{/${tuiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? 'Confirm'}    {${tuiTheme.colors.lightBlue}-fg}[Esc/n]{/${tuiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? 'Cancel'}`,
+      content: `{${tuiTheme.colors.lightBlue}-fg}[y/Enter]{/${tuiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? "Confirm"}    {${tuiTheme.colors.lightBlue}-fg}[Esc/n]{/${tuiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? "Cancel"}`,
     });
 
     const close = (confirmed: boolean) => {
@@ -64,43 +85,90 @@ export function confirmDialog(screen: blessed.Widgets.Screen, options: ConfirmOp
       footer.destroy();
       modal.destroy();
       overlay.destroy();
-      if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+      if (previousFocus && typeof previousFocus.focus === "function")
+        previousFocus.focus();
       screen.render();
       resolve(confirmed);
     };
 
-    overlay.key(['enter', 'y'], () => close(true));
-    overlay.key(['escape', 'n'], () => close(false));
-    overlay.on('click', () => overlay.focus());
-    modal.on('click', () => overlay.focus());
+    overlay.key(["enter", "y"], () => close(true));
+    overlay.key(["escape", "n"], () => close(false));
+    overlay.on("click", () => overlay.focus());
+    modal.on("click", () => overlay.focus());
 
     overlay.focus();
     screen.render();
   });
 }
 
-export async function messageDialog(screen: blessed.Widgets.Screen, title: string, message: string): Promise<void> {
+export async function messageDialog(
+  screen: blessed.Widgets.Screen,
+  title: string,
+  message: string,
+): Promise<void> {
   await confirmDialog(screen, {
     title,
     message,
-    confirmLabel: 'OK',
-    cancelLabel: 'Close',
+    confirmLabel: "OK",
+    cancelLabel: "Close",
   });
 }
 
-
-export function inputDialog(screen: blessed.Widgets.Screen, title: string, prompt: string, timeoutMs = 30000): Promise<string | null> {
+export function inputDialog(
+  screen: blessed.Widgets.Screen,
+  title: string,
+  prompt: string,
+  timeoutMs = 30000,
+): Promise<string | null> {
   return new Promise((resolve) => {
     const previousFocus = screen.focused;
     const { overlay, modal } = createModalShell(screen, title, false);
-    const label = blessed.box({ parent: modal, top: 1, left: 2, right: 2, height: 2, content: prompt });
-    const input = blessed.textbox({ parent: modal, top: 4, left: 2, right: 2, height: 3, border: 'line', inputOnFocus: true, censor: true });
-    const footer = blessed.box({ parent: modal, bottom: 1, left: 2, right: 2, height: 1, tags: true, content: `{${tuiTheme.colors.lightBlue}-fg}[Enter]{/${tuiTheme.colors.lightBlue}-fg} Submit  {${tuiTheme.colors.lightBlue}-fg}[Esc]{/${tuiTheme.colors.lightBlue}-fg} Cancel` });
+    const label = blessed.box({
+      parent: modal,
+      top: 1,
+      left: 2,
+      right: 2,
+      height: 2,
+      content: prompt,
+    });
+    const input = blessed.textbox({
+      parent: modal,
+      top: 4,
+      left: 2,
+      right: 2,
+      height: 3,
+      border: "line",
+      inputOnFocus: true,
+      censor: true,
+    });
+    const footer = blessed.box({
+      parent: modal,
+      bottom: 1,
+      left: 2,
+      right: 2,
+      height: 1,
+      tags: true,
+      content: `{${tuiTheme.colors.lightBlue}-fg}[Enter]{/${tuiTheme.colors.lightBlue}-fg} Submit  {${tuiTheme.colors.lightBlue}-fg}[Esc]{/${tuiTheme.colors.lightBlue}-fg} Cancel`,
+    });
     let timer: NodeJS.Timeout | null = setTimeout(() => close(null), timeoutMs);
-    const close = (value: string | null) => { if (timer) { clearTimeout(timer); timer = null; } label.destroy(); input.destroy(); footer.destroy(); modal.destroy(); overlay.destroy(); if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus(); screen.render(); resolve(value); };
-    overlay.key(['escape'], () => close(null));
-    input.key(['enter'], () => input.submit());
-    input.on('submit', (value) => close(String(value ?? '')));
+    const close = (value: string | null) => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      label.destroy();
+      input.destroy();
+      footer.destroy();
+      modal.destroy();
+      overlay.destroy();
+      if (previousFocus && typeof previousFocus.focus === "function")
+        previousFocus.focus();
+      screen.render();
+      resolve(value);
+    };
+    overlay.key(["escape"], () => close(null));
+    input.key(["enter"], () => input.submit());
+    input.on("submit", (value) => close(String(value ?? "")));
     overlay.focus();
     input.focus();
     input.readInput();

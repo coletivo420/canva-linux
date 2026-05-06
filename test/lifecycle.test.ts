@@ -1,23 +1,23 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
-const assert = require('node:assert/strict');
-const test = require('node:test');
+const assert = require("node:assert/strict");
+const test = require("node:test");
 
-const { loadRuntimeModule } = require('./helpers/runtime-module');
+const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const { registerAppLifecycle } = loadRuntimeModule('main/lifecycle');
+const { registerAppLifecycle } = loadRuntimeModule("main/lifecycle");
 
 function createLifecycleOptions({ lockResult = true } = {}) {
   const listeners = new Map();
   const calls = [];
   const app = {
     requestSingleInstanceLock() {
-      calls.push('requestSingleInstanceLock');
+      calls.push("requestSingleInstanceLock");
       return lockResult;
     },
     whenReady() {
-      calls.push('whenReady');
+      calls.push("whenReady");
       return new Promise(() => {});
     },
     on(event, listener) {
@@ -25,7 +25,7 @@ function createLifecycleOptions({ lockResult = true } = {}) {
       listeners.set(event, listener);
     },
     quit() {
-      calls.push('quit');
+      calls.push("quit");
     },
   };
 
@@ -44,7 +44,7 @@ function createLifecycleOptions({ lockResult = true } = {}) {
       },
       centralLogger: {
         initLogFile() {
-          return '/tmp/current.log';
+          return "/tmp/current.log";
         },
         logStatus() {},
       },
@@ -52,13 +52,13 @@ function createLifecycleOptions({ lockResult = true } = {}) {
       createShellWindow() {},
       createToolbarView() {},
       debugLog(category, ...args) {
-        calls.push(`debug:${category}:${args.join(':')}`);
+        calls.push(`debug:${category}:${args.join(":")}`);
         return true;
       },
       debugLevel: 0,
       flushSession: async () => {},
       focusMainWindow() {
-        calls.push('focusMainWindow');
+        calls.push("focusMainWindow");
       },
       getCanvaSession() {
         return {};
@@ -71,7 +71,7 @@ function createLifecycleOptions({ lockResult = true } = {}) {
         },
       },
       onThemeUpdated() {},
-      partition: 'persist:canva',
+      partition: "persist:canva",
       path: {},
       shouldGrantRemotePermission() {
         return false;
@@ -83,31 +83,35 @@ function createLifecycleOptions({ lockResult = true } = {}) {
   };
 }
 
-test('registerAppLifecycle quits immediately when single instance lock is unavailable', () => {
-  const { calls, listeners, options } = createLifecycleOptions({ lockResult: false });
+test("registerAppLifecycle quits immediately when single instance lock is unavailable", () => {
+  const { calls, listeners, options } = createLifecycleOptions({
+    lockResult: false,
+  });
 
   registerAppLifecycle(options);
 
   assert.deepEqual(calls, [
-    'requestSingleInstanceLock',
-    'debug:app:single-instance-lock-denied',
-    'quit',
+    "requestSingleInstanceLock",
+    "debug:app:single-instance-lock-denied",
+    "quit",
   ]);
-  assert.equal(listeners.has('second-instance'), false);
-  assert.equal(listeners.has('window-all-closed'), false);
+  assert.equal(listeners.has("second-instance"), false);
+  assert.equal(listeners.has("window-all-closed"), false);
 });
 
-test('registerAppLifecycle focuses the existing main window on second-instance', () => {
-  const { calls, listeners, options } = createLifecycleOptions({ lockResult: true });
+test("registerAppLifecycle focuses the existing main window on second-instance", () => {
+  const { calls, listeners, options } = createLifecycleOptions({
+    lockResult: true,
+  });
 
   registerAppLifecycle(options);
-  listeners.get('second-instance')();
+  listeners.get("second-instance")();
 
-  assert.equal(calls.includes('requestSingleInstanceLock'), true);
-  assert.equal(calls.includes('whenReady'), true);
-  assert.equal(listeners.has('window-all-closed'), true);
+  assert.equal(calls.includes("requestSingleInstanceLock"), true);
+  assert.equal(calls.includes("whenReady"), true);
+  assert.equal(listeners.has("window-all-closed"), true);
   assert.deepEqual(calls.slice(-2), [
-    'debug:app:second-instance',
-    'focusMainWindow',
+    "debug:app:second-instance",
+    "focusMainWindow",
   ]);
 });
