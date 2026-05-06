@@ -3,6 +3,7 @@
 ## [0.1.4.11-dev.56] - 2026-05-05
 
 ### Added
+- Added a TypeScript-first script guardrail check that blocks real JavaScript logic under `scripts/`, validates core wrapper coverage, and keeps TypeScript migration docs current.
 - Added a TypeScript wrapper contract check covering build-runtime, preload bundling, runtime asset copying, runtime cleanup, electron-builder beforeBuild, and TUI startup wrappers.
 - Added thin compatibility wrappers for AI-guardrails, doc-link, dependency-policy, and runtime-build checks so `scripts/*.js` entrypoints consistently delegate to `scripts/core/*.ts`.
 
@@ -13,6 +14,8 @@
 - Hardened sudo-common with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
 
 ### Changed
+- Normalized every `scripts/check-*.js` entrypoint to a minimal `runCore(...)` compatibility wrapper and tightened the TypeScript-first guardrail to enforce that shape.
+- Documented explicit TypeScript-first Node.js guardrails for future script work.
 - Documented the build/TUI wrapper-to-TypeScript implementation map and exposed `npm run check:typescript-wrappers`.
 - Pointed validation package scripts at thin compatibility wrappers instead of inline `node -e` loader snippets.
 - Removed the legacy overview-status fallback export from `scripts/core-wrapper.js` so missing core builds fail clearly or trigger the standard auto-build path.

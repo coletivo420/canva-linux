@@ -27,7 +27,8 @@ Project validations, contracts, and registries are implemented in TypeScript und
 
 - These are compiled using `esbuild` to `.build/scripts/core/`.
 - `scripts/core-wrapper.js` provides a thin loader that triggers an automatic build if artifacts are missing and fails clearly when the build cannot be produced.
-- `scripts/*.js` compatibility entrypoints for core validations must stay thin: load `scripts/core/*.ts` output through `loadCore(...)`, call `main()`, and avoid duplicating validation or status logic.
+- `scripts/*.js` compatibility entrypoints for core validations must stay thin: delegate to `scripts/core/*.ts` output through `runCore(...)`, call `main()` in the compiled TypeScript core, and avoid duplicating validation or status logic.
+- `check-typescript-first.ts` enforces TypeScript-first script guardrails, minimal `scripts/check-*.js` wrappers, package-script core entry coverage, and documentation coverage for migrated core entries.
 - All core validations are integrated into `npm run check:scripts-core`.
 - Build/TUI wrappers (`build-runtime`, `build-preload-bundle`, `copy-runtime-assets`, `clean-runtime-build`, `electron-builder-before-build`, and `run-tui`) are enforced by `check-typescript-wrapper-contract.ts` so the `.js` files stay as compatibility entrypoints and the `.ts` files remain the real implementations.
 
@@ -48,6 +49,7 @@ Migrated scripts:
 - `check-dependency-policy.ts`
 - `check-runtime-build.ts`
 - `check-typescript-wrapper-contract.ts`
+- `check-typescript-first.ts`
 - ... and other core contracts.
 
 TypeScript-backed script wrappers:
@@ -67,10 +69,14 @@ npm run build:runtime
 npm run build:scripts-core
 npm run check:scripts-core
 npm run check:typescript-wrappers
+npm run check:typescript-first
 ```
 
 ## Rules
 
+- New Node.js logic must be written in TypeScript by default.
+- Keep `scripts/*.js` files as thin compatibility wrappers unless they are accepted test/config/bootstrap helpers.
+- Do not duplicate TypeScript core logic in JavaScript fallbacks.
 - Do not edit `.build/` manually.
 - Do not edit generated `electron/preload/canva.bundle.js` manually.
 - Keep runtime behavior stable during type-only changes.
@@ -95,6 +101,7 @@ return new Promise((resolve, reject) => {
 
 ## Future cleanup
 
+- Flathub/npm source generation remains a future TypeScript migration item before it becomes release/submission-critical.
 - Remove stale `@ts-nocheck` directives where possible.
 - Improve type coverage in preload modules.
 - Consider ESM only as a separate future architecture decision.
