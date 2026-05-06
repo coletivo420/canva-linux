@@ -26,9 +26,7 @@ Direct actions are resolved through the shared Action Registry (`scripts/actions
 | --- | --- |
 | `--install-native` | Run Native Install. |
 | `--install-flatpak` | Build and install Flatpak locally. |
-| `--install` | Compatibility alias for `--install-flatpak`. |
 | `--bundle-flatpak` | Create distributable `.flatpak` package. |
-| `--bundle` | Compatibility alias for `--bundle-flatpak`. |
 | `--bundle-appimage` | Create experimental AppImage package. |
 | `--prepare-aur` | Planned for `0.1.4.12-dev.1`. |
 | `--bundle-deb` | Planned after AUR stabilization. |

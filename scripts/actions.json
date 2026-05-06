@@ -50,8 +50,7 @@
       "scripts/install-flatpak-local.sh"
     ],
     "cli": [
-      "--install-flatpak",
-      "--install"
+      "--install-flatpak"
     ],
     "longRunning": true,
     "description": "Build and install Canva Linux locally as a Flatpak.",
@@ -92,8 +91,7 @@
       "scripts/build-flatpak-bundle.sh"
     ],
     "cli": [
-      "--bundle-flatpak",
-      "--bundle"
+      "--bundle-flatpak"
     ],
     "longRunning": true,
     "description": "Create a distributable .flatpak package."

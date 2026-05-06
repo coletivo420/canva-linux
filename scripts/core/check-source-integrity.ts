@@ -44,6 +44,11 @@ const criticalMultilineFiles = [
 
 const maxDocumentationLineLength = 2000;
 
+const forbiddenCompatibilityCliAliases = [
+  '--install',
+  '--bundle',
+] as const;
+
 const skippedDirectories = new Set([
   '.build',
   '.flatpak-builder',
@@ -216,6 +221,49 @@ function validateShellFile(rootDir: string, relativePath: string, failures: stri
   }
 }
 
+function validateLauncherScriptShape(rootDir: string, failures: string[]): void {
+  const relativePath = 'canva-linux.sh';
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  if (lines[0] !== '#!/usr/bin/env bash') {
+    failures.push(`${relativePath}: shebang must be the first line by itself`);
+  }
+
+  if (lines[1] !== 'set -euo pipefail') {
+    failures.push(`${relativePath}: strict shell mode must be the second line by itself`);
+  }
+
+  if (lines.length < 100) {
+    failures.push(`${relativePath}: launcher appears collapsed; expected readable multiline shell content`);
+  }
+
+  if (!lines.some((line) => line.trim().startsWith('read -r -p "This action requires confirmation. Continue? [y/N] "'))) {
+    failures.push(`${relativePath}: confirmation prompt must remain inside the read command, not as collapsed shell text`);
+  }
+
+  for (const alias of forbiddenCompatibilityCliAliases) {
+    const escapedAlias = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const aliasPattern = new RegExp(`(^|[\\s|,\\[])["']?${escapedAlias}(?=["'\\s|,)\\]])`);
+    if (aliasPattern.test(content)) {
+      failures.push(`${relativePath}: removed compatibility alias ${alias} must not be accepted by the launcher`);
+    }
+  }
+}
+
+function validateRemovedCompatibilityAliases(rootDir: string, failures: string[]): void {
+  const actions = readJsonFile<Array<{ id?: string; cli?: string[] }>>(rootDir, 'scripts/actions.json', failures);
+  if (!actions) return;
+
+  for (const action of actions) {
+    for (const alias of action.cli ?? []) {
+      if ((forbiddenCompatibilityCliAliases as readonly string[]).includes(alias)) {
+        failures.push(`scripts/actions.json ${action.id ?? '<unknown>'}: removed compatibility alias ${alias} must not be registered`);
+      }
+    }
+  }
+}
+
 export function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
@@ -234,6 +282,8 @@ export function main(): number {
     if (!file.endsWith('.md')) validateCriticalTextShape(rootDir, file, failures);
   }
 
+  validateLauncherScriptShape(rootDir, failures);
+  validateRemovedCompatibilityAliases(rootDir, failures);
   validatePackageLockConsistency(rootDir, failures);
   validatePackageScripts(rootDir, failures);
 
