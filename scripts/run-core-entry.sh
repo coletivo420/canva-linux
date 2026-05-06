@@ -7,18 +7,20 @@ main() {
     exit 64
   fi
 
-  local entry="$1"
+  local ENTRY
+  ENTRY="$1"
   shift
 
-  local root_dir
-  root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  local ROOT_DIR
+  ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-  local target="${root_dir}/.build/scripts/core/${entry}.js"
-  if [[ ! -f "${target}" ]]; then
-    npm --prefix "${root_dir}" run build:scripts-core --silent
+  local TARGET
+  TARGET="${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
+  if [[ ! -f "${TARGET}" ]]; then
+    npm --prefix "${ROOT_DIR}" run build:scripts-core --silent
   fi
 
-  node "${target}" "$@"
+  node "${TARGET}" "$@"
 }
 
 main "$@"
