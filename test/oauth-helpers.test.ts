@@ -1,23 +1,25 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
 // @ts-check
 
-const assert = require('node:assert/strict');
-const test = require('node:test');
+const assert = require("node:assert/strict");
+const test = require("node:test");
 
-const { loadRuntimeModule } = require('./helpers/runtime-module');
+const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const {
-  createOAuthHelpers,
-  createOAuthPopupInitialState,
-} = loadRuntimeModule('main/oauth');
+const { createOAuthHelpers, createOAuthPopupInitialState } =
+  loadRuntimeModule("main/oauth");
 
 function fakeWindow() {
   return {
     webContents: {
-      getURL: () => 'about:blank',
-      getLastWebPreferences: () => ({ contextIsolation: true, nodeIntegration: false, sandbox: true }),
+      getURL: () => "about:blank",
+      getLastWebPreferences: () => ({
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+      }),
       on() {},
       once() {},
       setWindowOpenHandler() {},
@@ -37,14 +39,14 @@ function fakeWindow() {
   };
 }
 
-test('creates OAuth popup initial state for Canva auth opener', () => {
+test("creates OAuth popup initial state for Canva auth opener", () => {
   const entry = createOAuthPopupInitialState({
     popupId: 1,
     window: fakeWindow(),
-    startUrl: 'about:blank',
-    openerUrl: 'https://www.canva.com/login',
+    startUrl: "about:blank",
+    openerUrl: "https://www.canva.com/login",
     sourceWebContentsId: 10,
-    isCanvaAuthUrl: (/** @type {string} */ url) => url.includes('/login'),
+    isCanvaAuthUrl: (/** @type {string} */ url) => url.includes("/login"),
     isOAuthProviderUrl: () => false,
   });
 
@@ -53,20 +55,22 @@ test('creates OAuth popup initial state for Canva auth opener', () => {
   assert.equal(entry.sawExternalProvider, false);
   assert.equal(entry.sawAuthorizedCallback, false);
   assert.equal(entry.completionHandled, false);
-  assert.equal(entry.pendingCallbackUrl, '');
-  assert.equal(entry.closeReason, 'unknown');
+  assert.equal(entry.pendingCallbackUrl, "");
+  assert.equal(entry.closeReason, "unknown");
   assert.equal(entry.sourceWebContentsId, 10);
 });
 
-test('creates OAuth popup initial state for external provider', () => {
+test("creates OAuth popup initial state for external provider", () => {
   const entry = createOAuthPopupInitialState({
     popupId: 2,
     window: fakeWindow(),
-    startUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
-    openerUrl: 'https://www.canva.com/login',
+    startUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+    openerUrl: "https://www.canva.com/login",
     sourceWebContentsId: null,
-    isCanvaAuthUrl: (/** @type {string} */ url) => url.includes('canva.com/login'),
-    isOAuthProviderUrl: (/** @type {string} */ url) => url.includes('accounts.google.com'),
+    isCanvaAuthUrl: (/** @type {string} */ url) =>
+      url.includes("canva.com/login"),
+    isOAuthProviderUrl: (/** @type {string} */ url) =>
+      url.includes("accounts.google.com"),
   });
 
   assert.equal(entry.startedOnCanvaAuth, true);
@@ -74,15 +78,19 @@ test('creates OAuth popup initial state for external provider', () => {
   assert.equal(entry.sourceWebContentsId, null);
 });
 
-test('OAuth popup close handler prevents premature window close before callback', () => {
+test("OAuth popup close handler prevents premature window close before callback", () => {
   const authPopups = new Map();
   const windowListeners = new Map();
   const webContentsListeners = new Map();
   const window = {
     webContents: {
-      session: { partition: 'persist:canva' },
-      getURL: () => 'https://accounts.google.com/o/oauth2/v2/auth',
-      getLastWebPreferences: () => ({ contextIsolation: true, nodeIntegration: false, sandbox: true }),
+      session: { partition: "persist:canva" },
+      getURL: () => "https://accounts.google.com/o/oauth2/v2/auth",
+      getLastWebPreferences: () => ({
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: true,
+      }),
       on(event, listener) {
         webContentsListeners.set(event, listener);
       },
@@ -90,7 +98,7 @@ test('OAuth popup close handler prevents premature window close before callback'
         webContentsListeners.set(`once:${event}`, listener);
       },
       setWindowOpenHandler(listener) {
-        webContentsListeners.set('window-open-handler', listener);
+        webContentsListeners.set("window-open-handler", listener);
       },
       loadURL() {},
     },
@@ -111,14 +119,14 @@ test('OAuth popup close handler prevents premature window close before callback'
     },
   };
   const helpers = createOAuthHelpers({
-    appIconPath: '/tmp/icon.png',
-    appName: 'Canva Linux',
+    appIconPath: "/tmp/icon.png",
+    appName: "Canva Linux",
     authPopups,
     BrowserWindow: function FakeBrowserWindow() {
       return window;
     },
     classifyNavigationRequest() {
-      return { kind: 'blocked-external' };
+      return { kind: "blocked-external" };
     },
     debugLog() {
       return true;
@@ -127,7 +135,7 @@ test('OAuth popup close handler prevents premature window close before callback'
       return null;
     },
     extractHostname() {
-      return '';
+      return "";
     },
     flushSession: async () => {},
     getActiveTab() {
@@ -137,19 +145,19 @@ test('OAuth popup close handler prevents premature window close before callback'
       return window.webContents.session;
     },
     isBlankPopupUrl(url) {
-      return !url || url === 'about:blank' || url === 'about:srcdoc';
+      return !url || url === "about:blank" || url === "about:srcdoc";
     },
     isCanvaAuthUrl(url) {
-      return String(url).includes('canva.com/login');
+      return String(url).includes("canva.com/login");
     },
     isCanvaUrl(url) {
-      return String(url).includes('canva.com');
+      return String(url).includes("canva.com");
     },
     isOAuthProviderUrl(url) {
-      return String(url).includes('accounts.google.com');
+      return String(url).includes("accounts.google.com");
     },
     isSafeExternalUrl(url) {
-      return String(url).startsWith('https://');
+      return String(url).startsWith("https://");
     },
     mainWindowRef() {
       return null;
@@ -162,26 +170,30 @@ test('OAuth popup close handler prevents premature window close before callback'
       return {};
     },
     summarizeOauthEntry(entry) {
-      return entry ? `popup=${entry.id}` : 'none';
+      return entry ? `popup=${entry.id}` : "none";
     },
     windowLabel() {
-      return 'oauth-popup';
+      return "oauth-popup";
     },
   });
 
-  const entry = helpers.registerAuthPopupWindow(window, 'https://accounts.google.com/o/oauth2/v2/auth', {
-    openerUrl: 'https://www.canva.com/login',
-    sourceWebContentsId: 1,
-  });
+  const entry = helpers.registerAuthPopupWindow(
+    window,
+    "https://accounts.google.com/o/oauth2/v2/auth",
+    {
+      openerUrl: "https://www.canva.com/login",
+      sourceWebContentsId: 1,
+    },
+  );
   let prevented = false;
 
-  windowListeners.get('close')({
+  windowListeners.get("close")({
     preventDefault() {
       prevented = true;
     },
   });
 
   assert.equal(prevented, true);
-  assert.equal(entry.closeReason, 'closed-before-callback');
+  assert.equal(entry.closeReason, "closed-before-callback");
   assert.equal(authPopups.has(9), true);
 });

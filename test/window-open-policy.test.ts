@@ -1,14 +1,14 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
 // @ts-check
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
+const test = require("node:test");
+const assert = require("node:assert/strict");
 
-const { loadRuntimeModule } = require('./helpers/runtime-module');
+const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const { createWindowOpenPolicy } = loadRuntimeModule('main/window-open-policy');
+const { createWindowOpenPolicy } = loadRuntimeModule("main/window-open-policy");
 
 /**
  * @param {'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external'} kindToReturn
@@ -34,92 +34,93 @@ function createPolicyWithStub(kindToReturn) {
   };
 }
 
-test('maps oauth-popup into oauth category', () => {
-  const { classifyWindowOpenRequest } = createPolicyWithStub('oauth-popup');
+test("maps oauth-popup into oauth category", () => {
+  const { classifyWindowOpenRequest } = createPolicyWithStub("oauth-popup");
 
   const result = classifyWindowOpenRequest({
-    url: 'https://accounts.google.com/o/oauth2/v2/auth',
-    openerUrl: 'https://www.canva.com/login',
-    disposition: 'new-window',
-    frameName: 'google-auth',
+    url: "https://accounts.google.com/o/oauth2/v2/auth",
+    openerUrl: "https://www.canva.com/login",
+    disposition: "new-window",
+    frameName: "google-auth",
   });
 
-  assert.deepEqual(result, { category: 'oauth', kind: 'oauth-popup' });
+  assert.deepEqual(result, { category: "oauth", kind: "oauth-popup" });
 });
 
-test('maps internal-tab into tabs category', () => {
-  const { classifyWindowOpenRequest } = createPolicyWithStub('internal-tab');
+test("maps internal-tab into tabs category", () => {
+  const { classifyWindowOpenRequest } = createPolicyWithStub("internal-tab");
 
   const result = classifyWindowOpenRequest({
-    url: 'https://www.canva.com/design',
-    openerUrl: 'https://www.canva.com/',
-    disposition: 'foreground-tab',
-    frameName: '',
+    url: "https://www.canva.com/design",
+    openerUrl: "https://www.canva.com/",
+    disposition: "foreground-tab",
+    frameName: "",
   });
 
-  assert.deepEqual(result, { category: 'tabs', kind: 'internal-tab' });
+  assert.deepEqual(result, { category: "tabs", kind: "internal-tab" });
 });
 
-test('maps about:blank into blank-window', () => {
-  const { classifyWindowOpenRequest } = createPolicyWithStub('external');
+test("maps about:blank into blank-window", () => {
+  const { classifyWindowOpenRequest } = createPolicyWithStub("external");
 
   const result = classifyWindowOpenRequest({
-    url: 'about:blank',
-    openerUrl: 'https://www.canva.com/login',
-    disposition: 'new-window',
-    frameName: 'auth-popup',
+    url: "about:blank",
+    openerUrl: "https://www.canva.com/login",
+    disposition: "new-window",
+    frameName: "auth-popup",
   });
 
-  assert.deepEqual(result, { category: 'tabs', kind: 'blank-window' });
+  assert.deepEqual(result, { category: "tabs", kind: "blank-window" });
 });
 
-test('maps about:srcdoc into blank-window', () => {
-  const { classifyWindowOpenRequest } = createPolicyWithStub('external');
+test("maps about:srcdoc into blank-window", () => {
+  const { classifyWindowOpenRequest } = createPolicyWithStub("external");
 
   const result = classifyWindowOpenRequest({
-    url: 'about:srcdoc',
-    openerUrl: 'https://www.canva.com/login',
-    disposition: 'new-window',
-    frameName: 'auth-popup',
+    url: "about:srcdoc",
+    openerUrl: "https://www.canva.com/login",
+    disposition: "new-window",
+    frameName: "auth-popup",
   });
 
-  assert.deepEqual(result, { category: 'tabs', kind: 'blank-window' });
+  assert.deepEqual(result, { category: "tabs", kind: "blank-window" });
 });
 
-test('maps blocked-external into tabs blocked-external', () => {
-  const { classifyWindowOpenRequest } = createPolicyWithStub('blocked-external');
+test("maps blocked-external into tabs blocked-external", () => {
+  const { classifyWindowOpenRequest } =
+    createPolicyWithStub("blocked-external");
 
   const result = classifyWindowOpenRequest({
-    url: 'javascript:alert(1)',
-    openerUrl: 'https://www.canva.com/',
-    disposition: 'foreground-tab',
-    frameName: '',
+    url: "javascript:alert(1)",
+    openerUrl: "https://www.canva.com/",
+    disposition: "foreground-tab",
+    frameName: "",
   });
 
-  assert.deepEqual(result, { category: 'tabs', kind: 'blocked-external' });
+  assert.deepEqual(result, { category: "tabs", kind: "blocked-external" });
 });
 
-test('maps external into external-browser', () => {
-  const { classifyWindowOpenRequest } = createPolicyWithStub('external');
+test("maps external into external-browser", () => {
+  const { classifyWindowOpenRequest } = createPolicyWithStub("external");
 
   const result = classifyWindowOpenRequest({
-    url: 'https://example.com',
-    openerUrl: 'https://www.canva.com/',
-    disposition: 'foreground-tab',
-    frameName: '',
+    url: "https://example.com",
+    openerUrl: "https://www.canva.com/",
+    disposition: "foreground-tab",
+    frameName: "",
   });
 
-  assert.deepEqual(result, { category: 'tabs', kind: 'external-browser' });
+  assert.deepEqual(result, { category: "tabs", kind: "external-browser" });
 });
 
-test('forwards the expected arguments to classifyNavigationRequest', () => {
-  const { calls, classifyWindowOpenRequest } = createPolicyWithStub('external');
+test("forwards the expected arguments to classifyNavigationRequest", () => {
+  const { calls, classifyWindowOpenRequest } = createPolicyWithStub("external");
 
   const input = {
-    url: 'https://example.com',
-    openerUrl: 'https://www.canva.com/design',
-    disposition: 'background-tab',
-    frameName: 'share-popup',
+    url: "https://example.com",
+    openerUrl: "https://www.canva.com/design",
+    disposition: "background-tab",
+    frameName: "share-popup",
   };
 
   classifyWindowOpenRequest(input);

@@ -1,12 +1,13 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
-const fs = require('node:fs');
-const path = require('node:path');
+const fs = require("node:fs");
+const path = require("node:path");
 
-const ts = require('typescript');
+const ts = require("typescript");
 
-const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..', '..');
+const repoRoot =
+  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..", "..");
 let typeScriptExtensionRegistered = false;
 
 /**
@@ -15,7 +16,7 @@ let typeScriptExtensionRegistered = false;
  * @returns {void}
  */
 function compileTypeScriptModule(file, mod) {
-  const source = fs.readFileSync(file, 'utf8');
+  const source = fs.readFileSync(file, "utf8");
   const output = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
@@ -26,7 +27,7 @@ function compileTypeScriptModule(file, mod) {
     fileName: file,
   }).outputText;
 
-  /** @type {any} */ (mod)._compile(output, file);
+  /** @type {any} */ mod._compile(output, file);
 }
 
 function registerTypeScriptExtension() {
@@ -35,7 +36,9 @@ function registerTypeScriptExtension() {
   }
 
   typeScriptExtensionRegistered = true;
-  /** @type {Record<string, (mod: NodeJS.Module, filename: string) => void>} */ (require.extensions)['.ts'] = (mod, file) => {
+  /** @type {Record<string, (mod: NodeJS.Module, filename: string) => void>} */ require.extensions[
+    ".ts"
+  ] = (mod, file) => {
     compileTypeScriptModule(file, mod);
   };
 }
@@ -45,7 +48,7 @@ function registerTypeScriptExtension() {
  * @returns {any}
  */
 function loadRuntimeModule(modulePath) {
-  const sourceTs = path.join(repoRoot, 'electron', `${modulePath}.ts`);
+  const sourceTs = path.join(repoRoot, "electron", `${modulePath}.ts`);
 
   registerTypeScriptExtension();
 

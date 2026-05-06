@@ -5,7 +5,7 @@ import {
   type ActionGroup,
   type ActionKind,
   type CanvaAction,
-} from '../core/action-registry';
+} from "../core/action-registry";
 
 export type TuiActionGroup = ActionGroup;
 export type TuiActionKind = ActionKind;
@@ -17,10 +17,16 @@ export function loadTuiActions(rootDir = process.cwd()): TuiAction[] {
   return loadActions(rootDir);
 }
 
-export function getActionsByGroup(group: TuiActionGroup, rootDir = process.cwd()): TuiAction[] {
+export function getActionsByGroup(
+  group: TuiActionGroup,
+  rootDir = process.cwd(),
+): TuiAction[] {
   return getSharedActionsByGroup(group, rootDir);
 }
 
-export function getActionById(id: string, rootDir = process.cwd()): TuiAction | undefined {
+export function getActionById(
+  id: string,
+  rootDir = process.cwd(),
+): TuiAction | undefined {
   return getSharedActionById(id, rootDir);
 }

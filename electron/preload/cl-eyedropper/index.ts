@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
 export {
   CLEyeDropper,
   installClEyeDropperScalingPatch,
   removeClEyeDropperUi,
-} from './cl-eyedropper';
+} from "./cl-eyedropper";
 
 export type {
   CLEyeDropperOpenOptions,
@@ -13,4 +13,4 @@ export type {
   EyeDropperLog,
   LTCodeCompatibleResult,
   RgbTuple,
-} from './types';
+} from "./types";

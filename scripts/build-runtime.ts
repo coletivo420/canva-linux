@@ -1,8 +1,9 @@
-import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 
-const repoRoot = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, '..');
+const repoRoot =
+  process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 
 type CommandArgs = readonly string[];
 
@@ -11,8 +12,8 @@ function run(label: string, command: string, args: CommandArgs): void {
 
   const result = spawnSync(command, [...args], {
     cwd: repoRoot,
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
+    stdio: "inherit",
+    shell: process.platform === "win32",
   });
 
   if (result.status !== 0) {
@@ -21,26 +22,31 @@ function run(label: string, command: string, args: CommandArgs): void {
 }
 
 export function main(): void {
-  const buildDir = path.join(repoRoot, '.build');
-  run('clean .build', process.execPath, [
-    '-e',
+  const buildDir = path.join(repoRoot, ".build");
+  run("clean .build", process.execPath, [
+    "-e",
     "require('node:fs').rmSync(process.argv[1], { recursive: true, force: true })",
     buildDir,
   ]);
-  run('rebuild script artifacts after clean', 'npm', ['run', 'build:scripts']);
-  run('build electron-builder beforeBuild hook', 'npm', ['run', 'bootstrap:electron-builder']);
-  run('compile electron runtime', 'npx', ['tsc', '-p', 'tsconfig.build.json']);
-  run('copy runtime assets', process.execPath, ['.build/scripts/copy-runtime-assets.js']);
-  run('build preload bundle in .build', process.execPath, [
-    '.build/scripts/build-preload-bundle.js',
-    '--build-output',
+  run("rebuild script artifacts after clean", "npm", ["run", "build:scripts"]);
+  run("build electron-builder beforeBuild hook", "npm", [
+    "run",
+    "bootstrap:electron-builder",
+  ]);
+  run("compile electron runtime", "npx", ["tsc", "-p", "tsconfig.build.json"]);
+  run("copy runtime assets", process.execPath, [
+    ".build/scripts/copy-runtime-assets.js",
+  ]);
+  run("build preload bundle in .build", process.execPath, [
+    ".build/scripts/build-preload-bundle.js",
+    "--build-output",
   ]);
 
   const requiredFiles = [
-    '.build/electron/main/index.js',
-    '.build/electron/preload/canva.bundle.js',
-    '.build/electron/ui/toolbar.html',
-    '.build/electron/assets',
+    ".build/electron/main/index.js",
+    ".build/electron/preload/canva.bundle.js",
+    ".build/electron/ui/toolbar.html",
+    ".build/electron/assets",
   ];
 
   for (const file of requiredFiles) {
@@ -51,7 +57,7 @@ export function main(): void {
     }
   }
 
-  console.log('[runtime-build] OK');
+  console.log("[runtime-build] OK");
 }
 
 if (require.main === module) main();

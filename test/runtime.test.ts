@@ -1,23 +1,24 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
 // @ts-check
 
-const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
-const test = require('node:test');
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const test = require("node:test");
 
-const { loadRuntimeModule } = require('./helpers/runtime-module');
+const { loadRuntimeModule } = require("./helpers/runtime-module");
 
 const {
   configureSession,
   sanitizeDownloadFilename,
   sharedWebPreferences,
   shouldEnableCaptureVerboseLogging,
-} = loadRuntimeModule('main/runtime');
+} = loadRuntimeModule("main/runtime");
 
-const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..');
+const repoRoot =
+  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
 
 /**
  * @param {{ CANVA_DEBUG?: string, CANVA_DEBUG_LEVEL?: string }} env
@@ -27,10 +28,11 @@ function withDebugEnv(env, fn) {
   const previousDebug = process.env.CANVA_DEBUG;
   const previousLevel = process.env.CANVA_DEBUG_LEVEL;
   try {
-    if ('CANVA_DEBUG' in env) process.env.CANVA_DEBUG = env.CANVA_DEBUG;
+    if ("CANVA_DEBUG" in env) process.env.CANVA_DEBUG = env.CANVA_DEBUG;
     else delete process.env.CANVA_DEBUG;
 
-    if ('CANVA_DEBUG_LEVEL' in env) process.env.CANVA_DEBUG_LEVEL = env.CANVA_DEBUG_LEVEL;
+    if ("CANVA_DEBUG_LEVEL" in env)
+      process.env.CANVA_DEBUG_LEVEL = env.CANVA_DEBUG_LEVEL;
     else delete process.env.CANVA_DEBUG_LEVEL;
 
     fn();
@@ -43,28 +45,28 @@ function withDebugEnv(env, fn) {
   }
 }
 
-test('CANVA_DEBUG=1 does not enable Chromium capture verbose logging', () => {
-  withDebugEnv({ CANVA_DEBUG: '1' }, () => {
+test("CANVA_DEBUG=1 does not enable Chromium capture verbose logging", () => {
+  withDebugEnv({ CANVA_DEBUG: "1" }, () => {
     assert.equal(shouldEnableCaptureVerboseLogging(), false);
   });
 });
 
-test('CANVA_DEBUG=2 enables Chromium capture verbose logging', () => {
-  withDebugEnv({ CANVA_DEBUG: '2' }, () => {
+test("CANVA_DEBUG=2 enables Chromium capture verbose logging", () => {
+  withDebugEnv({ CANVA_DEBUG: "2" }, () => {
     assert.equal(shouldEnableCaptureVerboseLogging(), true);
   });
 });
 
-test('module-specific debug values do not enable verbose logging', () => {
-  withDebugEnv({ CANVA_DEBUG: 'gpu' }, () => {
+test("module-specific debug values do not enable verbose logging", () => {
+  withDebugEnv({ CANVA_DEBUG: "gpu" }, () => {
     assert.equal(shouldEnableCaptureVerboseLogging(), false);
   });
 });
 
-test('sharedWebPreferences keeps secure defaults', () => {
-  const session = /** @type {any} */ ({
-    partition: 'persist:canva',
-  });
+test("sharedWebPreferences keeps secure defaults", () => {
+  const session = /** @type {any} */ {
+    partition: "persist:canva",
+  };
   const preferences = sharedWebPreferences(() => session);
 
   assert.equal(preferences.session, session);
@@ -74,14 +76,23 @@ test('sharedWebPreferences keeps secure defaults', () => {
   assert.equal(preferences.spellcheck, true);
 });
 
-test('main runtime opens Canva, not the project website, as the app home URL', () => {
-  const mainSource = fs.readFileSync(path.join(repoRoot, 'electron/main/index.ts'), 'utf8');
+test("main runtime opens Canva, not the project website, as the app home URL", () => {
+  const mainSource = fs.readFileSync(
+    path.join(repoRoot, "electron/main/index.ts"),
+    "utf8",
+  );
 
-  assert.match(mainSource, /const APP_URL = 'https:\/\/www\.canva\.com\/';/);
-  assert.doesNotMatch(mainSource, /const APP_URL = 'https:\/\/coletivo420\.github\.io\/canva-linux\/';/);
+  assert.match(
+    mainSource,
+    /const APP_URL = [\"']https:\/\/www\.canva\.com\/[\"'];/,
+  );
+  assert.doesNotMatch(
+    mainSource,
+    /const APP_URL = [\"']https:\/\/coletivo420\.github\.io\/canva-linux\/[\"'];/,
+  );
 });
 
-test('sanitizes download filenames before choosing save paths', async () => {
+test("sanitizes download filenames before choosing save paths", async () => {
   let downloadListener = null;
   let savePath = null;
   const fakeSession = {
@@ -91,15 +102,15 @@ test('sanitizes download filenames before choosing save paths', async () => {
     setPermissionCheckHandler() {},
     webRequest: { onBeforeSendHeaders() {} },
     on(event, listener) {
-      if (event === 'will-download') downloadListener = listener;
+      if (event === "will-download") downloadListener = listener;
     },
   };
 
   await configureSession({
     app: {
       getPath(name) {
-        assert.equal(name, 'downloads');
-        return '/home/user/Downloads';
+        assert.equal(name, "downloads");
+        return "/home/user/Downloads";
       },
     },
     debugLog() {
@@ -110,27 +121,33 @@ test('sanitizes download filenames before choosing save paths', async () => {
       return fakeSession;
     },
     path,
-    partition: 'persist:canva',
+    partition: "persist:canva",
     shouldGrantRemotePermission() {
       return false;
     },
   });
 
-  assert.equal(typeof downloadListener, 'function');
+  assert.equal(typeof downloadListener, "function");
   downloadListener(null, {
     getFilename() {
-      return '../../bad:name?.png';
+      return "../../bad:name?.png";
     },
     setSavePath(nextPath) {
       savePath = nextPath;
     },
   });
 
-  assert.equal(savePath, path.join('/home/user/Downloads', 'bad_name_.png'));
+  assert.equal(savePath, path.join("/home/user/Downloads", "bad_name_.png"));
 });
 
-test('download filename sanitizer falls back for empty or directory-only names', () => {
-  assert.equal(sanitizeDownloadFilename('../../../', path), 'download');
-  assert.equal(sanitizeDownloadFilename('safe-name.png', path), 'safe-name.png');
-  assert.equal(sanitizeDownloadFilename('bad<name>|*.png', path), 'bad_name___.png');
+test("download filename sanitizer falls back for empty or directory-only names", () => {
+  assert.equal(sanitizeDownloadFilename("../../../", path), "download");
+  assert.equal(
+    sanitizeDownloadFilename("safe-name.png", path),
+    "safe-name.png",
+  );
+  assert.equal(
+    sanitizeDownloadFilename("bad<name>|*.png", path),
+    "bad_name___.png",
+  );
 });

@@ -1,7 +1,14 @@
-export const ACTION_GROUPS = ['install', 'development', 'maintenance'] as const;
-export const ACTION_SECTIONS = ['Install', 'Package generation', 'Build', 'Validation', 'Maintenance', 'Uninstall'] as const;
-export const ACTION_KINDS = ['command', 'planned', 'internal'] as const;
-export const INSTALL_SCOPES = ['system', 'user'] as const;
+export const ACTION_GROUPS = ["install", "development", "maintenance"] as const;
+export const ACTION_SECTIONS = [
+  "Install",
+  "Package generation",
+  "Build",
+  "Validation",
+  "Maintenance",
+  "Uninstall",
+] as const;
+export const ACTION_KINDS = ["command", "planned", "internal"] as const;
+export const INSTALL_SCOPES = ["system", "user"] as const;
 
 export type ActionGroup = (typeof ACTION_GROUPS)[number];
 export type ActionSection = (typeof ACTION_SECTIONS)[number];
@@ -30,19 +37,19 @@ type BaseAction = {
 };
 
 export type CommandAction = BaseAction & {
-  kind: 'command';
+  kind: "command";
   command: string;
   args: string[];
 };
 
 export type PlannedAction = BaseAction & {
-  kind: 'planned';
+  kind: "planned";
   command?: never;
   args?: never;
 };
 
 export type InternalAction = BaseAction & {
-  kind: 'internal';
+  kind: "internal";
   command?: string;
   args?: string[];
 };

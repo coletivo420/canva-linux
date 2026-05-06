@@ -1,14 +1,12 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
-const test = require('node:test');
-const assert = require('node:assert/strict');
+const test = require("node:test");
+const assert = require("node:assert/strict");
 
-const { loadRuntimeModule } = require('./helpers/runtime-module');
+const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const {
-  createTabController,
-} = loadRuntimeModule('main/tab-controller');
+const { createTabController } = loadRuntimeModule("main/tab-controller");
 
 class FakeWebContentsView {
   constructor(options = {}) {
@@ -22,14 +20,17 @@ class FakeWebContentsView {
   }
 }
 
-test('createTabController forwards navigation helpers into tab event attachment', () => {
+test("createTabController forwards navigation helpers into tab event attachment", () => {
   const attached = [];
   const ensuredViews = [];
   const visibilityCalls = [];
   const layoutCalls = [];
 
-  const classifyNavigationRequest = () => ({ kind: 'external' });
-  const classifyWindowOpenRequest = () => ({ category: 'tabs', kind: 'external-browser' });
+  const classifyNavigationRequest = () => ({ kind: "external" });
+  const classifyWindowOpenRequest = () => ({
+    category: "tabs",
+    kind: "external-browser",
+  });
 
   const state = {
     tabs: new Map(),
@@ -63,8 +64,8 @@ test('createTabController forwards navigation helpers into tab event attachment'
   };
 
   const controller = createTabController({
-    appName: 'Canva',
-    appUrl: 'https://www.canva.com',
+    appName: "Canva",
+    appUrl: "https://www.canva.com",
     broadcastTabsState() {},
     classifyNavigationRequest,
     classifyWindowOpenRequest,
@@ -72,9 +73,9 @@ test('createTabController forwards navigation helpers into tab event attachment'
       return true;
     },
     getCanvaSession() {
-      return { partition: 'persist:canva' };
+      return { partition: "persist:canva" };
     },
-    homeUrl: 'https://www.canva.com',
+    homeUrl: "https://www.canva.com",
     isBlankPopupUrl() {
       return false;
     },
@@ -90,7 +91,7 @@ test('createTabController forwards navigation helpers into tab event attachment'
     oauthHelpers: {},
     shell: {},
     shellBackgroundColor() {
-      return '#000000';
+      return "#000000";
     },
     state,
     tabHelpers,
@@ -100,21 +101,29 @@ test('createTabController forwards navigation helpers into tab event attachment'
     },
   });
 
-  const tab = controller.createTab('https://www.canva.com/design', { activate: false });
+  const tab = controller.createTab("https://www.canva.com/design", {
+    activate: false,
+  });
 
   assert.equal(attached.length, 1);
   assert.equal(attached[0].tab, tab);
-  assert.equal(attached[0].helpers.classifyNavigationRequest, classifyNavigationRequest);
-  assert.equal(attached[0].helpers.classifyWindowOpenRequest, classifyWindowOpenRequest);
+  assert.equal(
+    attached[0].helpers.classifyNavigationRequest,
+    classifyNavigationRequest,
+  );
+  assert.equal(
+    attached[0].helpers.classifyWindowOpenRequest,
+    classifyWindowOpenRequest,
+  );
 
   assert.equal(state.tabs.size, 1);
-  assert.equal(tab.view.webContents.loadedUrl, 'https://www.canva.com/design');
+  assert.equal(tab.view.webContents.loadedUrl, "https://www.canva.com/design");
   assert.equal(ensuredViews.length, 1);
   assert.deepEqual(visibilityCalls, [{ tabId: 1, visible: false }]);
   assert.equal(layoutCalls.length, 1);
 });
 
-test('createTabController does not inject EyeDropper implementation arguments', () => {
+test("createTabController does not inject EyeDropper implementation arguments", () => {
   const state = {
     tabs: new Map(),
     nextTabIdRef() {
@@ -123,22 +132,22 @@ test('createTabController does not inject EyeDropper implementation arguments', 
   };
 
   const controller = createTabController({
-    appName: 'Canva',
-    appUrl: 'https://www.canva.com',
+    appName: "Canva",
+    appUrl: "https://www.canva.com",
     broadcastTabsState() {},
     classifyNavigationRequest() {
-      return { kind: 'external' };
+      return { kind: "external" };
     },
     classifyWindowOpenRequest() {
-      return { category: 'tabs', kind: 'external-browser' };
+      return { category: "tabs", kind: "external-browser" };
     },
     debugLog() {
       return true;
     },
     getCanvaSession() {
-      return { partition: 'persist:canva' };
+      return { partition: "persist:canva" };
     },
-    homeUrl: 'https://www.canva.com',
+    homeUrl: "https://www.canva.com",
     isBlankPopupUrl() {
       return false;
     },
@@ -154,7 +163,7 @@ test('createTabController does not inject EyeDropper implementation arguments', 
     oauthHelpers: {},
     shell: {},
     shellBackgroundColor() {
-      return '#000000';
+      return "#000000";
     },
     state,
     tabHelpers: {
@@ -178,19 +187,27 @@ test('createTabController does not inject EyeDropper implementation arguments', 
     attachTabEventHandlersImpl() {},
   });
 
-  const tab = controller.createTab('https://www.canva.com/design', { activate: false });
-  assert.equal(Object.hasOwn(tab.view.options.webPreferences, 'additionalArguments'), false);
+  const tab = controller.createTab("https://www.canva.com/design", {
+    activate: false,
+  });
+  assert.equal(
+    Object.hasOwn(tab.view.options.webPreferences, "additionalArguments"),
+    false,
+  );
 });
 
-test('createHomeTab keeps the extracted helpers wired through the controller path', () => {
+test("createHomeTab keeps the extracted helpers wired through the controller path", () => {
   const attached = [];
 
-  const classifyNavigationRequest = () => ({ kind: 'external' });
-  const classifyWindowOpenRequest = () => ({ category: 'tabs', kind: 'external-browser' });
+  const classifyNavigationRequest = () => ({ kind: "external" });
+  const classifyWindowOpenRequest = () => ({
+    category: "tabs",
+    kind: "external-browser",
+  });
 
   const controller = createTabController({
-    appName: 'Canva',
-    appUrl: 'https://www.canva.com',
+    appName: "Canva",
+    appUrl: "https://www.canva.com",
     broadcastTabsState() {},
     classifyNavigationRequest,
     classifyWindowOpenRequest,
@@ -198,9 +215,9 @@ test('createHomeTab keeps the extracted helpers wired through the controller pat
       return true;
     },
     getCanvaSession() {
-      return { partition: 'persist:canva' };
+      return { partition: "persist:canva" };
     },
-    homeUrl: 'https://www.canva.com',
+    homeUrl: "https://www.canva.com",
     isBlankPopupUrl() {
       return false;
     },
@@ -216,7 +233,7 @@ test('createHomeTab keeps the extracted helpers wired through the controller pat
     oauthHelpers: {},
     shell: {},
     shellBackgroundColor() {
-      return '#000000';
+      return "#000000";
     },
     state: {
       tabs: new Map(),
@@ -251,6 +268,12 @@ test('createHomeTab keeps the extracted helpers wired through the controller pat
 
   assert.equal(attached.length, 1);
   assert.equal(homeTab.isHome, true);
-  assert.equal(attached[0].helpers.classifyNavigationRequest, classifyNavigationRequest);
-  assert.equal(attached[0].helpers.classifyWindowOpenRequest, classifyWindowOpenRequest);
+  assert.equal(
+    attached[0].helpers.classifyNavigationRequest,
+    classifyNavigationRequest,
+  );
+  assert.equal(
+    attached[0].helpers.classifyWindowOpenRequest,
+    classifyWindowOpenRequest,
+  );
 });

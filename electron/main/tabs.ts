@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // @ts-check
 
@@ -12,7 +12,10 @@ export type TabEntry = {
   createdAt: number;
   view: WebContentsViewLike;
 };
-export type TabStateLike = { tabs: Map<number, TabEntry>; activeTabId: number | null };
+export type TabStateLike = {
+  tabs: Map<number, TabEntry>;
+  activeTabId: number | null;
+};
 export type WebContentsViewLike = {
   webContents: {
     id?: number;
@@ -24,13 +27,22 @@ export type WebContentsViewLike = {
     destroy(): void;
   };
   setVisible(visible: boolean): void;
-  setBounds(bounds: { x: number; y: number; width: number; height: number }): void;
+  setBounds(bounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }): void;
 };
 export type NativeThemeLike = { shouldUseDarkColors: boolean };
 export type BrowserWindowLike = {
   setTitle(title: string): void;
   getContentSize(): [number, number];
-  contentView: { children?: unknown[]; addChildView(view: unknown): void; removeChildView(view: unknown): void };
+  contentView: {
+    children?: unknown[];
+    addChildView(view: unknown): void;
+    removeChildView(view: unknown): void;
+  };
 };
 
 type CreateTabHelpersOptions = {
@@ -38,7 +50,9 @@ type CreateTabHelpersOptions = {
   broadcastTabsState: () => void;
   createHomeTab: () => void;
   debugLog: DebugLog;
-  findTabByWebContentsRef: (fn: (webContents: { id?: number } | null | undefined) => TabEntry | null) => void;
+  findTabByWebContentsRef: (
+    fn: (webContents: { id?: number } | null | undefined) => TabEntry | null,
+  ) => void;
   getHomeUrl: () => string;
   mainWindowRef: () => BrowserWindowLike | null | undefined;
   nativeTheme: NativeThemeLike;
@@ -50,7 +64,13 @@ type CreateTabHelpersOptions = {
 
 export type ToolbarState = {
   activeTabId: number | null;
-  tabs: Array<{ id: number; title: string; url: string; favicon?: string | null; canClose: boolean }>;
+  tabs: Array<{
+    id: number;
+    title: string;
+    url: string;
+    favicon?: string | null;
+    canClose: boolean;
+  }>;
   theme: string;
 };
 
@@ -125,9 +145,12 @@ export function createTabHelpers({
 
   /** @returns {void} */
   function updateWindowTitle(): void {
-    const activeTab = state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
+    const activeTab =
+      state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
     const title = activeTab?.title;
-    mainWindowRef()?.setTitle(title && title !== appName ? `${title} - ${appName}` : appName);
+    mainWindowRef()?.setTitle(
+      title && title !== appName ? `${title} - ${appName}` : appName,
+    );
   }
 
   /** @returns {{ activeTabId: number | null, tabs: Array<{ id: number, title: string, url: string, favicon?: string | null, canClose: boolean }>, theme: string }} */
@@ -141,7 +164,7 @@ export function createTabHelpers({
         favicon: tab.favicon,
         canClose: !tab.isHome,
       })),
-      theme: nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
+      theme: nativeTheme.shouldUseDarkColors ? "dark" : "light",
     };
   }
 
@@ -150,7 +173,10 @@ export function createTabHelpers({
    * @param {boolean} visible
    * @returns {void}
    */
-  function setTabVisibility(tab: TabEntry | null | undefined, visible: boolean): void {
+  function setTabVisibility(
+    tab: TabEntry | null | undefined,
+    visible: boolean,
+  ): void {
     if (!tab?.view) return;
     tab.view.setVisible(Boolean(visible));
   }
@@ -175,7 +201,7 @@ export function createTabHelpers({
 
   /** @returns {void} */
   function layoutViews(): void {
-    debugLog('view', 'layout-views-start');
+    debugLog("view", "layout-views-start");
     const mainWindow = mainWindowRef();
     const toolbarView = toolbarViewRef();
     if (!mainWindow || !toolbarView) return;
@@ -192,12 +218,18 @@ export function createTabHelpers({
     }
 
     ensureTopLevelView(toolbarView);
-    debugLog('view', 'layout-views-done', `toolbar=${width}x${toolbarHeight}`, `tabs=${state.tabs.size}`);
+    debugLog(
+      "view",
+      "layout-views-done",
+      `toolbar=${width}x${toolbarHeight}`,
+      `tabs=${state.tabs.size}`,
+    );
   }
 
   /** @returns {void} */
   function detachActiveContentView(): void {
-    const activeTab = state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
+    const activeTab =
+      state.activeTabId === null ? null : state.tabs.get(state.activeTabId);
     if (activeTab) {
       setTabVisibility(activeTab, false);
     }
@@ -207,8 +239,14 @@ export function createTabHelpers({
    * @param {{ id?: number } | null | undefined} webContents
    * @returns {TabEntry | null}
    */
-  function findTabByWebContents(webContents: { id?: number } | null | undefined): TabEntry | null {
-    debugLog('view', 'find-tab-by-webcontents', webContents ? webContents.id : 'none');
+  function findTabByWebContents(
+    webContents: { id?: number } | null | undefined,
+  ): TabEntry | null {
+    debugLog(
+      "view",
+      "find-tab-by-webcontents",
+      webContents ? webContents.id : "none",
+    );
     if (!webContents) return null;
     for (const tab of state.tabs.values()) {
       if (tab.view.webContents.id === webContents.id) {
@@ -224,8 +262,14 @@ export function createTabHelpers({
    * @param {{ resetToHome?: boolean, switchToTab: (id: number) => void }} options
    * @returns {void}
    */
-  function focusHomeTab({ resetToHome = true, switchToTab }: { resetToHome?: boolean; switchToTab: (id: number) => void }): void {
-    debugLog('tabs:navigation', 'focus-home', `reset=${resetToHome}`);
+  function focusHomeTab({
+    resetToHome = true,
+    switchToTab,
+  }: {
+    resetToHome?: boolean;
+    switchToTab: (id: number) => void;
+  }): void {
+    debugLog("tabs:navigation", "focus-home", `reset=${resetToHome}`);
     const homeTab = getHomeTab();
     if (!homeTab) return;
     if (resetToHome && homeTab.url !== getHomeUrl()) {
@@ -239,7 +283,7 @@ export function createTabHelpers({
    * @returns {void}
    */
   function switchToTab(id: number): void {
-    debugLog('tabs:navigation', 'switch-request', id);
+    debugLog("tabs:navigation", "switch-request", id);
     const mainWindow = mainWindowRef();
     if (!state.tabs.has(id) || !mainWindow) return;
     const tab = state.tabs.get(id);
@@ -247,7 +291,7 @@ export function createTabHelpers({
 
     if (state.activeTabId === id) {
       tab.view.webContents.focus();
-      debugLog('tabs:navigation', 'switch-active', id, tab.url);
+      debugLog("tabs:navigation", "switch-active", id, tab.url);
       return;
     }
 
@@ -258,7 +302,7 @@ export function createTabHelpers({
     layoutViews();
     ensureTopLevelView(toolbarViewRef());
     tab.view.webContents.focus();
-    debugLog('tabs:navigation', 'switch-active', id, tab.url);
+    debugLog("tabs:navigation", "switch-active", id, tab.url);
     broadcastTabsState();
   }
 
@@ -269,7 +313,9 @@ export function createTabHelpers({
   function switchRelativeTab(step: number): void {
     const ordered = getOrderedTabs();
     if (ordered.length < 2) return;
-    const currentIndex = ordered.findIndex((tab) => tab.id === state.activeTabId);
+    const currentIndex = ordered.findIndex(
+      (tab) => tab.id === state.activeTabId,
+    );
     if (currentIndex < 0) return;
     const nextIndex = (currentIndex + step + ordered.length) % ordered.length;
     const nextTab = ordered[nextIndex];
@@ -281,7 +327,7 @@ export function createTabHelpers({
    * @returns {void}
    */
   function closeTab(id: number): void {
-    debugLog('tabs:navigation', 'close-request', id);
+    debugLog("tabs:navigation", "close-request", id);
     const ordered = getOrderedTabs();
     const index = ordered.findIndex((tab) => tab.id === id);
     const tab = state.tabs.get(id);

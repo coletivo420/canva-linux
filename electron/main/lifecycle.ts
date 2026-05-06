@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type AppLike = {
@@ -9,10 +9,14 @@ type AppLike = {
 };
 type CentralLoggerLike = {
   initLogFile(): string;
-  logStatus(category: string, level: 'ok' | 'warn' | 'critical', message: string): void;
+  logStatus(
+    category: string,
+    level: "ok" | "warn" | "critical",
+    message: string,
+  ): void;
 };
 type BrowserWindowConstructorLike = { getAllWindows(): unknown[] };
-type NativeThemeLike = { on(event: 'updated', listener: () => void): unknown };
+type NativeThemeLike = { on(event: "updated", listener: () => void): unknown };
 type TabControllerLike = { createHomeTab(): void };
 type LifecycleOptions = {
   app: AppLike;
@@ -64,22 +68,27 @@ function registerAppLifecycle({
   tabController,
 }: LifecycleOptions): void {
   if (!app.requestSingleInstanceLock()) {
-    debugLog('app', 'single-instance-lock-denied');
+    debugLog("app", "single-instance-lock-denied");
     app.quit();
     return;
   }
 
-  app.on('second-instance', () => {
-    debugLog('app', 'second-instance');
+  app.on("second-instance", () => {
+    debugLog("app", "second-instance");
     focusMainWindow();
   });
 
   app.whenReady().then(async () => {
     const logFilePath = centralLogger.initLogFile();
-    debugLog('startup', 'when-ready', `platform=${process.platform}`, `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === 'wayland')}`);
-    debugLog('startup', 'debug-level', String(debugLevel || 0));
-    centralLogger.logStatus('startup', 'ok', `debug-log-file ${logFilePath}`);
-    if (typeof registerGpuDiagnostics === 'function') {
+    debugLog(
+      "startup",
+      "when-ready",
+      `platform=${process.platform}`,
+      `wayland=${Boolean(process.env.WAYLAND_DISPLAY || process.env.XDG_SESSION_TYPE === "wayland")}`,
+    );
+    debugLog("startup", "debug-level", String(debugLevel || 0));
+    centralLogger.logStatus("startup", "ok", `debug-log-file ${logFilePath}`);
+    if (typeof registerGpuDiagnostics === "function") {
       registerGpuDiagnostics();
     }
     logReleaseStatus();
@@ -92,17 +101,17 @@ function registerAppLifecycle({
       partition,
       shouldGrantRemotePermission,
     });
-    debugLog('startup', 'session-configured');
+    debugLog("startup", "session-configured");
     createShellWindow();
     createToolbarView();
     tabController.createHomeTab();
 
-    nativeTheme.on('updated', () => {
+    nativeTheme.on("updated", () => {
       onThemeUpdated();
     });
 
-    app.on('activate', () => {
-      debugLog('app', 'activate');
+    app.on("activate", () => {
+      debugLog("app", "activate");
       if (BrowserWindow.getAllWindows().length === 0) {
         createShellWindow();
         createToolbarView();
@@ -111,17 +120,15 @@ function registerAppLifecycle({
     });
   });
 
-  app.on('window-all-closed', async () => {
-    debugLog('app', 'window-all-closed');
-    debugLog('session', 'flush-before-quit', partition);
+  app.on("window-all-closed", async () => {
+    debugLog("app", "window-all-closed");
+    debugLog("session", "flush-before-quit", partition);
     const canvaSession = canvaSessionRef();
     if (canvaSession) {
       await flushSession(canvaSession).catch(() => {});
     }
-    if (process.platform !== 'darwin') app.quit();
+    if (process.platform !== "darwin") app.quit();
   });
 }
 
-export {
-  registerAppLifecycle,
-};
+export { registerAppLifecycle };
