@@ -109,8 +109,8 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `packaging/flathub/scripts/generate-npm-sources.sh`
 - `playwright.config.js`
 - `run.sh`
-- `scripts/action-registry.js`
-- `scripts/action-runner.js`
+- `scripts/action-registry.js` (core compatibility wrapper)
+- `scripts/action-runner.js` (core compatibility wrapper)
 - `scripts/actions.json`
 - `scripts/app-identity-common.sh`
 - `scripts/build-appimage.sh`
@@ -119,15 +119,19 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/build-preload-bundle.js` (Node wrapper) / `scripts/build-preload-bundle.ts`
 - `scripts/build-runtime.js` (Node wrapper) / `scripts/build-runtime.ts`
 - `scripts/build-runtime.sh`
-- `scripts/check-ai-guardrails.js`
-- `scripts/check-dependency-policy.js`
-- `scripts/check-detection-contract.js`
-- `scripts/check-doc-links.js`
+- `scripts/check-action-contract.js` (core compatibility wrapper)
+- `scripts/check-ai-guardrails.js` (core compatibility wrapper)
+- `scripts/check-dependency-policy.js` (core compatibility wrapper)
+- `scripts/check-detection-contract.js` (core compatibility wrapper)
+- `scripts/check-doc-links.js` (core compatibility wrapper)
 - `scripts/check-flatpak-scope-policy.sh`
-- `scripts/check-review-checklist.js`
-- `scripts/check-runtime-build.js`
-- `scripts/check-shell-action-ids.js`
-- `scripts/check-version-consistency.js`
+- `scripts/check-no-shell-menu.js` (core compatibility wrapper)
+- `scripts/check-review-checklist.js` (core compatibility wrapper)
+- `scripts/check-runtime-build.js` (core compatibility wrapper)
+- `scripts/check-shell-action-ids.js` (core compatibility wrapper)
+- `scripts/check-sudo-contract.js` (core compatibility wrapper)
+- `scripts/check-typescript-wrapper-contract.js` (core compatibility wrapper)
+- `scripts/check-version-consistency.js` (core compatibility wrapper)
 - `scripts/clean-artifacts.sh`
 - `scripts/clean-runtime-build.js` (Node wrapper) / `scripts/clean-runtime-build.ts`
 - `scripts/copy-runtime-assets.js` (Node wrapper) / `scripts/copy-runtime-assets.ts`
@@ -136,6 +140,14 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/core/action-runner.ts`
 - `scripts/core/action-types.ts`
 - `scripts/core/check-detection-contract.ts`
+- `scripts/core/check-doc-links.ts`
+- `scripts/core/check-dependency-policy.ts`
+- `scripts/core/check-runtime-build.ts`
+- `scripts/core/check-ai-guardrails.ts`
+- `scripts/core/check-action-contract.ts`
+- `scripts/core/check-no-shell-menu.ts`
+- `scripts/core/check-sudo-contract.ts`
+- `scripts/core/check-typescript-wrapper-contract.ts`
 - `scripts/core/check-review-checklist.ts`
 - `scripts/core/check-shell-action-ids.ts`
 - `scripts/core/check-version-consistency.ts`
@@ -152,7 +164,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/install-layout-common.sh`
 - `scripts/install-native.sh`
 - `scripts/native-install-common.sh`
-- `scripts/overview-status.js`
+- `scripts/overview-status.js` (core compatibility wrapper)
 - `scripts/package-guidance-common.sh`
 - `scripts/preflight-common.sh`
 - `scripts/prepare-flathub-submission.sh`
@@ -179,7 +191,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/uninstall-flatpak.sh`
 - `scripts/uninstall-native.sh`
 - `scripts/user-data-common.sh`
-- `scripts/validate-actions.js`
+- `scripts/validate-actions.js` (core compatibility wrapper)
 - `scripts/validate-appimage.sh`
 - `scripts/validate-flathub-submission.sh`
 - `scripts/validate-flatpak.sh`

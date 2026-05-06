@@ -40,7 +40,7 @@ remove_path_safely() {
   fi
 
   if [[ "${FLATPAK_SCOPE:-}" == "user" ]]; then
-    ui_die "Could not remove ${target} as the current user; refusing sudo in user Flatpak scope. Run Fix build directory permissions first."
+    ui_die "Could not remove ${target} as the current user; administrator escalation is disabled in user Flatpak scope. Run Fix build directory permissions first."
   fi
 
   ui_warn "Could not remove ${target} as the current user; retrying with administrator authorization."
@@ -75,7 +75,7 @@ restore_path_ownership() {
   fi
 
   if [[ "${FLATPAK_SCOPE:-}" == "user" ]]; then
-    ui_warn "Ownership restore for ${target} needs administrator authorization; refusing sudo in user Flatpak scope."
+    ui_warn "Ownership restore for ${target} needs administrator authorization; administrator escalation is disabled in user Flatpak scope."
     return 0
   fi
 
