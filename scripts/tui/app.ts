@@ -2,7 +2,7 @@ import blessed from "blessed";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { CANVA_LOGO_LINES } from "./logo";
 import { getActionsByGroup, type TuiAction } from "./action-registry";
-import { confirmDialog, inputDialog } from "./modal";
+import { confirmDialog, errorDialog, inputDialog, messageDialog } from "./modal";
 import { runAction } from "./process-runner";
 import { tuiTheme } from "./theme";
 import { copyTextToClipboard } from "./clipboard";
@@ -353,6 +353,38 @@ export function createApp(opts: {
     progressState = "failed";
     setProgress(0, `Error: ${label}`, true);
   }
+
+  function sanitizeAuthOutput(text: string, password: string): string {
+    const cleaned = text.replace(/\r/g, "").trim();
+    if (!password) return cleaned;
+    return cleaned.split(password).join("[redacted]");
+  }
+
+  function formatAuthFailureMessage(detail: string): string {
+    return [
+      "Administrator authentication failed",
+      "",
+      detail || "sudo: a password is required",
+      "",
+      "The action was not started.",
+    ].join("\n");
+  }
+
+  function formatAuthTimeoutMessage(detail?: string): string {
+    return [
+      "Administrator authentication timed out",
+      "",
+      detail || "The administrator password was not validated in time.",
+      "",
+      "The action was not started.",
+    ].join("\n");
+  }
+
+  function didAuthTimeout(error: Error | undefined, message: string): boolean {
+    const code = (error as NodeJS.ErrnoException | undefined)?.code;
+    return code === "ETIMEDOUT" || /timed out/i.test(message);
+  }
+
   function setProgressCanceled() {
     progressState = "canceled";
     setProgress(0, "Canceled", true);
@@ -522,18 +554,40 @@ export function createApp(opts: {
       action.requiresRoot || (await actionNeedsRootForDetectedSystem(action));
     if (rootRequired) {
       modalActive = true;
-      const password = await inputDialog(
+      const passwordResult = await inputDialog(
         screen,
         "Administrator authentication",
         "Enter root password (30s timeout):",
         30000,
       );
       modalActive = false;
-      if (!password) {
-        appendLogText("[warn] Root authentication canceled.\n", "system");
-        setProgressError("root auth canceled");
+      if (passwordResult.status === "timeout") {
+        const message = [
+          "Administrator authentication timed out",
+          "",
+          "The action was not started.",
+        ].join("\n");
+        appendLogText("[warn] Root authentication timed out.\n", "system");
+        setProgressError("root authentication timed out");
+        modalActive = true;
+        await errorDialog(screen, "Administrator authentication", message);
+        modalActive = false;
         return;
       }
+      if (passwordResult.status === "canceled" || !passwordResult.value) {
+        const message = [
+          "Administrator authentication canceled",
+          "",
+          "The action was not started.",
+        ].join("\n");
+        appendLogText("[warn] Root authentication canceled.\n", "system");
+        setProgressError("root authentication canceled");
+        modalActive = true;
+        await messageDialog(screen, "Administrator authentication", message);
+        modalActive = false;
+        return;
+      }
+      const password = passwordResult.value;
       const auth = spawnSync(
         "bash",
         ["scripts/sudo-common.sh", "--validate-stdin"],
@@ -546,11 +600,33 @@ export function createApp(opts: {
         },
       );
       if ((auth.status ?? 1) !== 0) {
-        appendLogText(
-          auth.stderr || "[error] Invalid root password.\n",
-          "system",
+        const sudoMessage = sanitizeAuthOutput(
+          auth.stderr || auth.stdout || "sudo: a password is required",
+          password,
         );
-        setProgressError("invalid root password");
+        if (didAuthTimeout(auth.error, sudoMessage)) {
+          const popupMessage = formatAuthTimeoutMessage(sudoMessage);
+          appendLogText(`[error] ${popupMessage}\n`, "system");
+          setProgressError("root authentication timed out");
+          modalActive = true;
+          await errorDialog(
+            screen,
+            "Administrator authentication timed out",
+            popupMessage,
+          );
+          modalActive = false;
+          return;
+        }
+        const popupMessage = formatAuthFailureMessage(sudoMessage);
+        appendLogText(`[error] ${popupMessage}\n`, "system");
+        setProgressError("root authentication failed");
+        modalActive = true;
+        await errorDialog(
+          screen,
+          "Administrator authentication failed",
+          popupMessage,
+        );
+        modalActive = false;
         return;
       }
     }

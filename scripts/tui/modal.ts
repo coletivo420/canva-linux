@@ -9,6 +9,11 @@ export type ConfirmOptions = {
   dangerous?: boolean;
 };
 
+export type InputDialogResult =
+  | { status: "submitted"; value: string }
+  | { status: "canceled" }
+  | { status: "timeout" };
+
 function createModalShell(
   screen: blessed.Widgets.Screen,
   title: string,
@@ -114,12 +119,26 @@ export async function messageDialog(
   });
 }
 
+export async function errorDialog(
+  screen: blessed.Widgets.Screen,
+  title: string,
+  message: string,
+): Promise<void> {
+  await confirmDialog(screen, {
+    title,
+    message,
+    confirmLabel: "OK",
+    cancelLabel: "Close",
+    dangerous: true,
+  });
+}
+
 export function inputDialog(
   screen: blessed.Widgets.Screen,
   title: string,
   prompt: string,
   timeoutMs = 30000,
-): Promise<string | null> {
+): Promise<InputDialogResult> {
   return new Promise((resolve) => {
     const previousFocus = screen.focused;
     const { overlay, modal } = createModalShell(screen, title, false);
@@ -150,8 +169,11 @@ export function inputDialog(
       tags: true,
       content: `{${tuiTheme.colors.lightBlue}-fg}[Enter]{/${tuiTheme.colors.lightBlue}-fg} Submit  {${tuiTheme.colors.lightBlue}-fg}[Esc]{/${tuiTheme.colors.lightBlue}-fg} Cancel`,
     });
-    let timer: NodeJS.Timeout | null = setTimeout(() => close(null), timeoutMs);
-    const close = (value: string | null) => {
+    let timer: NodeJS.Timeout | null = setTimeout(
+      () => close({ status: "timeout" }),
+      timeoutMs,
+    );
+    const close = (result: InputDialogResult) => {
       if (timer) {
         clearTimeout(timer);
         timer = null;
@@ -164,11 +186,13 @@ export function inputDialog(
       if (previousFocus && typeof previousFocus.focus === "function")
         previousFocus.focus();
       screen.render();
-      resolve(value);
+      resolve(result);
     };
-    overlay.key(["escape"], () => close(null));
+    overlay.key(["escape"], () => close({ status: "canceled" }));
     input.key(["enter"], () => input.submit());
-    input.on("submit", (value) => close(String(value ?? "")));
+    input.on("submit", (value) =>
+      close({ status: "submitted", value: String(value ?? "") }),
+    );
     overlay.focus();
     input.focus();
     input.readInput();

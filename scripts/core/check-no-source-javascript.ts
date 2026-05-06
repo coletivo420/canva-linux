@@ -9,6 +9,10 @@ const allowedJavaScriptRoots = [
   "dist/",
 ] as const;
 
+const allowedGeneratedJavaScriptFiles = new Set([
+  "electron/preload/canva.bundle.js",
+]);
+
 const skippedDirectories = new Set([
   ".git",
   ".build",
@@ -30,8 +34,9 @@ function toRelative(rootDir: string, absolutePath: string): string {
 }
 
 function isAllowedJavaScript(relativePath: string): boolean {
-  return allowedJavaScriptRoots.some((prefix) =>
-    relativePath.startsWith(prefix),
+  return (
+    allowedGeneratedJavaScriptFiles.has(relativePath) ||
+    allowedJavaScriptRoots.some((prefix) => relativePath.startsWith(prefix))
   );
 }
 

@@ -21,6 +21,8 @@ function findCheckedFiles(dir: string): string[] {
 export function main(): number {
   const rootDir = findProjectRoot();
   const scriptsDir = path.join(rootDir, "scripts");
+  const sudoCommonPath = path.join(scriptsDir, "sudo-common.sh");
+  const tuiAppPath = path.join(scriptsDir, "tui", "app.ts");
   const checkedFiles = [
     ...findCheckedFiles(scriptsDir),
     path.join(rootDir, "canva-linux.sh"),
@@ -33,6 +35,49 @@ export function main(): number {
     );
   });
   const failures: string[] = [];
+  const sudoCommon = fs.readFileSync(sudoCommonPath, "utf8");
+  const tuiApp = fs.readFileSync(tuiAppPath, "utf8");
+
+  if (!/--validate-stdin\)\s*canva_sudo_validate_stdin\s*;;/.test(sudoCommon)) {
+    failures.push(
+      "scripts/sudo-common.sh: dispatcher must implement --validate-stdin",
+    );
+  }
+
+  if (!sudoCommon.includes('sudo -S -v -p ""')) {
+    failures.push(
+      'scripts/sudo-common.sh: --validate-stdin must validate with sudo -S -v -p ""',
+    );
+  }
+
+  if (!/password="\$\(cat\)"/.test(sudoCommon)) {
+    failures.push("scripts/sudo-common.sh: --validate-stdin must read stdin");
+  }
+
+  if (
+    !tuiApp.includes("formatAuthFailureMessage") ||
+    !tuiApp.includes("await errorDialog(") ||
+    !tuiApp.includes("Administrator authentication failed")
+  ) {
+    failures.push(
+      "scripts/tui/app.ts: sudo auth failures must be shown in a popup",
+    );
+  }
+
+  const authFailureBlock = tuiApp.match(
+    /if \(\(auth\.status \?\? 1\) !== 0\) \{[\s\S]*?\n      \}/,
+  )?.[0];
+  if (!authFailureBlock?.includes("return;")) {
+    failures.push(
+      "scripts/tui/app.ts: privileged actions must not start after failed sudo auth",
+    );
+  }
+
+  if (/appendLogText\([^)]*password/s.test(tuiApp)) {
+    failures.push(
+      "scripts/tui/app.ts: sudo password must never be written to logs",
+    );
+  }
 
   for (const fullPath of checkedFiles) {
     const relativePath = path.relative(rootDir, fullPath);

@@ -54,12 +54,34 @@ canva_sudo_validate() {
 
 canva_sudo_validate_stdin() {
   canva_assert_not_user_scope
+  local password
+  local output
   local status=0
-  canva_sudo_timeout sudo -S -v -p '' || status=$?
-  if [[ "$status" -ne 0 ]]; then
-    canva_sudo_error "$status"
-    return "$status"
+
+  password="$(cat)"
+  if [[ -z "${password}" ]]; then
+    echo "sudo: no password was provided" >&2
+    return 1
   fi
+
+  output="$(printf '%s\n' "${password}" | canva_sudo_timeout sudo -S -v -p "" 2>&1)" || status=$?
+  if [[ "${status}" -eq 0 ]]; then
+    password=""
+    return 0
+  fi
+
+  password=""
+  if [[ "${status}" -eq 124 ]]; then
+    canva_sudo_error "${status}"
+    return 1
+  fi
+
+  if [[ -n "${output}" ]]; then
+    printf '%s\n' "${output}" >&2
+  else
+    echo "sudo: a password is required" >&2
+  fi
+  return 1
 }
 
 canva_sudo() {
