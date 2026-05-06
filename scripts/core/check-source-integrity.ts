@@ -49,6 +49,12 @@ const forbiddenCompatibilityCliAliases = [
   '--bundle',
 ] as const;
 
+const forbiddenMaintainedJavaScriptFiles = [
+  'eslint.config.js',
+  'playwright.config.js',
+  'scripts/run-typescript-script.js',
+] as const;
+
 const skippedDirectories = new Set([
   '.build',
   '.flatpak-builder',
@@ -148,6 +154,14 @@ function validateCriticalTextShape(rootDir: string, relativePath: string, failur
     const longestLine = Math.max(...lines.map((line) => line.length), 0);
     if (longestLine > maxDocumentationLineLength) {
       failures.push(`${relativePath}:${lineNumberOfLongestLine(lines)}: documentation line is too long (${longestLine} characters); avoid giant one-line blocks`);
+    }
+  }
+}
+
+function validateNoMaintainedJavaScriptFiles(rootDir: string, failures: string[]): void {
+  for (const relativePath of forbiddenMaintainedJavaScriptFiles) {
+    if (fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${relativePath}: maintained JavaScript source/config contradicts the TypeScript-only source policy; use the corresponding TypeScript source and generated .build output`);
     }
   }
 }
@@ -319,6 +333,7 @@ export function main(): number {
     if (!file.endsWith('.md')) validateCriticalTextShape(rootDir, file, failures);
   }
 
+  validateNoMaintainedJavaScriptFiles(rootDir, failures);
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);
   validateRemovedCompatibilityAliases(rootDir, failures);

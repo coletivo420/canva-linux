@@ -28,6 +28,7 @@ npm ci --include=dev
 - New scripts must be TypeScript unless they are shell scripts for those host operations.
 - New tests must be TypeScript.
 - New configs should be TypeScript when tool-supported.
+- Keep the repository free of legacy maintained JavaScript entrypoints: do not re-add `eslint.config.js`, `playwright.config.js`, or `scripts/run-typescript-script.js`.
 - Run `npm run check:no-source-javascript` or `npm run check:scripts-core` after adding script, test, config, or packaging helper files.
 
 ## Adding workflow actions
