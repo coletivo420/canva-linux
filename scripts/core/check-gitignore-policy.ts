@@ -120,7 +120,18 @@ function validateGitignoreShape(rootDir: string, failures: string[]): void {
 
   lines.forEach((line, index) => {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) return;
+    if (!trimmed) return;
+
+    if (trimmed.startsWith('#')) {
+      for (const requiredPattern of essentialActiveGitignorePatterns) {
+        if (trimmed.includes(requiredPattern)) {
+          failures.push(
+            `.gitignore:${index + 1}: active ignore pattern ${requiredPattern} is hidden inside a comment; put it on its own non-comment line`,
+          );
+        }
+      }
+      return;
+    }
 
     if (/\s+#/.test(line)) {
       failures.push(`.gitignore:${index + 1}: comments must start on their own line`);
