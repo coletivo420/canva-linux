@@ -92,6 +92,9 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
   generated bootstrap and writes per-entry generated JavaScript under
   `.build/scripts/typescript/`.
+- `tsconfig.build.json` emits the Electron runtime from `electron/**/*.ts`
+  only; it must not set `allowJs`, must not set `checkJs`, and must not include
+  `electron/**/*.js`.
 - `npm run check:scripts-core` runs the generated core validation artifacts and
   includes the TypeScript-first closure checks, including `check-gitignore-policy`,
   `check-no-source-javascript`, and `check-source-integrity`.

@@ -127,8 +127,12 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
 function validateBuildTypeScriptConfig(rootDir: string, failures: string[]): void {
   const configPath = 'tsconfig.build.json';
   const config = JSON.parse(fs.readFileSync(path.join(rootDir, configPath), 'utf8')) as TsConfigJson;
-  if (config.compilerOptions?.allowJs === true) failures.push(`${configPath}: compilerOptions.allowJs must not be enabled for the TypeScript-only Electron runtime build`);
-  if (config.compilerOptions?.checkJs === true) failures.push(`${configPath}: compilerOptions.checkJs must not be enabled when JavaScript runtime source is forbidden`);
+  if (Object.hasOwn(config.compilerOptions ?? {}, 'allowJs')) {
+    failures.push(`${configPath}: compilerOptions.allowJs must be omitted for the TypeScript-only Electron runtime build`);
+  }
+  if (Object.hasOwn(config.compilerOptions ?? {}, 'checkJs')) {
+    failures.push(`${configPath}: compilerOptions.checkJs must be omitted when JavaScript runtime source is forbidden`);
+  }
   if (config.include?.includes('electron/**/*.js')) failures.push(`${configPath}: must not include electron/**/*.js because runtime source must be TypeScript`);
 }
 
