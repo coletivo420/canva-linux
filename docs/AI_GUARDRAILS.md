@@ -39,8 +39,16 @@
 
 ## TypeScript-first Node.js rules
 
-- New Node.js logic must be written in TypeScript by default.
-- JavaScript files under `scripts/` are forbidden as maintained source; only generated `.build/**/*.js` artifacts are allowed.
+- TypeScript is mandatory for all Node.js source code.
+- Do not create new JavaScript source files.
+- Do not add `scripts/*.js` as maintained source.
+- Do not add `test/*.js`.
+- Do not add JavaScript config files when TypeScript config is supported.
+- JavaScript may exist only as generated output under `.build` or external dependencies under `node_modules`.
+- Shell scripts are allowed only for Linux host operations, launcher glue, Flatpak/native install, sudo, purge, XDG and validation that must run before Node.
+- JSON/YAML/XML/Desktop files remain native data formats and must be validated by TypeScript checks where appropriate.
+- Flathub source generation must be TypeScript-backed.
+- If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.
 - Shell bootstraps may invoke TypeScript entrypoints, but JavaScript wrappers must not be reintroduced.
 - If a new script needs logic, create it under `scripts/core/*.ts` or as a typed script-specific `.ts` file.
 - Do not add maintained JavaScript implementation, test, config, bootstrap, or compatibility-wrapper files.
