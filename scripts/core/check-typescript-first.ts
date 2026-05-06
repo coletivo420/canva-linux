@@ -163,28 +163,43 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
   }
 }
 
-function validateBuildTypeScriptConfig(
+function validateTypeScriptConfig(
   rootDir: string,
+  configPath: string,
   failures: string[],
 ): void {
-  const configPath = "tsconfig.build.json";
   const config = JSON.parse(
     fs.readFileSync(path.join(rootDir, configPath), "utf8"),
   ) as TsConfigJson;
   if (Object.hasOwn(config.compilerOptions ?? {}, "allowJs")) {
     failures.push(
-      `${configPath}: compilerOptions.allowJs must be omitted for the TypeScript-only Electron runtime build`,
+      `${configPath}: compilerOptions.allowJs must be omitted because JavaScript source is forbidden`,
     );
   }
   if (Object.hasOwn(config.compilerOptions ?? {}, "checkJs")) {
     failures.push(
-      `${configPath}: compilerOptions.checkJs must be omitted when JavaScript runtime source is forbidden`,
+      `${configPath}: compilerOptions.checkJs must be omitted because JavaScript source is forbidden`,
     );
   }
-  if (config.include?.includes("electron/**/*.js"))
-    failures.push(
-      `${configPath}: must not include electron/**/*.js because runtime source must be TypeScript`,
-    );
+
+  const forbiddenIncludes = [
+    "electron/**/*.js",
+    "scripts/**/*.js",
+    "test/**/*.js",
+  ] as const;
+  for (const forbiddenInclude of forbiddenIncludes) {
+    if (config.include?.includes(forbiddenInclude)) {
+      failures.push(
+        `${configPath}: must not include ${forbiddenInclude} because maintained source must be TypeScript`,
+      );
+    }
+  }
+}
+
+function validateTypeScriptConfigs(rootDir: string, failures: string[]): void {
+  for (const configPath of ["tsconfig.json", "tsconfig.build.json"] as const) {
+    validateTypeScriptConfig(rootDir, configPath, failures);
+  }
 }
 
 function validateEslintTypeScriptOnlyConfig(
@@ -253,7 +268,7 @@ export function main(): number {
   validateForbiddenConfigs(rootDir, failures);
   validateRequiredTypeScriptEntrypoints(rootDir, failures);
   validatePackageScripts(rootDir, failures);
-  validateBuildTypeScriptConfig(rootDir, failures);
+  validateTypeScriptConfigs(rootDir, failures);
   validateEslintTypeScriptOnlyConfig(rootDir, failures);
   validateNoCommonJsRuntimeExports(rootDir, files, failures);
   validateFlathubShell(rootDir, failures);

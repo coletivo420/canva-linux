@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "allowJs": false,
     "noEmit": true,
     "target": "ES2022",
     "module": "commonjs",
