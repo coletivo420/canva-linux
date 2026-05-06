@@ -46,9 +46,9 @@ and `node_modules/` directories are never maintained source locations.
 
 Forbidden maintained JavaScript source:
 
-- `scripts/*.js`
+- `scripts/**/*.js`
 - `test/**/*.js`
-- `packaging/flathub/scripts/*.js`
+- `packaging/flathub/scripts/**/*.js`
 - `eslint.config.js`
 - `playwright.config.js`
 
@@ -56,7 +56,8 @@ Repository-root `eslint.config.js` and `playwright.config.js` must not exist; th
 maintained configs are `eslint.config.ts` and `playwright.config.ts`.
 
 The historical `scripts/run-typescript-script.js` bootstrap must also not exist as
-maintained source. `scripts/run-typescript-script.ts` is compiled to
+maintained source. No JavaScript wrapper or bootstrap belongs under `scripts/`;
+`scripts/run-typescript-script.ts` is compiled to
 `.build/scripts/bootstrap/run-typescript-script.js` when needed.
 
 `check-typescript-first.ts` enforces the wider TypeScript migration contract.
@@ -78,7 +79,9 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run build:scripts` compiles top-level script entrypoints such as
   `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
   `scripts/run-tui.ts` directly into `.build/scripts/*.js`.
-- Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts`; maintained `scripts/*.js` wrappers are forbidden.
+- Package entrypoints run those generated `.build/scripts/*.js` artifacts after
+  `build:scripts`; maintained `scripts/**/*.js` wrappers, bootstrap files, and
+  validation outputs are forbidden.
 - `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts`
   into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript
   entrypoints such as Flathub source generation.

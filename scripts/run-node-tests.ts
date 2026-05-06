@@ -86,11 +86,14 @@ function collectTypeScriptTestFiles(directory: string, predicate: (entryName: st
 }
 
 export function main(): void {
-  const testFiles = collectTypeScriptTestFiles(testDir, (entryName) => entryName.endsWith(nodeTestSuffix));
-  const supportFiles = collectTypeScriptTestFiles(
-    testDir,
-    (entryName) => entryName.endsWith('.ts') && !entryName.endsWith(nodeTestSuffix) && !entryName.endsWith(playwrightSpecSuffix),
-  );
+  const isNodeTest = (entryName: string): boolean => entryName.endsWith(nodeTestSuffix);
+  const isPlaywrightSpec = (entryName: string): boolean => entryName.endsWith(playwrightSpecSuffix);
+  const isTypeScriptSupportFile = (entryName: string): boolean => {
+    return entryName.endsWith('.ts') && !isNodeTest(entryName) && !isPlaywrightSpec(entryName);
+  };
+
+  const testFiles = collectTypeScriptTestFiles(testDir, isNodeTest);
+  const supportFiles = collectTypeScriptTestFiles(testDir, isTypeScriptSupportFile);
 
   if (testFiles.length === 0) {
     console.error('[error] No Node test files were found. Expected at least one *.test.ts file under test/.');
