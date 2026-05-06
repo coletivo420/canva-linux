@@ -221,6 +221,43 @@ function validateShellFile(rootDir: string, relativePath: string, failures: stri
   }
 }
 
+function validateProjectValidationScriptShape(rootDir: string, failures: string[]): void {
+  const relativePath = 'scripts/validate-project.sh';
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  if (lines[0] !== '#!/usr/bin/env bash') {
+    failures.push(`${relativePath}: shebang must be the first line by itself`);
+  }
+
+  if (lines[1] !== 'set -euo pipefail') {
+    failures.push(`${relativePath}: strict shell mode must be the second line by itself`);
+  }
+
+  if (lines.length < 60) {
+    failures.push(`${relativePath}: validation script appears collapsed; expected readable multiline shell content`);
+  }
+
+  const sourceFirstCommentIndex = lines.findIndex((line) => line.includes('Do not move runtime build before lint,'));
+  if (sourceFirstCommentIndex === -1) {
+    failures.push(`${relativePath}: missing source-first ordering comment for runtime build placement`);
+  } else if (!lines[sourceFirstCommentIndex].trim().startsWith('#')) {
+    failures.push(`${relativePath}:${sourceFirstCommentIndex + 1}: source-first ordering prose must remain a shell comment`);
+  }
+
+  const buildRuntimeIndex = lines.findIndex((line) => line === 'run_step "npm run build:runtime" npm run build:runtime');
+  const checkScriptsCoreIndex = lines.findIndex((line) => line === 'run_step "npm run check:scripts-core" npm run check:scripts-core');
+  if (buildRuntimeIndex === -1) {
+    failures.push(`${relativePath}: missing npm run build:runtime validation step`);
+  }
+  if (checkScriptsCoreIndex === -1) {
+    failures.push(`${relativePath}: missing npm run check:scripts-core validation step`);
+  }
+  if (buildRuntimeIndex !== -1 && checkScriptsCoreIndex !== -1 && buildRuntimeIndex < checkScriptsCoreIndex) {
+    failures.push(`${relativePath}: npm run build:runtime must stay after npm run check:scripts-core`);
+  }
+}
+
 function validateLauncherScriptShape(rootDir: string, failures: string[]): void {
   const relativePath = 'canva-linux.sh';
   const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
@@ -282,6 +319,7 @@ export function main(): number {
     if (!file.endsWith('.md')) validateCriticalTextShape(rootDir, file, failures);
   }
 
+  validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);
   validateRemovedCompatibilityAliases(rootDir, failures);
   validatePackageLockConsistency(rootDir, failures);
