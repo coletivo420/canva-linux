@@ -4,10 +4,14 @@ Canva Linux is TypeScript-first for Electron runtime code, Node.js maintenance l
 
 ## Current state
 
+- All maintained Node.js source code is TypeScript.
+- JavaScript is generated output only.
+- Shell remains shell for host operations.
 - Electron main and preload source modules are TypeScript.
 - Node.js maintenance scripts use TypeScript source files and shell bootstraps where Node cannot execute TypeScript directly.
 - Tests live under `test/**/*.ts`; `npm test` compiles them into `.build/test/` with inline source maps before running `node --test` on generated JavaScript.
-- ESLint and Playwright use `eslint.config.ts` and `playwright.config.ts`.
+- New tests must be TypeScript.
+- ESLint and Playwright use `eslint.config.ts` and `playwright.config.ts`; new configs should be TypeScript when the tool supports TypeScript configs.
 - Runtime output remains CommonJS-compatible generated JavaScript under `.build/`.
 - JavaScript is not maintained as source code in `scripts/`, `test/`, configs, or `packaging/flathub/scripts/`.
 
@@ -25,9 +29,11 @@ Allowed maintained source formats:
 - `packaging/flathub/scripts/*.ts`
 - JSON, YAML, XML, desktop entries, HTML, and shell files in their native formats
 
-Allowed generated JavaScript:
+Allowed generated and external JavaScript:
 
 - `.build/**/*.js`
+- `coverage/**/*.js`
+- `dist/**/*.js`
 - package-managed dependencies under `node_modules/**/*.js`
 
 Forbidden maintained JavaScript source:
@@ -38,7 +44,7 @@ Forbidden maintained JavaScript source:
 - `eslint.config.js`
 - `playwright.config.js`
 
-`check-typescript-first.ts` enforces this policy and fails if maintained JavaScript source returns outside generated output.
+`check-typescript-first.ts` enforces the wider TypeScript migration contract. `check-no-source-javascript.ts` enforces the no-source-JavaScript rule directly and fails if `.js` files appear outside `.build/`, `node_modules/`, `coverage/`, or `dist/`.
 
 ## Script Core
 
@@ -50,7 +56,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts`; maintained `scripts/*.js` wrappers are forbidden.
 - `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
-- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks.
+- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-no-source-javascript`.
 
 Migrated core entries include:
 
@@ -71,6 +77,7 @@ Migrated core entries include:
 - `check-runtime-build.ts`
 - `check-typescript-wrapper-contract.ts`
 - `check-typescript-first.ts`
+- `check-no-source-javascript.ts`
 
 Standalone TypeScript script entrypoints include:
 
@@ -112,11 +119,15 @@ npm run build:scripts-core
 npm run check:scripts-core
 npm run check:typescript-wrappers
 npm run check:typescript-first
+npm run check:no-source-javascript
 ```
 
 ## Rules
 
 - New Node.js logic must be written in TypeScript by default.
+- New scripts must be TypeScript unless they are shell scripts for host operations.
+- New tests must be TypeScript.
+- New configs should be TypeScript when tool-supported.
 - Do not add maintained JavaScript source files.
 - Do not duplicate TypeScript core logic in JavaScript fallbacks.
 - Do not edit `.build/` manually.

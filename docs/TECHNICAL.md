@@ -33,6 +33,8 @@ Canva Linux workflow actions are split into four layers:
 3. Interfaces (Blessed TUI and direct CLI flags)
 4. Backend scripts under `scripts/`
 
+All maintained Node.js source code is TypeScript. JavaScript is generated output only under build, coverage, distribution, or dependency directories. Shell remains shell for host operations such as launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node validation glue.
+
 ## Terminal Assistant / Blessed TUI
 
 `./canva-linux.sh` opens the Blessed TUI by default when stdin/stdout are TTY, `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection flags and environment variables have been removed.
@@ -51,7 +53,7 @@ Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
 
 ## TypeScript Script Core
 
-The project validations and contracts are implemented in TypeScript under `scripts/core/`. These are compiled into `.build/scripts/core/` and executed through `scripts/run-core-entry.sh`. All project validations are integrated into the `npm run check:scripts-core` quality gate.
+The project validations and contracts are implemented in TypeScript under `scripts/core/`. These are compiled into `.build/scripts/core/` and executed through `scripts/run-core-entry.sh`. All project validations are integrated into the `npm run check:scripts-core` quality gate. The gate includes `check-no-source-javascript`, so maintained `.js` files under script, test, config, or Flathub helper paths fail validation.
 
 ## Packaging roadmap notes
 

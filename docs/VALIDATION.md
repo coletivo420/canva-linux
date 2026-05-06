@@ -6,7 +6,8 @@ Current target:
 
 ## Automated
 - npm run build:scripts-core
-- npm run check:scripts-core
+- npm run check:scripts-core (includes `check-no-source-javascript`)
+- npm run check:no-source-javascript
 - npm run build:tui
 - npm run check:tui
 - npm run actions:validate
@@ -19,7 +20,7 @@ Current target:
 - scripts/run-core-entry.sh check-no-shell-menu
 - scripts/run-core-entry.sh check-sudo-contract
 - scripts/run-core-entry.sh check-action-contract
-- npm run validate:project
+- npm run validate:project (fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`)
 - bash -n canva-linux.sh scripts/*.sh
 - scripts/run-core-entry.sh overview-status
 - bash scripts/show-detected-installations.sh
@@ -43,3 +44,4 @@ Current target:
 - Confirm user-scope actions do not request sudo.
 - Confirm system-scope actions use `scripts/sudo-common.sh`.
 - Confirm `REVIEW.md` still starts with `# Review Checklist`.
+- Confirm new Node.js scripts, tests, and supported configs are authored in TypeScript, with shell reserved for host-operation glue.

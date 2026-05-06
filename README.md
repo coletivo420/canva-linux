@@ -17,7 +17,7 @@ cd canva-linux
 ```
 
 ## Canva Linux Install and Development Tool
-The launcher opens the Terminal Assistant by default (when supported), with Install, Development, and Maintenance workflows. Direct CLI action flags are available for automation.
+The launcher opens the Terminal Assistant by default (when supported), with Install, Development, and Maintenance workflows. Direct CLI action flags are available for automation. Maintained Node.js tooling is TypeScript; JavaScript appears only as generated output, while shell remains reserved for Linux host-operation glue.
 
 ## Feature Matrix
 - **Desktop App**: dedicated window, persistent session, desktop integration.

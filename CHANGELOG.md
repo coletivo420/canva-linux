@@ -3,6 +3,7 @@
 ## [0.1.4.11-dev.58] - 2026-05-06
 
 ### Changed
+- Documented the final TypeScript status across development, validation, technical, guardrail, and README docs: all maintained Node.js source is TypeScript, JavaScript is generated output only, and shell remains shell for host operations.
 - Closed the TypeScript migration as the general project rule: maintained JavaScript source is no longer allowed outside generated `.build/` artifacts and dependencies.
 - Migrated Node test, lint, Playwright, Flathub, TUI, core-runner, and build entrypoints to TypeScript-first execution through shell bootstraps or generated `.build/` JavaScript.
 - Updated project version and phase identity to `0.1.4-dev.11.58` / `0.1.4.11-dev.58`.
