@@ -59,6 +59,11 @@ type AttachTabEventHandlersHelpers = {
 // Attach all BrowserView/WebContents event wiring for a single Canva tab.
 // This module exists so tab lifecycle policy can evolve without forcing the
 // main entrypoint to keep every navigation and keyboard branch inline.
+function closeCreatedWindowIfPossible(window: unknown): void {
+  const candidate = window as { close?: () => void } | null | undefined;
+  if (typeof candidate?.close === 'function') candidate.close();
+}
+
 /**
  * @param {unknown} message
  * @param {unknown} sourceId
@@ -163,11 +168,26 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
       frameName: details.frameName || '',
     });
     debugLog(request.category, 'did-create-window', `tab=${tab.id}`, `kind=${request.kind}`, details.url || 'about:blank');
-    oauthHelpers.registerAuthPopupWindow(window, details.url || 'about:blank', {
-      shellBackgroundColor,
-      sourceWebContentsId: wc.id,
-      openerUrl,
-    });
+
+    if (request.kind === 'oauth-popup') {
+      oauthHelpers.registerAuthPopupWindow(window, details.url || 'about:blank', {
+        shellBackgroundColor,
+        sourceWebContentsId: wc.id,
+        openerUrl,
+      });
+      return;
+    }
+
+    closeCreatedWindowIfPossible(window);
+
+    if (request.kind === 'internal-tab') {
+      createTab(details.url, { activate: true });
+      return;
+    }
+
+    if (request.kind === 'external-browser' && !isBlankPopupUrl(details.url) && isSafeExternalUrl(details.url)) {
+      shell.openExternal(details.url);
+    }
   });
 
   wc.on('will-navigate', (event: PreventableEvent, url: string) => {

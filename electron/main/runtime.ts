@@ -26,7 +26,13 @@ type SessionLike = {
   webRequest: { onBeforeSendHeaders(handler: (details: BeforeSendHeadersDetailsLike, callback: (response: { requestHeaders: Record<string, string> }) => void) => void): void };
   on(event: 'will-download', listener: (event: unknown, item: DownloadItemLike) => void): void;
 };
-type PathLike = Pick<typeof import('node:path'), 'join'>;
+type PathLike = Pick<typeof import('node:path'), 'basename' | 'join'>;
+
+function sanitizeDownloadFilename(filename: string, path: PathLike): string {
+  const baseName = path.basename(String(filename || '')).replace(/[<>:\"/\\|?*\x00-\x1F]/g, '_').trim();
+  if (!baseName || baseName === '.' || baseName === '..') return 'download';
+  return baseName;
+}
 
 function appendDisableFeature(app: ElectronAppLike, featureName: string): void {
   const switchName = 'disable-features';
@@ -161,9 +167,10 @@ async function configureSession({
   });
 
   ses.on('will-download', (_event, item) => {
-    debugLog('upload', 'will-download', item.getFilename());
+    const filename = sanitizeDownloadFilename(item.getFilename(), path);
+    debugLog('upload', 'will-download', filename);
     const downloadsDir = app.getPath('downloads');
-    item.setSavePath(path.join(downloadsDir, item.getFilename()));
+    item.setSavePath(path.join(downloadsDir, filename));
   });
 
   await flushSessionFn(ses).catch(() => {});
@@ -174,6 +181,7 @@ export {
   configureLinuxRuntime,
   configureSession,
   flushSession,
+  sanitizeDownloadFilename,
   sharedWebPreferences,
   shouldEnableCaptureVerboseLogging,
 };
@@ -186,6 +194,7 @@ module.exports = {
   configureLinuxRuntime,
   configureSession,
   flushSession,
+  sanitizeDownloadFilename,
   sharedWebPreferences,
   shouldEnableCaptureVerboseLogging,
 };

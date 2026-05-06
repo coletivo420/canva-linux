@@ -46,6 +46,7 @@
     "test/eyedropper-bridge.test.ts",
     "test/window-open-policy.test.ts",
     "test/navigation.test.ts",
+    "test/tab-events.test.ts",
     "test/oauth-helpers.test.ts",
     "test/preload-debug.test.ts",
     "test/upload-diagnostics.test.ts",
