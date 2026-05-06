@@ -317,11 +317,13 @@ function validateRunCoreEntryScriptShape(rootDir: string, failures: string[]): v
   }
 
   const requiredStandaloneLines = [
-    'if [[ $# -lt 1 ]]; then',
-    'fi',
-    'ENTRY="$1"',
-    'shift',
-    'node "${TARGET}" "$@"',
+    'main() {',
+    '  if [[ $# -lt 1 ]]; then',
+    '  fi',
+    '  local entry="$1"',
+    '  shift',
+    '  node "${target}" "$@"',
+    'main "$@"',
   ] as const;
 
   for (const requiredLine of requiredStandaloneLines) {

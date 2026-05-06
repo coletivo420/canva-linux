@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Keep this wrapper formatted as real multiline shell; the shebang must stay alone.
-if [[ $# -lt 1 ]]; then
-  printf '%s\n' "usage: scripts/run-core-entry.sh <entry-name> [args...]" >&2
-  exit 64
-fi
+main() {
+  if [[ $# -lt 1 ]]; then
+    printf '%s\n' "usage: scripts/run-core-entry.sh <entry-name> [args...]" >&2
+    exit 64
+  fi
 
-ENTRY="$1"
-shift
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TARGET="${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
+  local entry="$1"
+  shift
 
-if [[ ! -f "${TARGET}" ]]; then
-  npm --prefix "${ROOT_DIR}" run build:scripts-core --silent
-fi
+  local root_dir
+  root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-node "${TARGET}" "$@"
+  local target="${root_dir}/.build/scripts/core/${entry}.js"
+  if [[ ! -f "${target}" ]]; then
+    npm --prefix "${root_dir}" run build:scripts-core --silent
+  fi
+
+  node "${target}" "$@"
+}
+
+main "$@"
