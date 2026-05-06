@@ -17,7 +17,9 @@ function buildScript(wrapperFilename) {
   const scriptName = scriptNameFromWrapper(wrapperFilename);
   const sourceDir = path.dirname(wrapperFilename);
   const entryPoint = path.join(sourceDir, `${scriptName}.ts`);
-  const outfile = path.join(repoRoot, '.build', 'scripts', 'bootstrap', `${scriptName}.js`);
+  const relativePath = path.relative(repoRoot, wrapperFilename);
+  const flatName = relativePath.replace(/[\\/]/g, '-').replace(/\.js$/, '');
+  const outfile = path.join(repoRoot, '.build', 'scripts', 'bootstrap', `${flatName}.js`);
 
   esbuild.buildSync({
     entryPoints: [entryPoint],
