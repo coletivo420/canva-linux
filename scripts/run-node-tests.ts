@@ -80,7 +80,7 @@ function collectTypeScriptTestFiles(directory: string, predicate: (entryName: st
 
 export function main(): void {
   const testFiles = collectTypeScriptTestFiles(testDir, (entryName) => entryName.endsWith('.test.ts'));
-  const compiledInputs = collectTypeScriptTestFiles(testDir, (entryName) => entryName.endsWith('.ts'));
+  const supportFiles = collectTypeScriptTestFiles(testDir, (entryName) => entryName.endsWith('.ts') && !entryName.endsWith('.test.ts'));
 
   if (testFiles.length === 0) {
     console.error('[error] No Node test files were found. Expected at least one *.test.ts file under test/.');
@@ -88,7 +88,6 @@ export function main(): void {
   }
 
   const relativeTestFiles = testFiles.map((file) => normalizePathForNodeTest(path.relative(testDir, file)));
-  const relativeCompileInputs = compiledInputs.map((file) => normalizePathForNodeTest(path.relative(rootDir, file)));
   const { nodeArgs, selectedRelativeTests } = splitNodeArgsAndTestSelectors(process.argv.slice(2));
 
   if (selectedRelativeTests) {
@@ -100,6 +99,11 @@ export function main(): void {
   }
 
   const selectedTestFiles = selectedRelativeTests ? relativeTestFiles.filter((file) => selectedRelativeTests.has(file)) : relativeTestFiles;
+  const selectedTestInputFiles = selectedTestFiles.map((file) => path.join(testDir, file));
+  const compileInputSet = new Set(selectedRelativeTests ? [...selectedTestInputFiles, ...supportFiles] : [...testFiles, ...supportFiles]);
+  const relativeCompileInputs = [...compileInputSet]
+    .sort((left, right) => left.localeCompare(right))
+    .map((file) => normalizePathForNodeTest(path.relative(rootDir, file)));
   const compiledTestFiles = selectedTestFiles.map((file) => path.join('.build/test', file.replace(/\.ts$/, '.js')));
   console.error(`[info] Compiling ${relativeCompileInputs.length} TypeScript test file(s) into .build/test.`);
 

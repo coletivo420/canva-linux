@@ -8,16 +8,17 @@ Current target:
 ## Automated
 
 - npm run build:scripts-core
-- npm run check:scripts-core (includes `check-no-source-javascript` and `check-source-integrity`)
+- npm run check:scripts-core (includes `check-gitignore-policy`, `check-no-source-javascript`, and `check-source-integrity`)
 - npm run check:no-source-javascript
-- npm run check:source-integrity
+- npm run check:source-integrity (validates formatted package JSON, shell heredocs, and readable shell/docs shapes)
 - npm run build:tui
 - npm run check:tui
 - npm run actions:validate
 - npm run lint
 - npm run typecheck
 - npm run typecheck:strict
-- npm test (compiles `test/**/*.ts` to `.build/test/` before `node --test`)
+- npm run check:gitignore-policy
+- npm test (compiles selected TypeScript tests plus support helpers to `.build/test/` before `node --test`)
 - npm run docs:check-links
 - npm run docs:check-ai
 - scripts/run-core-entry.sh check-no-shell-menu

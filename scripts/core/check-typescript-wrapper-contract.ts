@@ -18,15 +18,18 @@ const removedWrappers = [
 ] as const;
 
 const requiredStandaloneEntrypoints = [
-  { source: 'scripts/build-runtime.ts', artifact: '.build/scripts/build-runtime.js' },
-  { source: 'scripts/build-preload-bundle.ts', artifact: '.build/scripts/build-preload-bundle.js' },
-  { source: 'scripts/copy-runtime-assets.ts', artifact: '.build/scripts/copy-runtime-assets.js' },
-  { source: 'scripts/clean-runtime-build.ts', artifact: '.build/scripts/clean-runtime-build.js' },
-  { source: 'scripts/electron-builder-before-build.ts', artifact: '.build/scripts/electron-builder-before-build.js' },
-  { source: 'scripts/run-node-tests.ts', artifact: '.build/scripts/run-node-tests.js' },
-  { source: 'scripts/run-tui.ts', artifact: '.build/scripts/run-tui.js' },
-  { source: 'scripts/run-typescript-script.ts', artifact: '.build/scripts/run-typescript-script.js' },
+  'scripts/build-runtime.ts',
+  'scripts/build-preload-bundle.ts',
+  'scripts/copy-runtime-assets.ts',
+  'scripts/clean-runtime-build.ts',
+  'scripts/run-node-tests.ts',
+  'scripts/run-tui.ts',
 ] as const;
+
+const requiredBootstrapEntrypoints = {
+  'bootstrap:typescript': { source: 'scripts/run-typescript-script.ts', artifact: '.build/scripts/bootstrap/run-typescript-script.js' },
+  'bootstrap:electron-builder': { source: 'scripts/electron-builder-before-build.ts', artifact: '.build/scripts/bootstrap/electron-builder-before-build.js' },
+} as const;
 
 const requiredArtifactScripts = {
   test: '.build/scripts/run-node-tests.js',
@@ -49,9 +52,17 @@ export function main(): number {
   const packageScripts = packageJson.scripts ?? {};
   const standaloneBuild = packageScripts['build:scripts'] ?? '';
 
-  for (const entrypoint of requiredStandaloneEntrypoints) {
+  for (const source of requiredStandaloneEntrypoints) {
+    if (!fs.existsSync(path.join(rootDir, source))) failures.push(`${source}: missing TypeScript-first entrypoint`);
+    if (!standaloneBuild.includes(source)) failures.push(`package.json build:scripts: must compile ${source}`);
+  }
+
+  for (const [scriptName, entrypoint] of Object.entries(requiredBootstrapEntrypoints)) {
+    const command = packageScripts[scriptName] ?? '';
     if (!fs.existsSync(path.join(rootDir, entrypoint.source))) failures.push(`${entrypoint.source}: missing TypeScript-first entrypoint`);
-    if (!standaloneBuild.includes(entrypoint.source)) failures.push(`package.json build:scripts: must compile ${entrypoint.source}`);
+    if (!command.includes(entrypoint.source) || !command.includes(entrypoint.artifact)) {
+      failures.push(`package.json scripts.${scriptName}: must compile ${entrypoint.source} to ${entrypoint.artifact}`);
+    }
   }
 
   if (!standaloneBuild.includes('--outdir=.build/scripts') || !standaloneBuild.includes('--entry-names=[name]')) {

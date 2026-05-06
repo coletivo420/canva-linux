@@ -82,7 +82,7 @@ tui_needs_dev_tty_redirect() {
 }
 
 tui_has_entrypoint() {
-  [[ -f "${ROOT_DIR}/scripts/run-tui.ts" || -f "${ROOT_DIR}/scripts/tui/index.ts" || -f "${ROOT_DIR}/.build/scripts/tui/index.js" ]]
+  [[ -f "${ROOT_DIR}/scripts/run-tui.ts" ]]
 }
 
 tui_unavailable_reason() {
@@ -109,7 +109,7 @@ tui_unavailable_reason() {
   fi
 
   if ! tui_has_entrypoint; then
-    printf '%s\n' "TUI entrypoint is missing. Expected scripts/run-tui.ts, scripts/tui/index.ts or .build/scripts/tui/index.js."
+    printf '%s\n' "TUI entrypoint is missing. Expected scripts/run-tui.ts."
     return 0
   fi
 
@@ -120,70 +120,12 @@ can_run_tui() {
   ! tui_unavailable_reason "$@" > /dev/null
 }
 
-ensure_tui_npm_dependencies() {
-  if [[ -x "${ROOT_DIR}/scripts/ensure-npm-dependencies.sh" || -f "${ROOT_DIR}/scripts/ensure-npm-dependencies.sh" ]]; then
-    bash "${ROOT_DIR}/scripts/ensure-npm-dependencies.sh"
-    return $?
-  fi
-
-  if ! command -v npm > /dev/null 2>&1; then
-    ui_error "TUI fallback requires npm because scripts/ensure-npm-dependencies.sh is missing."
-    exit 1
-  fi
-
-  if [[ ! -d "${ROOT_DIR}/node_modules" ]]; then
-    ui_info "Installing npm dependencies with npm install --include=dev"
-    npm install --include=dev
-  fi
-}
-
-build_tui_direct() {
-  ensure_tui_npm_dependencies
-
-  if [[ -f "${ROOT_DIR}/scripts/tui/index.ts" ]]; then
-    npm run build:tui
-    return $?
-  fi
-
-  if [[ -f "${ROOT_DIR}/.build/scripts/tui/index.js" ]]; then
-    return 0
-  fi
-
-  ui_error "Cannot build TUI: scripts/tui/index.ts is missing."
-  exit 1
-}
-
-run_built_tui() {
-  local built_tui="${ROOT_DIR}/.build/scripts/tui/index.js"
-  if [[ ! -f "${built_tui}" ]]; then
-    ui_error "Built TUI entrypoint is missing: .build/scripts/tui/index.js"
-    exit 1
-  fi
-
-  if [[ -n "${PROJECT_PHASE:-}" ]]; then
-    CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node "${built_tui}"
-  else
-    node "${built_tui}"
-  fi
-}
-
-run_tui_direct() {
-  session_log "[tui] scripts/run-tui.ts missing; using direct TUI bootstrap fallback"
-  build_tui_direct
-  run_built_tui
-}
-
 run_tui_entrypoint() {
-  if [[ -f "${ROOT_DIR}/scripts/run-tui.ts" ]]; then
-    if [[ -n "${PROJECT_PHASE:-}" ]]; then
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts > /dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/run-tui.js
-    else
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-tui.js
-    fi
-    return $?
+  if [[ -n "${PROJECT_PHASE:-}" ]]; then
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts > /dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/run-tui.js
+  else
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-tui.js
   fi
-
-  run_tui_direct
 }
 
 run_tui_node() {

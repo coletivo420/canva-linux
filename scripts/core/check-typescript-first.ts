@@ -7,6 +7,14 @@ type PackageJson = {
   build?: { beforeBuild?: string };
 };
 
+type TsConfigJson = {
+  compilerOptions?: {
+    allowJs?: boolean;
+    checkJs?: boolean;
+  };
+  include?: string[];
+};
+
 const allowedJavaScriptPrefixes = [
   '.build/',
   'node_modules/',
@@ -116,6 +124,22 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
   }
 }
 
+function validateBuildTypeScriptConfig(rootDir: string, failures: string[]): void {
+  const configPath = 'tsconfig.build.json';
+  const config = JSON.parse(fs.readFileSync(path.join(rootDir, configPath), 'utf8')) as TsConfigJson;
+  if (config.compilerOptions?.allowJs === true) failures.push(`${configPath}: compilerOptions.allowJs must not be enabled for the TypeScript-only Electron runtime build`);
+  if (config.compilerOptions?.checkJs === true) failures.push(`${configPath}: compilerOptions.checkJs must not be enabled when JavaScript runtime source is forbidden`);
+  if (config.include?.includes('electron/**/*.js')) failures.push(`${configPath}: must not include electron/**/*.js because runtime source must be TypeScript`);
+}
+
+function validateEslintTypeScriptOnlyConfig(rootDir: string, failures: string[]): void {
+  const configPath = 'eslint.config.ts';
+  const config = fs.readFileSync(path.join(rootDir, configPath), 'utf8');
+  if (config.includes("'electron/**/*.js'") || config.includes('"electron/**/*.js"')) {
+    failures.push(`${configPath}: must not include a dedicated electron/**/*.js lint block after the TypeScript migration`);
+  }
+}
+
 function validateFlathubShell(rootDir: string, failures: string[]): void {
   const shellPath = 'packaging/flathub/scripts/generate-npm-sources.sh';
   const shellContent = fs.readFileSync(path.join(rootDir, shellPath), 'utf8');
@@ -143,6 +167,8 @@ export function main(): number {
   validateForbiddenConfigs(rootDir, failures);
   validateRequiredTypeScriptEntrypoints(rootDir, failures);
   validatePackageScripts(rootDir, failures);
+  validateBuildTypeScriptConfig(rootDir, failures);
+  validateEslintTypeScriptOnlyConfig(rootDir, failures);
   validateFlathubShell(rootDir, failures);
 
   if (failures.length) {

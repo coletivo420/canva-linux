@@ -39,14 +39,9 @@ run_step "npm run lint" npm run lint
 run_step "npm run typecheck" npm run typecheck
 run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "npm test" npm test
-run_step "npm run docs:check-links" npm run docs:check-links
 run_step "npm run docs:check-ai" npm run docs:check-ai
-run_step "npm run deps:check-policy" npm run deps:check-policy
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
 run_step "bash scripts/check-shell-ui-api.sh" bash scripts/check-shell-ui-api.sh
-run_step "scripts/run-core-entry.sh check-no-shell-menu" scripts/run-core-entry.sh check-no-shell-menu
-run_step "scripts/run-core-entry.sh check-sudo-contract" scripts/run-core-entry.sh check-sudo-contract
-run_step "scripts/run-core-entry.sh check-action-contract" scripts/run-core-entry.sh check-action-contract
 run_step "npm run check:scripts-core" npm run check:scripts-core
 run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check

@@ -1,8 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
     "noEmit": false,
     "declaration": false,
     "sourceMap": false,
@@ -20,7 +18,6 @@
     "moduleDetection": "force"
   },
   "include": [
-    "electron/**/*.js",
     "electron/**/*.ts"
   ],
   "exclude": [
