@@ -1,5 +1,4 @@
-// @ts-nocheck
-const { test, expect, _electron: electron } = require('@playwright/test');
+import { test, expect, _electron as electron } from '@playwright/test';
 
 test('launches Electron in development mode and opens the first window', async () => {
   const electronApp = await electron.launch({

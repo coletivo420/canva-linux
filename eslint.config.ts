@@ -1,16 +1,17 @@
-'use strict';
-// @ts-nocheck
+import { createRequire } from 'node:module';
+import type { Linter } from 'eslint';
 
-const tsParser = require('@typescript-eslint/parser');
-const tsPlugin = require('@typescript-eslint/eslint-plugin');
+const requireFromConfig = createRequire(__filename);
+const tsPlugin = requireFromConfig('@typescript-eslint/eslint-plugin');
+const tsParser = requireFromConfig('@typescript-eslint/parser');
 
 const commonRules = {
   eqeqeq: ['error', 'always'],
   'no-var': 'error',
   'prefer-const': 'error',
-};
+} satisfies Linter.RulesRecord;
 
-module.exports = [
+const config = [
   {
     ignores: [
       'build-dir/**',
@@ -49,13 +50,18 @@ module.exports = [
     ],
     languageOptions: {
       ecmaVersion: 'latest',
-      sourceType: 'commonjs',
+      parser: tsParser,
+      parserOptions: {
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
     },
     rules: {
-      eqeqeq: ['error', 'always'],
-      'no-var': 'error',
-      'prefer-const': 'error',
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      ...commonRules,
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
   },
   {
@@ -90,4 +96,6 @@ module.exports = [
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
     },
   },
-];
+] satisfies Linter.Config[];
+
+export default config;
