@@ -69,8 +69,7 @@ function typeScriptScriptImplementation(relativePath: string): string {
   return relativePath.replace(/\.js$/, '.ts');
 }
 
-function classifyWrapper(rootDir: string, relativePath: string): WrapperSummary {
-  const content = readText(rootDir, relativePath);
+function classifyWrapper(content: string, relativePath: string): WrapperSummary {
   const coreEntries = extractCoreEntriesFromWrapper(content);
 
   if (supportJavaScriptFiles.has(relativePath)) {
