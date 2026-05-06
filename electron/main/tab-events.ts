@@ -33,7 +33,7 @@ type AttachTabEventHandlersHelpers = {
     registerAuthPopupWindow(window: unknown, url: string, options: Record<string, unknown>): void;
     openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number | null): void;
   };
-  shell: { openExternal(url: string): unknown };
+  shell: { openExternal?: (url: string) => unknown };
   shellBackgroundColor: () => string;
   switchRelativeTab: (step: number) => void;
   broadcastTabsState: () => void;
@@ -100,7 +100,7 @@ function isKnownUpstreamFedCmWarning(message: unknown, sourceId: unknown): boole
  *     registerAuthPopupWindow(window: unknown, url: string, options: Record<string, unknown>): void;
  *     openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number): void;
  *   };
- *   shell: { openExternal(url: string): unknown };
+ *   shell: { openExternal?: (url: string) => unknown };
  *   shellBackgroundColor: () => string;
  *   switchRelativeTab: (step: number) => void;
  *   broadcastTabsState: () => void;
@@ -154,7 +154,7 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
 
     if (!isBlankPopupUrl(url) && isSafeExternalUrl(url)) {
       debugLog('tabs:navigation', 'external-open', `tab=${tab.id}`, url);
-      shell.openExternal(url);
+      shell.openExternal?.(url);
     }
     return { action: 'deny' };
   });
@@ -186,7 +186,7 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
     }
 
     if (request.kind === 'external-browser' && !isBlankPopupUrl(details.url) && isSafeExternalUrl(details.url)) {
-      shell.openExternal(details.url);
+      shell.openExternal?.(details.url);
     }
   });
 
@@ -210,7 +210,7 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
       event.preventDefault();
       if (isSafeExternalUrl(url)) {
         debugLog('tabs:navigation', 'external-navigation-blocked', `tab=${tab.id}`, url);
-        shell.openExternal(url);
+        shell.openExternal?.(url);
       } else {
         debugLog('tabs:navigation', 'unsafe-external-navigation-blocked', `tab=${tab.id}`, url || 'about:blank');
       }

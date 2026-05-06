@@ -8,7 +8,7 @@ const { loadRuntimeModule } = require('./helpers/runtime-module');
 
 const { attachTabEventHandlers } = loadRuntimeModule('main/tab-events');
 
-function createHarness(classifyWindowOpenRequest) {
+function createHarness(classifyWindowOpenRequest, { shell } = {}) {
   const listeners = new Map();
   const registeredPopups = [];
   const createdTabs = [];
@@ -80,7 +80,7 @@ function createHarness(classifyWindowOpenRequest) {
         },
         openAuthPopupForTab() {},
       },
-      shell: {
+      shell: shell || {
         openExternal(url) {
           externalUrls.push(url);
         },
@@ -170,4 +170,36 @@ test('did-create-window closes and opens external browser windows without OAuth 
   assert.equal(closed, true);
   assert.equal(registeredPopups.length, 0);
   assert.deepEqual(externalUrls, ['https://example.com/share']);
+});
+
+test('window open external handling does not require injected shell.openExternal', () => {
+  const { listeners, registeredPopups } = createHarness(() => ({ category: 'tabs', kind: 'external-browser' }), { shell: {} });
+
+  assert.doesNotThrow(() => {
+    const result = listeners.get('window-open-handler')({
+      url: 'https://example.com/share',
+      disposition: 'foreground-tab',
+      frameName: '',
+    });
+
+    assert.deepEqual(result, { action: 'deny' });
+  });
+  assert.equal(registeredPopups.length, 0);
+});
+
+test('external navigation blocking does not require injected shell.openExternal', () => {
+  const { listeners } = createHarness(() => ({ category: 'tabs', kind: 'external-browser' }), { shell: {} });
+  let prevented = false;
+
+  assert.doesNotThrow(() => {
+    listeners.get('will-navigate')(
+      {
+        preventDefault() {
+          prevented = true;
+        },
+      },
+      'https://example.com/share'
+    );
+  });
+  assert.equal(prevented, true);
 });
