@@ -306,7 +306,7 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
           }
         } catch {}
 
-        console.log('[canva:eyedropper:check] tab=${tab.id} installed=' + installed + ' ensured=' + ensured);
+        console.log('[canva:eyedropper:check] tab=' + ${tab.id} + ' installed=' + installed + ' ensured=' + ensured);
       })();
     `).catch(() => {});
   });

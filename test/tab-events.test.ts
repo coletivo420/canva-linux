@@ -2,9 +2,13 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const test = require('node:test');
 
 const { loadRuntimeModule } = require('./helpers/runtime-module');
+
+const repoRoot = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, '..');
 
 const { attachTabEventHandlers } = loadRuntimeModule('main/tab-events');
 
@@ -202,4 +206,11 @@ test('external navigation blocking does not require injected shell.openExternal'
     );
   });
   assert.equal(prevented, true);
+});
+
+test('EyeDropper injected diagnostic log includes the concrete tab id expression', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'electron', 'main', 'tab-events.ts'), 'utf8');
+
+  assert.match(source, /console\.log\('\[canva:eyedropper:check\] tab=' \+ \$\{tab\.id\} \+ ' installed='/);
+  assert.doesNotMatch(source, /console\.log\('\[canva:eyedropper:check\] tab=\$\{tab\.id\}/);
 });
