@@ -135,11 +135,16 @@ Bootstrap TypeScript entrypoints compiled by dedicated scripts include:
 
 Test execution:
 
-- `scripts/run-node-tests.ts` compiles all tests for full-suite runs, or only
-  selected `*.test.ts` files plus shared support files when test paths are passed
-  on the CLI, to `.build/test/**/*.js` with inline source maps.
-- `npm test` runs `node --test` against `.build/test/**/*.test.js`; Node does
-  not execute TypeScript test files directly.
+- `scripts/run-node-tests.ts` collects Node tests from `test/**/*.test.ts`,
+  compiles all Node tests for full-suite runs, or only selected `*.test.ts`
+  files plus shared support files when test paths are passed on the CLI, to
+  `.build/test/**/*.js` with inline source maps.
+- Playwright specs stay separate as `test/**/*.spec.ts` and run through
+  `npm run test:smoke`; the Node test runner rejects spec-file selectors so
+  Playwright tests are not compiled as Node support files by accident.
+- `npm test` runs `node --test` against the generated
+  `.build/test/**/*.test.js` outputs; Node does not execute TypeScript test
+  files directly.
 - `test/helpers/runtime-module.ts` loads Electron runtime TypeScript sources for
   module-level tests and no longer falls back to JavaScript source files.
 
