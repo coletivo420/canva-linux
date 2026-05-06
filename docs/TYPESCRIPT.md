@@ -90,7 +90,8 @@ Test execution:
 
 Flathub source generation:
 
-- `packaging/flathub/scripts/generate-npm-sources.ts` owns package-lock parsing, npm source list generation, integrity hash conversion, and `generated-sources.json` writing.
+- `packaging/flathub/scripts/generate-npm-sources.ts` owns package-lock parsing, npm source list generation, integrity hash conversion, deterministic ordering, and `generated-sources.json` writing.
+- The generator rejects local/workspace/link resolved dependencies, `node_modules` path sources, non-HTTPS tarballs, invalid integrity fragments, duplicate URL/hash conflicts, and missing `packaging/flathub/manifest.yml` wiring for `generated-sources.json`.
 - `packaging/flathub/scripts/generate-npm-sources.sh` invokes the TypeScript generator through `npm run run:ts`, which uses the generated runner bootstrap.
 
 ## Commands

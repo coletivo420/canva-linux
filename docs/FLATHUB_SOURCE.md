@@ -71,6 +71,8 @@ Using `dist/linux-unpacked` as an **internal build artifact** is acceptable. The
 
 For Flathub-reviewable Node/Electron builds, keep npm dependencies in `packaging/flathub/generated-sources.json` and run `npm install --offline` inside the sandbox build.
 
+Regenerate `generated-sources.json` with `packaging/flathub/scripts/generate-npm-sources.sh`. The maintained generator is `generate-npm-sources.ts`; it validates package-lock tarball URLs and integrity hashes, blocks local or `node_modules` path sources, keeps output sorted, and verifies the Flathub submission manifest consumes `generated-sources.json`.
+
 ## Release workflow separation
 
 GitHub `.flatpak` bundle releases and Flathub source builds are separate workflows.
