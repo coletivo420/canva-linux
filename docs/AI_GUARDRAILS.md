@@ -75,6 +75,7 @@
 - information item titles = green
 
 Additional rules:
+
 - Only `not detected` should use purple in status output and optional accent usage.
 - Detection refresh must not clear/override progress results.
 - Progress refresh must not convert a completed action into an error.

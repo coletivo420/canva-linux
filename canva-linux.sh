@@ -15,11 +15,11 @@ ui_init
 SESSION_LOG="${CANVA_TOOL_SESSION_LOG:-${XDG_STATE_HOME:-$HOME/.local/state}/canva-linux/tool-session.log}"
 SESSION_LOG_ENABLED=false
 
-if mkdir -p "$(dirname "${SESSION_LOG}")" 2>/dev/null && touch "${SESSION_LOG}" 2>/dev/null; then
+if mkdir -p "$(dirname "${SESSION_LOG}")" 2> /dev/null && touch "${SESSION_LOG}" 2> /dev/null; then
   SESSION_LOG_ENABLED=true
 else
   SESSION_LOG="/tmp/canva-linux-tool-session.log"
-  if mkdir -p "$(dirname "${SESSION_LOG}")" 2>/dev/null && touch "${SESSION_LOG}" 2>/dev/null; then
+  if mkdir -p "$(dirname "${SESSION_LOG}")" 2> /dev/null && touch "${SESSION_LOG}" 2> /dev/null; then
     SESSION_LOG_ENABLED=true
   fi
 fi
@@ -33,7 +33,7 @@ session_log "[identity] version=${PROJECT_DISPLAY_VERSION:-unknown} phase=${PROJ
 trap 'session_log "[session] ended"' EXIT
 
 ensure_action_runner_available() {
-  if command -v node >/dev/null 2>&1; then
+  if command -v node > /dev/null 2>&1; then
     return 0
   fi
 
@@ -47,7 +47,7 @@ run_action_by_cli_flag() {
   ensure_action_runner_available
 
   local yes_args=()
-  if scripts/run-core-entry.sh action-runner --cli "${flag}" --requires-confirmation >/dev/null 2>&1; then
+  if scripts/run-core-entry.sh action-runner --cli "${flag}" --requires-confirmation > /dev/null 2>&1; then
     if [[ "${FORCE}" != true ]]; then
       local answer
       read -r -p "This action requires confirmation. Continue? [y/N] " answer
@@ -98,8 +98,7 @@ tui_unavailable_reason() {
     return 0
   fi
 
-
-  if ! command -v node >/dev/null 2>&1; then
+  if ! command -v node > /dev/null 2>&1; then
     printf '%s\n' "TUI requires Node.js, but node was not found in PATH."
     return 0
   fi
@@ -118,7 +117,7 @@ tui_unavailable_reason() {
 }
 
 can_run_tui() {
-  ! tui_unavailable_reason "$@" >/dev/null
+  ! tui_unavailable_reason "$@" > /dev/null
 }
 
 ensure_tui_npm_dependencies() {
@@ -127,7 +126,7 @@ ensure_tui_npm_dependencies() {
     return $?
   fi
 
-  if ! command -v npm >/dev/null 2>&1; then
+  if ! command -v npm > /dev/null 2>&1; then
     ui_error "TUI fallback requires npm because scripts/ensure-npm-dependencies.sh is missing."
     exit 1
   fi
@@ -177,9 +176,9 @@ run_tui_direct() {
 run_tui_entrypoint() {
   if [[ -f "${ROOT_DIR}/scripts/run-tui.ts" ]]; then
     if [[ -n "${PROJECT_PHASE:-}" ]]; then
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts >/dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/run-tui.js
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts > /dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/run-tui.js
     else
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts >/dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-tui.js
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-tui.js
     fi
     return $?
   fi
@@ -190,7 +189,7 @@ run_tui_entrypoint() {
 run_tui_node() {
   if tui_needs_dev_tty_redirect; then
     session_log "[tui] stdio is not a tty; redirecting TUI to /dev/tty"
-    run_tui_entrypoint </dev/tty >/dev/tty 2>/dev/tty
+    run_tui_entrypoint < /dev/tty > /dev/tty 2> /dev/tty
     return $?
   fi
 
@@ -211,7 +210,7 @@ run_tui_mode() {
 }
 
 show_help() {
-  cat <<'H'
+  cat << 'H'
 Canva Linux — Install and Development Tool
 
 Usage:
@@ -265,7 +264,7 @@ fi
 
 for arg in "$@"; do
   case "${arg}" in
-    -y|--yes|--force)
+    -y | --yes | --force)
       FORCE=true
       ;;
   esac
@@ -273,13 +272,12 @@ done
 
 for arg in "$@"; do
   case "${arg}" in
-    --help|-h)
+    --help | -h)
       show_help
       exit 0
       ;;
-    -y|--yes|--force)
-      ;;
-    --install-native|--install-flatpak|--install|--build-runtime|--build-dir|--validate|--validate-appimage|--validate-appimage-extract|--doctor|--bundle-flatpak|--bundle|--bundle-appimage|--bundle-deb|--bundle-rpm|--prepare-aur|--clean|--uninstall|--uninstall-native|--uninstall-flatpak|--reset-user-data|--purge)
+    -y | --yes | --force) ;;
+    --install-native | --install-flatpak | --install | --build-runtime | --build-dir | --validate | --validate-appimage | --validate-appimage-extract | --doctor | --bundle-flatpak | --bundle | --bundle-appimage | --bundle-deb | --bundle-rpm | --prepare-aur | --clean | --uninstall | --uninstall-native | --uninstall-flatpak | --reset-user-data | --purge)
       run_action_by_cli_flag "${arg}"
       ;;
     *)

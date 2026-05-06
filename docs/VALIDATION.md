@@ -1,10 +1,12 @@
 # Validation Checklist (0.1.4.11-dev.58)
 
 Current target:
+
 - Version: `0.1.4.11 (Alpha)`
 - Phase: `0.1.4.11-dev.58`
 
 ## Automated
+
 - npm run build:scripts-core
 - npm run check:scripts-core (includes `check-no-source-javascript` and `check-source-integrity`)
 - npm run check:no-source-javascript
@@ -22,11 +24,12 @@ Current target:
 - scripts/run-core-entry.sh check-sudo-contract
 - scripts/run-core-entry.sh check-action-contract
 - npm run validate:project (fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/` only)
-- bash -n canva-linux.sh scripts/*.sh
+- bash -n canva-linux.sh scripts/\*.sh
 - scripts/run-core-entry.sh overview-status
 - bash scripts/show-detected-installations.sh
 
 ## Manual
+
 - Open `./canva-linux.sh`.
 - Confirm `Phase: 0.1.4.11-dev.58`.
 - Confirm `./canva-linux.sh` opens the TUI by default.

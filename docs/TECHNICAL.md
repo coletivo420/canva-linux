@@ -60,12 +60,12 @@ The project validations and contracts are implemented in TypeScript under `scrip
 - `prepare-aur` is planned for `0.1.4.12-dev.1`.
 - `.deb`/`.rpm` remain planned after AUR stabilization.
 
-
 ## Terminal theme
 
 The Blessed TUI and direct CLI output use a shared Canva-inspired visual language.
 
 Reference palette:
+
 - Light Blue: `#07B9CE`
 - Blue: `#3969E7`
 - Purple: `#7D2AE7`
@@ -74,11 +74,11 @@ The TUI uses `scripts/tui/theme.ts`.
 Direct CLI output uses ANSI-safe approximations through `scripts/ui-common.sh`.
 
 The theme must remain readable with:
+
 - truecolor terminals;
 - xterm-256color;
 - `TERM=dumb` direct CLI output;
 - `NO_COLOR=1` direct CLI output.
-
 
 ## Automatic overview status
 

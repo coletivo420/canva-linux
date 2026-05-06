@@ -51,13 +51,13 @@ run_step "npm run check:scripts-core" npm run check:scripts-core
 run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check
 
-if command -v desktop-file-validate >/dev/null 2>&1; then
+if command -v desktop-file-validate > /dev/null 2>&1; then
   run_step "desktop-file-validate" desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
 else
   log_info "desktop-file-validate not found, skipping"
 fi
 
-if command -v appstreamcli >/dev/null 2>&1; then
+if command -v appstreamcli > /dev/null 2>&1; then
   run_step "appstreamcli validate --explain" \
     appstreamcli validate --explain \
     data/io.github.coletivo420.canva-linux.metainfo.xml
