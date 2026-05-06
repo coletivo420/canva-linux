@@ -186,10 +186,3 @@ export {
   serializeGpuFeatureStatus,
   registerGpuDiagnostics,
 };
-
-module.exports = {
-  classifyGpuAcceleration,
-  getGpuRuntimeEnvironment,
-  serializeGpuFeatureStatus,
-  registerGpuDiagnostics,
-};

@@ -203,8 +203,3 @@ export {
   formatFilePrefix,
   formatTerminalPrefix,
 };
-
-module.exports = {
-  createCentralLogger,
-  createStatusLogger,
-};

@@ -233,7 +233,3 @@ export function createTabController({
     switchToTab,
   };
 }
-
-module.exports = {
-  createTabController,
-};

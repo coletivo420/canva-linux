@@ -330,7 +330,3 @@ export function createTabHelpers({
     updateWindowTitle,
   };
 }
-
-module.exports = {
-  createTabHelpers,
-};

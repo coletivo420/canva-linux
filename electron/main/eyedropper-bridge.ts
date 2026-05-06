@@ -74,9 +74,3 @@ export {
 export type {
   FindTabByWebContentsFn,
 };
-
-module.exports = {
-  registerEyeDropperBridge,
-  resolveRequestingTab,
-  validateSnapshotRequester,
-};

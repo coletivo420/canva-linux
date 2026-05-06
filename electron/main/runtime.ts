@@ -189,12 +189,3 @@ export {
 export type {
   SessionLike,
 };
-
-module.exports = {
-  configureLinuxRuntime,
-  configureSession,
-  flushSession,
-  sanitizeDownloadFilename,
-  sharedWebPreferences,
-  shouldEnableCaptureVerboseLogging,
-};

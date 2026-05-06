@@ -144,6 +144,17 @@ function validateEslintTypeScriptOnlyConfig(rootDir: string, failures: string[])
   }
 }
 
+
+function validateNoCommonJsRuntimeExports(rootDir: string, files: string[], failures: string[]): void {
+  for (const file of files) {
+    if (!file.startsWith('electron/main/') || !file.endsWith('.ts')) continue;
+    const content = fs.readFileSync(path.join(rootDir, file), 'utf8');
+    if (content.includes('module.exports')) {
+      failures.push(`${file}: use ESM exports only; duplicate module.exports blocks are forbidden in Electron main TypeScript`);
+    }
+  }
+}
+
 function validateFlathubShell(rootDir: string, failures: string[]): void {
   const shellPath = 'packaging/flathub/scripts/generate-npm-sources.sh';
   const shellContent = fs.readFileSync(path.join(rootDir, shellPath), 'utf8');
@@ -173,6 +184,7 @@ export function main(): number {
   validatePackageScripts(rootDir, failures);
   validateBuildTypeScriptConfig(rootDir, failures);
   validateEslintTypeScriptOnlyConfig(rootDir, failures);
+  validateNoCommonJsRuntimeExports(rootDir, files, failures);
   validateFlathubShell(rootDir, failures);
 
   if (failures.length) {

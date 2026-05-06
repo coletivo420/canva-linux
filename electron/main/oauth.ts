@@ -523,9 +523,3 @@ export function createOAuthHelpers({
     setAuthPopupTitle,
   };
 }
-
-module.exports = {
-  createOAuthHelpers,
-  createOAuthPopupInitialState,
-  createOAuthPopupOptionsSummary,
-};

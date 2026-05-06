@@ -95,6 +95,8 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `tsconfig.build.json` emits the Electron runtime from `electron/**/*.ts`
   only; it must not set `allowJs`, must not set `checkJs`, and must not include
   `electron/**/*.js`.
+- Electron main TypeScript modules use ESM `export` declarations only; do not
+  add duplicate `module.exports` blocks to `electron/main/**/*.ts`.
 - `npm run check:scripts-core` runs the generated core validation artifacts and
   includes the TypeScript-first closure checks, including `check-gitignore-policy`,
   `check-no-source-javascript`, and `check-source-integrity`.

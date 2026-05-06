@@ -333,7 +333,3 @@ export function attachTabEventHandlers(tab: TabEntry, helpers: AttachTabEventHan
     }
   });
 }
-
-module.exports = {
-  attachTabEventHandlers,
-};

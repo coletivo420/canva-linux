@@ -64,7 +64,3 @@ function registerMainIpcHandlers({
 export {
   registerMainIpcHandlers,
 };
-
-module.exports = {
-  registerMainIpcHandlers,
-};
