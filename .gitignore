@@ -1,3 +1,4 @@
+# Keep this file multiline: each ignore rule must stay on its own non-comment line.
 # Dependencies
 node_modules/
 .npm/

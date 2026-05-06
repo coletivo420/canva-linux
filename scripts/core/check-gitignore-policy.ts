@@ -3,6 +3,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { findProjectRoot } from './action-registry';
 
+const essentialActiveGitignorePatterns = [
+  'node_modules/',
+  '.build/',
+  'dist/',
+  'build-dir/',
+  'repo/',
+  '.flatpak-builder/',
+  '*.log',
+] as const;
+
 const requiredIgnoredPaths = [
   '.build/generated.js',
   'dist/generated.js',
@@ -94,9 +104,18 @@ function validateGitignoreShape(rootDir: string, failures: string[]): void {
   const content = fs.readFileSync(gitignorePath, 'utf8');
   const lines = content.split(/\r?\n/);
   const nonEmptyLines = lines.filter((line) => line.trim().length > 0);
+  const activePatterns = lines
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith('#'));
 
-  if (nonEmptyLines.length < 20) {
-    failures.push('.gitignore: appears collapsed; expected a multiline file with one pattern or comment per line');
+  if (nonEmptyLines.length < 20 || activePatterns.length < essentialActiveGitignorePatterns.length) {
+    failures.push('.gitignore: appears collapsed; expected a multiline file with one active ignore pattern or comment per line');
+  }
+
+  for (const requiredPattern of essentialActiveGitignorePatterns) {
+    if (!activePatterns.includes(requiredPattern)) {
+      failures.push(`.gitignore: missing active ignore pattern ${requiredPattern}; patterns hidden inside comments do not apply`);
+    }
   }
 
   lines.forEach((line, index) => {
