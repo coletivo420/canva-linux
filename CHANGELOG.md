@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Added a root-launch guard for the Canva Linux Install and Development Tool.
+- Added TUI Application Settings for general Tool logs and terminal text
+  selection in the logs panel.
+- Added guardrail checks for root launch, TUI settings, Tool logging and log
+  selection contracts.
+
+### Changed
+- Changed TUI session logging to append to launcher-created logs instead of
+  truncating them.
+- Separated Tool logs from Action logs in the TUI logs panel.
+
 ## [0.1.4.11-dev.58] - 2026-05-06
 
 ### Changed

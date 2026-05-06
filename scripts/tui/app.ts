@@ -6,10 +6,22 @@ import { confirmDialog, errorDialog, inputDialog, messageDialog } from "./modal"
 import { runAction } from "./process-runner";
 import { tuiTheme } from "./theme";
 import { copyTextToClipboard } from "./clipboard";
+import {
+  loadToolSettings,
+  saveToolSettings,
+  toolSettingsPath,
+  type ToolSettings,
+} from "./settings";
 import fs from "node:fs";
 import path from "node:path";
 
-type View = "main" | "install" | "development" | "maintenance" | "help";
+type View =
+  | "main"
+  | "install"
+  | "development"
+  | "maintenance"
+  | "settings"
+  | "help";
 type ProgressState =
   | "idle"
   | "running"
@@ -18,8 +30,24 @@ type ProgressState =
   | "failed"
   | "canceled";
 type LogSource = "stdout" | "stderr" | "system";
+type SettingsItem =
+  | {
+      kind: "section";
+      label: string;
+    }
+  | {
+      kind: "toggle";
+      key: keyof ToolSettings["tool"];
+      label: string;
+    }
+  | {
+      kind: "note";
+      label: string;
+    };
 
 const MAX_LOG_HISTORY_LINES = 5000;
+const TOOL_LOG_PREFIX = "Tool |";
+const ACTION_LOG_PREFIX = "Action |";
 
 export function createApp(opts: {
   version: string;
@@ -29,6 +57,8 @@ export function createApp(opts: {
   toolTitle: string;
   releaseNotes: string;
 }) {
+  let toolSettings = loadToolSettings();
+  const settingsPath = toolSettingsPath();
   const screen = blessed.screen({
     smartCSR: true,
     title: opts.title,
@@ -87,7 +117,7 @@ export function createApp(opts: {
     border: "line",
     label: "Logs",
     keys: true,
-    mouse: true,
+    mouse: !toolSettings.tool.terminalTextSelectionMode,
     scrollable: true,
     alwaysScroll: true,
     scrollbar: {
@@ -129,7 +159,32 @@ export function createApp(opts: {
     { label: "Install", view: "install" },
     { label: "Development", view: "development" },
     { label: "Maintenance & Uninstall", view: "maintenance" },
+    { label: "Application Settings", view: "settings" },
     { label: "Help", view: "help" },
+  ];
+  const settingsItems: SettingsItem[] = [
+    {
+      kind: "section",
+      label: "Canva Linux Install and Development Tool",
+    },
+    {
+      kind: "toggle",
+      key: "generalLogsEnabled",
+      label: "Enable general logs for Canva Linux Install and Development Tool",
+    },
+    {
+      kind: "toggle",
+      key: "terminalTextSelectionMode",
+      label: "Enable terminal text selection in logs",
+    },
+    {
+      kind: "section",
+      label: "Canva Linux final build",
+    },
+    {
+      kind: "note",
+      label: "Final build settings will be added in a later phase",
+    },
   ];
 
   let currentView: View = "main";
@@ -154,7 +209,10 @@ export function createApp(opts: {
       "tool-session.log",
     );
   fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
-  const sessionStream = fs.createWriteStream(sessionLogPath, { flags: "w" });
+  const launcherSessionLog = fs.existsSync(sessionLogPath)
+    ? fs.readFileSync(sessionLogPath, "utf8")
+    : "";
+  const sessionStream = fs.createWriteStream(sessionLogPath, { flags: "a" });
   const writeSession = (line: string) => sessionStream.write(`${line}\n`);
   writeSession("[mode] tui");
   process.on("exit", () => {
@@ -206,7 +264,7 @@ export function createApp(opts: {
   ): Promise<any | null> {
     if (overviewDetectionPromise) return overviewDetectionPromise;
     appendLogText(
-      `[info] Refreshing detected installations (${reason}).\n`,
+      `[info] Detection started (${reason}).\n`,
       "system",
     );
     overviewDetectionPromise = detectInstallationStatusNow()
@@ -218,6 +276,7 @@ export function createApp(opts: {
           overviewDetectionError = "Unable to parse status output";
           appendLogText("[error] Detection status parsing failed.\n", "system");
         }
+        appendLogText(`[info] Detection finished (${reason}).\n`, "system");
         renderDiagnosticsBox();
         renderCurrentContentPreservingProgress();
         return overviewStatus;
@@ -311,14 +370,30 @@ export function createApp(opts: {
     });
   }
 
-  function appendLogLine(line: string, source: LogSource) {
-    writeSession(`[${source}] ${line}`);
-    logHistory.push(line);
+  function isCriticalToolLog(line: string): boolean {
+    return /^\[(error|warn)\]/i.test(line) || /authentication failed/i.test(line);
+  }
+
+  function shouldDisplayLogLine(line: string, source: LogSource): boolean {
+    if (source !== "system") return true;
+    return toolSettings.tool.generalLogsEnabled || isCriticalToolLog(line);
+  }
+
+  function displayLogLine(line: string, source: LogSource) {
+    const prefix = source === "system" ? TOOL_LOG_PREFIX : ACTION_LOG_PREFIX;
+    const msg = `${prefix} ${line}`.replace(/[{}]/g, (c) =>
+      c === "{" ? "\\{" : "\\}",
+    );
+    logHistory.push(`${prefix} ${line}`);
     if (logHistory.length > MAX_LOG_HISTORY_LINES) logHistory.shift();
-    const msg = line.replace(/[{}]/g, (c) => (c === "{" ? "\\{" : "\\}"));
     if (source === "stderr") logs.log(`{red-fg}${msg}{/red-fg}`);
     else if (source === "system") logs.log(`{cyan-fg}${msg}{/cyan-fg}`);
     else logs.log(msg);
+  }
+
+  function appendLogLine(line: string, source: LogSource) {
+    writeSession(`[${source}] ${line}`);
+    if (shouldDisplayLogLine(line, source)) displayLogLine(line, source);
   }
   function appendLogText(text: string, source: LogSource = "stdout") {
     logBuffers[source] += text;
@@ -331,6 +406,23 @@ export function createApp(opts: {
       logBuffers[source] = logBuffers[source].slice(i + n);
     }
     screen.render();
+  }
+
+  function importLauncherSessionLog() {
+    if (!toolSettings.tool.generalLogsEnabled || !launcherSessionLog.trim())
+      return;
+    for (const line of launcherSessionLog.split(/\r?\n/)) {
+      if (line.trim()) displayLogLine(line, "system");
+    }
+  }
+
+  function applyLogSelectionMode() {
+    logs.options.mouse = !toolSettings.tool.terminalTextSelectionMode;
+    logs.setLabel(
+      toolSettings.tool.terminalTextSelectionMode
+        ? "Logs - terminal selection mode"
+        : "Logs",
+    );
   }
 
   function clearProgress() {
@@ -441,6 +533,91 @@ export function createApp(opts: {
     );
   }
 
+  function settingsItemLabel(item: SettingsItem): string {
+    if (item.kind === "section") return item.label;
+    if (item.kind === "note") return `  ${item.label}`;
+    return `  [${toolSettings.tool[item.key] ? "x" : " "}] ${item.label}`;
+  }
+
+  function selectedSettingsItem(): SettingsItem | null {
+    return settingsItems[menu.selected] ?? null;
+  }
+
+  function renderSettingsHelp() {
+    const selected = selectedSettingsItem();
+    const details: string[] = [
+      `{${tuiTheme.colors.helpTitle}-fg}Application Settings{/${tuiTheme.colors.helpTitle}-fg}`,
+      "",
+      `{${tuiTheme.colors.infoItemTitle}-fg}Settings file:{/${tuiTheme.colors.infoItemTitle}-fg}`,
+      `  {${tuiTheme.colors.descriptionText}-fg}${settingsPath}{/${tuiTheme.colors.descriptionText}-fg}`,
+      "",
+    ];
+
+    if (selected?.kind === "toggle") {
+      details.push(
+        `{${tuiTheme.colors.infoItemTitle}-fg}Selected setting:{/${tuiTheme.colors.infoItemTitle}-fg}`,
+        `  {${tuiTheme.colors.infoText}-fg}${selected.label}{/${tuiTheme.colors.infoText}-fg}`,
+        "",
+      );
+      if (selected.key === "generalLogsEnabled") {
+        details.push(
+          `{${tuiTheme.colors.helpSectionTitle}-fg}Behavior{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  When enabled, Tool-level logs such as startup, settings, detection and authentication events are visible in the logs panel.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  When disabled, Action logs remain visible and critical Tool warnings/errors still appear. The session log file continues recording Tool diagnostics.{/${tuiTheme.colors.descriptionText}-fg}`,
+        );
+      } else {
+        details.push(
+          `{${tuiTheme.colors.helpSectionTitle}-fg}Behavior{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Terminal text selection mode disables mouse handling in the logs panel.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Use PageUp, PageDown, Home and End to scroll logs while this mode is enabled. Some terminals may still require Shift during selection.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${tuiTheme.colors.descriptionText}-fg}`,
+        );
+      }
+    } else if (selected?.kind === "section") {
+      details.push(
+        `{${tuiTheme.colors.infoItemTitle}-fg}Section:{/${tuiTheme.colors.infoItemTitle}-fg}`,
+        `  {${tuiTheme.colors.infoText}-fg}${selected.label}{/${tuiTheme.colors.infoText}-fg}`,
+        "",
+        `{${tuiTheme.colors.descriptionText}-fg}Tool settings affect this installer/development interface. Final build settings will apply to the packaged Canva Linux app in a later phase.{/${tuiTheme.colors.descriptionText}-fg}`,
+      );
+    } else {
+      details.push(
+        `{${tuiTheme.colors.descriptionText}-fg}Use Enter or Space on a checkbox setting to toggle it. Application Settings are persistent TUI state, not shell actions.{/${tuiTheme.colors.descriptionText}-fg}`,
+      );
+    }
+
+    content.setContent(details.join("\n"));
+  }
+
+  function persistSettings(reason: string) {
+    try {
+      saveToolSettings(toolSettings);
+    } catch (error) {
+      appendLogText(
+        `[error] Settings could not be saved: ${error instanceof Error ? error.message : String(error)}\n`,
+        "system",
+      );
+      return;
+    }
+    applyLogSelectionMode();
+    appendLogText(`[info] Settings changed (${reason}).\n`, "system");
+    renderSettingsHelp();
+    screen.render();
+  }
+
+  function toggleSelectedSetting() {
+    const selected = selectedSettingsItem();
+    if (selected?.kind !== "toggle") return;
+    toolSettings = {
+      ...toolSettings,
+      tool: {
+        ...toolSettings.tool,
+        [selected.key]: !toolSettings.tool[selected.key],
+      },
+    };
+    persistSettings(selected.key);
+  }
+
   function renderCurrentContentPreservingProgress() {
     if (currentView === "main") {
       renderDiagnosticsBox();
@@ -449,6 +626,10 @@ export function createApp(opts: {
     }
     if (["install", "development", "maintenance"].includes(currentView)) {
       renderActionHelp(currentView, menu.selected);
+      screen.render();
+    }
+    if (currentView === "settings") {
+      renderSettingsHelp();
       screen.render();
     }
   }
@@ -504,6 +685,16 @@ export function createApp(opts: {
           `{${tuiTheme.colors.helpSectionTitle}-fg}Logs{/${tuiTheme.colors.helpSectionTitle}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${tuiTheme.colors.descriptionText}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Terminal text selection can be enabled in Application Settings; some terminals may still require Shift during selection.{/${tuiTheme.colors.descriptionText}-fg}`,
+          "",
+          `{${tuiTheme.colors.helpSectionTitle}-fg}Launcher{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  ./canva-linux.sh opens the TUI.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Any direct action flag runs CLI mode instead.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Do not run the Tool with sudo or as root; privileged actions ask for administrator authentication only when needed.{/${tuiTheme.colors.descriptionText}-fg}`,
+          "",
+          `{${tuiTheme.colors.helpSectionTitle}-fg}Settings{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Tool settings file: ${settingsPath}{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Tool settings affect this installer/development interface. Final build settings apply to the packaged app and are reserved for a later phase.{/${tuiTheme.colors.descriptionText}-fg}`,
           "",
           `{${tuiTheme.colors.helpSectionTitle}-fg}Status colors{/${tuiTheme.colors.helpSectionTitle}-fg}`,
           `  {${tuiTheme.colors.statusDetected}-fg}Detected / Completed{/${tuiTheme.colors.statusDetected}-fg}`,
@@ -515,6 +706,14 @@ export function createApp(opts: {
           `{${tuiTheme.colors.descriptionText}-fg}  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel{/${tuiTheme.colors.descriptionText}-fg}`,
         ].join("\n"),
       );
+      screen.render();
+      return;
+    }
+    if (view === "settings") {
+      currentActions = [];
+      menu.setItems(settingsItems.map(settingsItemLabel));
+      content.setLabel("Application Settings");
+      renderSettingsHelp();
       screen.render();
       return;
     }
@@ -536,6 +735,11 @@ export function createApp(opts: {
     if (currentView === "main")
       return setView(mainItems[index]?.view ?? "main");
     if (currentView === "help") return setView("main");
+    if (currentView === "settings") {
+      toggleSelectedSetting();
+      menu.setItems(settingsItems.map(settingsItemLabel));
+      return;
+    }
     const action = currentActions[index];
     if (!action) return;
     if (action.dangerous) {
@@ -553,6 +757,7 @@ export function createApp(opts: {
     const rootRequired =
       action.requiresRoot || (await actionNeedsRootForDetectedSystem(action));
     if (rootRequired) {
+      appendLogText("[info] Root authentication popup opened.\n", "system");
       modalActive = true;
       const passwordResult = await inputDialog(
         screen,
@@ -629,16 +834,15 @@ export function createApp(opts: {
         modalActive = false;
         return;
       }
+      appendLogText("[info] Root authentication succeeded.\n", "system");
     }
     if (!action.command) return;
     running = true;
     progressState = "running";
     setProgressRunning(5, "Starting");
-    logs.setContent("");
-    logHistory.length = 0;
     appendLogText(
       `$ ${action.command} ${(action.args ?? []).join(" ")}\n`,
-      "system",
+      "stdout",
     );
     writeSession(`[action] ${action.id} ${action.label}`);
     currentChild = runAction(
@@ -766,6 +970,12 @@ export function createApp(opts: {
   screen.key(["?"], () => {
     if (!running && !modalActive) setView("help");
   });
+  screen.key(["space"], () => {
+    if (!running && !modalActive && currentView === "settings") {
+      toggleSelectedSetting();
+      menu.setItems(settingsItems.map(settingsItemLabel));
+    }
+  });
   menu.on("keypress", (_, key) => {
     if (
       (key.name === "up" || key.name === "down") &&
@@ -775,6 +985,13 @@ export function createApp(opts: {
       renderActionHelp(currentView, menu.selected);
       screen.render();
     }
+    if (
+      (key.name === "up" || key.name === "down") &&
+      currentView === "settings"
+    ) {
+      renderSettingsHelp();
+      screen.render();
+    }
   });
   menu.on("select item", () => {
     if (["install", "development", "maintenance"].includes(currentView)) {
@@ -782,8 +999,19 @@ export function createApp(opts: {
       renderActionHelp(currentView, menu.selected);
       screen.render();
     }
+    if (currentView === "settings") {
+      renderSettingsHelp();
+      screen.render();
+    }
   });
 
+  applyLogSelectionMode();
+  importLauncherSessionLog();
+  appendLogText(
+    `[info] TUI started. version=${opts.version} phase=${opts.phase}\n`,
+    "system",
+  );
+  appendLogText(`[info] Settings loaded from ${settingsPath}.\n`, "system");
   setView("main");
   void refreshDetectedInstallations("startup");
   renderDiagnosticsBox();

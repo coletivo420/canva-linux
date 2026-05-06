@@ -18,6 +18,18 @@ function findCheckedFiles(dir: string): string[] {
   return results;
 }
 
+function isAllowedSudoText(line: string): boolean {
+  return [
+    "Do not run Canva Linux Install and Development Tool with sudo or as root.",
+    "Do not run this tool with sudo or as root.",
+    "Do not run the Tool with sudo or as root",
+    "root/sudo launch is blocked",
+    "must not instruct users to run ./canva-linux.sh with sudo",
+    "sudo password must never be written to logs",
+    "sudo stdin must never be logged",
+  ].some((allowed) => line.includes(allowed));
+}
+
 export function main(): number {
   const rootDir = findProjectRoot();
   const scriptsDir = path.join(rootDir, "scripts");
@@ -84,6 +96,7 @@ export function main(): number {
     const lines = fs.readFileSync(fullPath, "utf8").split(/\r?\n/);
     lines.forEach((line, index) => {
       if (line.trim().startsWith("#")) return;
+      if (isAllowedSudoText(line)) return;
       if (
         /(^|[^A-Za-z0-9_])sudo(\s|$)/.test(line) ||
         /['"]sudo['"]/.test(line)

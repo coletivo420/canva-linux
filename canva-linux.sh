@@ -4,6 +4,17 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "${ROOT_DIR}"
 
+ROOT_LAUNCH_GUARD_MESSAGE="Do not run Canva Linux Install and Development Tool with sudo or as root.
+
+Run this tool as your regular user. When an operation needs administrator privileges, Canva Linux will ask for authentication only for that specific action.
+
+Running the whole tool as root may break file ownership, user sessions, build artifacts and desktop integration."
+
+if [[ "${EUID}" -eq 0 ]]; then
+  printf '%s\n' "${ROOT_LAUNCH_GUARD_MESSAGE}" >&2
+  exit 1
+fi
+
 FORCE=false
 
 source "${ROOT_DIR}/scripts/app-identity-common.sh"
@@ -15,11 +26,11 @@ ui_init
 SESSION_LOG="${CANVA_TOOL_SESSION_LOG:-${XDG_STATE_HOME:-$HOME/.local/state}/canva-linux/tool-session.log}"
 SESSION_LOG_ENABLED=false
 
-if mkdir -p "$(dirname "${SESSION_LOG}")" 2> /dev/null && touch "${SESSION_LOG}" 2> /dev/null; then
+if mkdir -p "$(dirname "${SESSION_LOG}")" 2> /dev/null && ( : > "${SESSION_LOG}" ) 2> /dev/null; then
   SESSION_LOG_ENABLED=true
 else
   SESSION_LOG="/tmp/canva-linux-tool-session.log"
-  if mkdir -p "$(dirname "${SESSION_LOG}")" 2> /dev/null && touch "${SESSION_LOG}" 2> /dev/null; then
+  if mkdir -p "$(dirname "${SESSION_LOG}")" 2> /dev/null && ( : > "${SESSION_LOG}" ) 2> /dev/null; then
     SESSION_LOG_ENABLED=true
   fi
 fi
@@ -166,6 +177,8 @@ Global options:
 Interactive behavior:
   ./canva-linux.sh opens the Blessed TUI by default when available.
   Use --help or a direct action flag to run non-interactively.
+  Do not run this tool with sudo or as root. Privileged actions ask for
+  administrator authentication only when needed.
 
 Installation:
   --install-native       Run Native Install

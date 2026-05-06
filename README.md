@@ -22,6 +22,9 @@ The launcher opens the Terminal Assistant by default (when supported), with Inst
 Development, and Maintenance workflows. Direct CLI action flags are available for
 automation.
 
+Run the Tool as your regular user. Privileged operations ask for administrator
+authentication only when the selected action needs it.
+
 Maintained Node.js tooling is TypeScript. JavaScript appears only as generated
 output, while shell remains reserved for Linux host-operation glue.
 
