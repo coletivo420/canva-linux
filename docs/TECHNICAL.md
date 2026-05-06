@@ -29,17 +29,27 @@ Core runtime files:
 Canva Linux workflow actions are split into four layers:
 
 1. `scripts/actions.json` (canonical registry)
-2. `scripts/core/action-runner.ts` (action resolution/execution, compiled to `.build/scripts/core/action-runner.js`)
+2. `scripts/core/action-runner.ts`
+   - action resolution/execution, compiled to `.build/scripts/core/action-runner.js`
 3. Interfaces (Blessed TUI and direct CLI flags)
 4. Backend scripts under `scripts/`
 
-All maintained Node.js source code is TypeScript. Project-generated JavaScript belongs in `.build/` only; `dist/`, `coverage/`, and `node_modules/` may contain package, report, or dependency JavaScript, but they are not maintained source locations. Shell remains shell for host operations such as launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node validation glue.
+All maintained Node.js source code is TypeScript. Project-generated JavaScript
+belongs in `.build/` only. The `dist/`, `coverage/`, and `node_modules/`
+directories may contain package, report, or dependency JavaScript, but they are
+not maintained source locations. Shell remains shell for host operations such as
+launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node
+validation glue.
 
 ## Terminal Assistant / Blessed TUI
 
-`./canva-linux.sh` opens the Blessed TUI by default when stdin/stdout are TTY, `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection flags and environment variables have been removed.
+`./canva-linux.sh` opens the Blessed TUI by default when stdin/stdout are TTY,
+`TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection
+flags and environment variables have been removed.
 
-The TUI is a visual assistant over shared backend actions; it does not duplicate install/package logic. It provides guided sections, log monitoring, and a progress bar.
+The TUI is a visual assistant over shared backend actions; it does not duplicate
+install/package logic. It provides guided sections, log monitoring, and a
+progress bar.
 
 ## Sudo Contract
 
@@ -47,13 +57,20 @@ Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
 
 1. Actions with `requiresRoot: true` in `scripts/actions.json` are identified by the TUI.
 2. The TUI requests root password via a secure prompt before starting the action.
-3. The TUI validates the password and then passes `CANVA_TUI_ROOT_AUTH=1` to the child process.
-4. `scripts/sudo-common.sh` detects this environment variable and uses `sudo -n` for non-interactive execution.
+3. The TUI validates the password and then passes `CANVA_TUI_ROOT_AUTH=1` to
+   the child process.
+4. `scripts/sudo-common.sh` detects this environment variable and uses
+   `sudo -n` for non-interactive execution.
 5. In direct CLI mode, `sudo` prompts for the password as usual in the terminal.
 
 ## TypeScript Script Core
 
-The project validations and contracts are implemented in TypeScript under `scripts/core/`. These are compiled into `.build/scripts/core/` and executed through `scripts/run-core-entry.sh`. All project validations are integrated into the `npm run check:scripts-core` quality gate. The gate includes `check-no-source-javascript`, so maintained `.js` files under script, test, config, or Flathub helper paths fail validation.
+The project validations and contracts are implemented in TypeScript under
+`scripts/core/`. These are compiled into `.build/scripts/core/` and executed
+through `scripts/run-core-entry.sh`. All project validations are integrated into
+the `npm run check:scripts-core` quality gate. The gate includes
+`check-no-source-javascript`, so maintained `.js` files under script, test,
+config, or Flathub helper paths fail validation.
 
 ## Packaging roadmap notes
 
@@ -82,7 +99,9 @@ The theme must remain readable with:
 
 ## Automatic overview status
 
-The TUI Overview automatically displays package/version information and detected installation state. Manual detection actions are not exposed as normal user-facing actions.
+The TUI Overview automatically displays package/version information and detected
+installation state. Manual detection actions are not exposed as normal
+user-facing actions.
 
 ## Clipboard integration
 

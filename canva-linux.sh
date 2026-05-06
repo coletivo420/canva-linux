@@ -170,7 +170,6 @@ Interactive behavior:
 Installation:
   --install-native       Run Native Install
   --install-flatpak      Build and install Flatpak locally
-  --install              Compatibility alias for --install-flatpak
 
 Development:
   --build-runtime        Build compiled Electron runtime
@@ -183,7 +182,6 @@ Development:
 
 Package generation:
   --bundle-flatpak       Create distributable .flatpak package
-  --bundle               Compatibility alias for --bundle-flatpak
   --bundle-appimage      Create experimental AppImage package
   --bundle-deb           Planned
   --bundle-rpm           Planned
@@ -219,7 +217,7 @@ for arg in "$@"; do
       exit 0
       ;;
     -y | --yes | --force) ;;
-    --install-native | --install-flatpak | --install | --build-runtime | --build-dir | --validate | --validate-appimage | --validate-appimage-extract | --doctor | --bundle-flatpak | --bundle | --bundle-appimage | --bundle-deb | --bundle-rpm | --prepare-aur | --clean | --uninstall | --uninstall-native | --uninstall-flatpak | --reset-user-data | --purge)
+    --install-native | --install-flatpak | --build-runtime | --build-dir | --validate | --validate-appimage | --validate-appimage-extract | --doctor | --bundle-flatpak | --bundle-appimage | --bundle-deb | --bundle-rpm | --prepare-aur | --clean | --uninstall | --uninstall-native | --uninstall-flatpak | --reset-user-data | --purge)
       run_action_by_cli_flag "${arg}"
       ;;
     *)

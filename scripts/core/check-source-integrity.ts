@@ -43,6 +43,29 @@ const criticalMultilineFiles = [
 ] as const;
 
 const maxDocumentationLineLength = 2000;
+const strictDocumentationLineLength = 160;
+
+const strictDocumentationLineLengthFiles = new Set([
+  'README.md',
+  'CHANGELOG.md',
+  'docs/AI_GUARDRAILS.md',
+  'docs/CLI.md',
+  'docs/DEVELOPMENT.md',
+  'docs/TECHNICAL.md',
+  'docs/TYPESCRIPT.md',
+  'docs/VALIDATION.md',
+]);
+
+const forbiddenCompatibilityCliAliases = [
+  '--install',
+  '--bundle',
+] as const;
+
+const forbiddenMaintainedJavaScriptFiles = [
+  'eslint.config.js',
+  'playwright.config.js',
+  'scripts/run-typescript-script.js',
+] as const;
 
 const skippedDirectories = new Set([
   '.build',
@@ -140,9 +163,20 @@ function validateCriticalTextShape(rootDir: string, relativePath: string, failur
   }
 
   if (relativePath.endsWith('.md')) {
+    const lineLengthLimit = strictDocumentationLineLengthFiles.has(relativePath)
+      ? strictDocumentationLineLength
+      : maxDocumentationLineLength;
     const longestLine = Math.max(...lines.map((line) => line.length), 0);
-    if (longestLine > maxDocumentationLineLength) {
-      failures.push(`${relativePath}:${lineNumberOfLongestLine(lines)}: documentation line is too long (${longestLine} characters); avoid giant one-line blocks`);
+    if (longestLine > lineLengthLimit) {
+      failures.push(`${relativePath}:${lineNumberOfLongestLine(lines)}: documentation line is too long (${longestLine} characters); limit is ${lineLengthLimit}; avoid giant one-line blocks`);
+    }
+  }
+}
+
+function validateNoMaintainedJavaScriptFiles(rootDir: string, failures: string[]): void {
+  for (const relativePath of forbiddenMaintainedJavaScriptFiles) {
+    if (fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${relativePath}: maintained JavaScript source/config contradicts the TypeScript-only source policy; use the corresponding TypeScript source and generated .build output`);
     }
   }
 }
@@ -216,6 +250,86 @@ function validateShellFile(rootDir: string, relativePath: string, failures: stri
   }
 }
 
+function validateProjectValidationScriptShape(rootDir: string, failures: string[]): void {
+  const relativePath = 'scripts/validate-project.sh';
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  if (lines[0] !== '#!/usr/bin/env bash') {
+    failures.push(`${relativePath}: shebang must be the first line by itself`);
+  }
+
+  if (lines[1] !== 'set -euo pipefail') {
+    failures.push(`${relativePath}: strict shell mode must be the second line by itself`);
+  }
+
+  if (lines.length < 60) {
+    failures.push(`${relativePath}: validation script appears collapsed; expected readable multiline shell content`);
+  }
+
+  const sourceFirstCommentIndex = lines.findIndex((line) => line.includes('Do not move runtime build before lint,'));
+  if (sourceFirstCommentIndex === -1) {
+    failures.push(`${relativePath}: missing source-first ordering comment for runtime build placement`);
+  } else if (!lines[sourceFirstCommentIndex].trim().startsWith('#')) {
+    failures.push(`${relativePath}:${sourceFirstCommentIndex + 1}: source-first ordering prose must remain a shell comment`);
+  }
+
+  const buildRuntimeIndex = lines.findIndex((line) => line === 'run_step "npm run build:runtime" npm run build:runtime');
+  const checkScriptsCoreIndex = lines.findIndex((line) => line === 'run_step "npm run check:scripts-core" npm run check:scripts-core');
+  if (buildRuntimeIndex === -1) {
+    failures.push(`${relativePath}: missing npm run build:runtime validation step`);
+  }
+  if (checkScriptsCoreIndex === -1) {
+    failures.push(`${relativePath}: missing npm run check:scripts-core validation step`);
+  }
+  if (buildRuntimeIndex !== -1 && checkScriptsCoreIndex !== -1 && buildRuntimeIndex < checkScriptsCoreIndex) {
+    failures.push(`${relativePath}: npm run build:runtime must stay after npm run check:scripts-core`);
+  }
+}
+
+function validateLauncherScriptShape(rootDir: string, failures: string[]): void {
+  const relativePath = 'canva-linux.sh';
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  if (lines[0] !== '#!/usr/bin/env bash') {
+    failures.push(`${relativePath}: shebang must be the first line by itself`);
+  }
+
+  if (lines[1] !== 'set -euo pipefail') {
+    failures.push(`${relativePath}: strict shell mode must be the second line by itself`);
+  }
+
+  if (lines.length < 100) {
+    failures.push(`${relativePath}: launcher appears collapsed; expected readable multiline shell content`);
+  }
+
+  if (!lines.some((line) => line.trim().startsWith('read -r -p "This action requires confirmation. Continue? [y/N] "'))) {
+    failures.push(`${relativePath}: confirmation prompt must remain inside the read command, not as collapsed shell text`);
+  }
+
+  for (const alias of forbiddenCompatibilityCliAliases) {
+    const escapedAlias = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const aliasPattern = new RegExp(`(^|[\\s|,\\[])["']?${escapedAlias}(?=["'\\s|,)\\]])`);
+    if (aliasPattern.test(content)) {
+      failures.push(`${relativePath}: removed compatibility alias ${alias} must not be accepted by the launcher`);
+    }
+  }
+}
+
+function validateRemovedCompatibilityAliases(rootDir: string, failures: string[]): void {
+  const actions = readJsonFile<Array<{ id?: string; cli?: string[] }>>(rootDir, 'scripts/actions.json', failures);
+  if (!actions) return;
+
+  for (const action of actions) {
+    for (const alias of action.cli ?? []) {
+      if ((forbiddenCompatibilityCliAliases as readonly string[]).includes(alias)) {
+        failures.push(`scripts/actions.json ${action.id ?? '<unknown>'}: removed compatibility alias ${alias} must not be registered`);
+      }
+    }
+  }
+}
+
 export function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
@@ -234,6 +348,10 @@ export function main(): number {
     if (!file.endsWith('.md')) validateCriticalTextShape(rootDir, file, failures);
   }
 
+  validateNoMaintainedJavaScriptFiles(rootDir, failures);
+  validateProjectValidationScriptShape(rootDir, failures);
+  validateLauncherScriptShape(rootDir, failures);
+  validateRemovedCompatibilityAliases(rootDir, failures);
   validatePackageLockConsistency(rootDir, failures);
   validatePackageScripts(rootDir, failures);
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Keep this validation script multiline: prose must stay commented and each run_step must stay on its own line.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"

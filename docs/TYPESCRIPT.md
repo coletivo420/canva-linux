@@ -1,6 +1,7 @@
 # TypeScript
 
-Canva Linux is TypeScript-first for Electron runtime code, Node.js maintenance logic, tests, tooling configs and Flathub helper scripts.
+Canva Linux is TypeScript-first for Electron runtime code, Node.js maintenance
+logic, tests, tooling configs and Flathub helper scripts.
 
 ## Current state
 
@@ -9,11 +10,15 @@ Canva Linux is TypeScript-first for Electron runtime code, Node.js maintenance l
 - Shell remains shell for host operations.
 - Electron main and preload source modules are TypeScript.
 - Node.js maintenance scripts use TypeScript source files and shell bootstraps where Node cannot execute TypeScript directly.
-- Tests live under `test/**/*.ts`; `npm test` compiles selected tests plus support helpers into `.build/test/` with inline source maps before running `node --test` on generated JavaScript.
+- Tests live under `test/**/*.ts`; `npm test` compiles selected tests plus
+  support helpers into `.build/test/` with inline source maps before running
+  `node --test` on generated JavaScript.
 - New tests must be TypeScript.
-- ESLint and Playwright use `eslint.config.ts` and `playwright.config.ts`; new configs should be TypeScript when the tool supports TypeScript configs.
+- ESLint and Playwright use `eslint.config.ts` and `playwright.config.ts`; new
+  configs should be TypeScript when the tool supports TypeScript configs.
 - Runtime output remains CommonJS-compatible generated JavaScript under `.build/`.
-- JavaScript is not maintained as source code in `scripts/`, `test/`, configs, or `packaging/flathub/scripts/`.
+- JavaScript is not maintained as source code in `scripts/`, `test/`, configs,
+  or `packaging/flathub/scripts/`.
 
 ## TypeScript-first source policy
 
@@ -36,7 +41,8 @@ Allowed JavaScript that is not maintained source:
 - tool-generated reports under `coverage/**/*.js`
 - distributable/package output under `dist/**/*.js`
 
-Project-generated JavaScript belongs in `.build/`; `dist/`, `coverage/`, and `node_modules/` are never maintained source locations.
+Project-generated JavaScript belongs in `.build/`. The `dist/`, `coverage/`,
+and `node_modules/` directories are never maintained source locations.
 
 Forbidden maintained JavaScript source:
 
@@ -46,20 +52,49 @@ Forbidden maintained JavaScript source:
 - `eslint.config.js`
 - `playwright.config.js`
 
-`check-typescript-first.ts` enforces the wider TypeScript migration contract. `check-gitignore-policy.ts` keeps generated outputs ignored without hiding TypeScript source, tests, Flathub submission files, or source JavaScript probes. `check-no-source-javascript.ts` enforces the no-source-JavaScript rule directly and fails if `.js` files appear outside `.build/`, `node_modules/`, `coverage/`, or `dist/`. Within maintained project output, generated JavaScript is expected under `.build/` only.
+Repository-root `eslint.config.js` and `playwright.config.js` must not exist; the
+maintained configs are `eslint.config.ts` and `playwright.config.ts`.
+
+The historical `scripts/run-typescript-script.js` bootstrap must also not exist as
+maintained source. `scripts/run-typescript-script.ts` is compiled to
+`.build/scripts/bootstrap/run-typescript-script.js` when needed.
+
+`check-typescript-first.ts` enforces the wider TypeScript migration contract.
+`check-gitignore-policy.ts` keeps generated outputs ignored without hiding
+TypeScript source, tests, Flathub submission files, or source JavaScript probes.
+
+`check-no-source-javascript.ts` enforces the no-source-JavaScript rule directly
+and fails if `.js` files appear outside `.build/`, `node_modules/`, `coverage/`,
+or `dist/`. Within maintained project output, generated JavaScript is expected
+under `.build/` only.
 
 ## Script Core
 
 Project validations, contracts, and registries are implemented in TypeScript under `scripts/core/`.
 
 - `npm run build:scripts-core` compiles core entries with esbuild into `.build/scripts/core/`.
-- `scripts/run-core-entry.sh` builds the core on demand when compiled artifacts are missing, then runs the generated `.build/scripts/core/<entry>.js` artifact.
-- `npm run build:scripts` compiles top-level script entrypoints such as `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and `scripts/run-tui.ts` directly into `.build/scripts/*.js`.
+- `scripts/run-core-entry.sh` builds the core on demand when compiled artifacts
+  are missing, then runs the generated `.build/scripts/core/<entry>.js` artifact.
+- `npm run build:scripts` compiles top-level script entrypoints such as
+  `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
+  `scripts/run-tui.ts` directly into `.build/scripts/*.js`.
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts`; maintained `scripts/*.js` wrappers are forbidden.
-- `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
-- `npm run bootstrap:electron-builder` compiles `scripts/electron-builder-before-build.ts` into `.build/scripts/bootstrap/electron-builder-before-build.js` for the electron-builder `beforeBuild` hook.
-- `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
-- `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-gitignore-policy`, `check-no-source-javascript`, and `check-source-integrity`. The source-integrity check also rejects malformed or unformatted `package.json`, collapsed critical shell/docs files, giant one-line documentation blocks, and inline heredoc syntax in shell scripts.
+- `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts`
+  into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript
+  entrypoints such as Flathub source generation.
+- `npm run bootstrap:electron-builder` compiles
+  `scripts/electron-builder-before-build.ts` into
+  `.build/scripts/bootstrap/electron-builder-before-build.js` for the
+  electron-builder `beforeBuild` hook.
+- `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
+  generated bootstrap and writes per-entry generated JavaScript under
+  `.build/scripts/typescript/`.
+- `npm run check:scripts-core` runs the generated core validation artifacts and
+  includes the TypeScript-first closure checks, including `check-gitignore-policy`,
+  `check-no-source-javascript`, and `check-source-integrity`.
+- The source-integrity check also rejects malformed or unformatted `package.json`,
+  collapsed critical shell/docs files, giant one-line documentation blocks, and
+  inline heredoc syntax in shell scripts.
 
 Migrated core entries include:
 
@@ -100,15 +135,25 @@ Bootstrap TypeScript entrypoints compiled by dedicated scripts include:
 
 Test execution:
 
-- `scripts/run-node-tests.ts` compiles all tests for full-suite runs, or only selected `*.test.ts` files plus shared support files when test paths are passed on the CLI, to `.build/test/**/*.js` with inline source maps.
-- `npm test` runs `node --test` against `.build/test/**/*.test.js`; Node does not execute TypeScript test files directly.
-- `test/helpers/runtime-module.ts` loads Electron runtime TypeScript sources for module-level tests and no longer falls back to JavaScript source files.
+- `scripts/run-node-tests.ts` compiles all tests for full-suite runs, or only
+  selected `*.test.ts` files plus shared support files when test paths are passed
+  on the CLI, to `.build/test/**/*.js` with inline source maps.
+- `npm test` runs `node --test` against `.build/test/**/*.test.js`; Node does
+  not execute TypeScript test files directly.
+- `test/helpers/runtime-module.ts` loads Electron runtime TypeScript sources for
+  module-level tests and no longer falls back to JavaScript source files.
 
 Flathub source generation:
 
-- `packaging/flathub/scripts/generate-npm-sources.ts` owns package-lock parsing, npm source list generation, integrity hash conversion, deterministic ordering, and `generated-sources.json` writing.
-- The generator rejects local/workspace/link resolved dependencies, `node_modules` path sources, non-HTTPS tarballs, invalid integrity fragments, duplicate URL/hash conflicts, and missing `packaging/flathub/manifest.yml` wiring for `generated-sources.json`.
-- `packaging/flathub/scripts/generate-npm-sources.sh` invokes the TypeScript generator through `npm run run:ts`, which uses the generated runner bootstrap.
+- `packaging/flathub/scripts/generate-npm-sources.ts` owns package-lock parsing,
+  npm source list generation, integrity hash conversion, deterministic ordering,
+  and `generated-sources.json` writing.
+- The generator rejects local/workspace/link resolved dependencies, `node_modules`
+  path sources, non-HTTPS tarballs, invalid integrity fragments, duplicate
+  URL/hash conflicts, and missing `packaging/flathub/manifest.yml` wiring for
+  `generated-sources.json`.
+- `packaging/flathub/scripts/generate-npm-sources.sh` invokes the TypeScript
+  generator through `npm run run:ts`, which uses the generated runner bootstrap.
 
 ## Commands
 
@@ -133,7 +178,10 @@ npm run check:source-integrity
 
 ## Final architecture
 
-TypeScript owns all maintained Node.js source code: Electron runtime/preload, TUI, script core, build scripts, tests, configs, and the Flathub source generator. Shell remains limited to the launcher and Linux host operations. Generated project JavaScript belongs in `.build/` only.
+TypeScript owns all maintained Node.js source code: Electron runtime/preload, TUI,
+script core, build scripts, tests, configs, and the Flathub source generator.
+Shell remains limited to the launcher and Linux host operations. Generated project
+JavaScript belongs in `.build/` only.
 
 ## Rules
 
@@ -147,7 +195,8 @@ TypeScript owns all maintained Node.js source code: Electron runtime/preload, TU
 - Do not edit generated preload bundles manually.
 - Keep runtime behavior stable during type-only changes.
 - Prefer small module conversions and targeted tests.
-- In preload/runtime TypeScript files, always provide explicit Promise generic types when resolving structured objects that are destructured/consumed by shape.
+- In preload/runtime TypeScript files, always provide explicit Promise generic
+  types when resolving structured objects that are destructured/consumed by shape.
 
 Example:
 

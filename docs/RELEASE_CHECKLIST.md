@@ -29,7 +29,7 @@ This checklist tracks the stable `1.4.10` release closure.
 - [ ] Confirm app launches locally.
 - [ ] Confirm OAuth popup/login flow still works.
 - [ ] Confirm Canva editor opens and custom eyedropper flow remains active.
-- [ ] Confirm local release artifact workflow is documented (`npm run dist` + `./canva-linux.sh --bundle`).
+- [ ] Confirm local release artifact workflow is documented (`npm run dist` + `./canva-linux.sh --bundle-flatpak`).
 
 ## 5) Scope freeze confirmation
 
