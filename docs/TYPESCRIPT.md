@@ -9,7 +9,7 @@ Canva Linux is TypeScript-first for Electron runtime code, Node.js maintenance l
 - Shell remains shell for host operations.
 - Electron main and preload source modules are TypeScript.
 - Node.js maintenance scripts use TypeScript source files and shell bootstraps where Node cannot execute TypeScript directly.
-- Tests live under `test/**/*.ts`; `npm test` compiles them into `.build/test/` with inline source maps before running `node --test` on generated JavaScript.
+- Tests live under `test/**/*.ts`; `npm test` compiles selected tests plus support helpers into `.build/test/` with inline source maps before running `node --test` on generated JavaScript.
 - New tests must be TypeScript.
 - ESLint and Playwright use `eslint.config.ts` and `playwright.config.ts`; new configs should be TypeScript when the tool supports TypeScript configs.
 - Runtime output remains CommonJS-compatible generated JavaScript under `.build/`.
@@ -57,6 +57,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run build:scripts` compiles top-level script entrypoints such as `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and `scripts/run-tui.ts` directly into `.build/scripts/*.js`.
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts`; maintained `scripts/*.js` wrappers are forbidden.
 - `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
+- `npm run bootstrap:electron-builder` compiles `scripts/electron-builder-before-build.ts` into `.build/scripts/bootstrap/electron-builder-before-build.js` for the electron-builder `beforeBuild` hook.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
 - `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks, including `check-no-source-javascript` and `check-source-integrity`.
 
@@ -82,21 +83,23 @@ Migrated core entries include:
 - `check-no-source-javascript.ts`
 - `check-source-integrity.ts`
 
-Standalone TypeScript script entrypoints include:
+Standalone TypeScript script entrypoints compiled by `build:scripts` include:
 
 - `build-runtime.ts`
 - `build-preload-bundle.ts`
 - `copy-runtime-assets.ts`
 - `clean-runtime-build.ts`
-- `electron-builder-before-build.ts`
 - `run-node-tests.ts`
 - `run-tui.ts`
-- `register-typescript.ts`
+
+Bootstrap TypeScript entrypoints compiled by dedicated scripts include:
+
+- `electron-builder-before-build.ts`
 - `run-typescript-script.ts`
 
 Test execution:
 
-- `scripts/run-node-tests.ts` compiles `test/**/*.ts` to `.build/test/**/*.js` with inline source maps.
+- `scripts/run-node-tests.ts` compiles all tests for full-suite runs, or only selected `*.test.ts` files plus shared support files when test paths are passed on the CLI, to `.build/test/**/*.js` with inline source maps.
 - `npm test` runs `node --test` against `.build/test/**/*.test.js`; Node does not execute TypeScript test files directly.
 - `test/helpers/runtime-module.ts` loads Electron runtime TypeScript sources for module-level tests and no longer falls back to JavaScript source files.
 
