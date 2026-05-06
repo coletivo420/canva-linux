@@ -25,27 +25,6 @@ const config = [
   },
   {
     files: [
-      'electron/**/*.js',
-    ],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'commonjs',
-    },
-    settings: {
-      'import/extensions': ['.js', '.ts'],
-      'import/resolver': {
-        node: {
-          extensions: ['.js', '.ts'],
-        },
-      },
-    },
-    rules: {
-      ...commonRules,
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-    },
-  },
-  {
-    files: [
       'eslint.config.ts',
     ],
     languageOptions: {
