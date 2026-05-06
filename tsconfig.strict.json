@@ -41,6 +41,7 @@
     "test/debug-levels.test.ts",
     "test/gpu-diagnostics.test.ts",
     "test/runtime.test.ts",
+    "test/lifecycle.test.ts",
     "test/logging-helpers.test.ts",
     "test/tabs-state.test.ts",
     "test/eyedropper-bridge.test.ts",
