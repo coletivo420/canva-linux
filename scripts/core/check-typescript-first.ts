@@ -174,7 +174,7 @@ function validateCoreWrapper(rootDir: string, failures: string[]): void {
   const relativePath = 'scripts/core-wrapper.js';
   const content = readText(rootDir, relativePath);
 
-  if (!/module\.exports\s*=\s*\{\s*loadCore\s*,\s*runCore\s*\}/.test(content)) {
+  if (!/module\\.exports\\s*=\\s*\\{\\s*loadCore\\s*,\\s*runCore,?\\s*\\}/.test(content)) {
     failures.push(`${relativePath}: must only expose loadCore and runCore loader helpers`);
   }
 
