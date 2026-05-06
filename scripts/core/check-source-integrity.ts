@@ -299,6 +299,38 @@ function validateShellFile(rootDir: string, relativePath: string, failures: stri
   }
 }
 
+function validateRunCoreEntryScriptShape(rootDir: string, failures: string[]): void {
+  const relativePath = 'scripts/run-core-entry.sh';
+  const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
+  const lines = content.split(/\r?\n/);
+
+  if (lines[0] !== '#!/usr/bin/env bash') {
+    failures.push(`${relativePath}: shebang must be the first line by itself`);
+  }
+
+  if (lines[1] !== 'set -euo pipefail') {
+    failures.push(`${relativePath}: strict shell mode must be the second line by itself`);
+  }
+
+  if (lines.length < 15) {
+    failures.push(`${relativePath}: core entry wrapper appears collapsed; expected readable multiline shell content`);
+  }
+
+  const requiredStandaloneLines = [
+    'if [[ $# -lt 1 ]]; then',
+    'fi',
+    'ENTRY="$1"',
+    'shift',
+    'node "${TARGET}" "$@"',
+  ] as const;
+
+  for (const requiredLine of requiredStandaloneLines) {
+    if (!lines.includes(requiredLine)) {
+      failures.push(`${relativePath}: expected standalone line ${JSON.stringify(requiredLine)}`);
+    }
+  }
+}
+
 function validateProjectValidationScriptShape(rootDir: string, failures: string[]): void {
   const relativePath = 'scripts/validate-project.sh';
   const content = fs.readFileSync(path.join(rootDir, relativePath), 'utf8');
@@ -402,6 +434,7 @@ export function main(): number {
     validateReadableSourceShape(rootDir, file, failures);
   }
 
+  validateRunCoreEntryScriptShape(rootDir, failures);
   validateToolbarContentSecurityPolicy(rootDir, failures);
   validateNoMaintainedJavaScriptFiles(rootDir, failures);
   validateProjectValidationScriptShape(rootDir, failures);

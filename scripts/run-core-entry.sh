@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Keep this wrapper formatted as real multiline shell; the shebang must stay alone.
 if [[ $# -lt 1 ]]; then
   printf '%s\n' "usage: scripts/run-core-entry.sh <entry-name> [args...]" >&2
   exit 64
