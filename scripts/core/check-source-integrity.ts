@@ -456,12 +456,13 @@ function validateRunCoreEntryScriptShape(
 
   const requiredStandaloneLines = [
     "main() {",
-    "  if [[ $# -lt 1 ]]; then",
-    "  fi",
-    '  local entry="$1"',
-    "  shift",
-    '  node "${target}" "$@"',
-    'main "$@"',
+  const requiredStandaloneLines = [
+    '# Keep this wrapper formatted as real multiline shell; the shebang must stay alone.',
+    'if [[ $# -lt 1 ]]; then',
+    'fi',
+    'ENTRY="$1"',
+    'shift',
+    'node "${TARGET}" "$@"',
   ] as const;
 
   for (const requiredLine of requiredStandaloneLines) {
