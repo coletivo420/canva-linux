@@ -104,7 +104,7 @@ function validateTopLevelScriptWrappers(rootDir: string, failures: string[]): Wr
 
   for (const relativePath of listTopLevelScriptJavaScript(rootDir)) {
     const content = readText(rootDir, relativePath);
-    const summary = classifyWrapper(rootDir, relativePath);
+    const summary = classifyWrapper(content, relativePath);
     summaries.push(summary);
 
     if (summary.kind === 'support') {
