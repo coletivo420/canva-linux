@@ -64,4 +64,21 @@ function loadCore(entryName) {
   return require(target);
 }
 
-module.exports = { loadCore };
+function runCore(entryName, prefix) {
+  const core = loadCore(entryName);
+  if (!core) process.exit(1);
+
+  if (typeof core.main !== 'function') {
+    process.stderr.write(`[error] Core entry '${entryName}' does not export a main() function.\n`);
+    process.exit(1);
+  }
+
+  try {
+    process.exit(core.main());
+  } catch (error) {
+    process.stderr.write(`[${prefix}] ${error instanceof Error ? error.message : String(error)}\n`);
+    process.exit(1);
+  }
+}
+
+module.exports = { loadCore, runCore };
