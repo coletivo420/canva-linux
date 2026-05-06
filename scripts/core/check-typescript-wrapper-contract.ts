@@ -47,20 +47,20 @@ export function main(): number {
 
   const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8')) as PackageJson;
   const packageScripts = packageJson.scripts ?? {};
-  const standaloneBuild = packageScripts['build:scripts-standalone'] ?? '';
+  const standaloneBuild = packageScripts['build:scripts'] ?? '';
 
   for (const entrypoint of requiredStandaloneEntrypoints) {
     if (!fs.existsSync(path.join(rootDir, entrypoint.source))) failures.push(`${entrypoint.source}: missing TypeScript-first entrypoint`);
-    if (!standaloneBuild.includes(entrypoint.source)) failures.push(`package.json build:scripts-standalone: must compile ${entrypoint.source}`);
+    if (!standaloneBuild.includes(entrypoint.source)) failures.push(`package.json build:scripts: must compile ${entrypoint.source}`);
   }
 
   if (!standaloneBuild.includes('--outdir=.build/scripts') || !standaloneBuild.includes('--entry-names=[name]')) {
-    failures.push('package.json build:scripts-standalone: must emit generated entrypoints directly under .build/scripts');
+    failures.push('package.json build:scripts: must emit generated entrypoints directly under .build/scripts');
   }
 
   for (const [scriptName, artifact] of Object.entries(requiredArtifactScripts)) {
     const command = packageScripts[scriptName] ?? '';
-    if (!command.includes('build:scripts-standalone') || !command.includes(artifact)) {
+    if (!command.includes('build:scripts') || !command.includes(artifact)) {
       failures.push(`package.json scripts.${scriptName}: must build standalone TypeScript artifacts and run ${artifact}`);
     }
   }

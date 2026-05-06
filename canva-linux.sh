@@ -177,9 +177,9 @@ run_tui_direct() {
 run_tui_entrypoint() {
   if [[ -f "${ROOT_DIR}/scripts/run-tui.ts" ]]; then
     if [[ -n "${PROJECT_PHASE:-}" ]]; then
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts-standalone >/dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/run-tui.js
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts >/dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/run-tui.js
     else
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts-standalone >/dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-tui.js
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts >/dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-tui.js
     fi
     return $?
   fi

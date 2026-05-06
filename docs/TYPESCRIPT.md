@@ -46,9 +46,9 @@ Project validations, contracts, and registries are implemented in TypeScript und
 
 - `npm run build:scripts-core` compiles core entries with esbuild into `.build/scripts/core/`.
 - `scripts/run-core-entry.sh` builds the core on demand when compiled artifacts are missing, then runs the generated `.build/scripts/core/<entry>.js` artifact.
-- `npm run build:scripts-standalone` compiles top-level script entrypoints such as `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and `scripts/run-tui.ts` directly into `.build/scripts/*.js`.
-- Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts-standalone`; maintained `scripts/*.js` wrappers are forbidden.
-- `npm run build:typescript-runner` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
+- `npm run build:scripts` compiles top-level script entrypoints such as `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and `scripts/run-tui.ts` directly into `.build/scripts/*.js`.
+- Package entrypoints run those generated `.build/scripts/*.js` artifacts after `build:scripts`; maintained `scripts/*.js` wrappers are forbidden.
+- `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts` into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript entrypoints such as Flathub source generation.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that generated bootstrap and writes per-entry generated JavaScript under `.build/scripts/typescript/`.
 - `npm run check:scripts-core` runs the generated core validation artifacts and includes the TypeScript-first closure checks.
 
@@ -99,10 +99,15 @@ Flathub source generation:
 ## Commands
 
 ```bash
+npm run bootstrap:typescript
+npm run build:scripts
+npm run build:tui
+npm run build:runtime
+npm test
+npm run lint
+npm run validate
 npm run typecheck
 npm run typecheck:strict
-npm test
-npm run build:runtime
 npm run build:scripts-core
 npm run check:scripts-core
 npm run check:typescript-wrappers
