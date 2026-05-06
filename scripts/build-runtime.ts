@@ -25,7 +25,7 @@ export function main(): void {
   run('rebuild script artifacts after clean', 'npm', ['run', 'build:scripts']);
   run('compile electron runtime', 'npx', ['tsc', '-p', 'tsconfig.build.json']);
   run('copy runtime assets', process.execPath, ['.build/scripts/copy-runtime-assets.js']);
-  run('build electron-builder beforeBuild hook', 'npx', ['esbuild', 'scripts/electron-builder-before-build.ts', '--bundle', '--platform=node', '--target=node20', '--format=cjs', '--external:electron', '--external:esbuild', '--outfile=.build/scripts/bootstrap/electron-builder-before-build.js']);
+  run('build electron-builder beforeBuild hook', 'npx', ['esbuild', 'scripts/electron-builder-before-build.ts', '--bundle', '--platform=node', '--target=node22', '--format=cjs', '--external:electron', '--external:esbuild', '--outfile=.build/scripts/bootstrap/electron-builder-before-build.js']);
   run('build preload bundle in .build', process.execPath, [
     '.build/scripts/build-preload-bundle.js',
     '--build-output',
