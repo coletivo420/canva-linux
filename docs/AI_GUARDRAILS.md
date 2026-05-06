@@ -46,7 +46,7 @@
 - Do not add new JavaScript implementation files unless the file is an accepted config file, test file, bootstrap helper, or compatibility wrapper.
 - Do not duplicate TypeScript core logic in JavaScript fallbacks.
 - `scripts/core-wrapper.js` must only load or build compiled TypeScript core entries; it must not contain fallback implementations of status, registry, runner, validation, or detection contracts.
-- Flathub/npm source generation logic must move to TypeScript before being treated as release/submission-critical.
+- Flathub/npm source generation logic lives in TypeScript; keep `packaging/flathub/scripts/generate-npm-sources.js` as a thin compatibility wrapper only.
 
 ## Mandatory color semantics
 

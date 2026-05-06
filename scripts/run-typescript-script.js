@@ -15,8 +15,11 @@ function scriptNameFromWrapper(wrapperFilename) {
 
 function buildScript(wrapperFilename) {
   const scriptName = scriptNameFromWrapper(wrapperFilename);
-  const entryPoint = path.join(__dirname, `${scriptName}.ts`);
-  const outfile = path.join(repoRoot, '.build', 'scripts', 'bootstrap', `${scriptName}.js`);
+  const sourceDir = path.dirname(wrapperFilename);
+  const entryPoint = path.join(sourceDir, `${scriptName}.ts`);
+  const relativePath = path.relative(repoRoot, wrapperFilename);
+  const flatName = relativePath.replace(/[\\/]/g, '-').replace(/\.js$/, '');
+  const outfile = path.join(repoRoot, '.build', 'scripts', 'bootstrap', `${flatName}.js`);
 
   esbuild.buildSync({
     entryPoints: [entryPoint],
@@ -37,7 +40,7 @@ function buildScript(wrapperFilename) {
 
 function loadTypeScriptScript(wrapperFilename) {
   process.env.CANVA_SCRIPT_REPO_ROOT = repoRoot;
-  process.env.CANVA_SCRIPT_SOURCE_DIR = __dirname;
+  process.env.CANVA_SCRIPT_SOURCE_DIR = path.dirname(wrapperFilename);
   return require(buildScript(wrapperFilename));
 }
 

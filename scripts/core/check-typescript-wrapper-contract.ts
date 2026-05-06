@@ -16,6 +16,7 @@ const wrapperContracts: readonly WrapperContract[] = [
   { js: 'scripts/copy-runtime-assets.js', ts: 'scripts/copy-runtime-assets.ts', kind: 'run' },
   { js: 'scripts/clean-runtime-build.js', ts: 'scripts/clean-runtime-build.ts', kind: 'run' },
   { js: 'scripts/electron-builder-before-build.js', ts: 'scripts/electron-builder-before-build.ts', kind: 'load-default' },
+  { js: 'scripts/run-node-tests.js', ts: 'scripts/run-node-tests.ts', kind: 'run' },
   { js: 'scripts/run-tui.js', ts: 'scripts/run-tui.ts', kind: 'run' },
 ] as const;
 

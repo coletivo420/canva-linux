@@ -18,7 +18,6 @@ type WrapperSummary = {
 const supportJavaScriptFiles = new Set([
   'scripts/core-wrapper.js',
   'scripts/run-typescript-script.js',
-  'scripts/run-node-tests.js',
 ]);
 
 const acceptedJavaScriptFiles = new Set([
@@ -174,7 +173,7 @@ function validateCoreWrapper(rootDir: string, failures: string[]): void {
   const relativePath = 'scripts/core-wrapper.js';
   const content = readText(rootDir, relativePath);
 
-  if (!/module\\.exports\\s*=\\s*\\{\\s*loadCore\\s*,\\s*runCore,?\\s*\\}/.test(content)) {
+  if (!/module\.exports\s*=\s*\{\s*loadCore\s*,\s*runCore,?\s*\}/.test(content)) {
     failures.push(`${relativePath}: must only expose loadCore and runCore loader helpers`);
   }
 
@@ -239,12 +238,46 @@ function validateWrapperBuildCoverage(buildEntries: string[], summaries: Wrapper
   }
 }
 
+
+function validateFlathubSourceGenerator(rootDir: string, failures: string[]): void {
+  const jsPath = 'packaging/flathub/scripts/generate-npm-sources.js';
+  const tsPath = 'packaging/flathub/scripts/generate-npm-sources.ts';
+  const shellPath = 'packaging/flathub/scripts/generate-npm-sources.sh';
+
+  if (!pathExists(rootDir, jsPath)) {
+    failures.push(`${jsPath}: missing compatibility wrapper`);
+    return;
+  }
+  if (!pathExists(rootDir, tsPath)) {
+    failures.push(`${tsPath}: missing TypeScript implementation for Flathub npm source generation`);
+  }
+
+  const jsContent = readText(rootDir, jsPath);
+  const jsLines = nonEmptyNonCommentLines(jsContent);
+  if (!jsContent.includes("require('../../../scripts/run-typescript-script').runTypeScriptScript(__filename)")) {
+    failures.push(`${jsPath}: must delegate to the shared TypeScript script runner`);
+  }
+  if (jsLines.length > 3) {
+    failures.push(`${jsPath}: wrapper must stay thin; found ${jsLines.length} non-empty code lines`);
+  }
+
+  const shellContent = readText(rootDir, shellPath);
+  if (!shellContent.includes('generate-npm-sources.js')) {
+    failures.push(`${shellPath}: must invoke the TypeScript-backed generate-npm-sources.js wrapper`);
+  }
+
+  const docsContent = readText(rootDir, 'docs/TYPESCRIPT.md');
+  if (!docsContent.includes('generate-npm-sources.ts') || !docsContent.includes('generate-npm-sources.js')) {
+    failures.push('docs/TYPESCRIPT.md: missing Flathub source generator TypeScript migration status');
+  }
+}
+
 function validateTypescriptDocs(rootDir: string, buildEntries: string[], summaries: WrapperSummary[], failures: string[]): void {
   const docPath = 'docs/TYPESCRIPT.md';
   const content = readText(rootDir, docPath);
 
   for (const entry of buildEntries) {
-    if (!new RegExp("\\\\b" + entry + "\\\\.ts\\\\b").test(content)) {
+    if (!new RegExp("\\b" + entry + "\\.ts\\b").test(content)) {
       failures.push(`${docPath}: missing migrated scripts/core entry ${entry}.ts`);
     }
   }
@@ -272,6 +305,7 @@ export function main(): number {
   validateCoreWrapper(rootDir, failures);
   const buildEntries = validatePackageCoreEntries(rootDir, packageJson, failures);
   validateWrapperBuildCoverage(buildEntries, summaries, failures);
+  validateFlathubSourceGenerator(rootDir, failures);
   validateTypescriptDocs(rootDir, buildEntries, summaries, failures);
 
   if (failures.length) {

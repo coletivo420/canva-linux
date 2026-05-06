@@ -21,7 +21,9 @@
     "scripts/**/*.js",
     "scripts/**/*.ts",
     "test/**/*.js",
-    "playwright.config.js"
+    "playwright.config.js",
+    "packaging/flathub/scripts/**/*.js",
+    "packaging/flathub/scripts/**/*.ts"
   ],
   "exclude": [
     "node_modules",
