@@ -17,6 +17,7 @@ notes so release-facing docs stay focused.
 - [Validation checklist](VALIDATION.md)
 - [Release guide](RELEASE.md)
 - [Development guide](DEVELOPMENT.md)
+- [Project tree reference](PROJECT_TREE.md)
 - [Technical architecture](TECHNICAL.md)
 - [TypeScript notes](TYPESCRIPT.md)
 - [CL EyeDropper architecture](CANVA_LINUX_EYEDROPPER.md)

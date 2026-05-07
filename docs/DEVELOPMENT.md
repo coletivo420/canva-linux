@@ -61,6 +61,9 @@ cleanup is complete.
 
 ## Documentation layout
 
+Use [Project tree reference](PROJECT_TREE.md) before moving code across Electron, scripts, C420UI, packaging,
+or generated-output boundaries.
+
 Keep release-facing docs linked from `README.md` and `docs/README.md`. Internal
 AI/dev memory belongs under `docs/internal/`; submission notes and historical
 packaging notes belong under `docs/notes/`. Do not delete useful technical notes

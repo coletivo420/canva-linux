@@ -67,6 +67,7 @@ entry points:
 - [Validation checklist](docs/VALIDATION.md)
 - [Release guide](docs/RELEASE.md)
 - [Development guide](docs/DEVELOPMENT.md)
+- [Project tree reference](docs/PROJECT_TREE.md)
 - [Technical architecture](docs/TECHNICAL.md)
 - [TypeScript notes](docs/TYPESCRIPT.md)
 - [CL EyeDropper architecture](docs/CANVA_LINUX_EYEDROPPER.md)
