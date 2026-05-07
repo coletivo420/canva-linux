@@ -2,7 +2,12 @@ import blessed from "blessed";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { CANVA_LOGO_LINES } from "./logo";
 import { getActionsByGroup, type TuiAction } from "./action-registry";
-import { confirmDialog, errorDialog, inputDialog, messageDialog } from "./modal";
+import {
+  confirmDialog,
+  errorDialog,
+  inputDialog,
+  messageDialog,
+} from "./modal";
 import { runAction } from "./process-runner";
 import { tuiTheme } from "./theme";
 import { copyTextToClipboard } from "./clipboard";
@@ -16,6 +21,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { Writable } from "node:stream";
 
+// --- Types ---
+
 type View =
   | "main"
   | "install"
@@ -23,6 +30,7 @@ type View =
   | "maintenance"
   | "settings"
   | "help";
+
 type ProgressState =
   | "idle"
   | "running"
@@ -30,8 +38,11 @@ type ProgressState =
   | "warning"
   | "failed"
   | "canceled";
+
 type LogSource = "stdout" | "stderr" | "system";
+
 type FocusZone = "menu" | "diagnostics" | "content" | "logs";
+
 type SettingsItem =
   | {
       kind: "section";
@@ -47,10 +58,14 @@ type SettingsItem =
       label: string;
     };
 
+// --- Constants ---
+
 const MAX_LOG_HISTORY_LINES = 5000;
 const TOOL_LOG_PREFIX = "Tool |";
 const ACTION_LOG_PREFIX = "Action |";
 const FOCUS_ZONES: FocusZone[] = ["menu", "diagnostics", "content", "logs"];
+
+// --- Main Application Entry ---
 
 export function createApp(opts: {
   version: string;
@@ -60,11 +75,14 @@ export function createApp(opts: {
   toolTitle: string;
   releaseNotes: string;
 }) {
+  // --- Initialization & State ---
+
   let toolSettings = loadToolSettings();
   const settingsPath = toolSettingsPath();
   const terminalTextSelectionModeActive =
     toolSettings.tool.terminalTextSelectionMode;
   const tuiMouseEnabled = !terminalTextSelectionModeActive;
+
   const footerContent = [
     terminalTextSelectionModeActive
       ? "{bold}Text selection mode enabled{/bold}"
@@ -79,11 +97,15 @@ export function createApp(opts: {
   ]
     .filter(Boolean)
     .join(" | ");
+
   const screen = blessed.screen({
     smartCSR: true,
     title: opts.title,
     fullUnicode: true,
   });
+
+  // --- UI Widgets ---
+
   const header = blessed.box({
     top: 0,
     height: 2,
@@ -92,6 +114,7 @@ export function createApp(opts: {
     content: `{bold}${opts.toolTitle}{/bold}\nPhase: ${opts.phase}`,
     style: tuiTheme.header,
   });
+
   const menu = blessed.list({
     top: 2,
     left: 0,
@@ -104,6 +127,7 @@ export function createApp(opts: {
     label: "Main Menu",
     style: tuiTheme.menu,
   });
+
   const diagnostics = blessed.box({
     top: "42%",
     left: 0,
@@ -118,6 +142,7 @@ export function createApp(opts: {
     mouse: tuiMouseEnabled,
     style: tuiTheme.content,
   });
+
   const content = blessed.box({
     top: 2,
     left: "32%",
@@ -132,6 +157,7 @@ export function createApp(opts: {
     mouse: tuiMouseEnabled,
     style: tuiTheme.content,
   });
+
   const logs = blessed.log({
     top: "38%",
     left: "32%",
@@ -145,13 +171,18 @@ export function createApp(opts: {
     alwaysScroll: true,
     scrollbar: {
       ch: " ",
-      track: { bg: tuiTheme.colors.surfaceAlt },
-      style: { bg: tuiTheme.colors.lightBlue },
+      track: {
+        bg: tuiTheme.colors.surfaceAlt,
+      },
+      style: {
+        bg: tuiTheme.colors.lightBlue,
+      },
     },
     scrollback: MAX_LOG_HISTORY_LINES,
     tags: true,
     style: tuiTheme.logs,
   });
+
   const footer = blessed.box({
     bottom: 0,
     height: 1,
@@ -160,6 +191,7 @@ export function createApp(opts: {
     content: footerContent,
     style: tuiTheme.footer,
   });
+
   const progress = blessed.box({
     bottom: 1,
     height: 1,
@@ -167,8 +199,12 @@ export function createApp(opts: {
     width: "68%",
     tags: true,
     content: "",
-    style: { fg: "white", bg: "black" },
+    style: {
+      fg: "white",
+      bg: "black",
+    },
   });
+
   screen.append(header);
   screen.append(menu);
   screen.append(diagnostics);
@@ -193,6 +229,8 @@ export function createApp(opts: {
 
   applyProgramMouseMode();
 
+  // --- Menu and View Items ---
+
   const mainItems: Array<{ label: string; view: View }> = [
     { label: "Install", view: "install" },
     { label: "Development", view: "development" },
@@ -200,6 +238,7 @@ export function createApp(opts: {
     { label: "Application Settings", view: "settings" },
     { label: "Help", view: "help" },
   ];
+
   const settingsItems: SettingsItem[] = [
     {
       kind: "section",
@@ -225,10 +264,12 @@ export function createApp(opts: {
     },
   ];
 
+  // --- Application Internal State ---
+
   let currentView: View = "main";
   let focusZone: FocusZone = "menu";
   let menuLabelText = "Main Menu";
-  let diagnosticsLabelText = "Detected Installations";
+  const diagnosticsLabelText = "Detected Installations";
   let contentLabelText = "Overview";
   let logsLabelText = "Logs";
   let currentActions: TuiAction[] = [];
@@ -238,12 +279,15 @@ export function createApp(opts: {
   let progressState: ProgressState = "idle";
   let lastCtrlCAt = 0;
   let updatingSettingsMenuItems = false;
+
   const logBuffers: Record<LogSource, string> = {
     stdout: "",
     stderr: "",
     system: "",
   };
+
   const logHistory: string[] = [];
+
   const sessionLogPath =
     process.env.CANVA_TOOL_SESSION_LOG ||
     path.join(
@@ -252,7 +296,11 @@ export function createApp(opts: {
       "canva-linux",
       "tool-session.log",
     );
+
   const launcherSessionId = process.env.CANVA_TOOL_SESSION_ID?.trim() || "";
+
+  // --- Logging & Session Management ---
+
   function readExistingSessionLog(logPath: string): string {
     try {
       return fs.existsSync(logPath) ? fs.readFileSync(logPath, "utf8") : "";
@@ -276,29 +324,36 @@ export function createApp(opts: {
 
   const launcherSessionLog = readExistingSessionLog(sessionLogPath);
   const sessionStream = openSessionStream(sessionLogPath);
+
   const writeSession = (line: string) => {
     sessionStream?.write(`${line}\n`);
   };
+
   writeSession("[mode] tui");
+
   process.on("exit", () => {
     writeSession("[session] ended");
   });
+
+  // --- Detection & Diagnostics ---
 
   let overviewStatus: any = null;
   let overviewDetectionPromise: Promise<any | null> | null = null;
   let overviewDetectionError: string | null = null;
 
   const detectedSummary = (s: any) => {
-    if (!s)
+    if (!s) {
       return [
         `  Native Install: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
         `  Flatpak Install: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
         `  AppImage artifacts: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
       ];
+    }
     const i = s.installations;
     const fmt = (detected: boolean, version: string | undefined) => {
-      if (!detected)
+      if (!detected) {
         return `{${tuiTheme.colors.statusNotDetected}-fg}not detected{/${tuiTheme.colors.statusNotDetected}-fg}`;
+      }
       const v =
         version && version.trim()
           ? `v${version.trim().replace(/^v/, "")}`
@@ -327,11 +382,10 @@ export function createApp(opts: {
   function refreshDetectedInstallations(
     reason = "unknown",
   ): Promise<any | null> {
-    if (overviewDetectionPromise) return overviewDetectionPromise;
-    appendLogText(
-      `[info] Detection started (${reason}).\n`,
-      "system",
-    );
+    if (overviewDetectionPromise) {
+      return overviewDetectionPromise;
+    }
+    appendLogText(`[info] Detection started (${reason}).\n`, "system");
     overviewDetectionPromise = detectInstallationStatusNow()
       .then((latestStatus) => {
         if (latestStatus) {
@@ -372,7 +426,9 @@ export function createApp(opts: {
   async function actionNeedsRootForDetectedSystem(
     action: TuiAction,
   ): Promise<boolean> {
-    if (!["purge", "uninstall-detected"].includes(action.id)) return false;
+    if (!["purge", "uninstall-detected"].includes(action.id)) {
+      return false;
+    }
     const latestStatus =
       (await refreshDetectedInstallations(`root-check:${action.id}`)) ??
       overviewStatus;
@@ -384,7 +440,9 @@ export function createApp(opts: {
 
   function parseOverviewStatusOutput(output: string): any | null {
     const trimmed = output.trim();
-    if (!trimmed) return null;
+    if (!trimmed) {
+      return null;
+    }
     try {
       return JSON.parse(trimmed);
     } catch {
@@ -402,7 +460,9 @@ export function createApp(opts: {
       let stderr = "";
       let settled = false;
       const finish = (status: any | null) => {
-        if (settled) return;
+        if (settled) {
+          return;
+        }
         settled = true;
         resolve(status);
       };
@@ -420,8 +480,12 @@ export function createApp(opts: {
         finish(null);
       });
       child.on("close", (code) => {
-        if (settled) return;
-        if (stderr.trim()) appendLogText(stderr, "system");
+        if (settled) {
+          return;
+        }
+        if (stderr.trim()) {
+          appendLogText(stderr, "system");
+        }
         if ((code ?? 1) !== 0) {
           appendLogText(
             `[warn] Detection status exited with code ${code ?? "unknown"}.\n`,
@@ -435,12 +499,18 @@ export function createApp(opts: {
     });
   }
 
+  // --- Log Rendering ---
+
   function isCriticalToolLog(line: string): boolean {
-    return /^\[(error|warn)\]/i.test(line) || /authentication failed/i.test(line);
+    return (
+      /^\[(error|warn)\]/i.test(line) || /authentication failed/i.test(line)
+    );
   }
 
   function shouldDisplayLogLine(line: string, source: LogSource): boolean {
-    if (source !== "system") return true;
+    if (source !== "system") {
+      return true;
+    }
     return toolSettings.tool.generalLogsEnabled || isCriticalToolLog(line);
   }
 
@@ -450,21 +520,32 @@ export function createApp(opts: {
       c === "{" ? "\\{" : "\\}",
     );
     logHistory.push(`${prefix} ${line}`);
-    if (logHistory.length > MAX_LOG_HISTORY_LINES) logHistory.shift();
-    if (source === "stderr") logs.log(`{red-fg}${msg}{/red-fg}`);
-    else if (source === "system") logs.log(`{cyan-fg}${msg}{/cyan-fg}`);
-    else logs.log(msg);
+    if (logHistory.length > MAX_LOG_HISTORY_LINES) {
+      logHistory.shift();
+    }
+    if (source === "stderr") {
+      logs.log(`{red-fg}${msg}{/red-fg}`);
+    } else if (source === "system") {
+      logs.log(`{cyan-fg}${msg}{/cyan-fg}`);
+    } else {
+      logs.log(msg);
+    }
   }
 
   function appendLogLine(line: string, source: LogSource) {
     writeSession(`[${source}] ${line}`);
-    if (shouldDisplayLogLine(line, source)) displayLogLine(line, source);
+    if (shouldDisplayLogLine(line, source)) {
+      displayLogLine(line, source);
+    }
   }
+
   function appendLogText(text: string, source: LogSource = "stdout") {
     logBuffers[source] += text;
     while (true) {
       const m = logBuffers[source].match(/\r?\n/);
-      if (!m || m.index === undefined) break;
+      if (!m || m.index === undefined) {
+        break;
+      }
       const i = m.index;
       const n = m[0].length;
       appendLogLine(logBuffers[source].slice(0, i), source);
@@ -482,9 +563,13 @@ export function createApp(opts: {
       return;
     }
     for (const line of launcherSessionLog.split(/\r?\n/)) {
-      if (line.trim()) displayLogLine(line, "system");
+      if (line.trim()) {
+        displayLogLine(line, "system");
+      }
     }
   }
+
+  // --- Focus & Layout Helpers ---
 
   function activeLabel(label: string): string {
     return `{${tuiTheme.colors.activeLabel}-fg}${label}{/${tuiTheme.colors.activeLabel}-fg}`;
@@ -494,7 +579,10 @@ export function createApp(opts: {
     return `{${tuiTheme.colors.inactiveLabel}-fg}${label}{/${tuiTheme.colors.inactiveLabel}-fg}`;
   }
 
-  function setWidgetBorder(widget: blessed.Widgets.BoxElement, active: boolean) {
+  function setWidgetBorder(
+    widget: blessed.Widgets.BoxElement,
+    active: boolean,
+  ) {
     widget.style.border = {
       ...(widget.style.border ?? {}),
       fg: active
@@ -513,20 +601,26 @@ export function createApp(opts: {
   }
 
   function setFocusZone(nextZone: FocusZone) {
-    if (modalActive || focusZone === nextZone) return;
+    if (modalActive || focusZone === nextZone) {
+      return;
+    }
     focusZone = nextZone;
-    if (focusZone === "menu") menu.focus();
-    else if (focusZone === "diagnostics") diagnostics.focus();
-    else if (focusZone === "content") content.focus();
-    else logs.focus();
+    if (focusZone === "menu") {
+      menu.focus();
+    } else if (focusZone === "diagnostics") {
+      diagnostics.focus();
+    } else if (focusZone === "content") {
+      content.focus();
+    } else {
+      logs.focus();
+    }
     applyFocusStyles();
     screen.render();
   }
 
   function moveFocus(delta: number) {
     const index = FOCUS_ZONES.indexOf(focusZone);
-    const nextIndex =
-      (index + delta + FOCUS_ZONES.length) % FOCUS_ZONES.length;
+    const nextIndex = (index + delta + FOCUS_ZONES.length) % FOCUS_ZONES.length;
     setFocusZone(FOCUS_ZONES[nextIndex]);
   }
 
@@ -575,9 +669,7 @@ export function createApp(opts: {
         logHistory.length
           ? logHistory
               .map((line) =>
-                line.replace(/[{}]/g, (c) =>
-                  c === "{" ? "\\\\{" : "\\\\}",
-                ),
+                line.replace(/[{}]/g, (c) => (c === "{" ? "\\\\{" : "\\\\}")),
               )
               .join("\n")
           : "  No visible logs yet.",
@@ -588,30 +680,71 @@ export function createApp(opts: {
     screen.render();
   }
 
+  // --- Progress Management ---
+
   function clearProgress() {
     progress.setContent("");
     progressState = "idle";
   }
+
   function setProgressRunning(percent: number, label: string) {
     progressState = "running";
     setProgress(percent, label, false);
   }
+
   function setProgressSuccess(label = "Completed") {
     progressState = "success";
     setProgress(100, label, false);
   }
+
   function setProgressWarning(label = "Completed with warnings") {
     progressState = "warning";
     setProgress(100, label, false);
   }
+
   function setProgressError(label: string) {
     progressState = "failed";
     setProgress(0, `Error: ${label}`, true);
   }
 
+  function setProgressCanceled() {
+    progressState = "canceled";
+    setProgress(0, "Canceled", true);
+  }
+
+  function clearProgressOnNavigation() {
+    if (!running) {
+      clearProgress();
+    }
+  }
+
+  function setProgress(percent: number, label: string, isError = false) {
+    const barWidth = 20;
+    const fill = Math.max(
+      0,
+      Math.min(barWidth, Math.round((percent / 100) * barWidth)),
+    );
+    const bar = `${"█".repeat(fill)}${"░".repeat(barWidth - fill)}`;
+    const color =
+      isError || progressState === "failed" || progressState === "canceled"
+        ? "red-fg"
+        : progressState === "success" || progressState === "warning"
+          ? "green-fg"
+          : progressState === "running"
+            ? "yellow-fg"
+            : "white-fg";
+    progress.setContent(
+      `Progress: [{${color}}${bar}{/${color}}] ${percent}% - ${label}`,
+    );
+  }
+
+  // --- Modal Helpers ---
+
   function sanitizeAuthOutput(text: string, password: string): string {
     const cleaned = text.replace(/\r/g, "").trim();
-    if (!password) return cleaned;
+    if (!password) {
+      return cleaned;
+    }
     return cleaned.split(password).join("[redacted]");
   }
 
@@ -640,33 +773,7 @@ export function createApp(opts: {
     return code === "ETIMEDOUT" || /timed out/i.test(message);
   }
 
-  function setProgressCanceled() {
-    progressState = "canceled";
-    setProgress(0, "Canceled", true);
-  }
-  function clearProgressOnNavigation() {
-    if (!running) clearProgress();
-  }
-
-  function setProgress(percent: number, label: string, isError = false) {
-    const barWidth = 20;
-    const fill = Math.max(
-      0,
-      Math.min(barWidth, Math.round((percent / 100) * barWidth)),
-    );
-    const bar = `${"█".repeat(fill)}${"░".repeat(barWidth - fill)}`;
-    const color =
-      isError || progressState === "failed" || progressState === "canceled"
-        ? "red-fg"
-        : progressState === "success" || progressState === "warning"
-          ? "green-fg"
-          : progressState === "running"
-            ? "yellow-fg"
-            : "white-fg";
-    progress.setContent(
-      `Progress: [{${color}}${bar}{/${color}}] ${percent}% - ${label}`,
-    );
-  }
+  // --- Views & Rendering ---
 
   function renderSelectionDetails() {
     if (["install", "development", "maintenance"].includes(currentView)) {
@@ -680,35 +787,53 @@ export function createApp(opts: {
 
   function scrollFocusedPanel(delta: number) {
     if (focusZone === "menu") {
-      if (delta < 0) menu.up(Math.abs(delta));
-      else menu.down(delta);
+      if (delta < 0) {
+        menu.up(Math.abs(delta));
+      } else {
+        menu.down(delta);
+      }
       renderSelectionDetails();
       return;
     }
-    if (focusZone === "diagnostics") diagnostics.scroll(delta);
-    else if (focusZone === "content") content.scroll(delta);
-    else logs.scroll(delta);
+    if (focusZone === "diagnostics") {
+      diagnostics.scroll(delta);
+    } else if (focusZone === "content") {
+      content.scroll(delta);
+    } else {
+      logs.scroll(delta);
+    }
   }
 
   function setFocusedPanelScroll(percent: number) {
     if (focusZone === "menu") {
-      if (percent === 0) menu.select(0);
-      else menu.select(Math.max(0, (menu.items?.length ?? 1) - 1));
+      if (percent === 0) {
+        menu.select(0);
+      } else {
+        menu.select(Math.max(0, (menu.items?.length ?? 1) - 1));
+      }
       renderSelectionDetails();
       return;
     }
-    if (focusZone === "diagnostics") diagnostics.setScrollPerc(percent);
-    else if (focusZone === "content") content.setScrollPerc(percent);
-    else logs.setScrollPerc(percent);
+    if (focusZone === "diagnostics") {
+      diagnostics.setScrollPerc(percent);
+    } else if (focusZone === "content") {
+      content.setScrollPerc(percent);
+    } else {
+      logs.setScrollPerc(percent);
+    }
   }
 
   function renderActionHelp(view: View, selectedIndex: number) {
-    if (!["install", "development", "maintenance"].includes(view)) return;
+    if (!["install", "development", "maintenance"].includes(view)) {
+      return;
+    }
     const selected = currentActions[selectedIndex] ?? null;
     const base = [
       `{${tuiTheme.colors.helpTitle}-fg}${view[0].toUpperCase() + view.slice(1)} Actions{/${tuiTheme.colors.helpTitle}-fg}`,
     ];
-    if (!selected) return content.setContent(base.join("\n"));
+    if (!selected) {
+      return content.setContent(base.join("\n"));
+    }
     const warningBlock = selected.warning
       ? [
           "",
@@ -732,7 +857,9 @@ export function createApp(opts: {
 
   function activeSettingsSectionIndex(): number {
     for (let index = menu.selected; index >= 0; index -= 1) {
-      if (settingsItems[index]?.kind === "section") return index;
+      if (settingsItems[index]?.kind === "section") {
+        return index;
+      }
     }
     return -1;
   }
@@ -832,7 +959,9 @@ export function createApp(opts: {
       return;
     }
     applyLogPanelLabel();
-    if (currentView === "settings") setSettingsMenuItems();
+    if (currentView === "settings") {
+      setSettingsMenuItems();
+    }
     appendLogText(`[info] Settings changed (${reason}).\n`, "system");
     renderSettingsHelp();
     screen.render();
@@ -840,7 +969,9 @@ export function createApp(opts: {
 
   function toggleSelectedSetting() {
     const selected = selectedSettingsItem();
-    if (selected?.kind !== "toggle") return;
+    if (selected?.kind !== "toggle") {
+      return;
+    }
     toolSettings = {
       ...toolSettings,
       tool: {
@@ -870,8 +1001,11 @@ export function createApp(opts: {
   function setView(view: View) {
     currentView = view;
     clearProgressOnNavigation();
+
     if (view === "main") {
-      if (!overviewStatus) void refreshDetectedInstallations("enter-overview");
+      if (!overviewStatus) {
+        void refreshDetectedInstallations("enter-overview");
+      }
       renderDiagnosticsBox();
       currentActions = [];
       menu.setItems(mainItems.map((item) => item.label));
@@ -900,6 +1034,7 @@ export function createApp(opts: {
       screen.render();
       return;
     }
+
     if (view === "help") {
       currentActions = [];
       menu.setItems(["Back to Main"]);
@@ -955,6 +1090,7 @@ export function createApp(opts: {
       screen.render();
       return;
     }
+
     if (view === "settings") {
       currentActions = [];
       setSettingsMenuItems();
@@ -965,12 +1101,14 @@ export function createApp(opts: {
       screen.render();
       return;
     }
+
     const group =
       view === "install"
         ? "install"
         : view === "maintenance"
           ? "maintenance"
           : "development";
+
     currentActions = getActionsByGroup(group, opts.rootDir);
     menu.setItems(currentActions.map((a) => a.label));
     menuLabelText = `${view[0].toUpperCase() + view.slice(1)} Actions`;
@@ -980,17 +1118,27 @@ export function createApp(opts: {
     screen.render();
   }
 
+  // --- Actions & Execution ---
+
   menu.on("select", async (_, index) => {
-    if (running || modalActive || focusZone !== "menu") return;
-    if (currentView === "main")
+    if (running || modalActive || focusZone !== "menu") {
+      return;
+    }
+    if (currentView === "main") {
       return setView(mainItems[index]?.view ?? "main");
-    if (currentView === "help") return setView("main");
+    }
+    if (currentView === "help") {
+      return setView("main");
+    }
     if (currentView === "settings") {
       toggleSelectedSetting();
       return;
     }
     const action = currentActions[index];
-    if (!action) return;
+    if (!action) {
+      return;
+    }
+
     if (action.dangerous) {
       modalActive = true;
       const ok = await confirmDialog(screen, {
@@ -1000,11 +1148,14 @@ export function createApp(opts: {
         dangerous: true,
       });
       modalActive = false;
-      if (!ok) return;
+      if (!ok) {
+        return;
+      }
     }
 
     const rootRequired =
       action.requiresRoot || (await actionNeedsRootForDetectedSystem(action));
+
     if (rootRequired) {
       appendLogText("[info] Root authentication popup opened.\n", "system");
       modalActive = true;
@@ -1015,6 +1166,7 @@ export function createApp(opts: {
         30000,
       );
       modalActive = false;
+
       if (passwordResult.status === "timeout") {
         const message = [
           "Administrator authentication timed out",
@@ -1028,6 +1180,7 @@ export function createApp(opts: {
         modalActive = false;
         return;
       }
+
       if (passwordResult.status === "canceled" || !passwordResult.value) {
         const message = [
           "Administrator authentication canceled",
@@ -1041,6 +1194,7 @@ export function createApp(opts: {
         modalActive = false;
         return;
       }
+
       const password = passwordResult.value;
       const auth = spawnSync(
         "bash",
@@ -1050,9 +1204,13 @@ export function createApp(opts: {
           input: `${password}\n`,
           encoding: "utf8",
           timeout: 30000,
-          env: { ...process.env, ...(action.env ?? {}) },
+          env: {
+            ...process.env,
+            ...(action.env ?? {}),
+          },
         },
       );
+
       if ((auth.status ?? 1) !== 0) {
         const sudoMessage = sanitizeAuthOutput(
           auth.stderr || auth.stdout || "sudo: a password is required",
@@ -1085,7 +1243,11 @@ export function createApp(opts: {
       }
       appendLogText("[info] Root authentication succeeded.\n", "system");
     }
-    if (!action.command) return;
+
+    if (!action.command) {
+      return;
+    }
+
     running = true;
     progressState = "running";
     setProgressRunning(5, "Starting");
@@ -1094,6 +1256,7 @@ export function createApp(opts: {
       "stdout",
     );
     writeSession(`[action] ${action.id} ${action.label}`);
+
     currentChild = runAction(
       action.command,
       action.args ?? [],
@@ -1102,20 +1265,28 @@ export function createApp(opts: {
         currentChild = null;
         const installAction = action.id.startsWith("install-");
         let detectedNow = false;
+
         if (installAction) {
           const detectionKey = getInstallDetectionKey(action.id);
           if (detectionKey) {
             const latestStatus = await detectInstallationStatusNow();
-            if (latestStatus) overviewStatus = latestStatus;
+            if (latestStatus) {
+              overviewStatus = latestStatus;
+            }
             detectedNow = Boolean(latestStatus?.installations?.[detectionKey]);
           }
         }
-        if (signal === "SIGINT") setProgressCanceled();
-        else if (installAction && detectedNow && code !== 0)
+
+        if (signal === "SIGINT") {
+          setProgressCanceled();
+        } else if (installAction && detectedNow && code !== 0) {
           setProgressWarning("Completed with warnings");
-        else if (code === 0 || (installAction && detectedNow))
+        } else if (code === 0 || (installAction && detectedNow)) {
           setProgressSuccess("Completed");
-        else setProgressError(signal ?? `exit code ${code ?? "unknown"}`);
+        } else {
+          setProgressError(signal ?? `exit code ${code ?? "unknown"}`);
+        }
+
         appendLogText(
           `[info] Action finished (${signal ?? code ?? "unknown"}).\n`,
           "system",
@@ -1135,8 +1306,12 @@ export function createApp(opts: {
     );
   });
 
+  // --- Input & Keybindings ---
+
   const confirmExit = async () => {
-    if (modalActive) return;
+    if (modalActive) {
+      return;
+    }
     modalActive = true;
     const ok = await confirmDialog(screen, {
       title: "Exit Application",
@@ -1154,14 +1329,23 @@ export function createApp(opts: {
   screen.key(["q"], () => {
     void confirmExit();
   });
+
   screen.key(["tab"], () => {
-    if (!modalActive) moveFocus(1);
+    if (!modalActive) {
+      moveFocus(1);
+    }
   });
+
   screen.key(["S-tab", "backtab"], () => {
-    if (!modalActive) moveFocus(-1);
+    if (!modalActive) {
+      moveFocus(-1);
+    }
   });
+
   screen.key(["escape"], () => {
-    if (modalActive) return;
+    if (modalActive) {
+      return;
+    }
     if (running) {
       void confirmExit();
       return;
@@ -1172,8 +1356,11 @@ export function createApp(opts: {
     }
     setView("main");
   });
+
   screen.key(["C-c"], () => {
-    if (modalActive) return;
+    if (modalActive) {
+      return;
+    }
     const now = Date.now();
     if (running && currentChild) {
       if (now - lastCtrlCAt < 1500) {
@@ -1191,6 +1378,7 @@ export function createApp(opts: {
     }
     void confirmExit();
   });
+
   screen.key(["f5"], () => {
     const result = copyTextToClipboard(logHistory.join("\n"));
     appendLogText(
@@ -1198,36 +1386,57 @@ export function createApp(opts: {
       "system",
     );
   });
+
   screen.key(["f6"], () => {
-    if (!modalActive) showPlainLogsView();
+    if (!modalActive) {
+      showPlainLogsView();
+    }
   });
+
   screen.key(["S-pageup", "M-up"], () => {
     content.scroll(-5);
     screen.render();
   });
+
   screen.key(["S-pagedown", "M-down"], () => {
     content.scroll(5);
     screen.render();
   });
+
   screen.key(["pageup"], () => {
-    if (!modalActive) scrollFocusedPanel(-10);
+    if (!modalActive) {
+      scrollFocusedPanel(-10);
+    }
     screen.render();
   });
+
   screen.key(["pagedown"], () => {
-    if (!modalActive) scrollFocusedPanel(10);
+    if (!modalActive) {
+      scrollFocusedPanel(10);
+    }
     screen.render();
   });
+
   screen.key(["home"], () => {
-    if (!modalActive) setFocusedPanelScroll(0);
+    if (!modalActive) {
+      setFocusedPanelScroll(0);
+    }
     screen.render();
   });
+
   screen.key(["end"], () => {
-    if (!modalActive) setFocusedPanelScroll(100);
+    if (!modalActive) {
+      setFocusedPanelScroll(100);
+    }
     screen.render();
   });
+
   screen.key(["?"], () => {
-    if (!running && !modalActive) setView("help");
+    if (!running && !modalActive) {
+      setView("help");
+    }
   });
+
   screen.key(["space"], () => {
     if (
       !running &&
@@ -1238,20 +1447,39 @@ export function createApp(opts: {
       toggleSelectedSetting();
     }
   });
+
+  // --- Mouse Support ---
+
   menu.on("click", () => {
-    if (!modalActive) setFocusZone("menu");
+    if (!modalActive) {
+      setFocusZone("menu");
+    }
   });
+
   diagnostics.on("click", () => {
-    if (!modalActive) setFocusZone("diagnostics");
+    if (!modalActive) {
+      setFocusZone("diagnostics");
+    }
   });
+
   content.on("click", () => {
-    if (!modalActive) setFocusZone("content");
+    if (!modalActive) {
+      setFocusZone("content");
+    }
   });
+
   logs.on("click", () => {
-    if (!modalActive) setFocusZone("logs");
+    if (!modalActive) {
+      setFocusZone("logs");
+    }
   });
+
+  // --- Menu Event Listeners ---
+
   menu.on("keypress", (_, key) => {
-    if (updatingSettingsMenuItems) return;
+    if (updatingSettingsMenuItems) {
+      return;
+    }
     if (
       (key.name === "up" || key.name === "down") &&
       ["install", "development", "maintenance"].includes(currentView)
@@ -1267,8 +1495,11 @@ export function createApp(opts: {
       screen.render();
     }
   });
+
   menu.on("select item", () => {
-    if (updatingSettingsMenuItems) return;
+    if (updatingSettingsMenuItems) {
+      return;
+    }
     if (["install", "development", "maintenance"].includes(currentView)) {
       renderSelectionDetails();
       screen.render();
@@ -1279,16 +1510,21 @@ export function createApp(opts: {
     }
   });
 
+  // --- Startup ---
+
   applyLogPanelLabel();
   importLauncherSessionLog();
+
   appendLogText(
     `[info] TUI started. version=${opts.version} phase=${opts.phase}\n`,
     "system",
   );
   appendLogText(`[info] Settings loaded from ${settingsPath}.\n`, "system");
+
   setView("main");
   void refreshDetectedInstallations("startup");
   renderDiagnosticsBox();
   menu.focus();
+
   return screen;
 }

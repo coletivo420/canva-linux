@@ -27,7 +27,9 @@ export const DEFAULT_TOOL_SETTINGS: ToolSettings = {
 
 function configHome(): string {
   const xdgConfigHome = process.env.XDG_CONFIG_HOME?.trim();
-  if (xdgConfigHome) return xdgConfigHome;
+  if (xdgConfigHome) {
+    return xdgConfigHome;
+  }
   return path.join(process.env.HOME || ".", ".config");
 }
 
@@ -71,7 +73,8 @@ export function loadToolSettings(): ToolSettings {
   }
 
   try {
-    return normalizeSettings(JSON.parse(fs.readFileSync(settingsPath, "utf8")));
+    const rawContent = fs.readFileSync(settingsPath, "utf8");
+    return normalizeSettings(JSON.parse(rawContent));
   } catch {
     return structuredClone(DEFAULT_TOOL_SETTINGS);
   }

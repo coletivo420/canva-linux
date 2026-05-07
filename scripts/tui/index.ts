@@ -37,6 +37,7 @@ try {
     toolTitle: projectUi.toolTitle,
     releaseNotes: projectUi.versionReleaseNotes,
   });
+
   process.on("uncaughtException", (err) => {
     try {
       screen.destroy();

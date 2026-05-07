@@ -123,7 +123,7 @@
 - information box main titles = dark blue
 - information item titles = green
 
-Additional rules:
+### Additional rules
 
 - Only `not detected` should use purple in status output and optional accent usage.
 - Detection refresh must not clear/override progress results.

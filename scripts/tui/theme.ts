@@ -1,8 +1,10 @@
 import themeConfig from "../theme.json";
 
 type BlessedColor = string;
+
 const supportsTrueColor =
   process.env.COLORTERM === "truecolor" || process.env.COLORTERM === "24bit";
+
 const colors = {
   lightBlue: supportsTrueColor
     ? themeConfig.palette.canvaLightBlue
@@ -69,13 +71,9 @@ const colors = {
   appImageLoading: supportsTrueColor
     ? themeConfig.palette.warning
     : themeConfig.ansiFallback.warning,
-  activeBorder: supportsTrueColor
-    ? themeConfig.palette.canvaLightBlue
-    : "cyan",
+  activeBorder: supportsTrueColor ? themeConfig.palette.canvaLightBlue : "cyan",
   inactiveBorder: supportsTrueColor ? themeConfig.palette.canvaBlue : "blue",
-  activeLabel: supportsTrueColor
-    ? themeConfig.palette.canvaLightBlue
-    : "cyan",
+  activeLabel: supportsTrueColor ? themeConfig.palette.canvaLightBlue : "cyan",
   inactiveLabel: supportsTrueColor ? themeConfig.palette.muted : "gray",
   activeBlockBg: supportsTrueColor ? themeConfig.palette.surface : "black",
   activeCellBg: supportsTrueColor ? themeConfig.palette.canvaBlue : "blue",
@@ -86,6 +84,7 @@ const colors = {
   activeCheckboxBg: supportsTrueColor ? themeConfig.palette.surfaceAlt : "black",
   inactiveCheckboxFg: supportsTrueColor ? themeConfig.palette.muted : "gray",
 };
+
 export const tuiTheme = {
   supportsTrueColor,
   colors,
@@ -97,25 +96,37 @@ export const tuiTheme = {
   menu: {
     fg: colors.text as BlessedColor,
     bg: colors.background as BlessedColor,
-    border: { fg: colors.blue as BlessedColor },
+    border: {
+      fg: colors.blue as BlessedColor,
+    },
     selected: {
       fg: colors.menuSelectedFg as BlessedColor,
       bg: colors.menuSelectedBg as BlessedColor,
       bold: true,
     },
-    item: { fg: colors.text as BlessedColor },
+    item: {
+      fg: colors.text as BlessedColor,
+    },
   },
   content: {
     fg: colors.text as BlessedColor,
     bg: colors.background as BlessedColor,
-    border: { fg: colors.purple as BlessedColor },
-    label: { fg: colors.lightBlue as BlessedColor },
+    border: {
+      fg: colors.purple as BlessedColor,
+    },
+    label: {
+      fg: colors.lightBlue as BlessedColor,
+    },
   },
   logs: {
     fg: colors.text as BlessedColor,
     bg: colors.background as BlessedColor,
-    border: { fg: colors.blue as BlessedColor },
-    label: { fg: colors.lightBlue as BlessedColor },
+    border: {
+      fg: colors.blue as BlessedColor,
+    },
+    label: {
+      fg: colors.lightBlue as BlessedColor,
+    },
   },
   footer: {
     fg: colors.footerFg as BlessedColor,
