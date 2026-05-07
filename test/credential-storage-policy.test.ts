@@ -267,7 +267,7 @@ test("credential storage warning copy has secure backend unavailable text", () =
   assert.equal(policy.security, "secure-backend-unavailable");
   assert.equal(copy.title, "Secure credential encryption is unavailable");
   assert.equal(copy.message, "Secure credential encryption is unavailable.");
-  assert.equal(copy.detail.startsWith(`${policy.warning}\n\n`), true);
+  assert.equal(copy.detail.startsWith("Canva Linux will start in ephemeral session mode; credentials, cookies and login state will not be saved.\n\n"), true);
 });
 
 test("credential storage warning copy falls back when policy warning is unavailable", () => {
