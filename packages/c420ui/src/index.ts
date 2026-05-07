@@ -4,8 +4,10 @@ export type * from "./bridge";
 export type * from "./capabilities";
 export type * from "./events";
 export { createC420UIActionEngine } from "./action-engine";
+export { runC420UICli } from "./cli";
 export { c420uiExitCodes } from "./exit-codes";
 export type { C420UIExitCode, C420UIExitCodeName } from "./exit-codes";
+export type { c420uiCliOptions, c420uiCliResult } from "./cli";
 export type {
   c420uiActionEngineOptions,
   c420uiActionResolution,

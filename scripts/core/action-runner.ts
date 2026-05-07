@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+// Transitional legacy runner.
+// Direct launcher CLI now routes through the c420ui CLI bridge.
+// This runner remains available for compatibility checks and existing scripts
+// until the migration is complete.
 import { spawnSync } from "node:child_process";
 import { buildOverviewStatus } from "./overview-status";
 import {

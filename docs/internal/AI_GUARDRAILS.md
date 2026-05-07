@@ -107,12 +107,16 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
 - c420ui and CLI must share the same TypeScript action contract.
-- Preserve Action Runner root/planned-action behavior.
+- Preserve legacy Action Runner compatibility checks while direct CLI migrates through c420ui.
 
 - c420ui owns generic action resolution by id and CLI flag.
 - c420ui owns planned-action and dry-run semantics.
 - Project adapters execute concrete actions but must not reimplement generic action-engine policy.
-- The Canva Linux launcher must not be routed through the c420ui action engine until the dedicated CLI migration commit.
+- Direct CLI actions must pass through the c420ui CLI bridge.
+- Do not bypass the c420ui Action Engine from `canva-linux.sh`.
+- Only one direct action may execute per invocation.
+- Planned direct actions must exit with `78` unless they are dry-run metadata checks.
+- Planned direct action dry-runs must exit with `0`.
 - Detection refresh must not clear or override progress results.
 - Progress refresh must not convert a completed action into an error.
 - Installed-version detection must be updated whenever install layout changes.

@@ -228,3 +228,9 @@ The next boundary is the c420ui action engine.
 The action engine resolves actions by id or CLI flag, applies planned-action and dry-run semantics, emits operational events, and calls the active project bridge.
 
 The official Canva Linux launcher is not routed through this engine yet.
+
+## Commit 13 — direct CLI bridge migration
+
+Direct launcher actions now route through `.build/scripts/run-c420ui-cli.js`, the Canva Linux c420ui CLI bridge, and the reusable c420ui Action Engine. The legacy Action Runner remains in place for compatibility checks and existing scripts until the migration is complete.
+
+The launcher rejects multiple direct action flags before execution, while planned direct actions preserve exit code `78` and planned dry-runs preserve exit code `0`.

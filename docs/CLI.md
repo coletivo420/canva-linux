@@ -10,6 +10,8 @@ The `canva-linux.sh` launcher provides access to the c420ui terminal interface a
 
 - If no action is provided, the c420ui terminal interface starts.
 - If an action flag is provided, the command is executed directly.
+- Direct CLI actions are routed through the c420ui CLI bridge and the c420ui Action Engine.
+- Only one direct action can be executed per invocation.
 - Do not run the Tool as root. When an operation needs administrator privileges,
   Canva Linux asks for authentication only for that specific action.
 
@@ -19,10 +21,11 @@ The `canva-linux.sh` launcher provides access to the c420ui terminal interface a
 | --- | --- |
 | `-y, --yes` | Skip confirmation prompts for dangerous actions (uninstall, purge, etc.). |
 | `-h, --help` | Show usage information. |
+| `--dry-run` | Resolve direct action metadata without executing command scripts. |
 
 ## Actions
 
-Direct actions are resolved through the shared Action Registry (`scripts/actions.json`).
+Direct actions are resolved through the shared Action Registry (`scripts/actions.json`) by the c420ui CLI bridge.
 Planned actions are shown in c420ui so users can see future packaging targets,
 but they are not executable. Running a planned action without `--dry-run` exits
 with code `78`; `--dry-run` only resolves metadata and still exits `0`.

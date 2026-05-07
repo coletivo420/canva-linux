@@ -16,6 +16,7 @@ if [[ "${EUID}" -eq 0 ]]; then
 fi
 
 FORCE=false
+DRY_RUN=false
 
 source "${ROOT_DIR}/scripts/app-identity-common.sh"
 source "${ROOT_DIR}/scripts/ui-common.sh"
@@ -49,7 +50,7 @@ ensure_action_runner_available() {
     return 0
   fi
 
-  ui_error "Node.js is required for shared Action Registry commands."
+  ui_error "Node.js is required for c420ui CLI bridge commands."
   ui_info "Install Node.js, then retry."
   exit 1
 }
@@ -58,26 +59,24 @@ run_action_by_cli_flag() {
   local flag="$1"
   ensure_action_runner_available
 
-  local yes_args=()
-  if scripts/run-core-entry.sh action-runner --cli "${flag}" --requires-confirmation > /dev/null 2>&1; then
-    if [[ "${FORCE}" != true ]]; then
-      local answer
-      read -r -p "This action requires confirmation. Continue? [y/N] " answer
-      [[ "${answer}" =~ ^[Yy]$ ]] || {
-        ui_info "Canceled."
-        return 1
-      }
-    fi
-    yes_args=(--yes)
-  elif [[ "${FORCE}" == true ]]; then
-    yes_args=(--yes)
+  local args=("${flag}")
+  if [[ "${FORCE}" == true ]]; then
+    args+=(--yes)
+  fi
+  if [[ "${DRY_RUN}" == true ]]; then
+    args+=(--dry-run)
   fi
 
   session_log "[action] cli=${flag}"
   if [[ "${SESSION_LOG_ENABLED}" == true ]]; then
-    scripts/run-core-entry.sh action-runner --cli "${flag}" "${yes_args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null &&
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" \
+      CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" \
+      CANVA_TOOL_SESSION_ID="${SESSION_ID}" \
+      node .build/scripts/run-c420ui-cli.js "${args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
   else
-    scripts/run-core-entry.sh action-runner --cli "${flag}" "${yes_args[@]}" 2>&1
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null &&
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-c420ui-cli.js "${args[@]}" 2>&1
   fi
 }
 
@@ -101,17 +100,17 @@ c420ui_unavailable_reason() {
   local force="${1:-no}"
 
   if ! c420ui_has_attached_stdio && ! c420ui_has_dev_tty; then
-    printf '%s\n' "C420UI requires an interactive terminal or an accessible /dev/tty."
+    printf '%s\n' "c420ui requires an interactive terminal or an accessible /dev/tty."
     return 0
   fi
 
   if [[ "${TERM:-dumb}" == "dumb" ]]; then
-    printf '%s\n' "C420UI requires a usable TERM value; current TERM is '${TERM:-dumb}'."
+    printf '%s\n' "c420ui requires a usable TERM value; current TERM is '${TERM:-dumb}'."
     return 0
   fi
 
   if ! command -v node > /dev/null 2>&1; then
-    printf '%s\n' "C420UI requires Node.js, but node was not found in PATH."
+    printf '%s\n' "c420ui requires Node.js, but node was not found in PATH."
     return 0
   fi
 
@@ -121,7 +120,7 @@ c420ui_unavailable_reason() {
   fi
 
   if ! c420ui_has_entrypoint; then
-    printf '%s\n' "C420UI entrypoint is missing. Expected scripts/run-c420ui.ts."
+    printf '%s\n' "c420ui entrypoint is missing. Expected scripts/run-c420ui.ts."
     return 0
   fi
 
@@ -144,7 +143,7 @@ run_c420ui_entrypoint() {
 
 run_c420ui_node() {
   if c420ui_needs_dev_tty_redirect; then
-    session_log "[c420ui] stdio is not a tty; redirecting C420UI to /dev/tty"
+    session_log "[c420ui] stdio is not a tty; redirecting c420ui to /dev/tty"
     run_c420ui_entrypoint < /dev/tty > /dev/tty 2> /dev/tty
     return $?
   fi
@@ -171,14 +170,15 @@ Canva Linux — Install and Development Tool
 
 Usage:
   ./canva-linux.sh
-  ./canva-linux.sh [direct action] [--yes]
+  ./canva-linux.sh [direct action] [--yes] [--dry-run]
 
 Global options:
   -y, --yes              Non-interactive confirmation for uninstall/purge prompts
   -h, --help             Show this help
+      --dry-run           Resolve action metadata without executing commands
 
 Interactive behavior:
-  ./canva-linux.sh opens the C420UI by default when available.
+  ./canva-linux.sh opens the c420ui by default when available.
   Use --help or a direct action flag to run non-interactively.
   Do not run this tool with sudo or as root. Privileged actions ask for
   administrator authentication only when needed.
@@ -223,22 +223,39 @@ for arg in "$@"; do
     -y | --yes | --force)
       FORCE=true
       ;;
+    --dry-run)
+      DRY_RUN=true
+      ;;
   esac
 done
 
+DIRECT_ACTION_FLAGS=()
 for arg in "$@"; do
   case "${arg}" in
     --help | -h)
       show_help
       exit 0
       ;;
-    -y | --yes | --force) ;;
+    -y | --yes | --force | --dry-run) ;;
     --install-native | --install-flatpak | --build-runtime | --build-dir | --validate | --validate-appimage | --validate-appimage-extract | --doctor | --bundle-flatpak | --bundle-appimage | --bundle-deb | --bundle-rpm | --prepare-aur | --clean | --uninstall | --uninstall-native | --uninstall-flatpak | --reset-user-data | --purge)
-      run_action_by_cli_flag "${arg}"
+      DIRECT_ACTION_FLAGS+=("${arg}")
       ;;
     *)
       ui_error "Unknown option: ${arg}"
-      exit 1
+      exit 64
       ;;
   esac
 done
+
+if [[ "${#DIRECT_ACTION_FLAGS[@]}" -gt 1 ]]; then
+  ui_error "Only one direct action can be executed per invocation."
+  exit 64
+fi
+
+if [[ "${#DIRECT_ACTION_FLAGS[@]}" -eq 1 ]]; then
+  run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"
+  exit $?
+fi
+
+ui_error "No direct action was provided."
+exit 64

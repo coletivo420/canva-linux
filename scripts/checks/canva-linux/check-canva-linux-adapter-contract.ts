@@ -1,8 +1,11 @@
 #!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
 import { createCanvaLinuxC420UIAdapter } from "../../c420ui-canva-linux/adapter";
 
 export function main(): number {
-  const adapter = createCanvaLinuxC420UIAdapter(process.cwd());
+  const rootDir = process.cwd();
+  const adapter = createCanvaLinuxC420UIAdapter(rootDir);
   const failures: string[] = [];
   const project = adapter.projectInfo();
   const capabilities = adapter.loadCapabilities();
@@ -15,6 +18,15 @@ export function main(): number {
   if (capabilities.supportsRootActions !== true) failures.push("adapter must declare root action support");
   if (capabilities.supportsDryRun !== true) failures.push("adapter must declare dry-run support");
   if (typeof adapter.runAction !== "function") failures.push("adapter must implement runAction");
+
+  const cliBridgePath = path.join(rootDir, "scripts/c420ui-canva-linux/cli.ts");
+  const cliEntrypointPath = path.join(rootDir, "scripts/run-c420ui-cli.ts");
+  const launcherPath = path.join(rootDir, "canva-linux.sh");
+  if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
+  if (!fs.existsSync(cliEntrypointPath)) failures.push("Canva Linux c420ui CLI entrypoint must exist");
+  const launcher = fs.readFileSync(launcherPath, "utf8");
+  if (!launcher.includes("run-c420ui-cli.js")) failures.push("launcher must call run-c420ui-cli.js for direct actions");
+  if (launcher.includes("run-core-entry.sh action-runner --cli")) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-adapter-contract] OK");

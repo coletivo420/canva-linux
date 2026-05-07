@@ -121,3 +121,10 @@ Current target:
 - Confirm maintained source, comments, UI strings, README, docs, changelog, and AI maintenance instructions remain
   English-only until an explicit i18n system exists.
 - Confirm new Node.js scripts, tests, and supported configs are authored in TypeScript, with shell reserved for host-operation glue.
+
+## c420ui CLI bridge validation
+
+- Confirm direct CLI actions are routed through the c420ui CLI bridge.
+- Confirm multiple direct actions in one invocation fail before execution.
+- Confirm planned direct actions still exit `78`.
+- Confirm planned direct action dry-runs still exit `0`.

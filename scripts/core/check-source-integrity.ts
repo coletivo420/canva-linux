@@ -585,17 +585,15 @@ function validateLauncherScriptShape(
     );
   }
 
-  if (
-    !lines.some((line) =>
-      line
-        .trim()
-        .startsWith(
-          'read -r -p "This action requires confirmation. Continue? [y/N] "',
-        ),
-    )
-  ) {
+  if (!content.includes("run-c420ui-cli.js")) {
     failures.push(
-      `${relativePath}: confirmation prompt must remain inside the read command, not as collapsed shell text`,
+      `${relativePath}: direct CLI actions must route through the c420ui CLI bridge`,
+    );
+  }
+
+  if (!content.includes("Only one direct action can be executed per invocation.")) {
+    failures.push(
+      `${relativePath}: launcher must reject multiple direct actions before execution`,
     );
   }
 
