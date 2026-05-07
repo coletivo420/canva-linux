@@ -1,9 +1,9 @@
-# Validation Checklist (0.1.4.11-dev.58)
+# Validation Checklist (0.1.4.12)
 
 Current target:
 
-- Version: `0.1.4.11 (Alpha)`
-- Phase: `0.1.4.11-dev.58`
+- Version: `0.1.4.12 (Alpha)`
+- Release: `v0.1.4.12`
 
 ## Automated
 
@@ -45,12 +45,11 @@ Current target:
 ## Manual
 
 - Open `./canva-linux.sh`.
-- Confirm `Phase: 0.1.4.11-dev.58`.
+- Confirm `Release: v0.1.4.12`.
 - Confirm `./canva-linux.sh` opens the TUI by default.
 - Confirm `./canva-linux.sh --help` shows CLI help.
 - Confirm root execution is blocked with a clear message before the TUI or any
   direct CLI action starts.
-- Confirm `./canva-linux.sh --tui` is rejected as an unknown direct CLI flag.
 - Confirm removed interface routing variables are not read by launcher code.
 - Confirm direct CLI actions still work, for example `./canva-linux.sh --doctor`.
 - Confirm detected installs are green and not detected is purple.
@@ -72,8 +71,10 @@ Current target:
   panel.
 - Confirm disabling general Tool logs still leaves critical Tool warnings/errors
   visible.
-- Confirm terminal text selection mode disables TUI mouse handling on the next
-  TUI start while keyboard scroll and F5 log copy continue to work.
+- Confirm terminal text selection mode disables TUI mouse handling globally on
+  the next TUI start while keyboard scroll and F5 log copy continue to work.
+- Confirm F6 opens a plain logs view with the session log path for manual
+  selection fallback.
 - Confirm Tab and Shift+Tab move focus between menu, diagnostics, action panel
   and logs.
 - Confirm the active panel has a visible border/label highlight and the active

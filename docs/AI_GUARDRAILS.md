@@ -27,6 +27,10 @@
 - Modal dialogs must not leak Tab focus back to the main TUI.
 - During running actions, Tab/scroll/log copy may work, but action execution must remain blocked.
 - Help must document current keyboard navigation.
+- terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.
+- TUI mouse settings must be restored when leaving text selection mode.
+- F5 clipboard copy must keep working even when text selection mode is enabled.
+- Help must document terminal text selection limitations.
 - Passwords and sudo stdin must never be logged.
 - Application Settings are TUI state, not shell actions.
 - New UI strings, docs and comments must be written in English.
@@ -34,10 +38,10 @@
   `run_interactive_mode`, `menu_install`, `menu_dev`, `menu_maint`, or tool
   switching.
 - The project exposes only TUI and direct CLI actions.
-- `--no-tui` and `--tui` flags are removed. The launcher opens TUI when
+- Legacy explicit TUI routing flags are removed. The launcher opens TUI when
   called without args; any argument is resolved as direct CLI.
-- `CANVA_NO_TUI` and `CANVA_TUI` environment variables are removed and must
-  not be read for interface routing.
+- Legacy interface-routing environment variables are removed and must not be
+  read for interface routing.
 - Backend shell scripts may remain shell scripts, but shell UI menus are forbidden.
 - System-wide actions must use scripts/sudo-common.sh.
 - Raw sudo calls are forbidden outside scripts/sudo-common.sh.

@@ -19,6 +19,9 @@ export function main(): number {
   if (!app.includes('screen.key(["f5"]')) {
     failures.push("scripts/tui/app.ts: F5 log copy shortcut must remain available");
   }
+  if (!app.includes('screen.key(["f6"]')) {
+    failures.push("scripts/tui/app.ts: F6 plain logs fallback must remain available");
+  }
   if (!app.includes("terminalTextSelectionMode")) {
     failures.push("scripts/tui/app.ts: terminal text selection mode is required");
   }
@@ -60,9 +63,25 @@ export function main(): number {
       "scripts/tui/app.ts: terminal selection mode must be resolved before Blessed widgets are constructed",
     );
   }
-  if (!app.includes("mouse: tuiMouseEnabled")) {
+  const mouseControlledWidgetCount =
+    app.match(/mouse: tuiMouseEnabled/g)?.length ?? 0;
+  if (mouseControlledWidgetCount < 4) {
     failures.push(
-      "scripts/tui/app.ts: terminal selection mode must disable TUI mouse handling at startup",
+      "scripts/tui/app.ts: terminal selection mode must disable TUI mouse handling for menu, diagnostics, content and logs at startup",
+    );
+  }
+  if (
+    !app.includes("function applyProgramMouseMode") ||
+    !app.includes("disableMouse") ||
+    !app.includes("enableMouse")
+  ) {
+    failures.push(
+      "scripts/tui/app.ts: terminal selection mode must disable and restore screen program mouse handling",
+    );
+  }
+  if (!app.includes("Logs - Text selection mode enabled")) {
+    failures.push(
+      "scripts/tui/app.ts: enabled terminal text selection mode must be visible in the logs label",
     );
   }
   for (const keyHandler of [
@@ -82,6 +101,11 @@ export function main(): number {
     !technicalDocs.includes("Terminal text selection mode") ||
     !normalizedCliDocs.includes("next TUI start") ||
     !normalizedTechnicalDocs.includes("next TUI start") ||
+    !normalizedCliDocs.includes("F6") ||
+    !normalizedTechnicalDocs.includes("F6") ||
+    !normalizedTechnicalDocs
+      .toLowerCase()
+      .includes("some terminals may still require shift") ||
     !app.includes("Tab / Shift+Tab") ||
     !app.includes("Active panel") ||
     !app.includes("Active cell")

@@ -1,8 +1,8 @@
 {
-  "displayVersion": "0.1.4.11",
+  "displayVersion": "0.1.4.12",
   "status": "Alpha",
-  "phase": "0.1.4.11-dev.58",
+  "phase": "0.1.4.12",
   "toolTitle": "Canva Linux \u2014 Install and Development Tool",
   "tuiTitle": "Canva Linux Terminal Assistant",
-  "versionReleaseNotes": "Packaging preflight stabilization for install/uninstall detection, progress state, sudo and permissions."
+  "versionReleaseNotes": "Release preparation for TUI log selection, packaged artifacts, release workflow and documentation."
 }

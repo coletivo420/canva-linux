@@ -68,10 +68,13 @@ purge and maintenance operations. The launcher creates/truncates the session log
 once, and the TUI appends to it so launcher startup lines are preserved.
 
 Terminal text selection mode is resolved before Blessed widgets are constructed.
-When enabled before startup, it disables TUI mouse handling for the session so
-the terminal can perform native text selection. Changes take effect on the next
-TUI start. Keyboard scrolling with PageUp, PageDown, Home and End remains
-available, and F5 still copies the visible log history.
+When enabled before startup, it disables TUI mouse handling globally for the
+session, including the Blessed screen program when supported, so the terminal
+can perform native text selection. Changes take effect on the next TUI start.
+Keyboard scrolling with PageUp, PageDown, Home and End remains available, F5
+still copies the visible log history, and F6 opens a plain logs view with the
+session log path as a manual-selection fallback. Some terminals may still
+require Shift while selecting text.
 
 The TUI keeps an explicit FocusZone model for menu, diagnostics, action panel
 and logs. Tab and Shift+Tab move between these blocks, the active block uses a
@@ -85,7 +88,7 @@ Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
 
 1. Actions with `requiresRoot: true` in `scripts/actions.json` are identified by the TUI.
 2. The TUI requests root password via a secure prompt before starting the action.
-3. The TUI validates the password and then passes `CANVA_TUI_ROOT_AUTH=1` to
+3. The TUI validates the password and then passes the root-auth environment marker to
    the child process.
 4. `scripts/sudo-common.sh` detects this environment variable and uses
    `sudo -n` for non-interactive execution.
@@ -102,7 +105,7 @@ config, or Flathub helper paths fail validation.
 
 ## Packaging roadmap notes
 
-- `prepare-aur` is planned for `0.1.4.12-dev.1`.
+- `prepare-aur` is planned for a later packaging line.
 - `.deb`/`.rpm` remain planned after AUR stabilization.
 
 ## Terminal theme
@@ -133,4 +136,7 @@ user-facing actions.
 
 ## Clipboard integration
 
-The TUI `F5` shortcut copies logs to the desktop clipboard. Preferred backends: `wl-copy`, KDE Klipper (`qdbus6`/`qdbus`), GPaste, `xclip`, then `xsel`.
+The TUI `F5` shortcut copies logs to the desktop clipboard. Preferred backends:
+`wl-copy`, KDE Klipper (`qdbus6`/`qdbus`), GPaste, `xclip`, then `xsel`. The
+TUI `F6` shortcut shows the plain visible log history and session log path in
+the action panel for manual selection.

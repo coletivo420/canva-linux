@@ -2,17 +2,27 @@
 
 ## Unreleased
 
+## [0.1.4.12] - 2026-05-07
+
 ### Added
 - Added a root-launch guard for the Canva Linux Install and Development Tool.
 - Added TUI Application Settings for general Tool logs and terminal text
   selection in the logs panel.
 - Added guardrail checks for root launch, TUI settings, Tool logging and log
   selection contracts.
+- Added F6 plain logs fallback with the session log path for manual log
+  selection.
+- Added release preparation documentation for v0.1.4.12 artifacts and workflow
+  expectations.
 
 ### Changed
 - Changed TUI session logging to append to launcher-created logs instead of
   truncating them.
 - Separated Tool logs from Action logs in the TUI logs panel.
+- Changed terminal text selection mode to disable TUI mouse capture globally
+  and request Blessed screen mouse release when supported.
+- Updated public project identity to `0.1.4.12 (Alpha)` while keeping
+  `package.json` on the SemVer-compatible technical version `0.1.4-12`.
 
 ## [0.1.4.11-dev.58] - 2026-05-06
 

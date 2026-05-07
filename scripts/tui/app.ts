@@ -65,6 +65,20 @@ export function createApp(opts: {
   const terminalTextSelectionModeActive =
     toolSettings.tool.terminalTextSelectionMode;
   const tuiMouseEnabled = !terminalTextSelectionModeActive;
+  const footerContent = [
+    terminalTextSelectionModeActive
+      ? "{bold}Text selection mode enabled{/bold}"
+      : "",
+    "{bold}Tab{/bold} Focus",
+    "{bold}Enter{/bold} Select",
+    "{bold}Space{/bold} Toggle",
+    "{bold}F5{/bold} Copy Logs",
+    "{bold}F6{/bold} Plain Logs",
+    "{bold}?{/bold} Help",
+    "{bold}q{/bold} Quit",
+  ]
+    .filter(Boolean)
+    .join(" | ");
   const screen = blessed.screen({
     smartCSR: true,
     title: opts.title,
@@ -143,8 +157,7 @@ export function createApp(opts: {
     height: 1,
     width: "100%",
     tags: true,
-    content:
-      "{bold}Tab{/bold} Focus | {bold}Enter{/bold} Select | {bold}Space{/bold} Toggle | {bold}F5{/bold} Copy Logs | {bold}?{/bold} Help | {bold}q{/bold} Quit",
+    content: footerContent,
     style: tuiTheme.footer,
   });
   const progress = blessed.box({
@@ -163,6 +176,22 @@ export function createApp(opts: {
   screen.append(logs);
   screen.append(progress);
   screen.append(footer);
+
+  function applyProgramMouseMode() {
+    const program = screen.program as
+      | {
+          enableMouse?: () => void;
+          disableMouse?: () => void;
+        }
+      | undefined;
+    if (terminalTextSelectionModeActive) {
+      program?.disableMouse?.();
+      return;
+    }
+    program?.enableMouse?.();
+  }
+
+  applyProgramMouseMode();
 
   const mainItems: Array<{ label: string; view: View }> = [
     { label: "Install", view: "install" },
@@ -527,9 +556,31 @@ export function createApp(opts: {
 
   function applyLogPanelLabel() {
     logsLabelText = terminalTextSelectionModeActive
-      ? "Logs - terminal selection mode active"
+      ? "Logs - Text selection mode enabled"
       : "Logs";
     applyFocusStyles();
+  }
+
+  function showPlainLogsView() {
+    contentLabelText = "Plain Logs";
+    content.setContent(
+      [
+        `{${tuiTheme.colors.helpTitle}-fg}Plain Logs{/${tuiTheme.colors.helpTitle}-fg}`,
+        "",
+        `{${tuiTheme.colors.infoItemTitle}-fg}Session log file:{/${tuiTheme.colors.infoItemTitle}-fg}`,
+        `  {${tuiTheme.colors.descriptionText}-fg}${sessionLogPath}{/${tuiTheme.colors.descriptionText}-fg}`,
+        "",
+        `{${tuiTheme.colors.infoItemTitle}-fg}Visible TUI log history:{/${tuiTheme.colors.infoItemTitle}-fg}`,
+        logHistory.length
+          ? logHistory.join("\n").replace(/[{}]/g, (c) =>
+              c === "{" ? "\\{" : "\\}",
+            )
+          : "  No visible logs yet.",
+      ].join("\n"),
+    );
+    setFocusZone("content");
+    appendLogText("[info] Plain logs view opened with F6.\n", "system");
+    screen.render();
   }
 
   function clearProgress() {
@@ -746,6 +797,7 @@ export function createApp(opts: {
           `{${tuiTheme.colors.descriptionText}-fg}  When enabled before startup, terminal text selection mode disables TUI mouse handling for the session.{/${tuiTheme.colors.descriptionText}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  Changes to this setting take effect the next time the TUI starts. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${tuiTheme.colors.descriptionText}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  F6 opens a plain logs view with the session log path for manual selection fallback.{/${tuiTheme.colors.descriptionText}-fg}`,
         );
       }
     } else if (selected?.kind === "section") {
@@ -868,8 +920,9 @@ export function createApp(opts: {
           "",
           `{${tuiTheme.colors.helpSectionTitle}-fg}Logs{/${tuiTheme.colors.helpSectionTitle}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  F6             View plain logs and session log path{/${tuiTheme.colors.descriptionText}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Terminal text selection can be enabled in Application Settings; some terminals may still require Shift during selection.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Terminal text selection can be enabled in Application Settings. It disables TUI mouse capture globally on the next start, but some terminals may still require Shift during selection.{/${tuiTheme.colors.descriptionText}-fg}`,
           "",
           `{${tuiTheme.colors.helpSectionTitle}-fg}Launcher{/${tuiTheme.colors.helpSectionTitle}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  ./canva-linux.sh opens the TUI.{/${tuiTheme.colors.descriptionText}-fg}`,
@@ -1138,6 +1191,9 @@ export function createApp(opts: {
       `${result.ok ? "[ok]" : "[warn]"} ${result.message}\n`,
       "system",
     );
+  });
+  screen.key(["f6"], () => {
+    if (!modalActive) showPlainLogsView();
   });
   screen.key(["S-pageup", "M-up"], () => {
     content.scroll(-5);
