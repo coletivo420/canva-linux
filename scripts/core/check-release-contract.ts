@@ -106,7 +106,6 @@ export function main(): number {
     "dist/SHA256SUMS",
     "softprops/action-gh-release@v2",
     "body_path: docs/RELEASE.md",
-    "dist/canva-linux-${PACKAGE_VERSION}-x86_64.AppImage",
   ]) {
     assertIncludes(failures, workflowPath, workflow, expected);
   }

@@ -54,7 +54,6 @@ jobs:
           fi
 
           echo "RELEASE_VERSION=${public_version}" >> "$GITHUB_ENV"
-          echo "PACKAGE_VERSION=${package_version}" >> "$GITHUB_ENV"
 
       - name: Verify removed interface routing references
         run: |
@@ -85,8 +84,8 @@ jobs:
         run: |
           mkdir -p dist
 
-          appimage_source="dist/canva-linux-${PACKAGE_VERSION}-x86_64.AppImage"
-          flatpak_source="dist/canva-linux-${PACKAGE_VERSION}.flatpak"
+          appimage_source="dist/canva-linux-${RELEASE_VERSION}-x86_64.AppImage"
+          flatpak_source="dist/canva-linux-${RELEASE_VERSION}.flatpak"
           linux_unpacked="dist/linux-unpacked"
 
           test -s "$appimage_source"
