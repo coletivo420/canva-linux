@@ -1,0 +1,32 @@
+# Gemini Maintenance Policy for Canva Linux
+
+This file provides project context for Gemini CLI. It is auxiliary agent policy, not public user documentation.
+
+Required reading:
+- README.md
+- REVIEW.md
+- CHANGELOG.md
+- docs/DEVELOPMENT.md
+- docs/TYPESCRIPT.md
+- docs/internal/AI_GUARDRAILS.md
+- docs/internal/LOGGING_CONTRACT.md
+- docs/FEATURES.md
+- docs/DEBUGGING.md
+
+Non-regression rules:
+- Preserve version 0.1.4-12 unless explicitly instructed otherwise.
+- Do not introduce 0.1.4-12.RC2.
+- C420UI is the user-facing terminal interface name.
+- Do not use Terminal Assistant or TUI as product names.
+- Actions must come from scripts/actions.json.
+- Do not duplicate action logic in C420UI or launcher code.
+- Preserve Action Runner root/planned-action behavior.
+- Preserve CL-EyeDropper.
+- Preserve TypeScript-first source policy.
+- Do not add maintained JavaScript source.
+- Do not normalize x86_64/X86_64 to x64.
+- Do not remove validations to make checks pass.
+- Never log passwords, sudo stdin, cookies, tokens, or credential material.
+
+Gemini CLI note:
+After changing this file, reload Gemini CLI project memory before continuing.

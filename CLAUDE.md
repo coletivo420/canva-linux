@@ -1,11 +1,42 @@
-# Claude instructions for Canva Linux
+# Claude Maintenance Policy for Canva Linux
+
+This file provides auxiliary maintenance instructions for Claude agents. It is not public user documentation.
 
 Always read:
 
+- `README.md`
+- `REVIEW.md`
+- `CHANGELOG.md`
+- `docs/DEVELOPMENT.md`
+- `docs/TYPESCRIPT.md`
 - `docs/internal/AI_GUARDRAILS.md`
 - `docs/internal/LOGGING_CONTRACT.md`
 - `docs/FEATURES.md`
 - `docs/DEBUGGING.md`
+
+## Non-regression policy
+
+- Preserve version `0.1.4-12` unless the maintainer explicitly requests a versioning change.
+- Do not introduce `0.1.4-12.RC2`.
+- Keep C420UI as the user-facing terminal interface name.
+- Do not reintroduce Terminal Assistant or TUI as product names.
+- Preserve CL-EyeDropper and its bundled snapshot canvas flow.
+- Preserve real generated architecture names such as `x86_64` or `X86_64`; do not normalize them to `x64`.
+- Do not remove, weaken, bypass, or silently alter validations to make a build pass.
+- Report validations executed and anything not tested.
+
+## TypeScript-first policy
+
+- Use TypeScript for maintained Node.js logic.
+- Do not add maintained JavaScript source.
+- Shell remains reserved for Linux host-operation glue.
+
+## Root and sudo policy
+
+- Do not run or recommend `./canva-linux.sh` as root.
+- Prefer shared sudo helpers over direct sudo calls.
+- Never log passwords, sudo stdin, cookies, tokens, or credential material.
+- Privileged operations must request authentication only when needed.
 
 ## Critical logging rule
 
