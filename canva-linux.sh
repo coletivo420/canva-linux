@@ -55,10 +55,34 @@ ensure_action_runner_available() {
   exit 1
 }
 
+c420ui_cli_entrypoint_is_fresh() {
+  local entrypoint="${ROOT_DIR}/.build/scripts/run-c420ui-cli.js"
+
+  [[ -s "${entrypoint}" ]] || return 1
+
+  local source
+  for source in \
+    "${ROOT_DIR}/scripts/run-c420ui-cli.ts" \
+    "${ROOT_DIR}/scripts/c420ui-canva-linux/cli.ts" \
+    "${ROOT_DIR}/scripts/c420ui-canva-linux/bridge.ts" \
+    "${ROOT_DIR}/scripts/c420ui-canva-linux/adapter.ts" \
+    "${ROOT_DIR}/packages/c420ui/src/cli.ts" \
+    "${ROOT_DIR}/packages/c420ui/src/action-engine.ts" \
+    "${ROOT_DIR}/packages/c420ui/src/actions.ts" \
+    "${ROOT_DIR}/packages/c420ui/src/bridge.ts"
+  do
+    if [[ "${source}" -nt "${entrypoint}" ]]; then
+      return 1
+    fi
+  done
+
+  return 0
+}
+
 ensure_c420ui_cli_entrypoint() {
   ensure_action_runner_available
 
-  if [[ -s "${ROOT_DIR}/.build/scripts/run-c420ui-cli.js" ]]; then
+  if c420ui_cli_entrypoint_is_fresh; then
     return 0
   fi
 

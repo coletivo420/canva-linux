@@ -27,6 +27,7 @@ Current target:
 - `npm run check:source-integrity`
   - validates formatted package JSON, shell heredocs, launcher parser shape, and readable shell/docs shapes
   - protects launcher syntax with `bash -n canva-linux.sh`
+  - requires the direct c420ui CLI bridge bundle to be rebuilt when bridge sources are newer
 - `npm run build:c420ui`
 - `npm run check:c420ui`
 - `npm run check:c420ui-core`

@@ -604,6 +604,18 @@ function validateLauncherScriptShape(
     "DIRECT_ACTION_FLAGS=()",
     'DIRECT_ACTION_FLAGS+=("${arg}")',
     'run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"',
+    "c420ui_cli_entrypoint_is_fresh()",
+    'local entrypoint="${ROOT_DIR}/.build/scripts/run-c420ui-cli.js"',
+    '[[ -s "${entrypoint}" ]] || return 1',
+    '"${ROOT_DIR}/scripts/run-c420ui-cli.ts"',
+    '"${ROOT_DIR}/scripts/c420ui-canva-linux/cli.ts"',
+    '"${ROOT_DIR}/scripts/c420ui-canva-linux/bridge.ts"',
+    '"${ROOT_DIR}/scripts/c420ui-canva-linux/adapter.ts"',
+    '"${ROOT_DIR}/packages/c420ui/src/cli.ts"',
+    '"${ROOT_DIR}/packages/c420ui/src/action-engine.ts"',
+    '"${ROOT_DIR}/packages/c420ui/src/actions.ts"',
+    '"${ROOT_DIR}/packages/c420ui/src/bridge.ts"',
+    '[[ "${source}" -nt "${entrypoint}" ]]',
   ] as const;
 
   for (const fragment of requiredLauncherParserFragments) {
