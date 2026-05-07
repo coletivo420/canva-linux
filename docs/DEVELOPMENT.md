@@ -88,6 +88,9 @@ scripts/actions.json
 
 Do not add hardcoded action lists directly in c420ui or launcher code.
 
+New direct action execution logic must be modeled in the c420ui action engine first. Project adapters provide concrete
+action execution; they must not duplicate generic planned-action, dry-run or exit-code behavior.
+
 Recommended flow:
 
 1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.

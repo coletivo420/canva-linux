@@ -108,6 +108,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Flatpak user scope must always show a duplication warning.
 - c420ui and CLI must share the same TypeScript action contract.
 - Preserve Action Runner root/planned-action behavior.
+
+- c420ui owns generic action resolution by id and CLI flag.
+- c420ui owns planned-action and dry-run semantics.
+- Project adapters execute concrete actions but must not reimplement generic action-engine policy.
+- The Canva Linux launcher must not be routed through the c420ui action engine until the dedicated CLI migration commit.
 - Detection refresh must not clear or override progress results.
 - Progress refresh must not convert a completed action into an error.
 - Installed-version detection must be updated whenever install layout changes.

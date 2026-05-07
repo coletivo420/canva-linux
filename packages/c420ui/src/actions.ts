@@ -67,6 +67,11 @@ export type C420UIActionDescriptor = c420uiAction & {
   env?: Record<string, string>;
 };
 
+export function getC420UIActionCliFlags(action: c420uiAction): string[] {
+  const legacyCli = (action as { cli?: string[] }).cli ?? [];
+  return [...(action.cliFlags ?? []), ...legacyCli];
+}
+
 export function isC420UIPlannedAction(action: c420uiAction): boolean {
   return action.kind === "planned" || action.planned === true;
 }

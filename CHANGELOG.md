@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Added the initial c420ui action engine contract for resolving and running project actions through bridges.
 - Added an explicit English-only maintained repository language guardrail with future i18n architecture
   requirements for source, comments, UI strings, README, docs, changelog, and AI maintenance instructions.
 - Added the Canva Linux c420ui adapter boundary for project-specific metadata, action, path and root-guard wiring.

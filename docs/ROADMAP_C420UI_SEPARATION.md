@@ -220,3 +220,11 @@ Before extraction:
 
 The standalone c420ui project should be treated as future work until these
 conditions are met.
+
+### 9. Action engine
+
+The next boundary is the c420ui action engine.
+
+The action engine resolves actions by id or CLI flag, applies planned-action and dry-run semantics, emits operational events, and calls the active project bridge.
+
+The official Canva Linux launcher is not routed through this engine yet.

@@ -30,6 +30,17 @@ Request changes if a PR:
 - makes c420ui and direct CLI behavior diverge for `system` or `user` scope actions;
 - bypasses `scripts/sudo-common.sh` for system-wide actions.
 
+
+## c420ui action engine review
+
+Request changes if a PR:
+
+- duplicates planned-action behavior outside the c420ui action engine;
+- duplicates dry-run behavior outside the c420ui action engine;
+- makes the Canva Linux launcher use the new engine before the CLI migration commit;
+- adds Canva Linux-specific metadata to `packages/c420ui/src/action-engine.ts`;
+- changes runtime app logs while implementing action-engine contracts.
+
 ## c420ui naming and logo review
 
 Request changes if a PR:
