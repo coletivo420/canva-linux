@@ -120,8 +120,16 @@ export function main(): number {
     assertIncludes(failures, releaseDocsPath, releaseDocs, expected);
   }
 
-  for (const forbidden of ["0.1.4.12", "linux-unpacked-x64", "-x64.AppImage"]) {
-    if (workflow.includes(forbidden) || releaseDocs.includes(forbidden)) {
+  const releaseNamingText = `${workflow}\n${releaseDocs}`;
+  const dottedVersionMatch = releaseNamingText.match(/\b\d+\.\d+\.\d+\.\d+\b/);
+  if (dottedVersionMatch) {
+    failures.push(
+      `release naming must use npm-compatible versions, found dotted version ${dottedVersionMatch[0]}`,
+    );
+  }
+
+  for (const forbidden of ["linux-unpacked-x64", "-x64.AppImage"]) {
+    if (releaseNamingText.includes(forbidden)) {
       failures.push(
         `release naming must use npm version and x86_64 architecture, found ${forbidden}`,
       );
