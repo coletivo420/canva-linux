@@ -40,35 +40,24 @@ jobs:
           public_version="$(node -p "require('./scripts/project-ui.json').displayVersion")"
           package_version="$(node -p "require('./package.json').version")"
           phase="$(node -p "require('./scripts/project-ui.json').phase")"
-          mapped_phase="$(node - <<'NODE'
-          const version = require('./package.json').version;
-          const dev = version.match(/^(\d+\.\d+\.\d+)-dev\.(\d+)\.(\d+)$/);
-          if (dev) {
-            console.log(`${dev[1]}.${dev[2]}-dev.${dev[3]}`);
-            process.exit(0);
-          }
-          const release = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
-          if (release) {
-            console.log(`${release[1]}.${release[2]}`);
-            process.exit(0);
-          }
-          if (/^\d+\.\d+\.\d+$/.test(version)) {
-            console.log(version);
-            process.exit(0);
-          }
-          process.exit(1);
-          NODE
-          )"
+          shell_display_version="$(grep '^PROJECT_DISPLAY_VERSION=' scripts/app-identity-common.sh | cut -d'"' -f2)"
+          shell_phase="$(grep '^PROJECT_PHASE=' scripts/app-identity-common.sh | cut -d'"' -f2)"
 
+          if [[ ! "$package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::package.json version does not map to project identity: ${package_version}"
+            exit 1
+          fi
+
+          test "$package_version" = "$public_version"
           test "$phase" = "$public_version"
-          test "$mapped_phase" = "$public_version"
+          test "$shell_display_version" = "$public_version"
+          test "$shell_phase" = "$public_version"
 
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
             test "${GITHUB_REF_NAME}" = "v${public_version}"
           fi
 
           echo "RELEASE_VERSION=${public_version}" >> "$GITHUB_ENV"
-          echo "PACKAGE_VERSION=${package_version}" >> "$GITHUB_ENV"
 
       - name: Verify removed interface routing references
         run: |
@@ -80,6 +69,15 @@ jobs:
       - name: Run validation
         run: npm run validate:project
 
+      - name: Clean release artifacts
+        run: |
+          mkdir -p dist
+          rm -f dist/*.AppImage
+          rm -f dist/*.AppImage.sha256
+          rm -f dist/*.flatpak
+          rm -f dist/*linux-unpacked*.tar.gz
+          rm -f dist/SHA256SUMS
+
       - name: Build AppImage
         run: ./scripts/build-appimage.sh
 
@@ -90,38 +88,33 @@ jobs:
         run: |
           mkdir -p dist
 
-          appimage_source="$(find dist -maxdepth 1 -type f -name 'canva-linux-*.AppImage' | sort | head -n 1)"
-          flatpak_source="$(find dist -maxdepth 1 -type f -name 'canva-linux-*.flatpak' | sort | head -n 1)"
+          appimage_path="dist/canva-linux-${RELEASE_VERSION}-x86_64.AppImage"
+          flatpak_path="dist/canva-linux-${RELEASE_VERSION}.flatpak"
           linux_unpacked="dist/linux-unpacked"
+          tarball_path="dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz"
 
-          test -n "$appimage_source"
-          test -n "$flatpak_source"
+          test -s "$appimage_path"
+          test -s "$flatpak_path"
           test -d "$linux_unpacked"
 
-          appimage_target="dist/canva-linux-${RELEASE_VERSION}-x64.AppImage"
-          flatpak_target="dist/canva-linux-${RELEASE_VERSION}.flatpak"
-          tarball_target="dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-x64.tar.gz"
-
-          mv "$appimage_source" "$appimage_target"
-          mv "$flatpak_source" "$flatpak_target"
-          tar -C dist -czf "$tarball_target" linux-unpacked
+          tar -C dist -czf "$tarball_path" linux-unpacked
 
           cd dist
           sha256sum \
-            "canva-linux-${RELEASE_VERSION}-x64.AppImage" \
+            "canva-linux-${RELEASE_VERSION}-x86_64.AppImage" \
             "canva-linux-${RELEASE_VERSION}.flatpak" \
-            "canva-linux-${RELEASE_VERSION}-linux-unpacked-x64.tar.gz" \
+            "canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz" \
             > SHA256SUMS
 
       - name: Verify expected artifacts
         run: |
-          test -s "dist/canva-linux-${RELEASE_VERSION}-x64.AppImage"
+          test -s "dist/canva-linux-${RELEASE_VERSION}-x86_64.AppImage"
           test -s "dist/canva-linux-${RELEASE_VERSION}.flatpak"
-          test -s "dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-x64.tar.gz"
+          test -s "dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz"
           test -s "dist/SHA256SUMS"
-          grep -q "canva-linux-${RELEASE_VERSION}-x64.AppImage" dist/SHA256SUMS
+          grep -q "canva-linux-${RELEASE_VERSION}-x86_64.AppImage" dist/SHA256SUMS
           grep -q "canva-linux-${RELEASE_VERSION}.flatpak" dist/SHA256SUMS
-          grep -q "canva-linux-${RELEASE_VERSION}-linux-unpacked-x64.tar.gz" dist/SHA256SUMS
+          grep -q "canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz" dist/SHA256SUMS
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -131,7 +124,7 @@ jobs:
           body_path: docs/RELEASE.md
           fail_on_unmatched_files: true
           files: |
-            dist/canva-linux-${{ env.RELEASE_VERSION }}-x64.AppImage
+            dist/canva-linux-${{ env.RELEASE_VERSION }}-x86_64.AppImage
             dist/canva-linux-${{ env.RELEASE_VERSION }}.flatpak
-            dist/canva-linux-${{ env.RELEASE_VERSION }}-linux-unpacked-x64.tar.gz
+            dist/canva-linux-${{ env.RELEASE_VERSION }}-linux-unpacked-x86_64.tar.gz
             dist/SHA256SUMS

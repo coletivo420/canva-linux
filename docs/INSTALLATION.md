@@ -192,13 +192,13 @@ AppImage artifacts are portable generated files. They are not removed by `--unin
 
 ## Versioning policy
 
-Canva Linux may use project phase labels such as `0.1.4.12`.
+Canva Linux uses npm SemVer-compatible project phase labels such as `0.1.4-12`.
 
-Package metadata consumed by npm, electron-builder and future Linux package targets must use valid SemVer, for example `0.1.4-12` for release `v0.1.4.12`.
+Package metadata consumed by npm, electron-builder and future Linux package targets must use valid SemVer, for example `0.1.4-12` for release `v0.1.4-12`.
 
 Do not use four numeric version segments in `package.json#version`.
 
-Invalid: `0.1.4.12`
+Invalid: four numeric version segments
 Valid: `0.1.4-12`
 
 Native Install, Flatpak Install and AppImage share the same runtime behavior. Differences are limited to sandbox model, install paths and launch command.

@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## [0.1.4.12] - 2026-05-07
+## [0.1.4-12] - 2026-05-07
 
 ### Added
 - Added a root-launch guard for the Canva Linux Install and Development Tool.
@@ -12,7 +12,7 @@
   selection contracts.
 - Added F6 plain logs fallback with the session log path for manual log
   selection.
-- Added release preparation documentation for v0.1.4.12 artifacts and workflow
+- Added release preparation documentation for v0.1.4-12 artifacts and workflow
   expectations.
 
 ### Changed
@@ -21,8 +21,8 @@
 - Separated Tool logs from Action logs in the TUI logs panel.
 - Changed terminal text selection mode to disable TUI mouse capture globally
   and request Blessed screen mouse release when supported.
-- Updated public project identity to `0.1.4.12 (Alpha)` while keeping
-  `package.json` on the SemVer-compatible technical version `0.1.4-12`.
+- Updated public project identity to `0.1.4-12 (Alpha)` so release naming,
+  docs, workflow tags and `package.json` use the same npm-compatible version.
 
 ## [0.1.4.11-dev.58] - 2026-05-06
 
@@ -280,7 +280,7 @@
 ### Notes
 - Theme colors are Canva-inspired terminal adaptations.
 - Runtime Electron behavior is unchanged.
-- AUR/PKGBUILD remains planned for `0.1.4.12-dev.1`.
+- AUR/PKGBUILD remains planned for a later npm-compatible packaging line.
 
 ## [0.1.4.11-dev.43] - 2026-05-04
 
@@ -289,7 +289,7 @@
 - Clarified that `./canva-linux.sh` opens the Blessed TUI assistant by default when available.
 - Expanded documentation for the Shared Action Registry workflow.
 - Consolidated technical documentation around `scripts/actions.json`, `action-runner.js`, the TUI assistant and shell fallback.
-- Updated planned package notes to point AUR/PKGBUILD work to `0.1.4.12-dev.1`.
+- Updated planned package notes to point AUR/PKGBUILD work to a later npm-compatible packaging line.
 
 ### Fixed
 - Cleaned remaining documentation inconsistencies from the TUI migration.
@@ -302,7 +302,7 @@
 
 ### Notes
 - `0.1.4.11-dev.43` is still a cleanup/review phase.
-- The next development line is `0.1.4.12-dev.1 — AUR/PKGBUILD experimental`.
+- The next development line is AUR/PKGBUILD experimental with npm-compatible naming.
 - Runtime Electron behavior is unchanged.
 
 ## [0.1.4.11-dev.42] - 2026-05-04
@@ -329,7 +329,7 @@
 
 ### Notes
 - `0.1.4.11-dev.42` is a review/cleanup phase.
-- The next release line is `0.1.4.12-dev.1 — AUR/PKGBUILD experimental`.
+- The next release line is AUR/PKGBUILD experimental with npm-compatible naming.
 - Runtime Electron behavior is unchanged.
 
 ## [0.1.4.11-dev.41] - 2026-05-04

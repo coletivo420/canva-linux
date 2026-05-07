@@ -1,6 +1,6 @@
-#!/bin/bash
-# scripts/build-flatpak-bundle.sh - Generate a distributable Flatpak bundle on demand.
+#!/usr/bin/env bash
 set -euo pipefail
+# scripts/build-flatpak-bundle.sh - Generate a distributable Flatpak bundle on demand.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -63,7 +63,16 @@ else
 fi
 
 mkdir -p "$DIST_DIR"
-flatpak build-bundle repo "$BUNDLE_PATH" io.github.coletivo420.canva-linux   --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+rm -f "$BUNDLE_PATH"
+flatpak build-bundle \
+  repo \
+  "$BUNDLE_PATH" \
+  io.github.coletivo420.canva-linux \
+  --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+
+if [[ ! -s "$BUNDLE_PATH" ]]; then
+  ui_die "Expected Flatpak bundle was not generated: $BUNDLE_PATH"
+fi
 
 SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH")"
 ui_ok "Bundle generated: $(realpath "$BUNDLE_PATH")"

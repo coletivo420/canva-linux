@@ -1,9 +1,9 @@
-# Validation Checklist (0.1.4.12)
+# Validation Checklist (0.1.4-12)
 
 Current target:
 
-- Version: `0.1.4.12 (Alpha)`
-- Release: `v0.1.4.12`
+- Version: `0.1.4-12 (Alpha)`
+- Release: `v0.1.4-12`
 
 ## Automated
 
@@ -34,6 +34,7 @@ Current target:
 - scripts/run-core-entry.sh check-tool-logging-contract
 - scripts/run-core-entry.sh check-log-selection-contract
 - scripts/run-core-entry.sh check-action-contract
+- scripts/run-core-entry.sh check-release-contract
 - npm run validate:project
   - fails if source JavaScript appears outside `.build/`, `node_modules/`,
     `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/`
@@ -45,7 +46,7 @@ Current target:
 ## Manual
 
 - Open `./canva-linux.sh`.
-- Confirm `Release: v0.1.4.12`.
+- Confirm `Release: v0.1.4-12`.
 - Confirm `./canva-linux.sh` opens the TUI by default.
 - Confirm `./canva-linux.sh --help` shows CLI help.
 - Confirm root execution is blocked with a clear message before the TUI or any

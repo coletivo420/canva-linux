@@ -31,6 +31,8 @@ const requiredGuardrails = [
   "Legacy interface-routing environment variables are removed and must not be read for interface routing.",
   "terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.",
   "F5 clipboard copy must keep working even when text selection mode is enabled.",
+  "Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.",
+  "Linux release asset names must use `x86_64`, not `x64`.",
   "System-wide actions must use scripts/sudo-common.sh.",
   "Raw sudo calls are forbidden outside scripts/sudo-common.sh.",
   "User-scope actions must never call sudo.",

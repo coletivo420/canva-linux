@@ -1,14 +1,14 @@
 # Release
 
-## Canva Linux 0.1.4.12 Alpha
+## Canva Linux 0.1.4-12 Alpha
 
-Release: `v0.1.4.12`
+Release: `v0.1.4-12`
 
 ### Public artifacts
 
-- `canva-linux-0.1.4.12-x64.AppImage`
-- `canva-linux-0.1.4.12.flatpak`
-- `canva-linux-0.1.4.12-linux-unpacked-x64.tar.gz`
+- `canva-linux-0.1.4-12-x86_64.AppImage`
+- `canva-linux-0.1.4-12.flatpak`
+- `canva-linux-0.1.4-12-linux-unpacked-x86_64.tar.gz`
 - `SHA256SUMS`
 
 The `.deb`, `.rpm`, and AUR/PKGBUILD outputs remain planned for a later
@@ -48,7 +48,7 @@ The GitHub Release workflow must:
 
 ### Release notes template
 
-Canva Linux 0.1.4.12 Alpha
+Canva Linux 0.1.4-12 Alpha
 
 Highlights:
 

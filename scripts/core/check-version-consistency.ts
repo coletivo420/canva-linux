@@ -7,10 +7,8 @@ function expectedPhaseFromVersion(version: string) {
   const devMatch = version.match(/^(\d+\.\d+\.\d+)-dev\.(\d+)\.(\d+)$/);
   if (devMatch) return `${devMatch[1]}.${devMatch[2]}-dev.${devMatch[3]}`;
 
-  const releaseMatch = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
-  if (releaseMatch) return `${releaseMatch[1]}.${releaseMatch[2]}`;
-
-  if (/^\d+\.\d+\.\d+$/.test(version)) return version;
+  if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version))
+    return version;
 
   throw new Error(
     `package.json version does not map to a project phase: ${version}`,
@@ -24,14 +22,18 @@ export function main(): number {
   ) as { version?: string };
   const projectUi = JSON.parse(
     fs.readFileSync(path.join(rootDir, "scripts/project-ui.json"), "utf8"),
-  ) as { phase?: string };
+  ) as { displayVersion?: string; phase?: string };
   const identity = fs.readFileSync(
     path.join(rootDir, "scripts/app-identity-common.sh"),
     "utf8",
   );
   const phaseMatch = identity.match(/^PROJECT_PHASE="([^"]+)"/m);
+  const displayVersionMatch = identity.match(
+    /^PROJECT_DISPLAY_VERSION="([^"]+)"/m,
+  );
   if (!pkg.version) throw new Error("package.json version not found");
   if (!phaseMatch) throw new Error("PROJECT_PHASE not found");
+  if (!displayVersionMatch) throw new Error("PROJECT_DISPLAY_VERSION not found");
 
   const expectedPhase = expectedPhaseFromVersion(pkg.version);
   if (phaseMatch[1] !== expectedPhase) {
@@ -39,9 +41,19 @@ export function main(): number {
       `PROJECT_PHASE mismatch: expected ${expectedPhase}, got ${phaseMatch[1]}`,
     );
   }
+  if (displayVersionMatch[1] !== expectedPhase) {
+    throw new Error(
+      `PROJECT_DISPLAY_VERSION mismatch: expected ${expectedPhase}, got ${displayVersionMatch[1]}`,
+    );
+  }
   if (projectUi.phase !== expectedPhase) {
     throw new Error(
       `project-ui phase mismatch: expected ${expectedPhase}, got ${projectUi.phase || "missing"}`,
+    );
+  }
+  if (projectUi.displayVersion !== expectedPhase) {
+    throw new Error(
+      `project-ui displayVersion mismatch: expected ${expectedPhase}, got ${projectUi.displayVersion || "missing"}`,
     );
   }
 
