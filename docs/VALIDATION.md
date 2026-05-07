@@ -19,6 +19,7 @@ Current target:
 - `npm run lint`
 - `npm run typecheck`
 - `npm run typecheck:strict`
+  - strict by critical surface, not global strict; see `tsconfig.strict.json`
 - `npm run check:gitignore-policy`
 - `npm test`
   - compiles selected TypeScript tests plus support helpers to `.build/test/` before `node --test`

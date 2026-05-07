@@ -7,6 +7,10 @@ const tsParser = requireFromConfig("@typescript-eslint/parser");
 
 const commonRules = {
   eqeqeq: ["error", "always"],
+  "no-duplicate-imports": "error",
+  "no-fallthrough": "error",
+  "no-return-await": "error",
+  "no-throw-literal": "error",
   "no-var": "error",
   "prefer-const": "error",
 } satisfies Linter.RulesRecord;
@@ -57,14 +61,6 @@ const config = [
       parser: tsParser,
       parserOptions: {
         sourceType: "module",
-      },
-    },
-    settings: {
-      "import/extensions": [".js", ".ts"],
-      "import/resolver": {
-        node: {
-          extensions: [".js", ".ts"],
-        },
       },
     },
     plugins: {

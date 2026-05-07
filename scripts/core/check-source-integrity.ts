@@ -504,7 +504,7 @@ function validateProjectValidationScriptShape(
     failures.push(
       `${relativePath}: missing source-first ordering comment for runtime build placement`,
     );
-  } else if (!lines[sourceFirstCommentIndex].trim().startsWith("#")) {
+  } else if (!lines[sourceFirstCommentIndex]!.trim().startsWith("#")) {
     failures.push(
       `${relativePath}:${sourceFirstCommentIndex + 1}: source-first ordering prose must remain a shell comment`,
     );

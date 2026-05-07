@@ -89,8 +89,10 @@ test("root policy rejects requiresRoot actions in user scope", () => {
   };
 
   assert.equal(actionHasUserScope(action), true);
+  const policyError = validateRootPolicy(action);
+  assert.notEqual(policyError, null);
   assert.match(
-    validateRootPolicy(action),
+    policyError!,
     /requiresRoot=true cannot be combined with user scope/,
   );
 });

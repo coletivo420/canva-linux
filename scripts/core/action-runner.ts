@@ -121,7 +121,7 @@ Options:
 function printSummary(actions: CanvaAction[]) {
   const groups = ["install", "development", "maintenance"] as const;
   for (const group of groups) {
-    console.log(`${group[0].toUpperCase()}${group.slice(1)}:`);
+    console.log(`${group[0]!.toUpperCase()}${group.slice(1)}:`);
     for (const action of actions.filter((item) => item.group === group)) {
       const flags = [];
       if (action.planned || action.kind === "planned") flags.push("planned");

@@ -23,7 +23,7 @@ export function main(): number {
   const shell = fs.readFileSync(path.join(rootDir, "canva-linux.sh"), "utf8");
   const ids = [...shell.matchAll(/run_action_by_id\s+["']([^"']+)["']/g)]
     .map((match) => match[1])
-    .filter(Boolean);
+    .filter((id): id is string => Boolean(id));
   const missing = ids.filter((id) => !actionIds.has(id));
   if (missing.length) {
     throw new Error(
