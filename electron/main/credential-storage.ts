@@ -19,6 +19,12 @@ export type CredentialStorageSecurity =
   | "unknown"
   | "unsupported-platform";
 
+export type CredentialStorageWarningCopy = {
+  title: string;
+  message: string;
+  detail: string;
+};
+
 export type CredentialStoragePolicy = {
   backend: string;
   encryptionAvailable: boolean;
@@ -131,6 +137,32 @@ function createCredentialStoragePolicy({
   });
 }
 
+function createCredentialStorageWarningCopy(
+  policy: CredentialStoragePolicy,
+): CredentialStorageWarningCopy | null {
+  if (policy.mode !== "ephemeral") {
+    return null;
+  }
+
+  const backendUnavailable = policy.security === "secure-backend-unavailable";
+
+  return {
+    title: backendUnavailable
+      ? "Secure credential encryption is unavailable"
+      : "Secure credential encryption was not verified",
+    message: backendUnavailable
+      ? "Secure credential encryption is unavailable."
+      : "Secure credential encryption was not verified.",
+    detail: [
+      policy.warning ||
+        "Canva Linux will start in ephemeral session mode; credentials, cookies and login state will not be saved.",
+      "",
+      "Persistent login requires both a secure Linux Secret Service backend and available safeStorage encryption.",
+      "Install, enable, and unlock KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
+    ].join("\n"),
+  };
+}
+
 function resolveCredentialStoragePolicy({
   safeStorage,
   platform = process.platform,
@@ -181,6 +213,7 @@ export {
   PERSISTENT_PARTITION,
   SECURE_LINUX_BACKENDS,
   createCredentialStoragePolicy,
+  createCredentialStorageWarningCopy,
   createDefaultCredentialStoragePolicy,
   resolveCredentialStoragePolicy,
 };

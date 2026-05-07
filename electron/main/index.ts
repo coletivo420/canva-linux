@@ -36,6 +36,7 @@ const { registerAppLifecycle } = require("./lifecycle");
 const { createCentralLogger, createStatusLogger } = require("./logging");
 const { createLoggingHelpers } = require("./logging-helpers");
 const {
+  createCredentialStorageWarningCopy,
   createDefaultCredentialStoragePolicy,
   resolveCredentialStoragePolicy,
 } = require("./credential-storage");
@@ -106,21 +107,15 @@ configureLinuxRuntime({
 function showEphemeralSessionWarning(
   policy: CredentialStoragePolicy,
 ): Promise<unknown> {
-  if (policy.mode !== "ephemeral") {
+  const warningCopy = createCredentialStorageWarningCopy(policy);
+
+  if (!warningCopy) {
     return Promise.resolve();
   }
 
   return dialog.showMessageBox({
     type: "warning",
-    title: "Secure credential encryption was not verified",
-    message: "Secure credential encryption was not verified.",
-    detail: [
-      "Canva Linux will start in ephemeral session mode.",
-      "Your login, cookies and credentials will not be saved after closing the app.",
-      "",
-      "Persistent login requires both a secure Linux Secret Service backend and available safeStorage encryption.",
-      "Install, enable, and unlock KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
-    ].join("\n"),
+    ...warningCopy,
     buttons: ["Continue with ephemeral session"],
     defaultId: 0,
     cancelId: 0,

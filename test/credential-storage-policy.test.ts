@@ -8,6 +8,7 @@ const { loadRuntimeModule } = require("./helpers/runtime-module");
 
 const {
   createCredentialStoragePolicy,
+  createCredentialStorageWarningCopy,
   resolveCredentialStoragePolicy,
 } = loadRuntimeModule("main/credential-storage");
 
@@ -223,4 +224,69 @@ test("secure backend session options without available encryption never use the 
   assert.notEqual(sessionOptions.partition, "persist:canva");
   assert.equal(sessionOptions.partition.startsWith("persist:"), false);
   assert.equal(sessionOptions.cache, false);
+});
+
+test("credential storage warning copy is not created for persistent storage", () => {
+  const policy = createCredentialStoragePolicy({
+    backend: "kwallet6",
+    encryptionAvailable: true,
+    platform: "linux",
+  });
+
+  assert.equal(createCredentialStorageWarningCopy(policy), null);
+});
+
+test("credential storage warning copy uses policy warning for unverified ephemeral storage", () => {
+  const policy = createCredentialStoragePolicy({
+    backend: "basic_text",
+    encryptionAvailable: true,
+    platform: "linux",
+  });
+  const copy = createCredentialStorageWarningCopy(policy);
+
+  assert.deepEqual(copy, {
+    title: "Secure credential encryption was not verified",
+    message: "Secure credential encryption was not verified.",
+    detail: [
+      policy.warning,
+      "",
+      "Persistent login requires both a secure Linux Secret Service backend and available safeStorage encryption.",
+      "Install, enable, and unlock KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
+    ].join("\n"),
+  });
+});
+
+test("credential storage warning copy has secure backend unavailable text", () => {
+  const policy = createCredentialStoragePolicy({
+    backend: "kwallet6",
+    encryptionAvailable: false,
+    platform: "linux",
+  });
+  const copy = createCredentialStorageWarningCopy(policy);
+
+  assert.equal(policy.security, "secure-backend-unavailable");
+  assert.equal(copy.title, "Secure credential encryption is unavailable");
+  assert.equal(copy.message, "Secure credential encryption is unavailable.");
+  assert.equal(copy.detail.startsWith(`${policy.warning}\n\n`), true);
+});
+
+test("credential storage warning copy falls back when policy warning is unavailable", () => {
+  const policy = {
+    ...createCredentialStoragePolicy({
+      backend: "unknown",
+      encryptionAvailable: false,
+      encryptionAvailableVerified: false,
+      platform: "linux",
+    }),
+    warning: null,
+  };
+  const copy = createCredentialStorageWarningCopy(policy);
+
+  assert.equal(copy.title, "Secure credential encryption was not verified");
+  assert.equal(
+    copy.detail.startsWith(
+      "Canva Linux will start in ephemeral session mode; credentials, cookies and login state will not be saved.\n\n",
+    ),
+    true,
+  );
 });
