@@ -30,7 +30,7 @@ Direct actions are resolved through the shared Action Registry (`scripts/actions
 | `--install-flatpak` | Build and install Flatpak locally. |
 | `--bundle-flatpak` | Create distributable `.flatpak` package. |
 | `--bundle-appimage` | Create experimental AppImage package. |
-| `--prepare-aur` | Planned for `0.1.4.12-dev.1`. |
+| `--prepare-aur` | Planned for a later packaging line. |
 | `--bundle-deb` | Planned after AUR stabilization. |
 | `--bundle-rpm` | Planned after AUR stabilization. |
 | `--build-runtime` | Build compiled Electron runtime. |
@@ -70,6 +70,7 @@ Current Tool settings:
   logs panel. Action logs remain visible either way, and critical Tool warnings
   or errors still appear when general Tool logs are disabled.
 - `Prefer native terminal text selection on next TUI start`: when enabled before
-  startup, disables TUI mouse handling for the session so the terminal can
-  perform native text selection. Changes take effect on the next TUI start.
-  Keyboard log scrolling and F5 copy remain available.
+  startup, disables TUI mouse handling globally for the session so the terminal
+  can perform native text selection. Changes take effect on the next TUI start.
+  Keyboard log scrolling and F5 copy remain available. F6 opens a plain logs
+  view with the session log path as a fallback for manual selection.

@@ -27,8 +27,10 @@ function normalizeWhitespace(value: string): string {
 const requiredGuardrails = [
   "The interactive shell menu has been removed.",
   "The project exposes only TUI and direct CLI actions.",
-  "`--no-tui` and `--tui` flags are removed. The launcher opens TUI when called without args; any argument is resolved as direct CLI.",
-  "`CANVA_NO_TUI` and `CANVA_TUI` environment variables are removed and must not be read for interface routing.",
+  "Legacy explicit TUI routing flags are removed. The launcher opens TUI when called without args; any argument is resolved as direct CLI.",
+  "Legacy interface-routing environment variables are removed and must not be read for interface routing.",
+  "terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.",
+  "F5 clipboard copy must keep working even when text selection mode is enabled.",
   "System-wide actions must use scripts/sudo-common.sh.",
   "Raw sudo calls are forbidden outside scripts/sudo-common.sh.",
   "User-scope actions must never call sudo.",

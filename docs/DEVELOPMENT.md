@@ -69,5 +69,5 @@ This command automatically compiles the TypeScript core scripts if necessary.
 
 ## Next packaging target
 
-Next line: `0.1.4.12-dev.1 — AUR/PKGBUILD experimental`.
+Next line: AUR/PKGBUILD experimental packaging.
 AUR actions must be added through `scripts/actions.json`.

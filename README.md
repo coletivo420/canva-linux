@@ -1,8 +1,8 @@
 # Canva Linux
 
-Status: **Alpha**  
-Version line: **0.1.4.11**  
-Phase: **0.1.4.11-dev.58**
+Status: **Alpha**
+Version: **0.1.4.12 (Alpha)**
+Release: **v0.1.4.12**
 
 Independent community project. Not affiliated with Canva.
 
@@ -36,7 +36,7 @@ output, while shell remains reserved for Linux host-operation glue.
 - **TUI**: guided sections, logs, progress bar, root-auth popup for privileged actions.
 - **Maintenance**: uninstall, purge, reset user data, permissions recovery.
 - **Diagnostics**: GPU, upload, browser capture diagnostics.
-- **Future**: AUR/PKGBUILD (`0.1.4.12-dev.1`), then `.deb`/`.rpm`.
+- **Future**: AUR/PKGBUILD, then `.deb`/`.rpm`.
 
 ## Desktop Integration
 Native and Flatpak flows provide desktop entry integration for Linux environments.
@@ -57,6 +57,7 @@ Includes doctor checks, validation pipeline, cleanup, uninstall and purge workfl
 - [Debugging](docs/DEBUGGING.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [Validation](docs/VALIDATION.md)
+- [Release](docs/RELEASE.md)
 - [Development](docs/DEVELOPMENT.md)
 - [AI Guardrails](docs/AI_GUARDRAILS.md)
 - [Project README (docs)](docs/README.md)
