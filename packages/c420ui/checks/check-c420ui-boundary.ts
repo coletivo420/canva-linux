@@ -9,16 +9,28 @@ const forbidden = [
   "io.github.coletivo420.canva-linux",
   "https://github.com/coletivo420/canva-linux",
   "CL-EyeDropper",
-  "scripts/project-ui.json",
-  "scripts/actions.json",
+  "scripts/",
+  "project-ui.json",
+  "actions.json",
+  "app-identity-common.sh",
+  "run-core-entry.sh",
+  "sudo-common.sh",
+  "CANVA_",
 ];
+
+function collectTypeScriptFiles(dir: string): string[] {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) return collectTypeScriptFiles(entryPath);
+    if (entry.isFile() && entry.name.endsWith(".ts")) return [entryPath];
+    return [];
+  });
+}
 
 function readSource(rootDir: string): string {
   const srcDir = path.join(rootDir, "packages/c420ui/src");
-  return fs
-    .readdirSync(srcDir)
-    .filter((file) => file.endsWith(".ts"))
-    .map((file) => fs.readFileSync(path.join(srcDir, file), "utf8"))
+  return collectTypeScriptFiles(srcDir)
+    .map((file) => fs.readFileSync(file, "utf8"))
     .join("\n");
 }
 

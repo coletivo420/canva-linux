@@ -22,6 +22,14 @@ cd canva-linux
 npm ci --include=dev
 ```
 
+## Repository language and future i18n
+
+- All maintained source code, comments, UI strings, README, docs, changelog, and AI maintenance instructions must be written in English.
+- Do not add Portuguese comments, Portuguese docs, Portuguese UI strings, or mixed-language source text.
+- User-facing translations may be introduced later only through an explicit i18n architecture with structured translation
+  resources, typed keys, and fallback language rules.
+- Until that i18n system exists, English is the only maintained repository language.
+
 ## TypeScript source rules
 
 - All maintained Node.js source code is TypeScript.
@@ -94,13 +102,21 @@ If your action requires root privileges, set `requiresRoot: true` in `scripts/ac
 
 ## Core Validation
 
-All project contracts are checked by:
+Core script contracts are checked by:
 
 ```bash
 npm run check:scripts-core
 ```
 
-This command automatically compiles the TypeScript core scripts if necessary.
+The generic c420ui package contracts and the Canva Linux adapter contracts are
+checked separately:
+
+```bash
+npm run check:c420ui-core
+npm run check:canva-linux
+```
+
+These commands automatically compile their TypeScript check scripts if necessary.
 
 ## Next packaging target
 

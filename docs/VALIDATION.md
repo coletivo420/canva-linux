@@ -5,6 +5,13 @@ Current target:
 - Version: `0.1.4-12 (Alpha)`
 - Release: `v0.1.4-12`
 
+## Split validation model
+
+- `npm run check:c420ui-core` validates reusable c420ui contracts.
+- `npm run check:canva-linux` validates the Canva Linux adapter and concrete recipes.
+- `npm run check:c420ui-contracts` is a temporary compatibility alias.
+- `npm run check:scripts-core` remains the legacy aggregate until the validation split is complete.
+
 ## Automated
 
 - `npm run build:scripts-core`
@@ -15,6 +22,10 @@ Current target:
   - validates formatted package JSON, shell heredocs, and readable shell/docs shapes
 - `npm run build:c420ui`
 - `npm run check:c420ui`
+- `npm run check:c420ui-core`
+  - validates the generic c420ui package contracts without Canva Linux adapter checks
+- `npm run check:canva-linux`
+  - validates the Canva Linux adapter and artifact recipes separately from c420ui core
 - `npm run actions:validate`
 - `npm run lint`
 - `npm run typecheck`
@@ -27,6 +38,7 @@ Current target:
   - includes `basic_text`, locked keyring, and detection-error ephemeral fallbacks
 - `npm run docs:check-links`
 - `npm run docs:check-ai`
+  - validates the English-only maintained repository language guardrail and future i18n policy
 - `scripts/run-core-entry.sh check-no-shell-menu`
 - `scripts/run-core-entry.sh check-sudo-contract`
 - `scripts/run-core-entry.sh check-no-root-launch-contract`
@@ -99,4 +111,6 @@ Current target:
 - Confirm release artifact names preserve the generated architecture string (`x86_64`/`X86_64` when emitted) and never rewrite it to `x64`.
 - Confirm `SHA256SUMS` contains the real generated AppImage, Flatpak and tarball names.
 - Confirm `REVIEW.md` still starts with `# Review Checklist`.
+- Confirm maintained source, comments, UI strings, README, docs, changelog, and AI maintenance instructions remain
+  English-only until an explicit i18n system exists.
 - Confirm new Node.js scripts, tests, and supported configs are authored in TypeScript, with shell reserved for host-operation glue.

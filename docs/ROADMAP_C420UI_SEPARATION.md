@@ -44,6 +44,17 @@ launch behavior into the reusable c420ui core.
 Until broader package and adapter wiring is complete, `scripts/c420ui/` remains
 the source of truth for the in-repo implementation.
 
+## Bridge and validation split
+
+c420ui owns generic workflow contracts.
+
+Canva Linux owns concrete recipes.
+
+Validation is split accordingly:
+
+- c420ui checks live under `packages/c420ui/checks/`.
+- Canva Linux checks live under `scripts/checks/canva-linux/`.
+
 ## Non-goals for this phase
 
 - Do not migrate to ESM during this phase.

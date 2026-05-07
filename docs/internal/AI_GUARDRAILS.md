@@ -2,9 +2,14 @@
 
 This file is auxiliary maintenance policy for AI agents. It is not public user documentation.
 
-## Language and public docs
+## Language and future i18n
 
-- All source code comments, UI strings, README, docs, changelog, and AI maintenance instructions must be written in English.
+- All maintained source code, code comments, UI strings, README, docs, changelog and AI maintenance instructions must be written in English.
+- Do not add Portuguese comments, Portuguese docs, Portuguese UI strings, or mixed-language source text to the repository.
+- User-facing translations may be introduced later through an explicit i18n architecture.
+- Do not hardcode future translations directly in runtime code.
+- Future i18n must use structured translation resources, typed keys and fallback language rules.
+- Until an i18n system exists, English is the only maintained repository language.
 - README is the public entry point; long command references belong in `docs/CLI.md`.
 - Active docs must match current version/phase and validation flow.
 - Docs must reflect the current phase only; historical details belong in `CHANGELOG.md`.

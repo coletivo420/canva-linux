@@ -222,6 +222,11 @@ export function createCanvaLinuxC420UIAdapter(
     return loadArtifactWorkflows();
   }
 
+  // Transitional bridge execution path.
+  // The official launcher and legacy Action Runner are not routed through this path yet.
+  // Future commits will move CLI, sudo/root orchestration and operational logs into c420ui.
+  // Runtime Canva Linux app logs, credential diagnostics, OAuth/tabs/GPU/EyeDropper logs,
+  // and CANVA_DEBUG flows remain outside this adapter execution path.
   async function runAction(
     actionId: string,
     context: c420uiExecutionContext,

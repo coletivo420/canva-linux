@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- Added an explicit English-only maintained repository language guardrail with future i18n architecture
+  requirements for source, comments, UI strings, README, docs, changelog, and AI maintenance instructions.
 - Added the Canva Linux c420ui adapter boundary for project-specific metadata, action, path and root-guard wiring.
 - Added the private future `@coletivo420/c420ui` package skeleton with pure c420ui TypeScript contracts.
 - Added the public c420ui separation roadmap for compatibility-first package and adapter boundary work.
