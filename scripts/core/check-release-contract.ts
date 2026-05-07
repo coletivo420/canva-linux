@@ -45,7 +45,13 @@ function validateShellScript(
   failures: string[],
 ) {
   const fullPath = path.join(rootDir, relativePath);
-  const contents = read(rootDir, relativePath);
+  let contents: string;
+  try {
+    contents = read(rootDir, relativePath);
+  } catch {
+    failures.push(`${relativePath}: file not found`);
+    return;
+  }
   const lines = contents.split(/\r?\n/);
 
   if (!lines[0]?.startsWith("#!")) {
@@ -90,6 +96,11 @@ export function main(): number {
   if (workflow.includes("find dist") || workflow.includes("head -n 1")) {
     failures.push(`${workflowPath}: asset selection must not use find/head`);
   }
+  if (workflow.includes("_source=") || workflow.includes("_target=")) {
+    failures.push(
+      `${workflowPath}: release artifact paths must not use dead source/target rename variables`,
+    );
+  }
 
   if (!releaseVersion) failures.push("package.json: missing version");
 
@@ -98,6 +109,10 @@ export function main(): number {
     "tags:",
     "node-version: \"22\"",
     "npm run validate:project",
+    "shell_display_version",
+    "shell_phase",
+    "PROJECT_DISPLAY_VERSION",
+    "PROJECT_PHASE",
     "./scripts/build-appimage.sh",
     "./scripts/build-flatpak-bundle.sh",
     "canva-linux-${RELEASE_VERSION}-x86_64.AppImage",
@@ -120,7 +135,9 @@ export function main(): number {
   }
 
   const releaseNamingText = `${workflow}\n${releaseDocs}`;
-  const dottedVersionMatch = releaseNamingText.match(/\b\d+\.\d+\.\d+\.\d+\b/);
+  const dottedVersionMatch = releaseNamingText.match(
+    /\b(?:v|canva-linux-)\d+\.\d+\.\d+\.\d+\b/,
+  );
   if (dottedVersionMatch) {
     failures.push(
       `release naming must use npm-compatible versions, found dotted version ${dottedVersionMatch[0]}`,
