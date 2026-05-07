@@ -37,6 +37,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `docs/.nojekyll`
 - `docs/internal/AI_DEVELOPMENT.md`
 - `docs/internal/AI_GUARDRAILS.md`
+- `docs/internal/CHANGELOG_DEVELOPMENT_HISTORY.md`
 - `docs/APPIMAGE_FUSE.md`
 - `docs/CANVA_API.md`
 - `docs/CANVA_LINUX_EYEDROPPER.md`
