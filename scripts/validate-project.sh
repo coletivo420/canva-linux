@@ -43,7 +43,10 @@ run_step "npm test" npm test
 run_step "npm run docs:check-ai" npm run docs:check-ai
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
 run_step "bash scripts/check-shell-ui-api.sh" bash scripts/check-shell-ui-api.sh
-run_step "npm run check:scripts-core" npm run check:scripts-core
+run_step "npm run check:c420ui-core" npm run check:c420ui-core
+run_step "npm run check:canva-linux" npm run check:canva-linux
+run_step "npm run check:shared-tooling" npm run check:shared-tooling
+run_step "npm run check:legacy-tooling" npm run check:legacy-tooling
 run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check
 

@@ -8,15 +8,21 @@ Current target:
 ## Split validation model
 
 - `npm run check:c420ui-core` validates reusable c420ui contracts.
-- `npm run check:canva-linux` validates the Canva Linux adapter and concrete recipes.
-- `npm run check:c420ui-contracts` is a temporary compatibility alias.
-- `npm run check:scripts-core` remains the legacy aggregate until the validation split is complete.
+- `npm run check:canva-linux` validates the Canva Linux adapter, app runtime contracts and concrete recipes.
+- `npm run check:shared-tooling` validates repository-wide TypeScript, docs, dependency, source, runtime build and AI guardrail policies.
+- `npm run check:legacy-tooling` temporarily preserves contracts that still live under `scripts/core/` until the c420ui/action-runner migration is complete.
+- `npm run check:scripts-core` is a temporary aggregate that runs the four validation blocks above.
+- `npm run check:c420ui-contracts` is a temporary compatibility alias for the c420ui core and Canva Linux checks.
 
 ## Automated
 
 - `npm run build:scripts-core`
 - `npm run check:scripts-core`
-  - includes `check-gitignore-policy`, `check-no-source-javascript`, and `check-source-integrity`
+  - aggregates `check:c420ui-core`, `check:canva-linux`, `check:shared-tooling`, and `check:legacy-tooling`
+- `npm run check:shared-tooling`
+  - builds the runtime before checking it, then includes docs, dependency, source, TypeScript-first, wrapper, AI guardrail, and review checklist policies
+- `npm run check:legacy-tooling`
+  - preserves transitional `scripts/core/` runtime and tool contracts until they move to their final c420ui or Canva Linux validation domains
 - `npm run check:no-source-javascript`
 - `npm run check:source-integrity`
   - validates formatted package JSON, shell heredocs, and readable shell/docs shapes

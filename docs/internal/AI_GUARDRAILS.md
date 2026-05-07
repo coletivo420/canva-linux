@@ -205,6 +205,14 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - AppImage, Flatpak, tarball and checksum entries must use the actual generated architecture string.
 - Release docs and workflows must not hardcode `x64` unless the tool actually emits `x64`.
 
+
+## Validation domains
+
+- Validation domains must remain separated: c420ui core checks, Canva Linux checks, shared tooling checks and legacy transitional checks.
+- Do not add new c420ui-specific checks to `check:legacy-tooling`.
+- Do not add new Canva Linux-specific checks to `check:c420ui-core`.
+- The legacy tooling block must shrink over time, not grow.
+
 ## Changelog/review
 
 - Do not remove validation checks to make a build pass.

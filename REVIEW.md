@@ -58,6 +58,15 @@ Request changes if a PR:
 - hardcodes future translations directly in runtime code;
 - introduces user-facing translations without an explicit i18n architecture, structured translation resources, typed keys, and fallback language rules.
 
+## Validation split review
+
+Request changes if a PR:
+
+- adds new c420ui checks to the legacy tooling block;
+- adds Canva Linux concrete artifact checks to c420ui core checks;
+- bypasses `check:c420ui-core`, `check:canva-linux` or `check:shared-tooling`;
+- expands `check:legacy-tooling` without explaining why the check cannot yet live in its final domain.
+
 ## Changelog-backed regression review
 
 Request changes if a PR:

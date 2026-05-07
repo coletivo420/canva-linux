@@ -513,28 +513,50 @@ function validateProjectValidationScriptShape(
   const buildRuntimeIndex = lines.findIndex(
     (line) => line === 'run_step "npm run build:runtime" npm run build:runtime',
   );
-  const checkScriptsCoreIndex = lines.findIndex(
-    (line) =>
-      line ===
-      'run_step "npm run check:scripts-core" npm run check:scripts-core',
+  const validationBlockSteps = [
+    'run_step "npm run check:c420ui-core" npm run check:c420ui-core',
+    'run_step "npm run check:canva-linux" npm run check:canva-linux',
+    'run_step "npm run check:shared-tooling" npm run check:shared-tooling',
+    'run_step "npm run check:legacy-tooling" npm run check:legacy-tooling',
+  ] as const;
+  const validationBlockIndexes = validationBlockSteps.map((step) =>
+    lines.findIndex((line) => line === step),
   );
+
   if (buildRuntimeIndex === -1) {
     failures.push(
       `${relativePath}: missing npm run build:runtime validation step`,
     );
   }
-  if (checkScriptsCoreIndex === -1) {
-    failures.push(
-      `${relativePath}: missing npm run check:scripts-core validation step`,
-    );
+
+  validationBlockSteps.forEach((step, index) => {
+    if (validationBlockIndexes[index] === -1) {
+      failures.push(`${relativePath}: missing ${step} validation step`);
+    }
+  });
+
+  for (let index = 1; index < validationBlockIndexes.length; index += 1) {
+    const previousIndex = validationBlockIndexes[index - 1]!;
+    const currentIndex = validationBlockIndexes[index]!;
+    if (
+      previousIndex !== -1 &&
+      currentIndex !== -1 &&
+      currentIndex < previousIndex
+    ) {
+      failures.push(
+        `${relativePath}: split validation steps must stay in c420ui, Canva Linux, shared, legacy order`,
+      );
+    }
   }
+
+  const lastValidationIndex = Math.max(...validationBlockIndexes);
   if (
     buildRuntimeIndex !== -1 &&
-    checkScriptsCoreIndex !== -1 &&
-    buildRuntimeIndex < checkScriptsCoreIndex
+    lastValidationIndex !== -1 &&
+    buildRuntimeIndex < lastValidationIndex
   ) {
     failures.push(
-      `${relativePath}: npm run build:runtime must stay after npm run check:scripts-core`,
+      `${relativePath}: npm run build:runtime must stay after split validation steps`,
     );
   }
 }
