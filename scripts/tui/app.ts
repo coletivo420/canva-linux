@@ -562,6 +562,7 @@ export function createApp(opts: {
   }
 
   function showPlainLogsView() {
+    appendLogText("[info] Plain logs view opened with F6.\n", "system");
     contentLabelText = "Plain Logs";
     content.setContent(
       [
@@ -572,14 +573,18 @@ export function createApp(opts: {
         "",
         `{${tuiTheme.colors.infoItemTitle}-fg}Visible TUI log history:{/${tuiTheme.colors.infoItemTitle}-fg}`,
         logHistory.length
-          ? logHistory.join("\n").replace(/[{}]/g, (c) =>
-              c === "{" ? "\\{" : "\\}",
-            )
+          ? logHistory
+              .map((line) =>
+                line.replace(/[{}]/g, (c) =>
+                  c === "{" ? "\\\\{" : "\\\\}",
+                ),
+              )
+              .join("\n")
           : "  No visible logs yet.",
       ].join("\n"),
     );
     setFocusZone("content");
-    appendLogText("[info] Plain logs view opened with F6.\n", "system");
+    applyFocusStyles();
     screen.render();
   }
 
