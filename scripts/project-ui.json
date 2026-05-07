@@ -2,6 +2,8 @@
   "displayVersion": "0.1.4-12",
   "status": "Alpha",
   "phase": "0.1.4-12",
+  "projectName": "Canva Linux",
+  "projectSubtitle": "Install and Development Workspace",
   "toolTitle": "Canva Linux \u2014 Install and Development Tool",
   "c420uiTitle": "Canva Linux Terminal Assistant",
   "versionReleaseNotes": "Release preparation for C420UI log selection, packaged artifacts, release workflow and documentation."

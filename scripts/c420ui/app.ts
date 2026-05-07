@@ -57,6 +57,20 @@ type LogSource = "stdout" | "stderr" | "system";
 
 type FocusZone = "menu" | "diagnostics" | "content" | "logs";
 
+type HeaderBoxLayout = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+};
+
+export type HeaderLayout = {
+  c420uiHeader: HeaderBoxLayout;
+  projectHeader: HeaderBoxLayout;
+  workspaceTop: number;
+  layoutMode: "side-by-side" | "stacked";
+};
+
 type SettingsItem =
   | {
       kind: "section";
@@ -78,12 +92,89 @@ const MAX_LOG_HISTORY_LINES = 5000;
 const TOOL_LOG_PREFIX = "Tool |";
 const ACTION_LOG_PREFIX = "Action |";
 const FOCUS_ZONES: FocusZone[] = ["menu", "diagnostics", "content", "logs"];
+const HEADER_GAP = 0;
+const HEADER_BOX_HORIZONTAL_PADDING = 4;
+const C420UI_HEADER_MIN_WIDTH = 28;
+const PROJECT_HEADER_MIN_WIDTH = 40;
 
 const BRAND_CONFIG: C420UIBrandConfig = {
   name: "C420UI",
   version: "0.1",
   logoLines: [...C420UI_LOGO_LINES],
 };
+
+function longestLineLength(lines: string[]): number {
+  return Math.max(0, ...lines.map((line) => line.length));
+}
+
+export function computeHeaderLayout(
+  screenWidth: number,
+  brandConfig: C420UIBrandConfig,
+  projectConfig: C420UIProjectHeaderConfig,
+): HeaderLayout {
+  const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
+  const projectHeaderHeight = 5;
+  const c420uiHeaderContentWidth = longestLineLength([
+    `${brandConfig.name} v${brandConfig.version}`,
+    ...brandConfig.logoLines,
+  ]);
+  const projectHeaderContentWidth = longestLineLength([
+    projectConfig.projectName,
+    projectConfig.projectSubtitle,
+    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""} | Phase: ${projectConfig.phase ?? "unknown"}`,
+  ]);
+  const c420uiMinWidth = Math.max(
+    c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
+    C420UI_HEADER_MIN_WIDTH,
+  );
+  const projectMinWidth = Math.max(
+    projectHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
+    PROJECT_HEADER_MIN_WIDTH,
+  );
+  const normalizedScreenWidth = Math.max(1, screenWidth);
+  const canUseSideBySide =
+    normalizedScreenWidth >= c420uiMinWidth + projectMinWidth;
+
+  if (!canUseSideBySide) {
+    return {
+      c420uiHeader: {
+        top: 0,
+        left: 0,
+        width: normalizedScreenWidth,
+        height: c420uiHeaderHeight,
+      },
+      projectHeader: {
+        top: c420uiHeaderHeight,
+        left: 0,
+        width: normalizedScreenWidth,
+        height: projectHeaderHeight,
+      },
+      workspaceTop: c420uiHeaderHeight + projectHeaderHeight + HEADER_GAP,
+      layoutMode: "stacked",
+    };
+  }
+
+  const c420uiHeaderWidth = Math.min(c420uiMinWidth, normalizedScreenWidth);
+  const projectHeaderWidth = normalizedScreenWidth - c420uiHeaderWidth;
+
+  return {
+    c420uiHeader: {
+      top: 0,
+      left: 0,
+      width: c420uiHeaderWidth,
+      height: c420uiHeaderHeight,
+    },
+    projectHeader: {
+      top: 0,
+      left: c420uiHeaderWidth,
+      width: projectHeaderWidth,
+      height: projectHeaderHeight,
+    },
+    workspaceTop:
+      Math.max(c420uiHeaderHeight, projectHeaderHeight) + HEADER_GAP,
+    layoutMode: "side-by-side",
+  };
+}
 
 // --- Main Application Entry ---
 
@@ -125,17 +216,19 @@ export function createApp(opts: {
 
   // --- UI Layout Calculations ---
 
-  const BRAND_HEADER_HEIGHT = opts.brand.logoLines.length + 2; // logo + version line + spacing
-  const PROJECT_HEADER_HEIGHT = 5; // title + subtitle + version/phase + borders
-  const HEADER_TOTAL_HEIGHT = BRAND_HEADER_HEIGHT + PROJECT_HEADER_HEIGHT;
+  let headerLayout = computeHeaderLayout(
+    Number(screen.width) || process.stdout.columns || 80,
+    opts.brand,
+    opts.project,
+  );
 
   // --- UI Widgets ---
 
-  const brandHeader = blessed.box({
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: BRAND_HEADER_HEIGHT,
+  const c420uiHeader = blessed.box({
+    top: headerLayout.c420uiHeader.top,
+    left: headerLayout.c420uiHeader.left,
+    width: headerLayout.c420uiHeader.width,
+    height: headerLayout.c420uiHeader.height,
     border: "line",
     tags: true,
     content: [
@@ -146,10 +239,10 @@ export function createApp(opts: {
   });
 
   const projectHeader = blessed.box({
-    top: BRAND_HEADER_HEIGHT - 1, // Overlap border
-    left: 0,
-    width: "100%",
-    height: PROJECT_HEADER_HEIGHT,
+    top: headerLayout.projectHeader.top,
+    left: headerLayout.projectHeader.left,
+    width: headerLayout.projectHeader.width,
+    height: headerLayout.projectHeader.height,
     border: "line",
     tags: true,
     content: [
@@ -161,10 +254,10 @@ export function createApp(opts: {
   });
 
   const menu = blessed.list({
-    top: HEADER_TOTAL_HEIGHT - 2,
+    top: headerLayout.workspaceTop,
     left: 0,
     width: "32%",
-    height: `100%-${HEADER_TOTAL_HEIGHT + 1}`,
+    height: 1,
     keys: true,
     mouse: tuiMouseEnabled,
     border: "line",
@@ -174,10 +267,10 @@ export function createApp(opts: {
   });
 
   const diagnostics = blessed.box({
-    top: "70%",
+    top: headerLayout.workspaceTop,
     left: 0,
     width: "32%",
-    height: "30%-1",
+    height: 1,
     border: "line",
     label: "Detected Installations",
     tags: true,
@@ -189,10 +282,10 @@ export function createApp(opts: {
   });
 
   const content = blessed.box({
-    top: HEADER_TOTAL_HEIGHT - 2,
+    top: headerLayout.workspaceTop,
     left: "32%",
     width: "68%",
-    height: "36%",
+    height: 1,
     border: "line",
     label: "Overview",
     tags: true,
@@ -204,10 +297,10 @@ export function createApp(opts: {
   });
 
   const logs = blessed.log({
-    top: `36%+${HEADER_TOTAL_HEIGHT - 2}`,
+    top: headerLayout.workspaceTop,
     left: "32%",
     width: "68%",
-    height: `100%-${HEADER_TOTAL_HEIGHT + 36% + 1}`, // Rough approximation, blessed handles strings
+    height: 1,
     border: "line",
     label: "Logs",
     keys: true,
@@ -227,10 +320,6 @@ export function createApp(opts: {
     tags: true,
     style: c420uiTheme.logs,
   });
-
-  // Adjust logs height and top dynamically to fill the space
-  logs.top = HEADER_TOTAL_HEIGHT + 13; // 13 is roughly 36% of typical height
-  logs.height = `100%-${HEADER_TOTAL_HEIGHT + 13 + 2}`;
 
   const footer = blessed.box({
     bottom: 0,
@@ -254,7 +343,7 @@ export function createApp(opts: {
     },
   });
 
-  screen.append(brandHeader);
+  screen.append(c420uiHeader);
   screen.append(projectHeader);
   screen.append(menu);
   screen.append(diagnostics);
@@ -262,6 +351,81 @@ export function createApp(opts: {
   screen.append(logs);
   screen.append(progress);
   screen.append(footer);
+
+  function applyHeaderBoxLayout(widget: any, boxLayout: HeaderBoxLayout) {
+    widget.top = boxLayout.top;
+    widget.left = boxLayout.left;
+    widget.width = boxLayout.width;
+    widget.height = boxLayout.height;
+  }
+
+  function applyLayout() {
+    const screenWidth = Math.max(
+      1,
+      Number(screen.width) || process.stdout.columns || 80,
+    );
+    const screenHeight = Math.max(
+      1,
+      Number(screen.height) || process.stdout.rows || 24,
+    );
+    headerLayout = computeHeaderLayout(screenWidth, opts.brand, opts.project);
+
+    applyHeaderBoxLayout(c420uiHeader, headerLayout.c420uiHeader);
+    applyHeaderBoxLayout(projectHeader, headerLayout.projectHeader);
+
+    const workspaceTop = headerLayout.workspaceTop;
+    const reservedFooterRows = 2;
+    const workspaceHeight = Math.max(
+      1,
+      screenHeight - workspaceTop - reservedFooterRows,
+    );
+    const leftColumnWidth = Math.min(
+      Math.max(18, Math.floor(screenWidth * 0.32)),
+      Math.max(1, screenWidth - 1),
+    );
+    const rightColumnLeft = leftColumnWidth;
+    const rightColumnWidth = Math.max(1, screenWidth - rightColumnLeft);
+    const menuHeight = Math.max(3, Math.floor(workspaceHeight * 0.68));
+    const diagnosticsTop = workspaceTop + menuHeight;
+    const diagnosticsHeight = Math.max(
+      3,
+      screenHeight - diagnosticsTop - reservedFooterRows,
+    );
+    const contentHeight = Math.max(3, Math.floor(workspaceHeight * 0.36));
+    const logsTop = workspaceTop + contentHeight;
+    const logsHeight = Math.max(3, screenHeight - logsTop - reservedFooterRows);
+
+    menu.top = workspaceTop;
+    menu.left = 0;
+    menu.width = leftColumnWidth;
+    menu.height = menuHeight;
+
+    diagnostics.top = diagnosticsTop;
+    diagnostics.left = 0;
+    diagnostics.width = leftColumnWidth;
+    diagnostics.height = diagnosticsHeight;
+
+    content.top = workspaceTop;
+    content.left = rightColumnLeft;
+    content.width = rightColumnWidth;
+    content.height = contentHeight;
+
+    logs.top = logsTop;
+    logs.left = rightColumnLeft;
+    logs.width = rightColumnWidth;
+    logs.height = logsHeight;
+
+    progress.left = rightColumnLeft;
+    progress.width = rightColumnWidth;
+    footer.width = screenWidth;
+  }
+
+  applyLayout();
+
+  screen.on("resize", () => {
+    applyLayout();
+    screen.render();
+  });
 
   function applyProgramMouseMode() {
     const program = screen.program as

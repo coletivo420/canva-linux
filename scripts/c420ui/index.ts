@@ -38,8 +38,8 @@ try {
       logoLines: [...require("./logo").C420UI_LOGO_LINES],
     },
     project: {
-      projectName: "Canva Linux",
-      projectSubtitle: "Install and Development Workspace",
+      projectName: projectUi.projectName,
+      projectSubtitle: projectUi.projectSubtitle,
       displayVersion: projectUi.displayVersion ?? getPackageVersion(),
       phase: getProjectPhase(),
       status: projectUi.status,

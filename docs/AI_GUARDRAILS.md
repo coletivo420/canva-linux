@@ -72,8 +72,15 @@
   snapshot canvas picking.
 - Do not replace typed `EyeDropperOpenOptions` handling with `any` casts or
   untyped signal extraction.
-- C420UI must render its own brand header above the project/tool header.
 - The C420UI header and project/tool header must remain separate components.
+- C420UI Header and Project Header must be separate fixed components.
+- Side-by-side header layout is preferred on wide terminals.
+- Stacked header layout is allowed only as a narrow-terminal fallback.
+- Workspace must start below the tallest header row.
+- C420UI Header must use only C420UI brand config.
+- Project Header must use only project config.
+- Headers must not be part of FocusZone or Tab navigation.
+- Do not manually move only the Overview panel; always use shared workspaceTop.
 - Project-specific names must not be hardcoded in the C420UI header.
 - C420UI brand metadata must be reusable across projects.
 - Project header metadata must be injected through configuration.

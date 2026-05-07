@@ -30,6 +30,7 @@ Current target:
 - `scripts/run-core-entry.sh check-tui-settings-contract`
 - `scripts/run-core-entry.sh check-tool-logging-contract`
 - `scripts/run-core-entry.sh check-log-selection-contract`
+- `scripts/run-core-entry.sh check-c420ui-header-layout`
 - `scripts/run-core-entry.sh check-action-contract`
 - `scripts/run-core-entry.sh check-release-contract`
 - `npm run validate:project`
