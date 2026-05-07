@@ -62,7 +62,8 @@ cleanup is complete.
 ## Documentation layout
 
 Use [Project tree reference](PROJECT_TREE.md) before moving code across Electron, scripts, C420UI, packaging,
-or generated-output boundaries.
+or generated-output boundaries. Use [C420UI separation roadmap](ROADMAP_C420UI_SEPARATION.md) before
+changing C420UI package, adapter, or extraction boundaries.
 
 Keep release-facing docs linked from `README.md` and `docs/README.md`. Internal
 AI/dev memory belongs under `docs/internal/`; submission notes and historical

@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Added the public C420UI separation roadmap for compatibility-first package and adapter boundary work.
 - Added Secret Service-backed credential storage documentation and validation.
 - Added ephemeral session fallback when Linux credential storage falls back to `basic_text` or when a secure backend cannot provide available encryption.
 - Documented secure Linux credential storage through Secret Service backends plus available safe storage encryption as the requirement for persistent login,

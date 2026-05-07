@@ -30,6 +30,18 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Do not document C420UI as an externally consumable package until the maintainer explicitly requests publication.
 - Keep generated output in `.build/`, `dist/`, `coverage/`, or `repo/`; do not treat it as maintained source.
 
+
+## C420UI separation roadmap
+
+- Read `docs/ROADMAP_C420UI_SEPARATION.md` before moving C420UI code toward packages or adapters.
+- Separate for compatibility first and external extraction later.
+- Do not migrate C420UI to ESM during the current separation phase.
+- Do not publish or promise an NPM package during the current separation phase.
+- Do not remove `scripts/c420ui/` in one large change.
+- Do not change visual behavior as part of package-boundary work.
+- Do not rewrite Action Runner as part of C420UI separation.
+- Do not change versioning as part of C420UI separation.
+
 ## C420UI
 
 - C420UI is the user-facing name of the terminal interface.
