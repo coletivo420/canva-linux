@@ -1,14 +1,16 @@
-# c420ui package source placeholder
+# c420ui package source
 
-This directory is the source placeholder for the future private c420ui package.
-It exists to establish package boundaries before moving runtime logic out of
-Canva Linux tooling.
+This directory is the generic c420ui contract layer for terminal workflows.
+The package owns reusable primitives only:
 
-Current rules:
+- action registration contracts;
+- artifact workflow contracts;
+- project adapter bridge contracts;
+- execution lifecycle, dry-run and planned-action semantics;
+- event, progress, log and exit-code primitives;
+- capability declarations;
+- sudo/root provider interfaces.
 
-- the package is private and must not be published yet;
-- the package stays CommonJS-compatible during this phase;
-- do not import Canva Linux project metadata from here;
-- do not import `scripts/project-ui.json` from here;
-- do not import `scripts/actions.json` from here;
-- move pure c420ui contracts and primitives first, adapter wiring later.
+Project-specific metadata and recipes must live in adapters outside this
+package. The core must not import project registries, application metadata,
+release recipes or shell scripts directly.

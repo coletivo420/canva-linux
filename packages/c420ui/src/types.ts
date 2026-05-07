@@ -25,16 +25,3 @@ export type C420UIConfig = {
   project: C420UIProjectConfig;
   releaseNotes: string;
 };
-
-export type C420UIAction = {
-  id: string;
-  label: string;
-  group: string;
-  section: string;
-  kind: "command" | "planned";
-  description?: string;
-  warning?: string;
-  dangerous?: boolean;
-  planned?: boolean;
-  requiresRoot?: boolean;
-};

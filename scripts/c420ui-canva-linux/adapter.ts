@@ -1,12 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
-import { loadActions, type CanvaAction } from "../core/action-registry";
-import type {
-  C420UIConfig,
-  C420UIProjectConfig,
+import {
+  createC420UIBridge,
+  type C420UIActionDescriptor,
+  type C420UIConfig,
+  type C420UIProjectAdapter,
+  type C420UIProjectConfig,
+  type C420UIWorkflow,
 } from "../../packages/c420ui/src";
 import { c420uiLogoLines } from "../c420ui/logo";
 import { rootLaunchGuardMessage, toolSettingsPath } from "../c420ui/settings";
+import { loadActions, type CanvaAction } from "../core/action-registry";
+import {
+  loadCanvaLinuxArtifactWorkflows,
+  loadCanvaLinuxCapabilities,
+} from "./artifacts";
 
 type ProjectUiJson = {
   displayVersion?: string;
@@ -33,6 +41,25 @@ type AppIdentity = {
   projectPhase?: string;
 };
 
+type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
+  paths: {
+    projectUi: string;
+    packageJson: string;
+    actionsJson: string;
+    appIdentity: string;
+  };
+  loadProjectUi(): ProjectUiJson;
+  loadPackageJson(): PackageJson;
+  loadAppIdentity(): AppIdentity;
+  loadProjectConfig(): C420UIProjectConfig;
+  loadBrandConfig(): C420UIConfig["brand"];
+  getProjectPhase(): string;
+  getSessionLogPath(): string;
+  getToolSettingsPath(): string;
+  rootLaunchGuardMessage(): string;
+  toC420UIConfig(): C420UIConfig;
+};
+
 function readJsonFile<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 }
@@ -55,7 +82,25 @@ function stateHome(): string {
   return path.join(process.env.HOME || ".", ".local/state");
 }
 
-export function createCanvaLinuxC420UIAdapter(rootDir: string) {
+function toC420UIActionDescriptor(action: CanvaAction): C420UIActionDescriptor {
+  const phase = action.group === "install" ? "install" : "development";
+  return { ...action, phase };
+}
+
+function toC420UIWorkflow(action: C420UIActionDescriptor): C420UIWorkflow {
+  return {
+    id: action.id,
+    label: action.label,
+    phase: action.phase ?? "development",
+    actions: [action],
+    requiresRoot: action.requiresRoot,
+    supportsDryRun: action.kind === "command",
+  };
+}
+
+export function createCanvaLinuxC420UIAdapter(
+  rootDir: string,
+): CanvaLinuxC420UIAdapter {
   const resolvedRootDir = path.resolve(rootDir);
   const projectUiPath = path.join(resolvedRootDir, "scripts/project-ui.json");
   const packageJsonPath = path.join(resolvedRootDir, "package.json");
@@ -132,11 +177,31 @@ export function createCanvaLinuxC420UIAdapter(rootDir: string) {
     return rootLaunchGuardMessage(loadProjectUi().projectName);
   }
 
-  function loadCanvaLinuxActions(): CanvaAction[] {
+  function loadCanvaLinuxActions(): C420UIActionDescriptor[] {
     if (!fs.existsSync(actionsJsonPath)) {
       throw new Error(`Missing Canva Linux actions registry: ${actionsJsonPath}`);
     }
-    return loadActions(resolvedRootDir);
+    return loadActions(resolvedRootDir).map(toC420UIActionDescriptor);
+  }
+
+  function loadArtifactWorkflows() {
+    const workflows = loadCanvaLinuxArtifactWorkflows(
+      resolvedRootDir,
+      getPackageVersion(),
+    );
+    const actionsById = new Map(loadCanvaLinuxActions().map((action) => [action.id, action]));
+    return workflows.map((workflow) => ({
+      ...workflow,
+      actions: workflow.actions.length
+        ? workflow.actions
+        : workflow.artifacts
+            .map((artifact) => artifact.actionId ? actionsById.get(artifact.actionId) : undefined)
+            .filter((action): action is C420UIActionDescriptor => Boolean(action)),
+    }));
+  }
+
+  function loadWorkflows(): C420UIWorkflow[] {
+    return loadCanvaLinuxActions().map(toC420UIWorkflow);
   }
 
   function toC420UIConfig(): C420UIConfig {
@@ -150,7 +215,8 @@ export function createCanvaLinuxC420UIAdapter(rootDir: string) {
     };
   }
 
-  return {
+  const adapter: CanvaLinuxC420UIAdapter = {
+    id: "canva-linux",
     rootDir: resolvedRootDir,
     paths: {
       projectUi: projectUiPath,
@@ -158,16 +224,23 @@ export function createCanvaLinuxC420UIAdapter(rootDir: string) {
       actionsJson: actionsJsonPath,
       appIdentity: appIdentityPath,
     },
+    loadProjectInfo: loadProjectConfig,
+    loadConfig: toC420UIConfig,
     loadProjectUi,
     loadPackageJson,
     loadAppIdentity,
     loadProjectConfig,
     loadBrandConfig,
     loadActions: loadCanvaLinuxActions,
+    loadArtifactWorkflows,
+    loadWorkflows,
+    loadCapabilities: loadCanvaLinuxCapabilities,
     getProjectPhase,
     getSessionLogPath,
     getToolSettingsPath,
     rootLaunchGuardMessage: rootLaunchGuardMessageForProject,
     toC420UIConfig,
   };
+
+  return createC420UIBridge(adapter) as CanvaLinuxC420UIAdapter;
 }
