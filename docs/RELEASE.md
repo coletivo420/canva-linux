@@ -7,7 +7,7 @@ Release: `v0.1.4-12`
 ### Public artifacts
 
 - `canva-linux-0.1.4-12-x86_64.AppImage`
-- `canva-linux-0.1.4-12.flatpak`
+- `canva-linux-0.1.4-12-x86_64.flatpak`
 - `canva-linux-0.1.4-12-linux-unpacked-x86_64.tar.gz`
 - `SHA256SUMS`
 
@@ -23,8 +23,9 @@ The GitHub Release workflow must:
 - install dependencies from `package-lock.json`;
 - run the project validation gates;
 - build the runtime, AppImage, Flatpak bundle, and linux-unpacked tarball;
-- generate `SHA256SUMS`;
+- generate `SHA256SUMS` from the real generated file names;
 - fail if expected artifacts are missing;
+- preserve upstream/tooling architecture strings such as `x86_64` or `X86_64`;
 - fail if the tag does not match the public release version;
 - fail if source JavaScript appears outside allowed generated/dependency paths;
 - fail if active docs reference removed interface routing flags.
@@ -62,10 +63,10 @@ Highlights:
 
 Artifacts:
 
-- AppImage
-- Flatpak bundle
-- linux-unpacked tarball
-- SHA256SUMS
+- AppImage, preserving the generated architecture suffix
+- Flatpak bundle, preserving the Flatpak architecture string
+- linux-unpacked tarball, preserving the host/tool architecture string
+- SHA256SUMS, containing the real generated file names
 
 Known limitations:
 

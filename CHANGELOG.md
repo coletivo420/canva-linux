@@ -3,10 +3,26 @@
 ## Unreleased
 
 ### Added
+- Added C420UI log selection/session diagnostics guardrail checks for global
+  mouse release, F5/F6 log paths, session stream warnings and sudo auth popups.
+- Added C420UI branding and project-boundary checks for public naming and
+  reusable UI metadata separation.
 - Added a C420UI header layout guardrail check for separate fixed brand and
   project headers.
 
 ### Changed
+- Updated release artifact generation to preserve upstream/tooling architecture
+  strings in AppImage, Flatpak, tarball and SHA256SUMS entries.
+- Hardened C420UI manual text selection so mouse capture is updated globally
+  while keyboard navigation and F5 log copy remain available.
+- Hardened session logging diagnostics so asynchronously failing session log
+  streams surface a visible C420UI warning instead of silently staying truthy.
+- Restored legacy C420UI action type aliases so TypeScript checks pass during
+  the C420UI naming transition.
+- Consolidated public documentation around the C420UI terminal interface and
+  removed legacy terminal-interface product naming.
+- Moved project-specific C420UI overview metadata and logo content behind the
+  Canva Linux project adapter configuration.
 - Changed the C420UI brand and project headers to render side by side on wide
   terminals, with the workspace starting below the taller header.
 
@@ -24,7 +40,7 @@
   expectations.
 
 ### Changed
-- Renamed TUI to C420UI (Coletivo 420 UI) as a reusable toolkit.
+- Renamed legacy terminal-interface wording to C420UI (Coletivo 420 UI) as a reusable toolkit.
 - Refactored C420UI header into a layered structure with a fixed brand header and a project-specific header.
 - Changed C420UI session logging to append to launcher-created logs instead of
   truncating them.
@@ -271,7 +287,7 @@
 ## [0.1.4.11-dev.44] - 2026-05-04
 
 ### Added
-- Added a Canva-inspired Blessed C420UI theme.
+- Added a Canva-inspired C420UI terminal interface theme.
 - Added visible selected-menu highlighting in the C420UI.
 - Added `Version`, `Phase` and `Version Release Notes` below the logo in the C420UI Overview screen.
 - Added canonical installer identity: `Canva Linux — Install and Development Tool`.
@@ -295,8 +311,8 @@
 ## [0.1.4.11-dev.43] - 2026-05-04
 
 ### Changed
-- Improved README documentation for the default Terminal Assistant workflow.
-- Clarified that `./canva-linux.sh` opens the Blessed C420UI assistant by default when available.
+- Improved README documentation for the default C420UI workflow.
+- Clarified that `./canva-linux.sh` opens the C420UI terminal interface assistant by default when available.
 - Expanded documentation for the Shared Action Registry workflow.
 - Consolidated technical documentation around `scripts/actions.json`, `action-runner.js`, the C420UI assistant and shell fallback.
 - Updated planned package notes to point AUR/PKGBUILD work to a later npm-compatible packaging line.
@@ -351,7 +367,7 @@
 - Added `npm run actions:validate`.
 
 ### Changed
-- Changed Blessed C420UI to load actions from `scripts/actions.json`.
+- Changed C420UI terminal interface to load actions from `scripts/actions.json`.
 - Changed shell CLI actions to resolve through the shared Action Registry.
 
 ### Fixed
@@ -362,7 +378,7 @@
 
 ### Added
 
-- Enabled the Blessed C420UI as the default interactive launcher when available.
+- Enabled the C420UI terminal interface as the default interactive launcher when available.
 - Added automatic npm dependency bootstrap for C420UI startup.
 - Added `scripts/ensure-npm-dependencies.sh` as a shared npm dependency bootstrap entrypoint.
 - Added `blessed` to the required npm dependency preflight list.
@@ -370,8 +386,8 @@
 
 ### Changed
 
-- Changed `./canva-linux.sh` without arguments to open the Blessed C420UI when supported.
-- Changed `--tui` to explicitly force the Blessed C420UI.
+- Changed `./canva-linux.sh` without arguments to open the C420UI terminal interface when supported.
+- Changed `--tui` to explicitly force the C420UI terminal interface.
 - Changed `--no-tui` to explicitly force the shell menu fallback.
 - Changed `npm run check:tui` to use `scripts/run-tui.js`.
 - Improved npm dependency bootstrap messaging for long-running installs.
@@ -397,7 +413,7 @@
 - Added controlled cancellation flow for running C420UI actions.
 - Added process status states for idle, running, cancel-requested, success, failed and canceled.
 - Added scroll shortcuts for the C420UI log panel.
-- Added resize re-render handling for the Blessed C420UI.
+- Added resize re-render handling for the C420UI terminal interface.
 - Added process close metadata handling for exit code and signal.
 
 ### Changed

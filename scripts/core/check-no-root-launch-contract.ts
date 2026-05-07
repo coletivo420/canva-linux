@@ -30,8 +30,8 @@ export function main(): number {
   if (!runTui.includes("process.getuid") || !tuiIndex.includes("process.getuid")) {
     failures.push("C420UI bootstrap must include a secondary root-launch guard");
   }
-  if (!runTui.includes("ROOT_LAUNCH_GUARD_MESSAGE")) {
-    failures.push("scripts/run-c420ui.ts: must reuse the root-launch guard message");
+  if (!runTui.includes("rootLaunchGuardMessage")) {
+    failures.push("scripts/run-c420ui.ts: must reuse the root-launch guard message builder");
   }
 
   const docsToCheck = ["README.md", "docs/CLI.md", "docs/TECHNICAL.md"];

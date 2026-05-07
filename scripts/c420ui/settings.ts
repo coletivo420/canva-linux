@@ -1,13 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export const ROOT_LAUNCH_GUARD_MESSAGE = [
-  "Do not run Canva Linux Install and Development Tool with sudo or as root.",
-  "",
-  "Run this tool as your regular user. When an operation needs administrator privileges, Canva Linux will ask for authentication only for that specific action.",
-  "",
-  "Running the whole tool as root may break file ownership, user sessions, build artifacts and desktop integration.",
-].join("\n");
+export function rootLaunchGuardMessage(projectName: string): string {
+  const toolName = `${projectName} Install and Development Tool`;
+
+  return [
+    `Do not run ${toolName} with sudo or as root.`,
+    "",
+    `Run this tool as your regular user. When an operation needs administrator privileges, ${projectName} will ask for authentication only for that specific action.`,
+    "",
+    "Running the whole tool as root may break file ownership, user sessions, build artifacts and desktop integration.",
+  ].join("\n");
+}
 
 export type ToolSettings = {
   tool: {
@@ -33,8 +37,8 @@ function configHome(): string {
   return path.join(process.env.HOME || ".", ".config");
 }
 
-export function toolSettingsPath(): string {
-  return path.join(configHome(), "canva-linux", "tool-settings.json");
+export function toolSettingsPath(stateDirectoryName: string): string {
+  return path.join(configHome(), stateDirectoryName, "tool-settings.json");
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -61,11 +65,11 @@ function normalizeSettings(raw: unknown): ToolSettings {
   };
 }
 
-export function loadToolSettings(): ToolSettings {
-  const settingsPath = toolSettingsPath();
+export function loadToolSettings(stateDirectoryName: string): ToolSettings {
+  const settingsPath = toolSettingsPath(stateDirectoryName);
   if (!fs.existsSync(settingsPath)) {
     try {
-      saveToolSettings(DEFAULT_TOOL_SETTINGS);
+      saveToolSettings(DEFAULT_TOOL_SETTINGS, stateDirectoryName);
     } catch {
       // The C420UI can still run with defaults when the config path is unavailable.
     }
@@ -80,8 +84,11 @@ export function loadToolSettings(): ToolSettings {
   }
 }
 
-export function saveToolSettings(settings: ToolSettings): void {
-  const settingsPath = toolSettingsPath();
+export function saveToolSettings(
+  settings: ToolSettings,
+  stateDirectoryName: string,
+): void {
+  const settingsPath = toolSettingsPath(stateDirectoryName);
   fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
   fs.writeFileSync(
     settingsPath,

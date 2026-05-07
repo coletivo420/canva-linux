@@ -1,7 +1,7 @@
-import { createApp } from "./app";
+import { createApp, type C420UIProjectConfig } from "./app";
 import path from "node:path";
 import projectUi from "../project-ui.json";
-import { ROOT_LAUNCH_GUARD_MESSAGE } from "./settings";
+import { rootLaunchGuardMessage } from "./settings";
 
 function getPackageVersion(): string {
   const pkg = require(path.join(process.cwd(), "package.json")) as {
@@ -12,7 +12,7 @@ function getPackageVersion(): string {
 
 if (process.argv.includes("--help")) {
   console.log(
-    "Canva Linux C420UI (experimental)\n\nUsage:\n  npm run tui\n  ./canva-linux.sh",
+    `${projectUi.projectName} C420UI terminal interface\n\nUsage:\n  npm run c420ui\n  ${projectUi.launcherCommand}`,
   );
   process.exit(0);
 }
@@ -25,7 +25,7 @@ function getProjectPhase(): string {
 
 try {
   if (typeof process.getuid === "function" && process.getuid() === 0) {
-    console.error(ROOT_LAUNCH_GUARD_MESSAGE);
+    console.error(rootLaunchGuardMessage(projectUi.projectName));
     process.exit(1);
   }
 
@@ -43,7 +43,13 @@ try {
       displayVersion: projectUi.displayVersion ?? getPackageVersion(),
       phase: getProjectPhase(),
       status: projectUi.status,
-    },
+      logoLines: [...projectUi.logoLines],
+      appId: projectUi.appId,
+      executableName: projectUi.executableName,
+      repositoryUrl: projectUi.repositoryUrl,
+      launcherCommand: projectUi.launcherCommand,
+      stateDirectoryName: projectUi.stateDirectoryName,
+    } satisfies C420UIProjectConfig,
     releaseNotes: projectUi.versionReleaseNotes,
   });
 

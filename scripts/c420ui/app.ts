@@ -1,6 +1,5 @@
 import blessed from "blessed";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { C420UI_LOGO_LINES, CANVA_LOGO_LINES } from "./logo";
 import { getActionsByGroup, type C420UIAction } from "./action-registry";
 import {
   confirmDialog,
@@ -29,12 +28,26 @@ export type C420UIBrandConfig = {
   logoLines: string[];
 };
 
-export type C420UIProjectHeaderConfig = {
+export type C420UIProjectConfig = {
   projectName: string;
   projectSubtitle: string;
   displayVersion: string;
   phase?: string;
   status?: string;
+  logoLines: string[];
+  appId: string;
+  executableName: string;
+  repositoryUrl: string;
+  launcherCommand: string;
+  stateDirectoryName: string;
+};
+
+export type C420UIConfig = {
+  rootDir: string;
+  title: string;
+  brand: C420UIBrandConfig;
+  project: C420UIProjectConfig;
+  releaseNotes: string;
 };
 
 type View =
@@ -97,12 +110,6 @@ const HEADER_BOX_HORIZONTAL_PADDING = 4;
 const C420UI_HEADER_MIN_WIDTH = 28;
 const PROJECT_HEADER_MIN_WIDTH = 40;
 
-const BRAND_CONFIG: C420UIBrandConfig = {
-  name: "C420UI",
-  version: "0.1",
-  logoLines: [...C420UI_LOGO_LINES],
-};
-
 function longestLineLength(lines: string[]): number {
   return Math.max(0, ...lines.map((line) => line.length));
 }
@@ -110,7 +117,7 @@ function longestLineLength(lines: string[]): number {
 export function computeHeaderLayout(
   screenWidth: number,
   brandConfig: C420UIBrandConfig,
-  projectConfig: C420UIProjectHeaderConfig,
+  projectConfig: C420UIProjectConfig,
 ): HeaderLayout {
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
@@ -178,35 +185,31 @@ export function computeHeaderLayout(
 
 // --- Main Application Entry ---
 
-export function createApp(opts: {
-  rootDir: string;
-  title: string;
-  brand: C420UIBrandConfig;
-  project: C420UIProjectHeaderConfig;
-  releaseNotes: string;
-}) {
+export function createApp(opts: C420UIConfig) {
   // --- Initialization & State ---
 
-  let toolSettings = loadToolSettings();
-  const settingsPath = toolSettingsPath();
-  const terminalTextSelectionModeActive =
+  let toolSettings = loadToolSettings(opts.project.stateDirectoryName);
+  const settingsPath = toolSettingsPath(opts.project.stateDirectoryName);
+  let terminalTextSelectionModeActive =
     toolSettings.tool.terminalTextSelectionMode;
-  const tuiMouseEnabled = !terminalTextSelectionModeActive;
+  let tuiMouseEnabled = !terminalTextSelectionModeActive;
 
-  const footerContent = [
-    terminalTextSelectionModeActive
-      ? "{bold}Text selection mode enabled{/bold}"
-      : "",
-    "{bold}Tab{/bold} Focus",
-    "{bold}Enter{/bold} Select",
-    "{bold}Space{/bold} Toggle",
-    "{bold}F5{/bold} Copy Logs",
-    "{bold}F6{/bold} Plain Logs",
-    "{bold}?{/bold} Help",
-    "{bold}q{/bold} Quit",
-  ]
-    .filter(Boolean)
-    .join(" | ");
+  function footerContent() {
+    return [
+      terminalTextSelectionModeActive
+        ? "{bold}Text selection mode enabled{/bold}"
+        : "",
+      "{bold}Tab{/bold} Focus",
+      "{bold}Enter{/bold} Select",
+      "{bold}Space{/bold} Toggle",
+      "{bold}F5{/bold} Copy Logs",
+      "{bold}F6{/bold} Plain Logs",
+      "{bold}?{/bold} Help",
+      "{bold}q{/bold} Quit",
+    ]
+      .filter(Boolean)
+      .join(" | ");
+  }
 
   const screen = blessed.screen({
     smartCSR: true,
@@ -326,7 +329,7 @@ export function createApp(opts: {
     height: 1,
     width: "100%",
     tags: true,
-    content: footerContent,
+    content: footerContent(),
     style: c420uiTheme.footer,
   });
 
@@ -441,7 +444,23 @@ export function createApp(opts: {
     program?.enableMouse?.();
   }
 
-  applyProgramMouseMode();
+  function setWidgetMouseEnabled(widget: any, enabled: boolean) {
+    widget.options = { ...(widget.options ?? {}), mouse: enabled };
+    widget.mouse = enabled;
+  }
+
+  function applyGlobalMouseMode() {
+    terminalTextSelectionModeActive =
+      toolSettings.tool.terminalTextSelectionMode;
+    tuiMouseEnabled = !terminalTextSelectionModeActive;
+    applyProgramMouseMode();
+    for (const widget of [menu, diagnostics, content, logs]) {
+      setWidgetMouseEnabled(widget, tuiMouseEnabled);
+    }
+    footer.setContent(footerContent());
+  }
+
+  applyGlobalMouseMode();
 
   // --- Menu and View Items ---
 
@@ -466,7 +485,7 @@ export function createApp(opts: {
     {
       kind: "toggle",
       key: "terminalTextSelectionMode",
-      label: "Prefer native terminal text selection on next C420UI start",
+      label: "Manual text selection mode",
     },
     {
       kind: "section",
@@ -507,7 +526,7 @@ export function createApp(opts: {
     path.join(
       process.env.XDG_STATE_HOME ||
         path.join(process.env.HOME || ".", ".local/state"),
-      "canva-linux", // Still using this for path consistency in this project
+      opts.project.stateDirectoryName,
       "tool-session.log",
     );
 
@@ -523,15 +542,46 @@ export function createApp(opts: {
     }
   }
 
+  let sessionStreamOpenError: string | null = null;
+  let sessionLogUnavailableWarningShown = false;
+
+  function warnSessionLogUnavailableOnce() {
+    if (sessionLogUnavailableWarningShown) {
+      return;
+    }
+
+    sessionLogUnavailableWarningShown = true;
+    const reason = sessionStreamOpenError ? ` (${sessionStreamOpenError})` : "";
+    const warning = `[warn] Session log stream is unavailable: ${sessionLogPath}${reason}`;
+
+    displayLogLine(warning, "system");
+
+    try {
+      // Use console.warn only as a fallback. Do not call appendLogText here,
+      // because appendLogText calls writeSession and would recurse.
+      console.warn(warning);
+    } catch {
+      // Ignore fallback console failures.
+    }
+  }
+
+  function recordSessionStreamError(error: unknown) {
+    sessionStreamOpenError =
+      error instanceof Error ? error.message : String(error);
+    warnSessionLogUnavailableOnce();
+  }
+
   function openSessionStream(logPath: string): Writable | null {
     try {
       fs.mkdirSync(path.dirname(logPath), { recursive: true });
       const stream = fs.createWriteStream(logPath, { flags: "a" });
-      stream.on("error", () => {
+      stream.on("error", (error) => {
+        recordSessionStreamError(error);
         // Keep the C420UI alive when the configured state path becomes unavailable.
       });
       return stream;
-    } catch {
+    } catch (error) {
+      recordSessionStreamError(error);
       return null;
     }
   }
@@ -540,7 +590,16 @@ export function createApp(opts: {
   const sessionStream = openSessionStream(sessionLogPath);
 
   const writeSession = (line: string) => {
-    sessionStream?.write(`${line}\n`);
+    if (!sessionStream || sessionStreamOpenError) {
+      warnSessionLogUnavailableOnce();
+      return;
+    }
+
+    try {
+      sessionStream.write(`${line}\n`);
+    } catch (error) {
+      recordSessionStreamError(error);
+    }
   };
 
   writeSession("[mode] c420ui");
@@ -1140,8 +1199,8 @@ export function createApp(opts: {
       } else {
         details.push(
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Behavior{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  When enabled before startup, terminal text selection mode disables C420UI mouse handling for the session.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Changes to this setting take effect the next time the C420UI starts. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode disables C420UI mouse capture globally and keeps keyboard navigation active.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Changes take effect immediately and are saved for the next C420UI start. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F6 opens a plain logs view with the session log path for manual selection fallback.{/${c420uiTheme.colors.descriptionText}-fg}`,
         );
@@ -1151,7 +1210,7 @@ export function createApp(opts: {
         `{${c420uiTheme.colors.infoItemTitle}-fg}Section:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
         `  {${c420uiTheme.colors.infoText}-fg}${selected.label}{/${c420uiTheme.colors.infoText}-fg}`,
         "",
-        `{${c420uiTheme.colors.descriptionText}-fg}Tool settings affect this installer/development interface. Final build settings will apply to the packaged Canva Linux app in a later phase.{/${c420uiTheme.colors.descriptionText}-fg}`,
+        `{${c420uiTheme.colors.descriptionText}-fg}Tool settings affect this installer/development interface. Final build settings will apply to the packaged ${opts.project.projectName} app in a later phase.{/${c420uiTheme.colors.descriptionText}-fg}`,
       );
     } else {
       details.push(
@@ -1164,7 +1223,7 @@ export function createApp(opts: {
 
   function persistSettings(reason: string) {
     try {
-      saveToolSettings(toolSettings);
+      saveToolSettings(toolSettings, opts.project.stateDirectoryName);
     } catch (error) {
       appendLogText(
         `[error] Settings could not be saved: ${error instanceof Error ? error.message : String(error)}\n`,
@@ -1172,6 +1231,7 @@ export function createApp(opts: {
       );
       return;
     }
+    applyGlobalMouseMode();
     applyLogPanelLabel();
     if (currentView === "settings") {
       setSettingsMenuItems();
@@ -1227,7 +1287,7 @@ export function createApp(opts: {
       contentLabelText = "Overview";
       content.setContent(
         [
-          `{${c420uiTheme.colors.logo}-fg}${CANVA_LOGO_LINES.join("\n")}{/${c420uiTheme.colors.logo}-fg}`,
+          `{${c420uiTheme.colors.logo}-fg}${opts.project.logoLines.join("\n")}{/${c420uiTheme.colors.logo}-fg}`,
           "",
           "Version:",
           `  {${c420uiTheme.colors.version}-fg}${opts.project.displayVersion}{/${c420uiTheme.colors.version}-fg}`,
@@ -1239,9 +1299,9 @@ export function createApp(opts: {
           `  ${opts.releaseNotes}`,
           "",
           "Package / Version Information:",
-          "  App ID: io.github.coletivo420.canva-linux",
-          "  Executable: canva-linux",
-          "  Repository: https://github.com/coletivo420/canva-linux",
+          `  App ID: ${opts.project.appId}`,
+          `  Executable: ${opts.project.executableName}`,
+          `  Repository: ${opts.project.repositoryUrl}`,
         ].join("\n"),
       );
       applyFocusStyles();
@@ -1277,12 +1337,13 @@ export function createApp(opts: {
           `{${c420uiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F6             View plain logs and session log path{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Terminal text selection can be enabled in Application Settings. It disables C420UI mouse capture globally on the next start, but some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode can be enabled in Application Settings. It disables C420UI mouse capture globally, keeps keyboard navigation active, and some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Launcher{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  ./canva-linux.sh opens the C420UI.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  ${opts.project.launcherCommand} opens the C420UI.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Any direct action flag runs CLI mode instead.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Do not run the Tool with sudo or as root; privileged actions ask for administrator authentication only when needed.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Root authentication failures are shown in a centered popup and the action is not started.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Settings{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Tool settings file: ${settingsPath}{/${c420uiTheme.colors.descriptionText}-fg}`,

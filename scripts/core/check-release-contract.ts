@@ -115,20 +115,27 @@ export function main(): number {
     "PROJECT_PHASE",
     "./scripts/build-appimage.sh",
     "./scripts/build-flatpak-bundle.sh",
-    "canva-linux-${RELEASE_VERSION}-x86_64.AppImage",
-    "canva-linux-${RELEASE_VERSION}.flatpak",
-    "canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz",
+    "appimage_paths=(dist/canva-linux-${RELEASE_VERSION}-*.AppImage)",
+    "flatpak_paths=(dist/canva-linux-${RELEASE_VERSION}-*.flatpak)",
+    "linux_arch=\"$(uname -m)\"",
+    "tarball_path=\"dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-${linux_arch}.tar.gz\"",
+    "sha256sum \"${release_assets[@]}\" > SHA256SUMS",
     "dist/SHA256SUMS",
     "softprops/action-gh-release@v2",
     "body_path: docs/RELEASE.md",
+    "dist/canva-linux-${{ env.RELEASE_VERSION }}-*.AppImage",
+    "dist/canva-linux-${{ env.RELEASE_VERSION }}-*.flatpak",
+    "dist/canva-linux-${{ env.RELEASE_VERSION }}-linux-unpacked-*.tar.gz",
   ]) {
     assertIncludes(failures, workflowPath, workflow, expected);
   }
 
   for (const expected of [
     `canva-linux-${releaseVersion}-x86_64.AppImage`,
-    `canva-linux-${releaseVersion}.flatpak`,
+    `canva-linux-${releaseVersion}-x86_64.flatpak`,
     `canva-linux-${releaseVersion}-linux-unpacked-x86_64.tar.gz`,
+    "preserve upstream/tooling architecture strings",
+    "real generated file names",
     "SHA256SUMS",
   ]) {
     assertIncludes(failures, releaseDocsPath, releaseDocs, expected);
@@ -144,10 +151,24 @@ export function main(): number {
     );
   }
 
-  for (const forbidden of ["linux-unpacked-x64", "-x64.AppImage"]) {
-    if (releaseNamingText.includes(forbidden)) {
+  const releaseValidationText = [
+    workflow,
+    releaseDocs,
+    read(rootDir, "scripts/build-appimage.sh"),
+    read(rootDir, "scripts/build-flatpak-bundle.sh"),
+    read(rootDir, "scripts/package-guidance-common.sh"),
+  ].join("\n");
+
+  for (const forbidden of [
+    "linux-unpacked-x64",
+    "-x64.AppImage",
+    "-x64.flatpak",
+    "ARCH=x64",
+    "ARCH=\"x64\"",
+  ]) {
+    if (releaseValidationText.includes(forbidden)) {
       failures.push(
-        `release naming must use npm version and x86_64 architecture, found ${forbidden}`,
+        `release naming must preserve generated architecture names, found ${forbidden}`,
       );
     }
   }
@@ -157,6 +178,42 @@ export function main(): number {
   }
 
   const buildAppImage = read(rootDir, "scripts/build-appimage.sh");
+  if (
+    buildAppImage.includes("APPIMAGE_ARCH=") ||
+    buildAppImage.includes("-x86_64.AppImage") ||
+    buildAppImage.includes("-X86_64.AppImage")
+  ) {
+    failures.push(
+      "scripts/build-appimage.sh: AppImage architecture must be discovered from the generated artifact name",
+    );
+  }
+  assertIncludes(
+    failures,
+    "scripts/build-appimage.sh",
+    buildAppImage,
+    "appimage_candidates=(",
+  );
+  assertIncludes(
+    failures,
+    "scripts/build-appimage.sh",
+    buildAppImage,
+    'basename "${APPIMAGE_PATH}"',
+  );
+
+  const buildFlatpakBundle = read(rootDir, "scripts/build-flatpak-bundle.sh");
+  assertIncludes(
+    failures,
+    "scripts/build-flatpak-bundle.sh",
+    buildFlatpakBundle,
+    'FLATPAK_ARCH="$(flatpak --default-arch)"',
+  );
+  assertIncludes(
+    failures,
+    "scripts/build-flatpak-bundle.sh",
+    buildFlatpakBundle,
+    "canva-linux-${VERSION}-${FLATPAK_ARCH}.flatpak",
+  );
+
   if (
     buildAppImage.includes("> SHA256SUMS") ||
     buildAppImage.includes("/SHA256SUMS")

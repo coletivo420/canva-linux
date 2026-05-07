@@ -87,34 +87,59 @@ jobs:
       - name: Create release artifacts
         run: |
           mkdir -p dist
+          shopt -s nullglob
 
-          appimage_path="dist/canva-linux-${RELEASE_VERSION}-x86_64.AppImage"
-          flatpak_path="dist/canva-linux-${RELEASE_VERSION}.flatpak"
+          appimage_paths=(dist/canva-linux-${RELEASE_VERSION}-*.AppImage)
+          flatpak_paths=(dist/canva-linux-${RELEASE_VERSION}-*.flatpak)
           linux_unpacked="dist/linux-unpacked"
-          tarball_path="dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz"
+          linux_arch="$(uname -m)"
+          tarball_path="dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-${linux_arch}.tar.gz"
 
-          test -s "$appimage_path"
-          test -s "$flatpak_path"
+          if [[ "${#appimage_paths[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one AppImage artifact, found ${#appimage_paths[@]}"
+            exit 1
+          fi
+          if [[ "${#flatpak_paths[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one Flatpak artifact, found ${#flatpak_paths[@]}"
+            exit 1
+          fi
+
+          test -s "${appimage_paths[0]}"
+          test -s "${flatpak_paths[0]}"
           test -d "$linux_unpacked"
 
           tar -C dist -czf "$tarball_path" linux-unpacked
 
-          cd dist
-          sha256sum \
-            "canva-linux-${RELEASE_VERSION}-x86_64.AppImage" \
-            "canva-linux-${RELEASE_VERSION}.flatpak" \
-            "canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz" \
-            > SHA256SUMS
+          release_assets=(
+            "$(basename "${appimage_paths[0]}")"
+            "$(basename "${flatpak_paths[0]}")"
+            "$(basename "$tarball_path")"
+          )
+
+          (
+            cd dist
+            sha256sum "${release_assets[@]}" > SHA256SUMS
+          )
 
       - name: Verify expected artifacts
         run: |
-          test -s "dist/canva-linux-${RELEASE_VERSION}-x86_64.AppImage"
-          test -s "dist/canva-linux-${RELEASE_VERSION}.flatpak"
-          test -s "dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz"
+          shopt -s nullglob
+          release_assets=(
+            dist/canva-linux-${RELEASE_VERSION}-*.AppImage
+            dist/canva-linux-${RELEASE_VERSION}-*.flatpak
+            dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-*.tar.gz
+          )
+
+          if [[ "${#release_assets[@]}" -ne 3 ]]; then
+            echo "::error::Expected exactly three release artifacts, found ${#release_assets[@]}"
+            exit 1
+          fi
+
           test -s "dist/SHA256SUMS"
-          grep -q "canva-linux-${RELEASE_VERSION}-x86_64.AppImage" dist/SHA256SUMS
-          grep -q "canva-linux-${RELEASE_VERSION}.flatpak" dist/SHA256SUMS
-          grep -q "canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz" dist/SHA256SUMS
+          for asset in "${release_assets[@]}"; do
+            test -s "$asset"
+            grep -Fq "$(basename "$asset")" dist/SHA256SUMS
+          done
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -124,7 +149,7 @@ jobs:
           body_path: docs/RELEASE.md
           fail_on_unmatched_files: true
           files: |
-            dist/canva-linux-${{ env.RELEASE_VERSION }}-x86_64.AppImage
-            dist/canva-linux-${{ env.RELEASE_VERSION }}.flatpak
-            dist/canva-linux-${{ env.RELEASE_VERSION }}-linux-unpacked-x86_64.tar.gz
+            dist/canva-linux-${{ env.RELEASE_VERSION }}-*.AppImage
+            dist/canva-linux-${{ env.RELEASE_VERSION }}-*.flatpak
+            dist/canva-linux-${{ env.RELEASE_VERSION }}-linux-unpacked-*.tar.gz
             dist/SHA256SUMS

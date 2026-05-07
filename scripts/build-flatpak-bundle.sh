@@ -43,9 +43,10 @@ validate_package_version_semver
 
 VERSION="$(detect_package_version)"
 DIST_DIR="dist"
-BUNDLE_PATH="${DIST_DIR}/canva-linux-${VERSION}.flatpak"
+FLATPAK_ARCH="$(flatpak --default-arch)"
+BUNDLE_PATH="${DIST_DIR}/canva-linux-${VERSION}-${FLATPAK_ARCH}.flatpak"
 
-ui_info "Generating Flatpak bundle for version ${VERSION}"
+ui_info "Generating Flatpak bundle for version ${VERSION} (${FLATPAK_ARCH})"
 
 repo_has_app_ref() {
   [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/io\.github\.coletivo420\.canva-linux/'
@@ -68,6 +69,7 @@ flatpak build-bundle \
   repo \
   "$BUNDLE_PATH" \
   io.github.coletivo420.canva-linux \
+  --arch="${FLATPAK_ARCH}" \
   --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 
 if [[ ! -s "$BUNDLE_PATH" ]]; then

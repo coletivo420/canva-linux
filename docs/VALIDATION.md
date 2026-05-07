@@ -13,8 +13,8 @@ Current target:
 - `npm run check:no-source-javascript`
 - `npm run check:source-integrity`
   - validates formatted package JSON, shell heredocs, and readable shell/docs shapes
-- `npm run build:tui`
-- `npm run check:tui`
+- `npm run build:c420ui`
+- `npm run check:c420ui`
 - `npm run actions:validate`
 - `npm run lint`
 - `npm run typecheck`
@@ -27,10 +27,12 @@ Current target:
 - `scripts/run-core-entry.sh check-no-shell-menu`
 - `scripts/run-core-entry.sh check-sudo-contract`
 - `scripts/run-core-entry.sh check-no-root-launch-contract`
-- `scripts/run-core-entry.sh check-tui-settings-contract`
+- `scripts/run-core-entry.sh check-c420ui-settings-contract`
 - `scripts/run-core-entry.sh check-tool-logging-contract`
 - `scripts/run-core-entry.sh check-log-selection-contract`
 - `scripts/run-core-entry.sh check-c420ui-header-layout`
+- `scripts/run-core-entry.sh check-c420ui-branding`
+- `scripts/run-core-entry.sh check-c420ui-project-boundary`
 - `scripts/run-core-entry.sh check-action-contract`
 - `scripts/run-core-entry.sh check-release-contract`
 - `npm run validate:project`
@@ -69,5 +71,7 @@ Current target:
 - Confirm settings checkboxes show enabled and disabled state clearly.
 - Confirm modal dialogs block Tab focus from returning to the main C420UI.
 - Confirm running actions still allow Tab, focused-panel scrolling and F5 log copy while blocking new action execution.
+- Confirm release artifact names preserve the generated architecture string (`x86_64`/`X86_64` when emitted) and never rewrite it to `x64`.
+- Confirm `SHA256SUMS` contains the real generated AppImage, Flatpak and tarball names.
 - Confirm `REVIEW.md` still starts with `# Review Checklist`.
 - Confirm new Node.js scripts, tests, and supported configs are authored in TypeScript, with shell reserved for host-operation glue.

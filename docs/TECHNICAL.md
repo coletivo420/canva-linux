@@ -31,7 +31,7 @@ Canva Linux workflow actions are split into four layers:
 1. `scripts/actions.json` (canonical registry)
 2. `scripts/core/action-runner.ts`
    - action resolution/execution, compiled to `.build/scripts/core/action-runner.js`
-3. Interfaces (Blessed C420UI and direct CLI flags)
+3. Interfaces (C420UI workspace and direct CLI flags)
 4. Backend scripts under `scripts/`
 
 All maintained Node.js source code is TypeScript. Project-generated JavaScript
@@ -41,13 +41,13 @@ not maintained source locations. Shell remains shell for host operations such as
 launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node
 validation glue.
 
-## Terminal Assistant / Blessed C420UI
+## C420UI terminal interface
 
-`./canva-linux.sh` opens the Blessed C420UI by default when stdin/stdout are TTY,
+`./canva-linux.sh` opens the C420UI terminal interface by default when stdin/stdout are TTY,
 `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection
 flags and environment variables have been removed.
 
-The Tool must run as a regular user. `canva-linux.sh`, `scripts/run-tui.ts`, and
+The Tool must run as a regular user. `canva-linux.sh`, `scripts/run-c420ui.ts`, and
 the C420UI entrypoint refuse root execution before build, action, or C420UI startup.
 System-wide operations request administrator authentication only for the action
 that needs it.
@@ -67,14 +67,14 @@ Action logs cover stdout/stderr from install, build, validation, uninstall,
 purge and maintenance operations. The launcher creates/truncates the session log
 once, and the C420UI appends to it so launcher startup lines are preserved.
 
-Terminal text selection mode is resolved before Blessed widgets are constructed.
-When enabled before startup, it disables C420UI mouse handling globally for the
-session, including the Blessed screen program when supported, so the terminal
-can perform native text selection. Changes take effect on the next C420UI start.
-Keyboard scrolling with PageUp, PageDown, Home and End remains available, F5
-still copies the visible log history, and F6 opens a plain logs view with the
-session log path as a manual-selection fallback. Some terminals may still
-require Shift while selecting text.
+Terminal text selection mode disables C420UI mouse capture globally, including
+menu, diagnostics, content, logs, and the Blessed screen program when supported,
+so the terminal can perform native text selection while keyboard navigation
+remains active. Changes take effect immediately and are saved for the next C420UI
+start. Keyboard scrolling with PageUp, PageDown, Home and End remains available,
+F5 still copies the visible log history, and F6 opens a plain logs view with the
+session log path as a manual-selection fallback. Some terminals may still require
+Shift while selecting text.
 
 The C420UI keeps an explicit FocusZone model for menu, diagnostics, action panel
 and logs. Tab and Shift+Tab move between these blocks, the active block uses a
@@ -110,7 +110,7 @@ config, or Flathub helper paths fail validation.
 
 ## Terminal theme
 
-The Blessed C420UI and direct CLI output use a shared Canva-inspired visual language.
+The C420UI terminal interface and direct CLI output use a shared Canva-inspired visual language.
 
 Reference palette:
 

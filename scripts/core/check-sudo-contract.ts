@@ -20,6 +20,8 @@ function findCheckedFiles(dir: string): string[] {
 
 function isAllowedSudoText(line: string): boolean {
   return [
+    "with sudo or as root.",
+    "Install and Development Tool with sudo or as root.",
     "Do not run Canva Linux Install and Development Tool with sudo or as root.",
     "Do not run this tool with sudo or as root.",
     "Do not run the Tool with sudo or as root",
@@ -62,14 +64,15 @@ export function main(): number {
     );
   }
 
-  if (!/password="\$\(cat\)"/.test(sudoCommon)) {
+  if (!/password\s*=\s*"\$\(cat\)"/.test(sudoCommon)) {
     failures.push("scripts/sudo-common.sh: --validate-stdin must read stdin");
   }
 
   if (
     !tuiApp.includes("formatAuthFailureMessage") ||
     !tuiApp.includes("await errorDialog(") ||
-    !tuiApp.includes("Administrator authentication failed")
+    !tuiApp.includes("Administrator authentication failed") ||
+    !tuiApp.includes('setProgressError("root authentication failed")')
   ) {
     failures.push(
       "scripts/c420ui/app.ts: sudo auth failures must be shown in a popup",

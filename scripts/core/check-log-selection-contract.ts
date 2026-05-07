@@ -57,10 +57,10 @@ export function main(): number {
   }
   if (
     !app.includes("terminalTextSelectionModeActive") ||
-    !app.includes("const tuiMouseEnabled = !terminalTextSelectionModeActive")
+    !app.includes("let tuiMouseEnabled = !terminalTextSelectionModeActive")
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: terminal selection mode must be resolved before Blessed widgets are constructed",
+      "scripts/c420ui/app.ts: terminal selection mode must initialize mouse state before Blessed widgets are constructed",
     );
   }
   const mouseControlledWidgetCount =
@@ -77,6 +77,16 @@ export function main(): number {
   ) {
     failures.push(
       "scripts/c420ui/app.ts: terminal selection mode must disable and restore screen program mouse handling",
+    );
+  }
+  if (
+    !app.includes("function applyGlobalMouseMode") ||
+    !app.includes("function setWidgetMouseEnabled") ||
+    !app.includes("for (const widget of [menu, diagnostics, content, logs])") ||
+    !app.includes("footer.setContent(footerContent())")
+  ) {
+    failures.push(
+      "scripts/c420ui/app.ts: terminal selection mode must apply global mouse state to menu, diagnostics, content, logs and footer",
     );
   }
   if (!app.includes("Logs - Text selection mode enabled")) {
@@ -97,12 +107,14 @@ export function main(): number {
     }
   }
   if (
-    !cliDocs.includes("terminal text selection") ||
+    !(cliDocs.includes("terminal text selection") ||
+      cliDocs.includes("Manual text selection")) ||
     !technicalDocs.includes("Terminal text selection mode") ||
-    !normalizedCliDocs.includes("next C420UI start") ||
-    !normalizedTechnicalDocs.includes("next C420UI start") ||
+    !normalizedCliDocs.includes("Changes take effect immediately") ||
+    !normalizedTechnicalDocs.includes("Changes take effect immediately") ||
     !normalizedCliDocs.includes("F6") ||
     !normalizedTechnicalDocs.includes("F6") ||
+    !normalizedTechnicalDocs.includes("keyboard navigation remains active") ||
     !normalizedTechnicalDocs
       .toLowerCase()
       .includes("some terminals may still require shift") ||
