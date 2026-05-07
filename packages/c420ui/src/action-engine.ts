@@ -2,6 +2,7 @@ import {
   assertC420UIActionContract,
   getC420UIActionCliFlags,
   isC420UIPlannedAction,
+  requiresC420UIActionConfirmation,
   type c420uiAction,
 } from "./actions";
 import type {
@@ -114,6 +115,14 @@ export function createC420UIActionEngine(
         code: c420uiExitCodes.plannedAction,
         status: "planned",
         message: action.description,
+      };
+    }
+
+    if (requiresC420UIActionConfirmation(action) && !yes) {
+      return {
+        code: c420uiExitCodes.generalError,
+        status: "failed",
+        message: `[error] Action requires confirmation: ${action.label}\n[info] Re-run with --yes after confirming intent.`,
       };
     }
 

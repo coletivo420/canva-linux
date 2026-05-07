@@ -76,3 +76,12 @@
 
 Detailed development-cycle history was archived in:
 - docs/internal/CHANGELOG_DEVELOPMENT_HISTORY.md
+
+## 0.1.4-12 — Commit 13 direct CLI bridge migration
+
+- Migrated direct launcher actions to the c420ui CLI bridge and reusable c420ui
+  Action Engine while preserving the legacy Action Runner for compatibility checks.
+- Added direct-action validation so multiple direct action flags fail before execution with exit code `64`.
+- Restored confirmation, root/sudo preflight, and stdout/stderr forwarding for direct c420ui CLI bridge execution.
+- Preserved planned direct action exit semantics: planned actions exit `78`, and planned dry-runs exit `0`.
+- Updated launcher branding to use lowercase `c420ui`.

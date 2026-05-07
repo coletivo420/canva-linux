@@ -37,7 +37,7 @@ Request changes if a PR:
 
 - duplicates planned-action behavior outside the c420ui action engine;
 - duplicates dry-run behavior outside the c420ui action engine;
-- makes the Canva Linux launcher use the new engine before the CLI migration commit;
+- routes direct CLI actions around the c420ui Action Engine;
 - adds Canva Linux-specific metadata to `packages/c420ui/src/action-engine.ts`;
 - changes runtime app logs while implementing action-engine contracts.
 
@@ -129,3 +129,17 @@ Request changes if a PR:
 ## Repository inventory
 
 The generated file inventory belongs in `docs/internal/REPOSITORY_INVENTORY.md`. Do not replace this checklist with generated inventory output.
+
+## c420ui CLI bridge review
+
+Request changes if a PR:
+
+- routes direct CLI actions around the c420ui Action Engine;
+- allows multiple direct actions in a single launcher invocation;
+- allows dangerous or confirmation-required direct actions without `--yes`;
+- bypasses root/sudo preflight before privileged direct actions;
+- drops stdout/stderr from direct CLI action scripts;
+- changes planned action exit code `78`;
+- breaks planned action dry-run exit code `0`;
+- reintroduces `C420UI` branding in launcher help;
+- removes the legacy Action Runner before compatibility checks are migrated.

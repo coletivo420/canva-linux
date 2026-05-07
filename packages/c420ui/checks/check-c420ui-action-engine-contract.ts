@@ -19,6 +19,10 @@ export function main(): number {
     "bridge.runAction",
     "c420uiExitCodes.plannedAction",
     "c420uiExitCodes.success",
+    "isC420UIPlannedAction",
+    "dryRun",
+    "requiresC420UIActionConfirmation",
+    "Action requires confirmation",
   ];
   const forbidden = [
     "Canva Linux",

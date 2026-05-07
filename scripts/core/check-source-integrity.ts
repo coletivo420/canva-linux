@@ -585,17 +585,31 @@ function validateLauncherScriptShape(
     );
   }
 
+  if (!content.includes("run-c420ui-cli.js")) {
+    failures.push(
+      `${relativePath}: direct CLI actions must route through the c420ui CLI bridge`,
+    );
+  }
+
+  if (!content.includes("Only one direct action can be executed per invocation.")) {
+    failures.push(
+      `${relativePath}: launcher must reject multiple direct actions before execution`,
+    );
+  }
+
+  if (content.includes("--install-native | --install-flatpak")) {
+    failures.push(
+      `${relativePath}: direct action flags must be resolved by the c420ui CLI bridge, not hardcoded in Bash`,
+    );
+  }
+
   if (
-    !lines.some((line) =>
-      line
-        .trim()
-        .startsWith(
-          'read -r -p "This action requires confirmation. Continue? [y/N] "',
-        ),
+    /npm run build:scripts > \/dev\/null[\s\S]{0,240}run-c420ui-cli\.js/.test(
+      content,
     )
   ) {
     failures.push(
-      `${relativePath}: confirmation prompt must remain inside the read command, not as collapsed shell text`,
+      `${relativePath}: direct CLI build errors must remain visible`,
     );
   }
 

@@ -21,6 +21,7 @@ export type c420uiAction = {
   description?: string;
   warning?: string;
   dangerous?: boolean;
+  requiresConfirmation?: boolean;
   planned?: boolean;
   requiresRoot?: boolean;
   cliFlags?: string[];
@@ -74,6 +75,10 @@ export function getC420UIActionCliFlags(action: c420uiAction): string[] {
 
 export function isC420UIPlannedAction(action: c420uiAction): boolean {
   return action.kind === "planned" || action.planned === true;
+}
+
+export function requiresC420UIActionConfirmation(action: c420uiAction): boolean {
+  return action.dangerous === true || action.requiresConfirmation === true;
 }
 
 export function assertC420UIActionContract(action: c420uiAction): void {

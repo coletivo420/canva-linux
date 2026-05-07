@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -15,7 +15,16 @@ import {
 } from "../../packages/c420ui/src";
 import { c420uiLogoLines } from "../c420ui/logo";
 import { rootLaunchGuardMessage, toolSettingsPath } from "../c420ui/settings";
-import { loadActions, type CanvaAction } from "../core/action-registry";
+import {
+  loadActions,
+  type CanvaAction,
+} from "../core/action-registry";
+import {
+  actionRequiresRootValidation,
+  buildActionEnvironment,
+  ROOT_POLICY_EXIT_CODE,
+  validateRootPolicy,
+} from "../core/action-runner";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
@@ -91,6 +100,26 @@ function toC420UIActionDescriptor(action: CanvaAction): C420UIActionDescriptor {
   const phase = action.group === "install" ? "install" : (action.group === "maintenance" ? "maintenance" : "development");
   const kind = action.kind === "command" ? "command" : "planned";
   return { ...action, kind, phase, cliFlags: action.cli };
+}
+
+
+function validateRootAccess(
+  rootDir: string,
+  actionEnv: NodeJS.ProcessEnv,
+): number {
+  const result = spawnSync("bash", ["scripts/sudo-common.sh", "--validate"], {
+    cwd: rootDir,
+    stdio: "inherit",
+    env: actionEnv,
+    shell: false,
+  });
+  if (result.error) {
+    console.error(
+      `[error] Failed to start privilege validation: ${result.error.message}`,
+    );
+    return c420uiExitCodes.generalError;
+  }
+  return result.status ?? c420uiExitCodes.generalError;
 }
 
 function toC420UIWorkflow(action: C420UIActionDescriptor): C420UIWorkflow {
@@ -223,10 +252,10 @@ export function createCanvaLinuxC420UIAdapter(
   }
 
   // Transitional bridge execution path.
-  // The official launcher and legacy Action Runner are not routed through this path yet.
-  // Future commits will move CLI, sudo/root orchestration and operational logs into c420ui.
+  // Direct launcher CLI now routes through this path.
   // Runtime Canva Linux app logs, credential diagnostics, OAuth/tabs/GPU/EyeDropper logs,
   // and CANVA_DEBUG flows remain outside this adapter execution path.
+  // Defensive fallback only: planned and dry-run policy belongs to the c420ui Action Engine.
   async function runAction(
     actionId: string,
     context: c420uiExecutionContext,
@@ -246,11 +275,32 @@ export function createCanvaLinuxC420UIAdapter(
       return { code: c420uiExitCodes.invalidUsage, status: "failed", message: `${actionId} has no command` };
     }
 
+    const actionEnv = buildActionEnvironment(action as CanvaAction, context.env);
+    const rootPolicyError = validateRootPolicy(action as CanvaAction, actionEnv);
+    if (rootPolicyError) {
+      return {
+        code: ROOT_POLICY_EXIT_CODE,
+        status: "failed",
+        message: `[error] ${rootPolicyError}`,
+      };
+    }
+
+    if (actionRequiresRootValidation(action as CanvaAction, resolvedRootDir)) {
+      const rootStatus = validateRootAccess(resolvedRootDir, actionEnv);
+      if (rootStatus !== c420uiExitCodes.success) {
+        return {
+          code: rootStatus,
+          status: "failed",
+          message: "[error] Privilege validation failed before action execution.",
+        };
+      }
+    }
+
     return new Promise<c420uiActionResult>((resolve) => {
       context.emitProgress({ state: "running", label: action.label });
       const child = spawn(action.command as string, action.args ?? [], {
         cwd: resolvedRootDir,
-        env: { ...context.env, ...action.env },
+        env: actionEnv,
         stdio: ["ignore", "pipe", "pipe"],
       });
 
