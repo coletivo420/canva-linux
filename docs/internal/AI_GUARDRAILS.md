@@ -95,6 +95,16 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - User-scope actions must never call sudo.
 - Sudo contract checks must tolerate valid shell whitespace around assignments.
 
+## Credential storage
+
+- Persistent Canva login on Linux depends on a secure Secret Service backend.
+- Secure Electron backend names include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`.
+- `basic_text` is an insecure fallback and must use ephemeral session mode.
+- Unknown or failed credential-backend detection must use ephemeral session mode by caution.
+- Do not describe login persistence as universal; document it as Secret Service-backed.
+- Do not use `safeStorage.setUsePlainTextEncryption()` to preserve login.
+- Do not log cookies, tokens, passwords, session contents or credential material while diagnosing credential storage.
+
 ## Logging/privacy
 
 - Never log passwords, sudo stdin, cookies, tokens, or credential material.

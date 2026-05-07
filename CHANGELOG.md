@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Documented secure Linux credential storage through Secret Service backends as the requirement for persistent login, with ephemeral session fallback guidance.
 - Added auxiliary maintenance policy files for Codex, Claude, and Gemini so AI agents have non-public project guidance without duplicating public documentation.
 - Added review checklist coverage for agent policy, versioning, Action Runner behavior, C420UI naming, docs/changelog
   updates, logging safety, and CL-EyeDropper preservation.
@@ -11,6 +12,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Clarified that Canva Linux does not promise universal login persistence; persistent sessions depend on `kwallet`, `kwallet5`, `kwallet6`, `gnome_libsecret`, or a compatible Secret Service provider.
 - Deduplicated agent guardrail wording while preserving root, logging/privacy, header separation, and TypeScript-first rules.
 - Reorganized AI guardrails into focused maintenance sections for language/public docs, versioning, C420UI,
   Action Registry, root/sudo, logging/privacy, TypeScript-first source, CL-EyeDropper, packaging/architecture,

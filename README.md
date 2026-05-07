@@ -29,7 +29,7 @@ Maintained Node.js tooling is TypeScript. JavaScript appears only as generated
 output, while shell remains reserved for Linux host-operation glue.
 
 ## Feature Matrix
-- **Desktop App**: dedicated window, persistent session, desktop integration.
+- **Desktop App**: dedicated window, Secret Service-backed persistent session, ephemeral fallback, desktop integration.
 - **Editor**: CL-EyeDropper, upload/export flows, OAuth popup, internal tabs.
 - **System**: Native Install, Flatpak Install, experimental AppImage.
 - **Development**: runtime build, package generation, validation, doctor checks.

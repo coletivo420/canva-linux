@@ -15,6 +15,18 @@ Canva Linux development workflows require Node.js >= 22.
 
 Install the required packages for your distribution using the README.md requirements section.
 
+## Login is not saved after restart
+
+If Canva Linux says it is using ephemeral session mode, your system does not expose a secure Secret Service backend to Electron.
+
+Install or enable:
+
+- KWallet on KDE Plasma
+- GNOME Keyring / libsecret on GNOME
+- a compatible Secret Service provider on your desktop environment
+
+After enabling it, restart Canva Linux and check startup logs for the credential storage backend. Secure backend names include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`. If the logs still show `basic_text`, Canva Linux will keep using ephemeral session mode and login, cookies and credentials will not be saved.
+
 ## Google One Tap / FedCM warning
 
 Canva may emit a `[GSI_LOGGER]` warning from `static.canva.com` about Google One Tap prompt UI status methods and FedCM migration.

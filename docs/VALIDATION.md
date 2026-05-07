@@ -78,6 +78,13 @@ Current target:
 - Confirm disabling general Tool logs still leaves critical Tool warnings/errors visible.
 - Confirm terminal text selection mode disables C420UI mouse handling globally on the next C420UI start while keyboard scroll and F5 log copy continue to work.
 - Confirm F6 opens a plain logs view with the session log path for manual selection fallback.
+
+- Confirm starting on KDE Plasma with KWallet enabled logs `kwallet`, `kwallet5`, or `kwallet6` and keeps persistent login available.
+- Confirm starting on GNOME or a compatible desktop with GNOME Keyring/libsecret enabled logs `gnome_libsecret` and keeps persistent login available.
+- Confirm starting without a Secret Service backend shows the ephemeral session warning before Canva loads.
+- Confirm login does not persist after closing and reopening Canva Linux in ephemeral session mode.
+- Confirm startup logs show the credential storage backend and session policy.
+- Confirm logs do not contain cookies, tokens, passwords, session contents or credential material.
 - Confirm Tab and Shift+Tab move focus between menu, diagnostics, action panel and logs.
 - Confirm the active panel has a visible border/label highlight and the active menu/settings cell has a visible row highlight.
 - Confirm settings checkboxes show enabled and disabled state clearly.

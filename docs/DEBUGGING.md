@@ -69,6 +69,23 @@ Use `CANVA_DEBUG=1` for all internal Canva Linux diagnostics.
 
 Use `CANVA_DEBUG=2` for all internal diagnostics plus Chromium/Electron verbose logs.
 
+## Credential storage diagnostics
+
+At startup, Canva Linux logs the selected credential storage backend and the resulting session policy.
+
+Expected secure examples:
+
+- `kwallet`
+- `kwallet5`
+- `kwallet6`
+- `gnome_libsecret`
+
+Insecure fallback:
+
+- `basic_text`
+
+When `basic_text` is detected, Canva Linux starts in ephemeral session mode. In ephemeral mode, login state, cookies and credentials are not preserved after the app closes. Logs must not contain cookies, tokens, passwords or credential material.
+
 ## GPU diagnostics
 
 GPU diagnostics are included in `CANVA_DEBUG=1`.
