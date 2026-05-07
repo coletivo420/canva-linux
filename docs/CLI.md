@@ -10,6 +10,8 @@ The `canva-linux.sh` launcher provides access to the Terminal Assistant (TUI) an
 
 - If no action is provided, the Terminal Assistant (TUI) starts.
 - If an action flag is provided, the command is executed directly.
+- Do not run the Tool as root. When an operation needs administrator privileges,
+  Canva Linux asks for authentication only for that specific action.
 
 ## Global Options
 
@@ -54,3 +56,20 @@ The TUI and scripts honor the following environment variables:
 | `CANVA_NATIVE_SCOPE` | Set to `system` (default) or `user` for Native actions. |
 | `CANVA_TOOL_SESSION_LOG` | Path to the tool session log file. |
 | `CANVA_DEBUG` | Set to `1` or `2` for verbose Electron runtime diagnostics. |
+
+## Tool Settings
+
+Application Settings are persistent TUI state, not shell actions. They are stored
+in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, or
+`~/.config/canva-linux/tool-settings.json` when `XDG_CONFIG_HOME` is unset.
+
+Current Tool settings:
+
+- `Enable general logs for Canva Linux Install and Development Tool`: shows
+  Tool-level startup, settings, detection and authentication events in the TUI
+  logs panel. Action logs remain visible either way, and critical Tool warnings
+  or errors still appear when general Tool logs are disabled.
+- `Enable terminal text selection in logs`: disables mouse handling in the logs
+  panel so the terminal can perform native text selection. Keyboard log scrolling
+  and F5 copy remain available. Some terminals may still require Shift while
+  selecting text.

@@ -47,9 +47,30 @@ validation glue.
 `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection
 flags and environment variables have been removed.
 
+The Tool must run as a regular user. `canva-linux.sh`, `scripts/run-tui.ts`, and
+the TUI entrypoint refuse root execution before build, action, or TUI startup.
+System-wide operations request administrator authentication only for the action
+that needs it.
+
 The TUI is a visual assistant over shared backend actions; it does not duplicate
 install/package logic. It provides guided sections, log monitoring, and a
 progress bar.
+
+Application Settings are persistent TUI state stored at
+`$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, with
+`~/.config/canva-linux/tool-settings.json` as fallback. They are not entries in
+`scripts/actions.json`.
+
+Tool logs and Action logs are semantically distinct in the TUI logs panel. Tool
+logs cover startup, settings, detection, authentication and internal Tool errors.
+Action logs cover stdout/stderr from install, build, validation, uninstall,
+purge and maintenance operations. The launcher creates/truncates the session log
+once, and the TUI appends to it so launcher startup lines are preserved.
+
+Terminal text selection mode disables mouse handling in the logs panel. Keyboard
+scrolling with PageUp, PageDown, Home and End remains available, and F5 still
+copies the visible log history. Some terminals may still require Shift during
+selection.
 
 ## Sudo Contract
 

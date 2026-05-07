@@ -14,6 +14,14 @@
 - TUI must ask for root authentication before privileged execution.
 - Do not log passwords.
 - Prefer shared sudo helpers over direct sudo calls.
+- Never instruct users to run `./canva-linux.sh` with sudo.
+- The Tool must run as a regular user.
+- Privileged operations must request authentication only when needed.
+- Tool-level logs must be visible in the TUI when general Tool logs are enabled.
+- Action logs and Tool logs must remain distinguishable.
+- Passwords and sudo stdin must never be logged.
+- Application Settings are TUI state, not shell actions.
+- New UI strings, docs and comments must be written in English.
 - The interactive shell menu has been removed. Do not reintroduce
   `run_interactive_mode`, `menu_install`, `menu_dev`, `menu_maint`, or tool
   switching.

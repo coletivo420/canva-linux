@@ -1,6 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { ROOT_LAUNCH_GUARD_MESSAGE } from "./tui/settings";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
@@ -63,6 +64,11 @@ function ensureNpmDependencies(): void {
 }
 
 export function main(): void {
+  if (typeof process.getuid === "function" && process.getuid() === 0) {
+    console.error(ROOT_LAUNCH_GUARD_MESSAGE);
+    process.exit(1);
+  }
+
   ensureNpmDependencies();
 
   if (needsBuild()) {

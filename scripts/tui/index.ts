@@ -1,6 +1,7 @@
 import { createApp } from "./app";
 import path from "node:path";
 import projectUi from "../project-ui.json";
+import { ROOT_LAUNCH_GUARD_MESSAGE } from "./settings";
 
 function getPackageVersion(): string {
   const pkg = require(path.join(process.cwd(), "package.json")) as {
@@ -23,6 +24,11 @@ function getProjectPhase(): string {
 }
 
 try {
+  if (typeof process.getuid === "function" && process.getuid() === 0) {
+    console.error(ROOT_LAUNCH_GUARD_MESSAGE);
+    process.exit(1);
+  }
+
   const screen = createApp({
     version: `${projectUi.displayVersion ?? getPackageVersion()}${projectUi.status ? ` (${projectUi.status})` : ""}`,
     phase: getProjectPhase(),
