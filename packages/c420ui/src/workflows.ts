@@ -45,13 +45,13 @@ export async function runC420UIWorkflow(
       return { workflowId: workflow.id, exitCode: c420uiExitCodes.plannedAction, planned: true, dryRun };
     }
     emit(createC420UIEvent({ type: "action:start", workflowId: workflow.id, actionId: action.id, message: action.label }));
-    const exitCode = dryRun ? c420uiExitCodes.ok : await (options.executeAction?.(action) ?? c420uiExitCodes.ok);
+    const exitCode = dryRun ? c420uiExitCodes.success : await (options.executeAction?.(action) ?? c420uiExitCodes.success);
     emit(createC420UIEvent({ type: "action:finish", workflowId: workflow.id, actionId: action.id, message: action.label, data: { exitCode } }));
-    if (exitCode !== c420uiExitCodes.ok) {
-      return { workflowId: workflow.id, exitCode: c420uiExitCodes.executionFailed, planned: false, dryRun };
+    if (exitCode !== c420uiExitCodes.success) {
+      return { workflowId: workflow.id, exitCode: c420uiExitCodes.generalError, planned: false, dryRun };
     }
   }
 
   emit(createC420UIEvent({ type: "workflow:finish", workflowId: workflow.id, message: workflow.label }));
-  return { workflowId: workflow.id, exitCode: c420uiExitCodes.ok, planned: false, dryRun };
+  return { workflowId: workflow.id, exitCode: c420uiExitCodes.success, planned: false, dryRun };
 }

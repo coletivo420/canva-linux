@@ -1,13 +1,10 @@
 export const c420uiExitCodes = {
-  ok: 0,
+  success: 0,
   generalError: 1,
-  invalidUsage: 2,
-  contractViolation: 3,
-  plannedAction: 4,
-  unsupportedCapability: 5,
-  missingAdapter: 6,
-  requiresAuthorization: 7,
-  executionFailed: 8,
+  invalidUsage: 64,
+  rootPolicyError: 64,
+  plannedAction: 78,
+  canceled: 130,
 } as const;
 
 export type C420UIExitCodeName = keyof typeof c420uiExitCodes;

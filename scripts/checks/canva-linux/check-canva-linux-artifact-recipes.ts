@@ -9,13 +9,21 @@ export function main(): number {
 
   for (const workflow of workflows) {
     if (!workflow.id || !workflow.label) failures.push("artifact workflows must have id and label");
-    for (const artifact of workflow.artifacts) {
-      if (artifact.actionId && !actions.has(artifact.actionId)) {
-        failures.push(`${artifact.id}: action ${artifact.actionId} does not exist`);
+    const actionIds = [
+      workflow.buildActionId,
+      workflow.validateActionId,
+      workflow.installActionId,
+      workflow.uninstallActionId,
+      workflow.purgeActionId,
+      workflow.releaseActionId,
+    ].filter((id): id is string => Boolean(id));
+    for (const actionId of actionIds) {
+      if (actionId !== "release-artifacts" && !actions.has(actionId)) {
+        failures.push(`${workflow.id}: action ${actionId} does not exist`);
       }
-      if (!artifact.planned && !artifact.outputPattern) {
-        failures.push(`${artifact.id}: concrete artifacts must declare outputPattern`);
-      }
+    }
+    if (!workflow.planned && workflow.kind !== "native" && !("outputPattern" in workflow)) {
+      failures.push(`${workflow.id}: concrete packaged artifacts must declare outputPattern`);
     }
   }
 

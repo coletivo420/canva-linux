@@ -1,7 +1,12 @@
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import {
+  c420uiExitCodes,
   createC420UIBridge,
+  type c420uiActionResult,
+  type c420uiExecutionContext,
+  type c420uiProjectInfo,
   type C420UIActionDescriptor,
   type C420UIConfig,
   type C420UIProjectAdapter,
@@ -84,7 +89,8 @@ function stateHome(): string {
 
 function toC420UIActionDescriptor(action: CanvaAction): C420UIActionDescriptor {
   const phase = action.group === "install" ? "install" : "development";
-  return { ...action, phase };
+  const kind = action.kind === "command" ? "command" : "planned";
+  return { ...action, kind, phase, cliFlags: action.cli };
 }
 
 function toC420UIWorkflow(action: C420UIActionDescriptor): C420UIWorkflow {
@@ -185,23 +191,88 @@ export function createCanvaLinuxC420UIAdapter(
   }
 
   function loadArtifactWorkflows() {
-    const workflows = loadCanvaLinuxArtifactWorkflows(
+    return loadCanvaLinuxArtifactWorkflows(
       resolvedRootDir,
       getPackageVersion(),
     );
-    const actionsById = new Map(loadCanvaLinuxActions().map((action) => [action.id, action]));
-    return workflows.map((workflow) => ({
-      ...workflow,
-      actions: workflow.actions.length
-        ? workflow.actions
-        : workflow.artifacts
-            .map((artifact) => artifact.actionId ? actionsById.get(artifact.actionId) : undefined)
-            .filter((action): action is C420UIActionDescriptor => Boolean(action)),
-    }));
   }
 
   function loadWorkflows(): C420UIWorkflow[] {
     return loadCanvaLinuxActions().map(toC420UIWorkflow);
+  }
+
+  function projectInfo(): c420uiProjectInfo {
+    const project = loadProjectConfig();
+    return {
+      projectName: project.projectName,
+      projectSubtitle: project.projectSubtitle,
+      displayVersion: project.displayVersion,
+      phase: project.phase,
+      status: project.status,
+      appId: project.appId,
+      repositoryUrl: project.repositoryUrl,
+    };
+  }
+
+  function actions() {
+    return loadCanvaLinuxActions();
+  }
+
+  function artifactWorkflows() {
+    return loadArtifactWorkflows();
+  }
+
+  async function runAction(
+    actionId: string,
+    context: c420uiExecutionContext,
+  ): Promise<c420uiActionResult> {
+    const action = loadCanvaLinuxActions().find((item) => item.id === actionId);
+    if (!action) {
+      return { code: c420uiExitCodes.invalidUsage, status: "failed", message: `Unknown action: ${actionId}` };
+    }
+    if (action.kind === "planned" || action.planned) {
+      return { code: c420uiExitCodes.plannedAction, status: "planned", message: action.description };
+    }
+    if (context.dryRun) {
+      context.emitProgress({ state: "success", percent: 100, label: `Dry-run: ${action.label}` });
+      return { code: c420uiExitCodes.success, status: "success", message: "dry-run" };
+    }
+    if (!action.command) {
+      return { code: c420uiExitCodes.invalidUsage, status: "failed", message: `${actionId} has no command` };
+    }
+
+    return new Promise<c420uiActionResult>((resolve) => {
+      context.emitProgress({ state: "running", label: action.label });
+      const child = spawn(action.command as string, action.args ?? [], {
+        cwd: resolvedRootDir,
+        env: { ...context.env, ...action.env },
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+
+      child.stdout.on("data", (chunk: Buffer) => {
+        for (const line of chunk.toString().split(/\r?\n/).filter(Boolean)) {
+          context.emitLog({ source: "stdout", line });
+        }
+      });
+      child.stderr.on("data", (chunk: Buffer) => {
+        for (const line of chunk.toString().split(/\r?\n/).filter(Boolean)) {
+          context.emitLog({ source: "stderr", line });
+        }
+      });
+      child.on("error", (error) => {
+        context.emitProgress({ state: "failed", label: action.label });
+        resolve({ code: c420uiExitCodes.generalError, status: "failed", message: error.message });
+      });
+      child.on("close", (code) => {
+        const resultCode = code ?? c420uiExitCodes.generalError;
+        const success = resultCode === c420uiExitCodes.success;
+        context.emitProgress({ state: success ? "success" : "failed", percent: success ? 100 : undefined, label: action.label });
+        resolve({
+          code: resultCode,
+          status: success ? "success" : "failed",
+        });
+      });
+    });
   }
 
   function toC420UIConfig(): C420UIConfig {
@@ -218,6 +289,10 @@ export function createCanvaLinuxC420UIAdapter(
   const adapter: CanvaLinuxC420UIAdapter = {
     id: "canva-linux",
     rootDir: resolvedRootDir,
+    projectInfo,
+    actions,
+    artifactWorkflows,
+    runAction,
     paths: {
       projectUi: projectUiPath,
       packageJson: packageJsonPath,

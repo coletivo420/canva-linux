@@ -11,14 +11,16 @@ export function main(): number {
   const artifacts = read(rootDir, "packages/c420ui/src/artifacts.ts");
   const workflows = read(rootDir, "packages/c420ui/src/workflows.ts");
   const required = [
-    "C420UIArtifactRecipe",
-    "C420UIArtifactWorkflow",
-    "appimage",
-    "flatpak",
-    "deb",
-    "rpm",
-    "aur",
-    "supportsDryRun",
+    "c420uiArtifactKind",
+    "c420uiArtifactScope",
+    "c420uiArtifactWorkflow",
+    "buildActionId",
+    "validateActionId",
+    "installActionId",
+    "uninstallActionId",
+    "purgeActionId",
+    "releaseActionId",
+    "custom",
     "runC420UIWorkflow",
   ];
   const source = `${artifacts}\n${workflows}`;

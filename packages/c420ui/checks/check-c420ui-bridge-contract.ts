@@ -11,15 +11,16 @@ export function main(): number {
   const bridge = read(rootDir, "packages/c420ui/src/bridge.ts");
   const index = read(rootDir, "packages/c420ui/src/index.ts");
   const required = [
-    "C420UIProjectAdapter",
-    "loadProjectInfo",
-    "loadActions",
-    "loadArtifactWorkflows",
-    "loadWorkflows",
-    "loadCapabilities",
-    "getSudoProvider",
-    "runWorkflow",
+    "c420uiProjectInfo",
+    "c420uiExecutionContext",
+    "c420uiActionResult",
+    "c420uiProjectBridge",
+    "projectInfo()",
+    "actions()",
+    "artifactWorkflows()",
+    "runAction(actionId: string, context: c420uiExecutionContext)",
     "createC420UIBridge",
+    "export type * from \"./bridge\"",
   ];
   const failures = required
     .filter((fragment) => !bridge.includes(fragment) && !index.includes(fragment))

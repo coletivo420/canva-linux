@@ -1,3 +1,15 @@
+export type c420uiProjectCapabilities = {
+  supportsArtifacts?: boolean;
+  supportsInstall?: boolean;
+  supportsUninstall?: boolean;
+  supportsPurge?: boolean;
+  supportsRelease?: boolean;
+  supportsRootActions?: boolean;
+  supportsDryRun?: boolean;
+  supportsPlannedActions?: boolean;
+};
+
+export type C420UIProjectCapabilities = c420uiProjectCapabilities;
 export type C420UICapabilityStatus = "supported" | "planned" | "unsupported";
 
 export type C420UICapability = {
@@ -7,18 +19,9 @@ export type C420UICapability = {
   reason?: string;
 };
 
-export type C420UIProjectCapabilities = {
-  artifacts: Record<string, C420UICapabilityStatus>;
-  installScopes: Record<string, C420UICapabilityStatus>;
-  workflows: Record<string, C420UICapabilityStatus>;
-  sudoProvider: C420UICapabilityStatus;
-  releaseValidation: C420UICapabilityStatus;
-};
-
 export function hasC420UICapability(
-  capabilities: C420UIProjectCapabilities,
-  category: keyof Omit<C420UIProjectCapabilities, "sudoProvider" | "releaseValidation">,
-  id: string,
+  capabilities: c420uiProjectCapabilities,
+  id: keyof c420uiProjectCapabilities,
 ): boolean {
-  return capabilities[category][id] === "supported";
+  return capabilities[id] === true;
 }

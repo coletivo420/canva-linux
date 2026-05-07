@@ -1,141 +1,123 @@
 import path from "node:path";
 import type {
-  C420UIArtifactWorkflow,
-  C420UIProjectCapabilities,
+  c420uiArtifactWorkflow,
+  c420uiProjectCapabilities,
 } from "../../packages/c420ui/src";
 
-export function loadCanvaLinuxCapabilities(): C420UIProjectCapabilities {
+export type CanvaLinuxArtifactWorkflow = c420uiArtifactWorkflow & {
+  outputPattern?: string;
+};
+
+export function loadCanvaLinuxCapabilities(): c420uiProjectCapabilities {
   return {
-    artifacts: {
-      appimage: "supported",
-      flatpak: "supported",
-      native: "supported",
-      tarball: "supported",
-      checksums: "supported",
-      deb: "planned",
-      rpm: "planned",
-      aur: "planned",
-    },
-    installScopes: {
-      system: "supported",
-      user: "supported",
-    },
-    workflows: {
-      development: "supported",
-      build: "supported",
-      package: "supported",
-      install: "supported",
-      uninstall: "supported",
-      purge: "supported",
-      release: "supported",
-      validation: "supported",
-      logs: "supported",
-    },
-    sudoProvider: "supported",
-    releaseValidation: "supported",
+    supportsArtifacts: true,
+    supportsInstall: true,
+    supportsUninstall: true,
+    supportsPurge: true,
+    supportsRelease: true,
+    supportsRootActions: true,
+    supportsDryRun: true,
+    supportsPlannedActions: true,
   };
 }
 
 export function loadCanvaLinuxArtifactWorkflows(
   rootDir: string,
   version: string,
-): C420UIArtifactWorkflow[] {
+): CanvaLinuxArtifactWorkflow[] {
+  void rootDir;
   const distPattern = path.join("dist", `canva-linux-${version}-*`);
 
   return [
     {
-      id: "package-appimage",
-      label: "Create AppImage package",
-      description: "Build the concrete AppImage artifact for this project.",
-      supportsDryRun: true,
-      artifacts: [
-        {
-          id: "appimage",
-          kind: "appimage",
-          label: "AppImage",
-          outputPattern: `${distPattern}.AppImage`,
-          actionId: "bundle-appimage",
-          validatesWith: ["validate-appimage"],
-        },
-      ],
-      actions: [],
+      id: "appimage",
+      kind: "appimage",
+      label: "AppImage",
+      description: "Build and validate the concrete AppImage artifact for this project.",
+      scope: "portable",
+      buildActionId: "bundle-appimage",
+      validateActionId: "validate-appimage",
+      releaseActionId: "release-artifacts",
+      outputPattern: `${distPattern}.AppImage`,
     },
     {
-      id: "package-flatpak",
-      label: "Create Flatpak bundle",
-      description: "Build the concrete Flatpak artifact for this project.",
-      supportsDryRun: true,
-      artifacts: [
-        {
-          id: "flatpak",
-          kind: "flatpak",
-          label: "Flatpak bundle",
-          outputPattern: `${distPattern}.flatpak`,
-          actionId: "bundle-flatpak",
-          validatesWith: ["validate-flathub-submission"],
-        },
-      ],
-      actions: [],
+      id: "flatpak",
+      kind: "flatpak",
+      label: "Flatpak bundle",
+      description: "Build, validate, install or uninstall the concrete Flatpak artifact for this project.",
+      scope: "system",
+      buildActionId: "bundle-flatpak",
+      validateActionId: "validate-project",
+      installActionId: "install-flatpak-system",
+      uninstallActionId: "uninstall-flatpak-system",
+      purgeActionId: "purge",
+      releaseActionId: "release-artifacts",
+      outputPattern: `${distPattern}.flatpak`,
+      requiresRoot: true,
     },
     {
-      id: "release-artifacts",
-      label: "Release artifacts",
-      description: "Produce release outputs owned by the project adapter.",
-      supportsDryRun: true,
-      artifacts: [
-        {
-          id: "appimage-release",
-          kind: "appimage",
-          label: "Release AppImage",
-          outputPattern: `${distPattern}.AppImage`,
-          actionId: "bundle-appimage",
-        },
-        {
-          id: "flatpak-release",
-          kind: "flatpak",
-          label: "Release Flatpak",
-          outputPattern: `${distPattern}.flatpak`,
-          actionId: "bundle-flatpak",
-        },
-        {
-          id: "linux-unpacked-tarball",
-          kind: "tarball",
-          label: "Linux unpacked tarball",
-          outputPattern: path.join("dist", `canva-linux-${version}-linux-unpacked-*.tar.gz`),
-        },
-        {
-          id: "sha256sums",
-          kind: "checksums",
-          label: "SHA256SUMS",
-          outputPattern: path.join("dist", "SHA256SUMS"),
-        },
-      ],
-      actions: [],
+      id: "native-system",
+      kind: "native",
+      label: "Native system installation",
+      description: "Install, uninstall or purge the concrete native system installation.",
+      scope: "system",
+      installActionId: "install-native-system",
+      uninstallActionId: "uninstall-native-system",
+      purgeActionId: "purge",
+      requiresRoot: true,
     },
     {
-      id: "package-deb",
-      label: "Create Debian package",
+      id: "native-user",
+      kind: "native",
+      label: "Native user installation",
+      description: "Install, uninstall or purge the concrete native user installation.",
+      scope: "user",
+      installActionId: "install-native-user",
+      uninstallActionId: "uninstall-native-user",
+      purgeActionId: "purge",
+    },
+    {
+      id: "release-tarball",
+      kind: "tarball",
+      label: "Linux unpacked tarball",
+      description: "Release tarball generated from the Linux unpacked directory.",
+      scope: "release",
+      releaseActionId: "release-artifacts",
+      outputPattern: path.join("dist", `canva-linux-${version}-linux-unpacked-*.tar.gz`),
+    },
+    {
+      id: "release-checksums",
+      kind: "custom",
+      label: "SHA256SUMS",
+      description: "Release checksum manifest for generated artifacts.",
+      scope: "release",
+      releaseActionId: "release-artifacts",
+      outputPattern: path.join("dist", "SHA256SUMS"),
+    },
+    {
+      id: "deb",
+      kind: "deb",
+      label: "Debian package",
       description: "Debian package support is planned and must not report false success.",
-      artifacts: [
-        {
-          id: "deb",
-          kind: "deb",
-          label: "Debian package",
-          planned: true,
-        },
-      ],
-      actions: [
-        {
-          id: "package-deb-planned",
-          label: "Debian package support is planned",
-          group: "development",
-          section: "Package generation",
-          kind: "planned",
-          planned: true,
-          phase: "package",
-          exitCodeOnPlanned: 4,
-        },
-      ],
+      scope: "none",
+      planned: true,
+    },
+    {
+      id: "rpm",
+      kind: "rpm",
+      label: "RPM package",
+      description: "RPM package support is planned and must not report false success.",
+      scope: "none",
+      planned: true,
+    },
+    {
+      id: "aur",
+      kind: "aur",
+      label: "AUR package",
+      description: "AUR package support is planned and must not report false success.",
+      scope: "none",
+      planned: true,
+      buildActionId: "prepare-aur",
     },
   ];
 }
