@@ -597,6 +597,22 @@ function validateLauncherScriptShape(
     );
   }
 
+  if (content.includes("--install-native | --install-flatpak")) {
+    failures.push(
+      `${relativePath}: direct action flags must be resolved by the c420ui CLI bridge, not hardcoded in Bash`,
+    );
+  }
+
+  if (
+    /npm run build:scripts > \/dev\/null[\s\S]{0,240}run-c420ui-cli\.js/.test(
+      content,
+    )
+  ) {
+    failures.push(
+      `${relativePath}: direct CLI build errors must remain visible`,
+    );
+  }
+
   for (const alias of forbiddenCompatibilityCliAliases) {
     const escapedAlias = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const aliasPattern = new RegExp(

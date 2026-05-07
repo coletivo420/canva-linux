@@ -16,6 +16,7 @@ export function main(): number {
     "c420uiCliResult",
     "Only one direct action can be executed per invocation",
     "resolveActionByCliFlag",
+    "Unknown option",
   ];
   const forbidden = [
     "Canva Linux",

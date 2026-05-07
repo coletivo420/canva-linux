@@ -55,9 +55,19 @@ ensure_action_runner_available() {
   exit 1
 }
 
+ensure_c420ui_cli_entrypoint() {
+  ensure_action_runner_available
+
+  if [[ -f "${ROOT_DIR}/.build/scripts/run-c420ui-cli.js" ]]; then
+    return 0
+  fi
+
+  CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts
+}
+
 run_action_by_cli_flag() {
   local flag="$1"
-  ensure_action_runner_available
+  ensure_c420ui_cli_entrypoint
 
   local args=("${flag}")
   if [[ "${FORCE}" == true ]]; then
@@ -69,14 +79,12 @@ run_action_by_cli_flag() {
 
   session_log "[action] cli=${flag}"
   if [[ "${SESSION_LOG_ENABLED}" == true ]]; then
-    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null &&
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" \
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" \
       CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" \
       CANVA_TOOL_SESSION_ID="${SESSION_ID}" \
       node .build/scripts/run-c420ui-cli.js "${args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
   else
-    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null &&
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-c420ui-cli.js "${args[@]}" 2>&1
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-c420ui-cli.js "${args[@]}" 2>&1
   fi
 }
 
@@ -237,12 +245,8 @@ for arg in "$@"; do
       exit 0
       ;;
     -y | --yes | --force | --dry-run) ;;
-    --install-native | --install-flatpak | --build-runtime | --build-dir | --validate | --validate-appimage | --validate-appimage-extract | --doctor | --bundle-flatpak | --bundle-appimage | --bundle-deb | --bundle-rpm | --prepare-aur | --clean | --uninstall | --uninstall-native | --uninstall-flatpak | --reset-user-data | --purge)
-      DIRECT_ACTION_FLAGS+=("${arg}")
-      ;;
     *)
-      ui_error "Unknown option: ${arg}"
-      exit 64
+      DIRECT_ACTION_FLAGS+=("${arg}")
       ;;
   esac
 done

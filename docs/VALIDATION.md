@@ -126,5 +126,8 @@ Current target:
 
 - Confirm direct CLI actions are routed through the c420ui CLI bridge.
 - Confirm multiple direct actions in one invocation fail before execution.
+- Confirm dangerous direct actions require `--yes` before execution.
+- Confirm direct CLI action stdout/stderr is visible to the caller.
+- Confirm root/sudo preflight runs before privileged direct actions.
 - Confirm planned direct actions still exit `78`.
 - Confirm planned direct action dry-runs still exit `0`.

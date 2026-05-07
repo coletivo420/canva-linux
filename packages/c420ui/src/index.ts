@@ -13,7 +13,7 @@ export type {
   c420uiActionResolution,
   c420uiRunActionOptions,
 } from "./action-engine";
-export { assertC420UIActionContract, c420uiActionGroups, c420uiActionKinds, c420uiWorkflowPhases, getC420UIActionCliFlags, isC420UIPlannedAction } from "./actions";
+export { assertC420UIActionContract, c420uiActionGroups, c420uiActionKinds, c420uiWorkflowPhases, getC420UIActionCliFlags, isC420UIPlannedAction, requiresC420UIActionConfirmation } from "./actions";
 export { createC420UIBridge } from "./bridge";
 export { hasC420UICapability } from "./capabilities";
 export { createC420UIEvent } from "./events";

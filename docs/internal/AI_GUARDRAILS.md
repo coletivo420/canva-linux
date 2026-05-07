@@ -115,6 +115,9 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Direct CLI actions must pass through the c420ui CLI bridge.
 - Do not bypass the c420ui Action Engine from `canva-linux.sh`.
 - Only one direct action may execute per invocation.
+- Dangerous or confirmation-required direct actions must not execute without `--yes`.
+- Privileged direct actions must run root/sudo preflight before backend scripts start.
+- Direct CLI action stdout/stderr must remain visible to the caller.
 - Planned direct actions must exit with `78` unless they are dry-run metadata checks.
 - Planned direct action dry-runs must exit with `0`.
 - Detection refresh must not clear or override progress results.

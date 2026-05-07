@@ -24,9 +24,17 @@ export function main(): number {
   const launcherPath = path.join(rootDir, "canva-linux.sh");
   if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
   if (!fs.existsSync(cliEntrypointPath)) failures.push("Canva Linux c420ui CLI entrypoint must exist");
+  const cliBridge = fs.readFileSync(cliBridgePath, "utf8");
+  if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
+  const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/adapter.ts"), "utf8");
+  for (const fragment of ["validateRootPolicy", "actionRequiresRootValidation", "sudo-common.sh", "buildActionEnvironment"]) {
+    if (!adapterSource.includes(fragment)) failures.push(`adapter root preflight missing: ${fragment}`);
+  }
   const launcher = fs.readFileSync(launcherPath, "utf8");
   if (!launcher.includes("run-c420ui-cli.js")) failures.push("launcher must call run-c420ui-cli.js for direct actions");
   if (launcher.includes("run-core-entry.sh action-runner --cli")) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
+  if (launcher.includes("--install-native | --install-flatpak")) failures.push("launcher must not hardcode the direct action flag list");
+  if (!launcher.includes("ensure_c420ui_cli_entrypoint")) failures.push("launcher must build the c420ui CLI entrypoint conditionally");
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-adapter-contract] OK");

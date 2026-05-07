@@ -23,9 +23,18 @@ The `canva-linux.sh` launcher provides access to the c420ui terminal interface a
 | `-h, --help` | Show usage information. |
 | `--dry-run` | Resolve direct action metadata without executing command scripts. |
 
+`./canva-linux.sh --help` is stable launcher help. The compiled bridge help
+(`node .build/scripts/run-c420ui-cli.js --help`) is dynamic and lists the
+action flags exposed by the active project bridge.
+
+The current direct CLI accepts flag-only global options. Options that take values
+must be added deliberately to the generic parser before use.
+
 ## Actions
 
-Direct actions are resolved through the shared Action Registry (`scripts/actions.json`) by the c420ui CLI bridge.
+Direct actions are resolved through the shared Action Registry (`scripts/actions.json`)
+by the c420ui CLI bridge; the launcher does not maintain a separate executable
+action flag list.
 Planned actions are shown in c420ui so users can see future packaging targets,
 but they are not executable. Running a planned action without `--dry-run` exits
 with code `78`; `--dry-run` only resolves metadata and still exits `0`.

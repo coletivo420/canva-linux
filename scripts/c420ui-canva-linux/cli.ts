@@ -1,5 +1,15 @@
-import { runC420UICli } from "../../packages/c420ui/src";
+import { runC420UICli, type C420UIEvent } from "../../packages/c420ui/src";
 import { createCanvaLinuxBridge } from "./bridge";
+
+function emitDirectCliEvent(event: C420UIEvent): void {
+  if (event.type !== "log") return;
+  const line = `${event.line}\n`;
+  if (event.source === "stderr") {
+    process.stderr.write(line);
+    return;
+  }
+  process.stdout.write(line);
+}
 
 export async function runCanvaLinuxC420UICli(
   argv: string[],
@@ -12,6 +22,7 @@ export async function runCanvaLinuxC420UICli(
     rootDir,
     argv,
     env: process.env,
+    emit: emitDirectCliEvent,
     writeStdout: (line) => process.stdout.write(`${line}\n`),
     writeStderr: (line) => process.stderr.write(`${line}\n`),
   });

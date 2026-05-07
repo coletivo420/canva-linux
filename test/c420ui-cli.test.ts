@@ -40,6 +40,8 @@ function createFakeBridge(options?: { result?: c420uiActionResult }) {
       group: "maintenance",
       kind: "command",
       cliFlags: ["--purge"],
+      dangerous: true,
+      requiresConfirmation: true,
     },
     {
       id: "bundle-deb",
@@ -131,6 +133,25 @@ test("c420ui CLI rejects multiple direct actions", async () => {
   assert.equal(result.exitCode, c420uiExitCodes.invalidUsage);
   assert.deepEqual(stderr, ["Only one direct action can be executed per invocation."]);
   assert.equal(runCalls.length, 0);
+});
+
+
+test("c420ui CLI blocks dangerous actions without --yes", async () => {
+  const { result, stderr, runCalls } = await runCli(["--purge"]);
+
+  assert.equal(result.exitCode, c420uiExitCodes.generalError);
+  assert.deepEqual(stderr, [
+    "[error] Action requires confirmation: Purge\n[info] Re-run with --yes after confirming intent.",
+  ]);
+  assert.equal(runCalls.length, 0);
+});
+
+test("c420ui CLI allows dangerous actions with --yes", async () => {
+  const { result, runCalls } = await runCli(["--purge", "--yes"]);
+
+  assert.equal(result.exitCode, c420uiExitCodes.success);
+  assert.equal(runCalls[0]?.actionId, "purge");
+  assert.equal(runCalls[0]?.context.yes, true);
 });
 
 test("c420ui CLI preserves planned action exit code", async () => {
