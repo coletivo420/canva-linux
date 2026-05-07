@@ -25,7 +25,9 @@ type DownloadItemLike = {
   setSavePath(path: string): void;
 };
 type SessionLike = {
-  cookies: { flushStore(): Promise<void> };
+  cookies: { flushStore?(): Promise<void> };
+  clearCache?: () => Promise<void>;
+  clearStorageData?: () => Promise<void>;
   flushStorageData(): Promise<void>;
   setPermissionRequestHandler(
     handler: (
@@ -143,8 +145,28 @@ function shouldEnableCaptureVerboseLogging(): boolean {
 }
 
 async function flushSession(ses: SessionLike): Promise<void> {
-  await ses.cookies.flushStore();
+  await ses.cookies.flushStore?.();
   await ses.flushStorageData();
+}
+
+type EphemeralSessionClearWarning = (
+  operation: string,
+  error: unknown,
+) => void;
+
+async function clearEphemeralSessionData(
+  ses: SessionLike,
+  onWarning?: EphemeralSessionClearWarning,
+): Promise<void> {
+  await ses.clearStorageData?.().catch((error: unknown) => {
+    onWarning?.("clearStorageData", error);
+  });
+  await ses.clearCache?.().catch((error: unknown) => {
+    onWarning?.("clearCache", error);
+  });
+  await ses.cookies.flushStore?.().catch((error: unknown) => {
+    onWarning?.("cookies.flushStore", error);
+  });
 }
 
 function sharedWebPreferences(
@@ -269,6 +291,7 @@ async function configureSession({
 }
 
 export {
+  clearEphemeralSessionData,
   configureLinuxRuntime,
   configureSession,
   flushSession,

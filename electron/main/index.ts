@@ -41,6 +41,7 @@ const {
 } = require("./credential-storage");
 const { createOAuthHelpers } = require("./oauth");
 const {
+  clearEphemeralSessionData,
   configureLinuxRuntime,
   configureSession,
   flushSession,
@@ -372,6 +373,10 @@ registerAppLifecycle({
   BrowserWindow,
   canvaSessionRef: () => canvaSession,
   centralLogger,
+  clearEphemeralSessionData: clearEphemeralSessionData as unknown as (
+    session: unknown,
+    onWarning?: (operation: string, error: unknown) => void,
+  ) => Promise<void>,
   configureSession: configureSession as unknown as (
     options: Record<string, unknown>,
   ) => Promise<unknown>,
@@ -384,6 +389,9 @@ registerAppLifecycle({
     mainWindow?.focus();
   },
   getCanvaSession,
+  getCredentialStoragePolicy() {
+    return credentialStoragePolicy;
+  },
   logCredentialStoragePolicy,
   logReleaseStatus,
   nativeTheme,

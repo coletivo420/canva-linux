@@ -11,6 +11,7 @@ const test = require("node:test");
 const { loadRuntimeModule } = require("./helpers/runtime-module");
 
 const {
+  clearEphemeralSessionData,
   configureSession,
   sanitizeDownloadFilename,
   sharedWebPreferences,
@@ -61,6 +62,52 @@ test("module-specific debug values do not enable verbose logging", () => {
   withDebugEnv({ CANVA_DEBUG: "gpu" }, () => {
     assert.equal(shouldEnableCaptureVerboseLogging(), false);
   });
+});
+
+
+test("clears ephemeral session storage, cache and cookie store", async () => {
+  const calls = [];
+  await clearEphemeralSessionData({
+    clearStorageData: async () => calls.push("clearStorageData"),
+    clearCache: async () => calls.push("clearCache"),
+    cookies: {
+      flushStore: async () => calls.push("cookies.flushStore"),
+    },
+  });
+
+  assert.deepEqual(calls, [
+    "clearStorageData",
+    "clearCache",
+    "cookies.flushStore",
+  ]);
+});
+
+test("reports ephemeral cleanup failures without throwing", async () => {
+  const warnings = [];
+  await clearEphemeralSessionData(
+    {
+      clearStorageData: async () => {
+        throw new Error("storage failed");
+      },
+      clearCache: async () => {
+        throw new Error("cache failed");
+      },
+      cookies: {
+        flushStore: async () => {
+          throw new Error("cookie failed");
+        },
+      },
+    },
+    (operation, error) => {
+      warnings.push(`${operation}:${error.message}`);
+    },
+  );
+
+  assert.deepEqual(warnings, [
+    "clearStorageData:storage failed",
+    "clearCache:cache failed",
+    "cookies.flushStore:cookie failed",
+  ]);
 });
 
 test("sharedWebPreferences keeps secure defaults", () => {

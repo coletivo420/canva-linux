@@ -15,6 +15,10 @@ type CentralLoggerLike = {
     message: string,
   ): void;
 };
+type ClearEphemeralSessionData = (
+  session: any,
+  onWarning?: (operation: string, error: unknown) => void,
+) => Promise<void>;
 type BrowserWindowConstructorLike = { getAllWindows(): unknown[] };
 type NativeThemeLike = { on(event: "updated", listener: () => void): unknown };
 type TabControllerLike = { createHomeTab(): void };
@@ -24,6 +28,7 @@ type LifecycleOptions = {
   BrowserWindow: BrowserWindowConstructorLike;
   canvaSessionRef: () => unknown;
   centralLogger: CentralLoggerLike;
+  clearEphemeralSessionData: ClearEphemeralSessionData;
   configureSession: (options: Record<string, unknown>) => Promise<unknown>;
   createShellWindow: () => unknown;
   createToolbarView: () => unknown;
@@ -32,6 +37,7 @@ type LifecycleOptions = {
   flushSession: (session: any) => Promise<void>;
   focusMainWindow: () => void;
   getCanvaSession: () => unknown;
+  getCredentialStoragePolicy: () => CredentialStoragePolicy;
   logCredentialStoragePolicy: (policy: CredentialStoragePolicy) => void;
   logReleaseStatus: () => void;
   nativeTheme: NativeThemeLike;
@@ -53,6 +59,7 @@ function registerAppLifecycle({
   BrowserWindow,
   canvaSessionRef,
   centralLogger,
+  clearEphemeralSessionData,
   configureSession,
   createShellWindow,
   createToolbarView,
@@ -61,6 +68,7 @@ function registerAppLifecycle({
   flushSession,
   focusMainWindow,
   getCanvaSession,
+  getCredentialStoragePolicy,
   logCredentialStoragePolicy,
   logReleaseStatus,
   nativeTheme,
@@ -166,10 +174,35 @@ function registerAppLifecycle({
 
   app.on("window-all-closed", async () => {
     debugLog("app", "window-all-closed");
-    debugLog("session", "flush-before-quit", getSessionPartition());
+    debugLog("session", "shutdown-session", getSessionPartition());
     const canvaSession = canvaSessionRef();
     if (canvaSession) {
-      await flushSession(canvaSession).catch(() => {});
+      const credentialStoragePolicy = getCredentialStoragePolicy();
+      if (credentialStoragePolicy.mode === "ephemeral") {
+        debugLog(
+          "session",
+          "clear-ephemeral-before-quit",
+          credentialStoragePolicy.partition,
+        );
+        await clearEphemeralSessionData(
+          canvaSession,
+          (operation, error) => {
+            centralLogger.logStatus(
+              "session",
+              "warn",
+              `ephemeral-session-clear-${operation}-failed WARNING: ${startupErrorMessage(error)}`,
+            );
+          },
+        ).catch((error) => {
+          centralLogger.logStatus(
+            "session",
+            "warn",
+            `ephemeral-session-clear-failed WARNING: ${startupErrorMessage(error)}`,
+          );
+        });
+      } else {
+        await flushSession(canvaSession).catch(() => {});
+      }
     }
     if (process.platform !== "darwin") app.quit();
   });

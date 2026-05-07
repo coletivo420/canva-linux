@@ -9,6 +9,8 @@ const { loadRuntimeModule } = require("./helpers/runtime-module");
 const { registerAppLifecycle } = loadRuntimeModule("main/lifecycle");
 
 function createLifecycleOptions({
+  canvaSession = null,
+  clearEphemeralSessionData,
   configureSession,
   credentialStoragePolicy = {
     backend: "kwallet6",
@@ -48,6 +50,14 @@ function createLifecycleOptions({
       calls.push(`configureSession:${options.partition}`);
       return {};
     });
+  const clearEphemeralSessionDataFn =
+    clearEphemeralSessionData ||
+    (async (_session, onWarning) => {
+      calls.push("clearEphemeralSessionData");
+      if (typeof onWarning === "function") {
+        calls.push("clearEphemeralSessionData:warning-callback-available");
+      }
+    });
 
   return {
     calls,
@@ -60,7 +70,7 @@ function createLifecycleOptions({
         },
       },
       canvaSessionRef() {
-        return null;
+        return canvaSession;
       },
       centralLogger: {
         initLogFile() {
@@ -70,6 +80,7 @@ function createLifecycleOptions({
           calls.push(`logStatus:${category}:${level}:${message}`);
         },
       },
+      clearEphemeralSessionData: clearEphemeralSessionDataFn,
       configureSession: configureSessionFn,
       createShellWindow() {
         calls.push("createShellWindow");
@@ -82,12 +93,17 @@ function createLifecycleOptions({
         return true;
       },
       debugLevel: 0,
-      flushSession: async () => {},
+      flushSession: async () => {
+        calls.push("flushSession");
+      },
       focusMainWindow() {
         calls.push("focusMainWindow");
       },
       getCanvaSession() {
         return {};
+      },
+      getCredentialStoragePolicy() {
+        return credentialStoragePolicy;
       },
       logCredentialStoragePolicy(policy) {
         calls.push(`logCredentialStoragePolicy:${policy.mode}:${policy.partition}`);
@@ -158,6 +174,77 @@ test("registerAppLifecycle focuses the existing main window on second-instance",
     "debug:app:second-instance",
     "focusMainWindow",
   ]);
+});
+
+
+test("registerAppLifecycle flushes persistent sessions on shutdown", async () => {
+  const { calls, listeners, options } = createLifecycleOptions({
+    canvaSession: {},
+  });
+
+  registerAppLifecycle(options);
+  await listeners.get("window-all-closed")();
+
+  assert.equal(calls.includes("flushSession"), true);
+  assert.equal(calls.includes("clearEphemeralSessionData"), false);
+  assert.equal(calls.includes("quit"), true);
+});
+
+test("registerAppLifecycle clears ephemeral sessions instead of persistent flush", async () => {
+  const { calls, listeners, options } = createLifecycleOptions({
+    canvaSession: {},
+    credentialStoragePolicy: {
+      backend: "basic_text",
+      mode: "ephemeral",
+      security: "insecure-basic-text",
+      partition: "canva-ephemeral",
+      cache: false,
+      persistentLoginAvailable: false,
+      warning: "ephemeral warning",
+    },
+  });
+
+  registerAppLifecycle(options);
+  await listeners.get("window-all-closed")();
+
+  assert.equal(calls.includes("clearEphemeralSessionData"), true);
+  assert.equal(
+    calls.includes("clearEphemeralSessionData:warning-callback-available"),
+    true,
+  );
+  assert.equal(calls.includes("flushSession"), false);
+  assert.equal(calls.includes("quit"), true);
+});
+
+test("registerAppLifecycle logs ephemeral cleanup warnings without crashing", async () => {
+  const { calls, listeners, options } = createLifecycleOptions({
+    canvaSession: {},
+    clearEphemeralSessionData: async (_session, onWarning) => {
+      calls.push("clearEphemeralSessionData");
+      onWarning("clearCache", new Error("cache cleanup failed"));
+    },
+    credentialStoragePolicy: {
+      backend: "unknown",
+      mode: "ephemeral",
+      security: "unknown",
+      partition: "canva-ephemeral",
+      cache: false,
+      persistentLoginAvailable: false,
+      warning: "ephemeral warning",
+    },
+  });
+
+  registerAppLifecycle(options);
+  await listeners.get("window-all-closed")();
+
+  assert.equal(calls.includes("clearEphemeralSessionData"), true);
+  assert.equal(
+    calls.includes(
+      "logStatus:session:warn:ephemeral-session-clear-clearCache-failed WARNING: cache cleanup failed",
+    ),
+    true,
+  );
+  assert.equal(calls.includes("quit"), true);
 });
 
 test("registerAppLifecycle logs critical startup errors and quits", async () => {
