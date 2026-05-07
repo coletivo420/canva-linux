@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+- Added a C420UI header layout guardrail check for separate fixed brand and
+  project headers.
+
+### Changed
+- Changed the C420UI brand and project headers to render side by side on wide
+  terminals, with the workspace starting below the taller header.
+
 ## [0.1.4-12] - 2026-05-07
 
 ### Added
