@@ -543,26 +543,6 @@ export function createApp(opts: C420UIConfig) {
   }
 
   let sessionStreamOpenError: string | null = null;
-
-  function openSessionStream(logPath: string): Writable | null {
-    try {
-      fs.mkdirSync(path.dirname(logPath), { recursive: true });
-      const stream = fs.createWriteStream(logPath, { flags: "a" });
-      stream.on("error", (error) => {
-        sessionStreamOpenError =
-          error instanceof Error ? error.message : String(error);
-        // Keep the C420UI alive when the configured state path becomes unavailable.
-      });
-      return stream;
-    } catch (error) {
-      sessionStreamOpenError =
-        error instanceof Error ? error.message : String(error);
-      return null;
-    }
-  }
-
-  const launcherSessionLog = readExistingSessionLog(sessionLogPath);
-  const sessionStream = openSessionStream(sessionLogPath);
   let sessionLogUnavailableWarningShown = false;
 
   function warnSessionLogUnavailableOnce() {
@@ -574,10 +554,7 @@ export function createApp(opts: C420UIConfig) {
     const reason = sessionStreamOpenError ? ` (${sessionStreamOpenError})` : "";
     const warning = `[warn] Session log stream is unavailable: ${sessionLogPath}${reason}`;
 
-    logHistory.push(`${TOOL_LOG_PREFIX} ${warning}`);
-    if (logHistory.length > MAX_LOG_HISTORY_LINES) {
-      logHistory.shift();
-    }
+    displayLogLine(warning, "system");
 
     try {
       // Use console.warn only as a fallback. Do not call appendLogText here,
@@ -588,13 +565,41 @@ export function createApp(opts: C420UIConfig) {
     }
   }
 
+  function recordSessionStreamError(error: unknown) {
+    sessionStreamOpenError =
+      error instanceof Error ? error.message : String(error);
+    warnSessionLogUnavailableOnce();
+  }
+
+  function openSessionStream(logPath: string): Writable | null {
+    try {
+      fs.mkdirSync(path.dirname(logPath), { recursive: true });
+      const stream = fs.createWriteStream(logPath, { flags: "a" });
+      stream.on("error", (error) => {
+        recordSessionStreamError(error);
+        // Keep the C420UI alive when the configured state path becomes unavailable.
+      });
+      return stream;
+    } catch (error) {
+      recordSessionStreamError(error);
+      return null;
+    }
+  }
+
+  const launcherSessionLog = readExistingSessionLog(sessionLogPath);
+  const sessionStream = openSessionStream(sessionLogPath);
+
   const writeSession = (line: string) => {
-    if (!sessionStream) {
+    if (!sessionStream || sessionStreamOpenError) {
       warnSessionLogUnavailableOnce();
       return;
     }
 
-    sessionStream.write(`${line}\n`);
+    try {
+      sessionStream.write(`${line}\n`);
+    } catch (error) {
+      recordSessionStreamError(error);
+    }
   };
 
   writeSession("[mode] c420ui");

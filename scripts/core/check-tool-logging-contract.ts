@@ -34,7 +34,9 @@ export function main(): number {
     !app.includes("sessionLogUnavailableWarningShown") ||
     !app.includes("warnSessionLogUnavailableOnce") ||
     !app.includes("Session log stream is unavailable") ||
-    !app.includes("if (!sessionStream)")
+    !app.includes("if (!sessionStream || sessionStreamOpenError)") ||
+    !app.includes("recordSessionStreamError") ||
+    !app.includes('displayLogLine(warning, "system")')
   ) {
     failures.push(
       "scripts/c420ui/app.ts: writeSession must warn once when the session stream is unavailable",

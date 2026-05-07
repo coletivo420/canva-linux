@@ -13,6 +13,8 @@
 ### Changed
 - Hardened C420UI manual text selection so mouse capture is updated globally
   while keyboard navigation and F5 log copy remain available.
+- Hardened session logging diagnostics so asynchronously failing session log
+  streams surface a visible C420UI warning instead of silently staying truthy.
 - Restored legacy C420UI action type aliases so TypeScript checks pass during
   the C420UI naming transition.
 - Consolidated public documentation around the C420UI terminal interface and
