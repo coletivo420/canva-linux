@@ -25,6 +25,7 @@ ui_init
 
 SESSION_LOG="${CANVA_TOOL_SESSION_LOG:-${XDG_STATE_HOME:-$HOME/.local/state}/canva-linux/tool-session.log}"
 SESSION_LOG_ENABLED=false
+SESSION_ID="${CANVA_TOOL_SESSION_ID:-launcher-$$-${RANDOM}}"
 
 if mkdir -p "$(dirname "${SESSION_LOG}")" 2> /dev/null && ( : > "${SESSION_LOG}" ) 2> /dev/null; then
   SESSION_LOG_ENABLED=true
@@ -39,7 +40,7 @@ session_log() {
   [[ "${SESSION_LOG_ENABLED}" == true ]] && printf '%s\n' "$1" >> "${SESSION_LOG}" || true
 }
 
-session_log "[session] started"
+session_log "[session] started id=${SESSION_ID}"
 session_log "[identity] version=${PROJECT_DISPLAY_VERSION:-unknown} phase=${PROJECT_PHASE:-unknown}"
 trap 'session_log "[session] ended"' EXIT
 
@@ -133,9 +134,11 @@ can_run_tui() {
 
 run_tui_entrypoint() {
   if [[ -n "${PROJECT_PHASE:-}" ]]; then
-    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts > /dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" node .build/scripts/run-tui.js
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts > /dev/null &&
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-tui.js
   else
-    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null && CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-tui.js
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null &&
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-tui.js
   fi
 }
 

@@ -14,6 +14,7 @@ import {
 } from "./settings";
 import fs from "node:fs";
 import path from "node:path";
+import { Writable } from "node:stream";
 
 type View =
   | "main"
@@ -30,6 +31,7 @@ type ProgressState =
   | "failed"
   | "canceled";
 type LogSource = "stdout" | "stderr" | "system";
+type FocusZone = "menu" | "diagnostics" | "content" | "logs";
 type SettingsItem =
   | {
       kind: "section";
@@ -48,6 +50,7 @@ type SettingsItem =
 const MAX_LOG_HISTORY_LINES = 5000;
 const TOOL_LOG_PREFIX = "Tool |";
 const ACTION_LOG_PREFIX = "Action |";
+const FOCUS_ZONES: FocusZone[] = ["menu", "diagnostics", "content", "logs"];
 
 export function createApp(opts: {
   version: string;
@@ -59,6 +62,9 @@ export function createApp(opts: {
 }) {
   let toolSettings = loadToolSettings();
   const settingsPath = toolSettingsPath();
+  const terminalTextSelectionModeActive =
+    toolSettings.tool.terminalTextSelectionMode;
+  const tuiMouseEnabled = !terminalTextSelectionModeActive;
   const screen = blessed.screen({
     smartCSR: true,
     title: opts.title,
@@ -78,8 +84,9 @@ export function createApp(opts: {
     width: "32%",
     height: "40%",
     keys: true,
-    mouse: true,
+    mouse: tuiMouseEnabled,
     border: "line",
+    tags: true,
     label: "Main Menu",
     style: tuiTheme.menu,
   });
@@ -93,6 +100,8 @@ export function createApp(opts: {
     tags: true,
     scrollable: true,
     alwaysScroll: true,
+    keys: true,
+    mouse: tuiMouseEnabled,
     style: tuiTheme.content,
   });
   const content = blessed.box({
@@ -106,7 +115,7 @@ export function createApp(opts: {
     scrollable: true,
     alwaysScroll: true,
     keys: true,
-    mouse: true,
+    mouse: tuiMouseEnabled,
     style: tuiTheme.content,
   });
   const logs = blessed.log({
@@ -117,7 +126,7 @@ export function createApp(opts: {
     border: "line",
     label: "Logs",
     keys: true,
-    mouse: !toolSettings.tool.terminalTextSelectionMode,
+    mouse: tuiMouseEnabled,
     scrollable: true,
     alwaysScroll: true,
     scrollbar: {
@@ -135,7 +144,7 @@ export function createApp(opts: {
     width: "100%",
     tags: true,
     content:
-      "{bold}q{/bold} Quit | {bold}Esc{/bold} Back | {bold}Enter{/bold} Select | {bold}F5{/bold} Copy Logs | {bold}?{/bold} Help",
+      "{bold}Tab{/bold} Focus | {bold}Enter{/bold} Select | {bold}Space{/bold} Toggle | {bold}F5{/bold} Copy Logs | {bold}?{/bold} Help | {bold}q{/bold} Quit",
     style: tuiTheme.footer,
   });
   const progress = blessed.box({
@@ -175,7 +184,7 @@ export function createApp(opts: {
     {
       kind: "toggle",
       key: "terminalTextSelectionMode",
-      label: "Enable terminal text selection in logs",
+      label: "Prefer native terminal text selection on next TUI start",
     },
     {
       kind: "section",
@@ -188,12 +197,18 @@ export function createApp(opts: {
   ];
 
   let currentView: View = "main";
+  let focusZone: FocusZone = "menu";
+  let menuLabelText = "Main Menu";
+  let diagnosticsLabelText = "Detected Installations";
+  let contentLabelText = "Overview";
+  let logsLabelText = "Logs";
   let currentActions: TuiAction[] = [];
   let running = false;
   let modalActive = false;
   let currentChild: ChildProcess | null = null;
   let progressState: ProgressState = "idle";
   let lastCtrlCAt = 0;
+  let updatingSettingsMenuItems = false;
   const logBuffers: Record<LogSource, string> = {
     stdout: "",
     stderr: "",
@@ -208,12 +223,33 @@ export function createApp(opts: {
       "canva-linux",
       "tool-session.log",
     );
-  fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
-  const launcherSessionLog = fs.existsSync(sessionLogPath)
-    ? fs.readFileSync(sessionLogPath, "utf8")
-    : "";
-  const sessionStream = fs.createWriteStream(sessionLogPath, { flags: "a" });
-  const writeSession = (line: string) => sessionStream.write(`${line}\n`);
+  const launcherSessionId = process.env.CANVA_TOOL_SESSION_ID?.trim() || "";
+  function readExistingSessionLog(logPath: string): string {
+    try {
+      return fs.existsSync(logPath) ? fs.readFileSync(logPath, "utf8") : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function openSessionStream(logPath: string): Writable | null {
+    try {
+      fs.mkdirSync(path.dirname(logPath), { recursive: true });
+      const stream = fs.createWriteStream(logPath, { flags: "a" });
+      stream.on("error", () => {
+        // Keep the TUI alive when the configured state path becomes unavailable.
+      });
+      return stream;
+    } catch {
+      return null;
+    }
+  }
+
+  const launcherSessionLog = readExistingSessionLog(sessionLogPath);
+  const sessionStream = openSessionStream(sessionLogPath);
+  const writeSession = (line: string) => {
+    sessionStream?.write(`${line}\n`);
+  };
   writeSession("[mode] tui");
   process.on("exit", () => {
     writeSession("[session] ended");
@@ -409,20 +445,91 @@ export function createApp(opts: {
   }
 
   function importLauncherSessionLog() {
-    if (!toolSettings.tool.generalLogsEnabled || !launcherSessionLog.trim())
+    if (
+      !toolSettings.tool.generalLogsEnabled ||
+      !launcherSessionId ||
+      !launcherSessionLog.includes(`[session] started id=${launcherSessionId}`)
+    ) {
       return;
+    }
     for (const line of launcherSessionLog.split(/\r?\n/)) {
       if (line.trim()) displayLogLine(line, "system");
     }
   }
 
-  function applyLogSelectionMode() {
-    logs.options.mouse = !toolSettings.tool.terminalTextSelectionMode;
-    logs.setLabel(
-      toolSettings.tool.terminalTextSelectionMode
-        ? "Logs - terminal selection mode"
-        : "Logs",
+  function activeLabel(label: string): string {
+    return `{${tuiTheme.colors.activeLabel}-fg}${label}{/${tuiTheme.colors.activeLabel}-fg}`;
+  }
+
+  function inactiveLabel(label: string): string {
+    return `{${tuiTheme.colors.inactiveLabel}-fg}${label}{/${tuiTheme.colors.inactiveLabel}-fg}`;
+  }
+
+  function setWidgetBorder(widget: blessed.Widgets.BoxElement, active: boolean) {
+    widget.style.border = {
+      ...(widget.style.border ?? {}),
+      fg: active
+        ? tuiTheme.colors.activeBorder
+        : tuiTheme.colors.inactiveBorder,
+    };
+  }
+
+  function setLabeledPanel(
+    widget: blessed.Widgets.BoxElement,
+    label: string,
+    active: boolean,
+  ) {
+    setWidgetBorder(widget, active);
+    widget.setLabel(active ? activeLabel(label) : inactiveLabel(label));
+  }
+
+  function setFocusZone(nextZone: FocusZone) {
+    if (modalActive || focusZone === nextZone) return;
+    focusZone = nextZone;
+    if (focusZone === "menu") menu.focus();
+    else if (focusZone === "diagnostics") diagnostics.focus();
+    else if (focusZone === "content") content.focus();
+    else logs.focus();
+    applyFocusStyles();
+    screen.render();
+  }
+
+  function moveFocus(delta: number) {
+    const index = FOCUS_ZONES.indexOf(focusZone);
+    const nextIndex =
+      (index + delta + FOCUS_ZONES.length) % FOCUS_ZONES.length;
+    setFocusZone(FOCUS_ZONES[nextIndex]);
+  }
+
+  function applyFocusStyles() {
+    setLabeledPanel(menu, menuLabelText, focusZone === "menu");
+    setLabeledPanel(
+      diagnostics,
+      diagnosticsLabelText,
+      focusZone === "diagnostics",
     );
+    setLabeledPanel(content, contentLabelText, focusZone === "content");
+    setLabeledPanel(logs, logsLabelText, focusZone === "logs");
+
+    menu.style.selected = {
+      ...(menu.style.selected ?? {}),
+      fg:
+        focusZone === "menu"
+          ? tuiTheme.colors.activeCellFg
+          : tuiTheme.colors.menuInactiveSelectedFg,
+      bg:
+        focusZone === "menu"
+          ? tuiTheme.colors.activeCellBg
+          : tuiTheme.colors.menuInactiveSelectedBg,
+      bold: focusZone === "menu",
+    };
+  }
+
+  function applyLogPanelLabel() {
+    logsLabelText = terminalTextSelectionModeActive
+      ? "Logs - terminal selection mode active"
+      : "Logs";
+    applyFocusStyles();
   }
 
   function clearProgress() {
@@ -505,6 +612,40 @@ export function createApp(opts: {
     );
   }
 
+  function renderSelectionDetails() {
+    if (["install", "development", "maintenance"].includes(currentView)) {
+      clearProgressOnNavigation();
+      renderActionHelp(currentView, menu.selected);
+    } else if (currentView === "settings") {
+      setSettingsMenuItems();
+      renderSettingsHelp();
+    }
+  }
+
+  function scrollFocusedPanel(delta: number) {
+    if (focusZone === "menu") {
+      if (delta < 0) menu.up(Math.abs(delta));
+      else menu.down(delta);
+      renderSelectionDetails();
+      return;
+    }
+    if (focusZone === "diagnostics") diagnostics.scroll(delta);
+    else if (focusZone === "content") content.scroll(delta);
+    else logs.scroll(delta);
+  }
+
+  function setFocusedPanelScroll(percent: number) {
+    if (focusZone === "menu") {
+      if (percent === 0) menu.select(0);
+      else menu.select(Math.max(0, (menu.items?.length ?? 1) - 1));
+      renderSelectionDetails();
+      return;
+    }
+    if (focusZone === "diagnostics") diagnostics.setScrollPerc(percent);
+    else if (focusZone === "content") content.setScrollPerc(percent);
+    else logs.setScrollPerc(percent);
+  }
+
   function renderActionHelp(view: View, selectedIndex: number) {
     if (!["install", "development", "maintenance"].includes(view)) return;
     const selected = currentActions[selectedIndex] ?? null;
@@ -533,10 +674,44 @@ export function createApp(opts: {
     );
   }
 
-  function settingsItemLabel(item: SettingsItem): string {
-    if (item.kind === "section") return item.label;
-    if (item.kind === "note") return `  ${item.label}`;
-    return `  [${toolSettings.tool[item.key] ? "x" : " "}] ${item.label}`;
+  function activeSettingsSectionIndex(): number {
+    for (let index = menu.selected; index >= 0; index -= 1) {
+      if (settingsItems[index]?.kind === "section") return index;
+    }
+    return -1;
+  }
+
+  function settingsItemLabel(item: SettingsItem, index: number): string {
+    if (item.kind === "section") {
+      const sectionColor =
+        activeSettingsSectionIndex() === index
+          ? tuiTheme.colors.activeLabel
+          : tuiTheme.colors.inactiveLabel;
+      return `{${sectionColor}-fg}{bold}${item.label}{/bold}{/${sectionColor}-fg}`;
+    }
+    if (item.kind === "note") {
+      return `  {${tuiTheme.colors.inactiveLabel}-fg}${item.label}{/${tuiTheme.colors.inactiveLabel}-fg}`;
+    }
+    const enabled = Boolean(toolSettings.tool[item.key]);
+    const checkbox = enabled ? "✓" : " ";
+    const checkboxColor = enabled
+      ? tuiTheme.colors.activeCheckboxFg
+      : tuiTheme.colors.inactiveCheckboxFg;
+    return `  {${checkboxColor}-fg}[${checkbox}]{/${checkboxColor}-fg} ${item.label}`;
+  }
+
+  function setSettingsMenuItems() {
+    const selected = Math.min(
+      Math.max(menu.selected, 0),
+      settingsItems.length - 1,
+    );
+    updatingSettingsMenuItems = true;
+    try {
+      menu.setItems(settingsItems.map(settingsItemLabel));
+      menu.select(selected);
+    } finally {
+      updatingSettingsMenuItems = false;
+    }
   }
 
   function selectedSettingsItem(): SettingsItem | null {
@@ -568,8 +743,8 @@ export function createApp(opts: {
       } else {
         details.push(
           `{${tuiTheme.colors.helpSectionTitle}-fg}Behavior{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Terminal text selection mode disables mouse handling in the logs panel.{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Use PageUp, PageDown, Home and End to scroll logs while this mode is enabled. Some terminals may still require Shift during selection.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  When enabled before startup, terminal text selection mode disables TUI mouse handling for the session.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Changes to this setting take effect the next time the TUI starts. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${tuiTheme.colors.descriptionText}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${tuiTheme.colors.descriptionText}-fg}`,
         );
       }
@@ -599,7 +774,8 @@ export function createApp(opts: {
       );
       return;
     }
-    applyLogSelectionMode();
+    applyLogPanelLabel();
+    if (currentView === "settings") setSettingsMenuItems();
     appendLogText(`[info] Settings changed (${reason}).\n`, "system");
     renderSettingsHelp();
     screen.render();
@@ -642,7 +818,8 @@ export function createApp(opts: {
       renderDiagnosticsBox();
       currentActions = [];
       menu.setItems(mainItems.map((item) => item.label));
-      content.setLabel("Overview");
+      menuLabelText = "Main Menu";
+      contentLabelText = "Overview";
       content.setContent(
         [
           `{${tuiTheme.colors.logo}-fg}${CANVA_LOGO_LINES.join("\n")}{/${tuiTheme.colors.logo}-fg}`,
@@ -662,25 +839,33 @@ export function createApp(opts: {
           "  Repository: https://github.com/coletivo420/canva-linux",
         ].join("\n"),
       );
+      applyFocusStyles();
       screen.render();
       return;
     }
     if (view === "help") {
       currentActions = [];
       menu.setItems(["Back to Main"]);
-      content.setLabel("Help");
+      menuLabelText = "Help";
+      contentLabelText = "Help";
       content.setContent(
         [
           `{${tuiTheme.colors.helpTitle}-fg}Help{/${tuiTheme.colors.helpTitle}-fg}`,
           "",
           `{${tuiTheme.colors.helpSectionTitle}-fg}Navigation{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Up/Down        Move selection{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Enter          Select action{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Esc            Confirm exit{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  q              Quit{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Tab / Shift+Tab       Move focus between menu, diagnostics, action panel and logs{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Up/Down               Move menu selection when the menu is focused{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Enter                 Select action only when the menu is focused{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Space                 Toggle setting checkbox only when Application Settings is focused{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  PageUp/PageDown       Scroll the focused panel{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Home/End              Move the focused scrollable panel to start/end{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Esc                   Back to main or confirm exit{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  q                     Quit{/${tuiTheme.colors.descriptionText}-fg}`,
           "",
           `{${tuiTheme.colors.helpSectionTitle}-fg}Panels{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Alt+Up/Down or Shift+PgUp/PgDn scroll action panel{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Active panel: highlighted border and label{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Active cell: highlighted menu/settings row{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${tuiTheme.colors.descriptionText}-fg}  Alt+Up/Down or Shift+PgUp/PgDn still scroll action panel directly{/${tuiTheme.colors.descriptionText}-fg}`,
           "",
           `{${tuiTheme.colors.helpSectionTitle}-fg}Logs{/${tuiTheme.colors.helpSectionTitle}-fg}`,
           `{${tuiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${tuiTheme.colors.descriptionText}-fg}`,
@@ -697,6 +882,8 @@ export function createApp(opts: {
           `{${tuiTheme.colors.descriptionText}-fg}  Tool settings affect this installer/development interface. Final build settings apply to the packaged app and are reserved for a later phase.{/${tuiTheme.colors.descriptionText}-fg}`,
           "",
           `{${tuiTheme.colors.helpSectionTitle}-fg}Status colors{/${tuiTheme.colors.helpSectionTitle}-fg}`,
+          `  {${tuiTheme.colors.activeLabel}-fg}Active panel border / label{/${tuiTheme.colors.activeLabel}-fg}`,
+          `  {${tuiTheme.colors.activeCellFg}-fg}{${tuiTheme.colors.activeCellBg}-bg}Active cell row{/${tuiTheme.colors.activeCellBg}-bg}{/${tuiTheme.colors.activeCellFg}-fg}`,
           `  {${tuiTheme.colors.statusDetected}-fg}Detected / Completed{/${tuiTheme.colors.statusDetected}-fg}`,
           `  {${tuiTheme.colors.statusNotDetected}-fg}Not detected{/${tuiTheme.colors.statusNotDetected}-fg}`,
           `  {${tuiTheme.colors.warning}-fg}Running{/${tuiTheme.colors.warning}-fg}`,
@@ -706,14 +893,17 @@ export function createApp(opts: {
           `{${tuiTheme.colors.descriptionText}-fg}  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel{/${tuiTheme.colors.descriptionText}-fg}`,
         ].join("\n"),
       );
+      applyFocusStyles();
       screen.render();
       return;
     }
     if (view === "settings") {
       currentActions = [];
-      menu.setItems(settingsItems.map(settingsItemLabel));
-      content.setLabel("Application Settings");
+      setSettingsMenuItems();
+      menuLabelText = "Application Settings";
+      contentLabelText = "Application Settings";
       renderSettingsHelp();
+      applyFocusStyles();
       screen.render();
       return;
     }
@@ -725,19 +915,20 @@ export function createApp(opts: {
           : "development";
     currentActions = getActionsByGroup(group, opts.rootDir);
     menu.setItems(currentActions.map((a) => a.label));
-    content.setLabel(view[0].toUpperCase() + view.slice(1));
+    menuLabelText = `${view[0].toUpperCase() + view.slice(1)} Actions`;
+    contentLabelText = view[0].toUpperCase() + view.slice(1);
     renderActionHelp(view, menu.selected);
+    applyFocusStyles();
     screen.render();
   }
 
   menu.on("select", async (_, index) => {
-    if (running || modalActive) return;
+    if (running || modalActive || focusZone !== "menu") return;
     if (currentView === "main")
       return setView(mainItems[index]?.view ?? "main");
     if (currentView === "help") return setView("main");
     if (currentView === "settings") {
       toggleSelectedSetting();
-      menu.setItems(settingsItems.map(settingsItemLabel));
       return;
     }
     const action = currentActions[index];
@@ -905,6 +1096,12 @@ export function createApp(opts: {
   screen.key(["q"], () => {
     void confirmExit();
   });
+  screen.key(["tab"], () => {
+    if (!modalActive) moveFocus(1);
+  });
+  screen.key(["S-tab", "backtab"], () => {
+    if (!modalActive) moveFocus(-1);
+  });
   screen.key(["escape"], () => {
     if (modalActive) return;
     if (running) {
@@ -952,60 +1149,76 @@ export function createApp(opts: {
     screen.render();
   });
   screen.key(["pageup"], () => {
-    logs.scroll(-10);
+    if (!modalActive) scrollFocusedPanel(-10);
     screen.render();
   });
   screen.key(["pagedown"], () => {
-    logs.scroll(10);
+    if (!modalActive) scrollFocusedPanel(10);
     screen.render();
   });
   screen.key(["home"], () => {
-    logs.setScrollPerc(0);
+    if (!modalActive) setFocusedPanelScroll(0);
     screen.render();
   });
   screen.key(["end"], () => {
-    logs.setScrollPerc(100);
+    if (!modalActive) setFocusedPanelScroll(100);
     screen.render();
   });
   screen.key(["?"], () => {
     if (!running && !modalActive) setView("help");
   });
   screen.key(["space"], () => {
-    if (!running && !modalActive && currentView === "settings") {
+    if (
+      !running &&
+      !modalActive &&
+      focusZone === "menu" &&
+      currentView === "settings"
+    ) {
       toggleSelectedSetting();
-      menu.setItems(settingsItems.map(settingsItemLabel));
     }
   });
+  menu.on("click", () => {
+    if (!modalActive) setFocusZone("menu");
+  });
+  diagnostics.on("click", () => {
+    if (!modalActive) setFocusZone("diagnostics");
+  });
+  content.on("click", () => {
+    if (!modalActive) setFocusZone("content");
+  });
+  logs.on("click", () => {
+    if (!modalActive) setFocusZone("logs");
+  });
   menu.on("keypress", (_, key) => {
+    if (updatingSettingsMenuItems) return;
     if (
       (key.name === "up" || key.name === "down") &&
       ["install", "development", "maintenance"].includes(currentView)
     ) {
-      clearProgressOnNavigation();
-      renderActionHelp(currentView, menu.selected);
+      renderSelectionDetails();
       screen.render();
     }
     if (
       (key.name === "up" || key.name === "down") &&
       currentView === "settings"
     ) {
-      renderSettingsHelp();
+      renderSelectionDetails();
       screen.render();
     }
   });
   menu.on("select item", () => {
+    if (updatingSettingsMenuItems) return;
     if (["install", "development", "maintenance"].includes(currentView)) {
-      clearProgressOnNavigation();
-      renderActionHelp(currentView, menu.selected);
+      renderSelectionDetails();
       screen.render();
     }
     if (currentView === "settings") {
-      renderSettingsHelp();
+      renderSelectionDetails();
       screen.render();
     }
   });
 
-  applyLogSelectionMode();
+  applyLogPanelLabel();
   importLauncherSessionLog();
   appendLogText(
     `[info] TUI started. version=${opts.version} phase=${opts.phase}\n`,
