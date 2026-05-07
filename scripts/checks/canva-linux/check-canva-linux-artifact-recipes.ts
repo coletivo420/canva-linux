@@ -5,7 +5,21 @@ export function main(): number {
   const adapter = createCanvaLinuxC420UIAdapter(process.cwd());
   const workflows = adapter.loadArtifactWorkflows();
   const actions = new Set(adapter.loadActions().map((action) => action.id));
+  const workflowsById = new Map(workflows.map((workflow) => [workflow.id, workflow]));
   const failures: string[] = [];
+
+  for (const id of ["appimage", "flatpak", "native-system", "native-user"]) {
+    if (!workflowsById.has(id)) failures.push(`missing required artifact workflow: ${id}`);
+  }
+
+  for (const id of ["deb", "rpm", "aur"]) {
+    const workflow = workflowsById.get(id);
+    if (!workflow) {
+      failures.push(`missing planned artifact workflow: ${id}`);
+    } else if (!workflow.planned) {
+      failures.push(`${id}: package workflow must be marked planned`);
+    }
+  }
 
   for (const workflow of workflows) {
     if (!workflow.id || !workflow.label) failures.push("artifact workflows must have id and label");
@@ -24,6 +38,12 @@ export function main(): number {
     }
     if (!workflow.planned && workflow.kind !== "native" && !("outputPattern" in workflow)) {
       failures.push(`${workflow.id}: concrete packaged artifacts must declare outputPattern`);
+    }
+    if (workflow.scope === "system" && workflow.requiresRoot !== true) {
+      failures.push(`${workflow.id}: system-scoped workflows must require root`);
+    }
+    if (workflow.scope === "user" && workflow.requiresRoot === true) {
+      failures.push(`${workflow.id}: user-scoped workflows must not require root`);
     }
   }
 
