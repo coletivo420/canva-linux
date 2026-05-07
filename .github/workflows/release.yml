@@ -1,0 +1,155 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Linux packaging dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            appstream \
+            desktop-file-utils \
+            flatpak \
+            flatpak-builder
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Validate release identity
+        run: |
+          public_version="$(node -p "require('./scripts/project-ui.json').displayVersion")"
+          package_version="$(node -p "require('./package.json').version")"
+          phase="$(node -p "require('./scripts/project-ui.json').phase")"
+          shell_display_version="$(grep '^PROJECT_DISPLAY_VERSION=' scripts/app-identity-common.sh | cut -d'"' -f2)"
+          shell_phase="$(grep '^PROJECT_PHASE=' scripts/app-identity-common.sh | cut -d'"' -f2)"
+
+          if [[ ! "$package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::package.json version does not map to project identity: ${package_version}"
+            exit 1
+          fi
+
+          test "$package_version" = "$public_version"
+          test "$phase" = "$public_version"
+          test "$shell_display_version" = "$public_version"
+          test "$shell_phase" = "$public_version"
+
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            test "${GITHUB_REF_NAME}" = "v${public_version}"
+          fi
+
+          echo "RELEASE_VERSION=${public_version}" >> "$GITHUB_ENV"
+
+      - name: Verify removed interface routing references
+        run: |
+          if grep -REn -- '--tui|--no-tui|CANVA_NO_TUI|CANVA_TUI([^_A-Z]|$)|Shell Tool|F4 Shell Tool|shell fallback' README.md docs; then
+            echo "::error::Active docs still reference removed interface routing or shell fallback terms"
+            exit 1
+          fi
+
+      - name: Run validation
+        run: npm run validate:project
+
+      - name: Clean release artifacts
+        run: |
+          mkdir -p dist
+          rm -f dist/*.AppImage
+          rm -f dist/*.AppImage.sha256
+          rm -f dist/*.flatpak
+          rm -f dist/*linux-unpacked*.tar.gz
+          rm -f dist/SHA256SUMS
+
+      - name: Build AppImage
+        run: ./scripts/build-appimage.sh
+
+      - name: Build Flatpak bundle
+        run: ./scripts/build-flatpak-bundle.sh
+
+      - name: Create release artifacts
+        run: |
+          mkdir -p dist
+          shopt -s nullglob
+
+          appimage_paths=(dist/canva-linux-${RELEASE_VERSION}-*.AppImage)
+          flatpak_paths=(dist/canva-linux-${RELEASE_VERSION}-*.flatpak)
+          linux_unpacked="dist/linux-unpacked"
+          linux_arch="$(uname -m)"
+          tarball_path="dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-${linux_arch}.tar.gz"
+
+          if [[ "${#appimage_paths[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one AppImage artifact, found ${#appimage_paths[@]}"
+            exit 1
+          fi
+          if [[ "${#flatpak_paths[@]}" -ne 1 ]]; then
+            echo "::error::Expected exactly one Flatpak artifact, found ${#flatpak_paths[@]}"
+            exit 1
+          fi
+
+          test -s "${appimage_paths[0]}"
+          test -s "${flatpak_paths[0]}"
+          test -d "$linux_unpacked"
+
+          tar -C dist -czf "$tarball_path" linux-unpacked
+
+          release_assets=(
+            "$(basename "${appimage_paths[0]}")"
+            "$(basename "${flatpak_paths[0]}")"
+            "$(basename "$tarball_path")"
+          )
+
+          (
+            cd dist
+            sha256sum "${release_assets[@]}" > SHA256SUMS
+          )
+
+      - name: Verify expected artifacts
+        run: |
+          shopt -s nullglob
+          release_assets=(
+            dist/canva-linux-${RELEASE_VERSION}-*.AppImage
+            dist/canva-linux-${RELEASE_VERSION}-*.flatpak
+            dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-*.tar.gz
+          )
+
+          if [[ "${#release_assets[@]}" -ne 3 ]]; then
+            echo "::error::Expected exactly three release artifacts, found ${#release_assets[@]}"
+            exit 1
+          fi
+
+          test -s "dist/SHA256SUMS"
+          for asset in "${release_assets[@]}"; do
+            test -s "$asset"
+            grep -Fq "$(basename "$asset")" dist/SHA256SUMS
+          done
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.RELEASE_VERSION }}
+          name: Canva Linux ${{ env.RELEASE_VERSION }} Alpha
+          body_path: docs/RELEASE.md
+          fail_on_unmatched_files: true
+          files: |
+            dist/canva-linux-${{ env.RELEASE_VERSION }}-*.AppImage
+            dist/canva-linux-${{ env.RELEASE_VERSION }}-*.flatpak
+            dist/canva-linux-${{ env.RELEASE_VERSION }}-linux-unpacked-*.tar.gz
+            dist/SHA256SUMS

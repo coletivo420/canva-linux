@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // @ts-check
 
@@ -26,10 +26,24 @@ export type SessionLike = {
 export type WebContentsLike = {
   session?: SessionLike;
   getURL(): string;
-  getLastWebPreferences(): { contextIsolation?: boolean; nodeIntegration?: boolean; sandbox?: boolean } | null | undefined;
+  getLastWebPreferences():
+    | {
+        contextIsolation?: boolean;
+        nodeIntegration?: boolean;
+        sandbox?: boolean;
+      }
+    | null
+    | undefined;
   on(event: string, listener: (...args: any[]) => void): unknown;
   once(event: string, listener: (...args: any[]) => void): unknown;
-  setWindowOpenHandler(handler: (details: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => { action: 'deny' | 'allow' }): void;
+  setWindowOpenHandler(
+    handler: (details: {
+      url: string;
+      openerUrl?: string;
+      disposition?: string;
+      frameName?: string;
+    }) => { action: "deny" | "allow" },
+  ): void;
   loadURL(url: string): Promise<void> | void;
 };
 export type BrowserWindowLike = {
@@ -70,9 +84,14 @@ type CreateOAuthHelpersOptions = {
   authPopups: AuthPopupMap;
   getActiveTab: () => CanvaTabEntry | undefined;
   BrowserWindow: new (options: Record<string, unknown>) => BrowserWindowLike;
-  classifyNavigationRequest: (input: { url?: string; openerUrl?: string; disposition?: string; frameName?: string }) => { kind: string; url?: string };
+  classifyNavigationRequest: (input: {
+    url?: string;
+    openerUrl?: string;
+    disposition?: string;
+    frameName?: string;
+  }) => { kind: string; url?: string };
   debugLog: DebugLog;
-  detectCanvaOAuthCallback: (url: string) => 'authorized' | 'oauth' | null;
+  detectCanvaOAuthCallback: (url: string) => "authorized" | "oauth" | null;
   extractHostname: (urlish: string) => string;
   flushSession: (session: SessionLike) => Promise<void>;
   getCanvaSession: () => SessionLike;
@@ -84,7 +103,9 @@ type CreateOAuthHelpersOptions = {
   mainWindowRef: () => { focus(): void } | null;
   nextPopupIdRef: () => number;
   shell: { openExternal(url: string): Promise<void> | void };
-  sharedWebPreferences: (extra?: Record<string, unknown>) => Record<string, unknown>;
+  sharedWebPreferences: (
+    extra?: Record<string, unknown>,
+  ) => Record<string, unknown>;
   summarizeOauthEntry: (entry: OAuthPopupEntry | undefined) => string;
   windowLabel: (window: BrowserWindowLike) => string;
 };
@@ -197,9 +218,9 @@ export function createOAuthPopupInitialState({
     sawExternalProvider: isOAuthProviderUrl(startUrl),
     sawAuthorizedCallback: false,
     completionHandled: false,
-    pendingCallbackUrl: '',
+    pendingCallbackUrl: "",
     allowClose: false,
-    closeReason: 'unknown',
+    closeReason: "unknown",
     sourceWebContentsId,
   };
 }
@@ -208,11 +229,20 @@ export function createOAuthPopupInitialState({
  * @param {BrowserWindowLike} window
  * @returns {{ partition: string; contextIsolation: boolean; nodeIntegration: boolean; sandbox: boolean }}
  */
-export function createOAuthPopupOptionsSummary(window: BrowserWindowLike): { partition: string; contextIsolation: boolean; nodeIntegration: boolean; sandbox: boolean } {
+export function createOAuthPopupOptionsSummary(window: BrowserWindowLike): {
+  partition: string;
+  contextIsolation: boolean;
+  nodeIntegration: boolean;
+  sandbox: boolean;
+} {
   return {
-    partition: window.webContents.session?.partition || 'unknown',
-    contextIsolation: Boolean(window.webContents.getLastWebPreferences()?.contextIsolation),
-    nodeIntegration: Boolean(window.webContents.getLastWebPreferences()?.nodeIntegration),
+    partition: window.webContents.session?.partition || "unknown",
+    contextIsolation: Boolean(
+      window.webContents.getLastWebPreferences()?.contextIsolation,
+    ),
+    nodeIntegration: Boolean(
+      window.webContents.getLastWebPreferences()?.nodeIntegration,
+    ),
     sandbox: Boolean(window.webContents.getLastWebPreferences()?.sandbox),
   };
 }
@@ -272,13 +302,26 @@ export function createOAuthHelpers({
    * @param {CloseAuthPopupOptions} [options]
    * @returns {void}
    */
-  function closeAuthPopup(popupId: number, { reloadActiveTab = true, reason = 'manual-close' }: CloseAuthPopupOptions = {}): void {
+  function closeAuthPopup(
+    popupId: number,
+    {
+      reloadActiveTab = true,
+      reason = "manual-close",
+    }: CloseAuthPopupOptions = {},
+  ): void {
     const entry = authPopups.get(popupId);
     if (entry) {
       entry.closeReason = reason;
       entry.allowClose = true;
     }
-    debugLog('oauth', 'close-popup', popupId, `reload=${reloadActiveTab}`, `reason=${reason}`, summarizeOauthEntry(entry));
+    debugLog(
+      "oauth",
+      "close-popup",
+      popupId,
+      `reload=${reloadActiveTab}`,
+      `reason=${reason}`,
+      summarizeOauthEntry(entry),
+    );
     if (!entry) return;
     authPopups.delete(popupId);
 
@@ -288,7 +331,12 @@ export function createOAuthHelpers({
 
     if (reloadActiveTab) {
       const activeTab = getActiveTab();
-      debugLog('oauth', 'reload-active-tab-after-popup', popupId, activeTab ? `tab=${activeTab.id}` : 'tab=none');
+      debugLog(
+        "oauth",
+        "reload-active-tab-after-popup",
+        popupId,
+        activeTab ? `tab=${activeTab.id}` : "tab=none",
+      );
       activeTab?.view.webContents.reload();
     }
 
@@ -299,7 +347,9 @@ export function createOAuthHelpers({
    * @param {BrowserWindowLike | null | undefined} window
    * @returns {void}
    */
-  function setAuthPopupTitle(window: BrowserWindowLike | null | undefined): void {
+  function setAuthPopupTitle(
+    window: BrowserWindowLike | null | undefined,
+  ): void {
     if (!window || window.isDestroyed()) return;
     window.setTitle(`${appName} — Login`);
   }
@@ -308,7 +358,9 @@ export function createOAuthHelpers({
    * @param {() => string} shellBackgroundColor
    * @returns {Record<string, unknown>}
    */
-  function popupWindowOptions(shellBackgroundColor: () => string): Record<string, unknown> {
+  function popupWindowOptions(
+    shellBackgroundColor: () => string,
+  ): Record<string, unknown> {
     return {
       width: 520,
       height: 760,
@@ -329,9 +381,13 @@ export function createOAuthHelpers({
    * @param {RegisterAuthPopupOptions} options
    * @returns {OAuthPopupEntry}
    */
-  function registerAuthPopupWindow(window: BrowserWindowLike, startUrl: string, options: RegisterAuthPopupOptions): OAuthPopupEntry {
+  function registerAuthPopupWindow(
+    window: BrowserWindowLike,
+    startUrl: string,
+    options: RegisterAuthPopupOptions,
+  ): OAuthPopupEntry {
     const popupId = nextPopupIdRef();
-    const { openerUrl = '', sourceWebContentsId = null } = options;
+    const { openerUrl = "", sourceWebContentsId = null } = options;
     const popupOptionsSummary = createOAuthPopupOptionsSummary(window);
     const popupSessionPartition = popupOptionsSummary.partition;
     const sameAsCanvaSession = window.webContents.session === getCanvaSession();
@@ -346,95 +402,173 @@ export function createOAuthHelpers({
     });
     authPopups.set(popupId, entry);
 
-    debugLog('oauth', 'popup-created', summarizeOauthEntry(entry), startUrl || 'about:blank', `opener=${openerUrl || 'unknown'}`);
-    debugLog('oauth', 'popup-options', `popup=${popupId}`, popupOptionsSummary);
-    debugLog('oauth', `popup-session-same-as-canva=${sameAsCanvaSession ? 'true' : 'false'}`, `popup=${popupId}`);
-    if (popupSessionPartition && popupSessionPartition !== 'unknown') {
-      debugLog('oauth', 'popup-session-partition', `popup=${popupId}`, popupSessionPartition);
+    debugLog(
+      "oauth",
+      "popup-created",
+      summarizeOauthEntry(entry),
+      startUrl || "about:blank",
+      `opener=${openerUrl || "unknown"}`,
+    );
+    debugLog("oauth", "popup-options", `popup=${popupId}`, popupOptionsSummary);
+    debugLog(
+      "oauth",
+      `popup-session-same-as-canva=${sameAsCanvaSession ? "true" : "false"}`,
+      `popup=${popupId}`,
+    );
+    if (popupSessionPartition && popupSessionPartition !== "unknown") {
+      debugLog(
+        "oauth",
+        "popup-session-partition",
+        `popup=${popupId}`,
+        popupSessionPartition,
+      );
     }
 
     window.setMenuBarVisibility(false);
     setAuthPopupTitle(window);
     window.show();
-    debugLog('oauth', 'popup-show', `popup=${popupId}`);
+    debugLog("oauth", "popup-show", `popup=${popupId}`);
     window.focus();
-    debugLog('oauth', 'popup-focus', `popup=${popupId}`);
-    debugLog('oauth', 'popup-bounds', `popup=${popupId}`, window.getBounds());
-    window.once('ready-to-show', () => {
-      debugLog('oauth', 'popup-ready-to-show', `popup=${popupId}`, windowLabel(window));
+    debugLog("oauth", "popup-focus", `popup=${popupId}`);
+    debugLog("oauth", "popup-bounds", `popup=${popupId}`, window.getBounds());
+    window.once("ready-to-show", () => {
+      debugLog(
+        "oauth",
+        "popup-ready-to-show",
+        `popup=${popupId}`,
+        windowLabel(window),
+      );
       window.show();
-      debugLog('oauth', 'popup-show', `popup=${popupId}`);
+      debugLog("oauth", "popup-show", `popup=${popupId}`);
       window.focus();
-      debugLog('oauth', 'popup-focus', `popup=${popupId}`);
-      debugLog('oauth', 'popup-bounds', `popup=${popupId}`, window.getBounds());
+      debugLog("oauth", "popup-focus", `popup=${popupId}`);
+      debugLog("oauth", "popup-bounds", `popup=${popupId}`, window.getBounds());
     });
-    window.on('close', () => {
+    window.on("close", (event?: { preventDefault?: () => void }) => {
       if (!entry.allowClose && !entry.completionHandled) {
-        entry.closeReason = 'closed-before-callback';
-        debugLog('oauth', 'popup-close-before-callback', `popup=${popupId}`);
+        event?.preventDefault?.();
+        entry.closeReason = "closed-before-callback";
+        debugLog("oauth", "popup-close-before-callback", `popup=${popupId}`);
         return;
       }
-      if (!entry.closeReason || entry.closeReason === 'unknown') {
-        entry.closeReason = entry.completionHandled ? 'auth-complete' : 'user-or-provider-close';
+      if (!entry.closeReason || entry.closeReason === "unknown") {
+        entry.closeReason = entry.completionHandled
+          ? "auth-complete"
+          : "user-or-provider-close";
       }
     });
-    window.on('closed', () => {
-      debugLog('oauth', 'popup-closed', summarizeOauthEntry(entry), `reason=${entry.closeReason || 'unknown'}`);
+    window.on("closed", () => {
+      debugLog(
+        "oauth",
+        "popup-closed",
+        summarizeOauthEntry(entry),
+        `reason=${entry.closeReason || "unknown"}`,
+      );
       authPopups.delete(popupId);
       mainWindowRef()?.focus();
     });
 
     const wc = window.webContents;
 
-    wc.on('did-finish-load', () => {
-      const loadedUrl = wc.getURL() || startUrl || 'about:blank';
-      debugLog('oauth', 'popup-finish-load', `popup=${popupId}`, loadedUrl);
-      if (entry.sawAuthorizedCallback && entry.pendingCallbackUrl === loadedUrl && !entry.completionHandled) {
+    wc.on("did-finish-load", () => {
+      const loadedUrl = wc.getURL() || startUrl || "about:blank";
+      debugLog("oauth", "popup-finish-load", `popup=${popupId}`, loadedUrl);
+      if (
+        entry.sawAuthorizedCallback &&
+        entry.pendingCallbackUrl === loadedUrl &&
+        !entry.completionHandled
+      ) {
         entry.completionHandled = true;
         flushSession(getCanvaSession())
           .catch(() => {})
           .finally(() => {
-            debugLog('oauth', 'popup-authorized-callback', `popup=${popupId}`, loadedUrl);
-            closeAuthPopup(popupId, { reloadActiveTab: true, reason: 'authorized-callback-loaded' });
+            debugLog(
+              "oauth",
+              "popup-authorized-callback",
+              `popup=${popupId}`,
+              loadedUrl,
+            );
+            closeAuthPopup(popupId, {
+              reloadActiveTab: true,
+              reason: "authorized-callback-loaded",
+            });
           });
       }
     });
 
-    wc.on('page-favicon-updated', (_event: unknown, favicons: string[]) => {
-      debugLog('oauth', 'popup-favicon-updated', `popup=${popupId}`, favicons?.[0] || 'none');
+    wc.on("page-favicon-updated", (_event: unknown, favicons: string[]) => {
+      debugLog(
+        "oauth",
+        "popup-favicon-updated",
+        `popup=${popupId}`,
+        favicons?.[0] || "none",
+      );
     });
 
-    wc.on('page-title-updated', (event: { preventDefault(): void }, title: string) => {
-      debugLog('oauth', 'popup-title-updated', `popup=${popupId}`, title || appName);
-      event.preventDefault();
-      setAuthPopupTitle(window);
-    });
+    wc.on(
+      "page-title-updated",
+      (event: { preventDefault(): void }, title: string) => {
+        debugLog(
+          "oauth",
+          "popup-title-updated",
+          `popup=${popupId}`,
+          title || appName,
+        );
+        event.preventDefault();
+        setAuthPopupTitle(window);
+      },
+    );
 
-    wc.setWindowOpenHandler(({ url, openerUrl: childOpenerUrl, disposition, frameName }: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => {
-      const request = classifyNavigationRequest({
+    wc.setWindowOpenHandler(
+      ({
         url,
-        openerUrl: childOpenerUrl || wc.getURL(),
+        openerUrl: childOpenerUrl,
         disposition,
         frameName,
-      });
-      debugLog(request.kind === 'oauth-popup' ? 'oauth' : 'tabs', 'popup-window-open', `popup=${popupId}`, `kind=${request.kind}`, url || 'about:blank', disposition || 'unknown', frameName || '');
-      if (request.kind === 'oauth-popup' || isCanvaUrl(url)) {
-        window.focus();
-        if (!isBlankPopupUrl(url)) {
-          window.loadURL(url);
+      }: {
+        url: string;
+        openerUrl?: string;
+        disposition?: string;
+        frameName?: string;
+      }) => {
+        const request = classifyNavigationRequest({
+          url,
+          openerUrl: childOpenerUrl || wc.getURL(),
+          disposition,
+          frameName,
+        });
+        debugLog(
+          request.kind === "oauth-popup" ? "oauth" : "tabs",
+          "popup-window-open",
+          `popup=${popupId}`,
+          `kind=${request.kind}`,
+          url || "about:blank",
+          disposition || "unknown",
+          frameName || "",
+        );
+        if (request.kind === "oauth-popup" || isCanvaUrl(url)) {
+          window.focus();
+          if (!isBlankPopupUrl(url)) {
+            window.loadURL(url);
+          }
+          return { action: "deny" };
         }
-        return { action: 'deny' };
-      }
-      if (isSafeExternalUrl(url)) {
-        shell.openExternal(url);
-      } else {
-        debugLog('oauth', 'popup-unsafe-external-blocked', `popup=${popupId}`, url || 'about:blank');
-      }
-      return { action: 'deny' };
-    });
+        if (isSafeExternalUrl(url)) {
+          shell.openExternal(url);
+        } else {
+          debugLog(
+            "oauth",
+            "popup-unsafe-external-blocked",
+            `popup=${popupId}`,
+            url || "about:blank",
+          );
+        }
+        return { action: "deny" };
+      },
+    );
 
-    wc.on('will-navigate', (event: { preventDefault(): void }, url: string) => {
-      debugLog('oauth', 'popup-will-navigate', `popup=${popupId}`, url);
+    wc.on("will-navigate", (event: { preventDefault(): void }, url: string) => {
+      debugLog("oauth", "popup-will-navigate", `popup=${popupId}`, url);
       if (isOAuthProviderUrl(url) || isCanvaUrl(url) || isBlankPopupUrl(url)) {
         return;
       }
@@ -442,7 +576,12 @@ export function createOAuthHelpers({
       if (isSafeExternalUrl(url)) {
         shell.openExternal(url);
       } else {
-        debugLog('oauth', 'popup-unsafe-navigation-blocked', `popup=${popupId}`, url || 'about:blank');
+        debugLog(
+          "oauth",
+          "popup-unsafe-navigation-blocked",
+          `popup=${popupId}`,
+          url || "about:blank",
+        );
       }
     });
 
@@ -453,15 +592,26 @@ export function createOAuthHelpers({
     const syncPopupState = async (url: string): Promise<void> => {
       if (isOAuthProviderUrl(url)) {
         entry.sawExternalProvider = true;
-        debugLog('oauth', 'popup-provider-seen', `popup=${popupId}`, extractHostname(url) || 'unknown-provider-host');
+        debugLog(
+          "oauth",
+          "popup-provider-seen",
+          `popup=${popupId}`,
+          extractHostname(url) || "unknown-provider-host",
+        );
         return;
       }
 
       const callbackType = detectCanvaOAuthCallback(url);
       if (!callbackType) return;
 
-      debugLog('oauth', 'popup-canva-callback-detected', `popup=${popupId}`, `type=${callbackType}`, url);
-      if (callbackType === 'authorized') {
+      debugLog(
+        "oauth",
+        "popup-canva-callback-detected",
+        `popup=${popupId}`,
+        `type=${callbackType}`,
+        url,
+      );
+      if (callbackType === "authorized") {
         entry.sawAuthorizedCallback = true;
         entry.pendingCallbackUrl = url;
         return;
@@ -470,28 +620,71 @@ export function createOAuthHelpers({
       entry.pendingCallbackUrl = url;
     };
 
-    wc.on('did-navigate', (_event: unknown, url: string) => {
-      debugLog('oauth', 'popup-did-navigate', `popup=${popupId}`, url);
+    wc.on("did-navigate", (_event: unknown, url: string) => {
+      debugLog("oauth", "popup-did-navigate", `popup=${popupId}`, url);
       syncPopupState(url).catch(() => {});
     });
-    wc.on('will-redirect', (_event: unknown, url: string, isInPlace: boolean, isMainFrame: boolean) => {
-      debugLog('oauth', 'popup-will-redirect', `popup=${popupId}`, `mainFrame=${isMainFrame ? 'true' : 'false'}`, `inPlace=${isInPlace ? 'true' : 'false'}`, url);
-    });
-    wc.on('did-redirect-navigation', (_event: unknown, url: string) => {
-      debugLog('oauth', 'popup-did-redirect-navigation', `popup=${popupId}`, url);
+    wc.on(
+      "will-redirect",
+      (
+        _event: unknown,
+        url: string,
+        isInPlace: boolean,
+        isMainFrame: boolean,
+      ) => {
+        debugLog(
+          "oauth",
+          "popup-will-redirect",
+          `popup=${popupId}`,
+          `mainFrame=${isMainFrame ? "true" : "false"}`,
+          `inPlace=${isInPlace ? "true" : "false"}`,
+          url,
+        );
+      },
+    );
+    wc.on("did-redirect-navigation", (_event: unknown, url: string) => {
+      debugLog(
+        "oauth",
+        "popup-did-redirect-navigation",
+        `popup=${popupId}`,
+        url,
+      );
       syncPopupState(url).catch(() => {});
     });
-    wc.on('did-fail-load', (_event: unknown, code: number, description: string, validatedURL: string, isMainFrame: boolean) => {
-      debugLog('oauth', 'popup-did-fail-load', `popup=${popupId}`, `mainFrame=${isMainFrame ? 'true' : 'false'}`, `code=${code}`, description || 'no-description', validatedURL || 'unknown-url');
+    wc.on(
+      "did-fail-load",
+      (
+        _event: unknown,
+        code: number,
+        description: string,
+        validatedURL: string,
+        isMainFrame: boolean,
+      ) => {
+        debugLog(
+          "oauth",
+          "popup-did-fail-load",
+          `popup=${popupId}`,
+          `mainFrame=${isMainFrame ? "true" : "false"}`,
+          `code=${code}`,
+          description || "no-description",
+          validatedURL || "unknown-url",
+        );
+      },
+    );
+    wc.on("render-process-gone", (_event: unknown, details: any) => {
+      debugLog(
+        "oauth",
+        "popup-render-process-gone",
+        `popup=${popupId}`,
+        `reason=${details?.reason || "unknown"}`,
+        `exitCode=${details?.exitCode ?? "unknown"}`,
+      );
     });
-    wc.on('render-process-gone', (_event: unknown, details: any) => {
-      debugLog('oauth', 'popup-render-process-gone', `popup=${popupId}`, `reason=${details?.reason || 'unknown'}`, `exitCode=${details?.exitCode ?? 'unknown'}`);
+    wc.on("unresponsive", () => {
+      debugLog("oauth", "popup-unresponsive", `popup=${popupId}`);
     });
-    wc.on('unresponsive', () => {
-      debugLog('oauth', 'popup-unresponsive', `popup=${popupId}`);
-    });
-    wc.on('responsive', () => {
-      debugLog('oauth', 'popup-responsive', `popup=${popupId}`);
+    wc.on("responsive", () => {
+      debugLog("oauth", "popup-responsive", `popup=${popupId}`);
     });
 
     return entry;
@@ -504,7 +697,12 @@ export function createOAuthHelpers({
    * @param {number | null} sourceWebContentsId
    * @returns {void}
    */
-  function openAuthPopupForTab(url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number | null): void {
+  function openAuthPopupForTab(
+    url: string,
+    openerUrl: string,
+    shellBackgroundColor: () => string,
+    sourceWebContentsId: number | null,
+  ): void {
     const popup = new BrowserWindow(popupWindowOptions(shellBackgroundColor));
     registerAuthPopupWindow(popup, url, {
       openerUrl,
@@ -522,9 +720,3 @@ export function createOAuthHelpers({
     setAuthPopupTitle,
   };
 }
-
-module.exports = {
-  createOAuthHelpers,
-  createOAuthPopupInitialState,
-  createOAuthPopupOptionsSummary,
-};

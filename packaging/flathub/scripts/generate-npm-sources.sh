@@ -2,5 +2,6 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 
-node "${SCRIPT_DIR}/generate-npm-sources.js"
+npm --prefix "${ROOT_DIR}" run run:ts -- packaging/flathub/scripts/generate-npm-sources.ts "$@"

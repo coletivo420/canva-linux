@@ -1,28 +1,18 @@
-#!/bin/bash
-# scripts/build-flatpak-bundle.sh - Generate a distributable Flatpak bundle on demand.
+#!/usr/bin/env bash
 set -euo pipefail
+# scripts/build-flatpak-bundle.sh - Generate a distributable Flatpak bundle on demand.
 
-## Console helpers
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-info()  { echo -e "${YELLOW}[info]${NC} $*"; }
-ok()    { echo -e "${GREEN}[ok]${NC}  $*"; }
-warn()  { echo -e "${YELLOW}[warn]${NC} $*"; }
-err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
-
-## Paths
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 
+source "${SCRIPT_DIR}/ui-common.sh"
 source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/flatpak-build-common.sh"
+source "${SCRIPT_DIR}/package-guidance-common.sh"
+ui_init
 trap 'restore_flatpak_build_artifact_permissions || true' EXIT
 
-## Usage
 usage() {
   cat <<'USAGE'
 Usage:
@@ -33,25 +23,15 @@ Options:
 USAGE
 }
 
-## Flags
 USE_EXISTING_REPO=false
 for arg in "$@"; do
   case "$arg" in
-    --use-existing-repo)
-      USE_EXISTING_REPO=true
-      ;;
-    --help|-h)
-      usage
-      exit 0
-      ;;
-    *)
-      usage
-      err "Unknown argument: $arg"
-      ;;
+    --use-existing-repo) USE_EXISTING_REPO=true ;;
+    --help|-h) usage; exit 0 ;;
+    *) usage; ui_die "Unknown argument: $arg" ;;
   esac
 done
 
-## Dependency checks
 require_command flatpak
 require_command flatpak-builder
 require_command npm
@@ -59,34 +39,44 @@ require_command node
 require_command realpath
 require_command stat
 require_node_major 22
+validate_package_version_semver
 
 VERSION="$(detect_package_version)"
 DIST_DIR="dist"
-BUNDLE_PATH="${DIST_DIR}/canva-linux-${VERSION}.flatpak"
+FLATPAK_ARCH="$(flatpak --default-arch)"
+BUNDLE_PATH="${DIST_DIR}/canva-linux-${VERSION}-${FLATPAK_ARCH}.flatpak"
 
-info "Generating Flatpak bundle for version ${VERSION}"
+ui_info "Generating Flatpak bundle for version ${VERSION} (${FLATPAK_ARCH})"
 
-## Repo helpers
 repo_has_app_ref() {
   [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/io\.github\.coletivo420\.canva-linux/'
 }
 
-## Ensure valid Flatpak repository exists
 if [[ "$USE_EXISTING_REPO" == true ]]; then
-  repo_has_app_ref || err "repo/ is missing or does not contain io.github.coletivo420.canva-linux refs"
-  info "Using existing repo/ directory by explicit request"
+  repo_has_app_ref || ui_die "repo/ is missing or does not contain io.github.coletivo420.canva-linux refs"
+  ui_info "Using existing repo/ directory by explicit request"
 else
+  print_flatpak_bundle_notice
   ensure_flathub_runtime
   build_electron_output
   ensure_linux_unpacked
   build_flatpak_repo
 fi
 
-## Create distributable bundle
 mkdir -p "$DIST_DIR"
-flatpak build-bundle repo "$BUNDLE_PATH" io.github.coletivo420.canva-linux \
+rm -f "$BUNDLE_PATH"
+flatpak build-bundle \
+  repo \
+  "$BUNDLE_PATH" \
+  io.github.coletivo420.canva-linux \
+  --arch="${FLATPAK_ARCH}" \
   --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 
+if [[ ! -s "$BUNDLE_PATH" ]]; then
+  ui_die "Expected Flatpak bundle was not generated: $BUNDLE_PATH"
+fi
+
 SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH")"
-ok "Bundle generated: $(realpath "$BUNDLE_PATH")"
-ok "Bundle size: ${SIZE_BYTES} bytes"
+ui_ok "Bundle generated: $(realpath "$BUNDLE_PATH")"
+ui_ok "Bundle size: ${SIZE_BYTES} bytes"
+ui_ok ".flatpak package generation completed."

@@ -1,95 +1,130 @@
-// @ts-nocheck
-'use strict';
+"use strict";
 
-// @ts-check
-
-const { ipcRenderer } = require('electron');
+const { ipcRenderer } = require("electron");
 
 const {
   CLEyeDropper,
   installClEyeDropperScalingPatch,
   removeClEyeDropperUi,
-} = require('./cl-eyedropper/index');
+} = require("./cl-eyedropper/index");
 
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- * @typedef {(...args: unknown[]) => void} EyeDropperLog
- * @typedef {{ dataUrl: string, width?: number, height?: number, cssWidth?: number, cssHeight?: number }} EyeDropperSnapshot
- * @typedef {{ sRGBHex: string }} EyeDropperResult
- * @typedef {{ signal?: AbortSignal }} EyeDropperOpenOptions
- */
+type DebugLog = (category: string, ...args: unknown[]) => boolean;
+type EyeDropperLog = (...args: unknown[]) => void;
+type EyeDropperSnapshot = {
+  dataUrl: string;
+  width?: number;
+  height?: number;
+  cssWidth?: number;
+  cssHeight?: number;
+};
+type SnapshotCanvas = {
+  host: HTMLDivElement;
+  canvas: HTMLCanvasElement;
+};
+type EyeDropperResult = { sRGBHex: string };
+type EyeDropperOpenOptions = { signal?: AbortSignal };
 
 /**
  * @returns {DOMException}
  */
 function createAbortError() {
-  return new DOMException('The operation was aborted.', 'AbortError');
+  return new DOMException("The operation was aborted.", "AbortError");
 }
 
 /**
  * @param {string} [message]
  * @returns {DOMException}
  */
-function createOperationError(message) {
-  return new DOMException(message || 'The operation failed.', 'OperationError');
+function createOperationError(message?: string) {
+  return new DOMException(message || "The operation failed.", "OperationError");
 }
 
 /**
  * @param {unknown} value
  * @returns {string | null}
  */
-function normalizeHex(value) {
-  if (typeof value !== 'string') return null;
+function normalizeHex(value: unknown) {
+  if (typeof value !== "string") return null;
   const match = value.trim().match(/^#?([0-9a-fA-F]{6})$/);
   return match && match[1] ? `#${match[1].toLowerCase()}` : null;
 }
 
 /**
- * @param {EyeDropperSnapshot} snapshot
- * @param {{ logEyeDropper: EyeDropperLog }} options
- * @returns {Promise<{ host: HTMLDivElement, canvas: HTMLCanvasElement }>}
+ * Creates an overlay host and a canvas containing the captured Canva window snapshot.
  */
-function createSnapshotCanvas(snapshot, { logEyeDropper }) {
-  return new Promise((resolve, reject) => {
+function createSnapshotCanvas(
+  snapshot: EyeDropperSnapshot,
+  { logEyeDropper }: { logEyeDropper: EyeDropperLog },
+): Promise<SnapshotCanvas> {
+  return new Promise<SnapshotCanvas>((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
-      const cssWidth = Math.max(1, Number(snapshot?.cssWidth) || window.innerWidth || image.naturalWidth || 1);
-      const cssHeight = Math.max(1, Number(snapshot?.cssHeight) || window.innerHeight || image.naturalHeight || 1);
-      const nativeWidth = Math.max(1, Number(snapshot?.width) || image.naturalWidth || cssWidth);
-      const nativeHeight = Math.max(1, Number(snapshot?.height) || image.naturalHeight || cssHeight);
+      const cssWidth = Math.max(
+        1,
+        Number(snapshot?.cssWidth) ||
+          window.innerWidth ||
+          image.naturalWidth ||
+          1,
+      );
+      const cssHeight = Math.max(
+        1,
+        Number(snapshot?.cssHeight) ||
+          window.innerHeight ||
+          image.naturalHeight ||
+          1,
+      );
+      const nativeWidth = Math.max(
+        1,
+        Number(snapshot?.width) || image.naturalWidth || cssWidth,
+      );
+      const nativeHeight = Math.max(
+        1,
+        Number(snapshot?.height) || image.naturalHeight || cssHeight,
+      );
 
-      const host = document.createElement('div');
-      host.setAttribute('data-canva-eyedropper-host', 'true');
+      const host = document.createElement("div");
+      host.setAttribute("data-canva-eyedropper-host", "true");
       Object.assign(host.style, {
-        position: 'fixed',
-        inset: '0',
-        zIndex: '2147483646',
-        background: 'transparent',
-        cursor: 'crosshair',
-        pointerEvents: 'auto',
-        overflow: 'hidden',
+        position: "fixed",
+        inset: "0",
+        zIndex: "2147483646",
+        background: "transparent",
+        cursor: "crosshair",
+        pointerEvents: "auto",
+        overflow: "hidden",
       });
 
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = nativeWidth;
       canvas.height = nativeHeight;
       Object.assign(canvas.style, {
-        position: 'absolute',
-        inset: '0',
+        position: "absolute",
+        inset: "0",
         width: `${cssWidth}px`,
         height: `${cssHeight}px`,
-        display: 'block',
-        cursor: 'crosshair',
-        pointerEvents: 'auto',
+        display: "block",
+        cursor: "crosshair",
+        pointerEvents: "auto",
       });
 
-      const context = canvas.getContext('2d', { willReadFrequently: true, alpha: false });
+      const context = canvas.getContext("2d", {
+        willReadFrequently: true,
+        alpha: false,
+      });
       if (!context) {
-        reject(new Error('Failed to create the color picker canvas.'));
+        reject(new Error("Failed to create the color picker canvas."));
         return;
       }
 
-      logEyeDropper('eyedropper:flow', 'canvas', `${nativeWidth}x${nativeHeight}`, 'css', `${cssWidth}x${cssHeight}`, 'image', `${image.naturalWidth}x${image.naturalHeight}`);
+      logEyeDropper(
+        "eyedropper:flow",
+        "canvas",
+        `${nativeWidth}x${nativeHeight}`,
+        "css",
+        `${cssWidth}x${cssHeight}`,
+        "image",
+        `${image.naturalWidth}x${image.naturalHeight}`,
+      );
 
       context.imageSmoothingEnabled = false;
       context.clearRect(0, 0, nativeWidth, nativeHeight);
@@ -99,7 +134,8 @@ function createSnapshotCanvas(snapshot, { logEyeDropper }) {
       (document.body || document.documentElement).appendChild(host);
       resolve({ host, canvas });
     };
-    image.onerror = () => reject(new Error('Failed to load the Canva window snapshot.'));
+    image.onerror = () =>
+      reject(new Error("Failed to load the Canva window snapshot."));
     image.src = snapshot.dataUrl;
   });
 }
@@ -107,67 +143,107 @@ function createSnapshotCanvas(snapshot, { logEyeDropper }) {
 // Own the custom EyeDropper snapshot/open lifecycle separately from the wrapper
 // installation so the preload entrypoint stays focused on composition.
 /**
+ * @param {unknown} error
+ * @returns {string | null}
+ */
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : null;
+}
+
+/**
+ * @param {unknown} error
+ * @returns {boolean}
+ */
+function isAbortLikeError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.name === "AbortError" || /abort/i.test(String(error.message || ""))
+  );
+}
+
+/**
  * @param {{ debugLog: DebugLog, logEyeDropper: EyeDropperLog }} options
  * @returns {{ wrapOpenCall: (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult> }}
  */
-function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
+function createCustomEyeDropperFlow({
+  debugLog,
+  logEyeDropper,
+}: {
+  debugLog: DebugLog;
+  logEyeDropper: EyeDropperLog;
+}) {
   /** @type {null | (() => void)} */
-  let activePickerCleanup = null;
+  let activePickerCleanup: null | (() => void) = null;
 
   /**
    * @returns {Promise<EyeDropperResult>}
    */
-  async function openClEyeDropper() {
+  async function openCLEyeDropper() {
     if (activePickerCleanup) {
-      throw createOperationError('A color picker is already active.');
+      throw createOperationError("A color picker is already active.");
     }
 
     installClEyeDropperScalingPatch(logEyeDropper);
-    debugLog('eyedropper:flow', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
-    logEyeDropper('eyedropper:flow', 'open-request', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
-
-    const snapshot = /** @type {EyeDropperSnapshot | null | undefined} */ (await ipcRenderer.invoke('wrapper:eyedropper-snapshot'));
-    if (!snapshot || typeof snapshot.dataUrl !== 'string') {
-      debugLog('eyedropper:flow', 'snapshot-invalid', typeof snapshot);
-      throw createOperationError('The Canva window snapshot failed.');
-    }
     debugLog(
-      'eyedropper:flow',
-      'snapshot-ready',
-      `${snapshot.width || 'unknown'}x${snapshot.height || 'unknown'}`,
-      'css',
-      `${snapshot.cssWidth || 'unknown'}x${snapshot.cssHeight || 'unknown'}`
+      "eyedropper:flow",
+      "open-request",
+      process.isMainFrame ? "main-frame" : "sub-frame",
+      location.href,
+    );
+    logEyeDropper(
+      "eyedropper:flow",
+      "open-request",
+      process.isMainFrame ? "main-frame" : "sub-frame",
+      location.href,
     );
 
-    const { host, canvas } = await createSnapshotCanvas(snapshot, { logEyeDropper });
+    const snapshot =
+      /** @type {EyeDropperSnapshot | null | undefined} */ await ipcRenderer.invoke(
+        "wrapper:eyedropper-snapshot",
+      );
+    if (!snapshot || typeof snapshot.dataUrl !== "string") {
+      debugLog("eyedropper:flow", "snapshot-invalid", typeof snapshot);
+      throw createOperationError("The Canva window snapshot failed.");
+    }
+    debugLog(
+      "eyedropper:flow",
+      "snapshot-ready",
+      `${snapshot.width || "unknown"}x${snapshot.height || "unknown"}`,
+      "css",
+      `${snapshot.cssWidth || "unknown"}x${snapshot.cssHeight || "unknown"}`,
+    );
+
+    const { host, canvas } = await createSnapshotCanvas(snapshot, {
+      logEyeDropper,
+    });
     const eyedropper = new CLEyeDropper({
       overlay: {
-        background: 'rgba(0,0,0,0)',
+        background: "rgba(0,0,0,0)",
         zIndex: 2147483647,
       },
       magnifier: {
-        width: '96px',
-        height: '96px',
+        width: "96px",
+        height: "96px",
         size: 18,
         zoom: 6,
-        border: '2px solid rgba(17,24,39,0.92)',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.28)',
-        background: '#fff',
+        border: "2px solid rgba(17,24,39,0.92)",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.28)",
+        background: "#fff",
       },
       preview: {
-        background: 'rgba(17,24,39,0.96)',
-        color: '#fff',
-        borderRadius: '10px',
-        boxShadow: '0 8px 30px rgba(0,0,0,0.28)',
-        padding: '8px 12px',
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '13px',
-        minWidth: '96px',
+        background: "rgba(17,24,39,0.96)",
+        color: "#fff",
+        borderRadius: "10px",
+        boxShadow: "0 8px 30px rgba(0,0,0,0.28)",
+        padding: "8px 12px",
+        fontFamily: "system-ui, sans-serif",
+        fontSize: "13px",
+        minWidth: "96px",
         zIndex: 2147483647,
       },
     });
 
-    return await new Promise((resolve, reject) => {
+    return new Promise<EyeDropperResult>((resolve, reject) => {
       let settled = false;
 
       const cleanup = () => {
@@ -176,11 +252,11 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
         }
         removeClEyeDropperUi();
         host.remove();
-        window.removeEventListener('keydown', onKeyDown, true);
+        window.removeEventListener("keydown", onKeyDown, true);
       };
 
       /** @param {EyeDropperResult} payload */
-      const finishResolve = (payload) => {
+      const finishResolve = (payload: EyeDropperResult) => {
         if (settled) return;
         settled = true;
         cleanup();
@@ -188,7 +264,7 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
       };
 
       /** @param {unknown} error */
-      const finishReject = (error) => {
+      const finishReject = (error: unknown) => {
         if (settled) return;
         settled = true;
         cleanup();
@@ -196,8 +272,8 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
       };
 
       /** @param {KeyboardEvent} event */
-      const onKeyDown = (event) => {
-        if (event.key === 'Escape') {
+      const onKeyDown = (event: KeyboardEvent) => {
+        if (event.key === "Escape") {
           event.preventDefault();
           event.stopPropagation();
           finishReject(createAbortError());
@@ -205,25 +281,39 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
       };
 
       activePickerCleanup = cleanup;
-      window.addEventListener('keydown', onKeyDown, true);
+      window.addEventListener("keydown", onKeyDown, true);
 
       requestAnimationFrame(() => {
-        Promise.resolve(eyedropper.open(canvas)).then((result) => {
-          debugLog('eyedropper:flow', 'open-resolved');
-          const hex = normalizeHex(result?.hex || result?.sRGBHex);
-          if (!hex) {
-            finishReject(createOperationError('The color picker library did not return a valid color.'));
-            return;
-          }
-          finishResolve({ sRGBHex: hex });
-        }).catch((error) => {
-          debugLog('eyedropper:flow', 'open-rejected', error && error.message ? error.message : 'unknown-error');
-          if (error && (error.name === 'AbortError' || /abort/i.test(String(error.message || '')))) {
-            finishReject(createAbortError());
-            return;
-          }
-          finishReject(createOperationError(error && error.message ? error.message : 'The color picker failed.'));
-        });
+        /** @type {Promise<EyeDropperResult | { hex?: string, sRGBHex?: string }>} */
+        const openPromise = Promise.resolve(eyedropper.open(canvas));
+
+        openPromise
+          .then((result) => {
+            debugLog("eyedropper:flow", "open-resolved");
+            const hex = normalizeHex(result?.hex || result?.sRGBHex);
+            if (!hex) {
+              finishReject(
+                createOperationError(
+                  "The color picker library did not return a valid color.",
+                ),
+              );
+              return;
+            }
+            finishResolve({ sRGBHex: hex });
+          })
+          .catch((error) => {
+            const message = getErrorMessage(error) || "unknown-error";
+            debugLog("eyedropper:flow", "open-rejected", message);
+            if (isAbortLikeError(error)) {
+              finishReject(createAbortError());
+              return;
+            }
+            finishReject(
+              createOperationError(
+                getErrorMessage(error) || "The color picker failed.",
+              ),
+            );
+          });
       });
     });
   }
@@ -232,42 +322,51 @@ function createCustomEyeDropperFlow({ debugLog, logEyeDropper }) {
    * @param {EyeDropperOpenOptions} [options]
    * @returns {Promise<EyeDropperResult>}
    */
-  function wrapOpenCall(options = {}) {
-    const signal = options?.signal;
+  function wrapOpenCall(
+    options: EyeDropperOpenOptions = {},
+  ): Promise<EyeDropperResult> {
+    const signal = options.signal;
     if (signal?.aborted) {
       return Promise.reject(createAbortError());
     }
 
     /** @type {undefined | (() => void)} */
-    let abortHandler;
-    const pickPromise = openClEyeDropper().then((result) => {
-      if (!result || typeof result.sRGBHex !== 'string') {
-        throw createOperationError('The wrapper eye dropper did not return a valid color.');
-      }
-      return { sRGBHex: result.sRGBHex };
-    }).catch((error) => {
-      if (error && error.name === 'AbortError') {
-        throw createAbortError();
-      }
-      throw createOperationError(error && error.message ? error.message : 'The wrapper eye dropper failed.');
-    });
+    let abortHandler: undefined | (() => void);
+    const pickPromise = openCLEyeDropper()
+      .then((result) => {
+        if (!result || typeof result.sRGBHex !== "string") {
+          throw createOperationError(
+            "The wrapper eye dropper did not return a valid color.",
+          );
+        }
+        return { sRGBHex: result.sRGBHex };
+      })
+      .catch((error: unknown) => {
+        if (isAbortLikeError(error)) {
+          throw createAbortError();
+        }
+        throw createOperationError(
+          getErrorMessage(error) || "The wrapper eye dropper failed.",
+        );
+      });
 
     if (!signal) {
       return pickPromise;
     }
 
-    const abortPromise = new Promise((_, reject) => {
+    /** @type {Promise<never>} */
+    const abortPromise: Promise<never> = new Promise((_, reject) => {
       abortHandler = () => {
         if (activePickerCleanup) {
           activePickerCleanup();
         }
         reject(createAbortError());
       };
-      signal.addEventListener('abort', abortHandler, { once: true });
+      signal.addEventListener("abort", abortHandler, { once: true });
     });
 
     return Promise.race([pickPromise, abortPromise]).finally(() => {
-      if (abortHandler) signal.removeEventListener('abort', abortHandler);
+      if (abortHandler) signal.removeEventListener("abort", abortHandler);
     });
   }
 

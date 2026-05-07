@@ -1,23 +1,40 @@
-'use strict';
+"use strict";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type WebContentsLike = { id?: number };
-type CapturedImageLike = { getSize(): { width: number; height: number }; toDataURL(): string };
+type CapturedImageLike = {
+  getSize(): { width: number; height: number };
+  toDataURL(): string;
+};
 type WebContentsViewLike = {
   getBounds(): { width: number; height: number };
   webContents: { capturePage(): Promise<CapturedImageLike> };
 };
 type TabEntry = { id: number; view: WebContentsViewLike };
-type FindTabByWebContentsFn = (webContents: WebContentsLike) => TabEntry | null | undefined;
+type FindTabByWebContentsFn = (
+  webContents: WebContentsLike,
+) => TabEntry | null | undefined;
 type IpcMainLike = {
-  handle(channel: string, listener: (event: { sender: WebContentsLike }, ...args: unknown[]) => unknown): void;
+  handle(
+    channel: string,
+    listener: (
+      event: { sender: WebContentsLike },
+      ...args: unknown[]
+    ) => unknown,
+  ): void;
 };
 
-function resolveRequestingTab(sender: WebContentsLike, findTabByWebContents: FindTabByWebContentsFn): TabEntry | null {
+function resolveRequestingTab(
+  sender: WebContentsLike,
+  findTabByWebContents: FindTabByWebContentsFn,
+): TabEntry | null {
   return findTabByWebContents(sender) || null;
 }
 
-function validateSnapshotRequester(sender: WebContentsLike, tab: TabEntry | null | undefined): tab is TabEntry {
+function validateSnapshotRequester(
+  sender: WebContentsLike,
+  tab: TabEntry | null | undefined,
+): tab is TabEntry {
   return Boolean(sender && tab && tab.view);
 }
 
@@ -35,14 +52,24 @@ function registerEyeDropperBridge({
   webContentsLabel: (webContents: WebContentsLike) => string;
   findTabByWebContents: FindTabByWebContentsFn;
 }): void {
-  ipcMain.handle('wrapper:eyedropper-snapshot', async (event) => {
-    debugLog('eyedropper:bridge', 'snapshot-request', webContentsLabel(event.sender));
+  ipcMain.handle("wrapper:eyedropper-snapshot", async (event) => {
+    debugLog(
+      "eyedropper:bridge",
+      "snapshot-request",
+      webContentsLabel(event.sender),
+    );
 
     const tab = resolveRequestingTab(event.sender, findTabByWebContents);
 
     if (!validateSnapshotRequester(event.sender, tab)) {
-      debugLog('eyedropper:bridge', 'snapshot-missing-tab', webContentsLabel(event.sender));
-      throw new Error('The active Canva tab was not found for the eyedropper snapshot.');
+      debugLog(
+        "eyedropper:bridge",
+        "snapshot-missing-tab",
+        webContentsLabel(event.sender),
+      );
+      throw new Error(
+        "The active Canva tab was not found for the eyedropper snapshot.",
+      );
     }
 
     const bounds = tab.view.getBounds();
@@ -53,7 +80,13 @@ function registerEyeDropperBridge({
 
     // Keep the preload working in CSS pixels even though capturePage() returns
     // native pixel dimensions from the BrowserView surface.
-    debugLog('eyedropper:bridge', 'snapshot', `${size.width}x${size.height}`, 'css', `${cssWidth}x${cssHeight}`);
+    debugLog(
+      "eyedropper:bridge",
+      "snapshot",
+      `${size.width}x${size.height}`,
+      "css",
+      `${cssWidth}x${cssHeight}`,
+    );
 
     return {
       dataUrl: image.toDataURL(),
@@ -71,12 +104,4 @@ export {
   validateSnapshotRequester,
 };
 
-export type {
-  FindTabByWebContentsFn,
-};
-
-module.exports = {
-  registerEyeDropperBridge,
-  resolveRequestingTab,
-  validateSnapshotRequester,
-};
+export type { FindTabByWebContentsFn };

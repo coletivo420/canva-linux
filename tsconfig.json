@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
     "noEmit": true,
     "target": "ES2022",
     "module": "commonjs",
@@ -16,11 +14,12 @@
     ]
   },
   "include": [
-    "electron/**/*.js",
     "electron/**/*.ts",
-    "scripts/**/*.js",
-    "test/**/*.js",
-    "playwright.config.js"
+    "scripts/**/*.ts",
+    "test/**/*.ts",
+    "playwright.config.ts",
+    "eslint.config.ts",
+    "packaging/flathub/scripts/**/*.ts"
   ],
   "exclude": [
     "node_modules",

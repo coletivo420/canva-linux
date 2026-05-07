@@ -1,17 +1,19 @@
-'use strict';
+"use strict";
 
 type DebugLevel = 0 | 1 | 2;
 type DebugEmitter = (category: string, args: unknown[]) => void;
 
 function getDebugLevel(): DebugLevel {
-  const explicitLevel = String(process?.env?.CANVA_DEBUG_LEVEL || '').trim();
-  if (explicitLevel === '1' || explicitLevel === '2') {
+  const explicitLevel = String(process?.env?.CANVA_DEBUG_LEVEL || "").trim();
+  if (explicitLevel === "1" || explicitLevel === "2") {
     return Number(explicitLevel) as 1 | 2;
   }
 
-  const raw = String(process?.env?.CANVA_DEBUG || '').trim().toLowerCase();
-  if (raw === '1') return 1;
-  if (raw === '2') return 2;
+  const raw = String(process?.env?.CANVA_DEBUG || "")
+    .trim()
+    .toLowerCase();
+  if (raw === "1") return 1;
+  if (raw === "2") return 2;
 
   return 0;
 }
@@ -28,16 +30,16 @@ function isDebugCategoryEnabled(): boolean {
   return isDebugEnabled();
 }
 
-function normalizeDebugCategory(category = 'app'): string {
-  const raw = String(category || 'app')
+function normalizeDebugCategory(category = "app"): string {
+  const raw = String(category || "app")
     .trim()
     .toLowerCase()
-    .replace(/\.+/g, ':')
-    .replace(/\s+/g, '')
-    .replace(/:+/g, ':')
-    .replace(/^:+|:+$/g, '');
+    .replace(/\.+/g, ":")
+    .replace(/\s+/g, "")
+    .replace(/:+/g, ":")
+    .replace(/^:+|:+$/g, "");
 
-  return raw || 'app';
+  return raw || "app";
 }
 
 function createDebugTools({ emit }: { emit: DebugEmitter }) {

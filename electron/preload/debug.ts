@@ -1,24 +1,36 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
 // @ts-check
 
-const { ipcRenderer } = require('electron');
+const { ipcRenderer } = require("electron");
 
-const { createDebugTools } = require('../shared/debug');
+const { createDebugTools } = require("../shared/debug");
 
 /**
  * @param {unknown} value
  * @returns {string | null}
  */
 function normalizeEyeDropperCategoryHint(value) {
-  const raw = String(value || '').trim().toLowerCase();
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase();
   if (!raw) return null;
-  if (raw.startsWith('eyedropper:')) return raw;
+  if (raw.startsWith("eyedropper:")) return raw;
 
-  if (['bridge', 'flow', 'wrapper', 'routing', 'capture', 'library', 'lib'].includes(raw)) {
-    if (raw === 'capture') return 'eyedropper:routing';
-    return `eyedropper:${raw === 'lib' ? 'library' : raw}`;
+  if (
+    [
+      "bridge",
+      "flow",
+      "wrapper",
+      "routing",
+      "capture",
+      "library",
+      "lib",
+    ].includes(raw)
+  ) {
+    if (raw === "capture") return "eyedropper:routing";
+    return `eyedropper:${raw === "lib" ? "library" : raw}`;
   }
 
   return null;
@@ -29,14 +41,14 @@ function normalizeEyeDropperCategoryHint(value) {
 /**
  * @param {{ source?: string }} options
  */
-function createPreloadDebug({ source = 'preload' }) {
+function createPreloadDebug({ source = "preload" }) {
   /**
    * @param {string} category
    * @param {...unknown} args
    */
   function routeDebug(category, ...args) {
     try {
-      ipcRenderer.send('wrapper:debug-log', { category, args, source });
+      ipcRenderer.send("wrapper:debug-log", { category, args, source });
     } catch {
       try {
         console.log(`[canva:${source}:${category}]`, ...args);
@@ -54,9 +66,12 @@ function createPreloadDebug({ source = 'preload' }) {
    * @param {...unknown} args
    */
   function logEyeDropper(...args) {
-    let category = 'eyedropper';
+    let category = "eyedropper";
     let payload = args;
-    const candidate = typeof args[0] === 'string' ? normalizeEyeDropperCategoryHint(args[0]) : null;
+    const candidate =
+      typeof args[0] === "string"
+        ? normalizeEyeDropperCategoryHint(args[0])
+        : null;
     if (candidate) {
       category = candidate;
       payload = args.slice(1);

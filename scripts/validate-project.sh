@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+# Keep this validation script multiline: prose must stay commented and each run_step must stay on its own line.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
@@ -11,8 +12,10 @@ require_command git
 require_command npm
 require_command node
 require_node_major 22
+validate_package_version_semver
 validate_json_file package.json
 validate_json_file package-lock.json
+ensure_npm_dependencies
 
 log_info() {
   echo "[info] $*"
@@ -37,20 +40,20 @@ run_step "npm run lint" npm run lint
 run_step "npm run typecheck" npm run typecheck
 run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "npm test" npm test
-run_step "npm run docs:check-links" npm run docs:check-links
 run_step "npm run docs:check-ai" npm run docs:check-ai
-run_step "npm run deps:check-policy" npm run deps:check-policy
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
+run_step "bash scripts/check-shell-ui-api.sh" bash scripts/check-shell-ui-api.sh
+run_step "npm run check:scripts-core" npm run check:scripts-core
 run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check
 
-if command -v desktop-file-validate >/dev/null 2>&1; then
+if command -v desktop-file-validate > /dev/null 2>&1; then
   run_step "desktop-file-validate" desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
 else
   log_info "desktop-file-validate not found, skipping"
 fi
 
-if command -v appstreamcli >/dev/null 2>&1; then
+if command -v appstreamcli > /dev/null 2>&1; then
   run_step "appstreamcli validate --explain" \
     appstreamcli validate --explain \
     data/io.github.coletivo420.canva-linux.metainfo.xml

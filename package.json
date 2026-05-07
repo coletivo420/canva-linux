@@ -1,7 +1,7 @@
 {
   "name": "canva-linux",
-  "version": "0.1.4-dev.24",
-  "description": "A community opensource desktop wrapper for use with Canva",
+  "version": "0.1.4-12",
+  "description": "A community open-source desktop wrapper for use with Canva",
   "main": ".build/electron/main/index.js",
   "author": "Community",
   "license": "GPL-3.0-or-later",
@@ -17,26 +17,47 @@
   "scripts": {
     "start": "electron .",
     "dist": "NODE_OPTIONS=--no-deprecation electron-builder --linux dir",
-    "lint": "eslint .",
-    "test": "node --test \"test/**/*.test.js\"",
-    "test:unit": "node --test test/window-open-policy.test.js",
-    "test:wiring": "node --test test/tab-controller-wiring.test.js",
-    "test:smoke": "playwright test",
-    "test:smoke:headed": "playwright test --headed",
-    "lint:fix": "eslint . --fix",
-    "build:preload": "node scripts/build-preload-bundle.js",
-    "clean:runtime": "node scripts/clean-runtime-build.js",
-    "build:runtime": "node scripts/build-runtime.js",
-    "build:check": "node scripts/check-runtime-build.js",
+    "dist:appimage": "npm run build:runtime && NODE_OPTIONS=--no-deprecation electron-builder --linux AppImage --publish=never",
+    "lint": "eslint --config eslint.config.ts .",
+    "bootstrap:typescript": "esbuild scripts/run-typescript-script.ts --bundle --platform=node --target=node20 --format=cjs --external:esbuild --outfile=.build/scripts/bootstrap/run-typescript-script.js",
+    "bootstrap:electron-builder": "esbuild scripts/electron-builder-before-build.ts --bundle --platform=node --target=node22 --format=cjs --external:electron --external:esbuild --outfile=.build/scripts/bootstrap/electron-builder-before-build.js",
+    "run:ts": "npm run bootstrap:typescript --silent && node .build/scripts/bootstrap/run-typescript-script.js",
+    "build:scripts": "esbuild scripts/build-runtime.ts scripts/build-preload-bundle.ts scripts/copy-runtime-assets.ts scripts/clean-runtime-build.ts scripts/run-node-tests.ts scripts/run-c420ui.ts --bundle --platform=node --target=node20 --format=cjs --external:electron --external:blessed --external:esbuild --external:typescript --outdir=.build/scripts --entry-names=[name]",
+    "test": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-node-tests.js",
+    "test:unit": "npm run test -- test/window-open-policy.test.ts",
+    "test:wiring": "npm run test -- test/tab-controller-wiring.test.ts",
+    "test:smoke": "playwright test --config=playwright.config.ts",
+    "test:smoke:headed": "playwright test --config=playwright.config.ts --headed",
+    "lint:fix": "eslint --config eslint.config.ts --fix .",
+    "build:preload": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/build-preload-bundle.js",
+    "clean:runtime": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/clean-runtime-build.js",
+    "build:runtime": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/build-runtime.js",
+    "build:check": "npm run build:scripts-core && node .build/scripts/core/check-runtime-build.js",
     "build": "npm run build:runtime",
     "prestart": "npm run build:runtime",
     "predist": "npm run build:runtime",
-    "docs:check-links": "node scripts/check-doc-links.js",
-    "deps:check-policy": "node scripts/check-dependency-policy.js",
+    "docs:check-links": "npm run build:scripts-core && node .build/scripts/core/check-doc-links.js",
+    "deps:check-policy": "npm run build:scripts-core && node .build/scripts/core/check-dependency-policy.js",
     "typecheck": "tsc --noEmit",
     "validate:project": "./scripts/validate-project.sh",
-    "docs:check-ai": "node scripts/check-ai-guardrails.js",
-    "typecheck:strict": "tsc -p tsconfig.strict.json --noEmit"
+    "validate": "npm run check:scripts-core",
+    "docs:check-ai": "npm run build:scripts-core && node .build/scripts/core/check-ai-guardrails.js",
+    "typecheck:strict": "tsc -p tsconfig.strict.json",
+    "build:scripts-core": "esbuild scripts/core/action-registry.ts scripts/core/action-runner.ts scripts/core/validate-actions.ts scripts/core/overview-status.ts scripts/core/check-ai-guardrails.ts scripts/core/check-no-shell-menu.ts scripts/core/check-sudo-contract.ts scripts/core/check-no-root-launch-contract.ts scripts/core/check-c420ui-settings-contract.ts scripts/core/check-tool-logging-contract.ts scripts/core/check-log-selection-contract.ts scripts/core/check-c420ui-header-layout.ts scripts/core/check-c420ui-branding.ts scripts/core/check-c420ui-project-boundary.ts scripts/core/check-action-contract.ts scripts/core/check-detection-contract.ts scripts/core/check-version-consistency.ts scripts/core/check-release-contract.ts scripts/core/check-review-checklist.ts scripts/core/check-shell-action-ids.ts scripts/core/check-doc-links.ts scripts/core/check-dependency-policy.ts scripts/core/check-runtime-build.ts scripts/core/check-typescript-wrapper-contract.ts scripts/core/check-typescript-first.ts scripts/core/check-gitignore-policy.ts scripts/core/check-no-source-javascript.ts scripts/core/check-source-integrity.ts --bundle --platform=node --format=cjs --outdir=.build/scripts/core",
+    "check:scripts-core": "npm run build:scripts-core && node .build/scripts/core/validate-actions.js && node .build/scripts/core/check-no-shell-menu.js && node .build/scripts/core/check-sudo-contract.js && node .build/scripts/core/check-no-root-launch-contract.js && node .build/scripts/core/check-c420ui-settings-contract.js && node .build/scripts/core/check-tool-logging-contract.js && node .build/scripts/core/check-log-selection-contract.js && node .build/scripts/core/check-c420ui-header-layout.js && node .build/scripts/core/check-c420ui-branding.js && node .build/scripts/core/check-c420ui-project-boundary.js && node .build/scripts/core/check-action-contract.js && node .build/scripts/core/check-detection-contract.js && node .build/scripts/core/check-version-consistency.js && node .build/scripts/core/check-release-contract.js && node .build/scripts/core/check-review-checklist.js && node .build/scripts/core/check-shell-action-ids.js && node .build/scripts/core/check-doc-links.js && node .build/scripts/core/check-dependency-policy.js && node .build/scripts/core/check-runtime-build.js && node .build/scripts/core/check-typescript-wrapper-contract.js && node .build/scripts/core/check-typescript-first.js && node .build/scripts/core/check-gitignore-policy.js && node .build/scripts/core/check-no-source-javascript.js && node .build/scripts/core/check-source-integrity.js",
+    "build:c420ui": "esbuild scripts/c420ui/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/scripts/c420ui/index.js",
+    "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.js",
+    "check:c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.js --help",
+    "actions:validate": "npm run build:scripts-core && node .build/scripts/core/validate-actions.js",
+    "check:typescript-wrappers": "npm run build:scripts-core && node .build/scripts/core/check-typescript-wrapper-contract.js",
+    "check:typescript-first": "npm run build:scripts-core && node .build/scripts/core/check-typescript-first.js",
+    "check:gitignore-policy": "npm run build:scripts-core && node .build/scripts/core/check-gitignore-policy.js",
+    "check:no-source-javascript": "npm run build:scripts-core && node .build/scripts/core/check-no-source-javascript.js",
+    "check:c420ui-header-layout": "npm run build:scripts-core && node .build/scripts/core/check-c420ui-header-layout.js",
+    "check:release-contract": "npm run build:scripts-core && node .build/scripts/core/check-release-contract.js",
+    "check:source-integrity": "npm run build:scripts-core && node .build/scripts/core/check-source-integrity.js",
+    "check:c420ui-branding": "npm run build:scripts-core && node .build/scripts/core/check-c420ui-branding.js",
+    "check:c420ui-project-boundary": "npm run build:scripts-core && node .build/scripts/core/check-c420ui-project-boundary.js"
   },
   "build": {
     "appId": "io.github.coletivo420.canva-linux",
@@ -45,7 +66,7 @@
       "output": "dist",
       "buildResources": "build-resources"
     },
-    "beforeBuild": "./scripts/electron-builder-before-build.js",
+    "beforeBuild": "./.build/scripts/bootstrap/electron-builder-before-build.js",
     "files": [
       ".build/electron/**/*",
       "package.json"
@@ -55,6 +76,9 @@
       "category": "Graphics",
       "executableName": "canva-linux",
       "icon": "build-resources"
+    },
+    "appImage": {
+      "artifactName": "canva-linux-${version}-${arch}.AppImage"
     },
     "extraMetadata": {
       "main": ".build/electron/main/index.js"
@@ -67,8 +91,10 @@
     "@typescript-eslint/parser": "^8.59.1",
     "electron": "^41.5.0",
     "electron-builder": "^26.8.1",
+    "esbuild": "^0.28.0",
     "eslint": "^10.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "blessed": "^0.1.81"
   },
   "desktopName": "io.github.coletivo420.canva-linux.desktop",
   "engines": {

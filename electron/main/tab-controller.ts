@@ -1,20 +1,42 @@
-'use strict';
+"use strict";
 
 // @ts-check
 
-const path = require('path');
+const path = require("path");
 
-const { attachTabEventHandlers } = require('./tab-events');
+const { attachTabEventHandlers } = require("./tab-events");
 
 export type DebugLog = (category: string, ...args: unknown[]) => boolean;
 export type NavigationDecision = { kind: string; category?: string };
-export type ClassifyNavigationRequest = (request: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => NavigationDecision;
-export type WindowOpenPolicy = (request: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => NavigationDecision;
+export type ClassifyNavigationRequest = (request: {
+  url: string;
+  openerUrl?: string;
+  disposition?: string;
+  frameName?: string;
+}) => NavigationDecision;
+export type WindowOpenPolicy = (request: {
+  url: string;
+  openerUrl?: string;
+  disposition?: string;
+  frameName?: string;
+}) => NavigationDecision;
 export type WebContentsViewLike = {
-  webContents: Record<string, unknown> & { loadURL(url: string): Promise<void> | void };
+  webContents: Record<string, unknown> & {
+    loadURL(url: string): Promise<void> | void;
+  };
 };
-export type WebContentsViewConstructorLike = new (options: Record<string, unknown>) => WebContentsViewLike;
-export type TabEntry = { id: number; view: WebContentsViewLike; createdAt: number; title: string; url: string; favicon: string | null; isHome: boolean };
+export type WebContentsViewConstructorLike = new (
+  options: Record<string, unknown>,
+) => WebContentsViewLike;
+export type TabEntry = {
+  id: number;
+  view: WebContentsViewLike;
+  createdAt: number;
+  title: string;
+  url: string;
+  favicon: string | null;
+  isHome: boolean;
+};
 export type TabState = { tabs: Map<number, TabEntry>; nextTabIdRef(): number };
 export type TabHelpers = {
   ensureTopLevelView(view: WebContentsViewLike): void;
@@ -23,14 +45,31 @@ export type TabHelpers = {
   switchToTab(id: number): void;
   switchRelativeTab(step: number): void;
   closeTab(id: number): void;
-  focusHomeTab(options: { resetToHome?: boolean; switchToTab: (id: number) => void }): void;
+  focusHomeTab(options: {
+    resetToHome?: boolean;
+    switchToTab: (id: number) => void;
+  }): void;
 };
 export type OAuthHelpers = {
-  popupWindowOptions?: (shellBackgroundColor: () => string) => Record<string, unknown>;
-  registerAuthPopupWindow?: (window: any, startUrl: string, options: any) => any;
-  openAuthPopupForTab?: (url: string, openerUrl: string, shellBackgroundColor: () => string, sourceWebContentsId: number | null) => void;
+  popupWindowOptions?: (
+    shellBackgroundColor: () => string,
+  ) => Record<string, unknown>;
+  registerAuthPopupWindow?: (
+    window: any,
+    startUrl: string,
+    options: any,
+  ) => any;
+  openAuthPopupForTab?: (
+    url: string,
+    openerUrl: string,
+    shellBackgroundColor: () => string,
+    sourceWebContentsId: number | null,
+  ) => void;
 };
-export type AttachTabEventHandlersLike = (tab: TabEntry, helpers: Record<string, unknown>) => void;
+export type AttachTabEventHandlersLike = (
+  tab: TabEntry,
+  helpers: Record<string, unknown>,
+) => void;
 
 type CreateTabControllerOptions = {
   appName: string;
@@ -125,18 +164,37 @@ export function createTabController({
   WebContentsView,
   attachTabEventHandlersImpl,
 }: CreateTabControllerOptions) {
-  const attachHandlers = attachTabEventHandlersImpl || /** @type {AttachTabEventHandlersLike} */ (/** @type {unknown} */ (attachTabEventHandlers));
+  const attachHandlers =
+    attachTabEventHandlersImpl ||
+    /** @type {AttachTabEventHandlersLike} */ /** @type {unknown} */ attachTabEventHandlers;
 
   /**
    * @param {string} [url]
    * @param {{ activate?: boolean, isHome?: boolean }} [options]
    * @returns {TabEntry}
    */
-  function createTab(url = appUrl, { activate = true, isHome = false }: { activate?: boolean; isHome?: boolean } = {}): TabEntry {
-    debugLog('tabs:navigation', 'create', url, `activate=${activate}`, `home=${isHome}`);
+  function createTab(
+    url = appUrl,
+    {
+      activate = true,
+      isHome = false,
+    }: { activate?: boolean; isHome?: boolean } = {},
+  ): TabEntry {
+    debugLog(
+      "tabs:navigation",
+      "create",
+      url,
+      `activate=${activate}`,
+      `home=${isHome}`,
+    );
     const id = state.nextTabIdRef();
-    const preloadPath = path.resolve(__dirname, '..', 'preload', 'canva.bundle.js');
-    debugLog('tabs:navigation', 'preload-path', preloadPath);
+    const preloadPath = path.resolve(
+      __dirname,
+      "..",
+      "preload",
+      "canva.bundle.js",
+    );
+    debugLog("tabs:navigation", "preload-path", preloadPath);
 
     // Each tab stays as its own WebContentsView so the shell can switch
     // visibility and bounds without changing how the shared session behaves.
@@ -156,7 +214,7 @@ export function createTabController({
       id,
       view,
       createdAt: Date.now() + id,
-      title: isHome ? 'Home' : appName,
+      title: isHome ? "Home" : appName,
       url,
       favicon: null,
       isHome,
@@ -215,7 +273,9 @@ export function createTabController({
   }
 
   /** @param {{ resetToHome?: boolean }} [options] */
-  function focusHomeTab({ resetToHome = true }: { resetToHome?: boolean } = {}): void {
+  function focusHomeTab({
+    resetToHome = true,
+  }: { resetToHome?: boolean } = {}): void {
     return tabHelpers.focusHomeTab({ resetToHome, switchToTab });
   }
 
@@ -233,7 +293,3 @@ export function createTabController({
     switchToTab,
   };
 }
-
-module.exports = {
-  createTabController,
-};

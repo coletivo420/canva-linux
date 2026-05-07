@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type DebugEnabled = (category?: string) => boolean;
@@ -7,7 +7,11 @@ type IpcMainLike = {
   handle(channel: string, listener: (...args: unknown[]) => unknown): void;
 };
 type CentralLoggerLike = {
-  logDebug(category: string, args?: unknown[], options?: { source?: string }): void;
+  logDebug(
+    category: string,
+    args?: unknown[],
+    options?: { source?: string },
+  ): void;
 };
 type TabControllerLike = {
   switchToTab(id: number): void;
@@ -33,38 +37,39 @@ function registerMainIpcHandlers({
   ipcMain: IpcMainLike;
   tabController: TabControllerLike;
 }): void {
-  ipcMain.on('wrapper:debug-log', (_event, payload = {}) => {
+  ipcMain.on("wrapper:debug-log", (_event, payload = {}) => {
     const message = (payload || {}) as DebugPayload;
-    const category = typeof message.category === 'string' && message.category ? message.category : 'app';
+    const category =
+      typeof message.category === "string" && message.category
+        ? message.category
+        : "app";
     const args = Array.isArray(message.args) ? message.args : [];
-    const source = typeof message.source === 'string' && message.source ? message.source : 'preload';
+    const source =
+      typeof message.source === "string" && message.source
+        ? message.source
+        : "preload";
     if (!debugEnabled(category)) return;
     centralLogger.logDebug(category, args, { source });
   });
 
-  ipcMain.on('toolbar-action', (_event, message = {}) => {
+  ipcMain.on("toolbar-action", (_event, message = {}) => {
     const toolbarMessage = (message || {}) as ToolbarMessage;
-    const action = typeof toolbarMessage.action === 'string' ? toolbarMessage.action : '';
+    const action =
+      typeof toolbarMessage.action === "string" ? toolbarMessage.action : "";
     const payload = toolbarMessage.payload || {};
-    debugLog('tabs:toolbar', 'toolbar-action', action, payload);
-    if (action === 'switch-tab') {
-      if (typeof payload.id === 'number') tabController.switchToTab(payload.id);
+    debugLog("tabs:toolbar", "toolbar-action", action, payload);
+    if (action === "switch-tab") {
+      if (typeof payload.id === "number") tabController.switchToTab(payload.id);
       return;
     }
-    if (action === 'close-tab') {
-      if (typeof payload.id === 'number') tabController.closeTab(payload.id);
+    if (action === "close-tab") {
+      if (typeof payload.id === "number") tabController.closeTab(payload.id);
       return;
     }
-    if (action === 'go-home') {
+    if (action === "go-home") {
       tabController.focusHomeTab({ resetToHome: true });
     }
   });
 }
 
-export {
-  registerMainIpcHandlers,
-};
-
-module.exports = {
-  registerMainIpcHandlers,
-};
+export { registerMainIpcHandlers };

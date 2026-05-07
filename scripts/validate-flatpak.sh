@@ -116,8 +116,8 @@ while IFS='|' read -r path label; do
 done <<'REQUIRED_FILES'
 docs/SCREENSHOTS.md|screenshot manifest
 docs/PRIVACY.md|privacy documentation
-docs/FLATHUB_CHECKLIST.md|Flathub checklist
-docs/FLATHUB_SOURCE.md|Flathub source strategy documentation
+docs/notes/FLATHUB_CHECKLIST.md|Flathub checklist
+docs/notes/FLATHUB_SOURCE.md|Flathub source strategy documentation
 docs/FLATPAK_PERMISSIONS.md|permission review documentation
 io.github.coletivo420.canva-linux.yml|Flatpak manifest
 data/io.github.coletivo420.canva-linux.metainfo.xml|AppStream metadata
@@ -270,7 +270,7 @@ if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.f
       rm -f "$repo_lint_output"
     else
       warn "repo/ directory not found; skipping flatpak-builder-lint repo repo"
-      warn "Run ./canva-linux.sh --bundle to generate repo/ before repo lint"
+      warn "Run ./canva-linux.sh --bundle-flatpak to generate repo/ before repo lint"
     fi
 else
   warn "org.flatpak.Builder is not installed; skipping flatpak-builder-lint checks"
@@ -289,7 +289,7 @@ else
     ok "Bundle found: $BUNDLE_PATH"
   else
     warn "Bundle not found (expected for local install workflow): $BUNDLE_PATH"
-    warn "Run ./canva-linux.sh --bundle when preparing release artifacts"
+    warn "Run ./canva-linux.sh --bundle-flatpak when preparing release artifacts"
   fi
 fi
 

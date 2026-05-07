@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 type WebContentsLike = {
   id?: number;
@@ -24,7 +24,9 @@ type OAuthPopupEntry = {
 };
 
 type TabEntryLike = { id: number };
-type FindTabByWebContents = (webContents: WebContentsLike) => TabEntryLike | null | undefined;
+type FindTabByWebContents = (
+  webContents: WebContentsLike,
+) => TabEntryLike | null | undefined;
 
 function createLoggingHelpers({
   getMainWindow,
@@ -35,23 +37,25 @@ function createLoggingHelpers({
   getAuthPopups: () => Map<number, OAuthPopupEntry>;
   getFindTabByWebContents: () => FindTabByWebContents | null | undefined;
 }) {
-  function summarizeOauthEntry(entry: OAuthPopupEntry | null | undefined): string {
-    if (!entry) return 'popup=unknown';
+  function summarizeOauthEntry(
+    entry: OAuthPopupEntry | null | undefined,
+  ): string {
+    if (!entry) return "popup=unknown";
 
     return [
       `popup=${entry.id}`,
-      `startedOnCanvaAuth=${entry.startedOnCanvaAuth ? 'true' : 'false'}`,
-      `sawExternalProvider=${entry.sawExternalProvider ? 'true' : 'false'}`,
-      `source=${entry.sourceWebContentsId || 'unknown'}`,
-    ].join(' ');
+      `startedOnCanvaAuth=${entry.startedOnCanvaAuth ? "true" : "false"}`,
+      `sawExternalProvider=${entry.sawExternalProvider ? "true" : "false"}`,
+      `source=${entry.sourceWebContentsId || "unknown"}`,
+    ].join(" ");
   }
 
   function windowLabel(window: BrowserWindowLike | null | undefined): string {
-    if (!window) return 'unknown-window';
+    if (!window) return "unknown-window";
 
     const mainWindow = getMainWindow();
     if (mainWindow && window === mainWindow) {
-      return 'main-window';
+      return "main-window";
     }
 
     for (const entry of getAuthPopups().values()) {
@@ -60,14 +64,16 @@ function createLoggingHelpers({
       }
     }
 
-    return 'window';
+    return "window";
   }
 
-  function webContentsLabel(webContents: WebContentsLike | null | undefined): string {
-    if (!webContents) return 'unknown-webcontents';
+  function webContentsLabel(
+    webContents: WebContentsLike | null | undefined,
+  ): string {
+    if (!webContents) return "unknown-webcontents";
 
     const findTabByWebContents = getFindTabByWebContents();
-    if (typeof findTabByWebContents === 'function') {
+    if (typeof findTabByWebContents === "function") {
       const tab = findTabByWebContents(webContents);
       if (tab) {
         return `tab-${tab.id}`;
@@ -80,7 +86,7 @@ function createLoggingHelpers({
       }
     }
 
-    return `wc-${webContents.id || 'unknown'}`;
+    return `wc-${webContents.id || "unknown"}`;
   }
 
   return {
@@ -90,16 +96,6 @@ function createLoggingHelpers({
   };
 }
 
-export {
-  createLoggingHelpers,
-};
+export { createLoggingHelpers };
 
-export type {
-  BrowserWindowLike,
-  OAuthPopupEntry,
-  WebContentsLike,
-};
-
-module.exports = {
-  createLoggingHelpers,
-};
+export type { BrowserWindowLike, OAuthPopupEntry, WebContentsLike };

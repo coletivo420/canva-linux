@@ -1,0 +1,80 @@
+import { createRequire } from "node:module";
+import type { Linter } from "eslint";
+
+const requireFromConfig = createRequire(__filename);
+const tsPlugin = requireFromConfig("@typescript-eslint/eslint-plugin");
+const tsParser = requireFromConfig("@typescript-eslint/parser");
+
+const commonRules = {
+  eqeqeq: ["error", "always"],
+  "no-duplicate-imports": "error",
+  "no-fallthrough": "error",
+  "no-return-await": "error",
+  "no-throw-literal": "error",
+  "no-var": "error",
+  "prefer-const": "error",
+} satisfies Linter.RulesRecord;
+
+const config = [
+  {
+    ignores: [
+      "build-dir/**",
+      "dist/**",
+      ".build/**",
+      "node_modules/**",
+      "repo/**",
+      "electron/preload/canva.bundle.js",
+      ".flatpak-builder/**",
+    ],
+  },
+  {
+    files: ["eslint.config.ts"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      parser: tsParser,
+      parserOptions: {
+        sourceType: "module",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": tsPlugin,
+    },
+    rules: {
+      ...commonRules,
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_" },
+      ],
+    },
+  },
+  {
+    files: [
+      "electron/**/*.ts",
+      "scripts/**/*.ts",
+      "test/**/*.ts",
+      "packaging/flathub/scripts/**/*.ts",
+      "playwright.config.ts",
+    ],
+    languageOptions: {
+      ecmaVersion: "latest",
+      parser: tsParser,
+      parserOptions: {
+        sourceType: "module",
+      },
+    },
+    plugins: {
+      "@typescript-eslint": tsPlugin,
+    },
+    rules: {
+      ...commonRules,
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_" },
+      ],
+    },
+  },
+] satisfies Linter.Config[];
+
+export default config;

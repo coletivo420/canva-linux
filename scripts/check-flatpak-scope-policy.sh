@@ -25,7 +25,7 @@ if grep -RIn "${builder_user_install_pattern}" scripts canva-linux.sh; then
 fi
 
 if grep -RIn "${sudo_builder_pattern}" scripts canva-linux.sh; then
-  echo "[flatpak-scope] forbidden sudo flatpak-""builder"
+  echo "[flatpak-scope] forbidden sudo-flatpak-builder pattern"
   failed=true
 fi
 
@@ -41,8 +41,7 @@ fi
 
 for workflow_script in \
   scripts/install-flatpak-local.sh \
-  scripts/build-flatpak-bundle.sh \
-  scripts/run-flatpak-dev.sh; do
+  scripts/build-flatpak-bundle.sh; do
   if ! grep -q "trap 'restore_flatpak_build_artifact_permissions || true' EXIT" "${workflow_script}"; then
     echo "[flatpak-scope] missing Flatpak artifact ownership restore trap: ${workflow_script}"
     failed=true

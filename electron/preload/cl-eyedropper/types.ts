@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 export type RgbTuple = [number, number, number];
 
@@ -19,4 +19,6 @@ export type CLEyeDropperOpenOptions = Record<string, unknown>;
 
 export type EyeDropperLog = (...args: unknown[]) => void;
 
-export type CLEyeDropperOpenTarget = HTMLCanvasElement | CanvasRenderingContext2D;
+export type CLEyeDropperOpenTarget =
+  | HTMLCanvasElement
+  | CanvasRenderingContext2D;

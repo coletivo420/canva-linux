@@ -1,100 +1,84 @@
-# Canva Linux - Flatpak + Electron
+# Canva Linux
 
-A community-maintained open source desktop wrapper for use with Canva.
+Status: **Alpha**
+Version: **0.1.4-12 (Alpha)**
+Release: **v0.1.4-12**
 
----
+Independent community project. Not affiliated with Canva.
 
-## Status: Alpha
-
-Canva Linux is currently in **alpha**. It provides a Linux desktop wrapper around Canva with persistent sessions, internal tabs, OAuth handling, and system integration.
-
-> **Disclaimer:** Canva Linux is an independent community project and is not published, verified, endorsed, certified, or officially supported by Canva Pty Ltd.
-
----
-
-## Features
-
-- **Persistent sessions:** Stay logged in across restarts. Canva Linux uses Electron/Chromium persistent session storage and can integrate with the desktop secret storage available on the system, such as KWallet, GNOME Keyring/libsecret, or compatible Secret Service providers, when available.
-- **Flatpak support:** Local install, development runs, validation and bundle generation through `./canva-linux.sh`.
-- **OAuth support:** Google login and other provider popups are handled through a dedicated OAuth popup flow.
-- **CL-EyeDropper:** Custom Canva Linux EyeDropper integration for reliable color picking inside the Canva editor.
-- **GPU diagnostics:** Optional GPU/debug diagnostics through `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
-- **Upload/export compatibility:** File import, upload and download/export workflows are preserved through Flatpak-friendly permissions and portal-aware behavior.
-- **Wayland/X11 support:** Designed for modern Wayland sessions with X11 fallback support.
-
----
+## What is Canva Linux?
+Canva Linux is an open-source desktop wrapper/tooling project for running Canva
+with Linux-oriented integration, packaging, diagnostics, and maintenance workflows.
 
 ## Quick Start
-
-The canonical way to manage Canva Linux is via the `./canva-linux.sh` script.
-
-### Installation (Local Build)
-
 ```bash
 git clone https://github.com/coletivo420/canva-linux.git
 cd canva-linux
-./canva-linux.sh --install
+./canva-linux.sh
 ```
 
-### Usage
+## Canva Linux Install and Development Tool
+The launcher opens the C420UI terminal interface by default (when supported), with Install,
+Development, and Maintenance workflows. Direct CLI action flags are available for
+automation.
 
-```bash
-# Run the installed Flatpak
-flatpak run io.github.coletivo420.canva-linux
+Run the Tool as your regular user. Privileged operations ask for administrator
+authentication only when the selected action needs it.
 
-# Or run directly from the build directory (development)
-./canva-linux.sh --run-dev
-```
+Maintained Node.js tooling is TypeScript. JavaScript appears only as generated
+output, while shell remains reserved for Linux host-operation glue.
 
----
+## Feature Matrix
+- **Desktop App**: dedicated window, Secret Service-backed persistent session, ephemeral fallback, desktop integration.
+- **Editor**: CL-EyeDropper, upload/export flows, OAuth popup, internal tabs.
+- **System**: Native Install, Flatpak Install, experimental AppImage.
+- **Development**: runtime build, package generation, validation, doctor checks.
+- **C420UI workspace**: guided sections, logs, progress bar, root-auth popup for privileged actions.
+- **Maintenance**: uninstall, purge, reset user data, permissions recovery.
+- **Diagnostics**: GPU, upload, browser capture diagnostics.
+- **Future**: AUR/PKGBUILD, then `.deb`/`.rpm`.
 
-## Management Script
+## Desktop Integration
+Native and Flatpak flows provide desktop entry integration for Linux environments.
 
-The `./canva-linux.sh` script provides all common development and maintenance tasks:
+## Editor Compatibility
+Project includes compatibility layers for Canva editor workflows, including EyeDropper and OAuth handling.
 
-| Command | Description |
-| --- | --- |
-| `--run-dev` | Build and run without installing. |
-| `--install` | Build and install locally via Flatpak. |
-| `--bundle` | Generate a distributable `.flatpak` bundle. |
-| `--validate` | Run full project validation (lint, tests, etc). |
-| `--uninstall` | Remove the local Flatpak installation. |
-| `--reset-user-data` | Clear app cache, sessions, and login state. |
+## Packaging and Install Modes
+Supports scoped system/user install modes for Native and Flatpak, plus package artifact workflows.
 
----
-
-## Debugging
-
-If you encounter issues, you can enable debug logs:
-
-```bash
-# Level 1: Internal diagnostics
-CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-
-# Level 2: Verbose Electron/Chromium logs
-CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux
-```
-
-Logs are stored in `logs/current.log` within the application's data directory.
-
----
+## Diagnostics and Maintenance
+Includes doctor checks, validation pipeline, cleanup, uninstall and purge workflows.
 
 ## Documentation
 
-Comprehensive documentation is available in the `docs/` folder:
+Start with the [documentation index](docs/README.md) for the full map. Common
+entry points:
 
-- [Documentation Index](docs/README.md)
-- [Validation](docs/VALIDATION.md)
-- [Development Guide](docs/DEVELOPMENT.md)
-- [TypeScript](docs/TYPESCRIPT.md)
-- [CL-EyeDropper](docs/CANVA_LINUX_EYEDROPPER.md)
-- [AI Maintenance Notes](docs/AI_GUARDRAILS.md)
-- [Flatpak & Flathub Packaging](docs/FLATHUB.md)
+### Users and operators
+- [Installation](docs/INSTALLATION.md)
+- [CLI reference](docs/CLI.md)
+- [Features](docs/FEATURES.md)
+- [Debugging](docs/DEBUGGING.md)
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [AppImage FUSE requirements](docs/APPIMAGE_FUSE.md)
 
-Project website: https://coletivo420.github.io/canva-linux/
+### Contributors and release maintainers
+- [Validation checklist](docs/VALIDATION.md)
+- [Release guide](docs/RELEASE.md)
+- [Development guide](docs/DEVELOPMENT.md)
+- [Technical architecture](docs/TECHNICAL.md)
+- [TypeScript notes](docs/TYPESCRIPT.md)
+- [CL EyeDropper architecture](docs/CANVA_LINUX_EYEDROPPER.md)
 
----
+## Security / Privacy Notes
+Use only trusted build/dependency sources and review privileged actions before execution.
+
+## Limitations
+Some packaging targets remain planned and may depend on host tooling availability.
+
+## Contributing
+Issues and pull requests are welcome.
 
 ## License
-
-Distributed under the **GNU General Public License v3.0 or later**. See [LICENSE](LICENSE) for details.
+GPL-3.0

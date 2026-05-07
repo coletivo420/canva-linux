@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 // @ts-check
 
@@ -25,7 +25,11 @@ export type BrowserWindowLike = {
   loadURL(url: string): Promise<void> | void;
   getContentSize(): [number, number];
   setBackgroundColor(color: string): void;
-  contentView: { children?: unknown[]; addChildView(view: unknown): void; removeChildView(view: unknown): void };
+  contentView: {
+    children?: unknown[];
+    addChildView(view: unknown): void;
+    removeChildView(view: unknown): void;
+  };
 };
 
 type ShellHelpersOptions = {
@@ -35,7 +39,9 @@ type ShellHelpersOptions = {
   debugLog: DebugLog;
   layoutViews: () => void;
   nativeTheme: NativeThemeLike;
-  WebContentsView: new (options: Record<string, unknown>) => WebContentsViewLike;
+  WebContentsView: new (
+    options: Record<string, unknown>,
+  ) => WebContentsViewLike;
 };
 
 type CreateShellWindowOptions = {
@@ -112,15 +118,17 @@ export function createShellHelpers({
   WebContentsView,
 }: ShellHelpersOptions) {
   function shellBackgroundColor(): string {
-    return nativeTheme.shouldUseDarkColors ? '#1f2329' : '#f6f7fb';
+    return nativeTheme.shouldUseDarkColors ? "#1f2329" : "#f6f7fb";
   }
 
   /**
    * @param {{ setMainWindow(value: BrowserWindowLike | null): void }} options
    * @returns {BrowserWindowLike}
    */
-  function createShellWindow({ setMainWindow }: CreateShellWindowOptions): BrowserWindowLike {
-    debugLog('app', 'create-shell-window');
+  function createShellWindow({
+    setMainWindow,
+  }: CreateShellWindowOptions): BrowserWindowLike {
+    debugLog("app", "create-shell-window");
     const mainWindow = new BrowserWindow({
       width: 1280,
       height: 900,
@@ -139,24 +147,26 @@ export function createShellHelpers({
       },
     });
 
-    mainWindow.once('ready-to-show', () => {
-      debugLog('app', 'main-window-ready');
+    mainWindow.once("ready-to-show", () => {
+      debugLog("app", "main-window-ready");
       mainWindow.show();
     });
-    mainWindow.loadURL(`data:text/html,<html><body style="margin:0;background:${shellBackgroundColor()}"></body></html>`);
-    mainWindow.on('resize', () => {
-      debugLog('view', 'window-resize', ...mainWindow.getContentSize());
+    mainWindow.loadURL(
+      `data:text/html,<html><body style="margin:0;background:${shellBackgroundColor()}"></body></html>`,
+    );
+    mainWindow.on("resize", () => {
+      debugLog("view", "window-resize", ...mainWindow.getContentSize());
       layoutViews();
     });
-    mainWindow.on('maximize', () => {
-      debugLog('view', 'window-maximize');
+    mainWindow.on("maximize", () => {
+      debugLog("view", "window-maximize");
       layoutViews();
     });
-    mainWindow.on('unmaximize', () => {
-      debugLog('view', 'window-unmaximize');
+    mainWindow.on("unmaximize", () => {
+      debugLog("view", "window-unmaximize");
       layoutViews();
     });
-    mainWindow.on('closed', () => {
+    mainWindow.on("closed", () => {
       setMainWindow(null);
     });
 
@@ -183,7 +193,7 @@ export function createShellHelpers({
     preloadPath,
     setToolbarView,
   }: CreateToolbarViewOptions): WebContentsViewLike {
-    debugLog('tabs:toolbar', 'create-toolbar-view');
+    debugLog("tabs:toolbar", "create-toolbar-view");
     const toolbarView = new WebContentsView({
       webPreferences: {
         preload: preloadPath,
@@ -195,39 +205,85 @@ export function createShellHelpers({
 
     ensureTopLevelView(toolbarView);
     toolbarView.setVisible(true);
-    toolbarView.webContents.on('dom-ready', () => {
-      debugLog('tabs:toolbar', 'toolbar-dom-ready', toolbarView.webContents.getURL() || 'about:blank');
-    });
-    toolbarView.webContents.on('did-finish-load', () => {
-      debugLog('tabs:toolbar', 'toolbar-loaded', toolbarView.webContents.getURL() || 'about:blank');
-      broadcastTabsState();
-    });
-    toolbarView.webContents.on('did-fail-load', (_event: unknown, code: number, description: string, validatedURL: string, isMainFrame: boolean) => {
+    toolbarView.webContents.on("dom-ready", () => {
       debugLog(
-        'tabs:toolbar',
-        'toolbar-fail-load',
-        `mainFrame=${isMainFrame ? 'true' : 'false'}`,
-        `code=${code}`,
-        description || 'no-description',
-        validatedURL || 'unknown-url'
+        "tabs:toolbar",
+        "toolbar-dom-ready",
+        toolbarView.webContents.getURL() || "about:blank",
       );
     });
-    toolbarView.webContents.on('console-message', (event: { level?: number; message?: string; lineNumber?: number; sourceId?: string }, legacyLevel: unknown, legacyMessage: string, legacyLine: unknown, legacySourceId: string) => {
-      const level = event.level ?? legacyLevel;
-      const message = event.message ?? legacyMessage;
-      const lineNumber = event.lineNumber ?? legacyLine;
-      const sourceId = event.sourceId ?? legacySourceId;
+    toolbarView.webContents.on("did-finish-load", () => {
+      debugLog(
+        "tabs:toolbar",
+        "toolbar-loaded",
+        toolbarView.webContents.getURL() || "about:blank",
+      );
+      broadcastTabsState();
+    });
+    toolbarView.webContents.on(
+      "did-fail-load",
+      (
+        _event: unknown,
+        code: number,
+        description: string,
+        validatedURL: string,
+        isMainFrame: boolean,
+      ) => {
+        debugLog(
+          "tabs:toolbar",
+          "toolbar-fail-load",
+          `mainFrame=${isMainFrame ? "true" : "false"}`,
+          `code=${code}`,
+          description || "no-description",
+          validatedURL || "unknown-url",
+        );
+      },
+    );
+    toolbarView.webContents.on(
+      "console-message",
+      (
+        event: {
+          level?: number;
+          message?: string;
+          lineNumber?: number;
+          sourceId?: string;
+        },
+        legacyLevel: unknown,
+        legacyMessage: string,
+        legacyLine: unknown,
+        legacySourceId: string,
+      ) => {
+        const level = event.level ?? legacyLevel;
+        const message = event.message ?? legacyMessage;
+        const lineNumber = event.lineNumber ?? legacyLine;
+        const sourceId = event.sourceId ?? legacySourceId;
 
-      debugLog('tabs:toolbar', 'toolbar-console', `level=${level}`, `line=${lineNumber}`, sourceId || 'inline', message);
+        debugLog(
+          "tabs:toolbar",
+          "toolbar-console",
+          `level=${level}`,
+          `line=${lineNumber}`,
+          sourceId || "inline",
+          message,
+        );
+      },
+    );
+    toolbarView.webContents.on(
+      "render-process-gone",
+      (_event: unknown, details: any) => {
+        debugLog(
+          "tabs:toolbar",
+          "toolbar-render-process-gone",
+          `reason=${details?.reason || "unknown"}`,
+          `exitCode=${details?.exitCode ?? "unknown"}`,
+        );
+      },
+    );
+    toolbarView.webContents.on("unresponsive", () => {
+      debugLog("tabs:toolbar", "toolbar-unresponsive");
     });
-    toolbarView.webContents.on('render-process-gone', (_event: unknown, details: any) => {
-      debugLog('tabs:toolbar', 'toolbar-render-process-gone', `reason=${details?.reason || 'unknown'}`, `exitCode=${details?.exitCode ?? 'unknown'}`);
-    });
-    toolbarView.webContents.on('unresponsive', () => {
-      debugLog('tabs:toolbar', 'toolbar-unresponsive');
-    });
-    toolbarView.webContents.on('responsive', () => {
-      debugLog('tabs:toolbar', 'toolbar-responsive');
+    toolbarView.webContents.on("responsive", () => {
+      debugLog("tabs:toolbar", "toolbar-responsive");
     });
     toolbarView.webContents.loadURL(makeToolbarUrl());
     setToolbarView(toolbarView);
@@ -241,7 +297,3 @@ export function createShellHelpers({
     shellBackgroundColor,
   };
 }
-
-module.exports = {
-  createShellHelpers,
-};

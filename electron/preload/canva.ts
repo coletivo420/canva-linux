@@ -1,19 +1,24 @@
 // @ts-nocheck
-'use strict';
+"use strict";
 
-const { createPreloadDebug } = require('./debug');
+const { createPreloadDebug } = require("./debug");
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
-  source: 'canva-preload',
+  source: "canva-preload",
 });
 
 // CRITICAL: We need this log to know the preload started at all!
-debugLog('startup', 'preload-init', process.isMainFrame ? 'main-frame' : 'sub-frame', location.href);
+debugLog(
+  "startup",
+  "preload-init",
+  process.isMainFrame ? "main-frame" : "sub-frame",
+  location.href,
+);
 
 try {
   function installUploadDiagnostics() {
     try {
-      return require('./upload-diagnostics').installUploadDiagnostics;
+      return require("./upload-diagnostics").installUploadDiagnostics;
     } catch {
       return null;
     }
@@ -21,10 +26,10 @@ try {
 
   function loadEyeDropperRoutingDiagnostics() {
     try {
-      return require('./eyedropper-routing-diagnostics');
+      return require("./eyedropper-routing-diagnostics");
     } catch (primaryError) {
       try {
-        return require('./browser-capture-diagnostics');
+        return require("./browser-capture-diagnostics");
       } catch (fallbackError) {
         return {
           installEyeDropperRoutingDiagnostics() {},
@@ -37,7 +42,7 @@ try {
   function loadCustomEyeDropperFlow() {
     try {
       return {
-        ...require('./custom-eyedropper-flow'),
+        ...require("./custom-eyedropper-flow"),
         loadError: null,
       };
     } catch (error) {
@@ -45,7 +50,9 @@ try {
         createCustomEyeDropperFlow() {
           return {
             wrapOpenCall() {
-              return Promise.reject(new Error('custom-eyedropper-flow unavailable'));
+              return Promise.reject(
+                new Error("custom-eyedropper-flow unavailable"),
+              );
             },
           };
         },
@@ -57,7 +64,7 @@ try {
   function loadNativeEyeDropperWrapper() {
     try {
       return {
-        ...require('./native-eyedropper-wrapper'),
+        ...require("./native-eyedropper-wrapper"),
         loadError: null,
       };
     } catch (error) {
@@ -85,20 +92,32 @@ try {
     loadError: nativeEyeDropperWrapperLoadError,
   } = loadNativeEyeDropperWrapper();
 
-  debugLog('startup', 'modules-loaded');
+  debugLog("startup", "modules-loaded");
 
   if (eyeDropperRoutingLoadError) {
-    logEyeDropper('eyedropper:routing', 'module-load-failed', eyeDropperRoutingLoadError.message);
+    logEyeDropper(
+      "eyedropper:routing",
+      "module-load-failed",
+      eyeDropperRoutingLoadError.message,
+    );
   }
   if (customEyeDropperFlowLoadError) {
-    logEyeDropper('eyedropper:flow', 'module-load-failed', customEyeDropperFlowLoadError.message);
+    logEyeDropper(
+      "eyedropper:flow",
+      "module-load-failed",
+      customEyeDropperFlowLoadError.message,
+    );
   }
   if (nativeEyeDropperWrapperLoadError) {
-    logEyeDropper('eyedropper:wrapper', 'module-load-failed', nativeEyeDropperWrapperLoadError.message);
+    logEyeDropper(
+      "eyedropper:wrapper",
+      "module-load-failed",
+      nativeEyeDropperWrapperLoadError.message,
+    );
   }
 
   const installer = installUploadDiagnostics();
-  if (typeof installer === 'function') {
+  if (typeof installer === "function") {
     installer({ debugEnabled, debugLog });
   }
 
@@ -106,7 +125,12 @@ try {
     debugLog,
     logEyeDropper,
   });
-  installEyeDropperRoutingDiagnostics({ debugEnabled, debugLog, logEyeDropper, wrapOpenCall });
+  installEyeDropperRoutingDiagnostics({
+    debugEnabled,
+    debugLog,
+    logEyeDropper,
+    wrapOpenCall,
+  });
 
   const { ensureWrappedEyeDropperInstalled } = installNativeEyeDropperWrapper({
     logEyeDropper,
@@ -121,9 +145,9 @@ try {
       const installedFlag = scope.__canvaWrappedEyeDropperInstalled === true;
 
       return Boolean(
-        installedFlag
-        || (typeof wrapped === 'function' && ctor === wrapped)
-        || (typeof ctor === 'function' && ctor.name === 'WrappedEyeDropper')
+        installedFlag ||
+          (typeof wrapped === "function" && ctor === wrapped) ||
+          (typeof ctor === "function" && ctor.name === "WrappedEyeDropper"),
       );
     } catch {
       return false;
@@ -135,12 +159,12 @@ try {
   // process can verify/reinstall the wrapper without depending on preload
   // module scope.
   try {
-    Object.defineProperty(globalThis, 'ensureWrappedEyeDropperInstalled', {
+    Object.defineProperty(globalThis, "ensureWrappedEyeDropperInstalled", {
       configurable: true,
       enumerable: false,
       value: ensureWrappedEyeDropperInstalled,
     });
-    Object.defineProperty(globalThis, '__canvaIsWrappedEyeDropperInstalled', {
+    Object.defineProperty(globalThis, "__canvaIsWrappedEyeDropperInstalled", {
       configurable: true,
       enumerable: false,
       value: isWrappedEyeDropperInstalled,
@@ -149,26 +173,37 @@ try {
 
   // Install as early as possible.
   ensureWrappedEyeDropperInstalled();
-  debugLog('startup', 'eyedropper-installed');
+  debugLog("startup", "eyedropper-installed");
 
-  if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', () => {
-      ensureWrappedEyeDropperInstalled();
-    }, { once: true });
+  if (document.readyState === "loading") {
+    window.addEventListener(
+      "DOMContentLoaded",
+      () => {
+        ensureWrappedEyeDropperInstalled();
+      },
+      { once: true },
+    );
   } else {
     ensureWrappedEyeDropperInstalled();
   }
 
-  window.addEventListener('pageshow', () => {
-    ensureWrappedEyeDropperInstalled();
-  }, { passive: true });
-  window.addEventListener('focus', () => {
-    ensureWrappedEyeDropperInstalled();
-  }, { passive: true });
-
+  window.addEventListener(
+    "pageshow",
+    () => {
+      ensureWrappedEyeDropperInstalled();
+    },
+    { passive: true },
+  );
+  window.addEventListener(
+    "focus",
+    () => {
+      ensureWrappedEyeDropperInstalled();
+    },
+    { passive: true },
+  );
 } catch (fatalError) {
-  console.error('[canva:canva-preload:fatal]', fatalError);
-  if (typeof debugLog === 'function') {
-    debugLog('startup', 'fatal-error', fatalError.message);
+  console.error("[canva:canva-preload:fatal]", fatalError);
+  if (typeof debugLog === "function") {
+    debugLog("startup", "fatal-error", fatalError.message);
   }
 }

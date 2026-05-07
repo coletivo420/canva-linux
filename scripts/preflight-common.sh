@@ -29,6 +29,35 @@ validate_json_file() {
   }
 }
 
+validate_package_scripts() {
+  validate_json_file package.json
+
+  node <<'NODE'
+const fs = require('node:fs');
+
+const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+const scripts = pkg.scripts || {};
+const failures = [];
+
+for (const [name, command] of Object.entries(scripts)) {
+  if (typeof command !== 'string') {
+    failures.push(`scripts.${name} must be a string`);
+    continue;
+  }
+
+  if (/\r|\n/.test(command)) {
+    failures.push(`scripts.${name} must stay on one line`);
+  }
+}
+
+if (failures.length > 0) {
+  console.error('[error] package.json contains invalid npm scripts:');
+  for (const failure of failures) console.error(`[error] - ${failure}`);
+  process.exit(1);
+}
+NODE
+}
+
 require_node_major() {
   local min_major="${1:-22}"
 
@@ -43,6 +72,69 @@ require_node_major() {
   fi
 }
 
+CANVA_REQUIRED_NPM_DEPS=(
+  esbuild
+  typescript
+  electron
+  electron-builder
+  eslint
+  @typescript-eslint/parser
+  @typescript-eslint/eslint-plugin
+  blessed
+)
+
+check_npm_dependency() {
+  local dep="$1"
+
+  node -e "require.resolve(process.argv[1], { paths: [process.cwd()] })" "$dep" >/dev/null 2>&1
+}
+
+ensure_npm_dependencies() {
+  require_command node
+  require_command npm
+  require_node_major 22
+  validate_package_scripts
+
+  if [[ "${CANVA_SKIP_NPM_INSTALL:-0}" == "1" ]]; then
+    echo "[info] Skipping npm dependency bootstrap because CANVA_SKIP_NPM_INSTALL=1"
+    return 0
+  fi
+
+  local missing=0
+  if [[ ! -d node_modules ]]; then
+    missing=1
+  else
+    local dep
+    for dep in "${CANVA_REQUIRED_NPM_DEPS[@]}"; do
+      if ! check_npm_dependency "$dep"; then
+        missing=1
+        break
+      fi
+    done
+  fi
+
+  local install_cmd=(npm install --include=dev)
+  if [[ -f package-lock.json ]]; then
+    install_cmd=(npm ci --include=dev)
+  fi
+
+  if [[ "${CANVA_NPM_REPAIR:-}" == "clean" ]]; then
+    echo "[info] Forcing clean npm dependency repair (CANVA_NPM_REPAIR=clean)"
+    "${install_cmd[@]}" || exit 1
+    return 0
+  fi
+
+  if [[ "$missing" -eq 0 ]]; then
+    echo "[ok] npm dependencies are available"
+    return 0
+  fi
+
+  echo "[info] Installing npm dependencies with ${install_cmd[*]}"
+  echo "[info] This may take several minutes depending on your system."
+  echo "[info] Please be patient and keep this terminal open until the process finishes."
+  "${install_cmd[@]}" || exit 1
+}
+
 detect_package_version() {
   if command -v node >/dev/null 2>&1 && [[ -f package.json ]]; then
     validate_json_file package.json
@@ -50,4 +142,23 @@ detect_package_version() {
   else
     printf 'unknown'
   fi
+}
+
+validate_package_version_semver() {
+  validate_json_file package.json
+
+  local version
+  version="$(node -p "require('./package.json').version")"
+
+  node - "$version" <<'NODE'
+const version = process.argv[2];
+const semverPattern =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
+
+if (!semverPattern.test(version)) {
+  console.error(`[error] package.json version is not valid SemVer: ${version}`);
+  console.error('[error] Use a SemVer-compatible package version, for example: 0.1.4-dev.11.29');
+  process.exit(1);
+}
+NODE
 }
