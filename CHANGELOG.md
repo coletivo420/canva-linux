@@ -18,6 +18,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Moved generic C420UI TypeScript config contracts from `scripts/c420ui/app.ts` into the private `packages/c420ui` skeleton.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
   or when safe storage encryption is unavailable.
 - Startup diagnostics now explain whether persistent login is available or the app is running in ephemeral session mode.

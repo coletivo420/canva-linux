@@ -1,7 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { loadActions, type CanvaAction } from "../core/action-registry";
-import { type C420UIConfig, type C420UIProjectConfig } from "../c420ui/app";
+import type {
+  C420UIConfig,
+  C420UIProjectConfig,
+} from "../../packages/c420ui/src";
 import { C420UI_LOGO_LINES } from "../c420ui/logo";
 import { rootLaunchGuardMessage, toolSettingsPath } from "../c420ui/settings";
 
