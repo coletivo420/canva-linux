@@ -3,9 +3,12 @@
 ## Unreleased
 
 ### Added
+- Added the Canva Linux C420UI adapter boundary for project-specific metadata, action, path and root-guard wiring.
+- Added the private future `@coletivo420/c420ui` package skeleton with pure C420UI TypeScript contracts.
+- Added the public C420UI separation roadmap for compatibility-first package and adapter boundary work.
 - Added Secret Service-backed credential storage documentation and validation.
-- Added ephemeral session fallback when Linux credential storage falls back to `basic_text`.
-- Documented secure Linux credential storage through Secret Service backends as the requirement for persistent login,
+- Added ephemeral session fallback when Linux credential storage falls back to `basic_text` or when a secure backend cannot provide available encryption.
+- Documented secure Linux credential storage through Secret Service backends plus available safe storage encryption as the requirement for persistent login,
   with ephemeral session fallback guidance.
 - Added auxiliary maintenance policy files for Codex, Claude, and Gemini so AI agents have non-public project guidance without duplicating public documentation.
 - Added review checklist coverage for agent policy, versioning, Action Runner behavior, C420UI naming, docs/changelog
@@ -15,10 +18,12 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
-- Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected.
+- Moved generic C420UI TypeScript config contracts from `scripts/c420ui/app.ts` into the private `packages/c420ui` skeleton.
+- Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
+  or when safe storage encryption is unavailable.
 - Startup diagnostics now explain whether persistent login is available or the app is running in ephemeral session mode.
 - Clarified that Canva Linux does not promise universal login persistence; persistent sessions depend on `kwallet`,
-  `kwallet5`, `kwallet6`, `gnome_libsecret`, or a compatible Secret Service provider.
+  `kwallet5`, `kwallet6`, `gnome_libsecret`, or a compatible Secret Service provider, plus available encryption.
 - Deduplicated agent guardrail wording while preserving root, logging/privacy, header separation, and TypeScript-first rules.
 - Reorganized AI guardrails into focused maintenance sections for language/public docs, versioning, C420UI,
   Action Registry, root/sudo, logging/privacy, TypeScript-first source, CL-EyeDropper, packaging/architecture,
@@ -28,6 +33,8 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Fixed
+- Fixed the release workflow removed-interface-routing check so it scans active public documentation while excluding
+  archived internal development history.
 - Fixed C420UI stale-build detection so changes to `scripts/project-ui.json`, `scripts/app-identity-common.sh`,
   or `scripts/actions.json` are considered build inputs.
 - Fixed public manual-validation guidance that still referenced obsolete release/version wording and debug-filter terminology.

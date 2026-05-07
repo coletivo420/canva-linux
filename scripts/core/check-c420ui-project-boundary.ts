@@ -21,29 +21,38 @@ function assertIncludes(
 export function main(): number {
   const rootDir = findProjectRoot();
   const app = read(rootDir, "scripts/c420ui/app.ts");
+  const packageTypes = read(rootDir, "packages/c420ui/src/types.ts");
   const logo = read(rootDir, "scripts/c420ui/logo.ts");
   const settings = read(rootDir, "scripts/c420ui/settings.ts");
   const index = read(rootDir, "scripts/c420ui/index.ts");
+  const adapter = read(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
   const projectUi = read(rootDir, "scripts/project-ui.json");
   const failures: string[] = [];
 
   assertIncludes(
     failures,
     app,
+    "../../packages/c420ui/src",
+    "scripts/c420ui/app.ts must import generic C420UI types from packages/c420ui",
+  );
+
+  assertIncludes(
+    failures,
+    packageTypes,
     "export type C420UIBrandConfig",
-    "scripts/c420ui/app.ts must export C420UIBrandConfig",
+    "packages/c420ui/src/types.ts must export C420UIBrandConfig",
   );
   assertIncludes(
     failures,
-    app,
+    packageTypes,
     "export type C420UIProjectConfig",
-    "scripts/c420ui/app.ts must export C420UIProjectConfig",
+    "packages/c420ui/src/types.ts must export C420UIProjectConfig",
   );
   assertIncludes(
     failures,
-    app,
+    packageTypes,
     "export type C420UIConfig",
-    "scripts/c420ui/app.ts must export C420UIConfig",
+    "packages/c420ui/src/types.ts must export C420UIConfig",
   );
 
   const forbiddenCoreFragments = [
@@ -66,6 +75,14 @@ export function main(): number {
     }
   }
 
+
+  assertIncludes(
+    failures,
+    index,
+    "runCanvaLinuxC420UI",
+    "scripts/c420ui/index.ts must delegate to the Canva Linux C420UI adapter runner",
+  );
+
   const projectFields = [
     "logoLines",
     "appId",
@@ -82,11 +99,11 @@ export function main(): number {
       `scripts/c420ui/app.ts must read ${field} from project config`,
     );
     if (
-      !index.includes(`${field}: projectUi.${field}`) &&
-      !index.includes(`${field}: [...projectUi.${field}]`)
+      !adapter.includes(`${field}: projectUi.${field}`) &&
+      !adapter.includes(`${field}: [...projectUi.${field}]`)
     ) {
       failures.push(
-        `scripts/c420ui/index.ts must inject ${field} from scripts/project-ui.json`,
+        `scripts/c420ui-canva-linux/adapter.ts must inject ${field} from scripts/project-ui.json`,
       );
     }
     assertIncludes(

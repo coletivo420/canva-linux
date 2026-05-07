@@ -61,8 +61,16 @@ jobs:
 
       - name: Verify removed interface routing references
         run: |
-          if grep -REn -- '--tui|--no-tui|CANVA_NO_TUI|CANVA_TUI([^_A-Z]|$)|Shell Tool|F4 Shell Tool|shell fallback' README.md docs; then
-            echo "::error::Active docs still reference removed interface routing or shell fallback terms"
+          mapfile -d '' active_docs < <(
+            find README.md docs \
+              -type f \
+              \( -name '*.md' -o -name '*.html' \) \
+              ! -path 'docs/internal/*' \
+              -print0
+          )
+
+          if grep -En -- '--tui|--no-tui|CANVA_NO_TUI|CANVA_TUI([^_A-Z]|$)|Shell Tool|F4 Shell Tool|shell fallback' "${active_docs[@]}"; then
+            echo "::error::Active public docs still reference removed interface routing or shell fallback terms"
             exit 1
           fi
 

@@ -71,9 +71,10 @@ Use `CANVA_DEBUG=2` for all internal diagnostics plus Chromium/Electron verbose 
 
 ## Credential storage diagnostics
 
-At startup, Canva Linux logs the selected credential storage backend and the resulting session policy.
+At startup, Canva Linux logs the selected credential storage backend, whether
+`safeStorage.isEncryptionAvailable()` could be verified as available, and the resulting session policy.
 
-Expected secure examples:
+Expected secure backend examples, when encryption is also available:
 
 - `kwallet`
 - `kwallet5`
@@ -84,7 +85,10 @@ Insecure fallback:
 
 - `basic_text`
 
-When `basic_text` is detected, Canva Linux starts in ephemeral session mode. In ephemeral mode, login state, cookies and credentials are not preserved after the app closes. Logs must not contain cookies, tokens, passwords or credential material.
+Persistent login requires both a secure backend name and `isEncryptionAvailable=true`. When `basic_text` is detected,
+the backend is unknown, detection fails, or a secure backend reports unavailable encryption, Canva Linux starts in ephemeral session mode.
+In ephemeral mode, login state, cookies and credentials are not preserved after the app closes.
+Logs must not contain cookies, tokens, passwords or credential material.
 
 ## GPU diagnostics
 

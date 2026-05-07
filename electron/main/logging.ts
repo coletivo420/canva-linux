@@ -207,6 +207,8 @@ function createStatusLogger({
     const summary =
       `credential-storage-policy backend=${policy.backend} ` +
       `mode=${policy.mode} security=${policy.security} ` +
+      `encryptionAvailable=${String(policy.encryptionAvailable)} ` +
+      `encryptionAvailableVerified=${String(policy.encryptionAvailableVerified)} ` +
       `partition=${policy.partition} cache=${String(policy.cache)} ` +
       `persistentLoginAvailable=${String(policy.persistentLoginAvailable)}`;
 
@@ -223,7 +225,7 @@ function createStatusLogger({
       logStatus(
         "session",
         "ok",
-        `${summary} OK: secure Linux secret storage backend detected.`,
+        `${summary} OK: secure Linux secret storage backend and available encryption detected.`,
       );
       return;
     }

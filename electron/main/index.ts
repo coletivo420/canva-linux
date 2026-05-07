@@ -112,14 +112,14 @@ function showEphemeralSessionWarning(
 
   return dialog.showMessageBox({
     type: "warning",
-    title: "Secure credential storage was not detected",
-    message: "Secure credential storage was not detected.",
+    title: "Secure credential encryption was not verified",
+    message: "Secure credential encryption was not verified.",
     detail: [
       "Canva Linux will start in ephemeral session mode.",
       "Your login, cookies and credentials will not be saved after closing the app.",
       "",
-      "To enable persistent login, install or enable a Linux Secret Service backend:",
-      "KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
+      "Persistent login requires both a secure Linux Secret Service backend and available safeStorage encryption.",
+      "Install, enable, and unlock KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
     ].join("\n"),
     buttons: ["Continue with ephemeral session"],
     defaultId: 0,

@@ -17,7 +17,8 @@ Install the required packages for your distribution using the README.md requirem
 
 ## Login is not saved after restart
 
-If Canva Linux says it is using ephemeral session mode, your system does not expose a secure Secret Service backend to Electron.
+If Canva Linux says it is using ephemeral session mode, Electron either did not expose a secure Secret Service backend
+or could not verify that safe storage encryption is available.
 
 Install or enable:
 
@@ -25,7 +26,14 @@ Install or enable:
 - GNOME Keyring / libsecret on GNOME
 - a compatible Secret Service provider on your desktop environment
 
-After enabling it, restart Canva Linux and check startup logs for the credential storage backend. Secure backend names include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`. If the logs still show `basic_text`, Canva Linux will keep using ephemeral session mode and login, cookies and credentials will not be saved.
+Also make sure the keyring or wallet is unlocked and that any access prompt is accepted.
+A backend name such as `kwallet6` or `gnome_libsecret` is not sufficient by itself;
+persistent login also requires `safeStorage.isEncryptionAvailable()` to return `true`.
+
+After enabling it, restart Canva Linux and check startup logs for the credential storage backend and encryption availability.
+Secure backend names include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`.
+If the logs still show `basic_text`, an unknown backend, or unavailable encryption, Canva Linux will keep using ephemeral session mode
+and login, cookies and credentials will not be saved.
 
 ## Google One Tap / FedCM warning
 

@@ -25,7 +25,9 @@ Examples:
 
 Electron backend names expected for secure persistent login include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`.
 
-If no secure backend is available and Electron reports `basic_text`, Canva Linux uses an ephemeral session. Login, cookies and credentials will not be saved.
+If no secure backend is available, Electron reports `basic_text`, or `safeStorage.isEncryptionAvailable()` is false
+because the keyring/wallet is unavailable, locked, or cancelled, Canva Linux uses an ephemeral session.
+Login, cookies and credentials will not be saved.
 
 ## Installation modes
 
