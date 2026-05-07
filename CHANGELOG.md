@@ -29,6 +29,8 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Fixed
+- Fixed the release workflow removed-interface-routing check so it scans active public documentation while excluding
+  archived internal development history.
 - Fixed C420UI stale-build detection so changes to `scripts/project-ui.json`, `scripts/app-identity-common.sh`,
   or `scripts/actions.json` are considered build inputs.
 - Fixed public manual-validation guidance that still referenced obsolete release/version wording and debug-filter terminology.
