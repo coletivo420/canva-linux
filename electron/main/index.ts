@@ -5,6 +5,7 @@ const path = require("path");
 const {
   app,
   safeStorage,
+  dialog,
   BrowserWindow,
   WebContentsView,
   shell,
@@ -99,6 +100,32 @@ configureLinuxRuntime({
   path,
   wmClass: WM_CLASS,
 });
+
+
+function showEphemeralSessionWarning(
+  policy: CredentialStoragePolicy,
+): Promise<unknown> {
+  if (policy.mode !== "ephemeral") {
+    return Promise.resolve();
+  }
+
+  return dialog.showMessageBox({
+    type: "warning",
+    title: "Secure credential storage was not detected",
+    message: "Secure credential storage was not detected.",
+    detail: [
+      "Canva Linux will start in ephemeral session mode.",
+      "Your login, cookies and credentials will not be saved after closing the app.",
+      "",
+      "To enable persistent login, install or enable a Linux Secret Service backend:",
+      "KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
+    ].join("\n"),
+    buttons: ["Continue with ephemeral session"],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+}
 
 function getCanvaSession(): ElectronSession {
   if (!canvaSession) {
@@ -374,6 +401,7 @@ registerAppLifecycle({
   setCredentialStoragePolicy(policy: CredentialStoragePolicy) {
     credentialStoragePolicy = policy;
   },
+  showEphemeralSessionWarning,
   registerGpuDiagnostics() {
     registerGpuDiagnosticsModule({
       app,

@@ -9,7 +9,16 @@ const { loadRuntimeModule } = require("./helpers/runtime-module");
 const { registerAppLifecycle } = loadRuntimeModule("main/lifecycle");
 
 function createLifecycleOptions({
-  configureSession = async () => ({}),
+  configureSession,
+  credentialStoragePolicy = {
+    backend: "kwallet6",
+    mode: "persistent",
+    security: "secure",
+    partition: "persist:canva",
+    cache: true,
+    persistentLoginAvailable: true,
+    warning: null,
+  },
   lockResult = true,
   readyPromise = new Promise(() => {}),
 } = {}) {
@@ -33,6 +42,13 @@ function createLifecycleOptions({
     },
   };
 
+  const configureSessionFn =
+    configureSession ||
+    (async (options) => {
+      calls.push(`configureSession:${options.partition}`);
+      return {};
+    });
+
   return {
     calls,
     listeners,
@@ -54,7 +70,7 @@ function createLifecycleOptions({
           calls.push(`logStatus:${category}:${level}:${message}`);
         },
       },
-      configureSession,
+      configureSession: configureSessionFn,
       createShellWindow() {
         calls.push("createShellWindow");
       },
@@ -90,18 +106,13 @@ function createLifecycleOptions({
       },
       resolveCredentialStoragePolicy() {
         calls.push("resolveCredentialStoragePolicy");
-        return {
-          backend: "kwallet6",
-          mode: "persistent",
-          security: "secure",
-          partition: "persist:canva",
-          cache: true,
-          persistentLoginAvailable: true,
-          warning: null,
-        };
+        return credentialStoragePolicy;
       },
       setCredentialStoragePolicy(policy) {
         calls.push(`setCredentialStoragePolicy:${policy.mode}:${policy.partition}`);
+      },
+      async showEphemeralSessionWarning(policy) {
+        calls.push(`showEphemeralSessionWarning:${policy.security}:${policy.partition}`);
       },
       path: {},
       shouldGrantRemotePermission() {
@@ -173,6 +184,63 @@ test("registerAppLifecycle logs critical startup errors and quits", async () => 
   assert.equal(calls.includes("createHomeTab"), false);
 });
 
+
+test("registerAppLifecycle shows the ephemeral session warning before Canva loads", async () => {
+  const { calls, options } = createLifecycleOptions({
+    credentialStoragePolicy: {
+      backend: "basic_text",
+      mode: "ephemeral",
+      security: "insecure-basic-text",
+      partition: "canva-ephemeral",
+      cache: false,
+      persistentLoginAvailable: false,
+      warning: "ephemeral warning",
+    },
+    readyPromise: Promise.resolve(),
+  });
+
+  registerAppLifecycle(options);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  const warningIndex = calls.indexOf(
+    "showEphemeralSessionWarning:insecure-basic-text:canva-ephemeral",
+  );
+  const configureIndex = calls.indexOf("configureSession:canva-ephemeral");
+  const shellIndex = calls.indexOf("createShellWindow");
+
+  assert.notEqual(warningIndex, -1);
+  assert.notEqual(configureIndex, -1);
+  assert.notEqual(shellIndex, -1);
+  assert.equal(warningIndex < configureIndex, true);
+  assert.equal(configureIndex < shellIndex, true);
+  assert.equal(calls.includes("createToolbarView"), true);
+  assert.equal(calls.includes("createHomeTab"), true);
+});
+
+test("registerAppLifecycle shows the ephemeral warning for unknown storage", async () => {
+  const { calls, options } = createLifecycleOptions({
+    credentialStoragePolicy: {
+      backend: "unknown",
+      mode: "ephemeral",
+      security: "unknown",
+      partition: "canva-ephemeral",
+      cache: false,
+      persistentLoginAvailable: false,
+      warning: "ephemeral warning",
+    },
+    readyPromise: Promise.resolve(),
+  });
+
+  registerAppLifecycle(options);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(
+    calls.includes("showEphemeralSessionWarning:unknown:canva-ephemeral"),
+    true,
+  );
+  assert.equal(calls.includes("createHomeTab"), true);
+});
+
 test("registerAppLifecycle keeps normal startup flow unchanged", async () => {
   const { calls, listeners, options } = createLifecycleOptions({
     readyPromise: Promise.resolve(),
@@ -193,6 +261,10 @@ test("registerAppLifecycle keeps normal startup flow unchanged", async () => {
   assert.equal(
     calls.includes("logCredentialStoragePolicy:persistent:persist:canva"),
     true,
+  );
+  assert.equal(
+    calls.some((call) => call.startsWith("showEphemeralSessionWarning:")),
+    false,
   );
   assert.equal(calls.includes("debug:startup:session-configured"), true);
   assert.equal(calls.includes("createShellWindow"), true);

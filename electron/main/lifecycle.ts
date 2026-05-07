@@ -41,6 +41,7 @@ type LifecycleOptions = {
   registerGpuDiagnostics?: () => void;
   resolveCredentialStoragePolicy: () => CredentialStoragePolicy;
   setCredentialStoragePolicy: (policy: CredentialStoragePolicy) => void;
+  showEphemeralSessionWarning?: (policy: CredentialStoragePolicy) => Promise<unknown>;
   shouldGrantRemotePermission: (...args: any[]) => boolean;
   tabController: TabControllerLike;
 };
@@ -69,6 +70,7 @@ function registerAppLifecycle({
   registerGpuDiagnostics,
   resolveCredentialStoragePolicy,
   setCredentialStoragePolicy,
+  showEphemeralSessionWarning = async () => {},
   shouldGrantRemotePermission,
   tabController,
 }: LifecycleOptions): void {
@@ -109,6 +111,15 @@ function registerAppLifecycle({
     const credentialStoragePolicy = resolveCredentialStoragePolicy();
     setCredentialStoragePolicy(credentialStoragePolicy);
     logCredentialStoragePolicy(credentialStoragePolicy);
+    if (credentialStoragePolicy.mode === "ephemeral") {
+      await showEphemeralSessionWarning(credentialStoragePolicy);
+      debugLog(
+        "session",
+        "ephemeral-warning-confirmed",
+        `backend=${credentialStoragePolicy.backend}`,
+        `security=${credentialStoragePolicy.security}`,
+      );
+    }
     await configureSession({
       app,
       debugLog,
