@@ -59,6 +59,13 @@ should not be added unless a compatible import plugin is installed and documente
 `@typescript-eslint/no-unused-vars` remains a warning until real unused-variable
 cleanup is complete.
 
+## Documentation layout
+
+Keep release-facing docs linked from `README.md` and `docs/README.md`. Internal
+AI/dev memory belongs under `docs/internal/`; submission notes and historical
+packaging notes belong under `docs/notes/`. Do not delete useful technical notes
+when they leave the public index.
+
 ## Adding workflow actions
 
 All workflow actions must be registered in:

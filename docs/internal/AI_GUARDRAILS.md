@@ -82,7 +82,7 @@
 - Active docs must match current version/phase and validation flow.
 - `REVIEW.md` must preserve the Review Checklist.
 - File inventories must be appended under a separate section or moved to
-  `docs/REPOSITORY_INVENTORY.md`.
+  `docs/internal/REPOSITORY_INVENTORY.md`.
 - Never replace process safety checklists with generated inventories.
 - The custom EyeDropper flow must route through bundled CL-EyeDropper
   snapshot canvas picking.

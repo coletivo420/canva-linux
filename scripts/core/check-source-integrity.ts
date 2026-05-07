@@ -31,7 +31,7 @@ const centralDocumentationFiles = [
   "docs/README.md",
   "docs/TYPESCRIPT.md",
   "docs/VALIDATION.md",
-  "docs/FLATHUB.md",
+  "docs/notes/FLATHUB.md",
 ] as const;
 
 const criticalMultilineFiles = [
@@ -56,7 +56,7 @@ const strictDocumentationLineLength = 160;
 const strictDocumentationLineLengthFiles = new Set([
   "README.md",
   "CHANGELOG.md",
-  "docs/AI_GUARDRAILS.md",
+  "docs/internal/AI_GUARDRAILS.md",
   "docs/CLI.md",
   "docs/DEVELOPMENT.md",
   "docs/TECHNICAL.md",

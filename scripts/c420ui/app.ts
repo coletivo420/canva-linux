@@ -1428,7 +1428,7 @@ export function createApp(opts: C420UIConfig) {
 
     if (isPlannedAction(action)) {
       const message =
-        action.description ?? `${action.label} is not implemented in this phase.`;
+        action.description || `${action.label} is not implemented in this phase.`;
       appendLogText(`[planned] ${message}\n`, "system");
       modalActive = true;
       await messageDialog(

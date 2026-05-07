@@ -51,18 +51,25 @@ Supports scoped system/user install modes for Native and Flatpak, plus package a
 Includes doctor checks, validation pipeline, cleanup, uninstall and purge workflows.
 
 ## Documentation
-- [Requirements / Install Instructions](docs/INSTALLATION.md#requirements--install-instructions)
-- [CLI Reference](docs/CLI.md)
+
+Start with the [documentation index](docs/README.md) for the full map. Common
+entry points:
+
+### Users and operators
+- [Installation](docs/INSTALLATION.md)
+- [CLI reference](docs/CLI.md)
 - [Features](docs/FEATURES.md)
 - [Debugging](docs/DEBUGGING.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Validation](docs/VALIDATION.md)
-- [Release](docs/RELEASE.md)
-- [Development](docs/DEVELOPMENT.md)
-- [AI Guardrails](docs/AI_GUARDRAILS.md)
-- [Project README (docs)](docs/README.md)
-- [TypeScript Notes](docs/TYPESCRIPT.md)
-- [CL EyeDropper](docs/CANVA_LINUX_EYEDROPPER.md)
+- [AppImage FUSE requirements](docs/APPIMAGE_FUSE.md)
+
+### Contributors and release maintainers
+- [Validation checklist](docs/VALIDATION.md)
+- [Release guide](docs/RELEASE.md)
+- [Development guide](docs/DEVELOPMENT.md)
+- [Technical architecture](docs/TECHNICAL.md)
+- [TypeScript notes](docs/TYPESCRIPT.md)
+- [CL EyeDropper architecture](docs/CANVA_LINUX_EYEDROPPER.md)
 
 ## Security / Privacy Notes
 Use only trusted build/dependency sources and review privileged actions before execution.

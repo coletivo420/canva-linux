@@ -67,9 +67,9 @@ Before proposing or applying changes, align with the current state documented in
 - `README.md`
 - `CHANGELOG.md`
 - `docs/TECHNICAL.md`
-- `docs/FLATHUB.md`
+- `docs/notes/FLATHUB.md`
 - `docs/FLATPAK_PERMISSIONS.md`
-- `docs/AI_DEVELOPMENT.md`
+- `docs/internal/AI_DEVELOPMENT.md`
 
 Before proposing cleanup or simplification, check `CHANGELOG.md` to verify whether the target behavior is established project behavior.
 
@@ -168,8 +168,8 @@ When adding a new host dependency, update:
 
 Before changing logging code, read:
 
-- `docs/LOGGING_CONTRACT.md`
-- `docs/AI_GUARDRAILS.md`
+- `docs/internal/LOGGING_CONTRACT.md`
+- `docs/internal/AI_GUARDRAILS.md`
 - `docs/DEBUGGING.md`
 
 AI patches must not:
