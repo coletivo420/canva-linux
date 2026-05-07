@@ -60,7 +60,7 @@ Highlights:
 - Improved detection with installed version display.
 - AppImage and Flatpak package artifacts.
 - Improved C420UI logs, clipboard and manual text selection mode.
-- Secret Service-backed persistent login with an ephemeral session fallback when secure credential storage is unavailable.
+- Secret Service-backed persistent login with an ephemeral session fallback when secure credential storage or safe storage encryption is unavailable.
 
 Artifacts:
 

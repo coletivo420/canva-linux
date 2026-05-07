@@ -6,8 +6,8 @@ Protected features:
 
 - Secret Service-backed persistent Canva session
 - secure credential storage through Linux Secret Service backends
-- persistent login only when a secure credential backend is available
-- ephemeral session fallback when no secure credential backend is detected
+- persistent login only when a secure credential backend is selected and encryption is available
+- ephemeral session fallback when no secure credential backend or encryption key is available
 - Flatpak local install flow
 - Flatpak bundle flow
 - Flathub validation path
@@ -27,7 +27,8 @@ Do not remove feature-specific code because it looks verbose.
 
 ## Credential storage and persistent login
 
-Canva Linux supports persistent login only when Electron/Chromium can use a secure Linux credential storage backend.
+Canva Linux supports persistent login only when Electron/Chromium selects a secure Linux credential storage backend
+and reports that safe storage encryption is available. The selected backend name alone is not enough.
 
 Supported secure examples include:
 
@@ -35,7 +36,9 @@ Supported secure examples include:
 - GNOME Keyring / libsecret on GNOME and compatible desktops (`gnome_libsecret`)
 - compatible Secret Service providers used by desktops such as XFCE, Cinnamon, Pantheon and others when exposed through libsecret
 
-If Electron reports `basic_text`, Canva Linux starts in ephemeral session mode. In this mode, credentials, cookies and login state are not saved after closing the app.
+If Electron reports `basic_text`, an unknown backend, a detection error, or a nominally secure backend
+with unavailable encryption (for example a locked or cancelled keyring prompt), Canva Linux starts in ephemeral session mode.
+In this mode, credentials, cookies and login state are not saved after closing the app.
 
 ## Changelog-backed features
 

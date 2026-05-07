@@ -23,7 +23,8 @@ Current target:
 - `npm run check:gitignore-policy`
 - `npm test`
   - compiles selected TypeScript tests plus support helpers to `.build/test/` before `node --test`
-  - includes credential-storage policy contracts for Secret Service-backed persistent login and `basic_text` ephemeral fallback
+  - includes credential-storage policy contracts for Secret Service-backed persistent login only when encryption is available
+  - includes `basic_text`, locked keyring, and detection-error ephemeral fallbacks
 - `npm run docs:check-links`
 - `npm run docs:check-ai`
 - `scripts/run-core-entry.sh check-no-shell-menu`
@@ -80,12 +81,15 @@ Current target:
 - Confirm terminal text selection mode disables C420UI mouse handling globally on the next C420UI start while keyboard scroll and F5 log copy continue to work.
 - Confirm F6 opens a plain logs view with the session log path for manual selection fallback.
 
-- Confirm starting on KDE Plasma with KWallet enabled logs `kwallet`, `kwallet5`, or `kwallet6` and keeps persistent login available.
-- Confirm starting on GNOME or a compatible desktop with GNOME Keyring/libsecret enabled logs `gnome_libsecret` and keeps persistent login available.
-- Confirm starting without a Secret Service backend shows the ephemeral session warning before Canva loads.
+- Confirm starting on KDE Plasma with KWallet enabled and unlocked logs `kwallet`, `kwallet5`,
+  or `kwallet6`, reports encryption available, and keeps persistent login available.
+- Confirm starting on GNOME or a compatible desktop with GNOME Keyring/libsecret enabled and unlocked
+  logs `gnome_libsecret`, reports encryption available, and keeps persistent login available.
+- Confirm starting without a Secret Service backend, with `basic_text`, or with a locked/cancelled
+  secure backend shows the ephemeral session warning before Canva loads.
 - Confirm login does not persist after closing and reopening Canva Linux in ephemeral session mode.
 - Confirm startup logs show whether persistent login is available or ephemeral session mode is active.
-- Confirm startup logs show the credential storage backend and session policy.
+- Confirm startup logs show the credential storage backend, encryption availability, encryption verification status, and session policy.
 - Confirm logs do not contain cookies, tokens, passwords, session contents or credential material.
 - Confirm Tab and Shift+Tab move focus between menu, diagnostics, action panel and logs.
 - Confirm the active panel has a visible border/label highlight and the active menu/settings cell has a visible row highlight.

@@ -98,15 +98,21 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 ## Credential storage
 
 - Persistent login must require a secure Linux Secret Service backend.
+- The secure backend must also have `safeStorage.isEncryptionAvailable() === true`; the selected backend name alone is not sufficient.
 - If Electron reports `basic_text`, Canva Linux must use ephemeral session mode.
 - `basic_text` must never use the `persist:canva` partition.
+- `basic_text` must remain ephemeral even if encryption is reported available.
 - Ephemeral session mode must warn the user that login, cookies and credentials will not be saved.
 - Do not claim credentials are securely stored when the selected backend is `basic_text`.
+- Do not claim credentials are securely stored when the backend is unknown, unverifiable,
+  or when a secure backend has unavailable encryption.
 - Do not log passwords, cookies, tokens, session values or credential material.
-- Persistent Canva login on Linux depends on a secure Secret Service backend.
+- Persistent Canva login on Linux depends on a secure Secret Service backend with available encryption;
+  the selected backend name alone is not sufficient.
 - Secure Electron backend names include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`.
 - `basic_text` is an insecure fallback and must use ephemeral session mode.
-- Unknown or failed credential-backend detection must use ephemeral session mode by caution.
+- Unknown or failed credential-backend detection, failed encryption-availability detection,
+  and secure backends with unavailable encryption must use ephemeral session mode by caution.
 - Do not describe login persistence as universal; document it as Secret Service-backed.
 - Do not use `safeStorage.setUsePlainTextEncryption()` to preserve login.
 - Do not log cookies, tokens, passwords, session contents or credential material while diagnosing credential storage.
