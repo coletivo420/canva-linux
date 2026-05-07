@@ -230,13 +230,6 @@ for arg in "$@"; do
   case "${arg}" in
     -y | --yes | --force)
       FORCE=true
-      ;;
-    --dry-run)
-      DRY_RUN=true
-      ;;
-  esac
-done
-
 DIRECT_ACTION_FLAGS=()
 for arg in "$@"; do
   case "${arg}" in
