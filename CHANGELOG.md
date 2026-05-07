@@ -3,12 +3,18 @@
 ## Unreleased
 
 ### Added
+- Added C420UI log selection/session diagnostics guardrail checks for global
+  mouse release, F5/F6 log paths, session stream warnings and sudo auth popups.
 - Added C420UI branding and project-boundary checks for public naming and
   reusable UI metadata separation.
 - Added a C420UI header layout guardrail check for separate fixed brand and
   project headers.
 
 ### Changed
+- Hardened C420UI manual text selection so mouse capture is updated globally
+  while keyboard navigation and F5 log copy remain available.
+- Restored legacy C420UI action type aliases so TypeScript checks pass during
+  the C420UI naming transition.
 - Consolidated public documentation around the C420UI terminal interface and
   removed legacy terminal-interface product naming.
 - Moved project-specific C420UI overview metadata and logo content behind the

@@ -71,7 +71,8 @@ export function main(): number {
   if (
     !tuiApp.includes("formatAuthFailureMessage") ||
     !tuiApp.includes("await errorDialog(") ||
-    !tuiApp.includes("Administrator authentication failed")
+    !tuiApp.includes("Administrator authentication failed") ||
+    !tuiApp.includes('setProgressError("root authentication failed")')
   ) {
     failures.push(
       "scripts/c420ui/app.ts: sudo auth failures must be shown in a popup",

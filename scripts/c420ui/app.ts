@@ -190,24 +190,26 @@ export function createApp(opts: C420UIConfig) {
 
   let toolSettings = loadToolSettings(opts.project.stateDirectoryName);
   const settingsPath = toolSettingsPath(opts.project.stateDirectoryName);
-  const terminalTextSelectionModeActive =
+  let terminalTextSelectionModeActive =
     toolSettings.tool.terminalTextSelectionMode;
-  const tuiMouseEnabled = !terminalTextSelectionModeActive;
+  let tuiMouseEnabled = !terminalTextSelectionModeActive;
 
-  const footerContent = [
-    terminalTextSelectionModeActive
-      ? "{bold}Text selection mode enabled{/bold}"
-      : "",
-    "{bold}Tab{/bold} Focus",
-    "{bold}Enter{/bold} Select",
-    "{bold}Space{/bold} Toggle",
-    "{bold}F5{/bold} Copy Logs",
-    "{bold}F6{/bold} Plain Logs",
-    "{bold}?{/bold} Help",
-    "{bold}q{/bold} Quit",
-  ]
-    .filter(Boolean)
-    .join(" | ");
+  function footerContent() {
+    return [
+      terminalTextSelectionModeActive
+        ? "{bold}Text selection mode enabled{/bold}"
+        : "",
+      "{bold}Tab{/bold} Focus",
+      "{bold}Enter{/bold} Select",
+      "{bold}Space{/bold} Toggle",
+      "{bold}F5{/bold} Copy Logs",
+      "{bold}F6{/bold} Plain Logs",
+      "{bold}?{/bold} Help",
+      "{bold}q{/bold} Quit",
+    ]
+      .filter(Boolean)
+      .join(" | ");
+  }
 
   const screen = blessed.screen({
     smartCSR: true,
@@ -327,7 +329,7 @@ export function createApp(opts: C420UIConfig) {
     height: 1,
     width: "100%",
     tags: true,
-    content: footerContent,
+    content: footerContent(),
     style: c420uiTheme.footer,
   });
 
@@ -442,7 +444,23 @@ export function createApp(opts: C420UIConfig) {
     program?.enableMouse?.();
   }
 
-  applyProgramMouseMode();
+  function setWidgetMouseEnabled(widget: any, enabled: boolean) {
+    widget.options = { ...(widget.options ?? {}), mouse: enabled };
+    widget.mouse = enabled;
+  }
+
+  function applyGlobalMouseMode() {
+    terminalTextSelectionModeActive =
+      toolSettings.tool.terminalTextSelectionMode;
+    tuiMouseEnabled = !terminalTextSelectionModeActive;
+    applyProgramMouseMode();
+    for (const widget of [menu, diagnostics, content, logs]) {
+      setWidgetMouseEnabled(widget, tuiMouseEnabled);
+    }
+    footer.setContent(footerContent());
+  }
+
+  applyGlobalMouseMode();
 
   // --- Menu and View Items ---
 
@@ -467,7 +485,7 @@ export function createApp(opts: C420UIConfig) {
     {
       kind: "toggle",
       key: "terminalTextSelectionMode",
-      label: "Prefer native terminal text selection on next C420UI start",
+      label: "Manual text selection mode",
     },
     {
       kind: "section",
@@ -1176,8 +1194,8 @@ export function createApp(opts: C420UIConfig) {
       } else {
         details.push(
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Behavior{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  When enabled before startup, terminal text selection mode disables C420UI mouse handling for the session.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Changes to this setting take effect the next time the C420UI starts. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode disables C420UI mouse capture globally and keeps keyboard navigation active.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Changes take effect immediately and are saved for the next C420UI start. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F6 opens a plain logs view with the session log path for manual selection fallback.{/${c420uiTheme.colors.descriptionText}-fg}`,
         );
@@ -1208,6 +1226,7 @@ export function createApp(opts: C420UIConfig) {
       );
       return;
     }
+    applyGlobalMouseMode();
     applyLogPanelLabel();
     if (currentView === "settings") {
       setSettingsMenuItems();
@@ -1313,12 +1332,13 @@ export function createApp(opts: C420UIConfig) {
           `{${c420uiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F6             View plain logs and session log path{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Terminal text selection can be enabled in Application Settings. It disables C420UI mouse capture globally on the next start, but some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode can be enabled in Application Settings. It disables C420UI mouse capture globally, keeps keyboard navigation active, and some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Launcher{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  ${opts.project.launcherCommand} opens the C420UI.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Any direct action flag runs CLI mode instead.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Do not run the Tool with sudo or as root; privileged actions ask for administrator authentication only when needed.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Root authentication failures are shown in a centered popup and the action is not started.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Settings{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Tool settings file: ${settingsPath}{/${c420uiTheme.colors.descriptionText}-fg}`,

@@ -30,9 +30,12 @@
 - Modal dialogs must not leak Tab focus back to the main C420UI.
 - During running actions, Tab/scroll/log copy may work, but action execution must remain blocked.
 - Help must document current keyboard navigation.
+- Manual text selection mode must disable mouse capture globally, not only on the logs widget.
 - terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.
 - C420UI mouse settings must be restored when leaving text selection mode.
+- F5 log copy must work regardless of text selection mode.
 - F5 clipboard copy must keep working even when text selection mode is enabled.
+- Help must document log copy, manual selection and terminal limitations.
 - Help must document terminal text selection limitations.
 - Release workflow must build and upload AppImage, Flatpak bundle,
   linux-unpacked tarball, and SHA256SUMS.
@@ -43,8 +46,10 @@
   not publish four-number dotted versions.
 - Linux release asset names must use `x86_64`, not `x64`.
 - Passwords and sudo stdin must never be logged.
+- Session log write failures must not fail silently.
 - C420UI session logging must not fail silently.
 - If the session log stream cannot be opened, the UI must expose a warning without recursion.
+- writeSession must not call appendLogText directly to avoid recursion.
 - Sudo contract checks must tolerate valid shell whitespace around assignments.
 - Application Settings are C420UI state, not shell actions.
 - New UI strings, docs and comments must be written in English.
@@ -61,6 +66,8 @@
 - Raw sudo calls are forbidden outside scripts/sudo-common.sh.
 - User-scope actions must never call sudo.
 - C420UI root authentication must happen before privileged execution.
+- Sudo/root authentication failures must be shown in a centered C420UI popup.
+- Sudo passwords must never be logged.
 - Passwords must never be logged.
 - overview-status must always emit valid JSON.
 - Detection errors must not break the C420UI layout.

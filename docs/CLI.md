@@ -69,8 +69,8 @@ Current Tool settings:
   Tool-level startup, settings, detection and authentication events in the C420UI
   logs panel. Action logs remain visible either way, and critical Tool warnings
   or errors still appear when general Tool logs are disabled.
-- `Prefer native terminal text selection on next C420UI start`: when enabled before
-  startup, disables C420UI mouse handling globally for the session so the terminal
-  can perform native text selection. Changes take effect on the next C420UI start.
+- `Manual text selection mode`: disables C420UI mouse capture globally so the terminal
+  can perform native text selection while keyboard navigation remains active.
+  Changes take effect immediately and are saved for the next C420UI start.
   Keyboard log scrolling and F5 copy remain available. F6 opens a plain logs
   view with the session log path as a fallback for manual selection.

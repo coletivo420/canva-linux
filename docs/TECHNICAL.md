@@ -67,14 +67,14 @@ Action logs cover stdout/stderr from install, build, validation, uninstall,
 purge and maintenance operations. The launcher creates/truncates the session log
 once, and the C420UI appends to it so launcher startup lines are preserved.
 
-Terminal text selection mode is resolved before Blessed widgets are constructed.
-When enabled before startup, it disables C420UI mouse handling globally for the
-session, including the Blessed screen program when supported, so the terminal
-can perform native text selection. Changes take effect on the next C420UI start.
-Keyboard scrolling with PageUp, PageDown, Home and End remains available, F5
-still copies the visible log history, and F6 opens a plain logs view with the
-session log path as a manual-selection fallback. Some terminals may still
-require Shift while selecting text.
+Terminal text selection mode disables C420UI mouse capture globally, including
+menu, diagnostics, content, logs, and the Blessed screen program when supported,
+so the terminal can perform native text selection while keyboard navigation
+remains active. Changes take effect immediately and are saved for the next C420UI
+start. Keyboard scrolling with PageUp, PageDown, Home and End remains available,
+F5 still copies the visible log history, and F6 opens a plain logs view with the
+session log path as a manual-selection fallback. Some terminals may still require
+Shift while selecting text.
 
 The C420UI keeps an explicit FocusZone model for menu, diagnostics, action panel
 and logs. Tab and Shift+Tab move between these blocks, the active block uses a

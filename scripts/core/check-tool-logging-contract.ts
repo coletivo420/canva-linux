@@ -30,6 +30,24 @@ export function main(): number {
       "scripts/c420ui/app.ts: critical Tool warnings/errors must remain visible when general Tool logs are disabled",
     );
   }
+  if (
+    !app.includes("sessionLogUnavailableWarningShown") ||
+    !app.includes("warnSessionLogUnavailableOnce") ||
+    !app.includes("Session log stream is unavailable") ||
+    !app.includes("if (!sessionStream)")
+  ) {
+    failures.push(
+      "scripts/c420ui/app.ts: writeSession must warn once when the session stream is unavailable",
+    );
+  }
+  const writeSessionBlock =
+    app.match(/const writeSession = \(line: string\) => \{[\s\S]*?\n  \};/)?.[0] ?? "";
+  if (writeSessionBlock.includes("appendLogText")) {
+    failures.push(
+      "scripts/c420ui/app.ts: writeSession must not call appendLogText directly",
+    );
+  }
+
   if (/appendLogText\([^)]*password/s.test(app)) {
     failures.push("scripts/c420ui/app.ts: sudo password must never be written to logs");
   }
