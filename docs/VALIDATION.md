@@ -5,6 +5,13 @@ Current target:
 - Version: `0.1.4-12 (Alpha)`
 - Release: `v0.1.4-12`
 
+## Split validation model
+
+- `npm run check:c420ui-core` validates reusable c420ui contracts.
+- `npm run check:canva-linux` validates the Canva Linux adapter and concrete recipes.
+- `npm run check:c420ui-contracts` is a temporary compatibility alias.
+- `npm run check:scripts-core` remains the legacy aggregate until the validation split is complete.
+
 ## Automated
 
 - `npm run build:scripts-core`

@@ -18,11 +18,13 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │   └── assets/                Runtime assets copied into the Electron build
 ├── scripts/                   Canva Linux tool, validation, packaging, and host-operation source
 │   ├── core/                  TypeScript validation, action contracts, and action-runner core
+│   ├── checks/canva-linux/    Canva Linux concrete validation and anti-regression
 │   ├── c420ui/                Current in-repo c420ui implementation before package split
 │   ├── c420ui-canva-linux/    Canva Linux adapter boundary for c420ui integration
 │   └── *.sh                   Linux host-operation glue and launcher/install/package wrappers
 ├── packages/                  Private package workspace; no published c420ui package exists yet
 │   └── c420ui/                Private future standalone c420ui package skeleton
+│       └── checks/            c420ui generic validation and anti-regression
 ├── docs/                      Public and internal project documentation
 │   ├── *.md                   Public user, contributor, release, validation, and architecture docs
 │   ├── internal/              AI, developer-memory, historical, and legacy notes
@@ -93,6 +95,9 @@ The intended separation is:
 - **Canva Linux adapter**: project-specific actions, metadata, launch wiring,
   install/package status, and Canva Linux labels. This boundary starts in
   `scripts/c420ui-canva-linux/` before broader extraction.
+- **Validation split**: generic c420ui validation and anti-regression checks live
+  in `packages/c420ui/checks/`; Canva Linux concrete validation and
+  anti-regression checks live in `scripts/checks/canva-linux/`.
 - **Future package workspace**: `packages/c420ui/` is a private skeleton reserved for a possible
   standalone c420ui package after the core is separated. It is not a published
   npm package and should not be documented as externally consumable yet.
