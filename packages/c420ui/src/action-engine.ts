@@ -77,6 +77,31 @@ export function createC420UIActionEngine(
     const dryRun = runOptions.dryRun === true;
     const yes = runOptions.yes === true;
 
+    if (dryRun) {
+      emit?.(
+        createC420UIEvent({
+          type: "action:start",
+          actionId: action.id,
+          message: action.label,
+          data: { dryRun },
+        }),
+      );
+      const result: c420uiActionResult = {
+        code: c420uiExitCodes.success,
+        status: "success",
+        message: "dry-run",
+      };
+      emit?.(
+        createC420UIEvent({
+          type: "action:finish",
+          actionId: action.id,
+          message: action.label,
+          data: { exitCode: result.code, status: result.status },
+        }),
+      );
+      return result;
+    }
+
     if (isC420UIPlannedAction(action)) {
       emit?.(
         createC420UIEvent({
@@ -100,23 +125,6 @@ export function createC420UIActionEngine(
         data: { dryRun },
       }),
     );
-
-    if (dryRun) {
-      const result: c420uiActionResult = {
-        code: c420uiExitCodes.success,
-        status: "success",
-        message: "dry-run",
-      };
-      emit?.(
-        createC420UIEvent({
-          type: "action:finish",
-          actionId: action.id,
-          message: action.label,
-          data: { exitCode: result.code, status: result.status },
-        }),
-      );
-      return result;
-    }
 
     const context: c420uiExecutionContext = {
       rootDir,

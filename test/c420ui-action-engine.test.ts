@@ -134,6 +134,28 @@ test("planned actions return the planned-action exit code without running bridge
   assert.deepEqual(events.map((event) => event.type), ["action:planned"]);
 });
 
+test("planned dry-run actions return success without running bridge actions", async () => {
+  const events: C420UIEvent[] = [];
+  const { bridge, runCalls } = createFakeBridge({ actions: [plannedAction] });
+  const engine = createC420UIActionEngine({
+    bridge,
+    rootDir: "/repo",
+    emit(event) {
+      events.push(event);
+    },
+  });
+
+  const result = await engine.runAction(plannedAction, { dryRun: true });
+
+  assert.deepEqual(result, {
+    code: c420uiExitCodes.success,
+    status: "success",
+    message: "dry-run",
+  });
+  assert.equal(runCalls.length, 0);
+  assert.deepEqual(events.map((event) => event.type), ["action:start", "action:finish"]);
+});
+
 test("dry-run actions return success without running bridge actions", async () => {
   const events: C420UIEvent[] = [];
   const { bridge, runCalls } = createFakeBridge({ actions: [commandAction] });
