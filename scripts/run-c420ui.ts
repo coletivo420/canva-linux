@@ -27,6 +27,9 @@ function needsBuild(): boolean {
     ...listTsFiles(uiDir),
     path.join(rootDir, "package.json"),
     path.join(rootDir, "package-lock.json"),
+    path.join(rootDir, "scripts/project-ui.json"),
+    path.join(rootDir, "scripts/app-identity-common.sh"),
+    path.join(rootDir, "scripts/actions.json"),
   ].filter((file) => fs.existsSync(file));
   return inputs.some((file) => fs.statSync(file).mtimeMs > outMtime);
 }

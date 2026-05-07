@@ -1,0 +1,29 @@
+# Codex Maintenance Policy for Canva Linux
+
+This file provides auxiliary maintenance instructions for Codex agents. It is not public user documentation.
+
+Required reading:
+- README.md
+- REVIEW.md
+- CHANGELOG.md
+- docs/DEVELOPMENT.md
+- docs/TYPESCRIPT.md
+- docs/internal/AI_GUARDRAILS.md
+- docs/internal/LOGGING_CONTRACT.md
+
+Rules:
+- Preserve version 0.1.4-12 unless the maintainer explicitly requests a versioning change.
+- Do not introduce 0.1.4-12.RC2.
+- Keep C420UI as the user-facing terminal interface name.
+- Do not reintroduce Terminal Assistant or TUI as product names.
+- Do not reintroduce shell menus.
+- Do not run or recommend ./canva-linux.sh as root.
+- Preserve CL-EyeDropper.
+- Preserve real generated architecture names such as x86_64 or X86_64.
+- Do not normalize architecture names to x64.
+- Do not remove validation checks to make a build pass.
+- Do not add maintained JavaScript source.
+- Use TypeScript for maintained Node.js logic.
+- Shell remains reserved for Linux host-operation glue.
+- Report validations executed and anything not tested.
+- Never log passwords, sudo stdin, cookies, tokens, or credential material.

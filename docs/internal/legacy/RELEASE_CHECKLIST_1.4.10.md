@@ -1,3 +1,5 @@
+> Legacy historical checklist. Not current release guidance.
+
 # Release Checklist — 1.4.10
 
 This checklist tracks the stable `1.4.10` release closure.

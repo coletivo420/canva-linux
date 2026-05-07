@@ -37,6 +37,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `docs/.nojekyll`
 - `docs/internal/AI_DEVELOPMENT.md`
 - `docs/internal/AI_GUARDRAILS.md`
+- `docs/internal/CHANGELOG_DEVELOPMENT_HISTORY.md`
 - `docs/APPIMAGE_FUSE.md`
 - `docs/CANVA_API.md`
 - `docs/CANVA_LINUX_EYEDROPPER.md`
@@ -57,7 +58,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `docs/PRIVACY.md`
 - `docs/README.md`
 - `docs/internal/REPOSITORY_INVENTORY.md`
-- `docs/internal/RELEASE_CHECKLIST.md`
+- `docs/internal/legacy/RELEASE_CHECKLIST_1.4.10.md`
 - `docs/ROADMAP_0.1.5.md`
 - `docs/ROADMAP_0.1.6.md`
 - `docs/SCREENSHOTS.md`

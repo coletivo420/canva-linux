@@ -28,6 +28,7 @@ entry points but remain available:
 
 - [Internal development notes](internal/AI_DEVELOPMENT.md)
 - [Internal AI guardrails](internal/AI_GUARDRAILS.md)
+- [Internal changelog development history](internal/CHANGELOG_DEVELOPMENT_HISTORY.md)
 - [Repository inventory](internal/REPOSITORY_INVENTORY.md)
 - [TypeScript conversion review](internal/TYPESCRIPT_CONVERSION_REVIEW.md)
 - [Flathub notes](notes/FLATHUB.md)
