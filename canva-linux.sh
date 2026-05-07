@@ -81,37 +81,37 @@ run_action_by_cli_flag() {
   fi
 }
 
-tui_has_attached_stdio() {
+c420ui_has_attached_stdio() {
   [[ -t 0 && -t 1 ]]
 }
 
-tui_has_dev_tty() {
+c420ui_has_dev_tty() {
   [[ -r /dev/tty && -w /dev/tty ]]
 }
 
-tui_needs_dev_tty_redirect() {
-  ! tui_has_attached_stdio && tui_has_dev_tty
+c420ui_needs_dev_tty_redirect() {
+  ! c420ui_has_attached_stdio && c420ui_has_dev_tty
 }
 
-tui_has_entrypoint() {
-  [[ -f "${ROOT_DIR}/scripts/run-tui.ts" ]]
+c420ui_has_entrypoint() {
+  [[ -f "${ROOT_DIR}/scripts/run-c420ui.ts" ]]
 }
 
-tui_unavailable_reason() {
+c420ui_unavailable_reason() {
   local force="${1:-no}"
 
-  if ! tui_has_attached_stdio && ! tui_has_dev_tty; then
-    printf '%s\n' "TUI requires an interactive terminal or an accessible /dev/tty."
+  if ! c420ui_has_attached_stdio && ! c420ui_has_dev_tty; then
+    printf '%s\n' "C420UI requires an interactive terminal or an accessible /dev/tty."
     return 0
   fi
 
   if [[ "${TERM:-dumb}" == "dumb" ]]; then
-    printf '%s\n' "TUI requires a usable TERM value; current TERM is '${TERM:-dumb}'."
+    printf '%s\n' "C420UI requires a usable TERM value; current TERM is '${TERM:-dumb}'."
     return 0
   fi
 
   if ! command -v node > /dev/null 2>&1; then
-    printf '%s\n' "TUI requires Node.js, but node was not found in PATH."
+    printf '%s\n' "C420UI requires Node.js, but node was not found in PATH."
     return 0
   fi
 
@@ -120,49 +120,49 @@ tui_unavailable_reason() {
     return 0
   fi
 
-  if ! tui_has_entrypoint; then
-    printf '%s\n' "TUI entrypoint is missing. Expected scripts/run-tui.ts."
+  if ! c420ui_has_entrypoint; then
+    printf '%s\n' "C420UI entrypoint is missing. Expected scripts/run-c420ui.ts."
     return 0
   fi
 
   return 1
 }
 
-can_run_tui() {
-  ! tui_unavailable_reason "$@" > /dev/null
+can_run_c420ui() {
+  ! c420ui_unavailable_reason "$@" > /dev/null
 }
 
-run_tui_entrypoint() {
+run_c420ui_entrypoint() {
   if [[ -n "${PROJECT_PHASE:-}" ]]; then
     CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts > /dev/null &&
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-tui.js
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-c420ui.js
   else
     CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null &&
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-tui.js
+      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-c420ui.js
   fi
 }
 
-run_tui_node() {
-  if tui_needs_dev_tty_redirect; then
-    session_log "[tui] stdio is not a tty; redirecting TUI to /dev/tty"
-    run_tui_entrypoint < /dev/tty > /dev/tty 2> /dev/tty
+run_c420ui_node() {
+  if c420ui_needs_dev_tty_redirect; then
+    session_log "[c420ui] stdio is not a tty; redirecting C420UI to /dev/tty"
+    run_c420ui_entrypoint < /dev/tty > /dev/tty 2> /dev/tty
     return $?
   fi
 
-  run_tui_entrypoint
+  run_c420ui_entrypoint
 }
 
-run_tui_mode() {
+run_c420ui_mode() {
   local force="${1:-no}"
   local reason
 
-  if reason="$(tui_unavailable_reason "${force}")"; then
+  if reason="$(c420ui_unavailable_reason "${force}")"; then
     ui_error "${reason}"
     ui_info "Use ./canva-linux.sh --help to list direct CLI actions."
     exit 1
   fi
 
-  run_tui_node
+  run_c420ui_node
 }
 
 show_help() {
@@ -178,7 +178,7 @@ Global options:
   -h, --help             Show this help
 
 Interactive behavior:
-  ./canva-linux.sh opens the Blessed TUI by default when available.
+  ./canva-linux.sh opens the C420UI by default when available.
   Use --help or a direct action flag to run non-interactively.
   Do not run this tool with sudo or as root. Privileged actions ask for
   administrator authentication only when needed.
@@ -214,7 +214,7 @@ H
 }
 
 if [[ $# -eq 0 ]]; then
-  run_tui_mode no
+  run_c420ui_mode no
   exit 0
 fi
 

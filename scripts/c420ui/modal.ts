@@ -1,5 +1,5 @@
 import blessed from "blessed";
-import { tuiTheme } from "./theme";
+import { c420uiTheme } from "./theme";
 
 export type ConfirmOptions = {
   title: string;
@@ -25,7 +25,10 @@ function createModalShell(
     left: 0,
     width: "100%",
     height: "100%",
-    style: { bg: tuiTheme.colors.background, transparent: true },
+    style: {
+      bg: c420uiTheme.colors.background,
+      transparent: true,
+    },
   });
 
   const modal = blessed.box({
@@ -37,15 +40,15 @@ function createModalShell(
     border: "line",
     tags: true,
     label: dangerous
-      ? `{${tuiTheme.colors.error}-fg}${title}{/${tuiTheme.colors.error}-fg}`
-      : `{${tuiTheme.colors.lightBlue}-fg}${title}{/${tuiTheme.colors.lightBlue}-fg}`,
+      ? `{${c420uiTheme.colors.error}-fg}${title}{/${c420uiTheme.colors.error}-fg}`
+      : `{${c420uiTheme.colors.lightBlue}-fg}${title}{/${c420uiTheme.colors.lightBlue}-fg}`,
     style: {
-      fg: tuiTheme.modal.text,
-      bg: tuiTheme.modal.background,
+      fg: c420uiTheme.modal.text,
+      bg: c420uiTheme.modal.background,
       border: {
         fg: dangerous
-          ? tuiTheme.modal.dangerousBorder
-          : tuiTheme.modal.normalBorder,
+          ? c420uiTheme.modal.dangerousBorder
+          : c420uiTheme.modal.normalBorder,
       },
     },
   });
@@ -82,7 +85,11 @@ export function confirmDialog(
       right: 2,
       height: 1,
       tags: true,
-      content: `{${tuiTheme.colors.lightBlue}-fg}[y/Enter]{/${tuiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? "Confirm"}    {${tuiTheme.colors.lightBlue}-fg}[Esc/n]{/${tuiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? "Cancel"}`,
+      content: [
+        `{${c420uiTheme.colors.lightBlue}-fg}[y/Enter]{/${c420uiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? "Confirm"}`,
+        `    `,
+        `{${c420uiTheme.colors.lightBlue}-fg}[Esc/n]{/${c420uiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? "Cancel"}`,
+      ].join(""),
     });
 
     const close = (confirmed: boolean) => {
@@ -90,16 +97,26 @@ export function confirmDialog(
       footer.destroy();
       modal.destroy();
       overlay.destroy();
-      if (previousFocus && typeof previousFocus.focus === "function")
+      if (previousFocus && typeof previousFocus.focus === "function") {
         previousFocus.focus();
+      }
       screen.render();
       resolve(confirmed);
     };
 
-    overlay.key(["enter", "y"], () => close(true));
-    overlay.key(["escape", "n"], () => close(false));
-    overlay.on("click", () => overlay.focus());
-    modal.on("click", () => overlay.focus());
+    overlay.key(["enter", "y"], () => {
+      close(true);
+    });
+    overlay.key(["escape", "n"], () => {
+      close(false);
+    });
+
+    overlay.on("click", () => {
+      overlay.focus();
+    });
+    modal.on("click", () => {
+      overlay.focus();
+    });
 
     overlay.focus();
     screen.render();
@@ -142,6 +159,7 @@ export function inputDialog(
   return new Promise((resolve) => {
     const previousFocus = screen.focused;
     const { overlay, modal } = createModalShell(screen, title, false);
+
     const label = blessed.box({
       parent: modal,
       top: 1,
@@ -150,6 +168,7 @@ export function inputDialog(
       height: 2,
       content: prompt,
     });
+
     const input = blessed.textbox({
       parent: modal,
       top: 4,
@@ -160,6 +179,7 @@ export function inputDialog(
       inputOnFocus: true,
       censor: true,
     });
+
     const footer = blessed.box({
       parent: modal,
       bottom: 1,
@@ -167,12 +187,19 @@ export function inputDialog(
       right: 2,
       height: 1,
       tags: true,
-      content: `{${tuiTheme.colors.lightBlue}-fg}[Enter]{/${tuiTheme.colors.lightBlue}-fg} Submit  {${tuiTheme.colors.lightBlue}-fg}[Esc]{/${tuiTheme.colors.lightBlue}-fg} Cancel`,
+      content: [
+        `{${c420uiTheme.colors.lightBlue}-fg}[Enter]{/${c420uiTheme.colors.lightBlue}-fg} Submit`,
+        `  `,
+        `{${c420uiTheme.colors.lightBlue}-fg}[Esc]{/${c420uiTheme.colors.lightBlue}-fg} Cancel`,
+      ].join(""),
     });
-    let timer: NodeJS.Timeout | null = setTimeout(
-      () => close({ status: "timeout" }),
-      timeoutMs,
-    );
+
+    let timer: NodeJS.Timeout | null = setTimeout(() => {
+      close({
+        status: "timeout",
+      });
+    }, timeoutMs);
+
     const close = (result: InputDialogResult) => {
       if (timer) {
         clearTimeout(timer);
@@ -183,16 +210,30 @@ export function inputDialog(
       footer.destroy();
       modal.destroy();
       overlay.destroy();
-      if (previousFocus && typeof previousFocus.focus === "function")
+      if (previousFocus && typeof previousFocus.focus === "function") {
         previousFocus.focus();
+      }
       screen.render();
       resolve(result);
     };
-    overlay.key(["escape"], () => close({ status: "canceled" }));
-    input.key(["enter"], () => input.submit());
-    input.on("submit", (value) =>
-      close({ status: "submitted", value: String(value ?? "") }),
-    );
+
+    overlay.key(["escape"], () => {
+      close({
+        status: "canceled",
+      });
+    });
+
+    input.key(["enter"], () => {
+      input.submit();
+    });
+
+    input.on("submit", (value) => {
+      close({
+        status: "submitted",
+        value: String(value ?? ""),
+      });
+    });
+
     overlay.focus();
     input.focus();
     input.readInput();

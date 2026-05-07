@@ -5,7 +5,10 @@ function has(command: string): boolean {
 }
 
 function runWithInput(command: string, args: string[], input: string): boolean {
-  const result = spawnSync(command, args, { input, encoding: "utf8" });
+  const result = spawnSync(command, args, {
+    input,
+    encoding: "utf8",
+  });
   return result.status === 0;
 }
 
@@ -13,14 +16,22 @@ export function copyTextToClipboard(text: string): {
   ok: boolean;
   message: string;
 } {
-  if (!text.trim()) return { ok: false, message: "No logs to copy." };
+  if (!text.trim()) {
+    return {
+      ok: false,
+      message: "No logs to copy.",
+    };
+  }
 
   if (
     process.env.WAYLAND_DISPLAY &&
     has("wl-copy") &&
     runWithInput("wl-copy", [], text)
   ) {
-    return { ok: true, message: "Logs copied to clipboard via wl-copy." };
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via wl-copy.",
+    };
   }
 
   if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("kde")) {
@@ -59,16 +70,33 @@ export function copyTextToClipboard(text: string): {
   }
 
   if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("gnome")) {
-    if (has("gpaste-client") && runWithInput("gpaste-client", ["add"], text))
-      return { ok: true, message: "Logs copied to clipboard via GPaste." };
-    if (has("gpaste") && runWithInput("gpaste", ["add"], text))
-      return { ok: true, message: "Logs copied to clipboard via GPaste." };
+    if (has("gpaste-client") && runWithInput("gpaste-client", ["add"], text)) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via GPaste.",
+      };
+    }
+    if (has("gpaste") && runWithInput("gpaste", ["add"], text)) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via GPaste.",
+      };
+    }
   }
 
-  if (has("xclip") && runWithInput("xclip", ["-selection", "clipboard"], text))
-    return { ok: true, message: "Logs copied to clipboard via xclip." };
-  if (has("xsel") && runWithInput("xsel", ["--clipboard", "--input"], text))
-    return { ok: true, message: "Logs copied to clipboard via xsel." };
+  if (has("xclip") && runWithInput("xclip", ["-selection", "clipboard"], text)) {
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via xclip.",
+    };
+  }
+
+  if (has("xsel") && runWithInput("xsel", ["--clipboard", "--input"], text)) {
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via xsel.",
+    };
+  }
 
   return {
     ok: false,

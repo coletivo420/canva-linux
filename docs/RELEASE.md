@@ -31,9 +31,9 @@ The GitHub Release workflow must:
 
 ### Manual validation matrix
 
-- `./canva-linux.sh` opens the TUI.
+- `./canva-linux.sh` opens the C420UI.
 - F5 copies logs to the clipboard.
-- Text selection mode disables TUI mouse capture globally.
+- Text selection mode disables C420UI mouse capture globally.
 - F6 opens a plain logs view with the session log path.
 - Correct root password starts privileged actions.
 - Incorrect root password shows an error popup and does not start the action.
@@ -53,12 +53,12 @@ Canva Linux 0.1.4-12 Alpha
 Highlights:
 
 - TypeScript-first migration completed.
-- TUI and direct CLI architecture stabilized.
+- C420UI and direct CLI architecture stabilized.
 - Native and Flatpak system/user install flows.
 - Root authentication popup for privileged actions.
 - Improved detection with installed version display.
 - AppImage and Flatpak package artifacts.
-- Improved TUI logs, clipboard and manual text selection mode.
+- Improved C420UI logs, clipboard and manual text selection mode.
 
 Artifacts:
 

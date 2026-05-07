@@ -31,7 +31,7 @@ Canva Linux workflow actions are split into four layers:
 1. `scripts/actions.json` (canonical registry)
 2. `scripts/core/action-runner.ts`
    - action resolution/execution, compiled to `.build/scripts/core/action-runner.js`
-3. Interfaces (Blessed TUI and direct CLI flags)
+3. Interfaces (Blessed C420UI and direct CLI flags)
 4. Backend scripts under `scripts/`
 
 All maintained Node.js source code is TypeScript. Project-generated JavaScript
@@ -41,42 +41,42 @@ not maintained source locations. Shell remains shell for host operations such as
 launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node
 validation glue.
 
-## Terminal Assistant / Blessed TUI
+## Terminal Assistant / Blessed C420UI
 
-`./canva-linux.sh` opens the Blessed TUI by default when stdin/stdout are TTY,
+`./canva-linux.sh` opens the Blessed C420UI by default when stdin/stdout are TTY,
 `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection
 flags and environment variables have been removed.
 
 The Tool must run as a regular user. `canva-linux.sh`, `scripts/run-tui.ts`, and
-the TUI entrypoint refuse root execution before build, action, or TUI startup.
+the C420UI entrypoint refuse root execution before build, action, or C420UI startup.
 System-wide operations request administrator authentication only for the action
 that needs it.
 
-The TUI is a visual assistant over shared backend actions; it does not duplicate
+The C420UI is a visual assistant over shared backend actions; it does not duplicate
 install/package logic. It provides guided sections, log monitoring, and a
 progress bar.
 
-Application Settings are persistent TUI state stored at
+Application Settings are persistent C420UI state stored at
 `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, with
 `~/.config/canva-linux/tool-settings.json` as fallback. They are not entries in
 `scripts/actions.json`.
 
-Tool logs and Action logs are semantically distinct in the TUI logs panel. Tool
+Tool logs and Action logs are semantically distinct in the C420UI logs panel. Tool
 logs cover startup, settings, detection, authentication and internal Tool errors.
 Action logs cover stdout/stderr from install, build, validation, uninstall,
 purge and maintenance operations. The launcher creates/truncates the session log
-once, and the TUI appends to it so launcher startup lines are preserved.
+once, and the C420UI appends to it so launcher startup lines are preserved.
 
 Terminal text selection mode is resolved before Blessed widgets are constructed.
-When enabled before startup, it disables TUI mouse handling globally for the
+When enabled before startup, it disables C420UI mouse handling globally for the
 session, including the Blessed screen program when supported, so the terminal
-can perform native text selection. Changes take effect on the next TUI start.
+can perform native text selection. Changes take effect on the next C420UI start.
 Keyboard scrolling with PageUp, PageDown, Home and End remains available, F5
 still copies the visible log history, and F6 opens a plain logs view with the
 session log path as a manual-selection fallback. Some terminals may still
 require Shift while selecting text.
 
-The TUI keeps an explicit FocusZone model for menu, diagnostics, action panel
+The C420UI keeps an explicit FocusZone model for menu, diagnostics, action panel
 and logs. Tab and Shift+Tab move between these blocks, the active block uses a
 visible border/label highlight, and focused-panel scrolling is routed to the
 current FocusZone. Enter and Space only execute menu/settings behavior while the
@@ -86,9 +86,9 @@ menu is focused and no action/modal is active.
 
 Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
 
-1. Actions with `requiresRoot: true` in `scripts/actions.json` are identified by the TUI.
-2. The TUI requests root password via a secure prompt before starting the action.
-3. The TUI validates the password and then passes the root-auth environment marker to
+1. Actions with `requiresRoot: true` in `scripts/actions.json` are identified by the C420UI.
+2. The C420UI requests root password via a secure prompt before starting the action.
+3. The C420UI validates the password and then passes the root-auth environment marker to
    the child process.
 4. `scripts/sudo-common.sh` detects this environment variable and uses
    `sudo -n` for non-interactive execution.
@@ -110,7 +110,7 @@ config, or Flathub helper paths fail validation.
 
 ## Terminal theme
 
-The Blessed TUI and direct CLI output use a shared Canva-inspired visual language.
+The Blessed C420UI and direct CLI output use a shared Canva-inspired visual language.
 
 Reference palette:
 
@@ -118,7 +118,7 @@ Reference palette:
 - Blue: `#3969E7`
 - Purple: `#7D2AE7`
 
-The TUI uses `scripts/tui/theme.ts`.
+The C420UI uses `scripts/c420ui/theme.ts`.
 Direct CLI output uses ANSI-safe approximations through `scripts/ui-common.sh`.
 
 The theme must remain readable with:
@@ -130,13 +130,13 @@ The theme must remain readable with:
 
 ## Automatic overview status
 
-The TUI Overview automatically displays package/version information and detected
+The C420UI Overview automatically displays package/version information and detected
 installation state. Manual detection actions are not exposed as normal
 user-facing actions.
 
 ## Clipboard integration
 
-The TUI `F5` shortcut copies logs to the desktop clipboard. Preferred backends:
+The C420UI `F5` shortcut copies logs to the desktop clipboard. Preferred backends:
 `wl-copy`, KDE Klipper (`qdbus6`/`qdbus`), GPaste, `xclip`, then `xsel`. The
-TUI `F6` shortcut shows the plain visible log history and session log path in
+C420UI `F6` shortcut shows the plain visible log history and session log path in
 the action panel for manual selection.

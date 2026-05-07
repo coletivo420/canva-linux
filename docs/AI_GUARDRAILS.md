@@ -4,31 +4,31 @@
   instructions must be written in English.
 - README is the public entry point; long command references belong in `docs/CLI.md`.
 - Every behavior change must update `CHANGELOG.md`.
-- TUI/CLI actions must be sourced from `scripts/actions.json`.
-- Do not duplicate action logic in TUI or launcher code.
+- C420UI/CLI actions must be sourced from `scripts/actions.json`.
+- Do not duplicate action logic in C420UI or launcher code.
 - Do not ignore `action.env` from `scripts/actions.json`.
-- Any `system`/`user` scope action must behave the same in TUI and direct CLI.
+- Any `system`/`user` scope action must behave the same in C420UI and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
 - System-wide actions must declare `requiresRoot`.
-- TUI must ask for root authentication before privileged execution.
+- C420UI must ask for root authentication before privileged execution.
 - Do not log passwords.
 - Prefer shared sudo helpers over direct sudo calls.
 - Never instruct users to run `./canva-linux.sh` with sudo.
 - The Tool must run as a regular user.
 - Privileged operations must request authentication only when needed.
-- Tool-level logs must be visible in the TUI when general Tool logs are enabled.
+- Tool-level logs must be visible in the C420UI when general Tool logs are enabled.
 - Action logs and Tool logs must remain distinguishable.
-- TUI must keep an explicit FocusZone model.
-- Tab and Shift+Tab must move between focusable TUI blocks.
-- The active TUI block must have a visible border/label highlight.
+- C420UI must keep an explicit FocusZone model.
+- Tab and Shift+Tab must move between focusable C420UI blocks.
+- The active C420UI block must have a visible border/label highlight.
 - The active menu/settings cell must have a visible highlight.
 - Settings checkboxes must show enabled/disabled state clearly.
-- Modal dialogs must not leak Tab focus back to the main TUI.
+- Modal dialogs must not leak Tab focus back to the main C420UI.
 - During running actions, Tab/scroll/log copy may work, but action execution must remain blocked.
 - Help must document current keyboard navigation.
 - terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.
-- TUI mouse settings must be restored when leaving text selection mode.
+- C420UI mouse settings must be restored when leaving text selection mode.
 - F5 clipboard copy must keep working even when text selection mode is enabled.
 - Help must document terminal text selection limitations.
 - Release workflow must build and upload AppImage, Flatpak bundle,
@@ -40,13 +40,13 @@
   not publish four-number dotted versions.
 - Linux release asset names must use `x86_64`, not `x64`.
 - Passwords and sudo stdin must never be logged.
-- Application Settings are TUI state, not shell actions.
+- Application Settings are C420UI state, not shell actions.
 - New UI strings, docs and comments must be written in English.
 - The interactive shell menu has been removed. Do not reintroduce
   `run_interactive_mode`, `menu_install`, `menu_dev`, `menu_maint`, or tool
   switching.
-- The project exposes only TUI and direct CLI actions.
-- Legacy explicit TUI routing flags are removed. The launcher opens TUI when
+- The project exposes only C420UI and direct CLI actions.
+- Legacy explicit C420UI routing flags are removed. The launcher opens C420UI when
   called without args; any argument is resolved as direct CLI.
 - Legacy interface-routing environment variables are removed and must not be
   read for interface routing.
@@ -54,12 +54,12 @@
 - System-wide actions must use scripts/sudo-common.sh.
 - Raw sudo calls are forbidden outside scripts/sudo-common.sh.
 - User-scope actions must never call sudo.
-- TUI root authentication must happen before privileged execution.
+- C420UI root authentication must happen before privileged execution.
 - Passwords must never be logged.
 - overview-status must always emit valid JSON.
-- Detection errors must not break the TUI layout.
+- Detection errors must not break the C420UI layout.
 - Action metadata must come from scripts/actions.json.
-- TUI and CLI must share the same TypeScript action contract.
+- C420UI and CLI must share the same TypeScript action contract.
 - REVIEW.md must preserve the Review Checklist.
 - Keep ASCII logo light blue.
 - Maintenance must keep installation detection visible at the top.
@@ -72,6 +72,12 @@
   snapshot canvas picking.
 - Do not replace typed `EyeDropperOpenOptions` handling with `any` casts or
   untyped signal extraction.
+- C420UI must render its own brand header above the project/tool header.
+- The C420UI header and project/tool header must remain separate components.
+- Project-specific names must not be hardcoded in the C420UI header.
+- C420UI brand metadata must be reusable across projects.
+- Project header metadata must be injected through configuration.
+- Other projects must be able to reuse C420UI without editing the C420UI core.
 
 ## TypeScript-first Node.js rules
 
@@ -123,7 +129,7 @@
 - information box main titles = dark blue
 - information item titles = green
 
-Additional rules:
+### Additional rules
 
 - Only `not detected` should use purple in status output and optional accent usage.
 - Detection refresh must not clear/override progress results.

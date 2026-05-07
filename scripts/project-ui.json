@@ -3,6 +3,6 @@
   "status": "Alpha",
   "phase": "0.1.4-12",
   "toolTitle": "Canva Linux \u2014 Install and Development Tool",
-  "tuiTitle": "Canva Linux Terminal Assistant",
-  "versionReleaseNotes": "Release preparation for TUI log selection, packaged artifacts, release workflow and documentation."
+  "c420uiTitle": "Canva Linux Terminal Assistant",
+  "versionReleaseNotes": "Release preparation for C420UI log selection, packaged artifacts, release workflow and documentation."
 }

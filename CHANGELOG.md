@@ -6,9 +6,9 @@
 
 ### Added
 - Added a root-launch guard for the Canva Linux Install and Development Tool.
-- Added TUI Application Settings for general Tool logs and terminal text
+- Added C420UI Application Settings for general Tool logs and terminal text
   selection in the logs panel.
-- Added guardrail checks for root launch, TUI settings, Tool logging and log
+- Added guardrail checks for root launch, C420UI settings, Tool logging and log
   selection contracts.
 - Added F6 plain logs fallback with the session log path for manual log
   selection.
@@ -16,10 +16,12 @@
   expectations.
 
 ### Changed
-- Changed TUI session logging to append to launcher-created logs instead of
+- Renamed TUI to C420UI (Coletivo 420 UI) as a reusable toolkit.
+- Refactored C420UI header into a layered structure with a fixed brand header and a project-specific header.
+- Changed C420UI session logging to append to launcher-created logs instead of
   truncating them.
-- Separated Tool logs from Action logs in the TUI logs panel.
-- Changed terminal text selection mode to disable TUI mouse capture globally
+- Separated Tool logs from Action logs in the C420UI logs panel.
+- Changed terminal text selection mode to disable C420UI mouse capture globally
   and request Blessed screen mouse release when supported.
 - Updated public project identity to `0.1.4-12 (Alpha)` so release naming,
   docs, workflow tags and `package.json` use the same npm-compatible version.
@@ -32,7 +34,7 @@
   operations.
 - Closed the TypeScript migration as the general project rule: maintained JavaScript source is no longer allowed outside
   generated `.build/` artifacts and dependencies.
-- Migrated Node test, lint, Playwright, Flathub, TUI, core-runner, and build entrypoints to TypeScript-first execution
+- Migrated Node test, lint, Playwright, Flathub, C420UI, core-runner, and build entrypoints to TypeScript-first execution
   through shell bootstraps or generated `.build/` JavaScript.
 - Updated project version and phase identity to `0.1.4-dev.11.58` / `0.1.4.11-dev.58`.
 
@@ -52,7 +54,7 @@
 - Added a TypeScript-first script guardrail check that blocks real JavaScript logic under `scripts/`, validates core
   wrapper coverage, and keeps TypeScript migration docs current.
 - Added a TypeScript wrapper contract check covering build-runtime, preload bundling, runtime asset copying, runtime
-  cleanup, electron-builder beforeBuild, and TUI startup wrappers.
+  cleanup, electron-builder beforeBuild, and C420UI startup wrappers.
 - Added thin compatibility wrappers for AI-guardrails, doc-link, dependency-policy, and runtime-build checks so
   `scripts/*.js` entrypoints consistently delegate to `scripts/core/*.ts`.
 
@@ -60,14 +62,14 @@
 - Stabilized Native install preflight by using `data/icons/hicolor`, preserving missing-icon tolerance, validating
   system sudo before writes, and keeping post-install warnings non-fatal.
 - Stabilized Flatpak system/user install and uninstall scope behavior, including user-scope sudo refusal and system-scope sudo-common usage.
-- Made TUI action finalization use synchronous overview-status detection so successful installs with warnings finish green instead of red.
+- Made C420UI action finalization use synchronous overview-status detection so successful installs with warnings finish green instead of red.
 - Hardened sudo-common with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
 
 ### Changed
 - Normalized every `scripts/check-*.js` entrypoint to a minimal `runCore(...)` compatibility wrapper and tightened the
   TypeScript-first guardrail to enforce that shape.
 - Documented explicit TypeScript-first Node.js guardrails for future script work.
-- Documented the build/TUI wrapper-to-TypeScript implementation map and exposed `npm run check:typescript-wrappers`.
+- Documented the build/C420UI wrapper-to-TypeScript implementation map and exposed `npm run check:typescript-wrappers`.
 - Pointed validation package scripts at thin compatibility wrappers instead of inline `node -e` loader snippets.
 - Removed the legacy overview-status fallback export from `scripts/core-wrapper.js` so missing core builds fail clearly or trigger the standard auto-build path.
 - Updated technical version and phase identity to `0.1.4-dev.11.56` / `0.1.4.11-dev.56`.
@@ -77,8 +79,8 @@
 ### Removed
 - Removed legacy interactive shell menu from `canva-linux.sh`.
 - Removed `--tui` and `--no-tui` flags.
-- Removed `CANVA_NO_TUI` and `CANVA_TUI` environment variable support.
-- Removed "F4 Shell Tool" and "Use TUI Tool" references.
+- Removed `CANVA_NO_TUI` and `CANVA_C420UI` environment variable support.
+- Removed "F4 Shell Tool" and "Use C420UI Tool" references.
 
 ### Added
 - Centralized sudo usage via `scripts/sudo-common.sh` across all privileged scripts.
@@ -87,7 +89,7 @@
 
 ### Changed
 - Updated technical version and phase identity to `0.1.4-dev.11.55` / `0.1.4.11-dev.55`.
-- Refactored `canva-linux.sh` to a direct TUI/CLI router.
+- Refactored `canva-linux.sh` to a direct C420UI/CLI router.
 - Cleaned up `scripts/core-wrapper.js` to remove redundant fallbacks.
 - Updated documentation to reflect the final architecture.
 
@@ -95,7 +97,7 @@
 
 ### Removed
 - Removed the interactive shell menu interface from `canva-linux.sh`.
-- Removed TUI-to-shell switching and the F4 shell shortcut.
+- Removed C420UI-to-shell switching and the F4 shell shortcut.
 - Removed shell fallback menus from the default launcher flow.
 
 ### Added
@@ -105,13 +107,13 @@
 
 ### Changed
 - Updated technical version and phase identity to `0.1.4-dev.11.54` / `0.1.4.11-dev.54`.
-- Changed `canva-linux.sh` to expose only TUI startup and direct CLI actions.
+- Changed `canva-linux.sh` to expose only C420UI startup and direct CLI actions.
 - Changed `--no-tui` into a non-interactive compatibility flag that requires a direct action.
 - Changed system-wide Native and Flatpak flows to use the shared sudo helper contract.
 
 ### Fixed
 - Hardened system/user action scope validation.
-- Hardened TUI privileged execution so validated root sessions are reused without child-process sudo prompts.
+- Hardened C420UI privileged execution so validated root sessions are reused without child-process sudo prompts.
 - Hardened guardrails to prevent reintroducing interactive shell menus or raw sudo in critical scripts.
 
 ## [0.1.4.11-dev.53] - 2026-05-05
@@ -124,8 +126,8 @@
 
 ### Changed
 - Updated technical version and phase identity to `0.1.4-dev.11.53` / `0.1.4.11-dev.53`.
-- Changed the TUI action registry to use the shared TypeScript action contract.
-- Changed TUI process execution to pass an explicit root cwd and typed action environment.
+- Changed the C420UI action registry to use the shared TypeScript action contract.
+- Changed C420UI process execution to pass an explicit root cwd and typed action environment.
 
 ### Fixed
 - Fixed `scripts/overview-status.js` so it always emits valid JSON to stdout and keeps detector warnings on stderr.
@@ -138,7 +140,7 @@
 ## [0.1.4.11-dev.52] - 2026-05-05
 
 ### Fixed
-- Fixed installed version rendering in TUI and shell detected-installation output.
+- Fixed installed version rendering in C420UI and shell detected-installation output.
 - Fixed Flatpak uninstall scope handling so system/user actions do not remove both scopes.
 - Fixed shell Maintenance uninstall menu entries to use scoped uninstall action ids.
 
@@ -151,14 +153,14 @@
 
 ### Fixed
 - Fixed installed-version detection output for Native, Flatpak, and AppImage variants.
-- Fixed action environment propagation alignment in TUI/CLI execution paths.
+- Fixed action environment propagation alignment in C420UI/CLI execution paths.
 - Fixed progress final-state handling for successful installs with non-fatal post-install warnings.
 - Fixed selected-action coloring so only selected values are purple.
 - Fixed stale validation and guardrail documentation from older phases.
 
 ### Changed
 - Updated technical version and phase identity to `0.1.4-dev.11.51` / `0.1.4.11-dev.51`.
-- Updated TUI and shell color semantics: green detected/completed, yellow in-progress, red error/canceled, purple not-detected/selected values.
+- Updated C420UI and shell color semantics: green detected/completed, yellow in-progress, red error/canceled, purple not-detected/selected values.
 - Updated Help screen structure and semantic color guidance.
 
 ### Added
@@ -167,19 +169,19 @@
 ## [0.1.4.11-dev.50] - 2026-05-05
 
 ### Added
-- Added green `detected` and purple `not detected` status semantics across TUI/shell detection output.
+- Added green `detected` and purple `not detected` status semantics across C420UI/shell detection output.
 - Added installed-version fields for Native/Flatpak/AppImage detection data.
 - Added scoped uninstall actions for Native/Flatpak system and user flows.
 
 ### Changed
 - Updated technical version to `0.1.4-dev.11.50` and phase identity to `0.1.4.11-dev.50`.
 - Reworked README to keep only clone/cd/run commands and move command-heavy content to docs.
-- Updated TUI selection and action-help purple emphasis semantics.
+- Updated C420UI selection and action-help purple emphasis semantics.
 
 ### Fixed
 - Fixed shell compact detection color parity for `not detected` (including Native).
-- Fixed TUI privileged auth errors to use progress error state consistently.
-- Fixed session log mode to reset per new TUI session.
+- Fixed C420UI privileged auth errors to use progress error state consistently.
+- Fixed session log mode to reset per new C420UI session.
 - Fixed detection refresh to re-render current content without view-reset progress side effects.
 
 
@@ -187,27 +189,27 @@
 
 ### Changed
 - Updated project technical version to `0.1.4-dev.11.49` and phase identity to `0.1.4.11-dev.49`.
-- Reworked TUI layout with a fixed `Detected Installations` box below the left menu and reduced menu height.
-- Simplified TUI action details to show only action title, description and warnings.
+- Reworked C420UI layout with a fixed `Detected Installations` box below the left menu and reduced menu height.
+- Simplified C420UI action details to show only action title, description and warnings.
 - Standardized progress behavior: success/cancel/error states persist until next navigation and clear on idle navigation.
 - Added explicit detection refresh flow after action completion and startup refresh logging.
-- Updated validation and AI guardrail documentation with new TUI regression requirements.
+- Updated validation and AI guardrail documentation with new C420UI regression requirements.
 
 ## [0.1.4.11-dev.48] - 2026-05-05
 
 ### Added
-- Added scoped TUI/Shell install entries for Native and Flatpak system/user workflows.
-- Added proactive TUI administrator authentication before actions marked with `requiresRoot`.
+- Added scoped C420UI/Shell install entries for Native and Flatpak system/user workflows.
+- Added proactive C420UI administrator authentication before actions marked with `requiresRoot`.
 - Added maintenance action and script to repair build directory ownership.
 
 ### Changed
 - Reworked docs and validation references for dev.48.
-- Changed ASCII logo color back to light blue in TUI and shell tool.
+- Changed ASCII logo color back to light blue in C420UI and shell tool.
 - Updated project identity to `0.1.4-dev.11.48` / `0.1.4.11-dev.48`.
 
 ### Fixed
 - Restored visible system/user install selection in the shell menu and action registry.
-- Refreshed maintenance detection after action completion in TUI.
+- Refreshed maintenance detection after action completion in C420UI.
 
 ## [0.1.4.11-dev.46] - 2026-05-05
 
@@ -216,15 +218,15 @@
 - Added dedicated CLI reference document at `docs/CLI.md`.
 
 ### Changed
-- Updated TUI and shell version display to show `0.1.4.11 (Alpha)` and phase `0.1.4.11-dev.46`.
-- Updated TUI semantic theme tokens to separate selection/footer/logo/detection colors.
+- Updated C420UI and shell version display to show `0.1.4.11 (Alpha)` and phase `0.1.4.11-dev.46`.
+- Updated C420UI semantic theme tokens to separate selection/footer/logo/detection colors.
 - Updated maintenance/development/install panels to show contextual guidance and selected-action details.
 - Updated shell success/identity palette to blue-first visual semantics.
 - Updated README to keep public overview concise and point command details to docs.
 
 ### Fixed
-- Fixed TUI footer readability by using dedicated footer colors instead of selection colors.
-- Fixed shell fallback flow so exiting TUI from `Use TUI Tool` exits the app instead of returning to the shell loop.
+- Fixed C420UI footer readability by using dedicated footer colors instead of selection colors.
+- Fixed shell fallback flow so exiting C420UI from `Use C420UI Tool` exits the app instead of returning to the shell loop.
 - Fixed detection status semantics to avoid green and use blue/light-blue status tones.
 
 ### Notes
@@ -234,25 +236,25 @@
 ## [0.1.4.11-dev.45] - 2026-05-04
 
 ### Added
-- Added F4 shortcut in the TUI to switch to the Shell Tool.
-- Added Shell Tool menu option to return to the TUI Tool.
-- Added automatic package/version and installation-state information in the TUI Overview.
-- Added larger native-scrollable TUI log panel.
-- Added F5 shortcut to copy TUI logs to the desktop clipboard.
+- Added F4 shortcut in the C420UI to switch to the Shell Tool.
+- Added Shell Tool menu option to return to the C420UI Tool.
+- Added automatic package/version and installation-state information in the C420UI Overview.
+- Added larger native-scrollable C420UI log panel.
+- Added F5 shortcut to copy C420UI logs to the desktop clipboard.
 - Added desktop-aware clipboard backend detection for Wayland, KDE, GNOME and X11 tools.
 
 ### Changed
-- Improved selected menu item contrast in the TUI.
+- Improved selected menu item contrast in the C420UI.
 - Removed manual detection as a visible workflow action.
 - Hid detected-uninstall from visual menus while preserving CLI compatibility.
 - Moved package/version information from a manual action into the Overview.
 - Simplified Maintenance & Uninstall visible actions.
-- Updated TUI footer and help shortcuts.
+- Updated C420UI footer and help shortcuts.
 
 ### Fixed
 - Fixed poor selected-item readability on the light blue selection background.
 - Fixed redundant user-facing detection workflow.
-- Fixed cramped TUI log panel.
+- Fixed cramped C420UI log panel.
 
 ### Notes
 - Clipboard support depends on desktop/session tools such as `wl-copy`, KDE Klipper/qdbus, GPaste, `xclip` or `xsel`.
@@ -261,21 +263,21 @@
 ## [0.1.4.11-dev.44] - 2026-05-04
 
 ### Added
-- Added a Canva-inspired Blessed TUI theme.
-- Added visible selected-menu highlighting in the TUI.
-- Added `Version`, `Phase` and `Version Release Notes` below the logo in the TUI Overview screen.
+- Added a Canva-inspired Blessed C420UI theme.
+- Added visible selected-menu highlighting in the C420UI.
+- Added `Version`, `Phase` and `Version Release Notes` below the logo in the C420UI Overview screen.
 - Added canonical installer identity: `Canva Linux — Install and Development Tool`.
 
 ### Changed
-- Updated the TUI header to show the installer title and project phase.
-- Updated the TUI Overview layout to show logo, version, phase and release notes.
-- Aligned shell fallback naming with the TUI installer title.
-- Added shared theme planning between shell fallback and TUI.
+- Updated the C420UI header to show the installer title and project phase.
+- Updated the C420UI Overview layout to show logo, version, phase and release notes.
+- Aligned shell fallback naming with the C420UI installer title.
+- Added shared theme planning between shell fallback and C420UI.
 
 ### Fixed
-- Fixed TUI menu selection visibility by adding explicit selected-item styling.
+- Fixed C420UI menu selection visibility by adding explicit selected-item styling.
 - Fixed missing Overview version/release information.
-- Fixed inconsistent installer naming between shell fallback and TUI.
+- Fixed inconsistent installer naming between shell fallback and C420UI.
 
 ### Notes
 - Theme colors are Canva-inspired terminal adaptations.
@@ -286,14 +288,14 @@
 
 ### Changed
 - Improved README documentation for the default Terminal Assistant workflow.
-- Clarified that `./canva-linux.sh` opens the Blessed TUI assistant by default when available.
+- Clarified that `./canva-linux.sh` opens the Blessed C420UI assistant by default when available.
 - Expanded documentation for the Shared Action Registry workflow.
-- Consolidated technical documentation around `scripts/actions.json`, `action-runner.js`, the TUI assistant and shell fallback.
+- Consolidated technical documentation around `scripts/actions.json`, `action-runner.js`, the C420UI assistant and shell fallback.
 - Updated planned package notes to point AUR/PKGBUILD work to a later npm-compatible packaging line.
 
 ### Fixed
-- Cleaned remaining documentation inconsistencies from the TUI migration.
-- Reduced duplicated or overlapping TUI architecture notes in technical documentation.
+- Cleaned remaining documentation inconsistencies from the C420UI migration.
+- Reduced duplicated or overlapping C420UI architecture notes in technical documentation.
 - Improved consistency between shell menu labels, direct CLI commands and `scripts/actions.json`.
 - Clarified planned AUR/deb/rpm action behavior.
 
@@ -322,7 +324,7 @@
 - Fixed stale shell uninstall logic that referenced an undefined Flatpak uninstall function.
 - Fixed remaining shell menu paths that bypassed `scripts/actions.json`.
 - Fixed planned action handling to come from the Action Registry instead of hardcoded shell branches.
-- Fixed documentation references that treated the TypeScript TUI registry as the canonical action source.
+- Fixed documentation references that treated the TypeScript C420UI registry as the canonical action source.
 
 ### Removed
 - Removed obsolete shell helper functions superseded by backend scripts and `action-runner.js`.
@@ -341,37 +343,37 @@
 - Added `npm run actions:validate`.
 
 ### Changed
-- Changed Blessed TUI to load actions from `scripts/actions.json`.
+- Changed Blessed C420UI to load actions from `scripts/actions.json`.
 - Changed shell CLI actions to resolve through the shared Action Registry.
 
 ### Fixed
-- Fixed duplicate `modalActive` declaration in `scripts/tui/app.ts`.
+- Fixed duplicate `modalActive` declaration in `scripts/c420ui/app.ts`.
 
 
 ## [0.1.4.11-dev.40] - 2026-05-04
 
 ### Added
 
-- Enabled the Blessed TUI as the default interactive launcher when available.
-- Added automatic npm dependency bootstrap for TUI startup.
+- Enabled the Blessed C420UI as the default interactive launcher when available.
+- Added automatic npm dependency bootstrap for C420UI startup.
 - Added `scripts/ensure-npm-dependencies.sh` as a shared npm dependency bootstrap entrypoint.
 - Added `blessed` to the required npm dependency preflight list.
-- Added shell menu fallback when TUI startup fails in default mode.
+- Added shell menu fallback when C420UI startup fails in default mode.
 
 ### Changed
 
-- Changed `./canva-linux.sh` without arguments to open the Blessed TUI when supported.
-- Changed `--tui` to explicitly force the Blessed TUI.
+- Changed `./canva-linux.sh` without arguments to open the Blessed C420UI when supported.
+- Changed `--tui` to explicitly force the Blessed C420UI.
 - Changed `--no-tui` to explicitly force the shell menu fallback.
 - Changed `npm run check:tui` to use `scripts/run-tui.js`.
 - Improved npm dependency bootstrap messaging for long-running installs.
 
 ### Fixed
 
-- Fixed first-run TUI startup when `node_modules` is missing.
+- Fixed first-run C420UI startup when `node_modules` is missing.
 - Fixed missing Blessed runtime dependency detection in shared npm preflight.
-- Prevented TUI startup attempts in non-interactive or dumb terminal environments.
-- Preserved direct CLI command behavior without launching the TUI.
+- Prevented C420UI startup attempts in non-interactive or dumb terminal environments.
+- Preserved direct CLI command behavior without launching the C420UI.
 
 ### Notes
 
@@ -383,92 +385,92 @@
 
 ### Added
 
-- Added TUI confirmation dialogs for destructive actions.
-- Added controlled cancellation flow for running TUI actions.
+- Added C420UI confirmation dialogs for destructive actions.
+- Added controlled cancellation flow for running C420UI actions.
 - Added process status states for idle, running, cancel-requested, success, failed and canceled.
-- Added scroll shortcuts for the TUI log panel.
-- Added resize re-render handling for the Blessed TUI.
+- Added scroll shortcuts for the C420UI log panel.
+- Added resize re-render handling for the Blessed C420UI.
 - Added process close metadata handling for exit code and signal.
 
 ### Changed
 
-- Changed TUI quit/Ctrl+C behavior to avoid immediately destroying the screen while an action is running.
-- Changed destructive TUI actions to run only after explicit confirmation.
-- Changed TUI navigation to block view changes while an action is running.
+- Changed C420UI quit/Ctrl+C behavior to avoid immediately destroying the screen while an action is running.
+- Changed destructive C420UI actions to run only after explicit confirmation.
+- Changed C420UI navigation to block view changes while an action is running.
 - Improved action status display with command, status and hints.
 - Improved `scripts/run-tui.js` root directory resolution.
 
 ### Fixed
 
 - Fixed potential log truncation when quitting during a running process.
-- Fixed unsafe immediate process kill behavior in the TUI.
+- Fixed unsafe immediate process kill behavior in the C420UI.
 - Fixed accidental navigation away from running actions.
 - Fixed lack of signal-aware process status reporting.
 
 ### Notes
 
-- TUI remains experimental and is not yet the default launcher.
+- C420UI remains experimental and is not yet the default launcher.
 - Runtime Electron behavior is unchanged.
 
 ## [0.1.4.11-dev.38] - 2026-05-04
 
 ### Added
 
-- Added full TUI action coverage for current safe install, package generation, build, validation and maintenance actions.
-- Added line-buffered TUI log rendering with partial chunk buffering.
-- Added stdout/stderr-aware TUI log rendering.
-- Added colored stderr output in the TUI log panel.
+- Added full C420UI action coverage for current safe install, package generation, build, validation and maintenance actions.
+- Added line-buffered C420UI log rendering with partial chunk buffering.
+- Added stdout/stderr-aware C420UI log rendering.
+- Added colored stderr output in the C420UI log panel.
 - Added final log buffer flushing when a spawned process closes.
-- Added stale-build-aware TUI launcher using the existing `npm run build:tui` script.
+- Added stale-build-aware C420UI launcher using the existing `npm run build:tui` script.
 
 ### Changed
 
-- Changed TUI package/build/validation actions to run through the Action Registry.
+- Changed C420UI package/build/validation actions to run through the Action Registry.
 - Changed `scripts/run-tui.js` to invoke `npm run build:tui` instead of duplicating the esbuild command.
 - Changed project phase resolution to fall back when `CANVA_PROJECT_PHASE` is empty.
-- Changed the TUI log panel to preserve empty output lines.
+- Changed the C420UI log panel to preserve empty output lines.
 
 ### Fixed
 
-- Fixed TUI streamed output rendering where partial chunks were treated as complete lines.
-- Fixed lost empty lines in TUI logs.
+- Fixed C420UI streamed output rendering where partial chunks were treated as complete lines.
+- Fixed lost empty lines in C420UI logs.
 - Fixed missing final partial log output on process close.
 - Fixed blank phase display when `CANVA_PROJECT_PHASE` is set to an empty string.
 - Fixed maintainability issue caused by duplicating esbuild build arguments in `scripts/run-tui.js`.
 
 ### Notes
 
-- TUI remains experimental and is not yet the default launcher.
-- Destructive TUI actions remain guarded until confirmation dialogs are implemented.
+- C420UI remains experimental and is not yet the default launcher.
+- Destructive C420UI actions remain guarded until confirmation dialogs are implemented.
 - Runtime Electron behavior is unchanged.
 
 ## [0.1.4.11-dev.37] - 2026-05-04
 
 ### Added
 
-- Added a TUI action registry for Blessed-based navigation.
-- Added explicit TUI view state tracking.
-- Added a faster TUI launcher that rebuilds only when needed.
-- Added throttled TUI rendering for high-volume logs.
+- Added a C420UI action registry for Blessed-based navigation.
+- Added explicit C420UI view state tracking.
+- Added a faster C420UI launcher that rebuilds only when needed.
+- Added throttled C420UI rendering for high-volume logs.
 - Added UTF-8-safe subprocess output decoding with `StringDecoder`.
 
 ### Changed
 
 - Replaced fragile Blessed menu selection logic with explicit `currentView` state.
 - Replaced hardcoded `developmentActions[0]` execution with selected action resolution from the current action list.
-- Improved TUI process handling to avoid excessive rendering during command output.
-- Improved TUI startup performance by avoiding `npm run build:tui` on every launch.
+- Improved C420UI process handling to avoid excessive rendering during command output.
+- Improved C420UI startup performance by avoiding `npm run build:tui` on every launch.
 
 ### Fixed
 
 - Fixed Development menu reload bug caused by using `index === 1` outside the main-menu context.
 - Fixed action selection so the chosen action is executed instead of always running the first Development action.
 - Fixed raw stream decoding that could corrupt split UTF-8 sequences.
-- Fixed TUI logo parity with the shell launcher.
+- Fixed C420UI logo parity with the shell launcher.
 
 ### Notes
 
-- TUI remains experimental.
+- C420UI remains experimental.
 - Shell menu and direct CLI commands remain supported.
 - Runtime Electron behavior is unchanged.
 
@@ -476,7 +478,7 @@
 
 ### Added
 
-- Added an experimental Blessed-based Node/TypeScript TUI foundation under `scripts/tui/`.
+- Added an experimental Blessed-based Node/TypeScript C420UI foundation under `scripts/c420ui/`.
 - Added `--tui` and `--no-tui` launcher flags in `canva-linux.sh`.
 - Added `build:tui`, `tui`, and `check:tui` package scripts.
 - Added `blessed` as a development dependency.
@@ -489,7 +491,7 @@
 
 ### Notes
 
-- TUI currently focuses on menu navigation + Development Doctor execution with streamed logs.
+- C420UI currently focuses on menu navigation + Development Doctor execution with streamed logs.
 - Runtime Electron behavior is unchanged.
 
 ## [0.1.4.11-dev.35] - 2026-05-04

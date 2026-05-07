@@ -26,8 +26,8 @@ function normalizeWhitespace(value: string): string {
 
 const requiredGuardrails = [
   "The interactive shell menu has been removed.",
-  "The project exposes only TUI and direct CLI actions.",
-  "Legacy explicit TUI routing flags are removed. The launcher opens TUI when called without args; any argument is resolved as direct CLI.",
+  "The project exposes only C420UI and direct CLI actions.",
+  "Legacy explicit C420UI routing flags are removed. The launcher opens C420UI when called without args; any argument is resolved as direct CLI.",
   "Legacy interface-routing environment variables are removed and must not be read for interface routing.",
   "terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.",
   "F5 clipboard copy must keep working even when text selection mode is enabled.",
@@ -37,7 +37,7 @@ const requiredGuardrails = [
   "Raw sudo calls are forbidden outside scripts/sudo-common.sh.",
   "User-scope actions must never call sudo.",
   "overview-status must always emit valid JSON.",
-  "TUI and CLI must share the same TypeScript action contract.",
+  "C420UI and CLI must share the same TypeScript action contract.",
   "REVIEW.md must preserve the Review Checklist.",
   "TypeScript is mandatory for all Node.js source code.",
   "All maintained Node.js source code is TypeScript.",

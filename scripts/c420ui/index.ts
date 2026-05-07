@@ -12,7 +12,7 @@ function getPackageVersion(): string {
 
 if (process.argv.includes("--help")) {
   console.log(
-    "Canva Linux TUI (experimental)\n\nUsage:\n  npm run tui\n  ./canva-linux.sh",
+    "Canva Linux C420UI (experimental)\n\nUsage:\n  npm run tui\n  ./canva-linux.sh",
   );
   process.exit(0);
 }
@@ -30,13 +30,23 @@ try {
   }
 
   const screen = createApp({
-    version: `${projectUi.displayVersion ?? getPackageVersion()}${projectUi.status ? ` (${projectUi.status})` : ""}`,
-    phase: getProjectPhase(),
     rootDir: process.cwd(),
-    title: projectUi.tuiTitle,
-    toolTitle: projectUi.toolTitle,
+    title: projectUi.c420uiTitle,
+    brand: {
+      name: "C420UI",
+      version: "0.1",
+      logoLines: [...require("./logo").C420UI_LOGO_LINES],
+    },
+    project: {
+      projectName: "Canva Linux",
+      projectSubtitle: "Install and Development Workspace",
+      displayVersion: projectUi.displayVersion ?? getPackageVersion(),
+      phase: getProjectPhase(),
+      status: projectUi.status,
+    },
     releaseNotes: projectUi.versionReleaseNotes,
   });
+
   process.on("uncaughtException", (err) => {
     try {
       screen.destroy();

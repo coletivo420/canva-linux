@@ -1,14 +1,14 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { ROOT_LAUNCH_GUARD_MESSAGE } from "./tui/settings";
+import { ROOT_LAUNCH_GUARD_MESSAGE } from "./c420ui/settings";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 process.chdir(rootDir);
 
-const outFile = path.join(rootDir, ".build/scripts/tui/index.js");
-const tuiDir = path.join(rootDir, "scripts/tui");
+const outFile = path.join(rootDir, ".build/scripts/c420ui/index.js");
+const uiDir = path.join(rootDir, "scripts/c420ui");
 const identityFile = path.join(rootDir, "scripts/app-identity-common.sh");
 
 function listTsFiles(dir: string): string[] {
@@ -23,7 +23,7 @@ function needsBuild(): boolean {
   if (!fs.existsSync(outFile)) return true;
   const outMtime = fs.statSync(outFile).mtimeMs;
   const inputs = [
-    ...listTsFiles(tuiDir),
+    ...listTsFiles(uiDir),
     path.join(rootDir, "package.json"),
     path.join(rootDir, "package-lock.json"),
   ].filter((file) => fs.existsSync(file));
@@ -72,7 +72,7 @@ export function main(): void {
   ensureNpmDependencies();
 
   if (needsBuild()) {
-    const result = spawnSync("npm", ["run", "build:tui"], {
+    const result = spawnSync("npm", ["run", "build:c420ui"], {
       cwd: rootDir,
       stdio: "inherit",
       env: process.env,
@@ -83,7 +83,7 @@ export function main(): void {
 
   const run = spawnSync(
     process.execPath,
-    [".build/scripts/tui/index.js", ...process.argv.slice(2)],
+    [".build/scripts/c420ui/index.js", ...process.argv.slice(2)],
     {
       stdio: "inherit",
       env: { ...process.env, CANVA_PROJECT_PHASE: resolveProjectPhase() },

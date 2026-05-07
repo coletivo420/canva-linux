@@ -1,6 +1,6 @@
 # CLI Commands
 
-The `canva-linux.sh` launcher provides access to the Terminal Assistant (TUI) and direct CLI actions.
+The `canva-linux.sh` launcher provides access to the Terminal Assistant (C420UI) and direct CLI actions.
 
 ## Usage
 
@@ -8,7 +8,7 @@ The `canva-linux.sh` launcher provides access to the Terminal Assistant (TUI) an
 ./canva-linux.sh [action] [options]
 ```
 
-- If no action is provided, the Terminal Assistant (TUI) starts.
+- If no action is provided, the Terminal Assistant (C420UI) starts.
 - If an action flag is provided, the command is executed directly.
 - Do not run the Tool as root. When an operation needs administrator privileges,
   Canva Linux asks for authentication only for that specific action.
@@ -48,7 +48,7 @@ Direct actions are resolved through the shared Action Registry (`scripts/actions
 
 ## Environment Variables
 
-The TUI and scripts honor the following environment variables:
+The C420UI and scripts honor the following environment variables:
 
 | Variable | Description |
 | --- | --- |
@@ -59,18 +59,18 @@ The TUI and scripts honor the following environment variables:
 
 ## Tool Settings
 
-Application Settings are persistent TUI state, not shell actions. They are stored
+Application Settings are persistent C420UI state, not shell actions. They are stored
 in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, or
 `~/.config/canva-linux/tool-settings.json` when `XDG_CONFIG_HOME` is unset.
 
 Current Tool settings:
 
 - `Enable general logs for Canva Linux Install and Development Tool`: shows
-  Tool-level startup, settings, detection and authentication events in the TUI
+  Tool-level startup, settings, detection and authentication events in the C420UI
   logs panel. Action logs remain visible either way, and critical Tool warnings
   or errors still appear when general Tool logs are disabled.
-- `Prefer native terminal text selection on next TUI start`: when enabled before
-  startup, disables TUI mouse handling globally for the session so the terminal
-  can perform native text selection. Changes take effect on the next TUI start.
+- `Prefer native terminal text selection on next C420UI start`: when enabled before
+  startup, disables C420UI mouse handling globally for the session so the terminal
+  can perform native text selection. Changes take effect on the next C420UI start.
   Keyboard log scrolling and F5 copy remain available. F6 opens a plain logs
   view with the session log path as a fallback for manual selection.
