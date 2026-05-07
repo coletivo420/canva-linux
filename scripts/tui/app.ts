@@ -484,7 +484,7 @@ export function createApp(opts: {
   }
 
   function setFocusZone(nextZone: FocusZone) {
-    if (modalActive) return;
+    if (modalActive || focusZone === nextZone) return;
     focusZone = nextZone;
     if (focusZone === "menu") menu.focus();
     else if (focusZone === "diagnostics") diagnostics.focus();
