@@ -49,6 +49,15 @@ Request changes if a PR:
 - removes `docs/RELEASE.md` as the source for GitHub Release notes;
 - puts long command references in README instead of `docs/CLI.md`.
 
+## Language and future i18n review
+
+Request changes if a PR:
+
+- adds maintained source, comments, UI strings, README, docs, changelog, or AI maintenance instructions in a language other than English;
+- adds Portuguese comments, Portuguese docs, Portuguese UI strings, or mixed-language source text;
+- hardcodes future translations directly in runtime code;
+- introduces user-facing translations without an explicit i18n architecture, structured translation resources, typed keys, and fallback language rules.
+
 ## Changelog-backed regression review
 
 Request changes if a PR:

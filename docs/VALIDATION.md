@@ -31,6 +31,7 @@ Current target:
   - includes `basic_text`, locked keyring, and detection-error ephemeral fallbacks
 - `npm run docs:check-links`
 - `npm run docs:check-ai`
+  - validates the English-only maintained repository language guardrail and future i18n policy
 - `scripts/run-core-entry.sh check-no-shell-menu`
 - `scripts/run-core-entry.sh check-sudo-contract`
 - `scripts/run-core-entry.sh check-no-root-launch-contract`
@@ -103,4 +104,6 @@ Current target:
 - Confirm release artifact names preserve the generated architecture string (`x86_64`/`X86_64` when emitted) and never rewrite it to `x64`.
 - Confirm `SHA256SUMS` contains the real generated AppImage, Flatpak and tarball names.
 - Confirm `REVIEW.md` still starts with `# Review Checklist`.
+- Confirm maintained source, comments, UI strings, README, docs, changelog, and AI maintenance instructions remain
+  English-only until an explicit i18n system exists.
 - Confirm new Node.js scripts, tests, and supported configs are authored in TypeScript, with shell reserved for host-operation glue.
