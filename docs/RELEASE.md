@@ -60,6 +60,7 @@ Highlights:
 - Improved detection with installed version display.
 - AppImage and Flatpak package artifacts.
 - Improved C420UI logs, clipboard and manual text selection mode.
+- Secret Service-backed persistent login with an ephemeral session fallback when secure credential storage is unavailable.
 
 Artifacts:
 
@@ -70,6 +71,8 @@ Artifacts:
 
 Known limitations:
 
+- Persistent login requires a secure Linux Secret Service backend such as KWallet or GNOME Keyring/libsecret.
+  Without it, Canva Linux uses an ephemeral session and does not save login state.
 - `.deb`, `.rpm`, and AUR packaging are planned for a later line.
 - Flathub submission hardening continues separately.
 - Some terminal emulators may still require Shift while selecting text.

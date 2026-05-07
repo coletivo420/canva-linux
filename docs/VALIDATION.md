@@ -23,6 +23,7 @@ Current target:
 - `npm run check:gitignore-policy`
 - `npm test`
   - compiles selected TypeScript tests plus support helpers to `.build/test/` before `node --test`
+  - includes credential-storage policy contracts for Secret Service-backed persistent login and `basic_text` ephemeral fallback
 - `npm run docs:check-links`
 - `npm run docs:check-ai`
 - `scripts/run-core-entry.sh check-no-shell-menu`
@@ -83,6 +84,7 @@ Current target:
 - Confirm starting on GNOME or a compatible desktop with GNOME Keyring/libsecret enabled logs `gnome_libsecret` and keeps persistent login available.
 - Confirm starting without a Secret Service backend shows the ephemeral session warning before Canva loads.
 - Confirm login does not persist after closing and reopening Canva Linux in ephemeral session mode.
+- Confirm startup logs show whether persistent login is available or ephemeral session mode is active.
 - Confirm startup logs show the credential storage backend and session policy.
 - Confirm logs do not contain cookies, tokens, passwords, session contents or credential material.
 - Confirm Tab and Shift+Tab move focus between menu, diagnostics, action panel and logs.
