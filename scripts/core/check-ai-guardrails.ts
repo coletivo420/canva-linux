@@ -27,6 +27,9 @@ function normalizeWhitespace(value: string): string {
 const requiredGuardrails = [
   "The interactive shell menu has been removed.",
   "The project exposes only C420UI and direct CLI actions.",
+  "C420UI is the user-facing name of the terminal interface.",
+  "Do not reintroduce Terminal Assistant as product name.",
+  "Do not use TUI as product name.",
   "Legacy explicit C420UI routing flags are removed. The launcher opens C420UI when called without args; any argument is resolved as direct CLI.",
   "Legacy interface-routing environment variables are removed and must not be read for interface routing.",
   "terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.",
@@ -44,6 +47,8 @@ const requiredGuardrails = [
   "Stacked header layout is allowed only as a narrow-terminal fallback.",
   "Workspace must start below the tallest header row.",
   "C420UI Header must use only C420UI brand config.",
+  "C420UI core must not hardcode project-specific metadata.",
+  "Project metadata must come from config/adapters.",
   "Project Header must use only project config.",
   "Headers must not be part of FocusZone or Tab navigation.",
   "Do not manually move only the Overview panel; always use shared workspaceTop.",

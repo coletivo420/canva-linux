@@ -20,6 +20,8 @@ function findCheckedFiles(dir: string): string[] {
 
 function isAllowedSudoText(line: string): boolean {
   return [
+    "with sudo or as root.",
+    "Install and Development Tool with sudo or as root.",
     "Do not run Canva Linux Install and Development Tool with sudo or as root.",
     "Do not run this tool with sudo or as root.",
     "Do not run the Tool with sudo or as root",

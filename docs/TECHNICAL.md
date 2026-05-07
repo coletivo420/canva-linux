@@ -31,7 +31,7 @@ Canva Linux workflow actions are split into four layers:
 1. `scripts/actions.json` (canonical registry)
 2. `scripts/core/action-runner.ts`
    - action resolution/execution, compiled to `.build/scripts/core/action-runner.js`
-3. Interfaces (Blessed C420UI and direct CLI flags)
+3. Interfaces (C420UI workspace and direct CLI flags)
 4. Backend scripts under `scripts/`
 
 All maintained Node.js source code is TypeScript. Project-generated JavaScript
@@ -41,13 +41,13 @@ not maintained source locations. Shell remains shell for host operations such as
 launcher routing, install/uninstall, sudo, purge, XDG integration, and pre-Node
 validation glue.
 
-## Terminal Assistant / Blessed C420UI
+## C420UI terminal interface
 
-`./canva-linux.sh` opens the Blessed C420UI by default when stdin/stdout are TTY,
+`./canva-linux.sh` opens the C420UI terminal interface by default when stdin/stdout are TTY,
 `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection
 flags and environment variables have been removed.
 
-The Tool must run as a regular user. `canva-linux.sh`, `scripts/run-tui.ts`, and
+The Tool must run as a regular user. `canva-linux.sh`, `scripts/run-c420ui.ts`, and
 the C420UI entrypoint refuse root execution before build, action, or C420UI startup.
 System-wide operations request administrator authentication only for the action
 that needs it.
@@ -110,7 +110,7 @@ config, or Flathub helper paths fail validation.
 
 ## Terminal theme
 
-The Blessed C420UI and direct CLI output use a shared Canva-inspired visual language.
+The C420UI terminal interface and direct CLI output use a shared Canva-inspired visual language.
 
 Reference palette:
 

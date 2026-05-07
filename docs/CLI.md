@@ -1,6 +1,6 @@
 # CLI Commands
 
-The `canva-linux.sh` launcher provides access to the Terminal Assistant (C420UI) and direct CLI actions.
+The `canva-linux.sh` launcher provides access to the C420UI terminal interface and direct CLI actions.
 
 ## Usage
 
@@ -8,7 +8,7 @@ The `canva-linux.sh` launcher provides access to the Terminal Assistant (C420UI)
 ./canva-linux.sh [action] [options]
 ```
 
-- If no action is provided, the Terminal Assistant (C420UI) starts.
+- If no action is provided, the C420UI terminal interface starts.
 - If an action flag is provided, the command is executed directly.
 - Do not run the Tool as root. When an operation needs administrator privileges,
   Canva Linux asks for authentication only for that specific action.

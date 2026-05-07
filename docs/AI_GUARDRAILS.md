@@ -5,6 +5,9 @@
 - README is the public entry point; long command references belong in `docs/CLI.md`.
 - Every behavior change must update `CHANGELOG.md`.
 - C420UI/CLI actions must be sourced from `scripts/actions.json`.
+- C420UI is the user-facing name of the terminal interface.
+- Do not reintroduce Terminal Assistant as product name.
+- Do not use TUI as product name.
 - Do not duplicate action logic in C420UI or launcher code.
 - Do not ignore `action.env` from `scripts/actions.json`.
 - Any `system`/`user` scope action must behave the same in C420UI and direct CLI.
@@ -81,6 +84,8 @@
 - Stacked header layout is allowed only as a narrow-terminal fallback.
 - Workspace must start below the tallest header row.
 - C420UI Header must use only C420UI brand config.
+- C420UI core must not hardcode project-specific metadata.
+- Project metadata must come from config/adapters.
 - Project Header must use only project config.
 - Headers must not be part of FocusZone or Tab navigation.
 - Do not manually move only the Overview panel; always use shared workspaceTop.

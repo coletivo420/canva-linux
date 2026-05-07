@@ -1,6 +1,5 @@
 import blessed from "blessed";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { C420UI_LOGO_LINES, CANVA_LOGO_LINES } from "./logo";
 import { getActionsByGroup, type C420UIAction } from "./action-registry";
 import {
   confirmDialog,
@@ -29,12 +28,26 @@ export type C420UIBrandConfig = {
   logoLines: string[];
 };
 
-export type C420UIProjectHeaderConfig = {
+export type C420UIProjectConfig = {
   projectName: string;
   projectSubtitle: string;
   displayVersion: string;
   phase?: string;
   status?: string;
+  logoLines: string[];
+  appId: string;
+  executableName: string;
+  repositoryUrl: string;
+  launcherCommand: string;
+  stateDirectoryName: string;
+};
+
+export type C420UIConfig = {
+  rootDir: string;
+  title: string;
+  brand: C420UIBrandConfig;
+  project: C420UIProjectConfig;
+  releaseNotes: string;
 };
 
 type View =
@@ -97,12 +110,6 @@ const HEADER_BOX_HORIZONTAL_PADDING = 4;
 const C420UI_HEADER_MIN_WIDTH = 28;
 const PROJECT_HEADER_MIN_WIDTH = 40;
 
-const BRAND_CONFIG: C420UIBrandConfig = {
-  name: "C420UI",
-  version: "0.1",
-  logoLines: [...C420UI_LOGO_LINES],
-};
-
 function longestLineLength(lines: string[]): number {
   return Math.max(0, ...lines.map((line) => line.length));
 }
@@ -110,7 +117,7 @@ function longestLineLength(lines: string[]): number {
 export function computeHeaderLayout(
   screenWidth: number,
   brandConfig: C420UIBrandConfig,
-  projectConfig: C420UIProjectHeaderConfig,
+  projectConfig: C420UIProjectConfig,
 ): HeaderLayout {
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
@@ -178,17 +185,11 @@ export function computeHeaderLayout(
 
 // --- Main Application Entry ---
 
-export function createApp(opts: {
-  rootDir: string;
-  title: string;
-  brand: C420UIBrandConfig;
-  project: C420UIProjectHeaderConfig;
-  releaseNotes: string;
-}) {
+export function createApp(opts: C420UIConfig) {
   // --- Initialization & State ---
 
-  let toolSettings = loadToolSettings();
-  const settingsPath = toolSettingsPath();
+  let toolSettings = loadToolSettings(opts.project.stateDirectoryName);
+  const settingsPath = toolSettingsPath(opts.project.stateDirectoryName);
   const terminalTextSelectionModeActive =
     toolSettings.tool.terminalTextSelectionMode;
   const tuiMouseEnabled = !terminalTextSelectionModeActive;
@@ -507,7 +508,7 @@ export function createApp(opts: {
     path.join(
       process.env.XDG_STATE_HOME ||
         path.join(process.env.HOME || ".", ".local/state"),
-      "canva-linux", // Still using this for path consistency in this project
+      opts.project.stateDirectoryName,
       "tool-session.log",
     );
 
@@ -1186,7 +1187,7 @@ export function createApp(opts: {
         `{${c420uiTheme.colors.infoItemTitle}-fg}Section:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
         `  {${c420uiTheme.colors.infoText}-fg}${selected.label}{/${c420uiTheme.colors.infoText}-fg}`,
         "",
-        `{${c420uiTheme.colors.descriptionText}-fg}Tool settings affect this installer/development interface. Final build settings will apply to the packaged Canva Linux app in a later phase.{/${c420uiTheme.colors.descriptionText}-fg}`,
+        `{${c420uiTheme.colors.descriptionText}-fg}Tool settings affect this installer/development interface. Final build settings will apply to the packaged ${opts.project.projectName} app in a later phase.{/${c420uiTheme.colors.descriptionText}-fg}`,
       );
     } else {
       details.push(
@@ -1199,7 +1200,7 @@ export function createApp(opts: {
 
   function persistSettings(reason: string) {
     try {
-      saveToolSettings(toolSettings);
+      saveToolSettings(toolSettings, opts.project.stateDirectoryName);
     } catch (error) {
       appendLogText(
         `[error] Settings could not be saved: ${error instanceof Error ? error.message : String(error)}\n`,
@@ -1262,7 +1263,7 @@ export function createApp(opts: {
       contentLabelText = "Overview";
       content.setContent(
         [
-          `{${c420uiTheme.colors.logo}-fg}${CANVA_LOGO_LINES.join("\n")}{/${c420uiTheme.colors.logo}-fg}`,
+          `{${c420uiTheme.colors.logo}-fg}${opts.project.logoLines.join("\n")}{/${c420uiTheme.colors.logo}-fg}`,
           "",
           "Version:",
           `  {${c420uiTheme.colors.version}-fg}${opts.project.displayVersion}{/${c420uiTheme.colors.version}-fg}`,
@@ -1274,9 +1275,9 @@ export function createApp(opts: {
           `  ${opts.releaseNotes}`,
           "",
           "Package / Version Information:",
-          "  App ID: io.github.coletivo420.canva-linux",
-          "  Executable: canva-linux",
-          "  Repository: https://github.com/coletivo420/canva-linux",
+          `  App ID: ${opts.project.appId}`,
+          `  Executable: ${opts.project.executableName}`,
+          `  Repository: ${opts.project.repositoryUrl}`,
         ].join("\n"),
       );
       applyFocusStyles();
@@ -1315,7 +1316,7 @@ export function createApp(opts: {
           `{${c420uiTheme.colors.descriptionText}-fg}  Terminal text selection can be enabled in Application Settings. It disables C420UI mouse capture globally on the next start, but some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Launcher{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  ./canva-linux.sh opens the C420UI.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  ${opts.project.launcherCommand} opens the C420UI.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Any direct action flag runs CLI mode instead.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Do not run the Tool with sudo or as root; privileged actions ask for administrator authentication only when needed.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",

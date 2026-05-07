@@ -18,7 +18,7 @@ cd canva-linux
 ```
 
 ## Canva Linux Install and Development Tool
-The launcher opens the Terminal Assistant by default (when supported), with Install,
+The launcher opens the C420UI terminal interface by default (when supported), with Install,
 Development, and Maintenance workflows. Direct CLI action flags are available for
 automation.
 
@@ -33,7 +33,7 @@ output, while shell remains reserved for Linux host-operation glue.
 - **Editor**: CL-EyeDropper, upload/export flows, OAuth popup, internal tabs.
 - **System**: Native Install, Flatpak Install, experimental AppImage.
 - **Development**: runtime build, package generation, validation, doctor checks.
-- **TUI**: guided sections, logs, progress bar, root-auth popup for privileged actions.
+- **C420UI workspace**: guided sections, logs, progress bar, root-auth popup for privileged actions.
 - **Maintenance**: uninstall, purge, reset user data, permissions recovery.
 - **Diagnostics**: GPU, upload, browser capture diagnostics.
 - **Future**: AUR/PKGBUILD, then `.deb`/`.rpm`.

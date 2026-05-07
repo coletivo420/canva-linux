@@ -34,6 +34,24 @@ export function main(): number {
   assertIncludes(
     failures,
     app,
+    "export type C420UIBrandConfig",
+    "scripts/c420ui/app.ts must export C420UIBrandConfig",
+  );
+  assertIncludes(
+    failures,
+    app,
+    "export type C420UIProjectConfig",
+    "scripts/c420ui/app.ts must export C420UIProjectConfig",
+  );
+  assertIncludes(
+    failures,
+    app,
+    "export type C420UIConfig",
+    "scripts/c420ui/app.ts must export C420UIConfig",
+  );
+  assertIncludes(
+    failures,
+    app,
     "computeHeaderLayout",
     "scripts/c420ui/app.ts must centralize header layout math",
   );
@@ -100,6 +118,12 @@ export function main(): number {
     projectUi,
     '"projectSubtitle":',
     "scripts/project-ui.json must define projectSubtitle",
+  );
+  assertIncludes(
+    failures,
+    projectUi,
+    '"logoLines":',
+    "scripts/project-ui.json must define project logo lines",
   );
 
   if (failures.length) throw new Error(failures.join("\n"));
