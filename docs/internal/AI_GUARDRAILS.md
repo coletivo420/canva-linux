@@ -114,6 +114,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Project adapters execute concrete actions but must not reimplement generic action-engine policy.
 - Direct CLI actions must pass through the c420ui CLI bridge.
 - Do not bypass the c420ui Action Engine from `canva-linux.sh`.
+- Do not hardcode direct action flags in `canva-linux.sh`; resolve them through the c420ui CLI bridge.
+- Direct action flags must come from the project action registry.
+- The launcher may parse only global flags such as `--help`, `--yes`, `--force`, and `--dry-run`.
+- Keep `bash -n canva-linux.sh` protected by validation.
+- Keep direct c420ui CLI bridge freshness protected before launcher execution.
 - Only one direct action may execute per invocation.
 - Dangerous or confirmation-required direct actions must not execute without `--yes`.
 - Privileged direct actions must run root/sudo preflight before backend scripts start.

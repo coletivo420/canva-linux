@@ -10,7 +10,10 @@ The `canva-linux.sh` launcher provides access to the c420ui terminal interface a
 
 - If no action is provided, the c420ui terminal interface starts.
 - If an action flag is provided, the command is executed directly.
+- The shell launcher only parses global flags.
+- Direct CLI actions are resolved by the c420ui CLI bridge from the project action registry.
 - Direct CLI actions are routed through the c420ui CLI bridge and the c420ui Action Engine.
+- Only one direct action can be passed per invocation.
 - Only one direct action can be executed per invocation.
 - Do not run the Tool as root. When an operation needs administrator privileges,
   Canva Linux asks for authentication only for that specific action.

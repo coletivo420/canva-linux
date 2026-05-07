@@ -252,7 +252,8 @@ export function createCanvaLinuxC420UIAdapter(
   }
 
   // Transitional bridge execution path.
-  // Direct launcher CLI now routes through this path.
+  // Direct launcher CLI routes through this path for action execution.
+  // Privilege preflight is still delegated to legacy action-runner helpers.
   // Runtime Canva Linux app logs, credential diagnostics, OAuth/tabs/GPU/EyeDropper logs,
   // and CANVA_DEBUG flows remain outside this adapter execution path.
   // Defensive fallback only: planned and dry-run policy belongs to the c420ui Action Engine.

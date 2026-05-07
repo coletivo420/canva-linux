@@ -36,6 +36,9 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Fixed
+- Repaired the shell launcher parser after the direct CLI bridge migration.
+- Added validation coverage to prevent hardcoded launcher action flags and malformed shell parsing.
+- Rebuild the direct c420ui CLI bridge when launcher-relevant bridge sources are newer than the compiled bundle.
 - Fixed the release workflow removed-interface-routing check so it scans active public documentation while excluding
   archived internal development history.
 - Fixed c420ui stale-build detection so changes to `scripts/project-ui.json`, `scripts/app-identity-common.sh`,
