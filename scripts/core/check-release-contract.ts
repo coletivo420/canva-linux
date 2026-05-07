@@ -20,10 +20,8 @@ function packageVersionToPhase(version: string): string {
   const dev = version.match(/^(\d+\.\d+\.\d+)-dev\.(\d+)\.(\d+)$/);
   if (dev) return `${dev[1]}.${dev[2]}-dev.${dev[3]}`;
 
-  const release = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
-  if (release) return `${release[1]}.${release[2]}`;
-
-  if (/^\d+\.\d+\.\d+$/.test(version)) return version;
+  if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version))
+    return version;
 
   throw new Error(`package.json version does not map to release identity: ${version}`);
 }
@@ -98,9 +96,9 @@ export function main(): number {
     "npm run validate:project",
     "./scripts/build-appimage.sh",
     "./scripts/build-flatpak-bundle.sh",
-    "canva-linux-${RELEASE_VERSION}-x64.AppImage",
+    "canva-linux-${RELEASE_VERSION}-x86_64.AppImage",
     "canva-linux-${RELEASE_VERSION}.flatpak",
-    "canva-linux-${RELEASE_VERSION}-linux-unpacked-x64.tar.gz",
+    "canva-linux-${RELEASE_VERSION}-linux-unpacked-x86_64.tar.gz",
     "dist/SHA256SUMS",
     "softprops/action-gh-release@v2",
     "body_path: docs/RELEASE.md",
@@ -110,12 +108,20 @@ export function main(): number {
   }
 
   for (const expected of [
-    "canva-linux-0.1.4.12-x64.AppImage",
-    "canva-linux-0.1.4.12.flatpak",
-    "canva-linux-0.1.4.12-linux-unpacked-x64.tar.gz",
+    "canva-linux-0.1.4-12-x86_64.AppImage",
+    "canva-linux-0.1.4-12.flatpak",
+    "canva-linux-0.1.4-12-linux-unpacked-x86_64.tar.gz",
     "SHA256SUMS",
   ]) {
     assertIncludes(failures, releaseDocsPath, releaseDocs, expected);
+  }
+
+  for (const forbidden of ["0.1.4.12", "linux-unpacked-x64", "-x64.AppImage"]) {
+    if (workflow.includes(forbidden) || releaseDocs.includes(forbidden)) {
+      failures.push(
+        `release naming must use npm version and x86_64 architecture, found ${forbidden}`,
+      );
+    }
   }
 
   for (const script of releaseScripts) {

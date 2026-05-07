@@ -7,10 +7,8 @@ function expectedPhaseFromVersion(version: string) {
   const devMatch = version.match(/^(\d+\.\d+\.\d+)-dev\.(\d+)\.(\d+)$/);
   if (devMatch) return `${devMatch[1]}.${devMatch[2]}-dev.${devMatch[3]}`;
 
-  const releaseMatch = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
-  if (releaseMatch) return `${releaseMatch[1]}.${releaseMatch[2]}`;
-
-  if (/^\d+\.\d+\.\d+$/.test(version)) return version;
+  if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version))
+    return version;
 
   throw new Error(
     `package.json version does not map to a project phase: ${version}`,

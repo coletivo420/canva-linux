@@ -1,8 +1,8 @@
 # Canva Linux
 
 Status: **Alpha**
-Version: **0.1.4.12 (Alpha)**
-Release: **v0.1.4.12**
+Version: **0.1.4-12 (Alpha)**
+Release: **v0.1.4-12**
 
 Independent community project. Not affiliated with Canva.
 

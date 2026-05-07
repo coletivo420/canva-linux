@@ -36,6 +36,9 @@
 - Release workflow must use deterministic artifact names and must fail if an
   expected asset is missing or empty.
 - Release docs must keep `docs/RELEASE.md` available for GitHub Release notes.
+- Release identity must use the npm-compatible package version everywhere; do
+  not publish four-number dotted versions.
+- Linux release asset names must use `x86_64`, not `x64`.
 - Passwords and sudo stdin must never be logged.
 - Application Settings are TUI state, not shell actions.
 - New UI strings, docs and comments must be written in English.
