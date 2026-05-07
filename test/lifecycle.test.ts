@@ -73,8 +73,8 @@ function createLifecycleOptions({
       getCanvaSession() {
         return {};
       },
-      logCredentialStorageBackend() {
-        calls.push("logCredentialStorageBackend");
+      logCredentialStoragePolicy(policy) {
+        calls.push(`logCredentialStoragePolicy:${policy.mode}:${policy.partition}`);
       },
       logReleaseStatus() {
         calls.push("logReleaseStatus");
@@ -85,7 +85,24 @@ function createLifecycleOptions({
         },
       },
       onThemeUpdated() {},
-      partition: "persist:canva",
+      getSessionPartition() {
+        return "persist:canva";
+      },
+      resolveCredentialStoragePolicy() {
+        calls.push("resolveCredentialStoragePolicy");
+        return {
+          backend: "kwallet6",
+          mode: "persistent",
+          security: "secure",
+          partition: "persist:canva",
+          cache: true,
+          persistentLoginAvailable: true,
+          warning: null,
+        };
+      },
+      setCredentialStoragePolicy(policy) {
+        calls.push(`setCredentialStoragePolicy:${policy.mode}:${policy.partition}`);
+      },
       path: {},
       shouldGrantRemotePermission() {
         return false;
@@ -166,6 +183,15 @@ test("registerAppLifecycle keeps normal startup flow unchanged", async () => {
 
   assert.equal(
     calls.includes("logStatus:startup:ok:debug-log-file /tmp/current.log"),
+    true,
+  );
+  assert.equal(calls.includes("resolveCredentialStoragePolicy"), true);
+  assert.equal(
+    calls.includes("setCredentialStoragePolicy:persistent:persist:canva"),
+    true,
+  );
+  assert.equal(
+    calls.includes("logCredentialStoragePolicy:persistent:persist:canva"),
     true,
   );
   assert.equal(calls.includes("debug:startup:session-configured"), true);

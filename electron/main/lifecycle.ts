@@ -18,6 +18,7 @@ type CentralLoggerLike = {
 type BrowserWindowConstructorLike = { getAllWindows(): unknown[] };
 type NativeThemeLike = { on(event: "updated", listener: () => void): unknown };
 type TabControllerLike = { createHomeTab(): void };
+type CredentialStoragePolicy = import("./credential-storage").CredentialStoragePolicy;
 type LifecycleOptions = {
   app: AppLike;
   BrowserWindow: BrowserWindowConstructorLike;
@@ -31,13 +32,15 @@ type LifecycleOptions = {
   flushSession: (session: any) => Promise<void>;
   focusMainWindow: () => void;
   getCanvaSession: () => unknown;
-  logCredentialStorageBackend: () => void;
+  logCredentialStoragePolicy: (policy: CredentialStoragePolicy) => void;
   logReleaseStatus: () => void;
   nativeTheme: NativeThemeLike;
   onThemeUpdated: () => void;
-  partition: string;
+  getSessionPartition: () => string;
   path: unknown;
   registerGpuDiagnostics?: () => void;
+  resolveCredentialStoragePolicy: () => CredentialStoragePolicy;
+  setCredentialStoragePolicy: (policy: CredentialStoragePolicy) => void;
   shouldGrantRemotePermission: (...args: any[]) => boolean;
   tabController: TabControllerLike;
 };
@@ -57,13 +60,15 @@ function registerAppLifecycle({
   flushSession,
   focusMainWindow,
   getCanvaSession,
-  logCredentialStorageBackend,
+  logCredentialStoragePolicy,
   logReleaseStatus,
   nativeTheme,
   onThemeUpdated,
-  partition,
+  getSessionPartition,
   path,
   registerGpuDiagnostics,
+  resolveCredentialStoragePolicy,
+  setCredentialStoragePolicy,
   shouldGrantRemotePermission,
   tabController,
 }: LifecycleOptions): void {
@@ -101,13 +106,15 @@ function registerAppLifecycle({
       registerGpuDiagnostics();
     }
     logReleaseStatus();
-    logCredentialStorageBackend();
+    const credentialStoragePolicy = resolveCredentialStoragePolicy();
+    setCredentialStoragePolicy(credentialStoragePolicy);
+    logCredentialStoragePolicy(credentialStoragePolicy);
     await configureSession({
       app,
       debugLog,
       getCanvaSession,
       path,
-      partition,
+      partition: credentialStoragePolicy.partition,
       shouldGrantRemotePermission,
     });
     debugLog("startup", "session-configured");
@@ -148,7 +155,7 @@ function registerAppLifecycle({
 
   app.on("window-all-closed", async () => {
     debugLog("app", "window-all-closed");
-    debugLog("session", "flush-before-quit", partition);
+    debugLog("session", "flush-before-quit", getSessionPartition());
     const canvaSession = canvaSessionRef();
     if (canvaSession) {
       await flushSession(canvaSession).catch(() => {});
