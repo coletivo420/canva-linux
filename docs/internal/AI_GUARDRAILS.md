@@ -22,82 +22,86 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 ## Project tree boundaries
 
-- Read `docs/PROJECT_TREE.md` before moving code across Electron, scripts, C420UI, packaging,
+- Read `docs/PROJECT_TREE.md` before moving code across Electron, scripts, c420ui, packaging,
   docs, or generated-output boundaries.
-- `scripts/c420ui/` is the current transitional in-repo C420UI implementation before package split.
-- `scripts/c420ui-canva-linux/` is the Canva Linux adapter boundary, not a public C420UI API.
+- `scripts/c420ui/` is the current transitional in-repo c420ui implementation before package split.
+- `scripts/c420ui-canva-linux/` is the Canva Linux adapter boundary, not a public c420ui API.
 - `packages/c420ui/` is a planned standalone package boundary, not a published package promise.
-- Do not document C420UI as an externally consumable package until the maintainer explicitly requests publication.
+- Do not document c420ui as an externally consumable package until the maintainer explicitly requests publication.
 - Keep generated output in `.build/`, `dist/`, `coverage/`, or `repo/`; do not treat it as maintained source.
 
 
-## C420UI separation roadmap
+## c420ui separation roadmap
 
-- Read `docs/ROADMAP_C420UI_SEPARATION.md` before moving C420UI code toward packages or adapters.
+- Read `docs/ROADMAP_C420UI_SEPARATION.md` before moving c420ui code toward packages or adapters.
 - Separate for compatibility first and external extraction later.
-- Do not migrate C420UI to ESM during the current separation phase.
+- Do not migrate c420ui to ESM during the current separation phase.
 - Do not publish or promise an NPM package during the current separation phase.
 - Do not remove `scripts/c420ui/` in one large change.
 - Do not change visual behavior as part of package-boundary work.
-- Do not rewrite Action Runner as part of C420UI separation.
-- Do not change versioning as part of C420UI separation.
+- Do not rewrite Action Runner as part of c420ui separation.
+- Do not change versioning as part of c420ui separation.
 
-## C420UI
+## c420ui
 
-- C420UI is the user-facing name of the terminal interface.
+- The official tool name is `c420ui`, lowercase.
+- Do not use `C420UI` as public product branding.
+- Transitional TypeScript symbols may keep PascalCase aliases temporarily, but user-facing text must say `c420ui`.
+- The c420ui logo must remain the approved three-line lowercase logo unless the maintainer explicitly requests a redesign.
+- c420ui is the user-facing name of the terminal interface.
 - Do not reintroduce Terminal Assistant as product name.
 - Do not use TUI as product name.
 - The interactive shell menu has been removed. Do not reintroduce `run_interactive_mode`, `menu_install`, `menu_dev`, `menu_maint`, or tool switching.
-- The project exposes only C420UI and direct CLI actions.
-- Legacy explicit C420UI routing flags are removed. The launcher opens C420UI when called without args; any argument is resolved as direct CLI.
+- The project exposes only c420ui and direct CLI actions.
+- Legacy explicit c420ui routing flags are removed. The launcher opens c420ui when called without args; any argument is resolved as direct CLI.
 - Legacy interface-routing environment variables are removed and must not be read for interface routing.
 - Backend shell scripts may remain shell scripts, but shell UI menus are forbidden.
-- Application Settings are C420UI state, not shell actions.
-- C420UI must keep an explicit FocusZone model.
-- Tab and Shift+Tab must move between focusable C420UI blocks.
-- The active C420UI block must have a visible border/label highlight.
+- Application Settings are c420ui state, not shell actions.
+- c420ui must keep an explicit FocusZone model.
+- Tab and Shift+Tab must move between focusable c420ui blocks.
+- The active c420ui block must have a visible border/label highlight.
 - The active menu/settings cell must have a visible highlight.
 - Settings checkboxes must show enabled/disabled state clearly.
-- Modal dialogs must not leak Tab focus back to the main C420UI.
+- Modal dialogs must not leak Tab focus back to the main c420ui.
 - During running actions, Tab/scroll/log copy may work, but action execution must remain blocked.
 - Help must document current keyboard navigation.
 - Manual text selection mode must disable mouse capture globally, not only on the logs widget.
 - terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.
-- C420UI mouse settings must be restored when leaving text selection mode.
+- c420ui mouse settings must be restored when leaving text selection mode.
 - F5 log copy must work regardless of text selection mode.
 - F5 clipboard copy must keep working even when text selection mode is enabled.
 - Help must document log copy, manual selection and terminal limitations.
 - Help must document terminal text selection limitations.
-- Tool-level logs must be visible in the C420UI when general Tool logs are enabled.
+- Tool-level logs must be visible in the c420ui when general Tool logs are enabled.
 - Action logs and Tool logs must remain distinguishable.
-- Detection errors must not break the C420UI layout.
+- Detection errors must not break the c420ui layout.
 - overview-status must always emit valid JSON.
 - Keep ASCII logo light blue.
 - Maintenance must keep installation detection visible at the top.
-- C420UI Header and Project Header must remain separate fixed components.
+- c420ui Header and Project Header must remain separate fixed components.
 - Side-by-side header layout is preferred on wide terminals.
 - Stacked header layout is allowed only as a narrow-terminal fallback.
 - Workspace must start below the tallest header row.
-- C420UI Header must use only C420UI brand config.
+- c420ui Header must use only c420ui brand config.
 - Project Header must use only project config.
-- C420UI core must not hardcode project-specific metadata.
+- c420ui core must not hardcode project-specific metadata.
 - Project metadata must come from config/adapters.
 - Headers must not be part of FocusZone or Tab navigation.
 - Do not manually move only the Overview panel; always use shared workspaceTop.
-- C420UI brand metadata must be reusable across projects.
+- c420ui brand metadata must be reusable across projects.
 - Project header metadata must be injected through configuration.
-- Other projects must be able to reuse C420UI without editing the C420UI core.
+- Other projects must be able to reuse c420ui without editing the c420ui core.
 
 ## Action Registry
 
-- C420UI/CLI actions must be sourced from `scripts/actions.json`.
+- c420ui/CLI actions must be sourced from `scripts/actions.json`.
 - Action metadata must come from `scripts/actions.json`.
-- Do not duplicate action logic in C420UI or launcher code.
+- Do not duplicate action logic in c420ui or launcher code.
 - Do not ignore `action.env` from `scripts/actions.json`.
-- Any `system`/`user` scope action must behave the same in C420UI and direct CLI.
+- Any `system`/`user` scope action must behave the same in c420ui and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
-- C420UI and CLI must share the same TypeScript action contract.
+- c420ui and CLI must share the same TypeScript action contract.
 - Preserve Action Runner root/planned-action behavior.
 - Detection refresh must not clear or override progress results.
 - Progress refresh must not convert a completed action into an error.
@@ -110,8 +114,8 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - The Tool must run as a regular user.
 - Privileged operations must request authentication only when needed.
 - System-wide actions must declare `requiresRoot`.
-- C420UI root authentication must happen before privileged execution.
-- Sudo/root authentication failures must be shown in a centered C420UI popup.
+- c420ui root authentication must happen before privileged execution.
+- Sudo/root authentication failures must be shown in a centered c420ui popup.
 - Prefer shared sudo helpers over direct sudo calls.
 - System-wide actions must use scripts/sudo-common.sh.
 - Raw sudo calls are forbidden outside scripts/sudo-common.sh.
@@ -144,7 +148,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 - Never log passwords, sudo stdin, cookies, tokens, or credential material.
 - Session log write failures must not fail silently.
-- C420UI session logging must not fail silently.
+- c420ui session logging must not fail silently.
 - If the session log stream cannot be opened, the UI must expose a warning without recursion.
 - writeSession must not call appendLogText directly to avoid recursion.
 

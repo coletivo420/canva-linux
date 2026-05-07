@@ -5,7 +5,7 @@ import type {
   C420UIConfig,
   C420UIProjectConfig,
 } from "../../packages/c420ui/src";
-import { C420UI_LOGO_LINES } from "../c420ui/logo";
+import { c420uiLogoLines } from "../c420ui/logo";
 import { rootLaunchGuardMessage, toolSettingsPath } from "../c420ui/settings";
 
 type ProjectUiJson = {
@@ -108,9 +108,9 @@ export function createCanvaLinuxC420UIAdapter(rootDir: string) {
 
   function loadBrandConfig(): C420UIConfig["brand"] {
     return {
-      name: "C420UI",
+      name: "c420ui",
       version: "0.1",
-      logoLines: [...C420UI_LOGO_LINES],
+      logoLines: [...c420uiLogoLines],
     };
   }
 

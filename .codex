@@ -14,7 +14,7 @@ Required reading:
 Rules:
 - Preserve version 0.1.4-12 unless the maintainer explicitly requests a versioning change.
 - Do not introduce 0.1.4-12.RC2.
-- Keep C420UI as the user-facing terminal interface name.
+- Keep c420ui as the user-facing terminal interface name.
 - Do not reintroduce Terminal Assistant or TUI as product names.
 - Do not reintroduce shell menus.
 - Do not run or recommend ./canva-linux.sh as root.

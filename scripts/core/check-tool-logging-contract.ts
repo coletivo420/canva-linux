@@ -17,7 +17,7 @@ export function main(): number {
     failures.push("canva-linux.sh: launcher must create/truncate the session log once");
   }
   if (!app.includes('flags: "a"')) {
-    failures.push("scripts/c420ui/app.ts: C420UI must append to the launcher session log");
+    failures.push("scripts/c420ui/app.ts: c420ui must append to the launcher session log");
   }
   if (!app.includes("importLauncherSessionLog")) {
     failures.push("scripts/c420ui/app.ts: launcher logs must be imported when Tool logs are enabled");

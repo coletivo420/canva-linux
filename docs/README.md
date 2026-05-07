@@ -18,7 +18,7 @@ notes so release-facing docs stay focused.
 - [Release guide](RELEASE.md)
 - [Development guide](DEVELOPMENT.md)
 - [Project tree reference](PROJECT_TREE.md)
-- [C420UI separation roadmap](ROADMAP_C420UI_SEPARATION.md)
+- [c420ui separation roadmap](ROADMAP_C420UI_SEPARATION.md)
 - [Technical architecture](TECHNICAL.md)
 - [TypeScript notes](TYPESCRIPT.md)
 - [CL EyeDropper architecture](CANVA_LINUX_EYEDROPPER.md)

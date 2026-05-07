@@ -1,23 +1,21 @@
-# C420UI Separation Roadmap
+# c420ui Separation Roadmap
 
 ## Goal
 
-Separate C420UI from Canva Linux so it can become a reusable terminal UI toolkit
-without breaking Canva Linux installation, packaging, validation, or direct CLI
-workflows.
+Separate c420ui from Canva Linux so it can become a modular terminal tool for software development, build workflows, maintenance and package creation.
 
 This roadmap describes the internal compatibility-first path. It does not start
 NPM publication, external package support, or module-system migration.
 
 ## Current state
 
-C420UI was born inside Canva Linux and currently lives under `scripts/c420ui/`.
+c420ui was born inside Canva Linux and currently lives under `scripts/c420ui/`.
 It is the active in-repo terminal interface implementation for Canva Linux.
 
-Today, C420UI still shares repository-local assumptions with Canva Linux:
+Today, c420ui still shares repository-local assumptions with Canva Linux:
 
-- project metadata and C420UI brand metadata are close together;
-- direct CLI and C420UI workflows share `scripts/actions.json`;
+- project metadata and c420ui brand metadata are close together;
+- direct CLI and c420ui workflows share `scripts/actions.json`;
 - installation, packaging, validation, and maintenance actions are Canva
   Linux-specific;
 - build and validation scripts expect the current repository layout;
@@ -38,10 +36,10 @@ scripts/c420ui-canva-linux/
   run.ts
 ```
 
-`packages/c420ui/` is reserved for a future reusable C420UI package workspace.
+`packages/c420ui/` is reserved for a future reusable c420ui package workspace.
 `scripts/c420ui-canva-linux/` is the Canva Linux-specific adapter boundary for
 wiring project metadata, action definitions, detection/status summaries, and
-launch behavior into the reusable C420UI core.
+launch behavior into the reusable c420ui core.
 
 Until broader package and adapter wiring is complete, `scripts/c420ui/` remains
 the source of truth for the in-repo implementation.
@@ -65,7 +63,7 @@ adapter APIs stabilize.
 ### 1. Security stabilization
 
 Keep credential storage, root/sudo boundaries, logging privacy, and release
-validation stable before moving C420UI code.
+validation stable before moving c420ui code.
 
 Acceptance points:
 
@@ -74,11 +72,11 @@ Acceptance points:
 - root-auth and privileged action behavior remain centralized;
 - logs continue to avoid secrets, tokens, cookies, session values, and sudo
   stdin;
-- C420UI and direct CLI behavior remain equivalent for registered actions.
+- c420ui and direct CLI behavior remain equivalent for registered actions.
 
 ### 2. Documentation and tree mapping
 
-Use the project tree reference to prevent future changes from mixing C420UI core,
+Use the project tree reference to prevent future changes from mixing c420ui core,
 Canva Linux adapters, Electron runtime, packaging scripts, docs, and generated
 outputs.
 
@@ -132,9 +130,9 @@ The adapter should own:
 - project-specific labels and release identity;
 - launch integration from `canva-linux.sh` or direct TypeScript entrypoints.
 
-C420UI core should not hardcode Canva Linux project metadata.
+c420ui core should not hardcode Canva Linux project metadata.
 
-### 5. Move pure C420UI modules
+### 5. Move pure c420ui modules
 
 Move only reusable modules after they are separated from Canva Linux-specific
 assumptions.
@@ -146,7 +144,7 @@ Good candidates:
 - modal primitives;
 - log panel rendering primitives;
 - menu/list rendering primitives;
-- C420UI brand-header primitives that do not know the Canva Linux project.
+- c420ui brand-header primitives that do not know the Canva Linux project.
 
 Rules:
 
@@ -158,7 +156,7 @@ Rules:
 
 ### 6. Move Canva Linux-specific logic to adapter
 
-Move project-specific pieces out of C420UI core after reusable modules are stable.
+Move project-specific pieces out of c420ui core after reusable modules are stable.
 
 Adapter-owned examples:
 
@@ -183,7 +181,7 @@ Acceptance points:
 - `npm run typecheck` remains green;
 - `npm run typecheck:strict` expands deliberately, one surface at a time;
 - `npm test` covers moved modules and adapter wiring;
-- `npm run check:scripts-core` continues to enforce C420UI/action contracts;
+- `npm run check:scripts-core` continues to enforce c420ui/action contracts;
 - generated JavaScript remains under `.build/`.
 
 ### 8. Future standalone extraction
@@ -198,5 +196,5 @@ Before extraction:
 - release/version strategy must be explicitly approved by the maintainer;
 - NPM publication, if any, must be a separate decision and release plan.
 
-The standalone C420UI project should be treated as future work until these
+The standalone c420ui project should be treated as future work until these
 conditions are met.

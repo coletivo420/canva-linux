@@ -31,7 +31,7 @@ export function main(): number {
     failures,
     index,
     "runCanvaLinuxC420UI",
-    "scripts/c420ui/index.ts must delegate to the Canva Linux C420UI adapter runner",
+    "scripts/c420ui/index.ts must delegate to the Canva Linux c420ui adapter runner",
   );
   assertIncludes(
     failures,
@@ -43,7 +43,7 @@ export function main(): number {
     failures,
     app,
     "../../packages/c420ui/src",
-    "scripts/c420ui/app.ts must import generic C420UI types from packages/c420ui",
+    "scripts/c420ui/app.ts must import generic c420ui types from packages/c420ui",
   );
 
   assertIncludes(
@@ -106,7 +106,7 @@ export function main(): number {
   }
 
   if (app.includes("const brandHeader")) {
-    failures.push("C420UI brand header component must be named c420uiHeader");
+    failures.push("c420ui brand header component must be named c420uiHeader");
   }
   if (!app.includes("content: [\n      `{bold}${opts.brand.name}")) {
     failures.push("c420uiHeader content must come from brand config");

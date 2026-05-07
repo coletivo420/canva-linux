@@ -29,7 +29,7 @@ export function main(): number {
     );
   }
   if (!runTui.includes("process.getuid") || !adapterRun.includes("process.getuid")) {
-    failures.push("C420UI bootstrap must include a secondary root-launch guard");
+    failures.push("c420ui bootstrap must include a secondary root-launch guard");
   }
   if (!tuiIndex.includes("runCanvaLinuxC420UI")) {
     failures.push("scripts/c420ui/index.ts must delegate to adapter runner");

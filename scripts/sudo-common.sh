@@ -21,7 +21,7 @@ canva_sudo_error() {
     124) echo "[error] sudo authorization timed out after ${CANVA_SUDO_TIMEOUT_SECONDS}s." >&2 ;;
     *)
       if canva_is_tui_mode; then
-        echo "[error] sudo credentials are not cached for non-interactive C420UI mode." >&2
+        echo "[error] sudo credentials are not cached for non-interactive c420ui mode." >&2
         echo "[error] Re-run the action and complete administrator authentication before privileged writes." >&2
       else
         echo "[error] sudo authorization failed or was canceled." >&2
@@ -40,7 +40,7 @@ canva_assert_not_user_scope() {
 
 canva_sudo_validate() {
   canva_assert_not_user_scope
-  # C420UI pre-validates credentials before launching action-runner.
+  # c420ui pre-validates credentials before launching action-runner.
   # With CANVA_C420UI_ROOT_AUTH=1, central runner validation must only
   # accept cached sudo credentials and must not prompt from the TUI child.
   local status=0

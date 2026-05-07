@@ -29,7 +29,7 @@ const forbiddenPatterns = [
   "F4 Shell Tool",
   "fallback para shell",
   "shell menu interativo",
-  "opção “Use C420UI Tool”",
+  "opção “Use c420ui Tool”",
 ];
 
 function stripShellComment(line: string): string {

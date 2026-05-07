@@ -1,6 +1,6 @@
 # CLI Commands
 
-The `canva-linux.sh` launcher provides access to the C420UI terminal interface and direct CLI actions.
+The `canva-linux.sh` launcher provides access to the c420ui terminal interface and direct CLI actions.
 
 ## Usage
 
@@ -8,7 +8,7 @@ The `canva-linux.sh` launcher provides access to the C420UI terminal interface a
 ./canva-linux.sh [action] [options]
 ```
 
-- If no action is provided, the C420UI terminal interface starts.
+- If no action is provided, the c420ui terminal interface starts.
 - If an action flag is provided, the command is executed directly.
 - Do not run the Tool as root. When an operation needs administrator privileges,
   Canva Linux asks for authentication only for that specific action.
@@ -23,7 +23,7 @@ The `canva-linux.sh` launcher provides access to the C420UI terminal interface a
 ## Actions
 
 Direct actions are resolved through the shared Action Registry (`scripts/actions.json`).
-Planned actions are shown in C420UI so users can see future packaging targets,
+Planned actions are shown in c420ui so users can see future packaging targets,
 but they are not executable. Running a planned action without `--dry-run` exits
 with code `78`; `--dry-run` only resolves metadata and still exits `0`.
 
@@ -54,7 +54,7 @@ with code `78`; `--dry-run` only resolves metadata and still exits `0`.
 The Action Runner centrally enforces Action Registry metadata before starting a
 backend script. Actions with `requiresRoot: true` validate administrator access
 through `scripts/sudo-common.sh --validate`; direct CLI mode may prompt normally,
-while C420UI uses previously cached credentials in non-interactive mode.
+while c420ui uses previously cached credentials in non-interactive mode.
 
 `scope: "user"` actions must not require root, and the runner refuses an action
 that combines user scope with `requiresRoot: true`. User-scope Native and Flatpak
@@ -66,7 +66,7 @@ a system-wide Native or Flatpak installation is detected.
 
 ## Environment Variables
 
-The C420UI and scripts honor the following environment variables:
+The c420ui and scripts honor the following environment variables:
 
 | Variable | Description |
 | --- | --- |
@@ -77,18 +77,18 @@ The C420UI and scripts honor the following environment variables:
 
 ## Tool Settings
 
-Application Settings are persistent C420UI state, not shell actions. They are stored
+Application Settings are persistent c420ui state, not shell actions. They are stored
 in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, or
 `~/.config/canva-linux/tool-settings.json` when `XDG_CONFIG_HOME` is unset.
 
 Current Tool settings:
 
 - `Enable general logs for Canva Linux Install and Development Tool`: shows
-  Tool-level startup, settings, detection and authentication events in the C420UI
+  Tool-level startup, settings, detection and authentication events in the c420ui
   logs panel. Action logs remain visible either way, and critical Tool warnings
   or errors still appear when general Tool logs are disabled.
-- `Manual text selection mode`: disables C420UI mouse capture globally so the terminal
+- `Manual text selection mode`: disables c420ui mouse capture globally so the terminal
   can perform native text selection while keyboard navigation remains active.
-  Changes take effect immediately and are saved for the next C420UI start.
+  Changes take effect immediately and are saved for the next c420ui start.
   Keyboard log scrolling and F5 copy remain available. F6 opens a plain logs
   view with the session log path as a fallback for manual selection.

@@ -24,21 +24,21 @@ Request changes if a PR:
 Request changes if a PR:
 
 - sources action metadata from anywhere other than `scripts/actions.json`;
-- duplicates action logic in C420UI or launcher code;
+- duplicates action logic in c420ui or launcher code;
 - changes Action Runner root or planned-action behavior without explicit maintainer direction;
 - ignores `action.env` from `scripts/actions.json`;
-- makes C420UI and direct CLI behavior diverge for `system` or `user` scope actions;
+- makes c420ui and direct CLI behavior diverge for `system` or `user` scope actions;
 - bypasses `scripts/sudo-common.sh` for system-wide actions.
 
-## C420UI naming review
+## c420ui naming and logo review
 
 Request changes if a PR:
 
-- renames the user-facing terminal interface away from C420UI;
-- reintroduces Terminal Assistant or TUI as product names;
-- reintroduces shell menus or legacy interface-routing flags;
-- hardcodes project-specific metadata in C420UI core;
-- merges the C420UI header and project/tool header into one component.
+- uses `C420UI` as public branding;
+- reintroduces `Terminal Assistant` or `TUI` as product names;
+- changes the approved three-line c420ui logo without maintainer request;
+- removes the lowercase `c420ui` identity from help, docs or headers;
+- uses `C420UI_LOGO_LINES` in new code instead of `c420uiLogoLines`.
 
 ## Docs/changelog review
 

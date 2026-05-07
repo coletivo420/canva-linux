@@ -41,11 +41,11 @@ export function main(): number {
     actions.includes("generalLogsEnabled") ||
     actions.includes("terminalTextSelectionMode")
   ) {
-    failures.push("scripts/actions.json: C420UI settings must not be shell actions");
+    failures.push("scripts/actions.json: c420ui settings must not be shell actions");
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[ok] C420UI settings contract check passed");
+  console.log("[ok] c420ui settings contract check passed");
   return 0;
 }
 
