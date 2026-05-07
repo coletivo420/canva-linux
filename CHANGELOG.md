@@ -11,6 +11,8 @@
   project headers.
 
 ### Changed
+- Updated release artifact generation to preserve upstream/tooling architecture
+  strings in AppImage, Flatpak, tarball and SHA256SUMS entries.
 - Hardened C420UI manual text selection so mouse capture is updated globally
   while keyboard navigation and F5 log copy remain available.
 - Hardened session logging diagnostics so asynchronously failing session log

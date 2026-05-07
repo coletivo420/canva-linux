@@ -71,5 +71,7 @@ Current target:
 - Confirm settings checkboxes show enabled and disabled state clearly.
 - Confirm modal dialogs block Tab focus from returning to the main C420UI.
 - Confirm running actions still allow Tab, focused-panel scrolling and F5 log copy while blocking new action execution.
+- Confirm release artifact names preserve the generated architecture string (`x86_64`/`X86_64` when emitted) and never rewrite it to `x64`.
+- Confirm `SHA256SUMS` contains the real generated AppImage, Flatpak and tarball names.
 - Confirm `REVIEW.md` still starts with `# Review Checklist`.
 - Confirm new Node.js scripts, tests, and supported configs are authored in TypeScript, with shell reserved for host-operation glue.

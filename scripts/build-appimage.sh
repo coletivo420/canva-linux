@@ -20,9 +20,6 @@ ensure_npm_dependencies
 
 VERSION="$(detect_package_version)"
 DIST_DIR="dist"
-APPIMAGE_ARCH="x86_64"
-APPIMAGE_PATH="${DIST_DIR}/canva-linux-${VERSION}-${APPIMAGE_ARCH}.AppImage"
-APPIMAGE_SHA256_PATH="${APPIMAGE_PATH}.sha256"
 
 print_appimage_bundle_notice
 
@@ -34,13 +31,24 @@ rm -f "${DIST_DIR}"/*.AppImage.sha256
 ui_info "Building AppImage with electron-builder"
 npm run dist:appimage
 
+shopt -s nullglob
+appimage_candidates=("${DIST_DIR}/canva-linux-${VERSION}-"*.AppImage)
+shopt -u nullglob
+
+if [[ "${#appimage_candidates[@]}" -ne 1 ]]; then
+  ui_die "Expected exactly one generated AppImage matching ${DIST_DIR}/canva-linux-${VERSION}-*.AppImage, found ${#appimage_candidates[@]}"
+fi
+
+APPIMAGE_PATH="${appimage_candidates[0]}"
+APPIMAGE_SHA256_PATH="${APPIMAGE_PATH}.sha256"
+
 if [[ ! -s "${APPIMAGE_PATH}" ]]; then
   ui_die "Expected AppImage was not generated: ${APPIMAGE_PATH}"
 fi
 
 (
   cd "${DIST_DIR}"
-  sha256sum "canva-linux-${VERSION}-${APPIMAGE_ARCH}.AppImage" > "$(basename "${APPIMAGE_SHA256_PATH}")"
+  sha256sum "$(basename "${APPIMAGE_PATH}")" > "$(basename "${APPIMAGE_SHA256_PATH}")"
 )
 ui_ok "AppImage checksum generated: ${APPIMAGE_SHA256_PATH}"
 

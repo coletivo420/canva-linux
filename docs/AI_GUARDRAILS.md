@@ -44,7 +44,10 @@
 - Release docs must keep `docs/RELEASE.md` available for GitHub Release notes.
 - Release identity must use the npm-compatible package version everywhere; do
   not publish four-number dotted versions.
-- Linux release asset names must use `x86_64`, not `x64`.
+- Release asset architecture names must preserve upstream/tooling architecture names.
+- Do not normalize `x86_64` or `X86_64` to `x64`.
+- AppImage, Flatpak, tarball and checksum entries must use the actual generated architecture string.
+- Release docs and workflows must not hardcode `x64` unless the tool actually emits `x64`.
 - Passwords and sudo stdin must never be logged.
 - Session log write failures must not fail silently.
 - C420UI session logging must not fail silently.
