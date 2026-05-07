@@ -14,6 +14,7 @@ Required reading:
 - docs/DEBUGGING.md
 
 Non-regression rules:
+- Do not run or recommend ./canva-linux.sh as root.
 - Preserve version 0.1.4-12 unless explicitly instructed otherwise.
 - Do not introduce 0.1.4-12.RC2.
 - C420UI is the user-facing terminal interface name.
@@ -26,6 +27,7 @@ Non-regression rules:
 - Do not add maintained JavaScript source.
 - Do not normalize x86_64/X86_64 to x64.
 - Do not remove validations to make checks pass.
+- Report validations executed and anything not tested.
 - Never log passwords, sudo stdin, cookies, tokens, or credential material.
 
 Gemini CLI note:

@@ -11,6 +11,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Deduplicated agent guardrail wording while preserving root, logging/privacy, header separation, and TypeScript-first rules.
 - Reorganized AI guardrails into focused maintenance sections for language/public docs, versioning, C420UI,
   Action Registry, root/sudo, logging/privacy, TypeScript-first source, CL-EyeDropper, packaging/architecture,
   and changelog/review.

@@ -4,9 +4,8 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 ## Language and public docs
 
-- All source code comments, README, docs, changelog, and AI maintenance instructions must be written in English.
+- All source code comments, UI strings, README, docs, changelog, and AI maintenance instructions must be written in English.
 - README is the public entry point; long command references belong in `docs/CLI.md`.
-- New UI strings, docs and comments must be written in English.
 - Active docs must match current version/phase and validation flow.
 - Docs must reflect the current phase only; historical details belong in `CHANGELOG.md`.
 - REVIEW.md must preserve the Review Checklist.
@@ -52,8 +51,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - overview-status must always emit valid JSON.
 - Keep ASCII logo light blue.
 - Maintenance must keep installation detection visible at the top.
-- The C420UI header and project/tool header must remain separate components.
-- C420UI Header and Project Header must be separate fixed components.
+- C420UI Header and Project Header must remain separate fixed components.
 - Side-by-side header layout is preferred on wide terminals.
 - Stacked header layout is allowed only as a narrow-terminal fallback.
 - Workspace must start below the tallest header row.
@@ -100,7 +98,6 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 ## Logging/privacy
 
 - Never log passwords, sudo stdin, cookies, tokens, or credential material.
-- Sudo passwords must never be logged.
 - Session log write failures must not fail silently.
 - C420UI session logging must not fail silently.
 - If the session log stream cannot be opened, the UI must expose a warning without recursion.
@@ -108,8 +105,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 ## TypeScript-first
 
-- TypeScript is mandatory for all Node.js source code.
-- All maintained Node.js source code is TypeScript.
+- TypeScript is mandatory for all maintained Node.js source code.
 - JavaScript is generated output only.
 - Shell remains shell for host operations.
 - New scripts must be TypeScript unless they are shell scripts for host operations.
