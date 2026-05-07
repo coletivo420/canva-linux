@@ -8,7 +8,11 @@ const { loadRuntimeModule } = require("./helpers/runtime-module");
 
 const { registerAppLifecycle } = loadRuntimeModule("main/lifecycle");
 
-function createLifecycleOptions({ lockResult = true } = {}) {
+function createLifecycleOptions({
+  configureSession = async () => ({}),
+  lockResult = true,
+  readyPromise = new Promise(() => {}),
+} = {}) {
   const listeners = new Map();
   const calls = [];
   const app = {
@@ -18,7 +22,7 @@ function createLifecycleOptions({ lockResult = true } = {}) {
     },
     whenReady() {
       calls.push("whenReady");
-      return new Promise(() => {});
+      return readyPromise;
     },
     on(event, listener) {
       calls.push(`on:${event}`);
@@ -46,11 +50,17 @@ function createLifecycleOptions({ lockResult = true } = {}) {
         initLogFile() {
           return "/tmp/current.log";
         },
-        logStatus() {},
+        logStatus(category, level, message) {
+          calls.push(`logStatus:${category}:${level}:${message}`);
+        },
       },
-      configureSession: async () => ({}),
-      createShellWindow() {},
-      createToolbarView() {},
+      configureSession,
+      createShellWindow() {
+        calls.push("createShellWindow");
+      },
+      createToolbarView() {
+        calls.push("createToolbarView");
+      },
       debugLog(category, ...args) {
         calls.push(`debug:${category}:${args.join(":")}`);
         return true;
@@ -63,8 +73,12 @@ function createLifecycleOptions({ lockResult = true } = {}) {
       getCanvaSession() {
         return {};
       },
-      logCredentialStorageBackend() {},
-      logReleaseStatus() {},
+      logCredentialStorageBackend() {
+        calls.push("logCredentialStorageBackend");
+      },
+      logReleaseStatus() {
+        calls.push("logReleaseStatus");
+      },
       nativeTheme: {
         on(event, listener) {
           listeners.set(`nativeTheme:${event}`, listener);
@@ -77,7 +91,9 @@ function createLifecycleOptions({ lockResult = true } = {}) {
         return false;
       },
       tabController: {
-        createHomeTab() {},
+        createHomeTab() {
+          calls.push("createHomeTab");
+        },
       },
     },
   };
@@ -114,4 +130,49 @@ test("registerAppLifecycle focuses the existing main window on second-instance",
     "debug:app:second-instance",
     "focusMainWindow",
   ]);
+});
+
+test("registerAppLifecycle logs critical startup errors and quits", async () => {
+  const startupError = new Error("configureSession exploded");
+  const { calls, options } = createLifecycleOptions({
+    configureSession: async () => {
+      throw startupError;
+    },
+    readyPromise: Promise.resolve(),
+  });
+
+  registerAppLifecycle(options);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(
+    calls.includes(
+      "logStatus:startup:critical:startup failed: configureSession exploded",
+    ),
+    true,
+  );
+  assert.equal(calls.includes("quit"), true);
+  assert.equal(calls.includes("createShellWindow"), false);
+  assert.equal(calls.includes("createToolbarView"), false);
+  assert.equal(calls.includes("createHomeTab"), false);
+});
+
+test("registerAppLifecycle keeps normal startup flow unchanged", async () => {
+  const { calls, listeners, options } = createLifecycleOptions({
+    readyPromise: Promise.resolve(),
+  });
+
+  registerAppLifecycle(options);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.equal(
+    calls.includes("logStatus:startup:ok:debug-log-file /tmp/current.log"),
+    true,
+  );
+  assert.equal(calls.includes("debug:startup:session-configured"), true);
+  assert.equal(calls.includes("createShellWindow"), true);
+  assert.equal(calls.includes("createToolbarView"), true);
+  assert.equal(calls.includes("createHomeTab"), true);
+  assert.equal(calls.includes("quit"), false);
+  assert.equal(listeners.has("activate"), true);
+  assert.equal(listeners.has("nativeTheme:updated"), true);
 });
