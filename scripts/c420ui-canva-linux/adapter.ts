@@ -88,7 +88,7 @@ function stateHome(): string {
 }
 
 function toC420UIActionDescriptor(action: CanvaAction): C420UIActionDescriptor {
-  const phase = action.group === "install" ? "install" : "development";
+  const phase = action.group === "install" ? "install" : (action.group === "maintenance" ? "maintenance" : "development");
   const kind = action.kind === "command" ? "command" : "planned";
   return { ...action, kind, phase, cliFlags: action.cli };
 }
