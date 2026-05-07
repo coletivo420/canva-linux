@@ -1,0 +1,10 @@
+{
+  "name": "@coletivo420/c420ui",
+  "version": "0.0.0-private",
+  "private": true,
+  "description": "Reusable terminal UI toolkit extracted from Canva Linux tooling",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "GPL-3.0-or-later"
+}

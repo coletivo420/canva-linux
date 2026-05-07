@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Added the private future `@coletivo420/c420ui` package skeleton with pure C420UI TypeScript contracts.
 - Added the public C420UI separation roadmap for compatibility-first package and adapter boundary work.
 - Added Secret Service-backed credential storage documentation and validation.
 - Added ephemeral session fallback when Linux credential storage falls back to `basic_text` or when a secure backend cannot provide available encryption.
