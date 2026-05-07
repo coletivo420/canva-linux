@@ -143,3 +143,13 @@ Request changes if a PR:
 - breaks planned action dry-run exit code `0`;
 - reintroduces `C420UI` branding in launcher help;
 - removes the legacy Action Runner before compatibility checks are migrated.
+
+## Launcher parser review
+
+Request changes if a PR:
+
+- breaks `bash -n canva-linux.sh`;
+- hardcodes project action flags in the launcher parser;
+- routes direct CLI actions around `run-c420ui-cli.js`;
+- removes `--dry-run` propagation from the launcher;
+- allows multiple direct action flags in one invocation.

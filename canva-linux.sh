@@ -58,7 +58,7 @@ ensure_action_runner_available() {
 ensure_c420ui_cli_entrypoint() {
   ensure_action_runner_available
 
-  if [[ -f "${ROOT_DIR}/.build/scripts/run-c420ui-cli.js" ]]; then
+  if [[ -s "${ROOT_DIR}/.build/scripts/run-c420ui-cli.js" ]]; then
     return 0
   fi
 
@@ -230,6 +230,13 @@ for arg in "$@"; do
   case "${arg}" in
     -y | --yes | --force)
       FORCE=true
+      ;;
+    --dry-run)
+      DRY_RUN=true
+      ;;
+  esac
+done
+
 DIRECT_ACTION_FLAGS=()
 for arg in "$@"; do
   case "${arg}" in
@@ -237,7 +244,8 @@ for arg in "$@"; do
       show_help
       exit 0
       ;;
-    -y | --yes | --force | --dry-run) ;;
+    -y | --yes | --force | --dry-run)
+      ;;
     *)
       DIRECT_ACTION_FLAGS+=("${arg}")
       ;;

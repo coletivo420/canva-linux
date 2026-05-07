@@ -597,9 +597,40 @@ function validateLauncherScriptShape(
     );
   }
 
-  if (content.includes("--install-native | --install-flatpak")) {
+  const requiredLauncherParserFragments = [
+    'case "${arg}" in',
+    "FORCE=true",
+    "DRY_RUN=true",
+    "DIRECT_ACTION_FLAGS=()",
+    'DIRECT_ACTION_FLAGS+=("${arg}")',
+    'run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"',
+  ] as const;
+
+  for (const fragment of requiredLauncherParserFragments) {
+    if (!content.includes(fragment)) {
+      failures.push(
+        `${relativePath}: launcher parser is missing required fragment ${JSON.stringify(fragment)}`,
+      );
+    }
+  }
+
+  const forbiddenLauncherActionFlagFragments = [
+    "--install-native | --install-flatpak",
+    "--bundle-flatpak | --bundle-appimage",
+    "--reset-user-data | --purge",
+  ] as const;
+
+  for (const fragment of forbiddenLauncherActionFlagFragments) {
+    if (content.includes(fragment)) {
+      failures.push(
+        `${relativePath}: direct action flags must be resolved by the c420ui CLI bridge, not hardcoded in Bash`,
+      );
+    }
+  }
+
+  if (content.includes("scripts/run-core-entry.sh action-runner --cli")) {
     failures.push(
-      `${relativePath}: direct action flags must be resolved by the c420ui CLI bridge, not hardcoded in Bash`,
+      `${relativePath}: direct CLI actions must not route through the legacy Action Runner CLI`,
     );
   }
 
