@@ -1549,22 +1549,22 @@ export function createApp(opts: C420UIConfig) {
       appendLogText("[info] Root authentication succeeded.\n", "system");
     }
 
-    if (!action.command) {
-      return;
-    }
-
     running = true;
     progressState = "running";
     setProgressRunning(5, "Starting");
+    const runnerArgs = ["action-runner", "--id", action.id];
+    if (action.requiresConfirmation || action.dangerous) {
+      runnerArgs.push("--yes");
+    }
     appendLogText(
-      `$ ${action.command} ${(action.args ?? []).join(" ")}\n`,
+      `$ scripts/run-core-entry.sh ${runnerArgs.join(" ")}\n`,
       "stdout",
     );
     writeSession(`[action] ${action.id} ${action.label}`);
 
     currentChild = runAction(
-      action.command,
-      action.args ?? [],
+      "scripts/run-core-entry.sh",
+      runnerArgs,
       (txt, src) => appendLogText(txt, src),
       async ({ code, signal }) => {
         currentChild = null;

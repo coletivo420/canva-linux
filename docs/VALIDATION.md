@@ -67,7 +67,10 @@ Current target:
 - Confirm help screen uses the same semantic colors.
 - Confirm user/system action scopes are applied through `action.env`.
 - Confirm user-scope actions do not request sudo.
-- Confirm system-scope actions use `scripts/sudo-common.sh`.
+- Confirm system-scope actions use `scripts/sudo-common.sh --validate` from Action Runner before backend scripts start.
+- Confirm C420UI root actions validate cached sudo credentials non-interactively after the C420UI password prompt.
+- Confirm an action with `requiresRoot: true` and `scope: "user"` fails before its backend script starts.
+- Confirm `--uninstall` and `--purge` request root only when a system-wide installation is detected.
 - Confirm Application Settings appears below Maintenance & Uninstall.
 - Confirm general Tool logs can be toggled and are persisted in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json` or `~/.config/canva-linux/tool-settings.json`.
 - Confirm Tool logs and Action logs are visually distinguishable in the logs panel.

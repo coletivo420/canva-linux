@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import { buildOverviewStatus } from "./overview-status";
 import {
   actionRequiresConfirmation,
   findProjectRoot,
@@ -11,6 +12,87 @@ import {
 } from "./action-registry";
 
 export const PLANNED_ACTION_EXIT_CODE = 78;
+export const ROOT_POLICY_EXIT_CODE = 64;
+
+const conditionalSystemRootActionIds = new Set([
+  "purge",
+  "uninstall-detected",
+]);
+
+export function buildActionEnvironment(
+  action: CanvaAction,
+  baseEnv: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+  return { ...baseEnv, ...(action.env || {}) };
+}
+
+export function actionHasUserScope(
+  action: CanvaAction,
+  actionEnv: NodeJS.ProcessEnv = buildActionEnvironment(action),
+): boolean {
+  return (
+    action.scope === "user" ||
+    actionEnv.CANVA_NATIVE_SCOPE === "user" ||
+    actionEnv.CANVA_FLATPAK_SCOPE === "user"
+  );
+}
+
+export function validateRootPolicy(
+  action: CanvaAction,
+  actionEnv: NodeJS.ProcessEnv = buildActionEnvironment(action),
+): string | null {
+  if (action.requiresRoot === true && actionHasUserScope(action, actionEnv)) {
+    return `${action.id}: requiresRoot=true cannot be combined with user scope.`;
+  }
+  return null;
+}
+
+function actionNeedsDetectedSystemRoot(
+  action: CanvaAction,
+  rootDir: string,
+): boolean {
+  if (!conditionalSystemRootActionIds.has(action.id)) return false;
+  try {
+    const status = buildOverviewStatus(rootDir);
+    return Boolean(
+      status.installations.nativeSystem || status.installations.flatpakSystem,
+    );
+  } catch (error) {
+    console.error(
+      `[warn] Unable to detect system installations for root policy: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return false;
+  }
+}
+
+export function actionRequiresRootValidation(
+  action: CanvaAction,
+  rootDir = findProjectRoot(),
+): boolean {
+  return (
+    action.requiresRoot === true ||
+    actionNeedsDetectedSystemRoot(action, rootDir)
+  );
+}
+
+function validateRootAccess(
+  rootDir: string,
+  actionEnv: NodeJS.ProcessEnv,
+): number {
+  const result = spawnSync("bash", ["scripts/sudo-common.sh", "--validate"], {
+    cwd: rootDir,
+    stdio: "inherit",
+    env: actionEnv,
+    shell: false,
+  });
+  if (result.error) {
+    console.error(
+      `[error] Failed to start privilege validation: ${result.error.message}`,
+    );
+    return 1;
+  }
+  return result.status ?? 1;
+}
 
 function printHelp() {
   console.log(`Canva Linux Action Runner
@@ -157,10 +239,22 @@ Long running:
     return 1;
   }
 
+  const actionEnv = buildActionEnvironment(action);
+  const rootPolicyError = validateRootPolicy(action, actionEnv);
+  if (rootPolicyError) {
+    console.error(`[error] ${rootPolicyError}`);
+    return ROOT_POLICY_EXIT_CODE;
+  }
+
+  if (actionRequiresRootValidation(action, rootDir)) {
+    const rootStatus = validateRootAccess(rootDir, actionEnv);
+    if (rootStatus !== 0) return rootStatus;
+  }
+
   const result = spawnSync(action.command, action.args || [], {
     cwd: rootDir,
     stdio: "inherit",
-    env: { ...process.env, ...(action.env || {}) },
+    env: actionEnv,
     shell: false,
   });
   if (result.error) {

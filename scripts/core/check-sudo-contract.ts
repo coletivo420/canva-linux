@@ -37,6 +37,7 @@ export function main(): number {
   const scriptsDir = path.join(rootDir, "scripts");
   const sudoCommonPath = path.join(scriptsDir, "sudo-common.sh");
   const tuiAppPath = path.join(scriptsDir, "c420ui", "app.ts");
+  const actionRunnerPath = path.join(scriptsDir, "core", "action-runner.ts");
   const checkedFiles = [
     ...findCheckedFiles(scriptsDir),
     path.join(rootDir, "canva-linux.sh"),
@@ -51,6 +52,26 @@ export function main(): number {
   const failures: string[] = [];
   const sudoCommon = fs.readFileSync(sudoCommonPath, "utf8");
   const tuiApp = fs.readFileSync(tuiAppPath, "utf8");
+  const actionRunner = fs.readFileSync(actionRunnerPath, "utf8");
+
+  if (
+    !actionRunner.includes('["scripts/sudo-common.sh", "--validate"]') ||
+    !actionRunner.includes("validateRootPolicy") ||
+    !actionRunner.includes("actionRequiresRootValidation")
+  ) {
+    failures.push(
+      "scripts/core/action-runner.ts: runner must centrally validate root policy through scripts/sudo-common.sh",
+    );
+  }
+
+  if (
+    !tuiApp.includes('const runnerArgs = ["action-runner", "--id", action.id]') ||
+    !tuiApp.includes('"scripts/run-core-entry.sh"')
+  ) {
+    failures.push(
+      "scripts/c420ui/app.ts: actions must execute through action-runner",
+    );
+  }
 
   if (!/--validate-stdin\)\s*canva_sudo_validate_stdin\s*;;/.test(sudoCommon)) {
     failures.push(

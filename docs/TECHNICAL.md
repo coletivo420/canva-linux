@@ -86,13 +86,17 @@ menu is focused and no action/modal is active.
 
 Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
 
-1. Actions with `requiresRoot: true` in `scripts/actions.json` are identified by the C420UI.
-2. The C420UI requests root password via a secure prompt before starting the action.
-3. The C420UI validates the password and then passes the root-auth environment marker to
-   the child process.
+1. `scripts/core/action-runner.ts` centrally interprets Action Registry metadata,
+   including `requiresRoot`, `scope`, `env`, confirmation flags and planned state.
+2. Actions with `requiresRoot: true` validate root access through
+   `scripts/sudo-common.sh --validate` before backend scripts start.
+3. The C420UI requests the root password via a secure prompt before launching the
+   Action Runner, then passes the root-auth environment marker to the child.
 4. `scripts/sudo-common.sh` detects this environment variable and uses
-   `sudo -n` for non-interactive execution.
+   `sudo -n` for non-interactive cached-credential validation and execution.
 5. In direct CLI mode, `sudo` prompts for the password as usual in the terminal.
+6. User-scope actions are refused if they also declare `requiresRoot: true`;
+   `--uninstall` and `--purge` only validate root when a system install exists.
 
 ## TypeScript Script Core
 
