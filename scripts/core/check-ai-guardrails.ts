@@ -41,6 +41,8 @@ const requiredReviewFragments = [
 ];
 
 const requiredGuardrails = [
+  "All source code comments, UI strings, README, docs, changelog, and AI maintenance instructions must be written in English.",
+  "i18n may be implemented in the future, but current maintained source, docs, and comments must remain English.",
   "The interactive shell menu has been removed.",
   "The project exposes only c420ui and direct CLI actions.",
   "c420ui is the user-facing name of the terminal interface.",

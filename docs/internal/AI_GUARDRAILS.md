@@ -5,6 +5,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 ## Language and public docs
 
 - All source code comments, UI strings, README, docs, changelog, and AI maintenance instructions must be written in English.
+- i18n may be implemented in the future, but current maintained source, docs, and comments must remain English.
 - README is the public entry point; long command references belong in `docs/CLI.md`.
 - Active docs must match current version/phase and validation flow.
 - Docs must reflect the current phase only; historical details belong in `CHANGELOG.md`.

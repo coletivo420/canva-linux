@@ -1,4 +1,15 @@
-export type c420uiLogSource = "stdout" | "stderr" | "system" | "build" | "action";
+export type c420uiLogSource =
+  | "build"
+  | "package"
+  | "install"
+  | "uninstall"
+  | "purge"
+  | "release"
+  | "validation"
+  | "action"
+  | "stdout"
+  | "stderr"
+  | "system";
 
 export type c420uiLogEvent = {
   source: c420uiLogSource;
