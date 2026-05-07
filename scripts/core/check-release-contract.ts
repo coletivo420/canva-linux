@@ -132,6 +132,28 @@ export function main(): number {
     validateShellScript(rootDir, script, failures);
   }
 
+  const buildAppImage = read(rootDir, "scripts/build-appimage.sh");
+  if (
+    buildAppImage.includes("> SHA256SUMS") ||
+    buildAppImage.includes("/SHA256SUMS")
+  ) {
+    failures.push(
+      "scripts/build-appimage.sh: AppImage build must not create or remove the complete release SHA256SUMS manifest",
+    );
+  }
+  assertIncludes(
+    failures,
+    "scripts/build-appimage.sh",
+    buildAppImage,
+    ".AppImage.sha256",
+  );
+  assertIncludes(
+    failures,
+    "scripts/build-appimage.sh",
+    buildAppImage,
+    "--skip-release-manifest",
+  );
+
   const lock = JSON.parse(read(rootDir, "package-lock.json")) as {
     version?: string;
     packages?: Record<string, { version?: string }>;
