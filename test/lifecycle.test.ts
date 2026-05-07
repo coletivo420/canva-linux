@@ -298,6 +298,7 @@ test("registerAppLifecycle shows the ephemeral session warning before Canva load
   assert.notEqual(warningIndex, -1);
   assert.notEqual(configureIndex, -1);
   assert.notEqual(shellIndex, -1);
+  assert.equal(calls.includes("configureSession:persist:canva"), false);
   assert.equal(warningIndex < configureIndex, true);
   assert.equal(configureIndex < shellIndex, true);
   assert.equal(calls.includes("createToolbarView"), true);
@@ -326,6 +327,33 @@ test("registerAppLifecycle shows the ephemeral warning for unknown storage", asy
     true,
   );
   assert.equal(calls.includes("createHomeTab"), true);
+});
+
+
+test("registerAppLifecycle does not warn for secure persistent credential storage", async () => {
+  for (const backend of ["kwallet", "kwallet5", "kwallet6", "gnome_libsecret"]) {
+    const { calls, options } = createLifecycleOptions({
+      credentialStoragePolicy: {
+        backend,
+        mode: "persistent",
+        security: "secure",
+        partition: "persist:canva",
+        cache: true,
+        persistentLoginAvailable: true,
+        warning: null,
+      },
+      readyPromise: Promise.resolve(),
+    });
+
+    registerAppLifecycle(options);
+    await new Promise((resolve) => setImmediate(resolve));
+
+    assert.equal(
+      calls.some((call) => call.startsWith("showEphemeralSessionWarning:")),
+      false,
+    );
+    assert.equal(calls.includes("configureSession:persist:canva"), true);
+  }
 });
 
 test("registerAppLifecycle keeps normal startup flow unchanged", async () => {
