@@ -13,7 +13,7 @@ const removedWrappers = [
   "scripts/clean-runtime-build.js",
   "scripts/electron-builder-before-build.js",
   "scripts/run-node-tests.js",
-  "scripts/run-tui.js",
+  "scripts/run-c420ui.js",
   "scripts/run-typescript-script.js",
 ] as const;
 
@@ -23,7 +23,7 @@ const requiredStandaloneEntrypoints = [
   "scripts/copy-runtime-assets.ts",
   "scripts/clean-runtime-build.ts",
   "scripts/run-node-tests.ts",
-  "scripts/run-tui.ts",
+  "scripts/run-c420ui.ts",
 ] as const;
 
 const requiredBootstrapEntrypoints = {
@@ -42,8 +42,8 @@ const requiredArtifactScripts = {
   "build:preload": ".build/scripts/build-preload-bundle.js",
   "clean:runtime": ".build/scripts/clean-runtime-build.js",
   "build:runtime": ".build/scripts/build-runtime.js",
-  tui: ".build/scripts/run-tui.js",
-  "check:tui": ".build/scripts/run-tui.js",
+  c420ui: ".build/scripts/run-c420ui.js",
+  "check:c420ui": ".build/scripts/run-c420ui.js",
 } as const;
 
 export function main(): number {

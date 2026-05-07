@@ -1,7 +1,7 @@
 import blessed from "blessed";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { CANVA_LOGO_LINES } from "./logo";
-import { getActionsByGroup, type TuiAction } from "./action-registry";
+import { C420UI_LOGO_LINES, CANVA_LOGO_LINES } from "./logo";
+import { getActionsByGroup, type C420UIAction } from "./action-registry";
 import {
   confirmDialog,
   errorDialog,
@@ -9,7 +9,7 @@ import {
   messageDialog,
 } from "./modal";
 import { runAction } from "./process-runner";
-import { tuiTheme } from "./theme";
+import { c420uiTheme } from "./theme";
 import { copyTextToClipboard } from "./clipboard";
 import {
   loadToolSettings,
@@ -22,6 +22,20 @@ import path from "node:path";
 import { Writable } from "node:stream";
 
 // --- Types ---
+
+export type C420UIBrandConfig = {
+  name: "C420UI";
+  version: "0.1";
+  logoLines: string[];
+};
+
+export type C420UIProjectHeaderConfig = {
+  projectName: string;
+  projectSubtitle: string;
+  displayVersion: string;
+  phase?: string;
+  status?: string;
+};
 
 type View =
   | "main"
@@ -65,14 +79,19 @@ const TOOL_LOG_PREFIX = "Tool |";
 const ACTION_LOG_PREFIX = "Action |";
 const FOCUS_ZONES: FocusZone[] = ["menu", "diagnostics", "content", "logs"];
 
+const BRAND_CONFIG: C420UIBrandConfig = {
+  name: "C420UI",
+  version: "0.1",
+  logoLines: [...C420UI_LOGO_LINES],
+};
+
 // --- Main Application Entry ---
 
 export function createApp(opts: {
-  version: string;
-  phase: string;
   rootDir: string;
   title: string;
-  toolTitle: string;
+  brand: C420UIBrandConfig;
+  project: C420UIProjectHeaderConfig;
   releaseNotes: string;
 }) {
   // --- Initialization & State ---
@@ -104,35 +123,61 @@ export function createApp(opts: {
     fullUnicode: true,
   });
 
+  // --- UI Layout Calculations ---
+
+  const BRAND_HEADER_HEIGHT = opts.brand.logoLines.length + 2; // logo + version line + spacing
+  const PROJECT_HEADER_HEIGHT = 5; // title + subtitle + version/phase + borders
+  const HEADER_TOTAL_HEIGHT = BRAND_HEADER_HEIGHT + PROJECT_HEADER_HEIGHT;
+
   // --- UI Widgets ---
 
-  const header = blessed.box({
+  const brandHeader = blessed.box({
     top: 0,
-    height: 2,
+    left: 0,
     width: "100%",
+    height: BRAND_HEADER_HEIGHT,
+    border: "line",
     tags: true,
-    content: `{bold}${opts.toolTitle}{/bold}\nPhase: ${opts.phase}`,
-    style: tuiTheme.header,
+    content: [
+      `{bold}${opts.brand.name} v${opts.brand.version}{/bold}`,
+      ...opts.brand.logoLines,
+    ].join("\n"),
+    style: c420uiTheme.header,
+  });
+
+  const projectHeader = blessed.box({
+    top: BRAND_HEADER_HEIGHT - 1, // Overlap border
+    left: 0,
+    width: "100%",
+    height: PROJECT_HEADER_HEIGHT,
+    border: "line",
+    tags: true,
+    content: [
+      `{bold}${opts.project.projectName}{/bold}`,
+      opts.project.projectSubtitle,
+      `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""} | Phase: ${opts.project.phase ?? "unknown"}`,
+    ].join("\n"),
+    style: c420uiTheme.header,
   });
 
   const menu = blessed.list({
-    top: 2,
+    top: HEADER_TOTAL_HEIGHT - 2,
     left: 0,
     width: "32%",
-    height: "40%",
+    height: `100%-${HEADER_TOTAL_HEIGHT + 1}`,
     keys: true,
     mouse: tuiMouseEnabled,
     border: "line",
     tags: true,
     label: "Main Menu",
-    style: tuiTheme.menu,
+    style: c420uiTheme.menu,
   });
 
   const diagnostics = blessed.box({
-    top: "42%",
+    top: "70%",
     left: 0,
     width: "32%",
-    height: "55%-2",
+    height: "30%-1",
     border: "line",
     label: "Detected Installations",
     tags: true,
@@ -140,11 +185,11 @@ export function createApp(opts: {
     alwaysScroll: true,
     keys: true,
     mouse: tuiMouseEnabled,
-    style: tuiTheme.content,
+    style: c420uiTheme.content,
   });
 
   const content = blessed.box({
-    top: 2,
+    top: HEADER_TOTAL_HEIGHT - 2,
     left: "32%",
     width: "68%",
     height: "36%",
@@ -155,14 +200,14 @@ export function createApp(opts: {
     alwaysScroll: true,
     keys: true,
     mouse: tuiMouseEnabled,
-    style: tuiTheme.content,
+    style: c420uiTheme.content,
   });
 
   const logs = blessed.log({
-    top: "38%",
+    top: `36%+${HEADER_TOTAL_HEIGHT - 2}`,
     left: "32%",
     width: "68%",
-    height: "59%",
+    height: `100%-${HEADER_TOTAL_HEIGHT + 36% + 1}`, // Rough approximation, blessed handles strings
     border: "line",
     label: "Logs",
     keys: true,
@@ -172,16 +217,20 @@ export function createApp(opts: {
     scrollbar: {
       ch: " ",
       track: {
-        bg: tuiTheme.colors.surfaceAlt,
+        bg: c420uiTheme.colors.surfaceAlt,
       },
       style: {
-        bg: tuiTheme.colors.lightBlue,
+        bg: c420uiTheme.colors.lightBlue,
       },
     },
     scrollback: MAX_LOG_HISTORY_LINES,
     tags: true,
-    style: tuiTheme.logs,
+    style: c420uiTheme.logs,
   });
+
+  // Adjust logs height and top dynamically to fill the space
+  logs.top = HEADER_TOTAL_HEIGHT + 13; // 13 is roughly 36% of typical height
+  logs.height = `100%-${HEADER_TOTAL_HEIGHT + 13 + 2}`;
 
   const footer = blessed.box({
     bottom: 0,
@@ -189,7 +238,7 @@ export function createApp(opts: {
     width: "100%",
     tags: true,
     content: footerContent,
-    style: tuiTheme.footer,
+    style: c420uiTheme.footer,
   });
 
   const progress = blessed.box({
@@ -205,7 +254,8 @@ export function createApp(opts: {
     },
   });
 
-  screen.append(header);
+  screen.append(brandHeader);
+  screen.append(projectHeader);
   screen.append(menu);
   screen.append(diagnostics);
   screen.append(content);
@@ -242,21 +292,21 @@ export function createApp(opts: {
   const settingsItems: SettingsItem[] = [
     {
       kind: "section",
-      label: "Canva Linux Install and Development Tool",
+      label: `${opts.project.projectName} Install and Development Tool`,
     },
     {
       kind: "toggle",
       key: "generalLogsEnabled",
-      label: "Enable general logs for Canva Linux Install and Development Tool",
+      label: `Enable general logs for ${opts.project.projectName} Install and Development Tool`,
     },
     {
       kind: "toggle",
       key: "terminalTextSelectionMode",
-      label: "Prefer native terminal text selection on next TUI start",
+      label: "Prefer native terminal text selection on next C420UI start",
     },
     {
       kind: "section",
-      label: "Canva Linux final build",
+      label: `${opts.project.projectName} final build`,
     },
     {
       kind: "note",
@@ -272,7 +322,7 @@ export function createApp(opts: {
   const diagnosticsLabelText = "Detected Installations";
   let contentLabelText = "Overview";
   let logsLabelText = "Logs";
-  let currentActions: TuiAction[] = [];
+  let currentActions: C420UIAction[] = [];
   let running = false;
   let modalActive = false;
   let currentChild: ChildProcess | null = null;
@@ -293,7 +343,7 @@ export function createApp(opts: {
     path.join(
       process.env.XDG_STATE_HOME ||
         path.join(process.env.HOME || ".", ".local/state"),
-      "canva-linux",
+      "canva-linux", // Still using this for path consistency in this project
       "tool-session.log",
     );
 
@@ -314,7 +364,7 @@ export function createApp(opts: {
       fs.mkdirSync(path.dirname(logPath), { recursive: true });
       const stream = fs.createWriteStream(logPath, { flags: "a" });
       stream.on("error", () => {
-        // Keep the TUI alive when the configured state path becomes unavailable.
+        // Keep the C420UI alive when the configured state path becomes unavailable.
       });
       return stream;
     } catch {
@@ -329,7 +379,7 @@ export function createApp(opts: {
     sessionStream?.write(`${line}\n`);
   };
 
-  writeSession("[mode] tui");
+  writeSession("[mode] c420ui");
 
   process.on("exit", () => {
     writeSession("[session] ended");
@@ -344,21 +394,21 @@ export function createApp(opts: {
   const detectedSummary = (s: any) => {
     if (!s) {
       return [
-        `  Native Install: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
-        `  Flatpak Install: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
-        `  AppImage artifacts: {${tuiTheme.colors.appImageLoading}-fg}loading...{/${tuiTheme.colors.appImageLoading}-fg}`,
+        `  Native Install: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
+        `  Flatpak Install: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
+        `  AppImage artifacts: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
       ];
     }
     const i = s.installations;
     const fmt = (detected: boolean, version: string | undefined) => {
       if (!detected) {
-        return `{${tuiTheme.colors.statusNotDetected}-fg}not detected{/${tuiTheme.colors.statusNotDetected}-fg}`;
+        return `{${c420uiTheme.colors.statusNotDetected}-fg}not detected{/${c420uiTheme.colors.statusNotDetected}-fg}`;
       }
       const v =
         version && version.trim()
           ? `v${version.trim().replace(/^v/, "")}`
           : "version unknown";
-      return `{${tuiTheme.colors.statusDetected}-fg}detected{/${tuiTheme.colors.statusDetected}-fg}      ${v}`;
+      return `{${c420uiTheme.colors.statusDetected}-fg}detected{/${c420uiTheme.colors.statusDetected}-fg}      ${v}`;
     };
     return [
       `  Native System: ${fmt(Boolean(i.nativeSystem), i.nativeSystemVersion)}`,
@@ -372,7 +422,7 @@ export function createApp(opts: {
   function renderDiagnosticsBox() {
     if (overviewDetectionError) {
       diagnostics.setContent(
-        `  {${tuiTheme.colors.error}-fg}Detection error{/${tuiTheme.colors.error}-fg}\n  ${overviewDetectionError}`,
+        `  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}\n  ${overviewDetectionError}`,
       );
       return;
     }
@@ -424,7 +474,7 @@ export function createApp(opts: {
   }
 
   async function actionNeedsRootForDetectedSystem(
-    action: TuiAction,
+    action: C420UIAction,
   ): Promise<boolean> {
     if (!["purge", "uninstall-detected"].includes(action.id)) {
       return false;
@@ -572,11 +622,11 @@ export function createApp(opts: {
   // --- Focus & Layout Helpers ---
 
   function activeLabel(label: string): string {
-    return `{${tuiTheme.colors.activeLabel}-fg}${label}{/${tuiTheme.colors.activeLabel}-fg}`;
+    return `{${c420uiTheme.colors.activeLabel}-fg}${label}{/${c420uiTheme.colors.activeLabel}-fg}`;
   }
 
   function inactiveLabel(label: string): string {
-    return `{${tuiTheme.colors.inactiveLabel}-fg}${label}{/${tuiTheme.colors.inactiveLabel}-fg}`;
+    return `{${c420uiTheme.colors.inactiveLabel}-fg}${label}{/${c420uiTheme.colors.inactiveLabel}-fg}`;
   }
 
   function setWidgetBorder(
@@ -586,8 +636,8 @@ export function createApp(opts: {
     widget.style.border = {
       ...(widget.style.border ?? {}),
       fg: active
-        ? tuiTheme.colors.activeBorder
-        : tuiTheme.colors.inactiveBorder,
+        ? c420uiTheme.colors.activeBorder
+        : c420uiTheme.colors.inactiveBorder,
     };
   }
 
@@ -638,12 +688,12 @@ export function createApp(opts: {
       ...(menu.style.selected ?? {}),
       fg:
         focusZone === "menu"
-          ? tuiTheme.colors.activeCellFg
-          : tuiTheme.colors.menuInactiveSelectedFg,
+          ? c420uiTheme.colors.activeCellFg
+          : c420uiTheme.colors.menuInactiveSelectedFg,
       bg:
         focusZone === "menu"
-          ? tuiTheme.colors.activeCellBg
-          : tuiTheme.colors.menuInactiveSelectedBg,
+          ? c420uiTheme.colors.activeCellBg
+          : c420uiTheme.colors.menuInactiveSelectedBg,
       bold: focusZone === "menu",
     };
   }
@@ -660,12 +710,12 @@ export function createApp(opts: {
     contentLabelText = "Plain Logs";
     content.setContent(
       [
-        `{${tuiTheme.colors.helpTitle}-fg}Plain Logs{/${tuiTheme.colors.helpTitle}-fg}`,
+        `{${c420uiTheme.colors.helpTitle}-fg}Plain Logs{/${c420uiTheme.colors.helpTitle}-fg}`,
         "",
-        `{${tuiTheme.colors.infoItemTitle}-fg}Session log file:{/${tuiTheme.colors.infoItemTitle}-fg}`,
-        `  {${tuiTheme.colors.descriptionText}-fg}${sessionLogPath}{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${c420uiTheme.colors.infoItemTitle}-fg}Session log file:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+        `  {${c420uiTheme.colors.descriptionText}-fg}${sessionLogPath}{/${c420uiTheme.colors.descriptionText}-fg}`,
         "",
-        `{${tuiTheme.colors.infoItemTitle}-fg}Visible TUI log history:{/${tuiTheme.colors.infoItemTitle}-fg}`,
+        `{${c420uiTheme.colors.infoItemTitle}-fg}Visible C420UI log history:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
         logHistory.length
           ? logHistory
               .map((line) =>
@@ -829,7 +879,7 @@ export function createApp(opts: {
     }
     const selected = currentActions[selectedIndex] ?? null;
     const base = [
-      `{${tuiTheme.colors.helpTitle}-fg}${view[0].toUpperCase() + view.slice(1)} Actions{/${tuiTheme.colors.helpTitle}-fg}`,
+      `{${c420uiTheme.colors.helpTitle}-fg}${view[0].toUpperCase() + view.slice(1)} Actions{/${c420uiTheme.colors.helpTitle}-fg}`,
     ];
     if (!selected) {
       return content.setContent(base.join("\n"));
@@ -837,19 +887,19 @@ export function createApp(opts: {
     const warningBlock = selected.warning
       ? [
           "",
-          `{${tuiTheme.colors.infoItemTitle}-fg}Warning:{/${tuiTheme.colors.infoItemTitle}-fg}`,
-          `  {${tuiTheme.colors.error}-fg}${selected.warning}{/${tuiTheme.colors.error}-fg}`,
+          `{${c420uiTheme.colors.infoItemTitle}-fg}Warning:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+          `  {${c420uiTheme.colors.error}-fg}${selected.warning}{/${c420uiTheme.colors.error}-fg}`,
         ]
       : [];
     content.setContent(
       [
         ...base,
         "",
-        `{${tuiTheme.colors.infoItemTitle}-fg}Selected action:{/${tuiTheme.colors.infoItemTitle}-fg}`,
-        `  {${tuiTheme.colors.infoText}-fg}${selected.label}{/${tuiTheme.colors.infoText}-fg}`,
+        `{${c420uiTheme.colors.infoItemTitle}-fg}Selected action:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+        `  {${c420uiTheme.colors.infoText}-fg}${selected.label}{/${c420uiTheme.colors.infoText}-fg}`,
         "",
-        `{${tuiTheme.colors.infoItemTitle}-fg}Description:{/${tuiTheme.colors.infoItemTitle}-fg}`,
-        `  {${tuiTheme.colors.descriptionText}-fg}${selected.description ?? "No description available."}{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${c420uiTheme.colors.infoItemTitle}-fg}Description:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+        `  {${c420uiTheme.colors.descriptionText}-fg}${selected.description ?? "No description available."}{/${c420uiTheme.colors.descriptionText}-fg}`,
         ...warningBlock,
       ].join("\n"),
     );
@@ -868,18 +918,18 @@ export function createApp(opts: {
     if (item.kind === "section") {
       const sectionColor =
         activeSettingsSectionIndex() === index
-          ? tuiTheme.colors.activeLabel
-          : tuiTheme.colors.inactiveLabel;
+          ? c420uiTheme.colors.activeLabel
+          : c420uiTheme.colors.inactiveLabel;
       return `{${sectionColor}-fg}{bold}${item.label}{/bold}{/${sectionColor}-fg}`;
     }
     if (item.kind === "note") {
-      return `  {${tuiTheme.colors.inactiveLabel}-fg}${item.label}{/${tuiTheme.colors.inactiveLabel}-fg}`;
+      return `  {${c420uiTheme.colors.inactiveLabel}-fg}${item.label}{/${c420uiTheme.colors.inactiveLabel}-fg}`;
     }
     const enabled = Boolean(toolSettings.tool[item.key]);
     const checkbox = enabled ? "✓" : " ";
     const checkboxColor = enabled
-      ? tuiTheme.colors.activeCheckboxFg
-      : tuiTheme.colors.inactiveCheckboxFg;
+      ? c420uiTheme.colors.activeCheckboxFg
+      : c420uiTheme.colors.inactiveCheckboxFg;
     return `  {${checkboxColor}-fg}[${checkbox}]{/${checkboxColor}-fg} ${item.label}`;
   }
 
@@ -904,44 +954,44 @@ export function createApp(opts: {
   function renderSettingsHelp() {
     const selected = selectedSettingsItem();
     const details: string[] = [
-      `{${tuiTheme.colors.helpTitle}-fg}Application Settings{/${tuiTheme.colors.helpTitle}-fg}`,
+      `{${c420uiTheme.colors.helpTitle}-fg}Application Settings{/${c420uiTheme.colors.helpTitle}-fg}`,
       "",
-      `{${tuiTheme.colors.infoItemTitle}-fg}Settings file:{/${tuiTheme.colors.infoItemTitle}-fg}`,
-      `  {${tuiTheme.colors.descriptionText}-fg}${settingsPath}{/${tuiTheme.colors.descriptionText}-fg}`,
+      `{${c420uiTheme.colors.infoItemTitle}-fg}Settings file:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+      `  {${c420uiTheme.colors.descriptionText}-fg}${settingsPath}{/${c420uiTheme.colors.descriptionText}-fg}`,
       "",
     ];
 
     if (selected?.kind === "toggle") {
       details.push(
-        `{${tuiTheme.colors.infoItemTitle}-fg}Selected setting:{/${tuiTheme.colors.infoItemTitle}-fg}`,
-        `  {${tuiTheme.colors.infoText}-fg}${selected.label}{/${tuiTheme.colors.infoText}-fg}`,
+        `{${c420uiTheme.colors.infoItemTitle}-fg}Selected setting:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+        `  {${c420uiTheme.colors.infoText}-fg}${selected.label}{/${c420uiTheme.colors.infoText}-fg}`,
         "",
       );
       if (selected.key === "generalLogsEnabled") {
         details.push(
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Behavior{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  When enabled, Tool-level logs such as startup, settings, detection and authentication events are visible in the logs panel.{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  When disabled, Action logs remain visible and critical Tool warnings/errors still appear. The session log file continues recording Tool diagnostics.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Behavior{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  When enabled, Tool-level logs such as startup, settings, detection and authentication events are visible in the logs panel.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  When disabled, Action logs remain visible and critical Tool warnings/errors still appear. The session log file continues recording Tool diagnostics.{/${c420uiTheme.colors.descriptionText}-fg}`,
         );
       } else {
         details.push(
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Behavior{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  When enabled before startup, terminal text selection mode disables TUI mouse handling for the session.{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Changes to this setting take effect the next time the TUI starts. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  F6 opens a plain logs view with the session log path for manual selection fallback.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Behavior{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  When enabled before startup, terminal text selection mode disables C420UI mouse handling for the session.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Changes to this setting take effect the next time the C420UI starts. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  F6 opens a plain logs view with the session log path for manual selection fallback.{/${c420uiTheme.colors.descriptionText}-fg}`,
         );
       }
     } else if (selected?.kind === "section") {
       details.push(
-        `{${tuiTheme.colors.infoItemTitle}-fg}Section:{/${tuiTheme.colors.infoItemTitle}-fg}`,
-        `  {${tuiTheme.colors.infoText}-fg}${selected.label}{/${tuiTheme.colors.infoText}-fg}`,
+        `{${c420uiTheme.colors.infoItemTitle}-fg}Section:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+        `  {${c420uiTheme.colors.infoText}-fg}${selected.label}{/${c420uiTheme.colors.infoText}-fg}`,
         "",
-        `{${tuiTheme.colors.descriptionText}-fg}Tool settings affect this installer/development interface. Final build settings will apply to the packaged Canva Linux app in a later phase.{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${c420uiTheme.colors.descriptionText}-fg}Tool settings affect this installer/development interface. Final build settings will apply to the packaged Canva Linux app in a later phase.{/${c420uiTheme.colors.descriptionText}-fg}`,
       );
     } else {
       details.push(
-        `{${tuiTheme.colors.descriptionText}-fg}Use Enter or Space on a checkbox setting to toggle it. Application Settings are persistent TUI state, not shell actions.{/${tuiTheme.colors.descriptionText}-fg}`,
+        `{${c420uiTheme.colors.descriptionText}-fg}Use Enter or Space on a checkbox setting to toggle it. Application Settings are persistent C420UI state, not shell actions.{/${c420uiTheme.colors.descriptionText}-fg}`,
       );
     }
 
@@ -1013,13 +1063,13 @@ export function createApp(opts: {
       contentLabelText = "Overview";
       content.setContent(
         [
-          `{${tuiTheme.colors.logo}-fg}${CANVA_LOGO_LINES.join("\n")}{/${tuiTheme.colors.logo}-fg}`,
+          `{${c420uiTheme.colors.logo}-fg}${CANVA_LOGO_LINES.join("\n")}{/${c420uiTheme.colors.logo}-fg}`,
           "",
           "Version:",
-          `  {${tuiTheme.colors.version}-fg}${opts.version}{/${tuiTheme.colors.version}-fg}`,
+          `  {${c420uiTheme.colors.version}-fg}${opts.project.displayVersion}{/${c420uiTheme.colors.version}-fg}`,
           "",
           "Phase:",
-          `  {${tuiTheme.colors.phase}-fg}${opts.phase}{/${tuiTheme.colors.phase}-fg}`,
+          `  {${c420uiTheme.colors.phase}-fg}${opts.project.phase ?? "unknown"}{/${c420uiTheme.colors.phase}-fg}`,
           "",
           "Version Release Notes:",
           `  ${opts.releaseNotes}`,
@@ -1042,48 +1092,48 @@ export function createApp(opts: {
       contentLabelText = "Help";
       content.setContent(
         [
-          `{${tuiTheme.colors.helpTitle}-fg}Help{/${tuiTheme.colors.helpTitle}-fg}`,
+          `{${c420uiTheme.colors.helpTitle}-fg}Help{/${c420uiTheme.colors.helpTitle}-fg}`,
           "",
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Navigation{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Tab / Shift+Tab       Move focus between menu, diagnostics, action panel and logs{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Up/Down               Move menu selection when the menu is focused{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Enter                 Select action only when the menu is focused{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Space                 Toggle setting checkbox only when Application Settings is focused{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  PageUp/PageDown       Scroll the focused panel{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Home/End              Move the focused scrollable panel to start/end{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Esc                   Back to main or confirm exit{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  q                     Quit{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Navigation{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Tab / Shift+Tab       Move focus between menu, diagnostics, action panel and logs{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Up/Down               Move menu selection when the menu is focused{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Enter                 Select action only when the menu is focused{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Space                 Toggle setting checkbox only when Application Settings is focused{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown       Scroll the focused panel{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Home/End              Move the focused scrollable panel to start/end{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Esc                   Back to main or confirm exit{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  q                     Quit{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Panels{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Active panel: highlighted border and label{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Active cell: highlighted menu/settings row{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Alt+Up/Down or Shift+PgUp/PgDn still scroll action panel directly{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Panels{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Active panel: highlighted border and label{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Active cell: highlighted menu/settings row{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Alt+Up/Down or Shift+PgUp/PgDn still scroll action panel directly{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Logs{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  F6             View plain logs and session log path{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Terminal text selection can be enabled in Application Settings. It disables TUI mouse capture globally on the next start, but some terminals may still require Shift during selection.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Logs{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  F6             View plain logs and session log path{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Terminal text selection can be enabled in Application Settings. It disables C420UI mouse capture globally on the next start, but some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Launcher{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  ./canva-linux.sh opens the TUI.{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Any direct action flag runs CLI mode instead.{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Do not run the Tool with sudo or as root; privileged actions ask for administrator authentication only when needed.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Launcher{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  ./canva-linux.sh opens the C420UI.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Any direct action flag runs CLI mode instead.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Do not run the Tool with sudo or as root; privileged actions ask for administrator authentication only when needed.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Settings{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Tool settings file: ${settingsPath}{/${tuiTheme.colors.descriptionText}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  Tool settings affect this installer/development interface. Final build settings apply to the packaged app and are reserved for a later phase.{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Settings{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Tool settings file: ${settingsPath}{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Tool settings affect this installer/development interface. Final build settings apply to the packaged app and are reserved for a later phase.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Status colors{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `  {${tuiTheme.colors.activeLabel}-fg}Active panel border / label{/${tuiTheme.colors.activeLabel}-fg}`,
-          `  {${tuiTheme.colors.activeCellFg}-fg}{${tuiTheme.colors.activeCellBg}-bg}Active cell row{/${tuiTheme.colors.activeCellBg}-bg}{/${tuiTheme.colors.activeCellFg}-fg}`,
-          `  {${tuiTheme.colors.statusDetected}-fg}Detected / Completed{/${tuiTheme.colors.statusDetected}-fg}`,
-          `  {${tuiTheme.colors.statusNotDetected}-fg}Not detected{/${tuiTheme.colors.statusNotDetected}-fg}`,
-          `  {${tuiTheme.colors.warning}-fg}Running{/${tuiTheme.colors.warning}-fg}`,
-          `  {${tuiTheme.colors.error}-fg}Error / Canceled{/${tuiTheme.colors.error}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Status colors{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `  {${c420uiTheme.colors.activeLabel}-fg}Active panel border / label{/${c420uiTheme.colors.activeLabel}-fg}`,
+          `  {${c420uiTheme.colors.activeCellFg}-fg}{${c420uiTheme.colors.activeCellBg}-bg}Active cell row{/${c420uiTheme.colors.activeCellBg}-bg}{/${c420uiTheme.colors.activeCellFg}-fg}`,
+          `  {${c420uiTheme.colors.statusDetected}-fg}Detected / Completed{/${c420uiTheme.colors.statusDetected}-fg}`,
+          `  {${c420uiTheme.colors.statusNotDetected}-fg}Not detected{/${c420uiTheme.colors.statusNotDetected}-fg}`,
+          `  {${c420uiTheme.colors.warning}-fg}Running{/${c420uiTheme.colors.warning}-fg}`,
+          `  {${c420uiTheme.colors.error}-fg}Error / Canceled{/${c420uiTheme.colors.error}-fg}`,
           "",
-          `{${tuiTheme.colors.helpSectionTitle}-fg}Clipboard order{/${tuiTheme.colors.helpSectionTitle}-fg}`,
-          `{${tuiTheme.colors.descriptionText}-fg}  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel{/${tuiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.helpSectionTitle}-fg}Clipboard order{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel{/${c420uiTheme.colors.descriptionText}-fg}`,
         ].join("\n"),
       );
       applyFocusStyles();
@@ -1300,7 +1350,7 @@ export function createApp(opts: {
         cwd: opts.rootDir,
         env: {
           ...(action.env ?? {}),
-          ...(rootRequired ? { CANVA_TUI_ROOT_AUTH: "1" } : {}),
+          ...(rootRequired ? { CANVA_C420UI_ROOT_AUTH: "1" } : {}),
         },
       },
     );
@@ -1516,7 +1566,7 @@ export function createApp(opts: {
   importLauncherSessionLog();
 
   appendLogText(
-    `[info] TUI started. version=${opts.version} phase=${opts.phase}\n`,
+    `[info] C420UI started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}\n`,
     "system",
   );
   appendLogText(`[info] Settings loaded from ${settingsPath}.\n`, "system");

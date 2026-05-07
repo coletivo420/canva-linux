@@ -191,7 +191,7 @@ npm run check:source-integrity
 
 ## Final architecture
 
-TypeScript owns all maintained Node.js source code: Electron runtime/preload, TUI,
+TypeScript owns all maintained Node.js source code: Electron runtime/preload, C420UI,
 script core, build scripts, tests, configs, and the Flathub source generator.
 Shell remains limited to the launcher and Linux host operations. Generated project
 JavaScript belongs in `.build/` only.

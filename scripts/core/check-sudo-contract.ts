@@ -34,7 +34,7 @@ export function main(): number {
   const rootDir = findProjectRoot();
   const scriptsDir = path.join(rootDir, "scripts");
   const sudoCommonPath = path.join(scriptsDir, "sudo-common.sh");
-  const tuiAppPath = path.join(scriptsDir, "tui", "app.ts");
+  const tuiAppPath = path.join(scriptsDir, "c420ui", "app.ts");
   const checkedFiles = [
     ...findCheckedFiles(scriptsDir),
     path.join(rootDir, "canva-linux.sh"),
@@ -72,7 +72,7 @@ export function main(): number {
     !tuiApp.includes("Administrator authentication failed")
   ) {
     failures.push(
-      "scripts/tui/app.ts: sudo auth failures must be shown in a popup",
+      "scripts/c420ui/app.ts: sudo auth failures must be shown in a popup",
     );
   }
 
@@ -81,13 +81,13 @@ export function main(): number {
   )?.[0];
   if (!authFailureBlock?.includes("return;")) {
     failures.push(
-      "scripts/tui/app.ts: privileged actions must not start after failed sudo auth",
+      "scripts/c420ui/app.ts: privileged actions must not start after failed sudo auth",
     );
   }
 
   if (/appendLogText\([^)]*password/s.test(tuiApp)) {
     failures.push(
-      "scripts/tui/app.ts: sudo password must never be written to logs",
+      "scripts/c420ui/app.ts: sudo password must never be written to logs",
     );
   }
 

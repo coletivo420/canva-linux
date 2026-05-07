@@ -1,5 +1,5 @@
 import blessed from "blessed";
-import { tuiTheme } from "./theme";
+import { c420uiTheme } from "./theme";
 
 export type ConfirmOptions = {
   title: string;
@@ -26,7 +26,7 @@ function createModalShell(
     width: "100%",
     height: "100%",
     style: {
-      bg: tuiTheme.colors.background,
+      bg: c420uiTheme.colors.background,
       transparent: true,
     },
   });
@@ -40,15 +40,15 @@ function createModalShell(
     border: "line",
     tags: true,
     label: dangerous
-      ? `{${tuiTheme.colors.error}-fg}${title}{/${tuiTheme.colors.error}-fg}`
-      : `{${tuiTheme.colors.lightBlue}-fg}${title}{/${tuiTheme.colors.lightBlue}-fg}`,
+      ? `{${c420uiTheme.colors.error}-fg}${title}{/${c420uiTheme.colors.error}-fg}`
+      : `{${c420uiTheme.colors.lightBlue}-fg}${title}{/${c420uiTheme.colors.lightBlue}-fg}`,
     style: {
-      fg: tuiTheme.modal.text,
-      bg: tuiTheme.modal.background,
+      fg: c420uiTheme.modal.text,
+      bg: c420uiTheme.modal.background,
       border: {
         fg: dangerous
-          ? tuiTheme.modal.dangerousBorder
-          : tuiTheme.modal.normalBorder,
+          ? c420uiTheme.modal.dangerousBorder
+          : c420uiTheme.modal.normalBorder,
       },
     },
   });
@@ -86,9 +86,9 @@ export function confirmDialog(
       height: 1,
       tags: true,
       content: [
-        `{${tuiTheme.colors.lightBlue}-fg}[y/Enter]{/${tuiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? "Confirm"}`,
+        `{${c420uiTheme.colors.lightBlue}-fg}[y/Enter]{/${c420uiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? "Confirm"}`,
         `    `,
-        `{${tuiTheme.colors.lightBlue}-fg}[Esc/n]{/${tuiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? "Cancel"}`,
+        `{${c420uiTheme.colors.lightBlue}-fg}[Esc/n]{/${c420uiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? "Cancel"}`,
       ].join(""),
     });
 
@@ -188,9 +188,9 @@ export function inputDialog(
       height: 1,
       tags: true,
       content: [
-        `{${tuiTheme.colors.lightBlue}-fg}[Enter]{/${tuiTheme.colors.lightBlue}-fg} Submit`,
+        `{${c420uiTheme.colors.lightBlue}-fg}[Enter]{/${c420uiTheme.colors.lightBlue}-fg} Submit`,
         `  `,
-        `{${tuiTheme.colors.lightBlue}-fg}[Esc]{/${tuiTheme.colors.lightBlue}-fg} Cancel`,
+        `{${c420uiTheme.colors.lightBlue}-fg}[Esc]{/${c420uiTheme.colors.lightBlue}-fg} Cancel`,
       ].join(""),
     });
 

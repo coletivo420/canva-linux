@@ -10,22 +10,22 @@ function read(rootDir: string, relativePath: string): string {
 export function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
-  const app = read(rootDir, "scripts/tui/app.ts");
-  const settings = read(rootDir, "scripts/tui/settings.ts");
+  const app = read(rootDir, "scripts/c420ui/app.ts");
+  const settings = read(rootDir, "scripts/c420ui/settings.ts");
   const actions = read(rootDir, "scripts/actions.json");
 
   if (!app.includes('"settings"') || !app.includes("Application Settings")) {
-    failures.push("scripts/tui/app.ts: Application Settings view is required");
+    failures.push("scripts/c420ui/app.ts: Application Settings view is required");
   }
-  if (!app.includes("Enable general logs for Canva Linux Install and Development Tool")) {
-    failures.push("scripts/tui/app.ts: general Tool logs setting is required");
+  if (!app.includes("generalLogsEnabled") || !app.includes("Install and Development Tool")) {
+    failures.push("scripts/c420ui/app.ts: general Tool logs setting is required");
   }
   if (!settings.includes("generalLogsEnabled")) {
-    failures.push("scripts/tui/settings.ts: generalLogsEnabled setting is required");
+    failures.push("scripts/c420ui/settings.ts: generalLogsEnabled setting is required");
   }
   if (!settings.includes("terminalTextSelectionMode")) {
     failures.push(
-      "scripts/tui/settings.ts: terminalTextSelectionMode schema entry is required",
+      "scripts/c420ui/settings.ts: terminalTextSelectionMode schema entry is required",
     );
   }
   if (
@@ -34,18 +34,18 @@ export function main(): number {
     !settings.includes("tool-settings.json") ||
     !settings.includes("saveToolSettings")
   ) {
-    failures.push("scripts/tui/settings.ts: user config file persistence is required");
+    failures.push("scripts/c420ui/settings.ts: user config file persistence is required");
   }
   if (
     actions.includes("Application Settings") ||
     actions.includes("generalLogsEnabled") ||
     actions.includes("terminalTextSelectionMode")
   ) {
-    failures.push("scripts/actions.json: TUI settings must not be shell actions");
+    failures.push("scripts/actions.json: C420UI settings must not be shell actions");
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[ok] TUI settings contract check passed");
+  console.log("[ok] C420UI settings contract check passed");
   return 0;
 }
 

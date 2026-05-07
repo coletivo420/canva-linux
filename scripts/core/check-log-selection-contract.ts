@@ -10,36 +10,36 @@ function read(rootDir: string, relativePath: string): string {
 export function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
-  const app = read(rootDir, "scripts/tui/app.ts");
+  const app = read(rootDir, "scripts/c420ui/app.ts");
   const cliDocs = read(rootDir, "docs/CLI.md");
   const technicalDocs = read(rootDir, "docs/TECHNICAL.md");
   const normalizedCliDocs = cliDocs.replace(/\s+/g, " ");
   const normalizedTechnicalDocs = technicalDocs.replace(/\s+/g, " ");
 
   if (!app.includes('screen.key(["f5"]')) {
-    failures.push("scripts/tui/app.ts: F5 log copy shortcut must remain available");
+    failures.push("scripts/c420ui/app.ts: F5 log copy shortcut must remain available");
   }
   if (!app.includes('screen.key(["f6"]')) {
-    failures.push("scripts/tui/app.ts: F6 plain logs fallback must remain available");
+    failures.push("scripts/c420ui/app.ts: F6 plain logs fallback must remain available");
   }
   if (!app.includes("terminalTextSelectionMode")) {
-    failures.push("scripts/tui/app.ts: terminal text selection mode is required");
+    failures.push("scripts/c420ui/app.ts: terminal text selection mode is required");
   }
   if (!app.includes("type FocusZone") || !app.includes("FOCUS_ZONES")) {
-    failures.push("scripts/tui/app.ts: explicit FocusZone model is required");
+    failures.push("scripts/c420ui/app.ts: explicit FocusZone model is required");
   }
   if (!app.includes("function applyFocusStyles")) {
-    failures.push("scripts/tui/app.ts: active panel styling must be centralized");
+    failures.push("scripts/c420ui/app.ts: active panel styling must be centralized");
   }
   if (
     !app.includes('screen.key(["tab"]') ||
     !app.includes('screen.key(["S-tab", "backtab"]')
   ) {
-    failures.push("scripts/tui/app.ts: Tab and Shift+Tab focus navigation are required");
+    failures.push("scripts/c420ui/app.ts: Tab and Shift+Tab focus navigation are required");
   }
-  if (!app.includes("if (!modalActive) moveFocus")) {
+  if (!app.includes("if (!modalActive) {") || !app.includes("moveFocus")) {
     failures.push(
-      "scripts/tui/app.ts: modal dialogs must not leak Tab focus to the main TUI",
+      "scripts/c420ui/app.ts: modal dialogs must not leak Tab focus to the main C420UI",
     );
   }
   if (
@@ -47,12 +47,12 @@ export function main(): number {
     !app.includes("running || modalActive || focusZone !== \"menu\"")
   ) {
     failures.push(
-      "scripts/tui/app.ts: action execution must be blocked unless menu is focused and idle",
+      "scripts/c420ui/app.ts: action execution must be blocked unless menu is focused and idle",
     );
   }
   if (!app.includes("activeCellBg") || !app.includes("activeCheckboxFg")) {
     failures.push(
-      "scripts/tui/app.ts: active cells and settings checkboxes must be visibly styled",
+      "scripts/c420ui/app.ts: active cells and settings checkboxes must be visibly styled",
     );
   }
   if (
@@ -60,14 +60,14 @@ export function main(): number {
     !app.includes("const tuiMouseEnabled = !terminalTextSelectionModeActive")
   ) {
     failures.push(
-      "scripts/tui/app.ts: terminal selection mode must be resolved before Blessed widgets are constructed",
+      "scripts/c420ui/app.ts: terminal selection mode must be resolved before Blessed widgets are constructed",
     );
   }
   const mouseControlledWidgetCount =
     app.match(/mouse: tuiMouseEnabled/g)?.length ?? 0;
   if (mouseControlledWidgetCount < 4) {
     failures.push(
-      "scripts/tui/app.ts: terminal selection mode must disable TUI mouse handling for menu, diagnostics, content and logs at startup",
+      "scripts/c420ui/app.ts: terminal selection mode must disable C420UI mouse handling for menu, diagnostics, content and logs at startup",
     );
   }
   if (
@@ -76,12 +76,12 @@ export function main(): number {
     !app.includes("enableMouse")
   ) {
     failures.push(
-      "scripts/tui/app.ts: terminal selection mode must disable and restore screen program mouse handling",
+      "scripts/c420ui/app.ts: terminal selection mode must disable and restore screen program mouse handling",
     );
   }
   if (!app.includes("Logs - Text selection mode enabled")) {
     failures.push(
-      "scripts/tui/app.ts: enabled terminal text selection mode must be visible in the logs label",
+      "scripts/c420ui/app.ts: enabled terminal text selection mode must be visible in the logs label",
     );
   }
   for (const keyHandler of [
@@ -92,15 +92,15 @@ export function main(): number {
   ]) {
     if (!app.includes(keyHandler)) {
       failures.push(
-        "scripts/tui/app.ts: keyboard log scrolling must remain available",
+        "scripts/c420ui/app.ts: keyboard log scrolling must remain available",
       );
     }
   }
   if (
     !cliDocs.includes("terminal text selection") ||
     !technicalDocs.includes("Terminal text selection mode") ||
-    !normalizedCliDocs.includes("next TUI start") ||
-    !normalizedTechnicalDocs.includes("next TUI start") ||
+    !normalizedCliDocs.includes("next C420UI start") ||
+    !normalizedTechnicalDocs.includes("next C420UI start") ||
     !normalizedCliDocs.includes("F6") ||
     !normalizedTechnicalDocs.includes("F6") ||
     !normalizedTechnicalDocs

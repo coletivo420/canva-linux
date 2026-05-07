@@ -85,7 +85,7 @@ const colors = {
   inactiveCheckboxFg: supportsTrueColor ? themeConfig.palette.muted : "gray",
 };
 
-export const tuiTheme = {
+export const c420uiTheme = {
   supportsTrueColor,
   colors,
   header: {

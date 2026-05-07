@@ -7,26 +7,26 @@ import {
   type CanvaAction,
 } from "../core/action-registry";
 
-export type TuiActionGroup = ActionGroup;
-export type TuiActionKind = ActionKind;
-export type TuiAction = CanvaAction;
+export type C420UIActionGroup = ActionGroup;
+export type C420UIActionKind = ActionKind;
+export type C420UIAction = CanvaAction;
 
-export const tuiActions: TuiAction[] = [];
+export const c420uiActions: C420UIAction[] = [];
 
-export function loadTuiActions(rootDir = process.cwd()): TuiAction[] {
+export function loadC420UIActions(rootDir = process.cwd()): C420UIAction[] {
   return loadActions(rootDir);
 }
 
 export function getActionsByGroup(
-  group: TuiActionGroup,
+  group: C420UIActionGroup,
   rootDir = process.cwd(),
-): TuiAction[] {
+): C420UIAction[] {
   return getSharedActionsByGroup(group, rootDir);
 }
 
 export function getActionById(
   id: string,
   rootDir = process.cwd(),
-): TuiAction | undefined {
+): C420UIAction | undefined {
   return getSharedActionById(id, rootDir);
 }

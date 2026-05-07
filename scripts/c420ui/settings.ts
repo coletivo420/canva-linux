@@ -67,7 +67,7 @@ export function loadToolSettings(): ToolSettings {
     try {
       saveToolSettings(DEFAULT_TOOL_SETTINGS);
     } catch {
-      // The TUI can still run with defaults when the config path is unavailable.
+      // The C420UI can still run with defaults when the config path is unavailable.
     }
     return structuredClone(DEFAULT_TOOL_SETTINGS);
   }

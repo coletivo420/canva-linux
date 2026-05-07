@@ -4,7 +4,7 @@ set -euo pipefail
 CANVA_SUDO_TIMEOUT_SECONDS="${CANVA_SUDO_TIMEOUT_SECONDS:-30}"
 
 canva_is_tui_mode() {
-  [[ "${CANVA_TUI_ROOT_AUTH:-0}" == "1" ]]
+  [[ "${CANVA_C420UI_ROOT_AUTH:-0}" == "1" ]]
 }
 
 canva_sudo_timeout() {
@@ -21,7 +21,7 @@ canva_sudo_error() {
     124) echo "[error] sudo authorization timed out after ${CANVA_SUDO_TIMEOUT_SECONDS}s." >&2 ;;
     *)
       if canva_is_tui_mode; then
-        echo "[error] sudo credentials are not cached for non-interactive TUI mode." >&2
+        echo "[error] sudo credentials are not cached for non-interactive C420UI mode." >&2
         echo "[error] Re-run the action and complete administrator authentication before privileged writes." >&2
       else
         echo "[error] sudo authorization failed or was canceled." >&2

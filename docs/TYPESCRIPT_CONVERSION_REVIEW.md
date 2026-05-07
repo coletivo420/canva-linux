@@ -32,7 +32,7 @@ Planned sequence:
 - DEV16: convert main entrypoint to `.ts`.
 - DEV17: convert preload source modules to `.ts`.
 - DEV18: decide conversion/isolation strategy for the former third-party picker module.
-- DEV19: convert tests/config/scripts when safe. Runtime build, preload bundling, asset copy, clean, electron-builder hook, TUI launcher and toolbar preload now have TypeScript implementations with thin compatibility wrappers where Node tooling still needs `.js` entrypoints.
+- DEV19: convert tests/config/scripts when safe. Runtime build, preload bundling, asset copy, clean, electron-builder hook, C420UI launcher and toolbar preload now have TypeScript implementations with thin compatibility wrappers where Node tooling still needs `.js` entrypoints.
 - DEV20: verify full TypeScript conversion.
 - DEV21: post-conversion cleanup.
 - DEV22: stabilization and RC readiness.

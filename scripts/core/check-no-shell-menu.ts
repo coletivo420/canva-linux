@@ -7,8 +7,8 @@ type FileKind = "shell" | "typescript";
 
 const activeFiles: Array<{ path: string; kind: FileKind }> = [
   { path: "canva-linux.sh", kind: "shell" },
-  { path: "scripts/tui/app.ts", kind: "typescript" },
-  { path: "scripts/tui/index.ts", kind: "typescript" },
+  { path: "scripts/c420ui/app.ts", kind: "typescript" },
+  { path: "scripts/c420ui/index.ts", kind: "typescript" },
 ];
 
 const forbiddenPatterns = [
@@ -25,11 +25,11 @@ const forbiddenPatterns = [
   "--tui",
   "--no-tui",
   "CANVA_NO_TUI",
-  "CANVA_TUI",
+  "CANVA_C420UI",
   "F4 Shell Tool",
   "fallback para shell",
   "shell menu interativo",
-  "opção “Use TUI Tool”",
+  "opção “Use C420UI Tool”",
 ];
 
 function stripShellComment(line: string): string {
@@ -99,16 +99,16 @@ export function main(): number {
       const checkedLine = activeLine(line, file.kind, state);
       for (const pattern of forbiddenPatterns) {
         if (checkedLine.includes(pattern)) {
-          // Special case: CANVA_TUI is a substring of CANVA_TUI_ROOT_AUTH and CANVA_TUI_TITLE (which are allowed)
+          // Special case: CANVA_C420UI is a substring of CANVA_C420UI_ROOT_AUTH and CANVA_C420UI_TITLE (which are allowed)
           if (
-            pattern === "CANVA_TUI" &&
-            (checkedLine.includes("CANVA_TUI_ROOT_AUTH") ||
-              checkedLine.includes("CANVA_TUI_TITLE"))
+            pattern === "CANVA_C420UI" &&
+            (checkedLine.includes("CANVA_C420UI_ROOT_AUTH") ||
+              checkedLine.includes("CANVA_C420UI_TITLE"))
           ) {
             const sanitized = checkedLine
-              .replace(/CANVA_TUI_ROOT_AUTH/g, "")
-              .replace(/CANVA_TUI_TITLE/g, "");
-            if (!sanitized.includes("CANVA_TUI")) continue;
+              .replace(/CANVA_C420UI_ROOT_AUTH/g, "")
+              .replace(/CANVA_C420UI_TITLE/g, "");
+            if (!sanitized.includes("CANVA_C420UI")) continue;
           }
           failures.push(
             `${file.path}:${index + 1}: forbidden shell-menu fragment: ${pattern}`,

@@ -43,7 +43,7 @@ All workflow actions must be registered in:
 scripts/actions.json
 ```
 
-Do not add hardcoded action lists directly in TUI or launcher code.
+Do not add hardcoded action lists directly in C420UI or launcher code.
 
 Recommended flow:
 
@@ -51,7 +51,7 @@ Recommended flow:
 2. Add entry in `scripts/actions.json`.
 3. Run `npm run actions:validate`.
 4. Test direct CLI: `scripts/run-core-entry.sh action-runner --id <action-id> --dry-run`.
-5. Test direct CLI and TUI: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
+5. Test direct CLI and C420UI: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
 
 ## Sudo and Privileged Actions
 
