@@ -19,6 +19,14 @@
 - Privileged operations must request authentication only when needed.
 - Tool-level logs must be visible in the TUI when general Tool logs are enabled.
 - Action logs and Tool logs must remain distinguishable.
+- TUI must keep an explicit FocusZone model.
+- Tab and Shift+Tab must move between focusable TUI blocks.
+- The active TUI block must have a visible border/label highlight.
+- The active menu/settings cell must have a visible highlight.
+- Settings checkboxes must show enabled/disabled state clearly.
+- Modal dialogs must not leak Tab focus back to the main TUI.
+- During running actions, Tab/scroll/log copy may work, but action execution must remain blocked.
+- Help must document current keyboard navigation.
 - Passwords and sudo stdin must never be logged.
 - Application Settings are TUI state, not shell actions.
 - New UI strings, docs and comments must be written in English.

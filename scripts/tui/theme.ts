@@ -31,6 +31,12 @@ const colors = {
     ? themeConfig.palette.canvaPurple
     : "magenta",
   menuSelectedFg: "white",
+  menuInactiveSelectedBg: supportsTrueColor
+    ? themeConfig.palette.surfaceAlt
+    : "black",
+  menuInactiveSelectedFg: supportsTrueColor
+    ? themeConfig.palette.canvaLightBlue
+    : "cyan",
   footerBg: supportsTrueColor ? themeConfig.palette.surfaceAlt : "black",
   footerFg: "white",
   statusDetected: supportsTrueColor
@@ -63,6 +69,22 @@ const colors = {
   appImageLoading: supportsTrueColor
     ? themeConfig.palette.warning
     : themeConfig.ansiFallback.warning,
+  activeBorder: supportsTrueColor
+    ? themeConfig.palette.canvaLightBlue
+    : "cyan",
+  inactiveBorder: supportsTrueColor ? themeConfig.palette.canvaBlue : "blue",
+  activeLabel: supportsTrueColor
+    ? themeConfig.palette.canvaLightBlue
+    : "cyan",
+  inactiveLabel: supportsTrueColor ? themeConfig.palette.muted : "gray",
+  activeBlockBg: supportsTrueColor ? themeConfig.palette.surface : "black",
+  activeCellBg: supportsTrueColor ? themeConfig.palette.canvaBlue : "blue",
+  activeCellFg: "white",
+  activeCheckboxFg: supportsTrueColor
+    ? themeConfig.palette.success
+    : themeConfig.ansiFallback.success,
+  activeCheckboxBg: supportsTrueColor ? themeConfig.palette.surfaceAlt : "black",
+  inactiveCheckboxFg: supportsTrueColor ? themeConfig.palette.muted : "gray",
 };
 export const tuiTheme = {
   supportsTrueColor,

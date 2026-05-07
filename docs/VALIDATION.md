@@ -72,8 +72,16 @@ Current target:
   panel.
 - Confirm disabling general Tool logs still leaves critical Tool warnings/errors
   visible.
-- Confirm terminal text selection mode disables logs-panel mouse handling while
-  keyboard scroll and F5 log copy continue to work.
+- Confirm terminal text selection mode disables TUI mouse handling on the next
+  TUI start while keyboard scroll and F5 log copy continue to work.
+- Confirm Tab and Shift+Tab move focus between menu, diagnostics, action panel
+  and logs.
+- Confirm the active panel has a visible border/label highlight and the active
+  menu/settings cell has a visible row highlight.
+- Confirm settings checkboxes show enabled and disabled state clearly.
+- Confirm modal dialogs block Tab focus from returning to the main TUI.
+- Confirm running actions still allow Tab, focused-panel scrolling and F5 log
+  copy while blocking new action execution.
 - Confirm `REVIEW.md` still starts with `# Review Checklist`.
 - Confirm new Node.js scripts, tests, and supported configs are authored in
   TypeScript, with shell reserved for host-operation glue.

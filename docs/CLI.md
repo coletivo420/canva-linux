@@ -69,7 +69,7 @@ Current Tool settings:
   Tool-level startup, settings, detection and authentication events in the TUI
   logs panel. Action logs remain visible either way, and critical Tool warnings
   or errors still appear when general Tool logs are disabled.
-- `Enable terminal text selection in logs`: disables mouse handling in the logs
-  panel so the terminal can perform native text selection. Keyboard log scrolling
-  and F5 copy remain available. Some terminals may still require Shift while
-  selecting text.
+- `Prefer native terminal text selection on next TUI start`: when enabled before
+  startup, disables TUI mouse handling for the session so the terminal can
+  perform native text selection. Changes take effect on the next TUI start.
+  Keyboard log scrolling and F5 copy remain available.

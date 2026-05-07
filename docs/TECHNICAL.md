@@ -67,10 +67,17 @@ Action logs cover stdout/stderr from install, build, validation, uninstall,
 purge and maintenance operations. The launcher creates/truncates the session log
 once, and the TUI appends to it so launcher startup lines are preserved.
 
-Terminal text selection mode disables mouse handling in the logs panel. Keyboard
-scrolling with PageUp, PageDown, Home and End remains available, and F5 still
-copies the visible log history. Some terminals may still require Shift during
-selection.
+Terminal text selection mode is resolved before Blessed widgets are constructed.
+When enabled before startup, it disables TUI mouse handling for the session so
+the terminal can perform native text selection. Changes take effect on the next
+TUI start. Keyboard scrolling with PageUp, PageDown, Home and End remains
+available, and F5 still copies the visible log history.
+
+The TUI keeps an explicit FocusZone model for menu, diagnostics, action panel
+and logs. Tab and Shift+Tab move between these blocks, the active block uses a
+visible border/label highlight, and focused-panel scrolling is routed to the
+current FocusZone. Enter and Space only execute menu/settings behavior while the
+menu is focused and no action/modal is active.
 
 ## Sudo Contract
 

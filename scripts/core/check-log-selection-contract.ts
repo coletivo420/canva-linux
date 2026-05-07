@@ -13,6 +13,8 @@ export function main(): number {
   const app = read(rootDir, "scripts/tui/app.ts");
   const cliDocs = read(rootDir, "docs/CLI.md");
   const technicalDocs = read(rootDir, "docs/TECHNICAL.md");
+  const normalizedCliDocs = cliDocs.replace(/\s+/g, " ");
+  const normalizedTechnicalDocs = technicalDocs.replace(/\s+/g, " ");
 
   if (!app.includes('screen.key(["f5"]')) {
     failures.push("scripts/tui/app.ts: F5 log copy shortcut must remain available");
@@ -20,8 +22,48 @@ export function main(): number {
   if (!app.includes("terminalTextSelectionMode")) {
     failures.push("scripts/tui/app.ts: terminal text selection mode is required");
   }
-  if (!app.includes("logs.options.mouse")) {
-    failures.push("scripts/tui/app.ts: terminal selection mode must disable logs mouse handling");
+  if (!app.includes("type FocusZone") || !app.includes("FOCUS_ZONES")) {
+    failures.push("scripts/tui/app.ts: explicit FocusZone model is required");
+  }
+  if (!app.includes("function applyFocusStyles")) {
+    failures.push("scripts/tui/app.ts: active panel styling must be centralized");
+  }
+  if (
+    !app.includes('screen.key(["tab"]') ||
+    !app.includes('screen.key(["S-tab", "backtab"]')
+  ) {
+    failures.push("scripts/tui/app.ts: Tab and Shift+Tab focus navigation are required");
+  }
+  if (!app.includes("if (!modalActive) moveFocus")) {
+    failures.push(
+      "scripts/tui/app.ts: modal dialogs must not leak Tab focus to the main TUI",
+    );
+  }
+  if (
+    !app.includes("focusZone === \"menu\"") ||
+    !app.includes("running || modalActive || focusZone !== \"menu\"")
+  ) {
+    failures.push(
+      "scripts/tui/app.ts: action execution must be blocked unless menu is focused and idle",
+    );
+  }
+  if (!app.includes("activeCellBg") || !app.includes("activeCheckboxFg")) {
+    failures.push(
+      "scripts/tui/app.ts: active cells and settings checkboxes must be visibly styled",
+    );
+  }
+  if (
+    !app.includes("terminalTextSelectionModeActive") ||
+    !app.includes("const tuiMouseEnabled = !terminalTextSelectionModeActive")
+  ) {
+    failures.push(
+      "scripts/tui/app.ts: terminal selection mode must be resolved before Blessed widgets are constructed",
+    );
+  }
+  if (!app.includes("mouse: tuiMouseEnabled")) {
+    failures.push(
+      "scripts/tui/app.ts: terminal selection mode must disable TUI mouse handling at startup",
+    );
   }
   for (const keyHandler of [
     'screen.key(["pageup"]',
@@ -37,7 +79,12 @@ export function main(): number {
   }
   if (
     !cliDocs.includes("terminal text selection") ||
-    !technicalDocs.includes("Terminal text selection mode")
+    !technicalDocs.includes("Terminal text selection mode") ||
+    !normalizedCliDocs.includes("next TUI start") ||
+    !normalizedTechnicalDocs.includes("next TUI start") ||
+    !app.includes("Tab / Shift+Tab") ||
+    !app.includes("Active panel") ||
+    !app.includes("Active cell")
   ) {
     failures.push("docs: terminal text selection behavior must be documented");
   }
