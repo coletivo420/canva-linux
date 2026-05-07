@@ -12,7 +12,8 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
-- Clarified that Canva Linux does not promise universal login persistence; persistent sessions depend on `kwallet`, `kwallet5`, `kwallet6`, `gnome_libsecret`, or a compatible Secret Service provider.
+- Clarified that Canva Linux does not promise universal login persistence; persistent sessions depend on `kwallet`,
+  `kwallet5`, `kwallet6`, `gnome_libsecret`, or a compatible Secret Service provider.
 - Deduplicated agent guardrail wording while preserving root, logging/privacy, header separation, and TypeScript-first rules.
 - Reorganized AI guardrails into focused maintenance sections for language/public docs, versioning, C420UI,
   Action Registry, root/sudo, logging/privacy, TypeScript-first source, CL-EyeDropper, packaging/architecture,

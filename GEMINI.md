@@ -32,3 +32,12 @@ Non-regression rules:
 
 Gemini CLI note:
 After changing this file, reload Gemini CLI project memory before continuing.
+
+## Credential storage policy
+
+- Persistent login must require a secure Linux Secret Service backend.
+- If Electron reports `basic_text`, Canva Linux must use ephemeral session mode.
+- `basic_text` must never use the `persist:canva` partition.
+- Ephemeral session mode must warn the user that login, cookies and credentials will not be saved.
+- Do not claim credentials are securely stored when the selected backend is `basic_text`.
+- Do not log passwords, cookies, tokens, session values or credential material.

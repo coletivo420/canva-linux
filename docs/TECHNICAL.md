@@ -85,9 +85,14 @@ menu is focused and no action/modal is active.
 
 ## Credential storage and session persistence
 
-Canva Linux treats persistent login as a feature gated by secure Linux credential storage. Electron/Chromium must report a secure Secret Service backend such as `kwallet`, `kwallet5`, `kwallet6`, or `gnome_libsecret` before the app uses the persistent `persist:canva` session partition.
+Canva Linux treats persistent login as a feature gated by secure Linux credential storage.
+Electron/Chromium must report a secure Secret Service backend such as `kwallet`, `kwallet5`, `kwallet6`, or `gnome_libsecret`
+before the app uses the persistent `persist:canva` session partition.
 
-When Electron reports `basic_text`, or when backend detection is unknown or fails, the app selects an ephemeral session partition that does not start with `persist:`. In ephemeral mode, credentials, cookies and login state are not preserved after closing the app, and shutdown attempts to clear storage/cache data defensively.
+When Electron reports `basic_text`, or when backend detection is unknown or fails,
+the app selects an ephemeral session partition that does not start with `persist:`.
+In ephemeral mode, credentials, cookies and login state are not preserved after closing the app,
+and shutdown attempts to clear storage/cache data defensively.
 
 Logs may report the backend name and policy mode, but must not include cookies, tokens, passwords, session contents or credential material.
 
