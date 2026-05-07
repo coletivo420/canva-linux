@@ -81,6 +81,8 @@ export function main(): number {
   const releaseDocs = fs.existsSync(path.join(rootDir, releaseDocsPath))
     ? read(rootDir, releaseDocsPath)
     : "";
+  const pkg = JSON.parse(read(rootDir, "package.json")) as { version?: string };
+  const releaseVersion = pkg.version || "";
 
   if (!workflow) failures.push(`${workflowPath}: missing release workflow`);
   if (!releaseDocs) failures.push(`${releaseDocsPath}: missing release notes body`);
@@ -88,6 +90,8 @@ export function main(): number {
   if (workflow.includes("find dist") || workflow.includes("head -n 1")) {
     failures.push(`${workflowPath}: asset selection must not use find/head`);
   }
+
+  if (!releaseVersion) failures.push("package.json: missing version");
 
   for (const expected of [
     "workflow_dispatch:",
@@ -108,9 +112,9 @@ export function main(): number {
   }
 
   for (const expected of [
-    "canva-linux-0.1.4-12-x86_64.AppImage",
-    "canva-linux-0.1.4-12.flatpak",
-    "canva-linux-0.1.4-12-linux-unpacked-x86_64.tar.gz",
+    `canva-linux-${releaseVersion}-x86_64.AppImage`,
+    `canva-linux-${releaseVersion}.flatpak`,
+    `canva-linux-${releaseVersion}-linux-unpacked-x86_64.tar.gz`,
     "SHA256SUMS",
   ]) {
     assertIncludes(failures, releaseDocsPath, releaseDocs, expected);
@@ -128,7 +132,6 @@ export function main(): number {
     validateShellScript(rootDir, script, failures);
   }
 
-  const pkg = JSON.parse(read(rootDir, "package.json")) as { version?: string };
   const lock = JSON.parse(read(rootDir, "package-lock.json")) as {
     version?: string;
     packages?: Record<string, { version?: string }>;
