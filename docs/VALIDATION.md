@@ -34,6 +34,7 @@ Current target:
 - scripts/run-core-entry.sh check-tool-logging-contract
 - scripts/run-core-entry.sh check-log-selection-contract
 - scripts/run-core-entry.sh check-action-contract
+- scripts/run-core-entry.sh check-release-contract
 - npm run validate:project
   - fails if source JavaScript appears outside `.build/`, `node_modules/`,
     `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/`

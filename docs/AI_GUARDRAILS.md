@@ -31,6 +31,11 @@
 - TUI mouse settings must be restored when leaving text selection mode.
 - F5 clipboard copy must keep working even when text selection mode is enabled.
 - Help must document terminal text selection limitations.
+- Release workflow must build and upload AppImage, Flatpak bundle,
+  linux-unpacked tarball, and SHA256SUMS.
+- Release workflow must use deterministic artifact names and must fail if an
+  expected asset is missing or empty.
+- Release docs must keep `docs/RELEASE.md` available for GitHub Release notes.
 - Passwords and sudo stdin must never be logged.
 - Application Settings are TUI state, not shell actions.
 - New UI strings, docs and comments must be written in English.

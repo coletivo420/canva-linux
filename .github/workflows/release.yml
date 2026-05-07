@@ -40,25 +40,17 @@ jobs:
           public_version="$(node -p "require('./scripts/project-ui.json').displayVersion")"
           package_version="$(node -p "require('./package.json').version")"
           phase="$(node -p "require('./scripts/project-ui.json').phase")"
-          mapped_phase="$(node - <<'NODE'
-          const version = require('./package.json').version;
-          const dev = version.match(/^(\d+\.\d+\.\d+)-dev\.(\d+)\.(\d+)$/);
-          if (dev) {
-            console.log(`${dev[1]}.${dev[2]}-dev.${dev[3]}`);
-            process.exit(0);
-          }
-          const release = version.match(/^(\d+\.\d+\.\d+)-(\d+)$/);
-          if (release) {
-            console.log(`${release[1]}.${release[2]}`);
-            process.exit(0);
-          }
-          if (/^\d+\.\d+\.\d+$/.test(version)) {
-            console.log(version);
-            process.exit(0);
-          }
-          process.exit(1);
-          NODE
-          )"
+
+          if [[ "$package_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-dev\.([0-9]+)\.([0-9]+)$ ]]; then
+            mapped_phase="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}-dev.${BASH_REMATCH[3]}"
+          elif [[ "$package_version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-([0-9]+)$ ]]; then
+            mapped_phase="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+          elif [[ "$package_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            mapped_phase="$package_version"
+          else
+            echo "::error::package.json version does not map to project identity: ${package_version}"
+            exit 1
+          fi
 
           test "$phase" = "$public_version"
           test "$mapped_phase" = "$public_version"
@@ -80,6 +72,15 @@ jobs:
       - name: Run validation
         run: npm run validate:project
 
+      - name: Clean release artifacts
+        run: |
+          mkdir -p dist
+          rm -f dist/*.AppImage
+          rm -f dist/*.AppImage.sha256
+          rm -f dist/*.flatpak
+          rm -f dist/*linux-unpacked*.tar.gz
+          rm -f dist/SHA256SUMS
+
       - name: Build AppImage
         run: ./scripts/build-appimage.sh
 
@@ -90,20 +91,24 @@ jobs:
         run: |
           mkdir -p dist
 
-          appimage_source="$(find dist -maxdepth 1 -type f -name 'canva-linux-*.AppImage' | sort | head -n 1)"
-          flatpak_source="$(find dist -maxdepth 1 -type f -name 'canva-linux-*.flatpak' | sort | head -n 1)"
+          appimage_source="dist/canva-linux-${PACKAGE_VERSION}-x86_64.AppImage"
+          flatpak_source="dist/canva-linux-${PACKAGE_VERSION}.flatpak"
           linux_unpacked="dist/linux-unpacked"
 
-          test -n "$appimage_source"
-          test -n "$flatpak_source"
+          test -s "$appimage_source"
+          test -s "$flatpak_source"
           test -d "$linux_unpacked"
 
           appimage_target="dist/canva-linux-${RELEASE_VERSION}-x64.AppImage"
           flatpak_target="dist/canva-linux-${RELEASE_VERSION}.flatpak"
           tarball_target="dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-x64.tar.gz"
 
-          mv "$appimage_source" "$appimage_target"
-          mv "$flatpak_source" "$flatpak_target"
+          if [[ "$appimage_source" != "$appimage_target" ]]; then
+            mv "$appimage_source" "$appimage_target"
+          fi
+          if [[ "$flatpak_source" != "$flatpak_target" ]]; then
+            mv "$flatpak_source" "$flatpak_target"
+          fi
           tar -C dist -czf "$tarball_target" linux-unpacked
 
           cd dist
