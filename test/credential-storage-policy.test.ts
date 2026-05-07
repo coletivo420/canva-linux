@@ -248,7 +248,7 @@ test("credential storage warning copy uses policy warning for unverified ephemer
     title: "Secure credential encryption was not verified",
     message: "Secure credential encryption was not verified.",
     detail: [
-      policy.warning,
+      "Canva Linux will start in ephemeral session mode; credentials, cookies and login state will not be saved.",
       "",
       "Persistent login requires both a secure Linux Secret Service backend and available safeStorage encryption.",
       "Install, enable, and unlock KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
