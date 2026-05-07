@@ -1,8 +1,10 @@
 # Project tree reference
 
 This page is a reference map for humans and AI agents working on Canva Linux.
-It describes the current repository layout and the intended C420UI split points
+It describes the current repository layout and the intended c420ui split points
 without promising an external package or publication timeline.
+
+c420ui is the future modular tool layer for terminal UI, action execution, logs, sudo/root orchestration, development workflows and package creation.
 
 ## Current and planned top-level layout
 
@@ -16,11 +18,11 @@ without promising an external package or publication timeline.
 │   └── assets/                Runtime assets copied into the Electron build
 ├── scripts/                   Canva Linux tool, validation, packaging, and host-operation source
 │   ├── core/                  TypeScript validation, action contracts, and action-runner core
-│   ├── c420ui/                Current in-repo C420UI implementation before package split
-│   ├── c420ui-canva-linux/    Canva Linux adapter boundary for C420UI integration
+│   ├── c420ui/                Current in-repo c420ui implementation before package split
+│   ├── c420ui-canva-linux/    Canva Linux adapter boundary for c420ui integration
 │   └── *.sh                   Linux host-operation glue and launcher/install/package wrappers
-├── packages/                  Private package workspace; no published C420UI package exists yet
-│   └── c420ui/                Private future standalone C420UI package skeleton
+├── packages/                  Private package workspace; no published c420ui package exists yet
+│   └── c420ui/                Private future standalone c420ui package skeleton
 ├── docs/                      Public and internal project documentation
 │   ├── *.md                   Public user, contributor, release, validation, and architecture docs
 │   ├── internal/              AI, developer-memory, historical, and legacy notes
@@ -38,12 +40,12 @@ without promising an external package or publication timeline.
 ├── node_modules/              Package-manager installed dependencies
 ├── README.md                  Project entry point
 ├── CHANGELOG.md               Release-facing project history
-└── canva-linux.sh             Main launcher for C420UI/default and direct CLI workflows
+└── canva-linux.sh             Main launcher for c420ui/default and direct CLI workflows
 ```
 
 Some planned directories may not exist until their corresponding split work
 starts. `scripts/c420ui-canva-linux/` now exists as the Canva Linux adapter boundary,
-while `packages/c420ui/` exists only as a private package skeleton for the C420UI separation plan,
+while `packages/c420ui/` exists only as a private package skeleton for the c420ui separation plan,
 not a published or supported external package location today.
 
 ## Maintained source
@@ -52,7 +54,7 @@ Treat these as maintained source when editing behavior:
 
 - `electron/**/*.ts` for the Electron main, preload, shared, and runtime UI code.
 - `scripts/**/*.ts` for validation, action contracts, Action Runner logic,
-  C420UI code, and TypeScript packaging helpers.
+  c420ui code, and TypeScript packaging helpers.
 - `packaging/flathub/scripts/**/*.ts` for Flathub source-generation logic.
 - `packages/**/*.ts` only after package workspace files exist.
 - `test/**/*.ts` for unit, wiring, runtime, and smoke-test source.
@@ -78,35 +80,35 @@ Treat these paths as generated, disposable, or package-managed output:
 Do not move generated JavaScript from `.build/` into maintained source trees.
 Do not edit generated output as the source of truth.
 
-## C420UI split boundaries
+## c420ui split boundaries
 
-The current repository still hosts the Canva Linux C420UI implementation under
+The current repository still hosts the Canva Linux c420ui implementation under
 `scripts/c420ui/`. That directory is transitional: it is the active in-repo UI
 implementation until a package split is explicitly performed.
 
 The intended separation is:
 
-- **C420UI core**: reusable terminal UI primitives, layout, focus, logs, modal,
+- **c420ui core**: reusable terminal UI primitives, layout, focus, logs, modal,
   and brand/project-header boundaries. Today these live in `scripts/c420ui/`.
 - **Canva Linux adapter**: project-specific actions, metadata, launch wiring,
   install/package status, and Canva Linux labels. This boundary starts in
   `scripts/c420ui-canva-linux/` before broader extraction.
 - **Future package workspace**: `packages/c420ui/` is a private skeleton reserved for a possible
-  standalone C420UI package after the core is separated. It is not a published
+  standalone c420ui package after the core is separated. It is not a published
   npm package and should not be documented as externally consumable yet.
-- **Action contract**: C420UI and direct CLI actions must continue to source
+- **Action contract**: c420ui and direct CLI actions must continue to source
   actions from `scripts/actions.json` and shared TypeScript action contracts.
 
 When moving code toward the split, avoid hardcoding Canva Linux project metadata
-inside reusable C420UI core code. Keep C420UI branding and project branding as
+inside reusable c420ui core code. Keep c420ui branding and project branding as
 separate concepts.
 
 ## Runtime and packaging boundaries
 
-- `electron/` is application runtime code. It should not absorb C420UI terminal
+- `electron/` is application runtime code. It should not absorb c420ui terminal
   UI implementation details.
 - `scripts/core/` contains validation and action infrastructure used by direct
-  CLI and C420UI workflows. It is not Electron runtime code.
+  CLI and c420ui workflows. It is not Electron runtime code.
 - Shell scripts in `scripts/` are Linux host-operation glue. Keep sudo, install,
   purge, Flatpak, AppImage, and desktop integration behavior there when Node is
   the wrong boundary.

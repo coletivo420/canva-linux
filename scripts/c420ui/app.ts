@@ -84,7 +84,7 @@ const ACTION_LOG_PREFIX = "Action |";
 const FOCUS_ZONES: FocusZone[] = ["menu", "diagnostics", "content", "logs"];
 const HEADER_GAP = 0;
 const HEADER_BOX_HORIZONTAL_PADDING = 4;
-const C420UI_HEADER_MIN_WIDTH = 28;
+const c420uiHeaderMinWidth = 28;
 const PROJECT_HEADER_MIN_WIDTH = 40;
 
 function isPlannedAction(action: C420UIAction): boolean {
@@ -113,7 +113,7 @@ export function computeHeaderLayout(
   ]);
   const c420uiMinWidth = Math.max(
     c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
-    C420UI_HEADER_MIN_WIDTH,
+    c420uiHeaderMinWidth,
   );
   const projectMinWidth = Math.max(
     projectHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
@@ -558,7 +558,7 @@ export function createApp(opts: C420UIConfig) {
       const stream = fs.createWriteStream(logPath, { flags: "a" });
       stream.on("error", (error) => {
         recordSessionStreamError(error);
-        // Keep the C420UI alive when the configured state path becomes unavailable.
+        // Keep the c420ui alive when the configured state path becomes unavailable.
       });
       return stream;
     } catch (error) {
@@ -919,7 +919,7 @@ export function createApp(opts: C420UIConfig) {
         `{${c420uiTheme.colors.infoItemTitle}-fg}Session log file:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
         `  {${c420uiTheme.colors.descriptionText}-fg}${sessionLogPath}{/${c420uiTheme.colors.descriptionText}-fg}`,
         "",
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Visible C420UI log history:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+        `{${c420uiTheme.colors.infoItemTitle}-fg}Visible c420ui log history:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
         logHistory.length
           ? logHistory
               .map((line) =>
@@ -1092,7 +1092,7 @@ export function createApp(opts: C420UIConfig) {
       ? [
           "",
           `{${c420uiTheme.colors.infoItemTitle}-fg}Status:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-          `  {${c420uiTheme.colors.warning}-fg}Planned - visible in C420UI, but not executable in this phase.{/${c420uiTheme.colors.warning}-fg}`,
+          `  {${c420uiTheme.colors.warning}-fg}Planned - visible in c420ui, but not executable in this phase.{/${c420uiTheme.colors.warning}-fg}`,
         ]
       : [];
     const warningBlock = selected.warning
@@ -1188,8 +1188,8 @@ export function createApp(opts: C420UIConfig) {
       } else {
         details.push(
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Behavior{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode disables C420UI mouse capture globally and keeps keyboard navigation active.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Changes take effect immediately and are saved for the next C420UI start. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode disables c420ui mouse capture globally and keeps keyboard navigation active.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Changes take effect immediately and are saved for the next c420ui start. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F6 opens a plain logs view with the session log path for manual selection fallback.{/${c420uiTheme.colors.descriptionText}-fg}`,
         );
@@ -1203,7 +1203,7 @@ export function createApp(opts: C420UIConfig) {
       );
     } else {
       details.push(
-        `{${c420uiTheme.colors.descriptionText}-fg}Use Enter or Space on a checkbox setting to toggle it. Application Settings are persistent C420UI state, not shell actions.{/${c420uiTheme.colors.descriptionText}-fg}`,
+        `{${c420uiTheme.colors.descriptionText}-fg}Use Enter or Space on a checkbox setting to toggle it. Application Settings are persistent c420ui state, not shell actions.{/${c420uiTheme.colors.descriptionText}-fg}`,
       );
     }
 
@@ -1326,10 +1326,10 @@ export function createApp(opts: C420UIConfig) {
           `{${c420uiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F6             View plain logs and session log path{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode can be enabled in Application Settings. It disables C420UI mouse capture globally, keeps keyboard navigation active, and some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode can be enabled in Application Settings. It disables c420ui mouse capture globally, keeps keyboard navigation active, and some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Launcher{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  ${opts.project.launcherCommand} opens the C420UI.{/${c420uiTheme.colors.descriptionText}-fg}`,
+          `{${c420uiTheme.colors.descriptionText}-fg}  ${opts.project.launcherCommand} opens the c420ui.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Any direct action flag runs CLI mode instead.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Do not run the Tool with sudo or as root; privileged actions ask for administrator authentication only when needed.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Root authentication failures are shown in a centered popup and the action is not started.{/${c420uiTheme.colors.descriptionText}-fg}`,
@@ -1414,7 +1414,7 @@ export function createApp(opts: C420UIConfig) {
         [
           message,
           "",
-          "This action is visible in C420UI for roadmap awareness, but it is not executable in this phase.",
+          "This action is visible in c420ui for roadmap awareness, but it is not executable in this phase.",
         ].join("\n"),
       );
       modalActive = false;
@@ -1798,7 +1798,7 @@ export function createApp(opts: C420UIConfig) {
   importLauncherSessionLog();
 
   appendLogText(
-    `[info] C420UI started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}\n`,
+    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}\n`,
     "system",
   );
   appendLogText(`[info] Settings loaded from ${settingsPath}.\n`, "system");

@@ -39,7 +39,7 @@ export function main(): number {
   }
   if (!app.includes("if (!modalActive) {") || !app.includes("moveFocus")) {
     failures.push(
-      "scripts/c420ui/app.ts: modal dialogs must not leak Tab focus to the main C420UI",
+      "scripts/c420ui/app.ts: modal dialogs must not leak Tab focus to the main c420ui",
     );
   }
   if (
@@ -67,7 +67,7 @@ export function main(): number {
     app.match(/mouse: tuiMouseEnabled/g)?.length ?? 0;
   if (mouseControlledWidgetCount < 4) {
     failures.push(
-      "scripts/c420ui/app.ts: terminal selection mode must disable C420UI mouse handling for menu, diagnostics, content and logs at startup",
+      "scripts/c420ui/app.ts: terminal selection mode must disable c420ui mouse handling for menu, diagnostics, content and logs at startup",
     );
   }
   if (

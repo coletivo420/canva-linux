@@ -18,6 +18,7 @@ const bannedPhrases = [
   "Terminal Assistant",
   "Blessed TUI",
   "Canva Linux Terminal Assistant",
+  "C420UI",
 ];
 
 function read(rootDir: string, relativePath: string): string {
@@ -32,7 +33,7 @@ export function main(): number {
     const content = read(rootDir, relativePath);
     for (const phrase of bannedPhrases) {
       if (content.includes(phrase)) {
-        failures.push(`${relativePath}: use C420UI instead of ${phrase}`);
+        failures.push(`${relativePath}: use c420ui instead of ${phrase}`);
       }
     }
     if (/\bTUI\b/.test(content)) {
@@ -41,18 +42,18 @@ export function main(): number {
   }
 
   const readme = read(rootDir, "README.md");
-  if (!readme.includes("C420UI terminal interface")) {
-    failures.push("README.md: must name the terminal interface C420UI");
+  if (!readme.includes("c420ui terminal interface")) {
+    failures.push("README.md: must name the terminal interface c420ui");
   }
-  if (!readme.includes("**C420UI workspace**")) {
-    failures.push("README.md: feature matrix must use C420UI workspace");
+  if (!readme.includes("**c420ui workspace**")) {
+    failures.push("README.md: feature matrix must use c420ui workspace");
   }
 
   const projectUi = JSON.parse(read(rootDir, "scripts/project-ui.json")) as {
     c420uiTitle?: string;
   };
-  if (!projectUi.c420uiTitle?.includes("C420UI terminal interface")) {
-    failures.push("scripts/project-ui.json: c420uiTitle must use C420UI terminal interface");
+  if (!projectUi.c420uiTitle?.includes("c420ui terminal interface")) {
+    failures.push("scripts/project-ui.json: c420uiTitle must use c420ui terminal interface");
   }
 
   if (failures.length) throw new Error(failures.join("\n"));

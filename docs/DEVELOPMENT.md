@@ -61,9 +61,9 @@ cleanup is complete.
 
 ## Documentation layout
 
-Use [Project tree reference](PROJECT_TREE.md) before moving code across Electron, scripts, C420UI, packaging,
-or generated-output boundaries. Use [C420UI separation roadmap](ROADMAP_C420UI_SEPARATION.md) before
-changing C420UI package, adapter, or extraction boundaries.
+Use [Project tree reference](PROJECT_TREE.md) before moving code across Electron, scripts, c420ui, packaging,
+or generated-output boundaries. Use [c420ui separation roadmap](ROADMAP_C420UI_SEPARATION.md) before
+changing c420ui package, adapter, or extraction boundaries.
 
 Keep release-facing docs linked from `README.md` and `docs/README.md`. Internal
 AI/dev memory belongs under `docs/internal/`; submission notes and historical
@@ -78,7 +78,7 @@ All workflow actions must be registered in:
 scripts/actions.json
 ```
 
-Do not add hardcoded action lists directly in C420UI or launcher code.
+Do not add hardcoded action lists directly in c420ui or launcher code.
 
 Recommended flow:
 
@@ -86,7 +86,7 @@ Recommended flow:
 2. Add entry in `scripts/actions.json`.
 3. Run `npm run actions:validate`.
 4. Test direct CLI: `scripts/run-core-entry.sh action-runner --id <action-id> --dry-run`.
-5. Test direct CLI and C420UI: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
+5. Test direct CLI and c420ui: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
 
 ## Sudo and Privileged Actions
 

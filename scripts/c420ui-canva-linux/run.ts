@@ -7,7 +7,7 @@ export function runCanvaLinuxC420UI(rootDir = process.cwd()): void {
   if (process.argv.includes("--help")) {
     const project = adapter.loadProjectConfig();
     console.log(
-      `${project.projectName} C420UI terminal interface\n\nUsage:\n  npm run c420ui\n  ${project.launcherCommand}`,
+      `${project.projectName} c420ui terminal interface\n\nUsage:\n  npm run c420ui\n  ${project.launcherCommand}`,
     );
     return;
   }

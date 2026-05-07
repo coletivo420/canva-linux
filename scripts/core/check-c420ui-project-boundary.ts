@@ -33,9 +33,10 @@ export function main(): number {
     failures,
     app,
     "../../packages/c420ui/src",
-    "scripts/c420ui/app.ts must import generic C420UI types from packages/c420ui",
+    "scripts/c420ui/app.ts must import generic c420ui types from packages/c420ui",
   );
 
+  // Transitional PascalCase TypeScript symbols are allowed until the public API rename commit.
   assertIncludes(
     failures,
     packageTypes,
@@ -70,7 +71,7 @@ export function main(): number {
       settings.includes(fragment)
     ) {
       failures.push(
-        `C420UI core must not hardcode project metadata: ${fragment}`,
+        `c420ui core must not hardcode project metadata: ${fragment}`,
       );
     }
   }
@@ -80,7 +81,7 @@ export function main(): number {
     failures,
     index,
     "runCanvaLinuxC420UI",
-    "scripts/c420ui/index.ts must delegate to the Canva Linux C420UI adapter runner",
+    "scripts/c420ui/index.ts must delegate to the Canva Linux c420ui adapter runner",
   );
 
   const projectFields = [

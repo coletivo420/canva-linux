@@ -32,9 +32,9 @@ The GitHub Release workflow must:
 
 ### Manual validation matrix
 
-- `./canva-linux.sh` opens the C420UI.
+- `./canva-linux.sh` opens the c420ui.
 - F5 copies logs to the clipboard.
-- Text selection mode disables C420UI mouse capture globally.
+- Text selection mode disables c420ui mouse capture globally.
 - F6 opens a plain logs view with the session log path.
 - Correct root password starts privileged actions.
 - Incorrect root password shows an error popup and does not start the action.
@@ -54,12 +54,12 @@ Canva Linux 0.1.4-12 Alpha
 Highlights:
 
 - TypeScript-first migration completed.
-- C420UI and direct CLI architecture stabilized.
+- c420ui and direct CLI architecture stabilized.
 - Native and Flatpak system/user install flows.
 - Root authentication popup for privileged actions.
 - Improved detection with installed version display.
 - AppImage and Flatpak package artifacts.
-- Improved C420UI logs, clipboard and manual text selection mode.
+- Improved c420ui logs, clipboard and manual text selection mode.
 - Secret Service-backed persistent login with an ephemeral session fallback when secure credential storage or safe storage encryption is unavailable.
 
 Artifacts:
