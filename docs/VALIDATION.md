@@ -30,6 +30,7 @@ Current target:
 - `npm run check:c420ui`
 - `npm run check:c420ui-core`
   - validates the generic c420ui package contracts without Canva Linux adapter checks
+  - includes the c420ui action engine contract
 - `npm run check:canva-linux`
   - validates the Canva Linux adapter and artifact recipes separately from c420ui core
 - `npm run actions:validate`

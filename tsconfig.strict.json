@@ -15,6 +15,7 @@
     "electron/preload/**/*.ts",
     "scripts/core/**/*.ts",
     "test/action-runner.test.ts",
+    "test/c420ui-action-engine.test.ts",
     "test/logging-normalize.test.ts",
     "test/debug-levels.test.ts",
     "test/gpu-diagnostics.test.ts",
