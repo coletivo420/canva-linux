@@ -23,6 +23,9 @@ The `canva-linux.sh` launcher provides access to the C420UI terminal interface a
 ## Actions
 
 Direct actions are resolved through the shared Action Registry (`scripts/actions.json`).
+Planned actions are shown in C420UI so users can see future packaging targets,
+but they are not executable. Running a planned action without `--dry-run` exits
+with code `78`; `--dry-run` only resolves metadata and still exits `0`.
 
 | Command | Description |
 | --- | --- |

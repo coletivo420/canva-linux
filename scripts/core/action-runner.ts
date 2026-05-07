@@ -10,6 +10,8 @@ import {
   type CanvaAction,
 } from "./action-registry";
 
+export const PLANNED_ACTION_EXIT_CODE = 78;
+
 function printHelp() {
   console.log(`Canva Linux Action Runner
 
@@ -28,7 +30,7 @@ Options:
   --group <name>            List actions by group
   --id <action-id>          Resolve action by id
   --cli <flag>              Resolve action by CLI flag
-  --dry-run                 Print resolved action and command
+  --dry-run                 Print resolved action and command; planned actions still exit 0
   --requires-confirmation   Exit 0 if action requires confirmation, else 1
   --yes                     Confirm dangerous action execution
 `);
@@ -137,10 +139,13 @@ Long running:
   }
 
   if (action.kind === "planned" || action.planned) {
-    console.log(
+    console.error(
       `[planned] ${action.description || `${action.label} is not implemented in this phase.`}`,
     );
-    return 0;
+    console.error(
+      `[info] Planned actions are visible in the UI but are not executable in this phase.`,
+    );
+    return PLANNED_ACTION_EXIT_CODE;
   }
   if (actionRequiresConfirmation(action) && !has("--yes")) {
     console.error(`[error] Action requires confirmation: ${action.label}`);

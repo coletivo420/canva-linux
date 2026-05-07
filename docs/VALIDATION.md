@@ -39,6 +39,13 @@ Current target:
   - fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/` only
 - `bash -n canva-linux.sh scripts/*.sh`
 - `scripts/run-core-entry.sh overview-status`
+- `scripts/run-core-entry.sh action-runner --cli --bundle-deb` exits `78` because `.deb` packaging is planned, not built.
+- `scripts/run-core-entry.sh action-runner --cli --bundle-rpm` exits `78` because `.rpm` packaging is planned, not built.
+- `scripts/run-core-entry.sh action-runner --cli --prepare-aur` exits `78` because AUR packaging is planned, not built.
+- Planned-action dry runs exit `0` because they only resolve metadata:
+  - `scripts/run-core-entry.sh action-runner --cli --bundle-deb --dry-run`
+  - `scripts/run-core-entry.sh action-runner --cli --bundle-rpm --dry-run`
+  - `scripts/run-core-entry.sh action-runner --cli --prepare-aur --dry-run`
 - `bash scripts/show-detected-installations.sh`
 
 ## Manual
@@ -50,6 +57,7 @@ Current target:
 - Confirm root execution is blocked with a clear message before the C420UI or any direct CLI action starts.
 - Confirm removed interface routing variables are not read by launcher code.
 - Confirm direct CLI actions still work, for example `./canva-linux.sh --doctor`.
+- Confirm planned C420UI actions are displayed as planned and are not treated as successful builds.
 - Confirm detected installs are green and not detected is purple.
 - Confirm detected installs show installed versions, or `version unknown` when unreadable.
 - Confirm the detection panel does not show `Detection error` after a successful Flatpak install.
