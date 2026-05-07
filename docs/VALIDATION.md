@@ -15,6 +15,10 @@ Current target:
   - validates formatted package JSON, shell heredocs, and readable shell/docs shapes
 - `npm run build:c420ui`
 - `npm run check:c420ui`
+- `npm run check:c420ui-core`
+  - validates the generic c420ui package contracts without Canva Linux adapter checks
+- `npm run check:canva-linux`
+  - validates the Canva Linux adapter and artifact recipes separately from c420ui core
 - `npm run actions:validate`
 - `npm run lint`
 - `npm run typecheck`

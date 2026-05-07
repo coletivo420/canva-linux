@@ -94,13 +94,21 @@ If your action requires root privileges, set `requiresRoot: true` in `scripts/ac
 
 ## Core Validation
 
-All project contracts are checked by:
+Core script contracts are checked by:
 
 ```bash
 npm run check:scripts-core
 ```
 
-This command automatically compiles the TypeScript core scripts if necessary.
+The generic c420ui package contracts and the Canva Linux adapter contracts are
+checked separately:
+
+```bash
+npm run check:c420ui-core
+npm run check:canva-linux
+```
+
+These commands automatically compile their TypeScript check scripts if necessary.
 
 ## Next packaging target
 
