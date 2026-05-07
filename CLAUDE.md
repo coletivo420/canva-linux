@@ -63,3 +63,12 @@ Before approving cleanup or simplification, compare the proposed change against 
 Do not approve changes that remove, weaken, bypass, or silently alter behavior already documented in `CHANGELOG.md` unless the maintainer explicitly requested that change.
 
 When in doubt, ask for clarification instead of assuming old behavior is disposable.
+
+## Credential storage policy
+
+- Persistent login must require a secure Linux Secret Service backend.
+- If Electron reports `basic_text`, Canva Linux must use ephemeral session mode.
+- `basic_text` must never use the `persist:canva` partition.
+- Ephemeral session mode must warn the user that login, cookies and credentials will not be saved.
+- Do not claim credentials are securely stored when the selected backend is `basic_text`.
+- Do not log passwords, cookies, tokens, session values or credential material.

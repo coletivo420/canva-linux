@@ -5,6 +5,7 @@ const path = require("path");
 const {
   app,
   safeStorage,
+  dialog,
   BrowserWindow,
   WebContentsView,
   shell,
@@ -34,8 +35,13 @@ const { registerMainIpcHandlers } = require("./ipc");
 const { registerAppLifecycle } = require("./lifecycle");
 const { createCentralLogger, createStatusLogger } = require("./logging");
 const { createLoggingHelpers } = require("./logging-helpers");
+const {
+  createDefaultCredentialStoragePolicy,
+  resolveCredentialStoragePolicy,
+} = require("./credential-storage");
 const { createOAuthHelpers } = require("./oauth");
 const {
+  clearEphemeralSessionData,
   configureLinuxRuntime,
   configureSession,
   flushSession,
@@ -49,7 +55,6 @@ const { createWindowOpenPolicy } = require("./window-open-policy");
 const APP_ID = "io.github.coletivo420.canva-linux";
 const APP_URL = "https://www.canva.com/";
 const APP_NAME = "Canva Linux";
-const PARTITION = "persist:canva";
 const HOME_URL = APP_URL;
 const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
@@ -75,6 +80,7 @@ type FindTabByWebContents = (
   webContents: Partial<Pick<ElectronWebContents, "id">> | null | undefined,
 ) => TabEntry | null;
 type CreateHomeTab = () => TabEntry | null;
+type CredentialStoragePolicy = import("./credential-storage").CredentialStoragePolicy;
 
 let mainWindow: BrowserWindowInstance | null = null;
 let toolbarView: WebContentsViewInstance | null = null;
@@ -84,6 +90,8 @@ let nextPopupId = 1;
 const tabs = new Map<number, TabEntry>();
 const authPopups = new Map<number, AuthPopupEntry>();
 let canvaSession: ElectronSession | null = null;
+let credentialStoragePolicy: CredentialStoragePolicy =
+  createDefaultCredentialStoragePolicy();
 let findTabByWebContents: FindTabByWebContents = () => null;
 let createHomeTab: CreateHomeTab = () => null;
 
@@ -94,21 +102,46 @@ configureLinuxRuntime({
   wmClass: WM_CLASS,
 });
 
+
+function showEphemeralSessionWarning(
+  policy: CredentialStoragePolicy,
+): Promise<unknown> {
+  if (policy.mode !== "ephemeral") {
+    return Promise.resolve();
+  }
+
+  return dialog.showMessageBox({
+    type: "warning",
+    title: "Secure credential storage was not detected",
+    message: "Secure credential storage was not detected.",
+    detail: [
+      "Canva Linux will start in ephemeral session mode.",
+      "Your login, cookies and credentials will not be saved after closing the app.",
+      "",
+      "To enable persistent login, install or enable a Linux Secret Service backend:",
+      "KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
+    ].join("\n"),
+    buttons: ["Continue with ephemeral session"],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+}
+
 function getCanvaSession(): ElectronSession {
   if (!canvaSession) {
-    canvaSession = session.fromPartition(PARTITION, {
-      cache: true,
+    canvaSession = session.fromPartition(credentialStoragePolicy.partition, {
+      cache: credentialStoragePolicy.cache,
     }) as ElectronSession;
   }
   return canvaSession;
 }
 
-const { logCredentialStorageBackend, logReleaseStatus } = createStatusLogger({
+const { logCredentialStoragePolicy, logReleaseStatus } = createStatusLogger({
   app,
   appVersion: APP_VERSION,
   debugLog,
   logStatus: centralLogger.logStatus,
-  safeStorage,
 });
 
 const shellHelpers = createShellHelpers({
@@ -340,6 +373,10 @@ registerAppLifecycle({
   BrowserWindow,
   canvaSessionRef: () => canvaSession,
   centralLogger,
+  clearEphemeralSessionData: clearEphemeralSessionData as unknown as (
+    session: unknown,
+    onWarning?: (operation: string, error: unknown) => void,
+  ) => Promise<void>,
   configureSession: configureSession as unknown as (
     options: Record<string, unknown>,
   ) => Promise<unknown>,
@@ -352,15 +389,27 @@ registerAppLifecycle({
     mainWindow?.focus();
   },
   getCanvaSession,
-  logCredentialStorageBackend,
+  getCredentialStoragePolicy() {
+    return credentialStoragePolicy;
+  },
+  logCredentialStoragePolicy,
   logReleaseStatus,
   nativeTheme,
   onThemeUpdated() {
     applyThemeToShell();
     broadcastTabsState();
   },
-  partition: PARTITION,
+  getSessionPartition() {
+    return credentialStoragePolicy.partition;
+  },
   path,
+  resolveCredentialStoragePolicy() {
+    return resolveCredentialStoragePolicy({ safeStorage });
+  },
+  setCredentialStoragePolicy(policy: CredentialStoragePolicy) {
+    credentialStoragePolicy = policy;
+  },
+  showEphemeralSessionWarning,
   registerGpuDiagnostics() {
     registerGpuDiagnosticsModule({
       app,

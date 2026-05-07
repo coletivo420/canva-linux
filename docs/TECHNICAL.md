@@ -9,7 +9,8 @@ Canva Linux is an Electron desktop wrapper around Canva.
 Core runtime files:
 
 - `electron/main/index.ts` - Electron shell entrypoint and composition root.
-- `electron/main/runtime.ts` - Linux runtime setup and shared session configuration.
+- `electron/main/runtime.ts` - Linux runtime setup, shared session configuration, and ephemeral session cleanup.
+- `electron/main/credential-storage.ts` - Secret Service credential backend policy for persistent login versus ephemeral fallback.
 - `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring.
 - `electron/main/ipc.ts` - centralized main-process IPC routing.
 - `electron/main/logging.ts` - status output and startup diagnostics.
@@ -81,6 +82,19 @@ and logs. Tab and Shift+Tab move between these blocks, the active block uses a
 visible border/label highlight, and focused-panel scrolling is routed to the
 current FocusZone. Enter and Space only execute menu/settings behavior while the
 menu is focused and no action/modal is active.
+
+## Credential storage and session persistence
+
+Canva Linux treats persistent login as a feature gated by secure Linux credential storage.
+Electron/Chromium must report a secure Secret Service backend such as `kwallet`, `kwallet5`, `kwallet6`, or `gnome_libsecret`
+before the app uses the persistent `persist:canva` session partition.
+
+When Electron reports `basic_text`, or when backend detection is unknown or fails,
+the app selects an ephemeral session partition that does not start with `persist:`.
+In ephemeral mode, credentials, cookies and login state are not preserved after closing the app,
+and shutdown attempts to clear storage/cache data defensively.
+
+Logs may report the backend name and policy mode, but must not include cookies, tokens, passwords, session contents or credential material.
 
 ## Sudo Contract
 

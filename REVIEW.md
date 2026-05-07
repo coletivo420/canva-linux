@@ -64,6 +64,16 @@ Request changes if a PR:
 
 Accept removal only when the user or maintainer explicitly requested it and the PR updates `CHANGELOG.md`.
 
+## Credential storage review checklist
+
+Request changes if a PR:
+
+- allows `basic_text` to use `persist:canva`;
+- removes ephemeral fallback for insecure credential storage;
+- removes the user warning for ephemeral sessions;
+- claims persistent login works without Secret Service;
+- logs cookies, tokens, passwords or credential material.
+
 ## Logging review checklist
 
 Reject or request changes if a PR:

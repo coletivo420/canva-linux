@@ -5,10 +5,11 @@ const path = require("path");
 
 const { normalizeArgs, createLogSignature } = require("./logging-normalize");
 
+type CredentialStoragePolicy = import("./credential-storage").CredentialStoragePolicy;
+
 type StatusLevel = "ok" | "warn" | "critical";
 type LogOptions = { source?: string; level?: StatusLevel };
 type AppLike = { getPath(name: string): string };
-type SafeStorageLike = { getSelectedStorageBackend(): string };
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type StatusLogger = (
   category: string,
@@ -177,13 +178,11 @@ function createCentralLogger({ app }: { app: AppLike }) {
 
 function createStatusLogger({
   app,
-  safeStorage,
   debugLog,
   logStatus,
   appVersion,
 }: {
   app: AppLike;
-  safeStorage: SafeStorageLike;
   debugLog: DebugLog;
   logStatus: StatusLogger;
   appVersion: string;
@@ -204,35 +203,27 @@ function createStatusLogger({
     );
   }
 
-  function logCredentialStorageBackend() {
-    if (process.platform !== "linux") return;
+  function logCredentialStoragePolicy(policy: CredentialStoragePolicy) {
+    const summary =
+      `credential-storage-policy backend=${policy.backend} ` +
+      `mode=${policy.mode} security=${policy.security} ` +
+      `partition=${policy.partition} cache=${String(policy.cache)} ` +
+      `persistentLoginAvailable=${String(policy.persistentLoginAvailable)}`;
 
-    let backend = "unknown";
-    try {
-      backend = safeStorage.getSelectedStorageBackend();
-    } catch (error) {
+    if (policy.mode === "ephemeral") {
       logStatus(
         "session",
-        "warn",
-        `credential-storage-backend-error WARNING: ${errorMessage(error)}`,
+        policy.security === "insecure-basic-text" ? "critical" : "warn",
+        `${summary} WARNING: ${policy.warning || "Persistent login is disabled because secure credential storage could not be verified."}`,
       );
       return;
     }
 
-    if (backend === "basic_text") {
+    if (policy.security === "secure") {
       logStatus(
         "session",
-        "critical",
-        "credential-storage-backend basic_text CRITICAL: Electron/Chromium is using the basic plaintext fallback because no supported Linux secret service/keyring was selected. Install or enable KWallet/GNOME Keyring/Secret Service integration for better credential protection.",
-      );
-      return;
-    }
-
-    if (backend === "unknown") {
-      logStatus(
-        "session",
-        "warn",
-        "credential-storage-backend unknown WARNING: Electron could not verify the selected credential storage backend. This does not prove plaintext storage, but credential protection could not be verified. Check KWallet/GNOME Keyring/Secret Service integration.",
+        "ok",
+        `${summary} OK: secure Linux secret storage backend detected.`,
       );
       return;
     }
@@ -240,12 +231,12 @@ function createStatusLogger({
     logStatus(
       "session",
       "ok",
-      `credential-storage-backend ${backend} OK: secure Linux secret storage backend detected.`,
+      `${summary} OK: platform default credential storage policy selected.`,
     );
   }
 
   return {
-    logCredentialStorageBackend,
+    logCredentialStoragePolicy,
     logReleaseStatus,
     logStatus,
   };

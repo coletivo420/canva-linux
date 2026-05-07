@@ -13,6 +13,20 @@ See also:
 - [Development guide (host dependencies)](DEVELOPMENT.md#requirements)
 - [AppImage FUSE requirements](APPIMAGE_FUSE.md)
 
+## Credential storage requirements
+
+Persistent login requires a working Linux Secret Service backend.
+
+Examples:
+
+- KDE Plasma: KWallet / KWallet 5 / KWallet 6
+- GNOME: GNOME Keyring / libsecret
+- XFCE, Cinnamon, Pantheon and compatible desktops: libsecret-compatible Secret Service provider
+
+Electron backend names expected for secure persistent login include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`.
+
+If no secure backend is available and Electron reports `basic_text`, Canva Linux uses an ephemeral session. Login, cookies and credentials will not be saved.
+
 ## Installation modes
 
 | Mode | Scope | Sandbox | Default |

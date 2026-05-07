@@ -31,6 +31,15 @@ function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
+const requiredReviewFragments = [
+  "## Credential storage review checklist",
+  "allows `basic_text` to use `persist:canva`",
+  "removes ephemeral fallback for insecure credential storage",
+  "removes the user warning for ephemeral sessions",
+  "claims persistent login works without Secret Service",
+  "logs cookies, tokens, passwords or credential material",
+];
+
 const requiredGuardrails = [
   "The interactive shell menu has been removed.",
   "The project exposes only C420UI and direct CLI actions.",
@@ -45,6 +54,12 @@ const requiredGuardrails = [
   "writeSession must not call appendLogText directly to avoid recursion.",
   "Sudo/root authentication failures must be shown in a centered C420UI popup.",
   "Never log passwords, sudo stdin, cookies, tokens, or credential material.",
+  "Persistent login must require a secure Linux Secret Service backend.",
+  "If Electron reports `basic_text`, Canva Linux must use ephemeral session mode.",
+  "`basic_text` must never use the `persist:canva` partition.",
+  "Ephemeral session mode must warn the user that login, cookies and credentials will not be saved.",
+  "Do not claim credentials are securely stored when the selected backend is `basic_text`.",
+  "Do not log passwords, cookies, tokens, session values or credential material.",
   "Help must document log copy, manual selection and terminal limitations.",
   "terminalTextSelectionMode must disable mouse capture globally, not only on the logs widget.",
   "F5 clipboard copy must keep working even when text selection mode is enabled.",
@@ -120,6 +135,11 @@ export function main(): number {
     : "";
   if (!review.startsWith("# Review Checklist"))
     failures.push("REVIEW.md must preserve the Review Checklist at the top");
+  const normalizedReview = normalizeWhitespace(review);
+  for (const fragment of requiredReviewFragments) {
+    if (!normalizedReview.includes(normalizeWhitespace(fragment)))
+      failures.push(`REVIEW.md missing credential checklist item: ${fragment}`);
+  }
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[ai-guardrails] OK");
