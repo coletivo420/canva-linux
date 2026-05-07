@@ -25,7 +25,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Read `docs/PROJECT_TREE.md` before moving code across Electron, scripts, C420UI, packaging,
   docs, or generated-output boundaries.
 - `scripts/c420ui/` is the current transitional in-repo C420UI implementation before package split.
-- `scripts/c420ui-canva-linux/` is a planned Canva Linux adapter boundary, not current public API.
+- `scripts/c420ui-canva-linux/` is the Canva Linux adapter boundary, not a public C420UI API.
 - `packages/c420ui/` is a planned standalone package boundary, not a published package promise.
 - Do not document C420UI as an externally consumable package until the maintainer explicitly requests publication.
 - Keep generated output in `.build/`, `dist/`, `coverage/`, or `repo/`; do not treat it as maintained source.

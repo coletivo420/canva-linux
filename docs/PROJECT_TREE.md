@@ -17,10 +17,10 @@ without promising an external package or publication timeline.
 ├── scripts/                   Canva Linux tool, validation, packaging, and host-operation source
 │   ├── core/                  TypeScript validation, action contracts, and action-runner core
 │   ├── c420ui/                Current in-repo C420UI implementation before package split
-│   ├── c420ui-canva-linux/    Planned Canva Linux adapter location for C420UI integration
+│   ├── c420ui-canva-linux/    Canva Linux adapter boundary for C420UI integration
 │   └── *.sh                   Linux host-operation glue and launcher/install/package wrappers
-├── packages/                  Planned package workspace; no published C420UI package exists yet
-│   └── c420ui/                Planned standalone C420UI package after the split
+├── packages/                  Private package workspace; no published C420UI package exists yet
+│   └── c420ui/                Private future standalone C420UI package skeleton
 ├── docs/                      Public and internal project documentation
 │   ├── *.md                   Public user, contributor, release, validation, and architecture docs
 │   ├── internal/              AI, developer-memory, historical, and legacy notes
@@ -42,9 +42,9 @@ without promising an external package or publication timeline.
 ```
 
 Some planned directories may not exist until their corresponding split work
-starts. In particular, `scripts/c420ui-canva-linux/`, `packages/`, and
-`packages/c420ui/` are reference boundaries for the C420UI separation plan, not
-published or supported external package locations today.
+starts. `scripts/c420ui-canva-linux/` now exists as the Canva Linux adapter boundary,
+while `packages/c420ui/` exists only as a private package skeleton for the C420UI separation plan,
+not a published or supported external package location today.
 
 ## Maintained source
 
@@ -89,9 +89,9 @@ The intended separation is:
 - **C420UI core**: reusable terminal UI primitives, layout, focus, logs, modal,
   and brand/project-header boundaries. Today these live in `scripts/c420ui/`.
 - **Canva Linux adapter**: project-specific actions, metadata, launch wiring,
-  install/package status, and Canva Linux labels. The planned boundary is
-  `scripts/c420ui-canva-linux/` before or during extraction.
-- **Future package workspace**: `packages/c420ui/` is reserved for a possible
+  install/package status, and Canva Linux labels. This boundary starts in
+  `scripts/c420ui-canva-linux/` before broader extraction.
+- **Future package workspace**: `packages/c420ui/` is a private skeleton reserved for a possible
   standalone C420UI package after the core is separated. It is not a published
   npm package and should not be documented as externally consumable yet.
 - **Action contract**: C420UI and direct CLI actions must continue to source

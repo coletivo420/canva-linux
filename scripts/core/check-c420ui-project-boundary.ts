@@ -24,6 +24,7 @@ export function main(): number {
   const logo = read(rootDir, "scripts/c420ui/logo.ts");
   const settings = read(rootDir, "scripts/c420ui/settings.ts");
   const index = read(rootDir, "scripts/c420ui/index.ts");
+  const adapter = read(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
   const projectUi = read(rootDir, "scripts/project-ui.json");
   const failures: string[] = [];
 
@@ -66,6 +67,14 @@ export function main(): number {
     }
   }
 
+
+  assertIncludes(
+    failures,
+    index,
+    "runCanvaLinuxC420UI",
+    "scripts/c420ui/index.ts must delegate to the Canva Linux C420UI adapter runner",
+  );
+
   const projectFields = [
     "logoLines",
     "appId",
@@ -82,11 +91,11 @@ export function main(): number {
       `scripts/c420ui/app.ts must read ${field} from project config`,
     );
     if (
-      !index.includes(`${field}: projectUi.${field}`) &&
-      !index.includes(`${field}: [...projectUi.${field}]`)
+      !adapter.includes(`${field}: projectUi.${field}`) &&
+      !adapter.includes(`${field}: [...projectUi.${field}]`)
     ) {
       failures.push(
-        `scripts/c420ui/index.ts must inject ${field} from scripts/project-ui.json`,
+        `scripts/c420ui-canva-linux/adapter.ts must inject ${field} from scripts/project-ui.json`,
       );
     }
     assertIncludes(

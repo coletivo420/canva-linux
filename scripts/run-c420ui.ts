@@ -1,8 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { rootLaunchGuardMessage } from "./c420ui/settings";
-import projectUi from "./project-ui.json";
+import { createCanvaLinuxC420UIAdapter } from "./c420ui-canva-linux/adapter";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
@@ -10,7 +9,8 @@ process.chdir(rootDir);
 
 const outFile = path.join(rootDir, ".build/scripts/c420ui/index.js");
 const uiDir = path.join(rootDir, "scripts/c420ui");
-const identityFile = path.join(rootDir, "scripts/app-identity-common.sh");
+const adapterDir = path.join(rootDir, "scripts/c420ui-canva-linux");
+const adapter = createCanvaLinuxC420UIAdapter(rootDir);
 
 function listTsFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -25,6 +25,7 @@ function needsBuild(): boolean {
   const outMtime = fs.statSync(outFile).mtimeMs;
   const inputs = [
     ...listTsFiles(uiDir),
+    ...listTsFiles(adapterDir),
     path.join(rootDir, "package.json"),
     path.join(rootDir, "package-lock.json"),
     path.join(rootDir, "scripts/project-ui.json"),
@@ -32,22 +33,6 @@ function needsBuild(): boolean {
     path.join(rootDir, "scripts/actions.json"),
   ].filter((file) => fs.existsSync(file));
   return inputs.some((file) => fs.statSync(file).mtimeMs > outMtime);
-}
-
-function readProjectPhaseFromShell(): string {
-  try {
-    const content = fs.readFileSync(identityFile, "utf8");
-    const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
-    return match ? match[1] : "unknown";
-  } catch {
-    return "unknown";
-  }
-}
-
-function resolveProjectPhase(): string {
-  const fromEnv = process.env.CANVA_PROJECT_PHASE?.trim();
-  if (fromEnv) return fromEnv;
-  return readProjectPhaseFromShell();
 }
 
 function ensureNpmDependencies(): void {
@@ -69,7 +54,7 @@ function ensureNpmDependencies(): void {
 
 export function main(): void {
   if (typeof process.getuid === "function" && process.getuid() === 0) {
-    console.error(rootLaunchGuardMessage(projectUi.projectName));
+    console.error(adapter.rootLaunchGuardMessage());
     process.exit(1);
   }
 
@@ -90,7 +75,7 @@ export function main(): void {
     [".build/scripts/c420ui/index.js", ...process.argv.slice(2)],
     {
       stdio: "inherit",
-      env: { ...process.env, CANVA_PROJECT_PHASE: resolveProjectPhase() },
+      env: { ...process.env, CANVA_PROJECT_PHASE: adapter.getProjectPhase() },
     },
   );
 

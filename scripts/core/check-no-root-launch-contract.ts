@@ -13,6 +13,7 @@ export function main(): number {
   const launcher = read(rootDir, "canva-linux.sh");
   const runTui = read(rootDir, "scripts/run-c420ui.ts");
   const tuiIndex = read(rootDir, "scripts/c420ui/index.ts");
+  const adapterRun = read(rootDir, "scripts/c420ui-canva-linux/run.ts");
   const rootMessage =
     "Do not run Canva Linux Install and Development Tool with sudo or as root.";
 
@@ -27,11 +28,14 @@ export function main(): number {
       "canva-linux.sh: root guard must explain privileges are requested only when needed",
     );
   }
-  if (!runTui.includes("process.getuid") || !tuiIndex.includes("process.getuid")) {
+  if (!runTui.includes("process.getuid") || !adapterRun.includes("process.getuid")) {
     failures.push("C420UI bootstrap must include a secondary root-launch guard");
   }
+  if (!tuiIndex.includes("runCanvaLinuxC420UI")) {
+    failures.push("scripts/c420ui/index.ts must delegate to adapter runner");
+  }
   if (!runTui.includes("rootLaunchGuardMessage")) {
-    failures.push("scripts/run-c420ui.ts: must reuse the root-launch guard message builder");
+    failures.push("scripts/run-c420ui.ts: must reuse the root-launch guard message builder through the adapter");
   }
 
   const docsToCheck = ["README.md", "docs/CLI.md", "docs/TECHNICAL.md"];

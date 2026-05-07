@@ -22,9 +22,16 @@ export function main(): number {
   const rootDir = findProjectRoot();
   const app = read(rootDir, "scripts/c420ui/app.ts");
   const index = read(rootDir, "scripts/c420ui/index.ts");
+  const adapter = read(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
   const projectUi = read(rootDir, "scripts/project-ui.json");
   const failures: string[] = [];
 
+  assertIncludes(
+    failures,
+    index,
+    "runCanvaLinuxC420UI",
+    "scripts/c420ui/index.ts must delegate to the Canva Linux C420UI adapter runner",
+  );
   assertIncludes(
     failures,
     app,
@@ -99,10 +106,10 @@ export function main(): number {
   if (!app.includes("content: [\n      `{bold}${opts.project.projectName}")) {
     failures.push("projectHeader content must come from project config");
   }
-  if (!index.includes("projectName: projectUi.projectName")) {
+  if (!adapter.includes("projectName: projectUi.projectName")) {
     failures.push("project name must be injected from scripts/project-ui.json");
   }
-  if (!index.includes("projectSubtitle: projectUi.projectSubtitle")) {
+  if (!adapter.includes("projectSubtitle: projectUi.projectSubtitle")) {
     failures.push(
       "project subtitle must be injected from scripts/project-ui.json",
     );

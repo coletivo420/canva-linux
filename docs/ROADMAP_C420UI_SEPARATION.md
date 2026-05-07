@@ -39,12 +39,12 @@ scripts/c420ui-canva-linux/
 ```
 
 `packages/c420ui/` is reserved for a future reusable C420UI package workspace.
-`scripts/c420ui-canva-linux/` is reserved for Canva Linux-specific adapter code
-that wires project metadata, action definitions, detection/status summaries, and
+`scripts/c420ui-canva-linux/` is the Canva Linux-specific adapter boundary for
+wiring project metadata, action definitions, detection/status summaries, and
 launch behavior into the reusable C420UI core.
 
-Until these directories exist and are wired through validation, `scripts/c420ui/`
-remains the source of truth for the in-repo implementation.
+Until broader package and adapter wiring is complete, `scripts/c420ui/` remains
+the source of truth for the in-repo implementation.
 
 ## Non-goals for this phase
 
@@ -113,10 +113,10 @@ Rules:
 
 ### 4. Adapter boundary
 
-Introduce a Canva Linux adapter boundary that owns project-specific data and
+Introduce and then expand a Canva Linux adapter boundary that owns project-specific data and
 runtime glue.
 
-Planned shape:
+Initial shape:
 
 ```text
 scripts/c420ui-canva-linux/

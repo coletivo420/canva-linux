@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Added the Canva Linux C420UI adapter boundary for project-specific metadata, action, path and root-guard wiring.
 - Added the private future `@coletivo420/c420ui` package skeleton with pure C420UI TypeScript contracts.
 - Added the public C420UI separation roadmap for compatibility-first package and adapter boundary work.
 - Added Secret Service-backed credential storage documentation and validation.
