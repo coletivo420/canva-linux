@@ -775,6 +775,7 @@ export function createApp(opts: {
       return;
     }
     applyLogPanelLabel();
+    if (currentView === "settings") setSettingsMenuItems();
     appendLogText(`[info] Settings changed (${reason}).\n`, "system");
     renderSettingsHelp();
     screen.render();
