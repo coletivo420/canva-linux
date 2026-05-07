@@ -104,4 +104,4 @@ CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak
 
 Before a final Flathub submission, the maintainer must review source URLs, source hashes, and screenshot URLs against the intended stable release input.
 
-For practical submission-path commands and rationale notes, see `docs/FLATHUB_SUBMISSION_PATH.md` and `docs/FLATHUB_SUBMISSION_NOTES.md`.
+For practical submission-path commands and rationale notes, see `docs/notes/FLATHUB_SUBMISSION_PATH.md` and `docs/notes/FLATHUB_SUBMISSION_NOTES.md`.

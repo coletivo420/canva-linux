@@ -78,7 +78,16 @@ function registerAppLifecycle({
     focusMainWindow();
   });
 
-  app.whenReady().then(async () => {
+  function startupErrorMessage(error: unknown): string {
+    return error &&
+      typeof error === "object" &&
+      "message" in error &&
+      typeof error.message === "string"
+      ? error.message
+      : String(error);
+  }
+
+  async function bootApplication(): Promise<void> {
     const logFilePath = centralLogger.initLogFile();
     debugLog(
       "startup",
@@ -118,7 +127,24 @@ function registerAppLifecycle({
         tabController.createHomeTab();
       }
     });
-  });
+  }
+
+  function handleStartupError(error: unknown): void {
+    const message = `startup failed: ${startupErrorMessage(error)}`;
+    try {
+      centralLogger.logStatus("startup", "critical", message);
+    } catch {
+      console.error(`[canva:main:startup:critical] ${message}`);
+    }
+
+    if (debugLevel > 0 && error instanceof Error && error.stack) {
+      debugLog("startup", "startup-error-stack", error.stack);
+    }
+
+    app.quit();
+  }
+
+  app.whenReady().then(bootApplication).catch(handleStartupError);
 
   app.on("window-all-closed", async () => {
     debugLog("app", "window-all-closed");

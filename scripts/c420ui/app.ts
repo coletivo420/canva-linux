@@ -110,6 +110,10 @@ const HEADER_BOX_HORIZONTAL_PADDING = 4;
 const C420UI_HEADER_MIN_WIDTH = 28;
 const PROJECT_HEADER_MIN_WIDTH = 40;
 
+function isPlannedAction(action: C420UIAction): boolean {
+  return action.kind === "planned" || Boolean(action.planned);
+}
+
 function longestLineLength(lines: string[]): number {
   return Math.max(0, ...lines.map((line) => line.length));
 }
@@ -1107,6 +1111,13 @@ export function createApp(opts: C420UIConfig) {
     if (!selected) {
       return content.setContent(base.join("\n"));
     }
+    const plannedBlock = isPlannedAction(selected)
+      ? [
+          "",
+          `{${c420uiTheme.colors.infoItemTitle}-fg}Status:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
+          `  {${c420uiTheme.colors.warning}-fg}Planned - visible in C420UI, but not executable in this phase.{/${c420uiTheme.colors.warning}-fg}`,
+        ]
+      : [];
     const warningBlock = selected.warning
       ? [
           "",
@@ -1123,6 +1134,7 @@ export function createApp(opts: C420UIConfig) {
         "",
         `{${c420uiTheme.colors.infoItemTitle}-fg}Description:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
         `  {${c420uiTheme.colors.descriptionText}-fg}${selected.description ?? "No description available."}{/${c420uiTheme.colors.descriptionText}-fg}`,
+        ...plannedBlock,
         ...warningBlock,
       ].join("\n"),
     );
@@ -1414,6 +1426,24 @@ export function createApp(opts: C420UIConfig) {
       return;
     }
 
+    if (isPlannedAction(action)) {
+      const message =
+        action.description || `${action.label} is not implemented in this phase.`;
+      appendLogText(`[planned] ${message}\n`, "system");
+      modalActive = true;
+      await messageDialog(
+        screen,
+        "Planned action",
+        [
+          message,
+          "",
+          "This action is visible in C420UI for roadmap awareness, but it is not executable in this phase.",
+        ].join("\n"),
+      );
+      modalActive = false;
+      return;
+    }
+
     if (action.dangerous) {
       modalActive = true;
       const ok = await confirmDialog(screen, {
@@ -1519,22 +1549,22 @@ export function createApp(opts: C420UIConfig) {
       appendLogText("[info] Root authentication succeeded.\n", "system");
     }
 
-    if (!action.command) {
-      return;
-    }
-
     running = true;
     progressState = "running";
     setProgressRunning(5, "Starting");
+    const runnerArgs = ["action-runner", "--id", action.id];
+    if (action.requiresConfirmation || action.dangerous) {
+      runnerArgs.push("--yes");
+    }
     appendLogText(
-      `$ ${action.command} ${(action.args ?? []).join(" ")}\n`,
+      `$ scripts/run-core-entry.sh ${runnerArgs.join(" ")}\n`,
       "stdout",
     );
     writeSession(`[action] ${action.id} ${action.label}`);
 
     currentChild = runAction(
-      action.command,
-      action.args ?? [],
+      "scripts/run-core-entry.sh",
+      runnerArgs,
       (txt, src) => appendLogText(txt, src),
       async ({ code, signal }) => {
         currentChild = null;

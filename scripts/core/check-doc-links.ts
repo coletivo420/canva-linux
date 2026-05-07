@@ -32,7 +32,7 @@ function walk(dir: string) {
 
 function skipWhitespace(text: string, startIndex: number) {
   let index = startIndex;
-  while (index < text.length && /\s/.test(text[index])) {
+  while (index < text.length && /\s/.test(text[index]!)) {
     index += 1;
   }
   return index;
@@ -75,7 +75,7 @@ function parseMarkdownInlineLinks(text: string) {
       let escaped = false;
 
       while (cursor < text.length) {
-        const char = text[cursor];
+        const char = text[cursor]!;
 
         if (escaped) {
           escaped = false;
@@ -128,7 +128,7 @@ function parseMarkdownInlineLinks(text: string) {
 
       let escaped = false;
       while (cursor < text.length) {
-        const char = text[cursor];
+        const char = text[cursor]!;
 
         if (escaped) {
           escaped = false;
@@ -186,7 +186,7 @@ export function main(): number {
         continue;
       }
 
-      const linkPath = rawLink.split("#", 1)[0].trim();
+      const linkPath = (rawLink.split("#", 1)[0] ?? "").trim();
       if (!linkPath) {
         continue;
       }

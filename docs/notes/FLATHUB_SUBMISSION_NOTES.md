@@ -53,7 +53,7 @@ The dedicated submission path ensures Flathub review sees reproducible, auditabl
 
 ## Maintainer references
 
-- `docs/FLATHUB_SUBMISSION_PATH.md`
-- `docs/FLATHUB_CHECKLIST.md`
-- `docs/FLATHUB_SOURCE.md`
+- `docs/notes/FLATHUB_SUBMISSION_PATH.md`
+- `docs/notes/FLATHUB_CHECKLIST.md`
+- `docs/notes/FLATHUB_SOURCE.md`
 - `docs/TECHNICAL.md`

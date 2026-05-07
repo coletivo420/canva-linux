@@ -19,6 +19,7 @@ Current target:
 - `npm run lint`
 - `npm run typecheck`
 - `npm run typecheck:strict`
+  - strict by critical surface, not global strict; see `tsconfig.strict.json`
 - `npm run check:gitignore-policy`
 - `npm test`
   - compiles selected TypeScript tests plus support helpers to `.build/test/` before `node --test`
@@ -39,6 +40,13 @@ Current target:
   - fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/` only
 - `bash -n canva-linux.sh scripts/*.sh`
 - `scripts/run-core-entry.sh overview-status`
+- `scripts/run-core-entry.sh action-runner --cli --bundle-deb` exits `78` because `.deb` packaging is planned, not built.
+- `scripts/run-core-entry.sh action-runner --cli --bundle-rpm` exits `78` because `.rpm` packaging is planned, not built.
+- `scripts/run-core-entry.sh action-runner --cli --prepare-aur` exits `78` because AUR packaging is planned, not built.
+- Planned-action dry runs exit `0` because they only resolve metadata:
+  - `scripts/run-core-entry.sh action-runner --cli --bundle-deb --dry-run`
+  - `scripts/run-core-entry.sh action-runner --cli --bundle-rpm --dry-run`
+  - `scripts/run-core-entry.sh action-runner --cli --prepare-aur --dry-run`
 - `bash scripts/show-detected-installations.sh`
 
 ## Manual
@@ -50,6 +58,7 @@ Current target:
 - Confirm root execution is blocked with a clear message before the C420UI or any direct CLI action starts.
 - Confirm removed interface routing variables are not read by launcher code.
 - Confirm direct CLI actions still work, for example `./canva-linux.sh --doctor`.
+- Confirm planned C420UI actions are displayed as planned and are not treated as successful builds.
 - Confirm detected installs are green and not detected is purple.
 - Confirm detected installs show installed versions, or `version unknown` when unreadable.
 - Confirm the detection panel does not show `Detection error` after a successful Flatpak install.
@@ -59,7 +68,10 @@ Current target:
 - Confirm help screen uses the same semantic colors.
 - Confirm user/system action scopes are applied through `action.env`.
 - Confirm user-scope actions do not request sudo.
-- Confirm system-scope actions use `scripts/sudo-common.sh`.
+- Confirm system-scope actions use `scripts/sudo-common.sh --validate` from Action Runner before backend scripts start.
+- Confirm C420UI root actions validate cached sudo credentials non-interactively after the C420UI password prompt.
+- Confirm an action with `requiresRoot: true` and `scope: "user"` fails before its backend script starts.
+- Confirm `--uninstall` and `--purge` request root only when a system-wide installation is detected.
 - Confirm Application Settings appears below Maintenance & Uninstall.
 - Confirm general Tool logs can be toggled and are persisted in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json` or `~/.config/canva-linux/tool-settings.json`.
 - Confirm Tool logs and Action logs are visually distinguishable in the logs panel.

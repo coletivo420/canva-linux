@@ -23,6 +23,9 @@ The `canva-linux.sh` launcher provides access to the C420UI terminal interface a
 ## Actions
 
 Direct actions are resolved through the shared Action Registry (`scripts/actions.json`).
+Planned actions are shown in C420UI so users can see future packaging targets,
+but they are not executable. Running a planned action without `--dry-run` exits
+with code `78`; `--dry-run` only resolves metadata and still exits `0`.
 
 | Command | Description |
 | --- | --- |
@@ -45,6 +48,21 @@ Direct actions are resolved through the shared Action Registry (`scripts/actions
 | `--uninstall-flatpak` | Uninstall Flatpak Install. |
 | `--reset-user-data` | Delete login/session/cache data. |
 | `--purge` | Uninstall detected variants and remove user data. |
+
+## Root and Scope Enforcement
+
+The Action Runner centrally enforces Action Registry metadata before starting a
+backend script. Actions with `requiresRoot: true` validate administrator access
+through `scripts/sudo-common.sh --validate`; direct CLI mode may prompt normally,
+while C420UI uses previously cached credentials in non-interactive mode.
+
+`scope: "user"` actions must not require root, and the runner refuses an action
+that combines user scope with `requiresRoot: true`. User-scope Native and Flatpak
+actions receive their `CANVA_NATIVE_SCOPE=user` or `CANVA_FLATPAK_SCOPE=user`
+environment from the Action Registry and do not ask for sudo.
+
+`--uninstall` and `--purge` are conditional: they only validate root access when
+a system-wide Native or Flatpak installation is detected.
 
 ## Environment Variables
 

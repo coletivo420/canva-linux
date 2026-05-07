@@ -40,6 +40,9 @@ canva_assert_not_user_scope() {
 
 canva_sudo_validate() {
   canva_assert_not_user_scope
+  # C420UI pre-validates credentials before launching action-runner.
+  # With CANVA_C420UI_ROOT_AUTH=1, central runner validation must only
+  # accept cached sudo credentials and must not prompt from the TUI child.
   local status=0
   if canva_is_tui_mode; then
     canva_sudo_timeout sudo -n -v || status=$?

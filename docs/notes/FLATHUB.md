@@ -87,8 +87,8 @@ The manifest intentionally avoids broad home-directory access and keeps narrower
 
 Do not treat local GitHub release bundles as a direct Flathub submission mechanism, and do not replace the repository-root local manifest (`io.github.coletivo420.canva-linux.yml`) when preparing submission files.
 
-Source strategy guidance for final Flathub submission lives in `docs/FLATHUB_SOURCE.md`.
-Submission-path workflow lives in `docs/FLATHUB_SUBMISSION_PATH.md`, and rationale notes (including thin-wrapper objection handling) live in `docs/FLATHUB_SUBMISSION_NOTES.md`.
+Source strategy guidance for final Flathub submission lives in `docs/notes/FLATHUB_SOURCE.md`.
+Submission-path workflow lives in `docs/notes/FLATHUB_SUBMISSION_PATH.md`, and rationale notes (including thin-wrapper objection handling) live in `docs/notes/FLATHUB_SUBMISSION_NOTES.md`.
 
 - Submission manifest builds should come from a pinned public archive source (`type: archive` + `sha256`) and regenerate Electron output inside the sandbox.
 - `dist/linux-unpacked` is acceptable as an internal sandbox build artifact; avoid relying on host-prebuilt `dist/` content.
@@ -107,7 +107,7 @@ Run it after every lockfile change:
 
 ## Flathub checklist
 
-See `docs/FLATHUB_CHECKLIST.md` for the practical submission checklist, including:
+See `docs/notes/FLATHUB_CHECKLIST.md` for the practical submission checklist, including:
 
 - AppStream and desktop metadata validation
 - `flatpak-builder-lint` checks for manifest and repo

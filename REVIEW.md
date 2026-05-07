@@ -38,4 +38,4 @@ Request changes if a PR:
 
 ## Repository inventory
 
-The generated file inventory belongs in `docs/REPOSITORY_INVENTORY.md`. Do not replace this checklist with generated inventory output.
+The generated file inventory belongs in `docs/internal/REPOSITORY_INVENTORY.md`. Do not replace this checklist with generated inventory output.

@@ -48,7 +48,7 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 - Flathub validation commonly expects both manifest lint and repo lint checks.
 - If `org.flatpak.Builder` is missing locally, install it with:
   `flatpak install flathub org.flatpak.Builder`
-- Review `docs/FLATHUB_SOURCE.md` before preparing the final Flathub source definition.
+- Review `docs/notes/FLATHUB_SOURCE.md` before preparing the final Flathub source definition.
 - The generated `electron/preload/canva.bundle.js` should be regenerated from source during the build and should not replace review of the modular preload source files.
 - Release bundle publication must use the default rebuild path so the `.flatpak` is not created from stale Electron output.
 - Use `scripts/build-flatpak-bundle.sh --use-existing-repo` only for explicit local reuse of an already reviewed `repo/`, not for release publication after source changes.

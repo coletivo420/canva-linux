@@ -4,7 +4,7 @@ import path from "node:path";
 import { findProjectRoot } from "./action-registry";
 
 const requiredFiles = [
-  "docs/AI_GUARDRAILS.md",
+  "docs/internal/AI_GUARDRAILS.md",
   "docs/VALIDATION.md",
   "docs/TYPESCRIPT.md",
   "docs/CANVA_LINUX_EYEDROPPER.md",
@@ -13,11 +13,18 @@ const requiredFiles = [
 
 const readmeRefs = [
   "docs/README.md",
+  "docs/INSTALLATION.md",
+  "docs/CLI.md",
+  "docs/FEATURES.md",
+  "docs/DEBUGGING.md",
+  "docs/TROUBLESHOOTING.md",
   "docs/VALIDATION.md",
+  "docs/RELEASE.md",
   "docs/DEVELOPMENT.md",
+  "docs/TECHNICAL.md",
   "docs/TYPESCRIPT.md",
   "docs/CANVA_LINUX_EYEDROPPER.md",
-  "docs/AI_GUARDRAILS.md",
+  "docs/APPIMAGE_FUSE.md",
 ];
 
 function normalizeWhitespace(value: string): string {
@@ -100,13 +107,13 @@ export function main(): number {
   if (readme.includes("Shell Tool"))
     failures.push("README must not mention Shell Tool");
 
-  const guardrails = fs.existsSync(path.join(rootDir, "docs/AI_GUARDRAILS.md"))
-    ? fs.readFileSync(path.join(rootDir, "docs/AI_GUARDRAILS.md"), "utf8")
+  const guardrails = fs.existsSync(path.join(rootDir, "docs/internal/AI_GUARDRAILS.md"))
+    ? fs.readFileSync(path.join(rootDir, "docs/internal/AI_GUARDRAILS.md"), "utf8")
     : "";
   const normalizedGuardrails = normalizeWhitespace(guardrails);
   for (const fragment of requiredGuardrails) {
     if (!normalizedGuardrails.includes(normalizeWhitespace(fragment)))
-      failures.push(`AI_GUARDRAILS missing rule: ${fragment}`);
+      failures.push(`internal/AI_GUARDRAILS missing rule: ${fragment}`);
   }
 
   const review = fs.existsSync(path.join(rootDir, "REVIEW.md"))

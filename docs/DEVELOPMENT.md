@@ -35,6 +35,37 @@ npm ci --include=dev
   `scripts/run-typescript-script.js`.
 - Run `npm run check:no-source-javascript` or `npm run check:scripts-core` after adding script, test, config, or packaging helper files.
 
+## Type checking and linting
+
+The default `npm run typecheck` uses `tsconfig.json` with `strict: false` so the
+whole project can keep moving while legacy surfaces are tightened incrementally.
+
+`npm run typecheck:strict` is strict by critical surface, not strict global yet.
+Its current surface is grouped in `tsconfig.strict.json` as:
+
+1. `electron/main/**/*.ts`
+2. `electron/shared/**/*.ts`
+3. `electron/preload/**/*.ts`
+4. `scripts/core/**/*.ts`
+5. selected Node tests and support helpers already compatible with strict mode
+
+The next strict-mode expansion targets are `scripts/c420ui/**/*.ts`, then the
+remaining tests. Do not broaden the strict config and fix unrelated code in the
+same large patch; add one surface at a time and keep `npm run typecheck:strict`
+green.
+
+`npm run lint` uses safe project-wide ESLint rules only. Import resolver settings
+should not be added unless a compatible import plugin is installed and documented.
+`@typescript-eslint/no-unused-vars` remains a warning until real unused-variable
+cleanup is complete.
+
+## Documentation layout
+
+Keep release-facing docs linked from `README.md` and `docs/README.md`. Internal
+AI/dev memory belongs under `docs/internal/`; submission notes and historical
+packaging notes belong under `docs/notes/`. Do not delete useful technical notes
+when they leave the public index.
+
 ## Adding workflow actions
 
 All workflow actions must be registered in:

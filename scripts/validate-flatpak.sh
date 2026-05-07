@@ -116,8 +116,8 @@ while IFS='|' read -r path label; do
 done <<'REQUIRED_FILES'
 docs/SCREENSHOTS.md|screenshot manifest
 docs/PRIVACY.md|privacy documentation
-docs/FLATHUB_CHECKLIST.md|Flathub checklist
-docs/FLATHUB_SOURCE.md|Flathub source strategy documentation
+docs/notes/FLATHUB_CHECKLIST.md|Flathub checklist
+docs/notes/FLATHUB_SOURCE.md|Flathub source strategy documentation
 docs/FLATPAK_PERMISSIONS.md|permission review documentation
 io.github.coletivo420.canva-linux.yml|Flatpak manifest
 data/io.github.coletivo420.canva-linux.metainfo.xml|AppStream metadata

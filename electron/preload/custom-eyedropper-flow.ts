@@ -243,7 +243,7 @@ function createCustomEyeDropperFlow({
       },
     });
 
-    return await new Promise<EyeDropperResult>((resolve, reject) => {
+    return new Promise<EyeDropperResult>((resolve, reject) => {
       let settled = false;
 
       const cleanup = () => {

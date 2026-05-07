@@ -415,7 +415,9 @@
     "description": "Uninstall detected Native/Flatpak variants. AppImage artifacts are generated files and are removed by Clean generated artifacts.",
     "confirmationTitle": "Confirm Uninstall detected installations",
     "confirmationMessage": "Uninstall detected Native/Flatpak variants. AppImage artifacts are generated files and are removed by Clean generated artifacts.",
-    "hidden": true
+    "hidden": true,
+    "requiresRoot": false,
+    "warning": "Administrator authorization is requested only when a system-wide Native or Flatpak installation is detected."
   },
   {
     "id": "purge",
@@ -434,7 +436,9 @@
     "requiresConfirmation": true,
     "confirmationTitle": "Purge Canva Linux",
     "confirmationMessage": "This will uninstall detected variants and remove login/session/cache/user data.",
-    "description": "Uninstall Native/Flatpak variants and remove user data. Generated package artifacts are not installation variants."
+    "description": "Uninstall Native/Flatpak variants and remove user data. Generated package artifacts are not installation variants.",
+    "requiresRoot": false,
+    "warning": "Administrator authorization is requested only when a system-wide Native or Flatpak installation is detected."
   },
   {
     "id": "fix-build-permissions",

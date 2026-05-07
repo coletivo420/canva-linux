@@ -2,8 +2,8 @@
 
 Always read:
 
-- `docs/AI_GUARDRAILS.md`
-- `docs/LOGGING_CONTRACT.md`
+- `docs/internal/AI_GUARDRAILS.md`
+- `docs/internal/LOGGING_CONTRACT.md`
 - `docs/FEATURES.md`
 - `docs/DEBUGGING.md`
 
