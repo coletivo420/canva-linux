@@ -18,11 +18,7 @@ const bannedPhrases = [
   "Terminal Assistant",
   "Blessed TUI",
   "Canva Linux Terminal Assistant",
-  "C420UI terminal interface",
-  "C420UI workspace",
-  "C420UI Header",
-  "C420UI core",
-  "C420UI brand",
+  "C420UI",
 ];
 
 function read(rootDir: string, relativePath: string): string {
