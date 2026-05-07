@@ -55,6 +55,17 @@ Validation is split accordingly:
 - c420ui checks live under `packages/c420ui/checks/`.
 - Canva Linux checks live under `scripts/checks/canva-linux/`.
 
+## Validation split status
+
+Current validation layers:
+
+- c420ui core checks: `packages/c420ui/checks/`
+- Canva Linux checks: `scripts/checks/canva-linux/`
+- shared repository tooling checks: `scripts/core/*`
+- legacy transitional checks: `scripts/core/*` until moved or retired
+
+The legacy block must shrink over time as c420ui and Canva Linux checks absorb their own contracts.
+
 ## Non-goals for this phase
 
 - Do not migrate to ESM during this phase.
