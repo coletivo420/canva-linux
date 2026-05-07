@@ -523,24 +523,59 @@ export function createApp(opts: {
     }
   }
 
+  let sessionStreamOpenError: string | null = null;
+
   function openSessionStream(logPath: string): Writable | null {
     try {
       fs.mkdirSync(path.dirname(logPath), { recursive: true });
       const stream = fs.createWriteStream(logPath, { flags: "a" });
-      stream.on("error", () => {
+      stream.on("error", (error) => {
+        sessionStreamOpenError =
+          error instanceof Error ? error.message : String(error);
         // Keep the C420UI alive when the configured state path becomes unavailable.
       });
       return stream;
-    } catch {
+    } catch (error) {
+      sessionStreamOpenError =
+        error instanceof Error ? error.message : String(error);
       return null;
     }
   }
 
   const launcherSessionLog = readExistingSessionLog(sessionLogPath);
   const sessionStream = openSessionStream(sessionLogPath);
+  let sessionLogUnavailableWarningShown = false;
+
+  function warnSessionLogUnavailableOnce() {
+    if (sessionLogUnavailableWarningShown) {
+      return;
+    }
+
+    sessionLogUnavailableWarningShown = true;
+    const reason = sessionStreamOpenError ? ` (${sessionStreamOpenError})` : "";
+    const warning = `[warn] Session log stream is unavailable: ${sessionLogPath}${reason}`;
+
+    logHistory.push(`${TOOL_LOG_PREFIX} ${warning}`);
+    if (logHistory.length > MAX_LOG_HISTORY_LINES) {
+      logHistory.shift();
+    }
+
+    try {
+      // Use console.warn only as a fallback. Do not call appendLogText here,
+      // because appendLogText calls writeSession and would recurse.
+      console.warn(warning);
+    } catch {
+      // Ignore fallback console failures.
+    }
+  }
 
   const writeSession = (line: string) => {
-    sessionStream?.write(`${line}\n`);
+    if (!sessionStream) {
+      warnSessionLogUnavailableOnce();
+      return;
+    }
+
+    sessionStream.write(`${line}\n`);
   };
 
   writeSession("[mode] c420ui");

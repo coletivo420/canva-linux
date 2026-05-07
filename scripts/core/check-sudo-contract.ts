@@ -62,7 +62,7 @@ export function main(): number {
     );
   }
 
-  if (!/password="\$\(cat\)"/.test(sudoCommon)) {
+  if (!/password\s*=\s*"\$\(cat\)"/.test(sudoCommon)) {
     failures.push("scripts/sudo-common.sh: --validate-stdin must read stdin");
   }
 

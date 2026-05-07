@@ -40,6 +40,9 @@
   not publish four-number dotted versions.
 - Linux release asset names must use `x86_64`, not `x64`.
 - Passwords and sudo stdin must never be logged.
+- C420UI session logging must not fail silently.
+- If the session log stream cannot be opened, the UI must expose a warning without recursion.
+- Sudo contract checks must tolerate valid shell whitespace around assignments.
 - Application Settings are C420UI state, not shell actions.
 - New UI strings, docs and comments must be written in English.
 - The interactive shell menu has been removed. Do not reintroduce
