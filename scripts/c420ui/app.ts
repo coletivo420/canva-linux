@@ -1441,9 +1441,6 @@ export function createApp(options: C420UIAppOptions) {
       confirmed = true;
     }
 
-    running = true;
-    progressState = "running";
-    setProgressRunning(5, "Starting");
     appendLogText(`[action] ${action.id} ${action.label}\n`, "system");
     writeSession(`[action] ${action.id} ${action.label}`);
 

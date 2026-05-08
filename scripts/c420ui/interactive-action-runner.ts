@@ -112,13 +112,18 @@ export function createInteractiveActionRunner(
       const status = event.data?.status;
       const exitCode = event.data?.exitCode;
       const success = status === "success" || exitCode === c420uiExitCodes.success;
+      const canceled = status === "canceled";
       state.running = false;
-      state.progressState = success ? "success" : "failed";
+      state.progressState = canceled ? "canceled" : success ? "success" : "failed";
       options.setRunning(false);
       options.setProgress(
         state.progressState,
         success ? 100 : 0,
-        success ? "Completed" : `exit code ${String(exitCode ?? "unknown")}`,
+        canceled
+          ? "Canceled"
+          : success
+            ? "Completed"
+            : `exit code ${String(exitCode ?? "unknown")}`,
       );
     }
   }

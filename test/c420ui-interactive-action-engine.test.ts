@@ -208,6 +208,28 @@ test("interactive log and progress events are routed to UI callbacks", async () 
   assert.equal((runner.state as InteractiveActionRunnerState).progressState, "success");
 });
 
+test("interactive canceled finish event keeps canceled progress state", async () => {
+  const { bridge } = createFakeBridge({
+    actions: [normalAction],
+    result: {
+      code: c420uiExitCodes.canceled,
+      status: "canceled",
+      message: "Action canceled.",
+    },
+  });
+  const { runner, progress, running } = createRunner({ bridge });
+
+  const result = await runner.runAction(normalAction);
+
+  assert.equal(result.status, "canceled");
+  assert.equal(runner.state.progressState, "canceled");
+  assert.deepEqual(progress.at(-1), {
+    state: "canceled",
+    percent: 0,
+    label: "Canceled",
+  });
+  assert.deepEqual(running, [true, false]);
+});
 
 test("interactive cancel aborts the running action signal", async () => {
   let abortObserved: (() => void) | null = null;
