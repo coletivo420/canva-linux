@@ -31,11 +31,7 @@ function writeStub(): () => void {
   const backupPath = `${cliEntrypoint}.launcher-parser-test-backup`;
   const hadExistingEntrypoint = fs.existsSync(cliEntrypoint);
 
-  if (fs.existsSync(backupPath)) {
-    fs.rmSync(backupPath, { force: true });
-  }
-
-  if (hadExistingEntrypoint) {
+  if (hadExistingEntrypoint && !fs.existsSync(backupPath)) {
     fs.renameSync(cliEntrypoint, backupPath);
   }
 
