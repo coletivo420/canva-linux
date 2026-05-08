@@ -16,6 +16,15 @@ function runCheck(failures: string[], check: ContractCheck): void {
   }
 }
 
+function collectTypeScriptFiles(dir: string): string[] {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) return collectTypeScriptFiles(entryPath);
+    if (entry.isFile() && entry.name.endsWith(".ts")) return [entryPath];
+    return [];
+  });
+}
+
 const checkBoundaryPart = (() => {
 const forbidden = [
   "Canva Linux",
@@ -32,15 +41,6 @@ const forbidden = [
   "sudo-common.sh",
   "CANVA_",
 ];
-
-function collectTypeScriptFiles(dir: string): string[] {
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const entryPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) return collectTypeScriptFiles(entryPath);
-    if (entry.isFile() && entry.name.endsWith(".ts")) return [entryPath];
-    return [];
-  });
-}
 
 function readSource(rootDir: string): string {
   const srcDir = path.join(rootDir, "packages/c420ui/src");
@@ -98,9 +98,12 @@ function main(): number {
   const rootDir = process.cwd();
   const srcDir = path.join(rootDir, "packages/c420ui/src");
   const failures: string[] = [];
-  for (const file of fs.readdirSync(srcDir)) {
-    if (!file.endsWith(".ts")) continue;
-    if (!/^[a-z0-9-]+\.ts$/.test(file)) failures.push(`${file}: source file names must be kebab-case`);
+  for (const file of collectTypeScriptFiles(srcDir)) {
+    const relativePath = path.relative(srcDir, file).replace(/\\/g, "/");
+    const fileName = path.basename(file);
+    if (!/^[a-z0-9-]+\.ts$/.test(fileName)) {
+      failures.push(`${relativePath}: source file names must be kebab-case`);
+    }
   }
   const expected = [
     "actions.ts",

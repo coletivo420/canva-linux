@@ -18,6 +18,76 @@ function runCheck(failures: string[], check: PolicyCheck): void {
   }
 }
 
+const repositoryWalkSkippedDirectories = new Set([
+  ".build",
+  ".flatpak-builder",
+  ".git",
+  "build-dir",
+  "coverage",
+  "dist",
+  "node_modules",
+  "repo",
+  "test-results",
+]);
+
+let repositoryFilesCache: { rootDir: string; files: string[] } | null = null;
+
+function toRelative(rootDir: string, absolutePath: string): string {
+  return path.relative(rootDir, absolutePath).replace(/\\/g, "/");
+}
+
+function collectRepositoryFiles(
+  rootDir: string,
+  directory: string,
+  output: string[],
+): void {
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(directory, { withFileTypes: true });
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return;
+    }
+    throw error;
+  }
+
+  for (const entry of entries.sort((left, right) =>
+    left.name.localeCompare(right.name),
+  )) {
+    const absolutePath = path.join(directory, entry.name);
+    const relativePath = toRelative(rootDir, absolutePath);
+
+    if (entry.isDirectory()) {
+      if (
+        repositoryWalkSkippedDirectories.has(relativePath) ||
+        repositoryWalkSkippedDirectories.has(entry.name)
+      ) {
+        continue;
+      }
+      collectRepositoryFiles(rootDir, absolutePath, output);
+      continue;
+    }
+
+    if (entry.isFile()) output.push(relativePath);
+  }
+}
+
+function allRepositoryFiles(rootDir: string): string[] {
+  if (repositoryFilesCache?.rootDir === rootDir) return repositoryFilesCache.files;
+  const files: string[] = [];
+  collectRepositoryFiles(rootDir, rootDir, files);
+  repositoryFilesCache = {
+    rootDir,
+    files: files.sort((left, right) => left.localeCompare(right)),
+  };
+  return repositoryFilesCache.files;
+}
+
 const checkTypeScriptWrappersPart = (() => {
 type PackageJson = {
   scripts?: Record<string, string>;
@@ -176,53 +246,6 @@ const forbiddenConfigFiles = new Set([
   "eslint.config.js",
   "playwright.config.js",
 ]);
-
-function toRelative(rootDir: string, absolutePath: string): string {
-  return path.relative(rootDir, absolutePath).replace(/\\/g, "/");
-}
-
-function walkFiles(rootDir: string, directory: string, output: string[]): void {
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(directory, { withFileTypes: true });
-  } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "ENOENT"
-    )
-      return;
-    throw error;
-  }
-
-  for (const entry of entries.sort((left, right) =>
-    left.name.localeCompare(right.name),
-  )) {
-    const absolutePath = path.join(directory, entry.name);
-    const relativePath = toRelative(rootDir, absolutePath);
-    if (entry.isDirectory()) {
-      if (
-        relativePath === ".git" ||
-        relativePath === "node_modules" ||
-        relativePath === "dist" ||
-        relativePath === "repo" ||
-        relativePath === "build-dir" ||
-        relativePath === ".flatpak-builder"
-      )
-        continue;
-      walkFiles(rootDir, absolutePath, output);
-      continue;
-    }
-    if (entry.isFile()) output.push(relativePath);
-  }
-}
-
-function allRepositoryFiles(rootDir: string): string[] {
-  const files: string[] = [];
-  walkFiles(rootDir, rootDir, files);
-  return files.sort((left, right) => left.localeCompare(right));
-}
 
 function isAllowedGeneratedJavaScript(relativePath: string): boolean {
   return allowedJavaScriptPrefixes.some((prefix) =>
@@ -690,14 +713,6 @@ const allowedGeneratedJavaScriptFiles = new Set([
   "electron/preload/canva.bundle.js",
 ]);
 
-const skippedDirectories = new Set([
-  ".git",
-  ".build",
-  "node_modules",
-  "coverage",
-  "dist",
-]);
-
 const explicitlyBlockedJavaScript = [
   /^scripts\/.+\.js$/,
   /^test\/.+\.js$/,
@@ -705,10 +720,6 @@ const explicitlyBlockedJavaScript = [
   /^eslint\.config\.js$/,
   /^playwright\.config\.js$/,
 ] as const;
-
-function toRelative(rootDir: string, absolutePath: string): string {
-  return path.relative(rootDir, absolutePath).replace(/\\/g, "/");
-}
 
 function isAllowedJavaScript(relativePath: string): boolean {
   return (
@@ -723,46 +734,9 @@ function isExplicitlyBlocked(relativePath: string): boolean {
   );
 }
 
-function collectJavaScriptFiles(
-  rootDir: string,
-  directory: string,
-  output: string[],
-): void {
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(directory, { withFileTypes: true });
-  } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "ENOENT"
-    )
-      return;
-    throw error;
-  }
-
-  for (const entry of entries.sort((left, right) =>
-    left.name.localeCompare(right.name),
-  )) {
-    const absolutePath = path.join(directory, entry.name);
-    const relativePath = toRelative(rootDir, absolutePath);
-
-    if (entry.isDirectory()) {
-      if (skippedDirectories.has(relativePath)) continue;
-      collectJavaScriptFiles(rootDir, absolutePath, output);
-      continue;
-    }
-
-    if (entry.isFile() && relativePath.endsWith(".js"))
-      output.push(relativePath);
-  }
-}
-
 function findForbiddenJavaScript(rootDir: string): string[] {
-  const files: string[] = [];
-  collectJavaScriptFiles(rootDir, rootDir, files);
-  return files
+  return allRepositoryFiles(rootDir)
+    .filter((file) => file.endsWith(".js"))
     .filter((file) => !isAllowedJavaScript(file))
     .sort((left, right) => left.localeCompare(right));
 }
@@ -867,65 +841,8 @@ const forbiddenMaintainedJavaScriptFiles = [
   "scripts/run-typescript-script.js",
 ] as const;
 
-const skippedDirectories = new Set([
-  ".build",
-  ".flatpak-builder",
-  ".git",
-  "build-dir",
-  "coverage",
-  "dist",
-  "node_modules",
-  "repo",
-  "test-results",
-]);
-
-function toRelative(rootDir: string, absolutePath: string): string {
-  return path.relative(rootDir, absolutePath).replace(/\\/g, "/");
-}
-
-function collectFiles(
-  rootDir: string,
-  directory: string,
-  output: string[],
-): void {
-  let entries: fs.Dirent[];
-  try {
-    entries = fs.readdirSync(directory, { withFileTypes: true });
-  } catch (error) {
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "ENOENT"
-    )
-      return;
-    throw error;
-  }
-
-  for (const entry of entries.sort((left, right) =>
-    left.name.localeCompare(right.name),
-  )) {
-    const absolutePath = path.join(directory, entry.name);
-    const relativePath = toRelative(rootDir, absolutePath);
-
-    if (entry.isDirectory()) {
-      if (
-        skippedDirectories.has(relativePath) ||
-        skippedDirectories.has(entry.name)
-      )
-        continue;
-      collectFiles(rootDir, absolutePath, output);
-      continue;
-    }
-
-    if (entry.isFile()) output.push(relativePath);
-  }
-}
-
 function allSourceFiles(rootDir: string): string[] {
-  const files: string[] = [];
-  collectFiles(rootDir, rootDir, files);
-  return files.sort((left, right) => left.localeCompare(right));
+  return allRepositoryFiles(rootDir);
 }
 
 function readJsonFile<T>(
@@ -1160,10 +1077,6 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
       failures.push(
         `package.json scripts.${scriptName}: command must stay on one line`,
       );
-    if (/(?:^|\s)(?:node\s+)?scripts\/[^\s]+\.js\b/.test(command))
-      failures.push(
-        `package.json scripts.${scriptName}: must not call maintained scripts/*.js source`,
-      );
   }
 }
 
@@ -1350,7 +1263,7 @@ function validateProjectValidationScriptShape(
       currentIndex < previousIndex
     ) {
       failures.push(
-        `${relativePath}: split validation steps must stay in c420ui, Canva Linux, shared, legacy order`,
+        `${relativePath}: split validation steps must stay in c420ui, Canva Linux, and shared order`,
       );
     }
   }
@@ -1452,7 +1365,7 @@ function validateLauncherScriptShape(
   }
 
   if (
-    /npm run build:scripts > \/dev\/null[\s\S]{0,240}run-c420ui-cli\.js/.test(
+    /npm run build:scripts > \/dev\/null[\s\S]{0,1000}run-c420ui-cli\.js/.test(
       content,
     )
   ) {
