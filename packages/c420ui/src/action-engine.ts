@@ -12,12 +12,14 @@ import type {
 } from "./bridge";
 import { createC420UIEvent, type C420UIEventSink } from "./events";
 import { c420uiExitCodes } from "./exit-codes";
+import type { c420uiRootProvider } from "./root-provider";
 
 export type c420uiActionEngineOptions = {
   bridge: c420uiProjectBridge;
   rootDir: string;
   env?: NodeJS.ProcessEnv;
   emit?: C420UIEventSink;
+  rootProvider?: c420uiRootProvider;
 };
 
 export type c420uiRunActionOptions = {
@@ -32,7 +34,7 @@ export type c420uiActionResolution =
 export function createC420UIActionEngine(
   options: c420uiActionEngineOptions,
 ) {
-  const { bridge, rootDir, emit } = options;
+  const { bridge, rootDir, emit, rootProvider } = options;
 
   function listActions(): c420uiAction[] {
     return bridge.actions();
@@ -126,6 +128,38 @@ export function createC420UIActionEngine(
       };
     }
 
+    const baseEnv = options.env ?? process.env;
+    const actionEnv = rootProvider
+      ? rootProvider.buildActionEnvironment(action, baseEnv)
+      : baseEnv;
+
+    if (rootProvider) {
+      const scopeResult = rootProvider.validateActionScope(action, actionEnv);
+      if (scopeResult.ok === false) {
+        return {
+          code: scopeResult.code,
+          status: "failed",
+          message: scopeResult.message,
+        };
+      }
+
+      const rootPolicy = rootProvider.resolveRootPolicy(
+        action,
+        rootDir,
+        actionEnv,
+      );
+      if (rootPolicy.requiresRoot) {
+        const access = rootProvider.validateRootAccess(rootDir, actionEnv);
+        if (access.ok === false) {
+          return {
+            code: access.code,
+            status: "failed",
+            message: access.message,
+          };
+        }
+      }
+    }
+
     emit?.(
       createC420UIEvent({
         type: "action:start",
@@ -139,7 +173,7 @@ export function createC420UIActionEngine(
       rootDir,
       dryRun,
       yes,
-      env: options.env ?? process.env,
+      env: actionEnv,
       emitLog(event) {
         emit?.(createC420UIEvent({ type: "log", ...event }));
       },

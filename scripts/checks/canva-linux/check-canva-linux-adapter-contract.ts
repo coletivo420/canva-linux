@@ -27,8 +27,19 @@ export function main(): number {
   const cliBridge = fs.readFileSync(cliBridgePath, "utf8");
   if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
   const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/adapter.ts"), "utf8");
-  for (const fragment of ["validateRootPolicy", "actionRequiresRootValidation", "sudo-common.sh", "buildActionEnvironment"]) {
-    if (!adapterSource.includes(fragment)) failures.push(`adapter root preflight missing: ${fragment}`);
+  for (const fragment of [
+    "validateRootPolicy",
+    "actionRequiresRootValidation",
+    "ROOT_POLICY_EXIT_CODE",
+    "buildActionEnvironment",
+    "sudo-common.sh",
+  ]) {
+    if (adapterSource.includes(fragment)) {
+      failures.push(`adapter must not depend on legacy root preflight: ${fragment}`);
+    }
+  }
+  if (!adapterSource.includes("const actionEnv = { ...context.env, ...(action.env ?? {}) }")) {
+    failures.push("adapter must overlay action.env on context.env for direct bridge calls");
   }
   const launcher = fs.readFileSync(launcherPath, "utf8");
   if (!launcher.includes("run-c420ui-cli.js")) failures.push("launcher must call run-c420ui-cli.js for direct actions");

@@ -66,6 +66,12 @@ Current validation layers:
 
 The legacy block must shrink over time as c420ui and Canva Linux checks absorb their own contracts.
 
+### Root provider migration
+
+Root/sudo preflight is now modeled as a c420ui root provider contract.
+
+Canva Linux provides the concrete provider backed by `scripts/sudo-common.sh`.
+
 ## Non-goals for this phase
 
 - Do not migrate to ESM during this phase.

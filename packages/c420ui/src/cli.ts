@@ -2,6 +2,7 @@ import { createC420UIActionEngine } from "./action-engine";
 import { getC420UIActionCliFlags, type c420uiAction } from "./actions";
 import { c420uiExitCodes } from "./exit-codes";
 import type { c420uiProjectBridge } from "./bridge";
+import type { c420uiRootProvider } from "./root-provider";
 import type { C420UIEventSink } from "./events";
 
 export type c420uiCliOptions = {
@@ -10,6 +11,7 @@ export type c420uiCliOptions = {
   argv: string[];
   env?: NodeJS.ProcessEnv;
   emit?: C420UIEventSink;
+  rootProvider?: c420uiRootProvider;
   writeStdout?: (line: string) => void;
   writeStderr?: (line: string) => void;
 };
@@ -95,6 +97,7 @@ export async function runC420UICli(
     rootDir: options.rootDir,
     env: options.env,
     emit: options.emit,
+    rootProvider: options.rootProvider,
   });
   const parsed = parseC420UICliArgs(options.argv);
 

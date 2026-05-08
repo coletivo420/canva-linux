@@ -31,6 +31,16 @@ Request changes if a PR:
 - bypasses `scripts/sudo-common.sh` for system-wide actions.
 
 
+## c420ui root provider review
+
+Request changes if a PR:
+
+- imports root/sudo helpers from the legacy Action Runner into the Canva Linux adapter;
+- triggers sudo for dry-run, planned actions, or confirmation failures;
+- calls sudo directly from `packages/c420ui/src`;
+- bypasses `scripts/sudo-common.sh` for Canva Linux privileged actions;
+- removes user-scope protection for root actions.
+
 ## c420ui action engine review
 
 Request changes if a PR:
