@@ -62,11 +62,9 @@ source_newer_than_entrypoint() {
   [[ -e "${source}" ]] || return 0
 
   if [[ -d "${source}" ]]; then
-    while IFS= read -r file; do
-      if [[ "${file}" -nt "${entrypoint}" ]]; then
-        return 0
-      fi
-    done < <(find "${source}" -type f \( -name '*.ts' -o -name '*.json' \))
+    if [[ "${source}" -nt "${entrypoint}" ]] || find "${source}" -type f \( -name '*.ts' -o -name '*.json' \) -newer "${entrypoint}" | grep -q .; then
+      return 0
+    fi
     return 1
   fi
 
