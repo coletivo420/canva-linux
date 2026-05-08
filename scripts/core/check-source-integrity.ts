@@ -606,6 +606,7 @@ function validateLauncherScriptShape(
     'find "${source}" -type f',
     '"${ROOT_DIR}/scripts/c420ui-canva-linux"',
     '"${ROOT_DIR}/scripts/c420ui"',
+    '"${ROOT_DIR}/scripts/core/action-types.ts"',
     '"${ROOT_DIR}/packages/c420ui/src"',
     '"${ROOT_DIR}/scripts/actions.json"',
     '"${ROOT_DIR}/scripts/project-ui.json"',
