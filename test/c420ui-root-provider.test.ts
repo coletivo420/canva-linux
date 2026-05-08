@@ -44,6 +44,7 @@ function createFakeRootProvider(options: {
   scopeCode?: number;
   scopeMessage?: string;
   requiresRoot?: boolean;
+  warning?: string;
   accessCode?: number;
   accessMessage?: string;
 } = {}) {
@@ -70,7 +71,7 @@ function createFakeRootProvider(options: {
       calls.push("resolveRootPolicy");
       return options.requiresRoot
         ? { requiresRoot: true, reason: "test requires root" }
-        : { requiresRoot: false };
+        : { requiresRoot: false, warning: options.warning };
     },
     validateRootAccess() {
       calls.push("validateRootAccess");
@@ -256,4 +257,35 @@ test("successful root preflight calls bridge with provider-prepared env", async 
     ORIGINAL_ENV: "1",
     ROOT_PROVIDER_ACTION: "install-native",
   });
+});
+
+
+test("root policy warning is emitted before bridge.runAction", async () => {
+  const events: Array<{ type: string; line?: string }> = [];
+  const { bridge, runCalls } = createFakeBridge({ actions: [rootAction] });
+  const { provider } = createFakeRootProvider({
+    requiresRoot: false,
+    warning: "[warn] root policy detection failed",
+  });
+  const engine = createC420UIActionEngine({
+    bridge,
+    rootDir: "/repo",
+    rootProvider: provider,
+    emit(event) {
+      events.push({
+        type: event.type,
+        line: event.type === "log" ? event.line : undefined,
+      });
+    },
+  });
+
+  const result = await engine.runAction(rootAction, { yes: true });
+
+  assert.equal(result.status, "success");
+  assert.equal(runCalls.length, 1);
+  assert.deepEqual(events, [
+    { type: "log", line: "[warn] root policy detection failed" },
+    { type: "action:start", line: undefined },
+    { type: "action:finish", line: undefined },
+  ]);
 });

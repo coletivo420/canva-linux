@@ -1,7 +1,7 @@
 import type { c420uiAction } from "./actions";
 
 export type c420uiRootPolicyResult =
-  | { requiresRoot: false }
+  | { requiresRoot: false; warning?: string }
   | { requiresRoot: true; reason: string };
 
 export type c420uiRootValidationResult =
@@ -32,6 +32,11 @@ export type c420uiRootProvider = {
     rootDir: string,
     actionEnv: NodeJS.ProcessEnv,
   ): c420uiRootValidationResult;
+
+  buildRootActionEnvironment?(
+    action: c420uiAction,
+    actionEnv: NodeJS.ProcessEnv,
+  ): NodeJS.ProcessEnv;
 };
 
 export const c420uiRootPolicyExitCode = 64;

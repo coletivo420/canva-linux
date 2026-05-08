@@ -65,11 +65,13 @@ export function main(): number {
   }
 
   if (
-    !tuiApp.includes('const runnerArgs = ["action-runner", "--id", action.id]') ||
-    !tuiApp.includes('"scripts/run-core-entry.sh"')
+    !tuiApp.includes("createInteractiveActionRunner") ||
+    !tuiApp.includes("createActionEngine: createC420UIActionEngine") ||
+    tuiApp.includes('from "./process-runner"') ||
+    tuiApp.includes('const runnerArgs = ["action-runner", "--id", action.id]')
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: actions must execute through action-runner",
+      "scripts/c420ui/app.ts: actions must execute through the shared c420ui Action Engine",
     );
   }
 
@@ -89,23 +91,29 @@ export function main(): number {
     failures.push("scripts/sudo-common.sh: --validate-stdin must read stdin");
   }
 
+  const interactiveRunnerPath = path.join(
+    scriptsDir,
+    "c420ui",
+    "interactive-action-runner.ts",
+  );
+  const interactiveRunner = fs.readFileSync(interactiveRunnerPath, "utf8");
+
   if (
-    !tuiApp.includes("formatAuthFailureMessage") ||
-    !tuiApp.includes("await errorDialog(") ||
-    !tuiApp.includes("Administrator authentication failed") ||
-    !tuiApp.includes('setProgressError("root authentication failed")')
+    !interactiveRunner.includes("interactiveActionRequiresConfirmation(action)") ||
+    !interactiveRunner.includes('status: "canceled"') ||
+    !interactiveRunner.includes("!confirmed")
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: sudo auth failures must be shown in a popup",
+      "scripts/c420ui/interactive-action-runner.ts: confirmation cancellations must stop before root or bridge execution",
     );
   }
 
-  const authFailureBlock = tuiApp.match(
-    /if \(\(auth\.status \?\? 1\) !== 0\) \{[\s\S]*?\n      \}/,
-  )?.[0];
-  if (!authFailureBlock?.includes("return;")) {
+  if (
+    !interactiveRunner.includes("rootProvider: options.rootProvider") ||
+    !interactiveRunner.includes("engine.runAction(action")
+  ) {
     failures.push(
-      "scripts/c420ui/app.ts: privileged actions must not start after failed sudo auth",
+      "scripts/c420ui/interactive-action-runner.ts: privileged actions must use the c420ui root provider before bridge execution",
     );
   }
 

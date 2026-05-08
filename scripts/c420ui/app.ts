@@ -1,13 +1,9 @@
 import blessed from "blessed";
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
-import { getActionsByGroup, type C420UIAction } from "./action-registry";
+import { spawn } from "node:child_process";
 import {
   confirmDialog,
-  errorDialog,
-  inputDialog,
   messageDialog,
 } from "./modal";
-import { runAction } from "./process-runner";
 import { c420uiTheme } from "./theme";
 import { copyTextToClipboard } from "./clipboard";
 import {
@@ -19,11 +15,19 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 import { Writable } from "node:stream";
-import type {
-  C420UIBrandConfig,
-  C420UIConfig,
-  C420UIProjectConfig,
+import {
+  createC420UIActionEngine,
+  type C420UIBrandConfig,
+  type C420UIConfig,
+  type C420UIProjectConfig,
+  type c420uiAction,
+  type c420uiProjectBridge,
+  type c420uiRootProvider,
 } from "../../packages/c420ui/src";
+import {
+  createInteractiveActionRunner,
+  interactiveActionRequiresConfirmation,
+} from "./interactive-action-runner";
 
 // --- Types ---
 
@@ -44,6 +48,19 @@ type ProgressState =
   | "canceled";
 
 type LogSource = "stdout" | "stderr" | "system";
+
+type InteractiveAction = c420uiAction & {
+  command?: string;
+  args?: string[];
+  confirmationTitle?: string;
+  confirmationMessage?: string;
+};
+
+export type C420UIAppOptions = {
+  config: C420UIConfig;
+  bridge: c420uiProjectBridge;
+  rootProvider?: c420uiRootProvider;
+};
 
 type FocusZone = "menu" | "diagnostics" | "content" | "logs";
 
@@ -87,7 +104,8 @@ const HEADER_BOX_HORIZONTAL_PADDING = 4;
 const c420uiHeaderMinWidth = 28;
 const PROJECT_HEADER_MIN_WIDTH = 40;
 
-function isPlannedAction(action: C420UIAction): boolean {
+
+function isPlannedAction(action: InteractiveAction): boolean {
   return action.kind === "planned" || Boolean(action.planned);
 }
 
@@ -166,7 +184,9 @@ export function computeHeaderLayout(
 
 // --- Main Application Entry ---
 
-export function createApp(opts: C420UIConfig) {
+export function createApp(options: C420UIAppOptions) {
+  const opts = options.config;
+  const { bridge, rootProvider } = options;
   // --- Initialization & State ---
 
   let toolSettings = loadToolSettings(opts.project.stateDirectoryName);
@@ -486,10 +506,40 @@ export function createApp(opts: C420UIConfig) {
   const diagnosticsLabelText = "Detected Installations";
   let contentLabelText = "Overview";
   let logsLabelText = "Logs";
-  let currentActions: C420UIAction[] = [];
+  let currentActions: InteractiveAction[] = [];
   let running = false;
   let modalActive = false;
-  let currentChild: ChildProcess | null = null;
+  const actionRunner = createInteractiveActionRunner({
+    bridge,
+    rootDir: opts.rootDir,
+    env: process.env,
+    rootProvider,
+    createActionEngine: createC420UIActionEngine,
+    appendLogText(text, source) {
+      appendLogText(
+        text,
+        source === "stdout" || source === "stderr" ? source : "system",
+      );
+    },
+    setProgress(state, percent, label) {
+      if (state === "running") {
+        setProgressRunning(percent ?? 5, label);
+      } else if (state === "success") {
+        setProgressSuccess(label);
+      } else if (state === "warning") {
+        setProgressWarning(label);
+      } else if (state === "canceled") {
+        setProgressCanceled();
+      } else if (state === "failed") {
+        setProgressError(label);
+      } else {
+        clearProgress();
+      }
+    },
+    setRunning(nextRunning) {
+      running = nextRunning;
+    },
+  });
   let progressState: ProgressState = "idle";
   let lastCtrlCAt = 0;
   let updatingSettingsMenuItems = false;
@@ -675,21 +725,6 @@ export function createApp(opts: C420UIConfig) {
       default:
         return null;
     }
-  }
-
-  async function actionNeedsRootForDetectedSystem(
-    action: C420UIAction,
-  ): Promise<boolean> {
-    if (!["purge", "uninstall-detected"].includes(action.id)) {
-      return false;
-    }
-    const latestStatus =
-      (await refreshDetectedInstallations(`root-check:${action.id}`)) ??
-      overviewStatus;
-    return Boolean(
-      latestStatus?.installations?.nativeSystem ||
-        latestStatus?.installations?.flatpakSystem,
-    );
   }
 
   function parseOverviewStatusOutput(output: string): any | null {
@@ -990,41 +1025,6 @@ export function createApp(opts: C420UIConfig) {
     progress.setContent(
       `Progress: [{${color}}${bar}{/${color}}] ${percent}% - ${label}`,
     );
-  }
-
-  // --- Modal Helpers ---
-
-  function sanitizeAuthOutput(text: string, password: string): string {
-    const cleaned = text.replace(/\r/g, "").trim();
-    if (!password) {
-      return cleaned;
-    }
-    return cleaned.split(password).join("[redacted]");
-  }
-
-  function formatAuthFailureMessage(detail: string): string {
-    return [
-      "Administrator authentication failed",
-      "",
-      detail || "sudo: a password is required",
-      "",
-      "The action was not started.",
-    ].join("\n");
-  }
-
-  function formatAuthTimeoutMessage(detail?: string): string {
-    return [
-      "Administrator authentication timed out",
-      "",
-      detail || "The administrator password was not validated in time.",
-      "",
-      "The action was not started.",
-    ].join("\n");
-  }
-
-  function didAuthTimeout(error: Error | undefined, message: string): boolean {
-    const code = (error as NodeJS.ErrnoException | undefined)?.code;
-    return code === "ETIMEDOUT" || /timed out/i.test(message);
   }
 
   // --- Views & Rendering ---
@@ -1373,7 +1373,9 @@ export function createApp(opts: C420UIConfig) {
           ? "maintenance"
           : "development";
 
-    currentActions = getActionsByGroup(group, opts.rootDir);
+    currentActions = bridge
+      .actions()
+      .filter((action) => action.group === group) as InteractiveAction[];
     menu.setItems(currentActions.map((a) => a.label));
     menuLabelText = `${view[0].toUpperCase() + view.slice(1)} Actions`;
     contentLabelText = view[0].toUpperCase() + view.slice(1);
@@ -1406,7 +1408,7 @@ export function createApp(opts: C420UIConfig) {
     if (isPlannedAction(action)) {
       const message =
         action.description || `${action.label} is not implemented in this phase.`;
-      appendLogText(`[planned] ${message}\n`, "system");
+      await actionRunner.runAction(action, { dryRun: false });
       modalActive = true;
       await messageDialog(
         screen,
@@ -1421,171 +1423,66 @@ export function createApp(opts: C420UIConfig) {
       return;
     }
 
-    if (action.dangerous) {
+    const requiresConfirmation = interactiveActionRequiresConfirmation(action);
+    let confirmed = false;
+
+    if (requiresConfirmation) {
       modalActive = true;
       const ok = await confirmDialog(screen, {
         title: action.confirmationTitle ?? "Confirm",
         message:
           action.confirmationMessage ?? action.description ?? "Continue?",
-        dangerous: true,
+        dangerous: action.dangerous === true,
       });
       modalActive = false;
       if (!ok) {
         return;
       }
+      confirmed = true;
     }
 
-    const rootRequired =
-      action.requiresRoot || (await actionNeedsRootForDetectedSystem(action));
-
-    if (rootRequired) {
-      appendLogText("[info] Root authentication popup opened.\n", "system");
-      modalActive = true;
-      const passwordResult = await inputDialog(
-        screen,
-        "Administrator authentication",
-        "Enter root password (30s timeout):",
-        30000,
-      );
-      modalActive = false;
-
-      if (passwordResult.status === "timeout") {
-        const message = [
-          "Administrator authentication timed out",
-          "",
-          "The action was not started.",
-        ].join("\n");
-        appendLogText("[warn] Root authentication timed out.\n", "system");
-        setProgressError("root authentication timed out");
-        modalActive = true;
-        await errorDialog(screen, "Administrator authentication", message);
-        modalActive = false;
-        return;
-      }
-
-      if (passwordResult.status === "canceled" || !passwordResult.value) {
-        const message = [
-          "Administrator authentication canceled",
-          "",
-          "The action was not started.",
-        ].join("\n");
-        appendLogText("[warn] Root authentication canceled.\n", "system");
-        setProgressError("root authentication canceled");
-        modalActive = true;
-        await messageDialog(screen, "Administrator authentication", message);
-        modalActive = false;
-        return;
-      }
-
-      const password = passwordResult.value;
-      const auth = spawnSync(
-        "bash",
-        ["scripts/sudo-common.sh", "--validate-stdin"],
-        {
-          cwd: opts.rootDir,
-          input: `${password}\n`,
-          encoding: "utf8",
-          timeout: 30000,
-          env: {
-            ...process.env,
-            ...(action.env ?? {}),
-          },
-        },
-      );
-
-      if ((auth.status ?? 1) !== 0) {
-        const sudoMessage = sanitizeAuthOutput(
-          auth.stderr || auth.stdout || "sudo: a password is required",
-          password,
-        );
-        if (didAuthTimeout(auth.error, sudoMessage)) {
-          const popupMessage = formatAuthTimeoutMessage(sudoMessage);
-          appendLogText(`[error] ${popupMessage}\n`, "system");
-          setProgressError("root authentication timed out");
-          modalActive = true;
-          await errorDialog(
-            screen,
-            "Administrator authentication timed out",
-            popupMessage,
-          );
-          modalActive = false;
-          return;
-        }
-        const popupMessage = formatAuthFailureMessage(sudoMessage);
-        appendLogText(`[error] ${popupMessage}\n`, "system");
-        setProgressError("root authentication failed");
-        modalActive = true;
-        await errorDialog(
-          screen,
-          "Administrator authentication failed",
-          popupMessage,
-        );
-        modalActive = false;
-        return;
-      }
-      appendLogText("[info] Root authentication succeeded.\n", "system");
-    }
-
-    running = true;
-    progressState = "running";
-    setProgressRunning(5, "Starting");
-    const runnerArgs = ["action-runner", "--id", action.id];
-    if (action.requiresConfirmation || action.dangerous) {
-      runnerArgs.push("--yes");
-    }
-    appendLogText(
-      `$ scripts/run-core-entry.sh ${runnerArgs.join(" ")}\n`,
-      "stdout",
-    );
+    appendLogText(`[action] ${action.id} ${action.label}\n`, "system");
     writeSession(`[action] ${action.id} ${action.label}`);
 
-    currentChild = runAction(
-      "scripts/run-core-entry.sh",
-      runnerArgs,
-      (txt, src) => appendLogText(txt, src),
-      async ({ code, signal }) => {
-        currentChild = null;
-        const installAction = action.id.startsWith("install-");
-        let detectedNow = false;
+    const result = await actionRunner.runAction(action, {
+      confirmed,
+      dryRun: false,
+    });
 
-        if (installAction) {
-          const detectionKey = getInstallDetectionKey(action.id);
-          if (detectionKey) {
-            const latestStatus = await detectInstallationStatusNow();
-            if (latestStatus) {
-              overviewStatus = latestStatus;
-            }
-            detectedNow = Boolean(latestStatus?.installations?.[detectionKey]);
-          }
+    const installAction = action.id.startsWith("install-");
+    let detectedNow = false;
+
+    if (installAction) {
+      const detectionKey = getInstallDetectionKey(action.id);
+      if (detectionKey) {
+        const latestStatus = await detectInstallationStatusNow();
+        if (latestStatus) {
+          overviewStatus = latestStatus;
         }
+        detectedNow = Boolean(latestStatus?.installations?.[detectionKey]);
+      }
+    }
 
-        if (signal === "SIGINT") {
-          setProgressCanceled();
-        } else if (installAction && detectedNow && code !== 0) {
-          setProgressWarning("Completed with warnings");
-        } else if (code === 0 || (installAction && detectedNow)) {
-          setProgressSuccess("Completed");
-        } else {
-          setProgressError(signal ?? `exit code ${code ?? "unknown"}`);
-        }
+    if (result.status === "canceled") {
+      setProgressCanceled();
+    } else if (installAction && detectedNow && result.code !== 0) {
+      setProgressWarning("Completed with warnings");
+    } else if (result.code === 0 || (installAction && detectedNow)) {
+      setProgressSuccess("Completed");
+    } else if (result.status === "planned") {
+      setProgressWarning("Planned action");
+    } else {
+      setProgressError(`exit code ${result.code ?? "unknown"}`);
+    }
 
-        appendLogText(
-          `[info] Action finished (${signal ?? code ?? "unknown"}).\n`,
-          "system",
-        );
-        await refreshDetectedInstallations(`action:${action.id}`);
-        running = false;
-        renderActionHelp(currentView, menu.selected);
-        screen.render();
-      },
-      {
-        cwd: opts.rootDir,
-        env: {
-          ...(action.env ?? {}),
-          ...(rootRequired ? { CANVA_C420UI_ROOT_AUTH: "1" } : {}),
-        },
-      },
+    appendLogText(
+      `[info] Action finished (${result.status}:${result.code}).\n`,
+      "system",
     );
+    await refreshDetectedInstallations(`action:${action.id}`);
+    running = false;
+    renderActionHelp(currentView, menu.selected);
+    screen.render();
   });
 
   // --- Input & Keybindings ---
@@ -1644,18 +1541,23 @@ export function createApp(opts: C420UIConfig) {
       return;
     }
     const now = Date.now();
-    if (running && currentChild) {
+    if (running) {
       if (now - lastCtrlCAt < 1500) {
         void confirmExit();
         return;
       }
       lastCtrlCAt = now;
-      currentChild.kill("SIGINT");
-      appendLogText(
-        "[warn] Interrupt requested. Press Ctrl+C again to exit application.\n",
-        "system",
-      );
-      setProgressCanceled();
+      if (actionRunner.cancel()) {
+        appendLogText(
+          "[warn] Interrupt requested for running action. Press Ctrl+C again to exit application.\n",
+          "system",
+        );
+      } else {
+        appendLogText(
+          "[warn] Action is running. Press Ctrl+C again to exit application.\n",
+          "system",
+        );
+      }
       return;
     }
     void confirmExit();

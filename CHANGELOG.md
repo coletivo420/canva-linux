@@ -21,6 +21,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.
 - Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed by `scripts/sudo-common.sh`.
 - Moved generic c420ui TypeScript config contracts from `scripts/c420ui/app.ts` into the private `packages/c420ui` skeleton.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
@@ -37,6 +38,7 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Fixed
+- Restored interactive c420ui root-auth environment propagation and Ctrl+C cancellation for Action Engine-backed actions.
 - Hardened c420ui CLI bridge freshness detection for launcher direct actions.
 - Repaired the shell launcher parser after the direct CLI bridge migration.
 - Added validation coverage to prevent hardcoded launcher action flags and malformed shell parsing.

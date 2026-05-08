@@ -19,7 +19,9 @@ export function main(): number {
     "validateActionScope",
     "resolveRootPolicy",
     "validateRootAccess",
+    "buildRootActionEnvironment",
     "c420uiRootPolicyExitCode",
+    "warning?: string",
   ]) {
     if (!rootProvider.includes(fragment)) {
       failures.push(`missing root provider contract fragment: ${fragment}`);
@@ -32,6 +34,7 @@ export function main(): number {
     "rootProvider.validateActionScope",
     "rootProvider.resolveRootPolicy",
     "rootProvider.validateRootAccess",
+    "rootProvider.buildRootActionEnvironment",
     "bridge.runAction",
   ]) {
     if (!actionEngine.includes(fragment)) {
@@ -56,6 +59,13 @@ export function main(): number {
   }
   if (!index.includes('c420uiRootPolicyExitCode')) {
     failures.push("index must export c420uiRootPolicyExitCode");
+  }
+  if (!actionEngine.includes("rootPolicy.warning")) {
+    failures.push("action engine must emit root policy warnings");
+  }
+  const bridge = read(rootDir, "packages/c420ui/src/bridge.ts");
+  if (bridge.includes("C420UISudoProvider")) {
+    failures.push("bridge must not expose C420UISudoProvider separately from c420uiRootProvider");
   }
   if (rootProvider.includes("sudo-common.sh") || actionEngine.includes("sudo")) {
     failures.push("c420ui core must not call sudo directly");

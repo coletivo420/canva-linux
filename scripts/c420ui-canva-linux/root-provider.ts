@@ -79,12 +79,20 @@ export function createCanvaLinuxRootProvider(
               reason: `${action.id}: detected system installation`,
             };
           }
-        } catch {
-          return { requiresRoot: false };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          return {
+            requiresRoot: false,
+            warning: `[warn] Unable to detect system installations for root policy: ${message}`,
+          };
         }
       }
 
       return { requiresRoot: false };
+    },
+
+    buildRootActionEnvironment(_action, actionEnv) {
+      return { ...actionEnv, CANVA_C420UI_ROOT_AUTH: "1" };
     },
 
     validateRootAccess(rootDir, actionEnv) {

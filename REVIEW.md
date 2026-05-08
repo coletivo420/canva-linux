@@ -172,3 +172,14 @@ Request changes if a PR:
 - removes freshness coverage for `packages/c420ui/src`;
 - removes freshness coverage for `scripts/c420ui-canva-linux`;
 - tests launcher behavior by executing real destructive actions instead of a stub.
+
+
+## Interactive c420ui action engine review
+
+Request changes if a PR:
+
+- makes direct CLI and interactive c420ui use different execution policies;
+- reintroduces direct `spawn()` action execution in `scripts/c420ui/app.ts`;
+- bypasses the c420ui root provider for interactive privileged actions;
+- triggers sudo before confirmation or for dry-run/planned actions;
+- reintroduces `C420UISudoProvider` as a separate root abstraction.

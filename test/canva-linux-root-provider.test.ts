@@ -24,6 +24,14 @@ const userAction: c420uiAction = {
   scope: "user",
 };
 
+const purgeAction: c420uiAction = {
+  id: "purge",
+  label: "Purge",
+  group: "maintenance",
+  kind: "command",
+  dangerous: true,
+};
+
 test("buildActionEnvironment merges action env over base env", () => {
   const provider = createCanvaLinuxRootProvider();
   const env = provider.buildActionEnvironment(rootAction, {
@@ -87,6 +95,14 @@ test("resolveRootPolicy does not request root for user action without system ins
   const result = provider.resolveRootPolicy(userAction, "/repo", {});
 
   assert.deepEqual(result, { requiresRoot: false });
+});
+
+test("resolveRootPolicy returns warning when system detection fails", () => {
+  const provider = createCanvaLinuxRootProvider();
+  const result = provider.resolveRootPolicy(purgeAction, "/missing-root-dir", {});
+
+  assert.equal(result.requiresRoot, false);
+  assert.match(result.warning ?? "", /Unable to detect system installations for root policy/);
 });
 
 test("validateRootAccess uses scripts/sudo-common.sh through injected runner", () => {
