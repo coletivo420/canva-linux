@@ -113,8 +113,12 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui owns planned-action and dry-run semantics.
 - Project adapters execute concrete actions but must not reimplement generic action-engine policy.
 - Generic command execution belongs to `packages/c420ui/src/command-runner.ts`.
+- c420ui operational command logs must pass through `createC420UIOperationalLogEvent()`.
+- Do not emit raw secrets from command stdout/stderr when using c420ui operational logs.
 - Project adapters must not reimplement stdout/stderr process handling.
 - Project adapters may provide concrete command, args, cwd and env only.
+- Project adapters must not prepare action env after the Action Engine/root provider has prepared it.
+- Project adapters must not reimplement command cancellation.
 - Runtime app logs remain separate from c420ui operational command logs.
 - Direct CLI actions must pass through the c420ui CLI bridge.
 - Interactive c420ui actions and direct CLI actions must share the c420ui Action Engine.

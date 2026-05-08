@@ -184,6 +184,16 @@ Request changes if a PR:
 - changes runtime Electron logs while modifying c420ui command execution;
 - reintroduces `scripts/c420ui/process-runner.ts` as an action execution path.
 
+## Operational log policy review
+
+Request changes if a PR:
+
+- emits command stdout/stderr without c420ui redaction;
+- logs token, password, secret or bearer values in operational logs;
+- reimplements cancellation in a project adapter;
+- prepares action env inside a project adapter after root provider migration;
+- changes Electron runtime logs while touching c420ui operational command logs.
+
 ## Interactive c420ui action engine review
 
 Request changes if a PR:

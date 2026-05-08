@@ -10,7 +10,9 @@ Current target:
 - `npm run check:c420ui-core` validates reusable c420ui contracts.
 - `npm run check:c420ui-core` validates the generic root provider contract.
 - `npm run check:c420ui-core` validates the reusable command runner contract.
+- `npm run check:c420ui-core` validates the operational log policy and command runner cancellation contract.
 - Command execution tests verify stdout/stderr forwarding, exit code propagation and progress events.
+- Command runner tests cover redaction, cancellation and non-zero exits.
 - Interactive and direct CLI action execution must share the c420ui Action Engine.
 - `npm run check:canva-linux` validates the Canva Linux adapter, app runtime contracts and concrete recipes.
 - `npm run check:canva-linux` validates the Canva Linux root provider backed by `scripts/sudo-common.sh`.

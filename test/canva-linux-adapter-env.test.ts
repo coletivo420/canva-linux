@@ -73,7 +73,7 @@ function createTempProject(): string {
   return rootDir;
 }
 
-test("Canva Linux adapter overlays action env for direct bridge action runs", async () => {
+test("Canva Linux adapter trusts prepared context env for direct bridge action runs", async () => {
   const rootDir = createTempProject();
   const adapter = createCanvaLinuxC420UIAdapter(rootDir);
   const stdout: string[] = [];
@@ -93,7 +93,6 @@ test("Canva Linux adapter overlays action env for direct bridge action runs", as
     assert.equal(result.code, c420uiExitCodes.success);
     assert.equal(result.status, "success");
     assert.deepEqual(JSON.parse(stdout.join("")), {
-      scope: "user",
       base: "from-context",
     });
   } finally {

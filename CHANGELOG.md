@@ -21,6 +21,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Added c420ui operational log redaction and command cancellation policy.
 - Moved reusable operational command execution into the c420ui command runner.
 - Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.
 - Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed by `scripts/sudo-common.sh`.
@@ -39,6 +40,7 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Fixed
+- Avoided duplicate action environment preparation in the Canva Linux adapter.
 - Interactive action cancellation now reports a canceled progress state before execution.
 - Restored interactive c420ui root-auth environment propagation and Ctrl+C cancellation for Action Engine-backed actions.
 - Hardened c420ui CLI bridge freshness detection for launcher direct actions.

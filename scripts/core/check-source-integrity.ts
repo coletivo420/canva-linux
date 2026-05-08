@@ -49,6 +49,7 @@ const criticalReadableSourceFiles = [
   "scripts/core/check-source-integrity.ts",
   "packages/c420ui/src/root-provider.ts",
   "packages/c420ui/src/command-runner.ts",
+  "packages/c420ui/src/operational-logs.ts",
   "scripts/c420ui/interactive-action-runner.ts",
   "scripts/c420ui-canva-linux/root-provider.ts",
   "electron/ui/toolbar.html",

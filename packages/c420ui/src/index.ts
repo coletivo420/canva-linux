@@ -7,11 +7,13 @@ export type * from "./root-provider";
 export { createC420UIActionEngine } from "./action-engine";
 export { runC420UICli } from "./cli";
 export { runC420UICommand } from "./command-runner";
+export { createC420UIOperationalLogEvent, c420uiDefaultRedactionPatterns, redactC420UILogLine } from "./operational-logs";
 export { c420uiExitCodes } from "./exit-codes";
 export { c420uiRootPolicyExitCode } from "./root-provider";
 export type { C420UIExitCode, C420UIExitCodeName } from "./exit-codes";
 export type { c420uiCliOptions, c420uiCliResult } from "./cli";
 export type { c420uiCommandRunnerOptions } from "./command-runner";
+export type { c420uiOperationalLogOptions, c420uiRedactionPattern } from "./operational-logs";
 export type {
   c420uiActionEngineOptions,
   c420uiActionResolution,

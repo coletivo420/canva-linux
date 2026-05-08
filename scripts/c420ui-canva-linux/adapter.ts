@@ -251,7 +251,8 @@ export function createCanvaLinuxC420UIAdapter(
       return { code: c420uiExitCodes.invalidUsage, status: "failed", message: `${actionId} has no command` };
     }
 
-    const actionEnv = { ...context.env, ...(action.env ?? {}) };
+    // The Action Engine/root provider owns action environment preparation.
+    const actionEnv = context.env;
 
     if (context.signal?.aborted) {
       context.emitProgress({ state: "canceled", percent: 0, label: action.label });

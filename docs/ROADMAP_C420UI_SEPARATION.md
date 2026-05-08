@@ -77,6 +77,10 @@ Canva Linux provides the concrete provider backed by `scripts/sudo-common.sh`.
 Concrete project adapters now delegate command execution to the reusable c420ui command runner.
 Project adapters still provide the concrete command, args, cwd and environment.
 
+### Operational log policy
+
+c420ui command execution now applies a shared operational log policy for command lifecycle messages, redaction and cancellation.
+
 ## Non-goals for this phase
 
 - Do not migrate to ESM during this phase.

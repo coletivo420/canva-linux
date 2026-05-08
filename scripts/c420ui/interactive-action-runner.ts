@@ -190,6 +190,7 @@ export function createInteractiveActionRunner(
       return false;
     }
     activeAbortController.abort();
+    options.appendLogText("[info] Cancellation requested.\n", "system");
     state.progressState = "canceled";
     options.setProgress("canceled", 0, "Canceled");
     return true;
