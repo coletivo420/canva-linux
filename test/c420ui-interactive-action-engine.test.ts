@@ -282,7 +282,7 @@ test("interactive cancel aborts the running action signal", async () => {
       });
     },
   };
-  const { runner, progress } = createRunner({ bridge });
+  const { runner, logs, progress } = createRunner({ bridge });
   const aborted = new Promise<void>((resolve) => {
     abortObserved = resolve;
   });
@@ -294,4 +294,13 @@ test("interactive cancel aborts the running action signal", async () => {
 
   assert.equal(result.status, "canceled");
   assert.ok(progress.some((event) => event.state === "canceled"));
+  assert.ok(logs.some((event) => event.text === "[info] Cancellation requested.\n" && event.source === "system"));
+});
+
+test("interactive cancel without active action returns false without logging", () => {
+  const { bridge } = createFakeBridge({ actions: [normalAction] });
+  const { runner, logs } = createRunner({ bridge });
+
+  assert.equal(runner.cancel(), false);
+  assert.deepEqual(logs, []);
 });

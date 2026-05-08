@@ -21,6 +21,11 @@ export function main(): number {
     "emitLog",
     "emitProgress",
     "shell: false",
+    "createC420UIOperationalLogEvent",
+    "cancelKillTimeoutMs",
+    "Cancel requested",
+    "SIGINT",
+    "SIGTERM",
     'stdio: ["ignore", "pipe", "pipe"]',
   ]) {
     if (!runner.includes(fragment)) {
@@ -33,6 +38,12 @@ export function main(): number {
   }
   if (!index.includes('export type { c420uiCommandRunnerOptions } from "./command-runner"')) {
     failures.push("index must export c420uiCommandRunnerOptions");
+  }
+  if (!adapter.includes("const actionEnv = context.env")) {
+    failures.push("Canva Linux adapter must use the Action Engine/root provider prepared context.env");
+  }
+  if (adapter.includes("...context.env, ...(action.env")) {
+    failures.push("Canva Linux adapter must not merge action.env after context.env preparation");
   }
   if (!adapter.includes("runC420UICommand({")) {
     failures.push("Canva Linux adapter must delegate command execution to runC420UICommand");

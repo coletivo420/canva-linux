@@ -13,9 +13,12 @@ export type c420uiOperationalLogSource =
 
 export type c420uiLogSource = c420uiOperationalLogSource;
 
+export type C420UIEventLevel = "debug" | "info" | "warning" | "error";
+
 export type c420uiLogEvent = {
   source: c420uiLogSource;
   line: string;
+  level?: C420UIEventLevel;
   timestamp?: string;
 };
 
@@ -37,8 +40,6 @@ export type C420UILogSource = c420uiLogSource;
 export type C420UILogEvent = c420uiLogEvent;
 export type C420UIProgressState = c420uiProgressState;
 export type C420UIProgressEvent = c420uiProgressEvent;
-export type C420UIEventLevel = "debug" | "info" | "warning" | "error";
-
 export type C420UIProgress = {
   current: number;
   total?: number;
