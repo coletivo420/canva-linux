@@ -251,7 +251,7 @@ export function createCanvaLinuxC420UIAdapter(
       return { code: c420uiExitCodes.invalidUsage, status: "failed", message: `${actionId} has no command` };
     }
 
-    const actionEnv = context.env;
+    const actionEnv = { ...context.env, ...(action.env ?? {}) };
 
     return new Promise<c420uiActionResult>((resolve) => {
       context.emitProgress({ state: "running", label: action.label });

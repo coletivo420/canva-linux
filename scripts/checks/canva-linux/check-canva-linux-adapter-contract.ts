@@ -38,8 +38,8 @@ export function main(): number {
       failures.push(`adapter must not depend on legacy root preflight: ${fragment}`);
     }
   }
-  if (!adapterSource.includes("const actionEnv = context.env")) {
-    failures.push("adapter must execute actions with context.env from the root provider");
+  if (!adapterSource.includes("const actionEnv = { ...context.env, ...(action.env ?? {}) }")) {
+    failures.push("adapter must overlay action.env on context.env for direct bridge calls");
   }
   const launcher = fs.readFileSync(launcherPath, "utf8");
   if (!launcher.includes("run-c420ui-cli.js")) failures.push("launcher must call run-c420ui-cli.js for direct actions");
