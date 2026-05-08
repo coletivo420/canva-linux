@@ -40,7 +40,7 @@ export function redactC420UILogLine(line: string): string {
 
 export function createC420UIOperationalLogEvent(
   options: c420uiOperationalLogOptions,
-): c420uiLogEvent & { level?: C420UIEventLevel } {
+): c420uiLogEvent {
   return {
     source: options.source,
     line:
