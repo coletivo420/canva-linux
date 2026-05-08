@@ -249,11 +249,15 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 ## Validation domains
 
 - Validation domains must remain separated: c420ui core checks, Canva Linux checks, and shared tooling checks.
+- Domain checks must stay self-contained unless there is a strong reason to share a helper.
+- Do not create `*-parts/` validation directories.
 - Do not create one check file per tiny assertion.
+- Do not reintroduce one-file-per-assertion validation scripts.
 - Prefer consolidated domain checks.
-- New c420ui checks belong in `check-c420ui-core-contracts.ts`.
-- New Canva Linux checks belong in `check-canva-linux-contracts.ts`.
-- New repository-wide checks belong in `check-repository-policy.ts` unless they need a dedicated runner.
+- New c420ui validation belongs inside `check-c420ui-core-contracts.ts`.
+- New Canva Linux validation belongs inside `check-canva-linux-contracts.ts`.
+- New repository validation belongs inside `check-repository-policy.ts`.
+- New repository-wide checks need a dedicated runner only when they cannot fit the consolidated policy runner.
 - Do not reintroduce the removed legacy tooling script.
 - Do not add new Canva Linux-specific checks to `check:c420ui-core`.
 

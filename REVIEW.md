@@ -90,6 +90,15 @@ Request changes if a PR:
 - puts Canva Linux-specific assertions in c420ui core checks;
 - bypasses `check:c420ui-core`, `check:canva-linux` or `check:shared-tooling`.
 
+## Consolidated validation review
+
+Request changes if a PR:
+
+- creates a new `*-parts/` validation directory;
+- splits a small assertion into a new one-off check file;
+- adds imports from old check fragments;
+- expands validation with duplicate checks instead of extending the consolidated domain runner.
+
 ## Changelog-backed regression review
 
 Request changes if a PR:

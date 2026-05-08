@@ -15,6 +15,9 @@ The validation surface is intentionally small:
 
 Legacy compatibility is available through `check:legacy-compat`, but it is not part of the default validation path.
 
+The consolidated domain runners are self-contained. New validation should extend the appropriate domain runner instead of
+creating one-off check files or `*-parts/` validation directories, unless there is a strong reason to introduce a shared helper.
+
 ## Automated
 
 - `npm run build:scripts-core`
