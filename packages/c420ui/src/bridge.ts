@@ -38,12 +38,6 @@ export type c420uiProjectBridge = {
   runAction(actionId: string, context: c420uiExecutionContext): Promise<c420uiActionResult>;
 };
 
-export type C420UISudoProvider = {
-  id: string;
-  label: string;
-  runAsRoot(command: string, args: string[], env?: Record<string, string>): Promise<number> | number;
-};
-
 export type C420UIProjectInfo = c420uiProjectInfo;
 export type C420UIExecutionContext = c420uiExecutionContext;
 export type C420UIActionResult = c420uiActionResult;
@@ -57,7 +51,6 @@ export type C420UIProjectAdapter = c420uiProjectBridge & {
   loadArtifactWorkflows(): c420uiArtifactWorkflow[];
   loadWorkflows(): C420UIWorkflow[];
   loadCapabilities(): c420uiProjectCapabilities;
-  getSudoProvider?(): C420UISudoProvider;
   runWorkflow?(workflowId: string, options?: C420UIWorkflowRunOptions): Promise<C420UIWorkflowResult>;
 };
 

@@ -1,3 +1,4 @@
+// Legacy process runner kept temporarily until operational logger migration.
 import { spawn, type ChildProcess } from "node:child_process";
 import { StringDecoder } from "node:string_decoder";
 

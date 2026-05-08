@@ -148,6 +148,15 @@ export function createC420UIActionEngine(
         rootDir,
         actionEnv,
       );
+      if (rootPolicy.requiresRoot === false && rootPolicy.warning) {
+        emit?.(
+          createC420UIEvent({
+            type: "log",
+            source: "system",
+            line: rootPolicy.warning,
+          }),
+        );
+      }
       if (rootPolicy.requiresRoot) {
         const access = rootProvider.validateRootAccess(rootDir, actionEnv);
         if (access.ok === false) {

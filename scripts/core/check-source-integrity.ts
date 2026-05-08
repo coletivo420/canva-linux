@@ -48,6 +48,7 @@ const criticalReadableSourceFiles = [
   "scripts/core/check-typescript-first.ts",
   "scripts/core/check-source-integrity.ts",
   "packages/c420ui/src/root-provider.ts",
+  "scripts/c420ui/interactive-action-runner.ts",
   "scripts/c420ui-canva-linux/root-provider.ts",
   "electron/ui/toolbar.html",
 ] as const;

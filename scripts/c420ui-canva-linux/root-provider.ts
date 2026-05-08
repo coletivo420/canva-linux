@@ -79,8 +79,12 @@ export function createCanvaLinuxRootProvider(
               reason: `${action.id}: detected system installation`,
             };
           }
-        } catch {
-          return { requiresRoot: false };
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          return {
+            requiresRoot: false,
+            warning: `[warn] Unable to detect system installations for root policy: ${message}`,
+          };
         }
       }
 

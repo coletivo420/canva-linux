@@ -9,8 +9,10 @@ Current target:
 
 - `npm run check:c420ui-core` validates reusable c420ui contracts.
 - `npm run check:c420ui-core` validates the generic root provider contract.
+- Interactive and direct CLI action execution must share the c420ui Action Engine.
 - `npm run check:canva-linux` validates the Canva Linux adapter, app runtime contracts and concrete recipes.
 - `npm run check:canva-linux` validates the Canva Linux root provider backed by `scripts/sudo-common.sh`.
+- Root/sudo preflight must run before concrete project action execution in both direct and interactive paths.
 - `npm run check:shared-tooling` validates repository-wide TypeScript, docs, dependency, source, runtime build and AI guardrail policies.
 - `npm run check:legacy-tooling` temporarily preserves contracts that still live under `scripts/core/` until the c420ui/action-runner migration is complete.
 - `npm run check:scripts-core` is a temporary aggregate that runs the four validation blocks above.
@@ -38,6 +40,7 @@ Current target:
   - validates the generic c420ui package contracts without Canva Linux adapter checks
   - includes the c420ui action engine contract
   - includes the generic c420ui root provider contract
+  - includes the interactive c420ui Action Engine contract
 - `npm run check:canva-linux`
   - validates the Canva Linux adapter and artifact recipes separately from c420ui core
   - includes the Canva Linux root provider contract backed by `scripts/sudo-common.sh`
@@ -88,6 +91,11 @@ Current target:
 - Confirm removed interface routing variables are not read by launcher code.
 - Confirm direct CLI actions still work, for example `./canva-linux.sh --doctor`.
 - Confirm planned c420ui actions are displayed as planned and are not treated as successful builds.
+- Confirm interactive planned actions do not request sudo.
+- Confirm interactive dangerous actions open confirmation before execution.
+- Confirm canceling an interactive dangerous action does not execute backend scripts.
+- Confirm confirmed privileged interactive actions run root preflight before backend scripts.
+- Confirm interactive action stdout/stderr remains visible in the logs panel.
 - Confirm detected installs are green and not detected is purple.
 - Confirm detected installs show installed versions, or `version unknown` when unreadable.
 - Confirm the detection panel does not show `Detection error` after a successful Flatpak install.

@@ -1,5 +1,6 @@
 import { createApp } from "../c420ui/app";
 import { createCanvaLinuxC420UIAdapter } from "./adapter";
+import { createCanvaLinuxRootProvider } from "./root-provider";
 
 export function runCanvaLinuxC420UI(rootDir = process.cwd()): void {
   const adapter = createCanvaLinuxC420UIAdapter(rootDir);
@@ -17,7 +18,11 @@ export function runCanvaLinuxC420UI(rootDir = process.cwd()): void {
     process.exit(1);
   }
 
-  const screen = createApp(adapter.toC420UIConfig());
+  const screen = createApp({
+    config: adapter.toC420UIConfig(),
+    bridge: adapter,
+    rootProvider: createCanvaLinuxRootProvider(),
+  });
 
   process.on("uncaughtException", (err) => {
     try {

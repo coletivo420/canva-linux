@@ -1,7 +1,7 @@
 import type { c420uiAction } from "./actions";
 
 export type c420uiRootPolicyResult =
-  | { requiresRoot: false }
+  | { requiresRoot: false; warning?: string }
   | { requiresRoot: true; reason: string };
 
 export type c420uiRootValidationResult =
