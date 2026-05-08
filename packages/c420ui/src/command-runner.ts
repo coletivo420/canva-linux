@@ -123,7 +123,7 @@ export async function runC420UICommand(
       cancelKillTimer = setTimeout(() => {
         if (!closeObserved) child.kill(cancelKillSignal);
       }, cancelKillTimeoutMs);
-      cancelKillTimer.unref?.();
+      cancelKillTimer.unref();
     }
 
     emitOperationalLog(options, {
