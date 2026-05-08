@@ -128,9 +128,10 @@ export function createC420UIActionEngine(
       };
     }
 
+    const baseEnv = options.env ?? process.env;
     const actionEnv = rootProvider
-      ? rootProvider.buildActionEnvironment(action, options.env ?? process.env)
-      : options.env ?? process.env;
+      ? rootProvider.buildActionEnvironment(action, baseEnv)
+      : baseEnv;
 
     if (rootProvider) {
       const scopeResult = rootProvider.validateActionScope(action, actionEnv);
