@@ -150,6 +150,11 @@ export function createInteractiveActionRunner(
         status: "canceled",
         message: "Action canceled before execution.",
       };
+      state.running = false;
+      state.progressState = "canceled";
+      options.setRunning(false);
+      options.setProgress("canceled", 0, "Canceled");
+      options.appendLogText("[info] Action canceled before execution.\n", "system");
       state.lastResult = result;
       return result;
     }

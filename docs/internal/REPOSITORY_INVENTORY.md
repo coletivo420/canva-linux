@@ -187,7 +187,6 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/c420ui/index.ts`
 - `scripts/c420ui/logo.ts`
 - `scripts/c420ui/modal.ts`
-- `scripts/c420ui/process-runner.ts`
 - `scripts/c420ui/theme.ts`
 - `scripts/ui-common.sh`
 - `scripts/uninstall-detected.sh`
