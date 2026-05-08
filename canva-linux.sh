@@ -55,6 +55,22 @@ ensure_action_runner_available() {
   exit 1
 }
 
+source_newer_than_entrypoint() {
+  local entrypoint="$1"
+  local source="$2"
+
+  [[ -e "${source}" ]] || return 0
+
+  if [[ -d "${source}" ]]; then
+    if [[ "${source}" -nt "${entrypoint}" ]] || find "${source}" -type f \( -name '*.ts' -o -name '*.json' \) -newer "${entrypoint}" | grep -q .; then
+      return 0
+    fi
+    return 1
+  fi
+
+  [[ "${source}" -nt "${entrypoint}" ]]
+}
+
 c420ui_cli_entrypoint_is_fresh() {
   local entrypoint="${ROOT_DIR}/.build/scripts/run-c420ui-cli.js"
 
@@ -63,15 +79,17 @@ c420ui_cli_entrypoint_is_fresh() {
   local source
   for source in \
     "${ROOT_DIR}/scripts/run-c420ui-cli.ts" \
-    "${ROOT_DIR}/scripts/c420ui-canva-linux/cli.ts" \
-    "${ROOT_DIR}/scripts/c420ui-canva-linux/bridge.ts" \
-    "${ROOT_DIR}/scripts/c420ui-canva-linux/adapter.ts" \
-    "${ROOT_DIR}/packages/c420ui/src/cli.ts" \
-    "${ROOT_DIR}/packages/c420ui/src/action-engine.ts" \
-    "${ROOT_DIR}/packages/c420ui/src/actions.ts" \
-    "${ROOT_DIR}/packages/c420ui/src/bridge.ts"
+    "${ROOT_DIR}/scripts/c420ui-canva-linux" \
+    "${ROOT_DIR}/scripts/c420ui" \
+    "${ROOT_DIR}/scripts/core/action-registry.ts" \
+    "${ROOT_DIR}/scripts/core/action-types.ts" \
+    "${ROOT_DIR}/scripts/core/action-runner.ts" \
+    "${ROOT_DIR}/scripts/core/overview-status.ts" \
+    "${ROOT_DIR}/packages/c420ui/src" \
+    "${ROOT_DIR}/scripts/actions.json" \
+    "${ROOT_DIR}/scripts/project-ui.json"
   do
-    if [[ "${source}" -nt "${entrypoint}" ]]; then
+    if source_newer_than_entrypoint "${entrypoint}" "${source}"; then
       return 1
     fi
   done

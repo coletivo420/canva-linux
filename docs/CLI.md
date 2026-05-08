@@ -13,6 +13,8 @@ The `canva-linux.sh` launcher provides access to the c420ui terminal interface a
 - The shell launcher only parses global flags.
 - Direct CLI actions are resolved by the c420ui CLI bridge from the project action registry.
 - Direct CLI actions are routed through the c420ui CLI bridge and the c420ui Action Engine.
+- The launcher rebuilds the c420ui CLI bridge when relevant TypeScript sources, project adapter files or
+  action registry metadata are newer than `.build/scripts/run-c420ui-cli.js`.
 - Only one direct action can be passed per invocation.
 - Only one direct action can be executed per invocation.
 - Do not run the Tool as root. When an operation needs administrator privileges,

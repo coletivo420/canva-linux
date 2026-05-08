@@ -36,6 +36,7 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Fixed
+- Hardened c420ui CLI bridge freshness detection for launcher direct actions.
 - Repaired the shell launcher parser after the direct CLI bridge migration.
 - Added validation coverage to prevent hardcoded launcher action flags and malformed shell parsing.
 - Rebuild the direct c420ui CLI bridge when launcher-relevant bridge sources are newer than the compiled bundle.
@@ -44,6 +45,9 @@
 - Fixed c420ui stale-build detection so changes to `scripts/project-ui.json`, `scripts/app-identity-common.sh`,
   or `scripts/actions.json` are considered build inputs.
 - Fixed public manual-validation guidance that still referenced obsolete release/version wording and debug-filter terminology.
+
+### Tests
+- Added behavioral launcher parser coverage with a stubbed c420ui CLI entrypoint.
 
 ## [0.1.4-12] - 2026-05-07
 

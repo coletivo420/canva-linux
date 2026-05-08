@@ -28,6 +28,8 @@ Current target:
   - validates formatted package JSON, shell heredocs, launcher parser shape, and readable shell/docs shapes
   - protects launcher syntax with `bash -n canva-linux.sh`
   - requires the direct c420ui CLI bridge bundle to be rebuilt when bridge sources are newer
+  - verifies launcher behavior with a stubbed direct c420ui CLI bridge entrypoint
+  - verifies that global flags are translated before the c420ui CLI bridge receives direct action flags
 - `npm run build:c420ui`
 - `npm run check:c420ui`
 - `npm run check:c420ui-core`

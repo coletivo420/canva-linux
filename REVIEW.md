@@ -153,3 +153,12 @@ Request changes if a PR:
 - routes direct CLI actions around `run-c420ui-cli.js`;
 - removes `--dry-run` propagation from the launcher;
 - allows multiple direct action flags in one invocation.
+
+## Launcher freshness review
+
+Request changes if a PR:
+
+- lets `canva-linux.sh` execute a stale `.build/scripts/run-c420ui-cli.js`;
+- removes freshness coverage for `packages/c420ui/src`;
+- removes freshness coverage for `scripts/c420ui-canva-linux`;
+- tests launcher behavior by executing real destructive actions instead of a stub.
