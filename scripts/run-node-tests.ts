@@ -246,6 +246,47 @@ export function main(): void {
     }
   }
 
+  const runtimeSourceDirs = [
+    path.join(rootDir, "scripts", "core"),
+    path.join(rootDir, "scripts", "c420ui-canva-linux"),
+  ];
+  const runtimeSourceFiles = runtimeSourceDirs.flatMap((sourceDir) =>
+    collectTypeScriptTestFiles(sourceDir, (entryName) => entryName.endsWith(".ts")),
+  );
+
+  if (runtimeSourceFiles.length) {
+    const relativeRuntimeSources = runtimeSourceFiles.map((file) =>
+      normalizePathForNodeTest(path.relative(rootDir, file)),
+    );
+    const runtimeCompileResult = spawnSync(
+      "npx",
+      [
+        "esbuild",
+        ...relativeRuntimeSources,
+        "--platform=node",
+        "--target=node20",
+        "--format=cjs",
+        "--outbase=scripts",
+        "--outdir=.build/scripts",
+        "--sourcemap=inline",
+        "--log-level=warning",
+      ],
+      {
+        cwd: rootDir,
+        stdio: "inherit",
+        shell: false,
+        env: { ...process.env, CANVA_TEST_REPO_ROOT: rootDir },
+      },
+    );
+
+    if (runtimeCompileResult.error || runtimeCompileResult.status !== 0) {
+      console.error(
+        `[error] Failed to compile runtime test dependencies${runtimeCompileResult.error ? `: ${runtimeCompileResult.error.message}` : ""}`,
+      );
+      process.exit(runtimeCompileResult.status || 1);
+    }
+  }
+
   console.error(
     `[info] Running ${compiledTestFiles.length} compiled Node test file(s).`,
   );

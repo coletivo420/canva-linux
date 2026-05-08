@@ -126,6 +126,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Only one direct action may execute per invocation.
 - Dangerous or confirmation-required direct actions must not execute without `--yes`.
 - Privileged direct actions must run root/sudo preflight before backend scripts start.
+- Dry-run, planned actions and confirmation failures must not trigger sudo/root validation.
 - Direct CLI action stdout/stderr must remain visible to the caller.
 - Planned direct actions must exit with `78` unless they are dry-run metadata checks.
 - Planned direct action dry-runs must exit with `0`.
@@ -141,6 +142,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Privileged operations must request authentication only when needed.
 - System-wide actions must declare `requiresRoot`.
 - c420ui root authentication must happen before privileged execution.
+- c420ui owns the generic root provider contract.
+- Canva Linux owns the concrete root provider backed by `scripts/sudo-common.sh`.
+- Do not import root/sudo policy from `scripts/core/action-runner.ts` inside the Canva Linux adapter.
+- Do not call sudo directly from c420ui core.
+- Dry-run, planned actions and confirmation failures must not trigger sudo/root validation.
 - Sudo/root authentication failures must be shown in a centered c420ui popup.
 - Prefer shared sudo helpers over direct sudo calls.
 - System-wide actions must use scripts/sudo-common.sh.

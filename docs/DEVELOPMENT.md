@@ -101,7 +101,11 @@ Recommended flow:
 
 ## Sudo and Privileged Actions
 
-If your action requires root privileges, set `requiresRoot: true` in `scripts/actions.json` and use `scripts/sudo-common.sh` helpers in your backend script.
+If your action requires root privileges, set `requiresRoot: true` in
+`scripts/actions.json` and use `scripts/sudo-common.sh` helpers in your backend
+script. The generic root policy contract lives in
+`packages/c420ui/src/root-provider.ts`; the concrete Canva Linux provider lives in
+`scripts/c420ui-canva-linux/root-provider.ts`.
 
 ## Core Validation
 
@@ -111,7 +115,7 @@ Core script contracts are checked by:
 npm run check:scripts-core
 ```
 
-The generic c420ui package contracts and the Canva Linux adapter contracts are
+The generic c420ui package contracts, the c420ui root provider contract, the Canva Linux adapter contracts, and the Canva Linux root provider contract are
 checked separately:
 
 ```bash
@@ -133,5 +137,6 @@ Direct launcher actions are built with `npm run build:scripts` and executed thro
 `scripts/c420ui-canva-linux/cli.ts`; reusable parsing and action execution live in
 `packages/c420ui/src/cli.ts`.
 
-Keep direct action resolution inside the c420ui Action Engine and preserve the
-legacy Action Runner until compatibility checks have moved.
+Keep direct action resolution and generic root preflight ordering inside the
+c420ui Action Engine, keep Canva Linux privilege validation in the root provider,
+and preserve the legacy Action Runner until compatibility checks have moved.

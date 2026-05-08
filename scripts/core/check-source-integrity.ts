@@ -47,6 +47,8 @@ const criticalReadableSourceFiles = [
   "scripts/core/check-no-source-javascript.ts",
   "scripts/core/check-typescript-first.ts",
   "scripts/core/check-source-integrity.ts",
+  "packages/c420ui/src/root-provider.ts",
+  "scripts/c420ui-canva-linux/root-provider.ts",
   "electron/ui/toolbar.html",
 ] as const;
 
@@ -668,6 +670,52 @@ function validateLauncherScriptShape(
   }
 }
 
+function validateRootProviderContracts(
+  rootDir: string,
+  failures: string[],
+): void {
+  const c420uiRootProviderPath = "packages/c420ui/src/root-provider.ts";
+  const canvaLinuxRootProviderPath =
+    "scripts/c420ui-canva-linux/root-provider.ts";
+  const c420uiRootProvider = fs.readFileSync(
+    path.join(rootDir, c420uiRootProviderPath),
+    "utf8",
+  );
+  const canvaLinuxRootProvider = fs.readFileSync(
+    path.join(rootDir, canvaLinuxRootProviderPath),
+    "utf8",
+  );
+
+  for (const fragment of [
+    "c420uiRootProvider",
+    "buildActionEnvironment",
+    "validateActionScope",
+    "resolveRootPolicy",
+    "validateRootAccess",
+    "c420uiRootPolicyExitCode",
+  ] as const) {
+    if (!c420uiRootProvider.includes(fragment)) {
+      failures.push(
+        `${c420uiRootProviderPath}: missing root provider fragment ${fragment}`,
+      );
+    }
+  }
+
+  for (const fragment of [
+    "createCanvaLinuxRootProvider",
+    "scripts/sudo-common.sh",
+    "buildOverviewStatus",
+    "CANVA_NATIVE_SCOPE",
+    "CANVA_FLATPAK_SCOPE",
+  ] as const) {
+    if (!canvaLinuxRootProvider.includes(fragment)) {
+      failures.push(
+        `${canvaLinuxRootProviderPath}: missing root provider fragment ${fragment}`,
+      );
+    }
+  }
+}
+
 function validateRemovedCompatibilityAliases(
   rootDir: string,
   failures: string[],
@@ -725,6 +773,7 @@ export function main(): number {
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);
   validateRemovedCompatibilityAliases(rootDir, failures);
+  validateRootProviderContracts(rootDir, failures);
   validatePackageLockConsistency(rootDir, failures);
   validatePackageScripts(rootDir, failures);
 

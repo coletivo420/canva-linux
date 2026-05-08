@@ -1,4 +1,4 @@
-import { spawn, spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import {
@@ -19,12 +19,6 @@ import {
   loadActions,
   type CanvaAction,
 } from "../core/action-registry";
-import {
-  actionRequiresRootValidation,
-  buildActionEnvironment,
-  ROOT_POLICY_EXIT_CODE,
-  validateRootPolicy,
-} from "../core/action-runner";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
@@ -102,25 +96,6 @@ function toC420UIActionDescriptor(action: CanvaAction): C420UIActionDescriptor {
   return { ...action, kind, phase, cliFlags: action.cli };
 }
 
-
-function validateRootAccess(
-  rootDir: string,
-  actionEnv: NodeJS.ProcessEnv,
-): number {
-  const result = spawnSync("bash", ["scripts/sudo-common.sh", "--validate"], {
-    cwd: rootDir,
-    stdio: "inherit",
-    env: actionEnv,
-    shell: false,
-  });
-  if (result.error) {
-    console.error(
-      `[error] Failed to start privilege validation: ${result.error.message}`,
-    );
-    return c420uiExitCodes.generalError;
-  }
-  return result.status ?? c420uiExitCodes.generalError;
-}
 
 function toC420UIWorkflow(action: C420UIActionDescriptor): C420UIWorkflow {
   return {
@@ -253,7 +228,7 @@ export function createCanvaLinuxC420UIAdapter(
 
   // Transitional bridge execution path.
   // Direct launcher CLI routes through this path for action execution.
-  // Privilege preflight is still delegated to legacy action-runner helpers.
+  // Privilege preflight is owned by the c420ui root provider.
   // Runtime Canva Linux app logs, credential diagnostics, OAuth/tabs/GPU/EyeDropper logs,
   // and CANVA_DEBUG flows remain outside this adapter execution path.
   // Defensive fallback only: planned and dry-run policy belongs to the c420ui Action Engine.
@@ -276,26 +251,7 @@ export function createCanvaLinuxC420UIAdapter(
       return { code: c420uiExitCodes.invalidUsage, status: "failed", message: `${actionId} has no command` };
     }
 
-    const actionEnv = buildActionEnvironment(action as CanvaAction, context.env);
-    const rootPolicyError = validateRootPolicy(action as CanvaAction, actionEnv);
-    if (rootPolicyError) {
-      return {
-        code: ROOT_POLICY_EXIT_CODE,
-        status: "failed",
-        message: `[error] ${rootPolicyError}`,
-      };
-    }
-
-    if (actionRequiresRootValidation(action as CanvaAction, resolvedRootDir)) {
-      const rootStatus = validateRootAccess(resolvedRootDir, actionEnv);
-      if (rootStatus !== c420uiExitCodes.success) {
-        return {
-          code: rootStatus,
-          status: "failed",
-          message: "[error] Privilege validation failed before action execution.",
-        };
-      }
-    }
+    const actionEnv = context.env;
 
     return new Promise<c420uiActionResult>((resolve) => {
       context.emitProgress({ state: "running", label: action.label });

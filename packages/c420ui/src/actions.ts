@@ -24,6 +24,8 @@ export type c420uiAction = {
   requiresConfirmation?: boolean;
   planned?: boolean;
   requiresRoot?: boolean;
+  scope?: "user" | "system" | "auto" | string;
+  env?: Record<string, string>;
   cliFlags?: string[];
   artifactWorkflowId?: string;
 };
@@ -65,7 +67,6 @@ export type C420UIActionDescriptor = c420uiAction & {
   cli?: string[];
   command?: string;
   args?: string[];
-  env?: Record<string, string>;
 };
 
 export function getC420UIActionCliFlags(action: c420uiAction): string[] {

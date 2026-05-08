@@ -8,7 +8,9 @@ Current target:
 ## Split validation model
 
 - `npm run check:c420ui-core` validates reusable c420ui contracts.
+- `npm run check:c420ui-core` validates the generic root provider contract.
 - `npm run check:canva-linux` validates the Canva Linux adapter, app runtime contracts and concrete recipes.
+- `npm run check:canva-linux` validates the Canva Linux root provider backed by `scripts/sudo-common.sh`.
 - `npm run check:shared-tooling` validates repository-wide TypeScript, docs, dependency, source, runtime build and AI guardrail policies.
 - `npm run check:legacy-tooling` temporarily preserves contracts that still live under `scripts/core/` until the c420ui/action-runner migration is complete.
 - `npm run check:scripts-core` is a temporary aggregate that runs the four validation blocks above.
@@ -35,8 +37,10 @@ Current target:
 - `npm run check:c420ui-core`
   - validates the generic c420ui package contracts without Canva Linux adapter checks
   - includes the c420ui action engine contract
+  - includes the generic c420ui root provider contract
 - `npm run check:canva-linux`
   - validates the Canva Linux adapter and artifact recipes separately from c420ui core
+  - includes the Canva Linux root provider contract backed by `scripts/sudo-common.sh`
 - `npm run actions:validate`
 - `npm run lint`
 - `npm run typecheck`
@@ -93,7 +97,7 @@ Current target:
 - Confirm help screen uses the same semantic colors.
 - Confirm user/system action scopes are applied through `action.env`.
 - Confirm user-scope actions do not request sudo.
-- Confirm system-scope actions use `scripts/sudo-common.sh --validate` from Action Runner before backend scripts start.
+- Confirm system-scope actions use `scripts/sudo-common.sh --validate` through the Canva Linux root provider before backend scripts start.
 - Confirm c420ui root actions validate cached sudo credentials non-interactively after the c420ui password prompt.
 - Confirm an action with `requiresRoot: true` and `scope: "user"` fails before its backend script starts.
 - Confirm `--uninstall` and `--purge` request root only when a system-wide installation is detected.
