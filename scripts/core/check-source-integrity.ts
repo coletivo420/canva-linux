@@ -48,6 +48,7 @@ const criticalReadableSourceFiles = [
   "scripts/core/check-typescript-first.ts",
   "scripts/core/check-source-integrity.ts",
   "packages/c420ui/src/root-provider.ts",
+  "packages/c420ui/src/command-runner.ts",
   "scripts/c420ui/interactive-action-runner.ts",
   "scripts/c420ui-canva-linux/root-provider.ts",
   "electron/ui/toolbar.html",
@@ -290,6 +291,18 @@ function validateNoMaintainedJavaScriptFiles(
         `${relativePath}: maintained JavaScript source/config contradicts the TypeScript-only source policy; use the corresponding TypeScript source and generated .build output`,
       );
     }
+  }
+}
+
+function validateRetiredC420UIProcessRunner(
+  rootDir: string,
+  failures: string[],
+): void {
+  const retiredPath = "scripts/c420ui/process-runner.ts";
+  if (fs.existsSync(path.join(rootDir, retiredPath))) {
+    failures.push(
+      `${retiredPath}: must not exist after command runner migration`,
+    );
   }
 }
 
@@ -771,6 +784,7 @@ export function main(): number {
   validateRunCoreEntryScriptShape(rootDir, failures);
   validateToolbarContentSecurityPolicy(rootDir, failures);
   validateNoMaintainedJavaScriptFiles(rootDir, failures);
+  validateRetiredC420UIProcessRunner(rootDir, failures);
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);
   validateRemovedCompatibilityAliases(rootDir, failures);

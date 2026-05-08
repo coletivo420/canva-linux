@@ -72,6 +72,11 @@ Root/sudo preflight is now modeled as a c420ui root provider contract.
 
 Canva Linux provides the concrete provider backed by `scripts/sudo-common.sh`.
 
+### Operational command runner
+
+Concrete project adapters now delegate command execution to the reusable c420ui command runner.
+Project adapters still provide the concrete command, args, cwd and environment.
+
 ## Non-goals for this phase
 
 - Do not migrate to ESM during this phase.

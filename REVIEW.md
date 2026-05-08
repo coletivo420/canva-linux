@@ -174,6 +174,16 @@ Request changes if a PR:
 - tests launcher behavior by executing real destructive actions instead of a stub.
 
 
+## c420ui command runner review
+
+Request changes if a PR:
+
+- reimplements generic `spawn()` handling inside a project adapter;
+- drops partial stdout/stderr chunks;
+- hides command stderr from CLI or c420ui logs;
+- changes runtime Electron logs while modifying c420ui command execution;
+- reintroduces `scripts/c420ui/process-runner.ts` as an action execution path.
+
 ## Interactive c420ui action engine review
 
 Request changes if a PR:

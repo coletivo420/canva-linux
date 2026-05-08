@@ -31,6 +31,8 @@ export function main(): number {
     "AbortController",
     "signal: abortController.signal",
     "function cancel()",
+    "Action canceled before execution",
+    'setProgress("canceled",',
   ]) {
     if (!runner.includes(fragment)) {
       failures.push(`interactive action runner must include action engine fragment: ${fragment}`);

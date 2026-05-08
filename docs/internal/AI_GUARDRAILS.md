@@ -112,11 +112,16 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui owns generic action resolution by id and CLI flag.
 - c420ui owns planned-action and dry-run semantics.
 - Project adapters execute concrete actions but must not reimplement generic action-engine policy.
+- Generic command execution belongs to `packages/c420ui/src/command-runner.ts`.
+- Project adapters must not reimplement stdout/stderr process handling.
+- Project adapters may provide concrete command, args, cwd and env only.
+- Runtime app logs remain separate from c420ui operational command logs.
 - Direct CLI actions must pass through the c420ui CLI bridge.
 - Interactive c420ui actions and direct CLI actions must share the c420ui Action Engine.
 - Do not bypass the c420ui Action Engine from `canva-linux.sh`.
 - Do not reintroduce direct process execution from `scripts/c420ui/app.ts`.
 - Do not import `./process-runner` from the interactive app after the Action Engine migration.
+- Do not reintroduce `scripts/c420ui/process-runner.ts` as the interactive execution path.
 - Do not keep parallel root/sudo logic for interactive and direct CLI actions.
 - Do not hardcode direct action flags in `canva-linux.sh`; resolve them through the c420ui CLI bridge.
 - Direct action flags must come from the project action registry.

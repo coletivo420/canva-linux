@@ -180,6 +180,27 @@ test("interactive dangerous action canceled before engine does not call bridge o
   assert.deepEqual(calls, []);
 });
 
+test("interactive dangerous cancel updates progress to canceled and logs cancellation", async () => {
+  const { bridge } = createFakeBridge({ actions: [dangerousAction] });
+  const { provider, calls } = createFakeRootProvider(true);
+  const { runner, logs, progress, running } = createRunner({ bridge, rootProvider: provider });
+
+  const result = await runner.runAction(dangerousAction, { confirmed: false });
+
+  assert.equal(result.status, "canceled");
+  assert.equal(runner.state.progressState, "canceled");
+  assert.deepEqual(progress.at(-1), {
+    state: "canceled",
+    percent: 0,
+    label: "Canceled",
+  });
+  assert.deepEqual(running, [false]);
+  assert.deepEqual(logs, [
+    { text: "[info] Action canceled before execution.\n", source: "system" },
+  ]);
+  assert.deepEqual(calls, []);
+});
+
 test("interactive dangerous action confirmed passes yes=true to bridge context", async () => {
   const { bridge, runCalls } = createFakeBridge({ actions: [dangerousAction] });
   const { runner } = createRunner({ bridge });

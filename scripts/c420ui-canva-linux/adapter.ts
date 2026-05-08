@@ -1,9 +1,9 @@
-import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import {
   c420uiExitCodes,
   createC420UIBridge,
+  runC420UICommand,
   type c420uiActionResult,
   type c420uiExecutionContext,
   type c420uiProjectInfo,
@@ -262,65 +262,15 @@ export function createCanvaLinuxC420UIAdapter(
       };
     }
 
-    return new Promise<c420uiActionResult>((resolve) => {
-      let settled = false;
-      context.emitProgress({ state: "running", label: action.label });
-      const child = spawn(action.command as string, action.args ?? [], {
-        cwd: resolvedRootDir,
-        env: actionEnv,
-        stdio: ["ignore", "pipe", "pipe"],
-      });
-
-      function settle(result: c420uiActionResult) {
-        if (settled) return;
-        settled = true;
-        context.signal?.removeEventListener("abort", abortAction);
-        resolve(result);
-      }
-
-      function abortAction() {
-        context.emitProgress({ state: "canceled", percent: 0, label: action.label });
-        child.kill("SIGINT");
-      }
-
-      context.signal?.addEventListener("abort", abortAction, { once: true });
-
-      child.stdout.on("data", (chunk: Buffer) => {
-        for (const line of chunk.toString().split(/\r?\n/).filter(Boolean)) {
-          context.emitLog({ source: "stdout", line });
-        }
-      });
-      child.stderr.on("data", (chunk: Buffer) => {
-        for (const line of chunk.toString().split(/\r?\n/).filter(Boolean)) {
-          context.emitLog({ source: "stderr", line });
-        }
-      });
-      child.on("error", (error) => {
-        if (context.signal?.aborted) {
-          settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
-          return;
-        }
-        context.emitProgress({ state: "failed", label: action.label });
-        settle({ code: c420uiExitCodes.generalError, status: "failed", message: error.message });
-      });
-      child.on("close", (code, signal) => {
-        if (context.signal?.aborted || signal === "SIGINT") {
-          context.emitProgress({ state: "canceled", percent: 0, label: action.label });
-          settle({
-            code: c420uiExitCodes.canceled,
-            status: "canceled",
-            message: "Action canceled.",
-          });
-          return;
-        }
-        const resultCode = code ?? c420uiExitCodes.generalError;
-        const success = resultCode === c420uiExitCodes.success;
-        context.emitProgress({ state: success ? "success" : "failed", percent: success ? 100 : undefined, label: action.label });
-        settle({
-          code: resultCode,
-          status: success ? "success" : "failed",
-        });
-      });
+    return runC420UICommand({
+      command: action.command as string,
+      args: action.args ?? [],
+      cwd: resolvedRootDir,
+      env: actionEnv,
+      label: action.label,
+      signal: context.signal,
+      emitLog: context.emitLog,
+      emitProgress: context.emitProgress,
     });
   }
 
