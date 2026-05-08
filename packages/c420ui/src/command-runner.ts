@@ -31,7 +31,7 @@ function emitDecodedChunk(
   const lines = stream.pending.split(/\r?\n/);
   stream.pending = lines.pop() ?? "";
   for (const line of lines) {
-    if (line) emitLog({ source, line });
+    emitLog({ source, line });
   }
 }
 
