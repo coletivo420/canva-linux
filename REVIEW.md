@@ -214,3 +214,11 @@ Request changes if a PR:
 - bypasses the c420ui root provider for interactive privileged actions;
 - triggers sudo before confirmation or for dry-run/planned actions;
 - reintroduces `C420UISudoProvider` as a separate root abstraction.
+## Standalone check cleanup review
+
+Request changes if a PR:
+
+- adds a new standalone check under `scripts/core` for c420ui or Canva Linux behavior;
+- adds a check to `build:scripts-core` that is not part of shared repository infrastructure;
+- duplicates a rule already covered by `check-c420ui-core-contracts.ts`, `check-canva-linux-contracts.ts` or `check-repository-policy.ts`;
+- reintroduces old standalone validation aliases.

@@ -129,3 +129,12 @@ creating one-off check files or `*-parts/` validation directories, unless there 
 - Confirm root/sudo preflight runs before privileged direct actions.
 - Confirm planned direct actions still exit `78`.
 - Confirm planned direct action dry-runs still exit `0`.
+## Standalone check policy
+
+The validation surface is intentionally consolidated.
+
+`build:scripts-core` should compile shared infrastructure checks only. c420ui and Canva Linux behavior contracts live in their domain runners:
+
+- `packages/c420ui/checks/check-c420ui-core-contracts.ts`
+- `scripts/checks/canva-linux/check-canva-linux-contracts.ts`
+- `scripts/core/check-repository-policy.ts`

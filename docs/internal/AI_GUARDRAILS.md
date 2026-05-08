@@ -260,6 +260,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - New repository-wide checks need a dedicated runner only when they cannot fit the consolidated policy runner.
 - Do not reintroduce the removed legacy tooling script.
 - Do not add new Canva Linux-specific checks to `check:c420ui-core`.
+- Do not add standalone `scripts/core/check-*.ts` files for c420ui or Canva Linux behavior.
+- c420ui behavior belongs in `packages/c420ui/checks/check-c420ui-core-contracts.ts`.
+- Canva Linux behavior belongs in `scripts/checks/canva-linux/check-canva-linux-contracts.ts`.
+- Repository-wide policy belongs in `scripts/core/check-repository-policy.ts`.
+- `scripts/core/check-*.ts` should be reserved only for shared repository infrastructure checks that cannot live inside the consolidated runners.
 
 ## Changelog/review
 

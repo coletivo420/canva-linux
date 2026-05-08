@@ -117,7 +117,7 @@ This file preserves the detailed development changelog entries that were archive
 ### Added
 - Centralized sudo usage via `scripts/sudo-common.sh` across all privileged scripts.
 - Consolidated TypeScript core for scripts and validations.
-- Hardened `check-no-shell-menu` and consolidated sudo contract guardrails.
+- Hardened shell-menu validation and consolidated sudo contract guardrails.
 
 ### Changed
 - Updated technical version and phase identity to `0.1.4-dev.11.55` / `0.1.4.11-dev.55`.

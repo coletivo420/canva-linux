@@ -1,8 +1,10 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { createCanvaLinuxC420UIAdapter } from "../../c420ui-canva-linux/adapter";
-import { findProjectRoot } from "../../core/action-registry";
+import { findProjectRoot, loadActions } from "../../core/action-registry";
+import { buildOverviewStatus } from "../../core/overview-status";
 
 type ContractCheck = {
   name: string;
@@ -15,6 +17,182 @@ function runCheck(failures: string[], check: ContractCheck): void {
     if (exitCode !== 0) failures.push(`${check.name}: exited with ${exitCode}`);
   } catch (error) {
     failures.push(`${check.name}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+
+
+type CoreCheckFileKind = "shell" | "typescript";
+
+const noParallelShellMenuActiveFiles: Array<{ path: string; kind: CoreCheckFileKind }> = [
+  { path: "canva-linux.sh", kind: "shell" },
+  { path: "scripts/c420ui/app.ts", kind: "typescript" },
+  { path: "scripts/c420ui/index.ts", kind: "typescript" },
+];
+
+const noParallelShellMenuForbiddenPatterns = [
+  "run_interactive_mode",
+  "print_main_screen",
+  "menu_install",
+  "menu_dev",
+  "menu_maint",
+  "Shell Tool",
+  "SWITCH_TO_SHELL_EXIT_CODE",
+  "TUI_SWITCH_TO_SHELL_EXIT_CODE",
+  "shell fallback menu",
+  "shell menu fallback",
+  "--tui",
+  "--no-tui",
+  "CANVA_NO_TUI",
+  "CANVA_C420UI",
+  "F4 Shell Tool",
+  "fallback para shell",
+  "shell menu interativo",
+  "opção “Use c420ui Tool”",
+];
+
+const detectionBooleanFields = [
+  "nativeSystem",
+  "nativeUser",
+  "flatpakSystem",
+  "flatpakUser",
+  "appImageArtifacts",
+];
+const detectionVersionFields = [
+  "nativeSystemVersion",
+  "nativeUserVersion",
+  "flatpakSystemVersion",
+  "flatpakUserVersion",
+  "appImageVersion",
+];
+
+const releaseScripts = [
+  "scripts/build-appimage.sh",
+  "scripts/build-flatpak-bundle.sh",
+  "scripts/package-guidance-common.sh",
+  "scripts/validate-project.sh",
+  "scripts/app-identity-common.sh",
+];
+
+function readProjectFile(rootDir: string, relativePath: string): string {
+  return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+}
+
+function stripShellComment(line: string): string {
+  const trimmed = line.trimStart();
+  if (trimmed.startsWith("#")) return "";
+  return line;
+}
+
+function stripTypeScriptComments(
+  line: string,
+  state: { inBlockComment: boolean },
+): string {
+  let remaining = line;
+  let result = "";
+
+  while (remaining.length) {
+    if (state.inBlockComment) {
+      const endIndex = remaining.indexOf("*/");
+      if (endIndex === -1) return result;
+      remaining = remaining.slice(endIndex + 2);
+      state.inBlockComment = false;
+      continue;
+    }
+
+    const lineCommentIndex = remaining.indexOf("//");
+    const blockCommentIndex = remaining.indexOf("/*");
+    if (
+      lineCommentIndex !== -1 &&
+      (blockCommentIndex === -1 || lineCommentIndex < blockCommentIndex)
+    ) {
+      result += remaining.slice(0, lineCommentIndex);
+      return result;
+    }
+    if (blockCommentIndex !== -1) {
+      result += remaining.slice(0, blockCommentIndex);
+      remaining = remaining.slice(blockCommentIndex + 2);
+      state.inBlockComment = true;
+      continue;
+    }
+
+    result += remaining;
+    return result;
+  }
+
+  return result;
+}
+
+function activeLine(
+  line: string,
+  kind: CoreCheckFileKind,
+  state: { inBlockComment: boolean },
+): string {
+  if (kind === "shell") return stripShellComment(line);
+  return stripTypeScriptComments(line, state);
+}
+
+function expectedEnvFor(actionId: string, scope: string): [string, string] | null {
+  if (actionId.includes("flatpak")) return ["CANVA_FLATPAK_SCOPE", scope];
+  if (actionId.includes("native")) return ["CANVA_NATIVE_SCOPE", scope];
+  return null;
+}
+
+function expectedPhaseFromVersion(version: string): string {
+  const devMatch = version.match(/^(\d+\.\d+\.\d+)-dev\.(\d+)\.(\d+)$/);
+  if (devMatch) return `${devMatch[1]}.${devMatch[2]}-dev.${devMatch[3]}`;
+
+  if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) return version;
+
+  throw new Error(`package.json version does not map to a project phase: ${version}`);
+}
+
+function shellValue(file: string, key: string): string | null {
+  return file.match(new RegExp(`^${key}="([^"]+)"`, "m"))?.[1] ?? null;
+}
+
+function assertIncludes(
+  failures: string[],
+  file: string,
+  contents: string,
+  expected: string,
+): void {
+  if (!contents.includes(expected)) failures.push(`${file}: missing ${expected}`);
+}
+
+function validateReleaseShellScript(
+  rootDir: string,
+  relativePath: string,
+  failures: string[],
+): void {
+  const fullPath = path.join(rootDir, relativePath);
+  let contents: string;
+  try {
+    contents = readProjectFile(rootDir, relativePath);
+  } catch {
+    failures.push(`${relativePath}: file not found`);
+    return;
+  }
+  const lines = contents.split(/\r?\n/);
+
+  if (!lines[0]?.startsWith("#!")) {
+    failures.push(`${relativePath}: shebang must be the first line`);
+  }
+  if (lines[1] !== "set -euo pipefail") {
+    failures.push(`${relativePath}: set -euo pipefail must be on line 2`);
+  }
+  if (lines.length < 8) {
+    failures.push(`${relativePath}: release script appears collapsed`);
+  }
+
+  const syntax = spawnSync("bash", ["-n", fullPath], {
+    cwd: rootDir,
+    encoding: "utf8",
+  });
+  if (syntax.status !== 0) {
+    failures.push(
+      `${relativePath}: bash -n failed: ${syntax.stderr || syntax.stdout}`,
+    );
   }
 }
 
@@ -818,6 +996,399 @@ function checkInteractiveLogUiIntegration(failures: string[]): void {
   runCheck(failures, { name: "interactive log UI integration", run: checkInteractiveLogUiIntegrationPart.main });
 }
 
+
+function checkNoParallelShellMenu(failures: string[]): void {
+  const rootDir = findProjectRoot();
+
+  for (const file of noParallelShellMenuActiveFiles) {
+    const fullPath = path.join(rootDir, file.path);
+    if (!fs.existsSync(fullPath)) continue;
+    const state = { inBlockComment: false };
+    const lines = fs.readFileSync(fullPath, "utf8").split(/\r?\n/);
+    lines.forEach((line, index) => {
+      const checkedLine = activeLine(line, file.kind, state);
+      for (const pattern of noParallelShellMenuForbiddenPatterns) {
+        if (checkedLine.includes(pattern)) {
+          if (
+            pattern === "CANVA_C420UI" &&
+            (checkedLine.includes("CANVA_C420UI_ROOT_AUTH") ||
+              checkedLine.includes("CANVA_C420UI_TITLE"))
+          ) {
+            const sanitized = checkedLine
+              .replace(/CANVA_C420UI_ROOT_AUTH/g, "")
+              .replace(/CANVA_C420UI_TITLE/g, "");
+            if (!sanitized.includes("CANVA_C420UI")) continue;
+          }
+          failures.push(
+            `${file.path}:${index + 1}: forbidden shell-menu fragment: ${pattern}`,
+          );
+        }
+      }
+    });
+  }
+}
+
+function checkNoRootLauncherContract(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const launcher = readProjectFile(rootDir, "canva-linux.sh");
+  const runTui = readProjectFile(rootDir, "scripts/run-c420ui.ts");
+  const tuiIndex = readProjectFile(rootDir, "scripts/c420ui/index.ts");
+  const adapterRun = readProjectFile(rootDir, "scripts/c420ui-canva-linux/run.ts");
+  const rootMessage =
+    "Do not run Canva Linux Install and Development Tool with sudo or as root.";
+
+  if (!launcher.includes('[[ "${EUID}" -eq 0 ]]')) {
+    failures.push("canva-linux.sh: must block EUID=0 before launching Tool");
+  }
+  if (!launcher.includes(rootMessage)) {
+    failures.push("canva-linux.sh: must explain that root/sudo launch is blocked");
+  }
+  if (!launcher.includes("administrator privileges")) {
+    failures.push(
+      "canva-linux.sh: root guard must explain privileges are requested only when needed",
+    );
+  }
+  if (!runTui.includes("process.getuid") || !adapterRun.includes("process.getuid")) {
+    failures.push("c420ui bootstrap must include a secondary root-launch guard");
+  }
+  if (!tuiIndex.includes("runCanvaLinuxC420UI")) {
+    failures.push("scripts/c420ui/index.ts must delegate to adapter runner");
+  }
+  if (!runTui.includes("rootLaunchGuardMessage")) {
+    failures.push(
+      "scripts/run-c420ui.ts: must reuse the root-launch guard message builder through the adapter",
+    );
+  }
+
+  const docsToCheck = ["README.md", "docs/CLI.md", "docs/TECHNICAL.md"];
+  for (const relativePath of docsToCheck) {
+    const content = readProjectFile(rootDir, relativePath);
+    if (/sudo\s+\.\/canva-linux\.sh/.test(content)) {
+      failures.push(
+        `${relativePath}: must not instruct users to run ./canva-linux.sh with sudo`,
+      );
+    }
+  }
+}
+
+function checkActionRegistryContract(failures: string[]): void {
+  const actions = loadActions(findProjectRoot());
+  const aliases = new Map<string, string>();
+
+  for (const action of actions) {
+    if (action.scope === "system" && action.requiresRoot !== true) {
+      failures.push(`${action.id}: system-scope actions must set requiresRoot=true`);
+    }
+    if (action.scope === "user" && action.requiresRoot === true) {
+      failures.push(`${action.id}: user-scope actions must not require root`);
+    }
+    if (action.scope) {
+      const expected = expectedEnvFor(action.id, action.scope);
+      if (expected) {
+        const [key, value] = expected;
+        if (action.env?.[key] !== value) {
+          failures.push(`${action.id}: expected env ${key}=${value}`);
+        }
+      }
+    }
+    if (action.dangerous && !(action.confirmationTitle || action.confirmationMessage)) {
+      failures.push(
+        `${action.id}: dangerous actions must include confirmation metadata`,
+      );
+    }
+    if (
+      (action.kind === "planned" || action.planned) &&
+      (("command" in action && action.command) || ("args" in action && action.args))
+    ) {
+      failures.push(`${action.id}: planned actions must not define command/args`);
+    }
+    for (const alias of action.cli ?? []) {
+      const existing = aliases.get(alias);
+      if (existing) {
+        failures.push(
+          `${action.id}: duplicate CLI alias ${alias} already used by ${existing}`,
+        );
+      }
+      aliases.set(alias, action.id);
+    }
+  }
+}
+
+function checkInstallationDetectionContract(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const raw = JSON.stringify(buildOverviewStatus(rootDir));
+
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (error) {
+    failures.push(
+      `overview-status stdout is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return;
+  }
+
+  if (!parsed.package || typeof parsed.package !== "object") {
+    failures.push("overview-status missing package object");
+  }
+  for (const field of ["version", "phase", "appId", "executable"]) {
+    if (typeof parsed.package?.[field] !== "string") {
+      failures.push(`overview-status package.${field} must be string`);
+    }
+  }
+  if (!parsed.installations || typeof parsed.installations !== "object") {
+    failures.push("overview-status missing installations object");
+  }
+  for (const field of detectionBooleanFields) {
+    if (typeof parsed.installations?.[field] !== "boolean") {
+      failures.push(`overview-status installations.${field} must be boolean`);
+    }
+  }
+  for (const field of detectionVersionFields) {
+    if (typeof parsed.installations?.[field] !== "string") {
+      failures.push(`overview-status installations.${field} must be string`);
+    }
+  }
+}
+
+function checkVersionConsistency(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const pkg = JSON.parse(readProjectFile(rootDir, "package.json")) as { version?: string };
+  const projectUi = JSON.parse(readProjectFile(rootDir, "scripts/project-ui.json")) as {
+    displayVersion?: string;
+    phase?: string;
+  };
+  const identity = readProjectFile(rootDir, "scripts/app-identity-common.sh");
+  const phaseMatch = identity.match(/^PROJECT_PHASE="([^"]+)"/m);
+  const displayVersionMatch = identity.match(/^PROJECT_DISPLAY_VERSION="([^"]+)"/m);
+  if (!pkg.version) {
+    failures.push("package.json version not found");
+    return;
+  }
+  if (!phaseMatch) failures.push("PROJECT_PHASE not found");
+  if (!displayVersionMatch) failures.push("PROJECT_DISPLAY_VERSION not found");
+  if (!phaseMatch || !displayVersionMatch) return;
+
+  const expectedPhase = expectedPhaseFromVersion(pkg.version);
+  if (phaseMatch[1] !== expectedPhase) {
+    failures.push(`PROJECT_PHASE mismatch: expected ${expectedPhase}, got ${phaseMatch[1]}`);
+  }
+  if (displayVersionMatch[1] !== expectedPhase) {
+    failures.push(
+      `PROJECT_DISPLAY_VERSION mismatch: expected ${expectedPhase}, got ${displayVersionMatch[1]}`,
+    );
+  }
+  if (projectUi.phase !== expectedPhase) {
+    failures.push(
+      `project-ui phase mismatch: expected ${expectedPhase}, got ${projectUi.phase || "missing"}`,
+    );
+  }
+  if (projectUi.displayVersion !== expectedPhase) {
+    failures.push(
+      `project-ui displayVersion mismatch: expected ${expectedPhase}, got ${projectUi.displayVersion || "missing"}`,
+    );
+  }
+}
+
+function checkReleaseContract(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const workflowPath = ".github/workflows/release.yml";
+  const releaseDocsPath = "docs/RELEASE.md";
+  const workflow = fs.existsSync(path.join(rootDir, workflowPath))
+    ? readProjectFile(rootDir, workflowPath)
+    : "";
+  const releaseDocs = fs.existsSync(path.join(rootDir, releaseDocsPath))
+    ? readProjectFile(rootDir, releaseDocsPath)
+    : "";
+  const pkg = JSON.parse(readProjectFile(rootDir, "package.json")) as { version?: string };
+  const releaseVersion = pkg.version || "";
+
+  if (!workflow) failures.push(`${workflowPath}: missing release workflow`);
+  if (!releaseDocs) failures.push(`${releaseDocsPath}: missing release notes body`);
+  if (workflow.includes("\t")) failures.push(`${workflowPath}: tabs are forbidden`);
+  if (workflow.includes("find dist") || workflow.includes("head -n 1")) {
+    failures.push(`${workflowPath}: asset selection must not use find/head`);
+  }
+  if (workflow.includes("_source=") || workflow.includes("_target=")) {
+    failures.push(
+      `${workflowPath}: release artifact paths must not use dead source/target rename variables`,
+    );
+  }
+
+  if (!releaseVersion) failures.push("package.json: missing version");
+
+  for (const expected of [
+    "workflow_dispatch:",
+    "tags:",
+    'node-version: "22"',
+    "npm run validate:project",
+    "shell_display_version",
+    "shell_phase",
+    "PROJECT_DISPLAY_VERSION",
+    "PROJECT_PHASE",
+    "./scripts/build-appimage.sh",
+    "./scripts/build-flatpak-bundle.sh",
+    "appimage_paths=(dist/canva-linux-${RELEASE_VERSION}-*.AppImage)",
+    "flatpak_paths=(dist/canva-linux-${RELEASE_VERSION}-*.flatpak)",
+    'linux_arch="$(uname -m)"',
+    'tarball_path="dist/canva-linux-${RELEASE_VERSION}-linux-unpacked-${linux_arch}.tar.gz"',
+    'sha256sum "${release_assets[@]}" > SHA256SUMS',
+    "dist/SHA256SUMS",
+    "softprops/action-gh-release@v2",
+    "body_path: docs/RELEASE.md",
+    "dist/canva-linux-${{ env.RELEASE_VERSION }}-*.AppImage",
+    "dist/canva-linux-${{ env.RELEASE_VERSION }}-*.flatpak",
+    "dist/canva-linux-${{ env.RELEASE_VERSION }}-linux-unpacked-*.tar.gz",
+  ]) {
+    assertIncludes(failures, workflowPath, workflow, expected);
+  }
+
+  for (const expected of [
+    `canva-linux-${releaseVersion}-x86_64.AppImage`,
+    `canva-linux-${releaseVersion}-x86_64.flatpak`,
+    `canva-linux-${releaseVersion}-linux-unpacked-x86_64.tar.gz`,
+    "preserve upstream/tooling architecture strings",
+    "real generated file names",
+    "SHA256SUMS",
+  ]) {
+    assertIncludes(failures, releaseDocsPath, releaseDocs, expected);
+  }
+
+  const releaseNamingText = `${workflow}\n${releaseDocs}`;
+  const dottedVersionMatch = releaseNamingText.match(/\b(?:v|canva-linux-)\d+\.\d+\.\d+\.\d+\b/);
+  if (dottedVersionMatch) {
+    failures.push(
+      `release naming must use npm-compatible versions, found dotted version ${dottedVersionMatch[0]}`,
+    );
+  }
+
+  const releaseValidationText = [
+    workflow,
+    releaseDocs,
+    readProjectFile(rootDir, "scripts/build-appimage.sh"),
+    readProjectFile(rootDir, "scripts/build-flatpak-bundle.sh"),
+    readProjectFile(rootDir, "scripts/package-guidance-common.sh"),
+  ].join("\n");
+
+  for (const forbidden of [
+    "linux-unpacked-x64",
+    "-x64.AppImage",
+    "-x64.flatpak",
+    "ARCH=x64",
+    'ARCH="x64"',
+  ]) {
+    if (releaseValidationText.includes(forbidden)) {
+      failures.push(
+        `release naming must preserve generated architecture names, found ${forbidden}`,
+      );
+    }
+  }
+
+  for (const script of releaseScripts) {
+    validateReleaseShellScript(rootDir, script, failures);
+  }
+
+  const buildAppImage = readProjectFile(rootDir, "scripts/build-appimage.sh");
+  if (
+    buildAppImage.includes("APPIMAGE_ARCH=") ||
+    buildAppImage.includes("-x86_64.AppImage") ||
+    buildAppImage.includes("-X86_64.AppImage")
+  ) {
+    failures.push(
+      "scripts/build-appimage.sh: AppImage architecture must be discovered from the generated artifact name",
+    );
+  }
+  assertIncludes(failures, "scripts/build-appimage.sh", buildAppImage, "appimage_candidates=(");
+  assertIncludes(failures, "scripts/build-appimage.sh", buildAppImage, 'basename "${APPIMAGE_PATH}"');
+
+  const buildFlatpakBundle = readProjectFile(rootDir, "scripts/build-flatpak-bundle.sh");
+  assertIncludes(
+    failures,
+    "scripts/build-flatpak-bundle.sh",
+    buildFlatpakBundle,
+    'FLATPAK_ARCH="$(flatpak --default-arch)"',
+  );
+  assertIncludes(
+    failures,
+    "scripts/build-flatpak-bundle.sh",
+    buildFlatpakBundle,
+    "canva-linux-${VERSION}-${FLATPAK_ARCH}.flatpak",
+  );
+
+  if (buildAppImage.includes("> SHA256SUMS") || buildAppImage.includes("/SHA256SUMS")) {
+    failures.push(
+      "scripts/build-appimage.sh: AppImage build must not create or remove the complete release SHA256SUMS manifest",
+    );
+  }
+  assertIncludes(failures, "scripts/build-appimage.sh", buildAppImage, ".AppImage.sha256");
+  assertIncludes(failures, "scripts/build-appimage.sh", buildAppImage, "--skip-release-manifest");
+
+  const lock = JSON.parse(readProjectFile(rootDir, "package-lock.json")) as {
+    version?: string;
+    packages?: Record<string, { version?: string }>;
+  };
+  const projectUi = JSON.parse(readProjectFile(rootDir, "scripts/project-ui.json")) as {
+    displayVersion?: string;
+    phase?: string;
+  };
+  const identity = readProjectFile(rootDir, "scripts/app-identity-common.sh");
+  const displayVersion = shellValue(identity, "PROJECT_DISPLAY_VERSION");
+  const phase = shellValue(identity, "PROJECT_PHASE");
+
+  if (!pkg.version) failures.push("package.json: missing version");
+  if (pkg.version && lock.version !== pkg.version) {
+    failures.push("package-lock.json: top-level version must match package.json");
+  }
+  if (pkg.version && lock.packages?.[""]?.version !== pkg.version) {
+    failures.push("package-lock.json: root package version must match package.json");
+  }
+
+  if (pkg.version) {
+    const expectedPhase = expectedPhaseFromVersion(pkg.version);
+    if (projectUi.displayVersion !== expectedPhase) {
+      failures.push(`scripts/project-ui.json: displayVersion must be ${expectedPhase}`);
+    }
+    if (projectUi.phase !== expectedPhase) {
+      failures.push(`scripts/project-ui.json: phase must be ${expectedPhase}`);
+    }
+    if (displayVersion !== expectedPhase) {
+      failures.push(
+        `scripts/app-identity-common.sh: PROJECT_DISPLAY_VERSION must be ${expectedPhase}`,
+      );
+    }
+    if (phase !== expectedPhase) {
+      failures.push(`scripts/app-identity-common.sh: PROJECT_PHASE must be ${expectedPhase}`);
+    }
+  }
+}
+
+function checkShellActionIds(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const actions = loadActions(rootDir);
+  const actionIds = new Set(actions.map((action) => action.id));
+  const visibleMissingDescription = actions.filter(
+    (action) =>
+      action.planned !== true &&
+      action.kind === "command" &&
+      ["install", "development", "maintenance"].includes(action.group) &&
+      (!action.description || !action.description.trim()),
+  );
+  if (visibleMissingDescription.length) {
+    failures.push(
+      `Visible actions missing description: ${visibleMissingDescription.map((action) => action.id).join(", ")}`,
+    );
+  }
+
+  const shell = fs.readFileSync(path.join(rootDir, "canva-linux.sh"), "utf8");
+  const ids = [...shell.matchAll(/run_action_by_id\s+["']([^"']+)["']/g)]
+    .map((match) => match[1])
+    .filter((id): id is string => Boolean(id));
+  const missing = ids.filter((id) => !actionIds.has(id));
+  if (missing.length) {
+    failures.push(`Shell references unknown action IDs: ${[...new Set(missing)].join(", ")}`);
+  }
+}
+
 export function main(): number {
   const failures: string[] = [];
 
@@ -832,6 +1403,13 @@ export function main(): number {
   checkReleaseArtifacts(failures);
   checkLauncherSessionLogs(failures);
   checkInteractiveLogUiIntegration(failures);
+  checkNoParallelShellMenu(failures);
+  checkNoRootLauncherContract(failures);
+  checkActionRegistryContract(failures);
+  checkInstallationDetectionContract(failures);
+  checkVersionConsistency(failures);
+  checkReleaseContract(failures);
+  checkShellActionIds(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-contracts] OK");

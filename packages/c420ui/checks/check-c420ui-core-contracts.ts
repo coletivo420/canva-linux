@@ -582,6 +582,177 @@ function checkInteractiveActionEngine(failures: string[]): void {
   runCheck(failures, { name: "interactive action engine", run: checkInteractiveActionEnginePart.main });
 }
 
+
+
+function assertC420UIIncludes(
+  failures: string[],
+  content: string,
+  fragment: string,
+  message: string,
+): void {
+  if (!content.includes(fragment)) {
+    failures.push(message);
+  }
+}
+
+function checkHeaderLayoutContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const app = fs.readFileSync(path.join(rootDir, "scripts/c420ui/app.ts"), "utf8");
+  const packageTypes = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/types.ts"), "utf8");
+  const index = fs.readFileSync(path.join(rootDir, "scripts/c420ui/index.ts"), "utf8");
+  const adapter = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/adapter.ts"), "utf8");
+  const projectUi = fs.readFileSync(path.join(rootDir, "scripts/project-ui.json"), "utf8");
+
+  assertC420UIIncludes(
+    failures,
+    index,
+    "runCanvaLinuxC420UI",
+    "scripts/c420ui/index.ts must delegate to the Canva Linux c420ui adapter runner",
+  );
+  assertC420UIIncludes(
+    failures,
+    app,
+    "export type HeaderLayout",
+    "scripts/c420ui/app.ts must export HeaderLayout",
+  );
+  assertC420UIIncludes(
+    failures,
+    app,
+    "../../packages/c420ui/src",
+    "scripts/c420ui/app.ts must import generic c420ui types from packages/c420ui",
+  );
+
+  assertC420UIIncludes(
+    failures,
+    packageTypes,
+    "export type C420UIBrandConfig",
+    "packages/c420ui/src/types.ts must export C420UIBrandConfig",
+  );
+  assertC420UIIncludes(
+    failures,
+    packageTypes,
+    "export type C420UIProjectConfig",
+    "packages/c420ui/src/types.ts must export C420UIProjectConfig",
+  );
+  assertC420UIIncludes(
+    failures,
+    packageTypes,
+    "export type C420UIConfig",
+    "packages/c420ui/src/types.ts must export C420UIConfig",
+  );
+  assertC420UIIncludes(
+    failures,
+    app,
+    "computeHeaderLayout",
+    "scripts/c420ui/app.ts must centralize header layout math",
+  );
+  assertC420UIIncludes(
+    failures,
+    app,
+    "c420uiHeader",
+    "scripts/c420ui/app.ts must keep a dedicated c420uiHeader component",
+  );
+  assertC420UIIncludes(
+    failures,
+    app,
+    "projectHeader",
+    "scripts/c420ui/app.ts must keep a dedicated projectHeader component",
+  );
+  assertC420UIIncludes(
+    failures,
+    app,
+    "workspaceTop",
+    "scripts/c420ui/app.ts must apply a shared workspaceTop",
+  );
+  assertC420UIIncludes(
+    failures,
+    app,
+    "layoutMode",
+    "scripts/c420ui/app.ts must expose side-by-side/stacked layoutMode",
+  );
+
+  const focusZones = app.match(/const FOCUS_ZONES:[^=]+=\s*\[([^\]]+)\]/);
+  if (!focusZones) {
+    failures.push("scripts/c420ui/app.ts must keep explicit FOCUS_ZONES");
+  } else if (
+    focusZones[1]?.includes("c420uiHeader") ||
+    focusZones[1]?.includes("projectHeader")
+  ) {
+    failures.push("headers must not be included in FOCUS_ZONES");
+  }
+
+  if (app.includes("const brandHeader")) {
+    failures.push("c420ui brand header component must be named c420uiHeader");
+  }
+  if (!app.includes("content: [\n      `{bold}${opts.brand.name}")) {
+    failures.push("c420uiHeader content must come from brand config");
+  }
+  if (!app.includes("content: [\n      `{bold}${opts.project.projectName}")) {
+    failures.push("projectHeader content must come from project config");
+  }
+  if (!adapter.includes("projectName: projectUi.projectName")) {
+    failures.push("project name must be injected from scripts/project-ui.json");
+  }
+  if (!adapter.includes("projectSubtitle: projectUi.projectSubtitle")) {
+    failures.push("project subtitle must be injected from scripts/project-ui.json");
+  }
+  assertC420UIIncludes(
+    failures,
+    projectUi,
+    '"projectName":',
+    "scripts/project-ui.json must define projectName",
+  );
+  assertC420UIIncludes(
+    failures,
+    projectUi,
+    '"projectSubtitle":',
+    "scripts/project-ui.json must define projectSubtitle",
+  );
+  assertC420UIIncludes(
+    failures,
+    projectUi,
+    '"logoLines":',
+    "scripts/project-ui.json must define project logo lines",
+  );
+}
+
+function checkSettingsContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const app = fs.readFileSync(path.join(rootDir, "scripts/c420ui/app.ts"), "utf8");
+  const settings = fs.readFileSync(path.join(rootDir, "scripts/c420ui/settings.ts"), "utf8");
+  const actions = fs.readFileSync(path.join(rootDir, "scripts/actions.json"), "utf8");
+
+  if (!app.includes('"settings"') || !app.includes("Application Settings")) {
+    failures.push("scripts/c420ui/app.ts: Application Settings view is required");
+  }
+  if (!app.includes("generalLogsEnabled") || !app.includes("Install and Development Tool")) {
+    failures.push("scripts/c420ui/app.ts: general Tool logs setting is required");
+  }
+  if (!settings.includes("generalLogsEnabled")) {
+    failures.push("scripts/c420ui/settings.ts: generalLogsEnabled setting is required");
+  }
+  if (!settings.includes("terminalTextSelectionMode")) {
+    failures.push(
+      "scripts/c420ui/settings.ts: terminalTextSelectionMode schema entry is required",
+    );
+  }
+  if (
+    !settings.includes("XDG_CONFIG_HOME") ||
+    !settings.includes(".config") ||
+    !settings.includes("tool-settings.json") ||
+    !settings.includes("saveToolSettings")
+  ) {
+    failures.push("scripts/c420ui/settings.ts: user config file persistence is required");
+  }
+  if (
+    actions.includes("Application Settings") ||
+    actions.includes("generalLogsEnabled") ||
+    actions.includes("terminalTextSelectionMode")
+  ) {
+    failures.push("scripts/actions.json: c420ui settings must not be shell actions");
+  }
+}
+
 export function main(): number {
   const failures: string[] = [];
 
@@ -596,6 +767,8 @@ export function main(): number {
   checkOperationalLogs(failures);
   checkArtifactWorkflows(failures);
   checkInteractiveActionEngine(failures);
+  checkSettingsContract(failures);
+  checkHeaderLayoutContract(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[c420ui-core-contracts] OK");
