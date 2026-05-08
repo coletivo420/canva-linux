@@ -1550,10 +1550,17 @@ export function createApp(options: C420UIAppOptions) {
         return;
       }
       lastCtrlCAt = now;
-      appendLogText(
-        "[warn] Action is running. Press Ctrl+C again to exit application.\n",
-        "system",
-      );
+      if (actionRunner.cancel()) {
+        appendLogText(
+          "[warn] Interrupt requested for running action. Press Ctrl+C again to exit application.\n",
+          "system",
+        );
+      } else {
+        appendLogText(
+          "[warn] Action is running. Press Ctrl+C again to exit application.\n",
+          "system",
+        );
+      }
       return;
     }
     void confirmExit();

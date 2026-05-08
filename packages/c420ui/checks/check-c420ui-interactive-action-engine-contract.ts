@@ -28,6 +28,9 @@ export function main(): number {
     "createC420UIActionEngine",
     "engine.runAction(action",
     "requiresC420UIActionConfirmation",
+    "AbortController",
+    "signal: abortController.signal",
+    "function cancel()",
   ]) {
     if (!runner.includes(fragment)) {
       failures.push(`interactive action runner must include action engine fragment: ${fragment}`);

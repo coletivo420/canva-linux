@@ -19,6 +19,7 @@ export function main(): number {
     "validateActionScope",
     "resolveRootPolicy",
     "validateRootAccess",
+    "buildRootActionEnvironment",
     "c420uiRootPolicyExitCode",
     "warning?: string",
   ]) {
@@ -33,6 +34,7 @@ export function main(): number {
     "rootProvider.validateActionScope",
     "rootProvider.resolveRootPolicy",
     "rootProvider.validateRootAccess",
+    "rootProvider.buildRootActionEnvironment",
     "bridge.runAction",
   ]) {
     if (!actionEngine.includes(fragment)) {

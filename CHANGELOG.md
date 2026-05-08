@@ -38,6 +38,7 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Fixed
+- Restored interactive c420ui root-auth environment propagation and Ctrl+C cancellation for Action Engine-backed actions.
 - Hardened c420ui CLI bridge freshness detection for launcher direct actions.
 - Repaired the shell launcher parser after the direct CLI bridge migration.
 - Added validation coverage to prevent hardcoded launcher action flags and malformed shell parsing.

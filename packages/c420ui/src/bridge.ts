@@ -20,6 +20,7 @@ export type c420uiExecutionContext = {
   dryRun: boolean;
   yes: boolean;
   env: NodeJS.ProcessEnv;
+  signal?: AbortSignal;
   emitLog(event: c420uiLogEvent): void;
   emitProgress(event: c420uiProgressEvent): void;
 };

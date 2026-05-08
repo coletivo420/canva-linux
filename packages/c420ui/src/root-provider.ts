@@ -32,6 +32,11 @@ export type c420uiRootProvider = {
     rootDir: string,
     actionEnv: NodeJS.ProcessEnv,
   ): c420uiRootValidationResult;
+
+  buildRootActionEnvironment?(
+    action: c420uiAction,
+    actionEnv: NodeJS.ProcessEnv,
+  ): NodeJS.ProcessEnv;
 };
 
 export const c420uiRootPolicyExitCode = 64;

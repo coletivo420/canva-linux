@@ -27,6 +27,8 @@ export function main(): number {
     "CANVA_NATIVE_SCOPE",
     "CANVA_FLATPAK_SCOPE",
     "validateRootAccess",
+    "buildRootActionEnvironment",
+    "CANVA_C420UI_ROOT_AUTH",
     "warning:",
   ]) {
     if (!provider.includes(fragment)) {

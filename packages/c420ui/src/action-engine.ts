@@ -25,6 +25,7 @@ export type c420uiActionEngineOptions = {
 export type c420uiRunActionOptions = {
   dryRun?: boolean;
   yes?: boolean;
+  signal?: AbortSignal;
 };
 
 export type c420uiActionResolution =
@@ -129,7 +130,7 @@ export function createC420UIActionEngine(
     }
 
     const baseEnv = options.env ?? process.env;
-    const actionEnv = rootProvider
+    let actionEnv = rootProvider
       ? rootProvider.buildActionEnvironment(action, baseEnv)
       : baseEnv;
 
@@ -166,6 +167,9 @@ export function createC420UIActionEngine(
             message: access.message,
           };
         }
+        actionEnv = rootProvider.buildRootActionEnvironment
+          ? rootProvider.buildRootActionEnvironment(action, actionEnv)
+          : actionEnv;
       }
     }
 
@@ -183,6 +187,7 @@ export function createC420UIActionEngine(
       dryRun,
       yes,
       env: actionEnv,
+      signal: runOptions.signal,
       emitLog(event) {
         emit?.(createC420UIEvent({ type: "log", ...event }));
       },

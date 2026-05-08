@@ -91,6 +91,10 @@ export function createCanvaLinuxRootProvider(
       return { requiresRoot: false };
     },
 
+    buildRootActionEnvironment(_action, actionEnv) {
+      return { ...actionEnv, CANVA_C420UI_ROOT_AUTH: "1" };
+    },
+
     validateRootAccess(rootDir, actionEnv) {
       const result = runCommand(
         "bash",

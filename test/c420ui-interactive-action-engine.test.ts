@@ -68,6 +68,10 @@ function createFakeRootProvider(requiresRoot: boolean) {
       calls.push("validateRootAccess");
       return { ok: true };
     },
+    buildRootActionEnvironment(action, actionEnv) {
+      calls.push("buildRootActionEnvironment");
+      return { ...actionEnv, ROOT_AUTH_ACTION: action.id };
+    },
   };
 
   return { provider, calls };
@@ -147,7 +151,9 @@ test("interactive root action validates root access before bridge.runAction", as
     "validateActionScope",
     "resolveRootPolicy",
     "validateRootAccess",
+    "buildRootActionEnvironment",
   ]);
+  assert.equal(runCalls[0]?.context.env.ROOT_AUTH_ACTION, "install-native-system");
 });
 
 test("interactive dry-run does not validate root access", async () => {
@@ -200,4 +206,49 @@ test("interactive log and progress events are routed to UI callbacks", async () 
   assert.deepEqual(logs, [{ text: "hello\n", source: "stdout" }]);
   assert.ok(progress.some((event) => event.state === "success" && event.label === "Done"));
   assert.equal((runner.state as InteractiveActionRunnerState).progressState, "success");
+});
+
+
+test("interactive cancel aborts the running action signal", async () => {
+  let abortObserved: (() => void) | null = null;
+  const bridge: c420uiProjectBridge = {
+    id: "abort-project",
+    projectInfo() {
+      return { projectName: "Abort Project" };
+    },
+    actions() {
+      return [normalAction];
+    },
+    artifactWorkflows() {
+      return [];
+    },
+    runAction(_actionId, context) {
+      return new Promise<c420uiActionResult>((resolve) => {
+        context.signal?.addEventListener(
+          "abort",
+          () => {
+            abortObserved?.();
+            resolve({
+              code: c420uiExitCodes.canceled,
+              status: "canceled",
+              message: "Action canceled.",
+            });
+          },
+          { once: true },
+        );
+      });
+    },
+  };
+  const { runner, progress } = createRunner({ bridge });
+  const aborted = new Promise<void>((resolve) => {
+    abortObserved = resolve;
+  });
+
+  const runningAction = runner.runAction(normalAction);
+  assert.equal(runner.cancel(), true);
+  await aborted;
+  const result = await runningAction;
+
+  assert.equal(result.status, "canceled");
+  assert.ok(progress.some((event) => event.state === "canceled"));
 });

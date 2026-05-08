@@ -71,6 +71,7 @@ export function createInteractiveActionRunner(
     running: false,
     progressState: "idle",
   };
+  let activeAbortController: AbortController | null = null;
 
   function applyEvent(event: C420UIEvent) {
     if (event.type === "log") {
@@ -148,23 +149,44 @@ export function createInteractiveActionRunner(
       return result;
     }
 
-    const result = await engine.runAction(action, {
-      dryRun,
-      yes: confirmed,
-    });
-    state.lastResult = result;
+    const abortController = new AbortController();
+    activeAbortController = abortController;
 
-    if (result.status === "failed" && result.message) {
-      options.appendLogText(`${result.message}\n`, "system");
-      state.progressState = "failed";
-      options.setRunning(false);
-      options.setProgress("failed", 0, result.message);
+    try {
+      const result = await engine.runAction(action, {
+        dryRun,
+        yes: confirmed,
+        signal: abortController.signal,
+      });
+      state.lastResult = result;
+
+      if (result.status === "failed" && result.message) {
+        options.appendLogText(`${result.message}\n`, "system");
+        state.progressState = "failed";
+        options.setRunning(false);
+        options.setProgress("failed", 0, result.message);
+      }
+
+      return result;
+    } finally {
+      if (activeAbortController === abortController) {
+        activeAbortController = null;
+      }
     }
+  }
 
-    return result;
+  function cancel(): boolean {
+    if (!activeAbortController || activeAbortController.signal.aborted) {
+      return false;
+    }
+    activeAbortController.abort();
+    state.progressState = "canceled";
+    options.setProgress("canceled", 0, "Canceled");
+    return true;
   }
 
   return {
+    cancel,
     runAction,
     state,
   };
