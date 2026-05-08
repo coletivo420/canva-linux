@@ -44,7 +44,6 @@ export function main(): number {
     const relative = path.relative(rootDir, f);
     return (
       !relative.endsWith("sudo-common.sh") &&
-      relative !== "scripts/core/check-sudo-contract.ts" &&
       relative !== "scripts/core/canva-linux-contract-parts/check-sudo-contract.ts" &&
       relative !== "scripts/core/check-ai-guardrails.ts"
     );
