@@ -118,7 +118,7 @@ The project validations and contracts are implemented in TypeScript under
 `scripts/core/`. These are compiled into `.build/scripts/core/` and executed
 through `scripts/run-core-entry.sh`. All project validations are integrated into
 the `npm run check:scripts-core` quality gate. The gate includes
-`check-no-source-javascript`, so maintained `.js` files under script, test,
+`check-repository-policy`, so maintained `.js` files under script, test,
 config, or Flathub helper paths fail validation.
 
 ## Packaging roadmap notes

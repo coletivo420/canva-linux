@@ -90,6 +90,15 @@ Request changes if a PR:
 - puts Canva Linux-specific assertions in c420ui core checks;
 - bypasses `check:c420ui-core`, `check:canva-linux` or `check:shared-tooling`.
 
+## Consolidated validation review
+
+Request changes if a PR:
+
+- creates a new `*-parts/` validation directory;
+- splits a small assertion into a new one-off check file;
+- adds imports from old check fragments;
+- expands validation with duplicate checks instead of extending the consolidated domain runner.
+
 ## Changelog-backed regression review
 
 Request changes if a PR:
@@ -205,3 +214,21 @@ Request changes if a PR:
 - bypasses the c420ui root provider for interactive privileged actions;
 - triggers sudo before confirmation or for dry-run/planned actions;
 - reintroduces `C420UISudoProvider` as a separate root abstraction.
+
+## Standalone check cleanup review
+
+Request changes if a PR:
+
+- adds a new standalone check under `scripts/core` for c420ui or Canva Linux behavior;
+- adds a check to `build:scripts-core` that is not part of shared repository infrastructure;
+- duplicates a rule already covered by `check-c420ui-core-contracts.ts`, `check-canva-linux-contracts.ts` or `check-repository-policy.ts`;
+- reintroduces old standalone validation aliases.
+
+## Consolidated runner quality review
+
+Request changes if a PR:
+
+- reintroduces `*-parts` validation directories;
+- keeps historical `Part` naming in consolidated runners;
+- adds a c420ui source module without updating the public API contract;
+- adds a module to `packages/c420ui/src` without exporting or documenting it.

@@ -9,14 +9,6 @@ type CompatibilityCheck = {
 
 const checks: CompatibilityCheck[] = [
   { name: "actions", builtScript: "validate-actions.js" },
-  { name: "no shell menu", builtScript: "check-no-shell-menu.js" },
-  { name: "no root launch", builtScript: "check-no-root-launch-contract.js" },
-  { name: "c420ui settings", builtScript: "check-c420ui-settings-contract.js" },
-  { name: "action contract", builtScript: "check-action-contract.js" },
-  { name: "detection contract", builtScript: "check-detection-contract.js" },
-  { name: "version consistency", builtScript: "check-version-consistency.js" },
-  { name: "release contract", builtScript: "check-release-contract.js" },
-  { name: "shell action IDs", builtScript: "check-shell-action-ids.js" },
 ];
 
 export function main(): number {

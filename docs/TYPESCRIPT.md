@@ -60,13 +60,10 @@ maintained source. No JavaScript wrapper or bootstrap belongs under `scripts/`;
 `scripts/run-typescript-script.ts` is compiled to
 `.build/scripts/bootstrap/run-typescript-script.js` when needed.
 
-`check-typescript-first.ts` enforces the wider TypeScript migration contract.
-`check-gitignore-policy.ts` keeps generated outputs ignored without hiding
-TypeScript source, tests, Flathub submission files, or source JavaScript probes.
-
-`check-no-source-javascript.ts` enforces the no-source-JavaScript rule directly
-and fails if `.js` files appear outside `.build/`, `node_modules/`, `coverage/`,
-or `dist/`. Within maintained project output, generated JavaScript is expected
+`check-repository-policy.ts` enforces the wider TypeScript migration, gitignore,
+review checklist, source-integrity, and no-source-JavaScript contracts. It fails
+if `.js` files appear outside `.build/`, `node_modules/`, `coverage/`, or
+`dist/`. Within maintained project output, generated JavaScript is expected
 under `.build/` only.
 
 ## Script Core
@@ -97,10 +94,8 @@ Project validations, contracts, and registries are implemented in TypeScript und
   `electron/**/*.js`.
 - Electron main TypeScript modules use ESM `export` declarations only; do not
   add duplicate `module.exports` blocks to `electron/main/**/*.ts`.
-- `npm run check:scripts-core` runs the generated core validation artifacts and
-  includes the TypeScript-first closure checks, including `check-gitignore-policy`,
-  `check-no-source-javascript`, and `check-source-integrity`.
-- The source-integrity check also rejects malformed or unformatted `package.json`,
+- `npm run check:scripts-core` runs the consolidated c420ui core, Canva Linux, and shared tooling validation domains.
+- `check-repository-policy.ts` also rejects malformed or unformatted `package.json`,
   collapsed critical shell/docs files, giant one-line documentation blocks, and
   inline heredoc syntax in shell scripts.
 
@@ -111,21 +106,11 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `validate-actions.ts`
 - `overview-status.ts`
 - `check-ai-guardrails.ts`
-- `check-no-shell-menu.ts`
-- `check-sudo-contract.ts`
-- `check-action-contract.ts`
-- `check-detection-contract.ts`
-- `check-version-consistency.ts`
-- `check-review-checklist.ts`
-- `check-shell-action-ids.ts`
 - `check-doc-links.ts`
 - `check-dependency-policy.ts`
 - `check-runtime-build.ts`
-- `check-typescript-wrapper-contract.ts`
-- `check-typescript-first.ts`
-- `check-gitignore-policy.ts`
-- `check-no-source-javascript.ts`
-- `check-source-integrity.ts`
+- `check-repository-policy.ts`
+- `check-legacy-action-runner-compatibility.ts`
 
 ### Standalone TypeScript script entrypoints compiled by `build:scripts` include
 
