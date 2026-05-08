@@ -5,55 +5,41 @@ Current target:
 - Version: `0.1.4-12 (Alpha)`
 - Release: `v0.1.4-12`
 
-## Split validation model
+## Validation domains
 
-- `npm run check:c420ui-core` validates reusable c420ui contracts.
-- `npm run check:c420ui-core` validates the generic root provider contract.
-- `npm run check:c420ui-core` validates the reusable command runner contract.
-- `npm run check:c420ui-core` validates the operational log policy and command runner cancellation contract.
-- Command execution tests verify stdout/stderr forwarding, exit code propagation and progress events.
-- Command runner tests cover redaction, cancellation and non-zero exits.
-- Interactive and direct CLI action execution must share the c420ui Action Engine.
-- `npm run check:canva-linux` validates the Canva Linux adapter, app runtime contracts and concrete recipes.
-- `npm run check:canva-linux` validates the Canva Linux root provider backed by `scripts/sudo-common.sh`.
-- Root/sudo preflight must run before concrete project action execution in both direct and interactive paths.
-- `npm run check:shared-tooling` validates repository-wide TypeScript, docs, dependency, source, runtime build and AI guardrail policies.
-- `npm run check:legacy-tooling` temporarily preserves contracts that still live under `scripts/core/` until the c420ui/action-runner migration is complete.
-- `npm run check:scripts-core` is a temporary aggregate that runs the four validation blocks above.
-- `npm run check:c420ui-contracts` is a temporary compatibility alias for the c420ui core and Canva Linux checks.
+The validation surface is intentionally small:
+
+- `check:c420ui-core` validates reusable c420ui package contracts in one consolidated domain check.
+- `check:canva-linux` validates Canva Linux adapter, root, artifact, branding, boundary and log contracts in one consolidated domain check.
+- `check:shared-tooling` validates repository-wide tooling through focused shared checks plus the consolidated repository policy check.
+
+Legacy compatibility is available through `check:legacy-compat`, but it is not part of the default validation path.
 
 ## Automated
 
 - `npm run build:scripts-core`
 - `npm run check:scripts-core`
-  - aggregates `check:c420ui-core`, `check:canva-linux`, `check:shared-tooling`, and `check:legacy-tooling`
+  - aggregates `check:c420ui-core`, `check:canva-linux`, and `check:shared-tooling`
+- `npm run check:c420ui-core`
+  - runs `check-c420ui-core-contracts.ts` as the consolidated c420ui core contract check
+  - covers boundary, package policy, bridge, Action Engine, CLI, root provider, command runner, operational logs,
+    artifact workflow, interactive runner, and public API exports
+- `npm run check:canva-linux`
+  - runs `check-canva-linux-contracts.ts` as the consolidated Canva Linux contract check
+  - covers adapter, root provider, sudo-common, public branding, project boundary, artifact recipes, AppImage, Flatpak, release artifacts,
+    launcher/session logs, and interactive log UI integration
 - `npm run check:shared-tooling`
-  - builds the runtime before checking it, then includes docs, dependency, source, TypeScript-first, wrapper, AI guardrail, and review checklist policies
-- `npm run check:legacy-tooling`
-  - preserves transitional `scripts/core/` runtime and tool contracts until they move to their final c420ui or Canva Linux validation domains
-- `npm run check:no-source-javascript`
-- `npm run check:source-integrity`
-  - validates formatted package JSON, shell heredocs, launcher parser shape, and readable shell/docs shapes
-  - protects launcher syntax with `bash -n canva-linux.sh`
-  - requires the direct c420ui CLI bridge bundle to be rebuilt when bridge sources are newer
-  - verifies launcher behavior with a stubbed direct c420ui CLI bridge entrypoint
-  - verifies that global flags are translated before the c420ui CLI bridge receives direct action flags
+  - builds runtime and scripts-core, then runs AI guardrails, doc links, dependency policy, runtime build, and `check-repository-policy.ts`
+- `npm run check:legacy-compat`
+  - manually checks compatibility contracts that still depend on `scripts/core/action-runner.ts`
+  - it is not part of `validate` or `check:scripts-core`
 - `npm run build:c420ui`
 - `npm run check:c420ui`
-- `npm run check:c420ui-core`
-  - validates the generic c420ui package contracts without Canva Linux adapter checks
-  - includes the c420ui action engine contract
-  - includes the generic c420ui root provider contract
-  - includes the interactive c420ui Action Engine contract
-- `npm run check:canva-linux`
-  - validates the Canva Linux adapter and artifact recipes separately from c420ui core
-  - includes the Canva Linux root provider contract backed by `scripts/sudo-common.sh`
 - `npm run actions:validate`
 - `npm run lint`
 - `npm run typecheck`
 - `npm run typecheck:strict`
   - strict by critical surface, not global strict; see `tsconfig.strict.json`
-- `npm run check:gitignore-policy`
 - `npm test`
   - compiles selected TypeScript tests plus support helpers to `.build/test/` before `node --test`
   - includes credential-storage policy contracts for Secret Service-backed persistent login only when encryption is available
@@ -61,17 +47,6 @@ Current target:
 - `npm run docs:check-links`
 - `npm run docs:check-ai`
   - validates the English-only maintained repository language guardrail and future i18n policy
-- `scripts/run-core-entry.sh check-no-shell-menu`
-- `scripts/run-core-entry.sh check-sudo-contract`
-- `scripts/run-core-entry.sh check-no-root-launch-contract`
-- `scripts/run-core-entry.sh check-c420ui-settings-contract`
-- `scripts/run-core-entry.sh check-tool-logging-contract`
-- `scripts/run-core-entry.sh check-log-selection-contract`
-- `scripts/run-core-entry.sh check-c420ui-header-layout`
-- `scripts/run-core-entry.sh check-c420ui-branding`
-- `scripts/run-core-entry.sh check-c420ui-project-boundary`
-- `scripts/run-core-entry.sh check-action-contract`
-- `scripts/run-core-entry.sh check-release-contract`
 - `npm run validate:project`
   - fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/` only
 - `bash -n canva-linux.sh scripts/*.sh`

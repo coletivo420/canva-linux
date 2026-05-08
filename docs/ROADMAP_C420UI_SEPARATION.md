@@ -59,12 +59,11 @@ Validation is split accordingly:
 
 Current validation layers:
 
-- c420ui core checks: `packages/c420ui/checks/`
-- Canva Linux checks: `scripts/checks/canva-linux/`
-- shared repository tooling checks: `scripts/core/*`
-- legacy transitional checks: `scripts/core/*` until moved or retired
+- c420ui core checks: `packages/c420ui/checks/check-c420ui-core-contracts.ts`
+- Canva Linux checks: `scripts/checks/canva-linux/check-canva-linux-contracts.ts`
+- shared repository tooling checks: `scripts/core/check-repository-policy.ts` plus dedicated docs, dependency, runtime and AI guardrail checks
 
-The legacy block must shrink over time as c420ui and Canva Linux checks absorb their own contracts.
+Legacy Action Runner compatibility remains available manually through `check:legacy-compat`, but it is not part of the default validation path.
 
 ### Root provider migration
 

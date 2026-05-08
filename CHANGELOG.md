@@ -21,6 +21,8 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Consolidated validation into c420ui core, Canva Linux, and shared tooling domains while keeping
+  `check:legacy-compat` as a manual compatibility runner outside the default validation path.
 - Added c420ui operational log redaction and command cancellation policy.
 - Moved reusable operational command execution into the c420ui command runner.
 - Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.

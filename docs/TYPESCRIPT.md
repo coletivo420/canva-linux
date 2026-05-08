@@ -182,11 +182,8 @@ npm run typecheck
 npm run typecheck:strict
 npm run build:scripts-core
 npm run check:scripts-core
-npm run check:typescript-wrappers
-npm run check:typescript-first
-npm run check:gitignore-policy
-npm run check:no-source-javascript
-npm run check:source-integrity
+npm run check:shared-tooling
+npm run check:scripts-core
 ```
 
 ## Final architecture

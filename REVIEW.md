@@ -79,14 +79,16 @@ Request changes if a PR:
 - hardcodes future translations directly in runtime code;
 - introduces user-facing translations without an explicit i18n architecture, structured translation resources, typed keys, and fallback language rules.
 
-## Validation split review
+## Validation surface review
 
 Request changes if a PR:
 
-- adds new c420ui checks to the legacy tooling block;
-- adds Canva Linux concrete artifact checks to c420ui core checks;
-- bypasses `check:c420ui-core`, `check:canva-linux` or `check:shared-tooling`;
-- expands `check:legacy-tooling` without explaining why the check cannot yet live in its final domain.
+- adds a new single-purpose check without strong justification;
+- reintroduces the removed legacy tooling script;
+- adds new aliases for old check names;
+- expands validation with duplicate checks instead of extending the consolidated domain check;
+- puts Canva Linux-specific assertions in c420ui core checks;
+- bypasses `check:c420ui-core`, `check:canva-linux` or `check:shared-tooling`.
 
 ## Changelog-backed regression review
 
