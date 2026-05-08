@@ -86,6 +86,7 @@ export async function runC420UICommand(
   return new Promise<c420uiActionResult>((resolve) => {
     let settled = false;
     let closeObserved = false;
+    let cancellationRequested = false;
     let canceledProgressEmitted = false;
     let cancelKillTimer: NodeJS.Timeout | undefined;
     let child: ChildProcess;
@@ -111,6 +112,7 @@ export async function runC420UICommand(
     }
 
     function abortAction(): void {
+      cancellationRequested = true;
       emitOperationalLog(options, {
         source: "action",
         line: `[action] Cancel requested for ${options.label}`,
@@ -182,7 +184,7 @@ export async function runC420UICommand(
       if (settled) return;
       closeObserved = true;
       clearCancelKillTimer();
-      if (options.signal?.aborted || signal === cancelSignal || signal === cancelKillSignal) {
+      if (cancellationRequested || options.signal?.aborted || signal === cancelSignal) {
         emitCanceledProgress();
         settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
         return;

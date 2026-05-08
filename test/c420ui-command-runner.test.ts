@@ -176,6 +176,30 @@ test("c420ui command runner uses shell false", async () => {
   assert.equal(observedShell, false);
 });
 
+test("c420ui command runner treats external SIGTERM as failure without cancellation", async () => {
+  const spawnCommand = (() => {
+    const child = Object.assign(new EventEmitter(), {
+      stdout: new PassThrough(),
+      stderr: new PassThrough(),
+      kill() {
+        return true;
+      },
+    });
+    setImmediate(() => child.emit("close", null, "SIGTERM"));
+    return child;
+  }) as unknown as typeof spawn;
+  const options = createOptions({
+    spawnCommand,
+  });
+
+  const result = await runC420UICommand(options);
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.code, 1);
+  assert.equal(options.progress.at(-1)?.state, "failed");
+  assert.equal(options.progress.filter((event) => event.state === "canceled").length, 0);
+});
+
 test("c420ui command runner cancellation returns canceled and sends SIGINT", async () => {
   const abortController = new AbortController();
   const signals: NodeJS.Signals[] = [];
