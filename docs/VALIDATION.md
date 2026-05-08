@@ -129,6 +129,17 @@ creating one-off check files or `*-parts/` validation directories, unless there 
 - Confirm root/sudo preflight runs before privileged direct actions.
 - Confirm planned direct actions still exit `78`.
 - Confirm planned direct action dry-runs still exit `0`.
+
+## Consolidated validation runner policy
+
+Validation is organized around three self-contained domain runners:
+
+- `packages/c420ui/checks/check-c420ui-core-contracts.ts`
+- `scripts/checks/canva-linux/check-canva-linux-contracts.ts`
+- `scripts/core/check-repository-policy.ts`
+
+Do not create `*-parts` directories or restore one-file-per-assertion checks.
+
 ## Standalone check policy
 
 The validation surface is intentionally consolidated.

@@ -21,6 +21,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Polished consolidated validation runner naming and expanded the c420ui public API contract.
 - Folded remaining standalone core checks into the consolidated validation runners.
 - Consolidated validation into c420ui core, Canva Linux, and shared tooling domains while keeping
   `check:legacy-compat` as a manual compatibility runner outside the default validation path.

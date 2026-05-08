@@ -88,7 +88,7 @@ function allRepositoryFiles(rootDir: string): string[] {
   return repositoryFilesCache.files;
 }
 
-const checkTypeScriptWrappersPart = (() => {
+const checkTypeScriptWrappersContract = (() => {
 type PackageJson = {
   scripts?: Record<string, string>;
 };
@@ -201,14 +201,14 @@ function main(): number {
     return 1;
   }
 
-  console.log("[ok] TypeScript wrapper closure check passed");
+  console.log("[repository-policy] TypeScript wrappers OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkTypeScriptFirstPart = (() => {
+const checkTypeScriptFirstContract = (() => {
 type PackageJson = {
   scripts?: Record<string, string>;
   build?: { beforeBuild?: string };
@@ -439,14 +439,14 @@ function main(): number {
     return 1;
   }
 
-  console.log("[ok] TypeScript-first source policy passed");
+  console.log("[repository-policy] TypeScript-first OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkGitignorePolicyPart = (() => {
+const checkGitignorePolicyContract = (() => {
 const essentialActiveGitignorePatterns = [
   "node_modules/",
   ".build/",
@@ -694,14 +694,14 @@ function main(): number {
     return 1;
   }
 
-  console.log("[ok] Gitignore policy passed");
+  console.log("[repository-policy] gitignore OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkNoSourceJavaScriptPart = (() => {
+const checkNoSourceJavaScriptContract = (() => {
 const allowedJavaScriptRoots = [
   ".build/",
   "node_modules/",
@@ -760,7 +760,7 @@ function main(): number {
   }
 
   console.log(
-    "[ok] no source JavaScript files found outside allowed generated/dependency directories",
+    "[repository-policy] no source JavaScript OK",
   );
   return 0;
 }
@@ -768,7 +768,7 @@ function main(): number {
   return { main };
 })();
 
-const checkSourceIntegrityPart = (() => {
+const checkSourceIntegrityContract = (() => {
 type PackageJson = {
   name?: string;
   version?: string;
@@ -1501,14 +1501,14 @@ function main(): number {
     return 1;
   }
 
-  console.log("[source-integrity] OK");
+  console.log("[repository-policy] source integrity OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkReviewChecklistPart = (() => {
+const checkReviewChecklistContract = (() => {
 const requiredFragments = [
   "# Review Checklist",
   "## Logging review checklist",
@@ -1530,7 +1530,7 @@ function main(): number {
   }
   if (review.indexOf("# Review Checklist") > 0)
     throw new Error("REVIEW.md must start with the Review Checklist");
-  console.log("[ok] Review checklist check passed");
+  console.log("[repository-policy] review checklist OK");
   return 0;
 }
 
@@ -1538,27 +1538,27 @@ function main(): number {
 })();
 
 function checkTypeScriptWrappers(failures: string[]): void {
-  runCheck(failures, { name: "TypeScript wrapper contract", run: checkTypeScriptWrappersPart.main });
+  runCheck(failures, { name: "TypeScript wrapper contract", run: checkTypeScriptWrappersContract.main });
 }
 
 function checkTypeScriptFirst(failures: string[]): void {
-  runCheck(failures, { name: "TypeScript-first policy", run: checkTypeScriptFirstPart.main });
+  runCheck(failures, { name: "TypeScript-first policy", run: checkTypeScriptFirstContract.main });
 }
 
 function checkGitignorePolicy(failures: string[]): void {
-  runCheck(failures, { name: "gitignore policy", run: checkGitignorePolicyPart.main });
+  runCheck(failures, { name: "gitignore policy", run: checkGitignorePolicyContract.main });
 }
 
 function checkNoSourceJavaScript(failures: string[]): void {
-  runCheck(failures, { name: "no source JavaScript", run: checkNoSourceJavaScriptPart.main });
+  runCheck(failures, { name: "no source JavaScript", run: checkNoSourceJavaScriptContract.main });
 }
 
 function checkSourceIntegrity(failures: string[]): void {
-  runCheck(failures, { name: "source integrity", run: checkSourceIntegrityPart.main });
+  runCheck(failures, { name: "source integrity", run: checkSourceIntegrityContract.main });
 }
 
 function checkReviewChecklist(failures: string[]): void {
-  runCheck(failures, { name: "review checklist", run: checkReviewChecklistPart.main });
+  runCheck(failures, { name: "review checklist", run: checkReviewChecklistContract.main });
 }
 
 export function main(): number {

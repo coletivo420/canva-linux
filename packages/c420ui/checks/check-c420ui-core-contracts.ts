@@ -25,7 +25,7 @@ function collectTypeScriptFiles(dir: string): string[] {
   });
 }
 
-const checkBoundaryPart = (() => {
+const checkBoundaryContract = (() => {
 const forbidden = [
   "Canva Linux",
   "CANVA LINUX",
@@ -57,14 +57,14 @@ function main(): number {
     .map((fragment) => `packages/c420ui/src must not hardcode ${fragment}`);
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-boundary] OK");
+  console.log("[c420ui-core-contracts] boundary OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkPackagePolicyPart = (() => {
+const checkPackagePolicyContract = (() => {
 type PackageJson = {
   private?: boolean;
   name?: string;
@@ -86,14 +86,14 @@ function main(): number {
   if (pkg.types !== "dist/index.d.ts") failures.push("package types must point to dist/index.d.ts");
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-package-policy] OK");
+  console.log("[c420ui-core-contracts] package policy OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkPublicApiExportsPart = (() => {
+const checkPublicApiExportsContract = (() => {
 function main(): number {
   const rootDir = process.cwd();
   const srcDir = path.join(rootDir, "packages/c420ui/src");
@@ -106,27 +106,39 @@ function main(): number {
     }
   }
   const expected = [
+    "action-engine.ts",
     "actions.ts",
     "artifacts.ts",
     "bridge.ts",
     "capabilities.ts",
+    "cli.ts",
+    "command-runner.ts",
     "events.ts",
     "exit-codes.ts",
+    "operational-logs.ts",
+    "root-provider.ts",
+    "types.ts",
     "workflows.ts",
   ];
+  const index = fs.readFileSync(path.join(srcDir, "index.ts"), "utf8");
   for (const file of expected) {
     if (!fs.existsSync(path.join(srcDir, file))) failures.push(`missing ${file}`);
   }
+  for (const moduleName of expected.map((file) => `./${file.replace(/\.ts$/, "")}`)) {
+    if (!index.includes(`from "${moduleName}"`)) {
+      failures.push(`index.ts: missing public export for ${moduleName}`);
+    }
+  }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-naming] OK");
+  console.log("[c420ui-core-contracts] public API exports OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkBridgeContractPart = (() => {
+const checkBridgeContractRunner = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -152,14 +164,14 @@ function main(): number {
     .map((fragment) => `missing bridge contract fragment: ${fragment}`);
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-bridge-contract] OK");
+  console.log("[c420ui-core-contracts] bridge OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkActionEnginePart = (() => {
+const checkActionEngineContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -206,14 +218,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-action-engine-contract] OK");
+  console.log("[c420ui-core-contracts] action engine OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkCliContractPart = (() => {
+const checkCliContractRunner = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -254,14 +266,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-cli-contract] OK");
+  console.log("[c420ui-core-contracts] CLI OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkRootProviderPart = (() => {
+const checkRootProviderContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -332,14 +344,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-root-provider-contract] OK");
+  console.log("[c420ui-core-contracts] root provider OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkCommandRunnerPart = (() => {
+const checkCommandRunnerContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -397,14 +409,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-command-runner-contract] OK");
+  console.log("[c420ui-core-contracts] command runner OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkOperationalLogsPart = (() => {
+const checkOperationalLogsContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -434,14 +446,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-operational-logs-contract] OK");
+  console.log("[c420ui-core-contracts] operational logs OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkArtifactWorkflowsPart = (() => {
+const checkArtifactWorkflowContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -469,14 +481,14 @@ function main(): number {
     .map((fragment) => `missing artifact/workflow contract fragment: ${fragment}`);
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-artifact-workflow-contract] OK");
+  console.log("[c420ui-core-contracts] artifact workflows OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkInteractiveActionEnginePart = (() => {
+const checkInteractiveActionEngineContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -534,55 +546,55 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-interactive-action-engine-contract] OK");
+  console.log("[c420ui-core-contracts] interactive action engine OK");
   return 0;
 }
 
   return { main };
 })();
 
-function checkBoundary(failures: string[]): void {
-  runCheck(failures, { name: "boundary", run: checkBoundaryPart.main });
+function runBoundaryContract(failures: string[]): void {
+  runCheck(failures, { name: "boundary", run: checkBoundaryContract.main });
 }
 
-function checkPackagePolicy(failures: string[]): void {
-  runCheck(failures, { name: "package policy", run: checkPackagePolicyPart.main });
+function runPackagePolicyContract(failures: string[]): void {
+  runCheck(failures, { name: "package policy", run: checkPackagePolicyContract.main });
 }
 
-function checkPublicApiExports(failures: string[]): void {
-  runCheck(failures, { name: "public API exports", run: checkPublicApiExportsPart.main });
+function runPublicApiExportsContract(failures: string[]): void {
+  runCheck(failures, { name: "public API exports", run: checkPublicApiExportsContract.main });
 }
 
-function checkBridgeContract(failures: string[]): void {
-  runCheck(failures, { name: "bridge contract", run: checkBridgeContractPart.main });
+function runBridgeContract(failures: string[]): void {
+  runCheck(failures, { name: "bridge contract", run: checkBridgeContractRunner.main });
 }
 
-function checkActionEngine(failures: string[]): void {
-  runCheck(failures, { name: "action engine", run: checkActionEnginePart.main });
+function runActionEngineContract(failures: string[]): void {
+  runCheck(failures, { name: "action engine", run: checkActionEngineContract.main });
 }
 
-function checkCliContract(failures: string[]): void {
-  runCheck(failures, { name: "CLI contract", run: checkCliContractPart.main });
+function runCliContract(failures: string[]): void {
+  runCheck(failures, { name: "CLI contract", run: checkCliContractRunner.main });
 }
 
-function checkRootProvider(failures: string[]): void {
-  runCheck(failures, { name: "root provider", run: checkRootProviderPart.main });
+function runRootProviderContract(failures: string[]): void {
+  runCheck(failures, { name: "root provider", run: checkRootProviderContract.main });
 }
 
-function checkCommandRunner(failures: string[]): void {
-  runCheck(failures, { name: "command runner", run: checkCommandRunnerPart.main });
+function runCommandRunnerContract(failures: string[]): void {
+  runCheck(failures, { name: "command runner", run: checkCommandRunnerContract.main });
 }
 
-function checkOperationalLogs(failures: string[]): void {
-  runCheck(failures, { name: "operational logs", run: checkOperationalLogsPart.main });
+function runOperationalLogsContract(failures: string[]): void {
+  runCheck(failures, { name: "operational logs", run: checkOperationalLogsContract.main });
 }
 
-function checkArtifactWorkflows(failures: string[]): void {
-  runCheck(failures, { name: "artifact workflows", run: checkArtifactWorkflowsPart.main });
+function runArtifactWorkflowContract(failures: string[]): void {
+  runCheck(failures, { name: "artifact workflows", run: checkArtifactWorkflowContract.main });
 }
 
-function checkInteractiveActionEngine(failures: string[]): void {
-  runCheck(failures, { name: "interactive action engine", run: checkInteractiveActionEnginePart.main });
+function runInteractiveActionEngineContract(failures: string[]): void {
+  runCheck(failures, { name: "interactive action engine", run: checkInteractiveActionEngineContract.main });
 }
 
 
@@ -759,17 +771,17 @@ function checkSettingsContract(failures: string[]): void {
 export function main(): number {
   const failures: string[] = [];
 
-  checkBoundary(failures);
-  checkPackagePolicy(failures);
-  checkPublicApiExports(failures);
-  checkBridgeContract(failures);
-  checkActionEngine(failures);
-  checkCliContract(failures);
-  checkRootProvider(failures);
-  checkCommandRunner(failures);
-  checkOperationalLogs(failures);
-  checkArtifactWorkflows(failures);
-  checkInteractiveActionEngine(failures);
+  runBoundaryContract(failures);
+  runPackagePolicyContract(failures);
+  runPublicApiExportsContract(failures);
+  runBridgeContract(failures);
+  runActionEngineContract(failures);
+  runCliContract(failures);
+  runRootProviderContract(failures);
+  runCommandRunnerContract(failures);
+  runOperationalLogsContract(failures);
+  runArtifactWorkflowContract(failures);
+  runInteractiveActionEngineContract(failures);
   checkSettingsContract(failures);
   checkHeaderLayoutContract(failures);
 

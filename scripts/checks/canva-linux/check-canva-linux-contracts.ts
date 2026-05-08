@@ -196,7 +196,7 @@ function validateReleaseShellScript(
   }
 }
 
-const checkAdapterContractPart = (() => {
+const checkAdapterContractRunner = (() => {
 function main(): number {
   const rootDir = process.cwd();
   const adapter = createCanvaLinuxC420UIAdapter(rootDir);
@@ -245,14 +245,14 @@ function main(): number {
   if (!launcher.includes("ensure_c420ui_cli_entrypoint")) failures.push("launcher must build the c420ui CLI entrypoint conditionally");
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[canva-linux-adapter-contract] OK");
+  console.log("[canva-linux-contracts] adapter OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkRootProviderContractPart = (() => {
+const checkRootProviderContractRunner = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -314,14 +314,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[canva-linux-root-provider-contract] OK");
+  console.log("[canva-linux-contracts] root provider OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkSudoCommonContractPart = (() => {
+const checkSudoCommonContractRunner = (() => {
 function findCheckedFiles(dir: string): string[] {
   const results: string[] = [];
   const list = fs.readdirSync(dir);
@@ -447,14 +447,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[ok] Sudo contract check passed");
+  console.log("[canva-linux-contracts] sudo-common OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkPublicBrandingPart = (() => {
+const checkPublicBrandingContract = (() => {
 const publicFiles = [
   "README.md",
   "docs/TECHNICAL.md",
@@ -509,14 +509,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-branding] OK");
+  console.log("[canva-linux-contracts] public branding OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkProjectBoundaryPart = (() => {
+const checkProjectBoundaryContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -630,14 +630,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[c420ui-project-boundary] OK");
+  console.log("[canva-linux-contracts] project boundary OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkArtifactRecipesPart = (() => {
+const checkArtifactRecipesContract = (() => {
 function main(): number {
   const adapter = createCanvaLinuxC420UIAdapter(process.cwd());
   const workflows = adapter.loadArtifactWorkflows();
@@ -685,14 +685,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[canva-linux-artifact-recipes] OK");
+  console.log("[canva-linux-contracts] artifact recipes OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkAppImageContractPart = (() => {
+const checkAppImageContractRunner = (() => {
 function main(): number {
   const adapter = createCanvaLinuxC420UIAdapter(process.cwd());
   const capabilities = adapter.loadCapabilities();
@@ -707,14 +707,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[canva-linux-appimage-contract] OK");
+  console.log("[canva-linux-contracts] AppImage OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkFlatpakContractPart = (() => {
+const checkFlatpakContractRunner = (() => {
 function main(): number {
   const adapter = createCanvaLinuxC420UIAdapter(process.cwd());
   const capabilities = adapter.loadCapabilities();
@@ -729,14 +729,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[canva-linux-flatpak-contract] OK");
+  console.log("[canva-linux-contracts] Flatpak OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkReleaseArtifactsPart = (() => {
+const checkReleaseArtifactsContract = (() => {
 function main(): number {
   const adapter = createCanvaLinuxC420UIAdapter(process.cwd());
   const releaseWorkflows = adapter.loadArtifactWorkflows().filter((workflow) => workflow.scope === "release");
@@ -754,14 +754,14 @@ function main(): number {
   if (adapter.loadCapabilities().supportsRelease !== true) failures.push("release capability must be supported");
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[canva-linux-release-artifacts] OK");
+  console.log("[canva-linux-contracts] release artifacts OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkLauncherSessionLogsPart = (() => {
+const checkLauncherSessionLogsContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -814,14 +814,14 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[ok] Tool logging contract check passed");
+  console.log("[canva-linux-contracts] launcher session logs OK");
   return 0;
 }
 
   return { main };
 })();
 
-const checkInteractiveLogUiIntegrationPart = (() => {
+const checkInteractiveLogUiIntegrationContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
@@ -945,7 +945,7 @@ function main(): number {
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[ok] Log selection contract check passed");
+  console.log("[canva-linux-contracts] interactive log UI integration OK");
   return 0;
 }
 
@@ -953,47 +953,47 @@ function main(): number {
 })();
 
 function checkAdapterContract(failures: string[]): void {
-  runCheck(failures, { name: "adapter contract", run: checkAdapterContractPart.main });
+  runCheck(failures, { name: "adapter contract", run: checkAdapterContractRunner.main });
 }
 
 function checkRootProviderContract(failures: string[]): void {
-  runCheck(failures, { name: "root provider contract", run: checkRootProviderContractPart.main });
+  runCheck(failures, { name: "root provider contract", run: checkRootProviderContractRunner.main });
 }
 
 function checkSudoCommonContract(failures: string[]): void {
-  runCheck(failures, { name: "sudo-common contract", run: checkSudoCommonContractPart.main });
+  runCheck(failures, { name: "sudo-common contract", run: checkSudoCommonContractRunner.main });
 }
 
 function checkPublicBranding(failures: string[]): void {
-  runCheck(failures, { name: "public branding", run: checkPublicBrandingPart.main });
+  runCheck(failures, { name: "public branding", run: checkPublicBrandingContract.main });
 }
 
 function checkProjectBoundary(failures: string[]): void {
-  runCheck(failures, { name: "project adapter boundary", run: checkProjectBoundaryPart.main });
+  runCheck(failures, { name: "project adapter boundary", run: checkProjectBoundaryContract.main });
 }
 
 function checkArtifactRecipes(failures: string[]): void {
-  runCheck(failures, { name: "artifact recipes", run: checkArtifactRecipesPart.main });
+  runCheck(failures, { name: "artifact recipes", run: checkArtifactRecipesContract.main });
 }
 
 function checkAppImageContract(failures: string[]): void {
-  runCheck(failures, { name: "AppImage contract", run: checkAppImageContractPart.main });
+  runCheck(failures, { name: "AppImage contract", run: checkAppImageContractRunner.main });
 }
 
 function checkFlatpakContract(failures: string[]): void {
-  runCheck(failures, { name: "Flatpak contract", run: checkFlatpakContractPart.main });
+  runCheck(failures, { name: "Flatpak contract", run: checkFlatpakContractRunner.main });
 }
 
 function checkReleaseArtifacts(failures: string[]): void {
-  runCheck(failures, { name: "release artifacts", run: checkReleaseArtifactsPart.main });
+  runCheck(failures, { name: "release artifacts", run: checkReleaseArtifactsContract.main });
 }
 
 function checkLauncherSessionLogs(failures: string[]): void {
-  runCheck(failures, { name: "launcher session logs", run: checkLauncherSessionLogsPart.main });
+  runCheck(failures, { name: "launcher session logs", run: checkLauncherSessionLogsContract.main });
 }
 
 function checkInteractiveLogUiIntegration(failures: string[]): void {
-  runCheck(failures, { name: "interactive log UI integration", run: checkInteractiveLogUiIntegrationPart.main });
+  runCheck(failures, { name: "interactive log UI integration", run: checkInteractiveLogUiIntegrationContract.main });
 }
 
 

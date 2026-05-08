@@ -265,6 +265,9 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Canva Linux behavior belongs in `scripts/checks/canva-linux/check-canva-linux-contracts.ts`.
 - Repository-wide policy belongs in `scripts/core/check-repository-policy.ts`.
 - `scripts/core/check-*.ts` should be reserved only for shared repository infrastructure checks that cannot live inside the consolidated runners.
+- Do not keep historical `Part` naming after validation fragments are inlined.
+- Consolidated validation runners must use domain-oriented function names.
+- c420ui public API checks must include every maintained module under `packages/c420ui/src`.
 
 ## Changelog/review
 
