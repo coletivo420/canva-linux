@@ -29,13 +29,6 @@ if (
           executable: "canva-linux",
           repository: "https://github.com/coletivo420/canva-linux",
         },
-        package: {
-          version: "unknown",
-          phase: "unknown",
-          appId: "io.github.coletivo420.canva-linux",
-          executable: "canva-linux",
-          repository: "https://github.com/coletivo420/canva-linux",
-        },
         installations: {
           nativeSystem: false,
           nativeUser: false,

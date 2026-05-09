@@ -162,8 +162,11 @@ function main(): number {
   const index = read(rootDir, indexPath);
 
   for (const fragment of [
+    "runC420UIDetectionProbes",
+    "c420uiDetectionProbe",
     "c420uiOverviewStatusProvider",
     "parseC420UIDetectionKeyValueLines",
+    "boolFromC420UIDetectionValue",
     "buildC420UIOverviewStatus",
   ]) {
     if (!detection.includes(fragment)) {
@@ -177,6 +180,7 @@ function main(): number {
     "install-detection-common.sh",
     "DETECTED_NATIVE_SYSTEM",
     "io.github.coletivo420.canva-linux",
+    "package:" + " project",
   ]) {
     if (detection.includes(fragment)) {
       failures.push(`${detectionPath}: must not hardcode ${fragment}`);

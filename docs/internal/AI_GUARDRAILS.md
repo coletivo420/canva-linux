@@ -53,6 +53,9 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Do not put product detection logic in `scripts/core`.
 - Do not hardcode Canva Linux detection keys inside c420ui core.
 - c420ui owns the detection engine; Canva Linux owns the concrete probes.
+- Detection status uses `project`, not the removed legacy `package` shape.
+- Do not reintroduce `package: project` compatibility in detection providers.
+- c420ui detection probes are generic; Canva Linux owns concrete probe keys and shell glue.
 
 ## c420ui
 

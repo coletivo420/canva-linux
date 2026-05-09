@@ -5,6 +5,7 @@ import {
   boolFromC420UIDetectionValue,
   buildC420UIOverviewStatus,
   parseC420UIDetectionKeyValueLines,
+  runC420UIDetectionProbes,
   type c420uiOverviewStatus,
 } from "../packages/c420ui/src/detection";
 
@@ -61,4 +62,84 @@ test("buildC420UIOverviewStatus propagates provider status", async () => {
   );
 
   assert.equal(actual, expected);
+});
+
+
+test("runC420UIDetectionProbes merges values from multiple probes", async () => {
+  const result = await runC420UIDetectionProbes(
+    [
+      {
+        id: "one",
+        label: "One",
+        run() {
+          return { ok: true, values: { ONE: "1" } };
+        },
+      },
+      {
+        id: "two",
+        label: "Two",
+        run() {
+          return { ok: true, values: { TWO: "2" } };
+        },
+      },
+    ],
+    "/repo",
+  );
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.values, { ONE: "1", TWO: "2" });
+});
+
+test("runC420UIDetectionProbes collects warnings", async () => {
+  const result = await runC420UIDetectionProbes(
+    [
+      {
+        id: "warn",
+        label: "Warning probe",
+        run() {
+          return { ok: true, values: {}, warnings: ["probe warning"] };
+        },
+      },
+    ],
+    "/repo",
+  );
+
+  assert.deepEqual(result.warnings, ["probe warning"]);
+});
+
+test("runC420UIDetectionProbes converts thrown probe errors into warnings", async () => {
+  const result = await runC420UIDetectionProbes(
+    [
+      {
+        id: "throws",
+        label: "Throwing probe",
+        run() {
+          throw new Error("boom");
+        },
+      },
+    ],
+    "/repo",
+  );
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.values, {});
+  assert.deepEqual(result.warnings, ["throws: boom"]);
+});
+
+test("runC420UIDetectionProbes returns ok false when a probe fails", async () => {
+  const result = await runC420UIDetectionProbes(
+    [
+      {
+        id: "fails",
+        label: "Failing probe",
+        run() {
+          return { ok: false, values: { PARTIAL: "1" } };
+        },
+      },
+    ],
+    "/repo",
+  );
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.values, { PARTIAL: "1" });
 });

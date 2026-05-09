@@ -111,3 +111,27 @@ test("provider exposes Canva Linux metadata", () => {
     assert.equal(status.project.version, "0.1.4-12");
   });
 });
+
+
+test("provider status does not expose legacy package field", () => {
+  withProjectRoot((rootDir) => {
+    const runCommand: FakeRunCommand = () => fakeResult({});
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal("package" in status, false);
+  });
+});
+
+test("provider ignores unknown detected keys", () => {
+  withProjectRoot((rootDir) => {
+    const runCommand: FakeRunCommand = () =>
+      fakeResult({
+        stdout: "DETECTED_NATIVE_SYSTEM=true\nDETECTED_UNKNOWN=true\n",
+      });
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal(status.installations.nativeSystem, true);
+    assert.equal("unknown" in status.installations, false);
+    assert.equal("DETECTED_UNKNOWN" in status.installations, false);
+  });
+});

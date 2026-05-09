@@ -260,3 +260,12 @@ Request changes if a PR:
 - imports detection from `scripts/core`;
 - bypasses the c420ui detection engine for root policy decisions;
 - hardcodes Canva Linux metadata inside c420ui core.
+
+## Detection provider shape review
+
+Request changes if a PR:
+
+- reintroduces `status.package` in detection status;
+- adds Canva Linux keys to `packages/c420ui/src/detection.ts`;
+- bypasses c420ui detection contracts in root policy;
+- makes detection async without updating root policy callers safely.

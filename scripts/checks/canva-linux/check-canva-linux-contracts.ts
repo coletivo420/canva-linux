@@ -1156,6 +1156,8 @@ function checkDetectionProviderContract(failures: string[]): void {
   const packageJson = readProjectFile(rootDir, packageJsonPath);
 
   for (const fragment of [
+    "createCanvaLinuxDetectionProvider",
+    "buildCanvaLinuxOverviewStatus",
     "scripts/install-detection-common.sh",
     "parseC420UIDetectionKeyValueLines",
     "DETECTED_NATIVE_SYSTEM",
@@ -1165,6 +1167,17 @@ function checkDetectionProviderContract(failures: string[]): void {
   ]) {
     if (!provider.includes(fragment)) {
       failures.push(`${providerPath}: missing ${fragment}`);
+    }
+  }
+
+
+
+  for (const fragment of [
+    "package:" + " project",
+    "as c420uiOverviewStatus & { package:",
+  ]) {
+    if (provider.includes(fragment)) {
+      failures.push(`${providerPath}: must not restore legacy overview compatibility shape`);
     }
   }
 
@@ -1196,7 +1209,7 @@ function checkInstallationDetectionContract(failures: string[]): void {
     return;
   }
 
-  const project = parsed.project || parsed.package;
+  const project = parsed.project;
   if (!project || typeof project !== "object") {
     failures.push("overview status missing project object");
   }

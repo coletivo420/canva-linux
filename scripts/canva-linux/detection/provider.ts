@@ -8,6 +8,8 @@ import {
 import {
   boolFromC420UIDetectionValue,
   parseC420UIDetectionKeyValueLines,
+  type c420uiDetectionProbe,
+  type c420uiDetectionProbeResult,
   type c420uiOverviewStatus,
   type c420uiOverviewStatusProvider,
 } from "../../../packages/c420ui/src/detection";
@@ -21,6 +23,17 @@ type CanvaLinuxDetectionCommandRunner = (
 
 export type CanvaLinuxDetectionProviderOptions = {
   runCommand?: CanvaLinuxDetectionCommandRunner;
+};
+
+type CanvaLinuxDetectionProbe = Omit<c420uiDetectionProbe, "run"> & {
+  run(rootDir: string): c420uiDetectionProbeResult;
+};
+
+type CanvaLinuxOverviewStatusProvider = Omit<
+  c420uiOverviewStatusProvider,
+  "buildOverviewStatus"
+> & {
+  buildOverviewStatus(rootDir: string): c420uiOverviewStatus;
 };
 
 type PackageJson = {
@@ -102,11 +115,12 @@ function detectionCommand(): string {
   ].join("\n");
 }
 
-function runDetection(
+function runInstallDetection(
   rootDir: string,
   runCommand: CanvaLinuxDetectionCommandRunner,
-): { values: Record<string, string>; warnings: string[] } {
+): c420uiDetectionProbeResult {
   const warnings: string[] = [];
+  let ok = true;
 
   try {
     const result = runCommand("bash", ["-c", detectionCommand()], {
@@ -116,6 +130,7 @@ function runDetection(
     });
 
     if (result.error) {
+      ok = false;
       warnings.push(`Installation detection failed to start: ${result.error.message}`);
     }
 
@@ -123,12 +138,14 @@ function runDetection(
     if (stderr) warnings.push(stderr);
 
     if ((result.status ?? 0) !== 0) {
+      ok = false;
       warnings.push(
         `Installation detection exited with status ${result.status ?? "unknown"}.`,
       );
     }
 
     return {
+      ok,
       values: parseC420UIDetectionKeyValueLines(
         result.stdout || "",
         canvaLinuxDetectionKeys,
@@ -139,8 +156,20 @@ function runDetection(
     warnings.push(
       `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`,
     );
-    return { values: {}, warnings };
+    return { ok: false, values: {}, warnings };
   }
+}
+
+function createInstallDetectionProbe(
+  runCommand: CanvaLinuxDetectionCommandRunner,
+): CanvaLinuxDetectionProbe {
+  return {
+    id: "canva-linux-install-detection",
+    label: "Canva Linux installation detection",
+    run(rootDir: string): c420uiDetectionProbeResult {
+      return runInstallDetection(rootDir, runCommand);
+    },
+  };
 }
 
 function buildInstallations(values: Record<string, string>): c420uiOverviewStatus["installations"] {
@@ -160,24 +189,25 @@ function buildInstallations(values: Record<string, string>): c420uiOverviewStatu
 
 export function createCanvaLinuxDetectionProvider(
   options: CanvaLinuxDetectionProviderOptions = {},
-): c420uiOverviewStatusProvider {
-  const runCommand = options.runCommand ?? spawnSync;
+): CanvaLinuxOverviewStatusProvider {
+  const runCommand: CanvaLinuxDetectionCommandRunner =
+    options.runCommand ?? spawnSync;
 
   return {
     id: "canva-linux-detection-provider",
     label: "Canva Linux detection provider",
     buildOverviewStatus(rootDir: string): c420uiOverviewStatus {
       const project = safeProjectMetadata(rootDir);
-      const detection = runDetection(rootDir, runCommand as CanvaLinuxDetectionCommandRunner);
+      const probe = createInstallDetectionProbe(runCommand);
+      const detection = probe.run(rootDir);
       return {
         project,
-        package: project,
         installations: {
           ...emptyInstallations,
           ...buildInstallations(detection.values),
         },
-        warnings: detection.warnings,
-      } as c420uiOverviewStatus & { package: c420uiOverviewStatus["project"] };
+        warnings: detection.warnings ?? [],
+      };
     },
   };
 }
@@ -185,7 +215,5 @@ export function createCanvaLinuxDetectionProvider(
 export function buildCanvaLinuxOverviewStatus(
   rootDir = findCanvaLinuxProjectRoot(),
 ): c420uiOverviewStatus {
-  return createCanvaLinuxDetectionProvider().buildOverviewStatus(
-    rootDir,
-  ) as c420uiOverviewStatus;
+  return createCanvaLinuxDetectionProvider().buildOverviewStatus(rootDir);
 }

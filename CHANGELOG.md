@@ -26,6 +26,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Tightened the c420ui detection provider contract and removed the legacy `package` overview status shape.
 - Moved installation overview detection to the generic c420ui detection engine with a Canva Linux provider under `scripts/canva-linux/detection/`.
 - Moved Canva Linux action registry and project UI config under `config/canva-linux/`.
 - Moved Canva Linux action registry loading to `scripts/canva-linux/actions/registry.ts` and kept generic action validation in c420ui core.
