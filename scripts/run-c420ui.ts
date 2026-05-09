@@ -1,7 +1,7 @@
 import path from "node:path";
 import { isC420UIHostDependencyFailure } from "../packages/c420ui/src";
-import { ensureCanvaLinuxHostDependencies } from "./c420ui-canva-linux/dependencies";
-import { runCanvaLinuxC420UI } from "./c420ui-canva-linux/run";
+import { ensureCanvaLinuxHostDependencies } from "./c420ui-adapter/dependencies";
+import { runCanvaLinuxC420UI } from "./c420ui-adapter/run";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");

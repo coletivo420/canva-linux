@@ -4,10 +4,10 @@ import path from "node:path";
 import test from "node:test";
 
 import { c420uiExitCodes } from "../packages/c420ui/src";
-import { runCanvaLinuxArtifactWorkflow } from "../scripts/c420ui-canva-linux/bridge";
+import { runCanvaLinuxArtifactWorkflow } from "../scripts/c420ui-adapter/bridge";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..", "..");
-const bridgeSourcePath = path.join(rootDir, "scripts/c420ui-canva-linux/bridge.ts");
+const bridgeSourcePath = path.join(rootDir, "scripts/c420ui-adapter/bridge.ts");
 
 function readBridgeSource(): string {
   return fs.readFileSync(bridgeSourcePath, "utf8");

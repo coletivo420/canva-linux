@@ -31,7 +31,9 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
-- Moved host dependency policy into c420ui so the generic runner owns command, Node and npm checks, npm install strategy, repair mode and skip mode while Canva Linux declares dependencies in config.
+- Renamed the project-local c420ui adapter directory to `scripts/c420ui-adapter/` so future dependent projects can reuse the same path pattern.
+- Moved host dependency policy into c420ui so the generic runner owns command, Node and npm checks, npm install strategy, repair mode and skip mode.
+  Canva Linux now declares dependencies in config.
 - Strengthened c420ui, Canva Linux adapter, and shared tooling checks for dependent-project boundary enforcement.
 - Clarified custom scope validation policy and made Linux root validation command construction configurable.
 - Centralized generic action scope semantics and Linux root/sudo provider helpers in c420ui.

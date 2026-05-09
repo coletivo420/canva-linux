@@ -9,7 +9,7 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 ## Completed
 
 - Package boundary under `packages/c420ui`.
-- Canva Linux adapter under `scripts/c420ui-canva-linux`.
+- Canva Linux adapter under `scripts/c420ui-adapter`.
 - Direct CLI bridge.
 - Shared Action Engine.
 - Shared Root Provider contract.

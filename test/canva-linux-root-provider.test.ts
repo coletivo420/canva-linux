@@ -4,7 +4,7 @@ import test from "node:test";
 import type { SpawnSyncReturns } from "node:child_process";
 
 import { c420uiRootPolicyExitCode, type c420uiAction } from "../packages/c420ui/src";
-import { createCanvaLinuxRootProvider } from "../scripts/c420ui-canva-linux/root-provider";
+import { createCanvaLinuxRootProvider } from "../scripts/c420ui-adapter/root-provider";
 
 const rootAction: c420uiAction = {
   id: "install-native",
@@ -110,7 +110,7 @@ test("resolveRootPolicy returns warning when system detection fails", () => {
 
 test("Canva Linux root provider delegates generic Linux root behavior to c420ui", () => {
   const source = fs.readFileSync(
-    "scripts/c420ui-canva-linux/root-provider.ts",
+    "scripts/c420ui-adapter/root-provider.ts",
     "utf8",
   );
 

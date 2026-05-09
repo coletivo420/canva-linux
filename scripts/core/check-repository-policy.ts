@@ -818,8 +818,8 @@ const criticalReadableSourceFiles = [
   "packages/c420ui/src/command-runner.ts",
   "packages/c420ui/src/operational-logs.ts",
   "packages/c420ui/src/terminal/interactive-action-runner.ts",
-  "scripts/c420ui-canva-linux/root-provider.ts",
-  "scripts/c420ui-canva-linux/dependencies.ts",
+  "scripts/c420ui-adapter/root-provider.ts",
+  "scripts/c420ui-adapter/dependencies.ts",
   "electron/ui/toolbar.html",
 ] as const;
 
@@ -1075,7 +1075,7 @@ function validateDependentProjectBoundaryLayout(
     "packages/c420ui/src/terminal",
     "config/canva-linux/actions.json",
     "config/canva-linux/project-ui.json",
-    "scripts/c420ui-canva-linux",
+    "scripts/c420ui-adapter",
     "scripts/canva-linux/actions",
     "scripts/canva-linux/detection",
   ] as const;
@@ -1473,7 +1473,7 @@ function validateLauncherScriptShape(
     "source_newer_than_entrypoint()",
     "c420ui_cli_entrypoint_is_fresh()",
     'find "${source}" -type f',
-    '"${ROOT_DIR}/scripts/c420ui-canva-linux"',
+    '"${ROOT_DIR}/scripts/c420ui-adapter"',
     '"${ROOT_DIR}/packages/c420ui/src/terminal"',
     '"${ROOT_DIR}/scripts/canva-linux/project-root.ts"',
     '"${ROOT_DIR}/packages/c420ui/src"',
@@ -1544,7 +1544,7 @@ function validateRootProviderContracts(
 ): void {
   const c420uiRootProviderPath = "packages/c420ui/src/root-provider.ts";
   const canvaLinuxRootProviderPath =
-    "scripts/c420ui-canva-linux/root-provider.ts";
+    "scripts/c420ui-adapter/root-provider.ts";
   const c420uiRootProvider = fs.readFileSync(
     path.join(rootDir, c420uiRootProviderPath),
     "utf8",
@@ -1719,9 +1719,9 @@ function main(): number {
   const failures: string[] = [];
   const scriptFiles = [
     "scripts/run-c420ui.ts",
-    "scripts/c420ui-canva-linux/run.ts",
+    "scripts/c420ui-adapter/run.ts",
   ];
-  const adapterDir = path.join(rootDir, "scripts/c420ui-canva-linux");
+  const adapterDir = path.join(rootDir, "scripts/c420ui-adapter");
 
   for (const relativePath of scriptFiles) {
     const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
@@ -1730,7 +1730,7 @@ function main(): number {
     }
   }
 
-  for (const file of allRepositoryFiles(rootDir).filter((entry) => entry.startsWith("scripts/c420ui-canva-linux/"))) {
+  for (const file of allRepositoryFiles(rootDir).filter((entry) => entry.startsWith("scripts/c420ui-adapter/"))) {
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
     if (content.includes("rootLaunchGuardMessage")) {
       failures.push(`${file}: project adapters must not expose rootLaunchGuardMessage`);
@@ -1761,8 +1761,13 @@ function main(): number {
   const ensurePath = "scripts/ensure-npm-dependencies.sh";
   const preflightPath = "scripts/preflight-common.sh";
   const runEntrypointPath = "scripts/run-c420ui.ts";
-  const dependenciesPath = "scripts/c420ui-canva-linux/dependencies.ts";
+  const dependenciesPath = "scripts/c420ui-adapter/dependencies.ts";
   const configPath = "config/canva-linux/dependencies.json";
+
+  const legacyAdapterDir = path.join(rootDir, "scripts", "c420ui-" + "canva-linux");
+  if (fs.existsSync(legacyAdapterDir)) {
+    failures.push("scripts/" + "c420ui-" + "canva-linux must not exist");
+  }
 
   if (!fs.existsSync(path.join(rootDir, configPath))) {
     failures.push(`${configPath}: dependent project dependency declaration is required`);

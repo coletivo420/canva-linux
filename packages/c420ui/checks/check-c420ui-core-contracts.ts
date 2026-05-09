@@ -34,7 +34,8 @@ const forbidden = [
   "https://github.com/coletivo420/canva-linux",
   "CL-EyeDropper",
   "config/canva-linux",
-  "scripts/c420ui-canva-linux",
+  "scripts/c420ui-adapter",
+  "scripts/" + "c420ui-" + "canva-linux",
   "scripts/canva-linux",
   "scripts/app-identity-common.sh",
   "scripts/install-detection-common.sh",
@@ -77,7 +78,8 @@ const forbiddenFragments = [
   "canva-linux",
   "io.github.coletivo420.canva-linux",
   "config/canva-linux",
-  "scripts/c420ui-canva-linux",
+  "scripts/c420ui-adapter",
+  "scripts/" + "c420ui-" + "canva-linux",
   "scripts/canva-linux",
   "scripts/app-identity-common.sh",
   "scripts/install-detection-common.sh",
@@ -105,7 +107,12 @@ function main(): number {
         failures.push(`${relativePath}: c420ui core must not contain dependent-project fragment ${fragment}`);
       }
     }
-    if (/from\s+["'][^"']*(?:scripts\/c420ui-canva-linux|scripts\/canva-linux|config\/canva-linux)/.test(source)) {
+    const forbiddenImportPattern = new RegExp(
+      String.raw`from\s+["'][^"']*(?:scripts\/c420ui-adapter|scripts\/` +
+        "c420ui-" + "canva-linux" +
+        String.raw`|scripts\/canva-linux|config\/canva-linux)`,
+    );
+    if (forbiddenImportPattern.test(source)) {
       failures.push(`${relativePath}: c420ui core must not import dependent-project adapters or config`);
     }
   }
@@ -697,7 +704,7 @@ function main(): number {
     "bundle-flatpak",
     "install-flatpak-system",
     "createCanvaLinux",
-    "c420ui-canva-linux",
+    "c420ui-adapter",
     "ProjectAdapter",
   ]) {
     if (workflowRunner.includes(fragment)) {
@@ -867,7 +874,7 @@ function checkTerminalUiContract(failures: string[]): void {
     "overview-status",
     "install-detection-common.sh",
     "DETECTED_NATIVE_SYSTEM",
-    "scripts/c420ui-canva-linux",
+    "scripts/c420ui-adapter",
     "scripts/" + "sudo-common.sh",
   ]) {
     if (terminalSource.includes(fragment)) {
@@ -1116,6 +1123,8 @@ function checkHostDependencyContract(failures: string[]): void {
       "config/canva-linux",
       "scripts/ensure-npm-dependencies.sh",
       "scripts/preflight-common.sh",
+      "scripts/c420ui-adapter",
+      "scripts/" + "c420ui-" + "canva-linux",
       "electron-builder",
       "@typescript-eslint/parser",
       "blessed",

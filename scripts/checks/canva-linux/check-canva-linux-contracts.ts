@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { createCanvaLinuxC420UIAdapter } from "../../c420ui-canva-linux/adapter";
+import { createCanvaLinuxC420UIAdapter } from "../../c420ui-adapter/adapter";
 import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
 import { loadCanvaLinuxActions } from "../../canva-linux/actions/registry";
 import { buildCanvaLinuxOverviewStatus } from "../../canva-linux/detection/provider";
@@ -225,23 +225,23 @@ function main(): number {
   if (typeof adapter.runAction !== "function") failures.push("adapter must implement runAction");
   if (typeof adapter.overviewStatus !== "function") failures.push("adapter must implement overviewStatus");
 
-  const cliBridgePath = path.join(rootDir, "scripts/c420ui-canva-linux/cli.ts");
+  const cliBridgePath = path.join(rootDir, "scripts/c420ui-adapter/cli.ts");
   const cliEntrypointPath = path.join(rootDir, "scripts/run-c420ui-cli.ts");
   const launcherPath = path.join(rootDir, "canva-linux.sh");
-  const runSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/run.ts"), "utf8");
+  const runSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/run.ts"), "utf8");
   if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
   if (!fs.existsSync(cliEntrypointPath)) failures.push("Canva Linux c420ui CLI entrypoint must exist");
   const cliBridge = fs.readFileSync(cliBridgePath, "utf8");
   if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
-  const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/adapter.ts"), "utf8");
+  const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/adapter.ts"), "utf8");
   if (!runSource.includes("../../packages/c420ui/src/terminal")) {
-    failures.push("scripts/c420ui-canva-linux/run.ts must import terminal UI from packages/c420ui/src/terminal");
+    failures.push("scripts/c420ui-adapter/run.ts must import terminal UI from packages/c420ui/src/terminal");
   }
   if (!adapterSource.includes("../../packages/c420ui/src/terminal/logo") || !adapterSource.includes("../../packages/c420ui/src/terminal/settings")) {
-    failures.push("scripts/c420ui-canva-linux/adapter.ts must import logo/settings from packages/c420ui/src/terminal");
+    failures.push("scripts/c420ui-adapter/adapter.ts must import logo/settings from packages/c420ui/src/terminal");
   }
   if (!adapterSource.includes("function overviewStatus") || !adapterSource.includes("buildCanvaLinuxOverviewStatus(resolvedRootDir)") || !adapterSource.includes("overviewStatus,")) {
-    failures.push("scripts/c420ui-canva-linux/adapter.ts must provide overviewStatus through the project bridge");
+    failures.push("scripts/c420ui-adapter/adapter.ts must provide overviewStatus through the project bridge");
   }
   if (fs.existsSync(path.join(rootDir, "scripts/c420ui"))) {
     failures.push("scripts/c420ui must not exist");
@@ -285,10 +285,10 @@ function read(rootDir: string, relativePath: string): string {
 
 function main(): number {
   const rootDir = process.cwd();
-  const providerPath = "scripts/c420ui-canva-linux/root-provider.ts";
-  const adapterPath = "scripts/c420ui-canva-linux/adapter.ts";
-  const cliPath = "scripts/c420ui-canva-linux/cli.ts";
-  const runPath = "scripts/c420ui-canva-linux/run.ts";
+  const providerPath = "scripts/c420ui-adapter/root-provider.ts";
+  const adapterPath = "scripts/c420ui-adapter/adapter.ts";
+  const cliPath = "scripts/c420ui-adapter/cli.ts";
+  const runPath = "scripts/c420ui-adapter/run.ts";
   const provider = read(rootDir, providerPath);
   const adapter = read(rootDir, adapterPath);
   const cli = read(rootDir, cliPath);
@@ -370,10 +370,10 @@ function main(): number {
 function checkDependentProjectAdapterBoundary(failures: string[]): void {
   const rootDir = findProjectRoot();
   const runEntrypointPath = "scripts/run-c420ui.ts";
-  const runPath = "scripts/c420ui-canva-linux/run.ts";
-  const bridgePath = "scripts/c420ui-canva-linux/bridge.ts";
-  const adapterPath = "scripts/c420ui-canva-linux/adapter.ts";
-  const rootProviderPath = "scripts/c420ui-canva-linux/root-provider.ts";
+  const runPath = "scripts/c420ui-adapter/run.ts";
+  const bridgePath = "scripts/c420ui-adapter/bridge.ts";
+  const adapterPath = "scripts/c420ui-adapter/adapter.ts";
+  const rootProviderPath = "scripts/c420ui-adapter/root-provider.ts";
   const runEntrypoint = readProjectFile(rootDir, runEntrypointPath);
   const run = readProjectFile(rootDir, runPath);
   const bridge = readProjectFile(rootDir, bridgePath);
@@ -403,12 +403,13 @@ function checkDependentProjectAdapterBoundary(failures: string[]): void {
   }
 
   for (const relativePath of [
-    "scripts/c420ui-canva-linux/adapter.ts",
-    "scripts/c420ui-canva-linux/artifacts.ts",
-    "scripts/c420ui-canva-linux/bridge.ts",
-    "scripts/c420ui-canva-linux/cli.ts",
-    "scripts/c420ui-canva-linux/root-provider.ts",
-    "scripts/c420ui-canva-linux/run.ts",
+    "scripts/c420ui-adapter/adapter.ts",
+    "scripts/c420ui-adapter/artifacts.ts",
+    "scripts/c420ui-adapter/bridge.ts",
+    "scripts/c420ui-adapter/cli.ts",
+    "scripts/c420ui-adapter/dependencies.ts",
+    "scripts/c420ui-adapter/root-provider.ts",
+    "scripts/c420ui-adapter/run.ts",
   ] as const) {
     const source = readProjectFile(rootDir, relativePath);
     for (const fragment of [
@@ -445,7 +446,7 @@ function checkDependentProjectAdapterBoundary(failures: string[]): void {
 
 function checkHostDependencyProviderContract(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const dependenciesPath = "scripts/c420ui-canva-linux/dependencies.ts";
+  const dependenciesPath = "scripts/c420ui-adapter/dependencies.ts";
   const configPath = "config/canva-linux/dependencies.json";
   const runEntrypointPath = "scripts/run-c420ui.ts";
 
@@ -461,7 +462,7 @@ function checkHostDependencyProviderContract(failures: string[]): void {
   const dependencies = readProjectFile(rootDir, dependenciesPath);
   const config = readProjectFile(rootDir, configPath);
   const runEntrypoint = readProjectFile(rootDir, runEntrypointPath);
-  const legacyProviderPath = path.join(rootDir, "scripts/c420ui-canva-linux/host-dependencies.ts");
+  const legacyProviderPath = path.join(rootDir, "scripts/c420ui-adapter/host-dependencies.ts");
 
   for (const fragment of [
     "loadCanvaLinuxDependencyConfig",
@@ -503,7 +504,7 @@ function checkHostDependencyProviderContract(failures: string[]): void {
       legacyProvider.includes("createCanvaLinuxHostDependencyProvider") ||
       legacyProvider.includes("scripts/ensure-npm-dependencies.sh")
     ) {
-      failures.push("scripts/c420ui-canva-linux/host-dependencies.ts: legacy shell provider must not be active");
+      failures.push("scripts/c420ui-adapter/host-dependencies.ts: legacy shell provider must not be active");
     }
   }
   for (const fragment of ["esbuild", "electron", "electron-builder", "@typescript-eslint/parser", "blessed"] as const) {
@@ -724,13 +725,17 @@ function assertIncludes(
 
 function main(): number {
   const rootDir = findProjectRoot();
+  const legacyAdapterDir = path.join(rootDir, "scripts", "c420ui-" + "canva-linux");
   const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
   const packageTypes = read(rootDir, "packages/c420ui/src/types.ts");
   const logo = read(rootDir, "packages/c420ui/src/terminal/logo.ts");
   const settings = read(rootDir, "packages/c420ui/src/terminal/settings.ts");
-  const adapter = read(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
+  const adapter = read(rootDir, "scripts/c420ui-adapter/adapter.ts");
   const projectUi = read(rootDir, "config/canva-linux/project-ui.json");
   const failures: string[] = [];
+  if (fs.existsSync(legacyAdapterDir)) {
+    failures.push("scripts/" + "c420ui-" + "canva-linux: legacy project-named c420ui adapter directory must not exist");
+  }
 
   assertIncludes(
     failures,
@@ -782,9 +787,9 @@ function main(): number {
 
   assertIncludes(
     failures,
-    read(rootDir, "scripts/c420ui-canva-linux/run.ts"),
+    read(rootDir, "scripts/c420ui-adapter/run.ts"),
     "../../packages/c420ui/src/terminal",
-    "scripts/c420ui-canva-linux/run.ts must import terminal UI from packages/c420ui/src/terminal",
+    "scripts/c420ui-adapter/run.ts must import terminal UI from packages/c420ui/src/terminal",
   );
 
   const projectFields = [
@@ -807,7 +812,7 @@ function main(): number {
       !adapter.includes(`${field}: [...projectUi.${field}]`)
     ) {
       failures.push(
-        `scripts/c420ui-canva-linux/adapter.ts must inject ${field} from config/canva-linux/project-ui.json`,
+        `scripts/c420ui-adapter/adapter.ts must inject ${field} from config/canva-linux/project-ui.json`,
       );
     }
     assertIncludes(
@@ -833,8 +838,8 @@ function main(): number {
   const workflows = adapter.loadArtifactWorkflows();
   const actions = new Set(adapter.loadActions().map((action) => action.id));
   const workflowsById = new Map(workflows.map((workflow) => [workflow.id, workflow]));
-  const artifactsSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/artifacts.ts"), "utf8");
-  const bridgeSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/bridge.ts"), "utf8");
+  const artifactsSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/artifacts.ts"), "utf8");
+  const bridgeSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/bridge.ts"), "utf8");
   const failures: string[] = [];
 
   for (const fragment of [
@@ -846,7 +851,7 @@ function main(): number {
     "releaseActionId",
   ]) {
     if (!artifactsSource.includes(fragment)) {
-      failures.push(`scripts/c420ui-canva-linux/artifacts.ts: missing ${fragment}`);
+      failures.push(`scripts/c420ui-adapter/artifacts.ts: missing ${fragment}`);
     }
   }
 
@@ -857,7 +862,7 @@ function main(): number {
     "runC420UIArtifactWorkflow",
   ]) {
     if (!bridgeSource.includes(fragment)) {
-      failures.push(`scripts/c420ui-canva-linux/bridge.ts: missing ${fragment}`);
+      failures.push(`scripts/c420ui-adapter/bridge.ts: missing ${fragment}`);
     }
   }
 
@@ -866,7 +871,7 @@ function main(): number {
     "adapter.runAction(actionId, contextForAction())",
   ]) {
     if (bridgeSource.includes(fragment)) {
-      failures.push(`scripts/c420ui-canva-linux/bridge.ts: must not bypass Action Engine with ${fragment}`);
+      failures.push(`scripts/c420ui-adapter/bridge.ts: must not bypass Action Engine with ${fragment}`);
     }
   }
 
@@ -1257,7 +1262,7 @@ function checkNoRootLauncherContract(failures: string[]): void {
   const rootDir = findProjectRoot();
   const launcher = readProjectFile(rootDir, "canva-linux.sh");
   const runTui = readProjectFile(rootDir, "scripts/run-c420ui.ts");
-  const adapterRun = readProjectFile(rootDir, "scripts/c420ui-canva-linux/run.ts");
+  const adapterRun = readProjectFile(rootDir, "scripts/c420ui-adapter/run.ts");
   const rootMessage =
     "Do not run Canva Linux Install and Development Tool with sudo or as root.";
 
@@ -1272,7 +1277,7 @@ function checkNoRootLauncherContract(failures: string[]): void {
       "canva-linux.sh: root guard must explain privileges are requested only when needed",
     );
   }
-  const adapter = readProjectFile(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
+  const adapter = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
   if (!runTui.includes("runCanvaLinuxC420UI")) {
     failures.push("scripts/run-c420ui.ts must call runCanvaLinuxC420UI");
   }
@@ -1283,19 +1288,19 @@ function checkNoRootLauncherContract(failures: string[]): void {
     failures.push("scripts/run-c420ui.ts must not perform root launch checks");
   }
   if (!adapterRun.includes("runC420UITerminalApp")) {
-    failures.push("scripts/c420ui-canva-linux/run.ts must import runC420UITerminalApp");
+    failures.push("scripts/c420ui-adapter/run.ts must import runC420UITerminalApp");
   }
   if (!adapterRun.includes("../../packages/c420ui/src/terminal")) {
-    failures.push("scripts/c420ui-canva-linux/run.ts must import terminal UI from packages/c420ui/src/terminal");
+    failures.push("scripts/c420ui-adapter/run.ts must import terminal UI from packages/c420ui/src/terminal");
   }
   if (adapterRun.includes("process.getuid")) {
-    failures.push("scripts/c420ui-canva-linux/run.ts must not perform root launch checks");
+    failures.push("scripts/c420ui-adapter/run.ts must not perform root launch checks");
   }
   if (adapterRun.includes("process.exit")) {
-    failures.push("scripts/c420ui-canva-linux/run.ts must not own root guard exits");
+    failures.push("scripts/c420ui-adapter/run.ts must not own root guard exits");
   }
   if (adapter.includes("rootLaunchGuardMessage")) {
-    failures.push("scripts/c420ui-canva-linux/adapter.ts must not expose rootLaunchGuardMessage");
+    failures.push("scripts/c420ui-adapter/adapter.ts must not expose rootLaunchGuardMessage");
   }
 
   const docsToCheck = ["README.md", "docs/CLI.md", "docs/TECHNICAL.md"];
@@ -1383,7 +1388,7 @@ function checkActionRegistryContract(failures: string[]): void {
 function checkDetectionProviderContract(failures: string[]): void {
   const rootDir = findProjectRoot();
   const providerPath = "scripts/canva-linux/detection/provider.ts";
-  const rootProviderPath = "scripts/c420ui-canva-linux/root-provider.ts";
+  const rootProviderPath = "scripts/c420ui-adapter/root-provider.ts";
   const packageJsonPath = "package.json";
 
   if (!fs.existsSync(path.join(rootDir, providerPath))) {

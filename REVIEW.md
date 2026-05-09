@@ -46,7 +46,7 @@ Request changes if a PR:
 
 - adds project-specific strings to `packages/c420ui/src`;
 - imports project adapters from c420ui;
-- reimplements c420ui engines in `scripts/c420ui-canva-linux`;
+- reimplements c420ui engines in `scripts/c420ui-adapter`;
 - adds root launch guard outside c420ui terminal runtime;
 - hardcodes concrete Canva Linux action IDs in c420ui core;
 - moves project detection or package recipes into c420ui core.
@@ -118,6 +118,7 @@ Request changes if a PR:
 
 Request changes if a PR:
 
+- uses a project-specific c420ui adapter directory name instead of `scripts/c420ui-adapter/`;
 - reintroduces `scripts/c420ui/`;
 - puts generic terminal UI outside `packages/c420ui/src/terminal/`;
 - adds runtime or product entrypoints under `scripts/core`;
@@ -265,7 +266,7 @@ Request changes if a PR:
 
 - lets `canva-linux.sh` execute a stale `.build/scripts/run-c420ui-cli.js`;
 - removes freshness coverage for `packages/c420ui/src`;
-- removes freshness coverage for `scripts/c420ui-canva-linux`;
+- removes freshness coverage for `scripts/c420ui-adapter`;
 - tests launcher behavior by executing real destructive actions instead of a stub.
 
 
@@ -349,12 +350,13 @@ Request changes if a PR:
 
 Request changes if a PR:
 
+- uses a project-specific c420ui adapter directory name instead of `scripts/c420ui-adapter/`;
 - reintroduces `scripts/c420ui/`;
 - adds generic terminal UI code under `scripts/`;
 - hardcodes Canva Linux metadata inside `packages/c420ui/src/terminal`;
 - calls `scripts/run-core-entry.sh overview-status` from terminal UI;
 - imports Canva Linux adapters from c420ui terminal code;
-- makes `scripts/c420ui-canva-linux/` contain generic UI logic.
+- makes `scripts/c420ui-adapter/` contain generic UI logic.
 
 ## Host dependency ownership review
 

@@ -47,7 +47,7 @@ recipes, and host scripts.
 
 - Adding dependent-project names, app IDs, env vars, or action IDs to
   `packages/c420ui/src`.
-- Importing `scripts/c420ui-canva-linux`, `scripts/canva-linux`, or
+- Importing `scripts/c420ui-adapter`, `scripts/canva-linux`, or
   `config/canva-linux` from `packages/c420ui/src`.
 - Reimplementing the c420ui Action Engine, Command Runner, Detection Engine,
   Artifact Workflow Runner, or Linux root provider base in a dependent-project
@@ -71,6 +71,12 @@ recipes, and host scripts.
   shell helpers work even when execution bits are not available. Dependent
   projects that need direct executable helpers or another launcher must provide a
   custom `buildRootValidationCommand`.
+
+## Adapter directory naming
+
+- Dependent project adapters live under `scripts/c420ui-adapter/`.
+- Do not create c420ui adapter directories named after the dependent project.
+- The adapter directory is project-local, but its role is generic: connecting the dependent project to c420ui.
 
 ## Host dependency ownership
 

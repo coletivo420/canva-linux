@@ -22,7 +22,7 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │   ├── core/                  Shared TypeScript tooling and repository-wide checks
 │   ├── checks/canva-linux/    Canva Linux-specific validation and anti-regression checks
 │   ├── canva-linux/detection/ Canva Linux installation detection provider and probes
-│   ├── c420ui-canva-linux/    Canva Linux adapter boundary for c420ui integration
+│   ├── c420ui-adapter/        Project-local adapter connecting Canva Linux to c420ui
 │   ├── canva-linux/actions/   Canva Linux action registry loading and validation
 │   └── *.sh                   Linux host-operation glue and launcher/install/package wrappers
 ├── packages/                  Private package workspace; no published c420ui package exists yet
@@ -59,8 +59,9 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 ```
 
 Some planned directories may not exist until their corresponding split work
-starts. `scripts/c420ui-canva-linux/` now exists as the Canva Linux adapter boundary,
-while `packages/c420ui/` exists only as a private package skeleton for the c420ui separation plan,
+starts. Dependent project adapters live under `scripts/c420ui-adapter/`; the directory is project-local, but its role is generic: connecting the dependent project to c420ui.
+Do not create c420ui adapter directories named after the dependent project.
+`packages/c420ui/` exists only as a private package skeleton for the c420ui separation plan,
 not a published or supported external package location today.
 
 ## Maintained source
@@ -108,7 +109,7 @@ The intended separation is:
   settings, logo, help formatting, root launch guard, runtime startup policy and interactive runner code lives in `packages/c420ui/src/terminal/`.
 - **Canva Linux adapter**: project-specific actions, root policy conditionals, environment variable names, generic sudo helper environment translation, metadata, launch wiring, concrete host dependency bootstrap,
   install/package status, and Canva Linux labels live in
-  `scripts/c420ui-canva-linux/`. Installation detection probes live in
+  `scripts/c420ui-adapter/`. Installation detection probes live in
   `scripts/canva-linux/detection/` and use the generic engine in `packages/c420ui/src/detection.ts`.
 - **c420ui host tools**: reusable Linux host tools, including `packages/c420ui/host/linux/sudo-helper.sh`, live under `packages/c420ui/host/` and must not contain Canva Linux-specific names or `CANVA_*` variables.
 - **Validation split**: reusable c420ui validation and anti-regression checks live
