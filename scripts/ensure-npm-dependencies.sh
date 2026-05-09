@@ -2,5 +2,6 @@
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${ROOT_DIR}"
-source "${ROOT_DIR}/scripts/preflight-common.sh"
-ensure_npm_dependencies
+echo "[error] scripts/ensure-npm-dependencies.sh is no longer an active bootstrap path." >&2
+echo "[error] Host dependency policy is owned by c420ui and declared in config/canva-linux/dependencies.json." >&2
+exit 1

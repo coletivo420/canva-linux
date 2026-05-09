@@ -14,6 +14,40 @@ export type c420uiHostDependency = {
   requiredFor?: c420uiHostDependencyPurpose[];
 };
 
+export type c420uiCommandDependency = {
+  id: string;
+  command: string;
+  required?: boolean;
+  requiredFor?: c420uiHostDependencyPurpose[];
+  installHint?: string;
+};
+
+export type c420uiNodeDependencyConfig = {
+  minimumMajor?: number;
+  required?: boolean;
+};
+
+export type c420uiNpmDependencyConfig = {
+  packageManager: "npm";
+  lockfile?: string;
+  installStrategy?: "auto" | "ci" | "install";
+  includeDev?: boolean;
+  requiredDependencies?: string[];
+  requiredDevDependencies?: string[];
+};
+
+export type c420uiHostDependencyConfig = {
+  node?: c420uiNodeDependencyConfig;
+  commands?: c420uiCommandDependency[];
+  npm?: c420uiNpmDependencyConfig;
+};
+
+export type c420uiHostDependencyEnsureOptions = {
+  rootDir: string;
+  env?: NodeJS.ProcessEnv;
+  dryRun?: boolean;
+};
+
 export type c420uiHostDependencyCheckStatus =
   | "available"
   | "missing"

@@ -819,7 +819,7 @@ const criticalReadableSourceFiles = [
   "packages/c420ui/src/operational-logs.ts",
   "packages/c420ui/src/terminal/interactive-action-runner.ts",
   "scripts/c420ui-canva-linux/root-provider.ts",
-  "scripts/c420ui-canva-linux/host-dependencies.ts",
+  "scripts/c420ui-canva-linux/dependencies.ts",
   "electron/ui/toolbar.html",
 ] as const;
 
@@ -1760,19 +1760,32 @@ function main(): number {
   const failures: string[] = [];
   const ensurePath = "scripts/ensure-npm-dependencies.sh";
   const preflightPath = "scripts/preflight-common.sh";
-  const providerPath = "scripts/c420ui-canva-linux/host-dependencies.ts";
+  const runEntrypointPath = "scripts/run-c420ui.ts";
+  const dependenciesPath = "scripts/c420ui-canva-linux/dependencies.ts";
+  const configPath = "config/canva-linux/dependencies.json";
 
-  if (!fs.existsSync(path.join(rootDir, ensurePath))) {
-    failures.push(`${ensurePath}: temporary concrete host dependency implementation must remain until provider replacement`);
+  if (!fs.existsSync(path.join(rootDir, configPath))) {
+    failures.push(`${configPath}: dependent project dependency declaration is required`);
+  }
+  if (!fs.existsSync(path.join(rootDir, dependenciesPath))) {
+    failures.push(`${dependenciesPath}: dependency loader is required`);
   }
   if (!fs.existsSync(path.join(rootDir, preflightPath))) {
-    failures.push(`${preflightPath}: temporary shared project preflight implementation must remain in scripts/`);
+    failures.push(`${preflightPath}: shared project preflight helpers must remain in scripts/`);
   }
-  if (fs.existsSync(path.join(rootDir, providerPath))) {
-    const provider = fs.readFileSync(path.join(rootDir, providerPath), "utf8");
-    if (!provider.includes(ensurePath)) {
-      failures.push(`${providerPath}: must classify ${ensurePath} as the concrete Canva Linux implementation`);
-    }
+
+  const preflight = fs.existsSync(path.join(rootDir, preflightPath))
+    ? fs.readFileSync(path.join(rootDir, preflightPath), "utf8")
+    : "";
+  if (preflight.includes("CANVA_" + "REQUIRED_NPM_DEPS")) {
+    failures.push(`${preflightPath}: must not contain the legacy hardcoded npm dependency list`);
+  }
+
+  const runEntrypoint = fs.existsSync(path.join(rootDir, runEntrypointPath))
+    ? fs.readFileSync(path.join(rootDir, runEntrypointPath), "utf8")
+    : "";
+  if (runEntrypoint.includes(ensurePath)) {
+    failures.push(`${runEntrypointPath}: must not call ${ensurePath}`);
   }
 
   if (failures.length) {

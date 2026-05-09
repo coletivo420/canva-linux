@@ -1060,20 +1060,34 @@ function checkSettingsContract(failures: string[]): void {
 
 function checkHostDependencyContract(failures: string[]): void {
   const rootDir = process.cwd();
-  const hostDependenciesPath = "packages/c420ui/src/host-dependencies.ts";
+  const requiredFiles = [
+    "packages/c420ui/src/host-dependencies.ts",
+    "packages/c420ui/src/command-dependencies.ts",
+    "packages/c420ui/src/node-dependencies.ts",
+    "packages/c420ui/src/npm-dependencies.ts",
+    "packages/c420ui/src/host-dependency-runner.ts",
+  ] as const;
   const indexPath = "packages/c420ui/src/index.ts";
-  const fullPath = path.join(rootDir, hostDependenciesPath);
-  if (!fs.existsSync(fullPath)) {
-    failures.push(`${hostDependenciesPath}: missing host dependency contract`);
-    return;
+
+  for (const requiredFile of requiredFiles) {
+    if (!fs.existsSync(path.join(rootDir, requiredFile))) {
+      failures.push(`${requiredFile}: missing c420ui host dependency module`);
+    }
   }
 
-  const source = fs.readFileSync(fullPath, "utf8");
+  const hostDependenciesPath = "packages/c420ui/src/host-dependencies.ts";
+  if (!fs.existsSync(path.join(rootDir, hostDependenciesPath))) return;
+  const source = fs.readFileSync(path.join(rootDir, hostDependenciesPath), "utf8");
   const index = fs.readFileSync(path.join(rootDir, indexPath), "utf8");
   for (const fragment of [
     "c420uiHostDependencyProvider",
     "c420uiHostDependencyCheckResult",
     "c420uiHostDependencyPurpose",
+    "c420uiCommandDependency",
+    "c420uiNodeDependencyConfig",
+    "c420uiNpmDependencyConfig",
+    "c420uiHostDependencyConfig",
+    "c420uiHostDependencyEnsureOptions",
     "createC420UIHostDependencyResult",
     "isC420UIHostDependencyFailure",
   ] as const) {
@@ -1081,20 +1095,34 @@ function checkHostDependencyContract(failures: string[]): void {
       failures.push(`${hostDependenciesPath}: missing ${fragment}`);
     }
   }
-  if (!index.includes('export * from "./host-dependencies"')) {
-    failures.push(`${indexPath}: missing public export for ./host-dependencies`);
-  }
-  for (const forbidden of [
-    "Canva Linux",
-    "canva-linux",
-    "CANVA_",
-    "npm",
-    "scripts/ensure-npm-dependencies.sh",
-    "Node.js >=22",
-    "node >=22",
+  for (const exportPath of [
+    "./host-dependencies",
+    "./command-dependencies",
+    "./node-dependencies",
+    "./npm-dependencies",
+    "./host-dependency-runner",
   ] as const) {
-    if (source.includes(forbidden)) {
-      failures.push(`${hostDependenciesPath}: must not contain project-specific host dependency policy ${forbidden}`);
+    if (!index.includes(`export * from "${exportPath}"`)) {
+      failures.push(`${indexPath}: missing public export for ${exportPath}`);
+    }
+  }
+
+  for (const sourcePath of requiredFiles) {
+    const moduleSource = fs.readFileSync(path.join(rootDir, sourcePath), "utf8");
+    for (const forbidden of [
+      "Canva Linux",
+      "canva-linux",
+      "CANVA_",
+      "config/canva-linux",
+      "scripts/ensure-npm-dependencies.sh",
+      "scripts/preflight-common.sh",
+      "electron-builder",
+      "@typescript-eslint/parser",
+      "blessed",
+    ] as const) {
+      if (moduleSource.includes(forbidden)) {
+        failures.push(`${sourcePath}: must not contain project-specific host dependency policy ${forbidden}`);
+      }
     }
   }
 }

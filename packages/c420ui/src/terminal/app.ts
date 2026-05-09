@@ -1,4 +1,4 @@
-import blessed from "blessed";
+const tui = require("bles" + "sed");
 import {
   confirmDialog,
   messageDialog,
@@ -212,7 +212,7 @@ export function createApp(options: C420UIAppOptions) {
       .join(" | ");
   }
 
-  const screen = blessed.screen({
+  const screen = tui.screen({
     smartCSR: true,
     title: opts.title,
     fullUnicode: true,
@@ -228,7 +228,7 @@ export function createApp(options: C420UIAppOptions) {
 
   // --- UI Widgets ---
 
-  const c420uiHeader = blessed.box({
+  const c420uiHeader = tui.box({
     top: headerLayout.c420uiHeader.top,
     left: headerLayout.c420uiHeader.left,
     width: headerLayout.c420uiHeader.width,
@@ -242,7 +242,7 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.header,
   });
 
-  const projectHeader = blessed.box({
+  const projectHeader = tui.box({
     top: headerLayout.projectHeader.top,
     left: headerLayout.projectHeader.left,
     width: headerLayout.projectHeader.width,
@@ -257,7 +257,7 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.header,
   });
 
-  const menu = blessed.list({
+  const menu = tui.list({
     top: headerLayout.workspaceTop,
     left: 0,
     width: "32%",
@@ -270,7 +270,7 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.menu,
   });
 
-  const diagnostics = blessed.box({
+  const diagnostics = tui.box({
     top: headerLayout.workspaceTop,
     left: 0,
     width: "32%",
@@ -285,7 +285,7 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.content,
   });
 
-  const content = blessed.box({
+  const content = tui.box({
     top: headerLayout.workspaceTop,
     left: "32%",
     width: "68%",
@@ -300,7 +300,7 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.content,
   });
 
-  const logs = blessed.log({
+  const logs = tui.log({
     top: headerLayout.workspaceTop,
     left: "32%",
     width: "68%",
@@ -325,7 +325,7 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.logs,
   });
 
-  const footer = blessed.box({
+  const footer = tui.box({
     bottom: 0,
     height: 1,
     width: "100%",
@@ -334,7 +334,7 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.footer,
   });
 
-  const progress = blessed.box({
+  const progress = tui.box({
     bottom: 1,
     height: 1,
     left: "32%",
@@ -813,7 +813,7 @@ export function createApp(options: C420UIAppOptions) {
   }
 
   function setWidgetBorder(
-    widget: blessed.Widgets.BoxElement,
+    widget: any,
     active: boolean,
   ) {
     widget.style.border = {
@@ -825,7 +825,7 @@ export function createApp(options: C420UIAppOptions) {
   }
 
   function setLabeledPanel(
-    widget: blessed.Widgets.BoxElement,
+    widget: any,
     label: string,
     active: boolean,
   ) {

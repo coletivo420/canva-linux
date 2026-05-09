@@ -445,43 +445,71 @@ function checkDependentProjectAdapterBoundary(failures: string[]): void {
 
 function checkHostDependencyProviderContract(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const providerPath = "scripts/c420ui-canva-linux/host-dependencies.ts";
+  const dependenciesPath = "scripts/c420ui-canva-linux/dependencies.ts";
+  const configPath = "config/canva-linux/dependencies.json";
   const runEntrypointPath = "scripts/run-c420ui.ts";
-  const providerFullPath = path.join(rootDir, providerPath);
-  if (!fs.existsSync(providerFullPath)) {
-    failures.push(`${providerPath}: missing Canva Linux host dependency provider`);
+
+  if (!fs.existsSync(path.join(rootDir, dependenciesPath))) {
+    failures.push(`${dependenciesPath}: missing Canva Linux dependency loader`);
+    return;
+  }
+  if (!fs.existsSync(path.join(rootDir, configPath))) {
+    failures.push(`${configPath}: missing Canva Linux dependency declaration`);
     return;
   }
 
-  const provider = readProjectFile(rootDir, providerPath);
+  const dependencies = readProjectFile(rootDir, dependenciesPath);
+  const config = readProjectFile(rootDir, configPath);
   const runEntrypoint = readProjectFile(rootDir, runEntrypointPath);
-  const cliEntrypoint = readProjectFile(rootDir, "scripts/run-c420ui-cli.ts");
+  const legacyProviderPath = path.join(rootDir, "scripts/c420ui-canva-linux/host-dependencies.ts");
 
   for (const fragment of [
-    "createCanvaLinuxHostDependencyProvider",
-    "c420uiHostDependencyProvider",
-    "c420uiHostDependencyCheckResult",
-    "spawnSync",
-    "scripts/ensure-npm-dependencies.sh",
+    "loadCanvaLinuxDependencyConfig",
+    "ensureCanvaLinuxHostDependencies",
+    "runC420UIHostDependencyEnsure",
+    "config/canva-linux/dependencies.json",
   ] as const) {
-    if (!provider.includes(fragment)) {
-      failures.push(`${providerPath}: missing host dependency provider fragment ${fragment}`);
+    if (!dependencies.includes(fragment)) {
+      failures.push(`${dependenciesPath}: missing dependency loader fragment ${fragment}`);
     }
   }
   for (const fragment of [
-    "createCanvaLinuxHostDependencyProvider",
+    "ensureCanvaLinuxHostDependencies",
     "isC420UIHostDependencyFailure",
     "ensureHostDependencies",
   ] as const) {
     if (!runEntrypoint.includes(fragment)) {
-      failures.push(`${runEntrypointPath}: must use Canva Linux host dependency provider fragment ${fragment}`);
+      failures.push(`${runEntrypointPath}: must use Canva Linux dependency loader fragment ${fragment}`);
     }
   }
-  if (runEntrypoint.includes("scripts/ensure-npm-dependencies.sh")) {
-    failures.push(`${runEntrypointPath}: must not call scripts/ensure-npm-dependencies.sh directly`);
+  for (const forbidden of [
+    "scripts/ensure-npm-dependencies.sh",
+    "npm ci",
+    "npm install",
+    "CANVA_" + "REQUIRED_NPM_DEPS",
+    "CANVA_" + "SKIP_NPM_INSTALL",
+    "CANVA_" + "NPM_REPAIR",
+  ] as const) {
+    if (runEntrypoint.includes(forbidden)) {
+      failures.push(`${runEntrypointPath}: must not contain dependency policy fragment ${forbidden}`);
+    }
+    if (dependencies.includes(forbidden)) {
+      failures.push(`${dependenciesPath}: must not contain dependency policy fragment ${forbidden}`);
+    }
   }
-  if (cliEntrypoint.includes("scripts/ensure-npm-dependencies.sh")) {
-    failures.push("scripts/run-c420ui-cli.ts: must not call scripts/ensure-npm-dependencies.sh directly");
+  if (fs.existsSync(legacyProviderPath)) {
+    const legacyProvider = fs.readFileSync(legacyProviderPath, "utf8");
+    if (
+      legacyProvider.includes("createCanvaLinuxHostDependencyProvider") ||
+      legacyProvider.includes("scripts/ensure-npm-dependencies.sh")
+    ) {
+      failures.push("scripts/c420ui-canva-linux/host-dependencies.ts: legacy shell provider must not be active");
+    }
+  }
+  for (const fragment of ["esbuild", "electron", "electron-builder", "@typescript-eslint/parser", "blessed"] as const) {
+    if (!config.includes(fragment)) {
+      failures.push(`${configPath}: missing declared npm dependency ${fragment}`);
+    }
   }
 }
 

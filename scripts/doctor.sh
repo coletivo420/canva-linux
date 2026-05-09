@@ -17,15 +17,22 @@ fi
 for req in npm git; do command -v "$req" >/dev/null 2>&1 && echo "[ok] $req" || { echo "[error] $req missing"; failed=1; }; done
 
 if [[ ! -d node_modules ]]; then
-  echo "[warn] node_modules missing — run: npm ci --include=dev"
+  echo "[warn] node_modules missing — let c420ui ensure npm dependencies"
 else
-  for dep in "${CANVA_REQUIRED_NPM_DEPS[@]}"; do
-    if check_npm_dependency "$dep"; then
-      echo "[ok] npm dependency: $dep"
-    else
-      echo "[warn] npm dependency missing: $dep — run: npm ci --include=dev"
-    fi
-  done
+  node <<'NODE'
+const fs = require('node:fs');
+const { createRequire } = require('node:module');
+const config = JSON.parse(fs.readFileSync('config/canva-linux/dependencies.json', 'utf8'));
+const req = createRequire(process.cwd() + '/package.json');
+for (const dep of config.npm.requiredDevDependencies || []) {
+  try {
+    req.resolve(dep, { paths: [process.cwd()] });
+    console.log(`[ok] npm dependency: ${dep}`);
+  } catch {
+    console.log(`[warn] npm dependency missing: ${dep} — let c420ui ensure npm dependencies`);
+  }
+}
+NODE
 fi
 
 command -v flatpak >/dev/null 2>&1 || echo "[warn] flatpak missing — Flatpak Install and .flatpak package generation will not work"

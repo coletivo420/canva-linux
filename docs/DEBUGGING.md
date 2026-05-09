@@ -158,5 +158,5 @@ npm ci --include=dev
 To force a clean reinstall during installer flows:
 
 ```bash
-CANVA_NPM_REPAIR=clean ./canva-linux.sh --install-native
+C420UI_DEPENDENCY_REPAIR=clean ./canva-linux.sh --install-native
 ```

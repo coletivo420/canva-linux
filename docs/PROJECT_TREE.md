@@ -17,7 +17,7 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │   ├── ui/                    Static Electron shell UI assets
 │   └── assets/                Runtime assets copied into the Electron build
 ├── config/                    Project configuration files
-│   └── canva-linux/           Canva Linux actions and c420ui project UI config
+│   └── canva-linux/           Canva Linux actions, dependency declarations, and c420ui project UI config
 ├── scripts/                   Canva Linux tool, validation, packaging, and host-operation source
 │   ├── core/                  Shared TypeScript tooling and repository-wide checks
 │   ├── checks/canva-linux/    Canva Linux-specific validation and anti-regression checks
@@ -31,7 +31,11 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │       ├── host/linux/sudo-helper.sh Generic sudo/root helper
 │       ├── src/detection.ts   Generic c420ui detection engine
 │       ├── src/scopes.ts      Generic c420ui action scope semantics
-│       ├── src/host-dependencies.ts Generic host dependency provider contract
+│       ├── src/host-dependencies.ts Generic host dependency provider/config contract
+│       ├── src/command-dependencies.ts Generic host command dependency checks
+│       ├── src/node-dependencies.ts Generic Node dependency checks
+│       ├── src/npm-dependencies.ts Generic npm dependency checks and ensure logic
+│       ├── src/host-dependency-runner.ts Generic host dependency orchestration
 │       ├── src/linux-root-provider.ts Generic Linux root/sudo provider base
 │       └── checks/            Reusable c420ui validation and anti-regression checks
 ├── docs/                      Public and internal project documentation
@@ -139,4 +143,8 @@ separate concepts.
 - Public docs live in `docs/*.md`; AI/developer memory, guardrails, and legacy
   notes live under `docs/internal/`.
 
-`scripts/ensure-npm-dependencies.sh` remains a Canva Linux host-operation implementation detail for now.
+`config/canva-linux/dependencies.json` declares Canva Linux host/npm dependencies; c420ui owns dependency policy.
+
+## Host dependency ownership
+
+`c420ui` owns host dependency management. Dependent projects declare dependency config only. Project launchers must not run npm installation directly, and project shell helpers must not own npm dependency policy.
