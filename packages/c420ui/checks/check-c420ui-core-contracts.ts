@@ -462,7 +462,6 @@ function main(): number {
   const rootDir = process.cwd();
   const runner = read(rootDir, "packages/c420ui/src/command-runner.ts");
   const index = read(rootDir, "packages/c420ui/src/index.ts");
-  const adapter = read(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
   const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
   const failures: string[] = [];
 
@@ -490,18 +489,6 @@ function main(): number {
   }
   if (!index.includes('export type { c420uiCommandRunnerOptions } from "./command-runner"')) {
     failures.push("index must export c420uiCommandRunnerOptions");
-  }
-  if (!adapter.includes("const actionEnv = context.env")) {
-    failures.push("Canva Linux adapter must use the Action Engine/root provider prepared context.env");
-  }
-  if (adapter.includes("...context.env, ...(action.env")) {
-    failures.push("Canva Linux adapter must not merge action.env after context.env preparation");
-  }
-  if (!adapter.includes("runC420UICommand({")) {
-    failures.push("Canva Linux adapter must delegate command execution to runC420UICommand");
-  }
-  if (adapter.includes("spawn(")) {
-    failures.push("Canva Linux adapter must not reimplement generic spawn handling");
   }
   if (app.includes('from "./process-runner"') || app.includes("from './process-runner'")) {
     failures.push("interactive app must not import ./process-runner");
@@ -622,7 +609,6 @@ function read(rootDir: string, relativePath: string): string {
 function main(): number {
   const rootDir = process.cwd();
   const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
-  const run = read(rootDir, "scripts/c420ui-canva-linux/run.ts");
   const runner = read(rootDir, "packages/c420ui/src/terminal/interactive-action-runner.ts");
   const bridge = read(rootDir, "packages/c420ui/src/bridge.ts");
   const failures: string[] = [];
@@ -660,12 +646,6 @@ function main(): number {
   }
   if (app.includes("sudo-common.sh")) {
     failures.push("interactive app must not call sudo-common.sh directly");
-  }
-  if (!run.includes("createCanvaLinuxRootProvider")) {
-    failures.push("Canva Linux c420ui run path must import createCanvaLinuxRootProvider");
-  }
-  if (!run.includes("rootProvider: createCanvaLinuxRootProvider()")) {
-    failures.push("Canva Linux c420ui run path must pass rootProvider to createApp");
   }
   if (bridge.includes("C420UISudoProvider")) {
     failures.push("bridge contract must not reintroduce C420UISudoProvider");
@@ -798,8 +778,6 @@ function checkHeaderLayoutContract(failures: string[]): void {
   const app = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/terminal/app.ts"), "utf8");
   const packageTypes = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/types.ts"), "utf8");
   const index = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/terminal/index.ts"), "utf8");
-  const adapter = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/adapter.ts"), "utf8");
-  const projectUi = fs.readFileSync(path.join(rootDir, "config/canva-linux/project-ui.json"), "utf8");
 
   assertC420UIIncludes(
     failures,
@@ -888,37 +866,12 @@ function checkHeaderLayoutContract(failures: string[]): void {
   if (!app.includes("content: [\n      `{bold}${opts.project.projectName}")) {
     failures.push("projectHeader content must come from project config");
   }
-  if (!adapter.includes("projectName: projectUi.projectName")) {
-    failures.push("project name must be injected from config/canva-linux/project-ui.json");
-  }
-  if (!adapter.includes("projectSubtitle: projectUi.projectSubtitle")) {
-    failures.push("project subtitle must be injected from config/canva-linux/project-ui.json");
-  }
-  assertC420UIIncludes(
-    failures,
-    projectUi,
-    '"projectName":',
-    "config/canva-linux/project-ui.json must define projectName",
-  );
-  assertC420UIIncludes(
-    failures,
-    projectUi,
-    '"projectSubtitle":',
-    "config/canva-linux/project-ui.json must define projectSubtitle",
-  );
-  assertC420UIIncludes(
-    failures,
-    projectUi,
-    '"logoLines":',
-    "config/canva-linux/project-ui.json must define project logo lines",
-  );
 }
 
 function checkSettingsContract(failures: string[]): void {
   const rootDir = process.cwd();
   const app = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/terminal/app.ts"), "utf8");
   const settings = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/terminal/settings.ts"), "utf8");
-  const actions = fs.readFileSync(path.join(rootDir, "config/canva-linux/actions.json"), "utf8");
 
   if (!app.includes('"settings"') || !app.includes("Application Settings")) {
     failures.push("packages/c420ui/src/terminal/app.ts: Application Settings view is required");
@@ -941,13 +894,6 @@ function checkSettingsContract(failures: string[]): void {
     !settings.includes("saveToolSettings")
   ) {
     failures.push("packages/c420ui/src/terminal/settings.ts: user config file persistence is required");
-  }
-  if (
-    actions.includes("Application Settings") ||
-    actions.includes("generalLogsEnabled") ||
-    actions.includes("terminalTextSelectionMode")
-  ) {
-    failures.push("config/canva-linux/actions.json: c420ui settings must not be shell actions");
   }
 }
 

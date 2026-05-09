@@ -139,6 +139,16 @@ function expectedEnvFor(actionId: string, scope: string): [string, string] | nul
   return null;
 }
 
+function expectedInstallDetectionKeyFor(actionId: string): string | null {
+  const expected: Record<string, string> = {
+    "install-native-system": "nativeSystem",
+    "install-native-user": "nativeUser",
+    "install-flatpak-system": "flatpakSystem",
+    "install-flatpak-user": "flatpakUser",
+  };
+  return expected[actionId] ?? null;
+}
+
 function expectedPhaseFromVersion(version: string): string {
   const devMatch = version.match(/^(\d+\.\d+\.\d+)-dev\.(\d+)\.(\d+)$/);
   if (devMatch) return `${devMatch[1]}.${devMatch[2]}-dev.${devMatch[3]}`;
@@ -1162,6 +1172,10 @@ function checkActionRegistryContract(failures: string[]): void {
           failures.push(`${action.id}: expected env ${key}=${value}`);
         }
       }
+    }
+    const expectedInstallDetectionKey = expectedInstallDetectionKeyFor(action.id);
+    if (expectedInstallDetectionKey && action.installDetectionKey !== expectedInstallDetectionKey) {
+      failures.push(`${action.id}: expected installDetectionKey=${expectedInstallDetectionKey}`);
     }
     if (action.dangerous && !(action.confirmationTitle || action.confirmationMessage)) {
       failures.push(

@@ -33,6 +33,7 @@ export type c420uiAction = {
   env?: Record<string, string>;
   cliFlags?: string[];
   artifactWorkflowId?: string;
+  installDetectionKey?: string;
   cli?: string[];
   command?: string;
   args?: string[];

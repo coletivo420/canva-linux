@@ -32,6 +32,8 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - `packages/c420ui/src/terminal/` contains the generic c420ui terminal UI.
 - Generic c420ui terminal UI belongs under `packages/c420ui/src/terminal/`.
 - Do not reintroduce `scripts/c420ui/`.
+- `scripts/core` is infrastructure-check-only; do not add runtime or product entrypoints there.
+- Active docs must not reference removed runtime paths except as explicitly historical changelog or roadmap context.
 - Terminal diagnostics must use the generic project bridge/detection contract.
 - Do not call `scripts/run-core-entry.sh overview-status` from c420ui terminal UI.
 - `scripts/c420ui-canva-linux/` is adapter-only.
@@ -251,7 +253,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Flathub source generation must be TypeScript-backed.
 - If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.
 - Shell bootstraps may invoke TypeScript entrypoints, but JavaScript wrappers must not be reintroduced.
-- If a new script needs logic, create it under `scripts/core/*.ts` or as a typed script-specific `.ts` file.
+- If a new script needs logic, create a typed script-specific `.ts` file in the owning domain; keep `scripts/core/*.ts` limited to infrastructure checks.
 - Do not add maintained JavaScript implementation, test, config, bootstrap, or compatibility-wrapper files.
 - Do not duplicate TypeScript core logic in JavaScript fallbacks.
 - `scripts/run-core-entry.sh` must only build or run compiled TypeScript core entries; it must not contain fallback

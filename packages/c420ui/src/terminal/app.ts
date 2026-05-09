@@ -711,20 +711,9 @@ export function createApp(options: C420UIAppOptions) {
   }
 
   function getInstallDetectionKey(
-    actionId: string,
+    action: c420uiAction,
   ): keyof c420uiOverviewStatus["installations"] | null {
-    switch (actionId) {
-      case "install-native-system":
-        return "nativeSystem";
-      case "install-native-user":
-        return "nativeUser";
-      case "install-flatpak-system":
-        return "flatpakSystem";
-      case "install-flatpak-user":
-        return "flatpakUser";
-      default:
-        return null;
-    }
+    return action.installDetectionKey ?? null;
   }
 
   async function detectInstallationStatusNow(): Promise<c420uiOverviewStatus | null> {
@@ -1408,7 +1397,7 @@ export function createApp(options: C420UIAppOptions) {
     let detectedNow = false;
 
     if (installAction) {
-      const detectionKey = getInstallDetectionKey(action.id);
+      const detectionKey = getInstallDetectionKey(action);
       if (detectionKey) {
         const latestStatus = await detectInstallationStatusNow();
         if (latestStatus) {

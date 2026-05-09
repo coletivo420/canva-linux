@@ -7,7 +7,7 @@ const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 process.chdir(rootDir);
 
-const outFile = path.join(rootDir, ".build/scripts/c420ui/index.js");
+const outFile = path.join(rootDir, ".build/packages/c420ui/terminal/index.js");
 const uiDir = path.join(rootDir, "packages/c420ui/src/terminal");
 const adapterDir = path.join(rootDir, "scripts/c420ui-canva-linux");
 const adapter = createCanvaLinuxC420UIAdapter(rootDir);
@@ -72,7 +72,7 @@ export function main(): void {
 
   const run = spawnSync(
     process.execPath,
-    [".build/scripts/c420ui/index.js", ...process.argv.slice(2)],
+    [".build/packages/c420ui/terminal/index.js", ...process.argv.slice(2)],
     {
       stdio: "inherit",
       env: { ...process.env, CANVA_PROJECT_PHASE: adapter.getProjectPhase() },

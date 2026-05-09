@@ -15,9 +15,9 @@ main() {
   ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
   case "${ENTRY}" in
-    overview-status|check-ai-guardrails|check-doc-links|check-dependency-policy|check-runtime-build|check-repository-policy)
+    check-ai-guardrails|check-doc-links|check-dependency-policy|check-runtime-build|check-repository-policy)
       ;;
-    action-registry|action-runner|validate-actions|check-legacy-action-runner-compatibility)
+    action-registry|action-runner|overview-status|validate-actions|check-legacy-action-runner-compatibility)
       rm -f "${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
       printf '%s\n' "scripts/run-core-entry.sh: ${ENTRY} was removed; use a supported core entry." >&2
       exit 66
@@ -29,16 +29,9 @@ main() {
   esac
 
   local TARGET
-  if [[ "${ENTRY}" == "overview-status" ]]; then
-    TARGET="${ROOT_DIR}/.build/scripts/canva-linux/detection/overview-status.js"
-    if [[ ! -f "${TARGET}" ]]; then
-      npx --prefix "${ROOT_DIR}" esbuild "${ROOT_DIR}/scripts/canva-linux/detection/overview-status.ts" --bundle --platform=node --format=cjs --outfile="${TARGET}" --log-level=warning
-    fi
-  else
-    TARGET="${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
-    if [[ ! -f "${TARGET}" ]]; then
-      npm --prefix "${ROOT_DIR}" run build:scripts-core --silent
-    fi
+  TARGET="${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
+  if [[ ! -f "${TARGET}" ]]; then
+    npm --prefix "${ROOT_DIR}" run build:scripts-core --silent
   fi
 
   if [[ ! -f "${TARGET}" ]]; then

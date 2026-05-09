@@ -27,6 +27,9 @@
 
 ### Changed
 - Moved the generic c420ui terminal UI into `packages/c420ui/src/terminal`.
+- Tightened post-split repository policy so `scripts/core` is infrastructure-check-only and the retired runtime/config paths stay removed.
+- Moved terminal install-detection matching to project action metadata so `packages/c420ui/src` no longer hardcodes Canva Linux action IDs.
+- Kept `build:c420ui` as the isolated c420ui terminal UI smoke/build target while moving its generated bundle under `.build/packages/c420ui/terminal/`.
 - Added the c420ui artifact workflow runner and kept Canva Linux artifact recipes as project-specific configuration.
 - Tightened the c420ui detection provider contract and removed the legacy `package` overview status shape.
 - Moved installation overview detection to the generic c420ui detection engine with a Canva Linux provider under `scripts/canva-linux/detection/`.
@@ -58,6 +61,8 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Removed
+- Removed the `scripts/run-core-entry.sh overview-status` dispatch path so the core wrapper only runs infrastructure checks.
+- Removed stale cross-domain c420ui core contract assertions that duplicated Canva Linux adapter checks.
 - Removed the old `scripts/core/overview-status.ts` product detection entry from shared core tooling.
 - Removed the old `scripts/actions.json` and `scripts/project-ui.json` config locations.
 - Removed the old `scripts/core/action-registry.ts` and `scripts/core/validate-actions.ts` entries.

@@ -19,7 +19,8 @@
     "env": {
       "CANVA_NATIVE_SCOPE": "system"
     },
-    "warning": "Administrator authorization is required before the process starts."
+    "warning": "Administrator authorization is required before the process starts.",
+    "installDetectionKey": "nativeSystem"
   },
   {
     "id": "install-native-user",
@@ -37,7 +38,8 @@
     "requiresRoot": false,
     "env": {
       "CANVA_NATIVE_SCOPE": "user"
-    }
+    },
+    "installDetectionKey": "nativeUser"
   },
   {
     "id": "install-flatpak-system",
@@ -59,7 +61,8 @@
     "env": {
       "CANVA_FLATPAK_SCOPE": "system"
     },
-    "warning": "Administrator authorization is required before the process starts."
+    "warning": "Administrator authorization is required before the process starts.",
+    "installDetectionKey": "flatpakSystem"
   },
   {
     "id": "install-flatpak-user",
@@ -78,7 +81,8 @@
     "env": {
       "CANVA_FLATPAK_SCOPE": "user"
     },
-    "warning": "User-scope Flatpak install may duplicate desktop entries, runtimes or app visibility."
+    "warning": "User-scope Flatpak install may duplicate desktop entries, runtimes or app visibility.",
+    "installDetectionKey": "flatpakUser"
   },
   {
     "id": "bundle-flatpak",

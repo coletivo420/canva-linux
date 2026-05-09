@@ -105,8 +105,10 @@ The intended separation is:
 - **Validation split**: reusable c420ui validation and anti-regression checks live
   in `packages/c420ui/checks/`; Canva Linux-specific validation and
   anti-regression checks live in `scripts/checks/canva-linux/`; shared
-  TypeScript tooling checks and legacy transitional checks remain under
-  `scripts/core/` until migration completes.
+  infrastructure checks live under `scripts/core/`.
+- **Core scripts**: `scripts/core/` is infrastructure-check-only. Do not add
+  runtime/product entrypoints there, and do not reintroduce removed runtime paths
+  in active documentation.
 - **Future package workspace**: `packages/c420ui/` is a private skeleton reserved for a possible
   standalone c420ui package after the core is separated. It is not a published
   npm package and should not be documented as externally consumable yet.
