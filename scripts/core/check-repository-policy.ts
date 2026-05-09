@@ -1078,9 +1078,10 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
     `scripts/core/${legacyActionRunnerStem}.ts`,
     `scripts/core/${legacyCompatibilityStem}.ts`,
     "scripts/actions.json",
-    "scripts/project-ui.json",
-    "scripts/core/action-registry.ts",
-    "scripts/core/validate-actions.ts",
+  const removedFiles = [
+    `scripts/core/${legacyActionRunnerStem}.ts`,
+    `scripts/core/${legacyCompatibilityStem}.ts`,
+    `test/${legacyActionRunnerStem}.test.ts`,
   ] as const;
 
   for (const removedFile of removedFiles) {
