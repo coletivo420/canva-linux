@@ -11,6 +11,30 @@ export type C420UIWorkflow = {
   supportsDryRun?: boolean;
 };
 
+export type c420uiArtifactWorkflowPhaseActionIds = {
+  buildActionId?: string;
+  validateActionId?: string;
+  installActionId?: string;
+  uninstallActionId?: string;
+  purgeActionId?: string;
+  releaseActionId?: string;
+};
+
+export type c420uiArtifactWorkflowRuntimeMetadata = {
+  kind?: string;
+  scope?: string;
+  planned?: boolean;
+  outputPattern?: string;
+};
+
+export type c420uiRunnableArtifactWorkflow = Pick<
+  C420UIWorkflow,
+  "id" | "label" | "requiresRoot" | "supportsDryRun"
+> &
+  Partial<Pick<C420UIWorkflow, "phase" | "actions">> &
+  c420uiArtifactWorkflowPhaseActionIds &
+  c420uiArtifactWorkflowRuntimeMetadata;
+
 export type C420UIWorkflowResult = {
   workflowId: string;
   exitCode: C420UIExitCode;
