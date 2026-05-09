@@ -11,6 +11,7 @@
 - Updated maintenance documentation to remove legacy runner compatibility guidance.
 
 ### Added
+- Added formal dependent-project boundary documentation and checks to keep c420ui generic and Canva Linux project-specific.
 - Added the initial c420ui action engine contract for resolving and running project actions through bridges.
 - Added an explicit English-only maintained repository language guardrail with future i18n architecture
   requirements for source, comments, UI strings, README, docs, changelog, and AI maintenance instructions.
@@ -29,6 +30,10 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Strengthened c420ui, Canva Linux adapter, and shared tooling checks for dependent-project boundary enforcement.
+- Clarified custom scope validation policy and made Linux root validation command construction configurable.
+- Centralized generic action scope semantics and Linux root/sudo provider helpers in c420ui.
+- Slimmed the Canva Linux root provider so it only owns project-specific root policy.
 - Centralized the c420ui root launch guard inside the c420ui terminal runtime.
 - Kept `build:c420ui` as an isolated terminal package surface smoke build; it is not the runtime launcher.
 - Moved the generic c420ui terminal UI into `packages/c420ui/src/terminal`.

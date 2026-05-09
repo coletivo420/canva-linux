@@ -40,6 +40,17 @@ Request changes if a PR:
 - duplicates Action Engine, Root Provider, or Command Runner policy outside c420ui;
 - uses Action Runner terminology for new code.
 
+## Dependent project boundary review
+
+Request changes if a PR:
+
+- adds project-specific strings to `packages/c420ui/src`;
+- imports project adapters from c420ui;
+- reimplements c420ui engines in `scripts/c420ui-canva-linux`;
+- adds root launch guard outside c420ui terminal runtime;
+- hardcodes concrete Canva Linux action IDs in c420ui core;
+- moves project detection or package recipes into c420ui core.
+
 ## c420ui root provider review
 
 Request changes if a PR:
@@ -49,6 +60,16 @@ Request changes if a PR:
 - calls sudo directly from `packages/c420ui/src`;
 - bypasses `scripts/sudo-common.sh` for Canva Linux privileged actions;
 - removes user-scope protection for root actions.
+
+## c420ui scope/root provider boundary review
+
+Request changes if a PR:
+
+- reimplements generic scope helpers inside Canva Linux code;
+- hardcodes `CANVA_NATIVE_SCOPE`, `CANVA_FLATPAK_SCOPE` or `CANVA_C420UI_ROOT_AUTH` in c420ui core;
+- hardcodes `scripts/sudo-common.sh` in c420ui core;
+- reimplements `validateRootAccess` in the Canva Linux root provider;
+- moves conditional Canva Linux detection policy into c420ui core.
 
 ## c420ui action engine review
 

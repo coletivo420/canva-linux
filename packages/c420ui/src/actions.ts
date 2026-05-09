@@ -1,4 +1,5 @@
 import { c420uiExitCodes } from "./exit-codes";
+import { c420uiKnownActionScopes, type c420uiActionScope } from "./scopes";
 
 export type c420uiActionKind = "command" | "planned" | "internal";
 
@@ -29,7 +30,7 @@ export type c420uiAction = {
   confirmationTitle?: string;
   confirmationMessage?: string;
   confirmationPhrase?: string;
-  scope?: "user" | "system" | "auto" | string;
+  scope?: c420uiActionScope;
   env?: Record<string, string>;
   cliFlags?: string[];
   artifactWorkflowId?: string;
@@ -101,6 +102,11 @@ export type c420uiActionValidationOptions = {
   allowedGroups?: readonly string[];
   allowedSections?: readonly string[];
   allowedKinds?: readonly string[];
+  /**
+   * Action registries are strict by default and accept only
+   * c420uiKnownActionScopes. Projects that define custom scopes must list
+   * every accepted scope here.
+   */
   allowedScopes?: readonly string[];
 };
 
@@ -221,7 +227,7 @@ export function validateC420UIActions(
       requireString(item.scope, `Action scope must be string: ${item.id}`);
       validateAllowedValue(
         item.scope,
-        options.allowedScopes,
+        options.allowedScopes ?? c420uiKnownActionScopes,
         `Invalid action scope: ${item.id} -> ${item.scope}`,
       );
     }

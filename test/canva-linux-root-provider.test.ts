@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import test from "node:test";
 import type { SpawnSyncReturns } from "node:child_process";
 
@@ -103,6 +104,18 @@ test("resolveRootPolicy returns warning when system detection fails", () => {
 
   assert.equal(result.requiresRoot, false);
   assert.match(result.warning ?? "", /Unable to detect system installations for root policy/);
+});
+
+
+test("Canva Linux root provider delegates generic Linux root behavior to c420ui", () => {
+  const source = fs.readFileSync(
+    "scripts/c420ui-canva-linux/root-provider.ts",
+    "utf8",
+  );
+
+  assert.equal(source.includes("createC420UILinuxRootProviderBase"), true);
+  assert.equal(source.includes("validateRootAccess(rootDir"), false);
+  assert.equal(source.includes("buildRootActionEnvironment"), false);
 });
 
 test("validateRootAccess uses scripts/sudo-common.sh through injected runner", () => {

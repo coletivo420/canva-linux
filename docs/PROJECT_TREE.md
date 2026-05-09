@@ -29,10 +29,12 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 ├── packages/                  Private package workspace; no published c420ui package exists yet
 │   └── c420ui/                Private future standalone c420ui package skeleton
 │       ├── src/detection.ts   Generic c420ui detection engine
+│       ├── src/scopes.ts      Generic c420ui action scope semantics
+│       ├── src/linux-root-provider.ts Generic Linux root/sudo provider base
 │       └── checks/            Reusable c420ui validation and anti-regression checks
 ├── docs/                      Public and internal project documentation
 │   ├── *.md                   Public user, contributor, release, validation, and architecture docs
-│   ├── internal/              AI, developer-memory, historical, and legacy notes
+│   ├── internal/              AI, dependent-project boundary, historical, and legacy notes
 │   └── notes/                 Packaging and submission notes
 ├── packaging/                 Packaging submission workspaces
 │   └── flathub/               Flathub manifest, source generation, and submission helpers
@@ -94,18 +96,19 @@ The old `scripts/c420ui/` directory must not be reintroduced.
 
 The intended separation is:
 
-- **c420ui core**: reusable action, bridge, detection, workflow, root-provider,
-  command-runner and operational-log contracts live in `packages/c420ui/src/`.
+- **c420ui core**: reusable action, scope semantics, bridge, detection, workflow, root-provider,
+  Linux root/sudo provider base, command-runner and operational-log contracts live in `packages/c420ui/src/`.
 - **c420ui terminal UI**: reusable terminal layout, focus, logs, modal, clipboard,
   settings, logo, help formatting, root launch guard, runtime startup policy and interactive runner code lives in `packages/c420ui/src/terminal/`.
-- **Canva Linux adapter**: project-specific actions, metadata, launch wiring,
+- **Canva Linux adapter**: project-specific actions, root policy conditionals, environment variable names, concrete sudo helper path, metadata, launch wiring,
   install/package status, and Canva Linux labels live in
   `scripts/c420ui-canva-linux/`. Installation detection probes live in
   `scripts/canva-linux/detection/` and use the generic engine in `packages/c420ui/src/detection.ts`.
 - **Validation split**: reusable c420ui validation and anti-regression checks live
   in `packages/c420ui/checks/`; Canva Linux-specific validation and
   anti-regression checks live in `scripts/checks/canva-linux/`; shared
-  infrastructure checks live under `scripts/core/`.
+  infrastructure checks live under `scripts/core/`. Dependent-project boundary
+  rules are documented in `docs/internal/C420UI_DEPENDENT_PROJECT_BOUNDARIES.md`.
 - **Core scripts**: `scripts/core/` is infrastructure-check-only. Do not add
   runtime/product entrypoints there, and do not reintroduce removed runtime paths
   in active documentation.
