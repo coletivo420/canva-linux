@@ -111,7 +111,6 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `playwright.config.ts`
 - `run.sh`
 - `scripts/core/action-registry.ts`
-- `scripts/core/action-runner.ts`
 - `scripts/actions.json`
 - `scripts/app-identity-common.sh`
 - `scripts/build-appimage.sh`
@@ -130,7 +129,6 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/copy-runtime-assets.ts`
 - `scripts/run-core-entry.sh`
 - `scripts/core/action-registry.ts`
-- `scripts/core/action-runner.ts`
 - `scripts/core/action-types.ts`
 - `scripts/core/check-doc-links.ts`
 - `scripts/core/check-dependency-policy.ts`

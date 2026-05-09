@@ -83,7 +83,6 @@ c420ui_cli_entrypoint_is_fresh() {
     "${ROOT_DIR}/scripts/c420ui" \
     "${ROOT_DIR}/scripts/core/action-registry.ts" \
     "${ROOT_DIR}/scripts/core/action-types.ts" \
-    "${ROOT_DIR}/scripts/core/action-runner.ts" \
     "${ROOT_DIR}/scripts/core/overview-status.ts" \
     "${ROOT_DIR}/packages/c420ui/src" \
     "${ROOT_DIR}/scripts/actions.json" \

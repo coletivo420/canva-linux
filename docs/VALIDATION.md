@@ -13,7 +13,10 @@ The validation surface is intentionally small:
 - `check:canva-linux` validates Canva Linux adapter, root, artifact, branding, boundary and log contracts in one consolidated domain check.
 - `check:shared-tooling` validates repository-wide tooling through focused shared checks plus the consolidated repository policy check.
 
-Legacy compatibility is available through `check:legacy-compat`, but it is not part of the default validation path.
+Legacy Action Runner support has been removed. Current direct CLI validation must use:
+
+- `./canva-linux.sh <flag>`
+- `npm run c420ui:cli -- <flag>`
 
 The consolidated domain runners are self-contained. New validation should extend the appropriate domain runner instead of
 creating one-off check files or `*-parts/` validation directories, unless there is a strong reason to introduce a shared helper.
@@ -33,9 +36,6 @@ creating one-off check files or `*-parts/` validation directories, unless there 
     launcher/session logs, and interactive log UI integration
 - `npm run check:shared-tooling`
   - builds runtime and scripts-core, then runs AI guardrails, doc links, dependency policy, runtime build, and `check-repository-policy.ts`
-- `npm run check:legacy-compat`
-  - manually checks compatibility contracts that still depend on `scripts/core/action-runner.ts`
-  - it is not part of `validate` or `check:scripts-core`
 - `npm run build:c420ui`
 - `npm run check:c420ui`
 - `npm run actions:validate`
@@ -62,7 +62,7 @@ creating one-off check files or `*-parts/` validation directories, unless there 
   - `./canva-linux.sh --bundle-rpm --dry-run`
   - `./canva-linux.sh --prepare-aur --dry-run`
 - To test the compiled direct CLI entrypoint without the launcher, use `npm run c420ui:cli -- --bundle-deb`.
-- `scripts/run-core-entry.sh action-runner` is retained only for legacy compatibility checks. It is not the primary direct CLI validation path.
+- Current direct CLI validation uses `./canva-linux.sh <flag>` or `npm run c420ui:cli -- <flag>`.
 - `bash scripts/show-detected-installations.sh`
 
 ## Manual

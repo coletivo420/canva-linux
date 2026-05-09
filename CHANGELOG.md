@@ -5,7 +5,7 @@
 ### Documentation
 - Updated validation and AI maintenance docs to reflect the completed c420ui CLI, Action Engine, Root Provider, Command Runner,
   operational log, and consolidated validation migrations.
-- Reclassified the legacy Action Runner as a compatibility-only path in maintenance documentation.
+- Updated maintenance documentation to remove legacy runner compatibility guidance.
 
 ### Added
 - Added the initial c420ui action engine contract for resolving and running project actions through bridges.
@@ -19,17 +19,18 @@
 - Documented secure Linux credential storage through Secret Service backends plus available safe storage encryption as the requirement for persistent login,
   with ephemeral session fallback guidance.
 - Added auxiliary maintenance policy files for Codex, Claude, and Gemini so AI agents have non-public project guidance without duplicating public documentation.
-- Added review checklist coverage for agent policy, versioning, Action Runner behavior, c420ui naming, docs/changelog
+- Added review checklist coverage for agent policy, versioning, removed legacy runner behavior, c420ui naming, docs/changelog
   updates, logging safety, and CL-EyeDropper preservation.
 - Added c420ui rebuild inputs for project metadata and the action registry so metadata-only changes trigger a rebuilt terminal UI bundle.
-- Added current manual validation coverage for c420ui, Action Runner planned exits, root policy, TypeScript-first source
+- Added current manual validation coverage for c420ui, planned exits, root policy, TypeScript-first source
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Updated maintenance documentation to treat the c420ui Action Engine, Root Provider, Command Runner,
+  and CLI bridge as the only supported action execution path.
 - Polished consolidated validation runner naming and expanded the c420ui public API contract.
 - Folded remaining standalone core checks into the consolidated validation runners.
-- Consolidated validation into c420ui core, Canva Linux, and shared tooling domains while keeping
-  `check:legacy-compat` as a manual compatibility runner outside the default validation path.
+- Consolidated validation into c420ui core, Canva Linux, and shared tooling domains.
 - Inlined validation fragment logic into the consolidated c420ui core, Canva Linux, and repository policy runners,
   and removed the obsolete validation parts directories.
 - Added c420ui operational log redaction and command cancellation policy.
@@ -49,6 +50,10 @@
 - Updated manual validation to reflect the current `0.1.4-12` release instead of obsolete development-cycle guidance.
 - Moved the old release checklist to `docs/internal/legacy/RELEASE_CHECKLIST_1.4.10.md` and marked it as historical.
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
+
+### Removed
+- Removed the legacy Action Runner and its manual compatibility validation path after direct CLI and interactive c420ui
+  execution were migrated to the shared c420ui Action Engine.
 
 ### Fixed
 - Avoided duplicate action environment preparation in the Canva Linux adapter.
@@ -88,7 +93,7 @@
 - Updated project identity so release naming, docs, workflow tags, and `package.json` use the npm-compatible `0.1.4-12` version.
 
 ### Fixed
-- Fixed Action Runner planned-action handling so planned exit `78` is not reported as a successful action.
+- Fixed planned-action handling so planned exit `78` is not reported as a successful action.
 - Fixed centralized root/sudo handling for privileged actions, user-scope sudo refusal, and c420ui authentication prompts.
 - Fixed startup error reporting around the Electron ready flow so startup failures are caught and logged.
 - Fixed Flatpak and Native system/user install behavior, detection refreshes, scope handling, and post-install warning finalization.
@@ -105,7 +110,7 @@ Detailed development-cycle history was archived in:
 ## 0.1.4-12 — Commit 13 direct CLI bridge migration
 
 - Migrated direct launcher actions to the c420ui CLI bridge and reusable c420ui
-  Action Engine while preserving the legacy Action Runner for compatibility checks.
+  Action Engine.
 - Added direct-action validation so multiple direct action flags fail before execution with exit code `64`.
 - Restored confirmation, root/sudo preflight, and stdout/stderr forwarding for direct c420ui CLI bridge execution.
 - Preserved planned direct action exit semantics: planned actions exit `78`, and planned dry-runs exit `0`.

@@ -30,8 +30,7 @@ Core runtime files:
 Canva Linux workflow actions are split into four layers:
 
 1. `scripts/actions.json` (canonical registry)
-2. `scripts/core/action-runner.ts`
-   - action resolution/execution, compiled to `.build/scripts/core/action-runner.js`
+2. c420ui Action Engine, Root Provider, Command Runner, and CLI bridge
 3. Interfaces (c420ui workspace and direct CLI flags)
 4. Backend scripts under `scripts/`
 
@@ -100,12 +99,12 @@ Logs may report the backend name and policy mode, but must not include cookies, 
 
 Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
 
-1. `scripts/core/action-runner.ts` centrally interprets Action Registry metadata,
-   including `requiresRoot`, `scope`, `env`, confirmation flags and planned state.
+1. The c420ui Action Engine interprets Action Registry metadata, including
+   `requiresRoot`, `scope`, `env`, confirmation flags and planned state.
 2. Actions with `requiresRoot: true` validate root access through
    `scripts/sudo-common.sh --validate` before backend scripts start.
-3. The c420ui requests the root password via a secure prompt before launching the
-   Action Runner, then passes the root-auth environment marker to the child.
+3. The c420ui requests the root password via a secure prompt and the c420ui Root
+   Provider passes the root-auth environment marker to backend execution.
 4. `scripts/sudo-common.sh` detects this environment variable and uses
    `sudo -n` for non-interactive cached-credential validation and execution.
 5. In direct CLI mode, `sudo` prompts for the password as usual in the terminal.

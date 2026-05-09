@@ -55,8 +55,8 @@ not a published or supported external package location today.
 Treat these as maintained source when editing behavior:
 
 - `electron/**/*.ts` for the Electron main, preload, shared, and runtime UI code.
-- `scripts/**/*.ts` for validation, action contracts, Action Runner logic,
-  c420ui code, and TypeScript packaging helpers.
+- `scripts/**/*.ts` for validation, action contracts, c420ui code, and
+  TypeScript packaging helpers.
 - `packaging/flathub/scripts/**/*.ts` for Flathub source-generation logic.
 - `packages/**/*.ts` only after package workspace files exist.
 - `test/**/*.ts` for unit, wiring, runtime, and smoke-test source.

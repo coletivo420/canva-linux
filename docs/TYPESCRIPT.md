@@ -102,7 +102,6 @@ Project validations, contracts, and registries are implemented in TypeScript und
 ### Migrated core entries include
 
 - `action-registry.ts`
-- `action-runner.ts`
 - `validate-actions.ts`
 - `overview-status.ts`
 - `check-ai-guardrails.ts`
@@ -110,7 +109,6 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `check-dependency-policy.ts`
 - `check-runtime-build.ts`
 - `check-repository-policy.ts`
-- `check-legacy-action-runner-compatibility.ts`
 
 ### Standalone TypeScript script entrypoints compiled by `build:scripts` include
 

@@ -18,13 +18,14 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 - Operational log redaction.
 - Interactive c420ui execution through Action Engine.
 - Consolidated validation domains.
+- Legacy Action Runner removed after direct CLI and interactive c420ui execution migrated to the shared Action Engine.
 
 ## Current phase
 
-- Stale docs cleanup.
-- Legacy Action Runner audit.
 - Artifact workflow runner.
-- RC readiness.
+- Docs domain split.
+- Public docs cleanup.
+- RC validation matrix.
 
 ## Current execution model
 
@@ -32,7 +33,6 @@ Direct launcher actions route through `.build/scripts/run-c420ui-cli.js`, the Ca
 
 Interactive Canva Linux c420ui actions use the same Action Engine, Root Provider contract, Canva Linux Root Provider, Command Runner, and operational log redaction policy.
 
-Legacy Action Runner compatibility remains available manually through `check:legacy-compat`, but it is not part of the default validation path and is not the primary direct CLI validation path.
 
 ## Validation domains
 
@@ -46,11 +46,10 @@ New c420ui or Canva Linux behavior checks should extend the relevant consolidate
 
 ## Next phases
 
-1. Audit legacy Action Runner.
-2. Build artifact workflow runner.
-3. Split docs by domain.
-4. Public docs cleanup.
-5. RC validation matrix.
+1. Artifact workflow runner.
+2. Docs domain split.
+3. Public docs cleanup.
+4. RC validation matrix.
 
 ## Non-goals
 
@@ -58,7 +57,7 @@ New c420ui or Canva Linux behavior checks should extend the relevant consolidate
 - Do not publish or promise an NPM package.
 - Do not remove `scripts/c420ui/` in one large change.
 - Do not change visual behavior as part of docs cleanup or RC readiness work.
-- Do not rewrite or remove the legacy Action Runner incidentally; any retirement or wrapper conversion must happen in a dedicated legacy audit commit.
+- Do not restore the removed legacy Action Runner or its compatibility validation path.
 - Do not change versioning.
 - Do not move generated JavaScript into maintained source trees.
 - Do not change release artifact architecture naming.

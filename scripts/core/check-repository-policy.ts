@@ -1063,6 +1063,46 @@ function validatePackageLockConsistency(
     );
 }
 
+
+const legacyActionRunnerStem = "action" + "-runner";
+const legacyCompatibilityStem =
+  "check-legacy-" + legacyActionRunnerStem + "-compatibility";
+
+function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
+  const packageJson = readJsonFile<PackageJson>(
+    rootDir,
+    "package.json",
+    failures,
+  );
+  const removedFiles = [
+    `scripts/core/${legacyActionRunnerStem}.ts`,
+    `scripts/core/${legacyCompatibilityStem}.ts`,
+  ] as const;
+
+  for (const removedFile of removedFiles) {
+    if (fs.existsSync(path.join(rootDir, removedFile))) {
+      failures.push(`${removedFile}: legacy Action Runner files must not exist`);
+    }
+  }
+
+  const scripts = packageJson?.scripts ?? {};
+  const legacyScriptName = "check:" + "legacy-compat";
+  if (Object.hasOwn(scripts, legacyScriptName)) {
+    failures.push(
+      `package.json scripts.${legacyScriptName}: legacy compatibility validation must not be restored`,
+    );
+  }
+
+  const scriptsCoreBuild = scripts["build:scripts-core"] ?? "";
+  for (const removedFile of removedFiles) {
+    if (scriptsCoreBuild.includes(removedFile)) {
+      failures.push(
+        `package.json build:scripts-core: must not compile ${removedFile}`,
+      );
+    }
+  }
+}
+
 function validatePackageScripts(rootDir: string, failures: string[]): void {
   const packageJson = readJsonFile<PackageJson>(
     rootDir,
@@ -1358,7 +1398,8 @@ function validateLauncherScriptShape(
     }
   }
 
-  if (content.includes("scripts/run-core-entry.sh action-runner --cli")) {
+  const legacyRunCoreCli = "scripts/run-core-entry.sh " + legacyActionRunnerStem + " --cli";
+  if (content.includes(legacyRunCoreCli)) {
     failures.push(
       `${relativePath}: direct CLI actions must not route through the legacy Action Runner CLI`,
     );
@@ -1494,6 +1535,7 @@ function main(): number {
   validateRootProviderContracts(rootDir, failures);
   validatePackageLockConsistency(rootDir, failures);
   validatePackageScripts(rootDir, failures);
+  checkNoLegacyActionRunner(rootDir, failures);
 
   if (failures.length) {
     console.error("[source-integrity] FAILED:");
