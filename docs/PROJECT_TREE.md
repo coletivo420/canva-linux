@@ -21,12 +21,14 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 ├── scripts/                   Canva Linux tool, validation, packaging, and host-operation source
 │   ├── core/                  Shared TypeScript tooling and repository-wide checks
 │   ├── checks/canva-linux/    Canva Linux-specific validation and anti-regression checks
+│   ├── canva-linux/detection/ Canva Linux installation detection provider and probes
 │   ├── c420ui/                Current in-repo c420ui implementation before package split
 │   ├── c420ui-canva-linux/    Canva Linux adapter boundary for c420ui integration
 │   ├── canva-linux/actions/   Canva Linux action registry loading and validation
 │   └── *.sh                   Linux host-operation glue and launcher/install/package wrappers
 ├── packages/                  Private package workspace; no published c420ui package exists yet
 │   └── c420ui/                Private future standalone c420ui package skeleton
+│       ├── src/detection.ts   Generic c420ui detection engine
 │       └── checks/            Reusable c420ui validation and anti-regression checks
 ├── docs/                      Public and internal project documentation
 │   ├── *.md                   Public user, contributor, release, validation, and architecture docs
@@ -97,7 +99,8 @@ The intended separation is:
   and brand/project-header boundaries. Today these live in `scripts/c420ui/`.
 - **Canva Linux adapter**: project-specific actions, metadata, launch wiring,
   install/package status, and Canva Linux labels. This boundary starts in
-  `scripts/c420ui-canva-linux/` before broader extraction.
+  `scripts/c420ui-canva-linux/` before broader extraction. Installation detection probes live in
+  `scripts/canva-linux/detection/` and use the generic engine in `packages/c420ui/src/detection.ts`.
 - **Validation split**: reusable c420ui validation and anti-regression checks live
   in `packages/c420ui/checks/`; Canva Linux-specific validation and
   anti-regression checks live in `scripts/checks/canva-linux/`; shared
@@ -117,9 +120,7 @@ separate concepts.
 
 - `electron/` is application runtime code. It should not absorb c420ui terminal
   UI implementation details.
-- `scripts/core/` contains legacy transitional checks and shared TypeScript
-  tooling until migration completes, plus validation and action infrastructure
-  used by direct CLI and c420ui workflows. It is not Electron runtime code.
+- `scripts/core/` contains shared TypeScript tooling and repository-wide checks. It must not contain Canva Linux product detection logic.
 - Shell scripts in `scripts/` are Linux host-operation glue. Keep sudo, install,
   purge, Flatpak, AppImage, and desktop integration behavior there when Node is
   the wrong boundary.

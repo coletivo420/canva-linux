@@ -81,7 +81,7 @@ const requiredGuardrails = [
   "System-wide actions must use scripts/sudo-common.sh.",
   "Raw sudo calls are forbidden outside scripts/sudo-common.sh.",
   "User-scope actions must never call sudo.",
-  "overview-status must always emit valid JSON.",
+  "Overview status must use the c420ui detection engine and Canva Linux detection provider.",
   "c420ui and CLI must share the same TypeScript action contract.",
   "REVIEW.md must preserve the Review Checklist.",
   "c420ui Header and Project Header must remain separate fixed components.",

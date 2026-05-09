@@ -29,9 +29,16 @@ main() {
   esac
 
   local TARGET
-  TARGET="${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
-  if [[ ! -f "${TARGET}" ]]; then
-    npm --prefix "${ROOT_DIR}" run build:scripts-core --silent
+  if [[ "${ENTRY}" == "overview-status" ]]; then
+    TARGET="${ROOT_DIR}/.build/scripts/canva-linux/detection/overview-status.js"
+    if [[ ! -f "${TARGET}" ]]; then
+      npx --prefix "${ROOT_DIR}" esbuild "${ROOT_DIR}/scripts/canva-linux/detection/overview-status.ts" --bundle --platform=node --format=cjs --outfile="${TARGET}" --log-level=warning
+    fi
+  else
+    TARGET="${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
+    if [[ ! -f "${TARGET}" ]]; then
+      npm --prefix "${ROOT_DIR}" run build:scripts-core --silent
+    fi
   fi
 
   if [[ ! -f "${TARGET}" ]]; then

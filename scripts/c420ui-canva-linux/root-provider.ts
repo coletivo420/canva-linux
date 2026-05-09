@@ -8,7 +8,7 @@ import {
   type c420uiAction,
   type c420uiRootProvider,
 } from "../../packages/c420ui/src";
-import { buildOverviewStatus } from "../core/overview-status";
+import { buildCanvaLinuxOverviewStatus } from "../canva-linux/detection/provider";
 
 type RootProviderCommandRunner = (
   command: string,
@@ -69,7 +69,7 @@ export function createCanvaLinuxRootProvider(
 
       if (conditionalSystemRootActionIds.has(action.id)) {
         try {
-          const status = buildOverviewStatus(rootDir);
+          const status = buildCanvaLinuxOverviewStatus(rootDir);
           if (
             status.installations.nativeSystem ||
             status.installations.flatpakSystem
@@ -77,6 +77,12 @@ export function createCanvaLinuxRootProvider(
             return {
               requiresRoot: true,
               reason: `${action.id}: detected system installation`,
+            };
+          }
+          if (status.warnings.length) {
+            return {
+              requiresRoot: false,
+              warning: `[warn] Unable to detect system installations for root policy: ${status.warnings.join("; ")}`,
             };
           }
         } catch (error) {

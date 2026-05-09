@@ -48,6 +48,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Do not reintroduce `check:legacy-compat`.
 - Do not document Action Runner as an available execution path.
 - Do not change versioning as part of c420ui separation.
+- Detection framework belongs to `packages/c420ui/src/detection.ts`.
+- Canva Linux detection probes belong to `scripts/canva-linux/detection/`.
+- Do not put product detection logic in `scripts/core`.
+- Do not hardcode Canva Linux detection keys inside c420ui core.
+- c420ui owns the detection engine; Canva Linux owns the concrete probes.
 
 ## c420ui
 
@@ -82,7 +87,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Tool-level logs must be visible in the c420ui when general Tool logs are enabled.
 - Action logs and Tool logs must remain distinguishable.
 - Detection errors must not break the c420ui layout.
-- overview-status must always emit valid JSON.
+- Overview status must use the c420ui detection engine and Canva Linux detection provider.
 - Keep ASCII logo light blue.
 - Maintenance must keep installation detection visible at the top.
 - c420ui Header and Project Header must remain separate fixed components.

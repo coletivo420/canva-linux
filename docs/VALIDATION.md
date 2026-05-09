@@ -52,7 +52,7 @@ creating one-off check files or `*-parts/` validation directories, unless there 
 - `npm run validate:project`
   - fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/` only
 - `bash -n canva-linux.sh scripts/*.sh`
-- `scripts/run-core-entry.sh overview-status`
+- Detection refreshes are validated through the c420ui detection engine and Canva Linux provider checks.
 - `./canva-linux.sh --bundle-deb` exits `78` because `.deb` packaging is planned, not built.
 - `./canva-linux.sh --bundle-rpm` exits `78` because `.rpm` packaging is planned, not built.
 - `./canva-linux.sh --prepare-aur` exits `78` because AUR packaging is planned, not built.
@@ -150,3 +150,9 @@ The validation surface is intentionally consolidated.
 - `packages/c420ui/checks/check-c420ui-core-contracts.ts`
 - `scripts/checks/canva-linux/check-canva-linux-contracts.ts`
 - `scripts/core/check-repository-policy.ts`
+
+## Detection boundary validation
+
+- `npm run check:c420ui-core` verifies the generic c420ui detection engine and public export.
+- `npm run check:canva-linux` verifies the Canva Linux detection provider, root-provider wiring, and removal of the old core overview status entry.
+- `npm run check:shared-tooling` verifies repository policy, including that `scripts/core/overview-status.ts` is not restored.

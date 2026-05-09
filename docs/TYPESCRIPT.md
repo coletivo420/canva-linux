@@ -103,9 +103,8 @@ Project validations, contracts, and registries are implemented in TypeScript und
   collapsed critical shell/docs files, giant one-line documentation blocks, and
   inline heredoc syntax in shell scripts.
 
-### Migrated core entries include
+### Shared core entries include
 
-- `overview-status.ts`
 - `check-ai-guardrails.ts`
 - `check-doc-links.ts`
 - `check-dependency-policy.ts`
