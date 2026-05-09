@@ -96,8 +96,9 @@ Recommended flow:
 1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.
 2. Add entry in `scripts/actions.json`.
 3. Run `npm run actions:validate`.
-4. Test direct CLI: `scripts/run-core-entry.sh action-runner --id <action-id> --dry-run`.
-5. Test direct CLI and c420ui: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
+4. Test direct CLI through the launcher: `./canva-linux.sh <action-flag> --dry-run`.
+5. Test the compiled c420ui CLI bridge when needed: `npm run c420ui:cli -- <action-flag> --dry-run`.
+6. Test c420ui interactively: `./canva-linux.sh`.
 
 ## Sudo and Privileged Actions
 
@@ -130,6 +131,18 @@ These commands automatically compile their TypeScript check scripts if necessary
 Next line: AUR/PKGBUILD experimental packaging.
 AUR actions must be added through `scripts/actions.json`.
 
+## Current execution architecture
+
+Direct CLI and interactive c420ui actions share:
+
+- c420ui Action Engine;
+- c420ui Root Provider contract;
+- Canva Linux Root Provider;
+- c420ui Command Runner;
+- c420ui operational log redaction.
+
+The legacy Action Runner remains only for compatibility and must not receive new primary execution policy.
+
 ## Direct CLI bridge development
 
 Direct launcher actions are built with `npm run build:scripts` and executed through
@@ -138,5 +151,4 @@ Direct launcher actions are built with `npm run build:scripts` and executed thro
 `packages/c420ui/src/cli.ts`.
 
 Keep direct action resolution and generic root preflight ordering inside the
-c420ui Action Engine, keep Canva Linux privilege validation in the root provider,
-and preserve the legacy Action Runner until compatibility checks have moved.
+c420ui Action Engine, and keep Canva Linux privilege validation in the root provider.

@@ -44,7 +44,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Do not publish or promise an NPM package during the current separation phase.
 - Do not remove `scripts/c420ui/` in one large change.
 - Do not change visual behavior as part of package-boundary work.
-- Do not rewrite Action Runner as part of c420ui separation.
+- Do not rewrite or remove the legacy Action Runner incidentally. Any retirement or wrapper conversion must happen in a dedicated legacy audit commit.
 - Do not change versioning as part of c420ui separation.
 
 ## c420ui
@@ -107,7 +107,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
 - c420ui and CLI must share the same TypeScript action contract.
-- Preserve legacy Action Runner compatibility checks while direct CLI migrates through c420ui.
+- Direct CLI and interactive c420ui actions already route through the c420ui Action Engine.
+- The legacy Action Runner may remain only as a manual compatibility path until explicitly retired.
+- Do not describe the legacy Action Runner as the primary CLI execution path.
+- Do not add new validation requirements to `check:legacy-compat` unless they are strictly about legacy compatibility.
+- New action execution policy belongs to the c420ui Action Engine, Root Provider, Command Runner, and operational log policy.
 
 - c420ui owns generic action resolution by id and CLI flag.
 - c420ui owns planned-action and dry-run semantics.

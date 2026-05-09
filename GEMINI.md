@@ -21,7 +21,7 @@ Non-regression rules:
 - Do not use Terminal Assistant or TUI as product names.
 - Actions must come from scripts/actions.json.
 - Do not duplicate action logic in c420ui or launcher code.
-- Preserve Action Runner root/planned-action behavior.
+- Preserve the legacy Action Runner only as a compatibility path until an explicit legacy audit changes it.
 - Preserve CL-EyeDropper.
 - Preserve TypeScript-first source policy.
 - Do not add maintained JavaScript source.
