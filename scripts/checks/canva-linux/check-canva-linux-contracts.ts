@@ -663,8 +663,24 @@ function main(): number {
     }
   }
 
-  if (!bridgeSource.includes("runC420UIArtifactWorkflow")) {
-    failures.push("scripts/c420ui-canva-linux/bridge.ts: must use runC420UIArtifactWorkflow");
+  for (const fragment of [
+    "createC420UIActionEngine",
+    "createCanvaLinuxRootProvider",
+    "engine.runActionById",
+    "runC420UIArtifactWorkflow",
+  ]) {
+    if (!bridgeSource.includes(fragment)) {
+      failures.push(`scripts/c420ui-canva-linux/bridge.ts: missing ${fragment}`);
+    }
+  }
+
+  for (const fragment of [
+    "return adapter.runAction(actionId",
+    "adapter.runAction(actionId, contextForAction())",
+  ]) {
+    if (bridgeSource.includes(fragment)) {
+      failures.push(`scripts/c420ui-canva-linux/bridge.ts: must not bypass Action Engine with ${fragment}`);
+    }
   }
 
   for (const id of ["appimage", "flatpak", "native-system", "native-user"]) {

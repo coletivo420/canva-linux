@@ -84,6 +84,17 @@ test("planned workflow returns plannedAction", async () => {
   assert.equal(events.some((event) => event.type === "action:planned"), true);
 });
 
+test("unsupported phase emits workflow finish with error level", async () => {
+  const { events, result } = await runPhase(workflow({ installActionId: undefined }), "install");
+  const finish = events.find(
+    (event): event is C420UIEvent & { type: "workflow:finish" } =>
+      event.type === "workflow:finish",
+  );
+
+  assert.equal(result.code, c420uiExitCodes.invalidUsage);
+  assert.equal(finish?.level, "error");
+});
+
 test("dryRun does not call runAction", async () => {
   const { calls, result } = await runPhase(workflow(), "build", undefined, true);
 

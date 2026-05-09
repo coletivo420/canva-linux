@@ -60,6 +60,10 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Canva Linux may define workflow recipes, action IDs and output patterns.
 - Do not hardcode Canva Linux action IDs inside c420ui workflow runner.
 - Do not implement artifact workflow phase logic inside the Canva Linux adapter.
+- Artifact workflows must execute concrete actions through the c420ui Action Engine.
+- Do not call `adapter.runAction()` directly from project artifact workflow bridges.
+- Root/sudo policy must remain centralized in the Root Provider.
+- Dry-run and planned artifact workflows must not trigger sudo or concrete command execution.
 
 ## c420ui
 

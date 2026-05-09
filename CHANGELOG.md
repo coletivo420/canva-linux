@@ -64,6 +64,7 @@
   execution were migrated to the shared c420ui Action Engine.
 
 ### Fixed
+- Routed Canva Linux artifact workflow actions through the shared c420ui Action Engine and Root Provider instead of calling the project adapter directly.
 - Avoided duplicate action environment preparation in the Canva Linux adapter.
 - Interactive action cancellation now reports a canceled progress state before execution.
 - Restored interactive c420ui root-auth environment propagation and Ctrl+C cancellation for Action Engine-backed actions.

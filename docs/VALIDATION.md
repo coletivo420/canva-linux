@@ -54,6 +54,7 @@ creating one-off check files or `*-parts/` validation directories, unless there 
 - `bash -n canva-linux.sh scripts/*.sh`
 - Detection refreshes are validated through the c420ui detection engine and Canva Linux provider checks.
 - Artifact workflow phase routing is validated through `packages/c420ui/src/workflow-runner.ts` tests and the c420ui core contract check.
+- Canva Linux artifact workflow execution is validated to use the c420ui Action Engine and Root Provider instead of direct adapter calls.
 - `./canva-linux.sh --bundle-deb` exits `78` because `.deb` packaging is planned, not built.
 - `./canva-linux.sh --bundle-rpm` exits `78` because `.rpm` packaging is planned, not built.
 - `./canva-linux.sh --prepare-aur` exits `78` because AUR packaging is planned, not built.

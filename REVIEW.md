@@ -71,6 +71,17 @@ Request changes if a PR:
 - changes artifact architecture naming to x64;
 - bypasses Action Engine / Command Runner for artifact actions.
 
+
+## Artifact workflow execution review
+
+Request changes if a PR:
+
+- calls `adapter.runAction()` directly from artifact workflow orchestration;
+- bypasses the c420ui Action Engine for artifact phases;
+- bypasses the Canva Linux Root Provider for system install/uninstall/purge phases;
+- makes planned package workflows return success as if implemented;
+- triggers sudo during dry-run.
+
 ## c420ui naming and logo review
 
 Request changes if a PR:

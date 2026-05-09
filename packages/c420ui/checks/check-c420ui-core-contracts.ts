@@ -595,6 +595,9 @@ function main(): number {
     "bundle-appimage",
     "bundle-flatpak",
     "install-flatpak-system",
+    "createCanvaLinux",
+    "c420ui-canva-linux",
+    "ProjectAdapter",
   ]) {
     if (workflowRunner.includes(fragment)) {
       failures.push(`${workflowRunnerPath}: must not hardcode ${fragment}`);

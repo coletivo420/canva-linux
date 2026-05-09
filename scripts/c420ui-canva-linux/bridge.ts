@@ -1,8 +1,8 @@
 import {
+  createC420UIActionEngine,
   runC420UIArtifactWorkflow,
   runC420UIWorkflow,
   type c420uiActionResult,
-  type c420uiExecutionContext,
   type c420uiWorkflowPhase,
   type C420UIEventSink,
   type C420UIProjectAdapter,
@@ -10,6 +10,7 @@ import {
   type C420UIWorkflowRunOptions,
 } from "../../packages/c420ui/src";
 import { createCanvaLinuxC420UIAdapter } from "./adapter";
+import { createCanvaLinuxRootProvider } from "./root-provider";
 
 export function createCanvaLinuxBridge(
   rootDir = process.cwd(),
@@ -27,7 +28,6 @@ export async function runCanvaLinuxWorkflow(
   if (!workflow) throw new Error(`Unknown c420ui workflow: ${workflowId}`);
   return runC420UIWorkflow(workflow, options);
 }
-
 
 export type CanvaLinuxArtifactWorkflowRunOptions = {
   dryRun?: boolean;
@@ -47,18 +47,12 @@ export async function runCanvaLinuxArtifactWorkflow(
   const workflow = adapter.loadArtifactWorkflows().find((item) => item.id === workflowId);
   if (!workflow) throw new Error(`Unknown c420ui artifact workflow: ${workflowId}`);
 
-  const contextForAction = (): c420uiExecutionContext => ({
+  const engine = createC420UIActionEngine({
+    bridge: adapter,
     rootDir,
-    dryRun: options.dryRun === true,
-    yes: options.yes === true,
     env: options.env ?? process.env,
-    signal: options.signal,
-    emitLog(event) {
-      options.emit?.({ type: "log", ...event });
-    },
-    emitProgress(event) {
-      options.emit?.({ type: "progress", ...event });
-    },
+    rootProvider: createCanvaLinuxRootProvider(),
+    emit: options.emit,
   });
 
   return runC420UIArtifactWorkflow(workflow, {
@@ -67,7 +61,11 @@ export async function runCanvaLinuxArtifactWorkflow(
     yes: options.yes,
     emit: options.emit,
     runAction(actionId) {
-      return adapter.runAction(actionId, contextForAction());
+      return engine.runActionById(actionId, {
+        dryRun: options.dryRun,
+        yes: options.yes,
+        signal: options.signal,
+      });
     },
   });
 }

@@ -23,7 +23,7 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 - c420ui detection engine with Canva Linux detection provider.
 - Removed `scripts/core/overview-status.ts`.
 - Hardened c420ui detection provider contract around `project` overview status shape.
-- Artifact workflow runner: c420ui owns the artifact workflow runner. Canva Linux provides concrete workflow recipes.
+- Artifact workflow runner: c420ui owns the artifact workflow runner and routes concrete Canva Linux actions through the Action Engine and Root Provider. Canva Linux provides concrete workflow recipes.
 
 ## Current phase
 
