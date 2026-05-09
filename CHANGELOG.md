@@ -26,6 +26,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Moved the generic c420ui terminal UI into `packages/c420ui/src/terminal`.
 - Added the c420ui artifact workflow runner and kept Canva Linux artifact recipes as project-specific configuration.
 - Tightened the c420ui detection provider contract and removed the legacy `package` overview status shape.
 - Moved installation overview detection to the generic c420ui detection engine with a Canva Linux provider under `scripts/canva-linux/detection/`.
@@ -42,7 +43,7 @@
 - Moved reusable operational command execution into the c420ui command runner.
 - Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.
 - Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed by `scripts/sudo-common.sh`.
-- Moved generic c420ui TypeScript config contracts from `scripts/c420ui/app.ts` into the private `packages/c420ui` skeleton.
+- Moved generic c420ui TypeScript config contracts from `packages/c420ui/src/terminal/app.ts` into the private `packages/c420ui` skeleton.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
   or when safe storage encryption is unavailable.
 - Startup diagnostics now explain whether persistent login is available or the app is running in ephemeral session mode.
@@ -64,6 +65,7 @@
   execution were migrated to the shared c420ui Action Engine.
 
 ### Fixed
+- Routed c420ui terminal diagnostics through the project bridge instead of the removed overview-status entrypoint.
 - Routed Canva Linux artifact workflow actions through the shared c420ui Action Engine and Root Provider instead of calling the project adapter directly.
 - Avoided duplicate action environment preparation in the Canva Linux adapter.
 - Interactive action cancellation now reports a canceled progress state before execution.

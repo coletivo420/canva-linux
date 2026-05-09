@@ -58,7 +58,7 @@ New c420ui or Canva Linux behavior checks should extend the relevant consolidate
 
 - Do not migrate to ESM.
 - Do not publish or promise an NPM package.
-- Do not remove `scripts/c420ui/` in one large change.
+- Do not reintroduce `scripts/c420ui/`; generic terminal UI belongs under `packages/c420ui/src/terminal/`.
 - Do not change visual behavior as part of docs cleanup or RC readiness work.
 - Do not restore the removed legacy Action Runner or its compatibility validation path.
 - Do not change versioning.

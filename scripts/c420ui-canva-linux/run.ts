@@ -1,4 +1,4 @@
-import { createApp } from "../c420ui/app";
+import { createApp } from "../../packages/c420ui/src/terminal";
 import { createCanvaLinuxC420UIAdapter } from "./adapter";
 import { createCanvaLinuxRootProvider } from "./root-provider";
 

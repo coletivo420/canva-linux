@@ -24,4 +24,6 @@ export type C420UIConfig = {
   brand: C420UIBrandConfig;
   project: C420UIProjectConfig;
   releaseNotes: string;
+  sessionLogPath?: string;
+  sessionId?: string;
 };

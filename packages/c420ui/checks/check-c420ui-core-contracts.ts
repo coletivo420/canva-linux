@@ -222,6 +222,8 @@ function main(): number {
     "actions()",
     "artifactWorkflows()",
     "runAction(actionId: string, context: c420uiExecutionContext)",
+    "overviewStatus?()",
+    "c420uiOverviewStatus",
     "createC420UIBridge",
     "export type * from \"./bridge\"",
   ];
@@ -461,7 +463,7 @@ function main(): number {
   const runner = read(rootDir, "packages/c420ui/src/command-runner.ts");
   const index = read(rootDir, "packages/c420ui/src/index.ts");
   const adapter = read(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
-  const app = read(rootDir, "scripts/c420ui/app.ts");
+  const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
   const failures: string[] = [];
 
   for (const fragment of [
@@ -504,8 +506,8 @@ function main(): number {
   if (app.includes('from "./process-runner"') || app.includes("from './process-runner'")) {
     failures.push("interactive app must not import ./process-runner");
   }
-  if (fs.existsSync(path.join(rootDir, "scripts/c420ui/process-runner.ts"))) {
-    failures.push("scripts/c420ui/process-runner.ts must not exist after command runner migration");
+  if (fs.existsSync(path.join(rootDir, "packages/c420ui/src/terminal/process-runner.ts"))) {
+    failures.push("packages/c420ui/src/terminal/process-runner.ts must not exist after command runner migration");
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
@@ -619,9 +621,9 @@ function read(rootDir: string, relativePath: string): string {
 
 function main(): number {
   const rootDir = process.cwd();
-  const app = read(rootDir, "scripts/c420ui/app.ts");
+  const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
   const run = read(rootDir, "scripts/c420ui-canva-linux/run.ts");
-  const runner = read(rootDir, "scripts/c420ui/interactive-action-runner.ts");
+  const runner = read(rootDir, "packages/c420ui/src/terminal/interactive-action-runner.ts");
   const bridge = read(rootDir, "packages/c420ui/src/bridge.ts");
   const failures: string[] = [];
 
@@ -738,31 +740,84 @@ function assertC420UIIncludes(
   }
 }
 
+function checkTerminalUiContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const terminalDir = path.join(rootDir, "packages/c420ui/src/terminal");
+  const required = [
+    "app.ts",
+    "index.ts",
+    "interactive-action-runner.ts",
+    "logo.ts",
+    "settings.ts",
+    "theme.ts",
+    "modal.ts",
+    "clipboard.ts",
+  ];
+  for (const file of required) {
+    if (!fs.existsSync(path.join(terminalDir, file))) {
+      failures.push(`packages/c420ui/src/terminal/${file}: missing terminal UI file`);
+    }
+  }
+  if (fs.existsSync(path.join(rootDir, "scripts/c420ui"))) {
+    failures.push("scripts/c420ui must not exist");
+  }
+  const terminalSource = fs.existsSync(terminalDir)
+    ? collectTypeScriptFiles(terminalDir).map((file) => fs.readFileSync(file, "utf8")).join("\n")
+    : "";
+  for (const fragment of [
+    "Canva Linux",
+    "canva-linux",
+    "io.github.coletivo420.canva-linux",
+    "scripts/run-core-entry.sh",
+    "overview-status",
+    "install-detection-common.sh",
+    "DETECTED_NATIVE_SYSTEM",
+    "scripts/c420ui-canva-linux",
+    "scripts/sudo-common.sh",
+  ]) {
+    if (terminalSource.includes(fragment)) {
+      failures.push(`packages/c420ui/src/terminal must not contain ${fragment}`);
+    }
+  }
+  const app = fs.existsSync(path.join(terminalDir, "app.ts"))
+    ? fs.readFileSync(path.join(terminalDir, "app.ts"), "utf8")
+    : "";
+  if (!app.includes("bridge.overviewStatus")) {
+    failures.push("packages/c420ui/src/terminal/app.ts must use bridge.overviewStatus");
+  }
+  if (!app.includes("createC420UIActionEngine")) {
+    failures.push("packages/c420ui/src/terminal/app.ts must use createC420UIActionEngine");
+  }
+  if (app.includes("spawn(")) {
+    failures.push("packages/c420ui/src/terminal/app.ts must not spawn overview diagnostics");
+  }
+}
+
 function checkHeaderLayoutContract(failures: string[]): void {
   const rootDir = process.cwd();
-  const app = fs.readFileSync(path.join(rootDir, "scripts/c420ui/app.ts"), "utf8");
+  const app = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/terminal/app.ts"), "utf8");
   const packageTypes = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/types.ts"), "utf8");
-  const index = fs.readFileSync(path.join(rootDir, "scripts/c420ui/index.ts"), "utf8");
+  const index = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/terminal/index.ts"), "utf8");
   const adapter = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/adapter.ts"), "utf8");
   const projectUi = fs.readFileSync(path.join(rootDir, "config/canva-linux/project-ui.json"), "utf8");
 
   assertC420UIIncludes(
     failures,
     index,
-    "runCanvaLinuxC420UI",
-    "scripts/c420ui/index.ts must delegate to the Canva Linux c420ui adapter runner",
+    "createApp",
+    "packages/c420ui/src/terminal/index.ts must export createApp",
   );
   assertC420UIIncludes(
     failures,
     app,
     "export type HeaderLayout",
-    "scripts/c420ui/app.ts must export HeaderLayout",
+    "packages/c420ui/src/terminal/app.ts must export HeaderLayout",
   );
   assertC420UIIncludes(
     failures,
     app,
-    "../../packages/c420ui/src",
-    "scripts/c420ui/app.ts must import generic c420ui types from packages/c420ui",
+    "../action-engine",
+    "packages/c420ui/src/terminal/app.ts must import c420ui internals directly",
   );
 
   assertC420UIIncludes(
@@ -787,36 +842,36 @@ function checkHeaderLayoutContract(failures: string[]): void {
     failures,
     app,
     "computeHeaderLayout",
-    "scripts/c420ui/app.ts must centralize header layout math",
+    "packages/c420ui/src/terminal/app.ts must centralize header layout math",
   );
   assertC420UIIncludes(
     failures,
     app,
     "c420uiHeader",
-    "scripts/c420ui/app.ts must keep a dedicated c420uiHeader component",
+    "packages/c420ui/src/terminal/app.ts must keep a dedicated c420uiHeader component",
   );
   assertC420UIIncludes(
     failures,
     app,
     "projectHeader",
-    "scripts/c420ui/app.ts must keep a dedicated projectHeader component",
+    "packages/c420ui/src/terminal/app.ts must keep a dedicated projectHeader component",
   );
   assertC420UIIncludes(
     failures,
     app,
     "workspaceTop",
-    "scripts/c420ui/app.ts must apply a shared workspaceTop",
+    "packages/c420ui/src/terminal/app.ts must apply a shared workspaceTop",
   );
   assertC420UIIncludes(
     failures,
     app,
     "layoutMode",
-    "scripts/c420ui/app.ts must expose side-by-side/stacked layoutMode",
+    "packages/c420ui/src/terminal/app.ts must expose side-by-side/stacked layoutMode",
   );
 
   const focusZones = app.match(/const FOCUS_ZONES:[^=]+=\s*\[([^\]]+)\]/);
   if (!focusZones) {
-    failures.push("scripts/c420ui/app.ts must keep explicit FOCUS_ZONES");
+    failures.push("packages/c420ui/src/terminal/app.ts must keep explicit FOCUS_ZONES");
   } else if (
     focusZones[1]?.includes("c420uiHeader") ||
     focusZones[1]?.includes("projectHeader")
@@ -861,22 +916,22 @@ function checkHeaderLayoutContract(failures: string[]): void {
 
 function checkSettingsContract(failures: string[]): void {
   const rootDir = process.cwd();
-  const app = fs.readFileSync(path.join(rootDir, "scripts/c420ui/app.ts"), "utf8");
-  const settings = fs.readFileSync(path.join(rootDir, "scripts/c420ui/settings.ts"), "utf8");
+  const app = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/terminal/app.ts"), "utf8");
+  const settings = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/terminal/settings.ts"), "utf8");
   const actions = fs.readFileSync(path.join(rootDir, "config/canva-linux/actions.json"), "utf8");
 
   if (!app.includes('"settings"') || !app.includes("Application Settings")) {
-    failures.push("scripts/c420ui/app.ts: Application Settings view is required");
+    failures.push("packages/c420ui/src/terminal/app.ts: Application Settings view is required");
   }
   if (!app.includes("generalLogsEnabled") || !app.includes("Install and Development Tool")) {
-    failures.push("scripts/c420ui/app.ts: general Tool logs setting is required");
+    failures.push("packages/c420ui/src/terminal/app.ts: general Tool logs setting is required");
   }
   if (!settings.includes("generalLogsEnabled")) {
-    failures.push("scripts/c420ui/settings.ts: generalLogsEnabled setting is required");
+    failures.push("packages/c420ui/src/terminal/settings.ts: generalLogsEnabled setting is required");
   }
   if (!settings.includes("terminalTextSelectionMode")) {
     failures.push(
-      "scripts/c420ui/settings.ts: terminalTextSelectionMode schema entry is required",
+      "packages/c420ui/src/terminal/settings.ts: terminalTextSelectionMode schema entry is required",
     );
   }
   if (
@@ -885,7 +940,7 @@ function checkSettingsContract(failures: string[]): void {
     !settings.includes("tool-settings.json") ||
     !settings.includes("saveToolSettings")
   ) {
-    failures.push("scripts/c420ui/settings.ts: user config file persistence is required");
+    failures.push("packages/c420ui/src/terminal/settings.ts: user config file persistence is required");
   }
   if (
     actions.includes("Application Settings") ||
@@ -913,6 +968,7 @@ export function main(): number {
   runArtifactWorkflowContract(failures);
   runInteractiveActionEngineContract(failures);
   checkSettingsContract(failures);
+  checkTerminalUiContract(failures);
   checkHeaderLayoutContract(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));

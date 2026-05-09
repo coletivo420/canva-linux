@@ -89,17 +89,18 @@ Do not edit generated output as the source of truth.
 
 ## c420ui split boundaries
 
-The current repository still hosts the Canva Linux c420ui implementation under
-`scripts/c420ui/`. That directory is transitional: it is the active in-repo UI
-implementation until a package split is explicitly performed.
+The generic c420ui terminal UI now lives under `packages/c420ui/src/terminal/`.
+The old `scripts/c420ui/` directory must not be reintroduced.
 
 The intended separation is:
 
-- **c420ui core**: reusable terminal UI primitives, layout, focus, logs, modal,
-  and brand/project-header boundaries. Today these live in `scripts/c420ui/`.
+- **c420ui core**: reusable action, bridge, detection, workflow, root-provider,
+  command-runner and operational-log contracts live in `packages/c420ui/src/`.
+- **c420ui terminal UI**: reusable terminal layout, focus, logs, modal, clipboard,
+  settings, logo and interactive runner code lives in `packages/c420ui/src/terminal/`.
 - **Canva Linux adapter**: project-specific actions, metadata, launch wiring,
-  install/package status, and Canva Linux labels. This boundary starts in
-  `scripts/c420ui-canva-linux/` before broader extraction. Installation detection probes live in
+  install/package status, and Canva Linux labels live in
+  `scripts/c420ui-canva-linux/`. Installation detection probes live in
   `scripts/canva-linux/detection/` and use the generic engine in `packages/c420ui/src/detection.ts`.
 - **Validation split**: reusable c420ui validation and anti-regression checks live
   in `packages/c420ui/checks/`; Canva Linux-specific validation and

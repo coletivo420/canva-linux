@@ -13,12 +13,16 @@ import {
   type C420UIProjectConfig,
   type C420UIWorkflow,
 } from "../../packages/c420ui/src";
-import { c420uiLogoLines } from "../c420ui/logo";
-import { rootLaunchGuardMessage, toolSettingsPath } from "../c420ui/settings";
+import { c420uiLogoLines } from "../../packages/c420ui/src/terminal/logo";
+import {
+  rootLaunchGuardMessage,
+  toolSettingsPath,
+} from "../../packages/c420ui/src/terminal/settings";
 import {
   loadCanvaLinuxActions as loadCanvaLinuxActionRegistry,
   type CanvaAction,
 } from "../canva-linux/actions/registry";
+import { buildCanvaLinuxOverviewStatus } from "../canva-linux/detection/provider";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
@@ -63,6 +67,7 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
   loadBrandConfig(): C420UIConfig["brand"];
   getProjectPhase(): string;
   getSessionLogPath(): string;
+  getSessionId(): string;
   getToolSettingsPath(): string;
   rootLaunchGuardMessage(): string;
   toC420UIConfig(): C420UIConfig;
@@ -179,6 +184,10 @@ export function createCanvaLinuxC420UIAdapter(
     );
   }
 
+  function getSessionId(): string {
+    return process.env.CANVA_TOOL_SESSION_ID?.trim() || "";
+  }
+
   function getToolSettingsPath(): string {
     return toolSettingsPath(loadProjectUi().stateDirectoryName);
   }
@@ -224,6 +233,10 @@ export function createCanvaLinuxC420UIAdapter(
 
   function artifactWorkflows() {
     return loadArtifactWorkflows();
+  }
+
+  function overviewStatus() {
+    return buildCanvaLinuxOverviewStatus(resolvedRootDir);
   }
 
   // Transitional bridge execution path.
@@ -283,6 +296,8 @@ export function createCanvaLinuxC420UIAdapter(
       brand: loadBrandConfig(),
       project: loadProjectConfig(),
       releaseNotes: projectUi.versionReleaseNotes,
+      sessionLogPath: getSessionLogPath(),
+      sessionId: getSessionId(),
     };
   }
 
@@ -293,6 +308,7 @@ export function createCanvaLinuxC420UIAdapter(
     actions,
     artifactWorkflows,
     runAction,
+    overviewStatus,
     paths: {
       projectUi: projectUiPath,
       packageJson: packageJsonPath,
@@ -312,6 +328,7 @@ export function createCanvaLinuxC420UIAdapter(
     loadCapabilities: loadCanvaLinuxCapabilities,
     getProjectPhase,
     getSessionLogPath,
+    getSessionId,
     getToolSettingsPath,
     rootLaunchGuardMessage: rootLaunchGuardMessageForProject,
     toC420UIConfig,

@@ -379,7 +379,7 @@ This file preserves the detailed development changelog entries that were archive
 - Changed shell CLI actions to resolve through the shared Action Registry.
 
 ### Fixed
-- Fixed duplicate `modalActive` declaration in `scripts/c420ui/app.ts`.
+- Fixed duplicate `modalActive` declaration in `packages/c420ui/src/terminal/app.ts`.
 
 
 ## [0.1.4.11-dev.40] - 2026-05-04

@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   createInteractiveActionRunner,
   type InteractiveActionRunnerState,
-} from "../scripts/c420ui/interactive-action-runner";
+} from "../packages/c420ui/src/terminal/interactive-action-runner";
 import {
   c420uiExitCodes,
   type c420uiAction,

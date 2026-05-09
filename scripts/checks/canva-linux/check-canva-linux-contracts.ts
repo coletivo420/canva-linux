@@ -27,8 +27,8 @@ type CoreCheckFileKind = "shell" | "typescript";
 
 const noParallelShellMenuActiveFiles: Array<{ path: string; kind: CoreCheckFileKind }> = [
   { path: "canva-linux.sh", kind: "shell" },
-  { path: "scripts/c420ui/app.ts", kind: "typescript" },
-  { path: "scripts/c420ui/index.ts", kind: "typescript" },
+  { path: "packages/c420ui/src/terminal/app.ts", kind: "typescript" },
+  { path: "packages/c420ui/src/terminal/index.ts", kind: "typescript" },
 ];
 
 const noParallelShellMenuForbiddenPatterns = [
@@ -213,15 +213,29 @@ function main(): number {
   if (capabilities.supportsRootActions !== true) failures.push("adapter must declare root action support");
   if (capabilities.supportsDryRun !== true) failures.push("adapter must declare dry-run support");
   if (typeof adapter.runAction !== "function") failures.push("adapter must implement runAction");
+  if (typeof adapter.overviewStatus !== "function") failures.push("adapter must implement overviewStatus");
 
   const cliBridgePath = path.join(rootDir, "scripts/c420ui-canva-linux/cli.ts");
   const cliEntrypointPath = path.join(rootDir, "scripts/run-c420ui-cli.ts");
   const launcherPath = path.join(rootDir, "canva-linux.sh");
+  const runSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/run.ts"), "utf8");
   if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
   if (!fs.existsSync(cliEntrypointPath)) failures.push("Canva Linux c420ui CLI entrypoint must exist");
   const cliBridge = fs.readFileSync(cliBridgePath, "utf8");
   if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
   const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/adapter.ts"), "utf8");
+  if (!runSource.includes("../../packages/c420ui/src/terminal")) {
+    failures.push("scripts/c420ui-canva-linux/run.ts must import terminal UI from packages/c420ui/src/terminal");
+  }
+  if (!adapterSource.includes("../../packages/c420ui/src/terminal/logo") || !adapterSource.includes("../../packages/c420ui/src/terminal/settings")) {
+    failures.push("scripts/c420ui-canva-linux/adapter.ts must import logo/settings from packages/c420ui/src/terminal");
+  }
+  if (!adapterSource.includes("function overviewStatus") || !adapterSource.includes("buildCanvaLinuxOverviewStatus(resolvedRootDir)") || !adapterSource.includes("overviewStatus,")) {
+    failures.push("scripts/c420ui-canva-linux/adapter.ts must provide overviewStatus through the project bridge");
+  }
+  if (fs.existsSync(path.join(rootDir, "scripts/c420ui"))) {
+    failures.push("scripts/c420ui must not exist");
+  }
   for (const fragment of [
     "validateRootPolicy",
     "actionRequiresRootValidation",
@@ -357,7 +371,7 @@ function main(): number {
   const rootDir = findProjectRoot();
   const scriptsDir = path.join(rootDir, "scripts");
   const sudoCommonPath = path.join(scriptsDir, "sudo-common.sh");
-  const tuiAppPath = path.join(scriptsDir, "c420ui", "app.ts");
+  const tuiAppPath = path.join(rootDir, "packages/c420ui/src/terminal/app.ts");
   const checkedFiles = [
     ...findCheckedFiles(scriptsDir),
     path.join(rootDir, "canva-linux.sh"),
@@ -379,7 +393,7 @@ function main(): number {
     tuiApp.includes('const runnerArgs = ["action-runner", "--id", action.id]')
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: actions must execute through the shared c420ui Action Engine",
+      "packages/c420ui/src/terminal/app.ts: actions must execute through the shared c420ui Action Engine",
     );
   }
 
@@ -400,9 +414,8 @@ function main(): number {
   }
 
   const interactiveRunnerPath = path.join(
-    scriptsDir,
-    "c420ui",
-    "interactive-action-runner.ts",
+    rootDir,
+    "packages/c420ui/src/terminal/interactive-action-runner.ts",
   );
   const interactiveRunner = fs.readFileSync(interactiveRunnerPath, "utf8");
 
@@ -412,7 +425,7 @@ function main(): number {
     !interactiveRunner.includes("!confirmed")
   ) {
     failures.push(
-      "scripts/c420ui/interactive-action-runner.ts: confirmation cancellations must stop before root or bridge execution",
+      "packages/c420ui/src/terminal/interactive-action-runner.ts: confirmation cancellations must stop before root or bridge execution",
     );
   }
 
@@ -421,13 +434,13 @@ function main(): number {
     !interactiveRunner.includes("engine.runAction(action")
   ) {
     failures.push(
-      "scripts/c420ui/interactive-action-runner.ts: privileged actions must use the c420ui root provider before bridge execution",
+      "packages/c420ui/src/terminal/interactive-action-runner.ts: privileged actions must use the c420ui root provider before bridge execution",
     );
   }
 
   if (/appendLogText\([^)]*password/s.test(tuiApp)) {
     failures.push(
-      "scripts/c420ui/app.ts: sudo password must never be written to logs",
+      "packages/c420ui/src/terminal/app.ts: sudo password must never be written to logs",
     );
   }
 
@@ -536,11 +549,10 @@ function assertIncludes(
 
 function main(): number {
   const rootDir = findProjectRoot();
-  const app = read(rootDir, "scripts/c420ui/app.ts");
+  const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
   const packageTypes = read(rootDir, "packages/c420ui/src/types.ts");
-  const logo = read(rootDir, "scripts/c420ui/logo.ts");
-  const settings = read(rootDir, "scripts/c420ui/settings.ts");
-  const index = read(rootDir, "scripts/c420ui/index.ts");
+  const logo = read(rootDir, "packages/c420ui/src/terminal/logo.ts");
+  const settings = read(rootDir, "packages/c420ui/src/terminal/settings.ts");
   const adapter = read(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
   const projectUi = read(rootDir, "config/canva-linux/project-ui.json");
   const failures: string[] = [];
@@ -548,8 +560,8 @@ function main(): number {
   assertIncludes(
     failures,
     app,
-    "../../packages/c420ui/src",
-    "scripts/c420ui/app.ts must import generic c420ui types from packages/c420ui",
+    "../action-engine",
+    "packages/c420ui/src/terminal/app.ts must import generic c420ui internals from the package",
   );
 
   // Transitional PascalCase TypeScript symbols are allowed until the public API rename commit.
@@ -595,9 +607,9 @@ function main(): number {
 
   assertIncludes(
     failures,
-    index,
-    "runCanvaLinuxC420UI",
-    "scripts/c420ui/index.ts must delegate to the Canva Linux c420ui adapter runner",
+    read(rootDir, "scripts/c420ui-canva-linux/run.ts"),
+    "../../packages/c420ui/src/terminal",
+    "scripts/c420ui-canva-linux/run.ts must import terminal UI from packages/c420ui/src/terminal",
   );
 
   const projectFields = [
@@ -613,7 +625,7 @@ function main(): number {
       failures,
       app,
       `opts.project.${field}`,
-      `scripts/c420ui/app.ts must read ${field} from project config`,
+      `packages/c420ui/src/terminal/app.ts must read ${field} from project config`,
     );
     if (
       !adapter.includes(`${field}: projectUi.${field}`) &&
@@ -807,24 +819,24 @@ function read(rootDir: string, relativePath: string): string {
 function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
-  const app = read(rootDir, "scripts/c420ui/app.ts");
+  const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
   const launcher = read(rootDir, "canva-linux.sh");
 
   if (!launcher.includes(": > \"${SESSION_LOG}\"")) {
     failures.push("canva-linux.sh: launcher must create/truncate the session log once");
   }
   if (!app.includes('flags: "a"')) {
-    failures.push("scripts/c420ui/app.ts: c420ui must append to the launcher session log");
+    failures.push("packages/c420ui/src/terminal/app.ts: c420ui must append to the launcher session log");
   }
   if (!app.includes("importLauncherSessionLog")) {
-    failures.push("scripts/c420ui/app.ts: launcher logs must be imported when Tool logs are enabled");
+    failures.push("packages/c420ui/src/terminal/app.ts: launcher logs must be imported when Tool logs are enabled");
   }
   if (!app.includes("Tool |") || !app.includes("Action |")) {
-    failures.push("scripts/c420ui/app.ts: Tool logs and Action logs must remain distinguishable");
+    failures.push("packages/c420ui/src/terminal/app.ts: Tool logs and Action logs must remain distinguishable");
   }
   if (!app.includes("shouldDisplayLogLine") || !app.includes("isCriticalToolLog")) {
     failures.push(
-      "scripts/c420ui/app.ts: critical Tool warnings/errors must remain visible when general Tool logs are disabled",
+      "packages/c420ui/src/terminal/app.ts: critical Tool warnings/errors must remain visible when general Tool logs are disabled",
     );
   }
   if (
@@ -836,19 +848,19 @@ function main(): number {
     !app.includes('displayLogLine(warning, "system")')
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: writeSession must warn once when the session stream is unavailable",
+      "packages/c420ui/src/terminal/app.ts: writeSession must warn once when the session stream is unavailable",
     );
   }
   const writeSessionBlock =
     app.match(/const writeSession = \(line: string\) => \{[\s\S]*?\n  \};/)?.[0] ?? "";
   if (writeSessionBlock.includes("appendLogText")) {
     failures.push(
-      "scripts/c420ui/app.ts: writeSession must not call appendLogText directly",
+      "packages/c420ui/src/terminal/app.ts: writeSession must not call appendLogText directly",
     );
   }
 
   if (/appendLogText\([^)]*password/s.test(app)) {
-    failures.push("scripts/c420ui/app.ts: sudo password must never be written to logs");
+    failures.push("packages/c420ui/src/terminal/app.ts: sudo password must never be written to logs");
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
@@ -867,36 +879,36 @@ function read(rootDir: string, relativePath: string): string {
 function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
-  const app = read(rootDir, "scripts/c420ui/app.ts");
+  const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
   const cliDocs = read(rootDir, "docs/CLI.md");
   const technicalDocs = read(rootDir, "docs/TECHNICAL.md");
   const normalizedCliDocs = cliDocs.replace(/\s+/g, " ");
   const normalizedTechnicalDocs = technicalDocs.replace(/\s+/g, " ");
 
   if (!app.includes('screen.key(["f5"]')) {
-    failures.push("scripts/c420ui/app.ts: F5 log copy shortcut must remain available");
+    failures.push("packages/c420ui/src/terminal/app.ts: F5 log copy shortcut must remain available");
   }
   if (!app.includes('screen.key(["f6"]')) {
-    failures.push("scripts/c420ui/app.ts: F6 plain logs fallback must remain available");
+    failures.push("packages/c420ui/src/terminal/app.ts: F6 plain logs fallback must remain available");
   }
   if (!app.includes("terminalTextSelectionMode")) {
-    failures.push("scripts/c420ui/app.ts: terminal text selection mode is required");
+    failures.push("packages/c420ui/src/terminal/app.ts: terminal text selection mode is required");
   }
   if (!app.includes("type FocusZone") || !app.includes("FOCUS_ZONES")) {
-    failures.push("scripts/c420ui/app.ts: explicit FocusZone model is required");
+    failures.push("packages/c420ui/src/terminal/app.ts: explicit FocusZone model is required");
   }
   if (!app.includes("function applyFocusStyles")) {
-    failures.push("scripts/c420ui/app.ts: active panel styling must be centralized");
+    failures.push("packages/c420ui/src/terminal/app.ts: active panel styling must be centralized");
   }
   if (
     !app.includes('screen.key(["tab"]') ||
     !app.includes('screen.key(["S-tab", "backtab"]')
   ) {
-    failures.push("scripts/c420ui/app.ts: Tab and Shift+Tab focus navigation are required");
+    failures.push("packages/c420ui/src/terminal/app.ts: Tab and Shift+Tab focus navigation are required");
   }
   if (!app.includes("if (!modalActive) {") || !app.includes("moveFocus")) {
     failures.push(
-      "scripts/c420ui/app.ts: modal dialogs must not leak Tab focus to the main c420ui",
+      "packages/c420ui/src/terminal/app.ts: modal dialogs must not leak Tab focus to the main c420ui",
     );
   }
   if (
@@ -904,12 +916,12 @@ function main(): number {
     !app.includes("running || modalActive || focusZone !== \"menu\"")
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: action execution must be blocked unless menu is focused and idle",
+      "packages/c420ui/src/terminal/app.ts: action execution must be blocked unless menu is focused and idle",
     );
   }
   if (!app.includes("activeCellBg") || !app.includes("activeCheckboxFg")) {
     failures.push(
-      "scripts/c420ui/app.ts: active cells and settings checkboxes must be visibly styled",
+      "packages/c420ui/src/terminal/app.ts: active cells and settings checkboxes must be visibly styled",
     );
   }
   if (
@@ -917,14 +929,14 @@ function main(): number {
     !app.includes("let tuiMouseEnabled = !terminalTextSelectionModeActive")
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: terminal selection mode must initialize mouse state before Blessed widgets are constructed",
+      "packages/c420ui/src/terminal/app.ts: terminal selection mode must initialize mouse state before Blessed widgets are constructed",
     );
   }
   const mouseControlledWidgetCount =
     app.match(/mouse: tuiMouseEnabled/g)?.length ?? 0;
   if (mouseControlledWidgetCount < 4) {
     failures.push(
-      "scripts/c420ui/app.ts: terminal selection mode must disable c420ui mouse handling for menu, diagnostics, content and logs at startup",
+      "packages/c420ui/src/terminal/app.ts: terminal selection mode must disable c420ui mouse handling for menu, diagnostics, content and logs at startup",
     );
   }
   if (
@@ -933,7 +945,7 @@ function main(): number {
     !app.includes("enableMouse")
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: terminal selection mode must disable and restore screen program mouse handling",
+      "packages/c420ui/src/terminal/app.ts: terminal selection mode must disable and restore screen program mouse handling",
     );
   }
   if (
@@ -943,12 +955,12 @@ function main(): number {
     !app.includes("footer.setContent(footerContent())")
   ) {
     failures.push(
-      "scripts/c420ui/app.ts: terminal selection mode must apply global mouse state to menu, diagnostics, content, logs and footer",
+      "packages/c420ui/src/terminal/app.ts: terminal selection mode must apply global mouse state to menu, diagnostics, content, logs and footer",
     );
   }
   if (!app.includes("Logs - Text selection mode enabled")) {
     failures.push(
-      "scripts/c420ui/app.ts: enabled terminal text selection mode must be visible in the logs label",
+      "packages/c420ui/src/terminal/app.ts: enabled terminal text selection mode must be visible in the logs label",
     );
   }
   for (const keyHandler of [
@@ -959,7 +971,7 @@ function main(): number {
   ]) {
     if (!app.includes(keyHandler)) {
       failures.push(
-        "scripts/c420ui/app.ts: keyboard log scrolling must remain available",
+        "packages/c420ui/src/terminal/app.ts: keyboard log scrolling must remain available",
       );
     }
   }
@@ -1070,7 +1082,6 @@ function checkNoRootLauncherContract(failures: string[]): void {
   const rootDir = findProjectRoot();
   const launcher = readProjectFile(rootDir, "canva-linux.sh");
   const runTui = readProjectFile(rootDir, "scripts/run-c420ui.ts");
-  const tuiIndex = readProjectFile(rootDir, "scripts/c420ui/index.ts");
   const adapterRun = readProjectFile(rootDir, "scripts/c420ui-canva-linux/run.ts");
   const rootMessage =
     "Do not run Canva Linux Install and Development Tool with sudo or as root.";
@@ -1089,8 +1100,8 @@ function checkNoRootLauncherContract(failures: string[]): void {
   if (!runTui.includes("process.getuid") || !adapterRun.includes("process.getuid")) {
     failures.push("c420ui bootstrap must include a secondary root-launch guard");
   }
-  if (!tuiIndex.includes("runCanvaLinuxC420UI")) {
-    failures.push("scripts/c420ui/index.ts must delegate to adapter runner");
+  if (!adapterRun.includes("../../packages/c420ui/src/terminal")) {
+    failures.push("scripts/c420ui-canva-linux/run.ts must import terminal UI from packages/c420ui/src/terminal");
   }
   if (!runTui.includes("rootLaunchGuardMessage")) {
     failures.push(

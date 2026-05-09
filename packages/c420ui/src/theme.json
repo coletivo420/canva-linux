@@ -1,0 +1,23 @@
+{
+  "palette": {
+    "canvaLightBlue": "#07B9CE",
+    "canvaBlue": "#3969E7",
+    "canvaPurple": "#7D2AE7",
+    "success": "#00C853",
+    "warning": "#FFD166",
+    "error": "#FF4D4F",
+    "text": "#EAF7FF",
+    "muted": "#8FA3B8",
+    "background": "#10131A",
+    "surface": "#171B24",
+    "surfaceAlt": "#202635"
+  },
+  "ansiFallback": {
+    "primary": "cyan",
+    "secondary": "blue",
+    "accent": "magenta",
+    "success": "green",
+    "warning": "yellow",
+    "error": "red"
+  }
+}
