@@ -112,3 +112,38 @@ test("formatC420UITerminalHelp includes the project name and launcher command", 
   assert.match(help, /npm run c420ui/);
   assert.match(help, /\.\/example-project\.sh --ui/);
 });
+
+test("runC420UITerminalApp uses injected error writer and exit for uncaught exceptions", () => {
+  let uncaughtHandler: ((error: Error) => void) | undefined;
+  let destroyed = false;
+  const messages: string[] = [];
+  let exitCode: number | undefined;
+
+  runC420UITerminalApp(createRuntimeOptions(), {
+    getuid: () => 1000,
+    writeError(message) {
+      messages.push(message);
+    },
+    exit(code) {
+      exitCode = code;
+      throw new Error("exit");
+    },
+    create() {
+      return {
+        destroy() {
+          destroyed = true;
+        },
+      } as never;
+    },
+    onUncaughtException(listener) {
+      uncaughtHandler = listener;
+      return process;
+    },
+  });
+
+  assert.ok(uncaughtHandler);
+  assert.throws(() => uncaughtHandler?.(new Error("boom")), /exit/);
+  assert.equal(destroyed, true);
+  assert.equal(exitCode, 1);
+  assert.match(messages[0] ?? "", /boom/);
+});

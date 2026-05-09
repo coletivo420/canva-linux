@@ -20,11 +20,14 @@ export function runC420UITerminalApp(
   options: C420UIAppOptions,
   runtimeOptions: c420uiTerminalRuntimeOptions = {},
 ): void {
+  const writeError = runtimeOptions.writeError ?? console.error;
+  const exit = runtimeOptions.exit ?? (process.exit as (code: number) => never);
+
   enforceC420UIRootLaunchGuard({
     projectName: options.config.project.projectName,
     getuid: runtimeOptions.getuid,
-    writeError: runtimeOptions.writeError ?? console.error,
-    exit: runtimeOptions.exit ?? (process.exit as (code: number) => never),
+    writeError,
+    exit,
   });
 
   const create = runtimeOptions.create ?? loadC420UITerminalApp();
@@ -38,7 +41,7 @@ export function runC420UITerminalApp(
     try {
       screen.destroy();
     } catch {}
-    console.error(err);
-    process.exit(1);
+    writeError(err instanceof Error ? err.stack || err.message : String(err));
+    exit(1);
   });
 }
