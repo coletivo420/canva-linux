@@ -23,10 +23,10 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 - c420ui detection engine with Canva Linux detection provider.
 - Removed `scripts/core/overview-status.ts`.
 - Hardened c420ui detection provider contract around `project` overview status shape.
+- Artifact workflow runner: c420ui owns the artifact workflow runner and routes concrete Canva Linux actions through the Action Engine and Root Provider. Canva Linux provides concrete workflow recipes.
 
 ## Current phase
 
-- Artifact workflow runner.
 - Docs domain split.
 - Public docs cleanup.
 - RC validation matrix.
@@ -50,10 +50,9 @@ New c420ui or Canva Linux behavior checks should extend the relevant consolidate
 
 ## Next phases
 
-1. Artifact workflow runner.
-2. Docs domain split.
-3. Public docs cleanup.
-4. RC validation matrix.
+1. Docs domain split.
+2. Public docs cleanup.
+3. RC validation matrix.
 
 ## Non-goals
 

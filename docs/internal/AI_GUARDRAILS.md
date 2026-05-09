@@ -56,6 +56,14 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Detection status uses `project`, not the removed legacy `package` shape.
 - Do not reintroduce `package: project` compatibility in detection providers.
 - c420ui detection probes are generic; Canva Linux owns concrete probe keys and shell glue.
+- Artifact workflow execution belongs to `packages/c420ui/src/workflow-runner.ts`.
+- Canva Linux may define workflow recipes, action IDs and output patterns.
+- Do not hardcode Canva Linux action IDs inside c420ui workflow runner.
+- Do not implement artifact workflow phase logic inside the Canva Linux adapter.
+- Artifact workflows must execute concrete actions through the c420ui Action Engine.
+- Do not call `adapter.runAction()` directly from project artifact workflow bridges.
+- Root/sudo policy must remain centralized in the Root Provider.
+- Dry-run and planned artifact workflows must not trigger sudo or concrete command execution.
 
 ## c420ui
 

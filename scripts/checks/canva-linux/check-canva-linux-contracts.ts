@@ -642,10 +642,46 @@ function main(): number {
 const checkArtifactRecipesContract = (() => {
 function main(): number {
   const adapter = createCanvaLinuxC420UIAdapter(process.cwd());
+  const rootDir = process.cwd();
   const workflows = adapter.loadArtifactWorkflows();
   const actions = new Set(adapter.loadActions().map((action) => action.id));
   const workflowsById = new Map(workflows.map((workflow) => [workflow.id, workflow]));
+  const artifactsSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/artifacts.ts"), "utf8");
+  const bridgeSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/bridge.ts"), "utf8");
   const failures: string[] = [];
+
+  for (const fragment of [
+    "buildActionId",
+    "validateActionId",
+    "installActionId",
+    "uninstallActionId",
+    "purgeActionId",
+    "releaseActionId",
+  ]) {
+    if (!artifactsSource.includes(fragment)) {
+      failures.push(`scripts/c420ui-canva-linux/artifacts.ts: missing ${fragment}`);
+    }
+  }
+
+  for (const fragment of [
+    "createC420UIActionEngine",
+    "createCanvaLinuxRootProvider",
+    "engine.runActionById",
+    "runC420UIArtifactWorkflow",
+  ]) {
+    if (!bridgeSource.includes(fragment)) {
+      failures.push(`scripts/c420ui-canva-linux/bridge.ts: missing ${fragment}`);
+    }
+  }
+
+  for (const fragment of [
+    "return adapter.runAction(actionId",
+    "adapter.runAction(actionId, contextForAction())",
+  ]) {
+    if (bridgeSource.includes(fragment)) {
+      failures.push(`scripts/c420ui-canva-linux/bridge.ts: must not bypass Action Engine with ${fragment}`);
+    }
+  }
 
   for (const id of ["appimage", "flatpak", "native-system", "native-user"]) {
     if (!workflowsById.has(id)) failures.push(`missing required artifact workflow: ${id}`);

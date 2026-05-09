@@ -29,7 +29,7 @@ creating one-off check files or `*-parts/` validation directories, unless there 
 - `npm run check:c420ui-core`
   - runs `check-c420ui-core-contracts.ts` as the consolidated c420ui core contract check
   - covers boundary, package policy, bridge, Action Engine, CLI, root provider, command runner, operational logs,
-    artifact workflow, interactive runner, and public API exports
+    artifact workflow runner, interactive runner, and public API exports
 - `npm run check:canva-linux`
   - runs `check-canva-linux-contracts.ts` as the consolidated Canva Linux contract check
   - covers adapter, root provider, sudo-common, public branding, project boundary, action registry validation,
@@ -53,6 +53,8 @@ creating one-off check files or `*-parts/` validation directories, unless there 
   - fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/` only
 - `bash -n canva-linux.sh scripts/*.sh`
 - Detection refreshes are validated through the c420ui detection engine and Canva Linux provider checks.
+- Artifact workflow phase routing is validated through `packages/c420ui/src/workflow-runner.ts` tests and the c420ui core contract check.
+- Canva Linux artifact workflow execution is validated to use the c420ui Action Engine and Root Provider instead of direct adapter calls.
 - `./canva-linux.sh --bundle-deb` exits `78` because `.deb` packaging is planned, not built.
 - `./canva-linux.sh --bundle-rpm` exits `78` because `.rpm` packaging is planned, not built.
 - `./canva-linux.sh --prepare-aur` exits `78` because AUR packaging is planned, not built.

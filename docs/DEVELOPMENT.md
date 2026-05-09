@@ -91,6 +91,10 @@ Do not add hardcoded action lists directly in c420ui or launcher code.
 New direct action execution logic must be modeled in the c420ui action engine first. Project adapters provide concrete
 action execution; they must not duplicate generic planned-action, dry-run or exit-code behavior.
 
+Artifact workflow phase execution must be modeled in `packages/c420ui/src/workflow-runner.ts`. Canva Linux may define
+concrete artifact recipes, action IDs, scopes, and output patterns in `scripts/c420ui-canva-linux/artifacts.ts`, but phase
+routing for build, validate, install, uninstall, purge, and release belongs to c420ui.
+
 Recommended flow:
 
 1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.

@@ -120,6 +120,7 @@ function main(): number {
     "operational-logs.ts",
     "root-provider.ts",
     "types.ts",
+    "workflow-runner.ts",
     "workflows.ts",
   ];
   const index = fs.readFileSync(path.join(srcDir, "index.ts"), "utf8");
@@ -561,6 +562,8 @@ function main(): number {
   const rootDir = process.cwd();
   const artifacts = read(rootDir, "packages/c420ui/src/artifacts.ts");
   const workflows = read(rootDir, "packages/c420ui/src/workflows.ts");
+  const workflowRunnerPath = "packages/c420ui/src/workflow-runner.ts";
+  const workflowRunner = read(rootDir, workflowRunnerPath);
   const required = [
     "c420uiArtifactKind",
     "c420uiArtifactScope",
@@ -573,11 +576,33 @@ function main(): number {
     "releaseActionId",
     "custom",
     "runC420UIWorkflow",
+    "runC420UIArtifactWorkflow",
+    "c420uiArtifactWorkflowRunOptions",
+    "c420uiWorkflowPhase",
   ];
-  const source = `${artifacts}\n${workflows}`;
+  const source = `${artifacts}\n${workflows}\n${workflowRunner}`;
   const failures = required
     .filter((fragment) => !source.includes(fragment))
     .map((fragment) => `missing artifact/workflow contract fragment: ${fragment}`);
+
+  if (!fs.existsSync(path.join(rootDir, workflowRunnerPath))) {
+    failures.push(`${workflowRunnerPath}: missing artifact workflow runner`);
+  }
+
+  for (const fragment of [
+    "Canva Linux",
+    "canva-linux",
+    "bundle-appimage",
+    "bundle-flatpak",
+    "install-flatpak-system",
+    "createCanvaLinux",
+    "c420ui-canva-linux",
+    "ProjectAdapter",
+  ]) {
+    if (workflowRunner.includes(fragment)) {
+      failures.push(`${workflowRunnerPath}: must not hardcode ${fragment}`);
+    }
+  }
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[c420ui-core-contracts] artifact workflows OK");

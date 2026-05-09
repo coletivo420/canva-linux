@@ -5,6 +5,7 @@ export type * from "./detection";
 export type * from "./capabilities";
 export type * from "./events";
 export type * from "./root-provider";
+export type * from "./workflow-runner";
 export { createC420UIActionEngine } from "./action-engine";
 export { runC420UICli } from "./cli";
 export { runC420UICommand } from "./command-runner";
@@ -30,8 +31,12 @@ export type {
   C420UIWorkflowResult,
   C420UIWorkflowRunner,
   C420UIWorkflowRunOptions,
+  c420uiArtifactWorkflowPhaseActionIds,
+  c420uiArtifactWorkflowRuntimeMetadata,
+  c420uiRunnableArtifactWorkflow,
 } from "./workflows";
 export { runC420UIWorkflow } from "./workflows";
+export { runC420UIArtifactWorkflow } from "./workflow-runner";
 export type {
   C420UIBrandConfig,
   C420UIConfig,

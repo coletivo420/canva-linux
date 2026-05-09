@@ -2,11 +2,13 @@ import path from "node:path";
 import type {
   c420uiArtifactWorkflow,
   c420uiProjectCapabilities,
+  c420uiRunnableArtifactWorkflow,
 } from "../../packages/c420ui/src";
 
-export type CanvaLinuxArtifactWorkflow = c420uiArtifactWorkflow & {
-  outputPattern?: string;
-};
+export type CanvaLinuxArtifactWorkflow = c420uiArtifactWorkflow &
+  c420uiRunnableArtifactWorkflow & {
+    outputPattern?: string;
+  };
 
 export function loadCanvaLinuxCapabilities(): c420uiProjectCapabilities {
   return {

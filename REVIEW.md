@@ -60,6 +60,28 @@ Request changes if a PR:
 - adds Canva Linux-specific metadata to `packages/c420ui/src/action-engine.ts`;
 - changes runtime app logs while implementing action-engine contracts.
 
+
+## Artifact workflow runner review
+
+Request changes if a PR:
+
+- hardcodes Canva Linux action IDs inside c420ui core;
+- implements build/install/release phase routing in the Canva Linux adapter instead of c420ui;
+- reports planned package workflows as success;
+- changes artifact architecture naming to x64;
+- bypasses Action Engine / Command Runner for artifact actions.
+
+
+## Artifact workflow execution review
+
+Request changes if a PR:
+
+- calls `adapter.runAction()` directly from artifact workflow orchestration;
+- bypasses the c420ui Action Engine for artifact phases;
+- bypasses the Canva Linux Root Provider for system install/uninstall/purge phases;
+- makes planned package workflows return success as if implemented;
+- triggers sudo during dry-run.
+
 ## c420ui naming and logo review
 
 Request changes if a PR:

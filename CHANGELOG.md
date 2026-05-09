@@ -26,6 +26,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Added the c420ui artifact workflow runner and kept Canva Linux artifact recipes as project-specific configuration.
 - Tightened the c420ui detection provider contract and removed the legacy `package` overview status shape.
 - Moved installation overview detection to the generic c420ui detection engine with a Canva Linux provider under `scripts/canva-linux/detection/`.
 - Moved Canva Linux action registry and project UI config under `config/canva-linux/`.
@@ -63,6 +64,7 @@
   execution were migrated to the shared c420ui Action Engine.
 
 ### Fixed
+- Routed Canva Linux artifact workflow actions through the shared c420ui Action Engine and Root Provider instead of calling the project adapter directly.
 - Avoided duplicate action environment preparation in the Canva Linux adapter.
 - Interactive action cancellation now reports a canceled progress state before execution.
 - Restored interactive c420ui root-auth environment propagation and Ctrl+C cancellation for Action Engine-backed actions.
