@@ -13,6 +13,7 @@ recipes, and host scripts.
 - terminal root launch guard
 - action scopes
 - Linux root/sudo provider base
+- reusable Linux host sudo helper
 - detection contracts
 - artifact workflow runner
 - host dependency contracts
@@ -26,6 +27,7 @@ recipes, and host scripts.
 - concrete detection provider
 - concrete root policy decisions
 - concrete shell scripts
+- project-specific root action scope decisions and environment names
 - package naming
 - release process
 
@@ -37,6 +39,7 @@ recipes, and host scripts.
 - generic engines reimplemented in project adapters
 - root launch guard outside c420ui terminal runtime
 - concrete package action IDs inside c420ui core
+- project-specific sudo wrappers when the generic c420ui helper is sufficient
 
 ## Examples that checks must reject
 

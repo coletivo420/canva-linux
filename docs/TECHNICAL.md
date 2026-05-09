@@ -97,15 +97,15 @@ Logs may report the backend name and policy mode, but must not include cookies, 
 
 ## Sudo Contract
 
-Privileged actions follow a shared contract defined in `scripts/sudo-common.sh`.
+Privileged actions follow a shared contract defined in `packages/c420ui/host/linux/sudo-helper.sh`.
 
 1. The c420ui Action Engine interprets Action Registry metadata, including
    `requiresRoot`, `scope`, `env`, confirmation flags and planned state.
 2. Actions with `requiresRoot: true` validate root access through
-   `scripts/sudo-common.sh --validate` before backend scripts start.
+   `packages/c420ui/host/linux/sudo-helper.sh --validate` before backend scripts start.
 3. The c420ui requests the root password via a secure prompt and the c420ui Root
    Provider passes the root-auth environment marker to backend execution.
-4. `scripts/sudo-common.sh` detects this environment variable and uses
+4. `packages/c420ui/host/linux/sudo-helper.sh` detects this environment variable and uses
    `sudo -n` for non-interactive cached-credential validation and execution.
 5. In direct CLI mode, `sudo` prompts for the password as usual in the terminal.
 6. User-scope actions are refused if they also declare `requiresRoot: true`;

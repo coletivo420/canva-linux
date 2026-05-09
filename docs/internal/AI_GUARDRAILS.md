@@ -204,13 +204,14 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui owns generic action scope semantics.
 - c420ui owns the generic root provider contract.
 - c420ui owns the generic Linux root/sudo provider base.
+- c420ui owns `packages/c420ui/host/linux/sudo-helper.sh` for reusable privileged host operations.
 - c420ui must never import dependent project adapters.
 - Dependent project adapters must not reimplement c420ui engines.
 - Project-specific strings, env vars and action IDs are forbidden inside `packages/c420ui/src`.
 - Root launch guard belongs only to c420ui terminal runtime.
 - Privileged action policy uses c420ui root provider contracts.
 - Canva Linux root provider must remain thin and project-specific.
-- Canva Linux owns the concrete root provider configuration backed by `scripts/sudo-common.sh`.
+- Canva Linux owns the concrete root provider configuration backed by `packages/c420ui/host/linux/sudo-helper.sh`.
 - Do not hardcode Canva Linux env names or helper paths inside c420ui core.
 - Do not reimplement generic `validateRootAccess` in project adapters.
 - Do not import root/sudo policy from removed legacy runner surfaces inside the Canva Linux adapter.
@@ -218,8 +219,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Dry-run, planned actions and confirmation failures must not trigger sudo/root validation.
 - Sudo/root authentication failures must be shown in a centered c420ui popup.
 - Prefer shared sudo helpers over direct sudo calls.
-- System-wide actions must use scripts/sudo-common.sh.
-- Raw sudo calls are forbidden outside scripts/sudo-common.sh.
+- System-wide actions must use packages/c420ui/host/linux/sudo-helper.sh.
+- Raw sudo calls are forbidden outside packages/c420ui/host/linux/sudo-helper.sh.
+- Do not reintroduce the removed project-specific sudo helper.
+- The c420ui sudo helper must not contain `CANVA_*` environment variables or project-specific names.
+- Project adapters may translate project environment variables into `C420UI_*` variables.
 - User-scope actions must never call sudo.
 - Sudo contract checks must tolerate valid shell whitespace around assignments.
 

@@ -43,6 +43,7 @@ test("buildActionEnvironment merges action env over base env", () => {
   assert.deepEqual(env, {
     CANVA_NATIVE_SCOPE: "system",
     KEEP_ME: "1",
+    C420UI_ACTION_SCOPE: "system",
   });
 });
 
@@ -118,7 +119,7 @@ test("Canva Linux root provider delegates generic Linux root behavior to c420ui"
   assert.equal(source.includes("buildRootActionEnvironment"), false);
 });
 
-test("validateRootAccess uses scripts/sudo-common.sh through injected runner", () => {
+test("validateRootAccess uses c420ui sudo helper through injected runner", () => {
   const calls: Array<{
     command: string;
     args: string[];
@@ -146,7 +147,7 @@ test("validateRootAccess uses scripts/sudo-common.sh through injected runner", (
   assert.equal(calls.length, 1);
   assert.deepEqual(calls[0], {
     command: "bash",
-    args: ["scripts/sudo-common.sh", "--validate"],
+    args: ["packages/c420ui/host/linux/sudo-helper.sh", "--validate"],
     options: {
       cwd: "/repo",
       env,

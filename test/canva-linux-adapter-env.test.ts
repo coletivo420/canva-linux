@@ -32,7 +32,7 @@ function createTempProject(): string {
           command: process.execPath,
           args: [
             "-e",
-            "process.stdout.write(JSON.stringify({ rootAuth: process.env.CANVA_C420UI_ROOT_AUTH, base: process.env.BASE_ENV }))",
+            "process.stdout.write(JSON.stringify({ rootAuth: process.env.C420UI_ROOT_AUTH, base: process.env.BASE_ENV }))",
           ],
           requiresRoot: true,
         },

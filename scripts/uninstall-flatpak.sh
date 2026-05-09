@@ -4,7 +4,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "${ROOT_DIR}"
 source "${ROOT_DIR}/scripts/app-identity-common.sh"
 source "${ROOT_DIR}/scripts/ui-common.sh"
-source "${ROOT_DIR}/scripts/sudo-common.sh"
+source "${ROOT_DIR}/packages/c420ui/host/linux/sudo-helper.sh"
 source "${ROOT_DIR}/scripts/install-detection-common.sh"
 ui_init
 
@@ -17,7 +17,7 @@ detect_installations
 case "$SCOPE" in
   system)
     if [[ "${DETECTED_FLATPAK_SYSTEM}" == true ]]; then
-      canva_sudo_flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true
+      c420ui_sudo_flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true
       ui_ok "Flatpak system uninstall complete"
     else
       ui_info "No Flatpak system install detected"
@@ -39,7 +39,7 @@ case "$SCOPE" in
       ui_info "No Flatpak user install detected"
     fi
     if [[ "${DETECTED_FLATPAK_SYSTEM}" == true ]]; then
-      canva_sudo_flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true
+      c420ui_sudo_flatpak uninstall --system -y "$APP_ID" 2>/dev/null || true
       ui_ok "Flatpak system uninstall complete"
     else
       ui_info "No Flatpak system install detected"

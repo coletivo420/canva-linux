@@ -16,6 +16,30 @@ const conditionalSystemRootActionIds = new Set([
   "uninstall-detected",
 ]);
 
+function buildCanvaLinuxRootActionEnvironment(
+  action: c420uiAction,
+  baseEnv: NodeJS.ProcessEnv,
+): NodeJS.ProcessEnv {
+  const env = {
+    ...baseEnv,
+    ...(action.env || {}),
+  };
+
+  if (env.CANVA_NATIVE_SCOPE === "user" || env.CANVA_FLATPAK_SCOPE === "user") {
+    env.C420UI_ACTION_SCOPE = "user";
+  } else if (
+    env.CANVA_NATIVE_SCOPE === "system" ||
+    env.CANVA_FLATPAK_SCOPE === "system" ||
+    action.scope === "system"
+  ) {
+    env.C420UI_ACTION_SCOPE = "system";
+  } else if (action.scope) {
+    env.C420UI_ACTION_SCOPE = action.scope;
+  }
+
+  return env;
+}
+
 function hasCanvaLinuxUserScope(
   action: c420uiAction,
   actionEnv: NodeJS.ProcessEnv,
@@ -33,10 +57,11 @@ export function createCanvaLinuxRootProvider(
   const base = createC420UILinuxRootProviderBase({
     id: "canva-linux-root-provider",
     label: "Canva Linux root provider",
-    sudoHelperPath: "scripts/sudo-common.sh",
-    rootAuthEnvKey: "CANVA_C420UI_ROOT_AUTH",
+    sudoHelperPath: "packages/c420ui/host/linux/sudo-helper.sh",
+    rootAuthEnvKey: "C420UI_ROOT_AUTH",
     rootAuthEnvValue: "1",
     runCommand: options.runCommand,
+    buildActionEnvironment: buildCanvaLinuxRootActionEnvironment,
     actionHasUserScope: hasCanvaLinuxUserScope,
   });
 

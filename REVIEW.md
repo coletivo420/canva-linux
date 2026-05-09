@@ -58,7 +58,7 @@ Request changes if a PR:
 - imports root/sudo helpers from removed legacy runner surfaces into the Canva Linux adapter;
 - triggers sudo for dry-run, planned actions, or confirmation failures;
 - calls sudo directly from `packages/c420ui/src`;
-- bypasses `scripts/sudo-common.sh` for Canva Linux privileged actions;
+- bypasses `packages/c420ui/host/linux/sudo-helper.sh` for Canva Linux privileged actions;
 - removes user-scope protection for root actions.
 
 ## c420ui scope/root provider boundary review
@@ -66,10 +66,20 @@ Request changes if a PR:
 Request changes if a PR:
 
 - reimplements generic scope helpers inside Canva Linux code;
-- hardcodes `CANVA_NATIVE_SCOPE`, `CANVA_FLATPAK_SCOPE` or `CANVA_C420UI_ROOT_AUTH` in c420ui core;
-- hardcodes `scripts/sudo-common.sh` in c420ui core;
+- hardcodes `CANVA_NATIVE_SCOPE`, `CANVA_FLATPAK_SCOPE` or `C420UI_ROOT_AUTH` in c420ui core;
+- hardcodes `packages/c420ui/host/linux/sudo-helper.sh` in c420ui core;
 - reimplements `validateRootAccess` in the Canva Linux root provider;
 - moves conditional Canva Linux detection policy into c420ui core.
+
+## c420ui host sudo helper review
+
+Request changes if a PR:
+
+- reintroduces the removed project-specific sudo helper;
+- adds project-specific sudo helper function aliases;
+- adds `CANVA_*` env vars to `packages/c420ui/host`;
+- bypasses the c420ui Linux root provider base;
+- calls raw sudo outside the c420ui sudo helper.
 
 ## c420ui action engine review
 
