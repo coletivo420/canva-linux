@@ -70,9 +70,13 @@ under `.build/` only.
 
 Project validations, contracts, and registries are implemented in TypeScript under `scripts/core/`.
 
-- `npm run build:scripts-core` compiles core entries with esbuild into `.build/scripts/core/`.
-- `scripts/run-core-entry.sh` builds the core on demand when compiled artifacts
-  are missing, then runs the generated `.build/scripts/core/<entry>.js` artifact.
+- `npm run build:scripts-core` removes `.build/scripts/core/`, then compiles core
+  entries with esbuild into a fresh `.build/scripts/core/` output directory so stale
+  artifacts from removed entries cannot survive rebuilds.
+- `scripts/run-core-entry.sh` only dispatches supported core entries, removes stale
+  generated files for removed legacy entries when they are requested, builds the
+  core on demand when compiled artifacts are missing, then runs the generated
+  `.build/scripts/core/<entry>.js` artifact.
 - `npm run build:scripts` compiles top-level script entrypoints such as
   `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
   `scripts/run-c420ui.ts` directly into `.build/scripts/*.js`.

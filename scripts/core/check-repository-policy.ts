@@ -1098,6 +1098,12 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
   }
 
   const scriptsCoreBuild = scripts["build:scripts-core"] ?? "";
+  if (!scriptsCoreBuild.includes("rm -rf .build/scripts/core")) {
+    failures.push(
+      "package.json build:scripts-core: must clean .build/scripts/core before rebuilding so stale removed entries cannot survive",
+    );
+  }
+
   for (const removedFile of removedFiles) {
     if (scriptsCoreBuild.includes(removedFile)) {
       failures.push(
@@ -1225,6 +1231,8 @@ function validateRunCoreEntryScriptShape(
     "  fi",
     '  ENTRY="$1"',
     "  shift",
+    '      rm -f "${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"',
+    "      printf '%s\\n' \"scripts/run-core-entry.sh: ${ENTRY} was removed; use a supported core entry.\" >&2",
     '  node "${TARGET}" "$@"',
   ] as const;
 
