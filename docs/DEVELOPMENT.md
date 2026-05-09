@@ -96,8 +96,9 @@ Recommended flow:
 1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.
 2. Add entry in `scripts/actions.json`.
 3. Run `npm run actions:validate`.
-4. Test direct CLI: `scripts/run-core-entry.sh action-runner --id <action-id> --dry-run`.
-5. Test direct CLI and c420ui: `./canva-linux.sh --doctor` and `./canva-linux.sh`.
+4. Test direct CLI through the launcher: `./canva-linux.sh <action-flag> --dry-run`.
+5. Test the compiled c420ui CLI bridge when needed: `npm run c420ui:cli -- <action-flag> --dry-run`.
+6. Test c420ui interactively: `./canva-linux.sh`.
 
 ## Sudo and Privileged Actions
 
