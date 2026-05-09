@@ -360,6 +360,83 @@ function main(): number {
   return { main };
 })();
 
+
+function checkDependentProjectAdapterBoundary(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const runEntrypointPath = "scripts/run-c420ui.ts";
+  const runPath = "scripts/c420ui-canva-linux/run.ts";
+  const bridgePath = "scripts/c420ui-canva-linux/bridge.ts";
+  const adapterPath = "scripts/c420ui-canva-linux/adapter.ts";
+  const rootProviderPath = "scripts/c420ui-canva-linux/root-provider.ts";
+  const runEntrypoint = readProjectFile(rootDir, runEntrypointPath);
+  const run = readProjectFile(rootDir, runPath);
+  const bridge = readProjectFile(rootDir, bridgePath);
+  const adapter = readProjectFile(rootDir, adapterPath);
+  const rootProvider = readProjectFile(rootDir, rootProviderPath);
+
+  const requiredFragments: Array<[string, string, string]> = [
+    [runPath, run, "runC420UITerminalApp"],
+    [bridgePath, bridge, "runC420UIArtifactWorkflow"],
+    [bridgePath, bridge, "createC420UIActionEngine"],
+    [rootProviderPath, rootProvider, "createC420UILinuxRootProviderBase"],
+    [adapterPath, adapter, "runC420UICommand"],
+  ];
+  for (const [relativePath, source, fragment] of requiredFragments) {
+    if (!source.includes(fragment)) {
+      failures.push(`${relativePath}: dependent project adapter must use c420ui provider/engine ${fragment}`);
+    }
+  }
+
+  for (const [relativePath, source] of [
+    [runEntrypointPath, runEntrypoint],
+    [runPath, run],
+  ] as const) {
+    if (source.includes("process.getuid")) {
+      failures.push(`${relativePath}: root launch guard belongs to c420ui terminal runtime`);
+    }
+  }
+
+  for (const relativePath of [
+    "scripts/c420ui-canva-linux/adapter.ts",
+    "scripts/c420ui-canva-linux/artifacts.ts",
+    "scripts/c420ui-canva-linux/bridge.ts",
+    "scripts/c420ui-canva-linux/cli.ts",
+    "scripts/c420ui-canva-linux/root-provider.ts",
+    "scripts/c420ui-canva-linux/run.ts",
+  ] as const) {
+    const source = readProjectFile(rootDir, relativePath);
+    for (const fragment of [
+      "rootLaunchGuardMessage",
+      "run-core-entry.sh",
+      "action-runner",
+      "overview-status",
+      "adapter.runAction(actionId, contextForAction())",
+    ] as const) {
+      if (source.includes(fragment)) {
+        failures.push(`${relativePath}: dependent project adapter must not restore ${fragment}`);
+      }
+    }
+    for (const fragment of [
+      "createApp(",
+      "blessed",
+      "FOCUS_ZONES",
+      "validateRootAccess(rootDir",
+      "buildRootActionEnvironment",
+    ] as const) {
+      if (source.includes(fragment)) {
+        failures.push(`${relativePath}: dependent project adapter must not reimplement c420ui runtime/provider fragment ${fragment}`);
+      }
+    }
+  }
+
+  if (adapter.includes("spawnSync")) {
+    failures.push(`${adapterPath}: dependent project adapter must use runC420UICommand instead of spawning commands directly`);
+  }
+  if (rootProvider.includes("spawnSync")) {
+    failures.push(`${rootProviderPath}: dependent project root provider must delegate command execution to c420ui Linux root provider base`);
+  }
+}
+
 const checkSudoCommonContractRunner = (() => {
 function findCheckedFiles(dir: string): string[] {
   const results: string[] = [];
@@ -1564,6 +1641,7 @@ export function main(): number {
 
   checkAdapterContract(failures);
   checkRootProviderContract(failures);
+  checkDependentProjectAdapterBoundary(failures);
   checkSudoCommonContract(failures);
   checkPublicBranding(failures);
   checkProjectBoundary(failures);

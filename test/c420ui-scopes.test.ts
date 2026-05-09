@@ -6,6 +6,8 @@ import {
   isC420UISystemScope,
   isC420UIUserScope,
   normalizeC420UIActionScope,
+  validateC420UIActions,
+  type c420uiAction,
 } from "../packages/c420ui/src";
 
 test("normalizeC420UIActionScope returns undefined for undefined scope", () => {
@@ -24,4 +26,31 @@ test("scope helpers identify known scopes", () => {
 
 test("normalizeC420UIActionScope preserves unknown custom scopes", () => {
   assert.equal(normalizeC420UIActionScope(" project-custom "), "project-custom");
+});
+
+
+const customScopeAction: c420uiAction = {
+  id: "custom-scope-action",
+  label: "Custom Scope Action",
+  group: "custom",
+  section: "custom",
+  kind: "command",
+  scope: "project-custom",
+  command: "echo",
+  args: [],
+};
+
+test("validateC420UIActions rejects custom scopes by default", () => {
+  assert.throws(
+    () => validateC420UIActions([customScopeAction]),
+    /Invalid action scope: custom-scope-action -> project-custom/,
+  );
+});
+
+test("validateC420UIActions accepts custom scopes when explicitly allowed", () => {
+  assert.doesNotThrow(() =>
+    validateC420UIActions([customScopeAction], {
+      allowedScopes: ["user", "system", "auto", "project-custom"],
+    }),
+  );
 });

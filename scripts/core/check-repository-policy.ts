@@ -1061,6 +1061,42 @@ function validateNoCoreProductDetectionLogic(
   }
 }
 
+
+function validateDependentProjectBoundaryLayout(
+  rootDir: string,
+  failures: string[],
+): void {
+  const requiredPaths = [
+    "packages/c420ui/src",
+    "packages/c420ui/src/terminal",
+    "config/canva-linux/actions.json",
+    "config/canva-linux/project-ui.json",
+    "scripts/c420ui-canva-linux",
+    "scripts/canva-linux/actions",
+    "scripts/canva-linux/detection",
+  ] as const;
+  for (const requiredPath of requiredPaths) {
+    if (!fs.existsSync(path.join(rootDir, requiredPath))) {
+      failures.push(`${requiredPath}: expected dependent-project boundary path is missing`);
+    }
+  }
+
+  const removedPaths = [
+    "scripts/c420ui",
+    "scripts/actions.json",
+    "scripts/project-ui.json",
+    "scripts/core/action-runner.ts",
+    "scripts/core/overview-status.ts",
+    "scripts/core/action-registry.ts",
+    "scripts/core/validate-actions.ts",
+  ] as const;
+  for (const removedPath of removedPaths) {
+    if (fs.existsSync(path.join(rootDir, removedPath))) {
+      failures.push(`${removedPath}: removed runtime/project path must not return`);
+    }
+  }
+}
+
 function validatePackageLockConsistency(
   rootDir: string,
   failures: string[],
@@ -1600,6 +1636,7 @@ function main(): number {
   validateRetiredC420UIProcessRunner(rootDir, failures);
   validateNoLegacyC420UIDirectory(rootDir, failures);
   validateNoCoreProductDetectionLogic(rootDir, failures);
+  validateDependentProjectBoundaryLayout(rootDir, failures);
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);
   validateRemovedCompatibilityAliases(rootDir, failures);

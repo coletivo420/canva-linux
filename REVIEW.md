@@ -40,6 +40,17 @@ Request changes if a PR:
 - duplicates Action Engine, Root Provider, or Command Runner policy outside c420ui;
 - uses Action Runner terminology for new code.
 
+## Dependent project boundary review
+
+Request changes if a PR:
+
+- adds project-specific strings to `packages/c420ui/src`;
+- imports project adapters from c420ui;
+- reimplements c420ui engines in `scripts/c420ui-canva-linux`;
+- adds root launch guard outside c420ui terminal runtime;
+- hardcodes concrete Canva Linux action IDs in c420ui core;
+- moves project detection or package recipes into c420ui core.
+
 ## c420ui root provider review
 
 Request changes if a PR:

@@ -204,6 +204,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui owns generic action scope semantics.
 - c420ui owns the generic root provider contract.
 - c420ui owns the generic Linux root/sudo provider base.
+- c420ui must never import dependent project adapters.
+- Dependent project adapters must not reimplement c420ui engines.
+- Project-specific strings, env vars and action IDs are forbidden inside `packages/c420ui/src`.
+- Root launch guard belongs only to c420ui terminal runtime.
+- Privileged action policy uses c420ui root provider contracts.
 - Canva Linux root provider must remain thin and project-specific.
 - Canva Linux owns the concrete root provider configuration backed by `scripts/sudo-common.sh`.
 - Do not hardcode Canva Linux env names or helper paths inside c420ui core.

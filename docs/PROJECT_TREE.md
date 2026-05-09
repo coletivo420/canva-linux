@@ -34,7 +34,7 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │       └── checks/            Reusable c420ui validation and anti-regression checks
 ├── docs/                      Public and internal project documentation
 │   ├── *.md                   Public user, contributor, release, validation, and architecture docs
-│   ├── internal/              AI, developer-memory, historical, and legacy notes
+│   ├── internal/              AI, dependent-project boundary, historical, and legacy notes
 │   └── notes/                 Packaging and submission notes
 ├── packaging/                 Packaging submission workspaces
 │   └── flathub/               Flathub manifest, source generation, and submission helpers
@@ -107,7 +107,8 @@ The intended separation is:
 - **Validation split**: reusable c420ui validation and anti-regression checks live
   in `packages/c420ui/checks/`; Canva Linux-specific validation and
   anti-regression checks live in `scripts/checks/canva-linux/`; shared
-  infrastructure checks live under `scripts/core/`.
+  infrastructure checks live under `scripts/core/`. Dependent-project boundary
+  rules are documented in `docs/internal/C420UI_DEPENDENT_PROJECT_BOUNDARIES.md`.
 - **Core scripts**: `scripts/core/` is infrastructure-check-only. Do not add
   runtime/product entrypoints there, and do not reintroduce removed runtime paths
   in active documentation.

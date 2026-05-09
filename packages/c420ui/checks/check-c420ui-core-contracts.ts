@@ -33,14 +33,20 @@ const forbidden = [
   "io.github.coletivo420.canva-linux",
   "https://github.com/coletivo420/canva-linux",
   "CL-EyeDropper",
-  "scripts/",
   "config/canva-linux",
-  "project-ui.json",
-  "actions.json",
-  "app-identity-common.sh",
-  "run-core-entry.sh",
-  "sudo-common.sh",
-  "CANVA_",
+  "scripts/c420ui-canva-linux",
+  "scripts/canva-linux",
+  "scripts/app-identity-common.sh",
+  "scripts/install-detection-common.sh",
+  "scripts/sudo-common.sh",
+  "CANVA_NATIVE_SCOPE",
+  "CANVA_FLATPAK_SCOPE",
+  "CANVA_C420UI_ROOT_AUTH",
+  "bundle-appimage",
+  "bundle-flatpak",
+  "install-flatpak-system",
+  "install-native-system",
+  "release-artifacts",
 ];
 
 function readSource(rootDir: string): string {
@@ -55,10 +61,57 @@ function main(): number {
   const source = readSource(rootDir);
   const failures = forbidden
     .filter((fragment) => source.includes(fragment))
-    .map((fragment) => `packages/c420ui/src must not hardcode ${fragment}`);
+    .map((fragment) => `packages/c420ui/src must not hardcode dependent-project fragment: ${fragment}`);
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[c420ui-core-contracts] boundary OK");
+  return 0;
+}
+
+  return { main };
+})();
+
+const checkDependentProjectBoundaryContract = (() => {
+const forbiddenFragments = [
+  "Canva Linux",
+  "canva-linux",
+  "io.github.coletivo420.canva-linux",
+  "config/canva-linux",
+  "scripts/c420ui-canva-linux",
+  "scripts/canva-linux",
+  "scripts/app-identity-common.sh",
+  "scripts/install-detection-common.sh",
+  "scripts/sudo-common.sh",
+  "CANVA_NATIVE_SCOPE",
+  "CANVA_FLATPAK_SCOPE",
+  "CANVA_C420UI_ROOT_AUTH",
+  "bundle-appimage",
+  "bundle-flatpak",
+  "install-flatpak-system",
+  "install-native-system",
+  "release-artifacts",
+] as const;
+
+function main(): number {
+  const rootDir = process.cwd();
+  const srcDir = path.join(rootDir, "packages/c420ui/src");
+  const failures: string[] = [];
+
+  for (const file of collectTypeScriptFiles(srcDir)) {
+    const relativePath = path.relative(rootDir, file).replace(/\\/g, "/");
+    const source = fs.readFileSync(file, "utf8");
+    for (const fragment of forbiddenFragments) {
+      if (source.includes(fragment)) {
+        failures.push(`${relativePath}: c420ui core must not contain dependent-project fragment ${fragment}`);
+      }
+    }
+    if (/from\s+["'][^"']*(?:scripts\/c420ui-canva-linux|scripts\/canva-linux|config\/canva-linux)/.test(source)) {
+      failures.push(`${relativePath}: c420ui core must not import dependent-project adapters or config`);
+    }
+  }
+
+  if (failures.length) throw new Error(failures.join("\n"));
+  console.log("[c420ui-core-contracts] dependent project boundary OK");
   return 0;
 }
 
@@ -204,6 +257,10 @@ function main(): number {
 
 function runDetectionContract(failures: string[]): void {
   runCheck(failures, { name: "detection", run: checkDetectionContractRunner.main });
+}
+
+function runDependentProjectBoundaryContract(failures: string[]): void {
+  runCheck(failures, { name: "dependent project boundary", run: checkDependentProjectBoundaryContract.main });
 }
 
 const checkBridgeContractRunner = (() => {
@@ -1001,6 +1058,7 @@ export function main(): number {
   const failures: string[] = [];
 
   runBoundaryContract(failures);
+  runDependentProjectBoundaryContract(failures);
   runPackagePolicyContract(failures);
   runPublicApiExportsContract(failures);
   runBridgeContract(failures);
