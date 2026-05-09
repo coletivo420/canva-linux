@@ -50,6 +50,16 @@ Request changes if a PR:
 - bypasses `scripts/sudo-common.sh` for Canva Linux privileged actions;
 - removes user-scope protection for root actions.
 
+## c420ui scope/root provider boundary review
+
+Request changes if a PR:
+
+- reimplements generic scope helpers inside Canva Linux code;
+- hardcodes `CANVA_NATIVE_SCOPE`, `CANVA_FLATPAK_SCOPE` or `CANVA_C420UI_ROOT_AUTH` in c420ui core;
+- hardcodes `scripts/sudo-common.sh` in c420ui core;
+- reimplements `validateRootAccess` in the Canva Linux root provider;
+- moves conditional Canva Linux detection policy into c420ui core.
+
 ## c420ui action engine review
 
 Request changes if a PR:

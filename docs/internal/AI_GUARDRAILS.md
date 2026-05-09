@@ -201,8 +201,13 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Privileged operations must request authentication only when needed.
 - System-wide actions must declare `requiresRoot`.
 - c420ui root authentication must happen before privileged execution.
+- c420ui owns generic action scope semantics.
 - c420ui owns the generic root provider contract.
-- Canva Linux owns the concrete root provider backed by `scripts/sudo-common.sh`.
+- c420ui owns the generic Linux root/sudo provider base.
+- Canva Linux root provider must remain thin and project-specific.
+- Canva Linux owns the concrete root provider configuration backed by `scripts/sudo-common.sh`.
+- Do not hardcode Canva Linux env names or helper paths inside c420ui core.
+- Do not reimplement generic `validateRootAccess` in project adapters.
 - Do not import root/sudo policy from removed legacy runner surfaces inside the Canva Linux adapter.
 - Do not call sudo directly from c420ui core.
 - Dry-run, planned actions and confirmation failures must not trigger sudo/root validation.

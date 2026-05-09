@@ -29,6 +29,8 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Centralized generic action scope semantics and Linux root/sudo provider helpers in c420ui.
+- Slimmed the Canva Linux root provider so it only owns project-specific root policy.
 - Centralized the c420ui root launch guard inside the c420ui terminal runtime.
 - Kept `build:c420ui` as an isolated terminal package surface smoke build; it is not the runtime launcher.
 - Moved the generic c420ui terminal UI into `packages/c420ui/src/terminal`.

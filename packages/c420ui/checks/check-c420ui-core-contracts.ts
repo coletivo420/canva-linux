@@ -119,6 +119,8 @@ function main(): number {
     "exit-codes.ts",
     "operational-logs.ts",
     "root-provider.ts",
+    "scopes.ts",
+    "linux-root-provider.ts",
     "types.ts",
     "workflow-runner.ts",
     "workflows.ts",
@@ -383,6 +385,9 @@ function read(rootDir: string, relativePath: string): string {
 function main(): number {
   const rootDir = process.cwd();
   const rootProvider = read(rootDir, "packages/c420ui/src/root-provider.ts");
+  const linuxRootProvider = read(rootDir, "packages/c420ui/src/linux-root-provider.ts");
+  const scopes = read(rootDir, "packages/c420ui/src/scopes.ts");
+  const actions = read(rootDir, "packages/c420ui/src/actions.ts");
   const actionEngine = read(rootDir, "packages/c420ui/src/action-engine.ts");
   const index = read(rootDir, "packages/c420ui/src/index.ts");
   const failures: string[] = [];
@@ -430,6 +435,53 @@ function main(): number {
 
   if (!index.includes('export type * from "./root-provider"')) {
     failures.push("index must export root provider types");
+  }
+  for (const fragment of [
+    'export * from "./scopes"',
+    'export * from "./linux-root-provider"',
+  ]) {
+    if (!index.includes(fragment)) {
+      failures.push(`index must export ${fragment}`);
+    }
+  }
+  for (const fragment of [
+    "c420uiKnownActionScopes",
+    "c420uiActionScope",
+    "normalizeC420UIActionScope",
+    "isC420UIUserScope",
+    "isC420UISystemScope",
+    "isC420UIAutoScope",
+  ]) {
+    if (!scopes.includes(fragment)) {
+      failures.push(`scopes.ts missing ${fragment}`);
+    }
+  }
+  if (!actions.includes("c420uiActionScope")) {
+    failures.push("actions.ts must use c420uiActionScope");
+  }
+  for (const fragment of [
+    "createC420UILinuxRootProviderBase",
+    "validateC420UILinuxActionScope",
+    "defaultC420UILinuxBuildActionEnvironment",
+    "defaultC420UILinuxActionHasUserScope",
+    "sudoHelperPath",
+    "rootAuthEnvKey",
+    "rootAuthEnvValue",
+  ]) {
+    if (!linuxRootProvider.includes(fragment)) {
+      failures.push(`linux-root-provider.ts missing ${fragment}`);
+    }
+  }
+  for (const fragment of [
+    "Canva Linux",
+    "CANVA_NATIVE_SCOPE",
+    "CANVA_FLATPAK_SCOPE",
+    "CANVA_C420UI_ROOT_AUTH",
+    "scripts/sudo-common.sh",
+  ]) {
+    if (linuxRootProvider.includes(fragment)) {
+      failures.push(`linux-root-provider.ts must not hardcode ${fragment}`);
+    }
   }
   if (!index.includes('c420uiRootPolicyExitCode')) {
     failures.push("index must export c420uiRootPolicyExitCode");

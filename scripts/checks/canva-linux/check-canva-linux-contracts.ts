@@ -297,19 +297,29 @@ function main(): number {
 
   for (const fragment of [
     "createCanvaLinuxRootProvider",
-    "scripts/sudo-common.sh",
+    "createC420UILinuxRootProviderBase",
+    'sudoHelperPath: "scripts/sudo-common.sh"',
+    'rootAuthEnvKey: "CANVA_C420UI_ROOT_AUTH"',
     "buildCanvaLinuxOverviewStatus",
+    "conditionalSystemRootActionIds",
     "purge",
     "uninstall-detected",
     "CANVA_NATIVE_SCOPE",
     "CANVA_FLATPAK_SCOPE",
-    "validateRootAccess",
-    "buildRootActionEnvironment",
-    "CANVA_C420UI_ROOT_AUTH",
     "warning:",
   ]) {
     if (!provider.includes(fragment)) {
       failures.push(`missing Canva Linux root provider fragment: ${fragment}`);
+    }
+  }
+
+  for (const fragment of [
+    "validateRootAccess(rootDir",
+    "buildRootActionEnvironment",
+    "spawnSync",
+  ]) {
+    if (provider.includes(fragment)) {
+      failures.push(`Canva Linux root provider must delegate generic root fragment: ${fragment}`);
     }
   }
 

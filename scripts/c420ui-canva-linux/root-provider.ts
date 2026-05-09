@@ -1,23 +1,14 @@
 import {
-  spawnSync,
-  type SpawnSyncOptions,
-  type SpawnSyncReturns,
-} from "node:child_process";
-import {
-  c420uiRootPolicyExitCode,
+  createC420UILinuxRootProviderBase,
+  isC420UIUserScope,
   type c420uiAction,
+  type c420uiLinuxRootCommandRunner,
   type c420uiRootProvider,
 } from "../../packages/c420ui/src";
 import { buildCanvaLinuxOverviewStatus } from "../canva-linux/detection/provider";
 
-type RootProviderCommandRunner = (
-  command: string,
-  args: string[],
-  options: SpawnSyncOptions,
-) => SpawnSyncReturns<Buffer>;
-
 type CanvaLinuxRootProviderOptions = {
-  runCommand?: RootProviderCommandRunner;
+  runCommand?: c420uiLinuxRootCommandRunner;
 };
 
 const conditionalSystemRootActionIds = new Set([
@@ -25,12 +16,12 @@ const conditionalSystemRootActionIds = new Set([
   "uninstall-detected",
 ]);
 
-function hasUserScope(
+function hasCanvaLinuxUserScope(
   action: c420uiAction,
   actionEnv: NodeJS.ProcessEnv,
 ): boolean {
   return (
-    action.scope === "user" ||
+    isC420UIUserScope(action.scope) ||
     actionEnv.CANVA_NATIVE_SCOPE === "user" ||
     actionEnv.CANVA_FLATPAK_SCOPE === "user"
   );
@@ -39,27 +30,18 @@ function hasUserScope(
 export function createCanvaLinuxRootProvider(
   options: CanvaLinuxRootProviderOptions = {},
 ): c420uiRootProvider {
-  const runCommand = options.runCommand ?? spawnSync;
-
-  return {
+  const base = createC420UILinuxRootProviderBase({
     id: "canva-linux-root-provider",
     label: "Canva Linux root provider",
+    sudoHelperPath: "scripts/sudo-common.sh",
+    rootAuthEnvKey: "CANVA_C420UI_ROOT_AUTH",
+    rootAuthEnvValue: "1",
+    runCommand: options.runCommand,
+    actionHasUserScope: hasCanvaLinuxUserScope,
+  });
 
-    buildActionEnvironment(action, baseEnv) {
-      return { ...baseEnv, ...(action.env || {}) };
-    },
-
-    validateActionScope(action, actionEnv) {
-      if (action.requiresRoot === true && hasUserScope(action, actionEnv)) {
-        return {
-          ok: false,
-          code: c420uiRootPolicyExitCode,
-          message: `[error] ${action.id}: requiresRoot=true cannot be combined with user scope.`,
-        };
-      }
-
-      return { ok: true };
-    },
+  return {
+    ...base,
 
     resolveRootPolicy(action, rootDir, actionEnv) {
       void actionEnv;
@@ -96,43 +78,7 @@ export function createCanvaLinuxRootProvider(
 
       return { requiresRoot: false };
     },
-
-    buildRootActionEnvironment(_action, actionEnv) {
-      return { ...actionEnv, CANVA_C420UI_ROOT_AUTH: "1" };
-    },
-
-    validateRootAccess(rootDir, actionEnv) {
-      const result = runCommand(
-        "bash",
-        ["scripts/sudo-common.sh", "--validate"],
-        {
-          cwd: rootDir,
-          stdio: "inherit",
-          env: actionEnv,
-          shell: false,
-        },
-      ) as SpawnSyncReturns<Buffer>;
-
-      if (result.error) {
-        return {
-          ok: false,
-          code: 1,
-          message: `[error] Failed to start privilege validation: ${result.error.message}`,
-        };
-      }
-
-      const code = result.status ?? 1;
-      if (code !== 0) {
-        return {
-          ok: false,
-          code,
-          message: "[error] Privilege validation failed before action execution.",
-        };
-      }
-
-      return { ok: true };
-    },
   };
 }
 
-export type { CanvaLinuxRootProviderOptions, RootProviderCommandRunner };
+export type { CanvaLinuxRootProviderOptions };
