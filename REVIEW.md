@@ -355,3 +355,12 @@ Request changes if a PR:
 - calls `scripts/run-core-entry.sh overview-status` from terminal UI;
 - imports Canva Linux adapters from c420ui terminal code;
 - makes `scripts/c420ui-canva-linux/` contain generic UI logic.
+
+## Host dependency provider review
+
+Request changes if a PR:
+
+- hardcodes npm, Node.js versions, or Canva Linux dependency names inside `packages/c420ui/src/host-dependencies.ts`;
+- calls `scripts/ensure-npm-dependencies.sh` directly from generic c420ui code;
+- bypasses the host dependency provider from project launchers;
+- moves project dependency lists into c420ui core.

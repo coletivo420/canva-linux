@@ -31,6 +31,7 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │       ├── host/linux/sudo-helper.sh Generic sudo/root helper
 │       ├── src/detection.ts   Generic c420ui detection engine
 │       ├── src/scopes.ts      Generic c420ui action scope semantics
+│       ├── src/host-dependencies.ts Generic host dependency provider contract
 │       ├── src/linux-root-provider.ts Generic Linux root/sudo provider base
 │       └── checks/            Reusable c420ui validation and anti-regression checks
 ├── docs/                      Public and internal project documentation
@@ -98,10 +99,10 @@ The old `scripts/c420ui/` directory must not be reintroduced.
 The intended separation is:
 
 - **c420ui core**: reusable action, scope semantics, bridge, detection, workflow, root-provider,
-  Linux root/sudo provider base, command-runner and operational-log contracts live in `packages/c420ui/src/`.
+  Linux root/sudo provider base, host dependency contracts, command-runner and operational-log contracts live in `packages/c420ui/src/`.
 - **c420ui terminal UI**: reusable terminal layout, focus, logs, modal, clipboard,
   settings, logo, help formatting, root launch guard, runtime startup policy and interactive runner code lives in `packages/c420ui/src/terminal/`.
-- **Canva Linux adapter**: project-specific actions, root policy conditionals, environment variable names, generic sudo helper environment translation, metadata, launch wiring,
+- **Canva Linux adapter**: project-specific actions, root policy conditionals, environment variable names, generic sudo helper environment translation, metadata, launch wiring, concrete host dependency bootstrap,
   install/package status, and Canva Linux labels live in
   `scripts/c420ui-canva-linux/`. Installation detection probes live in
   `scripts/canva-linux/detection/` and use the generic engine in `packages/c420ui/src/detection.ts`.
@@ -131,9 +132,11 @@ separate concepts.
   UI implementation details.
 - `scripts/core/` contains shared TypeScript tooling and repository-wide checks. It must not contain Canva Linux product detection logic.
 - Shell scripts in `scripts/` are Linux host-operation glue. Keep sudo, install,
-  purge, Flatpak, AppImage, and desktop integration behavior there when Node is
+  npm dependency bootstrap, purge, Flatpak, AppImage, and desktop integration behavior there when Node is
   the wrong boundary.
 - `packaging/flathub/` is a Flathub submission workspace. It is distinct from
   general runtime source and from generated `repo/` output.
 - Public docs live in `docs/*.md`; AI/developer memory, guardrails, and legacy
   notes live under `docs/internal/`.
+
+`scripts/ensure-npm-dependencies.sh` remains a Canva Linux host-operation implementation detail for now.

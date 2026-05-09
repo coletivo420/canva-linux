@@ -71,6 +71,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Do not put product detection logic in `scripts/core`.
 - Do not hardcode Canva Linux detection keys inside c420ui core.
 - c420ui owns the detection engine; Canva Linux owns the concrete probes.
+- c420ui owns generic host dependency contracts but not concrete project dependency lists.
+- Canva Linux owns npm bootstrap policy, Node.js version policy, and `CANVA_*` bootstrap variables.
+- Project launchers must use the host dependency provider instead of calling bootstrap shell scripts directly.
+- Do not call `scripts/ensure-npm-dependencies.sh` from generic c420ui code.
+- Keep `scripts/ensure-npm-dependencies.sh` and `scripts/preflight-common.sh` in `scripts/` for now.
 - Detection status uses `project`, not the removed legacy `package` shape.
 - Do not reintroduce `package: project` compatibility in detection providers.
 - c420ui detection probes are generic; Canva Linux owns concrete probe keys and shell glue.

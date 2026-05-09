@@ -1,5 +1,6 @@
 export * from "./scopes";
 export * from "./linux-root-provider";
+export * from "./host-dependencies";
 export type * from "./actions";
 export type * from "./artifacts";
 export type * from "./bridge";

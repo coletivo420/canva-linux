@@ -788,6 +788,8 @@ const requiredShellFiles = [
   "canva-linux.sh",
   "scripts/validate-project.sh",
   "scripts/run-core-entry.sh",
+  "scripts/ensure-npm-dependencies.sh",
+  "scripts/preflight-common.sh",
   "packages/c420ui/host/linux/sudo-helper.sh",
 ] as const;
 
@@ -817,6 +819,7 @@ const criticalReadableSourceFiles = [
   "packages/c420ui/src/operational-logs.ts",
   "packages/c420ui/src/terminal/interactive-action-runner.ts",
   "scripts/c420ui-canva-linux/root-provider.ts",
+  "scripts/c420ui-canva-linux/host-dependencies.ts",
   "electron/ui/toolbar.html",
 ] as const;
 
@@ -1750,6 +1753,45 @@ function checkC420UIRootGuardOwnership(failures: string[]): void {
   runCheck(failures, { name: "c420ui root guard ownership", run: checkC420UIRootGuardOwnershipContract.main });
 }
 
+
+const checkSharedHostDependencyToolingContract = (() => {
+function main(): number {
+  const rootDir = findProjectRoot();
+  const failures: string[] = [];
+  const ensurePath = "scripts/ensure-npm-dependencies.sh";
+  const preflightPath = "scripts/preflight-common.sh";
+  const providerPath = "scripts/c420ui-canva-linux/host-dependencies.ts";
+
+  if (!fs.existsSync(path.join(rootDir, ensurePath))) {
+    failures.push(`${ensurePath}: temporary concrete host dependency implementation must remain until provider replacement`);
+  }
+  if (!fs.existsSync(path.join(rootDir, preflightPath))) {
+    failures.push(`${preflightPath}: temporary shared project preflight implementation must remain in scripts/`);
+  }
+  if (fs.existsSync(path.join(rootDir, providerPath))) {
+    const provider = fs.readFileSync(path.join(rootDir, providerPath), "utf8");
+    if (!provider.includes(ensurePath)) {
+      failures.push(`${providerPath}: must classify ${ensurePath} as the concrete Canva Linux implementation`);
+    }
+  }
+
+  if (failures.length) {
+    console.error("[repository-policy] shared host dependency tooling FAILED:");
+    for (const failure of failures) console.error(`- ${failure}`);
+    return 1;
+  }
+
+  console.log("[repository-policy] shared host dependency tooling OK");
+  return 0;
+}
+
+  return { main };
+})();
+
+function checkSharedHostDependencyTooling(failures: string[]): void {
+  runCheck(failures, { name: "shared host dependency tooling", run: checkSharedHostDependencyToolingContract.main });
+}
+
 export function main(): number {
   const failures: string[] = [];
 
@@ -1759,6 +1801,7 @@ export function main(): number {
   checkNoSourceJavaScript(failures);
   checkSourceIntegrity(failures);
   checkReviewChecklist(failures);
+  checkSharedHostDependencyTooling(failures);
   checkC420UIRootGuardOwnership(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));
