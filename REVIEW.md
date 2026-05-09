@@ -241,7 +241,7 @@ Request changes if a PR:
 Request changes if a PR:
 
 - makes direct CLI and interactive c420ui use different execution policies;
-- reintroduces direct `spawn()` action execution in `scripts/c420ui/app.ts`;
+- reintroduces direct `spawn()` action execution in `packages/c420ui/src/terminal/app.ts`;
 - bypasses the c420ui root provider for interactive privileged actions;
 - triggers sudo before confirmation or for dry-run/planned actions;
 - reintroduces `C420UISudoProvider` as a separate root abstraction.
@@ -291,3 +291,14 @@ Request changes if a PR:
 - adds Canva Linux keys to `packages/c420ui/src/detection.ts`;
 - bypasses c420ui detection contracts in root policy;
 - makes detection async without updating root policy callers safely.
+
+## c420ui terminal package boundary review
+
+Request changes if a PR:
+
+- reintroduces `scripts/c420ui/`;
+- adds generic terminal UI code under `scripts/`;
+- hardcodes Canva Linux metadata inside `packages/c420ui/src/terminal`;
+- calls `scripts/run-core-entry.sh overview-status` from terminal UI;
+- imports Canva Linux adapters from c420ui terminal code;
+- makes `scripts/c420ui-canva-linux/` contain generic UI logic.

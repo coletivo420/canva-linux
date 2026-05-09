@@ -1,5 +1,6 @@
 import type { c420uiAction, C420UIActionDescriptor } from "./actions";
 import type { c420uiArtifactWorkflow } from "./artifacts";
+import type { c420uiOverviewStatus } from "./detection";
 import type { c420uiLogEvent, c420uiProgressEvent } from "./events";
 import type { c420uiProjectCapabilities } from "./capabilities";
 import type { C420UIConfig, C420UIProjectConfig } from "./types";
@@ -37,6 +38,7 @@ export type c420uiProjectBridge = {
   actions(): c420uiAction[];
   artifactWorkflows(): c420uiArtifactWorkflow[];
   runAction(actionId: string, context: c420uiExecutionContext): Promise<c420uiActionResult>;
+  overviewStatus?(): Promise<c420uiOverviewStatus | null> | c420uiOverviewStatus | null;
 };
 
 export type C420UIProjectInfo = c420uiProjectInfo;

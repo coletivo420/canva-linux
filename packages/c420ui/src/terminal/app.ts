@@ -1,5 +1,4 @@
 import blessed from "blessed";
-import { spawn } from "node:child_process";
 import {
   confirmDialog,
   messageDialog,
@@ -15,15 +14,16 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 import { Writable } from "node:stream";
-import {
-  createC420UIActionEngine,
-  type C420UIBrandConfig,
-  type C420UIConfig,
-  type C420UIProjectConfig,
-  type c420uiAction,
-  type c420uiProjectBridge,
-  type c420uiRootProvider,
-} from "../../packages/c420ui/src";
+import { createC420UIActionEngine } from "../action-engine";
+import type { c420uiAction } from "../actions";
+import type { c420uiProjectBridge } from "../bridge";
+import type { c420uiOverviewStatus } from "../detection";
+import type { c420uiRootProvider } from "../root-provider";
+import type {
+  C420UIBrandConfig,
+  C420UIConfig,
+  C420UIProjectConfig,
+} from "../types";
 import {
   createInteractiveActionRunner,
   interactiveActionRequiresConfirmation,
@@ -553,7 +553,7 @@ export function createApp(options: C420UIAppOptions) {
   const logHistory: string[] = [];
 
   const sessionLogPath =
-    process.env.CANVA_TOOL_SESSION_LOG ||
+    opts.sessionLogPath ||
     path.join(
       process.env.XDG_STATE_HOME ||
         path.join(process.env.HOME || ".", ".local/state"),
@@ -561,7 +561,7 @@ export function createApp(options: C420UIAppOptions) {
       "tool-session.log",
     );
 
-  const launcherSessionId = process.env.CANVA_TOOL_SESSION_ID?.trim() || "";
+  const launcherSessionId = opts.sessionId?.trim() || "";
 
   // --- Logging & Session Management ---
 
@@ -641,11 +641,11 @@ export function createApp(options: C420UIAppOptions) {
 
   // --- Detection & Diagnostics ---
 
-  let overviewStatus: any = null;
-  let overviewDetectionPromise: Promise<any | null> | null = null;
+  let overviewStatus: c420uiOverviewStatus | null = null;
+  let overviewDetectionPromise: Promise<c420uiOverviewStatus | null> | null = null;
   let overviewDetectionError: string | null = null;
 
-  const detectedSummary = (s: any) => {
+  const detectedSummary = (s: c420uiOverviewStatus | null) => {
     if (!s) {
       return [
         `  Native Install: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
@@ -654,12 +654,12 @@ export function createApp(options: C420UIAppOptions) {
       ];
     }
     const i = s.installations;
-    const fmt = (detected: boolean, version: string | undefined) => {
+    const fmt = (detected: boolean, version: string | boolean | undefined) => {
       if (!detected) {
         return `{${c420uiTheme.colors.statusNotDetected}-fg}not detected{/${c420uiTheme.colors.statusNotDetected}-fg}`;
       }
       const v =
-        version && version.trim()
+        typeof version === "string" && version.trim()
           ? `v${version.trim().replace(/^v/, "")}`
           : "version unknown";
       return `{${c420uiTheme.colors.statusDetected}-fg}detected{/${c420uiTheme.colors.statusDetected}-fg}      ${v}`;
@@ -685,7 +685,7 @@ export function createApp(options: C420UIAppOptions) {
 
   function refreshDetectedInstallations(
     reason = "unknown",
-  ): Promise<any | null> {
+  ): Promise<c420uiOverviewStatus | null> {
     if (overviewDetectionPromise) {
       return overviewDetectionPromise;
     }
@@ -712,7 +712,7 @@ export function createApp(options: C420UIAppOptions) {
 
   function getInstallDetectionKey(
     actionId: string,
-  ): keyof NonNullable<any["installations"]> | null {
+  ): keyof c420uiOverviewStatus["installations"] | null {
     switch (actionId) {
       case "install-native-system":
         return "nativeSystem";
@@ -727,65 +727,20 @@ export function createApp(options: C420UIAppOptions) {
     }
   }
 
-  function parseOverviewStatusOutput(output: string): any | null {
-    const trimmed = output.trim();
-    if (!trimmed) {
+  async function detectInstallationStatusNow(): Promise<c420uiOverviewStatus | null> {
+    if (!bridge.overviewStatus) {
       return null;
     }
-    try {
-      return JSON.parse(trimmed);
-    } catch {
-      return null;
-    }
-  }
 
-  function detectInstallationStatusNow(): Promise<any | null> {
-    return new Promise((resolve) => {
-      const child = spawn("scripts/run-core-entry.sh", ["overview-status"], {
-        cwd: opts.rootDir,
-        stdio: ["ignore", "pipe", "pipe"],
-      });
-      let stdout = "";
-      let stderr = "";
-      let settled = false;
-      const finish = (status: any | null) => {
-        if (settled) {
-          return;
-        }
-        settled = true;
-        resolve(status);
-      };
-      child.stdout?.on("data", (chunk) => {
-        stdout += String(chunk);
-      });
-      child.stderr?.on("data", (chunk) => {
-        stderr += String(chunk);
-      });
-      child.on("error", (error) => {
-        appendLogText(
-          `[error] Detection status failed to start: ${error instanceof Error ? error.message : String(error)}\n`,
-          "system",
-        );
-        finish(null);
-      });
-      child.on("close", (code) => {
-        if (settled) {
-          return;
-        }
-        if (stderr.trim()) {
-          appendLogText(stderr, "system");
-        }
-        if ((code ?? 1) !== 0) {
-          appendLogText(
-            `[warn] Detection status exited with code ${code ?? "unknown"}.\n`,
-            "system",
-          );
-          finish(null);
-          return;
-        }
-        finish(parseOverviewStatusOutput(stdout));
-      });
-    });
+    try {
+      return await bridge.overviewStatus();
+    } catch (error) {
+      appendLogText(
+        `[error] Detection status failed: ${error instanceof Error ? error.message : String(error)}\n`,
+        "system",
+      );
+      return null;
+    }
   }
 
   // --- Log Rendering ---

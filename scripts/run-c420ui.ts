@@ -8,7 +8,7 @@ const rootDir =
 process.chdir(rootDir);
 
 const outFile = path.join(rootDir, ".build/scripts/c420ui/index.js");
-const uiDir = path.join(rootDir, "scripts/c420ui");
+const uiDir = path.join(rootDir, "packages/c420ui/src/terminal");
 const adapterDir = path.join(rootDir, "scripts/c420ui-canva-linux");
 const adapter = createCanvaLinuxC420UIAdapter(rootDir);
 

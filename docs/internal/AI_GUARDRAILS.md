@@ -29,7 +29,12 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 - Read `docs/PROJECT_TREE.md` before moving code across Electron, scripts, c420ui, packaging,
   docs, or generated-output boundaries.
-- `scripts/c420ui/` is the current transitional in-repo c420ui implementation before package split.
+- `packages/c420ui/src/terminal/` contains the generic c420ui terminal UI.
+- Generic c420ui terminal UI belongs under `packages/c420ui/src/terminal/`.
+- Do not reintroduce `scripts/c420ui/`.
+- Terminal diagnostics must use the generic project bridge/detection contract.
+- Do not call `scripts/run-core-entry.sh overview-status` from c420ui terminal UI.
+- `scripts/c420ui-canva-linux/` is adapter-only.
 - `scripts/c420ui-canva-linux/` is the Canva Linux adapter boundary, not a public c420ui API.
 - `packages/c420ui/` is a planned standalone package boundary, not a published package promise.
 - Do not document c420ui as an externally consumable package until the maintainer explicitly requests publication.
@@ -42,7 +47,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Separate for compatibility first and external extraction later.
 - Do not migrate c420ui to ESM during the current separation phase.
 - Do not publish or promise an NPM package during the current separation phase.
-- Do not remove `scripts/c420ui/` in one large change.
+- Do not reintroduce `scripts/c420ui/`.
 - Do not change visual behavior as part of package-boundary work.
 - Do not reintroduce `scripts/core/action-runner.ts`.
 - Do not reintroduce `check:legacy-compat`.
@@ -151,7 +156,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Direct CLI actions must pass through the c420ui CLI bridge.
 - Interactive c420ui actions and direct CLI actions must share the c420ui Action Engine.
 - Do not bypass the c420ui Action Engine from `canva-linux.sh`.
-- Do not reintroduce direct process execution from `scripts/c420ui/app.ts`.
+- Do not reintroduce direct process execution from `packages/c420ui/src/terminal/app.ts`.
 - Do not import `./process-runner` from the interactive app after the Action Engine migration.
 - Do not reintroduce `scripts/c420ui/process-runner.ts` as the interactive execution path.
 - Do not keep parallel root/sudo logic for interactive and direct CLI actions.
@@ -162,7 +167,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Keep direct c420ui CLI bridge freshness protected before launcher execution.
 - Do not narrow the c420ui CLI entrypoint freshness check to a small hardcoded list of files.
 - The launcher must rebuild the c420ui CLI bridge when `packages/c420ui/src`, `scripts/c420ui-canva-linux`,
-  `scripts/c420ui`, action registry metadata or project UI metadata changes.
+  `packages/c420ui/src/terminal`, action registry metadata or project UI metadata changes.
 - Launcher parser tests must not execute real project actions; use a stubbed `.build/scripts/run-c420ui-cli.js`.
 - Only one direct action may execute per invocation.
 - Dangerous or confirmation-required direct actions must not execute without `--yes`.

@@ -80,7 +80,7 @@ c420ui_cli_entrypoint_is_fresh() {
   for source in \
     "${ROOT_DIR}/scripts/run-c420ui-cli.ts" \
     "${ROOT_DIR}/scripts/c420ui-canva-linux" \
-    "${ROOT_DIR}/scripts/c420ui" \
+    "${ROOT_DIR}/packages/c420ui/src/terminal" \
     "${ROOT_DIR}/scripts/canva-linux/actions/registry.ts" \
     "${ROOT_DIR}/scripts/canva-linux/project-root.ts" \
     "${ROOT_DIR}/scripts/canva-linux/detection" \

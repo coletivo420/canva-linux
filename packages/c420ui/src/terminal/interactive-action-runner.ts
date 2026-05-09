@@ -1,14 +1,9 @@
-import {
-  createC420UIActionEngine,
-  c420uiExitCodes,
-  requiresC420UIActionConfirmation,
-  type C420UIEvent,
-  type c420uiAction,
-  type c420uiActionResult,
-  type c420uiLogSource,
-  type c420uiProjectBridge,
-  type c420uiRootProvider,
-} from "../../packages/c420ui/src";
+import { createC420UIActionEngine } from "../action-engine";
+import { requiresC420UIActionConfirmation, type c420uiAction } from "../actions";
+import { c420uiExitCodes } from "../exit-codes";
+import type { c420uiActionResult, c420uiProjectBridge } from "../bridge";
+import type { C420UIEvent, c420uiLogSource } from "../events";
+import type { c420uiRootProvider } from "../root-provider";
 
 export type InteractiveProgressState =
   | "idle"

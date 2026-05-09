@@ -814,7 +814,7 @@ const criticalReadableSourceFiles = [
   "packages/c420ui/src/root-provider.ts",
   "packages/c420ui/src/command-runner.ts",
   "packages/c420ui/src/operational-logs.ts",
-  "scripts/c420ui/interactive-action-runner.ts",
+  "packages/c420ui/src/terminal/interactive-action-runner.ts",
   "scripts/c420ui-canva-linux/root-provider.ts",
   "electron/ui/toolbar.html",
 ] as const;
@@ -1006,11 +1006,21 @@ function validateRetiredC420UIProcessRunner(
   rootDir: string,
   failures: string[],
 ): void {
-  const retiredPath = "scripts/c420ui/process-runner.ts";
+  const retiredPath = "packages/c420ui/src/terminal/process-runner.ts";
   if (fs.existsSync(path.join(rootDir, retiredPath))) {
     failures.push(
       `${retiredPath}: must not exist after command runner migration`,
     );
+  }
+}
+
+function validateNoLegacyC420UIDirectory(
+  rootDir: string,
+  failures: string[],
+): void {
+  const retiredPath = "scripts/c420ui";
+  if (fs.existsSync(path.join(rootDir, retiredPath))) {
+    failures.push(`${retiredPath}: must not exist; generic terminal UI belongs under packages/c420ui/src/terminal`);
   }
 }
 
@@ -1398,7 +1408,7 @@ function validateLauncherScriptShape(
     "c420ui_cli_entrypoint_is_fresh()",
     'find "${source}" -type f',
     '"${ROOT_DIR}/scripts/c420ui-canva-linux"',
-    '"${ROOT_DIR}/scripts/c420ui"',
+    '"${ROOT_DIR}/packages/c420ui/src/terminal"',
     '"${ROOT_DIR}/scripts/canva-linux/project-root.ts"',
     '"${ROOT_DIR}/packages/c420ui/src"',
     '"${ROOT_DIR}/config/canva-linux/actions.json"',
@@ -1563,6 +1573,7 @@ function main(): number {
   validateToolbarContentSecurityPolicy(rootDir, failures);
   validateNoMaintainedJavaScriptFiles(rootDir, failures);
   validateRetiredC420UIProcessRunner(rootDir, failures);
+  validateNoLegacyC420UIDirectory(rootDir, failures);
   validateNoCoreProductDetectionLogic(rootDir, failures);
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);

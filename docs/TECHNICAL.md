@@ -135,7 +135,7 @@ Reference palette:
 - Blue: `#3969E7`
 - Purple: `#7D2AE7`
 
-The c420ui uses `scripts/c420ui/theme.ts`.
+The c420ui uses `packages/c420ui/src/terminal/theme.ts`.
 Direct CLI output uses ANSI-safe approximations through `scripts/ui-common.sh`.
 
 The theme must remain readable with:

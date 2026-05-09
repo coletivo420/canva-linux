@@ -57,7 +57,7 @@ Its current surface is grouped in `tsconfig.strict.json` as:
 4. `scripts/core/**/*.ts`
 5. selected Node tests and support helpers already compatible with strict mode
 
-The next strict-mode expansion targets are `scripts/c420ui/**/*.ts`, then the
+The next strict-mode expansion targets are `packages/c420ui/src/terminal/**/*.ts`, then the
 remaining tests. Do not broaden the strict config and fix unrelated code in the
 same large patch; add one surface at a time and keep `npm run typecheck:strict`
 green.
