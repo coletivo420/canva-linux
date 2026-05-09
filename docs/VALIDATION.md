@@ -54,13 +54,15 @@ creating one-off check files or `*-parts/` validation directories, unless there 
   - fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/` only
 - `bash -n canva-linux.sh scripts/*.sh`
 - `scripts/run-core-entry.sh overview-status`
-- `scripts/run-core-entry.sh action-runner --cli --bundle-deb` exits `78` because `.deb` packaging is planned, not built.
-- `scripts/run-core-entry.sh action-runner --cli --bundle-rpm` exits `78` because `.rpm` packaging is planned, not built.
-- `scripts/run-core-entry.sh action-runner --cli --prepare-aur` exits `78` because AUR packaging is planned, not built.
+- `./canva-linux.sh --bundle-deb` exits `78` because `.deb` packaging is planned, not built.
+- `./canva-linux.sh --bundle-rpm` exits `78` because `.rpm` packaging is planned, not built.
+- `./canva-linux.sh --prepare-aur` exits `78` because AUR packaging is planned, not built.
 - Planned-action dry runs exit `0` because they only resolve metadata:
-  - `scripts/run-core-entry.sh action-runner --cli --bundle-deb --dry-run`
-  - `scripts/run-core-entry.sh action-runner --cli --bundle-rpm --dry-run`
-  - `scripts/run-core-entry.sh action-runner --cli --prepare-aur --dry-run`
+  - `./canva-linux.sh --bundle-deb --dry-run`
+  - `./canva-linux.sh --bundle-rpm --dry-run`
+  - `./canva-linux.sh --prepare-aur --dry-run`
+- To test the compiled direct CLI entrypoint without the launcher, use `npm run c420ui:cli -- --bundle-deb`.
+- `scripts/run-core-entry.sh action-runner` is retained only for legacy compatibility checks. It is not the primary direct CLI validation path.
 - `bash scripts/show-detected-installations.sh`
 
 ## Manual

@@ -130,6 +130,18 @@ These commands automatically compile their TypeScript check scripts if necessary
 Next line: AUR/PKGBUILD experimental packaging.
 AUR actions must be added through `scripts/actions.json`.
 
+## Current execution architecture
+
+Direct CLI and interactive c420ui actions share:
+
+- c420ui Action Engine;
+- c420ui Root Provider contract;
+- Canva Linux Root Provider;
+- c420ui Command Runner;
+- c420ui operational log redaction.
+
+The legacy Action Runner remains only for compatibility and must not receive new primary execution policy.
+
 ## Direct CLI bridge development
 
 Direct launcher actions are built with `npm run build:scripts` and executed through
@@ -138,5 +150,4 @@ Direct launcher actions are built with `npm run build:scripts` and executed thro
 `packages/c420ui/src/cli.ts`.
 
 Keep direct action resolution and generic root preflight ordering inside the
-c420ui Action Engine, keep Canva Linux privilege validation in the root provider,
-and preserve the legacy Action Runner until compatibility checks have moved.
+c420ui Action Engine, and keep Canva Linux privilege validation in the root provider.

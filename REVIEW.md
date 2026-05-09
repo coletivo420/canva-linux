@@ -215,6 +215,16 @@ Request changes if a PR:
 - triggers sudo before confirmation or for dry-run/planned actions;
 - reintroduces `C420UISudoProvider` as a separate root abstraction.
 
+## Legacy wording review
+
+Request changes if a PR:
+
+- describes `scripts/core/action-runner.ts` as the primary direct CLI path;
+- documents the legacy run-core Action Runner CLI command as the main user validation path;
+- reintroduces the removed legacy tooling validation alias;
+- adds new checks to `check:legacy-compat` that are not strictly compatibility-related;
+- documents c420ui separation as incomplete when the relevant boundary already exists.
+
 ## Standalone check cleanup review
 
 Request changes if a PR:

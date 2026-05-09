@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Documentation
+- Updated validation and AI maintenance docs to reflect the completed c420ui CLI, Action Engine, Root Provider, Command Runner,
+  operational log, and consolidated validation migrations.
+- Reclassified the legacy Action Runner as a compatibility-only path in maintenance documentation.
+
 ### Added
 - Added the initial c420ui action engine contract for resolving and running project actions through bridges.
 - Added an explicit English-only maintained repository language guardrail with future i18n architecture
