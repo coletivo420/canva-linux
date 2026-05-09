@@ -111,6 +111,7 @@ function main(): number {
     "actions.ts",
     "artifacts.ts",
     "bridge.ts",
+    "detection.ts",
     "capabilities.ts",
     "cli.ts",
     "command-runner.ts",
@@ -138,6 +139,69 @@ function main(): number {
 
   return { main };
 })();
+
+
+const checkDetectionContractRunner = (() => {
+function read(rootDir: string, relativePath: string): string {
+  return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+}
+
+function main(): number {
+  const rootDir = process.cwd();
+  const detectionPath = "packages/c420ui/src/detection.ts";
+  const indexPath = "packages/c420ui/src/index.ts";
+  const failures: string[] = [];
+
+  if (!fs.existsSync(path.join(rootDir, detectionPath))) {
+    failures.push(`${detectionPath}: missing detection engine`);
+  }
+
+  const detection = fs.existsSync(path.join(rootDir, detectionPath))
+    ? read(rootDir, detectionPath)
+    : "";
+  const index = read(rootDir, indexPath);
+
+  for (const fragment of [
+    "runC420UIDetectionProbes",
+    "c420uiDetectionProbe",
+    "c420uiOverviewStatusProvider",
+    "parseC420UIDetectionKeyValueLines",
+    "boolFromC420UIDetectionValue",
+    "buildC420UIOverviewStatus",
+  ]) {
+    if (!detection.includes(fragment)) {
+      failures.push(`${detectionPath}: missing ${fragment}`);
+    }
+  }
+
+  for (const fragment of [
+    "Canva Linux",
+    "canva-linux",
+    "install-detection-common.sh",
+    "DETECTED_NATIVE_SYSTEM",
+    "io.github.coletivo420.canva-linux",
+    "package:" + " project",
+  ]) {
+    if (detection.includes(fragment)) {
+      failures.push(`${detectionPath}: must not hardcode ${fragment}`);
+    }
+  }
+
+  if (!index.includes('from "./detection"')) {
+    failures.push("index.ts: missing public export for ./detection");
+  }
+
+  if (failures.length) throw new Error(failures.join("\n"));
+  console.log("[c420ui-core-contracts] detection OK");
+  return 0;
+}
+
+  return { main };
+})();
+
+function runDetectionContract(failures: string[]): void {
+  runCheck(failures, { name: "detection", run: checkDetectionContractRunner.main });
+}
 
 const checkBridgeContractRunner = (() => {
 function read(rootDir: string, relativePath: string): string {
@@ -814,6 +878,7 @@ export function main(): number {
   runPackagePolicyContract(failures);
   runPublicApiExportsContract(failures);
   runBridgeContract(failures);
+  runDetectionContract(failures);
   runActionValidationContract(failures);
   runActionEngineContract(failures);
   runCliContract(failures);

@@ -134,7 +134,6 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/core/check-dependency-policy.ts`
 - `scripts/core/check-runtime-build.ts`
 - `scripts/core/check-ai-guardrails.ts`
-- `scripts/core/overview-status.ts`
 - `scripts/desktop-integration-common.sh`
 - `scripts/doctor.sh`
 - `scripts/electron-builder-before-build.ts`
@@ -146,7 +145,6 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/install-layout-common.sh`
 - `scripts/install-native.sh`
 - `scripts/native-install-common.sh`
-- `scripts/core/overview-status.ts`
 - `scripts/package-guidance-common.sh`
 - `scripts/preflight-common.sh`
 - `scripts/prepare-flathub-submission.sh`

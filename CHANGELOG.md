@@ -26,6 +26,8 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Tightened the c420ui detection provider contract and removed the legacy `package` overview status shape.
+- Moved installation overview detection to the generic c420ui detection engine with a Canva Linux provider under `scripts/canva-linux/detection/`.
 - Moved Canva Linux action registry and project UI config under `config/canva-linux/`.
 - Moved Canva Linux action registry loading to `scripts/canva-linux/actions/registry.ts` and kept generic action validation in c420ui core.
 - Updated maintenance documentation to treat the c420ui Action Engine, Root Provider, Command Runner,
@@ -54,6 +56,7 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Removed
+- Removed the old `scripts/core/overview-status.ts` product detection entry from shared core tooling.
 - Removed the old `scripts/actions.json` and `scripts/project-ui.json` config locations.
 - Removed the old `scripts/core/action-registry.ts` and `scripts/core/validate-actions.ts` entries.
 - Removed the legacy Action Runner and its manual compatibility validation path after direct CLI and interactive c420ui

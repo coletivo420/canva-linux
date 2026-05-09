@@ -5,7 +5,7 @@ import path from "node:path";
 import { createCanvaLinuxC420UIAdapter } from "../../c420ui-canva-linux/adapter";
 import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
 import { loadCanvaLinuxActions as loadActions } from "../../canva-linux/actions/registry";
-import { buildOverviewStatus } from "../../core/overview-status";
+import { buildCanvaLinuxOverviewStatus } from "../../canva-linux/detection/provider";
 
 type ContractCheck = {
   name: string;
@@ -274,7 +274,7 @@ function main(): number {
   for (const fragment of [
     "createCanvaLinuxRootProvider",
     "scripts/sudo-common.sh",
-    "buildOverviewStatus",
+    "buildCanvaLinuxOverviewStatus",
     "purge",
     "uninstall-detected",
     "CANVA_NATIVE_SCOPE",
@@ -1139,9 +1139,65 @@ function checkActionRegistryContract(failures: string[]): void {
   }
 }
 
+
+function checkDetectionProviderContract(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const providerPath = "scripts/canva-linux/detection/provider.ts";
+  const rootProviderPath = "scripts/c420ui-canva-linux/root-provider.ts";
+  const packageJsonPath = "package.json";
+
+  if (!fs.existsSync(path.join(rootDir, providerPath))) {
+    failures.push(`${providerPath} must exist`);
+    return;
+  }
+
+  const provider = readProjectFile(rootDir, providerPath);
+  const rootProvider = readProjectFile(rootDir, rootProviderPath);
+  const packageJson = readProjectFile(rootDir, packageJsonPath);
+
+  for (const fragment of [
+    "createCanvaLinuxDetectionProvider",
+    "buildCanvaLinuxOverviewStatus",
+    "scripts/install-detection-common.sh",
+    "parseC420UIDetectionKeyValueLines",
+    "DETECTED_NATIVE_SYSTEM",
+    "io.github.coletivo420.canva-linux",
+    "canva-linux",
+    "https://github.com/coletivo420/canva-linux",
+  ]) {
+    if (!provider.includes(fragment)) {
+      failures.push(`${providerPath}: missing ${fragment}`);
+    }
+  }
+
+
+
+  for (const fragment of [
+    "package:" + " project",
+    "as c420uiOverviewStatus & { package:",
+  ]) {
+    if (provider.includes(fragment)) {
+      failures.push(`${providerPath}: must not restore legacy overview compatibility shape`);
+    }
+  }
+
+  if (!rootProvider.includes('../canva-linux/detection/provider')) {
+    failures.push(`${rootProviderPath}: must import the Canva Linux detection provider`);
+  }
+  if (rootProvider.includes('../core/overview-status')) {
+    failures.push(`${rootProviderPath}: must not import ../core/overview-status`);
+  }
+  if (fs.existsSync(path.join(rootDir, "scripts/core/overview-status.ts"))) {
+    failures.push("scripts/core/overview-status.ts must not exist");
+  }
+  if (packageJson.includes("scripts/core/overview-status.ts")) {
+    failures.push("package.json build:scripts-core must not compile overview-status.ts");
+  }
+}
+
 function checkInstallationDetectionContract(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const raw = JSON.stringify(buildOverviewStatus(rootDir));
+  const raw = JSON.stringify(buildCanvaLinuxOverviewStatus(rootDir));
 
   let parsed: any;
   try {
@@ -1153,12 +1209,13 @@ function checkInstallationDetectionContract(failures: string[]): void {
     return;
   }
 
-  if (!parsed.package || typeof parsed.package !== "object") {
-    failures.push("overview-status missing package object");
+  const project = parsed.project;
+  if (!project || typeof project !== "object") {
+    failures.push("overview status missing project object");
   }
   for (const field of ["version", "phase", "appId", "executable"]) {
-    if (typeof parsed.package?.[field] !== "string") {
-      failures.push(`overview-status package.${field} must be string`);
+    if (typeof project?.[field] !== "string") {
+      failures.push(`overview status project.${field} must be string`);
     }
   }
   if (!parsed.installations || typeof parsed.installations !== "object") {
@@ -1432,6 +1489,7 @@ export function main(): number {
   checkNoRootLauncherContract(failures);
   checkCanvaLinuxConfigBoundary(failures);
   checkActionRegistryContract(failures);
+  checkDetectionProviderContract(failures);
   checkInstallationDetectionContract(failures);
   checkVersionConsistency(failures);
   checkReleaseContract(failures);

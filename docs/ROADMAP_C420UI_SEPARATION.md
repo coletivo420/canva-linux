@@ -20,6 +20,9 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 - Consolidated validation domains.
 - Legacy Action Runner removed after direct CLI and interactive c420ui execution migrated to the shared Action Engine.
 - Canva Linux project config moved under `config/canva-linux/`.
+- c420ui detection engine with Canva Linux detection provider.
+- Removed `scripts/core/overview-status.ts`.
+- Hardened c420ui detection provider contract around `project` overview status shape.
 
 ## Current phase
 

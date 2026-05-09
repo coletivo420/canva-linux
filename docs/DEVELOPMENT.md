@@ -155,3 +155,9 @@ or `npm run c420ui:cli -- <action-flag> --dry-run`. The concrete Canva Linux wir
 
 Keep direct action resolution and generic root preflight ordering inside the
 c420ui Action Engine, and keep Canva Linux privilege validation in the root provider.
+
+## Detection boundaries
+
+- Generic detection parsing and overview status normalization live in `packages/c420ui/src/detection.ts`.
+- Canva Linux installation probes and shell glue live in `scripts/canva-linux/detection/`.
+- Shared repository tooling under `scripts/core/` must not contain Canva Linux product detection logic.

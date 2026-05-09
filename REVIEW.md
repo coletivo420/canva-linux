@@ -250,3 +250,22 @@ Request changes if a PR:
 - keeps historical `Part` naming in consolidated runners;
 - adds a c420ui source module without updating the public API contract;
 - adds a module to `packages/c420ui/src` without exporting or documenting it.
+
+## Detection boundary review
+
+Request changes if a PR:
+
+- reintroduces `scripts/core/overview-status.ts`;
+- puts Canva Linux detection keys inside `packages/c420ui/src`;
+- imports detection from `scripts/core`;
+- bypasses the c420ui detection engine for root policy decisions;
+- hardcodes Canva Linux metadata inside c420ui core.
+
+## Detection provider shape review
+
+Request changes if a PR:
+
+- reintroduces `status.package` in detection status;
+- adds Canva Linux keys to `packages/c420ui/src/detection.ts`;
+- bypasses c420ui detection contracts in root policy;
+- makes detection async without updating root policy callers safely.

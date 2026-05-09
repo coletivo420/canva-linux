@@ -1,6 +1,7 @@
 export type * from "./actions";
 export type * from "./artifacts";
 export type * from "./bridge";
+export type * from "./detection";
 export type * from "./capabilities";
 export type * from "./events";
 export type * from "./root-provider";
@@ -21,6 +22,7 @@ export type {
 } from "./action-engine";
 export { assertC420UIActionContract, c420uiActionGroups, c420uiActionKinds, c420uiWorkflowPhases, getC420UIActionCliFlags, isC420UIPlannedAction, requiresC420UIActionConfirmation, validateC420UIActionRegistry, validateC420UIActions } from "./actions";
 export { createC420UIBridge } from "./bridge";
+export { boolFromC420UIDetectionValue, buildC420UIOverviewStatus, parseC420UIDetectionKeyValueLines, runC420UIDetectionProbes } from "./detection";
 export { hasC420UICapability } from "./capabilities";
 export { createC420UIEvent } from "./events";
 export type {

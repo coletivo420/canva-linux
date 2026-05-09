@@ -1014,6 +1014,29 @@ function validateRetiredC420UIProcessRunner(
   }
 }
 
+
+function validateNoCoreProductDetectionLogic(
+  rootDir: string,
+  failures: string[],
+): void {
+  const scriptsCoreDir = path.join(rootDir, "scripts/core");
+  if (!fs.existsSync(scriptsCoreDir)) return;
+
+  for (const entry of fs.readdirSync(scriptsCoreDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".ts")) continue;
+    const relativePath = `scripts/core/${entry.name}`;
+    const content = fs.readFileSync(path.join(scriptsCoreDir, entry.name), "utf8");
+    for (const fragment of [
+      "DETECTED_NATIVE_" + "SYSTEM",
+      "install-detection-common" + ".sh",
+    ] as const) {
+      if (content.includes(fragment)) {
+        failures.push(`${relativePath}: scripts/core must not contain product detection logic`);
+      }
+    }
+  }
+}
+
 function validatePackageLockConsistency(
   rootDir: string,
   failures: string[],
@@ -1077,16 +1100,14 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
   const removedFiles = [
     `scripts/core/${legacyActionRunnerStem}.ts`,
     `scripts/core/${legacyCompatibilityStem}.ts`,
-    "scripts/actions.json",
-  const removedFiles = [
-    `scripts/core/${legacyActionRunnerStem}.ts`,
-    `scripts/core/${legacyCompatibilityStem}.ts`,
     `test/${legacyActionRunnerStem}.test.ts`,
+    "scripts/actions.json",
+    "scripts/core/overview-status.ts",
   ] as const;
 
   for (const removedFile of removedFiles) {
     if (fs.existsSync(path.join(rootDir, removedFile))) {
-      failures.push(`${removedFile}: legacy Action Runner files must not exist`);
+      failures.push(`${removedFile}: removed core product logic must not exist`);
     }
   }
 
@@ -1475,7 +1496,7 @@ function validateRootProviderContracts(
   for (const fragment of [
     "createCanvaLinuxRootProvider",
     "scripts/sudo-common.sh",
-    "buildOverviewStatus",
+    "buildCanvaLinuxOverviewStatus",
     "CANVA_NATIVE_SCOPE",
     "CANVA_FLATPAK_SCOPE",
   ] as const) {
@@ -1542,6 +1563,7 @@ function main(): number {
   validateToolbarContentSecurityPolicy(rootDir, failures);
   validateNoMaintainedJavaScriptFiles(rootDir, failures);
   validateRetiredC420UIProcessRunner(rootDir, failures);
+  validateNoCoreProductDetectionLogic(rootDir, failures);
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);
   validateRemovedCompatibilityAliases(rootDir, failures);
