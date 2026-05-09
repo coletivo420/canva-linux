@@ -55,7 +55,7 @@
 - Added c420ui operational log redaction and command cancellation policy.
 - Moved reusable operational command execution into the c420ui command runner.
 - Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.
-- Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed by `scripts/sudo-common.sh`.
+- Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed by `packages/c420ui/host/linux/sudo-helper.sh`.
 - Moved generic c420ui TypeScript config contracts from `packages/c420ui/src/terminal/app.ts` into the private `packages/c420ui` skeleton.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
   or when safe storage encryption is unavailable.

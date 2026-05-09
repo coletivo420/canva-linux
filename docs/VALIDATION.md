@@ -32,7 +32,7 @@ creating one-off check files or `*-parts/` validation directories, unless there 
     artifact workflow runner, interactive runner, and public API exports
 - `npm run check:canva-linux`
   - runs `check-canva-linux-contracts.ts` as the consolidated Canva Linux contract check
-  - covers adapter, root provider, sudo-common, public branding, project boundary, action registry validation,
+  - covers adapter, root provider, c420ui sudo helper, public branding, project boundary, action registry validation,
     artifact recipes, AppImage, Flatpak, release artifacts, launcher/session logs, and interactive log UI integration
 - `npm run check:shared-tooling`
   - builds runtime and scripts-core, then runs AI guardrails, doc links, dependency policy, runtime build, and `check-repository-policy.ts`
@@ -90,7 +90,7 @@ creating one-off check files or `*-parts/` validation directories, unless there 
 - Confirm help screen uses the same semantic colors.
 - Confirm user/system action scopes are applied through `action.env`.
 - Confirm user-scope actions do not request sudo.
-- Confirm system-scope actions use `scripts/sudo-common.sh --validate` through the Canva Linux root provider before backend scripts start.
+- Confirm system-scope actions use `packages/c420ui/host/linux/sudo-helper.sh --validate` through the Canva Linux root provider before backend scripts start.
 - Confirm c420ui root actions validate cached sudo credentials non-interactively after the c420ui password prompt.
 - Confirm an action with `requiresRoot: true` and `scope: "user"` fails before its backend script starts.
 - Confirm `--uninstall` and `--purge` request root only when a system-wide installation is detected.

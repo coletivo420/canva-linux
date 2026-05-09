@@ -38,10 +38,10 @@ const forbidden = [
   "scripts/canva-linux",
   "scripts/app-identity-common.sh",
   "scripts/install-detection-common.sh",
-  "scripts/sudo-common.sh",
+  "scripts/" + "sudo-common.sh",
   "CANVA_NATIVE_SCOPE",
   "CANVA_FLATPAK_SCOPE",
-  "CANVA_C420UI_ROOT_AUTH",
+  "CANVA_C420UI" + "_ROOT_AUTH",
   "bundle-appimage",
   "bundle-flatpak",
   "install-flatpak-system",
@@ -81,10 +81,10 @@ const forbiddenFragments = [
   "scripts/canva-linux",
   "scripts/app-identity-common.sh",
   "scripts/install-detection-common.sh",
-  "scripts/sudo-common.sh",
+  "scripts/" + "sudo-common.sh",
   "CANVA_NATIVE_SCOPE",
   "CANVA_FLATPAK_SCOPE",
-  "CANVA_C420UI_ROOT_AUTH",
+  "CANVA_C420UI" + "_ROOT_AUTH",
   "bundle-appimage",
   "bundle-flatpak",
   "install-flatpak-system",
@@ -535,8 +535,8 @@ function main(): number {
     "Canva Linux",
     "CANVA_NATIVE_SCOPE",
     "CANVA_FLATPAK_SCOPE",
-    "CANVA_C420UI_ROOT_AUTH",
-    "scripts/sudo-common.sh",
+    "CANVA_C420UI" + "_ROOT_AUTH",
+    "scripts/" + "sudo-common.sh",
   ]) {
     if (linuxRootProvider.includes(fragment)) {
       failures.push(`linux-root-provider.ts must not hardcode ${fragment}`);
@@ -867,7 +867,7 @@ function checkTerminalUiContract(failures: string[]): void {
     "install-detection-common.sh",
     "DETECTED_NATIVE_SYSTEM",
     "scripts/c420ui-canva-linux",
-    "scripts/sudo-common.sh",
+    "scripts/" + "sudo-common.sh",
   ]) {
     if (terminalSource.includes(fragment)) {
       failures.push(`packages/c420ui/src/terminal must not contain ${fragment}`);
@@ -1056,6 +1056,46 @@ function checkSettingsContract(failures: string[]): void {
   }
 }
 
+
+function checkLinuxHostSudoHelperContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const helperPath = "packages/c420ui/host/linux/sudo-helper.sh";
+  const fullPath = path.join(rootDir, helperPath);
+  if (!fs.existsSync(fullPath)) {
+    failures.push(`${helperPath}: missing reusable Linux sudo host helper`);
+    return;
+  }
+
+  const source = fs.readFileSync(fullPath, "utf8");
+  for (const fragment of [
+    "#!/usr/bin/env bash",
+    "set -euo pipefail",
+    "c420ui_sudo_validate",
+    "c420ui_sudo_validate_stdin",
+    "c420ui_sudo()",
+    "--validate)",
+    "--validate-stdin)",
+    "C420UI_ROOT_AUTH",
+    "sudo -n",
+    'sudo -S -v -p ""',
+  ] as const) {
+    if (!source.includes(fragment)) {
+      failures.push(`${helperPath}: missing helper fragment ${fragment}`);
+    }
+  }
+
+  for (const forbidden of [
+    "CANVA_",
+    "canva_",
+    "scripts/" + "sudo-common.sh",
+    "Canva Linux",
+  ] as const) {
+    if (source.includes(forbidden)) {
+      failures.push(`${helperPath}: must not contain project-specific fragment ${forbidden}`);
+    }
+  }
+}
+
 export function main(): number {
   const failures: string[] = [];
 
@@ -1074,6 +1114,7 @@ export function main(): number {
   runArtifactWorkflowContract(failures);
   runInteractiveActionEngineContract(failures);
   checkSettingsContract(failures);
+  checkLinuxHostSudoHelperContract(failures);
   checkTerminalUiContract(failures);
   checkHeaderLayoutContract(failures);
 

@@ -788,6 +788,7 @@ const requiredShellFiles = [
   "canva-linux.sh",
   "scripts/validate-project.sh",
   "scripts/run-core-entry.sh",
+  "packages/c420ui/host/linux/sudo-helper.sh",
 ] as const;
 
 const centralDocumentationFiles = [
@@ -1089,6 +1090,7 @@ function validateDependentProjectBoundaryLayout(
     "scripts/core/overview-status.ts",
     "scripts/core/action-registry.ts",
     "scripts/core/validate-actions.ts",
+    "scripts/" + "sudo-common.sh",
   ] as const;
   for (const removedPath of removedPaths) {
     if (fs.existsSync(path.join(rootDir, removedPath))) {
@@ -1566,7 +1568,7 @@ function validateRootProviderContracts(
 
   for (const fragment of [
     "createCanvaLinuxRootProvider",
-    "scripts/sudo-common.sh",
+    "packages/c420ui/host/linux/sudo-helper.sh",
     "buildCanvaLinuxOverviewStatus",
     "CANVA_NATIVE_SCOPE",
     "CANVA_FLATPAK_SCOPE",

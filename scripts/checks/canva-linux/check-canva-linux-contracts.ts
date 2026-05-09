@@ -298,8 +298,11 @@ function main(): number {
   for (const fragment of [
     "createCanvaLinuxRootProvider",
     "createC420UILinuxRootProviderBase",
-    'sudoHelperPath: "scripts/sudo-common.sh"',
-    'rootAuthEnvKey: "CANVA_C420UI_ROOT_AUTH"',
+    'sudoHelperPath: "packages/c420ui/host/linux/sudo-helper.sh"',
+    'rootAuthEnvKey: "C420UI_ROOT_AUTH"',
+    "buildCanvaLinuxRootActionEnvironment",
+    "buildActionEnvironment: buildCanvaLinuxRootActionEnvironment",
+    "C420UI_ACTION_SCOPE",
     "buildCanvaLinuxOverviewStatus",
     "conditionalSystemRootActionIds",
     "purge",
@@ -323,8 +326,11 @@ function main(): number {
     }
   }
 
-  if (!fs.existsSync(path.join(rootDir, "scripts/sudo-common.sh"))) {
-    failures.push("scripts/sudo-common.sh must back privileged actions");
+  if (fs.existsSync(path.join(rootDir, "scripts/" + "sudo-common.sh"))) {
+    failures.push("scripts/" + "sudo-common.sh must not exist; use packages/c420ui/host/linux/sudo-helper.sh");
+  }
+  if (!fs.existsSync(path.join(rootDir, "packages/c420ui/host/linux/sudo-helper.sh"))) {
+    failures.push("packages/c420ui/host/linux/sudo-helper.sh must back privileged actions");
   }
   if (!cli.includes("createCanvaLinuxRootProvider()")) {
     failures.push("Canva Linux CLI must pass createCanvaLinuxRootProvider()");
@@ -343,7 +349,7 @@ function main(): number {
     "buildActionEnvironment",
     "ROOT_POLICY_EXIT_CODE",
     "validateRootPolicy",
-    "scripts/sudo-common.sh",
+    "scripts/" + "sudo-common.sh",
   ]) {
     if (adapter.includes(fragment)) {
       failures.push(
@@ -437,7 +443,7 @@ function checkDependentProjectAdapterBoundary(failures: string[]): void {
   }
 }
 
-const checkSudoCommonContractRunner = (() => {
+const checkC420UISudoHelperContractRunner = (() => {
 function findCheckedFiles(dir: string): string[] {
   const results: string[] = [];
   const list = fs.readdirSync(dir);
@@ -470,7 +476,7 @@ function isAllowedSudoText(line: string): boolean {
 function main(): number {
   const rootDir = findProjectRoot();
   const scriptsDir = path.join(rootDir, "scripts");
-  const sudoCommonPath = path.join(scriptsDir, "sudo-common.sh");
+  const sudoHelperPath = path.join(rootDir, "packages/c420ui/host/linux/sudo-helper.sh");
   const tuiAppPath = path.join(rootDir, "packages/c420ui/src/terminal/app.ts");
   const checkedFiles = [
     ...findCheckedFiles(scriptsDir),
@@ -478,13 +484,12 @@ function main(): number {
   ].filter((f) => {
     const relative = path.relative(rootDir, f);
     return (
-      !relative.endsWith("sudo-common.sh") &&
       relative !== "scripts/checks/canva-linux/check-canva-linux-contracts.ts" &&
       relative !== "scripts/core/check-ai-guardrails.ts"
     );
   });
   const failures: string[] = [];
-  const sudoCommon = fs.readFileSync(sudoCommonPath, "utf8");
+  const sudoHelper = fs.readFileSync(sudoHelperPath, "utf8");
   const tuiApp = fs.readFileSync(tuiAppPath, "utf8");
   if (
     !tuiApp.includes("createInteractiveActionRunner") ||
@@ -497,20 +502,20 @@ function main(): number {
     );
   }
 
-  if (!/--validate-stdin\)\s*canva_sudo_validate_stdin\s*;;/.test(sudoCommon)) {
+  if (!/--validate-stdin\)\s*c420ui_sudo_validate_stdin\s*;;/.test(sudoHelper)) {
     failures.push(
-      "scripts/sudo-common.sh: dispatcher must implement --validate-stdin",
+      "packages/c420ui/host/linux/sudo-helper.sh: dispatcher must implement --validate-stdin",
     );
   }
 
-  if (!sudoCommon.includes('sudo -S -v -p ""')) {
+  if (!sudoHelper.includes('sudo -S -v -p ""')) {
     failures.push(
-      'scripts/sudo-common.sh: --validate-stdin must validate with sudo -S -v -p ""',
+      'packages/c420ui/host/linux/sudo-helper.sh: --validate-stdin must validate with sudo -S -v -p ""',
     );
   }
 
-  if (!/password\s*=\s*"\$\(cat\)"/.test(sudoCommon)) {
-    failures.push("scripts/sudo-common.sh: --validate-stdin must read stdin");
+  if (!/password\s*=\s*"\$\(cat\)"/.test(sudoHelper)) {
+    failures.push("packages/c420ui/host/linux/sudo-helper.sh: --validate-stdin must read stdin");
   }
 
   const interactiveRunnerPath = path.join(
@@ -555,14 +560,14 @@ function main(): number {
         /['"]sudo['"]/.test(line)
       ) {
         failures.push(
-          `${relativePath}:${index + 1}: raw sudo is forbidden; use scripts/sudo-common.sh`,
+          `${relativePath}:${index + 1}: raw sudo is forbidden; use packages/c420ui/host/linux/sudo-helper.sh`,
         );
       }
     });
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
-  console.log("[canva-linux-contracts] sudo-common OK");
+  console.log("[canva-linux-contracts] c420ui sudo helper OK");
   return 0;
 }
 
@@ -1111,7 +1116,7 @@ function checkRootProviderContract(failures: string[]): void {
 }
 
 function checkSudoCommonContract(failures: string[]): void {
-  runCheck(failures, { name: "sudo-common contract", run: checkSudoCommonContractRunner.main });
+  runCheck(failures, { name: "c420ui sudo helper contract", run: checkC420UISudoHelperContractRunner.main });
 }
 
 function checkPublicBranding(failures: string[]): void {
@@ -1161,11 +1166,11 @@ function checkNoParallelShellMenu(failures: string[]): void {
         if (checkedLine.includes(pattern)) {
           if (
             pattern === "CANVA_C420UI" &&
-            (checkedLine.includes("CANVA_C420UI_ROOT_AUTH") ||
+            (checkedLine.includes("CANVA_C420UI" + "_ROOT_AUTH") ||
               checkedLine.includes("CANVA_C420UI_TITLE"))
           ) {
             const sanitized = checkedLine
-              .replace(/CANVA_C420UI_ROOT_AUTH/g, "")
+              .replace(new RegExp("CANVA_C420UI" + "_ROOT_AUTH", "g"), "")
               .replace(/CANVA_C420UI_TITLE/g, "");
             if (!sanitized.includes("CANVA_C420UI")) continue;
           }

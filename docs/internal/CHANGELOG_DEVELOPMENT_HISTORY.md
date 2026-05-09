@@ -93,9 +93,9 @@ This file preserves the detailed development changelog entries that were archive
 ### Fixed
 - Stabilized Native install preflight by using `data/icons/hicolor`, preserving missing-icon tolerance, validating
   system sudo before writes, and keeping post-install warnings non-fatal.
-- Stabilized Flatpak system/user install and uninstall scope behavior, including user-scope sudo refusal and system-scope sudo-common usage.
+- Stabilized Flatpak system/user install and uninstall scope behavior, including user-scope sudo refusal and system-scope c420ui sudo helper usage.
 - Made C420UI action finalization use synchronous overview-status detection so successful installs with warnings finish green instead of red.
-- Hardened sudo-common with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
+- Hardened c420ui sudo helper with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
 
 ### Changed
 - Normalized every `scripts/check-*.js` entrypoint to a minimal `runCore(...)` compatibility wrapper and tightened the
@@ -115,7 +115,7 @@ This file preserves the detailed development changelog entries that were archive
 - Removed "F4 Shell Tool" and "Use C420UI Tool" references.
 
 ### Added
-- Centralized sudo usage via `scripts/sudo-common.sh` across all privileged scripts.
+- Centralized sudo usage via `packages/c420ui/host/linux/sudo-helper.sh` across all privileged scripts.
 - Consolidated TypeScript core for scripts and validations.
 - Hardened shell-menu validation and consolidated sudo contract guardrails.
 
@@ -133,7 +133,7 @@ This file preserves the detailed development changelog entries that were archive
 - Removed shell fallback menus from the default launcher flow.
 
 ### Added
-- Added `scripts/sudo-common.sh` as the shared privileged-command contract.
+- Added `packages/c420ui/host/linux/sudo-helper.sh` as the shared privileged-command contract.
 - Added anti-regression checks for removed shell menus, sudo helper usage, and action metadata contracts.
 - Added TypeScript guardrail checks for AI maintenance rules.
 
