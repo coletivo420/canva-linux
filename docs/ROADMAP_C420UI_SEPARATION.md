@@ -19,6 +19,7 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 - Interactive c420ui execution through Action Engine.
 - Consolidated validation domains.
 - Legacy Action Runner removed after direct CLI and interactive c420ui execution migrated to the shared Action Engine.
+- Canva Linux project config moved under `config/canva-linux/`.
 
 ## Current phase
 

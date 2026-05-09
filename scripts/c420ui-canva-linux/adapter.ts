@@ -16,9 +16,9 @@ import {
 import { c420uiLogoLines } from "../c420ui/logo";
 import { rootLaunchGuardMessage, toolSettingsPath } from "../c420ui/settings";
 import {
-  loadActions,
+  loadCanvaLinuxActions as loadCanvaLinuxActionRegistry,
   type CanvaAction,
-} from "../core/action-registry";
+} from "../canva-linux/actions/registry";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
@@ -112,9 +112,9 @@ export function createCanvaLinuxC420UIAdapter(
   rootDir: string,
 ): CanvaLinuxC420UIAdapter {
   const resolvedRootDir = path.resolve(rootDir);
-  const projectUiPath = path.join(resolvedRootDir, "scripts/project-ui.json");
+  const projectUiPath = path.join(resolvedRootDir, "config/canva-linux/project-ui.json");
   const packageJsonPath = path.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = path.join(resolvedRootDir, "scripts/actions.json");
+  const actionsJsonPath = path.join(resolvedRootDir, "config/canva-linux/actions.json");
   const appIdentityPath = path.join(
     resolvedRootDir,
     "scripts/app-identity-common.sh",
@@ -191,7 +191,7 @@ export function createCanvaLinuxC420UIAdapter(
     if (!fs.existsSync(actionsJsonPath)) {
       throw new Error(`Missing Canva Linux actions registry: ${actionsJsonPath}`);
     }
-    return loadActions(resolvedRootDir).map(toC420UIActionDescriptor);
+    return loadCanvaLinuxActionRegistry(resolvedRootDir).map(toC420UIActionDescriptor);
   }
 
   function loadArtifactWorkflows() {

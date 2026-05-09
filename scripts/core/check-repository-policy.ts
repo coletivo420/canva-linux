@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { findProjectRoot } from "./action-registry";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../canva-linux/project-root";
 
 type PolicyCheck = {
   name: string;
@@ -489,9 +489,9 @@ const requiredVersionedPaths = [
   "tsconfig.build.json",
   "tsconfig.strict.json",
   "package-lock.json",
-  "scripts/actions.json",
+  "config/canva-linux/actions.json",
+  "config/canva-linux/project-ui.json",
   "scripts/theme.json",
-  "scripts/project-ui.json",
   "io.github.coletivo420.canva-linux.yml",
   "packaging/flathub/manifest.yml",
   "packaging/flathub/generated-sources.json",
@@ -1077,6 +1077,10 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
   const removedFiles = [
     `scripts/core/${legacyActionRunnerStem}.ts`,
     `scripts/core/${legacyCompatibilityStem}.ts`,
+    "scripts/actions.json",
+    "scripts/project-ui.json",
+    "scripts/core/action-registry.ts",
+    "scripts/core/validate-actions.ts",
   ] as const;
 
   for (const removedFile of removedFiles) {
@@ -1365,10 +1369,10 @@ function validateLauncherScriptShape(
     'find "${source}" -type f',
     '"${ROOT_DIR}/scripts/c420ui-canva-linux"',
     '"${ROOT_DIR}/scripts/c420ui"',
-    '"${ROOT_DIR}/scripts/core/action-types.ts"',
+    '"${ROOT_DIR}/scripts/canva-linux/project-root.ts"',
     '"${ROOT_DIR}/packages/c420ui/src"',
-    '"${ROOT_DIR}/scripts/actions.json"',
-    '"${ROOT_DIR}/scripts/project-ui.json"',
+    '"${ROOT_DIR}/config/canva-linux/actions.json"',
+    '"${ROOT_DIR}/config/canva-linux/project-ui.json"',
     "DIRECT_ACTION_FLAGS=()",
     'DIRECT_ACTION_FLAGS+=("${arg}")',
     'run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"',
@@ -1480,7 +1484,7 @@ function validateRemovedCompatibilityAliases(
 ): void {
   const actions = readJsonFile<Array<{ id?: string; cli?: string[] }>>(
     rootDir,
-    "scripts/actions.json",
+    "config/canva-linux/actions.json",
     failures,
   );
   if (!actions) return;
@@ -1491,7 +1495,7 @@ function validateRemovedCompatibilityAliases(
         (forbiddenCompatibilityCliAliases as readonly string[]).includes(alias)
       ) {
         failures.push(
-          `scripts/actions.json ${action.id ?? "<unknown>"}: removed compatibility alias ${alias} must not be registered`,
+          `config/canva-linux/actions.json ${action.id ?? "<unknown>"}: removed compatibility alias ${alias} must not be registered`,
         );
       }
     }

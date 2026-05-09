@@ -28,9 +28,9 @@ function needsBuild(): boolean {
     ...listTsFiles(adapterDir),
     path.join(rootDir, "package.json"),
     path.join(rootDir, "package-lock.json"),
-    path.join(rootDir, "scripts/project-ui.json"),
+    path.join(rootDir, "config/canva-linux/project-ui.json"),
     path.join(rootDir, "scripts/app-identity-common.sh"),
-    path.join(rootDir, "scripts/actions.json"),
+    path.join(rootDir, "config/canva-linux/actions.json"),
   ].filter((file) => fs.existsSync(file));
   return inputs.some((file) => fs.statSync(file).mtimeMs > outMtime);
 }

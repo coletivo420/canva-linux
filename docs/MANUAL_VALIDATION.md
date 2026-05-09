@@ -48,7 +48,7 @@ Do not remove or weaken validation checks to make the command pass.
    - `./canva-linux.sh`
 2. Confirm the interface uses c420ui as the user-facing terminal interface name.
 3. Confirm the install detection/status overview is visible at the top.
-4. Confirm actions are loaded from `scripts/actions.json`.
+4. Confirm actions are loaded from `config/canva-linux/actions.json`.
 5. Confirm keyboard navigation, focus highlights, settings, log copy, and text
    selection behavior match `docs/FEATURES.md` and `docs/DEBUGGING.md`.
 6. Confirm c420ui is not launched or recommended as root.

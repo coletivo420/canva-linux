@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { findProjectRoot } from "./action-registry";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../canva-linux/project-root";
 
 const expectedMain = ".build/electron/main/index.js";
 

@@ -5,7 +5,7 @@ import {
   type ActionGroup,
   type ActionKind,
   type CanvaAction,
-} from "../core/action-registry";
+} from "../canva-linux/actions/registry";
 
 export type C420UIActionGroup = ActionGroup;
 export type C420UIActionKind = ActionKind;

@@ -101,8 +101,6 @@ Project validations, contracts, and registries are implemented in TypeScript und
 
 ### Migrated core entries include
 
-- `action-registry.ts`
-- `validate-actions.ts`
 - `overview-status.ts`
 - `check-ai-guardrails.ts`
 - `check-doc-links.ts`

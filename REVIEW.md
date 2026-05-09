@@ -19,6 +19,17 @@ Request changes if a PR:
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
 
+## Canva Linux config boundary review
+
+Request changes if a PR:
+
+- reintroduces `scripts/actions.json`;
+- reintroduces `scripts/project-ui.json`;
+- reintroduces `scripts/core/action-registry.ts`;
+- reintroduces `scripts/core/validate-actions.ts`;
+- puts project-specific registry loading inside `packages/c420ui/src`;
+- hardcodes Canva Linux config paths inside c420ui core.
+
 ## Removed Action Runner review
 
 Request changes if a PR:

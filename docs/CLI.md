@@ -37,7 +37,7 @@ must be added deliberately to the generic parser before use.
 
 ## Actions
 
-Direct actions are resolved through the shared Action Registry (`scripts/actions.json`)
+Direct actions are resolved through the shared Action Registry (`config/canva-linux/actions.json`)
 by the c420ui CLI bridge; the launcher does not maintain a separate executable
 action flag list.
 Planned actions are shown in c420ui so users can see future packaging targets,

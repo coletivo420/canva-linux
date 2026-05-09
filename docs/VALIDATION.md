@@ -32,13 +32,12 @@ creating one-off check files or `*-parts/` validation directories, unless there 
     artifact workflow, interactive runner, and public API exports
 - `npm run check:canva-linux`
   - runs `check-canva-linux-contracts.ts` as the consolidated Canva Linux contract check
-  - covers adapter, root provider, sudo-common, public branding, project boundary, artifact recipes, AppImage, Flatpak, release artifacts,
-    launcher/session logs, and interactive log UI integration
+  - covers adapter, root provider, sudo-common, public branding, project boundary, action registry validation,
+    artifact recipes, AppImage, Flatpak, release artifacts, launcher/session logs, and interactive log UI integration
 - `npm run check:shared-tooling`
   - builds runtime and scripts-core, then runs AI guardrails, doc links, dependency policy, runtime build, and `check-repository-policy.ts`
 - `npm run build:c420ui`
 - `npm run check:c420ui`
-- `npm run actions:validate`
 - `npm run lint`
 - `npm run typecheck`
 - `npm run typecheck:strict`

@@ -101,10 +101,16 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 ## Action Registry
 
-- c420ui/CLI actions must be sourced from `scripts/actions.json`.
-- Action metadata must come from `scripts/actions.json`.
+- c420ui/CLI actions must be sourced from `config/canva-linux/actions.json`.
+- Action metadata must come from `config/canva-linux/actions.json`.
+- Canva Linux project configuration belongs under `config/canva-linux/`.
+- Do not put project configuration under `scripts/`.
+- Canva Linux action registry loading belongs under `scripts/canva-linux/actions/`.
+- Do not reintroduce `scripts/core/action-registry.ts`.
+- Do not reintroduce `scripts/core/validate-actions.ts`.
+- Generic c420ui action validation belongs in `packages/c420ui/src/actions.ts`.
 - Do not duplicate action logic in c420ui or launcher code.
-- Do not ignore `action.env` from `scripts/actions.json`.
+- Do not ignore `action.env` from `config/canva-linux/actions.json`.
 - Any `system`/`user` scope action must behave the same in c420ui and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.

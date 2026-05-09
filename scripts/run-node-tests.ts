@@ -248,6 +248,7 @@ export function main(): void {
 
   const runtimeSourceDirs = [
     path.join(rootDir, "scripts", "core"),
+    path.join(rootDir, "scripts", "canva-linux"),
     path.join(rootDir, "scripts", "c420ui"),
     path.join(rootDir, "scripts", "c420ui-canva-linux"),
   ];

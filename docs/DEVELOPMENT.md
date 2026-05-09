@@ -83,7 +83,7 @@ when they leave the public index.
 All workflow actions must be registered in:
 
 ```text
-scripts/actions.json
+config/canva-linux/actions.json
 ```
 
 Do not add hardcoded action lists directly in c420ui or launcher code.
@@ -94,8 +94,8 @@ action execution; they must not duplicate generic planned-action, dry-run or exi
 Recommended flow:
 
 1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.
-2. Add entry in `scripts/actions.json`.
-3. Run `npm run actions:validate`.
+2. Add entry in `config/canva-linux/actions.json`.
+3. Run `npm run check:canva-linux`.
 4. Test direct CLI through the launcher: `./canva-linux.sh <action-flag> --dry-run`.
 5. Test the compiled c420ui CLI bridge when needed: `npm run c420ui:cli -- <action-flag> --dry-run`.
 6. Test c420ui interactively: `./canva-linux.sh`.
@@ -103,12 +103,14 @@ Recommended flow:
 ## Sudo and Privileged Actions
 
 If your action requires root privileges, set `requiresRoot: true` in
-`scripts/actions.json` and use `scripts/sudo-common.sh` helpers in your backend
+`config/canva-linux/actions.json` and use `scripts/sudo-common.sh` helpers in your backend
 script. The generic root policy contract lives in
 `packages/c420ui/src/root-provider.ts`; the concrete Canva Linux provider lives in
 `scripts/c420ui-canva-linux/root-provider.ts`.
 
 ## Core Validation
+
+Action registry validation is part of `npm run check:canva-linux`.
 
 Core script contracts are checked by:
 
@@ -129,7 +131,7 @@ These commands automatically compile their TypeScript check scripts if necessary
 ## Next packaging target
 
 Next line: AUR/PKGBUILD experimental packaging.
-AUR actions must be added through `scripts/actions.json`.
+AUR actions must be added through `config/canva-linux/actions.json`.
 
 ## Current execution architecture
 

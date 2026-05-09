@@ -26,6 +26,8 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Moved Canva Linux action registry and project UI config under `config/canva-linux/`.
+- Moved Canva Linux action registry loading to `scripts/canva-linux/actions/registry.ts` and kept generic action validation in c420ui core.
 - Updated maintenance documentation to treat the c420ui Action Engine, Root Provider, Command Runner,
   and CLI bridge as the only supported action execution path.
 - Polished consolidated validation runner naming and expanded the c420ui public API contract.
@@ -52,6 +54,8 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Removed
+- Removed the old `scripts/actions.json` and `scripts/project-ui.json` config locations.
+- Removed the old `scripts/core/action-registry.ts` and `scripts/core/validate-actions.ts` entries.
 - Removed the legacy Action Runner and its manual compatibility validation path after direct CLI and interactive c420ui
   execution were migrated to the shared c420ui Action Engine.
 
@@ -65,8 +69,8 @@
 - Rebuild the direct c420ui CLI bridge when launcher-relevant bridge sources are newer than the compiled bundle.
 - Fixed the release workflow removed-interface-routing check so it scans active public documentation while excluding
   archived internal development history.
-- Fixed c420ui stale-build detection so changes to `scripts/project-ui.json`, `scripts/app-identity-common.sh`,
-  or `scripts/actions.json` are considered build inputs.
+- Fixed c420ui stale-build detection so changes to `config/canva-linux/project-ui.json`, `scripts/app-identity-common.sh`,
+  or `config/canva-linux/actions.json` are considered build inputs.
 - Fixed public manual-validation guidance that still referenced obsolete release/version wording and debug-filter terminology.
 
 ### Tests

@@ -2,7 +2,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { findProjectRoot } from "./action-registry";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../canva-linux/project-root";
 
 type DetectionLines = Record<string, string>;
 

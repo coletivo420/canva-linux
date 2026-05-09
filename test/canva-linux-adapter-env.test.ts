@@ -14,13 +14,13 @@ import { createCanvaLinuxRootProvider } from "../scripts/c420ui-canva-linux/root
 
 function createTempProject(): string {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-adapter-env-"));
-  fs.mkdirSync(path.join(rootDir, "scripts"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, "config", "canva-linux"), { recursive: true });
   fs.writeFileSync(
     path.join(rootDir, "package.json"),
     `${JSON.stringify({ name: "adapter-env-test", version: "0.0.0" }, null, 2)}\n`,
   );
   fs.writeFileSync(
-    path.join(rootDir, "scripts", "actions.json"),
+    path.join(rootDir, "config", "canva-linux", "actions.json"),
     `${JSON.stringify(
       [
         {
