@@ -97,7 +97,7 @@ The intended separation is:
 - **c420ui core**: reusable action, bridge, detection, workflow, root-provider,
   command-runner and operational-log contracts live in `packages/c420ui/src/`.
 - **c420ui terminal UI**: reusable terminal layout, focus, logs, modal, clipboard,
-  settings, logo and interactive runner code lives in `packages/c420ui/src/terminal/`.
+  settings, logo, help formatting, root launch guard, runtime startup policy and interactive runner code lives in `packages/c420ui/src/terminal/`.
 - **Canva Linux adapter**: project-specific actions, metadata, launch wiring,
   install/package status, and Canva Linux labels live in
   `scripts/c420ui-canva-linux/`. Installation detection probes live in
@@ -114,6 +114,7 @@ The intended separation is:
   npm package and should not be documented as externally consumable yet.
 - **Action contract**: c420ui and direct CLI actions must continue to source
   actions from `config/canva-linux/actions.json` and shared TypeScript action contracts.
+- **Terminal root guard**: root launch checks, launch messaging, and terminal help formatting belong to `packages/c420ui/src/terminal/root-guard.ts`, `packages/c420ui/src/terminal/runtime.ts`, and `packages/c420ui/src/terminal/help.ts`; Canva Linux wrappers and adapters must not duplicate them.
 
 When moving code toward the split, avoid hardcoding Canva Linux project metadata
 inside reusable c420ui core code. Keep c420ui branding and project branding as

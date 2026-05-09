@@ -45,6 +45,17 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 ## c420ui separation roadmap
 
+### c420ui terminal startup and root guard
+
+- The c420ui terminal runtime owns the root launch guard.
+- Do not add root launch checks to `scripts/run-c420ui.ts`.
+- Do not add root launch checks to `scripts/c420ui-canva-linux/run.ts`.
+- Project adapters must not expose `rootLaunchGuardMessage`.
+- The Canva Linux root provider is only for privileged actions, not for launching the terminal UI.
+
+
+### c420ui package boundary
+
 - Read `docs/ROADMAP_C420UI_SEPARATION.md` before moving c420ui code toward packages or adapters.
 - Separate for compatibility first and external extraction later.
 - Do not migrate c420ui to ESM during the current separation phase.

@@ -732,6 +732,9 @@ function checkTerminalUiContract(failures: string[]): void {
     "theme.ts",
     "modal.ts",
     "clipboard.ts",
+    "root-guard.ts",
+    "runtime.ts",
+    "help.ts",
   ];
   for (const file of required) {
     if (!fs.existsSync(path.join(terminalDir, file))) {
@@ -770,6 +773,51 @@ function checkTerminalUiContract(failures: string[]): void {
   }
   if (app.includes("spawn(")) {
     failures.push("packages/c420ui/src/terminal/app.ts must not spawn overview diagnostics");
+  }
+
+  const index = fs.existsSync(path.join(terminalDir, "index.ts"))
+    ? fs.readFileSync(path.join(terminalDir, "index.ts"), "utf8")
+    : "";
+  const rootGuard = fs.existsSync(path.join(terminalDir, "root-guard.ts"))
+    ? fs.readFileSync(path.join(terminalDir, "root-guard.ts"), "utf8")
+    : "";
+  const runtime = fs.existsSync(path.join(terminalDir, "runtime.ts"))
+    ? fs.readFileSync(path.join(terminalDir, "runtime.ts"), "utf8")
+    : "";
+  const help = fs.existsSync(path.join(terminalDir, "help.ts"))
+    ? fs.readFileSync(path.join(terminalDir, "help.ts"), "utf8")
+    : "";
+  const settings = fs.existsSync(path.join(terminalDir, "settings.ts"))
+    ? fs.readFileSync(path.join(terminalDir, "settings.ts"), "utf8")
+    : "";
+  for (const fragment of [
+    "createC420UIRootLaunchGuardMessage",
+    "isC420UIRootLaunch",
+    "enforceC420UIRootLaunchGuard",
+  ]) {
+    if (!rootGuard.includes(fragment)) {
+      failures.push(`packages/c420ui/src/terminal/root-guard.ts must contain ${fragment}`);
+    }
+    if (!index.includes(fragment)) {
+      failures.push(`packages/c420ui/src/terminal/index.ts must export ${fragment}`);
+    }
+  }
+  if (!runtime.includes("runC420UITerminalApp")) {
+    failures.push("packages/c420ui/src/terminal/runtime.ts must contain runC420UITerminalApp");
+  }
+  if (!index.includes("runC420UITerminalApp")) {
+    failures.push("packages/c420ui/src/terminal/index.ts must export runC420UITerminalApp");
+  }
+  if (!help.includes("formatC420UITerminalHelp") || !index.includes("formatC420UITerminalHelp")) {
+    failures.push("packages/c420ui/src/terminal/help.ts must provide exported help formatting");
+  }
+  if (settings.includes("rootLaunchGuardMessage")) {
+    failures.push("packages/c420ui/src/terminal/settings.ts must not contain rootLaunchGuardMessage");
+  }
+  const guardIndex = runtime.indexOf("enforceC420UIRootLaunchGuard");
+  const createIndex = runtime.indexOf("create(options)");
+  if (guardIndex < 0 || createIndex < 0 || guardIndex > createIndex) {
+    failures.push("packages/c420ui/src/terminal/runtime.ts must enforce root guard before createApp");
   }
 }
 

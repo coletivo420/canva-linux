@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createCanvaLinuxC420UIAdapter } from "../../c420ui-canva-linux/adapter";
 import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
-import { loadCanvaLinuxActions as loadActions } from "../../canva-linux/actions/registry";
+import { loadCanvaLinuxActions } from "../../canva-linux/actions/registry";
 import { buildCanvaLinuxOverviewStatus } from "../../canva-linux/detection/provider";
 
 type ContractCheck = {
@@ -323,7 +323,10 @@ function main(): number {
     failures.push("Canva Linux interactive c420ui must pass createCanvaLinuxRootProvider()");
   }
   if (!run.includes("rootProvider: createCanvaLinuxRootProvider()")) {
-    failures.push("Canva Linux interactive c420ui must pass rootProvider to createApp");
+    failures.push("Canva Linux interactive c420ui must pass rootProvider to terminal runtime");
+  }
+  if (!run.includes("runC420UITerminalApp")) {
+    failures.push("Canva Linux interactive c420ui must start through runC420UITerminalApp");
   }
   for (const fragment of [
     "actionRequiresRootValidation",
@@ -1107,16 +1110,30 @@ function checkNoRootLauncherContract(failures: string[]): void {
       "canva-linux.sh: root guard must explain privileges are requested only when needed",
     );
   }
-  if (!runTui.includes("process.getuid") || !adapterRun.includes("process.getuid")) {
-    failures.push("c420ui bootstrap must include a secondary root-launch guard");
+  const adapter = readProjectFile(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
+  if (!runTui.includes("runCanvaLinuxC420UI")) {
+    failures.push("scripts/run-c420ui.ts must call runCanvaLinuxC420UI");
+  }
+  if (runTui.includes(".build/packages/c420ui/terminal/index.js")) {
+    failures.push("scripts/run-c420ui.ts must not execute the c420ui terminal barrel bundle");
+  }
+  if (runTui.includes("process.getuid")) {
+    failures.push("scripts/run-c420ui.ts must not perform root launch checks");
+  }
+  if (!adapterRun.includes("runC420UITerminalApp")) {
+    failures.push("scripts/c420ui-canva-linux/run.ts must import runC420UITerminalApp");
   }
   if (!adapterRun.includes("../../packages/c420ui/src/terminal")) {
     failures.push("scripts/c420ui-canva-linux/run.ts must import terminal UI from packages/c420ui/src/terminal");
   }
-  if (!runTui.includes("rootLaunchGuardMessage")) {
-    failures.push(
-      "scripts/run-c420ui.ts: must reuse the root-launch guard message builder through the adapter",
-    );
+  if (adapterRun.includes("process.getuid")) {
+    failures.push("scripts/c420ui-canva-linux/run.ts must not perform root launch checks");
+  }
+  if (adapterRun.includes("process.exit")) {
+    failures.push("scripts/c420ui-canva-linux/run.ts must not own root guard exits");
+  }
+  if (adapter.includes("rootLaunchGuardMessage")) {
+    failures.push("scripts/c420ui-canva-linux/adapter.ts must not expose rootLaunchGuardMessage");
   }
 
   const docsToCheck = ["README.md", "docs/CLI.md", "docs/TECHNICAL.md"];
@@ -1154,7 +1171,7 @@ function checkCanvaLinuxConfigBoundary(failures: string[]): void {
 }
 
 function checkActionRegistryContract(failures: string[]): void {
-  const actions = loadActions(findProjectRoot());
+  const actions = loadCanvaLinuxActions(findProjectRoot());
   const aliases = new Map<string, string>();
 
   for (const action of actions) {
@@ -1507,7 +1524,7 @@ function checkReleaseContract(failures: string[]): void {
 
 function checkShellActionIds(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const actions = loadActions(rootDir);
+  const actions = loadCanvaLinuxActions(rootDir);
   const actionIds = new Set(actions.map((action) => action.id));
   const visibleMissingDescription = actions.filter(
     (action) =>

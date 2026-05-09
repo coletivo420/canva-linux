@@ -45,7 +45,7 @@
     "typecheck:strict": "tsc -p tsconfig.strict.json",
     "build:scripts-core": "rm -rf .build/scripts/core && esbuild scripts/core/check-ai-guardrails.ts scripts/core/check-doc-links.ts scripts/core/check-dependency-policy.ts scripts/core/check-runtime-build.ts scripts/core/check-repository-policy.ts --bundle --platform=node --format=cjs --outdir=.build/scripts/core",
     "check:scripts-core": "npm run check:c420ui-core && npm run check:canva-linux && npm run check:shared-tooling",
-    "build:c420ui": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js",
+    "build:c420ui": "npm run build:c420ui-terminal",
     "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.js",
     "check:c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.js --help",
     "build:c420ui-checks": "esbuild packages/c420ui/checks/check-*.ts --bundle --platform=node --format=cjs --outdir=.build/packages/c420ui/checks",
@@ -53,7 +53,8 @@
     "build:canva-linux-checks": "esbuild scripts/checks/canva-linux/check-*.ts --bundle --platform=node --format=cjs --outdir=.build/scripts/checks/canva-linux",
     "check:canva-linux": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-canva-linux-contracts.js",
     "check:shared-tooling": "npm run build:runtime && npm run build:scripts-core && node .build/scripts/core/check-ai-guardrails.js && node .build/scripts/core/check-doc-links.js && node .build/scripts/core/check-dependency-policy.js && node .build/scripts/core/check-runtime-build.js && node .build/scripts/core/check-repository-policy.js",
-    "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js"
+    "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
+    "build:c420ui-terminal": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js"
   },
   "build": {
     "appId": "io.github.coletivo420.canva-linux",

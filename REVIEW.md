@@ -166,6 +166,17 @@ Request changes if a PR:
 - claims persistent login works without Secret Service;
 - logs cookies, tokens, passwords or credential material.
 
+
+## c420ui root launch guard review
+
+Request changes if a PR:
+
+- adds `process.getuid()` root-launch checks outside `packages/c420ui/src/terminal`;
+- reintroduces `adapter.rootLaunchGuardMessage()`;
+- formats c420ui terminal help inside the Canva Linux adapter;
+- executes `packages/c420ui/src/terminal/index.ts` as a runtime entrypoint;
+- bypasses `runC420UITerminalApp()` for terminal startup.
+
 ## Logging review checklist
 
 Reject or request changes if a PR:
