@@ -1670,8 +1670,45 @@ function checkSourceIntegrity(failures: string[]): void {
   runCheck(failures, { name: "source integrity", run: checkSourceIntegrityContract.main });
 }
 
+
+const checkC420UIRootGuardOwnershipContract = (() => {
+function main(): number {
+  const rootDir = findProjectRoot();
+  const failures: string[] = [];
+  const scriptFiles = [
+    "scripts/run-c420ui.ts",
+    "scripts/c420ui-canva-linux/run.ts",
+  ];
+  const adapterDir = path.join(rootDir, "scripts/c420ui-canva-linux");
+
+  for (const relativePath of scriptFiles) {
+    const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+    if (content.includes("process.getuid")) {
+      failures.push(`${relativePath}: root launch checks belong to packages/c420ui/src/terminal`);
+    }
+  }
+
+  for (const file of allRepositoryFiles(rootDir).filter((entry) => entry.startsWith("scripts/c420ui-canva-linux/"))) {
+    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    if (content.includes("rootLaunchGuardMessage")) {
+      failures.push(`${file}: project adapters must not expose rootLaunchGuardMessage`);
+    }
+  }
+
+  if (fs.existsSync(adapterDir) && failures.length) throw new Error(failures.join("\n"));
+  console.log("[repository-policy] c420ui root guard ownership OK");
+  return 0;
+}
+
+  return { main };
+})();
+
 function checkReviewChecklist(failures: string[]): void {
   runCheck(failures, { name: "review checklist", run: checkReviewChecklistContract.main });
+}
+
+function checkC420UIRootGuardOwnership(failures: string[]): void {
+  runCheck(failures, { name: "c420ui root guard ownership", run: checkC420UIRootGuardOwnershipContract.main });
 }
 
 export function main(): number {
@@ -1683,6 +1720,7 @@ export function main(): number {
   checkNoSourceJavaScript(failures);
   checkSourceIntegrity(failures);
   checkReviewChecklist(failures);
+  checkC420UIRootGuardOwnership(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[repository-policy] OK");

@@ -14,10 +14,7 @@ import {
   type C420UIWorkflow,
 } from "../../packages/c420ui/src";
 import { c420uiLogoLines } from "../../packages/c420ui/src/terminal/logo";
-import {
-  rootLaunchGuardMessage,
-  toolSettingsPath,
-} from "../../packages/c420ui/src/terminal/settings";
+import { toolSettingsPath } from "../../packages/c420ui/src/terminal/settings";
 import {
   loadCanvaLinuxActions as loadCanvaLinuxActionRegistry,
   type CanvaAction,
@@ -69,7 +66,6 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
   getSessionLogPath(): string;
   getSessionId(): string;
   getToolSettingsPath(): string;
-  rootLaunchGuardMessage(): string;
   toC420UIConfig(): C420UIConfig;
 };
 
@@ -192,9 +188,6 @@ export function createCanvaLinuxC420UIAdapter(
     return toolSettingsPath(loadProjectUi().stateDirectoryName);
   }
 
-  function rootLaunchGuardMessageForProject(): string {
-    return rootLaunchGuardMessage(loadProjectUi().projectName);
-  }
 
   function loadCanvaLinuxActions(): C420UIActionDescriptor[] {
     if (!fs.existsSync(actionsJsonPath)) {
@@ -330,7 +323,6 @@ export function createCanvaLinuxC420UIAdapter(
     getSessionLogPath,
     getSessionId,
     getToolSettingsPath,
-    rootLaunchGuardMessage: rootLaunchGuardMessageForProject,
     toC420UIConfig,
   };
 

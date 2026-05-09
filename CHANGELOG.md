@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Fixed
+- Fixed c420ui terminal startup so `npm run c420ui` uses the project runner instead of executing the terminal package barrel.
+
 ### Documentation
 - Updated validation and AI maintenance docs to reflect the completed c420ui CLI, Action Engine, Root Provider, Command Runner,
   operational log, and consolidated validation migrations.
@@ -11,7 +14,7 @@
 - Added the initial c420ui action engine contract for resolving and running project actions through bridges.
 - Added an explicit English-only maintained repository language guardrail with future i18n architecture
   requirements for source, comments, UI strings, README, docs, changelog, and AI maintenance instructions.
-- Added the Canva Linux c420ui adapter boundary for project-specific metadata, action, path and root-guard wiring.
+- Added the Canva Linux c420ui adapter boundary for project-specific metadata, action and path wiring.
 - Added the private future `@coletivo420/c420ui` package skeleton with pure c420ui TypeScript contracts.
 - Added the public c420ui separation roadmap for compatibility-first package and adapter boundary work.
 - Added Secret Service-backed credential storage documentation and validation.
@@ -26,6 +29,8 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Centralized the c420ui root launch guard inside the c420ui terminal runtime.
+- Kept `build:c420ui` as an isolated terminal package surface smoke build; it is not the runtime launcher.
 - Moved the generic c420ui terminal UI into `packages/c420ui/src/terminal`.
 - Tightened post-split repository policy so `scripts/core` is infrastructure-check-only and the retired runtime/config paths stay removed.
 - Moved terminal install-detection matching to project action metadata so `packages/c420ui/src` no longer hardcodes Canva Linux action IDs.

@@ -1,18 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export function rootLaunchGuardMessage(projectName: string): string {
-  const toolName = `${projectName} Install and Development Tool`;
-
-  return [
-    `Do not run ${toolName} with sudo or as root.`,
-    "",
-    `Run this tool as your regular user. When an operation needs administrator privileges, ${projectName} will ask for authentication only for that specific action.`,
-    "",
-    "Running the whole tool as root may break file ownership, user sessions, build artifacts and desktop integration.",
-  ].join("\n");
-}
-
 export type ToolSettings = {
   tool: {
     generalLogsEnabled: boolean;
