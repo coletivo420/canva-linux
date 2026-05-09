@@ -82,6 +82,17 @@ Request changes if a PR:
 - makes planned package workflows return success as if implemented;
 - triggers sudo during dry-run.
 
+
+## c420ui split audit review
+
+Request changes if a PR:
+
+- reintroduces `scripts/c420ui/`;
+- puts generic terminal UI outside `packages/c420ui/src/terminal/`;
+- adds runtime or product entrypoints under `scripts/core`;
+- leaves active docs pointing to removed runtime paths;
+- hardcodes Canva Linux action IDs, config paths, app IDs, shell scripts, or `CANVA_` variables inside `packages/c420ui/src`.
+
 ## c420ui naming and logo review
 
 Request changes if a PR:

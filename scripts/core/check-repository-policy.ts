@@ -1032,9 +1032,23 @@ function validateNoCoreProductDetectionLogic(
   const scriptsCoreDir = path.join(rootDir, "scripts/core");
   if (!fs.existsSync(scriptsCoreDir)) return;
 
+  const allowedCoreFiles = new Set([
+    "check-ai-guardrails.ts",
+    "check-doc-links.ts",
+    "check-dependency-policy.ts",
+    "check-runtime-build.ts",
+    "check-repository-policy.ts",
+  ]);
+
   for (const entry of fs.readdirSync(scriptsCoreDir, { withFileTypes: true })) {
-    if (!entry.isFile() || !entry.name.endsWith(".ts")) continue;
     const relativePath = `scripts/core/${entry.name}`;
+    if (!entry.isFile() || !entry.name.endsWith(".ts")) {
+      failures.push(`${relativePath}: scripts/core is infrastructure-check-only and must not contain runtime/product entrypoints`);
+      continue;
+    }
+    if (!allowedCoreFiles.has(entry.name)) {
+      failures.push(`${relativePath}: scripts/core is infrastructure-check-only; move runtime/product code to its owning domain`);
+    }
     const content = fs.readFileSync(path.join(scriptsCoreDir, entry.name), "utf8");
     for (const fragment of [
       "DETECTED_NATIVE_" + "SYSTEM",
@@ -1112,6 +1126,9 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
     `scripts/core/${legacyCompatibilityStem}.ts`,
     `test/${legacyActionRunnerStem}.test.ts`,
     "scripts/actions.json",
+    "scripts/project-ui.json",
+    "scripts/core/action-registry.ts",
+    "scripts/core/validate-actions.ts",
     "scripts/core/overview-status.ts",
   ] as const;
 
@@ -1122,11 +1139,15 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
   }
 
   const scripts = packageJson?.scripts ?? {};
-  const legacyScriptName = "check:" + "legacy-compat";
-  if (Object.hasOwn(scripts, legacyScriptName)) {
-    failures.push(
-      `package.json scripts.${legacyScriptName}: legacy compatibility validation must not be restored`,
-    );
+  for (const legacyScriptName of [
+    "check:" + "legacy-compat",
+    "check:" + "legacy-tooling",
+  ] as const) {
+    if (Object.hasOwn(scripts, legacyScriptName)) {
+      failures.push(
+        `package.json scripts.${legacyScriptName}: legacy compatibility validation must not be restored`,
+      );
+    }
   }
 
   const scriptsCoreBuild = scripts["build:scripts-core"] ?? "";
@@ -1267,6 +1288,10 @@ function validateRunCoreEntryScriptShape(
     "      printf '%s\\n' \"scripts/run-core-entry.sh: ${ENTRY} was removed; use a supported core entry.\" >&2",
     '  node "${TARGET}" "$@"',
   ] as const;
+
+  if (content.includes('overview-status|check-ai-guardrails') || content.includes('if [[ "${ENTRY}" == "overview-status" ]]')) {
+    failures.push(`${relativePath}: overview-status must not be a run-core-entry.sh dispatch target`);
+  }
 
   for (const requiredLine of requiredStandaloneLines) {
     if (!lines.includes(requiredLine)) {
