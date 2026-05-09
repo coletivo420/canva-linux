@@ -19,23 +19,32 @@ Request changes if a PR:
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
 
-## Action Runner review
+## Canva Linux config boundary review
 
 Request changes if a PR:
 
-- sources action metadata from anywhere other than `scripts/actions.json`;
-- duplicates action logic in c420ui or launcher code;
-- changes Action Runner root or planned-action behavior without explicit maintainer direction;
-- ignores `action.env` from `scripts/actions.json`;
-- makes c420ui and direct CLI behavior diverge for `system` or `user` scope actions;
-- bypasses `scripts/sudo-common.sh` for system-wide actions.
+- reintroduces `scripts/actions.json`;
+- reintroduces `scripts/project-ui.json`;
+- reintroduces `scripts/core/action-registry.ts`;
+- reintroduces `scripts/core/validate-actions.ts`;
+- puts project-specific registry loading inside `packages/c420ui/src`;
+- hardcodes Canva Linux config paths inside c420ui core.
 
+## Removed Action Runner review
+
+Request changes if a PR:
+
+- reintroduces `scripts/core/action-runner.ts`;
+- reintroduces `check:legacy-compat`;
+- documents `scripts/run-core-entry.sh action-runner` as an execution path;
+- duplicates Action Engine, Root Provider, or Command Runner policy outside c420ui;
+- uses Action Runner terminology for new code.
 
 ## c420ui root provider review
 
 Request changes if a PR:
 
-- imports root/sudo helpers from the legacy Action Runner into the Canva Linux adapter;
+- imports root/sudo helpers from removed legacy runner surfaces into the Canva Linux adapter;
 - triggers sudo for dry-run, planned actions, or confirmation failures;
 - calls sudo directly from `packages/c420ui/src`;
 - bypasses `scripts/sudo-common.sh` for Canva Linux privileged actions;
@@ -163,7 +172,7 @@ Request changes if a PR:
 - changes planned action exit code `78`;
 - breaks planned action dry-run exit code `0`;
 - reintroduces `C420UI` branding in launcher help;
-- removes the legacy Action Runner before compatibility checks are migrated.
+- restores removed legacy action execution surfaces or compatibility checks.
 
 ## Launcher parser review
 
@@ -215,14 +224,13 @@ Request changes if a PR:
 - triggers sudo before confirmation or for dry-run/planned actions;
 - reintroduces `C420UISudoProvider` as a separate root abstraction.
 
-## Legacy wording review
+## Removed legacy runner wording review
 
 Request changes if a PR:
 
-- describes `scripts/core/action-runner.ts` as the primary direct CLI path;
-- documents the legacy run-core Action Runner CLI command as the main user validation path;
-- reintroduces the removed legacy tooling validation alias;
-- adds new checks to `check:legacy-compat` that are not strictly compatibility-related;
+- documents removed legacy runner commands as an execution path;
+- introduces new direct CLI validation paths outside `./canva-linux.sh` or `npm run c420ui:cli`;
+- adds new compatibility checks for removed legacy runner surfaces;
 - documents c420ui separation as incomplete when the relevant boundary already exists.
 
 ## Standalone check cleanup review

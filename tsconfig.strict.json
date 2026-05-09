@@ -14,7 +14,7 @@
     "electron/shared/**/*.ts",
     "electron/preload/**/*.ts",
     "scripts/core/**/*.ts",
-    "test/action-runner.test.ts",
+    "scripts/canva-linux/**/*.ts",
     "test/c420ui-action-engine.test.ts",
     "test/logging-normalize.test.ts",
     "test/debug-levels.test.ts",

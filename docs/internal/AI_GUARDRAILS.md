@@ -44,7 +44,9 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Do not publish or promise an NPM package during the current separation phase.
 - Do not remove `scripts/c420ui/` in one large change.
 - Do not change visual behavior as part of package-boundary work.
-- Do not rewrite or remove the legacy Action Runner incidentally. Any retirement or wrapper conversion must happen in a dedicated legacy audit commit.
+- Do not reintroduce `scripts/core/action-runner.ts`.
+- Do not reintroduce `check:legacy-compat`.
+- Do not document Action Runner as an available execution path.
 - Do not change versioning as part of c420ui separation.
 
 ## c420ui
@@ -99,18 +101,24 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 ## Action Registry
 
-- c420ui/CLI actions must be sourced from `scripts/actions.json`.
-- Action metadata must come from `scripts/actions.json`.
+- c420ui/CLI actions must be sourced from `config/canva-linux/actions.json`.
+- Action metadata must come from `config/canva-linux/actions.json`.
+- Canva Linux project configuration belongs under `config/canva-linux/`.
+- Do not put project configuration under `scripts/`.
+- Canva Linux action registry loading belongs under `scripts/canva-linux/actions/`.
+- Do not reintroduce `scripts/core/action-registry.ts`.
+- Do not reintroduce `scripts/core/validate-actions.ts`.
+- Generic c420ui action validation belongs in `packages/c420ui/src/actions.ts`.
 - Do not duplicate action logic in c420ui or launcher code.
-- Do not ignore `action.env` from `scripts/actions.json`.
+- Do not ignore `action.env` from `config/canva-linux/actions.json`.
 - Any `system`/`user` scope action must behave the same in c420ui and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
 - c420ui and CLI must share the same TypeScript action contract.
 - Direct CLI and interactive c420ui actions already route through the c420ui Action Engine.
-- The legacy Action Runner may remain only as a manual compatibility path until explicitly retired.
-- Do not describe the legacy Action Runner as the primary CLI execution path.
-- Do not add new validation requirements to `check:legacy-compat` unless they are strictly about legacy compatibility.
+- Action execution belongs to the c420ui Action Engine.
+- Direct CLI execution belongs to the c420ui CLI bridge.
+- Command execution belongs to the c420ui Command Runner.
 - New action execution policy belongs to the c420ui Action Engine, Root Provider, Command Runner, and operational log policy.
 
 - c420ui owns generic action resolution by id and CLI flag.
@@ -161,7 +169,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui root authentication must happen before privileged execution.
 - c420ui owns the generic root provider contract.
 - Canva Linux owns the concrete root provider backed by `scripts/sudo-common.sh`.
-- Do not import root/sudo policy from `scripts/core/action-runner.ts` inside the Canva Linux adapter.
+- Do not import root/sudo policy from removed legacy runner surfaces inside the Canva Linux adapter.
 - Do not call sudo directly from c420ui core.
 - Dry-run, planned actions and confirmation failures must not trigger sudo/root validation.
 - Sudo/root authentication failures must be shown in a centered c420ui popup.

@@ -81,13 +81,12 @@ c420ui_cli_entrypoint_is_fresh() {
     "${ROOT_DIR}/scripts/run-c420ui-cli.ts" \
     "${ROOT_DIR}/scripts/c420ui-canva-linux" \
     "${ROOT_DIR}/scripts/c420ui" \
-    "${ROOT_DIR}/scripts/core/action-registry.ts" \
-    "${ROOT_DIR}/scripts/core/action-types.ts" \
-    "${ROOT_DIR}/scripts/core/action-runner.ts" \
+    "${ROOT_DIR}/scripts/canva-linux/actions/registry.ts" \
+    "${ROOT_DIR}/scripts/canva-linux/project-root.ts" \
     "${ROOT_DIR}/scripts/core/overview-status.ts" \
     "${ROOT_DIR}/packages/c420ui/src" \
-    "${ROOT_DIR}/scripts/actions.json" \
-    "${ROOT_DIR}/scripts/project-ui.json"
+    "${ROOT_DIR}/config/canva-linux/actions.json" \
+    "${ROOT_DIR}/config/canva-linux/project-ui.json"
   do
     if source_newer_than_entrypoint "${entrypoint}" "${source}"; then
       return 1

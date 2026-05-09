@@ -1,15 +1,26 @@
-export {
-  c420uiActions,
-  getActionsByGroup,
+import {
   getActionById,
-  loadC420UIActions,
-  type C420UIAction,
-  type C420UIActionGroup,
-  type C420UIActionKind,
-} from "./action-registry";
-export {
-  c420uiActions as tuiActions,
-  type C420UIAction as TuiAction,
-  type C420UIActionGroup as TuiActionGroup,
-  type C420UIActionKind as TuiActionKind,
-} from "./action-registry";
+  getActionsByGroup,
+  loadActions,
+  type ActionGroup,
+  type ActionKind,
+  type CanvaAction,
+} from "../canva-linux/actions/registry";
+
+export type C420UIActionGroup = ActionGroup;
+export type C420UIActionKind = ActionKind;
+export type C420UIAction = CanvaAction;
+
+export const c420uiActions: C420UIAction[] = [];
+
+export function loadC420UIActions(rootDir = process.cwd()): C420UIAction[] {
+  return loadActions(rootDir);
+}
+
+export { getActionById, getActionsByGroup };
+export { c420uiActions as tuiActions };
+export type {
+  C420UIAction as TuiAction,
+  C420UIActionGroup as TuiActionGroup,
+  C420UIActionKind as TuiActionKind,
+};

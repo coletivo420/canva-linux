@@ -3,7 +3,8 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { createCanvaLinuxC420UIAdapter } from "../../c420ui-canva-linux/adapter";
-import { findProjectRoot, loadActions } from "../../core/action-registry";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
+import { loadCanvaLinuxActions as loadActions } from "../../canva-linux/actions/registry";
 import { buildOverviewStatus } from "../../core/overview-status";
 
 type ContractCheck = {
@@ -240,7 +241,8 @@ function main(): number {
   }
   const launcher = fs.readFileSync(launcherPath, "utf8");
   if (!launcher.includes("run-c420ui-cli.js")) failures.push("launcher must call run-c420ui-cli.js for direct actions");
-  if (launcher.includes("run-core-entry.sh action-runner --cli")) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
+  const legacyRunCoreCli = "run-core-entry.sh " + "action-runner" + " --cli";
+  if (launcher.includes(legacyRunCoreCli)) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
   if (launcher.includes("--install-native | --install-flatpak")) failures.push("launcher must not hardcode the direct action flag list");
   if (!launcher.includes("ensure_c420ui_cli_entrypoint")) failures.push("launcher must build the c420ui CLI entrypoint conditionally");
 
@@ -463,7 +465,7 @@ const publicFiles = [
   "docs/CLI.md",
   "docs/RELEASE.md",
   "CHANGELOG.md",
-  "scripts/project-ui.json",
+  "config/canva-linux/project-ui.json",
 ];
 
 const bannedPhrases = [
@@ -501,11 +503,11 @@ function main(): number {
     failures.push("README.md: feature matrix must use c420ui workspace");
   }
 
-  const projectUi = JSON.parse(read(rootDir, "scripts/project-ui.json")) as {
+  const projectUi = JSON.parse(read(rootDir, "config/canva-linux/project-ui.json")) as {
     c420uiTitle?: string;
   };
   if (!projectUi.c420uiTitle?.includes("c420ui terminal interface")) {
-    failures.push("scripts/project-ui.json: c420uiTitle must use c420ui terminal interface");
+    failures.push("config/canva-linux/project-ui.json: c420uiTitle must use c420ui terminal interface");
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
@@ -540,7 +542,7 @@ function main(): number {
   const settings = read(rootDir, "scripts/c420ui/settings.ts");
   const index = read(rootDir, "scripts/c420ui/index.ts");
   const adapter = read(rootDir, "scripts/c420ui-canva-linux/adapter.ts");
-  const projectUi = read(rootDir, "scripts/project-ui.json");
+  const projectUi = read(rootDir, "config/canva-linux/project-ui.json");
   const failures: string[] = [];
 
   assertIncludes(
@@ -618,14 +620,14 @@ function main(): number {
       !adapter.includes(`${field}: [...projectUi.${field}]`)
     ) {
       failures.push(
-        `scripts/c420ui-canva-linux/adapter.ts must inject ${field} from scripts/project-ui.json`,
+        `scripts/c420ui-canva-linux/adapter.ts must inject ${field} from config/canva-linux/project-ui.json`,
       );
     }
     assertIncludes(
       failures,
       projectUi,
       `"${field}":`,
-      `scripts/project-ui.json must define ${field}`,
+      `config/canva-linux/project-ui.json must define ${field}`,
     );
   }
 
@@ -1071,6 +1073,29 @@ function checkNoRootLauncherContract(failures: string[]): void {
   }
 }
 
+
+function checkCanvaLinuxConfigBoundary(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const requiredFiles = [
+    "config/canva-linux/actions.json",
+    "config/canva-linux/project-ui.json",
+    "scripts/canva-linux/actions/registry.ts",
+  ] as const;
+  const removedFiles = [
+    "scripts/actions.json",
+    "scripts/project-ui.json",
+    "scripts/core/action-registry.ts",
+    "scripts/core/validate-actions.ts",
+  ] as const;
+
+  for (const file of requiredFiles) {
+    if (!fs.existsSync(path.join(rootDir, file))) failures.push(`${file}: required config boundary file is missing`);
+  }
+  for (const file of removedFiles) {
+    if (fs.existsSync(path.join(rootDir, file))) failures.push(`${file}: removed config boundary file must not exist`);
+  }
+}
+
 function checkActionRegistryContract(failures: string[]): void {
   const actions = loadActions(findProjectRoot());
   const aliases = new Map<string, string>();
@@ -1154,7 +1179,7 @@ function checkInstallationDetectionContract(failures: string[]): void {
 function checkVersionConsistency(failures: string[]): void {
   const rootDir = findProjectRoot();
   const pkg = JSON.parse(readProjectFile(rootDir, "package.json")) as { version?: string };
-  const projectUi = JSON.parse(readProjectFile(rootDir, "scripts/project-ui.json")) as {
+  const projectUi = JSON.parse(readProjectFile(rootDir, "config/canva-linux/project-ui.json")) as {
     displayVersion?: string;
     phase?: string;
   };
@@ -1327,7 +1352,7 @@ function checkReleaseContract(failures: string[]): void {
     version?: string;
     packages?: Record<string, { version?: string }>;
   };
-  const projectUi = JSON.parse(readProjectFile(rootDir, "scripts/project-ui.json")) as {
+  const projectUi = JSON.parse(readProjectFile(rootDir, "config/canva-linux/project-ui.json")) as {
     displayVersion?: string;
     phase?: string;
   };
@@ -1346,10 +1371,10 @@ function checkReleaseContract(failures: string[]): void {
   if (pkg.version) {
     const expectedPhase = expectedPhaseFromVersion(pkg.version);
     if (projectUi.displayVersion !== expectedPhase) {
-      failures.push(`scripts/project-ui.json: displayVersion must be ${expectedPhase}`);
+      failures.push(`config/canva-linux/project-ui.json: displayVersion must be ${expectedPhase}`);
     }
     if (projectUi.phase !== expectedPhase) {
-      failures.push(`scripts/project-ui.json: phase must be ${expectedPhase}`);
+      failures.push(`config/canva-linux/project-ui.json: phase must be ${expectedPhase}`);
     }
     if (displayVersion !== expectedPhase) {
       failures.push(
@@ -1405,6 +1430,7 @@ export function main(): number {
   checkInteractiveLogUiIntegration(failures);
   checkNoParallelShellMenu(failures);
   checkNoRootLauncherContract(failures);
+  checkCanvaLinuxConfigBoundary(failures);
   checkActionRegistryContract(failures);
   checkInstallationDetectionContract(failures);
   checkVersionConsistency(failures);

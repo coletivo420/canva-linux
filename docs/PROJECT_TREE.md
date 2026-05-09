@@ -16,11 +16,14 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │   ├── shared/                Runtime helpers shared by main/preload code
 │   ├── ui/                    Static Electron shell UI assets
 │   └── assets/                Runtime assets copied into the Electron build
+├── config/                    Project configuration files
+│   └── canva-linux/           Canva Linux actions and c420ui project UI config
 ├── scripts/                   Canva Linux tool, validation, packaging, and host-operation source
-│   ├── core/                  Legacy transitional checks and shared TypeScript tooling until migration completes
+│   ├── core/                  Shared TypeScript tooling and repository-wide checks
 │   ├── checks/canva-linux/    Canva Linux-specific validation and anti-regression checks
 │   ├── c420ui/                Current in-repo c420ui implementation before package split
 │   ├── c420ui-canva-linux/    Canva Linux adapter boundary for c420ui integration
+│   ├── canva-linux/actions/   Canva Linux action registry loading and validation
 │   └── *.sh                   Linux host-operation glue and launcher/install/package wrappers
 ├── packages/                  Private package workspace; no published c420ui package exists yet
 │   └── c420ui/                Private future standalone c420ui package skeleton
@@ -55,8 +58,8 @@ not a published or supported external package location today.
 Treat these as maintained source when editing behavior:
 
 - `electron/**/*.ts` for the Electron main, preload, shared, and runtime UI code.
-- `scripts/**/*.ts` for validation, action contracts, Action Runner logic,
-  c420ui code, and TypeScript packaging helpers.
+- `scripts/**/*.ts` for validation, action contracts, c420ui code, and
+  TypeScript packaging helpers.
 - `packaging/flathub/scripts/**/*.ts` for Flathub source-generation logic.
 - `packages/**/*.ts` only after package workspace files exist.
 - `test/**/*.ts` for unit, wiring, runtime, and smoke-test source.
@@ -104,7 +107,7 @@ The intended separation is:
   standalone c420ui package after the core is separated. It is not a published
   npm package and should not be documented as externally consumable yet.
 - **Action contract**: c420ui and direct CLI actions must continue to source
-  actions from `scripts/actions.json` and shared TypeScript action contracts.
+  actions from `config/canva-linux/actions.json` and shared TypeScript action contracts.
 
 When moving code toward the split, avoid hardcoding Canva Linux project metadata
 inside reusable c420ui core code. Keep c420ui branding and project branding as

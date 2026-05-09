@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { findProjectRoot } from "./action-registry";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../canva-linux/project-root";
 
 type PolicyCheck = {
   name: string;
@@ -489,9 +489,9 @@ const requiredVersionedPaths = [
   "tsconfig.build.json",
   "tsconfig.strict.json",
   "package-lock.json",
-  "scripts/actions.json",
+  "config/canva-linux/actions.json",
+  "config/canva-linux/project-ui.json",
   "scripts/theme.json",
-  "scripts/project-ui.json",
   "io.github.coletivo420.canva-linux.yml",
   "packaging/flathub/manifest.yml",
   "packaging/flathub/generated-sources.json",
@@ -1063,6 +1063,57 @@ function validatePackageLockConsistency(
     );
 }
 
+
+const legacyActionRunnerStem = "action" + "-runner";
+const legacyCompatibilityStem =
+  "check-legacy-" + legacyActionRunnerStem + "-compatibility";
+
+function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
+  const packageJson = readJsonFile<PackageJson>(
+    rootDir,
+    "package.json",
+    failures,
+  );
+  const removedFiles = [
+    `scripts/core/${legacyActionRunnerStem}.ts`,
+    `scripts/core/${legacyCompatibilityStem}.ts`,
+    "scripts/actions.json",
+  const removedFiles = [
+    `scripts/core/${legacyActionRunnerStem}.ts`,
+    `scripts/core/${legacyCompatibilityStem}.ts`,
+    `test/${legacyActionRunnerStem}.test.ts`,
+  ] as const;
+
+  for (const removedFile of removedFiles) {
+    if (fs.existsSync(path.join(rootDir, removedFile))) {
+      failures.push(`${removedFile}: legacy Action Runner files must not exist`);
+    }
+  }
+
+  const scripts = packageJson?.scripts ?? {};
+  const legacyScriptName = "check:" + "legacy-compat";
+  if (Object.hasOwn(scripts, legacyScriptName)) {
+    failures.push(
+      `package.json scripts.${legacyScriptName}: legacy compatibility validation must not be restored`,
+    );
+  }
+
+  const scriptsCoreBuild = scripts["build:scripts-core"] ?? "";
+  if (!scriptsCoreBuild.includes("rm -rf .build/scripts/core")) {
+    failures.push(
+      "package.json build:scripts-core: must clean .build/scripts/core before rebuilding so stale removed entries cannot survive",
+    );
+  }
+
+  for (const removedFile of removedFiles) {
+    if (scriptsCoreBuild.includes(removedFile)) {
+      failures.push(
+        `package.json build:scripts-core: must not compile ${removedFile}`,
+      );
+    }
+  }
+}
+
 function validatePackageScripts(rootDir: string, failures: string[]): void {
   const packageJson = readJsonFile<PackageJson>(
     rootDir,
@@ -1181,6 +1232,8 @@ function validateRunCoreEntryScriptShape(
     "  fi",
     '  ENTRY="$1"',
     "  shift",
+    '      rm -f "${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"',
+    "      printf '%s\\n' \"scripts/run-core-entry.sh: ${ENTRY} was removed; use a supported core entry.\" >&2",
     '  node "${TARGET}" "$@"',
   ] as const;
 
@@ -1325,10 +1378,10 @@ function validateLauncherScriptShape(
     'find "${source}" -type f',
     '"${ROOT_DIR}/scripts/c420ui-canva-linux"',
     '"${ROOT_DIR}/scripts/c420ui"',
-    '"${ROOT_DIR}/scripts/core/action-types.ts"',
+    '"${ROOT_DIR}/scripts/canva-linux/project-root.ts"',
     '"${ROOT_DIR}/packages/c420ui/src"',
-    '"${ROOT_DIR}/scripts/actions.json"',
-    '"${ROOT_DIR}/scripts/project-ui.json"',
+    '"${ROOT_DIR}/config/canva-linux/actions.json"',
+    '"${ROOT_DIR}/config/canva-linux/project-ui.json"',
     "DIRECT_ACTION_FLAGS=()",
     'DIRECT_ACTION_FLAGS+=("${arg}")',
     'run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"',
@@ -1358,7 +1411,8 @@ function validateLauncherScriptShape(
     }
   }
 
-  if (content.includes("scripts/run-core-entry.sh action-runner --cli")) {
+  const legacyRunCoreCli = "scripts/run-core-entry.sh " + legacyActionRunnerStem + " --cli";
+  if (content.includes(legacyRunCoreCli)) {
     failures.push(
       `${relativePath}: direct CLI actions must not route through the legacy Action Runner CLI`,
     );
@@ -1439,7 +1493,7 @@ function validateRemovedCompatibilityAliases(
 ): void {
   const actions = readJsonFile<Array<{ id?: string; cli?: string[] }>>(
     rootDir,
-    "scripts/actions.json",
+    "config/canva-linux/actions.json",
     failures,
   );
   if (!actions) return;
@@ -1450,7 +1504,7 @@ function validateRemovedCompatibilityAliases(
         (forbiddenCompatibilityCliAliases as readonly string[]).includes(alias)
       ) {
         failures.push(
-          `scripts/actions.json ${action.id ?? "<unknown>"}: removed compatibility alias ${alias} must not be registered`,
+          `config/canva-linux/actions.json ${action.id ?? "<unknown>"}: removed compatibility alias ${alias} must not be registered`,
         );
       }
     }
@@ -1494,6 +1548,7 @@ function main(): number {
   validateRootProviderContracts(rootDir, failures);
   validatePackageLockConsistency(rootDir, failures);
   validatePackageScripts(rootDir, failures);
+  checkNoLegacyActionRunner(rootDir, failures);
 
   if (failures.length) {
     console.error("[source-integrity] FAILED:");

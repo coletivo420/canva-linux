@@ -4,7 +4,7 @@ This document defines the manual validation routine for the current release.
 
 ## Validation scope
 
-`0.1.4-12` validates the current Canva Linux runtime, c420ui, Action Runner,
+`0.1.4-12` validates the current Canva Linux runtime, c420ui,
 packaging, and CL-EyeDropper behavior.
 
 Expected outcome:
@@ -48,15 +48,15 @@ Do not remove or weaken validation checks to make the command pass.
    - `./canva-linux.sh`
 2. Confirm the interface uses c420ui as the user-facing terminal interface name.
 3. Confirm the install detection/status overview is visible at the top.
-4. Confirm actions are loaded from `scripts/actions.json`.
+4. Confirm actions are loaded from `config/canva-linux/actions.json`.
 5. Confirm keyboard navigation, focus highlights, settings, log copy, and text
    selection behavior match `docs/FEATURES.md` and `docs/DEBUGGING.md`.
 6. Confirm c420ui is not launched or recommended as root.
 
-## Action Runner planned exit validation
+## Planned exit validation
 
 1. Trigger a planned action path that should return exit code `78`.
-2. Confirm the Action Runner reports the planned exit as planned/canceled rather
+2. Confirm direct CLI and c420ui report the planned exit as planned/canceled rather
    than success.
 3. Confirm c420ui blocks concurrent action execution while an action is running.
 4. Confirm direct CLI and c420ui expose equivalent behavior for the same action.

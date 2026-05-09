@@ -34,6 +34,7 @@ const forbidden = [
   "https://github.com/coletivo420/canva-linux",
   "CL-EyeDropper",
   "scripts/",
+  "config/canva-linux",
   "project-ui.json",
   "actions.json",
   "app-identity-common.sh",
@@ -171,6 +172,40 @@ function main(): number {
   return { main };
 })();
 
+
+const checkActionValidationContract = (() => {
+function read(rootDir: string, relativePath: string): string {
+  return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+}
+
+function main(): number {
+  const rootDir = process.cwd();
+  const actions = read(rootDir, "packages/c420ui/src/actions.ts");
+  const index = read(rootDir, "packages/c420ui/src/index.ts");
+  const required = [
+    "c420uiActionValidationOptions",
+    "validateC420UIActions",
+    "validateC420UIActionRegistry",
+    "allowedGroups",
+    "allowedSections",
+    "allowedKinds",
+    "allowedScopes",
+    "Duplicate action id",
+    "Duplicate cli alias",
+    "Dangerous action must set requiresConfirmation=true",
+  ];
+  const failures = required
+    .filter((fragment) => !actions.includes(fragment) && !index.includes(fragment))
+    .map((fragment) => `missing action validation fragment: ${fragment}`);
+
+  if (failures.length) throw new Error(failures.join("\n"));
+  console.log("[c420ui-core-contracts] action validation OK");
+  return 0;
+}
+
+  return { main };
+})();
+
 const checkActionEngineContract = (() => {
 function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
@@ -199,7 +234,7 @@ function main(): number {
     "canva-linux",
     "io.github.coletivo420.canva-linux",
     "project-ui.json",
-    "scripts/actions.json",
+    "config/canva-linux/actions.json",
   ];
   const failures = [
     ...required
@@ -569,6 +604,10 @@ function runBridgeContract(failures: string[]): void {
   runCheck(failures, { name: "bridge contract", run: checkBridgeContractRunner.main });
 }
 
+function runActionValidationContract(failures: string[]): void {
+  runCheck(failures, { name: "action validation", run: checkActionValidationContract.main });
+}
+
 function runActionEngineContract(failures: string[]): void {
   runCheck(failures, { name: "action engine", run: checkActionEngineContract.main });
 }
@@ -616,7 +655,7 @@ function checkHeaderLayoutContract(failures: string[]): void {
   const packageTypes = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/types.ts"), "utf8");
   const index = fs.readFileSync(path.join(rootDir, "scripts/c420ui/index.ts"), "utf8");
   const adapter = fs.readFileSync(path.join(rootDir, "scripts/c420ui-canva-linux/adapter.ts"), "utf8");
-  const projectUi = fs.readFileSync(path.join(rootDir, "scripts/project-ui.json"), "utf8");
+  const projectUi = fs.readFileSync(path.join(rootDir, "config/canva-linux/project-ui.json"), "utf8");
 
   assertC420UIIncludes(
     failures,
@@ -706,28 +745,28 @@ function checkHeaderLayoutContract(failures: string[]): void {
     failures.push("projectHeader content must come from project config");
   }
   if (!adapter.includes("projectName: projectUi.projectName")) {
-    failures.push("project name must be injected from scripts/project-ui.json");
+    failures.push("project name must be injected from config/canva-linux/project-ui.json");
   }
   if (!adapter.includes("projectSubtitle: projectUi.projectSubtitle")) {
-    failures.push("project subtitle must be injected from scripts/project-ui.json");
+    failures.push("project subtitle must be injected from config/canva-linux/project-ui.json");
   }
   assertC420UIIncludes(
     failures,
     projectUi,
     '"projectName":',
-    "scripts/project-ui.json must define projectName",
+    "config/canva-linux/project-ui.json must define projectName",
   );
   assertC420UIIncludes(
     failures,
     projectUi,
     '"projectSubtitle":',
-    "scripts/project-ui.json must define projectSubtitle",
+    "config/canva-linux/project-ui.json must define projectSubtitle",
   );
   assertC420UIIncludes(
     failures,
     projectUi,
     '"logoLines":',
-    "scripts/project-ui.json must define project logo lines",
+    "config/canva-linux/project-ui.json must define project logo lines",
   );
 }
 
@@ -735,7 +774,7 @@ function checkSettingsContract(failures: string[]): void {
   const rootDir = process.cwd();
   const app = fs.readFileSync(path.join(rootDir, "scripts/c420ui/app.ts"), "utf8");
   const settings = fs.readFileSync(path.join(rootDir, "scripts/c420ui/settings.ts"), "utf8");
-  const actions = fs.readFileSync(path.join(rootDir, "scripts/actions.json"), "utf8");
+  const actions = fs.readFileSync(path.join(rootDir, "config/canva-linux/actions.json"), "utf8");
 
   if (!app.includes('"settings"') || !app.includes("Application Settings")) {
     failures.push("scripts/c420ui/app.ts: Application Settings view is required");
@@ -764,7 +803,7 @@ function checkSettingsContract(failures: string[]): void {
     actions.includes("generalLogsEnabled") ||
     actions.includes("terminalTextSelectionMode")
   ) {
-    failures.push("scripts/actions.json: c420ui settings must not be shell actions");
+    failures.push("config/canva-linux/actions.json: c420ui settings must not be shell actions");
   }
 }
 
@@ -775,6 +814,7 @@ export function main(): number {
   runPackagePolicyContract(failures);
   runPublicApiExportsContract(failures);
   runBridgeContract(failures);
+  runActionValidationContract(failures);
   runActionEngineContract(failures);
   runCliContract(failures);
   runRootProviderContract(failures);
