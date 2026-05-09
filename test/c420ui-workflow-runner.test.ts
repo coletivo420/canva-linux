@@ -6,8 +6,27 @@ import {
   runC420UIArtifactWorkflow,
   type c420uiActionResult,
   type c420uiRunnableArtifactWorkflow,
+  type C420UIActionDescriptor,
   type C420UIEvent,
 } from "../packages/c420ui/src";
+
+type WorkflowEvent = C420UIEvent & {
+  data?: Record<string, unknown>;
+  level?: string;
+  message: string;
+};
+
+function eventOfType(events: C420UIEvent[], type: string): WorkflowEvent | undefined {
+  return events.find((event): event is WorkflowEvent => event.type === type);
+}
+
+const buildActionDescriptor: C420UIActionDescriptor = {
+  id: "build-action",
+  label: "Build artifact",
+  group: "package",
+  section: "Artifacts",
+  kind: "command",
+};
 
 function workflow(
   overrides: Partial<c420uiRunnableArtifactWorkflow> = {},
@@ -82,17 +101,16 @@ test("planned workflow returns plannedAction", async () => {
   assert.equal(result.code, c420uiExitCodes.plannedAction);
   assert.equal(result.status, "planned");
   assert.equal(events.some((event) => event.type === "action:planned"), true);
+  assert.equal(eventOfType(events, "workflow:finish")?.data?.dryRun, false);
 });
 
 test("unsupported phase emits workflow finish with error level", async () => {
   const { events, result } = await runPhase(workflow({ installActionId: undefined }), "install");
-  const finish = events.find(
-    (event): event is C420UIEvent & { type: "workflow:finish" } =>
-      event.type === "workflow:finish",
-  );
+  const finish = eventOfType(events, "workflow:finish");
 
   assert.equal(result.code, c420uiExitCodes.invalidUsage);
   assert.equal(finish?.level, "error");
+  assert.equal(finish?.data?.dryRun, false);
 });
 
 test("dryRun does not call runAction", async () => {
@@ -101,6 +119,20 @@ test("dryRun does not call runAction", async () => {
   assert.deepEqual(calls, []);
   assert.equal(result.code, c420uiExitCodes.success);
   assert.equal(result.message, "dry-run");
+});
+
+test("action events prefer action labels over raw action IDs", async () => {
+  const { events } = await runPhase(workflow({ actions: [buildActionDescriptor] }), "build");
+
+  assert.equal(eventOfType(events, "action:start")?.message, "Build artifact");
+  assert.equal(eventOfType(events, "action:finish")?.message, "Build artifact");
+});
+
+test("action events use readable fallback messages when action labels are unavailable", async () => {
+  const { events } = await runPhase(workflow(), "build");
+
+  assert.equal(eventOfType(events, "action:start")?.message, "Executing action: build-action");
+  assert.equal(eventOfType(events, "action:finish")?.message, "Finished action: build-action");
 });
 
 test("non-zero action result propagates failure", async () => {

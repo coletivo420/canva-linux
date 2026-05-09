@@ -72,6 +72,16 @@ function eventData(plan: c420uiArtifactWorkflowPhasePlan): Record<string, unknow
   };
 }
 
+function actionEventMessage(
+  workflow: c420uiRunnableArtifactWorkflow,
+  actionId: string,
+  fallbackPrefix: string,
+): string {
+  const actionLabel = workflow.actions?.find((action) => action.id === actionId)?.label;
+  if (actionLabel?.trim()) return actionLabel;
+  return `${fallbackPrefix}: ${actionId}`;
+}
+
 export async function runC420UIArtifactWorkflow(
   workflow: c420uiRunnableArtifactWorkflow,
   options: c420uiArtifactWorkflowRunOptions,
@@ -99,13 +109,13 @@ export async function runC420UIArtifactWorkflow(
       workflowId: workflow.id,
       actionId,
       message: result.message ?? workflow.label,
-      data: { ...eventData(plan), exitCode: result.code, status: result.status },
+      data: { ...eventData(plan), dryRun, exitCode: result.code, status: result.status },
     }));
     emit(createC420UIEvent({
       type: "workflow:finish",
       workflowId: workflow.id,
       message: workflow.label,
-      data: { ...eventData(plan), exitCode: result.code, status: result.status },
+      data: { ...eventData(plan), dryRun, exitCode: result.code, status: result.status },
     }));
     return result;
   }
@@ -121,7 +131,7 @@ export async function runC420UIArtifactWorkflow(
       workflowId: workflow.id,
       message: workflow.label,
       level: "error",
-      data: { ...eventData(plan), exitCode: result.code, status: result.status },
+      data: { ...eventData(plan), dryRun, exitCode: result.code, status: result.status },
     }));
     return result;
   }
@@ -130,7 +140,7 @@ export async function runC420UIArtifactWorkflow(
     type: "action:start",
     workflowId: workflow.id,
     actionId,
-    message: actionId,
+    message: actionEventMessage(workflow, actionId, "Executing action"),
     data: { ...eventData(plan), dryRun, yes: options.yes === true },
   }));
 
@@ -142,7 +152,7 @@ export async function runC420UIArtifactWorkflow(
     type: "action:finish",
     workflowId: workflow.id,
     actionId,
-    message: actionId,
+    message: actionEventMessage(workflow, actionId, "Finished action"),
     level: result.status === "failed" ? "error" : undefined,
     data: { ...eventData(plan), dryRun, exitCode: result.code, status: result.status },
   }));

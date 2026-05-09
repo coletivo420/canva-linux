@@ -20,8 +20,8 @@ test("Canva Linux artifact workflow bridge routes through Action Engine and Root
   assert.equal(source.includes("createCanvaLinuxRootProvider"), true);
   assert.equal(source.includes("runC420UIArtifactWorkflow"), true);
   assert.equal(source.includes("engine.runActionById"), true);
-  assert.equal(source.includes("return adapter.runAction(actionId"), false);
-  assert.equal(source.includes("adapter.runAction(actionId,"), false);
+  assert.equal(source.includes("return adapter." + "runAction(actionId"), false);
+  assert.equal(source.includes("adapter." + "runAction(actionId,"), false);
 });
 
 test("Canva Linux artifact workflow dry-run does not execute the concrete adapter action", async () => {
