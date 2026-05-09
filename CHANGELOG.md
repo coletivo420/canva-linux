@@ -31,6 +31,7 @@
 
 ### Changed
 - Strengthened c420ui, Canva Linux adapter, and shared tooling checks for dependent-project boundary enforcement.
+- Clarified custom scope validation policy and made Linux root validation command construction configurable.
 - Centralized generic action scope semantics and Linux root/sudo provider helpers in c420ui.
 - Slimmed the Canva Linux root provider so it only owns project-specific root policy.
 - Centralized the c420ui root launch guard inside the c420ui terminal runtime.

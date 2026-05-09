@@ -134,3 +134,24 @@ test("sudo helper path is configurable instead of hardcoded", () => {
 
   assert.deepEqual(calls, [["another-helper.sh", "--validate"]]);
 });
+
+
+test("validateRootAccess supports a custom validation command builder", () => {
+  const calls: Array<{ command: string; args: string[] }> = [];
+  const provider = createC420UILinuxRootProviderBase({
+    sudoHelperPath: "direct-helper",
+    buildRootValidationCommand(sudoHelperPath) {
+      return { command: sudoHelperPath, args: ["--validate"] };
+    },
+    runCommand(command, args) {
+      calls.push({ command, args: [...args] });
+      return { status: 0 } as SpawnSyncReturns<Buffer>;
+    },
+  });
+
+  provider.validateRootAccess("/repo", {});
+
+  assert.deepEqual(calls, [
+    { command: "direct-helper", args: ["--validate"] },
+  ]);
+});

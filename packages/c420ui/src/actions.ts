@@ -102,6 +102,11 @@ export type c420uiActionValidationOptions = {
   allowedGroups?: readonly string[];
   allowedSections?: readonly string[];
   allowedKinds?: readonly string[];
+  /**
+   * Action registries are strict by default and accept only
+   * c420uiKnownActionScopes. Projects that define custom scopes must list
+   * every accepted scope here.
+   */
   allowedScopes?: readonly string[];
 };
 

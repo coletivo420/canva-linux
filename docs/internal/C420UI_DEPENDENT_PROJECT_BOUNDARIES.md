@@ -51,3 +51,15 @@ recipes, and host scripts.
   launchers or adapters.
 - Moving project detection providers, action registries, artifact recipes, or
   package naming into c420ui core.
+
+## Extension policy
+
+- Action registry validation accepts only `user`, `system`, and `auto` scopes by
+  default. Dependent projects that introduce custom scopes must pass an explicit
+  `allowedScopes` list to `validateC420UIActions`.
+- `normalizeC420UIActionScope` preserves custom scope strings so provider-level
+  code can interpret them before or outside strict registry validation.
+- The Linux root provider base runs root validation through `bash` by default so
+  shell helpers work even when execution bits are not available. Dependent
+  projects that need direct executable helpers or another launcher must provide a
+  custom `buildRootValidationCommand`.

@@ -22,6 +22,21 @@ export type c420uiLinuxActionScopePredicate = (
   actionEnv: NodeJS.ProcessEnv,
 ) => boolean;
 
+export type c420uiLinuxRootValidationCommand = {
+  command: string;
+  args: string[];
+};
+
+export type c420uiLinuxRootValidationCommandBuilder = (
+  sudoHelperPath: string,
+) => c420uiLinuxRootValidationCommand;
+
+export function defaultC420UILinuxRootValidationCommand(
+  sudoHelperPath: string,
+): c420uiLinuxRootValidationCommand {
+  return { command: "bash", args: [sudoHelperPath, "--validate"] };
+}
+
 export type c420uiLinuxRootProviderBaseOptions = {
   id?: string;
   label?: string;
@@ -29,6 +44,7 @@ export type c420uiLinuxRootProviderBaseOptions = {
   rootAuthEnvKey?: string;
   rootAuthEnvValue?: string;
   runCommand?: c420uiLinuxRootCommandRunner;
+  buildRootValidationCommand?: c420uiLinuxRootValidationCommandBuilder;
   buildActionEnvironment?: (
     action: c420uiAction,
     baseEnv: NodeJS.ProcessEnv,
@@ -84,6 +100,9 @@ export function createC420UILinuxRootProviderBase(
     options.buildActionEnvironment ?? defaultC420UILinuxBuildActionEnvironment;
   const actionHasUserScope =
     options.actionHasUserScope ?? defaultC420UILinuxActionHasUserScope;
+  const buildRootValidationCommand =
+    options.buildRootValidationCommand ??
+    defaultC420UILinuxRootValidationCommand;
 
   return {
     id: options.id ?? "c420ui-linux-root-provider-base",
@@ -102,7 +121,10 @@ export function createC420UILinuxRootProviderBase(
     },
 
     validateRootAccess(rootDir, actionEnv) {
-      const result = runCommand("bash", [options.sudoHelperPath, "--validate"], {
+      const validationCommand = buildRootValidationCommand(
+        options.sudoHelperPath,
+      );
+      const result = runCommand(validationCommand.command, validationCommand.args, {
         cwd: rootDir,
         stdio: "inherit",
         env: actionEnv,

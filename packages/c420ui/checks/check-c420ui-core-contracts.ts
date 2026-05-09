@@ -521,6 +521,8 @@ function main(): number {
     "validateC420UILinuxActionScope",
     "defaultC420UILinuxBuildActionEnvironment",
     "defaultC420UILinuxActionHasUserScope",
+    "defaultC420UILinuxRootValidationCommand",
+    "buildRootValidationCommand",
     "sudoHelperPath",
     "rootAuthEnvKey",
     "rootAuthEnvValue",
