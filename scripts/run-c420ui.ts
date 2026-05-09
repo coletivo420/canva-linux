@@ -1,34 +1,32 @@
-import { spawnSync } from "node:child_process";
-import fs from "node:fs";
 import path from "node:path";
+import { isC420UIHostDependencyFailure } from "../packages/c420ui/src";
+import { createCanvaLinuxHostDependencyProvider } from "./c420ui-canva-linux/host-dependencies";
 import { runCanvaLinuxC420UI } from "./c420ui-canva-linux/run";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 process.chdir(rootDir);
 
-function ensureNpmDependencies(): void {
-  const script = path.join(rootDir, "scripts/ensure-npm-dependencies.sh");
-  if (!fs.existsSync(script)) {
-    console.error(`[error] Missing dependency bootstrap script: ${script}`);
-    process.exit(1);
-  }
-  const result = spawnSync("bash", [script], {
-    cwd: rootDir,
-    stdio: "inherit",
+async function ensureHostDependencies(): Promise<void> {
+  const hostDependencies = createCanvaLinuxHostDependencyProvider({
+    rootDir,
     env: process.env,
-    shell: false,
   });
-  if ((result.status ?? 1) !== 0) {
-    process.exit(result.status ?? 1);
+  const result = hostDependencies.ensure
+    ? await hostDependencies.ensure()
+    : undefined;
+
+  if (result && isC420UIHostDependencyFailure(result)) {
+    console.error(result.message || "Failed to ensure host dependencies.");
+    process.exit(result.exitCode ?? 1);
   }
 }
 
-export function main(): void {
+export async function main(): Promise<void> {
   const argv = process.argv.slice(2);
 
   if (!argv.includes("--help")) {
-    ensureNpmDependencies();
+    await ensureHostDependencies();
   }
 
   runCanvaLinuxC420UI({
@@ -38,4 +36,9 @@ export function main(): void {
   });
 }
 
-if (require.main === module) main();
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });
+}

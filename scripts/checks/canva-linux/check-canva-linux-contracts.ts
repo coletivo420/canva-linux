@@ -443,6 +443,48 @@ function checkDependentProjectAdapterBoundary(failures: string[]): void {
   }
 }
 
+function checkHostDependencyProviderContract(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const providerPath = "scripts/c420ui-canva-linux/host-dependencies.ts";
+  const runEntrypointPath = "scripts/run-c420ui.ts";
+  const providerFullPath = path.join(rootDir, providerPath);
+  if (!fs.existsSync(providerFullPath)) {
+    failures.push(`${providerPath}: missing Canva Linux host dependency provider`);
+    return;
+  }
+
+  const provider = readProjectFile(rootDir, providerPath);
+  const runEntrypoint = readProjectFile(rootDir, runEntrypointPath);
+  const cliEntrypoint = readProjectFile(rootDir, "scripts/run-c420ui-cli.ts");
+
+  for (const fragment of [
+    "createCanvaLinuxHostDependencyProvider",
+    "c420uiHostDependencyProvider",
+    "c420uiHostDependencyCheckResult",
+    "spawnSync",
+    "scripts/ensure-npm-dependencies.sh",
+  ] as const) {
+    if (!provider.includes(fragment)) {
+      failures.push(`${providerPath}: missing host dependency provider fragment ${fragment}`);
+    }
+  }
+  for (const fragment of [
+    "createCanvaLinuxHostDependencyProvider",
+    "isC420UIHostDependencyFailure",
+    "ensureHostDependencies",
+  ] as const) {
+    if (!runEntrypoint.includes(fragment)) {
+      failures.push(`${runEntrypointPath}: must use Canva Linux host dependency provider fragment ${fragment}`);
+    }
+  }
+  if (runEntrypoint.includes("scripts/ensure-npm-dependencies.sh")) {
+    failures.push(`${runEntrypointPath}: must not call scripts/ensure-npm-dependencies.sh directly`);
+  }
+  if (cliEntrypoint.includes("scripts/ensure-npm-dependencies.sh")) {
+    failures.push("scripts/run-c420ui-cli.ts: must not call scripts/ensure-npm-dependencies.sh directly");
+  }
+}
+
 const checkC420UISudoHelperContractRunner = (() => {
 function findCheckedFiles(dir: string): string[] {
   const results: string[] = [];
@@ -1647,6 +1689,7 @@ export function main(): number {
   checkAdapterContract(failures);
   checkRootProviderContract(failures);
   checkDependentProjectAdapterBoundary(failures);
+  checkHostDependencyProviderContract(failures);
   checkSudoCommonContract(failures);
   checkPublicBranding(failures);
   checkProjectBoundary(failures);

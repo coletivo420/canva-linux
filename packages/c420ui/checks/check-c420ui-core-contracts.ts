@@ -174,6 +174,7 @@ function main(): number {
     "root-provider.ts",
     "scopes.ts",
     "linux-root-provider.ts",
+    "host-dependencies.ts",
     "types.ts",
     "workflow-runner.ts",
     "workflows.ts",
@@ -1057,6 +1058,47 @@ function checkSettingsContract(failures: string[]): void {
 }
 
 
+function checkHostDependencyContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const hostDependenciesPath = "packages/c420ui/src/host-dependencies.ts";
+  const indexPath = "packages/c420ui/src/index.ts";
+  const fullPath = path.join(rootDir, hostDependenciesPath);
+  if (!fs.existsSync(fullPath)) {
+    failures.push(`${hostDependenciesPath}: missing host dependency contract`);
+    return;
+  }
+
+  const source = fs.readFileSync(fullPath, "utf8");
+  const index = fs.readFileSync(path.join(rootDir, indexPath), "utf8");
+  for (const fragment of [
+    "c420uiHostDependencyProvider",
+    "c420uiHostDependencyCheckResult",
+    "c420uiHostDependencyPurpose",
+    "createC420UIHostDependencyResult",
+    "isC420UIHostDependencyFailure",
+  ] as const) {
+    if (!source.includes(fragment)) {
+      failures.push(`${hostDependenciesPath}: missing ${fragment}`);
+    }
+  }
+  if (!index.includes('export * from "./host-dependencies"')) {
+    failures.push(`${indexPath}: missing public export for ./host-dependencies`);
+  }
+  for (const forbidden of [
+    "Canva Linux",
+    "canva-linux",
+    "CANVA_",
+    "npm",
+    "scripts/ensure-npm-dependencies.sh",
+    "Node.js >=22",
+    "node >=22",
+  ] as const) {
+    if (source.includes(forbidden)) {
+      failures.push(`${hostDependenciesPath}: must not contain project-specific host dependency policy ${forbidden}`);
+    }
+  }
+}
+
 function checkLinuxHostSudoHelperContract(failures: string[]): void {
   const rootDir = process.cwd();
   const helperPath = "packages/c420ui/host/linux/sudo-helper.sh";
@@ -1115,6 +1157,7 @@ export function main(): number {
   runInteractiveActionEngineContract(failures);
   checkSettingsContract(failures);
   checkLinuxHostSudoHelperContract(failures);
+  checkHostDependencyContract(failures);
   checkTerminalUiContract(failures);
   checkHeaderLayoutContract(failures);
 

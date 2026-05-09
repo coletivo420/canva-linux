@@ -26,6 +26,7 @@ recipes, and host scripts.
 - concrete artifact recipes
 - concrete detection provider
 - concrete root policy decisions
+- concrete dependency lists and install/bootstrap commands
 - concrete shell scripts
 - project-specific root action scope decisions and environment names
 - package naming
@@ -40,6 +41,7 @@ recipes, and host scripts.
 - root launch guard outside c420ui terminal runtime
 - concrete package action IDs inside c420ui core
 - project-specific sudo wrappers when the generic c420ui helper is sufficient
+- npm, Node.js version, or project dependency-list policy inside c420ui core
 
 ## Examples that checks must reject
 
@@ -54,6 +56,8 @@ recipes, and host scripts.
   launchers or adapters.
 - Moving project detection providers, action registries, artifact recipes, or
   package naming into c420ui core.
+- Calling `scripts/ensure-npm-dependencies.sh` directly from generic c420ui code.
+- Bypassing the host dependency provider from project launchers.
 
 ## Extension policy
 
@@ -66,3 +70,10 @@ recipes, and host scripts.
   shell helpers work even when execution bits are not available. Dependent
   projects that need direct executable helpers or another launcher must provide a
   custom `buildRootValidationCommand`.
+
+## Host dependency ownership
+
+- c420ui owns host dependency contracts, including generic check and ensure result types.
+- Dependent projects own concrete dependency lists and install/bootstrap commands.
+- `scripts/ensure-npm-dependencies.sh` is a Canva Linux implementation detail until replaced by a project provider.
+- `scripts/preflight-common.sh` remains in `scripts/` for now and must not be moved into c420ui core in this phase.
