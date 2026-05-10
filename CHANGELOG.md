@@ -31,6 +31,10 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Slimmed the Canva Linux c420ui adapter so `runAction()` only executes concrete commands after the c420ui
+  Action Engine applies planned-action, dry-run, root, and confirmation policy.
+- Classified remaining shell helpers as c420ui host tools, Canva Linux recipes, repository checks, or obsolete
+  helpers, and documented `scripts/preflight-common.sh` as repository-check-only.
 - Hardened c420ui host dependency management with config validation, dry-run planned commands, npm declaration checks, and executable command lookup.
 - Renamed the project-local c420ui adapter directory to `scripts/c420ui-adapter/` so future dependent projects can reuse the same path pattern.
 - Moved host dependency policy into c420ui so the generic runner owns command, Node and npm checks, npm install strategy, repair mode and skip mode.
@@ -76,6 +80,7 @@
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
 ### Removed
+- Removed the obsolete npm dependency bootstrap shell script and the repository preflight fallback that referenced it.
 - Removed the `scripts/run-core-entry.sh overview-status` dispatch path so the core wrapper only runs infrastructure checks.
 - Removed stale cross-domain c420ui core contract assertions that duplicated Canva Linux adapter checks.
 - Removed the old `scripts/core/overview-status.ts` product detection entry from shared core tooling.

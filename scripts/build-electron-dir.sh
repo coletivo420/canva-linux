@@ -7,11 +7,9 @@ source "${SCRIPT_DIR}/preflight-common.sh"
 
 require_command node
 require_command npm
-require_node_major 22
 validate_package_version_semver
 
 cd "${REPO_ROOT}"
-ensure_npm_dependencies
 
 npm run dist
 

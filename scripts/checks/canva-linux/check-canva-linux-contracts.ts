@@ -232,7 +232,11 @@ function main(): number {
   if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
   if (!fs.existsSync(cliEntrypointPath)) failures.push("Canva Linux c420ui CLI entrypoint must exist");
   const cliBridge = fs.readFileSync(cliBridgePath, "utf8");
+  const bridgeSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/bridge.ts"), "utf8");
   if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
+  if (!cliBridge.includes("runC420UICli")) failures.push("scripts/c420ui-adapter/cli.ts must route direct actions through runC420UICli");
+  if (!bridgeSource.includes("createC420UIActionEngine")) failures.push("scripts/c420ui-adapter/bridge.ts must route artifact actions through createC420UIActionEngine");
+  if (!bridgeSource.includes("runC420UIArtifactWorkflow")) failures.push("scripts/c420ui-adapter/bridge.ts must use runC420UIArtifactWorkflow");
   const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/adapter.ts"), "utf8");
   const developmentAdapterPath = "scripts/c420ui-adapter/development.ts";
   const actionAdapterPath = "scripts/c420ui-adapter/actions.ts";
@@ -296,7 +300,21 @@ function main(): number {
       failures.push(`adapter must not depend on legacy root preflight: ${fragment}`);
     }
   }
-  if (!adapterSource.includes("const actionEnv = context.env")) {
+  for (const fragment of [
+    "Transitional bridge" + " execution path",
+    "Defensive fallback" + " only",
+    'action.kind === ' + '"planned"',
+    "action.planned",
+    "context." + "dryRun",
+  ] as const) {
+    if (adapterSource.includes(fragment)) {
+      failures.push(`adapter.runAction must not restore Action Engine policy fallback: ${fragment}`);
+    }
+  }
+  if (!adapterSource.includes("runC420UICommand")) {
+    failures.push("adapter.runAction must continue using runC420UICommand");
+  }
+  if (!adapterSource.includes("env: context.env")) {
     failures.push("adapter must use the Action Engine/root provider prepared context.env");
   }
   if (adapterSource.includes("...context.env, ...(action.env")) {
@@ -419,6 +437,28 @@ function checkDependentProjectAdapterBoundary(failures: string[]): void {
   const adapter = readProjectFile(rootDir, adapterPath);
   const rootProvider = readProjectFile(rootDir, rootProviderPath);
 
+  for (const [relativePath, source] of [
+    [adapterPath, adapter],
+    [bridgePath, bridge],
+    ["scripts/c420ui-adapter/cli.ts", readProjectFile(rootDir, "scripts/c420ui-adapter/cli.ts")],
+  ] as const) {
+    for (const fragment of [
+      "adapter.runAction(actionId, contextForAction())",
+      "scripts/" + "ensure-npm-dependencies.sh",
+      "ensure_" + "npm_dependencies",
+      "scripts/" + "c420ui-canva-linux",
+      "scripts/" + "sudo-common.sh",
+      "canva_" + "sudo",
+      "CANVA_" + "REQUIRED_NPM_DEPS",
+      "CANVA_" + "SKIP_NPM_INSTALL",
+      "CANVA_" + "NPM_REPAIR",
+    ] as const) {
+      if (source.includes(fragment)) {
+        failures.push(`${relativePath}: dependent project adapter must not restore legacy transitional fragment ${fragment}`);
+      }
+    }
+  }
+
   const requiredFragments: Array<[string, string, string]> = [
     [runPath, run, "runC420UITerminalApp"],
     [bridgePath, bridge, "runC420UIArtifactWorkflow"],
@@ -528,7 +568,7 @@ function checkHostDependencyProviderContract(failures: string[]): void {
     }
   }
   for (const forbidden of [
-    "scripts/ensure-npm-dependencies.sh",
+    "scripts/" + "ensure-npm-dependencies.sh",
     "npm ci",
     "npm install",
     "CANVA_" + "REQUIRED_NPM_DEPS",
@@ -546,7 +586,7 @@ function checkHostDependencyProviderContract(failures: string[]): void {
     const legacyProvider = fs.readFileSync(legacyProviderPath, "utf8");
     if (
       legacyProvider.includes("createCanvaLinuxHostDependencyProvider") ||
-      legacyProvider.includes("scripts/ensure-npm-dependencies.sh")
+      legacyProvider.includes("scripts/" + "ensure-npm-dependencies.sh")
     ) {
       failures.push("scripts/c420ui-adapter/host-dependencies.ts: legacy shell provider must not be active");
     }

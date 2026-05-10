@@ -73,6 +73,34 @@ function createTempProject(): string {
   return rootDir;
 }
 
+test("Canva Linux adapter ignores direct dry-run fallback and executes concrete commands", async () => {
+  const rootDir = createTempProject();
+  const adapter = createCanvaLinuxC420UIAdapter(rootDir);
+  const stdout: string[] = [];
+
+  try {
+    const result = await adapter.runAction("install-native-user", {
+      rootDir,
+      dryRun: true,
+      yes: true,
+      env: { BASE_ENV: "from-direct-dry-run" } as NodeJS.ProcessEnv,
+      emitLog(event) {
+        if (event.source === "stdout") stdout.push(event.line);
+      },
+      emitProgress() {},
+    });
+
+    assert.equal(result.code, c420uiExitCodes.success);
+    assert.equal(result.status, "success");
+    assert.notEqual(result.message, "dry-run");
+    assert.deepEqual(JSON.parse(stdout.join("")), {
+      base: "from-direct-dry-run",
+    });
+  } finally {
+    fs.rmSync(rootDir, { recursive: true, force: true });
+  }
+});
+
 test("Canva Linux adapter trusts prepared context env for direct bridge action runs", async () => {
   const rootDir = createTempProject();
   const adapter = createCanvaLinuxC420UIAdapter(rootDir);

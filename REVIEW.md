@@ -92,6 +92,18 @@ Request changes if a PR:
 - changes runtime app logs while implementing action-engine contracts.
 
 
+
+## Adapter and shell helper review
+
+Request changes if a PR:
+
+- restores planned-action or dry-run fallback handling in a dependent-project adapter;
+- calls `adapter.runAction()` directly instead of routing through the c420ui Action Engine;
+- duplicates root or confirmation policy outside the c420ui Action Engine and root provider;
+- restores the obsolete npm dependency bootstrap script;
+- adds npm install, repair, or skip policy to `scripts/preflight-common.sh`;
+- leaves shell helper classifications in `docs/checks/SHELL_HELPERS.md` stale.
+
 ## Artifact workflow runner review
 
 Request changes if a PR:

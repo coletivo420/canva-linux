@@ -14,9 +14,7 @@ ui_init
 require_command node
 require_command npm
 require_command sha256sum
-require_node_major 22
 validate_package_version_semver
-ensure_npm_dependencies
 
 VERSION="$(detect_package_version)"
 DIST_DIR="dist"
