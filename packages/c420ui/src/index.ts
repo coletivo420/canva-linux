@@ -1,6 +1,10 @@
 export * from "./scopes";
 export * from "./linux-root-provider";
 export * from "./host-dependencies";
+export * from "./command-dependencies";
+export * from "./node-dependencies";
+export * from "./npm-dependencies";
+export * from "./host-dependency-runner";
 export type * from "./actions";
 export type * from "./artifacts";
 export type * from "./bridge";

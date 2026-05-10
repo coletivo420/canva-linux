@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   createC420UIHostDependencyResult,
   isC420UIHostDependencyFailure,
+  validateC420UIHostDependencyConfig,
   type c420uiHostDependencyProvider,
 } from "../packages/c420ui/src/host-dependencies";
 
@@ -37,4 +38,52 @@ test("host dependency provider can omit ensure", () => {
 
   assert.equal(provider.ensure, undefined);
   assert.deepEqual(provider.check(), { status: "available" });
+});
+
+test("invalid config fails", () => {
+  assert.throws(() => validateC420UIHostDependencyConfig(null), /must be an object/);
+});
+
+test("node.minimumMajor as string fails", () => {
+  assert.throws(
+    () => validateC420UIHostDependencyConfig({ node: { minimumMajor: "22" } }),
+    /node\.minimumMajor must be a number/,
+  );
+});
+
+test("commands as non-array fails", () => {
+  assert.throws(
+    () => validateC420UIHostDependencyConfig({ commands: "git" }),
+    /commands must be an array/,
+  );
+});
+
+test("npm.requiredDevDependencies as string fails", () => {
+  assert.throws(
+    () =>
+      validateC420UIHostDependencyConfig({
+        npm: {
+          packageManager: "npm",
+          requiredDevDependencies: "typescript",
+        },
+      }),
+    /npm\.requiredDevDependencies must be a string array/,
+  );
+});
+
+test("valid config passes", () => {
+  const config = {
+    node: { minimumMajor: 22, required: true },
+    commands: [{ id: "git", command: "git", required: true, requiredFor: ["development"] }],
+    npm: {
+      packageManager: "npm",
+      lockfile: "package-lock.json",
+      installStrategy: "auto",
+      includeDev: true,
+      requiredDependencies: ["leftpad"],
+      requiredDevDependencies: ["typescript"],
+    },
+  };
+
+  assert.deepEqual(validateC420UIHostDependencyConfig(config), config);
 });

@@ -92,7 +92,7 @@ New direct action execution logic must be modeled in the c420ui action engine fi
 action execution; they must not duplicate generic planned-action, dry-run or exit-code behavior.
 
 Artifact workflow phase execution must be modeled in `packages/c420ui/src/workflow-runner.ts`. Canva Linux may define
-concrete artifact recipes, action IDs, scopes, and output patterns in `scripts/c420ui-canva-linux/artifacts.ts`, but phase
+concrete artifact recipes, action IDs, scopes, and output patterns in `scripts/c420ui-adapter/artifacts.ts`, but phase
 routing for build, validate, install, uninstall, purge, and release belongs to c420ui.
 
 Recommended flow:
@@ -110,7 +110,7 @@ If your action requires root privileges, set `requiresRoot: true` in
 `config/canva-linux/actions.json` and use `packages/c420ui/host/linux/sudo-helper.sh` helpers in your backend
 script. The generic root policy contract lives in
 `packages/c420ui/src/root-provider.ts`; the concrete Canva Linux provider lives in
-`scripts/c420ui-canva-linux/root-provider.ts`.
+`scripts/c420ui-adapter/root-provider.ts`.
 
 ## Core Validation
 
@@ -154,7 +154,7 @@ Action execution is no longer validated through the legacy Action Runner.
 Direct launcher actions are built with `npm run build:scripts` and executed through
 `.build/scripts/run-c420ui-cli.js`. Validate direct actions with `./canva-linux.sh <action-flag> --dry-run`
 or `npm run c420ui:cli -- <action-flag> --dry-run`. The concrete Canva Linux wiring lives in
-`scripts/c420ui-canva-linux/cli.ts`; reusable parsing and action execution live in
+`scripts/c420ui-adapter/cli.ts`; reusable parsing and action execution live in
 `packages/c420ui/src/cli.ts`.
 
 Keep direct action resolution and generic root preflight ordering inside the

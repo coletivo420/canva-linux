@@ -1,0 +1,36 @@
+{
+  "node": {
+    "minimumMajor": 22,
+    "required": true
+  },
+  "commands": [
+    {
+      "id": "git",
+      "command": "git",
+      "required": true,
+      "requiredFor": ["development", "build", "release"]
+    },
+    {
+      "id": "npm",
+      "command": "npm",
+      "required": true,
+      "requiredFor": ["terminal", "cli", "development", "build"]
+    }
+  ],
+  "npm": {
+    "packageManager": "npm",
+    "lockfile": "package-lock.json",
+    "installStrategy": "auto",
+    "includeDev": true,
+    "requiredDevDependencies": [
+      "esbuild",
+      "typescript",
+      "electron",
+      "electron-builder",
+      "eslint",
+      "@typescript-eslint/parser",
+      "@typescript-eslint/eslint-plugin",
+      "blessed"
+    ]
+  }
+}

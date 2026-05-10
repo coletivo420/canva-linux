@@ -25,6 +25,13 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Every behavior change must update `CHANGELOG.md`.
 
 
+## Host dependency policy
+
+- c420ui owns host dependency management for command checks, Node minimum checks, npm checks, install strategy, repair/skip modes, messages and exit codes.
+- Dependent projects declare dependency config only; for Canva Linux this is `config/canva-linux/dependencies.json`.
+- Project launchers must not run `npm ci` or `npm install` directly.
+- Project shell helpers must not own npm dependency policy or hardcoded npm dependency lists.
+
 ## Project tree boundaries
 
 - Read `docs/PROJECT_TREE.md` before moving code across Electron, scripts, c420ui, packaging,
@@ -36,8 +43,9 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Active docs must not reference removed runtime paths except as explicitly historical changelog or roadmap context.
 - Terminal diagnostics must use the generic project bridge/detection contract.
 - Do not call `scripts/run-core-entry.sh overview-status` from c420ui terminal UI.
-- `scripts/c420ui-canva-linux/` is adapter-only.
-- `scripts/c420ui-canva-linux/` is the Canva Linux adapter boundary, not a public c420ui API.
+- Dependent project adapters live under `scripts/c420ui-adapter/`.
+- `scripts/c420ui-adapter/` is project-local adapter-only code, not a public c420ui API.
+- Do not create project-specific c420ui adapter directory names; keep the reusable project-local adapter path stable across dependent projects.
 - `packages/c420ui/` is a planned standalone package boundary, not a published package promise.
 - Do not document c420ui as an externally consumable package until the maintainer explicitly requests publication.
 - Keep generated output in `.build/`, `dist/`, `coverage/`, or `repo/`; do not treat it as maintained source.
@@ -49,7 +57,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 - The c420ui terminal runtime owns the root launch guard.
 - Do not add root launch checks to `scripts/run-c420ui.ts`.
-- Do not add root launch checks to `scripts/c420ui-canva-linux/run.ts`.
+- Do not add root launch checks to `scripts/c420ui-adapter/run.ts`.
 - Project adapters must not expose `rootLaunchGuardMessage`.
 - The Canva Linux root provider is only for privileged actions, not for launching the terminal UI.
 
@@ -74,8 +82,8 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui owns generic host dependency contracts but not concrete project dependency lists.
 - Canva Linux owns npm bootstrap policy, Node.js version policy, and `CANVA_*` bootstrap variables.
 - Project launchers must use the host dependency provider instead of calling bootstrap shell scripts directly.
-- Do not call `scripts/ensure-npm-dependencies.sh` from generic c420ui code.
-- Keep `scripts/ensure-npm-dependencies.sh` and `scripts/preflight-common.sh` in `scripts/` for now.
+- Do not run npm installation directly from project launchers; c420ui owns host dependency management.
+- Keep project shell out of npm dependency policy; dependent projects declare host dependencies in config.
 - Detection status uses `project`, not the removed legacy `package` shape.
 - Do not reintroduce `package: project` compatibility in detection providers.
 - c420ui detection probes are generic; Canva Linux owns concrete probe keys and shell glue.
@@ -184,7 +192,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Keep `bash -n canva-linux.sh` protected by validation.
 - Keep direct c420ui CLI bridge freshness protected before launcher execution.
 - Do not narrow the c420ui CLI entrypoint freshness check to a small hardcoded list of files.
-- The launcher must rebuild the c420ui CLI bridge when `packages/c420ui/src`, `scripts/c420ui-canva-linux`,
+- The launcher must rebuild the c420ui CLI bridge when `packages/c420ui/src`, `scripts/c420ui-adapter`,
   `packages/c420ui/src/terminal`, action registry metadata or project UI metadata changes.
 - Launcher parser tests must not execute real project actions; use a stubbed `.build/scripts/run-c420ui-cli.js`.
 - Only one direct action may execute per invocation.

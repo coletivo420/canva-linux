@@ -11,7 +11,7 @@
 - Updated maintenance documentation to remove legacy runner compatibility guidance.
 
 ### Added
-- Added a generic c420ui host dependency provider contract with a Canva Linux adapter for the existing npm bootstrap script.
+- Added generic c420ui host dependency runner modules for command, Node and npm dependency checks.
 - Added formal dependent-project boundary documentation and checks to keep c420ui generic and Canva Linux project-specific.
 - Added the initial c420ui action engine contract for resolving and running project actions through bridges.
 - Added an explicit English-only maintained repository language guardrail with future i18n architecture
@@ -31,7 +31,10 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
-- Routed c420ui launcher host dependency bootstrap through the Canva Linux provider without moving existing shell scripts.
+- Hardened c420ui host dependency management with config validation, dry-run planned commands, npm declaration checks, and executable command lookup.
+- Renamed the project-local c420ui adapter directory to `scripts/c420ui-adapter/` so future dependent projects can reuse the same path pattern.
+- Moved host dependency policy into c420ui so the generic runner owns command, Node and npm checks, npm install strategy, repair mode and skip mode.
+  Canva Linux now declares dependencies in config.
 - Strengthened c420ui, Canva Linux adapter, and shared tooling checks for dependent-project boundary enforcement.
 - Clarified custom scope validation policy and made Linux root validation command construction configurable.
 - Centralized generic action scope semantics and Linux root/sudo provider helpers in c420ui.

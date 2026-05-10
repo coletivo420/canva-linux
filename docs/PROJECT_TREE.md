@@ -17,12 +17,12 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │   ├── ui/                    Static Electron shell UI assets
 │   └── assets/                Runtime assets copied into the Electron build
 ├── config/                    Project configuration files
-│   └── canva-linux/           Canva Linux actions and c420ui project UI config
+│   └── canva-linux/           Canva Linux actions, dependency declarations, and c420ui project UI config
 ├── scripts/                   Canva Linux tool, validation, packaging, and host-operation source
 │   ├── core/                  Shared TypeScript tooling and repository-wide checks
 │   ├── checks/canva-linux/    Canva Linux-specific validation and anti-regression checks
 │   ├── canva-linux/detection/ Canva Linux installation detection provider and probes
-│   ├── c420ui-canva-linux/    Canva Linux adapter boundary for c420ui integration
+│   ├── c420ui-adapter/        Project-local adapter connecting Canva Linux to c420ui
 │   ├── canva-linux/actions/   Canva Linux action registry loading and validation
 │   └── *.sh                   Linux host-operation glue and launcher/install/package wrappers
 ├── packages/                  Private package workspace; no published c420ui package exists yet
@@ -31,7 +31,11 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │       ├── host/linux/sudo-helper.sh Generic sudo/root helper
 │       ├── src/detection.ts   Generic c420ui detection engine
 │       ├── src/scopes.ts      Generic c420ui action scope semantics
-│       ├── src/host-dependencies.ts Generic host dependency provider contract
+│       ├── src/host-dependencies.ts Generic host dependency provider/config contract
+│       ├── src/command-dependencies.ts Generic host command dependency checks
+│       ├── src/node-dependencies.ts Generic Node dependency checks
+│       ├── src/npm-dependencies.ts Generic npm dependency checks and ensure logic
+│       ├── src/host-dependency-runner.ts Generic host dependency orchestration
 │       ├── src/linux-root-provider.ts Generic Linux root/sudo provider base
 │       └── checks/            Reusable c420ui validation and anti-regression checks
 ├── docs/                      Public and internal project documentation
@@ -55,8 +59,9 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 ```
 
 Some planned directories may not exist until their corresponding split work
-starts. `scripts/c420ui-canva-linux/` now exists as the Canva Linux adapter boundary,
-while `packages/c420ui/` exists only as a private package skeleton for the c420ui separation plan,
+starts. Dependent project adapters live under `scripts/c420ui-adapter/`; the directory is project-local, but its role is generic: connecting the dependent project to c420ui.
+Do not create c420ui adapter directories named after the dependent project.
+`packages/c420ui/` exists only as a private package skeleton for the c420ui separation plan,
 not a published or supported external package location today.
 
 ## Maintained source
@@ -104,7 +109,7 @@ The intended separation is:
   settings, logo, help formatting, root launch guard, runtime startup policy and interactive runner code lives in `packages/c420ui/src/terminal/`.
 - **Canva Linux adapter**: project-specific actions, root policy conditionals, environment variable names, generic sudo helper environment translation, metadata, launch wiring, concrete host dependency bootstrap,
   install/package status, and Canva Linux labels live in
-  `scripts/c420ui-canva-linux/`. Installation detection probes live in
+  `scripts/c420ui-adapter/`. Installation detection probes live in
   `scripts/canva-linux/detection/` and use the generic engine in `packages/c420ui/src/detection.ts`.
 - **c420ui host tools**: reusable Linux host tools, including `packages/c420ui/host/linux/sudo-helper.sh`, live under `packages/c420ui/host/` and must not contain Canva Linux-specific names or `CANVA_*` variables.
 - **Validation split**: reusable c420ui validation and anti-regression checks live
@@ -139,4 +144,8 @@ separate concepts.
 - Public docs live in `docs/*.md`; AI/developer memory, guardrails, and legacy
   notes live under `docs/internal/`.
 
-`scripts/ensure-npm-dependencies.sh` remains a Canva Linux host-operation implementation detail for now.
+`config/canva-linux/dependencies.json` declares Canva Linux host/npm dependencies; c420ui owns dependency policy.
+
+## Host dependency ownership
+
+`c420ui` owns host dependency management. Dependent projects declare dependency config only. Project launchers must not run npm installation directly, and project shell helpers must not own npm dependency policy.

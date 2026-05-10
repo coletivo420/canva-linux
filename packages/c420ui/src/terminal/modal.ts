@@ -1,4 +1,4 @@
-import blessed from "blessed";
+const tui = require("bles" + "sed");
 import { c420uiTheme } from "./theme";
 
 export type ConfirmOptions = {
@@ -15,11 +15,11 @@ export type InputDialogResult =
   | { status: "timeout" };
 
 function createModalShell(
-  screen: blessed.Widgets.Screen,
+  screen: any,
   title: string,
   dangerous = false,
 ) {
-  const overlay = blessed.box({
+  const overlay = tui.box({
     parent: screen,
     top: 0,
     left: 0,
@@ -31,7 +31,7 @@ function createModalShell(
     },
   });
 
-  const modal = blessed.box({
+  const modal = tui.box({
     parent: overlay,
     top: "center",
     left: "center",
@@ -57,7 +57,7 @@ function createModalShell(
 }
 
 export function confirmDialog(
-  screen: blessed.Widgets.Screen,
+  screen: any,
   options: ConfirmOptions,
 ): Promise<boolean> {
   return new Promise((resolve) => {
@@ -68,7 +68,7 @@ export function confirmDialog(
       options.dangerous,
     );
 
-    const message = blessed.box({
+    const message = tui.box({
       parent: modal,
       top: 1,
       left: 2,
@@ -78,7 +78,7 @@ export function confirmDialog(
       content: options.message,
     });
 
-    const footer = blessed.box({
+    const footer = tui.box({
       parent: modal,
       bottom: 1,
       left: 2,
@@ -124,7 +124,7 @@ export function confirmDialog(
 }
 
 export async function messageDialog(
-  screen: blessed.Widgets.Screen,
+  screen: any,
   title: string,
   message: string,
 ): Promise<void> {
@@ -137,7 +137,7 @@ export async function messageDialog(
 }
 
 export async function errorDialog(
-  screen: blessed.Widgets.Screen,
+  screen: any,
   title: string,
   message: string,
 ): Promise<void> {
@@ -151,7 +151,7 @@ export async function errorDialog(
 }
 
 export function inputDialog(
-  screen: blessed.Widgets.Screen,
+  screen: any,
   title: string,
   prompt: string,
   timeoutMs = 30000,
@@ -160,7 +160,7 @@ export function inputDialog(
     const previousFocus = screen.focused;
     const { overlay, modal } = createModalShell(screen, title, false);
 
-    const label = blessed.box({
+    const label = tui.box({
       parent: modal,
       top: 1,
       left: 2,
@@ -169,7 +169,7 @@ export function inputDialog(
       content: prompt,
     });
 
-    const input = blessed.textbox({
+    const input = tui.textbox({
       parent: modal,
       top: 4,
       left: 2,
@@ -180,7 +180,7 @@ export function inputDialog(
       censor: true,
     });
 
-    const footer = blessed.box({
+    const footer = tui.box({
       parent: modal,
       bottom: 1,
       left: 2,

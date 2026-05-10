@@ -58,81 +58,9 @@ if (failures.length > 0) {
 NODE
 }
 
-require_node_major() {
-  local min_major="${1:-22}"
-
-  require_command node "[error] 'node' not found. Canva Linux development workflows require Node.js >=${min_major}."
-
-  local current_major
-  current_major="$(node -p "Number(process.versions.node.split('.')[0])")"
-
-  if (( current_major < min_major )); then
-    echo "[error] Node.js >=${min_major} is required. Current version: $(node -v)" >&2
-    exit 1
-  fi
-}
-
-CANVA_REQUIRED_NPM_DEPS=(
-  esbuild
-  typescript
-  electron
-  electron-builder
-  eslint
-  @typescript-eslint/parser
-  @typescript-eslint/eslint-plugin
-  blessed
-)
-
-check_npm_dependency() {
-  local dep="$1"
-
-  node -e "require.resolve(process.argv[1], { paths: [process.cwd()] })" "$dep" >/dev/null 2>&1
-}
-
 ensure_npm_dependencies() {
-  require_command node
-  require_command npm
-  require_node_major 22
-  validate_package_scripts
-
-  if [[ "${CANVA_SKIP_NPM_INSTALL:-0}" == "1" ]]; then
-    echo "[info] Skipping npm dependency bootstrap because CANVA_SKIP_NPM_INSTALL=1"
-    return 0
-  fi
-
-  local missing=0
-  if [[ ! -d node_modules ]]; then
-    missing=1
-  else
-    local dep
-    for dep in "${CANVA_REQUIRED_NPM_DEPS[@]}"; do
-      if ! check_npm_dependency "$dep"; then
-        missing=1
-        break
-      fi
-    done
-  fi
-
-  local install_cmd=(npm install --include=dev)
-  if [[ -f package-lock.json ]]; then
-    install_cmd=(npm ci --include=dev)
-  fi
-
-  if [[ "${CANVA_NPM_REPAIR:-}" == "clean" ]]; then
-    echo "[info] Forcing clean npm dependency repair (CANVA_NPM_REPAIR=clean)"
-    "${install_cmd[@]}" || exit 1
-    return 0
-  fi
-
-  if [[ "$missing" -eq 0 ]]; then
-    echo "[ok] npm dependencies are available"
-    return 0
-  fi
-
-  echo "[info] Installing npm dependencies with ${install_cmd[*]}"
-  echo "[info] This may take several minutes depending on your system."
-  echo "[info] Please be patient and keep this terminal open until the process finishes."
-  "${install_cmd[@]}" || exit 1
+  echo "[error] npm dependency policy is owned by c420ui. Use scripts/run-c420ui.ts or npm directly for this workflow." >&2
+  return 1
 }
 
 detect_package_version() {
