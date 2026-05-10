@@ -235,6 +235,7 @@ function main(): number {
   if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
   const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/adapter.ts"), "utf8");
   const developmentAdapterPath = "scripts/c420ui-adapter/development.ts";
+  const actionAdapterPath = "scripts/c420ui-adapter/actions.ts";
   const developmentConfigPath = "config/canva-linux/development.json";
   if (!fs.existsSync(path.join(rootDir, developmentConfigPath))) {
     failures.push(`${developmentConfigPath}: development task recipes are required`);
@@ -242,8 +243,29 @@ function main(): number {
   if (!fs.existsSync(path.join(rootDir, developmentAdapterPath))) {
     failures.push(`${developmentAdapterPath}: development adapter is required`);
   }
+  if (!fs.existsSync(path.join(rootDir, actionAdapterPath))) {
+    failures.push(`${actionAdapterPath}: shared action descriptor loader is required`);
+  }
+  const developmentSource = fs.existsSync(path.join(rootDir, developmentAdapterPath))
+    ? fs.readFileSync(path.join(rootDir, developmentAdapterPath), "utf8")
+    : "";
   if (!adapterSource.includes("loadCanvaLinuxDevelopmentWorkflows")) {
     failures.push("scripts/c420ui-adapter/adapter.ts must use loadCanvaLinuxDevelopmentWorkflows");
+  }
+  if (!adapterSource.includes("loadCanvaLinuxC420UIActions")) {
+    failures.push("scripts/c420ui-adapter/adapter.ts must use loadCanvaLinuxC420UIActions");
+  }
+  if (!developmentSource.includes("loadCanvaLinuxC420UIActions")) {
+    failures.push(`${developmentAdapterPath}: must use loadCanvaLinuxC420UIActions`);
+  }
+  if (!developmentSource.includes("createC420UIDevelopmentWorkflowFromAction")) {
+    failures.push(`${developmentAdapterPath}: must use createC420UIDevelopmentWorkflowFromAction`);
+  }
+  if (!developmentSource.includes("validateCanvaLinuxDevelopmentTasksAgainstActions")) {
+    failures.push(`${developmentAdapterPath}: must validate development tasks against real actions`);
+  }
+  if (adapterSource.includes("function toC420UIActionDescriptor")) {
+    failures.push("scripts/c420ui-adapter/adapter.ts must not contain local toC420UIActionDescriptor conversion");
   }
   if (adapterSource.includes("toC420UIWorkflow")) {
     failures.push("scripts/c420ui-adapter/adapter.ts must not contain local toC420UIWorkflow assembly");
@@ -1751,8 +1773,11 @@ function checkDevelopmentTaskRecipes(failures: string[]): void {
     if (actionPlanned && task.planned !== true) {
       failures.push(`${developmentPath}: task ${task.id} references planned action ${task.actionId} without planned=true`);
     }
-    if (task.requiresRoot !== undefined && action.requiresRoot !== undefined && task.requiresRoot !== action.requiresRoot) {
+    if (task.requiresRoot !== undefined && Boolean(task.requiresRoot) !== Boolean(action.requiresRoot)) {
       failures.push(`${developmentPath}: task ${task.id} requiresRoot contradicts action ${task.actionId}`);
+    }
+    if ((task as { scope?: string }).scope !== undefined && (task as { scope?: string }).scope !== action.scope) {
+      failures.push(`${developmentPath}: task ${task.id} scope contradicts action ${task.actionId}`);
     }
     if (task.supportsDryRun === true && action.kind !== "command") {
       failures.push(`${developmentPath}: task ${task.id} promises dry-run for non-command action ${task.actionId}`);

@@ -1182,9 +1182,11 @@ function checkDevelopmentProviderContract(failures: string[]): void {
     "c420uiDevelopmentTask",
     "c420uiDevelopmentProvider",
     "createC420UIDevelopmentWorkflow",
+    "createC420UIDevelopmentWorkflowFromAction",
     "createC420UIDevelopmentWorkflows",
     "validateC420UIDevelopmentConfig",
     "validateC420UIDevelopmentTasks",
+    "assertC420UIDevelopmentTaskMatchesAction",
   ] as const) {
     if (!provider.includes(fragment)) {
       failures.push(`${providerPath}: missing development provider fragment ${fragment}`);

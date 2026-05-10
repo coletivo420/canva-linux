@@ -15,15 +15,12 @@ import {
 } from "../../packages/c420ui/src";
 import { c420uiLogoLines } from "../../packages/c420ui/src/terminal/logo";
 import { toolSettingsPath } from "../../packages/c420ui/src/terminal/settings";
-import {
-  loadCanvaLinuxActions as loadCanvaLinuxActionRegistry,
-  type CanvaAction,
-} from "../canva-linux/actions/registry";
 import { buildCanvaLinuxOverviewStatus } from "../canva-linux/detection/provider";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
 } from "./artifacts";
+import { loadCanvaLinuxC420UIActions } from "./actions";
 import { loadCanvaLinuxDevelopmentWorkflows } from "./development";
 
 type ProjectUiJson = {
@@ -90,12 +87,6 @@ function stateHome(): string {
   const xdgStateHome = process.env.XDG_STATE_HOME?.trim();
   if (xdgStateHome) return xdgStateHome;
   return path.join(process.env.HOME || ".", ".local/state");
-}
-
-function toC420UIActionDescriptor(action: CanvaAction): C420UIActionDescriptor {
-  const phase = action.group === "install" ? "install" : (action.group === "maintenance" ? "maintenance" : "development");
-  const kind = action.kind === "command" ? "command" : "planned";
-  return { ...action, kind, phase, cliFlags: action.cli };
 }
 
 
@@ -183,7 +174,7 @@ export function createCanvaLinuxC420UIAdapter(
     if (!fs.existsSync(actionsJsonPath)) {
       throw new Error(`Missing Canva Linux actions registry: ${actionsJsonPath}`);
     }
-    return loadCanvaLinuxActionRegistry(resolvedRootDir).map(toC420UIActionDescriptor);
+    return loadCanvaLinuxC420UIActions(resolvedRootDir);
   }
 
   function loadArtifactWorkflows() {

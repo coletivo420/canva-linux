@@ -1,5 +1,5 @@
 import { c420uiKnownActionScopes, type c420uiActionScope } from "./scopes";
-import type { C420UIActionDescriptor, C420UIWorkflowPhase } from "./actions";
+import { isC420UIPlannedAction, type C420UIActionDescriptor, type C420UIWorkflowPhase } from "./actions";
 import type { C420UIWorkflow } from "./workflows";
 
 export type c420uiDevelopmentTaskKind =
@@ -196,6 +196,73 @@ export function createC420UIDevelopmentWorkflow(
     phase: kindToWorkflowPhase(task.kind),
     actions: [action],
     requiresRoot: task.requiresRoot,
+    supportsDryRun: task.supportsDryRun,
+  };
+}
+
+export function getC420UIDevelopmentTaskWorkflowPhase(
+  task: c420uiDevelopmentTask,
+): C420UIWorkflowPhase {
+  validateC420UIDevelopmentTasks([task]);
+  return kindToWorkflowPhase(task.kind);
+}
+
+function supportsDryRunAction(action: C420UIActionDescriptor): boolean {
+  if (isC420UIPlannedAction(action)) return false;
+  if (action.dryRun === "disabled") return false;
+  return action.kind === "command" || action.dryRun === "supported" || action.dryRun === "required";
+}
+
+export function assertC420UIDevelopmentTaskMatchesAction(
+  task: c420uiDevelopmentTask,
+  action: C420UIActionDescriptor,
+): void {
+  validateC420UIDevelopmentTasks([task]);
+  if (task.actionId !== action.id) {
+    throw new Error(`Development task ${task.id} actionId does not match action ${action.id}`);
+  }
+
+  const plannedAction = isC420UIPlannedAction(action);
+  if (task.planned === true && !plannedAction) {
+    throw new Error(`Development task ${task.id} is planned but action ${action.id} is executable`);
+  }
+  if (task.planned !== true && plannedAction) {
+    throw new Error(`Development task ${task.id} is executable but action ${action.id} is planned`);
+  }
+
+  if (task.requiresRoot !== undefined && Boolean(task.requiresRoot) !== Boolean(action.requiresRoot)) {
+    throw new Error(`Development task ${task.id} requiresRoot contradicts action ${action.id}`);
+  }
+  if (task.scope !== undefined && task.scope !== action.scope) {
+    throw new Error(`Development task ${task.id} scope contradicts action ${action.id}`);
+  }
+  if (task.supportsDryRun === true && !supportsDryRunAction(action)) {
+    throw new Error(`Development task ${task.id} promises dry-run but action ${action.id} does not support it`);
+  }
+
+  const workflowPhase = kindToWorkflowPhase(task.kind);
+  if (action.phase !== undefined && action.phase !== workflowPhase) {
+    throw new Error(`Development task ${task.id} phase ${workflowPhase} contradicts action ${action.id} phase ${action.phase}`);
+  }
+}
+
+export function createC420UIDevelopmentWorkflowFromAction(
+  task: c420uiDevelopmentTask,
+  action: C420UIActionDescriptor,
+): C420UIWorkflow {
+  assertC420UIDevelopmentTaskMatchesAction(task, action);
+  const phase = kindToWorkflowPhase(task.kind);
+  const workflowAction: C420UIActionDescriptor = {
+    ...action,
+    phase,
+  };
+
+  return {
+    id: task.id,
+    label: task.label || action.label,
+    phase,
+    actions: [workflowAction],
+    requiresRoot: action.requiresRoot,
     supportsDryRun: task.supportsDryRun,
   };
 }
