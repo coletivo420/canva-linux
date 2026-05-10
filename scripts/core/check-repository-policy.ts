@@ -788,7 +788,6 @@ const requiredShellFiles = [
   "canva-linux.sh",
   "scripts/validate-project.sh",
   "scripts/run-core-entry.sh",
-  "scripts/ensure-npm-dependencies.sh",
   "scripts/preflight-common.sh",
   "packages/c420ui/host/linux/sudo-helper.sh",
 ] as const;
@@ -1758,8 +1757,9 @@ const checkSharedHostDependencyToolingContract = (() => {
 function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
-  const ensurePath = "scripts/ensure-npm-dependencies.sh";
+  const ensurePath = "scripts/" + "ensure-npm-dependencies.sh";
   const preflightPath = "scripts/preflight-common.sh";
+  const shellClassificationPath = "docs/checks/SHELL_HELPERS.md";
   const runEntrypointPath = "scripts/run-c420ui.ts";
   const dependenciesPath = "scripts/c420ui-adapter/dependencies.ts";
   const configPath = "config/canva-linux/dependencies.json";
@@ -1778,6 +1778,9 @@ function main(): number {
   if (!fs.existsSync(path.join(rootDir, preflightPath))) {
     failures.push(`${preflightPath}: shared project preflight helpers must remain in scripts/`);
   }
+  if (!fs.existsSync(path.join(rootDir, shellClassificationPath))) {
+    failures.push(`${shellClassificationPath}: shell helper classification is required`);
+  }
 
   const preflight = fs.existsSync(path.join(rootDir, preflightPath))
     ? fs.readFileSync(path.join(rootDir, preflightPath), "utf8")
@@ -1788,16 +1791,31 @@ function main(): number {
   if (preflight.includes("npm ci") || preflight.includes("npm install")) {
     failures.push(`${preflightPath}: must not contain active npm install policy`);
   }
-  const ensureFunctionMatch = preflight.match(/ensure_npm_dependencies\(\) \{[\s\S]*?\n\}/);
-  if (!ensureFunctionMatch || !ensureFunctionMatch[0].includes("return 1")) {
-    failures.push(`${preflightPath}: ensure_npm_dependencies must be repository-check-only and must not install`);
+  if (!preflight.includes("Repository-check-only")) {
+    failures.push(`${preflightPath}: must be explicitly marked repository-check-only`);
+  }
+  if (preflight.includes("ensure_" + "npm_dependencies")) {
+    failures.push(`${preflightPath}: must not contain removed npm dependency bootstrap helper`);
   }
 
-  const ensureScript = fs.existsSync(path.join(rootDir, ensurePath))
-    ? fs.readFileSync(path.join(rootDir, ensurePath), "utf8")
+  if (fs.existsSync(path.join(rootDir, ensurePath))) {
+    failures.push(`${ensurePath}: obsolete npm dependency bootstrap script must not exist`);
+  }
+
+  const shellClassification = fs.existsSync(path.join(rootDir, shellClassificationPath))
+    ? fs.readFileSync(path.join(rootDir, shellClassificationPath), "utf8")
     : "";
-  if (!ensureScript.includes("no longer an active bootstrap path") || !ensureScript.includes("exit 1")) {
-    failures.push(`${ensurePath}: must not be an active npm dependency bootstrap path`);
+  for (const fragment of [
+    "c420ui host tool",
+    "Canva Linux recipes",
+    "Repository check helper",
+    "Obsolete",
+    "packages/c420ui/host/linux/sudo-helper.sh",
+    "scripts/preflight-common.sh",
+  ] as const) {
+    if (!shellClassification.includes(fragment)) {
+      failures.push(`${shellClassificationPath}: missing shell classification fragment ${fragment}`);
+    }
   }
 
   const runEntrypoint = fs.existsSync(path.join(rootDir, runEntrypointPath))

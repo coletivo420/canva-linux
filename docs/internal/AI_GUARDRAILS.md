@@ -365,3 +365,10 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 ### Additional color rules
 
 - Only `not detected` should use purple in status output and optional accent usage.
+
+### Adapter and shell-helper boundaries
+
+- Dependent project adapters execute concrete commands only after the c420ui Action Engine has applied planned-action, dry-run, root, and confirmation policy.
+- Project adapters must not duplicate Action Engine policy or restore transitional planned/dry-run fallbacks.
+- `scripts/preflight-common.sh` is repository-check-only; keep npm install, repair, and skip policy in c420ui host dependency management.
+- Keep shell helper classifications in `docs/checks/SHELL_HELPERS.md` up to date when adding, removing, or repurposing shell scripts.

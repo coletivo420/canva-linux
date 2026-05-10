@@ -22,14 +22,14 @@ print_flatpak_scope_notice(){ [[ "${FLATPAK_SCOPE}" == "system" ]] && ui_section
 SKIP_NPM=false
 for arg in "$@"; do case "$arg" in --skip-npm) SKIP_NPM=true;; --help|-h) usage; exit 0;; *) usage; ui_error "Unknown argument: $arg"; exit 1;; esac; done
 require_command flatpak; require_command flatpak-builder
-if [[ "$SKIP_NPM" == false ]]; then require_command npm; require_node_major 22; fi
+if [[ "$SKIP_NPM" == false ]]; then require_command npm; fi
 VERSION="$(detect_package_version)"
 ui_info "Preparing local Flatpak install for Canva Linux v${VERSION}"
 ui_info "Flatpak scope: ${FLATPAK_SCOPE}"
 ui_ok "Host dependencies are available"
 print_flatpak_scope_notice
 ensure_flathub_runtime
-if [[ "$SKIP_NPM" == false ]]; then build_electron_output; else ui_warn "Skipping npm install + npm run dist (--skip-npm)"; fi
+if [[ "$SKIP_NPM" == false ]]; then build_electron_output; else ui_warn "Skipping Electron build (--skip-npm)"; fi
 ensure_linux_unpacked
 install_flatpak_direct
 print_flatpak_post_install_guidance || true

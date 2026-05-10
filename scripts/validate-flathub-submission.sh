@@ -24,7 +24,6 @@ source "${SCRIPT_DIR}/preflight-common.sh"
 ## Preflight
 require_command bash
 require_command node
-require_node_major 22
 
 ARCHIVE_URL="$(node - <<'NODE'
 const fs = require('node:fs');

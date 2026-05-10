@@ -38,7 +38,6 @@ require_command npm
 require_command node
 require_command realpath
 require_command stat
-require_node_major 22
 validate_package_version_semver
 
 VERSION="$(detect_package_version)"

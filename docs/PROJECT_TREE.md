@@ -120,6 +120,10 @@ The intended separation is:
 - **Core scripts**: `scripts/core/` is infrastructure-check-only. Do not add
   runtime/product entrypoints there, and do not reintroduce removed runtime paths
   in active documentation.
+- **Shell helper classification**: `docs/checks/SHELL_HELPERS.md` classifies
+  remaining shell helpers. `scripts/preflight-common.sh` is repository-check-only;
+  dependent-project adapters execute concrete commands only after the c420ui
+  Action Engine applies planned-action, dry-run, root, and confirmation policy.
 - **Future package workspace**: `packages/c420ui/` is a private skeleton reserved for a possible
   standalone c420ui package after the core is separated. It is not a published
   npm package and should not be documented as externally consumable yet.
@@ -136,9 +140,10 @@ separate concepts.
 - `electron/` is application runtime code. It should not absorb c420ui terminal
   UI implementation details.
 - `scripts/core/` contains shared TypeScript tooling and repository-wide checks. It must not contain Canva Linux product detection logic.
-- Shell scripts in `scripts/` are Linux host-operation glue. Keep sudo, install,
-  npm dependency bootstrap, purge, Flatpak, AppImage, and desktop integration behavior there when Node is
-  the wrong boundary.
+- Shell scripts in `scripts/` are Linux host-operation glue. Keep package
+  recipes, purge, Flatpak, AppImage, and desktop integration behavior there when
+  Node is the wrong boundary; npm dependency policy belongs to c420ui host
+  dependency management, not shell preflight helpers.
 - `packaging/flathub/` is a Flathub submission workspace. It is distinct from
   general runtime source and from generated `repo/` output.
 - Public docs live in `docs/*.md`; AI/developer memory, guardrails, and legacy

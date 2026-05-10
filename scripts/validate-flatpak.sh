@@ -82,7 +82,6 @@ source "${SCRIPT_DIR}/preflight-common.sh"
 require_command bash
 require_command node
 require_command flatpak
-require_node_major 22
 
 ## Flags
 CHECK_RELEASE_ARTIFACTS=false

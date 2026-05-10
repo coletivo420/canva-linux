@@ -28,6 +28,7 @@ recipes, and host scripts.
 - concrete root policy decisions
 - concrete dependency declarations, including minimum Node major, required host commands, npm dependency names, lockfile, install strategy and usage purposes
 - concrete shell scripts
+- repository-check-only preflight helpers
 - project-specific root action scope decisions and environment names
 - package naming
 - release process
@@ -38,6 +39,7 @@ recipes, and host scripts.
 - project-specific env vars inside `packages/c420ui/src`
 - project adapters imported by c420ui
 - generic engines reimplemented in project adapters
+- planned, dry-run, root, or confirmation policy duplicated in dependent-project adapters
 - root launch guard outside c420ui terminal runtime
 - concrete package action IDs inside c420ui core
 - project-specific sudo wrappers when the generic c420ui helper is sufficient
@@ -59,6 +61,7 @@ recipes, and host scripts.
 - Calling `scripts/ensure-npm-dependencies.sh` directly from launchers or generic c420ui code.
 - Bypassing `runC420UIHostDependencyEnsure` from project launchers.
 - Running `npm ci` or `npm install` directly from project launchers.
+- Calling `adapter.runAction()` directly as a replacement for the c420ui Action Engine.
 
 ## Extension policy
 
@@ -84,3 +87,18 @@ recipes, and host scripts.
 - Dependent projects own concrete dependency declarations only.
 - `config/canva-linux/dependencies.json` is the Canva Linux declaration; c420ui owns host dependency management.
 - `scripts/preflight-common.sh` remains in `scripts/` for now and must not be moved into c420ui core in this phase.
+
+## Adapter execution boundary
+
+Dependent project adapters execute concrete commands only after the c420ui
+Action Engine has applied planned-action, dry-run, root, and confirmation
+policy. Project adapters must not duplicate Action Engine policy; their
+`runAction()` implementations should resolve an action command, honor
+pre-start cancellation when needed, and delegate execution to the c420ui command
+runner.
+
+## Shell helper classification
+
+Shell helper classifications are maintained in `docs/checks/SHELL_HELPERS.md`.
+`scripts/preflight-common.sh` is repository-check-only and must not own npm
+install or dependency repair policy.

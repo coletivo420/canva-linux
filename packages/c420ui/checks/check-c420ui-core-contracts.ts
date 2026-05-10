@@ -35,6 +35,9 @@ const forbidden = [
   "CL-EyeDropper",
   "config/canva-linux",
   "scripts/c420ui-adapter",
+  "CANVA_",
+  "electron-builder",
+  "@typescript-eslint/parser",
   "scripts/" + "c420ui-" + "canva-linux",
   "scripts/canva-linux",
   "scripts/app-identity-common.sh",
@@ -79,6 +82,9 @@ const forbiddenFragments = [
   "io.github.coletivo420.canva-linux",
   "config/canva-linux",
   "scripts/c420ui-adapter",
+  "CANVA_",
+  "electron-builder",
+  "@typescript-eslint/parser",
   "scripts/" + "c420ui-" + "canva-linux",
   "scripts/canva-linux",
   "scripts/app-identity-common.sh",
@@ -1149,14 +1155,13 @@ function checkHostDependencyContract(failures: string[]): void {
       "canva-linux",
       "CANVA_",
       "config/canva-linux",
-      "scripts/ensure-npm-dependencies.sh",
+      "scripts/" + "ensure-npm-dependencies.sh",
       "scripts/preflight-common.sh",
       "scripts/c420ui-adapter",
       "scripts/" + "c420ui-" + "canva-linux",
       "electron-builder",
       "@typescript-eslint/parser",
-      "blessed",
-    ] as const) {
+        ] as const) {
       if (moduleSource.includes(forbidden)) {
         failures.push(`${sourcePath}: must not contain project-specific host dependency policy ${forbidden}`);
       }

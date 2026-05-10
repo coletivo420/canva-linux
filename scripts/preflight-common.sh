@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/preflight-common.sh - Shared preflight checks for host tooling.
+# scripts/preflight-common.sh - Repository-check-only helpers for host tooling.
 
 require_command() {
   local cmd="$1"
@@ -56,11 +56,6 @@ if (failures.length > 0) {
   process.exit(1);
 }
 NODE
-}
-
-ensure_npm_dependencies() {
-  echo "[error] npm dependency policy is owned by c420ui. Use scripts/run-c420ui.ts or npm directly for this workflow." >&2
-  return 1
 }
 
 detect_package_version() {

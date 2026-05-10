@@ -213,33 +213,26 @@ export function createCanvaLinuxC420UIAdapter(
     return buildCanvaLinuxOverviewStatus(resolvedRootDir);
   }
 
-  // Transitional bridge execution path.
-  // Direct launcher CLI routes through this path for action execution.
-  // Privilege preflight is owned by the c420ui root provider.
-  // Runtime Canva Linux app logs, credential diagnostics, OAuth/tabs/GPU/EyeDropper logs,
-  // and CANVA_DEBUG flows remain outside this adapter execution path.
-  // Defensive fallback only: planned and dry-run policy belongs to the c420ui Action Engine.
   async function runAction(
     actionId: string,
     context: c420uiExecutionContext,
   ): Promise<c420uiActionResult> {
     const action = loadCanvaLinuxActions().find((item) => item.id === actionId);
     if (!action) {
-      return { code: c420uiExitCodes.invalidUsage, status: "failed", message: `Unknown action: ${actionId}` };
-    }
-    if (action.kind === "planned" || action.planned) {
-      return { code: c420uiExitCodes.plannedAction, status: "planned", message: action.description };
-    }
-    if (context.dryRun) {
-      context.emitProgress({ state: "success", percent: 100, label: `Dry-run: ${action.label}` });
-      return { code: c420uiExitCodes.success, status: "success", message: "dry-run" };
-    }
-    if (!action.command) {
-      return { code: c420uiExitCodes.invalidUsage, status: "failed", message: `${actionId} has no command` };
+      return {
+        code: c420uiExitCodes.invalidUsage,
+        status: "failed",
+        message: `Unknown action: ${actionId}`,
+      };
     }
 
-    // The Action Engine/root provider owns action environment preparation.
-    const actionEnv = context.env;
+    if (!action.command) {
+      return {
+        code: c420uiExitCodes.invalidUsage,
+        status: "failed",
+        message: `${actionId} has no command`,
+      };
+    }
 
     if (context.signal?.aborted) {
       context.emitProgress({ state: "canceled", percent: 0, label: action.label });
@@ -251,10 +244,10 @@ export function createCanvaLinuxC420UIAdapter(
     }
 
     return runC420UICommand({
-      command: action.command as string,
+      command: action.command,
       args: action.args ?? [],
       cwd: resolvedRootDir,
-      env: actionEnv,
+      env: context.env,
       label: action.label,
       signal: context.signal,
       emitLog: context.emitLog,
