@@ -11,7 +11,6 @@ require_node_major 22
 validate_package_version_semver
 
 cd "${REPO_ROOT}"
-ensure_npm_dependencies
 
 npm run dist
 

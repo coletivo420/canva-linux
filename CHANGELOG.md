@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- Added shell-helper classification documentation and static checks for repository-only preflight helpers.
+- Added dependent-project boundary documentation for Action Engine-owned planned/dry-run/root/confirmation policy.
 - Added Secret Service-backed credential storage documentation and validation.
 - Added ephemeral session fallback when Linux credential storage falls back to `basic_text`.
 - Documented secure Linux credential storage through Secret Service backends as the requirement for persistent login,
@@ -15,6 +17,7 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Slimmed npm preflight helpers so build recipes no longer call a transitional dependency bootstrap shell entrypoint.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected.
 - Startup diagnostics now explain whether persistent login is available or the app is running in ephemeral session mode.
 - Clarified that Canva Linux does not promise universal login persistence; persistent sessions depend on `kwallet`,
