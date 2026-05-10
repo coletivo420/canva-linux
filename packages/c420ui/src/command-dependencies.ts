@@ -37,7 +37,11 @@ export const lookupC420UICommandInPath: c420uiCommandLookup = (
       const fullPath = commandHasDirectory ? candidate : path.join(directory, candidate);
       try {
         const stat = fs.statSync(fullPath);
-        if (stat.isFile()) return true;
+        if (!stat.isFile()) continue;
+        if (process.platform !== "win32") {
+          fs.accessSync(fullPath, fs.constants.X_OK);
+        }
+        return true;
       } catch {
         // Continue searching PATH.
       }

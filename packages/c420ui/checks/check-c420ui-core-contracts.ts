@@ -1095,6 +1095,9 @@ function checkHostDependencyContract(failures: string[]): void {
     "c420uiNpmDependencyConfig",
     "c420uiHostDependencyConfig",
     "c420uiHostDependencyEnsureOptions",
+    "validateC420UIHostDependencyConfig",
+    "assertC420UIHostDependencyConfig",
+    "plannedCommand",
     "createC420UIHostDependencyResult",
     "isC420UIHostDependencyFailure",
   ] as const) {
@@ -1112,6 +1115,30 @@ function checkHostDependencyContract(failures: string[]): void {
     if (!index.includes(`export * from "${exportPath}"`)) {
       failures.push(`${indexPath}: missing public export for ${exportPath}`);
     }
+  }
+
+
+  const commandDependencies = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/command-dependencies.ts"), "utf8");
+  if (!commandDependencies.includes("fs.accessSync") || !commandDependencies.includes("fs.constants.X_OK")) {
+    failures.push("packages/c420ui/src/command-dependencies.ts: command lookup must require executable files on POSIX hosts");
+  }
+
+  const npmDependencies = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/npm-dependencies.ts"), "utf8");
+  for (const fragment of [
+    "checkC420UINpmDeclaredDependencies",
+    "checkC420UINpmInstalledDependencies",
+    "dependencies",
+    "devDependencies",
+    "optionalDependencies",
+  ] as const) {
+    if (!npmDependencies.includes(fragment)) {
+      failures.push(`packages/c420ui/src/npm-dependencies.ts: missing npm dependency validation fragment ${fragment}`);
+    }
+  }
+
+  const runner = fs.readFileSync(path.join(rootDir, "packages/c420ui/src/host-dependency-runner.ts"), "utf8");
+  if (!runner.includes("plannedCommand") || !runner.includes("planC420UINpmInstallCommand")) {
+    failures.push("packages/c420ui/src/host-dependency-runner.ts: dry-run must expose the planned host dependency command");
   }
 
   for (const sourcePath of requiredFiles) {

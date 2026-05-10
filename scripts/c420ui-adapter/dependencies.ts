@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   runC420UIHostDependencyEnsure,
+  validateC420UIHostDependencyConfig,
   type c420uiHostDependencyCheckResult,
   type c420uiHostDependencyConfig,
   type c420uiNpmCommandRunner,
@@ -10,7 +11,7 @@ import {
 export function loadCanvaLinuxDependencyConfig(rootDir: string): c420uiHostDependencyConfig {
   const relativeConfigPath = "config/canva-linux/dependencies.json";
   const configPath = path.join(rootDir, relativeConfigPath);
-  return JSON.parse(fs.readFileSync(configPath, "utf8")) as c420uiHostDependencyConfig;
+  return validateC420UIHostDependencyConfig(JSON.parse(fs.readFileSync(configPath, "utf8")));
 }
 
 export function ensureCanvaLinuxHostDependencies(options: {

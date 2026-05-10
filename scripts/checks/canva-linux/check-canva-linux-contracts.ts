@@ -463,11 +463,16 @@ function checkHostDependencyProviderContract(failures: string[]): void {
   const config = readProjectFile(rootDir, configPath);
   const runEntrypoint = readProjectFile(rootDir, runEntrypointPath);
   const legacyProviderPath = path.join(rootDir, "scripts/c420ui-adapter/host-dependencies.ts");
+  const legacyProjectAdapterDir = path.join(rootDir, "scripts", "c420ui-" + "canva-linux");
+  if (fs.existsSync(legacyProjectAdapterDir)) {
+    failures.push("scripts/" + "c420ui-" + "canva-linux must not exist");
+  }
 
   for (const fragment of [
     "loadCanvaLinuxDependencyConfig",
     "ensureCanvaLinuxHostDependencies",
     "runC420UIHostDependencyEnsure",
+    "validateC420UIHostDependencyConfig",
     "config/canva-linux/dependencies.json",
   ] as const) {
     if (!dependencies.includes(fragment)) {

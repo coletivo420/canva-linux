@@ -3,6 +3,7 @@ import { checkC420UINodeDependency } from "./node-dependencies";
 import {
   checkC420UINpmDependencies,
   ensureC420UINpmDependencies,
+  planC420UINpmInstallCommand,
   type c420uiNpmCommandRunner,
 } from "./npm-dependencies";
 import type {
@@ -62,7 +63,11 @@ export function runC420UIHostDependencyEnsure(
   if (npmResult.status === "failed") return npmResult;
   if (npmResult.status === "missing" || repairRequested) {
     if (options.dryRun) {
-      return { status: "skipped", message: "Host dependency installation would run, but dry-run is enabled." };
+      return {
+        status: "skipped",
+        message: "Host dependency installation would run, but dry-run is enabled.",
+        plannedCommand: planC420UINpmInstallCommand(config.npm, options.rootDir),
+      };
     }
     return ensureC420UINpmDependencies(config.npm, {
       rootDir: options.rootDir,

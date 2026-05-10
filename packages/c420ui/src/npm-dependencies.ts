@@ -6,6 +6,7 @@ import type {
   c420uiHostDependency,
   c420uiHostDependencyCheckResult,
   c420uiNpmDependencyConfig,
+  c420uiPlannedHostDependencyCommand,
 } from "./host-dependencies";
 
 export type c420uiNpmCommandRunner = (
@@ -20,6 +21,9 @@ export type c420uiNpmCommandRunner = (
 
 type PackageJson = {
   scripts?: Record<string, unknown>;
+  dependencies?: Record<string, unknown>;
+  devDependencies?: Record<string, unknown>;
+  optionalDependencies?: Record<string, unknown>;
 };
 
 function readPackageJson(rootDir: string): { packageJson?: PackageJson; result?: c420uiHostDependencyCheckResult } {
@@ -64,6 +68,21 @@ function validatePackageScripts(packageJson: PackageJson): c420uiHostDependencyC
   return undefined;
 }
 
+function dependencyNames(dependencies: Record<string, unknown> | undefined): string[] {
+  return dependencies ? Object.keys(dependencies) : [];
+}
+
+function declaredDependencyNames(
+  packageJson: PackageJson,
+  config: c420uiNpmDependencyConfig,
+): Set<string> {
+  return new Set([
+    ...dependencyNames(packageJson.dependencies),
+    ...dependencyNames(packageJson.optionalDependencies),
+    ...(config.includeDev === false ? [] : dependencyNames(packageJson.devDependencies)),
+  ]);
+}
+
 export function resolveC420UINpmDependency(dependency: string, rootDir: string): boolean {
   try {
     const projectRequire = createRequire(path.join(rootDir, "package.json"));
@@ -89,6 +108,74 @@ function installArgs(config: c420uiNpmDependencyConfig, rootDir: string): string
   return config.includeDev === false ? [command] : [command, "--include=dev"];
 }
 
+export function planC420UINpmInstallCommand(
+  config: c420uiNpmDependencyConfig | undefined,
+  rootDir: string,
+): c420uiPlannedHostDependencyCommand | undefined {
+  if (!config) return undefined;
+  return {
+    command: "npm",
+    args: installArgs(config, rootDir),
+    cwd: rootDir,
+  };
+}
+
+export function checkC420UINpmDeclaredDependencies(
+  config: c420uiNpmDependencyConfig | undefined,
+  packageJson: PackageJson,
+): c420uiHostDependencyCheckResult {
+  if (!config) {
+    return { status: "skipped", message: "No npm dependencies were declared." };
+  }
+
+  const declared = declaredDependencyNames(packageJson, config);
+  const undeclared = requiredNpmDependencies(config).filter((dependency) => !declared.has(dependency));
+  if (undeclared.length > 0) {
+    return {
+      status: "failed",
+      dependencies: undeclared.map<c420uiHostDependency>((dependency) => ({
+        id: dependency,
+        label: dependency,
+      })),
+      exitCode: 1,
+      message: `Required npm dependencies are not declared in package.json: ${undeclared.join(", ")}.`,
+    };
+  }
+
+  return { status: "available", message: "Required npm dependencies are declared." };
+}
+
+export function checkC420UINpmInstalledDependencies(
+  config: c420uiNpmDependencyConfig | undefined,
+  options: {
+    rootDir: string;
+    resolveDependency?: (dependency: string, rootDir: string) => boolean;
+  },
+): c420uiHostDependencyCheckResult {
+  if (!config) {
+    return { status: "skipped", message: "No npm dependencies were declared." };
+  }
+
+  const resolveDependency = options.resolveDependency ?? resolveC420UINpmDependency;
+  const missing = requiredNpmDependencies(config)
+    .filter((dependency) => !resolveDependency(dependency, options.rootDir))
+    .map<c420uiHostDependency>((dependency) => ({
+      id: dependency,
+      label: dependency,
+    }));
+
+  if (missing.length > 0) {
+    return {
+      status: "missing",
+      dependencies: missing,
+      exitCode: 1,
+      message: `Required npm dependencies are declared but not installed: ${missing.map((item) => item.id).join(", ")}.`,
+    };
+  }
+
+  return { status: "available", message: "Required npm dependencies are installed." };
+}
+
 export function checkC420UINpmDependencies(
   config: c420uiNpmDependencyConfig | undefined,
   options: {
@@ -110,24 +197,13 @@ export function checkC420UINpmDependencies(
   const scriptsResult = validatePackageScripts(packageJson ?? {});
   if (scriptsResult) return scriptsResult;
 
-  const resolveDependency = options.resolveDependency ?? resolveC420UINpmDependency;
-  const missing = requiredNpmDependencies(config)
-    .filter((dependency) => !resolveDependency(dependency, options.rootDir))
-    .map<c420uiHostDependency>((dependency) => ({
-      id: dependency,
-      label: dependency,
-    }));
+  const declaredResult = checkC420UINpmDeclaredDependencies(config, packageJson ?? {});
+  if (declaredResult.status === "failed") return declaredResult;
 
-  if (missing.length > 0) {
-    return {
-      status: "missing",
-      dependencies: missing,
-      exitCode: 1,
-      message: `Missing required npm dependencies: ${missing.map((item) => item.id).join(", ")}.`,
-    };
-  }
-
-  return { status: "available", message: "Required npm dependencies are available." };
+  return checkC420UINpmInstalledDependencies(config, {
+    rootDir: options.rootDir,
+    resolveDependency: options.resolveDependency,
+  });
 }
 
 const defaultNpmCommandRunner: c420uiNpmCommandRunner = (command, args, options) =>
@@ -163,6 +239,8 @@ export function ensureC420UINpmDependencies(
   if (result) return result;
   const scriptsResult = validatePackageScripts(packageJson ?? {});
   if (scriptsResult) return scriptsResult;
+  const declaredResult = checkC420UINpmDeclaredDependencies(config, packageJson ?? {});
+  if (declaredResult.status === "failed") return declaredResult;
 
   const args = installArgs(config, options.rootDir);
   const runCommand = options.runCommand ?? defaultNpmCommandRunner;

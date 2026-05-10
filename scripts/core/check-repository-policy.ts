@@ -1785,6 +1785,20 @@ function main(): number {
   if (preflight.includes("CANVA_" + "REQUIRED_NPM_DEPS")) {
     failures.push(`${preflightPath}: must not contain the legacy hardcoded npm dependency list`);
   }
+  if (preflight.includes("npm ci") || preflight.includes("npm install")) {
+    failures.push(`${preflightPath}: must not contain active npm install policy`);
+  }
+  const ensureFunctionMatch = preflight.match(/ensure_npm_dependencies\(\) \{[\s\S]*?\n\}/);
+  if (!ensureFunctionMatch || !ensureFunctionMatch[0].includes("return 1")) {
+    failures.push(`${preflightPath}: ensure_npm_dependencies must be repository-check-only and must not install`);
+  }
+
+  const ensureScript = fs.existsSync(path.join(rootDir, ensurePath))
+    ? fs.readFileSync(path.join(rootDir, ensurePath), "utf8")
+    : "";
+  if (!ensureScript.includes("no longer an active bootstrap path") || !ensureScript.includes("exit 1")) {
+    failures.push(`${ensurePath}: must not be an active npm dependency bootstrap path`);
+  }
 
   const runEntrypoint = fs.existsSync(path.join(rootDir, runEntrypointPath))
     ? fs.readFileSync(path.join(rootDir, runEntrypointPath), "utf8")
