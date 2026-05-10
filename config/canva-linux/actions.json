@@ -263,6 +263,18 @@
     "description": "Remove generated build and packaging artifacts."
   },
   {
+    "id": "release-artifacts",
+    "label": "Release artifacts",
+    "group": "development",
+    "section": "Package generation",
+    "kind": "planned",
+    "cli": [
+      "--release-artifacts"
+    ],
+    "planned": true,
+    "description": "Release artifact publication is declared as a development recipe and planned for a later release workflow."
+  },
+  {
     "id": "show-detected",
     "label": "Show detected installs/artifacts",
     "group": "maintenance",
