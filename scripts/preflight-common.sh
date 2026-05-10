@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# scripts/preflight-common.sh - Shared preflight checks for host tooling.
+# scripts/preflight-common.sh - Repository-check-only helpers for host tooling.
+#
+# Keep this file limited to repository validation primitives. It must not
+# install, repair, or otherwise mutate npm dependencies.
 
 require_command() {
   local cmd="$1"
@@ -72,68 +75,6 @@ require_node_major() {
   fi
 }
 
-CANVA_REQUIRED_NPM_DEPS=(
-  esbuild
-  typescript
-  electron
-  electron-builder
-  eslint
-  @typescript-eslint/parser
-  @typescript-eslint/eslint-plugin
-  blessed
-)
-
-check_npm_dependency() {
-  local dep="$1"
-
-  node -e "require.resolve(process.argv[1], { paths: [process.cwd()] })" "$dep" >/dev/null 2>&1
-}
-
-ensure_npm_dependencies() {
-  require_command node
-  require_command npm
-  require_node_major 22
-  validate_package_scripts
-
-  if [[ "${CANVA_SKIP_NPM_INSTALL:-0}" == "1" ]]; then
-    echo "[info] Skipping npm dependency bootstrap because CANVA_SKIP_NPM_INSTALL=1"
-    return 0
-  fi
-
-  local missing=0
-  if [[ ! -d node_modules ]]; then
-    missing=1
-  else
-    local dep
-    for dep in "${CANVA_REQUIRED_NPM_DEPS[@]}"; do
-      if ! check_npm_dependency "$dep"; then
-        missing=1
-        break
-      fi
-    done
-  fi
-
-  local install_cmd=(npm install --include=dev)
-  if [[ -f package-lock.json ]]; then
-    install_cmd=(npm ci --include=dev)
-  fi
-
-  if [[ "${CANVA_NPM_REPAIR:-}" == "clean" ]]; then
-    echo "[info] Forcing clean npm dependency repair (CANVA_NPM_REPAIR=clean)"
-    "${install_cmd[@]}" || exit 1
-    return 0
-  fi
-
-  if [[ "$missing" -eq 0 ]]; then
-    echo "[ok] npm dependencies are available"
-    return 0
-  fi
-
-  echo "[info] Installing npm dependencies with ${install_cmd[*]}"
-  echo "[info] This may take several minutes depending on your system."
-  echo "[info] Please be patient and keep this terminal open until the process finishes."
-  "${install_cmd[@]}" || exit 1
-}
 
 detect_package_version() {
   if command -v node >/dev/null 2>&1 && [[ -f package.json ]]; then

@@ -150,8 +150,6 @@ ensure_system_flatpak_runtime_dependencies() {
 }
 
 build_electron_output() {
-  ensure_npm_dependencies
-
   ui_info "Building Electron app (target: dir)"
   npm run dist
 }

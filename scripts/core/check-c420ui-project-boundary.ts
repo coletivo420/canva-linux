@@ -7,6 +7,25 @@ function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
 
+function listTypeScriptFiles(rootDir: string, relativeDir: string): string[] {
+  const absoluteDir = path.join(rootDir, relativeDir);
+  const discovered: string[] = [];
+
+  function walk(currentDir: string): void {
+    for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+      const fullPath = path.join(currentDir, entry.name);
+      if (entry.isDirectory()) {
+        walk(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith(".ts")) {
+        discovered.push(path.relative(rootDir, fullPath));
+      }
+    }
+  }
+
+  walk(absoluteDir);
+  return discovered.sort((left, right) => left.localeCompare(right));
+}
+
 function assertIncludes(
   failures: string[],
   content: string,
@@ -21,8 +40,6 @@ function assertIncludes(
 export function main(): number {
   const rootDir = findProjectRoot();
   const app = read(rootDir, "scripts/c420ui/app.ts");
-  const logo = read(rootDir, "scripts/c420ui/logo.ts");
-  const settings = read(rootDir, "scripts/c420ui/settings.ts");
   const index = read(rootDir, "scripts/c420ui/index.ts");
   const projectUi = read(rootDir, "scripts/project-ui.json");
   const failures: string[] = [];
@@ -50,19 +67,23 @@ export function main(): number {
     "Canva Linux",
     "CANVA LINUX",
     "canva-linux",
+    "config/canva-linux",
+    "scripts/c420ui-adapter",
     "io.github.coletivo420.canva-linux",
     "https://github.com/coletivo420/canva-linux",
     "CANVA_LOGO_LINES",
+    "@canva-linux",
+    "canva_linux",
   ];
-  for (const fragment of forbiddenCoreFragments) {
-    if (
-      app.includes(fragment) ||
-      logo.includes(fragment) ||
-      settings.includes(fragment)
-    ) {
-      failures.push(
-        `C420UI core must not hardcode project metadata: ${fragment}`,
-      );
+  const coreFiles = listTypeScriptFiles(rootDir, "scripts/c420ui");
+  for (const relativePath of coreFiles) {
+    const content = read(rootDir, relativePath);
+    for (const fragment of forbiddenCoreFragments) {
+      if (content.includes(fragment)) {
+        failures.push(
+          `${relativePath}: C420UI core must not hardcode project metadata or dependent-project paths: ${fragment}`,
+        );
+      }
     }
   }
 

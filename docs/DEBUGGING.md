@@ -150,9 +150,3 @@ If runtime build fails with missing npm modules such as `esbuild`, repair the wo
 npm ci --include=dev
 ./canva-linux.sh --build-runtime
 ```
-
-To force a clean reinstall during installer flows:
-
-```bash
-CANVA_NPM_REPAIR=clean ./canva-linux.sh --install-native
-```

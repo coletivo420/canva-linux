@@ -159,7 +159,6 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/desktop-integration-common.sh`
 - `scripts/doctor.sh`
 - `scripts/electron-builder-before-build.ts`
-- `scripts/ensure-npm-dependencies.sh`
 - `scripts/fix-build-permissions.sh`
 - `scripts/flatpak-build-common.sh`
 - `scripts/install-detection-common.sh`
@@ -223,3 +222,9 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `tsconfig.json`
 - `tsconfig.strict.json`
 - `types/blessed.d.ts`
+
+- `docs/PROJECT_TREE.md`
+- `docs/checks/SHELL_HELPER_CLASSIFICATION.md`
+- `docs/internal/C420UI_DEPENDENT_PROJECT_BOUNDARIES.md`
+- `scripts/core/check-shell-helper-classification.ts`
+- `test/canva-linux-adapter-contract.test.ts`

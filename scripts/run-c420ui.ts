@@ -50,30 +50,11 @@ function resolveProjectPhase(): string {
   return readProjectPhaseFromShell();
 }
 
-function ensureNpmDependencies(): void {
-  const script = path.join(rootDir, "scripts/ensure-npm-dependencies.sh");
-  if (!fs.existsSync(script)) {
-    console.error(`[error] Missing dependency bootstrap script: ${script}`);
-    process.exit(1);
-  }
-  const result = spawnSync("bash", [script], {
-    cwd: rootDir,
-    stdio: "inherit",
-    env: process.env,
-    shell: false,
-  });
-  if ((result.status ?? 1) !== 0) {
-    process.exit(result.status ?? 1);
-  }
-}
-
 export function main(): void {
   if (typeof process.getuid === "function" && process.getuid() === 0) {
     console.error(rootLaunchGuardMessage(projectUi.projectName));
     process.exit(1);
   }
-
-  ensureNpmDependencies();
 
   if (needsBuild()) {
     const result = spawnSync("npm", ["run", "build:c420ui"], {

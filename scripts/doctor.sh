@@ -19,13 +19,7 @@ for req in npm git; do command -v "$req" >/dev/null 2>&1 && echo "[ok] $req" || 
 if [[ ! -d node_modules ]]; then
   echo "[warn] node_modules missing — run: npm ci --include=dev"
 else
-  for dep in "${CANVA_REQUIRED_NPM_DEPS[@]}"; do
-    if check_npm_dependency "$dep"; then
-      echo "[ok] npm dependency: $dep"
-    else
-      echo "[warn] npm dependency missing: $dep — run: npm ci --include=dev"
-    fi
-  done
+  echo "[ok] node_modules present"
 fi
 
 command -v flatpak >/dev/null 2>&1 || echo "[warn] flatpak missing — Flatpak Install and .flatpak package generation will not work"

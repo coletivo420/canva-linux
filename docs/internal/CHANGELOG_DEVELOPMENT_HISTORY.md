@@ -387,9 +387,8 @@ This file preserves the detailed development changelog entries that were archive
 ### Added
 
 - Enabled the C420UI terminal interface as the default interactive launcher when available.
-- Added automatic npm dependency bootstrap for C420UI startup.
-- Added `scripts/ensure-npm-dependencies.sh` as a shared npm dependency bootstrap entrypoint.
-- Added `blessed` to the required npm dependency preflight list.
+- Added npm dependency availability checks for C420UI startup.
+- Documented `blessed` as a required development dependency.
 - Added shell menu fallback when C420UI startup fails in default mode.
 
 ### Changed

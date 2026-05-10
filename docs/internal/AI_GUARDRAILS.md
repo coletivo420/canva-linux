@@ -64,6 +64,9 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - C420UI brand metadata must be reusable across projects.
 - Project header metadata must be injected through configuration.
 - Other projects must be able to reuse C420UI without editing the C420UI core.
+- Dependent project adapters execute concrete commands only after the c420ui Action Engine has applied planned/dry-run/root/confirmation policy.
+- Project adapters must not duplicate Action Engine policy.
+- Command runners and adapters must not implement planned or dry-run fallback policy.
 
 ## Action Registry
 
@@ -76,6 +79,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Flatpak user scope must always show a duplication warning.
 - C420UI and CLI must share the same TypeScript action contract.
 - Preserve Action Runner root/planned-action behavior.
+- Action Engine owns planned, dry-run, root and confirmation policy before concrete command execution.
 - Detection refresh must not clear or override progress results.
 - Progress refresh must not convert a completed action into an error.
 - Installed-version detection must be updated whenever install layout changes.

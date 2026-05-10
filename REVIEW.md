@@ -26,9 +26,12 @@ Request changes if a PR:
 - sources action metadata from anywhere other than `scripts/actions.json`;
 - duplicates action logic in C420UI or launcher code;
 - changes Action Runner root or planned-action behavior without explicit maintainer direction;
+- duplicates planned, dry-run, root, or confirmation policy in command runners or dependent project adapters;
+- lets command runners execute anything other than concrete commands after Action Runner policy is applied;
 - ignores `action.env` from `scripts/actions.json`;
 - makes C420UI and direct CLI behavior diverge for `system` or `user` scope actions;
 - bypasses `scripts/sudo-common.sh` for system-wide actions.
+- reintroduces npm dependency bootstrap shell entrypoints instead of explicit `npm ci --include=dev`.
 
 ## C420UI naming review
 
