@@ -172,6 +172,7 @@ function main(): number {
     "artifacts.ts",
     "bridge.ts",
     "detection.ts",
+    "development-provider.ts",
     "capabilities.ts",
     "cli.ts",
     "command-runner.ts",
@@ -1163,6 +1164,47 @@ function checkHostDependencyContract(failures: string[]): void {
   }
 }
 
+
+function checkDevelopmentProviderContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const providerPath = "packages/c420ui/src/development-provider.ts";
+  const indexPath = "packages/c420ui/src/index.ts";
+  const fullProviderPath = path.join(rootDir, providerPath);
+  if (!fs.existsSync(fullProviderPath)) {
+    failures.push(`${providerPath}: missing generic development provider`);
+    return;
+  }
+
+  const provider = fs.readFileSync(fullProviderPath, "utf8");
+  const index = fs.readFileSync(path.join(rootDir, indexPath), "utf8");
+  for (const fragment of [
+    "c420uiDevelopmentTaskKind",
+    "c420uiDevelopmentTask",
+    "c420uiDevelopmentProvider",
+    "createC420UIDevelopmentWorkflow",
+    "createC420UIDevelopmentWorkflows",
+    "validateC420UIDevelopmentConfig",
+    "validateC420UIDevelopmentTasks",
+  ] as const) {
+    if (!provider.includes(fragment)) {
+      failures.push(`${providerPath}: missing development provider fragment ${fragment}`);
+    }
+  }
+  if (!index.includes('from "./development-provider"')) {
+    failures.push(`${indexPath}: must export ./development-provider`);
+  }
+  for (const forbidden of [
+    "Canva Linux",
+    "CANVA_",
+    "config/canva-linux",
+    "scripts/c420ui-adapter",
+  ] as const) {
+    if (provider.includes(forbidden)) {
+      failures.push(`${providerPath}: must not contain project-specific fragment ${forbidden}`);
+    }
+  }
+}
+
 function checkLinuxHostSudoHelperContract(failures: string[]): void {
   const rootDir = process.cwd();
   const helperPath = "packages/c420ui/host/linux/sudo-helper.sh";
@@ -1220,6 +1262,7 @@ export function main(): number {
   runArtifactWorkflowContract(failures);
   runInteractiveActionEngineContract(failures);
   checkSettingsContract(failures);
+  checkDevelopmentProviderContract(failures);
   checkLinuxHostSudoHelperContract(failures);
   checkHostDependencyContract(failures);
   checkTerminalUiContract(failures);

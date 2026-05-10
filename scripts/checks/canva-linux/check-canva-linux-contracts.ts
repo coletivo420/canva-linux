@@ -234,6 +234,23 @@ function main(): number {
   const cliBridge = fs.readFileSync(cliBridgePath, "utf8");
   if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
   const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/adapter.ts"), "utf8");
+  const developmentAdapterPath = "scripts/c420ui-adapter/development.ts";
+  const developmentConfigPath = "config/canva-linux/development.json";
+  if (!fs.existsSync(path.join(rootDir, developmentConfigPath))) {
+    failures.push(`${developmentConfigPath}: development task recipes are required`);
+  }
+  if (!fs.existsSync(path.join(rootDir, developmentAdapterPath))) {
+    failures.push(`${developmentAdapterPath}: development adapter is required`);
+  }
+  if (!adapterSource.includes("loadCanvaLinuxDevelopmentWorkflows")) {
+    failures.push("scripts/c420ui-adapter/adapter.ts must use loadCanvaLinuxDevelopmentWorkflows");
+  }
+  if (adapterSource.includes("toC420UIWorkflow")) {
+    failures.push("scripts/c420ui-adapter/adapter.ts must not contain local toC420UIWorkflow assembly");
+  }
+  if (adapterSource.includes("actions.map(toC420UIWorkflow)")) {
+    failures.push("scripts/c420ui-adapter/adapter.ts must not mount workflows from actions.map(toC420UIWorkflow)");
+  }
   if (!runSource.includes("../../packages/c420ui/src/terminal")) {
     failures.push("scripts/c420ui-adapter/run.ts must import terminal UI from packages/c420ui/src/terminal");
   }
@@ -1694,6 +1711,61 @@ function checkReleaseContract(failures: string[]): void {
   }
 }
 
+function checkDevelopmentTaskRecipes(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const developmentPath = "config/canva-linux/development.json";
+  const actionsPath = "config/canva-linux/actions.json";
+  if (!fs.existsSync(path.join(rootDir, developmentPath))) {
+    failures.push(`${developmentPath}: missing development recipe config`);
+    return;
+  }
+
+  const config = JSON.parse(readProjectFile(rootDir, developmentPath)) as {
+    tasks?: Array<{
+      id?: string;
+      kind?: string;
+      actionId?: string;
+      requiresRoot?: boolean;
+      supportsDryRun?: boolean;
+      planned?: boolean;
+    }>;
+  };
+  const actions = loadCanvaLinuxActions(rootDir);
+  const actionsById = new Map(actions.map((action) => [action.id, action]));
+  const tasks = config.tasks ?? [];
+  if (!Array.isArray(config.tasks)) {
+    failures.push(`${developmentPath}: tasks must be an array`);
+    return;
+  }
+
+  const requiredKinds = new Set(["doctor", "validate", "build", "package", "release"]);
+  for (const task of tasks) {
+    if (!task.id || !task.actionId) continue;
+    if (task.kind) requiredKinds.delete(task.kind);
+    const action = actionsById.get(task.actionId);
+    if (!action) {
+      failures.push(`${developmentPath}: task ${task.id} references unknown actionId ${task.actionId}`);
+      continue;
+    }
+    const actionPlanned = action.kind === "planned" || action.planned === true;
+    if (actionPlanned && task.planned !== true) {
+      failures.push(`${developmentPath}: task ${task.id} references planned action ${task.actionId} without planned=true`);
+    }
+    if (task.requiresRoot !== undefined && action.requiresRoot !== undefined && task.requiresRoot !== action.requiresRoot) {
+      failures.push(`${developmentPath}: task ${task.id} requiresRoot contradicts action ${task.actionId}`);
+    }
+    if (task.supportsDryRun === true && action.kind !== "command") {
+      failures.push(`${developmentPath}: task ${task.id} promises dry-run for non-command action ${task.actionId}`);
+    }
+  }
+  if (requiredKinds.size) {
+    failures.push(`${developmentPath}: missing required development task kinds ${[...requiredKinds].join(", ")}`);
+  }
+  if (!fs.existsSync(path.join(rootDir, actionsPath))) {
+    failures.push(`${actionsPath}: actions registry is required for development recipes`);
+  }
+}
+
 function checkShellActionIds(failures: string[]): void {
   const rootDir = findProjectRoot();
   const actions = loadCanvaLinuxActions(rootDir);
@@ -1745,6 +1817,7 @@ export function main(): number {
   checkInstallationDetectionContract(failures);
   checkVersionConsistency(failures);
   checkReleaseContract(failures);
+  checkDevelopmentTaskRecipes(failures);
   checkShellActionIds(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));

@@ -24,6 +24,7 @@ import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
 } from "./artifacts";
+import { loadCanvaLinuxDevelopmentWorkflows } from "./development";
 
 type ProjectUiJson = {
   displayVersion?: string;
@@ -97,17 +98,6 @@ function toC420UIActionDescriptor(action: CanvaAction): C420UIActionDescriptor {
   return { ...action, kind, phase, cliFlags: action.cli };
 }
 
-
-function toC420UIWorkflow(action: C420UIActionDescriptor): C420UIWorkflow {
-  return {
-    id: action.id,
-    label: action.label,
-    phase: action.phase ?? "development",
-    actions: [action],
-    requiresRoot: action.requiresRoot,
-    supportsDryRun: action.kind === "command",
-  };
-}
 
 export function createCanvaLinuxC420UIAdapter(
   rootDir: string,
@@ -204,7 +194,7 @@ export function createCanvaLinuxC420UIAdapter(
   }
 
   function loadWorkflows(): C420UIWorkflow[] {
-    return loadCanvaLinuxActions().map(toC420UIWorkflow);
+    return loadCanvaLinuxDevelopmentWorkflows(resolvedRootDir);
   }
 
   function projectInfo(): c420uiProjectInfo {

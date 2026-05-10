@@ -1,0 +1,59 @@
+{
+  "tasks": [
+    {
+      "id": "doctor",
+      "label": "Doctor",
+      "kind": "doctor",
+      "actionId": "doctor",
+      "supportsDryRun": true,
+      "requiredFor": ["development"]
+    },
+    {
+      "id": "validate-project",
+      "label": "Validate project",
+      "kind": "validate",
+      "actionId": "validate-project",
+      "supportsDryRun": true,
+      "requiredFor": ["validation", "build"]
+    },
+    {
+      "id": "build-runtime",
+      "label": "Build runtime",
+      "kind": "build",
+      "actionId": "build-runtime",
+      "supportsDryRun": true,
+      "requiredFor": ["build"]
+    },
+    {
+      "id": "bundle-appimage",
+      "label": "Build AppImage",
+      "kind": "package",
+      "actionId": "bundle-appimage",
+      "supportsDryRun": true,
+      "requiredFor": ["package", "release"]
+    },
+    {
+      "id": "bundle-flatpak",
+      "label": "Build Flatpak bundle",
+      "kind": "package",
+      "actionId": "bundle-flatpak",
+      "supportsDryRun": true,
+      "requiredFor": ["package", "release"]
+    },
+    {
+      "id": "clean",
+      "label": "Clean artifacts",
+      "kind": "clean",
+      "actionId": "clean",
+      "supportsDryRun": true
+    },
+    {
+      "id": "release-artifacts",
+      "label": "Release artifacts",
+      "kind": "release",
+      "actionId": "release-artifacts",
+      "planned": true,
+      "requiredFor": ["release"]
+    }
+  ]
+}
