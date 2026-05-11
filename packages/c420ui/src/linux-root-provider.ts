@@ -172,7 +172,7 @@ export function createC420UILinuxRootProviderBase(
         shell: false,
         input: `${input}\n`,
         stdio: ["pipe", "pipe", "pipe"],
-      }) as SpawnSyncReturns<Buffer>;
+      });
 
       if (result.error) {
         return {
