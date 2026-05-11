@@ -994,6 +994,23 @@ function main(): number {
   }
 
   for (const fragment of [
+    "EXPECTED_CAPABILITY_FIELDS",
+    "capabilities.${field} must be a boolean",
+    "workflowIds",
+    "duplicate workflow id",
+    "ARTIFACT_WORKFLOW_KINDS",
+    "ARTIFACT_WORKFLOW_SCOPES",
+    "EXECUTABLE_ARTIFACT_ACTION_ID_FIELDS",
+    "isExecutableArtifactActionField",
+    "outputPattern.includes(\"x64\")",
+    "outputPattern.includes(\"${arch}\")",
+  ]) {
+    if (!artifactsSource.includes(fragment)) {
+      failures.push(`${artifactsAdapterPath}: missing validation fragment ${fragment}`);
+    }
+  }
+
+  for (const fragment of [
     "createC420UIActionEngine",
     "createCanvaLinuxRootProvider",
     "engine.runActionById",
@@ -1017,6 +1034,40 @@ function main(): number {
   if (artifactsConfigSource.includes("x64")) {
     failures.push(`${artifactsConfigPath}: artifact recipes must not normalize generated architecture names to x64`);
   }
+  if (artifactsConfigSource.includes("${arch}")) {
+    failures.push(`${artifactsConfigPath}: artifact recipes must preserve generated architecture globs instead of \${arch}`);
+  }
+
+  const expectedCapabilityFields = [
+    "supportsArtifacts",
+    "supportsInstall",
+    "supportsUninstall",
+    "supportsPurge",
+    "supportsRelease",
+    "supportsRootActions",
+    "supportsDryRun",
+    "supportsPlannedActions",
+  ];
+  for (const field of expectedCapabilityFields) {
+    if (typeof (artifactsConfig as { capabilities?: Record<string, unknown> }).capabilities?.[field] !== "boolean") {
+      failures.push(`${artifactsConfigPath}: capabilities.${field} must be a boolean`);
+    }
+  }
+
+  const seenWorkflowIds = new Set<string>();
+  const allowedKinds = new Set(["appimage", "flatpak", "native", "tarball", "custom", "deb", "rpm", "aur"]);
+  const allowedScopes = new Set(["portable", "system", "user", "release", "none"]);
+  for (const workflow of artifactsConfig.workflows ?? []) {
+    const workflowId = typeof workflow.id === "string" ? workflow.id : "<unknown>";
+    if (seenWorkflowIds.has(workflowId)) failures.push(`${artifactsConfigPath}: duplicate workflow id ${workflowId}`);
+    seenWorkflowIds.add(workflowId);
+    if (!allowedKinds.has(String(workflow.kind))) {
+      failures.push(`${artifactsConfigPath}: workflow ${workflowId} has invalid kind ${String(workflow.kind)}`);
+    }
+    if (!allowedScopes.has(String(workflow.scope))) {
+      failures.push(`${artifactsConfigPath}: workflow ${workflowId} has invalid scope ${String(workflow.scope)}`);
+    }
+  }
 
   const actionsById = new Map(adapter.loadActions().map((action) => [action.id, action]));
   for (const workflow of artifactsConfig.workflows ?? []) {
@@ -1039,6 +1090,9 @@ function main(): number {
       const actionPlanned = action.kind === "planned" || action.planned === true;
       if (workflow.planned === true && actionPlanned !== true) {
         failures.push(`${artifactsConfigPath}: planned workflow ${workflowId} points at executable ${field} ${actionId}`);
+      }
+      if (workflow.planned !== true && field !== "releaseActionId" && actionPlanned) {
+        failures.push(`${artifactsConfigPath}: executable workflow ${workflowId} points at planned ${field} ${actionId}`);
       }
     }
   }
@@ -1075,6 +1129,20 @@ function main(): number {
       const actionPlanned = action.kind === "planned" || action.planned === true;
       if (workflow.planned === true && actionPlanned !== true) {
         failures.push(`${workflow.id}: planned artifact workflow must not point at executable action ${actionId}`);
+      }
+    }
+    for (const [field, actionId] of [
+      ["buildActionId", workflow.buildActionId],
+      ["validateActionId", workflow.validateActionId],
+      ["installActionId", workflow.installActionId],
+      ["uninstallActionId", workflow.uninstallActionId],
+      ["purgeActionId", workflow.purgeActionId],
+    ] as const) {
+      if (!actionId || workflow.planned === true) continue;
+      const action = adapter.loadActions().find((candidate) => candidate.id === actionId);
+      const actionPlanned = action?.kind === "planned" || action?.planned === true;
+      if (actionPlanned) {
+        failures.push(`${workflow.id}: executable artifact workflow must not point ${field} at planned action ${actionId}`);
       }
     }
     if (!workflow.planned && workflow.kind !== "native" && !("outputPattern" in workflow)) {
