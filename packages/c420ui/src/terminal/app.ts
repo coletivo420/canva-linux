@@ -580,6 +580,12 @@ export function createApp(options: C420UIAppOptions) {
           request.actionEnv,
           submittedInput,
         );
+      } catch {
+        validation = {
+          ok: false,
+          code: c420uiExitCodes.generalError,
+          message: "[error] Administrator authorization validation failed.",
+        };
       } finally {
         submittedInput = "";
       }

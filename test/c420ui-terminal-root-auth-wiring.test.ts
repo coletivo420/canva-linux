@@ -39,10 +39,20 @@ test("app.ts protects sudo input modal state with try/finally", () => {
   assert.equal(sudoPromptBlock?.[0].includes("modalActive = false;"), true);
 });
 
+test("app.ts handles root validation exceptions generically", () => {
+  const app = read("packages/c420ui/src/terminal/app.ts");
+  const validationBlock = app.match(
+    /try \{[\s\S]*?validateRootAccessWithInput\([\s\S]*?submittedInput[\s\S]*?\} catch \{[\s\S]*?Administrator authorization validation failed[\s\S]*?\} finally \{[\s\S]*?submittedInput = "";/,
+  );
+
+  assert.notEqual(validationBlock, null);
+});
+
 test("app.ts does not log submitted password", () => {
   const app = read("packages/c420ui/src/terminal/app.ts");
 
-  assert.equal(app.includes("appendLogText(password"), false);
-  assert.equal(app.includes("appendLogText(result.value"), false);
-  assert.equal(app.includes("appendLogText(submittedInput"), false);
+  assert.equal(
+    /appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app),
+    false,
+  );
 });
