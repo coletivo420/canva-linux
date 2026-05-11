@@ -560,13 +560,11 @@ export function createApp(options: C420UIAppOptions) {
         };
       }
 
-      let submittedInput = result.value;
       const validation = rootProvider.validateRootAccessWithInput(
         opts.rootDir,
         request.actionEnv,
-        submittedInput,
+        result.value,
       );
-      submittedInput = "";
 
       if (validation.ok) {
         const env = rootProvider.buildRootActionEnvironment
@@ -589,11 +587,6 @@ export function createApp(options: C420UIAppOptions) {
       }
     }
 
-    return {
-      ok: false,
-      code: c420uiExitCodes.rootPolicyError,
-      message: "[error] Administrator authorization failed.",
-    };
   }
 
   const actionRunner = createInteractiveActionRunner({
