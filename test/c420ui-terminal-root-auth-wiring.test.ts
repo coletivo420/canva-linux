@@ -46,13 +46,24 @@ test("app.ts handles root validation exceptions generically", () => {
   );
 
   assert.notEqual(validationBlock, null);
+  assert.equal(app.includes("Administrator authorization validation failed"), true);
+  assert.equal(app.includes("Administrator authorization failed"), true);
 });
 
 test("app.ts does not log submitted password", () => {
   const app = read("packages/c420ui/src/terminal/app.ts");
 
   assert.equal(
-    /appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app),
-    false,
+    /finally \{[\s\S]*?submittedInput = "";[\s\S]*?\}/.test(app),
+    true,
   );
+  for (const forbidden of [
+    /appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/,
+    /writeSession\s*\(\s*(password|result\.value|submittedInput)\b/,
+    /console\.log\s*\(\s*(password|result\.value|submittedInput)\b/,
+    /console\.error\s*\(\s*(password|result\.value|submittedInput)\b/,
+    /logs\.log\s*\(\s*(password|result\.value|submittedInput)\b/,
+  ] as const) {
+    assert.equal(forbidden.test(app), false);
+  }
 });

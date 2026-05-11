@@ -25,6 +25,38 @@ function collectTypeScriptFiles(dir: string): string[] {
   });
 }
 
+function collectInteractiveRootAuthHardeningFailures(
+  app: string,
+  context: string,
+): string[] {
+  const failures: string[] = [];
+  if (
+    !/try \{[\s\S]*?validateRootAccessWithInput\([\s\S]*?submittedInput[\s\S]*?\} catch \{[\s\S]*?Administrator authorization validation failed[\s\S]*?\} finally \{[\s\S]*?submittedInput = "";/.test(
+      app,
+    )
+  ) {
+    failures.push(`${context} must convert root validation throws into a generic failure and clear submittedInput`);
+  }
+  if (!app.includes("Administrator authorization failed")) {
+    failures.push(`${context} must keep a final administrator authorization failure fallback`);
+  }
+  if (!app.includes("Administrator authorization validation failed")) {
+    failures.push(`${context} must return a generic administrator authorization validation failure`);
+  }
+  for (const forbidden of [
+    /appendLogText\s*\(\s*(submittedInput|password|result\.value)\b/,
+    /writeSession\s*\(\s*(submittedInput|password|result\.value)\b/,
+    /console\.log\s*\(\s*(submittedInput|password|result\.value)\b/,
+    /console\.error\s*\(\s*(submittedInput|password|result\.value)\b/,
+    /logs\.log\s*\(\s*(submittedInput|password|result\.value)\b/,
+  ] as const) {
+    if (forbidden.test(app)) {
+      failures.push(`${context} must not log submitted administrator passwords`);
+    }
+  }
+  return failures;
+}
+
 const checkBoundaryContract = (() => {
 const forbidden = [
   "Canva Linux",
@@ -595,16 +627,7 @@ function main(): number {
   ) {
     failures.push("app.ts must clear modalActive in the administrator authorization prompt finally block");
   }
-  if (
-    !/try \{[\s\S]*?validateRootAccessWithInput\([\s\S]*?submittedInput[\s\S]*?\} catch \{[\s\S]*?Administrator authorization validation failed[\s\S]*?\} finally \{[\s\S]*?submittedInput = "";/.test(
-      app,
-    )
-  ) {
-    failures.push("app.ts must convert root validation throws into a generic failure and clear submittedInput");
-  }
-  if (/appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app)) {
-    failures.push("app.ts must not log submitted administrator passwords");
-  }
+  failures.push(...collectInteractiveRootAuthHardeningFailures(app, "app.ts"));
   for (const forbidden of ["sudo", "password", "root prompt", "sudo-helper.sh"] as const) {
     if (adapter.includes(forbidden)) {
       failures.push(`adapter.ts must not contain sudo/password/root prompt logic: ${forbidden}`);
@@ -830,16 +853,7 @@ function main(): number {
   ) {
     failures.push("interactive app must clear modalActive in the administrator authorization prompt finally block");
   }
-  if (
-    !/try \{[\s\S]*?validateRootAccessWithInput\([\s\S]*?submittedInput[\s\S]*?\} catch \{[\s\S]*?Administrator authorization validation failed[\s\S]*?\} finally \{[\s\S]*?submittedInput = "";/.test(
-      app,
-    )
-  ) {
-    failures.push("interactive app must convert root validation throws into a generic failure and clear submittedInput");
-  }
-  if (/appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app)) {
-    failures.push("interactive app must not log submitted administrator passwords");
-  }
+  failures.push(...collectInteractiveRootAuthHardeningFailures(app, "interactive app"));
   if (bridge.includes("C420UISudoProvider")) {
     failures.push("bridge contract must not reintroduce C420UISudoProvider");
   }
