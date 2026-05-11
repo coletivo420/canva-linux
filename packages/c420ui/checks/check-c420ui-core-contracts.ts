@@ -470,6 +470,7 @@ function main(): number {
     "validateActionScope",
     "resolveRootPolicy",
     "validateRootAccess",
+    "validateRootAccessWithInput",
     "buildRootActionEnvironment",
     "c420uiRootPolicyExitCode",
     "warning?: string",
@@ -485,6 +486,7 @@ function main(): number {
     "rootProvider.validateActionScope",
     "rootProvider.resolveRootPolicy",
     "rootProvider.validateRootAccess",
+    "requestRootAccess",
     "rootProvider.buildRootActionEnvironment",
     "bridge.runAction",
   ]) {
@@ -537,7 +539,11 @@ function main(): number {
     "defaultC420UILinuxBuildActionEnvironment",
     "defaultC420UILinuxActionHasUserScope",
     "defaultC420UILinuxRootValidationCommand",
+    "defaultC420UILinuxRootValidationStdinCommand",
+    "--validate-stdin",
     "buildRootValidationCommand",
+    "buildRootValidationStdinCommand",
+    `stdio: ["pipe", "pipe", "pipe"]`,
     "sudoHelperPath",
     "rootAuthEnvKey",
     "rootAuthEnvValue",
@@ -569,6 +575,23 @@ function main(): number {
   }
   if (rootProvider.includes("sudo-common.sh") || actionEngine.includes("sudo")) {
     failures.push("c420ui core must not call sudo directly");
+  }
+  const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
+  const runner = read(rootDir, "packages/c420ui/src/terminal/interactive-action-runner.ts");
+  const adapter = read(rootDir, "scripts/c420ui-adapter/adapter.ts");
+  if (!runner.includes("requestRootAccess")) {
+    failures.push("interactive-action-runner.ts must pass requestRootAccess to the action engine");
+  }
+  if (!app.includes("inputDialog") || !app.includes("requestInteractiveRootAccess")) {
+    failures.push("app.ts must wire inputDialog for interactive root access");
+  }
+  if (app.includes("appendLogText(password") || app.includes("appendLogText(result.value")) {
+    failures.push("app.ts must not log submitted administrator passwords");
+  }
+  for (const forbidden of ["sudo", "password", "root prompt", "sudo-helper.sh"] as const) {
+    if (adapter.includes(forbidden)) {
+      failures.push(`adapter.ts must not contain sudo/password/root prompt logic: ${forbidden}`);
+    }
   }
 
   if (failures.length) throw new Error(failures.join("\n"));
@@ -751,6 +774,7 @@ function main(): number {
   }
   for (const fragment of [
     "createC420UIActionEngine",
+    "requestRootAccess",
     "engine.runAction(action",
     "requiresC420UIActionConfirmation",
     "AbortController",
@@ -772,6 +796,12 @@ function main(): number {
   }
   if (app.includes("sudo-common.sh")) {
     failures.push("interactive app must not call sudo-common.sh directly");
+  }
+  if (!app.includes("inputDialog") || !app.includes("requestRootAccess:")) {
+    failures.push("interactive app must pass requestRootAccess using inputDialog");
+  }
+  if (app.includes("appendLogText(password") || app.includes("appendLogText(result.value")) {
+    failures.push("interactive app must not log submitted administrator passwords");
   }
   if (bridge.includes("C420UISudoProvider")) {
     failures.push("bridge contract must not reintroduce C420UISudoProvider");

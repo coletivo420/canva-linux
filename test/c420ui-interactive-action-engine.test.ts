@@ -12,6 +12,7 @@ import {
   type c420uiExecutionContext,
   type c420uiLogSource,
   type c420uiProjectBridge,
+  type c420uiRootAccessRequester,
   type c420uiRootProvider,
 } from "../packages/c420ui/src";
 
@@ -80,6 +81,8 @@ function createFakeRootProvider(requiresRoot: boolean) {
 function createRunner(options: {
   bridge: c420uiProjectBridge;
   rootProvider?: c420uiRootProvider;
+  requestRootAccess?: c420uiRootAccessRequester;
+  createActionEngine?: typeof import("../packages/c420ui/src").createC420UIActionEngine;
 }) {
   const logs: Array<{ text: string; source: c420uiLogSource }> = [];
   const progress: Array<{ state: string; percent?: number; label: string }> = [];
@@ -88,6 +91,8 @@ function createRunner(options: {
     bridge: options.bridge,
     rootDir: "/repo",
     rootProvider: options.rootProvider,
+    requestRootAccess: options.requestRootAccess,
+    createActionEngine: options.createActionEngine,
     env: { TEST_ENV: "1" } as NodeJS.ProcessEnv,
     appendLogText(text, source) {
       logs.push({ text, source });
@@ -303,4 +308,69 @@ test("interactive cancel without active action returns false without logging", (
 
   assert.equal(runner.cancel(), false);
   assert.deepEqual(logs, []);
+});
+
+test("passes requestRootAccess to createC420UIActionEngine", async () => {
+  const { bridge } = createFakeBridge({ actions: [rootAction] });
+  const requestRootAccess: c420uiRootAccessRequester = () => ({ ok: true });
+  let capturedRequestRootAccess: c420uiRootAccessRequester | undefined;
+  const { runner } = createRunner({
+    bridge,
+    requestRootAccess,
+    createActionEngine(options) {
+      capturedRequestRootAccess = options.requestRootAccess;
+      return {
+        listActions() {
+          return [];
+        },
+        resolveActionById() {
+          return { found: false, reason: "not-found", query: "" };
+        },
+        resolveActionByCliFlag() {
+          return { found: false, reason: "not-found", query: "" };
+        },
+        async runAction() {
+          return {
+            code: c420uiExitCodes.success,
+            status: "success",
+          };
+        },
+        async runActionById() {
+          return {
+            code: c420uiExitCodes.success,
+            status: "success",
+          };
+        },
+      };
+    },
+  });
+
+  await runner.runAction(rootAction, { confirmed: true });
+
+  assert.equal(capturedRequestRootAccess, requestRootAccess);
+});
+
+test("canceled root auth returns canceled", async () => {
+  const { bridge, runCalls } = createFakeBridge({ actions: [rootAction] });
+  const { provider } = createFakeRootProvider(true);
+  const { runner } = createRunner({
+    bridge,
+    rootProvider: provider,
+    requestRootAccess() {
+      return {
+        ok: false,
+        code: c420uiExitCodes.canceled,
+        message: "[info] Administrator authorization canceled.",
+      };
+    },
+  });
+
+  const result = await runner.runAction(rootAction, { confirmed: true });
+
+  assert.deepEqual(result, {
+    code: c420uiExitCodes.canceled,
+    status: "canceled",
+    message: "[info] Administrator authorization canceled.",
+  });
+  assert.equal(runCalls.length, 0);
 });

@@ -33,6 +33,12 @@ export type c420uiRootProvider = {
     actionEnv: NodeJS.ProcessEnv,
   ): c420uiRootValidationResult;
 
+  validateRootAccessWithInput?(
+    rootDir: string,
+    actionEnv: NodeJS.ProcessEnv,
+    input: string,
+  ): c420uiRootValidationResult;
+
   buildRootActionEnvironment?(
     action: c420uiAction,
     actionEnv: NodeJS.ProcessEnv,

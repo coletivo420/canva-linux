@@ -155,3 +155,79 @@ test("validateRootAccess supports a custom validation command builder", () => {
     { command: "direct-helper", args: ["--validate"] },
   ]);
 });
+
+test("validateRootAccessWithInput calls configured sudo helper with --validate-stdin", () => {
+  const calls: Array<{ command: string; args: string[] }> = [];
+  const provider = createC420UILinuxRootProviderBase({
+    sudoHelperPath: "project-helper.sh",
+    runCommand(command, args) {
+      calls.push({ command, args: [...args] });
+      return { status: 0 } as SpawnSyncReturns<Buffer>;
+    },
+  });
+
+  assert.deepEqual(provider.validateRootAccessWithInput?.("/repo", {}, "secret"), {
+    ok: true,
+  });
+  assert.deepEqual(calls, [
+    { command: "bash", args: ["project-helper.sh", "--validate-stdin"] },
+  ]);
+});
+
+test("validateRootAccessWithInput passes password through stdin", () => {
+  const inputs: unknown[] = [];
+  const provider = createC420UILinuxRootProviderBase({
+    sudoHelperPath: "project-helper.sh",
+    runCommand(_command, _args, options) {
+      inputs.push(options.input);
+      return { status: 0 } as SpawnSyncReturns<Buffer>;
+    },
+  });
+
+  provider.validateRootAccessWithInput?.("/repo", {}, "secret-password");
+
+  assert.deepEqual(inputs, ["secret-password\n"]);
+});
+
+test("validateRootAccessWithInput does not use stdio inherit", () => {
+  const stdioValues: unknown[] = [];
+  const provider = createC420UILinuxRootProviderBase({
+    sudoHelperPath: "project-helper.sh",
+    runCommand(_command, _args, options) {
+      stdioValues.push(options.stdio);
+      return { status: 0 } as SpawnSyncReturns<Buffer>;
+    },
+  });
+
+  provider.validateRootAccessWithInput?.("/repo", {}, "secret");
+
+  assert.deepEqual(stdioValues, [["pipe", "pipe", "pipe"]]);
+});
+
+test("validateRootAccessWithInput returns ok on status 0", () => {
+  const provider = createC420UILinuxRootProviderBase({
+    sudoHelperPath: "project-helper.sh",
+    runCommand() {
+      return { status: 0 } as SpawnSyncReturns<Buffer>;
+    },
+  });
+
+  assert.deepEqual(provider.validateRootAccessWithInput?.("/repo", {}, "secret"), {
+    ok: true,
+  });
+});
+
+test("validateRootAccessWithInput returns failed on non-zero status", () => {
+  const provider = createC420UILinuxRootProviderBase({
+    sudoHelperPath: "project-helper.sh",
+    runCommand() {
+      return { status: 5 } as SpawnSyncReturns<Buffer>;
+    },
+  });
+
+  assert.deepEqual(provider.validateRootAccessWithInput?.("/repo", {}, "secret"), {
+    ok: false,
+    code: 5,
+    message: "[error] Privilege validation failed before action execution.",
+  });
+});

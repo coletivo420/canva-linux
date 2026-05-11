@@ -37,6 +37,12 @@ export function defaultC420UILinuxRootValidationCommand(
   return { command: "bash", args: [sudoHelperPath, "--validate"] };
 }
 
+export function defaultC420UILinuxRootValidationStdinCommand(
+  sudoHelperPath: string,
+): c420uiLinuxRootValidationCommand {
+  return { command: "bash", args: [sudoHelperPath, "--validate-stdin"] };
+}
+
 export type c420uiLinuxRootProviderBaseOptions = {
   id?: string;
   label?: string;
@@ -45,6 +51,7 @@ export type c420uiLinuxRootProviderBaseOptions = {
   rootAuthEnvValue?: string;
   runCommand?: c420uiLinuxRootCommandRunner;
   buildRootValidationCommand?: c420uiLinuxRootValidationCommandBuilder;
+  buildRootValidationStdinCommand?: c420uiLinuxRootValidationCommandBuilder;
   buildActionEnvironment?: (
     action: c420uiAction,
     baseEnv: NodeJS.ProcessEnv,
@@ -93,6 +100,7 @@ export function createC420UILinuxRootProviderBase(
   | "buildActionEnvironment"
   | "validateActionScope"
   | "validateRootAccess"
+  | "validateRootAccessWithInput"
   | "buildRootActionEnvironment"
 > {
   const runCommand = options.runCommand ?? spawnSync;
@@ -103,6 +111,9 @@ export function createC420UILinuxRootProviderBase(
   const buildRootValidationCommand =
     options.buildRootValidationCommand ??
     defaultC420UILinuxRootValidationCommand;
+  const buildRootValidationStdinCommand =
+    options.buildRootValidationStdinCommand ??
+    defaultC420UILinuxRootValidationStdinCommand;
 
   return {
     id: options.id ?? "c420ui-linux-root-provider-base",
@@ -129,6 +140,38 @@ export function createC420UILinuxRootProviderBase(
         stdio: "inherit",
         env: actionEnv,
         shell: false,
+      }) as SpawnSyncReturns<Buffer>;
+
+      if (result.error) {
+        return {
+          ok: false,
+          code: 1,
+          message: `[error] Failed to start privilege validation: ${result.error.message}`,
+        };
+      }
+
+      const code = result.status ?? 1;
+      if (code !== 0) {
+        return {
+          ok: false,
+          code,
+          message: "[error] Privilege validation failed before action execution.",
+        };
+      }
+
+      return { ok: true };
+    },
+
+    validateRootAccessWithInput(rootDir, actionEnv, input) {
+      const validationCommand = buildRootValidationStdinCommand(
+        options.sudoHelperPath,
+      );
+      const result = runCommand(validationCommand.command, validationCommand.args, {
+        cwd: rootDir,
+        env: actionEnv,
+        shell: false,
+        input: `${input}\n`,
+        stdio: ["pipe", "pipe", "pipe"],
       }) as SpawnSyncReturns<Buffer>;
 
       if (result.error) {

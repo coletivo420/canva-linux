@@ -1,4 +1,7 @@
-import { createC420UIActionEngine } from "../action-engine";
+import {
+  createC420UIActionEngine,
+  type c420uiRootAccessRequester,
+} from "../action-engine";
 import { requiresC420UIActionConfirmation, type c420uiAction } from "../actions";
 import { c420uiExitCodes } from "../exit-codes";
 import type { c420uiActionResult, c420uiProjectBridge } from "../bridge";
@@ -24,6 +27,7 @@ type InteractiveActionRunnerOptions = {
   rootDir: string;
   env?: NodeJS.ProcessEnv;
   rootProvider?: c420uiRootProvider;
+  requestRootAccess?: c420uiRootAccessRequester;
   createActionEngine?: typeof createC420UIActionEngine;
   appendLogText(text: string, source: c420uiLogSource): void;
   setProgress(
@@ -129,6 +133,7 @@ export function createInteractiveActionRunner(
     rootDir: options.rootDir,
     env: options.env,
     rootProvider: options.rootProvider,
+    requestRootAccess: options.requestRootAccess,
     emit: applyEvent,
   });
 
