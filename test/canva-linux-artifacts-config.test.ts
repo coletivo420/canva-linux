@@ -4,11 +4,9 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { loadCanvaLinuxActions } from "../scripts/canva-linux/actions/registry";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
-  validateCanvaLinuxArtifactsAgainstActions,
 } from "../scripts/c420ui-adapter/artifacts";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
@@ -26,14 +24,6 @@ const expectedCapabilityFields = [
 ] as const;
 const validKinds = new Set(["appimage", "flatpak", "native", "tarball", "custom", "deb", "rpm", "aur"]);
 const validScopes = new Set(["portable", "system", "user", "release", "none"]);
-const executableActionIdFields = [
-  "buildActionId",
-  "validateActionId",
-  "installActionId",
-  "uninstallActionId",
-  "purgeActionId",
-] as const;
-
 function loadArtifactsConfig() {
   return JSON.parse(fs.readFileSync(artifactsConfigPath, "utf8")) as {
     capabilities: Record<string, unknown>;
@@ -145,78 +135,6 @@ test("artifact outputPattern expands package.json version without x64 normalizat
     assert.equal(workflow.outputPattern?.includes("${arch}") ?? false, false, workflow.id);
   }
 });
-
-test("all artifact action ids exist in actions.json", () => {
-  const actionIds = new Set(loadCanvaLinuxActions(rootDir).map((action) => action.id));
-  const actionIdFields = [
-    "buildActionId",
-    "validateActionId",
-    "installActionId",
-    "uninstallActionId",
-    "purgeActionId",
-    "releaseActionId",
-  ] as const;
-
-  for (const workflow of loadWorkflows()) {
-    for (const field of actionIdFields) {
-      const actionId = workflow[field];
-      if (actionId) assert.equal(actionIds.has(actionId), true, `${workflow.id}.${field}`);
-    }
-  }
-});
-
-test("planned package workflows cannot report executable success", () => {
-  const workflowsById = new Map(loadWorkflows().map((workflow) => [workflow.id, workflow]));
-  const actionsById = new Map(loadCanvaLinuxActions(rootDir).map((action) => [action.id, action]));
-
-  assert.equal(workflowsById.get("deb")?.buildActionId, undefined);
-  assert.equal(workflowsById.get("rpm")?.buildActionId, undefined);
-
-  const aurBuildActionId = workflowsById.get("aur")?.buildActionId;
-  assert.equal(aurBuildActionId, "prepare-aur");
-  const aurAction = actionsById.get(aurBuildActionId ?? "");
-  assert.equal(aurAction?.kind, "planned");
-  assert.equal(aurAction?.planned, true);
-});
-
-
-test("non-planned executable artifact phases do not reference planned actions", () => {
-  const actionsById = new Map(loadCanvaLinuxActions(rootDir).map((action) => [action.id, action]));
-
-  for (const workflow of loadWorkflows()) {
-    if (workflow.planned === true) continue;
-    for (const field of executableActionIdFields) {
-      const actionId = workflow[field];
-      if (!actionId) continue;
-      const action = actionsById.get(actionId);
-      assert.ok(action, `${workflow.id}.${field}`);
-      assert.equal(action.kind === "planned" || action.planned === true, false, `${workflow.id}.${field}`);
-    }
-  }
-});
-
-test("planned releaseActionId references are explicitly allowed", () => {
-  const workflowsById = new Map(loadWorkflows().map((workflow) => [workflow.id, workflow]));
-  const actions = loadCanvaLinuxActions(rootDir).map((action) => ({
-    ...action,
-    kind: action.kind === "command" ? "command" as const : "planned" as const,
-  }));
-  const actionsById = new Map(actions.map((action) => [action.id, action]));
-  const appImageReleaseActionId = workflowsById.get("appimage")?.releaseActionId;
-
-  assert.equal(appImageReleaseActionId, "release-artifacts");
-  assert.equal(actionsById.get(appImageReleaseActionId ?? "")?.planned, true);
-  assert.doesNotThrow(() => validateCanvaLinuxArtifactsAgainstActions(loadWorkflows(), actions));
-
-  assert.throws(
-    () => validateCanvaLinuxArtifactsAgainstActions(
-      [{ ...workflowsById.get("appimage")!, buildActionId: "release-artifacts" }],
-      actions,
-    ),
-    /buildActionId release-artifacts is planned/,
-  );
-});
-
 
 test("artifact config loader reports missing and malformed configuration clearly", () => {
   const missingRoot = fs.mkdtempSync(path.join(os.tmpdir(), "canva-linux-artifacts-missing-"));

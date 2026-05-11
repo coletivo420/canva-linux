@@ -28,7 +28,8 @@ Request changes if a PR:
 - reintroduces `scripts/core/action-registry.ts`;
 - reintroduces `scripts/core/validate-actions.ts`;
 - puts project-specific registry loading inside `packages/c420ui/src`;
-- hardcodes Canva Linux config paths inside c420ui core.
+- hardcodes Canva Linux config paths inside c420ui core;
+- moves `actions.json`, `development.json`, or `artifacts.json` declarations out of `config/canva-linux` without an explicit migration.
 
 ## Removed Action Runner review
 
@@ -47,6 +48,7 @@ Request changes if a PR:
 - adds project-specific strings to `packages/c420ui/src`;
 - imports project adapters from c420ui;
 - reimplements c420ui engines in `scripts/c420ui-adapter`;
+- turns `scripts/c420ui-adapter` into a planned-action, dry-run, root, sudo, or confirmation policy layer;
 - adds root launch guard outside c420ui terminal runtime;
 - hardcodes concrete Canva Linux action IDs in c420ui core;
 - moves project detection or package recipes into c420ui core.

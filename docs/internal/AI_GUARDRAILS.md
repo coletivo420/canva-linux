@@ -151,6 +151,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui/CLI actions must be sourced from `config/canva-linux/actions.json`.
 - Action metadata must come from `config/canva-linux/actions.json`.
 - Canva Linux project configuration belongs under `config/canva-linux/`.
+- `config/canva-linux/actions.json`, `config/canva-linux/development.json`, and `config/canva-linux/artifacts.json` are project-owned declarations.
 - Do not put project configuration under `scripts/`.
 - Canva Linux action registry loading belongs under `scripts/canva-linux/actions/`.
 - Do not reintroduce `scripts/core/action-registry.ts`.
@@ -176,6 +177,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Do not emit raw secrets from command stdout/stderr when using c420ui operational logs.
 - Project adapters must not reimplement stdout/stderr process handling.
 - Project adapters may provide concrete command, args, cwd and env only.
+- Project adapters should stay thin: load project config, map declarations to c420ui contracts, and delegate generic policy to c420ui.
 - Project adapters must not prepare action env after the Action Engine/root provider has prepared it.
 - Project adapters must not reimplement command cancellation.
 - Runtime app logs remain separate from c420ui operational command logs.

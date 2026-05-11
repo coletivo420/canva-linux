@@ -162,6 +162,7 @@ function resolveOutputPattern(outputPattern: string, version: string): string {
   return toConfigPath(outputPattern.replaceAll("${version}", version));
 }
 
+// c420ui treats artifact declarations as process-static project config; cache by path to avoid repeated parsing.
 let cachedArtifactsConfig: CanvaLinuxArtifactsConfig | null = null;
 let cachedArtifactsConfigPath: string | null = null;
 
