@@ -72,7 +72,16 @@ type ArtifactActionIdField = (typeof ARTIFACT_ACTION_ID_FIELDS)[number];
 type ExecutableArtifactActionIdField = (typeof EXECUTABLE_ARTIFACT_ACTION_ID_FIELDS)[number];
 
 function readJsonFile<T>(filePath: string): T {
-  return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`Missing Canva Linux configuration file: ${filePath}`);
+  }
+
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to parse configuration file ${filePath}: ${message}`);
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -152,10 +161,19 @@ function resolveOutputPattern(outputPattern: string, version: string): string {
   return toConfigPath(outputPattern.replaceAll("${version}", version));
 }
 
+let cachedArtifactsConfig: CanvaLinuxArtifactsConfig | null = null;
+let cachedArtifactsConfigPath: string | null = null;
+
 function loadArtifactsConfig(rootDir: string): CanvaLinuxArtifactsConfig {
   const configPath = path.join(rootDir, ARTIFACTS_CONFIG_PATH);
+  if (cachedArtifactsConfig && cachedArtifactsConfigPath === configPath) {
+    return cachedArtifactsConfig;
+  }
+
   const config = readJsonFile<unknown>(configPath);
   validateCanvaLinuxArtifactsConfigShape(config, configPath);
+  cachedArtifactsConfig = config;
+  cachedArtifactsConfigPath = configPath;
   return config;
 }
 

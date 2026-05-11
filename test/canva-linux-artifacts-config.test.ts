@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
@@ -43,6 +44,21 @@ function loadArtifactsConfig() {
 function loadWorkflows() {
   const version = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")).version as string;
   return loadCanvaLinuxArtifactWorkflows(rootDir, version);
+}
+
+function createTempRootWithArtifactsConfig(configText: string): string {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "canva-linux-artifacts-"));
+  const configDir = path.join(tempRoot, "config/canva-linux");
+  fs.mkdirSync(configDir, { recursive: true });
+  fs.writeFileSync(path.join(configDir, "artifacts.json"), configText);
+  return tempRoot;
+}
+
+function minimalArtifactsConfigText(): string {
+  return JSON.stringify({
+    capabilities: Object.fromEntries(expectedCapabilityFields.map((field) => [field, true])),
+    workflows: [],
+  });
 }
 
 test("config/canva-linux/artifacts.json loads", () => {
@@ -199,4 +215,27 @@ test("planned releaseActionId references are explicitly allowed", () => {
     ),
     /buildActionId release-artifacts is planned/,
   );
+});
+
+
+test("artifact config loader reports missing and malformed configuration clearly", () => {
+  const missingRoot = fs.mkdtempSync(path.join(os.tmpdir(), "canva-linux-artifacts-missing-"));
+  assert.throws(
+    () => loadCanvaLinuxCapabilities(missingRoot),
+    /Missing Canva Linux configuration file:/,
+  );
+
+  const invalidRoot = createTempRootWithArtifactsConfig("{");
+  assert.throws(
+    () => loadCanvaLinuxCapabilities(invalidRoot),
+    /Failed to parse configuration file .*artifacts\.json:/,
+  );
+});
+
+test("artifact config loader caches validated config per config path", () => {
+  const tempRoot = createTempRootWithArtifactsConfig(minimalArtifactsConfigText());
+  assert.equal(loadCanvaLinuxCapabilities(tempRoot).supportsArtifacts, true);
+
+  fs.writeFileSync(path.join(tempRoot, "config/canva-linux/artifacts.json"), "{");
+  assert.equal(loadCanvaLinuxCapabilities(tempRoot).supportsArtifacts, true);
 });
