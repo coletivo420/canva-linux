@@ -53,6 +53,7 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
     projectUi: string;
     packageJson: string;
     actionsJson: string;
+    artifactsJson: string;
     appIdentity: string;
   };
   loadProjectUi(): ProjectUiJson;
@@ -97,6 +98,7 @@ export function createCanvaLinuxC420UIAdapter(
   const projectUiPath = path.join(resolvedRootDir, "config/canva-linux/project-ui.json");
   const packageJsonPath = path.join(resolvedRootDir, "package.json");
   const actionsJsonPath = path.join(resolvedRootDir, "config/canva-linux/actions.json");
+  const artifactsJsonPath = path.join(resolvedRootDir, "config/canva-linux/artifacts.json");
   const appIdentityPath = path.join(
     resolvedRootDir,
     "scripts/app-identity-common.sh",
@@ -280,6 +282,7 @@ export function createCanvaLinuxC420UIAdapter(
       projectUi: projectUiPath,
       packageJson: packageJsonPath,
       actionsJson: actionsJsonPath,
+      artifactsJson: artifactsJsonPath,
       appIdentity: appIdentityPath,
     },
     loadProjectInfo: loadProjectConfig,
@@ -292,7 +295,7 @@ export function createCanvaLinuxC420UIAdapter(
     loadActions: loadCanvaLinuxActions,
     loadArtifactWorkflows,
     loadWorkflows,
-    loadCapabilities: loadCanvaLinuxCapabilities,
+    loadCapabilities: () => loadCanvaLinuxCapabilities(resolvedRootDir),
     getProjectPhase,
     getSessionLogPath,
     getSessionId,
