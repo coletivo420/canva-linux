@@ -57,11 +57,13 @@ test("app.ts does not log submitted password", () => {
     /finally \{[\s\S]*?submittedInput = "";[\s\S]*?\}/.test(app),
     true,
   );
-  assert.equal(
-    /appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app),
-    false,
-  );
-  assert.equal(app.includes("console.log(submittedInput"), false);
-  assert.equal(app.includes("console.error(submittedInput"), false);
-  assert.equal(app.includes("writeSession(submittedInput"), false);
+  for (const forbidden of [
+    /appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/,
+    /writeSession\s*\(\s*(password|result\.value|submittedInput)\b/,
+    /console\.log\s*\(\s*(password|result\.value|submittedInput)\b/,
+    /console\.error\s*\(\s*(password|result\.value|submittedInput)\b/,
+    /logs\.log\s*\(\s*(password|result\.value|submittedInput)\b/,
+  ] as const) {
+    assert.equal(forbidden.test(app), false);
+  }
 });
