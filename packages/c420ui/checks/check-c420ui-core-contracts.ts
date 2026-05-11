@@ -585,7 +585,24 @@ function main(): number {
   if (!app.includes("inputDialog") || !app.includes("requestInteractiveRootAccess")) {
     failures.push("app.ts must wire inputDialog for interactive root access");
   }
-  if (app.includes("appendLogText(password") || app.includes("appendLogText(result.value")) {
+  if (!app.includes("finally")) {
+    failures.push("app.ts must restore interactive root auth modal state with finally");
+  }
+  if (
+    !/modalActive = true;[\s\S]*?inputDialog\([\s\S]*?Administrator authorization[\s\S]*?finally \{[\s\S]*?modalActive = false;/.test(
+      app,
+    )
+  ) {
+    failures.push("app.ts must clear modalActive in the administrator authorization prompt finally block");
+  }
+  if (
+    !/try \{[\s\S]*?validateRootAccessWithInput\([\s\S]*?submittedInput[\s\S]*?\} catch \{[\s\S]*?Administrator authorization validation failed[\s\S]*?\} finally \{[\s\S]*?submittedInput = "";/.test(
+      app,
+    )
+  ) {
+    failures.push("app.ts must convert root validation throws into a generic failure and clear submittedInput");
+  }
+  if (/appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app)) {
     failures.push("app.ts must not log submitted administrator passwords");
   }
   for (const forbidden of ["sudo", "password", "root prompt", "sudo-helper.sh"] as const) {
@@ -800,7 +817,27 @@ function main(): number {
   if (!app.includes("inputDialog") || !app.includes("requestRootAccess:")) {
     failures.push("interactive app must pass requestRootAccess using inputDialog");
   }
-  if (app.includes("appendLogText(password") || app.includes("appendLogText(result.value")) {
+  if (!app.includes("requestInteractiveRootAccess")) {
+    failures.push("interactive app must keep requestInteractiveRootAccess wired");
+  }
+  if (!app.includes("finally")) {
+    failures.push("interactive app must restore modal state with finally");
+  }
+  if (
+    !/modalActive = true;[\s\S]*?inputDialog\([\s\S]*?Administrator authorization[\s\S]*?finally \{[\s\S]*?modalActive = false;/.test(
+      app,
+    )
+  ) {
+    failures.push("interactive app must clear modalActive in the administrator authorization prompt finally block");
+  }
+  if (
+    !/try \{[\s\S]*?validateRootAccessWithInput\([\s\S]*?submittedInput[\s\S]*?\} catch \{[\s\S]*?Administrator authorization validation failed[\s\S]*?\} finally \{[\s\S]*?submittedInput = "";/.test(
+      app,
+    )
+  ) {
+    failures.push("interactive app must convert root validation throws into a generic failure and clear submittedInput");
+  }
+  if (/appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app)) {
     failures.push("interactive app must not log submitted administrator passwords");
   }
   if (bridge.includes("C420UISudoProvider")) {

@@ -3,6 +3,7 @@ import {
   confirmDialog,
   inputDialog,
   messageDialog,
+  type InputDialogResult,
 } from "./modal";
 import { c420uiTheme } from "./theme";
 import { copyTextToClipboard } from "./clipboard";
@@ -530,19 +531,30 @@ export function createApp(options: C420UIAppOptions) {
     const maxAttempts = 3;
 
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      let result: InputDialogResult;
+
       modalActive = true;
-      const result = await inputDialog(
-        screen,
-        "Administrator authorization",
-        [
-          `${request.action.label}`,
-          "",
-          "Enter your sudo password to continue.",
-          `Reason: ${request.reason}`,
-        ].join("\n"),
-        30000,
-      );
-      modalActive = false;
+      try {
+        result = await inputDialog(
+          screen,
+          "Administrator authorization",
+          [
+            `${request.action.label}`,
+            "",
+            "Enter your sudo password to continue.",
+            `Reason: ${request.reason}`,
+          ].join("\n"),
+          30000,
+        );
+      } catch {
+        return {
+          ok: false,
+          code: c420uiExitCodes.generalError,
+          message: "[error] Administrator authorization prompt failed.",
+        };
+      } finally {
+        modalActive = false;
+      }
 
       if (result.status === "canceled") {
         return {
@@ -560,11 +572,23 @@ export function createApp(options: C420UIAppOptions) {
         };
       }
 
-      const validation = rootProvider.validateRootAccessWithInput(
-        opts.rootDir,
-        request.actionEnv,
-        result.value,
-      );
+      let validation: c420uiRootAccessRequestResult;
+      let submittedInput = result.value;
+      try {
+        validation = rootProvider.validateRootAccessWithInput(
+          opts.rootDir,
+          request.actionEnv,
+          submittedInput,
+        );
+      } catch {
+        validation = {
+          ok: false,
+          code: c420uiExitCodes.generalError,
+          message: "[error] Administrator authorization validation failed.",
+        };
+      } finally {
+        submittedInput = "";
+      }
 
       if (validation.ok) {
         const env = rootProvider.buildRootActionEnvironment
