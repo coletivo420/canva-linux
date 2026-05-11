@@ -602,8 +602,23 @@ function main(): number {
   ) {
     failures.push("app.ts must convert root validation throws into a generic failure and clear submittedInput");
   }
-  if (/appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app)) {
-    failures.push("app.ts must not log submitted administrator passwords");
+  if (!app.includes("Administrator authorization failed")) {
+    failures.push("app.ts must keep a final administrator authorization failure fallback");
+  }
+  if (!app.includes("Administrator authorization validation failed")) {
+    failures.push("app.ts must return a generic administrator authorization validation failure");
+  }
+  for (const forbidden of [
+    /appendLogText\s*\(\s*submittedInput\b/,
+    /appendLogText\s*\(\s*(password|result\.value)\b/,
+    /writeSession\s*\(\s*submittedInput\b/,
+    /console\.log\s*\(\s*submittedInput\b/,
+    /console\.error\s*\(\s*submittedInput\b/,
+    /logs\.log\s*\(\s*submittedInput\b/,
+  ] as const) {
+    if (forbidden.test(app)) {
+      failures.push("app.ts must not log submitted administrator passwords");
+    }
   }
   for (const forbidden of ["sudo", "password", "root prompt", "sudo-helper.sh"] as const) {
     if (adapter.includes(forbidden)) {
@@ -837,8 +852,23 @@ function main(): number {
   ) {
     failures.push("interactive app must convert root validation throws into a generic failure and clear submittedInput");
   }
-  if (/appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app)) {
-    failures.push("interactive app must not log submitted administrator passwords");
+  if (!app.includes("Administrator authorization failed")) {
+    failures.push("interactive app must keep a final administrator authorization failure fallback");
+  }
+  if (!app.includes("Administrator authorization validation failed")) {
+    failures.push("interactive app must return a generic administrator authorization validation failure");
+  }
+  for (const forbidden of [
+    /appendLogText\s*\(\s*submittedInput\b/,
+    /appendLogText\s*\(\s*(password|result\.value)\b/,
+    /writeSession\s*\(\s*submittedInput\b/,
+    /console\.log\s*\(\s*submittedInput\b/,
+    /console\.error\s*\(\s*submittedInput\b/,
+    /logs\.log\s*\(\s*submittedInput\b/,
+  ] as const) {
+    if (forbidden.test(app)) {
+      failures.push("interactive app must not log submitted administrator passwords");
+    }
   }
   if (bridge.includes("C420UISudoProvider")) {
     failures.push("bridge contract must not reintroduce C420UISudoProvider");

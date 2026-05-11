@@ -46,13 +46,22 @@ test("app.ts handles root validation exceptions generically", () => {
   );
 
   assert.notEqual(validationBlock, null);
+  assert.equal(app.includes("Administrator authorization validation failed"), true);
+  assert.equal(app.includes("Administrator authorization failed"), true);
 });
 
 test("app.ts does not log submitted password", () => {
   const app = read("packages/c420ui/src/terminal/app.ts");
 
   assert.equal(
+    /finally \{[\s\S]*?submittedInput = "";[\s\S]*?\}/.test(app),
+    true,
+  );
+  assert.equal(
     /appendLogText\s*\(\s*(password|result\.value|submittedInput)\b/.test(app),
     false,
   );
+  assert.equal(app.includes("console.log(submittedInput"), false);
+  assert.equal(app.includes("console.error(submittedInput"), false);
+  assert.equal(app.includes("writeSession(submittedInput"), false);
 });

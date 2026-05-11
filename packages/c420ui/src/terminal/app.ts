@@ -581,9 +581,9 @@ export function createApp(options: C420UIAppOptions) {
           submittedInput,
         );
       } catch {
-        validation = {
+        return {
           ok: false,
-          code: c420uiExitCodes.generalError,
+          code: c420uiExitCodes.rootPolicyError,
           message: "[error] Administrator authorization validation failed.",
         };
       } finally {
@@ -611,6 +611,11 @@ export function createApp(options: C420UIAppOptions) {
       }
     }
 
+    return {
+      ok: false,
+      code: c420uiExitCodes.rootPolicyError,
+      message: "[error] Administrator authorization failed.",
+    };
   }
 
   const actionRunner = createInteractiveActionRunner({
