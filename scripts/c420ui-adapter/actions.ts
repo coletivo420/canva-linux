@@ -17,7 +17,8 @@ function actionPhase(action: CanvaAction): C420UIWorkflowPhase | undefined {
 export function toC420UIActionDescriptor(
   action: CanvaAction,
 ): C420UIActionDescriptor {
-  const kind = action.kind === "command" ? "command" : "planned";
+  const isCommandAction = action.kind === "command";
+  const kind = isCommandAction ? "command" : "planned";
   return {
     ...action,
     kind,

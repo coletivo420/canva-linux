@@ -35,7 +35,7 @@ const forbidden = [
   "CL-EyeDropper",
   "config/canva-linux",
   "scripts/c420ui-adapter",
-  "CANVA_",
+  "CANVA" + "_",
   "electron-builder",
   "@typescript-eslint/parser",
   "scripts/" + "c420ui-" + "canva-linux",
@@ -43,9 +43,9 @@ const forbidden = [
   "scripts/app-identity-common.sh",
   "scripts/install-detection-common.sh",
   "scripts/" + "sudo-common.sh",
-  "CANVA_NATIVE_SCOPE",
-  "CANVA_FLATPAK_SCOPE",
-  "CANVA_C420UI" + "_ROOT_AUTH",
+  "CANVA" + "_NATIVE_SCOPE",
+  "CANVA" + "_FLATPAK_SCOPE",
+  "CANVA" + "_C420UI_ROOT_AUTH",
   "bundle-appimage",
   "bundle-flatpak",
   "install-flatpak-system",
@@ -82,7 +82,7 @@ const forbiddenFragments = [
   "io.github.coletivo420.canva-linux",
   "config/canva-linux",
   "scripts/c420ui-adapter",
-  "CANVA_",
+  "CANVA" + "_",
   "electron-builder",
   "@typescript-eslint/parser",
   "scripts/" + "c420ui-" + "canva-linux",
@@ -90,9 +90,9 @@ const forbiddenFragments = [
   "scripts/app-identity-common.sh",
   "scripts/install-detection-common.sh",
   "scripts/" + "sudo-common.sh",
-  "CANVA_NATIVE_SCOPE",
-  "CANVA_FLATPAK_SCOPE",
-  "CANVA_C420UI" + "_ROOT_AUTH",
+  "CANVA" + "_NATIVE_SCOPE",
+  "CANVA" + "_FLATPAK_SCOPE",
+  "CANVA" + "_C420UI_ROOT_AUTH",
   "bundle-appimage",
   "bundle-flatpak",
   "install-flatpak-system",
@@ -548,9 +548,9 @@ function main(): number {
   }
   for (const fragment of [
     "Canva Linux",
-    "CANVA_NATIVE_SCOPE",
-    "CANVA_FLATPAK_SCOPE",
-    "CANVA_C420UI" + "_ROOT_AUTH",
+    "CANVA" + "_NATIVE_SCOPE",
+    "CANVA" + "_FLATPAK_SCOPE",
+    "CANVA" + "_C420UI_ROOT_AUTH",
     "scripts/" + "sudo-common.sh",
   ]) {
     if (linuxRootProvider.includes(fragment)) {
@@ -1153,7 +1153,7 @@ function checkHostDependencyContract(failures: string[]): void {
     for (const forbidden of [
       "Canva Linux",
       "canva-linux",
-      "CANVA_",
+      "CANVA" + "_",
       "config/canva-linux",
       "scripts/" + "ensure-npm-dependencies.sh",
       "scripts/preflight-common.sh",
@@ -1202,7 +1202,7 @@ function checkDevelopmentProviderContract(failures: string[]): void {
   }
   for (const forbidden of [
     "Canva Linux",
-    "CANVA_",
+    "CANVA" + "_",
     "config/canva-linux",
     "scripts/c420ui-adapter",
   ] as const) {
@@ -1240,7 +1240,7 @@ function checkLinuxHostSudoHelperContract(failures: string[]): void {
   }
 
   for (const forbidden of [
-    "CANVA_",
+    "CANVA" + "_",
     "canva_",
     "scripts/" + "sudo-common.sh",
     "Canva Linux",
