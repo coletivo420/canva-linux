@@ -26,6 +26,9 @@ export type { c420uiOperationalLogOptions, c420uiRedactionPattern } from "./oper
 export type {
   c420uiActionEngineOptions,
   c420uiActionResolution,
+  c420uiRootAccessRequest,
+  c420uiRootAccessRequester,
+  c420uiRootAccessRequestResult,
   c420uiRunActionOptions,
 } from "./action-engine";
 export { assertC420UIActionContract, c420uiActionGroups, c420uiActionKinds, c420uiWorkflowPhases, getC420UIActionCliFlags, isC420UIPlannedAction, requiresC420UIActionConfirmation, validateC420UIActionRegistry, validateC420UIActions } from "./actions";

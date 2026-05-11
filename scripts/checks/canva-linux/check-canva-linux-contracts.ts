@@ -320,6 +320,11 @@ function main(): number {
   if (adapterSource.includes("...context.env, ...(action.env")) {
     failures.push("adapter must not merge action.env after root provider environment preparation");
   }
+  for (const forbidden of ["sudo", "password", "root prompt", "sudo-helper.sh"] as const) {
+    if (adapterSource.includes(forbidden)) {
+      failures.push(`adapter must not contain sudo/password/root prompt logic: ${forbidden}`);
+    }
+  }
   const launcher = fs.readFileSync(launcherPath, "utf8");
   if (!launcher.includes("run-c420ui-cli.js")) failures.push("launcher must call run-c420ui-cli.js for direct actions");
   const legacyRunCoreCli = "run-core-entry.sh " + "action-runner" + " --cli";
@@ -388,6 +393,25 @@ function main(): number {
   }
   if (!fs.existsSync(path.join(rootDir, "packages/c420ui/host/linux/sudo-helper.sh"))) {
     failures.push("packages/c420ui/host/linux/sudo-helper.sh must back privileged actions");
+  }
+  const rootProviderContract = read(rootDir, "packages/c420ui/src/root-provider.ts");
+  const linuxRootProvider = read(rootDir, "packages/c420ui/src/linux-root-provider.ts");
+  const actionEngine = read(rootDir, "packages/c420ui/src/action-engine.ts");
+  const interactiveRunner = read(rootDir, "packages/c420ui/src/terminal/interactive-action-runner.ts");
+  const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
+  for (const [contractPath, contractSource, fragment] of [
+    ["packages/c420ui/src/root-provider.ts", rootProviderContract, "validateRootAccessWithInput?"],
+    ["packages/c420ui/src/linux-root-provider.ts", linuxRootProvider, "--validate-stdin"],
+    ["packages/c420ui/src/action-engine.ts", actionEngine, "requestRootAccess"],
+    ["packages/c420ui/src/terminal/interactive-action-runner.ts", interactiveRunner, "requestRootAccess"],
+    ["packages/c420ui/src/terminal/app.ts", app, "inputDialog"],
+  ] as const) {
+    if (!contractSource.includes(fragment)) {
+      failures.push(`${contractPath}: missing interactive root auth fragment ${fragment}`);
+    }
+  }
+  if (app.includes("appendLogText(password") || app.includes("appendLogText(result.value")) {
+    failures.push("packages/c420ui/src/terminal/app.ts must not log submitted administrator passwords");
   }
   if (!cli.includes("createCanvaLinuxRootProvider()")) {
     failures.push("Canva Linux CLI must pass createCanvaLinuxRootProvider()");

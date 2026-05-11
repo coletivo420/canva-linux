@@ -14,12 +14,30 @@ import { createC420UIEvent, type C420UIEventSink } from "./events";
 import { c420uiExitCodes } from "./exit-codes";
 import type { c420uiRootProvider } from "./root-provider";
 
+export type c420uiRootAccessRequest = {
+  action: c420uiAction;
+  rootDir: string;
+  actionEnv: NodeJS.ProcessEnv;
+  reason: string;
+};
+
+export type c420uiRootAccessRequestResult =
+  | { ok: true; env?: NodeJS.ProcessEnv }
+  | { ok: false; code: number; message: string };
+
+export type c420uiRootAccessRequester = (
+  request: c420uiRootAccessRequest,
+) =>
+  | Promise<c420uiRootAccessRequestResult>
+  | c420uiRootAccessRequestResult;
+
 export type c420uiActionEngineOptions = {
   bridge: c420uiProjectBridge;
   rootDir: string;
   env?: NodeJS.ProcessEnv;
   emit?: C420UIEventSink;
   rootProvider?: c420uiRootProvider;
+  requestRootAccess?: c420uiRootAccessRequester;
 };
 
 export type c420uiRunActionOptions = {
@@ -159,17 +177,43 @@ export function createC420UIActionEngine(
         );
       }
       if (rootPolicy.requiresRoot) {
-        const access = rootProvider.validateRootAccess(rootDir, actionEnv);
-        if (access.ok === false) {
-          return {
-            code: access.code,
-            status: "failed",
-            message: access.message,
-          };
+        if (options.requestRootAccess) {
+          const requested = await options.requestRootAccess({
+            action,
+            rootDir,
+            actionEnv,
+            reason: rootPolicy.reason,
+          });
+
+          if (requested.ok === false) {
+            return {
+              code: requested.code,
+              status:
+                requested.code === c420uiExitCodes.canceled
+                  ? "canceled"
+                  : "failed",
+              message: requested.message,
+            };
+          }
+
+          actionEnv =
+            requested.env ??
+            (rootProvider.buildRootActionEnvironment
+              ? rootProvider.buildRootActionEnvironment(action, actionEnv)
+              : actionEnv);
+        } else {
+          const access = rootProvider.validateRootAccess(rootDir, actionEnv);
+          if (access.ok === false) {
+            return {
+              code: access.code,
+              status: "failed",
+              message: access.message,
+            };
+          }
+          actionEnv = rootProvider.buildRootActionEnvironment
+            ? rootProvider.buildRootActionEnvironment(action, actionEnv)
+            : actionEnv;
         }
-        actionEnv = rootProvider.buildRootActionEnvironment
-          ? rootProvider.buildRootActionEnvironment(action, actionEnv)
-          : actionEnv;
       }
     }
 

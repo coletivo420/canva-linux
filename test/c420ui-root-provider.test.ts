@@ -289,3 +289,121 @@ test("root policy warning is emitted before bridge.runAction", async () => {
     { type: "action:finish", line: undefined },
   ]);
 });
+
+test("root action with requestRootAccess calls requester before bridge.runAction", async () => {
+  const order: string[] = [];
+  const { bridge, runCalls } = createFakeBridge({ actions: [rootAction] });
+  const { provider } = createFakeRootProvider({ requiresRoot: true });
+  const engine = createC420UIActionEngine({
+    bridge,
+    rootDir: "/repo",
+    rootProvider: provider,
+    requestRootAccess(request) {
+      order.push(`request:${request.action.id}:${request.reason}`);
+      return { ok: true };
+    },
+  });
+
+  const originalRunAction = bridge.runAction.bind(bridge);
+  bridge.runAction = async (actionId, context) => {
+    order.push(`run:${actionId}`);
+    return originalRunAction(actionId, context);
+  };
+
+  const result = await engine.runAction(rootAction, { yes: true });
+
+  assert.equal(result.status, "success");
+  assert.equal(runCalls.length, 1);
+  assert.deepEqual(order, [
+    "request:install-native:test requires root",
+    "run:install-native",
+  ]);
+});
+
+test("requestRootAccess failure prevents bridge.runAction", async () => {
+  const { bridge, runCalls } = createFakeBridge({ actions: [rootAction] });
+  const { provider, calls } = createFakeRootProvider({ requiresRoot: true });
+  const engine = createC420UIActionEngine({
+    bridge,
+    rootDir: "/repo",
+    rootProvider: provider,
+    requestRootAccess() {
+      return { ok: false, code: 23, message: "interactive auth rejected" };
+    },
+  });
+
+  const result = await engine.runAction(rootAction, { yes: true });
+
+  assert.deepEqual(result, {
+    code: 23,
+    status: "failed",
+    message: "interactive auth rejected",
+  });
+  assert.equal(runCalls.length, 0);
+  assert.deepEqual(calls, [
+    "buildActionEnvironment",
+    "validateActionScope",
+    "resolveRootPolicy",
+  ]);
+});
+
+test("requestRootAccess canceled returns canceled and prevents bridge.runAction", async () => {
+  const { bridge, runCalls } = createFakeBridge({ actions: [rootAction] });
+  const { provider } = createFakeRootProvider({ requiresRoot: true });
+  const engine = createC420UIActionEngine({
+    bridge,
+    rootDir: "/repo",
+    rootProvider: provider,
+    requestRootAccess() {
+      return {
+        ok: false,
+        code: c420uiExitCodes.canceled,
+        message: "interactive auth canceled",
+      };
+    },
+  });
+
+  const result = await engine.runAction(rootAction, { yes: true });
+
+  assert.deepEqual(result, {
+    code: c420uiExitCodes.canceled,
+    status: "canceled",
+    message: "interactive auth canceled",
+  });
+  assert.equal(runCalls.length, 0);
+});
+
+test("requestRootAccess success passes returned env to bridge.runAction", async () => {
+  const { bridge, runCalls } = createFakeBridge({ actions: [rootAction] });
+  const { provider } = createFakeRootProvider({ requiresRoot: true });
+  const engine = createC420UIActionEngine({
+    bridge,
+    rootDir: "/repo",
+    rootProvider: provider,
+    env: { BASE_ENV: "1" } as NodeJS.ProcessEnv,
+    requestRootAccess() {
+      return { ok: true, env: { AUTH_ENV: "from-requester" } };
+    },
+  });
+
+  const result = await engine.runAction(rootAction, { yes: true });
+
+  assert.equal(result.status, "success");
+  assert.deepEqual(runCalls[0]?.context.env, { AUTH_ENV: "from-requester" });
+});
+
+test("CLI non-interactive path still uses validateRootAccess when no requester exists", async () => {
+  const { bridge, runCalls } = createFakeBridge({ actions: [rootAction] });
+  const { provider, calls } = createFakeRootProvider({ requiresRoot: true });
+  const engine = createC420UIActionEngine({
+    bridge,
+    rootDir: "/repo",
+    rootProvider: provider,
+  });
+
+  const result = await engine.runAction(rootAction, { yes: true });
+
+  assert.equal(result.status, "success");
+  assert.equal(runCalls.length, 1);
+  assert.ok(calls.includes("validateRootAccess"));
+});

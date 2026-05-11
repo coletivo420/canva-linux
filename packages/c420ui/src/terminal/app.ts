@@ -1,6 +1,7 @@
 const tui = require("bles" + "sed");
 import {
   confirmDialog,
+  inputDialog,
   messageDialog,
 } from "./modal";
 import { c420uiTheme } from "./theme";
@@ -14,10 +15,15 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 import { Writable } from "node:stream";
-import { createC420UIActionEngine } from "../action-engine";
+import {
+  createC420UIActionEngine,
+  type c420uiRootAccessRequest,
+  type c420uiRootAccessRequestResult,
+} from "../action-engine";
 import type { c420uiAction } from "../actions";
 import type { c420uiProjectBridge } from "../bridge";
 import type { c420uiOverviewStatus } from "../detection";
+import { c420uiExitCodes } from "../exit-codes";
 import type { c420uiRootProvider } from "../root-provider";
 import type {
   C420UIBrandConfig,
@@ -509,11 +515,93 @@ export function createApp(options: C420UIAppOptions) {
   let currentActions: InteractiveAction[] = [];
   let running = false;
   let modalActive = false;
+
+  async function requestInteractiveRootAccess(
+    request: c420uiRootAccessRequest,
+  ): Promise<c420uiRootAccessRequestResult> {
+    if (!rootProvider?.validateRootAccessWithInput) {
+      return {
+        ok: false,
+        code: c420uiExitCodes.rootPolicyError,
+        message: "[error] Interactive root authentication is unavailable.",
+      };
+    }
+
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      modalActive = true;
+      const result = await inputDialog(
+        screen,
+        "Administrator authorization",
+        [
+          `${request.action.label}`,
+          "",
+          "Enter your sudo password to continue.",
+          `Reason: ${request.reason}`,
+        ].join("\n"),
+        30000,
+      );
+      modalActive = false;
+
+      if (result.status === "canceled") {
+        return {
+          ok: false,
+          code: c420uiExitCodes.canceled,
+          message: "[info] Administrator authorization canceled.",
+        };
+      }
+
+      if (result.status === "timeout") {
+        return {
+          ok: false,
+          code: c420uiExitCodes.canceled,
+          message: "[error] Administrator authorization timed out.",
+        };
+      }
+
+      let submittedInput = result.value;
+      const validation = rootProvider.validateRootAccessWithInput(
+        opts.rootDir,
+        request.actionEnv,
+        submittedInput,
+      );
+      submittedInput = "";
+
+      if (validation.ok) {
+        const env = rootProvider.buildRootActionEnvironment
+          ? rootProvider.buildRootActionEnvironment(
+              request.action,
+              request.actionEnv,
+            )
+          : request.actionEnv;
+
+        return { ok: true, env };
+      }
+
+      appendLogText(
+        `[warn] Administrator authorization failed (${attempt}/${maxAttempts}).\n`,
+        "system",
+      );
+
+      if (attempt === maxAttempts) {
+        return validation;
+      }
+    }
+
+    return {
+      ok: false,
+      code: c420uiExitCodes.rootPolicyError,
+      message: "[error] Administrator authorization failed.",
+    };
+  }
+
   const actionRunner = createInteractiveActionRunner({
     bridge,
     rootDir: opts.rootDir,
     env: process.env,
     rootProvider,
+    requestRootAccess: rootProvider ? requestInteractiveRootAccess : undefined,
     createActionEngine: createC420UIActionEngine,
     appendLogText(text, source) {
       appendLogText(
