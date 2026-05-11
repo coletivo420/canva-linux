@@ -1810,6 +1810,8 @@ function main(): number {
     "Canva Linux recipes",
     "Repository check helper",
     "Obsolete",
+    "build-runtime.sh",
+    "install-flatpak-local.sh",
     "packages/c420ui/host/linux/sudo-helper.sh",
     "scripts/preflight-common.sh",
   ] as const) {

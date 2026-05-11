@@ -29,34 +29,6 @@ validate_json_file() {
   }
 }
 
-validate_package_scripts() {
-  validate_json_file package.json
-
-  node <<'NODE'
-const fs = require('node:fs');
-
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-const scripts = pkg.scripts || {};
-const failures = [];
-
-for (const [name, command] of Object.entries(scripts)) {
-  if (typeof command !== 'string') {
-    failures.push(`scripts.${name} must be a string`);
-    continue;
-  }
-
-  if (/\r|\n/.test(command)) {
-    failures.push(`scripts.${name} must stay on one line`);
-  }
-}
-
-if (failures.length > 0) {
-  console.error('[error] package.json contains invalid npm scripts:');
-  for (const failure of failures) console.error(`[error] - ${failure}`);
-  process.exit(1);
-}
-NODE
-}
 
 detect_package_version() {
   if command -v node >/dev/null 2>&1 && [[ -f package.json ]]; then

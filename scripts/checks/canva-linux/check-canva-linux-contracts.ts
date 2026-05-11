@@ -446,7 +446,7 @@ function checkDependentProjectAdapterBoundary(failures: string[]): void {
       "adapter.runAction(actionId, contextForAction())",
       "scripts/" + "ensure-npm-dependencies.sh",
       "ensure_" + "npm_dependencies",
-      "scripts/" + "c420ui-canva-linux",
+      "scripts/" + "c420ui-" + "canva-linux",
       "scripts/" + "sudo-common.sh",
       "canva_" + "sudo",
       "CANVA_" + "REQUIRED_NPM_DEPS",

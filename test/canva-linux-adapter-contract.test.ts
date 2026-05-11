@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..", "..");
+const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
 
 function read(relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
@@ -39,7 +39,7 @@ test("artifact workflows route through the Action Engine", () => {
   assert.equal(source.includes("adapter.runAction(actionId"), false);
 });
 
-test("shell helper classification removes transitional npm bootstrap", () => {
+test("shell helper classification keeps removed npm bootstrap out", () => {
   const preflight = read("scripts/preflight-common.sh");
 
   assert.equal(fs.existsSync(path.join(rootDir, "scripts/" + "ensure-npm-dependencies.sh")), false);
