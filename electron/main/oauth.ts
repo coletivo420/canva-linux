@@ -2,11 +2,15 @@
 
 // @ts-check
 
-export type DebugLog = (category: string, ...args: unknown[]) => boolean;
-export type CanvaTabEntry = {
-  id: number;
-  view: { webContents: { reload(): void } };
-};
+import type {
+  DebugLog,
+  SessionLike,
+  TabEntry,
+  WebContentsLike,
+} from "../shared/types";
+
+export type { DebugLog, SessionLike, WebContentsLike } from "../shared/types";
+export type CanvaTabEntry = Pick<TabEntry, "id" | "view">;
 export type OAuthPopupEntry = {
   id: number;
   window: BrowserWindowLike;
@@ -20,32 +24,6 @@ export type OAuthPopupEntry = {
   sourceWebContentsId: number | null;
 };
 export type AuthPopupMap = Map<number, OAuthPopupEntry>;
-export type SessionLike = {
-  partition?: string;
-};
-export type WebContentsLike = {
-  session?: SessionLike;
-  getURL(): string;
-  getLastWebPreferences():
-    | {
-        contextIsolation?: boolean;
-        nodeIntegration?: boolean;
-        sandbox?: boolean;
-      }
-    | null
-    | undefined;
-  on(event: string, listener: (...args: any[]) => void): unknown;
-  once(event: string, listener: (...args: any[]) => void): unknown;
-  setWindowOpenHandler(
-    handler: (details: {
-      url: string;
-      openerUrl?: string;
-      disposition?: string;
-      frameName?: string;
-    }) => { action: "deny" | "allow" },
-  ): void;
-  loadURL(url: string): Promise<void> | void;
-};
 export type BrowserWindowLike = {
   webContents: WebContentsLike;
   isDestroyed(): boolean;
@@ -109,86 +87,6 @@ type CreateOAuthHelpersOptions = {
   summarizeOauthEntry: (entry: OAuthPopupEntry | undefined) => string;
   windowLabel: (window: BrowserWindowLike) => string;
 };
-
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- */
-
-/**
- * @typedef {{
- *   id: number;
- *   view: { webContents: { reload(): void } };
- * }} CanvaTabEntry
- */
-
-/**
- * @typedef {{
- *   id: number;
- *   window: BrowserWindowLike;
- *   startedOnCanvaAuth: boolean;
- *   sawExternalProvider: boolean;
- *   sawAuthorizedCallback: boolean;
- *   completionHandled: boolean;
- *   pendingCallbackUrl: string;
- *   allowClose: boolean;
- *   closeReason: string;
- *   sourceWebContentsId: number | null;
- * }} OAuthPopupEntry
- */
-
-/**
- * @typedef {Map<number, OAuthPopupEntry>} AuthPopupMap
- */
-
-/**
- * @typedef {{
- *   partition?: string;
- * }} SessionLike
- */
-
-/**
- * @typedef {{
- *   session?: SessionLike;
- *   getURL(): string;
- *   getLastWebPreferences(): { contextIsolation?: boolean; nodeIntegration?: boolean; sandbox?: boolean } | null | undefined;
- *   on(event: string, listener: (...args: any[]) => void): unknown;
- *   once(event: string, listener: (...args: any[]) => void): unknown;
- *   setWindowOpenHandler(handler: (details: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => { action: 'deny' | 'allow' }): void;
- *   loadURL(url: string): Promise<void> | void;
- * }} WebContentsLike
- */
-
-/**
- * @typedef {{
- *   webContents: WebContentsLike;
- *   isDestroyed(): boolean;
- *   destroy(): void;
- *   focus(): void;
- *   show(): void;
- *   loadURL(url: string): Promise<void> | void;
- *   setTitle(title: string): void;
- *   setMenuBarVisibility(visible: boolean): void;
- *   setBackgroundColor(color: string): void;
- *   getBounds(): Record<string, number>;
- *   once(event: string, listener: (...args: any[]) => void): unknown;
- *   on(event: string, listener: (...args: any[]) => void): unknown;
- * }} BrowserWindowLike
- */
-
-/**
- * @typedef {{
- *   reloadActiveTab?: boolean;
- *   reason?: string;
- * }} CloseAuthPopupOptions
- */
-
-/**
- * @typedef {{
- *   openerUrl?: string;
- *   shellBackgroundColor?: () => string;
- *   sourceWebContentsId?: number | null;
- * }} RegisterAuthPopupOptions
- */
 
 /**
  * @param {{
@@ -466,7 +364,14 @@ export function createOAuthHelpers({
       ) {
         entry.completionHandled = true;
         flushSession(getCanvaSession())
-          .catch(() => {})
+          .catch((error: unknown) => {
+            debugLog(
+              "session",
+              "flush-error",
+              `popup=${popupId}`,
+              error instanceof Error ? error.message : String(error),
+            );
+          })
           .finally(() => {
             debugLog(
               "oauth",
@@ -609,7 +514,14 @@ export function createOAuthHelpers({
 
     wc.on("did-navigate", (_event: unknown, url: string) => {
       debugLog("oauth", "popup-did-navigate", `popup=${popupId}`, url);
-      syncPopupState(url).catch(() => {});
+      syncPopupState(url).catch((error: unknown) => {
+        debugLog(
+          "oauth",
+          "sync-state-error",
+          `popup=${popupId}`,
+          error instanceof Error ? error.message : String(error),
+        );
+      });
     });
     wc.on(
       "will-redirect",
@@ -636,7 +548,14 @@ export function createOAuthHelpers({
         `popup=${popupId}`,
         url,
       );
-      syncPopupState(url).catch(() => {});
+      syncPopupState(url).catch((error: unknown) => {
+        debugLog(
+          "oauth",
+          "sync-state-error",
+          `popup=${popupId}`,
+          error instanceof Error ? error.message : String(error),
+        );
+      });
     });
     wc.on(
       "did-fail-load",

@@ -2,35 +2,15 @@
 
 // @ts-check
 
-export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+import type { DebugLog, TabEntry } from "../shared/types";
+
+export type {
+  DebugLog,
+  TabEntry,
+  WebContentsLike,
+} from "../shared/types";
 export type NavigationDecision = { category: string; kind: string };
 export type PreventableEvent = { preventDefault(): void };
-export type WebContentsLike = {
-  id: number;
-  getURL(): string;
-  focus(): void;
-  loadURL(url: string): Promise<void> | void;
-  executeJavaScript(code: string): Promise<unknown>;
-  insertCSS(css: string): Promise<unknown>;
-  setWindowOpenHandler(
-    handler: (details: {
-      url: string;
-      disposition?: string;
-      frameName?: string;
-    }) => {
-      action: "allow" | "deny";
-      overrideBrowserWindowOptions?: Record<string, unknown>;
-    },
-  ): void;
-  on(event: string, listener: (...args: any[]) => void): unknown;
-};
-export type TabEntry = {
-  id: number;
-  title: string;
-  url: string;
-  favicon: string | null;
-  view: { webContents: WebContentsLike };
-};
 type AttachTabEventHandlersHelpers = {
   appName: string;
   appUrl: string;
@@ -77,23 +57,6 @@ type AttachTabEventHandlersHelpers = {
   switchRelativeTab: (step: number) => void;
   broadcastTabsState: () => void;
 };
-
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- * @typedef {{ category: string, kind: string }} NavigationDecision
- * @typedef {{ preventDefault(): void }} PreventableEvent
- * @typedef {{
- *   id: number;
- *   getURL(): string;
- *   focus(): void;
- *   loadURL(url: string): Promise<void> | void;
- *   executeJavaScript(code: string): Promise<unknown>;
- *   insertCSS(css: string): Promise<unknown>;
- *   setWindowOpenHandler(handler: (details: { url: string, disposition?: string, frameName?: string }) => { action: 'allow' | 'deny', overrideBrowserWindowOptions?: Record<string, unknown> }): void;
- *   on(event: string, listener: (...args: any[]) => void): unknown;
- * }} WebContentsLike
- * @typedef {{ id: number, title: string, url: string, favicon: string | null, view: { webContents: WebContentsLike } }} TabEntry
- */
 
 // Attach all BrowserView/WebContents event wiring for a single Canva tab.
 // This module exists so tab lifecycle policy can evolve without forcing the
@@ -177,6 +140,14 @@ export function attachTabEventHandlers(
 
   debugLog("view", "attach-handlers", `tab=${tab.id}`);
   const wc = tab.view.webContents;
+  const logAsyncFailure = (operation: string, error: unknown): void => {
+    debugLog(
+      "tabs:diagnostics",
+      operation,
+      `tab=${tab.id}`,
+      error instanceof Error ? error.message : String(error),
+    );
+  };
 
   wc.setWindowOpenHandler(
     ({
@@ -347,9 +318,16 @@ export function attachTabEventHandlers(
         if (typeof ensureWrappedEyeDropperInstalled === 'function') {
           ensureWrappedEyeDropperInstalled();
         }
-      } catch {}
+      } catch (error) {
+        console.warn(
+          '[canva:eyedropper:ensure-error]',
+          error && error.message ? error.message : String(error),
+        );
+      }
     `,
-    ).catch(() => {});
+    ).catch((error: unknown) => {
+      logAsyncFailure("ensure-wrapper-error", error);
+    });
   };
 
   wc.on("did-navigate", syncNavigation);
@@ -380,7 +358,9 @@ export function attachTabEventHandlers(
       html { text-rendering: optimizeLegibility; }
       body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
     `,
-    ).catch(() => {});
+    ).catch((error: unknown) => {
+      logAsyncFailure("insert-css-error", error);
+    });
   });
 
   wc.on(
@@ -458,7 +438,12 @@ export function attachTabEventHandlers(
           if (typeof ensureWrappedEyeDropperInstalled === 'function') {
             ensured = ensureWrappedEyeDropperInstalled() !== false;
           }
-        } catch {}
+        } catch (error) {
+          console.warn(
+            '[canva:eyedropper:ensure-error]',
+            error && error.message ? error.message : String(error),
+          );
+        }
 
         try {
           if (typeof __canvaIsWrappedEyeDropperInstalled === 'function') {
@@ -473,12 +458,19 @@ export function attachTabEventHandlers(
               || (typeof ctor === 'function' && ctor.name === 'WrappedEyeDropper')
             );
           }
-        } catch {}
+        } catch (error) {
+          console.warn(
+            '[canva:eyedropper:check-error]',
+            error && error.message ? error.message : String(error),
+          );
+        }
 
         console.log('[canva:eyedropper:check] tab=' + ${tab.id} + ' installed=' + installed + ' ensured=' + ensured);
       })();
     `,
-    ).catch(() => {});
+    ).catch((error: unknown) => {
+      logAsyncFailure("eyedropper-check-error", error);
+    });
   });
 
   wc.on("before-input-event", (event: PreventableEvent, input: any) => {

@@ -1,6 +1,6 @@
 "use strict";
 
-type DebugLog = (category: string, ...args: unknown[]) => boolean;
+import type { DebugLog } from "../shared/types";
 type CommandLineLike = {
   appendSwitch(name: string, value?: string): void;
   getSwitchValue(name: string): string;
@@ -286,7 +286,13 @@ async function configureSession({
     item.setSavePath(path.join(downloadsDir, filename));
   });
 
-  await flushSessionFn(ses).catch(() => {});
+  await flushSessionFn(ses).catch((error: unknown) => {
+    debugLog(
+      "session",
+      "flush-error",
+      error instanceof Error ? error.message : String(error),
+    );
+  });
   return ses;
 }
 

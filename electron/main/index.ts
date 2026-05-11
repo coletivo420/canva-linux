@@ -56,7 +56,6 @@ const { createWindowOpenPolicy } = require("./window-open-policy");
 const APP_ID = "io.github.coletivo420.canva-linux";
 const APP_URL = "https://www.canva.com/";
 const APP_NAME = "Canva Linux";
-const HOME_URL = APP_URL;
 const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
 const APP_ICON_PATH = path.join(__dirname, "..", "assets", "canva-icon.png");
@@ -193,7 +192,7 @@ const tabHelpers = createTabHelpers({
   findTabByWebContentsRef(value: FindTabByWebContents) {
     findTabByWebContents = value;
   },
-  getHomeUrl: () => HOME_URL,
+  getHomeUrl: () => APP_URL,
   mainWindowRef: () => mainWindow,
   nativeTheme,
   setActiveTabId(value: number | null) {
@@ -222,9 +221,7 @@ const oauthHelpers = createOAuthHelpers({
   extractHostname,
   flushSession: flushSession as unknown as (session: unknown) => Promise<void>,
   getActiveTab: () =>
-    (activeTabId === null ? undefined : tabs.get(activeTabId)) as unknown as
-      | import("./oauth").CanvaTabEntry
-      | undefined,
+    activeTabId === null ? undefined : tabs.get(activeTabId),
   getCanvaSession,
   isBlankPopupUrl,
   isCanvaAuthUrl,
@@ -327,7 +324,7 @@ const tabController = createTabController({
   classifyWindowOpenRequest,
   debugLog,
   getCanvaSession,
-  homeUrl: HOME_URL,
+  homeUrl: APP_URL,
   isBlankPopupUrl,
   isCanvaAuthUrl,
   isCanvaUrl,
@@ -341,7 +338,7 @@ const tabController = createTabController({
     },
     tabs,
   },
-  tabHelpers: tabHelpers as unknown as import("./tab-controller").TabHelpers,
+  tabHelpers,
   WebContentsView:
     WebContentsView as unknown as import("./tab-controller").WebContentsViewConstructorLike,
 });

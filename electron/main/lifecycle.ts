@@ -1,6 +1,6 @@
 "use strict";
 
-type DebugLog = (category: string, ...args: unknown[]) => boolean;
+import type { DebugLog } from "../shared/types";
 type AppLike = {
   requestSingleInstanceLock(): boolean;
   whenReady(): Promise<void>;
@@ -201,7 +201,13 @@ function registerAppLifecycle({
           );
         });
       } else {
-        await flushSession(canvaSession).catch(() => {});
+        await flushSession(canvaSession).catch((error: unknown) => {
+          debugLog(
+            "session",
+            "flush-error",
+            startupErrorMessage(error),
+          );
+        });
       }
     }
     if (process.platform !== "darwin") app.quit();
