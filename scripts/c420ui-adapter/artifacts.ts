@@ -154,7 +154,8 @@ function assertRequiredString(
 }
 
 function toConfigPath(configPath: string): string {
-  return path.join(...configPath.split(/[\\/]+/));
+  // Ensure we treat the path as relative and normalize platform-specific separators
+  return path.normalize(configPath.replace(/^[\\/]+/, ""));
 }
 
 function resolveOutputPattern(outputPattern: string, version: string): string {
