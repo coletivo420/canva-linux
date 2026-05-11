@@ -1112,7 +1112,7 @@ function main(): number {
 
   for (const workflow of workflows) {
     if (!workflow.id || !workflow.label) failures.push("artifact workflows must have id and label");
-    if (!workflow.planned && workflow.kind !== "native" && !("outputPattern" in workflow)) {
+    if (!workflow.planned && workflow.kind !== "native" && !workflow.outputPattern) {
       failures.push(`${workflow.id}: concrete packaged artifacts must declare outputPattern`);
     }
     if (workflow.scope === "system" && workflow.requiresRoot !== true) {
