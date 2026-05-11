@@ -944,9 +944,25 @@ function main(): number {
   const rootDir = process.cwd();
   const workflows = adapter.loadArtifactWorkflows();
   const workflowsById = new Map(workflows.map((workflow) => [workflow.id, workflow]));
-  const artifactsSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/artifacts.ts"), "utf8");
+  const artifactsConfigPath = "config/canva-linux/artifacts.json";
+  const artifactsAdapterPath = "scripts/c420ui-adapter/artifacts.ts";
+  const artifactsConfigFullPath = path.join(rootDir, artifactsConfigPath);
+  const artifactsSource = fs.readFileSync(path.join(rootDir, artifactsAdapterPath), "utf8");
+  const artifactsConfigSource = fs.existsSync(artifactsConfigFullPath)
+    ? fs.readFileSync(artifactsConfigFullPath, "utf8")
+    : "";
+  const artifactsConfig = artifactsConfigSource
+    ? JSON.parse(artifactsConfigSource) as { workflows?: Array<Record<string, unknown>> }
+    : { workflows: [] };
   const bridgeSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/bridge.ts"), "utf8");
   const failures: string[] = [];
+
+  if (!fs.existsSync(artifactsConfigFullPath)) {
+    failures.push(`${artifactsConfigPath}: artifact workflow recipes are required`);
+  }
+  if (!artifactsSource.includes(artifactsConfigPath)) {
+    failures.push(`${artifactsAdapterPath}: must load ${artifactsConfigPath}`);
+  }
 
   for (const fragment of [
     "buildActionId",
@@ -957,7 +973,23 @@ function main(): number {
     "releaseActionId",
   ]) {
     if (!artifactsSource.includes(fragment)) {
-      failures.push(`scripts/c420ui-adapter/artifacts.ts: missing ${fragment}`);
+      failures.push(`${artifactsAdapterPath}: missing ${fragment}`);
+    }
+  }
+
+  for (const hardcodedWorkflow of [
+    'id: "appimage"',
+    'id: "flatpak"',
+    'id: "native-system"',
+    'id: "native-user"',
+    'id: "release-tarball"',
+    'id: "release-checksums"',
+    'id: "deb"',
+    'id: "rpm"',
+    'id: "aur"',
+  ]) {
+    if (artifactsSource.includes(hardcodedWorkflow)) {
+      failures.push(`${artifactsAdapterPath}: must not hardcode artifact workflow declarations (${hardcodedWorkflow})`);
     }
   }
 
@@ -978,6 +1010,36 @@ function main(): number {
   ]) {
     if (bridgeSource.includes(fragment)) {
       failures.push(`scripts/c420ui-adapter/bridge.ts: must not bypass Action Engine with ${fragment}`);
+    }
+  }
+
+
+  if (artifactsConfigSource.includes("x64")) {
+    failures.push(`${artifactsConfigPath}: artifact recipes must not normalize generated architecture names to x64`);
+  }
+
+  const actionsById = new Map(adapter.loadActions().map((action) => [action.id, action]));
+  for (const workflow of artifactsConfig.workflows ?? []) {
+    const workflowId = typeof workflow.id === "string" ? workflow.id : "<unknown>";
+    for (const field of [
+      "buildActionId",
+      "validateActionId",
+      "installActionId",
+      "uninstallActionId",
+      "purgeActionId",
+      "releaseActionId",
+    ]) {
+      const actionId = workflow[field];
+      if (typeof actionId !== "string") continue;
+      const action = actionsById.get(actionId);
+      if (!action) {
+        failures.push(`${artifactsConfigPath}: workflow ${workflowId} references unknown ${field} ${actionId}`);
+        continue;
+      }
+      const actionPlanned = action.kind === "planned" || action.planned === true;
+      if (workflow.planned === true && actionPlanned !== true) {
+        failures.push(`${artifactsConfigPath}: planned workflow ${workflowId} points at executable ${field} ${actionId}`);
+      }
     }
   }
 
@@ -1712,6 +1774,7 @@ function checkReleaseContract(failures: string[]): void {
     readProjectFile(rootDir, "scripts/build-appimage.sh"),
     readProjectFile(rootDir, "scripts/build-flatpak-bundle.sh"),
     readProjectFile(rootDir, "scripts/package-guidance-common.sh"),
+    readProjectFile(rootDir, "config/canva-linux/artifacts.json"),
   ].join("\n");
 
   for (const forbidden of [
