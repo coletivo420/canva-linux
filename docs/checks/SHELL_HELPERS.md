@@ -34,6 +34,8 @@ root handling, or confirmation.
   checks such as `require_command`, `validate_json_file`,
   `detect_package_version`, and `validate_package_version_semver`.
 
+All listed helpers are used by active validation or packaging scripts; remove a helper from this file and from `scripts/preflight-common.sh` if it loses its last active caller.
+
 It must not own npm install policy, dependency repair policy, or bootstrap fallbacks.
 
 ## Obsolete

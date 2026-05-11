@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
@@ -7,23 +6,6 @@ import { c420uiExitCodes } from "../packages/c420ui/src";
 import { runCanvaLinuxArtifactWorkflow } from "../scripts/c420ui-adapter/bridge";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
-const bridgeSourcePath = path.join(rootDir, "scripts/c420ui-adapter/bridge.ts");
-
-function readBridgeSource(): string {
-  return fs.readFileSync(bridgeSourcePath, "utf8");
-}
-
-test("Canva Linux artifact workflow bridge routes through Action Engine and Root Provider", () => {
-  const source = readBridgeSource();
-
-  assert.equal(source.includes("createC420UIActionEngine"), true);
-  assert.equal(source.includes("createCanvaLinuxRootProvider"), true);
-  assert.equal(source.includes("runC420UIArtifactWorkflow"), true);
-  assert.equal(source.includes("engine.runActionById"), true);
-  assert.equal(source.includes("return adapter." + "runAction(actionId"), false);
-  assert.equal(source.includes("adapter." + "runAction(actionId,"), false);
-});
-
 test("Canva Linux artifact workflow dry-run does not execute the concrete adapter action", async () => {
   const result = await runCanvaLinuxArtifactWorkflow(
     "appimage",

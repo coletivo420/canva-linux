@@ -1112,39 +1112,6 @@ function main(): number {
 
   for (const workflow of workflows) {
     if (!workflow.id || !workflow.label) failures.push("artifact workflows must have id and label");
-    const actionIds = [
-      workflow.buildActionId,
-      workflow.validateActionId,
-      workflow.installActionId,
-      workflow.uninstallActionId,
-      workflow.purgeActionId,
-      workflow.releaseActionId,
-    ].filter((id): id is string => Boolean(id));
-    for (const actionId of actionIds) {
-      const action = adapter.loadActions().find((candidate) => candidate.id === actionId);
-      if (!action) {
-        failures.push(`${workflow.id}: action ${actionId} does not exist`);
-        continue;
-      }
-      const actionPlanned = action.kind === "planned" || action.planned === true;
-      if (workflow.planned === true && actionPlanned !== true) {
-        failures.push(`${workflow.id}: planned artifact workflow must not point at executable action ${actionId}`);
-      }
-    }
-    for (const [field, actionId] of [
-      ["buildActionId", workflow.buildActionId],
-      ["validateActionId", workflow.validateActionId],
-      ["installActionId", workflow.installActionId],
-      ["uninstallActionId", workflow.uninstallActionId],
-      ["purgeActionId", workflow.purgeActionId],
-    ] as const) {
-      if (!actionId || workflow.planned === true) continue;
-      const action = adapter.loadActions().find((candidate) => candidate.id === actionId);
-      const actionPlanned = action?.kind === "planned" || action?.planned === true;
-      if (actionPlanned) {
-        failures.push(`${workflow.id}: executable artifact workflow must not point ${field} at planned action ${actionId}`);
-      }
-    }
     if (!workflow.planned && workflow.kind !== "native" && !("outputPattern" in workflow)) {
       failures.push(`${workflow.id}: concrete packaged artifacts must declare outputPattern`);
     }

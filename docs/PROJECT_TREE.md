@@ -17,7 +17,7 @@ c420ui is the future modular tool layer for terminal UI, action execution, logs,
 │   ├── ui/                    Static Electron shell UI assets
 │   └── assets/                Runtime assets copied into the Electron build
 ├── config/                    Project configuration files
-│   └── canva-linux/           Canva Linux actions, dependency declarations, and c420ui project UI config
+│   └── canva-linux/           Canva Linux actions, development, dependency, artifact, and project UI config
 ├── scripts/                   Canva Linux tool, validation, packaging, and host-operation source
 │   ├── core/                  Shared TypeScript tooling and repository-wide checks
 │   ├── checks/canva-linux/    Canva Linux-specific validation and anti-regression checks
@@ -107,7 +107,7 @@ The intended separation is:
   Linux root/sudo provider base, host dependency contracts, command-runner and operational-log contracts live in `packages/c420ui/src/`.
 - **c420ui terminal UI**: reusable terminal layout, focus, logs, modal, clipboard,
   settings, logo, help formatting, root launch guard, runtime startup policy and interactive runner code lives in `packages/c420ui/src/terminal/`.
-- **Canva Linux adapter**: project-specific actions, root policy conditionals, environment variable names, generic sudo helper environment translation, metadata, launch wiring, concrete host dependency bootstrap,
+- **Canva Linux adapter**: thin project loader for actions, development tasks, artifact workflows, root policy conditionals, environment variable names, generic sudo helper environment translation, metadata, launch wiring, concrete host dependency declarations,
   install/package status, and Canva Linux labels live in
   `scripts/c420ui-adapter/`. Installation detection probes live in
   `scripts/canva-linux/detection/` and use the generic engine in `packages/c420ui/src/detection.ts`.
@@ -127,8 +127,10 @@ The intended separation is:
 - **Future package workspace**: `packages/c420ui/` is a private skeleton reserved for a possible
   standalone c420ui package after the core is separated. It is not a published
   npm package and should not be documented as externally consumable yet.
-- **Action contract**: c420ui and direct CLI actions must continue to source
-  actions from `config/canva-linux/actions.json` and shared TypeScript action contracts.
+- **Project config contract**: c420ui and direct CLI actions must continue to source
+  actions from `config/canva-linux/actions.json`, development workflows from
+  `config/canva-linux/development.json`, and artifact workflows from
+  `config/canva-linux/artifacts.json` through shared TypeScript contracts.
 - **Terminal root guard**: root launch checks, launch messaging, and terminal help formatting belong to `packages/c420ui/src/terminal/root-guard.ts`, `packages/c420ui/src/terminal/runtime.ts`, and `packages/c420ui/src/terminal/help.ts`; Canva Linux wrappers and adapters must not duplicate them.
 
 When moving code toward the split, avoid hardcoding Canva Linux project metadata

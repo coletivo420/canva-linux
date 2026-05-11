@@ -23,6 +23,7 @@ recipes, and host scripts.
 
 - project metadata
 - concrete action registry
+- concrete development task declarations
 - concrete artifact recipes
 - concrete detection provider
 - concrete root policy decisions
@@ -56,7 +57,7 @@ recipes, and host scripts.
   adapter.
 - Moving root launch checks from `packages/c420ui/src/terminal` into project
   launchers or adapters.
-- Moving project detection providers, action registries, artifact recipes, or
+- Moving project detection providers, action registries, development task declarations, artifact recipes, or
   package naming into c420ui core.
 - Calling `scripts/ensure-npm-dependencies.sh` directly from launchers or generic c420ui code.
 - Bypassing `runC420UIHostDependencyEnsure` from project launchers.
@@ -87,6 +88,12 @@ recipes, and host scripts.
 - Dependent projects own concrete dependency declarations only.
 - `config/canva-linux/dependencies.json` is the Canva Linux declaration; c420ui owns host dependency management.
 - `scripts/preflight-common.sh` remains in `scripts/` for now and must not be moved into c420ui core in this phase.
+
+## Project config ownership
+
+- `config/canva-linux/actions.json`, `config/canva-linux/development.json`, and `config/canva-linux/artifacts.json` are Canva Linux project declarations.
+- c420ui core owns generic validation and runtime semantics; it must not receive Canva Linux policy or paths.
+- The Canva Linux adapter loads these declarations and maps them to c420ui contracts without becoming a policy engine.
 
 ## Adapter execution boundary
 

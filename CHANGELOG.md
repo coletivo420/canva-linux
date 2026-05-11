@@ -4,11 +4,14 @@
 
 ### Fixed
 - Fixed c420ui terminal startup so `npm run c420ui` uses the project runner instead of executing the terminal package barrel.
+- Consolidated duplicate Canva Linux artifact action validation in checks and removed duplicate source-string tests from the behavioral suite.
+- Kept artifact configuration process-static in the adapter loader and documented the path-based cache.
 
 ### Documentation
 - Updated validation and AI maintenance docs to reflect the completed c420ui CLI, Action Engine, Root Provider, Command Runner,
   operational log, and consolidated validation migrations.
 - Updated maintenance documentation to remove legacy runner compatibility guidance.
+- Clarified that Canva Linux actions, development tasks, and artifact workflows are project config declarations loaded by a thin adapter.
 
 ### Added
 - Added generic c420ui host dependency runner modules for command, Node and npm dependency checks.

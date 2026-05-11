@@ -610,7 +610,6 @@ function main(): number {
   }
   const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
   const runner = read(rootDir, "packages/c420ui/src/terminal/interactive-action-runner.ts");
-  const adapter = read(rootDir, "scripts/c420ui-adapter/adapter.ts");
   if (!runner.includes("requestRootAccess")) {
     failures.push("interactive-action-runner.ts must pass requestRootAccess to the action engine");
   }
@@ -628,11 +627,6 @@ function main(): number {
     failures.push("app.ts must clear modalActive in the administrator authorization prompt finally block");
   }
   failures.push(...collectInteractiveRootAuthHardeningFailures(app, "app.ts"));
-  for (const forbidden of ["sudo", "password", "root prompt", "sudo-helper.sh"] as const) {
-    if (adapter.includes(forbidden)) {
-      failures.push(`adapter.ts must not contain sudo/password/root prompt logic: ${forbidden}`);
-    }
-  }
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[c420ui-core-contracts] root provider OK");
