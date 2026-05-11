@@ -1,6 +1,8 @@
 // @ts-nocheck
 "use strict";
 
+const { contextBridge } = require("electron");
+
 const { createPreloadDebug } = require("./debug");
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
@@ -14,6 +16,179 @@ debugLog(
   process.isMainFrame ? "main-frame" : "sub-frame",
   location.href,
 );
+
+function installMainWorldEyeDropperBridge() {
+  if (
+    !contextBridge ||
+    typeof contextBridge.executeInMainWorld !== "function"
+  ) {
+    return false;
+  }
+
+  try {
+    contextBridge.executeInMainWorld({
+      func: () => {
+        const scope = globalThis || window;
+
+        function log(...args) {
+          try {
+            console.log("[canva:eyedropper:wrapper]", ...args);
+          } catch {}
+        }
+
+        function bridge() {
+          return scope.__canvaEyeDropperBridge;
+        }
+
+        function isWrappedEyeDropperInstalled() {
+          const ctor = scope.EyeDropper;
+          const wrapped = scope.__canvaWrappedEyeDropper;
+          return Boolean(
+            scope.__canvaWrappedEyeDropperInstalled === true ||
+              (typeof wrapped === "function" && ctor === wrapped) ||
+              (typeof ctor === "function" && ctor.name === "WrappedEyeDropper"),
+          );
+        }
+
+        function createAbortError() {
+          return new DOMException("The operation was aborted.", "AbortError");
+        }
+
+        function createOperationError(message) {
+          return new DOMException(
+            message || "The wrapper eye dropper failed.",
+            "OperationError",
+          );
+        }
+
+        function installWrappedEyeDropper() {
+          if (
+            scope.__canvaWrappedEyeDropperInstalled &&
+            scope.__canvaWrappedEyeDropper
+          ) {
+            return scope.__canvaWrappedEyeDropper;
+          }
+
+          const existingCtor = (() => {
+            try {
+              return scope.EyeDropper;
+            } catch {
+              return undefined;
+            }
+          })();
+          if (
+            !scope.__canvaNativeEyeDropper &&
+            typeof existingCtor === "function"
+          ) {
+            scope.__canvaNativeEyeDropper = existingCtor;
+          }
+
+          class WrappedEyeDropper {
+            async open(options = {}) {
+              const api = bridge();
+              if (!api || typeof api.open !== "function") {
+                throw createOperationError(
+                  "The Canva eye dropper bridge is unavailable.",
+                );
+              }
+
+              const signal = options?.signal;
+              if (signal?.aborted) {
+                throw createAbortError();
+              }
+
+              let abortHandler;
+              const pickPromise = Promise.resolve(api.open()).then((result) => {
+                if (!result || typeof result.sRGBHex !== "string") {
+                  throw createOperationError(
+                    "The wrapper eye dropper did not return a valid color.",
+                  );
+                }
+                return { sRGBHex: result.sRGBHex };
+              });
+
+              if (!signal) {
+                return pickPromise;
+              }
+
+              const abortPromise = new Promise((_, reject) => {
+                abortHandler = () => {
+                  try {
+                    api.cancel?.();
+                  } catch {}
+                  reject(createAbortError());
+                };
+                signal.addEventListener("abort", abortHandler, { once: true });
+              });
+
+              return Promise.race([pickPromise, abortPromise]).finally(() => {
+                if (abortHandler) {
+                  signal.removeEventListener("abort", abortHandler);
+                }
+              });
+            }
+          }
+
+          try {
+            Object.defineProperty(scope, "EyeDropper", {
+              configurable: true,
+              enumerable: false,
+              get() {
+                return WrappedEyeDropper;
+              },
+              set() {
+                return true;
+              },
+            });
+            scope.__canvaWrappedEyeDropper = WrappedEyeDropper;
+            scope.__canvaWrappedEyeDropperInstalled = true;
+            log("installed", location.href);
+          } catch (error) {
+            scope.__canvaWrappedEyeDropperInstalled = false;
+            log("install-failed", error?.message || String(error));
+          }
+
+          return WrappedEyeDropper;
+        }
+
+        function ensureWrappedEyeDropperInstalled() {
+          const wrapped = installWrappedEyeDropper();
+          try {
+            if (scope.EyeDropper !== wrapped) {
+              scope.__canvaWrappedEyeDropperInstalled = false;
+              installWrappedEyeDropper();
+            }
+          } catch {}
+          return isWrappedEyeDropperInstalled();
+        }
+
+        try {
+          Object.defineProperty(scope, "ensureWrappedEyeDropperInstalled", {
+            configurable: true,
+            enumerable: false,
+            value: ensureWrappedEyeDropperInstalled,
+          });
+          Object.defineProperty(scope, "__canvaIsWrappedEyeDropperInstalled", {
+            configurable: true,
+            enumerable: false,
+            value: isWrappedEyeDropperInstalled,
+          });
+        } catch {}
+
+        ensureWrappedEyeDropperInstalled();
+        return true;
+      },
+    });
+    return true;
+  } catch (error) {
+    logEyeDropper(
+      "eyedropper:wrapper",
+      "main-world-install-failed",
+      error?.message || String(error),
+    );
+    return false;
+  }
+}
 
 try {
   function installUploadDiagnostics() {
@@ -53,6 +228,9 @@ try {
               return Promise.reject(
                 new Error("custom-eyedropper-flow unavailable"),
               );
+            },
+            cancelActivePicker() {
+              return false;
             },
           };
         },
@@ -121,9 +299,14 @@ try {
     installer({ debugEnabled, debugLog });
   }
 
-  const { wrapOpenCall } = createCustomEyeDropperFlow({
+  const { wrapOpenCall, cancelActivePicker } = createCustomEyeDropperFlow({
     debugLog,
     logEyeDropper,
+  });
+
+  contextBridge.exposeInMainWorld("__canvaEyeDropperBridge", {
+    open: () => wrapOpenCall(),
+    cancel: () => cancelActivePicker(),
   });
   installEyeDropperRoutingDiagnostics({
     debugEnabled,
@@ -136,6 +319,7 @@ try {
     logEyeDropper,
     wrapOpenCall,
   });
+  installMainWorldEyeDropperBridge();
 
   function isWrappedEyeDropperInstalled() {
     try {
@@ -173,6 +357,7 @@ try {
 
   // Install as early as possible.
   ensureWrappedEyeDropperInstalled();
+  installMainWorldEyeDropperBridge();
   debugLog("startup", "eyedropper-installed");
 
   if (document.readyState === "loading") {
@@ -180,17 +365,20 @@ try {
       "DOMContentLoaded",
       () => {
         ensureWrappedEyeDropperInstalled();
+        installMainWorldEyeDropperBridge();
       },
       { once: true },
     );
   } else {
     ensureWrappedEyeDropperInstalled();
+    installMainWorldEyeDropperBridge();
   }
 
   window.addEventListener(
     "pageshow",
     () => {
       ensureWrappedEyeDropperInstalled();
+      installMainWorldEyeDropperBridge();
     },
     { passive: true },
   );
@@ -198,6 +386,7 @@ try {
     "focus",
     () => {
       ensureWrappedEyeDropperInstalled();
+      installMainWorldEyeDropperBridge();
     },
     { passive: true },
   );

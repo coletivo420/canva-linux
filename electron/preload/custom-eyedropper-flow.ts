@@ -163,7 +163,10 @@ function isAbortLikeError(error: unknown) {
 
 /**
  * @param {{ debugLog: DebugLog, logEyeDropper: EyeDropperLog }} options
- * @returns {{ wrapOpenCall: (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult> }}
+ * @returns {{
+ *   wrapOpenCall: (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult>,
+ *   cancelActivePicker: () => boolean,
+ * }}
  */
 function createCustomEyeDropperFlow({
   debugLog,
@@ -370,8 +373,15 @@ function createCustomEyeDropperFlow({
     });
   }
 
+  function cancelActivePicker() {
+    if (!activePickerCleanup) return false;
+    activePickerCleanup();
+    return true;
+  }
+
   return {
     wrapOpenCall,
+    cancelActivePicker,
   };
 }
 

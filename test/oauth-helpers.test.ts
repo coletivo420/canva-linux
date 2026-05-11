@@ -8,8 +8,11 @@ const test = require("node:test");
 
 const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const { createOAuthHelpers, createOAuthPopupInitialState } =
-  loadRuntimeModule("main/oauth");
+const {
+  createOAuthHelpers,
+  createOAuthPopupInitialState,
+  createOAuthPopupOptionsSummary,
+} = loadRuntimeModule("main/oauth");
 
 function fakeWindow() {
   return {
@@ -76,6 +79,31 @@ test("creates OAuth popup initial state for external provider", () => {
   assert.equal(entry.startedOnCanvaAuth, true);
   assert.equal(entry.sawExternalProvider, true);
   assert.equal(entry.sourceWebContentsId, null);
+});
+
+test("OAuth popup options summary reads web preferences once", () => {
+  let readCount = 0;
+  const summary = createOAuthPopupOptionsSummary({
+    webContents: {
+      session: { partition: "persist:canva" },
+      getLastWebPreferences() {
+        readCount += 1;
+        return {
+          contextIsolation: true,
+          nodeIntegration: false,
+          sandbox: true,
+        };
+      },
+    },
+  });
+
+  assert.equal(readCount, 1);
+  assert.deepEqual(summary, {
+    partition: "persist:canva",
+    contextIsolation: true,
+    nodeIntegration: false,
+    sandbox: true,
+  });
 });
 
 test("OAuth popup close handler prevents premature window close before callback", () => {

@@ -117,6 +117,9 @@ test("createTabController forwards navigation helpers into tab event attachment"
   );
 
   assert.equal(state.tabs.size, 1);
+  assert.equal(tab.view.options.webPreferences.contextIsolation, true);
+  assert.equal(tab.view.options.webPreferences.sandbox, true);
+  assert.equal(tab.view.options.webPreferences.nodeIntegration, false);
   assert.equal(tab.view.webContents.loadedUrl, "https://www.canva.com/design");
   assert.equal(ensuredViews.length, 1);
   assert.deepEqual(visibilityCalls, [{ tabId: 1, visible: false }]);

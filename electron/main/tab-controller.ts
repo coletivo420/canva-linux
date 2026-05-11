@@ -201,8 +201,8 @@ export function createTabController({
     const view = new WebContentsView({
       webPreferences: {
         preload: preloadPath,
-        contextIsolation: false,
-        sandbox: false,
+        contextIsolation: true,
+        sandbox: true,
         nodeIntegration: false,
         nodeIntegrationInSubFrames: true,
         session: getCanvaSession(),
