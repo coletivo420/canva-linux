@@ -5,7 +5,6 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$REPO_ROOT"
 source "${SCRIPT_DIR}/ui-common.sh"
 source "${SCRIPT_DIR}/runtime-guidance-common.sh"
-source "${SCRIPT_DIR}/app-identity-common.sh"
 source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/flatpak-build-common.sh"
 ui_init
@@ -13,7 +12,7 @@ trap 'restore_flatpak_build_artifact_permissions || true' EXIT
 
 usage(){ cat <<'USAGE'
 Usage:
-  ./scripts/install-flatpak-local.sh [--skip-electron-build] [--skip-npm]
+  ./scripts/install-flatpak-local.sh [--skip-electron-build]
 USAGE
 }
 
@@ -23,7 +22,6 @@ SKIP_ELECTRON_BUILD=false
 for arg in "$@"; do
   case "$arg" in
     --skip-electron-build) SKIP_ELECTRON_BUILD=true ;;
-    --skip-npm) SKIP_ELECTRON_BUILD=true; ui_warn "--skip-npm is kept as an alias; prefer --skip-electron-build" ;;
     --help|-h) usage; exit 0 ;;
     *) usage; ui_error "Unknown argument: $arg"; exit 1 ;;
   esac

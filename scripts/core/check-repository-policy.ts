@@ -1092,6 +1092,8 @@ function validateDependentProjectBoundaryLayout(
     "scripts/core/overview-status.ts",
     "scripts/core/action-registry.ts",
     "scripts/core/validate-actions.ts",
+    "scripts/" + "c420ui-" + "canva-linux",
+    "scripts/" + "ensure-npm-dependencies.sh",
     "scripts/" + "sudo-common.sh",
   ] as const;
   for (const removedPath of removedPaths) {
@@ -1537,6 +1539,19 @@ function validateLauncherScriptShape(
   }
 }
 
+function validateRemovedFlatpakLocalInstallAlias(
+  rootDir: string,
+  failures: string[],
+): void {
+  const removedAlias = "--skip-" + "npm";
+  for (const relativePath of allRepositoryFiles(rootDir)) {
+    const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+    if (content.includes(removedAlias)) {
+      failures.push(`${relativePath}: removed Flatpak local-install alias must not return`);
+    }
+  }
+}
+
 function validateRootProviderContracts(
   rootDir: string,
   failures: string[],
@@ -1644,6 +1659,7 @@ function main(): number {
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);
   validateRemovedCompatibilityAliases(rootDir, failures);
+  validateRemovedFlatpakLocalInstallAlias(rootDir, failures);
   validateRootProviderContracts(rootDir, failures);
   validatePackageLockConsistency(rootDir, failures);
   validatePackageScripts(rootDir, failures);

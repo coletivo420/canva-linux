@@ -828,7 +828,6 @@ function main(): number {
     "packages/c420ui/src/terminal/app.ts must import generic c420ui internals from the package",
   );
 
-  // Transitional PascalCase TypeScript symbols are allowed until the public API rename commit.
   assertIncludes(
     failures,
     packageTypes,
@@ -920,7 +919,6 @@ function main(): number {
   const adapter = createCanvaLinuxC420UIAdapter(process.cwd());
   const rootDir = process.cwd();
   const workflows = adapter.loadArtifactWorkflows();
-  const actions = new Set(adapter.loadActions().map((action) => action.id));
   const workflowsById = new Map(workflows.map((workflow) => [workflow.id, workflow]));
   const artifactsSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/artifacts.ts"), "utf8");
   const bridgeSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/bridge.ts"), "utf8");
@@ -983,8 +981,14 @@ function main(): number {
       workflow.releaseActionId,
     ].filter((id): id is string => Boolean(id));
     for (const actionId of actionIds) {
-      if (actionId !== "release-artifacts" && !actions.has(actionId)) {
+      const action = adapter.loadActions().find((candidate) => candidate.id === actionId);
+      if (!action) {
         failures.push(`${workflow.id}: action ${actionId} does not exist`);
+        continue;
+      }
+      const actionPlanned = action.kind === "planned" || action.planned === true;
+      if (workflow.planned === true && actionPlanned !== true) {
+        failures.push(`${workflow.id}: planned artifact workflow must not point at executable action ${actionId}`);
       }
     }
     if (!workflow.planned && workflow.kind !== "native" && !("outputPattern" in workflow)) {
@@ -1062,7 +1066,12 @@ function main(): number {
       failures.push(`release artifacts must include ${expected}`);
     }
   }
+  const releaseAction = adapter.loadActions().find((action) => action.id === "release-artifacts");
   const releaseLinked = adapter.loadArtifactWorkflows().filter((workflow) => workflow.releaseActionId === "release-artifacts");
+  if (!releaseAction) failures.push("release-artifacts action is required");
+  if (releaseAction && (releaseAction.kind !== "planned" || releaseAction.planned !== true)) {
+    failures.push("release-artifacts action must remain planned until publication is executable");
+  }
   if (!releaseLinked.some((workflow) => workflow.kind === "appimage")) failures.push("release must include AppImage workflow");
   if (!releaseLinked.some((workflow) => workflow.kind === "flatpak")) failures.push("release must include Flatpak workflow");
   if (adapter.loadCapabilities().supportsRelease !== true) failures.push("release capability must be supported");
