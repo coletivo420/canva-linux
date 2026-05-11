@@ -1,6 +1,7 @@
 // @ts-nocheck
 "use strict";
 
+const { contextBridge } = require("electron");
 const { createPreloadDebug } = require("./debug");
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
@@ -154,22 +155,36 @@ try {
     }
   }
 
+  function exposePreloadHelper(name, value) {
+    try {
+      if (process.contextIsolated && contextBridge) {
+        contextBridge.exposeInMainWorld(name, value);
+        return;
+      }
+
+      Object.defineProperty(globalThis, name, {
+        configurable: true,
+        enumerable: false,
+        value,
+      });
+    } catch (error) {
+      debugLog("startup", "helper-expose-failed", name, error.message);
+    }
+  }
+
   // tab-events.js runs diagnostics through executeJavaScript() after complex
-  // Canva editor navigations. Expose only idempotent helpers so the main
+  // Canva editor navigations. Expose only idempotent helpers through
+  // contextBridge so the renderer can stay context-isolated while the main
   // process can verify/reinstall the wrapper without depending on preload
   // module scope.
-  try {
-    Object.defineProperty(globalThis, "ensureWrappedEyeDropperInstalled", {
-      configurable: true,
-      enumerable: false,
-      value: ensureWrappedEyeDropperInstalled,
-    });
-    Object.defineProperty(globalThis, "__canvaIsWrappedEyeDropperInstalled", {
-      configurable: true,
-      enumerable: false,
-      value: isWrappedEyeDropperInstalled,
-    });
-  } catch {}
+  exposePreloadHelper(
+    "ensureWrappedEyeDropperInstalled",
+    ensureWrappedEyeDropperInstalled,
+  );
+  exposePreloadHelper(
+    "__canvaIsWrappedEyeDropperInstalled",
+    isWrappedEyeDropperInstalled,
+  );
 
   // Install as early as possible.
   ensureWrappedEyeDropperInstalled();
