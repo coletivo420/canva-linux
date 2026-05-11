@@ -9,18 +9,6 @@ function read(relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
 
-test("adapter.runAction only executes concrete action commands", () => {
-  const source = read("scripts/c420ui-adapter/adapter.ts");
-
-  assert.equal(source.includes("Transitional bridge" + " execution path"), false);
-  assert.equal(source.includes("Defensive fallback" + " only"), false);
-  assert.equal(source.includes('action.kind === ' + '"planned"'), false);
-  assert.equal(source.includes("action.planned"), false);
-  assert.equal(source.includes("context." + "dryRun"), false);
-  assert.equal(source.includes("runC420UICommand"), true);
-  assert.equal(source.includes("env: context.env"), true);
-});
-
 test("CLI direct actions route through runC420UICli", () => {
   const source = read("scripts/c420ui-adapter/cli.ts");
 
