@@ -41,6 +41,54 @@ export type RegisterAuthPopupOptions = {
   shellBackgroundColor?: () => string;
   sourceWebContentsId?: number | null;
 };
+
+const SENSITIVE_OAUTH_LOG_PARAMS = new Set([
+  "access_token",
+  "auth_token",
+  "authorization",
+  "client_secret",
+  "code",
+  "credential",
+  "id_token",
+  "password",
+  "refresh_token",
+  "session_state",
+  "state",
+  "token",
+]);
+
+function redactSensitiveUrlParams(url: string): string {
+  try {
+    const parsed = new URL(url);
+
+    for (const key of Array.from(parsed.searchParams.keys())) {
+      if (SENSITIVE_OAUTH_LOG_PARAMS.has(key.toLowerCase())) {
+        parsed.searchParams.set(key, "[redacted]");
+      }
+    }
+
+    if (parsed.hash.includes("=")) {
+      const hashParams = new URLSearchParams(parsed.hash.slice(1));
+      let redactedHash = false;
+
+      for (const key of Array.from(hashParams.keys())) {
+        if (SENSITIVE_OAUTH_LOG_PARAMS.has(key.toLowerCase())) {
+          hashParams.set(key, "[redacted]");
+          redactedHash = true;
+        }
+      }
+
+      if (redactedHash) {
+        parsed.hash = hashParams.toString();
+      }
+    }
+
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 type CreateOAuthPopupInitialStateOptions = {
   popupId: number;
   window: BrowserWindowLike;
@@ -296,8 +344,8 @@ export function createOAuthHelpers({
       "oauth",
       "popup-created",
       summarizeOauthEntry(entry),
-      startUrl || "about:blank",
-      `opener=${openerUrl || "unknown"}`,
+      redactSensitiveUrlParams(startUrl || "about:blank"),
+      `opener=${redactSensitiveUrlParams(openerUrl || "unknown")}`,
     );
     debugLog("oauth", "popup-options", `popup=${popupId}`, popupOptionsSummary);
     debugLog(
@@ -360,7 +408,12 @@ export function createOAuthHelpers({
 
     wc.on("did-finish-load", () => {
       const loadedUrl = wc.getURL() || startUrl || "about:blank";
-      debugLog("oauth", "popup-finish-load", `popup=${popupId}`, loadedUrl);
+      debugLog(
+        "oauth",
+        "popup-finish-load",
+        `popup=${popupId}`,
+        redactSensitiveUrlParams(loadedUrl),
+      );
       if (
         entry.sawAuthorizedCallback &&
         entry.pendingCallbackUrl === loadedUrl &&
@@ -376,7 +429,7 @@ export function createOAuthHelpers({
               "oauth",
               "popup-authorized-callback",
               `popup=${popupId}`,
-              loadedUrl,
+              redactSensitiveUrlParams(loadedUrl),
             );
             closeAuthPopup(popupId, {
               reloadActiveTab: true,
@@ -432,7 +485,7 @@ export function createOAuthHelpers({
           "popup-window-open",
           `popup=${popupId}`,
           `kind=${request.kind}`,
-          url || "about:blank",
+          redactSensitiveUrlParams(url || "about:blank"),
           disposition || "unknown",
           frameName || "",
         );
@@ -450,7 +503,7 @@ export function createOAuthHelpers({
             "oauth",
             "popup-unsafe-external-blocked",
             `popup=${popupId}`,
-            url || "about:blank",
+            redactSensitiveUrlParams(url || "about:blank"),
           );
         }
         return { action: "deny" };
@@ -458,7 +511,12 @@ export function createOAuthHelpers({
     );
 
     wc.on("will-navigate", (event: { preventDefault(): void }, url: string) => {
-      debugLog("oauth", "popup-will-navigate", `popup=${popupId}`, url);
+      debugLog(
+        "oauth",
+        "popup-will-navigate",
+        `popup=${popupId}`,
+        redactSensitiveUrlParams(url),
+      );
       if (isOAuthProviderUrl(url) || isCanvaUrl(url) || isBlankPopupUrl(url)) {
         return;
       }
@@ -470,7 +528,7 @@ export function createOAuthHelpers({
           "oauth",
           "popup-unsafe-navigation-blocked",
           `popup=${popupId}`,
-          url || "about:blank",
+          redactSensitiveUrlParams(url || "about:blank"),
         );
       }
     });
@@ -499,7 +557,7 @@ export function createOAuthHelpers({
         "popup-canva-callback-detected",
         `popup=${popupId}`,
         `type=${callbackType}`,
-        url,
+        redactSensitiveUrlParams(url),
       );
       if (callbackType === "authorized") {
         entry.sawAuthorizedCallback = true;
@@ -511,7 +569,12 @@ export function createOAuthHelpers({
     };
 
     wc.on("did-navigate", (_event: unknown, url: string) => {
-      debugLog("oauth", "popup-did-navigate", `popup=${popupId}`, url);
+      debugLog(
+        "oauth",
+        "popup-did-navigate",
+        `popup=${popupId}`,
+        redactSensitiveUrlParams(url),
+      );
       syncPopupState(url).catch((error) => {
         debugLog("oauth", "sync-state-error", String(error));
       });
@@ -530,7 +593,7 @@ export function createOAuthHelpers({
           `popup=${popupId}`,
           `mainFrame=${isMainFrame ? "true" : "false"}`,
           `inPlace=${isInPlace ? "true" : "false"}`,
-          url,
+          redactSensitiveUrlParams(url),
         );
       },
     );
@@ -539,7 +602,7 @@ export function createOAuthHelpers({
         "oauth",
         "popup-did-redirect-navigation",
         `popup=${popupId}`,
-        url,
+        redactSensitiveUrlParams(url),
       );
       syncPopupState(url).catch((error) => {
         debugLog("oauth", "sync-state-error", String(error));
@@ -561,7 +624,7 @@ export function createOAuthHelpers({
           `mainFrame=${isMainFrame ? "true" : "false"}`,
           `code=${code}`,
           description || "no-description",
-          validatedURL || "unknown-url",
+          redactSensitiveUrlParams(validatedURL || "unknown-url"),
         );
       },
     );
