@@ -201,7 +201,9 @@ function registerAppLifecycle({
           );
         });
       } else {
-        await flushSession(canvaSession).catch(() => {});
+        await flushSession(canvaSession).catch((error) => {
+          debugLog("session", "flush-error", startupErrorMessage(error));
+        });
       }
     }
     if (process.platform !== "darwin") app.quit();

@@ -1,13 +1,14 @@
 import path from "path";
 
-import { attachTabEventHandlers, type TabEntry as EventTabEntry } from "./tab-events";
+import type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types";
+import { attachTabEventHandlers } from "./tab-events";
 import type {
   BrowserWindowLike as OAuthBrowserWindowLike,
   OAuthPopupEntry,
   RegisterAuthPopupOptions,
 } from "./oauth";
 
-export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+export type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types";
 export type NavigationDecision = { kind: string; category?: string };
 export type ClassifyNavigationRequest = (request: {
   url: string;
@@ -21,39 +22,9 @@ export type WindowOpenPolicy = (request: {
   disposition?: string;
   frameName?: string;
 }) => NavigationDecision;
-export type WebContentsViewLike = {
-  webContents: Record<string, unknown> & {
-    id: number;
-    getURL: () => string;
-    focus: () => void;
-    executeJavaScript: (code: string) => Promise<unknown>;
-    insertCSS: (css: string) => Promise<unknown>;
-    setWindowOpenHandler: (
-      handler: (details: {
-        url: string;
-        disposition?: string;
-        frameName?: string;
-      }) => {
-        action: "allow" | "deny";
-        overrideBrowserWindowOptions?: Record<string, unknown>;
-      },
-    ) => void;
-    on: (event: string, listener: (...args: any[]) => void) => unknown;
-    loadURL(url: string): Promise<void> | void;
-  };
-};
 export type WebContentsViewConstructorLike = new (
   options: Record<string, unknown>,
 ) => WebContentsViewLike;
-export type TabEntry = {
-  id: number;
-  view: WebContentsViewLike;
-  createdAt: number;
-  title: string;
-  url: string;
-  favicon: string | null;
-  isHome: boolean;
-};
 export type TabState = { tabs: Map<number, TabEntry>; nextTabIdRef(): number };
 export type TabHelpers = {
   ensureTopLevelView(view: WebContentsViewLike): void;
@@ -110,30 +81,6 @@ type CreateTabControllerOptions = {
   attachTabEventHandlersImpl?: AttachTabEventHandlersLike;
 };
 
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- * @typedef {{ kind: string, category?: string }} NavigationDecision
- * @typedef {(request: { url: string, openerUrl?: string, disposition?: string, frameName?: string }) => NavigationDecision} ClassifyNavigationRequest
- * @typedef {(request: { url: string, openerUrl?: string, disposition?: string, frameName?: string }) => NavigationDecision} WindowOpenPolicy
- * @typedef {{
- *   webContents: Record<string, unknown> & { loadURL(url: string): Promise<void> | void };
- * }} WebContentsViewLike
- * @typedef {new (options: Record<string, unknown>) => WebContentsViewLike} WebContentsViewConstructorLike
- * @typedef {{ id: number, view: WebContentsViewLike, createdAt: number, title: string, url: string, favicon: string | null, isHome: boolean }} TabEntry
- * @typedef {{ tabs: Map<number, TabEntry>, nextTabIdRef(): number }} TabState
- * @typedef {{
- *   ensureTopLevelView(view: WebContentsViewLike): void;
- *   setTabVisibility(tab: TabEntry, visible: boolean): void;
- *   layoutViews(): void;
- *   switchToTab(id: number): void;
- *   switchRelativeTab(step: number): void;
- *   closeTab(id: number): void;
- *   focusHomeTab(options: { resetToHome?: boolean, switchToTab: (id: number) => void }): void;
- * }} TabHelpers
- * @typedef {{ popupWindowOptions?: (shellBackgroundColor: () => string) => Record<string, unknown>, registerAuthPopupWindow?: Function, openAuthPopupForTab?: Function }} OAuthHelpers
- * @typedef {(tab: TabEntry, helpers: Record<string, unknown>) => void} AttachTabEventHandlersLike
- */
-
 // Coordinate tab creation with the lower-level tab-state helpers.
 // This preserves the current runtime wiring while letting index.js stay focused
 // on bootstrap and process-wide composition.
@@ -184,7 +131,7 @@ export function createTabController({
   const attachHandlers: AttachTabEventHandlersLike = attachTabEventHandlersImpl ||
     ((tab, helpers) => {
       attachTabEventHandlers(
-        tab as EventTabEntry,
+        tab,
         helpers as Parameters<typeof attachTabEventHandlers>[1],
       );
     });
@@ -231,7 +178,7 @@ export function createTabController({
       },
     });
 
-    const tab = {
+    const tab: TabEntry = {
       id,
       view,
       createdAt: Date.now(),

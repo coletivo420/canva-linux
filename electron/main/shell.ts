@@ -1,18 +1,8 @@
-export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+import type { DebugLog, WebContentsViewLike } from "../shared/types";
+export type { WebContentsLike, WebContentsViewLike } from "../shared/types";
+
 export type NativeThemeLike = {
   shouldUseDarkColors: boolean;
-};
-export type WebContentsLike = {
-  id?: number;
-  loadURL(url: string): Promise<void> | void;
-  getURL(): string;
-  isDestroyed(): boolean;
-  send(channel: string, ...args: unknown[]): void;
-  on(event: string, listener: (...args: any[]) => void): unknown;
-};
-export type WebContentsViewLike = {
-  webContents: WebContentsLike;
-  setVisible(visible: boolean): void;
 };
 export type BrowserWindowLike = {
   show(): void;
@@ -52,46 +42,6 @@ type CreateToolbarViewOptions = {
   preloadPath: string;
   setToolbarView(value: WebContentsViewLike): void;
 };
-
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- */
-
-/**
- * @typedef {{
- *   shouldUseDarkColors: boolean;
- * }} NativeThemeLike
- */
-
-/**
- * @typedef {{
- *   id?: number;
- *   loadURL(url: string): Promise<void> | void;
- *   getURL(): string;
- *   isDestroyed(): boolean;
- *   send(channel: string, ...args: unknown[]): void;
- *   on(event: string, listener: (...args: any[]) => void): unknown;
- * }} WebContentsLike
- */
-
-/**
- * @typedef {{
- *   webContents: WebContentsLike;
- *   setVisible(visible: boolean): void;
- * }} WebContentsViewLike
- */
-
-/**
- * @typedef {{
- *   show(): void;
- *   once(event: string, listener: (...args: unknown[]) => void): unknown;
- *   on(event: string, listener: (...args: unknown[]) => void): unknown;
- *   loadURL(url: string): Promise<void> | void;
- *   getContentSize(): [number, number];
- *   setBackgroundColor(color: string): void;
- *   contentView: { children?: unknown[], addChildView(view: unknown): void, removeChildView(view: unknown): void };
- * }} BrowserWindowLike
- */
 
 /**
  * @param {{
