@@ -127,7 +127,7 @@ export function createOAuthPopupOptionsSummary(window: BrowserWindowLike): {
   nodeIntegration: boolean;
   sandbox: boolean;
 } {
-  const prefs = window.webContents.getLastWebPreferences();
+  const prefs = window.webContents.getLastWebPreferences?.();
 
   return {
     partition: window.webContents.session?.partition || "unknown",
