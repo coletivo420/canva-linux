@@ -1,6 +1,6 @@
 import path from "node:path";
 
-import type { C420UIActionDescriptor } from "./actions";
+import { isC420UIPlannedAction, type C420UIActionDescriptor } from "./actions";
 
 export type c420uiArtifactKind =
   | "appimage"
