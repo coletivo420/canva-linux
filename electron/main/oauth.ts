@@ -503,7 +503,6 @@ export function createOAuthHelpers({
         return;
       }
 
-      debugLog("oauth", "popup-oauth-callback", `popup=${popupId}`, url);
       entry.pendingCallbackUrl = url;
     };
 
