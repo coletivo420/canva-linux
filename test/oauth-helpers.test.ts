@@ -326,6 +326,110 @@ test("OAuth popup stays hidden until ready-to-show", () => {
   );
 });
 
+test("OAuth popup ready-to-show ignores destroyed window", () => {
+  const authPopups = new Map();
+  const windowListeners = new Map();
+  const debugEvents = [];
+  let focusCount = 0;
+  let showCount = 0;
+  let getBoundsCount = 0;
+  const window = fakeWindow();
+  window.webContents.session = { partition: "persist:canva" };
+  window.isDestroyed = () => true;
+  window.focus = () => {
+    focusCount += 1;
+  };
+  window.show = () => {
+    showCount += 1;
+  };
+  window.getBounds = () => {
+    getBoundsCount += 1;
+    return { x: 0, y: 0, width: 520, height: 760 };
+  };
+  window.once = (event, listener) => {
+    windowListeners.set(`once:${event}`, listener);
+  };
+  window.on = (event, listener) => {
+    windowListeners.set(event, listener);
+  };
+
+  const helpers = createOAuthHelpers({
+    appIconPath: "/tmp/icon.png",
+    appName: "Canva Linux",
+    authPopups,
+    BrowserWindow: function FakeBrowserWindow() {
+      return window;
+    },
+    classifyNavigationRequest() {
+      return { kind: "blocked-external" };
+    },
+    debugLog(...args) {
+      debugEvents.push(args);
+      return true;
+    },
+    detectCanvaOAuthCallback() {
+      return null;
+    },
+    extractHostname() {
+      return "";
+    },
+    flushSession: async () => {},
+    getActiveTab() {
+      return undefined;
+    },
+    getCanvaSession() {
+      return window.webContents.session;
+    },
+    isBlankPopupUrl(url) {
+      return !url || url === "about:blank" || url === "about:srcdoc";
+    },
+    isCanvaAuthUrl(url) {
+      return String(url).includes("canva.com/login");
+    },
+    isCanvaUrl(url) {
+      return String(url).includes("canva.com");
+    },
+    isOAuthProviderUrl(url) {
+      return String(url).includes("accounts.google.com");
+    },
+    isSafeExternalUrl(url) {
+      return String(url).startsWith("https://");
+    },
+    mainWindowRef() {
+      return null;
+    },
+    nextPopupIdRef() {
+      return 10;
+    },
+    shell: { openExternal() {} },
+    sharedWebPreferences() {
+      return {};
+    },
+    summarizeOauthEntry(entry) {
+      return entry ? `popup=${entry.id}` : "none";
+    },
+    windowLabel() {
+      return "oauth-popup";
+    },
+  });
+
+  helpers.registerAuthPopupWindow(window, "https://accounts.google.com", {
+    openerUrl: "https://www.canva.com/login",
+  });
+
+  windowListeners.get("once:ready-to-show")();
+
+  assert.equal(showCount, 0);
+  assert.equal(focusCount, 0);
+  assert.equal(getBoundsCount, 0);
+  assert.equal(
+    debugEvents.some(
+      (event) => event[0] === "oauth" && event[1] === "popup-ready",
+    ),
+    false,
+  );
+});
+
 test("OAuth callback navigation is logged separately from authorized callback", async () => {
   const authPopups = new Map();
   const webContentsListeners = new Map();

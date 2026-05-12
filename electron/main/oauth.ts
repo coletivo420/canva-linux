@@ -317,6 +317,10 @@ export function createOAuthHelpers({
     window.setMenuBarVisibility(false);
     setAuthPopupTitle(window);
     window.once("ready-to-show", () => {
+      if (window.isDestroyed()) {
+        return;
+      }
+
       window.show();
       window.focus();
       debugLog(
