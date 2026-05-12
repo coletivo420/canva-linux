@@ -1,10 +1,11 @@
-"use strict";
+import path from "path";
 
-// @ts-check
-
-const path = require("path");
-
-const { attachTabEventHandlers } = require("./tab-events");
+import { attachTabEventHandlers } from "./tab-events";
+import type {
+  BrowserWindowLike as OAuthBrowserWindowLike,
+  OAuthPopupEntry,
+  RegisterAuthPopupOptions,
+} from "./oauth";
 
 export type DebugLog = (category: string, ...args: unknown[]) => boolean;
 export type NavigationDecision = { kind: string; category?: string };
@@ -22,6 +23,22 @@ export type WindowOpenPolicy = (request: {
 }) => NavigationDecision;
 export type WebContentsViewLike = {
   webContents: Record<string, unknown> & {
+    id?: number;
+    getURL?: () => string;
+    focus?: () => void;
+    executeJavaScript?: (code: string) => Promise<unknown>;
+    insertCSS?: (css: string) => Promise<unknown>;
+    setWindowOpenHandler?: (
+      handler: (details: {
+        url: string;
+        disposition?: string;
+        frameName?: string;
+      }) => {
+        action: "allow" | "deny";
+        overrideBrowserWindowOptions?: Record<string, unknown>;
+      },
+    ) => void;
+    on?: (event: string, listener: (...args: any[]) => void) => unknown;
     loadURL(url: string): Promise<void> | void;
   };
 };
@@ -55,10 +72,10 @@ export type OAuthHelpers = {
     shellBackgroundColor: () => string,
   ) => Record<string, unknown>;
   registerAuthPopupWindow?: (
-    window: any,
+    window: OAuthBrowserWindowLike,
     startUrl: string,
-    options: any,
-  ) => any;
+    options: RegisterAuthPopupOptions,
+  ) => OAuthPopupEntry;
   openAuthPopupForTab?: (
     url: string,
     openerUrl: string,
@@ -164,9 +181,13 @@ export function createTabController({
   WebContentsView,
   attachTabEventHandlersImpl,
 }: CreateTabControllerOptions) {
-  const attachHandlers =
-    attachTabEventHandlersImpl ||
-    /** @type {AttachTabEventHandlersLike} */ /** @type {unknown} */ attachTabEventHandlers;
+  const attachHandlers: AttachTabEventHandlersLike = attachTabEventHandlersImpl ||
+    ((tab, helpers) => {
+      attachTabEventHandlers(
+        tab as import("./tab-events").TabEntry,
+        helpers as Parameters<typeof attachTabEventHandlers>[1],
+      );
+    });
 
   /**
    * @param {string} [url]

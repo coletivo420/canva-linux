@@ -1,5 +1,3 @@
-"use strict";
-
 function safeStringify(value: unknown): string {
   const seen = new WeakSet<object>();
 

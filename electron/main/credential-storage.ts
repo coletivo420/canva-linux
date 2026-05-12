@@ -1,5 +1,3 @@
-"use strict";
-
 const PERSISTENT_PARTITION = "persist:canva";
 const EPHEMERAL_PARTITION = "canva-ephemeral";
 

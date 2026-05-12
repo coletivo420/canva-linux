@@ -1,5 +1,3 @@
-"use strict";
-
 export type RgbTuple = [number, number, number];
 
 export type LTCodeCompatibleResult = {

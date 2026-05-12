@@ -1,6 +1,4 @@
-"use strict";
-
-// @ts-check
+import type { SessionLike } from "./runtime";
 
 export type DebugLog = (category: string, ...args: unknown[]) => boolean;
 export type CanvaTabEntry = {
@@ -20,9 +18,7 @@ export type OAuthPopupEntry = {
   sourceWebContentsId: number | null;
 };
 export type AuthPopupMap = Map<number, OAuthPopupEntry>;
-export type SessionLike = {
-  partition?: string;
-};
+export type { SessionLike } from "./runtime";
 export type WebContentsLike = {
   session?: SessionLike;
   getURL(): string;
@@ -671,15 +667,18 @@ export function createOAuthHelpers({
         );
       },
     );
-    wc.on("render-process-gone", (_event: unknown, details: any) => {
-      debugLog(
-        "oauth",
-        "popup-render-process-gone",
-        `popup=${popupId}`,
-        `reason=${details?.reason || "unknown"}`,
-        `exitCode=${details?.exitCode ?? "unknown"}`,
-      );
-    });
+    wc.on(
+      "render-process-gone",
+      (_event: unknown, details: { reason?: string; exitCode?: number }) => {
+        debugLog(
+          "oauth",
+          "popup-render-process-gone",
+          `popup=${popupId}`,
+          `reason=${details?.reason || "unknown"}`,
+          `exitCode=${details?.exitCode ?? "unknown"}`,
+        );
+      },
+    );
     wc.on("unresponsive", () => {
       debugLog("oauth", "popup-unresponsive", `popup=${popupId}`);
     });

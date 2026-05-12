@@ -1,4 +1,4 @@
-"use strict";
+import type { SessionLike } from "./runtime";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type AppLike = {
@@ -16,7 +16,7 @@ type CentralLoggerLike = {
   ): void;
 };
 type ClearEphemeralSessionData = (
-  session: any,
+  session: SessionLike,
   onWarning?: (operation: string, error: unknown) => void,
 ) => Promise<void>;
 type BrowserWindowConstructorLike = { getAllWindows(): unknown[] };
@@ -26,7 +26,7 @@ type CredentialStoragePolicy = import("./credential-storage").CredentialStorageP
 type LifecycleOptions = {
   app: AppLike;
   BrowserWindow: BrowserWindowConstructorLike;
-  canvaSessionRef: () => unknown;
+  canvaSessionRef: () => SessionLike | null | undefined;
   centralLogger: CentralLoggerLike;
   clearEphemeralSessionData: ClearEphemeralSessionData;
   configureSession: (options: Record<string, unknown>) => Promise<unknown>;
@@ -34,9 +34,9 @@ type LifecycleOptions = {
   createToolbarView: () => unknown;
   debugLog: DebugLog;
   debugLevel: number;
-  flushSession: (session: any) => Promise<void>;
+  flushSession: (session: SessionLike) => Promise<void>;
   focusMainWindow: () => void;
-  getCanvaSession: () => unknown;
+  getCanvaSession: () => SessionLike;
   getCredentialStoragePolicy: () => CredentialStoragePolicy;
   logCredentialStoragePolicy: (policy: CredentialStoragePolicy) => void;
   logReleaseStatus: () => void;

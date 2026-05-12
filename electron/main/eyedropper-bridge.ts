@@ -1,5 +1,3 @@
-"use strict";
-
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type WebContentsLike = { id?: number };
 type CapturedImageLike = {

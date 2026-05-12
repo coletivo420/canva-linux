@@ -1,5 +1,3 @@
-"use strict";
-
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type CommandLineLike = {
   appendSwitch(name: string, value?: string): void;
@@ -25,10 +23,11 @@ type DownloadItemLike = {
   setSavePath(path: string): void;
 };
 type SessionLike = {
+  partition?: string;
   cookies: { flushStore?(): Promise<void> };
   clearCache?: () => Promise<void>;
   clearStorageData?: () => Promise<void>;
-  flushStorageData(): Promise<void>;
+  flushStorageData(): Promise<void> | void;
   setPermissionRequestHandler(
     handler: (
       webContents: WebContentsLike | null | undefined,

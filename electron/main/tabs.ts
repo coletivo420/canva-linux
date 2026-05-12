@@ -1,7 +1,3 @@
-"use strict";
-
-// @ts-check
-
 export type DebugLog = (category: string, ...args: unknown[]) => boolean;
 export type TabEntry = {
   id: number;

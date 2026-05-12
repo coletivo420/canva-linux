@@ -1,7 +1,3 @@
-"use strict";
-
-// @ts-check
-
 export type DebugLog = (category: string, ...args: unknown[]) => boolean;
 export type NativeThemeLike = {
   shouldUseDarkColors: boolean;
@@ -270,7 +266,7 @@ export function createShellHelpers({
     );
     toolbarView.webContents.on(
       "render-process-gone",
-      (_event: unknown, details: any) => {
+      (_event: unknown, details: { reason?: string; exitCode?: number }) => {
         debugLog(
           "tabs:toolbar",
           "toolbar-render-process-gone",

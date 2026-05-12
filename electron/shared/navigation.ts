@@ -1,5 +1,3 @@
-"use strict";
-
 type NavigationKind =
   | "oauth-popup"
   | "internal-tab"
