@@ -109,7 +109,11 @@ function closeCreatedWindowIfPossible(
   }
 
   debugLog("tabs", "close-created-window");
-  candidate.close();
+  try {
+    candidate.close();
+  } catch (error) {
+    debugLog("tabs", "close-created-window-error", String(error));
+  }
 }
 
 /**
