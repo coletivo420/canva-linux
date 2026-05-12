@@ -98,9 +98,18 @@ type AttachTabEventHandlersHelpers = {
 // Attach all BrowserView/WebContents event wiring for a single Canva tab.
 // This module exists so tab lifecycle policy can evolve without forcing the
 // main entrypoint to keep every navigation and keyboard branch inline.
-function closeCreatedWindowIfPossible(window: unknown): void {
+function closeCreatedWindowIfPossible(
+  window: unknown,
+  debugLog: DebugLog,
+): void {
   const candidate = window as { close?: () => void } | null | undefined;
-  if (typeof candidate?.close === "function") candidate.close();
+  if (typeof candidate?.close !== "function") {
+    debugLog("tabs", "close-created-window-unavailable");
+    return;
+  }
+
+  debugLog("tabs", "close-created-window");
+  candidate.close();
 }
 
 /**
@@ -270,7 +279,7 @@ export function attachTabEventHandlers(
         return;
       }
 
-      closeCreatedWindowIfPossible(window);
+      closeCreatedWindowIfPossible(window, debugLog);
 
       if (request.kind === "internal-tab") {
         createTab(details.url, { activate: true });
