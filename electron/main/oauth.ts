@@ -127,15 +127,13 @@ export function createOAuthPopupOptionsSummary(window: BrowserWindowLike): {
   nodeIntegration: boolean;
   sandbox: boolean;
 } {
+  const prefs = window.webContents.getLastWebPreferences();
+
   return {
     partition: window.webContents.session?.partition || "unknown",
-    contextIsolation: Boolean(
-      window.webContents.getLastWebPreferences()?.contextIsolation,
-    ),
-    nodeIntegration: Boolean(
-      window.webContents.getLastWebPreferences()?.nodeIntegration,
-    ),
-    sandbox: Boolean(window.webContents.getLastWebPreferences()?.sandbox),
+    contextIsolation: Boolean(prefs?.contextIsolation),
+    nodeIntegration: Boolean(prefs?.nodeIntegration),
+    sandbox: Boolean(prefs?.sandbox),
   };
 }
 
@@ -260,7 +258,7 @@ export function createOAuthHelpers({
       minHeight: 560,
       title: `${appName} — Login`,
       autoHideMenuBar: true,
-      show: true,
+      show: false,
       backgroundColor: shellBackgroundColor(),
       icon: appIconPath,
       webPreferences: sharedWebPreferences(),
@@ -318,22 +316,16 @@ export function createOAuthHelpers({
 
     window.setMenuBarVisibility(false);
     setAuthPopupTitle(window);
-    window.show();
-    debugLog("oauth", "popup-show", `popup=${popupId}`);
-    window.focus();
-    debugLog("oauth", "popup-focus", `popup=${popupId}`);
-    debugLog("oauth", "popup-bounds", `popup=${popupId}`, window.getBounds());
     window.once("ready-to-show", () => {
+      window.show();
+      window.focus();
       debugLog(
         "oauth",
         "popup-ready-to-show",
         `popup=${popupId}`,
         windowLabel(window),
       );
-      window.show();
-      debugLog("oauth", "popup-show", `popup=${popupId}`);
-      window.focus();
-      debugLog("oauth", "popup-focus", `popup=${popupId}`);
+      debugLog("oauth", "popup-ready", `popup=${popupId}`);
       debugLog("oauth", "popup-bounds", `popup=${popupId}`, window.getBounds());
     });
     window.on("close", (event?: { preventDefault?: () => void }) => {
@@ -511,6 +503,7 @@ export function createOAuthHelpers({
         return;
       }
 
+      debugLog("oauth", "popup-oauth-callback", `popup=${popupId}`, url);
       entry.pendingCallbackUrl = url;
     };
 
