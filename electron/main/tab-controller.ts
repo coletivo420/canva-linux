@@ -1,6 +1,6 @@
 import path from "path";
 
-import { attachTabEventHandlers } from "./tab-events";
+import { attachTabEventHandlers, type TabEntry as EventTabEntry } from "./tab-events";
 import type {
   BrowserWindowLike as OAuthBrowserWindowLike,
   OAuthPopupEntry,
