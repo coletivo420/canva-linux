@@ -38,6 +38,7 @@ test("release status logs runtime metadata without inline changelog entries", ()
       "release",
       "version=1.2.3",
       `platform=${process.platform}`,
+      `arch=${process.arch}`,
       "downloads=/tmp/downloads",
     ],
   ]);

@@ -733,6 +733,7 @@ function read(rootDir: string, relativePath: string): string {
 function main(): number {
   const rootDir = process.cwd();
   const artifacts = read(rootDir, "packages/c420ui/src/artifacts.ts");
+  const index = read(rootDir, "packages/c420ui/src/index.ts");
   const workflows = read(rootDir, "packages/c420ui/src/workflows.ts");
   const workflowRunnerPath = "packages/c420ui/src/workflow-runner.ts";
   const workflowRunner = read(rootDir, workflowRunnerPath);
@@ -747,6 +748,9 @@ function main(): number {
     "purgeActionId",
     "releaseActionId",
     "custom",
+    "validateC420UIArtifactRecipeConfig",
+    "validateC420UIArtifactWorkflowsAgainstActions",
+    "resolveC420UIArtifactOutputPattern",
     "runC420UIWorkflow",
     "runC420UIArtifactWorkflow",
     "c420uiArtifactWorkflowRunOptions",
@@ -759,6 +763,26 @@ function main(): number {
 
   if (!fs.existsSync(path.join(rootDir, workflowRunnerPath))) {
     failures.push(`${workflowRunnerPath}: missing artifact workflow runner`);
+  }
+
+  for (const fragment of [
+    "validateC420UIArtifactRecipeConfig",
+    "validateC420UIArtifactWorkflowsAgainstActions",
+    "resolveC420UIArtifactOutputPattern",
+  ]) {
+    if (!index.includes(fragment)) {
+      failures.push(`packages/c420ui/src/index.ts must export ${fragment}`);
+    }
+  }
+
+  for (const fragment of [
+    "Canva Linux",
+    "config/canva-linux",
+    "canva-linux-${version}",
+  ]) {
+    if (artifacts.includes(fragment)) {
+      failures.push(`packages/c420ui/src/artifacts.ts must not contain project-specific fragment ${fragment}`);
+    }
   }
 
   for (const fragment of [

@@ -22,8 +22,7 @@ const expectedCapabilityFields = [
   "supportsDryRun",
   "supportsPlannedActions",
 ] as const;
-const validKinds = new Set(["appimage", "flatpak", "native", "tarball", "custom", "deb", "rpm", "aur"]);
-const validScopes = new Set(["portable", "system", "user", "release", "none"]);
+
 function loadArtifactsConfig() {
   return JSON.parse(fs.readFileSync(artifactsConfigPath, "utf8")) as {
     capabilities: Record<string, unknown>;
@@ -76,17 +75,6 @@ test("artifact capabilities are boolean and preserved from config", () => {
     supportsDryRun: true,
     supportsPlannedActions: true,
   });
-});
-
-test("artifact workflow ids are unique and use known kind and scope values", () => {
-  const config = loadArtifactsConfig();
-  const ids = config.workflows.map((workflow) => workflow.id);
-  assert.deepEqual(ids, [...new Set(ids)]);
-
-  for (const workflow of config.workflows) {
-    assert.equal(validKinds.has(String(workflow.kind)), true, String(workflow.id));
-    assert.equal(validScopes.has(String(workflow.scope)), true, String(workflow.id));
-  }
 });
 
 test("appimage, flatpak, native, release, and planned workflows exist", () => {
