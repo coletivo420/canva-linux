@@ -258,7 +258,7 @@ export function validateC420UIArtifactWorkflowsAgainstActions(
       if (!action) {
         throw new Error(`Artifact workflow ${workflow.id} references unknown ${field} ${actionId}`);
       }
-      const actionPlanned = action.kind === "planned" || action.planned === true;
+      const actionPlanned = isC420UIPlannedAction(action);
       if (workflow.planned === true && actionPlanned !== true) {
         throw new Error(`Artifact workflow ${workflow.id} is planned but ${field} ${actionId} is executable`);
       }
