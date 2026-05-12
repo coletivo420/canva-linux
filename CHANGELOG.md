@@ -17,6 +17,8 @@
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
+- Removed release-specific corrected, validated, and under-observation startup log lists from runtime logging; release details now live
+  in this changelog while startup logs keep only stable version/platform context.
 - Slimmed npm preflight helpers so build recipes no longer call a transitional dependency bootstrap shell entrypoint.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected.
 - Startup diagnostics now explain whether persistent login is available or the app is running in ephemeral session mode.
@@ -56,6 +58,12 @@
 - Updated project identity so release naming, docs, workflow tags, and `package.json` use the npm-compatible `0.1.4-12` version.
 
 ### Fixed
+- Fixed global debug categories to use canonical names, including drag -> dnd compatibility.
+- Fixed window-open logging so internal Canva tabs are distinguished from real OAuth popup flows.
+- Fixed upload diagnostics to preserve ingress context from drop, paste, picker, and file-bearing network handoff.
+- Fixed OAuth popup diagnostics that referenced an undefined tab object during popup title or favicon updates.
+- Fixed Linux startup so Electron hardware acceleration is no longer disabled by default.
+- Fixed GPU diagnostics so they are centralized in `current.log`.
 - Fixed Action Runner planned-action handling so planned exit `78` is not reported as a successful action.
 - Fixed centralized root/sudo handling for privileged actions, user-scope sudo refusal, and C420UI authentication prompts.
 - Fixed startup error reporting around the Electron ready flow so startup failures are caught and logged.
@@ -64,6 +72,20 @@
 - Fixed C420UI detection and progress refresh behavior so completed results are not overwritten by stale refresh state.
 - Fixed logging safety for circular objects, BigInt, Error, Function, arbitrary Electron objects, and session write failures.
 - Fixed release validation to fail when expected AppImage, Flatpak, tarball, or checksum artifacts are missing or empty.
+
+### Validated
+- Validated application startup on Linux Wayland.
+- Validated persistent session initialization and fixed Home tab shell behavior.
+- Validated custom eyedropper behavior after the global debug expansion.
+- Validated host drag-and-drop into the Canva editor on Wayland with a real file drop.
+- Validated GPU backend selection with `CANVA_GPU_BACKEND=auto,opengl,vulkan,software,force`.
+- Validated Flatpak DRI access and Chromium GPU feature status logging.
+
+### Under observation
+- Host file picker continuation and clipboard-driven imports inside Canva remain under observation.
+- OAuth popup completion paths after the WebContentsView migration with a clean local session remain under observation.
+- Non-fatal DBus, VAAPI, and compositor warnings that do not block startup remain under observation.
+- Vulkan/ANGLE behavior across Intel, AMD, NVIDIA, Wayland, and X11 remains under observation.
 
 ## Historical development notes
 

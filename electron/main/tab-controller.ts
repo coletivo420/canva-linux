@@ -213,7 +213,7 @@ export function createTabController({
     const tab = {
       id,
       view,
-      createdAt: Date.now() + id,
+      createdAt: Date.now(),
       title: isHome ? "Home" : appName,
       url,
       favicon: null,
