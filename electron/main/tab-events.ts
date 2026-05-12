@@ -1,32 +1,8 @@
-export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+import type { DebugLog, TabEntry } from "../shared/types";
+
+export type { TabEntry, WebContentsLike } from "../shared/types";
 export type NavigationDecision = { category: string; kind: string };
 export type PreventableEvent = { preventDefault(): void };
-export type WebContentsLike = {
-  id: number;
-  getURL(): string;
-  focus(): void;
-  loadURL(url: string): Promise<void> | void;
-  executeJavaScript(code: string): Promise<unknown>;
-  insertCSS(css: string): Promise<unknown>;
-  setWindowOpenHandler(
-    handler: (details: {
-      url: string;
-      disposition?: string;
-      frameName?: string;
-    }) => {
-      action: "allow" | "deny";
-      overrideBrowserWindowOptions?: Record<string, unknown>;
-    },
-  ): void;
-  on(event: string, listener: (...args: any[]) => void): unknown;
-};
-export type TabEntry = {
-  id: number;
-  title: string;
-  url: string;
-  favicon: string | null;
-  view: { webContents: WebContentsLike };
-};
 type AttachTabEventHandlersHelpers = {
   appName: string;
   appUrl: string;
@@ -73,23 +49,6 @@ type AttachTabEventHandlersHelpers = {
   switchRelativeTab: (step: number) => void;
   broadcastTabsState: () => void;
 };
-
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- * @typedef {{ category: string, kind: string }} NavigationDecision
- * @typedef {{ preventDefault(): void }} PreventableEvent
- * @typedef {{
- *   id: number;
- *   getURL(): string;
- *   focus(): void;
- *   loadURL(url: string): Promise<void> | void;
- *   executeJavaScript(code: string): Promise<unknown>;
- *   insertCSS(css: string): Promise<unknown>;
- *   setWindowOpenHandler(handler: (details: { url: string, disposition?: string, frameName?: string }) => { action: 'allow' | 'deny', overrideBrowserWindowOptions?: Record<string, unknown> }): void;
- *   on(event: string, listener: (...args: any[]) => void): unknown;
- * }} WebContentsLike
- * @typedef {{ id: number, title: string, url: string, favicon: string | null, view: { webContents: WebContentsLike } }} TabEntry
- */
 
 // Attach all BrowserView/WebContents event wiring for a single Canva tab.
 // This module exists so tab lifecycle policy can evolve without forcing the
@@ -353,7 +312,14 @@ export function attachTabEventHandlers(
         }
       } catch {}
     `,
-    ).catch(() => {});
+    ).catch((error) => {
+      debugLog(
+        "eyedropper:diagnostics",
+        "execute-javascript-error",
+        `tab=${tab.id}`,
+        String(error),
+      );
+    });
   };
 
   wc.on("did-navigate", syncNavigation);
@@ -384,7 +350,14 @@ export function attachTabEventHandlers(
       html { text-rendering: optimizeLegibility; }
       body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
     `,
-    ).catch(() => {});
+    ).catch((error) => {
+      debugLog(
+        "tabs:view",
+        "insert-css-error",
+        `tab=${tab.id}`,
+        String(error),
+      );
+    });
   });
 
   wc.on(
@@ -482,7 +455,14 @@ export function attachTabEventHandlers(
         console.log('[canva:eyedropper:check] tab=' + ${tab.id} + ' installed=' + installed + ' ensured=' + ensured);
       })();
     `,
-    ).catch(() => {});
+    ).catch((error) => {
+      debugLog(
+        "eyedropper:diagnostics",
+        "execute-javascript-error",
+        `tab=${tab.id}`,
+        String(error),
+      );
+    });
   });
 
   wc.on("before-input-event", (event: PreventableEvent, input: any) => {

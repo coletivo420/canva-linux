@@ -285,7 +285,9 @@ async function configureSession({
     item.setSavePath(path.join(downloadsDir, filename));
   });
 
-  await flushSessionFn(ses).catch(() => {});
+  await flushSessionFn(ses).catch((error: unknown) => {
+    debugLog("session", "flush-error", String(error));
+  });
   return ses;
 }
 

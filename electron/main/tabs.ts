@@ -1,34 +1,9 @@
-export type DebugLog = (category: string, ...args: unknown[]) => boolean;
-export type TabEntry = {
-  id: number;
-  title: string;
-  url: string;
-  favicon: string | null;
-  isHome: boolean;
-  createdAt: number;
-  view: WebContentsViewLike;
-};
+import type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types";
+
+export type { TabEntry, WebContentsViewLike } from "../shared/types";
 export type TabStateLike = {
   tabs: Map<number, TabEntry>;
   activeTabId: number | null;
-};
-export type WebContentsViewLike = {
-  webContents: {
-    id?: number;
-    isDestroyed(): boolean;
-    send(channel: string, payload: unknown): void;
-    getURL(): string;
-    loadURL(url: string): Promise<void> | void;
-    focus(): void;
-    destroy(): void;
-  };
-  setVisible(visible: boolean): void;
-  setBounds(bounds: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  }): void;
 };
 export type NativeThemeLike = { shouldUseDarkColors: boolean };
 export type BrowserWindowLike = {
@@ -69,35 +44,6 @@ export type ToolbarState = {
   }>;
   theme: string;
 };
-
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- * @typedef {{
- *   id: number;
- *   title: string;
- *   url: string;
- *   favicon: string | null;
- *   isHome: boolean;
- *   createdAt: number;
- *   view: WebContentsViewLike;
- * }} TabEntry
- * @typedef {{ tabs: Map<number, TabEntry>, activeTabId: number | null }} TabStateLike
- * @typedef {{
- *   webContents: {
- *     id?: number;
- *     isDestroyed(): boolean;
- *     send(channel: string, payload: unknown): void;
- *     getURL(): string;
- *     loadURL(url: string): Promise<void> | void;
- *     focus(): void;
- *     destroy(): void;
- *   };
- *   setVisible(visible: boolean): void;
- *   setBounds(bounds: { x: number, y: number, width: number, height: number }): void;
- * }} WebContentsViewLike
- * @typedef {{ shouldUseDarkColors: boolean }} NativeThemeLike
- * @typedef {{ setTitle(title: string): void, getContentSize(): [number, number], contentView: { children?: unknown[], addChildView(view: unknown): void, removeChildView(view: unknown): void } }} BrowserWindowLike
- */
 
 /**
  * @param {{

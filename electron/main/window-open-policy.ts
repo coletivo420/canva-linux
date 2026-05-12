@@ -28,45 +28,6 @@ export type WindowOpenClassification = {
   kind: WindowOpenKind;
 };
 
-/**
- * @typedef {'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external'} NavigationKind
- */
-
-/**
- * @typedef {'oauth' | 'tabs'} WindowOpenCategory
- */
-
-/**
- * @typedef {'oauth-popup' | 'internal-tab' | 'blank-window' | 'blocked-external' | 'external-browser'} WindowOpenKind
- */
-
-/**
- * @typedef {{
- *   url?: string;
- *   openerUrl?: string;
- *   disposition?: string;
- *   frameName?: string;
- * }} WindowOpenInput
- */
-
-/**
- * @typedef {{
- *   kind: NavigationKind;
- *   url?: string;
- * }} NavigationClassification
- */
-
-/**
- * @typedef {(input: WindowOpenInput) => NavigationClassification} ClassifyNavigationRequest
- */
-
-/**
- * @typedef {{
- *   category: WindowOpenCategory;
- *   kind: WindowOpenKind;
- * }} WindowOpenClassification
- */
-
 // Keep the main-process window-open policy isolated from index.js bootstrap so
 // the policy can be unit-tested without loading the full Electron entrypoint.
 /**
