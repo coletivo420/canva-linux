@@ -131,7 +131,9 @@ export function createTabHelpers({
 }: CreateTabHelpersOptions) {
   /** @returns {TabEntry[]} */
   function getOrderedTabs(): TabEntry[] {
-    return [...state.tabs.values()].sort((a, b) => a.createdAt - b.createdAt);
+    return [...state.tabs.values()].sort(
+      (a, b) => a.createdAt - b.createdAt || a.id - b.id,
+    );
   }
 
   /** @returns {TabEntry | null} */

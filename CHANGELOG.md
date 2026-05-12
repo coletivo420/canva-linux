@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Fixed
+- Removed stale inline release-status changelog entries from startup logging so release details live only in the changelog.
+- Kept tab creation timestamps as real creation times and use the tab id only as a secondary ordering tiebreaker.
+- Added diagnostics when generated popup windows are closed or cannot be closed by the tab event policy.
 - Fixed c420ui terminal startup so `npm run c420ui` uses the project runner instead of executing the terminal package barrel.
 - Consolidated duplicate Canva Linux artifact action validation in checks and removed duplicate source-string tests from the behavioral suite.
 - Kept artifact configuration process-static in the adapter loader and documented the path-based cache.
