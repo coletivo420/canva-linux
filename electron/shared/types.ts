@@ -12,14 +12,14 @@ export type WebContentsLike = {
       }
     | null
     | undefined;
-  isDestroyed?(): boolean;
-  focus?(): void;
-  send?(channel: string, ...args: unknown[]): void;
-  loadURL?(url: string): Promise<void> | void;
-  executeJavaScript?(code: string): Promise<unknown>;
-  insertCSS?(css: string): Promise<unknown>;
-  destroy?(): void;
-  setWindowOpenHandler?(
+  isDestroyed(): boolean;
+  focus(): void;
+  send(channel: string, ...args: unknown[]): void;
+  loadURL(url: string): Promise<void> | void;
+  executeJavaScript(code: string): Promise<unknown>;
+  insertCSS(css: string): Promise<unknown>;
+  destroy(): void;
+  setWindowOpenHandler(
     handler: (details: {
       url: string;
       openerUrl?: string;
