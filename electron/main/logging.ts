@@ -162,6 +162,7 @@ function createStatusLogger({
       "release",
       `version=${appVersion}`,
       `platform=${process.platform}`,
+      `arch=${process.arch}`,
       `downloads=${app.getPath("downloads")}`,
     );
   }
