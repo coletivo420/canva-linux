@@ -422,12 +422,18 @@ test("OAuth popup ready-to-show ignores destroyed window", () => {
   assert.equal(showCount, 0);
   assert.equal(focusCount, 0);
   assert.equal(getBoundsCount, 0);
-  assert.equal(
-    debugEvents.some(
-      (event) => event[0] === "oauth" && event[1] === "popup-ready",
-    ),
-    false,
-  );
+  for (const marker of [
+    "popup-ready",
+    "popup-ready-to-show",
+    "popup-bounds",
+  ]) {
+    assert.equal(
+      debugEvents.some(
+        (event) => event[0] === "oauth" && event[1] === marker,
+      ),
+      false,
+    );
+  }
 });
 
 test("OAuth callback navigation is logged separately from authorized callback", async () => {
@@ -521,9 +527,10 @@ test("OAuth callback navigation is logged separately from authorized callback", 
     debugEvents.some(
       (event) =>
         event[0] === "oauth" &&
-        event[1] === "popup-oauth-callback" &&
+        event[1] === "popup-canva-callback-detected" &&
         event[2] === "popup=11" &&
-        event[3] === callbackUrl,
+        event[3] === "type=oauth" &&
+        event[4] === callbackUrl,
     ),
     true,
   );
