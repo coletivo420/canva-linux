@@ -265,7 +265,7 @@ export function attachTabEventHandlers(
           url,
           wc.getURL(),
           shellBackgroundColor,
-          wc.id,
+          wc.id ?? null,
         );
       }
       return;

@@ -54,8 +54,8 @@ else
 fi
 
 if command -v appstreamcli > /dev/null 2>&1; then
-  run_step "appstreamcli validate --explain" \
-    appstreamcli validate --explain \
+  run_step "appstreamcli validate --explain --no-net" \
+    appstreamcli validate --explain --no-net \
     data/io.github.coletivo420.canva-linux.metainfo.xml
 else
   log_info "appstreamcli not found, skipping"

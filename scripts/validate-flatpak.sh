@@ -239,8 +239,8 @@ fi
 
 ## Optional AppStream validation
 if check_optional_command appstreamcli "AppStream validator"; then
-  info "Running appstreamcli validate --explain"
-  appstreamcli validate --explain data/io.github.coletivo420.canva-linux.metainfo.xml
+  info "Running appstreamcli validate --explain --no-net"
+  appstreamcli validate --explain --no-net data/io.github.coletivo420.canva-linux.metainfo.xml
   ok "AppStream metadata validation passed"
 fi
 
