@@ -432,6 +432,7 @@ test("OAuth popup ready-to-show ignores destroyed window", () => {
         (event) => event[0] === "oauth" && event[1] === marker,
       ),
       false,
+      `Marker ${marker} should not be logged for a destroyed window`,
     );
   }
 });
@@ -516,7 +517,10 @@ test("OAuth callback navigation is logged separately from authorized callback", 
     "https://www.canva.com/login",
     {},
   );
-  const callbackUrl = "https://www.canva.com/oauth/provider-callback";
+  const callbackUrl =
+    "https://www.canva.com/oauth/provider-callback?code=secret-code&state=secret-state&source=popup";
+  const redactedCallbackLogUrl =
+    "https://www.canva.com/oauth/provider-callback?code=%5Bredacted%5D&state=%5Bredacted%5D&source=popup";
 
   webContentsListeners.get("did-navigate")(null, callbackUrl);
   await new Promise((resolve) => setImmediate(resolve));
@@ -530,8 +534,13 @@ test("OAuth callback navigation is logged separately from authorized callback", 
         event[1] === "popup-canva-callback-detected" &&
         event[2] === "popup=11" &&
         event[3] === "type=oauth" &&
-        event[4] === callbackUrl,
+        event[4] === redactedCallbackLogUrl,
     ),
     true,
+  );
+  assert.equal(
+    debugEvents.flat().includes(callbackUrl),
+    false,
+    "Full OAuth callback URL should not be logged",
   );
 });
