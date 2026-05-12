@@ -1,8 +1,6 @@
-"use strict";
+import path from "path";
 
-const path = require("path");
-
-const {
+import {
   app,
   safeStorage,
   dialog,
@@ -12,11 +10,11 @@ const {
   session,
   ipcMain,
   nativeTheme,
-} = require("electron");
+} from "electron";
 
-const { createDebugTools } = require("../shared/debug");
-const {
-  classifyWindowOpenRequest: sharedClassifyWindowOpenRequest,
+import { createDebugTools } from "../shared/debug";
+import {
+  classifyWindowOpenRequest as sharedClassifyWindowOpenRequest,
   detectCanvaOAuthCallback,
   extractHostname,
   isBlankPopupUrl,
@@ -25,33 +23,31 @@ const {
   isCanvaUrl,
   isSafeExternalUrl,
   shouldGrantRemotePermission,
-} = require("../shared/navigation");
+} from "../shared/navigation";
 
-const { registerEyeDropperBridge } = require("./eyedropper-bridge");
-const {
-  registerGpuDiagnostics: registerGpuDiagnosticsModule,
-} = require("./gpu-diagnostics");
-const { registerMainIpcHandlers } = require("./ipc");
-const { registerAppLifecycle } = require("./lifecycle");
-const { createCentralLogger, createStatusLogger } = require("./logging");
-const { createLoggingHelpers } = require("./logging-helpers");
-const {
+import { registerEyeDropperBridge } from "./eyedropper-bridge";
+import { registerGpuDiagnostics as registerGpuDiagnosticsModule } from "./gpu-diagnostics";
+import { registerMainIpcHandlers } from "./ipc";
+import { registerAppLifecycle } from "./lifecycle";
+import { createCentralLogger, createStatusLogger } from "./logging";
+import { createLoggingHelpers } from "./logging-helpers";
+import {
   createCredentialStorageWarningCopy,
   createDefaultCredentialStoragePolicy,
   resolveCredentialStoragePolicy,
-} = require("./credential-storage");
-const { createOAuthHelpers } = require("./oauth");
-const {
+} from "./credential-storage";
+import { createOAuthHelpers } from "./oauth";
+import {
   clearEphemeralSessionData,
   configureLinuxRuntime,
   configureSession,
   flushSession,
-  sharedWebPreferences: createSharedWebPreferences,
-} = require("./runtime");
-const { createShellHelpers } = require("./shell");
-const { createTabController } = require("./tab-controller");
-const { createTabHelpers } = require("./tabs");
-const { createWindowOpenPolicy } = require("./window-open-policy");
+  sharedWebPreferences as createSharedWebPreferences,
+} from "./runtime";
+import { createShellHelpers } from "./shell";
+import { createTabController } from "./tab-controller";
+import { createTabHelpers } from "./tabs";
+import { createWindowOpenPolicy } from "./window-open-policy";
 
 const APP_ID = "io.github.coletivo420.canva-linux";
 const APP_URL = "https://www.canva.com/";

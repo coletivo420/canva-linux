@@ -1,5 +1,4 @@
-// @ts-nocheck
-"use strict";
+// @ts-nocheck -- These preload modules intentionally use CommonJS/Electron globals until their runtime contracts are fully typed.
 
 const { createPreloadDebug } = require("./debug");
 

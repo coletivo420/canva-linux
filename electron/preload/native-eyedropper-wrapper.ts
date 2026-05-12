@@ -1,7 +1,4 @@
-// @ts-nocheck
-"use strict";
-
-// @ts-check
+// @ts-nocheck -- These preload modules intentionally use CommonJS/Electron globals until their runtime contracts are fully typed.
 
 /**
  * @typedef {(...args: unknown[]) => void} EyeDropperLog

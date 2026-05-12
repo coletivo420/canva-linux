@@ -1,7 +1,3 @@
-"use strict";
-
-// @ts-check
-
 export type DebugLog = (category: string, ...args: unknown[]) => boolean;
 export type NavigationDecision = { category: string; kind: string };
 export type PreventableEvent = { preventDefault(): void };

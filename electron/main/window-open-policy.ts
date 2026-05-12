@@ -1,7 +1,3 @@
-"use strict";
-
-// @ts-check
-
 export type NavigationKind =
   | "oauth-popup"
   | "internal-tab"

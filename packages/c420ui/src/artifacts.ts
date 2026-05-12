@@ -29,6 +29,7 @@ export type c420uiArtifactWorkflow = {
   releaseActionId?: string;
   planned?: boolean;
   requiresRoot?: boolean;
+  outputPattern?: string;
 };
 
 export type C420UIArtifactKind = c420uiArtifactKind;

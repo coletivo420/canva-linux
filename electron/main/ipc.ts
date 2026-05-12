@@ -1,5 +1,3 @@
-"use strict";
-
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type DebugEnabled = (category?: string) => boolean;
 type IpcMainLike = {
