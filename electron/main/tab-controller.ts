@@ -184,7 +184,7 @@ export function createTabController({
   const attachHandlers: AttachTabEventHandlersLike = attachTabEventHandlersImpl ||
     ((tab, helpers) => {
       attachTabEventHandlers(
-        tab as import("./tab-events").TabEntry,
+        tab as EventTabEntry,
         helpers as Parameters<typeof attachTabEventHandlers>[1],
       );
     });
