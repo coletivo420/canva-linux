@@ -23,12 +23,12 @@ export type WindowOpenPolicy = (request: {
 }) => NavigationDecision;
 export type WebContentsViewLike = {
   webContents: Record<string, unknown> & {
-    id?: number;
-    getURL?: () => string;
-    focus?: () => void;
-    executeJavaScript?: (code: string) => Promise<unknown>;
-    insertCSS?: (css: string) => Promise<unknown>;
-    setWindowOpenHandler?: (
+    id: number;
+    getURL: () => string;
+    focus: () => void;
+    executeJavaScript: (code: string) => Promise<unknown>;
+    insertCSS: (css: string) => Promise<unknown>;
+    setWindowOpenHandler: (
       handler: (details: {
         url: string;
         disposition?: string;
@@ -38,7 +38,7 @@ export type WebContentsViewLike = {
         overrideBrowserWindowOptions?: Record<string, unknown>;
       },
     ) => void;
-    on?: (event: string, listener: (...args: any[]) => void) => unknown;
+    on: (event: string, listener: (...args: any[]) => void) => unknown;
     loadURL(url: string): Promise<void> | void;
   };
 };
