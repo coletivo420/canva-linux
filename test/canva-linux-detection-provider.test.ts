@@ -19,11 +19,11 @@ function createProjectRoot(): string {
   mkdirSync(path.join(rootDir, "scripts"), { recursive: true });
   writeFileSync(
     path.join(rootDir, "package.json"),
-    `${JSON.stringify({ name: "canva-linux", version: "0.1.4-12" }, null, 2)}\n`,
+    `${JSON.stringify({ name: "canva-linux", version: "0.1.4-14" }, null, 2)}\n`,
   );
   writeFileSync(
     path.join(rootDir, "scripts/app-identity-common.sh"),
-    'PROJECT_PHASE="0.1.4-12"\n',
+    'PROJECT_PHASE="0.1.4-14"\n',
   );
   return rootDir;
 }
@@ -108,7 +108,7 @@ test("provider exposes Canva Linux metadata", () => {
 
     assert.equal(status.project.appId, "io.github.coletivo420.canva-linux");
     assert.equal(status.project.executable, "canva-linux");
-    assert.equal(status.project.version, "0.1.4-12");
+    assert.equal(status.project.version, "0.1.4-14");
   });
 });
 

@@ -1,10 +1,10 @@
-# Manual Validation — 0.1.4-12
+# Manual Validation — 0.1.4-14
 
 This document defines the manual validation routine for the current release.
 
 ## Validation scope
 
-`0.1.4-12` validates the current Canva Linux runtime, c420ui,
+`0.1.4-14` validates the current Canva Linux runtime, c420ui,
 packaging, and CL-EyeDropper behavior.
 
 Expected outcome:

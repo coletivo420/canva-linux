@@ -52,7 +52,7 @@ const requiredGuardrails = [
   "c420ui is the user-facing name of the terminal interface.",
   "The official tool name is `c420ui`, lowercase.",
   "Do not use `C420UI` as public product branding.",
-  "Transitional TypeScript symbols may keep PascalCase aliases temporarily, but user-facing text must say `c420ui`.",
+  "PascalCase TypeScript aliases may exist only as maintained API aliases; user-facing text must say `c420ui`.",
   "The c420ui logo must remain the approved three-line lowercase logo unless the maintainer explicitly requests a redesign.",
   "Do not reintroduce Terminal Assistant as product name.",
   "Do not use TUI as product name.",

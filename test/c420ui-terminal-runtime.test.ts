@@ -31,8 +31,8 @@ function createRuntimeOptions(): C420UIAppOptions {
       project: {
         projectName: "Example Project",
         projectSubtitle: "Example subtitle",
-        displayVersion: "0.1.4-12",
-        phase: "0.1.4-12",
+        displayVersion: "0.1.4-14",
+        phase: "0.1.4-14",
         status: "dev",
         logoLines: [],
         appId: "example.project",

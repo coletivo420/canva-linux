@@ -67,6 +67,20 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
+const currentReleaseVersion = "0.1.4-14";
+const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+$/;
+const forbiddenCurrentReleaseVersions = ["0.1.4-dev.14", "0.1.4-rc.14", "0.1.4.14"];
+const activePublicReleaseDocs = [
+  "README.md",
+  "docs/README.md",
+  "docs/CLI.md",
+  "docs/VALIDATION.md",
+  "docs/RELEASE.md",
+  "docs/MANUAL_VALIDATION.md",
+  "CLAUDE.md",
+  "REVIEW.md",
+];
+
 const releaseScripts = [
   "scripts/build-appimage.sh",
   "scripts/build-flatpak-bundle.sh",
@@ -1808,6 +1822,42 @@ function checkReleaseContract(failures: string[]): void {
   const phase = shellValue(identity, "PROJECT_PHASE");
 
   if (!pkg.version) failures.push("package.json: missing version");
+  if (pkg.version && pkg.version !== currentReleaseVersion) {
+    failures.push(`package.json: version must be ${currentReleaseVersion}`);
+  }
+  if (pkg.version && !releaseVersionPattern.test(pkg.version)) {
+    failures.push("package.json: version must follow N.N.N-X release versioning");
+  }
+  if (pkg.version && forbiddenCurrentReleaseVersions.includes(pkg.version)) {
+    failures.push(`package.json: forbidden release version ${pkg.version}`);
+  }
+  if (lock.version !== currentReleaseVersion) {
+    failures.push(`package-lock.json: top-level version must be ${currentReleaseVersion}`);
+  }
+  if (lock.packages?.[""]?.version !== currentReleaseVersion) {
+    failures.push(`package-lock.json: root package version must be ${currentReleaseVersion}`);
+  }
+  const appstream = readProjectFile(rootDir, "data/io.github.coletivo420.canva-linux.metainfo.xml");
+  if (!appstream.includes(`<release version="${currentReleaseVersion}" date="2026-05-14">`)) {
+    failures.push(`AppStream metadata must contain release ${currentReleaseVersion}`);
+  }
+  for (const forbidden of forbiddenCurrentReleaseVersions) {
+    const filesWithForbidden = [
+      "package.json",
+      "package-lock.json",
+      "README.md",
+      "docs/RELEASE.md",
+    ].filter((relativePath) => readProjectFile(rootDir, relativePath).includes(forbidden));
+    if (filesWithForbidden.length) {
+      failures.push(`forbidden release identity ${forbidden} found in ${filesWithForbidden.join(", ")}`);
+    }
+  }
+  for (const relativePath of activePublicReleaseDocs) {
+    const contents = readProjectFile(rootDir, relativePath);
+    if (contents.includes("0.1.4-12")) {
+      failures.push(`${relativePath}: active public docs must not reference 0.1.4-12`);
+    }
+  }
   if (pkg.version && lock.version !== pkg.version) {
     failures.push("package-lock.json: top-level version must match package.json");
   }
