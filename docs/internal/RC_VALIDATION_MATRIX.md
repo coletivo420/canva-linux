@@ -30,7 +30,7 @@ Every required automated command must be recorded with its status during RC vali
 | `npm run typecheck` | Not run in this template. | Standard TypeScript checking completes without type errors. | Maintained TypeScript may no longer satisfy the standard project type contract. | runtime build |
 | `npm run typecheck:strict` | Not run in this template. | Strict TypeScript checking completes without type errors. | Strict type-safety expectations for the release candidate may have regressed. | runtime build |
 | `npm test` | Not run in this template. | The automated test suite passes without changing runtime behavior. | Behavior covered by tests may have regressed or the test environment may be incomplete. | runtime build |
-| `./scripts/validate-project.sh` | Not run in this template. | The shell-level project validation runner completes the complete required validation sequence. | The release candidate failed the top-level validation entrypoint or a required command is not runnable from shell validation. | release metadata |
+| `./scripts/validate-project.sh` | Not run in this template. | The shell-level project validation runner completes the required validation sequence. | The release candidate failed the top-level validation entrypoint or a required command is not runnable from shell validation. | release metadata |
 
 ## Manual RC validation matrix
 
