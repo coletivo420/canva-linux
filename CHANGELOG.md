@@ -10,6 +10,8 @@
 - Added AppStream release metadata for `0.1.4-14`.
 - Split documentation into generic c420ui, Canva Linux dependent-project, and internal maintenance sections.
 - Refreshed public release, validation, review, and AI maintenance docs for the consolidated c420ui separation state.
+- Expanded c420ui, Canva Linux, and internal split docs with ownership, implementation, boundary checks, and forbidden-regression coverage.
+- Added split documentation depth checks so placeholder docs cannot replace the maintained split references.
 
 ### Fixed
 - Removed stale inline release-status changelog entries from startup logging so release details live only in the changelog.

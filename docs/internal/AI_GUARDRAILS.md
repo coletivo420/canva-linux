@@ -26,6 +26,20 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Every behavior change must update `CHANGELOG.md`.
 
 
+
+## 0.1.4-14 split documentation policy
+
+- Current maintained release target is `0.1.4-14`.
+- The release version format must remain `N.N.N-X`.
+- Canva Linux is the dependent project; c420ui is the generic engine.
+- Canva Linux does not install dependencies directly from launchers or shell helpers.
+- Canva Linux does not validate generic artifact recipes; c420ui owns that validation.
+- The Canva Linux adapter must not duplicate Action Engine policy for planned actions, dry-run,
+  confirmation, root policy, `requestRootAccess`, or fallback execution.
+- `scripts/preflight-common.sh` is repository-check-only.
+- Split docs must explain controls, non-controls, implementing files, consumed configs/adapters,
+  boundary checks, and forbidden regressions.
+
 ## Host dependency policy
 
 - c420ui owns host dependency management for command checks, Node minimum checks, npm checks, install strategy, repair/skip modes, messages and exit codes.

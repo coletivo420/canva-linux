@@ -84,7 +84,9 @@ recipes, and host scripts.
 
 ## Host dependency ownership
 
-- c420ui owns host dependency management, including generic check and ensure result types, command lookup, Node minimum validation, npm dependency resolution, install strategy selection, repair mode, skip mode, messages and exit codes.
+- c420ui owns host dependency management, including generic check and ensure result types, command lookup,
+  Node minimum validation, npm dependency resolution, install strategy selection, repair mode, skip mode,
+  messages and exit codes.
 - Dependent projects own concrete dependency declarations only.
 - `config/canva-linux/dependencies.json` is the Canva Linux declaration; c420ui owns host dependency management.
 - `scripts/preflight-common.sh` remains in `scripts/` for now and must not be moved into c420ui core in this phase.
@@ -109,3 +111,22 @@ runner.
 Shell helper classifications are maintained in `docs/checks/SHELL_HELPERS.md`.
 `scripts/preflight-common.sh` is repository-check-only and must not own npm
 install or dependency repair policy.
+
+## Current 0.1.4-14 maintenance rules
+
+- Current version is `0.1.4-14` and the required release format is `N.N.N-X`.
+- Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
+- All maintained code, comments, docs, UI strings, changelog text, and AI
+  maintenance policy must be in English.
+- Future i18n must use explicit translation resources and typed keys; do not add
+  hardcoded translations now.
+- Canva Linux launchers and shell helpers must not run npm dependency
+  installation directly.
+- Canva Linux must declare dependencies in `config/canva-linux/dependencies.json`
+  and let c420ui own dependency policy.
+- Canva Linux must declare artifact recipes in `config/canva-linux/artifacts.json`
+  and let c420ui validate generic artifact recipe contracts.
+- The Canva Linux adapter must not duplicate Action Engine policy for planned
+  actions, dry-run, confirmation, root policy, or fallback execution.
+- `scripts/preflight-common.sh` is repository-check-only and must not own npm
+  install, repair, or skip behavior.

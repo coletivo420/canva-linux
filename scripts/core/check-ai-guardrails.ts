@@ -27,6 +27,211 @@ const readmeRefs = [
   "docs/APPIMAGE_FUSE.md",
 ];
 
+
+const requiredSplitDocFragments: Record<string, string[]> = {
+  "docs/c420ui/ARCHITECTURE.md": [
+    "Controls",
+    "Must not control",
+    "Implementing files",
+    "Consumed configs and adapters",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/ACTION_ENGINE.md": [
+    "dry-run",
+    "planned",
+    "root",
+    "requestRootAccess",
+    "bridge.runAction",
+    "adapter",
+    "fallback",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/COMMAND_RUNNER.md": [
+    "Command Runner",
+    "Operational log",
+    "redaction",
+    "adapter",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/ROOT_PROVIDER.md": [
+    "c420uiRootProvider",
+    "validateRootAccess",
+    "validateRootAccessWithInput",
+    "C420UI_ROOT_AUTH",
+    "sudo-helper.sh",
+    "passwords",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/HOST_DEPENDENCIES.md": [
+    "Node.js",
+    "command lookup",
+    "npm declared-versus-installed",
+    "C420UI_SKIP_DEPENDENCY_INSTALL",
+    "C420UI_DEPENDENCY_REPAIR",
+    "config/canva-linux/dependencies.json",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/DEVELOPMENT_PROVIDER.md": [
+    "Development Provider",
+    "development.json",
+    "actions.json",
+    "planned",
+    "scope",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/ARTIFACTS.md": [
+    "c420uiArtifactRecipeWorkflow",
+    "outputPattern",
+    "${version}",
+    "x64",
+    "${arch}",
+    "scope",
+    "planned",
+    "requiresRoot",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/TERMINAL_UI.md": [
+    "Terminal UI",
+    "requestRootAccess",
+    "project-ui.json",
+    "Focus",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/ARCHITECTURE.md": [
+    "dependent project",
+    "c420ui",
+    "Electron runtime",
+    "CANVA_DEBUG",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/CLI.md": [
+    "dependent project",
+    "c420ui",
+    "canva-linux.sh",
+    "direct CLI",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/CONFIG.md": [
+    "actions.json",
+    "dependencies.json",
+    "artifacts.json",
+    "development.json",
+    "project-ui.json",
+    "dependent project",
+    "c420ui",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/PACKAGING.md": [
+    "dependent project",
+    "c420ui",
+    "scripts/build-appimage.sh",
+    "scripts/build-flatpak-bundle.sh",
+    "scripts/package-guidance-common.sh",
+    "artifact names",
+    "x64",
+    "DEB",
+    "RPM",
+    "AUR",
+  ],
+  "docs/canva-linux/APPIMAGE.md": [
+    "dependent project",
+    "c420ui",
+    "scripts/build-appimage.sh",
+    "outputPattern",
+    "artifact names",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/FLATPAK.md": [
+    "dependent project",
+    "c420ui",
+    "scripts/build-flatpak-bundle.sh",
+    "AppStream",
+    "artifact names",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/RELEASE.md": [
+    "dependent project",
+    "0.1.4-14",
+    "N.N.N-X",
+    "AppStream",
+    "package-lock.json",
+    "validate-project",
+    "dist/",
+    "Required checks",
+  ],
+  "docs/canva-linux/CREDENTIAL_STORAGE.md": [
+    "dependent project",
+    "c420ui",
+    "basic_text",
+    "persist:canva",
+    "ephemeral",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/internal/AI_GUARDRAILS.md": [
+    "0.1.4-14",
+    "N.N.N-X",
+    "English",
+    "i18n",
+    "Canva Linux does not install dependencies directly",
+    "Canva Linux does not validate generic artifact recipes",
+    "adapter must not duplicate Action Engine policy",
+  ],
+  "docs/internal/C420UI_DEPENDENT_PROJECT_BOUNDARIES.md": [
+    "0.1.4-14",
+    "N.N.N-X",
+    "preflight-common.sh",
+    "repository-check-only",
+    "planned, dry-run, root, or confirmation policy duplicated",
+    "Canva Linux",
+    "c420ui",
+  ],
+  "docs/internal/VALIDATION_POLICY.md": [
+    "0.1.4-14",
+    "N.N.N-X",
+    "English",
+    "i18n",
+    "preflight-common.sh",
+    "repository-check-only",
+    "Canva Linux does not install dependencies directly",
+    "Canva Linux does not validate generic artifact recipes",
+  ],
+  "docs/internal/PROJECT_TREE.md": [
+    "docs/c420ui/",
+    "docs/canva-linux/",
+    "docs/internal/",
+    "packages/c420ui/",
+    "scripts/c420ui-adapter/",
+    "config/canva-linux/",
+    "preflight-common.sh",
+    "0.1.4-14",
+  ],
+};
+
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
@@ -112,6 +317,29 @@ const requiredGuardrails = [
   "If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.",
 ];
 
+
+function assertRequiredSplitDocs(rootDir: string, failures: string[]): void {
+  for (const [relativePath, fragments] of Object.entries(requiredSplitDocFragments)) {
+    const fullPath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(fullPath)) {
+      failures.push(`missing split documentation file: ${relativePath}`);
+      continue;
+    }
+
+    const contents = fs.readFileSync(fullPath, "utf8");
+    const normalizedContents = normalizeWhitespace(contents);
+    if (contents.length < 600) {
+      failures.push(`${relativePath}: split documentation is too short`);
+    }
+
+    for (const fragment of fragments) {
+      if (!normalizedContents.includes(normalizeWhitespace(fragment))) {
+        failures.push(`${relativePath}: missing split documentation fragment: ${fragment}`);
+      }
+    }
+  }
+}
+
 export function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
@@ -139,6 +367,8 @@ export function main(): number {
     if (!normalizedGuardrails.includes(normalizeWhitespace(fragment)))
       failures.push(`internal/AI_GUARDRAILS missing rule: ${fragment}`);
   }
+
+  assertRequiredSplitDocs(rootDir, failures);
 
   const review = fs.existsSync(path.join(rootDir, "REVIEW.md"))
     ? fs.readFileSync(path.join(rootDir, "REVIEW.md"), "utf8")
