@@ -35,7 +35,7 @@ Expected `dist/` artifacts preserve generated architecture names:
 
 ## RC validation matrix
 
-Before tagging `v0.1.4-14`, maintainers must complete the internal [RC Validation Matrix](../internal/RC_VALIDATION_MATRIX.md). It is the authoritative release-candidate checklist for required command status, expected results, manual dry-runs, packaging-environment checks, and release blockers.
+Before tagging `v0.1.4-14`, maintainers must use the internal [RC Validation Matrix](../internal/RC_VALIDATION_MATRIX.md) as the authoritative release-candidate checklist for required command status, expected results, manual dry-runs, packaging-environment checks, and release blockers. The matrix now records the `2026-05-14` RC validation against commit `75853e9e08ca56a1b0b6aec13fe5ed3b74625d1a`, including passed npm checks and environment-blocked Flatpak/AppImage/root-launcher checks.
 
 ## Required checks
 

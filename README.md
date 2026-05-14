@@ -1,15 +1,36 @@
 # Canva Linux
 
 Status: **Alpha**
-Version: **0.1.4-14 (Alpha)**
-Release: **v0.1.4-14**
+Version: **0.1.4-14**
+Release target: **v0.1.4-14**
+License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
 
-## What is Canva Linux?
+Canva Linux is an open-source Linux desktop wrapper and maintenance toolkit for using Canva with native Linux-oriented integration,
+packaging, diagnostics, and development workflows.
 
-Canva Linux is an open-source desktop wrapper and tooling project for running Canva with Linux-oriented integration, packaging,
-diagnostics, and maintenance workflows.
+It provides a dedicated desktop wrapper, Linux integration, packaging and validation tooling, and community-maintained workflows for
+users, contributors, and automation. Canva Linux is not official Canva software.
+
+## Feature Matrix
+
+| Area | Status | Features |
+| --- | --- | --- |
+| Desktop wrapper | Available | Dedicated Electron window, persistent Canva session, desktop integration |
+| Session storage | Available | Secret Service-backed persistent login with ephemeral fallback |
+| Editor integration | Available | Internal tabs, OAuth popup handling, upload/export flows |
+| Color tools | Available | CL-EyeDropper integration |
+| Diagnostics | Available | GPU diagnostics, browser capture diagnostics, upload diagnostics |
+| Packaging | Available / Experimental | Flatpak packaging, native install workflows, experimental AppImage |
+| Development tooling | Available | TypeScript-first maintained tooling, runtime build, validation, doctor checks, package recipes |
+| Dependency checks | Available | Host dependency validation, declared vs installed npm dependency checks |
+| Artifact validation | Available | Artifact recipe validation, AppStream metadata checks, RC validation matrix |
+| **c420ui workspace** | Available | Terminal UI, c420ui Action Engine, progress/log panels, root-auth popup for privileged actions |
+| Maintenance | Available | Uninstall, purge, reset user data, permissions recovery |
+| Planned packages | Planned | AUR/PKGBUILD, `.deb`, `.rpm` |
+
+TypeScript-first maintained tooling is part of the project contract, with JavaScript treated as generated runtime/build output.
 
 ## Quick Start
 
@@ -19,87 +40,103 @@ cd canva-linux
 ./canva-linux.sh
 ```
 
-The launcher opens the c420ui terminal interface by default. Direct CLI action flags are available for automation.
-Both surfaces route through the same c420ui Action Engine.
+The launcher opens the c420ui terminal interface by default. Direct CLI flags are available for automation.
 
-Run the tool as your regular user. Privileged operations ask for administrator authentication only when the selected action needs it.
+Run Canva Linux as a regular user. Privileged actions request administrator authentication only when needed.
 
-## Architecture at a glance
+## Usage
 
-- Canva Linux owns the Electron runtime, Canva integration, packaging recipes, release metadata, and project configuration.
-- c420ui owns the generic terminal UI, Action Engine, Command Runner, Root Provider, host dependency runner, and artifact workflow runner.
-- `scripts/c420ui-adapter/` is the Canva Linux adapter layer between project configuration and generic c420ui contracts.
-- `config/canva-linux/` contains project action, artifact, dependency, development, and UI declarations.
-- Release asset names preserve upstream/tooling architecture strings such as `x86_64` or `X86_64`.
+```bash
+./canva-linux.sh --help
+./canva-linux.sh --doctor --dry-run
+./canva-linux.sh --bundle-appimage --dry-run
+./canva-linux.sh --bundle-flatpak --dry-run
+./canva-linux.sh --purge --yes --dry-run
+```
 
-Maintained Node.js tooling is TypeScript. JavaScript appears only as generated output, while shell remains reserved for Linux host-operation glue.
+Dry-run commands report planned work without intentionally changing installed packages, bundles, credentials, runtime data, or user
+configuration. Packaging commands depend on the required host tooling being installed for the target environment.
 
-## Feature Matrix
+## Canva Linux Documentation
 
-- **Desktop app**: dedicated window, Secret Service-backed persistent session, ephemeral fallback, desktop integration.
-- **Editor**: CL-EyeDropper, upload/export flows, OAuth popup, internal tabs.
-- **System**: Native Install, Flatpak Install, experimental AppImage.
-- **Development**: runtime build, package generation, validation, doctor checks.
-- **c420ui workspace**: guided sections, logs, progress bar, root-auth popup for privileged actions.
-- **Maintenance**: uninstall, purge, reset user data, permissions recovery.
-- **Diagnostics**: GPU, upload, browser capture diagnostics.
-- **Planned package targets**: AUR/PKGBUILD, then `.deb` and `.rpm`.
-
-## Documentation
-
-Start with the [documentation index](docs/README.md) for the full map.
-
-### Users and operators
-
+- [Documentation index](docs/README.md)
 - [Installation](docs/INSTALLATION.md)
 - [CLI reference](docs/CLI.md)
 - [Features](docs/FEATURES.md)
 - [Debugging](docs/DEBUGGING.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
 - [AppImage FUSE requirements](docs/APPIMAGE_FUSE.md)
-
-### Contributors and release maintainers
-
-- [Validation checklist](docs/VALIDATION.md)
+- [Validation](docs/VALIDATION.md)
 - [Release guide](docs/RELEASE.md)
 - [Development guide](docs/DEVELOPMENT.md)
-- [Project tree reference](docs/PROJECT_TREE.md)
 - [Technical architecture](docs/TECHNICAL.md)
 - [TypeScript notes](docs/TYPESCRIPT.md)
 - [CL EyeDropper architecture](docs/CANVA_LINUX_EYEDROPPER.md)
 
-### Split architecture references
+### Canva Linux internals
 
-- [c420ui architecture](docs/c420ui/ARCHITECTURE.md)
-- [c420ui Action Engine](docs/c420ui/ACTION_ENGINE.md)
-- [c420ui Command Runner](docs/c420ui/COMMAND_RUNNER.md)
-- [c420ui Root Provider](docs/c420ui/ROOT_PROVIDER.md)
-- [c420ui host dependencies](docs/c420ui/HOST_DEPENDENCIES.md)
-- [c420ui development provider](docs/c420ui/DEVELOPMENT_PROVIDER.md)
-- [c420ui artifact workflows](docs/c420ui/ARTIFACTS.md)
-- [c420ui terminal UI](docs/c420ui/TERMINAL_UI.md)
-- [Canva Linux architecture](docs/canva-linux/ARCHITECTURE.md)
-- [Canva Linux CLI](docs/canva-linux/CLI.md)
-- [Canva Linux config](docs/canva-linux/CONFIG.md)
+- [Architecture](docs/canva-linux/ARCHITECTURE.md)
+- [CLI](docs/canva-linux/CLI.md)
+- [Configuration](docs/canva-linux/CONFIG.md)
+- [Packaging](docs/canva-linux/PACKAGING.md)
+- [AppImage](docs/canva-linux/APPIMAGE.md)
+- [Flatpak](docs/canva-linux/FLATPAK.md)
+- [Release](docs/canva-linux/RELEASE.md)
+- [Credential storage](docs/canva-linux/CREDENTIAL_STORAGE.md)
+
+## Architecture Overview
+
+Canva Linux owns:
+
+- Electron runtime
+- Canva integration
+- packaging recipes
+- release metadata
+- desktop/AppStream metadata
+- project configuration
+
+c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` connects Canva Linux configuration to c420ui, and
+`config/canva-linux/` contains project declarations for actions, artifacts, dependencies, development tasks, and UI metadata.
+
+## Release and Packaging
+
+Current release target: `0.1.4-14`.
+
+Versioning format: `N.N.N-X`.
+
+Artifact names preserve generated architecture strings such as `x86_64` and `X86_64`. Do not normalize architecture names to `x64`.
+
 - [Canva Linux packaging](docs/canva-linux/PACKAGING.md)
-- [Canva Linux AppImage](docs/canva-linux/APPIMAGE.md)
-- [Canva Linux Flatpak](docs/canva-linux/FLATPAK.md)
 - [Canva Linux release](docs/canva-linux/RELEASE.md)
-- [Canva Linux credential storage](docs/canva-linux/CREDENTIAL_STORAGE.md)
+- [RC validation matrix](docs/internal/RC_VALIDATION_MATRIX.md)
 
-## Security and privacy notes
+## Security and Privacy
 
-Use only trusted build/dependency sources and review privileged actions before execution. Persistent login requires a secure Linux Secret Service backend.
-Otherwise, Canva Linux uses ephemeral session mode.
+Canva Linux is not official Canva software. Review the code, packaging recipes, and privileged workflows before running them in a
+sensitive environment.
 
-## Limitations
+Persistent login depends on Linux Secret Service support. Without secure storage, session behavior can be ephemeral.
 
-Some packaging targets are planned and depend on host tooling availability.
+Root actions are isolated to explicit install and maintenance workflows. Administrator credentials must never be logged.
 
 ## Contributing
 
 Issues and pull requests are welcome.
 
-## License
+Maintained code, comments, documentation, and changelog entries must be in English. Future translations require explicit i18n
+architecture.
 
-GPL-3.0
+## About c420ui
+
+c420ui is the generic terminal UI and action orchestration engine used by Canva Linux. It owns the Action Engine, Command Runner,
+Root Provider, host dependency checks, artifact workflow runner, and terminal interface. Canva Linux consumes it through project
+configuration and `scripts/c420ui-adapter/`.
+
+- [c420ui architecture](docs/c420ui/ARCHITECTURE.md)
+- [Action Engine](docs/c420ui/ACTION_ENGINE.md)
+- [Command Runner](docs/c420ui/COMMAND_RUNNER.md)
+- [Root Provider](docs/c420ui/ROOT_PROVIDER.md)
+- [Host Dependencies](docs/c420ui/HOST_DEPENDENCIES.md)
+- [Development Provider](docs/c420ui/DEVELOPMENT_PROVIDER.md)
+- [Artifact Workflows](docs/c420ui/ARTIFACTS.md)
+- [Terminal UI](docs/c420ui/TERMINAL_UI.md)
