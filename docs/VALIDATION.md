@@ -19,9 +19,20 @@ The validation baseline protects these release facts:
 
 ## Validation domains
 
-- `check:c420ui-core` validates reusable c420ui package contracts in one consolidated domain check.
-- `check:canva-linux` validates Canva Linux adapter, root, artifact, branding, boundary and log contracts in one consolidated domain check.
-- `check:shared-tooling` validates repository-wide tooling through focused shared checks plus the consolidated repository policy check.
+- `npm run check:c420ui-core`
+  - runs `check-c420ui-core-contracts.ts` as the consolidated c420ui core contract check
+  - covers package and dependent-project boundaries, package policy, public API exports, bridge, detection,
+    Action Engine, CLI, root provider, command runner, operational logs, artifact workflow runner, and
+    interactive action runner contracts
+- `npm run check:canva-linux`
+  - runs `check-canva-linux-contracts.ts` as the consolidated Canva Linux contract check
+  - covers the adapter, root provider, c420ui sudo helper, public branding, project boundary, action registry
+    validation, artifact recipes, AppImage, Flatpak, release artifacts, launcher/session logs, and interactive log
+    UI integration
+- `npm run check:shared-tooling`
+  - builds the runtime and shared script checks
+  - runs AI guardrails, documentation links, dependency policy, runtime-build verification, and repository policy
+    checks for repository-wide tooling coverage
 
 Current direct CLI validation uses:
 
