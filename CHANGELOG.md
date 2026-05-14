@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+- Added an internal RC validation matrix for `0.1.4-14` with required commands, manual dry-runs, dependency-backed packaging checks,
+  expected results, owner domains, and release blockers.
+
+### Changed
+- Linked the RC validation matrix from release, validation, documentation, and review guidance, and made AI guardrail checks require
+  the matrix before RC validation.
+
 
 ## [0.1.4-14] - 2026-05-14
 

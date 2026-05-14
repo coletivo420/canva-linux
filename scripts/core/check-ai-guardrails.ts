@@ -5,6 +5,7 @@ import { findCanvaLinuxProjectRoot as findProjectRoot } from "../canva-linux/pro
 
 const requiredFiles = [
   "docs/internal/AI_GUARDRAILS.md",
+  "docs/internal/RC_VALIDATION_MATRIX.md",
   "docs/VALIDATION.md",
   "docs/TYPESCRIPT.md",
   "docs/CANVA_LINUX_EYEDROPPER.md",
@@ -236,6 +237,51 @@ function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
 
+const requiredRcValidationFragments = [
+  "0.1.4-14",
+  "v0.1.4-14",
+  "N.N.N-X",
+  "Validation date",
+  "Validated commit",
+  "Validation environment",
+  "npm run check:c420ui-core",
+  "npm run check:canva-linux",
+  "npm run check:shared-tooling",
+  "npm run check:scripts-core",
+  "npm run validate",
+  "npm run docs:check-links",
+  "npm run docs:check-ai",
+  "npm run lint",
+  "npm run typecheck",
+  "npm run typecheck:strict",
+  "npm test",
+  "./scripts/validate-project.sh",
+  "npm run c420ui -- --help",
+  "npm run c420ui:cli -- --doctor --dry-run",
+  "./canva-linux.sh --help",
+  "./canva-linux.sh --doctor --dry-run",
+  "./canva-linux.sh --bundle-appimage --dry-run",
+  "./canva-linux.sh --bundle-flatpak --dry-run",
+  "./canva-linux.sh --purge --yes --dry-run",
+  "./scripts/build-appimage.sh",
+  "./scripts/build-flatpak-bundle.sh",
+  "./scripts/validate-flatpak.sh",
+  "Release blockers",
+  "package.json",
+  "package-lock.json",
+  "AppStream",
+  "0.1.4-dev.14",
+  "0.1.4-rc.14",
+  "0.1.4.14",
+  "x64",
+  "scripts/c420ui-canva-linux",
+  "scripts/c420ui/",
+  "ensure-npm-dependencies.sh",
+  "c420ui core contains Canva Linux hardcoding",
+  "planned-action, dry-run, root, or confirmation policy",
+  "Runtime Electron behavior changes",
+];
+
 const requiredReviewFragments = [
   "## Credential storage review checklist",
   "allows `basic_text` to use `persist:canva`",
@@ -318,6 +364,23 @@ const requiredGuardrails = [
 ];
 
 
+function assertRequiredRcValidationMatrix(rootDir: string, failures: string[]): void {
+  const relativePath = "docs/internal/RC_VALIDATION_MATRIX.md";
+  const fullPath = path.join(rootDir, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    failures.push(`missing RC validation matrix: ${relativePath}`);
+    return;
+  }
+
+  const contents = fs.readFileSync(fullPath, "utf8");
+  const normalizedContents = normalizeWhitespace(contents);
+  for (const fragment of requiredRcValidationFragments) {
+    if (!normalizedContents.includes(normalizeWhitespace(fragment))) {
+      failures.push(`${relativePath}: missing RC validation fragment: ${fragment}`);
+    }
+  }
+}
+
 function assertRequiredSplitDocs(rootDir: string, failures: string[]): void {
   for (const [relativePath, fragments] of Object.entries(requiredSplitDocFragments)) {
     const fullPath = path.join(rootDir, relativePath);
@@ -369,6 +432,7 @@ export function main(): number {
   }
 
   assertRequiredSplitDocs(rootDir, failures);
+  assertRequiredRcValidationMatrix(rootDir, failures);
 
   const review = fs.existsSync(path.join(rootDir, "REVIEW.md"))
     ? fs.readFileSync(path.join(rootDir, "REVIEW.md"), "utf8")
