@@ -48,6 +48,7 @@ This index separates c420ui engine documentation, Canva Linux dependent-project 
 - [Internal AI guardrails](internal/AI_GUARDRAILS.md)
 - [Dependent project boundaries](internal/C420UI_DEPENDENT_PROJECT_BOUNDARIES.md)
 - [Validation policy](internal/VALIDATION_POLICY.md)
+- [RC validation matrix](internal/RC_VALIDATION_MATRIX.md)
 - [Internal project tree](internal/PROJECT_TREE.md)
 - [Internal development notes](internal/AI_DEVELOPMENT.md)
 - [Internal changelog development history](internal/CHANGELOG_DEVELOPMENT_HISTORY.md)

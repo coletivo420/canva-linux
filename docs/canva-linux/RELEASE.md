@@ -33,6 +33,10 @@ Expected `dist/` artifacts preserve generated architecture names:
 - `canva-linux-0.1.4-14-linux-unpacked-x86_64.tar.gz`
 - `SHA256SUMS`
 
+## RC validation matrix
+
+Before tagging `v0.1.4-14`, maintainers must complete the internal [RC Validation Matrix](../internal/RC_VALIDATION_MATRIX.md). It is the authoritative release-candidate checklist for required command status, expected results, manual dry-runs, packaging-environment checks, and release blockers.
+
 ## Required checks
 
 - `npm run check:c420ui-core`

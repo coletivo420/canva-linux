@@ -2,7 +2,7 @@
 
 The `0.1.4-14` validation baseline protects the consolidated c420ui and Canva
 Linux split. This document is internal maintenance policy for humans and AI
-agents.
+agents. The formal release-candidate checklist is maintained in [RC Validation Matrix](RC_VALIDATION_MATRIX.md).
 
 ## Language and i18n
 
@@ -34,6 +34,10 @@ agents.
   install, dependency repair, or skip policy.
 - Artifact names must preserve generated architecture strings such as `x86_64`
   or `X86_64`.
+
+## RC validation matrix
+
+The release candidate for `0.1.4-14` must use the formal [RC Validation Matrix](RC_VALIDATION_MATRIX.md) before `v0.1.4-14` is tagged. The matrix records automated commands, manual dry-run checks, dependency-backed packaging checks, expected results, owner domains, and release blockers.
 
 ## Required validation commands
 

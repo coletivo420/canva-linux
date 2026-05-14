@@ -10,6 +10,15 @@ Request changes if a PR:
 - removes validations or review checklist items to make a change pass;
 - fails to report validations executed and anything not tested.
 
+## RC validation matrix review
+
+Request changes if a PR preparing `0.1.4-14` for RC validation:
+
+- removes `docs/internal/RC_VALIDATION_MATRIX.md`;
+- fails to link the RC validation matrix from maintained release or validation documentation;
+- omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
+- marks `v0.1.4-14` ready while a release blocker remains open.
+
 ## Versioning review
 
 Request changes if a PR:
