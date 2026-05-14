@@ -20,7 +20,11 @@ scripts/canva-linux/       Canva Linux project-specific actions, detection, and 
 scripts/core/              Repository-wide validation and infrastructure checks.
 config/canva-linux/        Canva Linux project declarations for actions, artifacts, dependencies, development, and UI.
 electron/                  Canva Linux Electron runtime and preload source.
+test/                      TypeScript-first unit, wiring, and smoke tests.
+packaging/                 Packaging submission workspaces (e.g., Flathub).
 data/                      Desktop and AppStream metadata.
+build-resources/           Packaging icons and builder resources.
+assets/                    Repository documentation assets.
 ```
 
 Generic c420ui code must not hardcode Canva Linux metadata. Canva Linux code must not reimplement c420ui Action Engine, Command Runner, Root Provider, host dependency, or artifact workflow policy.
