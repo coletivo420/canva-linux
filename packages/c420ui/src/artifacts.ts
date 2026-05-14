@@ -36,6 +36,10 @@ export type c420uiArtifactWorkflow = {
   outputPattern?: string;
 };
 
+export type c420uiArtifactRecipeWorkflow = c420uiArtifactWorkflow & {
+  scope: c420uiArtifactScope;
+};
+
 export type c420uiArtifactCapabilities = {
   supportsArtifacts: boolean;
   supportsInstall: boolean;
@@ -49,16 +53,17 @@ export type c420uiArtifactCapabilities = {
 
 export type c420uiArtifactRecipeConfig = {
   capabilities: c420uiArtifactCapabilities;
-  workflows: c420uiArtifactWorkflow[];
+  workflows: c420uiArtifactRecipeWorkflow[];
 };
 
 export type C420UIArtifactKind = c420uiArtifactKind;
 export type C420UIArtifactScope = c420uiArtifactScope;
 export type C420UIArtifactWorkflow = c420uiArtifactWorkflow;
+export type C420UIArtifactRecipeWorkflow = c420uiArtifactRecipeWorkflow;
 export type C420UIArtifactCapabilities = c420uiArtifactCapabilities;
 export type C420UIArtifactRecipeConfig = c420uiArtifactRecipeConfig;
 
-export type C420UIArtifactRecipe = c420uiArtifactWorkflow & {
+export type C420UIArtifactRecipe = c420uiArtifactRecipeWorkflow & {
   outputPattern?: string;
 };
 
@@ -189,6 +194,10 @@ function isExecutableArtifactActionField(field: ArtifactActionIdField): boolean 
   return (executableArtifactActionIdFields as readonly string[]).includes(field);
 }
 
+function isRootManagedArtifactActionField(field: ArtifactActionIdField): boolean {
+  return field === "installActionId" || field === "uninstallActionId" || field === "purgeActionId";
+}
+
 function toConfigPath(configPath: string): string {
   return path.normalize(configPath.replace(/^[\\/]+/, ""));
 }
@@ -246,7 +255,7 @@ export function validateC420UIArtifactRecipeConfig(
 }
 
 export function validateC420UIArtifactWorkflowsAgainstActions(
-  workflows: c420uiArtifactWorkflow[],
+  workflows: c420uiArtifactRecipeWorkflow[],
   actions: C420UIActionDescriptor[],
 ): void {
   const actionsById = new Map(actions.map((action) => [action.id, action]));
@@ -264,6 +273,27 @@ export function validateC420UIArtifactWorkflowsAgainstActions(
       }
       if (workflow.planned !== true && isExecutableArtifactActionField(field) && actionPlanned) {
         throw new Error(`Artifact workflow ${workflow.id} is executable but ${field} ${actionId} is planned`);
+      }
+      if (workflow.requiresRoot === true && action.scope === "user") {
+        throw new Error(`Artifact workflow ${workflow.id} requires root but ${field} ${actionId} is user-scoped`);
+      }
+      if (workflow.requiresRoot === false && action.requiresRoot === true) {
+        throw new Error(`Artifact workflow ${workflow.id} declares requiresRoot=false but ${field} ${actionId} requires root`);
+      }
+      if (
+        workflow.scope === "system" &&
+        isRootManagedArtifactActionField(field) &&
+        action.scope === "user"
+      ) {
+        throw new Error(`Artifact workflow ${workflow.id} is system-scoped but ${field} ${actionId} is user-scoped`);
+      }
+      if (
+        workflow.scope === "system" &&
+        isRootManagedArtifactActionField(field) &&
+        action.scope === "system" &&
+        action.requiresRoot === false
+      ) {
+        throw new Error(`Artifact workflow ${workflow.id} is system-scoped but ${field} ${actionId} declares requiresRoot=false`);
       }
     }
   }

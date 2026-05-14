@@ -93,6 +93,15 @@ test("workflow without required id, kind, label, or scope fails", () => {
   }
 });
 
+test("recipe workflow requires scope", () => {
+  const workflowWithoutScope: Record<string, unknown> = { ...validConfig().workflows[0] };
+  delete workflowWithoutScope.scope;
+  assert.throws(
+    () => validateC420UIArtifactRecipeConfig(validConfig({ workflows: [workflowWithoutScope as never] })),
+    /scope must be a non-empty string/,
+  );
+});
+
 test("invalid kind fails", () => {
   assert.throws(
     () =>
@@ -168,6 +177,69 @@ test("executable workflow pointing to planned action fails", () => {
         [action("bundle-appimage", { kind: "planned", planned: true })],
       ),
     /appimage is executable but buildActionId bundle-appimage is planned/,
+  );
+});
+
+test("requiresRoot=false contradicting action requiresRoot=true fails", () => {
+  const workflow = {
+    ...validConfig().workflows[0],
+    buildActionId: undefined,
+    installActionId: "install-system",
+    requiresRoot: false,
+  };
+  assert.throws(
+    () =>
+      validateC420UIArtifactWorkflowsAgainstActions(
+        [workflow],
+        [action("install-system", { requiresRoot: true })],
+      ),
+    /appimage declares requiresRoot=false but installActionId install-system requires root/,
+  );
+});
+
+test("requiresRoot=true with user-scoped action fails", () => {
+  const workflow = { ...validConfig().workflows[0], requiresRoot: true };
+  assert.throws(
+    () =>
+      validateC420UIArtifactWorkflowsAgainstActions(
+        [workflow],
+        [action("bundle-appimage", { scope: "user" })],
+      ),
+    /appimage requires root but buildActionId bundle-appimage is user-scoped/,
+  );
+});
+
+test("system workflow with user-scoped action fails", () => {
+  const workflow = {
+    ...validConfig().workflows[0],
+    buildActionId: undefined,
+    scope: "system" as const,
+    installActionId: "install-user",
+  };
+  assert.throws(
+    () =>
+      validateC420UIArtifactWorkflowsAgainstActions(
+        [workflow],
+        [action("install-user", { scope: "user" })],
+      ),
+    /appimage is system-scoped but installActionId install-user is user-scoped/,
+  );
+});
+
+test("system workflow with non-root system action fails", () => {
+  const workflow = {
+    ...validConfig().workflows[0],
+    buildActionId: undefined,
+    scope: "system" as const,
+    installActionId: "install-system",
+  };
+  assert.throws(
+    () =>
+      validateC420UIArtifactWorkflowsAgainstActions(
+        [workflow],
+        [action("install-system", { scope: "system", requiresRoot: false })],
+      ),
+    /appimage is system-scoped but installActionId install-system declares requiresRoot=false/,
   );
 });
 

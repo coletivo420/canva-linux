@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   resolveC420UIArtifactOutputPattern,
   type c420uiArtifactRecipeConfig,
+  type c420uiArtifactRecipeWorkflow,
   type c420uiArtifactWorkflow,
   type c420uiProjectCapabilities,
   type c420uiRunnableArtifactWorkflow,
@@ -12,6 +13,7 @@ import {
 import { loadCanvaLinuxC420UIActions } from "./actions";
 
 export type CanvaLinuxArtifactWorkflow = c420uiArtifactWorkflow &
+  c420uiArtifactRecipeWorkflow &
   c420uiRunnableArtifactWorkflow & {
     outputPattern?: string;
   };
