@@ -9,6 +9,8 @@
 ### Changed
 - Linked the RC validation matrix from release, validation, documentation, and review guidance, and made AI guardrail checks require
   the matrix before RC validation.
+- Recorded the `2026-05-14` `0.1.4-14` RC validation results, including the validated commit, environment, automated command statuses,
+  manual dry-run outcomes, and release-blocker grep review.
 
 
 ## [0.1.4-14] - 2026-05-14
