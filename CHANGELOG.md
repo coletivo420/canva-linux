@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+
+## [0.1.4-14] - 2026-05-14
+
+### Changed
+- Bumped package metadata to `0.1.4-14` while preserving the `N.N.N-X` release versioning rule.
+- Added AppStream release metadata for `0.1.4-14`.
+- Split documentation into generic c420ui, Canva Linux dependent-project, and internal maintenance sections.
+- Refreshed public release, validation, review, and AI maintenance docs for the consolidated c420ui separation state.
+- Expanded c420ui, Canva Linux, and internal split docs with ownership, implementation, boundary checks, and forbidden-regression coverage.
+- Added split documentation depth checks so placeholder docs cannot replace the maintained split references.
+
 ### Fixed
 - Removed stale inline release-status changelog entries from startup logging so release details live only in the changelog.
 - Kept tab creation timestamps as real creation times and use the tab id only as a secondary ordering tiebreaker.
@@ -81,7 +92,7 @@
 - Reorganized AI guardrails into focused maintenance sections for language/public docs, versioning, c420ui,
   Action Registry, root/sudo, logging/privacy, TypeScript-first source, CL-EyeDropper, packaging/architecture,
   and changelog/review.
-- Updated manual validation to reflect the current `0.1.4-12` release instead of obsolete development-cycle guidance.
+- Updated manual validation to reflect the current `0.1.4-14` release and consolidated documentation split.
 - Moved the old release checklist to `docs/internal/legacy/RELEASE_CHECKLIST_1.4.10.md` and marked it as historical.
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 

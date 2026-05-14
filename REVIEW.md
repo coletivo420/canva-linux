@@ -14,8 +14,8 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- changes version `0.1.4-12` without an explicit maintainer request;
-- introduces `0.1.4-12.RC2`;
+- changes version `0.1.4-14` without an explicit maintainer request;
+- introduces `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
 

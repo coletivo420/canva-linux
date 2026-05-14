@@ -19,11 +19,26 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 ## Versioning
 
-- Preserve version `0.1.4-12` unless the maintainer explicitly requests a versioning change.
-- Do not introduce `0.1.4-12.RC2`.
+- Preserve version `0.1.4-14` unless the maintainer explicitly requests a versioning change.
+- Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
+- Preserve the `N.N.N-X` release versioning rule.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
 - Every behavior change must update `CHANGELOG.md`.
 
+
+
+## 0.1.4-14 split documentation policy
+
+- Current maintained release target is `0.1.4-14`.
+- The release version format must remain `N.N.N-X`.
+- Canva Linux is the dependent project; c420ui is the generic engine.
+- Canva Linux does not install dependencies directly from launchers or shell helpers.
+- Canva Linux does not validate generic artifact recipes; c420ui owns that validation.
+- The Canva Linux adapter must not duplicate Action Engine policy for planned actions, dry-run,
+  confirmation, root policy, `requestRootAccess`, or fallback execution.
+- `scripts/preflight-common.sh` is repository-check-only.
+- Split docs must explain controls, non-controls, implementing files, consumed configs/adapters,
+  boundary checks, and forbidden regressions.
 
 ## Host dependency policy
 
@@ -100,7 +115,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 - The official tool name is `c420ui`, lowercase.
 - Do not use `C420UI` as public product branding.
-- Transitional TypeScript symbols may keep PascalCase aliases temporarily, but user-facing text must say `c420ui`.
+- PascalCase TypeScript aliases may exist only as maintained API aliases; user-facing text must say `c420ui`.
 - The c420ui logo must remain the approved three-line lowercase logo unless the maintainer explicitly requests a redesign.
 - c420ui is the user-facing name of the terminal interface.
 - Do not reintroduce Terminal Assistant as product name.
@@ -371,6 +386,6 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 ### Adapter and shell-helper boundaries
 
 - Dependent project adapters execute concrete commands only after the c420ui Action Engine has applied planned-action, dry-run, root, and confirmation policy.
-- Project adapters must not duplicate Action Engine policy or restore transitional planned/dry-run fallbacks.
+- Project adapters must not duplicate Action Engine policy or restore adapter-owned planned/dry-run fallbacks.
 - `scripts/preflight-common.sh` is repository-check-only; keep npm install, repair, and skip policy in c420ui host dependency management.
 - Keep shell helper classifications in `docs/checks/SHELL_HELPERS.md` up to date when adding, removing, or repurposing shell scripts.

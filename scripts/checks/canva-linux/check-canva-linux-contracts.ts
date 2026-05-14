@@ -67,6 +67,22 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
+const currentReleaseVersion = "0.1.4-14";
+const currentReleaseDate = "2026-05-14";
+const previousReleaseVersion = "0.1.4-12";
+const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+$/;
+const forbiddenCurrentReleaseVersions = ["0.1.4-dev.14", "0.1.4-rc.14", "0.1.4.14"];
+const activePublicReleaseDocs = [
+  "README.md",
+  "docs/README.md",
+  "docs/CLI.md",
+  "docs/VALIDATION.md",
+  "docs/RELEASE.md",
+  "docs/MANUAL_VALIDATION.md",
+  "CLAUDE.md",
+  "REVIEW.md",
+];
+
 const releaseScripts = [
   "scripts/build-appimage.sh",
   "scripts/build-flatpak-bundle.sh",
@@ -77,6 +93,14 @@ const releaseScripts = [
 
 function readProjectFile(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+}
+
+function readOptionalProjectFile(rootDir: string, relativePath: string): string | undefined {
+  try {
+    return readProjectFile(rootDir, relativePath);
+  } catch {
+    return undefined;
+  }
 }
 
 function stripShellComment(line: string): string {
@@ -1808,6 +1832,50 @@ function checkReleaseContract(failures: string[]): void {
   const phase = shellValue(identity, "PROJECT_PHASE");
 
   if (!pkg.version) failures.push("package.json: missing version");
+  if (pkg.version && pkg.version !== currentReleaseVersion) {
+    failures.push(`package.json: version must be ${currentReleaseVersion}`);
+  }
+  if (pkg.version && !releaseVersionPattern.test(pkg.version)) {
+    failures.push("package.json: version must follow N.N.N-X release versioning");
+  }
+  if (pkg.version && forbiddenCurrentReleaseVersions.includes(pkg.version)) {
+    failures.push(`package.json: forbidden release version ${pkg.version}`);
+  }
+  if (lock.version !== currentReleaseVersion) {
+    failures.push(`package-lock.json: top-level version must be ${currentReleaseVersion}`);
+  }
+  if (lock.packages?.[""]?.version !== currentReleaseVersion) {
+    failures.push(`package-lock.json: root package version must be ${currentReleaseVersion}`);
+  }
+  const appstreamPath = "data/io.github.coletivo420.canva-linux.metainfo.xml";
+  const appstream = readOptionalProjectFile(rootDir, appstreamPath);
+  const expectedReleaseTag = `<release version="${currentReleaseVersion}" date="${currentReleaseDate}">`;
+  if (appstream === undefined) {
+    failures.push(`${appstreamPath}: AppStream metadata file not found`);
+  } else if (!appstream.includes(expectedReleaseTag)) {
+    failures.push(`AppStream metadata must contain release entry: ${expectedReleaseTag}`);
+  }
+  for (const forbidden of forbiddenCurrentReleaseVersions) {
+    const filesWithForbidden = [
+      "package.json",
+      "package-lock.json",
+      "README.md",
+      "docs/RELEASE.md",
+    ].filter((relativePath) =>
+      readOptionalProjectFile(rootDir, relativePath)?.includes(forbidden) ?? false,
+    );
+    if (filesWithForbidden.length) {
+      failures.push(`forbidden release identity ${forbidden} found in ${filesWithForbidden.join(", ")}`);
+    }
+  }
+  for (const relativePath of activePublicReleaseDocs) {
+    const contents = readOptionalProjectFile(rootDir, relativePath);
+    if (contents === undefined) {
+      failures.push(`${relativePath}: file not found during version check`);
+    } else if (contents.includes(previousReleaseVersion)) {
+      failures.push(`${relativePath}: active public docs must not reference ${previousReleaseVersion}`);
+    }
+  }
   if (pkg.version && lock.version !== pkg.version) {
     failures.push("package-lock.json: top-level version must match package.json");
   }

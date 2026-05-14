@@ -1,160 +1,75 @@
-# Validation Checklist (0.1.4-12)
+# Validation Checklist (0.1.4-14)
 
 Current target:
 
-- Version: `0.1.4-12 (Alpha)`
-- Release: `v0.1.4-12`
+- Version: `0.1.4-14 (Alpha)`
+- Release: `v0.1.4-14`
+- Versioning rule: `N.N.N-X`
+
+## Release metadata checks
+
+The validation baseline protects these release facts:
+
+- `package.json` version is `0.1.4-14`.
+- `package-lock.json` top-level version is `0.1.4-14`.
+- `package-lock.json` root package version is `0.1.4-14`.
+- `data/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
+- Active release docs point to `v0.1.4-14`.
+- Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 
 ## Validation domains
 
-The validation surface is intentionally small:
+- `npm run check:c420ui-core`
+  - runs `check-c420ui-core-contracts.ts` as the consolidated c420ui core contract check
+  - covers package and dependent-project boundaries, package policy, public API exports, bridge, detection,
+    Action Engine, CLI, root provider, command runner, operational logs, artifact workflow runner, and
+    interactive action runner contracts
+- `npm run check:canva-linux`
+  - runs `check-canva-linux-contracts.ts` as the consolidated Canva Linux contract check
+  - covers the adapter, root provider, c420ui sudo helper, public branding, project boundary, action registry
+    validation, artifact recipes, AppImage, Flatpak, release artifacts, launcher/session logs, and interactive log
+    UI integration
+- `npm run check:shared-tooling`
+  - builds the runtime and shared script checks
+  - runs AI guardrails, documentation links, dependency policy, runtime-build verification, and repository policy
+    checks for repository-wide tooling coverage
 
-- `check:c420ui-core` validates reusable c420ui package contracts in one consolidated domain check.
-- `check:canva-linux` validates Canva Linux adapter, root, artifact, branding, boundary and log contracts in one consolidated domain check.
-- `check:shared-tooling` validates repository-wide tooling through focused shared checks plus the consolidated repository policy check.
-
-Legacy Action Runner support has been removed. Current direct CLI validation must use:
+Current direct CLI validation uses:
 
 - `./canva-linux.sh <flag>`
 - `npm run c420ui:cli -- <flag>`
 
-The consolidated domain runners are self-contained. New validation should extend the appropriate domain runner instead of
-creating one-off check files or `*-parts/` validation directories, unless there is a strong reason to introduce a shared helper.
+The consolidated domain runners are self-contained. New validation should extend the appropriate domain runner.
+Do not create one-off check files or validation directories for domain-specific coverage.
+Introduce shared helpers only when the policy applies across domains.
 
-## Automated
+## Required automated validation
 
-- `npm run build:scripts-core`
-- `npm run check:scripts-core`
-  - aggregates `check:c420ui-core`, `check:canva-linux`, and `check:shared-tooling`
 - `npm run check:c420ui-core`
-  - runs `check-c420ui-core-contracts.ts` as the consolidated c420ui core contract check
-  - covers boundary, package policy, bridge, Action Engine, CLI, root provider, command runner, operational logs,
-    artifact workflow runner, interactive runner, and public API exports
 - `npm run check:canva-linux`
-  - runs `check-canva-linux-contracts.ts` as the consolidated Canva Linux contract check
-  - covers adapter, root provider, c420ui sudo helper, public branding, project boundary, action registry validation,
-    artifact recipes, AppImage, Flatpak, release artifacts, launcher/session logs, and interactive log UI integration
 - `npm run check:shared-tooling`
-  - builds runtime and scripts-core, then runs AI guardrails, doc links, dependency policy, runtime build, and `check-repository-policy.ts`
-- `npm run build:c420ui`
-- `npm run check:c420ui`
+- `npm run check:scripts-core`
+- `npm run validate`
+- `npm run docs:check-links`
+- `npm run docs:check-ai`
 - `npm run lint`
 - `npm run typecheck`
 - `npm run typecheck:strict`
-  - strict by critical surface, not global strict; see `tsconfig.strict.json`
 - `npm test`
-  - compiles selected TypeScript tests plus support helpers to `.build/test/` before `node --test`
-  - includes credential-storage policy contracts for Secret Service-backed persistent login only when encryption is available
-  - includes `basic_text`, locked keyring, and detection-error ephemeral fallbacks
-- `npm run docs:check-links`
-- `npm run docs:check-ai`
-  - validates the English-only maintained repository language guardrail and future i18n policy
-- `npm run validate:project`
-  - fails if source JavaScript appears outside `.build/`, `node_modules/`, `coverage/`, or `dist/`; project-generated JavaScript belongs in `.build/` only
-- `bash -n canva-linux.sh scripts/*.sh`
-- Detection refreshes are validated through the c420ui detection engine and Canva Linux provider checks.
-- Artifact workflow phase routing is validated through `packages/c420ui/src/workflow-runner.ts` tests and the c420ui core contract check.
-- Canva Linux artifact workflow execution is validated to use the c420ui Action Engine and Root Provider instead of direct adapter calls.
-- `./canva-linux.sh --bundle-deb` exits `78` because `.deb` packaging is planned, not built.
-- `./canva-linux.sh --bundle-rpm` exits `78` because `.rpm` packaging is planned, not built.
-- `./canva-linux.sh --prepare-aur` exits `78` because AUR packaging is planned, not built.
-- Planned-action dry runs exit `0` because they only resolve metadata:
-  - `./canva-linux.sh --bundle-deb --dry-run`
-  - `./canva-linux.sh --bundle-rpm --dry-run`
-  - `./canva-linux.sh --prepare-aur --dry-run`
-- To test the compiled direct CLI entrypoint without the launcher, use `npm run c420ui:cli -- --bundle-deb`.
-- Current direct CLI validation uses `./canva-linux.sh <flag>` or `npm run c420ui:cli -- <flag>`.
-- `bash scripts/show-detected-installations.sh`
+- `./scripts/validate-project.sh`
 
-## Manual
+## Release grep review
 
-- Open `./canva-linux.sh`.
-- Confirm `Release: v0.1.4-12`.
-- Confirm `./canva-linux.sh` opens the c420ui by default.
-- Confirm `./canva-linux.sh --help` shows CLI help.
-- Confirm root execution is blocked with a clear message before the c420ui or any direct CLI action starts.
-- Confirm removed interface routing variables are not read by launcher code.
-- Confirm direct CLI actions still work, for example `./canva-linux.sh --doctor`.
-- Confirm planned c420ui actions are displayed as planned and are not treated as successful builds.
-- Confirm interactive planned actions do not request sudo.
-- Confirm interactive dangerous actions open confirmation before execution.
-- Confirm canceling an interactive dangerous action does not execute backend scripts.
-- Confirm confirmed privileged interactive actions run root preflight before backend scripts.
-- Confirm interactive action stdout/stderr remains visible in the logs panel.
-- Confirm detected installs are green and not detected is purple.
-- Confirm detected installs show installed versions, or `version unknown` when unreadable.
-- Confirm the detection panel does not show `Detection error` after a successful Flatpak install.
-- Confirm successful installs finish with `100% - Completed` in green.
-- Confirm real failures finish with `0% - Error` in red.
-- Confirm Ctrl+C cancellation shows `0% - Canceled` in red.
-- Confirm help screen uses the same semantic colors.
-- Confirm user/system action scopes are applied through `action.env`.
-- Confirm user-scope actions do not request sudo.
-- Confirm system-scope actions use `packages/c420ui/host/linux/sudo-helper.sh --validate` through the Canva Linux root provider before backend scripts start.
-- Confirm c420ui root actions validate cached sudo credentials non-interactively after the c420ui password prompt.
-- Confirm an action with `requiresRoot: true` and `scope: "user"` fails before its backend script starts.
-- Confirm `--uninstall` and `--purge` request root only when a system-wide installation is detected.
-- Confirm Application Settings appears below Maintenance & Uninstall.
-- Confirm general Tool logs can be toggled and are persisted in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json` or `~/.config/canva-linux/tool-settings.json`.
-- Confirm Tool logs and Action logs are visually distinguishable in the logs panel.
-- Confirm disabling general Tool logs still leaves critical Tool warnings/errors visible.
-- Confirm terminal text selection mode disables c420ui mouse handling globally on the next c420ui start while keyboard scroll and F5 log copy continue to work.
-- Confirm F6 opens a plain logs view with the session log path for manual selection fallback.
+Before release handoff, inspect the requested release grep set from the release task.
+Only clearly historical changelog material may retain previous release identifiers.
+Old AppStream history may retain old development release identifiers.
+Generated dependency source manifests may retain platform package names that contain `x64`.
 
-- Confirm starting on KDE Plasma with KWallet enabled and unlocked logs `kwallet`, `kwallet5`,
-  or `kwallet6`, reports encryption available, and keeps persistent login available.
-- Confirm starting on GNOME or a compatible desktop with GNOME Keyring/libsecret enabled and unlocked
-  logs `gnome_libsecret`, reports encryption available, and keeps persistent login available.
-- Confirm starting without a Secret Service backend, with `basic_text`, or with a locked/cancelled
-  secure backend shows the ephemeral session warning before Canva loads.
-- Confirm login does not persist after closing and reopening Canva Linux in ephemeral session mode.
-- Confirm startup logs show whether persistent login is available or ephemeral session mode is active.
-- Confirm startup logs show the credential storage backend, encryption availability, encryption verification status, and session policy.
-- Confirm logs do not contain cookies, tokens, passwords, session contents or credential material.
-- Confirm Tab and Shift+Tab move focus between menu, diagnostics, action panel and logs.
-- Confirm the active panel has a visible border/label highlight and the active menu/settings cell has a visible row highlight.
-- Confirm settings checkboxes show enabled and disabled state clearly.
-- Confirm modal dialogs block Tab focus from returning to the main c420ui.
-- Confirm running actions still allow Tab, focused-panel scrolling and F5 log copy while blocking new action execution.
-- Confirm release artifact names preserve the generated architecture string (`x86_64`/`X86_64` when emitted) and never rewrite it to `x64`.
-- Confirm `SHA256SUMS` contains the real generated AppImage, Flatpak and tarball names.
-- Confirm `REVIEW.md` still starts with `# Review Checklist`.
-- Confirm maintained source, comments, UI strings, README, docs, changelog, and AI maintenance instructions remain
-  English-only until an explicit i18n system exists.
-- Confirm new Node.js scripts, tests, and supported configs are authored in TypeScript, with shell reserved for host-operation glue.
+## Manual validation summary
 
-## c420ui CLI bridge validation
-
-- Confirm direct CLI actions are routed through the c420ui CLI bridge.
-- Confirm multiple direct actions in one invocation fail before execution.
-- Confirm dangerous direct actions require `--yes` before execution.
-- Confirm direct CLI action stdout/stderr is visible to the caller.
-- Confirm root/sudo preflight runs before privileged direct actions.
-- Confirm planned direct actions still exit `78`.
-- Confirm planned direct action dry-runs still exit `0`.
-
-## Consolidated validation runner policy
-
-Validation is organized around three self-contained domain runners:
-
-- `packages/c420ui/checks/check-c420ui-core-contracts.ts`
-- `scripts/checks/canva-linux/check-canva-linux-contracts.ts`
-- `scripts/core/check-repository-policy.ts`
-
-Do not create `*-parts` directories or restore one-file-per-assertion checks.
-
-## Standalone check policy
-
-The validation surface is intentionally consolidated.
-
-`build:scripts-core` should compile shared infrastructure checks only. c420ui and Canva Linux behavior contracts live in their domain runners:
-
-- `packages/c420ui/checks/check-c420ui-core-contracts.ts`
-- `scripts/checks/canva-linux/check-canva-linux-contracts.ts`
-- `scripts/core/check-repository-policy.ts`
-
-## Detection boundary validation
-
-- `npm run check:c420ui-core` verifies the generic c420ui detection engine and public export.
-- `npm run check:canva-linux` verifies the Canva Linux detection provider, root-provider wiring, and removal of the old core overview status entry.
-- `npm run check:shared-tooling` verifies repository policy, including that `scripts/core/overview-status.ts` is not restored.
+- Confirm `./canva-linux.sh` opens c420ui.
+- Confirm direct CLI flags run through the c420ui CLI bridge.
+- Confirm `Release: v0.1.4-14` appears in current release docs.
+- Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
+- Confirm root authentication prompts only for privileged actions.
+- Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.

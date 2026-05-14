@@ -11,7 +11,7 @@ CL-EyeDropper provides Canva-compatible color picking inside the Electron/Flatpa
 1. Canva calls `EyeDropper.open()`.
 2. The preload wrapper intercepts the call.
 3. The main process captures a scoped snapshot through `wrapper:eyedropper-snapshot`.
-4. The preload creates a temporary canvas from the snapshot.
+4. The preload creates an in-memory canvas from the snapshot.
 5. CL-EyeDropper samples the selected pixel.
 6. Canva receives:
 

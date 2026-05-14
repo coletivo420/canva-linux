@@ -15,8 +15,9 @@ Required reading:
 
 Non-regression rules:
 - Do not run or recommend ./canva-linux.sh as root.
-- Preserve version 0.1.4-12 unless explicitly instructed otherwise.
-- Do not introduce 0.1.4-12.RC2.
+- Preserve version 0.1.4-14 unless explicitly instructed otherwise.
+- Do not introduce 0.1.4-dev.14, 0.1.4-rc.14, or 0.1.4.14.
+- Preserve the N.N.N-X release versioning rule.
 - c420ui is the user-facing terminal interface name.
 - Do not use Terminal Assistant or TUI as product names.
 - Actions must come from config/canva-linux/actions.json.
