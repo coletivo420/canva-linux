@@ -1,4 +1,4 @@
-const tui = require("bles" + "sed");
+import blessed from "blessed";
 import {
   confirmDialog,
   inputDialog,
