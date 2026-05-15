@@ -121,6 +121,72 @@ function validateBundledBlessedNodeSection(relativePath: string, bundle: string,
     }
     previousIndex = index;
   }
+
+  const hasAncestorStart = bundle.indexOf("Node.prototype.hasAncestor = function(target)");
+  const getStart = bundle.indexOf("Node.prototype.get = function(name, value)", hasAncestorStart);
+  if (hasAncestorStart !== -1 && getStart !== -1) {
+    const hasAncestorSection = bundle.slice(hasAncestorStart, getStart);
+    if (!hasAncestorSection.includes("return false;") || !hasAncestorSection.includes("};")) {
+      failures.push(`${relativePath}: bundled blessed Node.prototype.hasAncestor must close before Node.prototype.get`);
+    }
+    if (hasAncestorSection.includes("Node.prototype.emitAncestors")) {
+      failures.push(`${relativePath}: bundled blessed Node.prototype.hasAncestor contains duplicated emitAncestors fragments`);
+    }
+  }
+}
+
+function validateBundledActionEngineSection(relativePath: string, bundle: string, failures: string[]): void {
+  const actionEngineStart = bundle.indexOf("function createC420UIActionEngine(options)");
+  if (actionEngineStart === -1) return;
+
+  const actionEngineEnd = bundle.indexOf("\n// packages/c420ui/src/", actionEngineStart + 1);
+  if (actionEngineEnd === -1) {
+    failures.push(`${relativePath}: bundled c420ui action engine section is missing the next c420ui module boundary`);
+    return;
+  }
+
+  const actionEngineSection = bundle.slice(actionEngineStart, actionEngineEnd);
+  const orderedFragments = [
+    "function listActions()",
+    "function resolveActionById(actionId)",
+    "function resolveActionByCliFlag(flag)",
+    "async function runActionById(actionId, runOptions = {})",
+    "async function runAction(action, runOptions = {})",
+    "return {",
+    "listActions,",
+    "resolveActionById,",
+    "resolveActionByCliFlag,",
+    "runActionById,",
+    "runAction",
+    "};",
+  ];
+
+  let previousIndex = -1;
+  for (const fragment of orderedFragments) {
+    const index = actionEngineSection.indexOf(fragment, previousIndex + 1);
+    if (index === -1) {
+      failures.push(`${relativePath}: missing bundled c420ui action engine fragment ${fragment}`);
+      continue;
+    }
+    if (index <= previousIndex) {
+      failures.push(`${relativePath}: bundled c420ui action engine fragment is out of order: ${fragment}`);
+    }
+    previousIndex = index;
+  }
+
+  const engineReturnStart = actionEngineSection.lastIndexOf("return {");
+  const engineReturnEnd = engineReturnStart === -1 ? -1 : actionEngineSection.indexOf("};", engineReturnStart);
+  if (engineReturnStart === -1 || engineReturnEnd === -1) {
+    failures.push(`${relativePath}: bundled c420ui action engine must return its API object before init_action_engine`);
+    return;
+  }
+
+  const engineReturnSection = actionEngineSection.slice(engineReturnStart, engineReturnEnd);
+  for (const fragment of ["listActions,", "resolveActionById,", "resolveActionByCliFlag,", "runActionById,", "runAction"]) {
+    if (!engineReturnSection.includes(fragment)) {
+      failures.push(`${relativePath}: bundled c420ui action engine API return is missing ${fragment}`);
+    }
+  }
 }
 
 function validateBundledCanvaLinuxAdapterSection(relativePath: string, bundle: string, failures: string[]): void {
@@ -342,6 +408,7 @@ function main(): void {
     if (!fs.existsSync(path.join(rootDir, relativePath))) continue;
     const bundle = read(rootDir, relativePath);
     validateBundledBlessedNodeSection(relativePath, bundle, failures);
+    validateBundledActionEngineSection(relativePath, bundle, failures);
     validateBundledCanvaLinuxAdapterSection(relativePath, bundle, failures);
 
     for (const forbidden of ["electron-builder", "@typescript-eslint", "playwright", "typescript/lib"]) {
