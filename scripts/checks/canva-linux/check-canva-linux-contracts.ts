@@ -1968,13 +1968,13 @@ function extractShellFunction(source: string, functionName: string): string {
   if (start === -1) throw new Error(`canva-linux.sh: missing ${functionName}`);
 
   const nextFunction = lines.findIndex((line, index) => {
-    return (
-      index > start &&
-      /^[_a-zA-Z][_a-zA-Z0-9]*\(\) \{\s*$/.test(line)
-    );
-  });
-
-  return lines.slice(start, nextFunction === -1 ? undefined : nextFunction).join("");
+function extractShellFunction(source: string, functionName: string): string {
+  const start = source.indexOf(`${functionName}() {`);
+  if (start === -1) throw new Error(`canva-linux.sh: missing ${functionName}`);
+  const rest = source.slice(start);
+  const match = rest.match(/\n}\n/);
+  if (!match) throw new Error(`canva-linux.sh: cannot locate end of ${functionName}`);
+  return rest.slice(0, match.index! + 3);
 }
 
 function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
