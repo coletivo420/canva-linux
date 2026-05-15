@@ -1960,6 +1960,81 @@ function checkDevelopmentTaskRecipes(failures: string[]): void {
   }
 }
 
+
+function extractShellFunction(source: string, functionName: string): string {
+  const lines = source.split(/(?<=\n)/);
+  const signature = `${functionName}() {`;
+  const start = lines.findIndex((line) => line.trimEnd() === signature);
+  if (start === -1) throw new Error(`canva-linux.sh: missing ${functionName}`);
+
+  const nextFunction = lines.findIndex((line, index) => {
+function extractShellFunction(source: string, functionName: string): string {
+  const start = source.indexOf(`${functionName}() {`);
+  if (start === -1) throw new Error(`canva-linux.sh: missing ${functionName}`);
+  const rest = source.slice(start);
+  const match = rest.match(/\n}\n/);
+  if (!match) throw new Error(`canva-linux.sh: cannot locate end of ${functionName}`);
+  return rest.slice(0, match.index! + 3);
+}
+
+function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const launcher = readProjectFile(rootDir, "canva-linux.sh");
+  let bootstrap = "";
+
+  try {
+    bootstrap = extractShellFunction(launcher, "ensure_c420ui_bootstrap_npm_dependencies");
+  } catch (error) {
+    failures.push(error instanceof Error ? error.message : String(error));
+    return;
+  }
+
+  for (const fragment of [
+    "c420ui_bootstrap_npm_dependencies_available()",
+    '[[ -x "${ROOT_DIR}/node_modules/.bin/esbuild" ]]',
+    '[[ -d "${ROOT_DIR}/node_modules/blessed" ]]',
+    "local bootstrap_packages=(esbuild blessed)",
+    "--no-save",
+    "--package-lock=false",
+    "--include=dev",
+    "--ignore-scripts",
+    "C420UI_SKIP_DEPENDENCY_INSTALL",
+    "c420ui bootstrap dependencies are missing and C420UI_SKIP_DEPENDENCY_INSTALL=1 is set.",
+  ] as const) {
+    if (!launcher.includes(fragment)) failures.push(`canva-linux.sh: missing bootstrap policy fragment ${fragment}`);
+  }
+
+  for (const forbidden of [
+    "scripts/" + "ensure-npm-dependencies.sh",
+    "CANVA_" + "REQUIRED_NPM_DEPS",
+    "CANVA_" + "SKIP_NPM_INSTALL",
+    "CANVA_" + "NPM_REPAIR",
+    "npm ci",
+  ] as const) {
+    if (launcher.includes(forbidden)) failures.push(`canva-linux.sh: must not restore launcher dependency policy fragment ${forbidden}`);
+  }
+
+  for (const forbiddenPackage of [
+    "electron",
+    "electron-builder",
+    "eslint",
+    "typescript",
+    "@typescript-eslint/parser",
+    "@typescript-eslint/eslint-plugin",
+  ] as const) {
+    if (bootstrap.includes(forbiddenPackage)) {
+      failures.push(`canva-linux.sh: bootstrap dependency list must not include ${forbiddenPackage}`);
+    }
+  }
+
+  if (/(^|\s)--save(=|\s|$)/.test(bootstrap)) {
+    failures.push("canva-linux.sh: bootstrap must not save dependencies into package.json");
+  }
+  if (bootstrap.includes("package-lock=true")) {
+    failures.push("canva-linux.sh: bootstrap must not enable package-lock mutation");
+  }
+}
+
 function checkShellActionIds(failures: string[]): void {
   const rootDir = findProjectRoot();
   const actions = loadCanvaLinuxActions(rootDir);
@@ -2012,6 +2087,7 @@ export function main(): number {
   checkVersionConsistency(failures);
   checkReleaseContract(failures);
   checkDevelopmentTaskRecipes(failures);
+  checkLauncherBootstrapDependencyPolicy(failures);
   checkShellActionIds(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));

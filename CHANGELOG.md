@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- Added a minimal launcher bootstrap for clean checkouts that installs only `esbuild` and `blessed` before c420ui starts,
+  while leaving full dependency repair owned by c420ui.
 - Added an internal RC validation matrix for `0.1.4-14` with required commands, manual dry-runs, dependency-backed packaging checks,
   expected results, owner domains, and release blockers.
 

@@ -45,6 +45,63 @@ session_log "[session] started id=${SESSION_ID}"
 session_log "[identity] version=${PROJECT_DISPLAY_VERSION:-unknown} phase=${PROJECT_PHASE:-unknown}"
 trap 'session_log "[session] ended"' EXIT
 
+
+c420ui_bootstrap_npm_dependencies_available() {
+  [[ -x "${ROOT_DIR}/node_modules/.bin/esbuild" ]] && [[ -d "${ROOT_DIR}/node_modules/blessed" ]]
+}
+
+c420ui_bootstrap_dev_dependency_version() {
+  local package_name="$1"
+
+  node -p "const p = require('./package.json'); const version = p.devDependencies && p.devDependencies['${package_name}']; version || '';"
+}
+
+ensure_c420ui_bootstrap_npm_dependencies() {
+  local bootstrap_packages=(esbuild blessed)
+  local package_name
+  local package_version
+  local install_specs=()
+
+  if c420ui_bootstrap_npm_dependencies_available; then
+    return 0
+  fi
+
+  if [[ "${C420UI_SKIP_DEPENDENCY_INSTALL:-}" == "1" ]]; then
+    ui_error "c420ui bootstrap dependencies are missing and C420UI_SKIP_DEPENDENCY_INSTALL=1 is set."
+    ui_info "Unset C420UI_SKIP_DEPENDENCY_INSTALL or install the bootstrap dependencies manually."
+    exit 1
+  fi
+
+  if ! command -v node > /dev/null 2>&1; then
+    ui_error "Node.js is required to install c420ui bootstrap dependencies."
+    ui_info "Install Node.js, then retry."
+    exit 1
+  fi
+
+  if ! command -v npm > /dev/null 2>&1; then
+    ui_error "npm is required to install c420ui bootstrap dependencies."
+    ui_info "Install npm, then retry."
+    exit 1
+  fi
+
+  if [[ ! -f "${ROOT_DIR}/package.json" ]]; then
+    ui_error "Project metadata is missing: package.json."
+    exit 1
+  fi
+
+  for package_name in "${bootstrap_packages[@]}"; do
+    package_version="$(c420ui_bootstrap_dev_dependency_version "${package_name}")"
+    if [[ -z "${package_version}" ]]; then
+      ui_error "c420ui bootstrap dependency '${package_name}' is not declared in package.json devDependencies."
+      exit 1
+    fi
+    install_specs+=("${package_name}@${package_version}")
+  done
+
+  ui_info "Installing minimal c420ui bootstrap npm dependencies: esbuild, blessed."
+  npm install --no-save --package-lock=false --include=dev --ignore-scripts "${install_specs[@]}"
+}
+
 ensure_action_runner_available() {
   if command -v node > /dev/null 2>&1; then
     return 0
@@ -102,6 +159,8 @@ ensure_c420ui_cli_entrypoint() {
   if c420ui_cli_entrypoint_is_fresh; then
     return 0
   fi
+
+  ensure_c420ui_bootstrap_npm_dependencies
 
   CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts
 }
@@ -181,6 +240,8 @@ can_run_c420ui() {
 }
 
 run_c420ui_entrypoint() {
+  ensure_c420ui_bootstrap_npm_dependencies
+
   if [[ -n "${PROJECT_PHASE:-}" ]]; then
     CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts > /dev/null &&
       CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-c420ui.js
