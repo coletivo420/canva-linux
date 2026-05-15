@@ -16675,6 +16675,33 @@ var require_node = __commonJS({
     Node.prototype.append = function(element) {
       this.insert(element, this.children.length);
     };
+    Node.prototype.insertBefore = function(element, other) {
+      var i = this.children.indexOf(other);
+      if (~i) this.insert(element, i);
+    };
+    Node.prototype.insertAfter = function(element, other) {
+      var i = this.children.indexOf(other);
+      if (~i) this.insert(element, i + 1);
+    };
+    Node.prototype.remove = function(element) {
+      if (element.parent !== this) return;
+      var i = this.children.indexOf(element);
+      if (!~i) return;
+      element.clearPos();
+      element.parent = null;
+      this.children.splice(i, 1);
+      i = this.screen.clickable.indexOf(element);
+      if (~i) this.screen.clickable.splice(i, 1);
+      i = this.screen.keyable.indexOf(element);
+      if (~i) this.screen.keyable.splice(i, 1);
+      element.emit("reparent", null);
+      this.emit("remove", element);
+      (function emit(el) {
+        var n = el.detached !== true;
+        el.detached = true;
+        if (n) el.emit("detach");
+        el.children.forEach(emit);
+      })(element);
       if (this.screen.focused === element) {
         this.screen.rewindFocus();
       }
@@ -16722,14 +16749,15 @@ var require_node = __commonJS({
       return out;
     };
     Node.prototype.emitDescendants = function() {
-      return this.forDescendants(function(el) {
-      })(this);
-    };
-    Node.prototype.hasAncestor = function(target) {
-      var el = this;
-      while (el = el.parent) {
-        if (el === target) return true;
+      var args = Array.prototype.slice(arguments), iter;
+      if (typeof args[args.length - 1] === "function") {
+        iter = args.pop();
       }
+      return this.forDescendants(function(el) {
+        if (iter) iter(el);
+        el.emit.apply(el, args);
+      }, true);
+    };
     Node.prototype.emitAncestors = function() {
       var args = Array.prototype.slice(arguments), iter;
       if (typeof args[args.length - 1] === "function") {
@@ -16758,34 +16786,6 @@ var require_node = __commonJS({
       while (el = el.parent) {
         if (el === target) return true;
       }
-      while (el = el.parent) {
-        iter(el);
-      }
-    };
-    Node.prototype.collectDescendants = function(s) {
-      var out = [];
-      this.forDescendants(function(el) {
-        out.push(el);
-      }, s);
-      return out;
-    };
-    Node.prototype.collectAncestors = function(s) {
-      var out = [];
-      this.forAncestors(function(el) {
-        out.push(el);
-      }, s);
-      return out;
-    };
-    Node.prototype.emitDescendants = function() {
-      var args = Array.prototype.slice(arguments), iter;
-      if (typeof args[args.length - 1] === "function") {
-        iter = args.pop();
-      }
-      return this.forDescendants(function(el) {
-        if (iter) iter(el);
-        el.emit.apply(el, args);
-      }, true);
-    };
       return false;
     };
     Node.prototype.get = function(name, value) {
@@ -17226,6 +17226,34 @@ function validateActionEnv(action) {
         `Action env value must be string: ${String(action.id)} -> ${key}`
       );
     }
+  }
+}
+function validateAllowedValue(value, allowed, message) {
+  if (allowed && !allowed.includes(value)) throw new Error(message);
+}
+function validateC420UIActions(actions, options = {}) {
+  if (!Array.isArray(actions)) throw new Error("actions registry must contain an array");
+  const ids = /* @__PURE__ */ new Set();
+  const cliAliases = /* @__PURE__ */ new Set();
+  for (const item of actions) {
+    if (!isRecord(item)) throw new Error("Action entries must be objects");
+    requireString(item.id, "Action missing id");
+    if (!/^[a-z0-9-]+$/.test(item.id)) {
+      throw new Error(`Invalid action id format: ${item.id}`);
+    }
+    if (ids.has(item.id)) throw new Error(`Duplicate action id: ${item.id}`);
+    ids.add(item.id);
+    requireString(item.label, `Action missing label: ${item.id}`);
+    requireString(item.group, `Action missing group: ${item.id}`);
+    requireString(item.section, `Action missing section: ${item.id}`);
+    requireString(item.kind, `Action missing kind: ${item.id}`);
+    validateAllowedValue(
+      item.group,
+      options.allowedGroups,
+      `Invalid action group: ${item.id} -> ${item.group}`
+    );
+    validateAllowedValue(
+      item.section,
       options.allowedSections,
       `Invalid action section: ${item.id} -> ${item.section}`
     );
@@ -17250,6 +17278,8 @@ function validateActionEnv(action) {
         options.allowedScopes ?? c420uiKnownActionScopes,
         `Invalid action scope: ${item.id} -> ${item.scope}`
       );
+    }
+    for (const key of [
       "hidden",
       "longRunning",
       "dangerous",
@@ -17258,6 +17288,7 @@ function validateActionEnv(action) {
       "requiresRoot"
     ]) {
       requireOptionalBoolean(item, key);
+    }
     for (const key of [
       "command",
       "description",
@@ -17268,89 +17299,41 @@ function validateActionEnv(action) {
       "artifactWorkflowId"
     ]) {
       requireOptionalString(item, key);
+    }
     validateActionEnv(item);
     if (item.kind === "planned") {
       if (item.command || item.args) {
         throw new Error(`Planned action must not define command/args: ${item.id}`);
       }
+    }
+    if (item.kind === "command") {
+      if (!item.command) throw new Error(`Command action missing command: ${item.id}`);
+      if (!Array.isArray(item.args)) {
+        throw new Error(`Command action args must be an array: ${item.id}`);
       }
     }
-    }
-    }
-}
-}
-  }
-});
-
-    };
-  }
-  }
-      return {
-      };
-    }
-      };
-    }
-      return {
-      };
-    }
-      return {
-      };
-    }
-              status: "failed",
-              message: access.message
-            };
-          }
-          actionEnv = rootProvider.buildRootActionEnvironment ? rootProvider.buildRootActionEnvironment(action, actionEnv) : actionEnv;
-        }
+    for (const alias of [...item.cli ?? [], ...item.cliFlags ?? []]) {
+      if (!alias.startsWith("--")) {
+        throw new Error(`CLI alias must start with --: ${item.id} -> ${alias}`);
       }
+      if (cliAliases.has(alias)) throw new Error(`Duplicate cli alias: ${alias}`);
+      cliAliases.add(alias);
     }
-    emit?.(
-      createC420UIEvent({
-        type: "action:start",
-        actionId: action.id,
-        message: action.label,
-        data: { dryRun }
-      })
-    );
-    const context = {
-      rootDir: rootDir2,
-      dryRun,
-      yes,
-      env: actionEnv,
-      signal: runOptions.signal,
-      emitLog(event) {
-        emit?.(createC420UIEvent({ type: "log", ...event }));
-      },
-      emitProgress(event) {
-        emit?.(createC420UIEvent({ type: "progress", ...event }));
-      }
-    const result = await bridge.runAction(action.id, context);
-    emit?.(
-      createC420UIEvent({
-        type: "action:finish",
-        actionId: action.id,
-        message: action.label,
-        data: { exitCode: result.code, status: result.status }
-      })
-    );
-    return result;
-    listActions,
-    resolveActionById,
-    resolveActionByCliFlag,
-    runActionById,
-    runAction
-var init_action_engine = __esm({
-  "packages/c420ui/src/action-engine.ts"() {
-    init_actions();
-    init_events();
-    init_exit_codes();
+    if (item.dangerous && item.requiresConfirmation !== true) {
+      throw new Error(
+        `Dangerous action must set requiresConfirmation=true: ${item.id}`
+      );
+    }
     if (item.dangerous && !(item.description || item.confirmationMessage)) {
       throw new Error(
         `Dangerous action missing description/confirmationMessage: ${item.id}`
       );
+    }
   }
+}
 function validateC420UIActionRegistry(actions, options) {
   validateC420UIActions(actions, options);
+}
 var c420uiActionKinds;
 var init_actions = __esm({
   "packages/c420ui/src/actions.ts"() {
@@ -17368,6 +17351,9 @@ function createC420UIEvent(event) {
 }
 var init_events = __esm({
   "packages/c420ui/src/events.ts"() {
+  }
+});
+
 // packages/c420ui/src/exit-codes.ts
 var c420uiExitCodes;
 var init_exit_codes = __esm({
@@ -17379,6 +17365,8 @@ var init_exit_codes = __esm({
       rootPolicyError: 64,
       plannedAction: 78,
       canceled: 130
+    };
+  }
 });
 
 // packages/c420ui/src/action-engine.ts
@@ -17386,6 +17374,7 @@ function createC420UIActionEngine(options) {
   const { bridge, rootDir: rootDir2, emit, rootProvider } = options;
   function listActions() {
     return bridge.actions();
+  }
   function resolveActionById(actionId) {
     const action = listActions().find((candidate) => candidate.id === actionId);
     return action ? { found: true, action } : { found: false, reason: "not-found", query: actionId };
@@ -17399,9 +17388,12 @@ function createC420UIActionEngine(options) {
   async function runActionById(actionId, runOptions = {}) {
     const resolution = resolveActionById(actionId);
     if (!resolution.found) {
+      return {
         code: c420uiExitCodes.invalidUsage,
         status: "failed",
         message: `Unknown action: ${actionId}`
+      };
+    }
     return runAction(resolution.action, runOptions);
   }
   async function runAction(action, runOptions = {}) {
@@ -17421,6 +17413,7 @@ function createC420UIActionEngine(options) {
         code: c420uiExitCodes.success,
         status: "success",
         message: "dry-run"
+      };
       emit?.(
         createC420UIEvent({
           type: "action:finish",
@@ -17430,6 +17423,7 @@ function createC420UIActionEngine(options) {
         })
       );
       return result2;
+    }
     if (isC420UIPlannedAction(action)) {
       emit?.(
         createC420UIEvent({
@@ -17438,14 +17432,20 @@ function createC420UIActionEngine(options) {
           message: action.description ?? action.label
         })
       );
+      return {
         code: c420uiExitCodes.plannedAction,
         status: "planned",
         message: action.description
+      };
+    }
     if (requiresC420UIActionConfirmation(action) && !yes) {
+      return {
         code: c420uiExitCodes.generalError,
         status: "failed",
         message: `[error] Action requires confirmation: ${action.label}
 [info] Re-run with --yes after confirming intent.`
+      };
+    }
     const baseEnv = options.env ?? process.env;
     let actionEnv = rootProvider ? rootProvider.buildActionEnvironment(action, baseEnv) : baseEnv;
     if (rootProvider) {
@@ -17492,59 +17492,59 @@ function createC420UIActionEngine(options) {
           if (access.ok === false) {
             return {
               code: access.code,
-    };
-  }
-  return {
-  };
-}
-  const rawTool = isObject(rawRoot.tool) ? rawRoot.tool : {};
-  const runtime = isObject(rawRoot.runtime) ? rawRoot.runtime : {};
-  return {
-    tool: {
-      generalLogsEnabled: typeof rawTool.generalLogsEnabled === "boolean" ? rawTool.generalLogsEnabled : DEFAULT_TOOL_SETTINGS.tool.generalLogsEnabled,
-      terminalTextSelectionMode: typeof rawTool.terminalTextSelectionMode === "boolean" ? rawTool.terminalTextSelectionMode : DEFAULT_TOOL_SETTINGS.tool.terminalTextSelectionMode
-    },
-    runtime
-  };
-}
-function loadToolSettings(stateDirectoryName) {
-  const settingsPath = toolSettingsPath(stateDirectoryName);
-  if (!import_node_fs4.default.existsSync(settingsPath)) {
-    try {
-      saveToolSettings(DEFAULT_TOOL_SETTINGS, stateDirectoryName);
-    } catch {
+              status: "failed",
+              message: access.message
+            };
+          }
+          actionEnv = rootProvider.buildRootActionEnvironment ? rootProvider.buildRootActionEnvironment(action, actionEnv) : actionEnv;
+        }
+      }
     }
-    return structuredClone(DEFAULT_TOOL_SETTINGS);
-  }
-  try {
-    const rawContent = import_node_fs4.default.readFileSync(settingsPath, "utf8");
-    return normalizeSettings(JSON.parse(rawContent));
-  } catch {
-    return structuredClone(DEFAULT_TOOL_SETTINGS);
-  }
-}
-function saveToolSettings(settings, stateDirectoryName) {
-  const settingsPath = toolSettingsPath(stateDirectoryName);
-  import_node_fs4.default.mkdirSync(import_node_path5.default.dirname(settingsPath), { recursive: true });
-  import_node_fs4.default.writeFileSync(
-    settingsPath,
-    `${JSON.stringify(normalizeSettings(settings), null, 2)}
-`,
-    "utf8"
-  );
-}
-var import_node_fs4, import_node_path5, DEFAULT_TOOL_SETTINGS;
-var init_settings = __esm({
-  "packages/c420ui/src/terminal/settings.ts"() {
-    import_node_fs4 = __toESM(require("node:fs"));
-    import_node_path5 = __toESM(require("node:path"));
-    DEFAULT_TOOL_SETTINGS = {
-      tool: {
-        generalLogsEnabled: true,
-        terminalTextSelectionMode: false
+    emit?.(
+      createC420UIEvent({
+        type: "action:start",
+        actionId: action.id,
+        message: action.label,
+        data: { dryRun }
+      })
+    );
+    const context = {
+      rootDir: rootDir2,
+      dryRun,
+      yes,
+      env: actionEnv,
+      signal: runOptions.signal,
+      emitLog(event) {
+        emit?.(createC420UIEvent({ type: "log", ...event }));
       },
-      runtime: {}
+      emitProgress(event) {
+        emit?.(createC420UIEvent({ type: "progress", ...event }));
+      }
     };
+    const result = await bridge.runAction(action.id, context);
+    emit?.(
+      createC420UIEvent({
+        type: "action:finish",
+        actionId: action.id,
+        message: action.label,
+        data: { exitCode: result.code, status: result.status }
+      })
+    );
+    return result;
+  }
+  return {
+    listActions,
+    resolveActionById,
+    resolveActionByCliFlag,
+    runActionById,
+    runAction
+  };
+}
+var init_action_engine = __esm({
+  "packages/c420ui/src/action-engine.ts"() {
+    init_actions();
+    init_events();
+    init_exit_codes();
   }
 });
 
@@ -17573,6 +17573,34 @@ function createInteractiveActionRunner(options) {
     if (event.type === "progress") {
       const nextState = toProgressState(event.state);
       state.progressState = nextState;
+      options.setProgress(
+        nextState,
+        event.percent,
+        event.label ?? nextState
+      );
+      return;
+    }
+    if (event.type === "action:start") {
+      state.running = true;
+      state.progressState = "running";
+      options.setRunning(true);
+      options.setProgress("running", 5, event.message || "Starting");
+      return;
+    }
+    if (event.type === "action:planned") {
+      state.progressState = "warning";
+      options.appendLogText(
+        `[planned] ${event.message}
+`,
+        "system"
+      );
+      options.setProgress("warning", 100, "Planned action");
+      return;
+    }
+    if (event.type === "action:finish") {
+      const status = event.data?.status;
+      const exitCode = event.data?.exitCode;
+      const success = status === "success" || exitCode === c420uiExitCodes.success;
       const canceled = status === "canceled";
       state.running = false;
       state.progressState = canceled ? "canceled" : success ? "success" : "failed";
@@ -17582,6 +17610,8 @@ function createInteractiveActionRunner(options) {
         success ? 100 : 0,
         canceled ? "Canceled" : success ? "Completed" : `exit code ${String(exitCode ?? "unknown")}`
       );
+    }
+  }
   const makeEngine = options.createActionEngine ?? createC420UIActionEngine;
   const engine = makeEngine({
     bridge: options.bridge,
@@ -17607,6 +17637,7 @@ function createInteractiveActionRunner(options) {
       options.appendLogText("[info] Action canceled before execution.\n", "system");
       state.lastResult = result;
       return result;
+    }
     const abortController = new AbortController();
     activeAbortController = abortController;
     try {
@@ -17626,9 +17657,6 @@ function createInteractiveActionRunner(options) {
       return result;
     } finally {
       if (activeAbortController === abortController) {
-  }
-});
-
         activeAbortController = null;
       }
     }
@@ -17657,34 +17685,6 @@ var init_interactive_action_runner = __esm({
   }
 });
 
-      };
-      state.running = false;
-      state.progressState = "canceled";
-      options.setRunning(false);
-      options.setProgress("canceled", 0, "Canceled");
-      options.appendLogText("[info] Action canceled before execution.\n", "system");
-      state.lastResult = result;
-      return result;
-    }
-    const abortController = new AbortController();
-    activeAbortController = abortController;
-    try {
-      const result = await engine.runAction(action, {
-        dryRun,
-        yes: confirmed,
-        signal: abortController.signal
-      });
-      state.lastResult = result;
-      if (result.status === "failed" && result.message) {
-        options.appendLogText(`${result.message}
-`, "system");
-        state.progressState = "failed";
-        options.setRunning(false);
-        options.setProgress("failed", 0, result.message);
-      }
-      return result;
-    } finally {
-      if (activeAbortController === abortController) {
 // packages/c420ui/src/host-dependencies.ts
 function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -17746,6 +17746,33 @@ function validateConfigShape(value) {
       });
     }
   }
+  if ("npm" in value) {
+    if (!isRecord2(value.npm)) {
+      failures.push("npm must be an object");
+    } else {
+      if (value.npm.packageManager !== "npm") failures.push('npm.packageManager must be "npm"');
+      assertOptionalString(value.npm, "lockfile", failures, "npm");
+      if ("installStrategy" in value.npm && !c420uiKnownNpmInstallStrategies.includes(value.npm.installStrategy)) {
+        failures.push('npm.installStrategy must be "auto", "ci", or "install"');
+      }
+      assertOptionalBoolean(value.npm, "includeDev", failures, "npm");
+      assertOptionalStringArray(value.npm, "requiredDependencies", failures, "npm");
+      assertOptionalStringArray(value.npm, "requiredDevDependencies", failures, "npm");
+    }
+  }
+  return failures;
+}
+function assertC420UIHostDependencyConfig(value) {
+  const failures = validateConfigShape(value);
+  if (failures.length > 0) {
+    throw new Error(`Invalid c420ui host dependency config: ${failures.join("; ")}.`);
+  }
+}
+function validateC420UIHostDependencyConfig(value) {
+  assertC420UIHostDependencyConfig(value);
+  return value;
+}
+function isC420UIHostDependencyFailure(result) {
   return result.status === "missing" || result.status === "failed";
 }
 var c420uiKnownHostDependencyPurposes, c420uiKnownNpmInstallStrategies;
@@ -17774,11 +17801,13 @@ async function runC420UIStartupTasks(tasks, log) {
   for (const task of tasks) {
     log(`[info] ${task.label}...
 `);
-      }
-var init_startup_task = __esm({
-  "packages/c420ui/src/startup-task.ts"() {
-    init_host_dependencies();
+    try {
+      const result = await task.run();
+      const plannedCommand = formatPlannedCommand(result);
+      if (plannedCommand) {
+        log(`[info] Planned dependency command: ${plannedCommand}
 `);
+      }
       if (isC420UIHostDependencyFailure(result)) {
         log("[error] Failed to prepare dependent project dependencies.\n");
         if (result.message) log(`[error] ${result.message}
@@ -17791,41 +17820,12 @@ var init_startup_task = __esm({
       log("[error] Failed to prepare dependent project dependencies.\n");
       log(`[error] ${error instanceof Error ? error.message : String(error)}
 `);
+    }
+  }
+}
 var init_startup_task = __esm({
   "packages/c420ui/src/startup-task.ts"() {
     init_host_dependencies();
-  if (!command) return null;
-  return [command.command, ...command.args].join(" ");
-}
-async function runC420UIStartupTasks(tasks, log) {
-  for (const task of tasks) {
-    log(`[info] ${task.label}...
-`);
-        activeAbortController = null;
-      }
-    }
-  }
-  function cancel() {
-    if (!activeAbortController || activeAbortController.signal.aborted) {
-      return false;
-    }
-    activeAbortController.abort();
-    options.appendLogText("[info] Cancellation requested.\n", "system");
-    state.progressState = "canceled";
-    options.setProgress("canceled", 0, "Canceled");
-    return true;
-  }
-  return {
-    cancel,
-    runAction,
-    state
-  };
-}
-var init_interactive_action_runner = __esm({
-  "packages/c420ui/src/terminal/interactive-action-runner.ts"() {
-    init_action_engine();
-    init_actions();
-    init_exit_codes();
   }
 });
 
@@ -18190,6 +18190,34 @@ function createApp(options) {
         result = await inputDialog(
           screen,
           "Administrator authorization",
+          [
+            `${request.action.label}`,
+            "",
+            "Enter your sudo password to continue.",
+            `Reason: ${request.reason}`
+          ].join("\n"),
+          3e4
+        );
+      } catch {
+        return {
+          ok: false,
+          code: c420uiExitCodes.generalError,
+          message: "[error] Administrator authorization prompt failed."
+        };
+      } finally {
+        modalActive = false;
+      }
+      if (result.status === "canceled") {
+        return {
+          ok: false,
+          code: c420uiExitCodes.canceled,
+          message: "[info] Administrator authorization canceled."
+        };
+      }
+      if (result.status === "timeout") {
+        return {
+          ok: false,
+          code: c420uiExitCodes.canceled,
           message: "[error] Administrator authorization timed out."
         };
       }
@@ -18218,44 +18246,16 @@ function createApp(options) {
         return { ok: true, env };
       }
       appendLogText(
-    setProgress(state, percent, label) {
-      if (state === "running") {
-        setProgressRunning(percent ?? 5, label);
-      } else if (state === "success") {
-        setProgressSuccess(label);
-  const sessionLogPath = opts.sessionLogPath || import_node_path2.default.join(
-    process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || ".", ".local/state"),
-      return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
-      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
-      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
-      code: c420uiExitCodes.rootPolicyError,
-      message: "[error] Administrator authorization failed."
-    };
-  }
-  const actionRunner = createInteractiveActionRunner({
-    bridge,
-    setProgress(state, percent, label) {
-      if (state === "running") {
-        setProgressRunning(percent ?? 5, label);
-      } else if (state === "success") {
-        setProgressSuccess(label);
-  const sessionLogPath = opts.sessionLogPath || import_node_path2.default.join(
-    process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || ".", ".local/state"),
-      return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
-      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
-      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
+        `[warn] Administrator authorization failed (${attempt}/${maxAttempts}).
+`,
+        "system"
+      );
+      if (attempt === maxAttempts) {
+        return validation;
       }
-      appendLogText(
-    setProgress(state, percent, label) {
-      if (state === "running") {
-        setProgressRunning(percent ?? 5, label);
-      } else if (state === "success") {
-        setProgressSuccess(label);
-  const sessionLogPath = opts.sessionLogPath || import_node_path2.default.join(
-    process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || ".", ".local/state"),
-      return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
-      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
-      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
+    }
+    return {
+      ok: false,
       code: c420uiExitCodes.rootPolicyError,
       message: "[error] Administrator authorization failed."
     };
@@ -18273,11 +18273,11 @@ function createApp(options) {
         source === "stdout" || source === "stderr" ? source : "system"
       );
     },
-  const sessionLogPath = opts.sessionLogPath || import_node_path2.default.join(
-    process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || ".", ".local/state"),
-      return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
-      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
-      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
+    setProgress(state, percent, label) {
+      if (state === "running") {
+        setProgressRunning(percent ?? 5, label);
+      } else if (state === "success") {
+        setProgressSuccess(label);
       } else if (state === "warning") {
         setProgressWarning(label);
       } else if (state === "canceled") {
@@ -18301,15 +18301,15 @@ function createApp(options) {
     system: ""
   };
   const logHistory = [];
-  const sessionLogPath = opts.sessionLogPath || import_node_path6.default.join(
-    process.env.XDG_STATE_HOME || import_node_path6.default.join(process.env.HOME || ".", ".local/state"),
+  const sessionLogPath = opts.sessionLogPath || import_node_path2.default.join(
+    process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || ".", ".local/state"),
     opts.project.stateDirectoryName,
     "tool-session.log"
   );
   const launcherSessionId = opts.sessionId?.trim() || "";
   function readExistingSessionLog(logPath) {
     try {
-      return import_node_fs5.default.existsSync(logPath) ? import_node_fs5.default.readFileSync(logPath, "utf8") : "";
+      return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
     } catch {
       return "";
     }
@@ -18335,8 +18335,8 @@ function createApp(options) {
   }
   function openSessionStream(logPath) {
     try {
-      import_node_fs5.default.mkdirSync(import_node_path6.default.dirname(logPath), { recursive: true });
-      const stream = import_node_fs5.default.createWriteStream(logPath, { flags: "a" });
+      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
+      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
       stream.on("error", (error) => {
         recordSessionStreamError(error);
       });
@@ -19104,6 +19104,34 @@ function createApp(options) {
     appendLogText(
       `${result.ok ? "[ok]" : "[warn]"} ${result.message}
 `,
+      "system"
+    );
+  });
+  screen.key(["f6"], () => {
+    if (!modalActive) {
+      showPlainLogsView();
+    }
+  });
+  screen.key(["S-pageup", "M-up"], () => {
+    content.scroll(-5);
+    screen.render();
+  });
+  screen.key(["S-pagedown", "M-down"], () => {
+    content.scroll(5);
+    screen.render();
+  });
+  screen.key(["pageup"], () => {
+    if (!modalActive) {
+      scrollFocusedPanel(-10);
+    }
+    screen.render();
+  });
+  screen.key(["pagedown"], () => {
+    if (!modalActive) {
+      scrollFocusedPanel(10);
+    }
+    screen.render();
+  });
   screen.key(["home"], () => {
     if (!modalActive) {
       setFocusedPanelScroll(0);
@@ -19147,6 +19175,9 @@ function createApp(options) {
     }
   });
   menu.on("keypress", (_, key) => {
+    if (updatingSettingsMenuItems) {
+      return;
+    }
     if ((key.name === "up" || key.name === "down") && ["install", "development", "maintenance"].includes(currentView)) {
       renderSelectionDetails();
       screen.render();
@@ -19156,13 +19187,10 @@ function createApp(options) {
       screen.render();
     }
   });
-  return screen;
-}
-  void refreshDetectedInstallations("startup");
-  renderDiagnosticsBox();
-  menu.focus();
-  return screen;
-}
+  menu.on("select item", () => {
+    if (updatingSettingsMenuItems) {
+      return;
+    }
     if (["install", "development", "maintenance"].includes(currentView)) {
       renderSelectionDetails();
       screen.render();
@@ -19185,36 +19213,6 @@ function createApp(options) {
   void refreshDetectedInstallations("startup");
   renderDiagnosticsBox();
   menu.focus();
-  return screen;
-}
-  diagnostics.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("diagnostics");
-    }
-  });
-  content.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("content");
-    }
-  });
-  logs.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("logs");
-    }
-  });
-  menu.on("keypress", (_, key) => {
-    if (updatingSettingsMenuItems) {
-      return;
-    }
-    if ((key.name === "up" || key.name === "down") && ["install", "development", "maintenance"].includes(currentView)) {
-      renderSelectionDetails();
-      screen.render();
-    }
-    if ((key.name === "up" || key.name === "down") && currentView === "settings") {
-      renderSelectionDetails();
-      screen.render();
-    }
-  });
   if (options.startupTasks?.length) {
     setImmediate(() => {
       void runC420UIStartupTasks(options.startupTasks ?? [], (text) => {
@@ -19222,6 +19220,8 @@ function createApp(options) {
       }).then(() => screen.render());
     });
   }
+  return screen;
+}
 var import_node_fs2, import_node_path2, tui2, MAX_LOG_HISTORY_LINES, TOOL_LOG_PREFIX, ACTION_LOG_PREFIX, FOCUS_ZONES, HEADER_GAP, HEADER_BOX_HORIZONTAL_PADDING, c420uiHeaderMinWidth, PROJECT_HEADER_MIN_WIDTH;
 var init_app = __esm({
   "packages/c420ui/src/terminal/app.ts"() {
@@ -19246,6 +19246,34 @@ var init_app = __esm({
     ACTION_LOG_PREFIX = "Action |";
     FOCUS_ZONES = ["menu", "diagnostics", "content", "logs"];
     HEADER_GAP = 0;
+    HEADER_BOX_HORIZONTAL_PADDING = 4;
+    c420uiHeaderMinWidth = 28;
+    PROJECT_HEADER_MIN_WIDTH = 40;
+  }
+});
+
+// scripts/run-c420ui.ts
+var run_c420ui_exports = {};
+__export(run_c420ui_exports, {
+  main: () => main
+});
+module.exports = __toCommonJS(run_c420ui_exports);
+var import_node_path13 = __toESM(require("node:path"));
+
+// packages/c420ui/src/terminal/index.ts
+init_app();
+
+// packages/c420ui/src/terminal/help.ts
+function formatC420UITerminalHelp(options) {
+  const launcher = options.launcherCommand || options.config.project.launcherCommand;
+  return [
+    `${options.config.project.projectName} c420ui terminal interface`,
+    "",
+    "Usage:",
+    "  npm run c420ui",
+    launcher ? `  ${launcher}` : ""
+  ].filter(Boolean).join("\n");
+}
 function printC420UITerminalHelp(options) {
   console.log(formatC420UITerminalHelp(options));
 }
@@ -19274,12 +19302,42 @@ function enforceC420UIRootLaunchGuard(options) {
   options.exit?.(1);
 }
 
+// packages/c420ui/src/terminal/runtime.ts
+function loadC420UITerminalApp() {
+  const app = (init_app(), __toCommonJS(app_exports));
+  return app.createApp;
+}
+function runC420UITerminalApp(options, runtimeOptions = {}) {
+  const writeError = runtimeOptions.writeError ?? console.error;
+  const exit = runtimeOptions.exit ?? process.exit;
+  enforceC420UIRootLaunchGuard({
+    projectName: options.config.project.projectName,
+    getuid: runtimeOptions.getuid,
+    writeError,
+    exit
+  });
+  const create = runtimeOptions.create ?? loadC420UITerminalApp();
+  const screen = create(options);
+  const onUncaughtException = runtimeOptions.onUncaughtException ?? ((listener) => process.on("uncaughtException", listener));
+  onUncaughtException((err) => {
+    try {
+      screen.destroy();
+    } catch {
+    }
+    writeError(err instanceof Error ? err.stack || err.message : String(err));
+    exit(1);
+  });
+}
 
+// scripts/c420ui-adapter/adapter.ts
+var import_node_fs10 = __toESM(require("node:fs"));
+var import_node_path11 = __toESM(require("node:path"));
 
 // packages/c420ui/src/index.ts
 init_scopes();
 
 // packages/c420ui/src/linux-root-provider.ts
+var import_node_child_process2 = require("node:child_process");
 
 // packages/c420ui/src/root-provider.ts
 var c420uiRootPolicyExitCode = 64;
@@ -19310,6 +19368,7 @@ function validateC420UILinuxActionScope(action, actionEnv, actionHasUserScope = 
   return { ok: true };
 }
 function createC420UILinuxRootProviderBase(options) {
+  const runCommand = options.runCommand ?? import_node_child_process2.spawnSync;
   const buildActionEnvironment = options.buildActionEnvironment ?? defaultC420UILinuxBuildActionEnvironment;
   const actionHasUserScope = options.actionHasUserScope ?? defaultC420UILinuxActionHasUserScope;
   const buildRootValidationCommand = options.buildRootValidationCommand ?? defaultC420UILinuxRootValidationCommand;
@@ -19337,65 +19396,34 @@ function createC420UILinuxRootProviderBase(options) {
         env: actionEnv,
         shell: false
       });
+      if (result.error) {
+        return {
+          ok: false,
+          code: 1,
           message: `[error] Failed to start privilege validation: ${result.error.message}`
         };
       }
+      const code = result.status ?? 1;
+      if (code !== 0) {
+        return {
+          ok: false,
+          code,
+          message: "[error] Privilege validation failed before action execution."
+        };
       }
-    }
-}
-
-// packages/c420ui/src/command-dependencies.ts
-  return import_node_path3.default.extname(command) ? [command] : [command, ...extensions.map((extension) => `${command}${extension}`)];
-      const fullPath = commandHasDirectory ? candidate : import_node_path3.default.join(directory, candidate);
-        const stat = import_node_fs3.default.statSync(fullPath);
-          import_node_fs3.default.accessSync(fullPath, import_node_fs3.default.constants.X_OK);
-  const normalized = version.startsWith("v") ? version.slice(1) : version;
-  const major = Number(normalized.split(".")[0]);
-  return Number.isFinite(major) ? major : null;
-}
-function checkC420UINodeDependency(config, options = {}) {
-  if (!config || config.required === false) {
-    return { status: "skipped", message: "No required Node.js dependency was declared." };
-  const nodeVersion = options.nodeVersion ?? process.versions.node;
-var import_node_child_process3 = require("node:child_process");
-var import_node_fs4 = __toESM(require("node:fs"));
-var import_node_path4 = __toESM(require("node:path"));
-  const packagePath = import_node_path4.default.join(rootDir2, "package.json");
-  if (!import_node_fs4.default.existsSync(packagePath)) {
-    const packageJson = JSON.parse(import_node_fs4.default.readFileSync(packagePath, "utf8"));
-    const projectRequire = (0, import_node_module.createRequire)(import_node_path4.default.join(rootDir2, "package.json"));
-  const hasLockfile = import_node_fs4.default.existsSync(import_node_path4.default.join(rootDir2, lockfile));
-  if (missing.length > 0) {
-var defaultNpmCommandRunner = (command, args, options) => (0, import_node_child_process3.spawnSync)(command, args, {
-  const runCommand = options.runCommand ?? defaultNpmCommandRunner;
-  const repairMessage = env.C420UI_DEPENDENCY_REPAIR === "clean" ? " after clean repair was requested" : "";
-  const commandResult = runCommand("npm", args, {
-    cwd: options.rootDir,
-    env,
-  if (commandResult.status === "failed" || commandResult.status === "missing") return commandResult;
-init_startup_task();
-var import_node_child_process4 = require("node:child_process");
-  return {
-  const spawnCommand = options.spawnCommand ?? import_node_child_process4.spawn;
-      return buildActionEnvironment(action, baseEnv);
+      return { ok: true };
     },
-    validateActionScope(action, actionEnv) {
-      return validateC420UILinuxActionScope(
-        action,
-        actionEnv,
-        actionHasUserScope
-      );
-    },
-    validateRootAccess(rootDir2, actionEnv) {
-      const validationCommand = buildRootValidationCommand(
+    validateRootAccessWithInput(rootDir2, actionEnv, input) {
+      const validationCommand = buildRootValidationStdinCommand(
         options.sudoHelperPath
       );
       const result = runCommand(validationCommand.command, validationCommand.args, {
         cwd: rootDir2,
-        stdio: "inherit",
         env: actionEnv,
-        shell: false
-      });
+        shell: false,
+        input: `${input}
+`,
+        stdio: ["pipe", "pipe", "pipe"]
       });
       if (result.error) {
         return {
@@ -19403,6 +19431,7 @@ var import_node_child_process4 = require("node:child_process");
           code: 1,
           message: `[error] Failed to start privilege validation: ${result.error.message}`
         };
+      }
       const code = result.status ?? 1;
       if (code !== 0) {
         return {
@@ -19419,49 +19448,20 @@ var import_node_child_process4 = require("node:child_process");
         ...actionEnv,
         [options.rootAuthEnvKey]: options.rootAuthEnvValue ?? "1"
       };
+    }
   };
+}
+
 // packages/c420ui/src/index.ts
 init_host_dependencies();
 
+// packages/c420ui/src/command-dependencies.ts
 var import_node_fs3 = __toESM(require("node:fs"));
 var import_node_path3 = __toESM(require("node:path"));
-  return import_node_path3.default.extname(command) ? [command] : [command, ...extensions.map((extension) => `${command}${extension}`)];
-      const fullPath = commandHasDirectory ? candidate : import_node_path3.default.join(directory, candidate);
-        const stat = import_node_fs3.default.statSync(fullPath);
-          import_node_fs3.default.accessSync(fullPath, import_node_fs3.default.constants.X_OK);
-  const normalized = version.startsWith("v") ? version.slice(1) : version;
-  const major = Number(normalized.split(".")[0]);
-  return Number.isFinite(major) ? major : null;
-}
-function checkC420UINodeDependency(config, options = {}) {
-  if (!config || config.required === false) {
-    return { status: "skipped", message: "No required Node.js dependency was declared." };
-  const nodeVersion = options.nodeVersion ?? process.versions.node;
-var import_node_child_process3 = require("node:child_process");
-var import_node_fs4 = __toESM(require("node:fs"));
-var import_node_path4 = __toESM(require("node:path"));
-  const packagePath = import_node_path4.default.join(rootDir2, "package.json");
-  if (!import_node_fs4.default.existsSync(packagePath)) {
-    const packageJson = JSON.parse(import_node_fs4.default.readFileSync(packagePath, "utf8"));
-  if (failures.length > 0) {
-    const projectRequire = (0, import_node_module.createRequire)(import_node_path4.default.join(rootDir2, "package.json"));
-  }
-}
-  const hasLockfile = import_node_fs4.default.existsSync(import_node_path4.default.join(rootDir2, lockfile));
-  if (missing.length > 0) {
-var defaultNpmCommandRunner = (command, args, options) => (0, import_node_child_process3.spawnSync)(command, args, {
-}
-function isC420UIHostDependencyFailure(result) {
-  return result.status === "missing" || result.status === "failed";
-}
-
-// packages/c420ui/src/command-dependencies.ts
-var import_node_fs = __toESM(require("node:fs"));
-var import_node_path = __toESM(require("node:path"));
 function candidateNames(command, env) {
   if (process.platform !== "win32") return [command];
   const extensions = (env?.PATHEXT || ".COM;.EXE;.BAT;.CMD").split(";").filter(Boolean);
-  return import_node_path.default.extname(command) ? [command] : [command, ...extensions.map((extension) => `${command}${extension}`)];
+  return import_node_path3.default.extname(command) ? [command] : [command, ...extensions.map((extension) => `${command}${extension}`)];
 }
 var lookupC420UICommandInPath = (command, options) => {
   if (!command) return false;
@@ -19472,12 +19472,12 @@ var lookupC420UICommandInPath = (command, options) => {
   const directories = commandHasDirectory ? [""] : pathValue.split(pathSeparator);
   for (const directory of directories) {
     for (const candidate of candidateNames(command, env)) {
-      const fullPath = commandHasDirectory ? candidate : import_node_path.default.join(directory, candidate);
+      const fullPath = commandHasDirectory ? candidate : import_node_path3.default.join(directory, candidate);
       try {
-        const stat = import_node_fs.default.statSync(fullPath);
+        const stat = import_node_fs3.default.statSync(fullPath);
         if (!stat.isFile()) continue;
         if (process.platform !== "win32") {
-          import_node_fs.default.accessSync(fullPath, import_node_fs.default.constants.X_OK);
+          import_node_fs3.default.accessSync(fullPath, import_node_fs3.default.constants.X_OK);
         }
         return true;
       } catch {
@@ -19515,15 +19515,15 @@ function checkC420UICommandDependencies(dependencies = [], options = {}) {
 
 // packages/c420ui/src/node-dependencies.ts
 function parseMajor(version) {
-var import_node_child_process3 = require("node:child_process");
-var import_node_fs4 = __toESM(require("node:fs"));
-var import_node_path4 = __toESM(require("node:path"));
-  const packagePath = import_node_path4.default.join(rootDir2, "package.json");
-  if (!import_node_fs4.default.existsSync(packagePath)) {
-    const packageJson = JSON.parse(import_node_fs4.default.readFileSync(packagePath, "utf8"));
-    const projectRequire = (0, import_node_module.createRequire)(import_node_path4.default.join(rootDir2, "package.json"));
+  const normalized = version.startsWith("v") ? version.slice(1) : version;
+  const major = Number(normalized.split(".")[0]);
+  return Number.isFinite(major) ? major : null;
+}
+function checkC420UINodeDependency(config, options = {}) {
+  if (!config || config.required === false) {
+    return { status: "skipped", message: "No required Node.js dependency was declared." };
   }
-  const hasLockfile = import_node_fs4.default.existsSync(import_node_path4.default.join(rootDir2, lockfile));
+  const nodeVersion = options.nodeVersion ?? process.versions.node;
   const currentMajor = parseMajor(nodeVersion);
   if (currentMajor === null) {
     return {
@@ -19543,17 +19543,17 @@ var import_node_path4 = __toESM(require("node:path"));
 }
 
 // packages/c420ui/src/npm-dependencies.ts
-var import_node_child_process2 = require("node:child_process");
-var import_node_fs2 = __toESM(require("node:fs"));
-var import_node_path2 = __toESM(require("node:path"));
+var import_node_child_process3 = require("node:child_process");
+var import_node_fs4 = __toESM(require("node:fs"));
+var import_node_path4 = __toESM(require("node:path"));
 var import_node_module = require("node:module");
 function readPackageJson(rootDir2) {
-  const packagePath = import_node_path2.default.join(rootDir2, "package.json");
-  if (!import_node_fs2.default.existsSync(packagePath)) {
+  const packagePath = import_node_path4.default.join(rootDir2, "package.json");
+  if (!import_node_fs4.default.existsSync(packagePath)) {
     return { result: { status: "failed", exitCode: 1, message: "package.json was not found." } };
   }
   try {
-    const packageJson = JSON.parse(import_node_fs2.default.readFileSync(packagePath, "utf8"));
+    const packageJson = JSON.parse(import_node_fs4.default.readFileSync(packagePath, "utf8"));
     return { packageJson };
   } catch (error) {
     return {
@@ -19596,7 +19596,7 @@ function declaredDependencyNames(packageJson, config) {
 }
 function resolveC420UINpmDependency(dependency, rootDir2) {
   try {
-    const projectRequire = (0, import_node_module.createRequire)(import_node_path2.default.join(rootDir2, "package.json"));
+    const projectRequire = (0, import_node_module.createRequire)(import_node_path4.default.join(rootDir2, "package.json"));
     projectRequire.resolve(dependency, { paths: [rootDir2] });
     return true;
   } catch {
@@ -19612,7 +19612,7 @@ function requiredNpmDependencies(config) {
 function installArgs(config, rootDir2) {
   const strategy = config.installStrategy ?? "auto";
   const lockfile = config.lockfile ?? "package-lock.json";
-  const hasLockfile = import_node_fs2.default.existsSync(import_node_path2.default.join(rootDir2, lockfile));
+  const hasLockfile = import_node_fs4.default.existsSync(import_node_path4.default.join(rootDir2, lockfile));
   const command = strategy === "ci" || strategy === "auto" && hasLockfile ? "ci" : "install";
   return config.includeDev === false ? [command] : [command, "--include=dev"];
 }
@@ -19652,7 +19652,7 @@ function checkC420UINpmInstalledDependencies(config, options) {
     id: dependency,
     label: dependency
   }));
-var defaultNpmCommandRunner = (command, args, options) => (0, import_node_child_process3.spawnSync)(command, args, {
+  if (missing.length > 0) {
     return {
       status: "missing",
       dependencies: missing,
@@ -19680,7 +19680,7 @@ function checkC420UINpmDependencies(config, options) {
     resolveDependency: options.resolveDependency
   });
 }
-var defaultNpmCommandRunner = (command, args, options) => (0, import_node_child_process2.spawnSync)(command, args, {
+var defaultNpmCommandRunner = (command, args, options) => (0, import_node_child_process3.spawnSync)(command, args, {
   cwd: options.cwd,
   env: options.env,
   stdio: options.stdio ?? "inherit",
@@ -19705,11 +19705,11 @@ function ensureC420UINpmDependencies(config, options) {
   const declaredResult = checkC420UINpmDeclaredDependencies(config, packageJson ?? {});
   if (declaredResult.status === "failed") return declaredResult;
   const args = installArgs(config, options.rootDir);
-  if (commandResult.status === "failed" || commandResult.status === "missing") return commandResult;
-init_startup_task();
-var import_node_child_process4 = require("node:child_process");
-  return {
-  const spawnCommand = options.spawnCommand ?? import_node_child_process4.spawn;
+  const runCommand = options.runCommand ?? defaultNpmCommandRunner;
+  const repairMessage = env.C420UI_DEPENDENCY_REPAIR === "clean" ? " after clean repair was requested" : "";
+  const commandResult = runCommand("npm", args, {
+    cwd: options.rootDir,
+    env,
     stdio: "inherit"
   });
   if (commandResult.error) {
@@ -19733,8 +19733,7 @@ function runC420UIHostDependencyEnsure(config, options) {
   const commandResult = checkC420UICommandDependencies(config.commands ?? [], {
     env: options.env
   });
-init_startup_task();
-var import_node_child_process4 = require("node:child_process");
+  if (commandResult.status === "failed" || commandResult.status === "missing") return commandResult;
   const npmResult = checkC420UINpmDependencies(config.npm, {
     rootDir: options.rootDir,
     env: options.env
@@ -19762,6 +19761,7 @@ var import_node_child_process4 = require("node:child_process");
 }
 
 // packages/c420ui/src/index.ts
+init_startup_task();
 init_action_engine();
 
 // packages/c420ui/src/cli.ts
@@ -19770,7 +19770,7 @@ init_actions();
 init_exit_codes();
 
 // packages/c420ui/src/command-runner.ts
-var import_node_child_process3 = require("node:child_process");
+var import_node_child_process4 = require("node:child_process");
 var import_node_string_decoder = require("node:string_decoder");
 init_exit_codes();
 
@@ -19794,7 +19794,7 @@ function redactC420UILogLine(line) {
   );
 }
 function createC420UIOperationalLogEvent(options) {
-  const spawnCommand = options.spawnCommand ?? import_node_child_process4.spawn;
+  return {
     source: options.source,
     line: options.redact === false ? options.line : redactC420UILogLine(options.line),
     level: options.level,
@@ -19822,7 +19822,7 @@ function emitRemainingChunk(stream, source, emitLog) {
   stream.pending = "";
 }
 async function runC420UICommand(options) {
-  const spawnCommand = options.spawnCommand ?? import_node_child_process3.spawn;
+  const spawnCommand = options.spawnCommand ?? import_node_child_process4.spawn;
   const args = options.args ?? [];
   const stdoutStream = { decoder: new import_node_string_decoder.StringDecoder("utf8"), pending: "" };
   const stderrStream = { decoder: new import_node_string_decoder.StringDecoder("utf8"), pending: "" };
@@ -19857,25 +19857,25 @@ async function runC420UICommand(options) {
     function clearCancelKillTimer() {
       if (!cancelKillTimer) return;
       clearTimeout(cancelKillTimer);
-    options.emitProgress({ state: "running", label: options.label });
-    try {
-      child = spawnCommand(options.command, args, {
-        cwd: options.cwd,
-        env: options.env,
-        shell: false,
-        stdio: ["ignore", "pipe", "pipe"]
-      });
+      cancelKillTimer = void 0;
     }
-      emitRemainingChunk(stdoutStream, "stdout", options.emitLog);
-    child.stderr?.on("end", () => {
+    function settle(result) {
+      if (settled) return;
+      settled = true;
+      clearCancelKillTimer();
+      options.signal?.removeEventListener("abort", abortAction);
+      resolve(result);
+    }
+    function abortAction() {
+      cancellationRequested = true;
       emitOperationalLog(options, {
         source: "action",
-      const resultCode = code ?? c420uiExitCodes.generalError;
-var import_node_path5 = __toESM(require("node:path"));
-var executableArtifactActionIdFields = [
-  "buildActionId",
-  if (typeof value[field] !== "string" || !value[field].trim()) {
-  return import_node_path5.default.normalize(configPath.replace(/^[\\/]+/, ""));
+        line: `[action] Cancel requested for ${options.label}`,
+        level: "info"
+      });
+      emitCanceledProgress();
+      child.kill(cancelSignal);
+      cancelKillTimer = setTimeout(() => {
         if (!closeObserved) child.kill(cancelKillSignal);
       }, cancelKillTimeoutMs);
       cancelKillTimer.unref();
@@ -19885,14 +19885,14 @@ var executableArtifactActionIdFields = [
       line: `[action] Starting ${options.label}`,
       level: "info"
     });
-      emitRemainingChunk(stdoutStream, "stdout", options.emitLog);
-    child.stderr?.on("end", () => {
-      const resultCode = code ?? c420uiExitCodes.generalError;
-var import_node_path5 = __toESM(require("node:path"));
-var executableArtifactActionIdFields = [
-  "buildActionId",
-  if (typeof value[field] !== "string" || !value[field].trim()) {
-  return import_node_path5.default.normalize(configPath.replace(/^[\\/]+/, ""));
+    options.emitProgress({ state: "running", label: options.label });
+    try {
+      child = spawnCommand(options.command, args, {
+        cwd: options.cwd,
+        env: options.env,
+        shell: false,
+        stdio: ["ignore", "pipe", "pipe"]
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       emitOperationalLog(options, {
@@ -19912,9 +19912,9 @@ var executableArtifactActionIdFields = [
       emitDecodedChunk(stderrStream, chunk, "stderr", options.emitLog);
     });
     child.stdout?.on("end", () => {
-      const resultCode = code ?? c420uiExitCodes.generalError;
+      emitRemainingChunk(stdoutStream, "stdout", options.emitLog);
     });
-var import_node_path5 = __toESM(require("node:path"));
+    child.stderr?.on("end", () => {
       emitRemainingChunk(stderrStream, "stderr", options.emitLog);
     });
     child.on("error", (error) => {
@@ -19940,7 +19940,7 @@ var import_node_path5 = __toESM(require("node:path"));
         settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
         return;
       }
-var import_node_path5 = __toESM(require("node:path"));
+      const resultCode = code ?? c420uiExitCodes.generalError;
       const success = resultCode === c420uiExitCodes.success;
       if (!success) {
         emitOperationalLog(options, {
@@ -19967,7 +19967,7 @@ init_exit_codes();
 init_actions();
 
 // packages/c420ui/src/artifacts.ts
-var import_node_path3 = __toESM(require("node:path"));
+var import_node_path5 = __toESM(require("node:path"));
 init_actions();
 var artifactCapabilityFields = [
   "supportsArtifacts",
@@ -20004,8 +20004,8 @@ var artifactActionIdFields = [
   "purgeActionId",
   "releaseActionId"
 ];
-  if (typeof value[field] !== "string" || !value[field].trim()) {
-  return import_node_path5.default.normalize(configPath.replace(/^[\\/]+/, ""));
+var executableArtifactActionIdFields = [
+  "buildActionId",
   "validateActionId",
   "installActionId",
   "uninstallActionId",
@@ -20031,7 +20031,7 @@ function assertOptionalString2(value, field, context) {
 }
 function assertOptionalActionId(value, field, context) {
   if (value[field] === void 0) return;
-  return import_node_path5.default.normalize(configPath.replace(/^[\\/]+/, ""));
+  if (typeof value[field] !== "string" || !value[field].trim()) {
     throw new Error(`${context}: ${field} must be a non-empty string when present`);
   }
 }
@@ -20059,7 +20059,7 @@ function isRootManagedArtifactActionField(field) {
   return field === "installActionId" || field === "uninstallActionId" || field === "purgeActionId";
 }
 function toConfigPath(configPath) {
-  return import_node_path3.default.normalize(configPath.replace(/^[\\/]+/, ""));
+  return import_node_path5.default.normalize(configPath.replace(/^[\\/]+/, ""));
 }
 function assertC420UIArtifactRecipeConfig(config, context = "artifact recipe config") {
   if (!isRecord3(config)) throw new Error(`${context}: artifacts config must be an object`);
@@ -20215,6 +20215,33 @@ function validateOptionalScope(task) {
     throw new Error(`Invalid development task scope: ${String(task.id)} -> ${task.scope}`);
   }
 }
+function validateRequiredFor(task) {
+  if (task.requiredFor === void 0) return;
+  if (!Array.isArray(task.requiredFor)) {
+    throw new Error(`Development task requiredFor must be an array: ${String(task.id)}`);
+  }
+  for (const value of task.requiredFor) {
+    if (typeof value !== "string" || !c420uiDevelopmentTaskRequiredForValues.includes(
+      value
+    )) {
+      throw new Error(`Invalid development task requiredFor: ${String(task.id)} -> ${String(value)}`);
+    }
+  }
+}
+function kindToWorkflowPhase(kind) {
+  switch (kind) {
+    case "doctor":
+    case "clean":
+    case "custom":
+      return "development";
+    case "validate":
+      return "validation";
+    case "build":
+      return "build";
+    case "package":
+      return "package";
+    case "install":
+      return "install";
     case "uninstall":
       return "uninstall";
     case "purge":
@@ -20243,6 +20270,34 @@ function validateC420UIDevelopmentTasks(tasks) {
     validateOptionalScope(item);
     requireOptionalBoolean2(item, "requiresRoot");
     requireOptionalBoolean2(item, "supportsDryRun");
+    requireOptionalBoolean2(item, "planned");
+    validateRequiredFor(item);
+  }
+}
+function validateC420UIDevelopmentConfig(config) {
+  if (!isRecord4(config)) throw new Error("development config must be an object");
+  validateC420UIDevelopmentTasks(config.tasks);
+}
+function supportsDryRunAction(action) {
+  if (isC420UIPlannedAction(action)) return false;
+  if (action.dryRun === "disabled") return false;
+  return action.kind === "command" || action.dryRun === "supported" || action.dryRun === "required";
+}
+function assertC420UIDevelopmentTaskMatchesAction(task, action) {
+  validateC420UIDevelopmentTasks([task]);
+  if (task.actionId !== action.id) {
+    throw new Error(`Development task ${task.id} actionId does not match action ${action.id}`);
+  }
+  const plannedAction = isC420UIPlannedAction(action);
+  if (task.planned === true && !plannedAction) {
+    throw new Error(`Development task ${task.id} is planned but action ${action.id} is executable`);
+  }
+  if (task.planned !== true && plannedAction) {
+    throw new Error(`Development task ${task.id} is executable but action ${action.id} is planned`);
+  }
+  if (task.requiresRoot !== void 0 && Boolean(task.requiresRoot) !== Boolean(action.requiresRoot)) {
+    throw new Error(`Development task ${task.id} requiresRoot contradicts action ${action.id}`);
+  }
   if (task.scope !== void 0 && task.scope !== action.scope) {
     throw new Error(`Development task ${task.id} scope contradicts action ${action.id}`);
   }
@@ -20254,17 +20309,122 @@ function validateC420UIDevelopmentTasks(tasks) {
     throw new Error(`Development task ${task.id} phase ${workflowPhase} contradicts action ${action.id} phase ${action.phase}`);
   }
 }
+function createC420UIDevelopmentWorkflowFromAction(task, action) {
+  assertC420UIDevelopmentTaskMatchesAction(task, action);
+  const phase = kindToWorkflowPhase(task.kind);
+  const workflowAction = {
+    ...action,
+    phase
+  };
+  return {
+    id: task.id,
+    label: task.label || action.label,
+    phase,
+    actions: [workflowAction],
+    requiresRoot: action.requiresRoot,
+    supportsDryRun: task.supportsDryRun
+  };
+}
+
+// packages/c420ui/src/terminal/logo.ts
+var c420uiLogoLines = [
+  "\u2584\u2584  \u2588 \u2588 \u2584\u2584\u2584 \u2584\u2580\u2584  \u2584 \u2584  \u2584",
+  "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
+  "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
+];
+
+// scripts/c420ui-adapter/adapter.ts
+init_settings();
+
+// scripts/canva-linux/detection/provider.ts
 var import_node_fs6 = __toESM(require("node:fs"));
 var import_node_path7 = __toESM(require("node:path"));
+var import_node_child_process5 = require("node:child_process");
+
+// scripts/canva-linux/project-root.ts
 var import_node_fs5 = __toESM(require("node:fs"));
 var import_node_path6 = __toESM(require("node:path"));
+function defaultRootSearchDir() {
   return import_node_path6.default.resolve(__dirname, "../..");
+}
+function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
   let current = import_node_path6.default.resolve(startDir);
+  while (true) {
     if (import_node_fs5.default.existsSync(import_node_path6.default.join(current, "package.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/actions.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/project-ui.json"))) {
+      return current;
+    }
     const parent = import_node_path6.default.dirname(current);
+    if (parent === current) return defaultRootSearchDir();
+    current = parent;
+  }
+}
+
+// scripts/canva-linux/detection/provider.ts
+var canvaLinuxDetectionKeys = [
+  "DETECTED_NATIVE_SYSTEM",
+  "DETECTED_NATIVE_USER",
+  "DETECTED_FLATPAK_SYSTEM",
+  "DETECTED_FLATPAK_USER",
+  "DETECTED_APPIMAGE_ARTIFACTS",
+  "DETECTED_NATIVE_SYSTEM_VERSION",
+  "DETECTED_NATIVE_USER_VERSION",
+  "DETECTED_FLATPAK_SYSTEM_VERSION",
+  "DETECTED_FLATPAK_USER_VERSION",
+  "DETECTED_APPIMAGE_VERSION"
+];
+var emptyInstallations = {
+  nativeSystem: false,
+  nativeUser: false,
+  flatpakSystem: false,
+  flatpakUser: false,
+  appImageArtifacts: false,
+  nativeSystemVersion: "",
+  nativeUserVersion: "",
+  flatpakSystemVersion: "",
+  flatpakUserVersion: "",
+  appImageVersion: ""
+};
+function readPackage(rootDir2) {
+  return JSON.parse(
     import_node_fs6.default.readFileSync(import_node_path7.default.join(rootDir2, "package.json"), "utf8")
+  );
+}
+function readPhase(rootDir2) {
   const content = import_node_fs6.default.readFileSync(
     import_node_path7.default.join(rootDir2, "scripts/app-identity-common.sh"),
+    "utf8"
+  );
+  const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
+  return match?.[1] ?? "unknown";
+}
+function safeProjectMetadata(rootDir2) {
+  let version = "unknown";
+  let phase = "unknown";
+  try {
+    version = readPackage(rootDir2).version || "unknown";
+  } catch {
+    version = "unknown";
+  }
+  try {
+    phase = readPhase(rootDir2);
+  } catch {
+    phase = "unknown";
+  }
+  return {
+    version,
+    phase,
+    appId: "io.github.coletivo420.canva-linux",
+    executable: "canva-linux",
+    repository: "https://github.com/coletivo420/canva-linux"
+  };
+}
+function detectionCommand() {
+  return [
+    "source scripts/install-detection-common.sh",
+    "detect_installations",
+    "print_detection_status_env"
+  ].join("\n");
+}
 function runInstallDetection(rootDir2, runCommand) {
   const warnings = [];
   let ok = true;
@@ -20293,6 +20453,34 @@ function runInstallDetection(rootDir2, runCommand) {
         canvaLinuxDetectionKeys
       ),
       warnings
+    };
+  } catch (error) {
+    warnings.push(
+      `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return { ok: false, values: {}, warnings };
+  }
+}
+function createInstallDetectionProbe(runCommand) {
+  return {
+    id: "canva-linux-install-detection",
+    label: "Canva Linux installation detection",
+    run(rootDir2) {
+      return runInstallDetection(rootDir2, runCommand);
+    }
+  };
+}
+function buildInstallations(values) {
+  return {
+    nativeSystem: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_SYSTEM),
+    nativeUser: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_USER),
+    flatpakSystem: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_SYSTEM),
+    flatpakUser: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_USER),
+    appImageArtifacts: boolFromC420UIDetectionValue(values.DETECTED_APPIMAGE_ARTIFACTS),
+    nativeSystemVersion: values.DETECTED_NATIVE_SYSTEM_VERSION || "",
+    nativeUserVersion: values.DETECTED_NATIVE_USER_VERSION || "",
+    flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
+    flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
     appImageVersion: values.DETECTED_APPIMAGE_VERSION || ""
   };
 }
@@ -20318,203 +20506,15 @@ function createCanvaLinuxDetectionProvider(options = {}) {
 }
 function buildCanvaLinuxOverviewStatus(rootDir2 = findCanvaLinuxProjectRoot()) {
   return createCanvaLinuxDetectionProvider().buildOverviewStatus(rootDir2);
-
-// scripts/canva-linux/actions/registry.ts
-var import_node_fs7 = __toESM(require("node:fs"));
-var import_node_path8 = __toESM(require("node:path"));
-  return import_node_path8.default.join(rootDir2, "config/canva-linux/actions.json");
-  const resolvedRoot = import_node_path8.default.resolve(rootDir2);
-    import_node_fs7.default.readFileSync(actionsPath(resolvedRoot), "utf8")
-
-  if (!import_node_fs8.default.existsSync(filePath)) {
-    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
-  const configPath = import_node_path9.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-var import_node_fs9 = __toESM(require("node:fs"));
-var import_node_path10 = __toESM(require("node:path"));
-  return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
-  const developmentConfigPath = import_node_path10.default.join(
-// scripts/c420ui-adapter/adapter.ts
-  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
-    const content = import_node_fs10.default.readFileSync(identityPath, "utf8");
-  return import_node_path11.default.join(process.env.HOME || ".", ".local/state");
-  const resolvedRootDir = import_node_path11.default.resolve(rootDir2);
-  const projectUiPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
-  const packageJsonPath = import_node_path11.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
-  const appIdentityPath = import_node_path11.default.join(
-    return import_node_path11.default.join(
-    if (!import_node_fs10.default.existsSync(actionsJsonPath)) {
-    return buildCanvaLinuxOverviewStatus(resolvedRootDir);
-  }
-  async function runAction(actionId, context) {
-    const action = loadCanvaLinuxActions2().find((item) => item.id === actionId);
-    if (!action) {
-      return {
-        code: c420uiExitCodes.invalidUsage,
-        status: "failed",
-        message: `Unknown action: ${actionId}`
-      };
-    }
-    if (!action.command) {
-      return {
-        code: c420uiExitCodes.invalidUsage,
-        status: "failed",
-        message: `${actionId} has no command`
-      };
-    }
-    if (context.signal?.aborted) {
-      context.emitProgress({ state: "canceled", percent: 0, label: action.label });
-      return {
-        code: c420uiExitCodes.canceled,
-        status: "canceled",
-        message: "Action canceled before start."
-      };
-    }
-    return runC420UICommand({
-      command: action.command,
-      rootDir: resolvedRootDir,
-      title: projectUi.c420uiTitle,
-      brand: loadBrandConfig(),
-      project: loadProjectConfig(),
-      releaseNotes: projectUi.versionReleaseNotes,
-      sessionLogPath: getSessionLogPath(),
-      sessionId: getSessionId()
-    };
-  }
-  const adapter = {
-    id: "canva-linux",
-    rootDir: resolvedRootDir,
-    projectInfo,
-    actions,
-    artifactWorkflows,
-    runAction,
-// scripts/c420ui-adapter/dependencies.ts
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
-function loadCanvaLinuxDependencyConfig(rootDir2) {
-  const relativeConfigPath = "config/canva-linux/dependencies.json";
-  const configPath = import_node_path12.default.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs11.default.readFileSync(configPath, "utf8")));
-}
-function ensureCanvaLinuxHostDependencies(options) {
-  return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
-}
-
-    rootAuthEnvValue: "1",
-    runCommand: options.runCommand,
-    buildActionEnvironment: buildCanvaLinuxRootActionEnvironment,
-    actionHasUserScope: hasCanvaLinuxUserScope
-  });
-  return {
-    ...base,
-    resolveRootPolicy(action, rootDir2, actionEnv) {
-      void actionEnv;
-      if (action.requiresRoot === true) {
-        return { requiresRoot: true, reason: `${action.id}: requiresRoot=true` };
-      }
-      if (conditionalSystemRootActionIds.has(action.id)) {
-        try {
-          const status = buildCanvaLinuxOverviewStatus(rootDir2);
-          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
-            return {
-              requiresRoot: true,
-              reason: `${action.id}: detected system installation`
-            };
-          }
-          if (status.warnings.length) {
-            return {
-              requiresRoot: false,
-              warning: `[warn] Unable to detect system installations for root policy: ${status.warnings.join("; ")}`
-            };
-          }
-        } catch (error) {
-      }
-    rootProvider: createCanvaLinuxRootProvider(),
-    startupTasks: [
-      {
-        id: "host-dependencies",
-        label: "Checking dependent project dependencies",
-        run: () => ensureCanvaLinuxHostDependencies({
-          rootDir: rootDir2,
-          env: options.env
-        })
-      }
-    ]
-}
-function buildInstallations(values) {
-  return {
-    nativeSystem: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_SYSTEM),
-    nativeUser: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_USER),
-    flatpakSystem: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_SYSTEM),
-    flatpakUser: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_USER),
-    appImageArtifacts: boolFromC420UIDetectionValue(values.DETECTED_APPIMAGE_ARTIFACTS),
-    nativeSystemVersion: values.DETECTED_NATIVE_SYSTEM_VERSION || "",
-    nativeUserVersion: values.DETECTED_NATIVE_USER_VERSION || "",
-    flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
-    flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
-
-// scripts/canva-linux/actions/registry.ts
-var import_node_fs7 = __toESM(require("node:fs"));
-var import_node_path8 = __toESM(require("node:path"));
-  return import_node_path8.default.join(rootDir2, "config/canva-linux/actions.json");
-  const resolvedRoot = import_node_path8.default.resolve(rootDir2);
-    import_node_fs7.default.readFileSync(actionsPath(resolvedRoot), "utf8")
-  if (!import_node_fs8.default.existsSync(filePath)) {
-    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
-  const configPath = import_node_path9.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-var import_node_fs9 = __toESM(require("node:fs"));
-var import_node_path10 = __toESM(require("node:path"));
-  return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
-  const developmentConfigPath = import_node_path10.default.join(
-  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
-    const content = import_node_fs10.default.readFileSync(identityPath, "utf8");
-  return import_node_path11.default.join(process.env.HOME || ".", ".local/state");
-  const resolvedRootDir = import_node_path11.default.resolve(rootDir2);
-  const projectUiPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
-  const packageJsonPath = import_node_path11.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
-  const appIdentityPath = import_node_path11.default.join(
-    return import_node_path11.default.join(
-    if (!import_node_fs10.default.existsSync(actionsJsonPath)) {
-
-// scripts/canva-linux/actions/registry.ts
-var import_node_fs7 = __toESM(require("node:fs"));
-var import_node_path8 = __toESM(require("node:path"));
-  return import_node_path8.default.join(rootDir2, "config/canva-linux/actions.json");
-  const resolvedRoot = import_node_path8.default.resolve(rootDir2);
-    import_node_fs7.default.readFileSync(actionsPath(resolvedRoot), "utf8")
-  if (!import_node_fs8.default.existsSync(filePath)) {
-    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
-  const configPath = import_node_path9.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-var import_node_fs9 = __toESM(require("node:fs"));
-var import_node_path10 = __toESM(require("node:path"));
-  return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
-  const developmentConfigPath = import_node_path10.default.join(
-  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
-    const content = import_node_fs10.default.readFileSync(identityPath, "utf8");
-  return import_node_path11.default.join(process.env.HOME || ".", ".local/state");
-  const resolvedRootDir = import_node_path11.default.resolve(rootDir2);
-  const projectUiPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
-  const packageJsonPath = import_node_path11.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
-  const appIdentityPath = import_node_path11.default.join(
-    return import_node_path11.default.join(
-    if (!import_node_fs10.default.existsSync(actionsJsonPath)) {
-  const appIdentityPath = import_node_path11.default.join(
-    return import_node_path11.default.join(
-    if (!import_node_fs10.default.existsSync(actionsJsonPath)) {
 }
 
 // scripts/c420ui-adapter/artifacts.ts
-var import_node_fs9 = __toESM(require("node:fs"));
-var import_node_path10 = __toESM(require("node:path"));
-
-// scripts/canva-linux/actions/registry.ts
 var import_node_fs8 = __toESM(require("node:fs"));
 var import_node_path9 = __toESM(require("node:path"));
+
+// scripts/canva-linux/actions/registry.ts
+var import_node_fs7 = __toESM(require("node:fs"));
+var import_node_path8 = __toESM(require("node:path"));
 init_actions();
 var ACTION_GROUPS = ["install", "development", "maintenance"];
 var ACTION_SECTIONS = [
@@ -20533,7 +20533,7 @@ function findProjectRoot(startDir) {
   return findCanvaLinuxProjectRoot(startDir);
 }
 function actionsPath(rootDir2 = findProjectRoot()) {
-  return import_node_path9.default.join(rootDir2, "config/canva-linux/actions.json");
+  return import_node_path8.default.join(rootDir2, "config/canva-linux/actions.json");
 }
 function validateCanvaLinuxGroupSection(action) {
   if (action.group === "install" && action.section !== "Install") {
@@ -20558,10 +20558,10 @@ function validateCanvaLinuxActions(actions) {
   }
 }
 function loadCanvaLinuxActionRegistry(rootDir2 = findProjectRoot()) {
-  const resolvedRoot = import_node_path9.default.resolve(rootDir2);
+  const resolvedRoot = import_node_path8.default.resolve(rootDir2);
   if (cachedActions && cachedRoot === resolvedRoot) return cachedActions;
   const actions = JSON.parse(
-    import_node_fs8.default.readFileSync(actionsPath(resolvedRoot), "utf8")
+    import_node_fs7.default.readFileSync(actionsPath(resolvedRoot), "utf8")
   );
   validateCanvaLinuxActions(actions);
   cachedRoot = resolvedRoot;
@@ -20596,11 +20596,11 @@ function loadCanvaLinuxC420UIActions(rootDir2) {
 // scripts/c420ui-adapter/artifacts.ts
 var ARTIFACTS_CONFIG_PATH = "config/canva-linux/artifacts.json";
 function readJsonFile(filePath) {
-  if (!import_node_fs9.default.existsSync(filePath)) {
+  if (!import_node_fs8.default.existsSync(filePath)) {
     throw new Error(`Missing Canva Linux configuration file: ${filePath}`);
   }
   try {
-    return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
+    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to parse configuration file ${filePath}: ${message}`);
@@ -20609,7 +20609,7 @@ function readJsonFile(filePath) {
 var cachedArtifactsConfig = null;
 var cachedArtifactsConfigPath = null;
 function loadArtifactsConfig(rootDir2) {
-  const configPath = import_node_path10.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
+  const configPath = import_node_path9.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
   if (cachedArtifactsConfig && cachedArtifactsConfigPath === configPath) {
     return cachedArtifactsConfig;
   }
@@ -20634,13 +20634,13 @@ function loadCanvaLinuxArtifactWorkflows(rootDir2, version) {
 }
 
 // scripts/c420ui-adapter/development.ts
-var import_node_fs10 = __toESM(require("node:fs"));
-var import_node_path11 = __toESM(require("node:path"));
+var import_node_fs9 = __toESM(require("node:fs"));
+var import_node_path10 = __toESM(require("node:path"));
 function readJsonFile2(filePath) {
-  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
+  return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
 }
 function loadCanvaLinuxDevelopmentTasks(rootDir2) {
-  const developmentConfigPath = import_node_path11.default.join(
+  const developmentConfigPath = import_node_path10.default.join(
     rootDir2,
     "config/canva-linux/development.json"
   );
@@ -20673,11 +20673,11 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir2, actions = loadCanvaLinuxC4
 
 // scripts/c420ui-adapter/adapter.ts
 function readJsonFile3(filePath) {
-  return JSON.parse(import_node_fs11.default.readFileSync(filePath, "utf8"));
+  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
 }
 function readAppIdentity(identityPath) {
   try {
-    const content = import_node_fs11.default.readFileSync(identityPath, "utf8");
+    const content = import_node_fs10.default.readFileSync(identityPath, "utf8");
     return {
       projectDisplayVersion: content.match(/^PROJECT_DISPLAY_VERSION="([^"]+)"/m)?.[1],
       projectPhase: content.match(/^PROJECT_PHASE="([^"]+)"/m)?.[1]
@@ -20689,15 +20689,15 @@ function readAppIdentity(identityPath) {
 function stateHome() {
   const xdgStateHome = process.env.XDG_STATE_HOME?.trim();
   if (xdgStateHome) return xdgStateHome;
-  return import_node_path12.default.join(process.env.HOME || ".", ".local/state");
+  return import_node_path11.default.join(process.env.HOME || ".", ".local/state");
 }
 function createCanvaLinuxC420UIAdapter(rootDir2) {
-  const resolvedRootDir = import_node_path12.default.resolve(rootDir2);
-  const projectUiPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
-  const packageJsonPath = import_node_path12.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
-  const appIdentityPath = import_node_path12.default.join(
+  const resolvedRootDir = import_node_path11.default.resolve(rootDir2);
+  const projectUiPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
+  const packageJsonPath = import_node_path11.default.join(resolvedRootDir, "package.json");
+  const actionsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/actions.json");
+  const artifactsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
+  const appIdentityPath = import_node_path11.default.join(
     resolvedRootDir,
     "scripts/app-identity-common.sh"
   );
@@ -20746,7 +20746,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   function getSessionLogPath() {
     const fromEnv = process.env.CANVA_TOOL_SESSION_LOG?.trim();
     if (fromEnv) return fromEnv;
-    return import_node_path12.default.join(
+    return import_node_path11.default.join(
       stateHome(),
       loadProjectUi().stateDirectoryName,
       "tool-session.log"
@@ -20759,7 +20759,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return toolSettingsPath(loadProjectUi().stateDirectoryName);
   }
   function loadCanvaLinuxActions2() {
-    if (!import_node_fs11.default.existsSync(actionsJsonPath)) {
+    if (!import_node_fs10.default.existsSync(actionsJsonPath)) {
       throw new Error(`Missing Canva Linux actions registry: ${actionsJsonPath}`);
     }
     return loadCanvaLinuxC420UIActions(resolvedRootDir);
@@ -20792,6 +20792,34 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return loadArtifactWorkflows();
   }
   function overviewStatus() {
+    return buildCanvaLinuxOverviewStatus(resolvedRootDir);
+  }
+  async function runAction(actionId, context) {
+    const action = loadCanvaLinuxActions2().find((item) => item.id === actionId);
+    if (!action) {
+      return {
+        code: c420uiExitCodes.invalidUsage,
+        status: "failed",
+        message: `Unknown action: ${actionId}`
+      };
+    }
+    if (!action.command) {
+      return {
+        code: c420uiExitCodes.invalidUsage,
+        status: "failed",
+        message: `${actionId} has no command`
+      };
+    }
+    if (context.signal?.aborted) {
+      context.emitProgress({ state: "canceled", percent: 0, label: action.label });
+      return {
+        code: c420uiExitCodes.canceled,
+        status: "canceled",
+        message: "Action canceled before start."
+      };
+    }
+    return runC420UICommand({
+      command: action.command,
       args: action.args ?? [],
       cwd: resolvedRootDir,
       env: context.env,
@@ -20804,62 +20832,22 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   function toC420UIConfig() {
     const projectUi = loadProjectUi();
     return {
-// scripts/c420ui-adapter/dependencies.ts
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
-function loadCanvaLinuxDependencyConfig(rootDir2) {
-  const relativeConfigPath = "config/canva-linux/dependencies.json";
-  const configPath = import_node_path12.default.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs11.default.readFileSync(configPath, "utf8")));
-}
-function ensureCanvaLinuxHostDependencies(options) {
-  return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
-}
-
-    rootAuthEnvValue: "1",
-    runCommand: options.runCommand,
-    buildActionEnvironment: buildCanvaLinuxRootActionEnvironment,
-    actionHasUserScope: hasCanvaLinuxUserScope
-  });
-  return {
-    ...base,
-    resolveRootPolicy(action, rootDir2, actionEnv) {
-      void actionEnv;
-      if (action.requiresRoot === true) {
-        return { requiresRoot: true, reason: `${action.id}: requiresRoot=true` };
-      }
-      if (conditionalSystemRootActionIds.has(action.id)) {
-        try {
-          const status = buildCanvaLinuxOverviewStatus(rootDir2);
-          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
-            return {
-              requiresRoot: true,
-              reason: `${action.id}: detected system installation`
-            };
-          }
-          if (status.warnings.length) {
-            return {
-              requiresRoot: false,
-              warning: `[warn] Unable to detect system installations for root policy: ${status.warnings.join("; ")}`
-            };
-          }
-        } catch (error) {
-      }
-    rootProvider: createCanvaLinuxRootProvider(),
-    startupTasks: [
-      {
-        id: "host-dependencies",
-        label: "Checking dependent project dependencies",
-        run: () => ensureCanvaLinuxHostDependencies({
-          rootDir: rootDir2,
-          env: options.env
-        })
-      }
-    ]
-function ensureCanvaLinuxHostDependencies(options) {
-  return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
-}
-
+      rootDir: resolvedRootDir,
+      title: projectUi.c420uiTitle,
+      brand: loadBrandConfig(),
+      project: loadProjectConfig(),
+      releaseNotes: projectUi.versionReleaseNotes,
+      sessionLogPath: getSessionLogPath(),
+      sessionId: getSessionId()
+    };
+  }
+  const adapter = {
+    id: "canva-linux",
+    rootDir: resolvedRootDir,
+    projectInfo,
+    actions,
+    artifactWorkflows,
+    runAction,
     overviewStatus,
     paths: {
       projectUi: projectUiPath,
@@ -20886,6 +20874,18 @@ function ensureCanvaLinuxHostDependencies(options) {
     toC420UIConfig
   };
   return createC420UIBridge(adapter);
+}
+
+// scripts/c420ui-adapter/dependencies.ts
+var import_node_fs11 = __toESM(require("node:fs"));
+var import_node_path12 = __toESM(require("node:path"));
+function loadCanvaLinuxDependencyConfig(rootDir2) {
+  const relativeConfigPath = "config/canva-linux/dependencies.json";
+  const configPath = import_node_path12.default.join(rootDir2, relativeConfigPath);
+  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs11.default.readFileSync(configPath, "utf8")));
+}
+function ensureCanvaLinuxHostDependencies(options) {
+  return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
 }
 
 // scripts/c420ui-adapter/root-provider.ts
@@ -20916,12 +20916,41 @@ function createCanvaLinuxRootProvider(options = {}) {
     label: "Canva Linux root provider",
     sudoHelperPath: "packages/c420ui/host/linux/sudo-helper.sh",
     rootAuthEnvKey: "C420UI_ROOT_AUTH",
+    rootAuthEnvValue: "1",
+    runCommand: options.runCommand,
+    buildActionEnvironment: buildCanvaLinuxRootActionEnvironment,
+    actionHasUserScope: hasCanvaLinuxUserScope
+  });
+  return {
+    ...base,
+    resolveRootPolicy(action, rootDir2, actionEnv) {
+      void actionEnv;
+      if (action.requiresRoot === true) {
+        return { requiresRoot: true, reason: `${action.id}: requiresRoot=true` };
+      }
+      if (conditionalSystemRootActionIds.has(action.id)) {
+        try {
+          const status = buildCanvaLinuxOverviewStatus(rootDir2);
+          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
+            return {
+              requiresRoot: true,
+              reason: `${action.id}: detected system installation`
+            };
+          }
+          if (status.warnings.length) {
+            return {
+              requiresRoot: false,
+              warning: `[warn] Unable to detect system installations for root policy: ${status.warnings.join("; ")}`
+            };
+          }
+        } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           return {
             requiresRoot: false,
             warning: `[warn] Unable to detect system installations for root policy: ${message}`
           };
         }
+      }
       return { requiresRoot: false };
     }
   };
@@ -20929,32 +20958,6 @@ function createCanvaLinuxRootProvider(options = {}) {
 
 // scripts/c420ui-adapter/run.ts
 function runCanvaLinuxC420UI(options = {}) {
-    rootProvider: createCanvaLinuxRootProvider(),
-    startupTasks: [
-      {
-        id: "host-dependencies",
-        label: "Checking dependent project dependencies",
-        run: () => ensureCanvaLinuxHostDependencies({
-          rootDir: rootDir2,
-          env: options.env
-        })
-      }
-    ]
-              warning: `[warn] Unable to detect system installations for root policy: ${status.warnings.join("; ")}`
-            };
-          }
-        } catch (error) {
-    rootProvider: createCanvaLinuxRootProvider(),
-    startupTasks: [
-      {
-        id: "host-dependencies",
-        label: "Checking dependent project dependencies",
-        run: () => ensureCanvaLinuxHostDependencies({
-          rootDir: rootDir2,
-          env: options.env
-        })
-      }
-    ]
   const rootDir2 = options.rootDir ?? process.cwd();
   const argv = options.argv ?? process.argv.slice(2);
   const adapter = createCanvaLinuxC420UIAdapter(rootDir2);
@@ -20969,28 +20972,25 @@ function runCanvaLinuxC420UI(options = {}) {
   runC420UITerminalApp({
     config,
     bridge: adapter,
-    rootProvider: createCanvaLinuxRootProvider()
+    rootProvider: createCanvaLinuxRootProvider(),
+    startupTasks: [
+      {
+        id: "host-dependencies",
+        label: "Checking dependent project dependencies",
+        run: () => ensureCanvaLinuxHostDependencies({
+          rootDir: rootDir2,
+          env: options.env
+        })
+      }
+    ]
   });
 }
 
 // scripts/run-c420ui.ts
 var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path13.default.resolve(__dirname, "..");
 process.chdir(rootDir);
-async function ensureHostDependencies() {
-  const result = ensureCanvaLinuxHostDependencies({
-    rootDir,
-    env: process.env
-  });
-  if (isC420UIHostDependencyFailure(result)) {
-    console.error(result.message || "Failed to ensure host dependencies.");
-    process.exit(result.exitCode ?? 1);
-  }
-}
 async function main() {
   const argv = process.argv.slice(2);
-  if (!argv.includes("--help")) {
-    await ensureHostDependencies();
-  }
   runCanvaLinuxC420UI({
     rootDir,
     argv,
