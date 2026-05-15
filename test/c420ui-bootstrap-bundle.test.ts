@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   createC420UIBootstrapEsbuildCliArgs,
 } from "../scripts/canva-linux/bootstrap/build-recipe";
 import {
@@ -19,6 +20,9 @@ const bootstrapDir = path.join("bootstrap", "c420ui");
 const manifestPath = path.join(bootstrapDir, "manifest.json");
 const uiEntrypoint = path.join(bootstrapDir, "run-c420ui.cjs");
 const cliEntrypoint = path.join(bootstrapDir, "run-c420ui-cli.cjs");
+const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
+  (asset) => path.join("bootstrap", "usr", asset),
+);
 
 function readJson<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
@@ -89,6 +93,30 @@ test("c420ui bootstrap entrypoints exist and are not empty", () => {
     const stats = fs.statSync(entrypoint);
     assert.equal(stats.isFile(), true, `${entrypoint} must be a file`);
     assert.ok(stats.size > 0, `${entrypoint} must not be empty`);
+  }
+});
+
+test("c420ui bootstrap includes blessed runtime terminfo assets", () => {
+  for (const runtimeAsset of blessedRuntimeAssets) {
+    const stats = fs.statSync(runtimeAsset);
+    assert.equal(stats.isFile(), true, `${runtimeAsset} must be a file`);
+    assert.ok(stats.size > 0, `${runtimeAsset} must not be empty`);
+  }
+});
+
+test("c420ui bootstrap blessed runtime assets match installed blessed package", () => {
+  const blessedUsrDir = path.join(
+    path.dirname(require.resolve("blessed/package.json")),
+    "usr",
+  );
+
+  for (const runtimeAsset of blessedRuntimeAssets) {
+    const relativeAsset = path.relative(path.join("bootstrap", "usr"), runtimeAsset);
+    assert.deepEqual(
+      fs.readFileSync(runtimeAsset),
+      fs.readFileSync(path.join(blessedUsrDir, relativeAsset)),
+      `${runtimeAsset} must match node_modules/blessed/usr/${relativeAsset}`,
+    );
   }
 });
 

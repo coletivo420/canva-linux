@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 
@@ -7,6 +8,7 @@ import {
   C420UI_BOOTSTRAP_BUILD_RECIPE,
   C420UI_BOOTSTRAP_BUILD_TARGET,
   C420UI_BOOTSTRAP_BUILD_TOOL,
+  C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
   createC420UIBootstrapEsbuildCliArgs,
   C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
@@ -245,6 +247,33 @@ function validateBundledCanvaLinuxAdapterSection(relativePath: string, bundle: s
   }
 }
 
+function validateBlessedRuntimeAssetsMatchPackage(
+  rootDir: string,
+  relativePaths: readonly string[],
+  failures: string[],
+): void {
+  const requireFromRoot = createRequire(path.join(rootDir, "package.json"));
+  const blessedUsrDir = path.join(
+    path.dirname(requireFromRoot.resolve("blessed/package.json")),
+    "usr",
+  );
+  const bootstrapUsrDir = path.join(rootDir, "bootstrap", "usr");
+
+  for (const relativePath of relativePaths) {
+    const committedPath = path.join(rootDir, relativePath);
+    const relativeAsset = path.relative(bootstrapUsrDir, committedPath);
+    const packagePath = path.join(blessedUsrDir, relativeAsset);
+
+    if (!fs.existsSync(committedPath) || !fs.existsSync(packagePath)) continue;
+
+    const committed = fs.readFileSync(committedPath);
+    const packaged = fs.readFileSync(packagePath);
+    if (!committed.equals(packaged)) {
+      failures.push(`${relativePath}: runtime asset is stale; run npm run build:c420ui-bootstrap`);
+    }
+  }
+}
+
 function validateGeneratedArtifactsMatchBuildRecipe(
   rootDir: string,
   relativePaths: readonly string[],
@@ -290,8 +319,11 @@ function main(): void {
   const manifestPath = "bootstrap/c420ui/manifest.json";
   const uiBundlePath = "bootstrap/c420ui/run-c420ui.cjs";
   const cliBundlePath = "bootstrap/c420ui/run-c420ui-cli.cjs";
+  const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
+    (asset) => `bootstrap/usr/${asset}`,
+  );
 
-  for (const relativePath of [manifestPath, uiBundlePath, cliBundlePath]) {
+  for (const relativePath of [manifestPath, uiBundlePath, cliBundlePath, ...blessedRuntimeAssets]) {
     fileExistsAndIsNotEmpty(rootDir, relativePath, failures);
   }
 
@@ -403,6 +435,7 @@ function main(): void {
     validateJavaScriptSyntax(rootDir, relativePath, failures);
   }
   validateGeneratedArtifactsMatchBuildRecipe(rootDir, [uiBundlePath, cliBundlePath], failures);
+  validateBlessedRuntimeAssetsMatchPackage(rootDir, blessedRuntimeAssets, failures);
 
   for (const relativePath of [uiBundlePath, cliBundlePath]) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) continue;
