@@ -404,3 +404,10 @@ full dependency policy after startup.
 
 Do not migrate the bootstrap to ESM in incidental changes. The current bundle is explicit CommonJS; ESM remains future work
 that requires its own planned change.
+
+
+## Bootstrap identity
+
+The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
+`c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
+`package.json`. Do not collapse them into a single ambiguous `version` field.

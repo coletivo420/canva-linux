@@ -70,3 +70,10 @@ Release checkouts must be able to start c420ui from the generated bootstrap bund
 The bootstrap bundle starts c420ui and contains the generic c420ui engine plus the minimal Canva Linux adapter needed to load project configuration. Full dependency validation, npm declared-versus-installed checks, repair, `C420UI_SKIP_DEPENDENCY_INSTALL`, and `C420UI_DEPENDENCY_REPAIR` remain Stage 1 c420ui Host Dependency Runner responsibilities after startup.
 
 The bootstrap artifact is CommonJS for this release. ESM is documented as future work and requires a separate migration phase.
+
+
+## Bootstrap identity
+
+The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
+`c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
+`package.json`. Do not collapse them into a single ambiguous `version` field.

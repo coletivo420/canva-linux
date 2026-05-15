@@ -15,16 +15,23 @@ function readJson<T>(filePath: string): T {
 test("c420ui bootstrap manifest exists and matches package metadata", () => {
   const manifest = readJson<{
     kind: string;
-    version: string;
+    c420uiVersion: string;
+    dependentProject: string;
+    dependentProjectVersion: string;
     entrypoint: string;
     cliEntrypoint: string;
     moduleFormat: string;
     futureModuleFormat: string;
   }>(manifestPath);
-  const packageJson = readJson<{ version: string }>("package.json");
+  const rootPackageJson = readJson<{ version: string }>("package.json");
+  const c420uiPackageJson = readJson<{ version: string }>("packages/c420ui/package.json");
 
   assert.equal(manifest.kind, "c420ui-bootstrap");
-  assert.equal(manifest.version, packageJson.version);
+  assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
+  assert.equal(manifest.dependentProject, "canva-linux");
+  assert.equal(manifest.dependentProjectVersion, rootPackageJson.version);
+  assert.notEqual(manifest.c420uiVersion, manifest.dependentProjectVersion);
+  assert.equal("version" in manifest, false);
   assert.equal(manifest.entrypoint, "run-c420ui.cjs");
   assert.equal(manifest.cliEntrypoint, "run-c420ui-cli.cjs");
   assert.equal(manifest.moduleFormat, "commonjs");

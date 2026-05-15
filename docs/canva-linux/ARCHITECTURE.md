@@ -63,3 +63,10 @@ The `canva-linux.sh` launcher contains a Stage 0 bootstrap only to make c420ui e
 `canva-linux.sh` now treats `bootstrap/c420ui/run-c420ui.cjs` as the primary interactive c420ui entrypoint and `bootstrap/c420ui/run-c420ui-cli.cjs` as the primary direct-action entrypoint. The `.build/scripts` files remain development fallbacks only when the generated bootstrap artifacts are absent.
 
 A release checkout must start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The bundle may include the c420ui engine and the minimum Canva Linux adapter code that reads `config/canva-linux`, but it must not embed the full dependent-project dependency policy. c420ui takes over dependency validation and repair after startup.
+
+
+## Bootstrap identity
+
+The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
+`c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
+`package.json`. Do not collapse them into a single ambiguous `version` field.

@@ -38,6 +38,7 @@ These commands are manual release-candidate checks. Record their output in the r
 
 | Command | Status | Expected result | Failure meaning | Owner domain |
 | --- | --- | --- | --- | --- |
+| `node -p "require('./bootstrap/c420ui/manifest.json').c420uiVersion" && node -p "require('./bootstrap/c420ui/manifest.json').dependentProjectVersion"` | Required for bootstrap RC validation | Bootstrap identity reports c420ui engine version from `packages/c420ui/package.json` and dependent-project version from the root `package.json`. | The bootstrap manifest may have collapsed engine and dependent-project identity into one ambiguous version. | c420ui bootstrap |
 | `rm -rf node_modules .build && ./canva-linux.sh --doctor --dry-run` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts direct c420ui CLI through `bootstrap/c420ui/run-c420ui-cli.cjs` without a missing `esbuild` failure or launcher-side npm install. | Stage 0 bootstrap or Stage 1 dependency ownership may be broken. | c420ui bootstrap |
 | `rm -rf node_modules .build && ./canva-linux.sh` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts interactive c420ui through `bootstrap/c420ui/run-c420ui.cjs` without a missing `esbuild` failure or launcher-side npm install. | The release checkout may not start c420ui independently. | c420ui bootstrap |
 | `npm run c420ui -- --help` | Pass | c420ui help starts through the maintained launcher and documents the current terminal UI and command surface. | The c420ui entrypoint, help text, or launcher path may be broken. | c420ui core |
@@ -91,3 +92,6 @@ The release candidate must not be tagged or published while any blocker below is
 ## c420ui bootstrap release requirement
 
 The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-14`; ESM is future work only.
+
+The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate: `c420uiVersion` is sourced
+from `packages/c420ui/package.json`, while `dependentProjectVersion` is sourced from the repository root `package.json`.

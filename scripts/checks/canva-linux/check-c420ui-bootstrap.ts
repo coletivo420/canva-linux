@@ -46,17 +46,27 @@ function main(): void {
 
   if (fs.existsSync(path.join(rootDir, manifestPath))) {
     const manifest = JSON.parse(read(rootDir, manifestPath)) as Record<string, unknown>;
-    const packageJson = JSON.parse(read(rootDir, "package.json")) as { version?: string };
+    const rootPackageJson = JSON.parse(read(rootDir, "package.json")) as { version?: string };
+    const c420uiPackageJson = JSON.parse(read(rootDir, "packages/c420ui/package.json")) as { version?: string };
+
+    if ("version" in manifest) {
+      failures.push(`${manifestPath}: use c420uiVersion and dependentProjectVersion instead of ambiguous version`);
+    }
+    if (c420uiPackageJson.version === rootPackageJson.version) {
+      failures.push("packages/c420ui/package.json: c420ui version must stay distinct from the dependent project version");
+    }
+
     const expected: Record<string, unknown> = {
       kind: "c420ui-bootstrap",
-      version: packageJson.version,
+      c420uiVersion: c420uiPackageJson.version,
+      dependentProject: "canva-linux",
+      dependentProjectVersion: rootPackageJson.version,
       entrypoint: "run-c420ui.cjs",
       cliEntrypoint: "run-c420ui-cli.cjs",
       moduleFormat: "commonjs",
       futureModuleFormat: "esm",
       typescriptFirst: true,
       ownsFullDependencyPolicy: true,
-      dependentProject: "canva-linux",
     };
     for (const [key, value] of Object.entries(expected)) {
       if (manifest[key] !== value) {

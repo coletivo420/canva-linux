@@ -1,12 +1,13 @@
 {
   "kind": "c420ui-bootstrap",
-  "version": "0.1.4-14",
+  "c420uiVersion": "0.1.0",
+  "dependentProject": "canva-linux",
+  "dependentProjectVersion": "0.1.4-14",
   "entrypoint": "run-c420ui.cjs",
   "cliEntrypoint": "run-c420ui-cli.cjs",
   "requiresNode": ">=22.0.0",
   "moduleFormat": "commonjs",
   "futureModuleFormat": "esm",
   "typescriptFirst": true,
-  "ownsFullDependencyPolicy": true,
-  "dependentProject": "canva-linux"
+  "ownsFullDependencyPolicy": true
 }

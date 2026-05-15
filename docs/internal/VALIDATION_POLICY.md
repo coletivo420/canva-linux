@@ -87,6 +87,14 @@ regressions. Placeholder docs are not acceptable.
 
 ## c420ui bootstrap validation policy
 
-Every release validation must confirm that `bootstrap/c420ui/run-c420ui.cjs`, `bootstrap/c420ui/run-c420ui-cli.cjs`, and `bootstrap/c420ui/manifest.json` exist and match the package version. The manifest must remain `kind: c420ui-bootstrap`, `moduleFormat: commonjs`, and `futureModuleFormat: esm` until a dedicated ESM migration is implemented.
+Every release validation must confirm that `bootstrap/c420ui/run-c420ui.cjs`, `bootstrap/c420ui/run-c420ui-cli.cjs`, and `bootstrap/c420ui/manifest.json` exist. The manifest must remain `kind: c420ui-bootstrap`, `moduleFormat: commonjs`, and `futureModuleFormat: esm` until a dedicated ESM migration is implemented.
 
 A clean release checkout must be able to start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The launcher must not install npm dependencies; after startup, c420ui owns full host dependency validation, repair, and workflow execution.
+
+
+The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate:
+
+- `c420uiVersion` must match `packages/c420ui/package.json`.
+- `dependentProjectVersion` must match the repository root `package.json`.
+- The manifest must not use an ambiguous top-level `version` field.
+- The c420ui engine version must stay distinct from the Canva Linux dependent-project version unless maintainers explicitly request otherwise.
