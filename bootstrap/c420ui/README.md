@@ -1,6 +1,6 @@
 # c420ui Bootstrap Bundle
 
-`bootstrap/c420ui/*.cjs` are generated bootstrap artifacts. Do not edit them manually.
+`bootstrap/c420ui/*.cjs` and `bootstrap/usr/*` are generated bootstrap artifacts. Do not edit them manually.
 
 The source remains TypeScript-first in `scripts/run-c420ui.ts`, `scripts/run-c420ui-cli.ts`, `scripts/c420ui-adapter/*`, and `packages/c420ui/src/*`. Rebuild the bundle with:
 

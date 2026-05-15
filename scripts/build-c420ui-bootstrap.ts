@@ -1,5 +1,6 @@
 import * as esbuild from "esbuild";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 import {
@@ -7,6 +8,7 @@ import {
   C420UI_BOOTSTRAP_BUILD_TARGET,
   C420UI_BOOTSTRAP_BUILD_TOOL,
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
+  C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   createC420UIBootstrapBuildOptions,
   C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
@@ -42,6 +44,23 @@ function requirePackageVersion(packageJson: PackageJson, relativePath: string): 
   return packageJson.version;
 }
 
+function copyBlessedRuntimeAssets(rootDir: string, bootstrapDir: string): void {
+  const requireFromRoot = createRequire(path.join(rootDir, "package.json"));
+  const blessedPackageJsonPath = requireFromRoot.resolve("blessed/package.json");
+  const blessedUsrDir = path.join(path.dirname(blessedPackageJsonPath), "usr");
+  const bootstrapUsrDir = path.join(path.dirname(bootstrapDir), "usr");
+
+  fs.rmSync(bootstrapUsrDir, { recursive: true, force: true });
+  fs.mkdirSync(bootstrapUsrDir, { recursive: true });
+
+  for (const relativeAsset of C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS) {
+    fs.copyFileSync(
+      path.join(blessedUsrDir, relativeAsset),
+      path.join(bootstrapUsrDir, relativeAsset),
+    );
+  }
+}
+
 async function main(): Promise<void> {
   const rootDir = findProjectRoot();
   const bootstrapDir = path.join(rootDir, "bootstrap", "c420ui");
@@ -53,6 +72,7 @@ async function main(): Promise<void> {
   const c420uiVersion = requirePackageVersion(c420uiPackageJson, "packages/c420ui/package.json");
 
   await esbuild.build(createC420UIBootstrapBuildOptions(rootDir, bootstrapDir));
+  copyBlessedRuntimeAssets(rootDir, bootstrapDir);
 
   const sourceHash = calculateC420UIBootstrapSourceHash(rootDir);
 
