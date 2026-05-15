@@ -19,6 +19,22 @@ Request changes if a PR preparing `0.1.4-14` for RC validation:
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
 - marks `v0.1.4-14` ready while a release blocker remains open.
 
+## Standalone c420ui bootstrap validation
+
+The `0.1.4-14` RC validation confirmed that the committed c420ui bootstrap bundle can start without local `node_modules`,
+local `esbuild`, or launcher-side npm installation.
+
+Validated guarantees:
+
+- `c420uiVersion` remains independent from the Canva Linux dependent-project version.
+- `dependentProjectVersion` remains `0.1.4-14`.
+- `bootstrap/c420ui/manifest.json` sourceHash matches current TypeScript sources and project configuration.
+- Stale sourceHash detection fails as expected when bootstrap inputs are edited without rebuilding.
+- The launcher does not run `npm install` or `npm ci`.
+- Full dependency validation and repair remain owned by c420ui after startup.
+
+Direct `./canva-linux.sh` startup was blocked in the validation container because it runs as root and the launcher correctly refuses root execution.
+
 ## Versioning review
 
 Request changes if a PR:

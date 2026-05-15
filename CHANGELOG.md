@@ -3,8 +3,8 @@
 ## Unreleased
 
 ### Added
-- Added a minimal launcher bootstrap for clean checkouts that installs only `esbuild` and `blessed` before c420ui starts,
-  while leaving full dependency repair owned by c420ui.
+- Added committed standalone c420ui bootstrap artifacts for clean checkouts so c420ui can start before dependent-project
+  dependency repair, without requiring launcher-side npm installation.
 - Added an internal RC validation matrix for `0.1.4-14` with required commands, manual dry-runs, dependency-backed packaging checks,
   expected results, owner domains, and release blockers.
 
@@ -20,6 +20,9 @@
 ### Changed
 - Bumped package metadata to `0.1.4-14` while preserving the `N.N.N-X` release versioning rule.
 - Added AppStream release metadata for `0.1.4-14`.
+- Validated the standalone c420ui bootstrap bundle for clean source checkouts without local `node_modules` or local `esbuild`.
+- Added sourceHash validation for `bootstrap/c420ui` artifacts and confirmed stale bundle detection.
+- Confirmed c420ui remains the independent dependency resolver for dependent projects, with Canva Linux dependencies repaired after c420ui startup.
 - Split documentation into generic c420ui, Canva Linux dependent-project, and internal maintenance sections.
 - Refreshed public release, validation, review, and AI maintenance docs for the consolidated c420ui separation state.
 - Expanded c420ui, Canva Linux, and internal split docs with ownership, implementation, boundary checks, and forbidden-regression coverage.
