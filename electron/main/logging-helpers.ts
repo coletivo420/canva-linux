@@ -1,5 +1,3 @@
-"use strict";
-
 type WebContentsLike = {
   id?: number;
   getURL?: () => string;

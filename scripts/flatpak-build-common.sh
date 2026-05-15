@@ -4,7 +4,7 @@
 FLATPAK_SCOPE="${CANVA_FLATPAK_SCOPE:-system}"
 FLATPAK_APP_ID="io.github.coletivo420.canva-linux"
 LOCAL_FLATPAK_REMOTE="canva-linux-local"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/sudo-common.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/packages/c420ui/host/linux/sudo-helper.sh"
 
 validate_flatpak_scope() {
   case "${FLATPAK_SCOPE}" in
@@ -44,7 +44,7 @@ remove_path_safely() {
   fi
 
   ui_warn "Could not remove ${target} as the current user; retrying with administrator authorization."
-  canva_sudo_rm -rf "${target}"
+  c420ui_sudo_rm -rf "${target}"
 }
 
 remove_flatpak_build_artifacts() {
@@ -80,7 +80,7 @@ restore_path_ownership() {
   fi
 
   ui_warn "Restoring ownership for ${target} to the current user."
-  canva_sudo_chown -R "${uid}:${gid}" "${target}"
+  c420ui_sudo_chown -R "${uid}:${gid}" "${target}"
 }
 
 restore_flatpak_build_artifact_permissions() {
@@ -102,7 +102,7 @@ ensure_flathub_runtime() {
       ui_warn "System Flathub remote is not configured."
       ui_warn "Canva Linux installs to the system Flatpak scope by default, for all users."
       ui_warn "Adding the system Flathub remote requires administrator authorization."
-      canva_sudo_flatpak remote-add --if-not-exists --system flathub \
+      c420ui_sudo_flatpak remote-add --if-not-exists --system flathub \
         https://dl.flathub.org/repo/flathub.flatpakrepo
     else
       ui_info "System Flathub remote is already configured"
@@ -133,7 +133,7 @@ ensure_system_flatpak_authorization() {
 
   ui_warn "Administrator authorization is required for system Flatpak installation."
   ui_warn "Canva Linux will write to the system Flatpak scope for all users."
-  canva_sudo_validate
+  c420ui_sudo_validate
 }
 
 ensure_system_flatpak_runtime_dependencies() {
@@ -141,7 +141,7 @@ ensure_system_flatpak_runtime_dependencies() {
   [[ "${FLATPAK_SCOPE}" == "system" ]] || return 0
 
   ui_info "Ensuring required Flatpak runtimes are installed in system scope"
-  canva_sudo_flatpak install -y --system flathub \
+  c420ui_sudo_flatpak install -y --system flathub \
     org.freedesktop.Platform//25.08 \
     org.freedesktop.Sdk//25.08 \
     org.electronjs.Electron2.BaseApp//25.08
@@ -225,13 +225,13 @@ install_system_flatpak_from_repo() {
 
   ui_info "Configuring local system Flatpak remote: ${LOCAL_FLATPAK_REMOTE}"
   if flatpak remotes --system | awk '{print $1}' | grep -qx "${LOCAL_FLATPAK_REMOTE}"; then
-    canva_sudo_flatpak remote-modify \
+    c420ui_sudo_flatpak remote-modify \
       --system \
       --no-gpg-verify \
       --url="${repo_uri}" \
       "${LOCAL_FLATPAK_REMOTE}"
   else
-    canva_sudo_flatpak remote-add \
+    c420ui_sudo_flatpak remote-add \
       --system \
       --no-gpg-verify \
       --if-not-exists \
@@ -240,7 +240,7 @@ install_system_flatpak_from_repo() {
   fi
 
   ui_info "Installing Canva Linux from local repo into system Flatpak scope"
-  canva_sudo_flatpak install -y --system --reinstall "${LOCAL_FLATPAK_REMOTE}" "${FLATPAK_APP_ID}"
+  c420ui_sudo_flatpak install -y --system --reinstall "${LOCAL_FLATPAK_REMOTE}" "${FLATPAK_APP_ID}"
 
   ui_ok "Direct local Flatpak install completed in system scope"
 }

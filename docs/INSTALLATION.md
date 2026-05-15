@@ -25,7 +25,9 @@ Examples:
 
 Electron backend names expected for secure persistent login include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`.
 
-If no secure backend is available and Electron reports `basic_text`, Canva Linux uses an ephemeral session. Login, cookies and credentials will not be saved.
+If no secure backend is available, Electron reports `basic_text`, or `safeStorage.isEncryptionAvailable()` is false
+because the keyring/wallet is unavailable, locked, or cancelled, Canva Linux uses an ephemeral session.
+Login, cookies and credentials will not be saved.
 
 ## Installation modes
 
@@ -206,13 +208,13 @@ AppImage artifacts are portable generated files. They are not removed by `--unin
 
 ## Versioning policy
 
-Canva Linux uses npm SemVer-compatible project phase labels such as `0.1.4-12`.
+Canva Linux uses npm SemVer-compatible project phase labels such as `0.1.4-14`.
 
-Package metadata consumed by npm, electron-builder and future Linux package targets must use valid SemVer, for example `0.1.4-12` for release `v0.1.4-12`.
+Package metadata consumed by npm, electron-builder and future Linux package targets must use valid SemVer, for example `0.1.4-14` for release `v0.1.4-14`.
 
 Do not use four numeric version segments in `package.json#version`.
 
 Invalid: four numeric version segments
-Valid: `0.1.4-12`
+Valid: `0.1.4-14`
 
 Native Install, Flatpak Install and AppImage share the same runtime behavior. Differences are limited to sandbox model, install paths and launch command.

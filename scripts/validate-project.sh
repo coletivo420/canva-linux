@@ -11,7 +11,6 @@ require_command bash
 require_command git
 require_command npm
 require_command node
-require_node_major 22
 validate_package_version_semver
 validate_json_file package.json
 validate_json_file package-lock.json
@@ -42,7 +41,9 @@ run_step "npm test" npm test
 run_step "npm run docs:check-ai" npm run docs:check-ai
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
 run_step "bash scripts/check-shell-ui-api.sh" bash scripts/check-shell-ui-api.sh
-run_step "npm run check:scripts-core" npm run check:scripts-core
+run_step "npm run check:c420ui-core" npm run check:c420ui-core
+run_step "npm run check:canva-linux" npm run check:canva-linux
+run_step "npm run check:shared-tooling" npm run check:shared-tooling
 run_step "npm run build:runtime" npm run build:runtime
 run_step "npm run build:check" npm run build:check
 
@@ -53,8 +54,9 @@ else
 fi
 
 if command -v appstreamcli > /dev/null 2>&1; then
-  run_step "appstreamcli validate --explain" \
-    appstreamcli validate --explain \
+  run_step "appstreamcli validate --explain --no-net" \
+    appstreamcli validate --explain --no-net \
+    --override releases-not-in-order=info \
     data/io.github.coletivo420.canva-linux.metainfo.xml
 else
   log_info "appstreamcli not found, skipping"

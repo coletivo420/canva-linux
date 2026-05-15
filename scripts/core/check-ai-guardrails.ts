@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { findProjectRoot } from "./action-registry";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../canva-linux/project-root";
 
 const requiredFiles = [
   "docs/internal/AI_GUARDRAILS.md",
+  "docs/internal/RC_VALIDATION_MATRIX.md",
   "docs/VALIDATION.md",
   "docs/TYPESCRIPT.md",
   "docs/CANVA_LINUX_EYEDROPPER.md",
@@ -27,9 +28,259 @@ const readmeRefs = [
   "docs/APPIMAGE_FUSE.md",
 ];
 
+
+const requiredSplitDocFragments: Record<string, string[]> = {
+  "docs/c420ui/ARCHITECTURE.md": [
+    "Controls",
+    "Must not control",
+    "Implementing files",
+    "Consumed configs and adapters",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/ACTION_ENGINE.md": [
+    "dry-run",
+    "planned",
+    "root",
+    "requestRootAccess",
+    "bridge.runAction",
+    "adapter",
+    "fallback",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/COMMAND_RUNNER.md": [
+    "Command Runner",
+    "Operational log",
+    "redaction",
+    "adapter",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/ROOT_PROVIDER.md": [
+    "c420uiRootProvider",
+    "validateRootAccess",
+    "validateRootAccessWithInput",
+    "C420UI_ROOT_AUTH",
+    "sudo-helper.sh",
+    "passwords",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/HOST_DEPENDENCIES.md": [
+    "Node.js",
+    "command lookup",
+    "npm declared-versus-installed",
+    "C420UI_SKIP_DEPENDENCY_INSTALL",
+    "C420UI_DEPENDENCY_REPAIR",
+    "config/canva-linux/dependencies.json",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/DEVELOPMENT_PROVIDER.md": [
+    "Development Provider",
+    "development.json",
+    "actions.json",
+    "planned",
+    "scope",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/ARTIFACTS.md": [
+    "c420uiArtifactRecipeWorkflow",
+    "outputPattern",
+    "${version}",
+    "x64",
+    "${arch}",
+    "scope",
+    "planned",
+    "requiresRoot",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/c420ui/TERMINAL_UI.md": [
+    "Terminal UI",
+    "requestRootAccess",
+    "project-ui.json",
+    "Focus",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/ARCHITECTURE.md": [
+    "dependent project",
+    "c420ui",
+    "Electron runtime",
+    "CANVA_DEBUG",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/CLI.md": [
+    "dependent project",
+    "c420ui",
+    "canva-linux.sh",
+    "direct CLI",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/CONFIG.md": [
+    "actions.json",
+    "dependencies.json",
+    "artifacts.json",
+    "development.json",
+    "project-ui.json",
+    "dependent project",
+    "c420ui",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/PACKAGING.md": [
+    "dependent project",
+    "c420ui",
+    "scripts/build-appimage.sh",
+    "scripts/build-flatpak-bundle.sh",
+    "scripts/package-guidance-common.sh",
+    "artifact names",
+    "x64",
+    "DEB",
+    "RPM",
+    "AUR",
+  ],
+  "docs/canva-linux/APPIMAGE.md": [
+    "dependent project",
+    "c420ui",
+    "scripts/build-appimage.sh",
+    "outputPattern",
+    "artifact names",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/FLATPAK.md": [
+    "dependent project",
+    "c420ui",
+    "scripts/build-flatpak-bundle.sh",
+    "AppStream",
+    "artifact names",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/canva-linux/RELEASE.md": [
+    "dependent project",
+    "0.1.4-14",
+    "N.N.N-X",
+    "AppStream",
+    "package-lock.json",
+    "validate-project",
+    "dist/",
+    "Required checks",
+  ],
+  "docs/canva-linux/CREDENTIAL_STORAGE.md": [
+    "dependent project",
+    "c420ui",
+    "basic_text",
+    "persist:canva",
+    "ephemeral",
+    "Implementing files",
+    "Boundary checks",
+    "Forbidden regressions",
+  ],
+  "docs/internal/AI_GUARDRAILS.md": [
+    "0.1.4-14",
+    "N.N.N-X",
+    "English",
+    "i18n",
+    "Canva Linux does not install dependencies directly",
+    "Canva Linux does not validate generic artifact recipes",
+    "adapter must not duplicate Action Engine policy",
+  ],
+  "docs/internal/C420UI_DEPENDENT_PROJECT_BOUNDARIES.md": [
+    "0.1.4-14",
+    "N.N.N-X",
+    "preflight-common.sh",
+    "repository-check-only",
+    "planned, dry-run, root, or confirmation policy duplicated",
+    "Canva Linux",
+    "c420ui",
+  ],
+  "docs/internal/VALIDATION_POLICY.md": [
+    "0.1.4-14",
+    "N.N.N-X",
+    "English",
+    "i18n",
+    "preflight-common.sh",
+    "repository-check-only",
+    "Canva Linux does not install dependencies directly",
+    "Canva Linux does not validate generic artifact recipes",
+  ],
+  "docs/internal/PROJECT_TREE.md": [
+    "docs/c420ui/",
+    "docs/canva-linux/",
+    "docs/internal/",
+    "packages/c420ui/",
+    "scripts/c420ui-adapter/",
+    "config/canva-linux/",
+    "preflight-common.sh",
+    "0.1.4-14",
+  ],
+};
+
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
 }
+
+const requiredRcValidationFragments = [
+  "0.1.4-14",
+  "v0.1.4-14",
+  "N.N.N-X",
+  "Validation date",
+  "Validated commit",
+  "Validation environment",
+  "npm run check:c420ui-core",
+  "npm run check:canva-linux",
+  "npm run check:shared-tooling",
+  "npm run check:scripts-core",
+  "npm run validate",
+  "npm run docs:check-links",
+  "npm run docs:check-ai",
+  "npm run lint",
+  "npm run typecheck",
+  "npm run typecheck:strict",
+  "npm test",
+  "./scripts/validate-project.sh",
+  "npm run c420ui -- --help",
+  "npm run c420ui:cli -- --doctor --dry-run",
+  "./canva-linux.sh --help",
+  "./canva-linux.sh --doctor --dry-run",
+  "./canva-linux.sh --bundle-appimage --dry-run",
+  "./canva-linux.sh --bundle-flatpak --dry-run",
+  "./canva-linux.sh --purge --yes --dry-run",
+  "./scripts/build-appimage.sh",
+  "./scripts/build-flatpak-bundle.sh",
+  "./scripts/validate-flatpak.sh",
+  "Release blockers",
+  "package.json",
+  "package-lock.json",
+  "AppStream",
+  "0.1.4-dev.14",
+  "0.1.4-rc.14",
+  "0.1.4.14",
+  "x64",
+  "scripts/c420ui-canva-linux",
+  "scripts/c420ui/",
+  "ensure-npm-dependencies.sh",
+  "c420ui core contains Canva Linux hardcoding",
+  "planned-action, dry-run, root, or confirmation policy",
+  "Runtime Electron behavior changes",
+];
 
 const requiredReviewFragments = [
   "## Credential storage review checklist",
@@ -41,18 +292,28 @@ const requiredReviewFragments = [
 ];
 
 const requiredGuardrails = [
+  "All maintained source code, code comments, UI strings, README, docs, changelog and AI maintenance instructions must be written in English.",
+  "Do not add Portuguese comments, Portuguese docs, Portuguese UI strings, or mixed-language source text to the repository.",
+  "User-facing translations may be introduced later through an explicit i18n architecture.",
+  "Do not hardcode future translations directly in runtime code.",
+  "Future i18n must use structured translation resources, typed keys and fallback language rules.",
+  "Until an i18n system exists, English is the only maintained repository language.",
   "The interactive shell menu has been removed.",
-  "The project exposes only C420UI and direct CLI actions.",
-  "C420UI is the user-facing name of the terminal interface.",
+  "The project exposes only c420ui and direct CLI actions.",
+  "c420ui is the user-facing name of the terminal interface.",
+  "The official tool name is `c420ui`, lowercase.",
+  "Do not use `C420UI` as public product branding.",
+  "PascalCase TypeScript aliases may exist only as maintained API aliases; user-facing text must say `c420ui`.",
+  "The c420ui logo must remain the approved three-line lowercase logo unless the maintainer explicitly requests a redesign.",
   "Do not reintroduce Terminal Assistant as product name.",
   "Do not use TUI as product name.",
-  "Legacy explicit C420UI routing flags are removed. The launcher opens C420UI when called without args; any argument is resolved as direct CLI.",
+  "Legacy explicit c420ui routing flags are removed. The launcher opens c420ui when called without args; any argument is resolved as direct CLI.",
   "Legacy interface-routing environment variables are removed and must not be read for interface routing.",
   "Manual text selection mode must disable mouse capture globally, not only on the logs widget.",
   "F5 log copy must work regardless of text selection mode.",
   "Session log write failures must not fail silently.",
   "writeSession must not call appendLogText directly to avoid recursion.",
-  "Sudo/root authentication failures must be shown in a centered C420UI popup.",
+  "Sudo/root authentication failures must be shown in a centered c420ui popup.",
   "Never log passwords, sudo stdin, cookies, tokens, or credential material.",
   "Persistent login must require a secure Linux Secret Service backend.",
   "If Electron reports `basic_text`, Canva Linux must use ephemeral session mode.",
@@ -68,18 +329,18 @@ const requiredGuardrails = [
   "Do not normalize `x86_64` or `X86_64` to `x64`.",
   "AppImage, Flatpak, tarball and checksum entries must use the actual generated architecture string.",
   "Release docs and workflows must not hardcode `x64` unless the tool actually emits `x64`.",
-  "System-wide actions must use scripts/sudo-common.sh.",
-  "Raw sudo calls are forbidden outside scripts/sudo-common.sh.",
+  "System-wide actions must use packages/c420ui/host/linux/sudo-helper.sh.",
+  "Raw sudo calls are forbidden outside packages/c420ui/host/linux/sudo-helper.sh.",
   "User-scope actions must never call sudo.",
-  "overview-status must always emit valid JSON.",
-  "C420UI and CLI must share the same TypeScript action contract.",
+  "Overview status must use the c420ui detection engine and Canva Linux detection provider.",
+  "c420ui and CLI must share the same TypeScript action contract.",
   "REVIEW.md must preserve the Review Checklist.",
-  "C420UI Header and Project Header must remain separate fixed components.",
+  "c420ui Header and Project Header must remain separate fixed components.",
   "Side-by-side header layout is preferred on wide terminals.",
   "Stacked header layout is allowed only as a narrow-terminal fallback.",
   "Workspace must start below the tallest header row.",
-  "C420UI Header must use only C420UI brand config.",
-  "C420UI core must not hardcode project-specific metadata.",
+  "c420ui Header must use only c420ui brand config.",
+  "c420ui core must not hardcode project-specific metadata.",
   "Project metadata must come from config/adapters.",
   "Project Header must use only project config.",
   "Headers must not be part of FocusZone or Tab navigation.",
@@ -101,6 +362,46 @@ const requiredGuardrails = [
   "Flathub source generation must be TypeScript-backed.",
   "If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.",
 ];
+
+
+function assertRequiredRcValidationMatrix(rootDir: string, failures: string[]): void {
+  const relativePath = "docs/internal/RC_VALIDATION_MATRIX.md";
+  const fullPath = path.join(rootDir, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    failures.push(`missing RC validation matrix: ${relativePath}`);
+    return;
+  }
+
+  const contents = fs.readFileSync(fullPath, "utf8");
+  const normalizedContents = normalizeWhitespace(contents);
+  for (const fragment of requiredRcValidationFragments) {
+    if (!normalizedContents.includes(normalizeWhitespace(fragment))) {
+      failures.push(`${relativePath}: missing RC validation fragment: ${fragment}`);
+    }
+  }
+}
+
+function assertRequiredSplitDocs(rootDir: string, failures: string[]): void {
+  for (const [relativePath, fragments] of Object.entries(requiredSplitDocFragments)) {
+    const fullPath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(fullPath)) {
+      failures.push(`missing split documentation file: ${relativePath}`);
+      continue;
+    }
+
+    const contents = fs.readFileSync(fullPath, "utf8");
+    const normalizedContents = normalizeWhitespace(contents);
+    if (contents.length < 600) {
+      failures.push(`${relativePath}: split documentation is too short`);
+    }
+
+    for (const fragment of fragments) {
+      if (!normalizedContents.includes(normalizeWhitespace(fragment))) {
+        failures.push(`${relativePath}: missing split documentation fragment: ${fragment}`);
+      }
+    }
+  }
+}
 
 export function main(): number {
   const rootDir = findProjectRoot();
@@ -129,6 +430,9 @@ export function main(): number {
     if (!normalizedGuardrails.includes(normalizeWhitespace(fragment)))
       failures.push(`internal/AI_GUARDRAILS missing rule: ${fragment}`);
   }
+
+  assertRequiredSplitDocs(rootDir, failures);
+  assertRequiredRcValidationMatrix(rootDir, failures);
 
   const review = fs.existsSync(path.join(rootDir, "REVIEW.md"))
     ? fs.readFileSync(path.join(rootDir, "REVIEW.md"), "utf8")

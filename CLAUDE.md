@@ -16,9 +16,10 @@ Always read:
 
 ## Non-regression policy
 
-- Preserve version `0.1.4-12` unless the maintainer explicitly requests a versioning change.
-- Do not introduce `0.1.4-12.RC2`.
-- Keep C420UI as the user-facing terminal interface name.
+- Preserve version `0.1.4-14` unless the maintainer explicitly requests a versioning change.
+- Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
+- Preserve the `N.N.N-X` release versioning rule.
+- Keep c420ui as the user-facing terminal interface name.
 - Do not reintroduce Terminal Assistant or TUI as product names.
 - Preserve CL-EyeDropper and its bundled snapshot canvas flow.
 - Preserve real generated architecture names such as `x86_64` or `X86_64`; do not normalize them to `x64`.

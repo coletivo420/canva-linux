@@ -45,6 +45,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.4-14" date="2026-05-14">
+      <description>
+        <p>Completed the c420ui separation cleanup, centralized host dependency and artifact recipe validation, and refreshed release-readiness documentation while preserving runtime behavior.</p>
+      </description>
+    </release>
     <release version="0.1.4-dev.23" date="2026-05-02">
       <description>
         <p>Removed the legacy EyeDropper fallback and temporary implementation selector so CL-EyeDropper is the only supported Canva Linux EyeDropper implementation.</p>

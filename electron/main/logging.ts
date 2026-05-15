@@ -1,9 +1,7 @@
-"use strict";
+import fs from "fs";
+import path from "path";
 
-const fs = require("fs");
-const path = require("path");
-
-const { normalizeArgs, createLogSignature } = require("./logging-normalize");
+import { normalizeArgs, createLogSignature } from "./logging-normalize";
 
 type CredentialStoragePolicy = import("./credential-storage").CredentialStoragePolicy;
 
@@ -60,7 +58,6 @@ function formatFilePrefix({
 }): string {
   return `[canva:${source}:${category}:${level}]`;
 }
-
 
 function createCentralLogger({ app }: { app: AppLike }) {
   let logFilePath: string | null = null;
@@ -165,6 +162,7 @@ function createStatusLogger({
       "release",
       `version=${appVersion}`,
       `platform=${process.platform}`,
+      `arch=${process.arch}`,
       `downloads=${app.getPath("downloads")}`,
     );
   }
@@ -173,6 +171,8 @@ function createStatusLogger({
     const summary =
       `credential-storage-policy backend=${policy.backend} ` +
       `mode=${policy.mode} security=${policy.security} ` +
+      `encryptionAvailable=${String(policy.encryptionAvailable)} ` +
+      `encryptionAvailableVerified=${String(policy.encryptionAvailableVerified)} ` +
       `partition=${policy.partition} cache=${String(policy.cache)} ` +
       `persistentLoginAvailable=${String(policy.persistentLoginAvailable)}`;
 
@@ -189,7 +189,7 @@ function createStatusLogger({
       logStatus(
         "session",
         "ok",
-        `${summary} OK: secure Linux secret storage backend detected.`,
+        `${summary} OK: secure Linux secret storage backend and available encryption detected.`,
       );
       return;
     }

@@ -14,10 +14,29 @@ main() {
   local ROOT_DIR
   ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+  case "${ENTRY}" in
+    check-ai-guardrails|check-doc-links|check-dependency-policy|check-runtime-build|check-repository-policy)
+      ;;
+    action-registry|action-runner|overview-status|validate-actions|check-legacy-action-runner-compatibility)
+      rm -f "${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
+      printf '%s\n' "scripts/run-core-entry.sh: ${ENTRY} was removed; use a supported core entry." >&2
+      exit 66
+      ;;
+    *)
+      printf '%s\n' "scripts/run-core-entry.sh: unknown core entry '${ENTRY}'." >&2
+      exit 64
+      ;;
+  esac
+
   local TARGET
   TARGET="${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
   if [[ ! -f "${TARGET}" ]]; then
     npm --prefix "${ROOT_DIR}" run build:scripts-core --silent
+  fi
+
+  if [[ ! -f "${TARGET}" ]]; then
+    printf '%s\n' "scripts/run-core-entry.sh: failed to build ${TARGET}." >&2
+    exit 66
   fi
 
   node "${TARGET}" "$@"

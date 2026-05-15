@@ -1,14 +1,14 @@
 # Release
 
-## Canva Linux 0.1.4-12 Alpha
+## Canva Linux 0.1.4-14 Alpha
 
-Release: `v0.1.4-12`
+Release: `v0.1.4-14`
 
 ### Public artifacts
 
-- `canva-linux-0.1.4-12-x86_64.AppImage`
-- `canva-linux-0.1.4-12-x86_64.flatpak`
-- `canva-linux-0.1.4-12-linux-unpacked-x86_64.tar.gz`
+- `canva-linux-0.1.4-14-x86_64.AppImage`
+- `canva-linux-0.1.4-14-x86_64.flatpak`
+- `canva-linux-0.1.4-14-linux-unpacked-x86_64.tar.gz`
 - `SHA256SUMS`
 
 The `.deb`, `.rpm`, and AUR/PKGBUILD outputs remain planned for a later
@@ -32,9 +32,9 @@ The GitHub Release workflow must:
 
 ### Manual validation matrix
 
-- `./canva-linux.sh` opens the C420UI.
+- `./canva-linux.sh` opens the c420ui.
 - F5 copies logs to the clipboard.
-- Text selection mode disables C420UI mouse capture globally.
+- Text selection mode disables c420ui mouse capture globally.
 - F6 opens a plain logs view with the session log path.
 - Correct root password starts privileged actions.
 - Incorrect root password shows an error popup and does not start the action.
@@ -49,18 +49,18 @@ The GitHub Release workflow must:
 
 ### Release notes template
 
-Canva Linux 0.1.4-12 Alpha
+Canva Linux 0.1.4-14 Alpha
 
 Highlights:
 
 - TypeScript-first migration completed.
-- C420UI and direct CLI architecture stabilized.
+- c420ui and direct CLI architecture stabilized.
 - Native and Flatpak system/user install flows.
 - Root authentication popup for privileged actions.
 - Improved detection with installed version display.
 - AppImage and Flatpak package artifacts.
-- Improved C420UI logs, clipboard and manual text selection mode.
-- Secret Service-backed persistent login with an ephemeral session fallback when secure credential storage is unavailable.
+- Improved c420ui logs, clipboard and manual text selection mode.
+- Secret Service-backed persistent login with an ephemeral session fallback when secure credential storage or safe storage encryption is unavailable.
 
 Artifacts:
 

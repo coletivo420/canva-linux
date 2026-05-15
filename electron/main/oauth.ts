@@ -1,8 +1,5 @@
-"use strict";
-
-// @ts-check
-
-export type DebugLog = (category: string, ...args: unknown[]) => boolean;
+import type { DebugLog, WebContentsLike } from "../shared/types";
+import type { SessionLike } from "./runtime";
 export type CanvaTabEntry = {
   id: number;
   view: { webContents: { reload(): void } };
@@ -20,32 +17,7 @@ export type OAuthPopupEntry = {
   sourceWebContentsId: number | null;
 };
 export type AuthPopupMap = Map<number, OAuthPopupEntry>;
-export type SessionLike = {
-  partition?: string;
-};
-export type WebContentsLike = {
-  session?: SessionLike;
-  getURL(): string;
-  getLastWebPreferences():
-    | {
-        contextIsolation?: boolean;
-        nodeIntegration?: boolean;
-        sandbox?: boolean;
-      }
-    | null
-    | undefined;
-  on(event: string, listener: (...args: any[]) => void): unknown;
-  once(event: string, listener: (...args: any[]) => void): unknown;
-  setWindowOpenHandler(
-    handler: (details: {
-      url: string;
-      openerUrl?: string;
-      disposition?: string;
-      frameName?: string;
-    }) => { action: "deny" | "allow" },
-  ): void;
-  loadURL(url: string): Promise<void> | void;
-};
+export type { SessionLike } from "./runtime";
 export type BrowserWindowLike = {
   webContents: WebContentsLike;
   isDestroyed(): boolean;
@@ -69,6 +41,54 @@ export type RegisterAuthPopupOptions = {
   shellBackgroundColor?: () => string;
   sourceWebContentsId?: number | null;
 };
+
+const SENSITIVE_OAUTH_LOG_PARAMS = new Set([
+  "access_token",
+  "auth_token",
+  "authorization",
+  "client_secret",
+  "code",
+  "credential",
+  "id_token",
+  "password",
+  "refresh_token",
+  "session_state",
+  "state",
+  "token",
+]);
+
+function redactSensitiveUrlParams(url: string): string {
+  try {
+    const parsed = new URL(url);
+
+    for (const key of Array.from(parsed.searchParams.keys())) {
+      if (SENSITIVE_OAUTH_LOG_PARAMS.has(key.toLowerCase())) {
+        parsed.searchParams.set(key, "[redacted]");
+      }
+    }
+
+    if (parsed.hash.includes("=")) {
+      const hashParams = new URLSearchParams(parsed.hash.slice(1));
+      let redactedHash = false;
+
+      for (const key of Array.from(hashParams.keys())) {
+        if (SENSITIVE_OAUTH_LOG_PARAMS.has(key.toLowerCase())) {
+          hashParams.set(key, "[redacted]");
+          redactedHash = true;
+        }
+      }
+
+      if (redactedHash) {
+        parsed.hash = hashParams.toString();
+      }
+    }
+
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 type CreateOAuthPopupInitialStateOptions = {
   popupId: number;
   window: BrowserWindowLike;
@@ -109,86 +129,6 @@ type CreateOAuthHelpersOptions = {
   summarizeOauthEntry: (entry: OAuthPopupEntry | undefined) => string;
   windowLabel: (window: BrowserWindowLike) => string;
 };
-
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- */
-
-/**
- * @typedef {{
- *   id: number;
- *   view: { webContents: { reload(): void } };
- * }} CanvaTabEntry
- */
-
-/**
- * @typedef {{
- *   id: number;
- *   window: BrowserWindowLike;
- *   startedOnCanvaAuth: boolean;
- *   sawExternalProvider: boolean;
- *   sawAuthorizedCallback: boolean;
- *   completionHandled: boolean;
- *   pendingCallbackUrl: string;
- *   allowClose: boolean;
- *   closeReason: string;
- *   sourceWebContentsId: number | null;
- * }} OAuthPopupEntry
- */
-
-/**
- * @typedef {Map<number, OAuthPopupEntry>} AuthPopupMap
- */
-
-/**
- * @typedef {{
- *   partition?: string;
- * }} SessionLike
- */
-
-/**
- * @typedef {{
- *   session?: SessionLike;
- *   getURL(): string;
- *   getLastWebPreferences(): { contextIsolation?: boolean; nodeIntegration?: boolean; sandbox?: boolean } | null | undefined;
- *   on(event: string, listener: (...args: any[]) => void): unknown;
- *   once(event: string, listener: (...args: any[]) => void): unknown;
- *   setWindowOpenHandler(handler: (details: { url: string; openerUrl?: string; disposition?: string; frameName?: string }) => { action: 'deny' | 'allow' }): void;
- *   loadURL(url: string): Promise<void> | void;
- * }} WebContentsLike
- */
-
-/**
- * @typedef {{
- *   webContents: WebContentsLike;
- *   isDestroyed(): boolean;
- *   destroy(): void;
- *   focus(): void;
- *   show(): void;
- *   loadURL(url: string): Promise<void> | void;
- *   setTitle(title: string): void;
- *   setMenuBarVisibility(visible: boolean): void;
- *   setBackgroundColor(color: string): void;
- *   getBounds(): Record<string, number>;
- *   once(event: string, listener: (...args: any[]) => void): unknown;
- *   on(event: string, listener: (...args: any[]) => void): unknown;
- * }} BrowserWindowLike
- */
-
-/**
- * @typedef {{
- *   reloadActiveTab?: boolean;
- *   reason?: string;
- * }} CloseAuthPopupOptions
- */
-
-/**
- * @typedef {{
- *   openerUrl?: string;
- *   shellBackgroundColor?: () => string;
- *   sourceWebContentsId?: number | null;
- * }} RegisterAuthPopupOptions
- */
 
 /**
  * @param {{
@@ -235,15 +175,13 @@ export function createOAuthPopupOptionsSummary(window: BrowserWindowLike): {
   nodeIntegration: boolean;
   sandbox: boolean;
 } {
+  const prefs = window.webContents.getLastWebPreferences?.();
+
   return {
     partition: window.webContents.session?.partition || "unknown",
-    contextIsolation: Boolean(
-      window.webContents.getLastWebPreferences()?.contextIsolation,
-    ),
-    nodeIntegration: Boolean(
-      window.webContents.getLastWebPreferences()?.nodeIntegration,
-    ),
-    sandbox: Boolean(window.webContents.getLastWebPreferences()?.sandbox),
+    contextIsolation: Boolean(prefs?.contextIsolation),
+    nodeIntegration: Boolean(prefs?.nodeIntegration),
+    sandbox: Boolean(prefs?.sandbox),
   };
 }
 
@@ -368,7 +306,7 @@ export function createOAuthHelpers({
       minHeight: 560,
       title: `${appName} — Login`,
       autoHideMenuBar: true,
-      show: true,
+      show: false,
       backgroundColor: shellBackgroundColor(),
       icon: appIconPath,
       webPreferences: sharedWebPreferences(),
@@ -406,8 +344,8 @@ export function createOAuthHelpers({
       "oauth",
       "popup-created",
       summarizeOauthEntry(entry),
-      startUrl || "about:blank",
-      `opener=${openerUrl || "unknown"}`,
+      redactSensitiveUrlParams(startUrl || "about:blank"),
+      `opener=${redactSensitiveUrlParams(openerUrl || "unknown")}`,
     );
     debugLog("oauth", "popup-options", `popup=${popupId}`, popupOptionsSummary);
     debugLog(
@@ -426,22 +364,20 @@ export function createOAuthHelpers({
 
     window.setMenuBarVisibility(false);
     setAuthPopupTitle(window);
-    window.show();
-    debugLog("oauth", "popup-show", `popup=${popupId}`);
-    window.focus();
-    debugLog("oauth", "popup-focus", `popup=${popupId}`);
-    debugLog("oauth", "popup-bounds", `popup=${popupId}`, window.getBounds());
     window.once("ready-to-show", () => {
+      if (window.isDestroyed()) {
+        return;
+      }
+
+      window.show();
+      window.focus();
       debugLog(
         "oauth",
         "popup-ready-to-show",
         `popup=${popupId}`,
         windowLabel(window),
       );
-      window.show();
-      debugLog("oauth", "popup-show", `popup=${popupId}`);
-      window.focus();
-      debugLog("oauth", "popup-focus", `popup=${popupId}`);
+      debugLog("oauth", "popup-ready", `popup=${popupId}`);
       debugLog("oauth", "popup-bounds", `popup=${popupId}`, window.getBounds());
     });
     window.on("close", (event?: { preventDefault?: () => void }) => {
@@ -472,7 +408,12 @@ export function createOAuthHelpers({
 
     wc.on("did-finish-load", () => {
       const loadedUrl = wc.getURL() || startUrl || "about:blank";
-      debugLog("oauth", "popup-finish-load", `popup=${popupId}`, loadedUrl);
+      debugLog(
+        "oauth",
+        "popup-finish-load",
+        `popup=${popupId}`,
+        redactSensitiveUrlParams(loadedUrl),
+      );
       if (
         entry.sawAuthorizedCallback &&
         entry.pendingCallbackUrl === loadedUrl &&
@@ -480,13 +421,15 @@ export function createOAuthHelpers({
       ) {
         entry.completionHandled = true;
         flushSession(getCanvaSession())
-          .catch(() => {})
+          .catch((error) => {
+            debugLog("session", "flush-error", String(error));
+          })
           .finally(() => {
             debugLog(
               "oauth",
               "popup-authorized-callback",
               `popup=${popupId}`,
-              loadedUrl,
+              redactSensitiveUrlParams(loadedUrl),
             );
             closeAuthPopup(popupId, {
               reloadActiveTab: true,
@@ -542,7 +485,7 @@ export function createOAuthHelpers({
           "popup-window-open",
           `popup=${popupId}`,
           `kind=${request.kind}`,
-          url || "about:blank",
+          redactSensitiveUrlParams(url || "about:blank"),
           disposition || "unknown",
           frameName || "",
         );
@@ -560,7 +503,7 @@ export function createOAuthHelpers({
             "oauth",
             "popup-unsafe-external-blocked",
             `popup=${popupId}`,
-            url || "about:blank",
+            redactSensitiveUrlParams(url || "about:blank"),
           );
         }
         return { action: "deny" };
@@ -568,7 +511,12 @@ export function createOAuthHelpers({
     );
 
     wc.on("will-navigate", (event: { preventDefault(): void }, url: string) => {
-      debugLog("oauth", "popup-will-navigate", `popup=${popupId}`, url);
+      debugLog(
+        "oauth",
+        "popup-will-navigate",
+        `popup=${popupId}`,
+        redactSensitiveUrlParams(url),
+      );
       if (isOAuthProviderUrl(url) || isCanvaUrl(url) || isBlankPopupUrl(url)) {
         return;
       }
@@ -580,7 +528,7 @@ export function createOAuthHelpers({
           "oauth",
           "popup-unsafe-navigation-blocked",
           `popup=${popupId}`,
-          url || "about:blank",
+          redactSensitiveUrlParams(url || "about:blank"),
         );
       }
     });
@@ -609,7 +557,7 @@ export function createOAuthHelpers({
         "popup-canva-callback-detected",
         `popup=${popupId}`,
         `type=${callbackType}`,
-        url,
+        redactSensitiveUrlParams(url),
       );
       if (callbackType === "authorized") {
         entry.sawAuthorizedCallback = true;
@@ -621,8 +569,15 @@ export function createOAuthHelpers({
     };
 
     wc.on("did-navigate", (_event: unknown, url: string) => {
-      debugLog("oauth", "popup-did-navigate", `popup=${popupId}`, url);
-      syncPopupState(url).catch(() => {});
+      debugLog(
+        "oauth",
+        "popup-did-navigate",
+        `popup=${popupId}`,
+        redactSensitiveUrlParams(url),
+      );
+      syncPopupState(url).catch((error) => {
+        debugLog("oauth", "sync-state-error", String(error));
+      });
     });
     wc.on(
       "will-redirect",
@@ -638,7 +593,7 @@ export function createOAuthHelpers({
           `popup=${popupId}`,
           `mainFrame=${isMainFrame ? "true" : "false"}`,
           `inPlace=${isInPlace ? "true" : "false"}`,
-          url,
+          redactSensitiveUrlParams(url),
         );
       },
     );
@@ -647,9 +602,11 @@ export function createOAuthHelpers({
         "oauth",
         "popup-did-redirect-navigation",
         `popup=${popupId}`,
-        url,
+        redactSensitiveUrlParams(url),
       );
-      syncPopupState(url).catch(() => {});
+      syncPopupState(url).catch((error) => {
+        debugLog("oauth", "sync-state-error", String(error));
+      });
     });
     wc.on(
       "did-fail-load",
@@ -667,19 +624,22 @@ export function createOAuthHelpers({
           `mainFrame=${isMainFrame ? "true" : "false"}`,
           `code=${code}`,
           description || "no-description",
-          validatedURL || "unknown-url",
+          redactSensitiveUrlParams(validatedURL || "unknown-url"),
         );
       },
     );
-    wc.on("render-process-gone", (_event: unknown, details: any) => {
-      debugLog(
-        "oauth",
-        "popup-render-process-gone",
-        `popup=${popupId}`,
-        `reason=${details?.reason || "unknown"}`,
-        `exitCode=${details?.exitCode ?? "unknown"}`,
-      );
-    });
+    wc.on(
+      "render-process-gone",
+      (_event: unknown, details: { reason?: string; exitCode?: number }) => {
+        debugLog(
+          "oauth",
+          "popup-render-process-gone",
+          `popup=${popupId}`,
+          `reason=${details?.reason || "unknown"}`,
+          `exitCode=${details?.exitCode ?? "unknown"}`,
+        );
+      },
+    );
     wc.on("unresponsive", () => {
       debugLog("oauth", "popup-unresponsive", `popup=${popupId}`);
     });

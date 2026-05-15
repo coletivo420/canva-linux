@@ -15,13 +15,14 @@ Required reading:
 
 Non-regression rules:
 - Do not run or recommend ./canva-linux.sh as root.
-- Preserve version 0.1.4-12 unless explicitly instructed otherwise.
-- Do not introduce 0.1.4-12.RC2.
-- C420UI is the user-facing terminal interface name.
+- Preserve version 0.1.4-14 unless explicitly instructed otherwise.
+- Do not introduce 0.1.4-dev.14, 0.1.4-rc.14, or 0.1.4.14.
+- Preserve the N.N.N-X release versioning rule.
+- c420ui is the user-facing terminal interface name.
 - Do not use Terminal Assistant or TUI as product names.
-- Actions must come from scripts/actions.json.
-- Do not duplicate action logic in C420UI or launcher code.
-- Preserve Action Runner root/planned-action behavior.
+- Actions must come from config/canva-linux/actions.json.
+- Do not duplicate action logic in c420ui or launcher code.
+- Preserve the legacy Action Runner only as a compatibility path until an explicit legacy audit changes it.
 - Preserve CL-EyeDropper.
 - Preserve TypeScript-first source policy.
 - Do not add maintained JavaScript source.

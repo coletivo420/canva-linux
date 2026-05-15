@@ -3,91 +3,178 @@
 ## Unreleased
 
 ### Added
-- Added shell-helper classification documentation and static checks for repository-only preflight helpers.
-- Added dependent-project boundary documentation for Action Engine-owned planned/dry-run/root/confirmation policy.
+- Added an internal RC validation matrix for `0.1.4-14` with required commands, manual dry-runs, dependency-backed packaging checks,
+  expected results, owner domains, and release blockers.
+
+### Changed
+- Linked the RC validation matrix from release, validation, documentation, and review guidance, and made AI guardrail checks require
+  the matrix before RC validation.
+- Recorded the `2026-05-14` `0.1.4-14` RC validation results, including the validated commit, environment, automated command statuses,
+  manual dry-run outcomes, and release-blocker grep review.
+
+
+## [0.1.4-14] - 2026-05-14
+
+### Changed
+- Bumped package metadata to `0.1.4-14` while preserving the `N.N.N-X` release versioning rule.
+- Added AppStream release metadata for `0.1.4-14`.
+- Split documentation into generic c420ui, Canva Linux dependent-project, and internal maintenance sections.
+- Refreshed public release, validation, review, and AI maintenance docs for the consolidated c420ui separation state.
+- Expanded c420ui, Canva Linux, and internal split docs with ownership, implementation, boundary checks, and forbidden-regression coverage.
+- Added split documentation depth checks so placeholder docs cannot replace the maintained split references.
+
+### Fixed
+- Removed stale inline release-status changelog entries from startup logging so release details live only in the changelog.
+- Kept tab creation timestamps as real creation times and use the tab id only as a secondary ordering tiebreaker.
+- Added diagnostics when generated popup windows are closed or cannot be closed by the tab event policy.
+- Fixed c420ui terminal startup so `npm run c420ui` uses the project runner instead of executing the terminal package barrel.
+- Consolidated duplicate Canva Linux artifact action validation in checks and removed duplicate source-string tests from the behavioral suite.
+- Kept artifact configuration process-static in the adapter loader and documented the path-based cache.
+
+### Documentation
+- Updated validation and AI maintenance docs to reflect the completed c420ui CLI, Action Engine, Root Provider, Command Runner,
+  operational log, and consolidated validation migrations.
+- Updated maintenance documentation to remove legacy runner compatibility guidance.
+- Clarified that Canva Linux actions, development tasks, and artifact workflows are project config declarations loaded by a thin adapter.
+
+### Added
+- Added generic c420ui host dependency runner modules for command, Node and npm dependency checks.
+- Added formal dependent-project boundary documentation and checks to keep c420ui generic and Canva Linux project-specific.
+- Added the initial c420ui action engine contract for resolving and running project actions through bridges.
+- Added an explicit English-only maintained repository language guardrail with future i18n architecture
+  requirements for source, comments, UI strings, README, docs, changelog, and AI maintenance instructions.
+- Added the Canva Linux c420ui adapter boundary for project-specific metadata, action and path wiring.
+- Added the private future `@coletivo420/c420ui` package skeleton with pure c420ui TypeScript contracts.
+- Added the public c420ui separation roadmap for compatibility-first package and adapter boundary work.
 - Added Secret Service-backed credential storage documentation and validation.
-- Added ephemeral session fallback when Linux credential storage falls back to `basic_text`.
-- Documented secure Linux credential storage through Secret Service backends as the requirement for persistent login,
+- Added ephemeral session fallback when Linux credential storage falls back to `basic_text` or when a secure backend cannot provide available encryption.
+- Documented secure Linux credential storage through Secret Service backends plus available safe storage encryption as the requirement for persistent login,
   with ephemeral session fallback guidance.
 - Added auxiliary maintenance policy files for Codex, Claude, and Gemini so AI agents have non-public project guidance without duplicating public documentation.
-- Added review checklist coverage for agent policy, versioning, Action Runner behavior, C420UI naming, docs/changelog
+- Added review checklist coverage for agent policy, versioning, removed legacy runner behavior, c420ui naming, docs/changelog
   updates, logging safety, and CL-EyeDropper preservation.
-- Added C420UI rebuild inputs for project metadata and the action registry so metadata-only changes trigger a rebuilt terminal UI bundle.
-- Added current manual validation coverage for C420UI, Action Runner planned exits, root policy, TypeScript-first source
+- Added c420ui rebuild inputs for project metadata and the action registry so metadata-only changes trigger a rebuilt terminal UI bundle.
+- Added current manual validation coverage for c420ui, planned exits, root policy, TypeScript-first source
   rules, Native/Flatpak scopes, AppImage artifacts, CL-EyeDropper, and `CANVA_DEBUG=1` / `CANVA_DEBUG=2`.
 
 ### Changed
-- Removed release-specific corrected, validated, and under-observation startup log lists from runtime logging; release details now live
-  in this changelog while startup logs keep only stable version/platform context.
-- Slimmed npm preflight helpers so build recipes no longer call a transitional dependency bootstrap shell entrypoint.
-- Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected.
+- Slimmed the Canva Linux c420ui adapter so `runAction()` only executes concrete commands after the c420ui
+  Action Engine applies planned-action, dry-run, root, and confirmation policy.
+- Classified remaining shell helpers as c420ui host tools, Canva Linux recipes, repository checks, or obsolete
+  helpers, and documented `scripts/preflight-common.sh` as repository-check-only.
+- Hardened c420ui host dependency management with config validation, dry-run planned commands, npm declaration checks, and executable command lookup.
+- Renamed the project-local c420ui adapter directory to `scripts/c420ui-adapter/` so future dependent projects can reuse the same path pattern.
+- Moved host dependency policy into c420ui so the generic runner owns command, Node and npm checks, npm install strategy, repair mode and skip mode.
+  Canva Linux now declares dependencies in config.
+- Strengthened c420ui, Canva Linux adapter, and shared tooling checks for dependent-project boundary enforcement.
+- Clarified custom scope validation policy and made Linux root validation command construction configurable.
+- Centralized generic action scope semantics and Linux root/sudo provider helpers in c420ui.
+- Slimmed the Canva Linux root provider so it only owns project-specific root policy.
+- Centralized the c420ui root launch guard inside the c420ui terminal runtime.
+- Kept `build:c420ui` as an isolated terminal package surface smoke build; it is not the runtime launcher.
+- Moved the generic c420ui terminal UI into `packages/c420ui/src/terminal`.
+- Tightened post-split repository policy so `scripts/core` is infrastructure-check-only and the retired runtime/config paths stay removed.
+- Moved terminal install-detection matching to project action metadata so `packages/c420ui/src` no longer hardcodes Canva Linux action IDs.
+- Kept `build:c420ui` as the isolated c420ui terminal UI smoke/build target while moving its generated bundle under `.build/packages/c420ui/terminal/`.
+- Added the c420ui artifact workflow runner and kept Canva Linux artifact recipes as project-specific configuration.
+- Tightened the c420ui detection provider contract and removed the legacy `package` overview status shape.
+- Moved installation overview detection to the generic c420ui detection engine with a Canva Linux provider under `scripts/canva-linux/detection/`.
+- Moved Canva Linux action registry and project UI config under `config/canva-linux/`.
+- Moved Canva Linux action registry loading to `scripts/canva-linux/actions/registry.ts` and kept generic action validation in c420ui core.
+- Updated maintenance documentation to treat the c420ui Action Engine, Root Provider, Command Runner,
+  and CLI bridge as the only supported action execution path.
+- Polished consolidated validation runner naming and expanded the c420ui public API contract.
+- Folded remaining standalone core checks into the consolidated validation runners.
+- Consolidated validation into c420ui core, Canva Linux, and shared tooling domains.
+- Inlined validation fragment logic into the consolidated c420ui core, Canva Linux, and repository policy runners,
+  and removed the obsolete validation parts directories.
+- Added c420ui operational log redaction and command cancellation policy.
+- Moved reusable operational command execution into the c420ui command runner.
+- Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.
+- Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed by `packages/c420ui/host/linux/sudo-helper.sh`.
+- Moved generic c420ui TypeScript config contracts from `packages/c420ui/src/terminal/app.ts` into the private `packages/c420ui` skeleton.
+- Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
+  or when safe storage encryption is unavailable.
 - Startup diagnostics now explain whether persistent login is available or the app is running in ephemeral session mode.
 - Clarified that Canva Linux does not promise universal login persistence; persistent sessions depend on `kwallet`,
-  `kwallet5`, `kwallet6`, `gnome_libsecret`, or a compatible Secret Service provider.
+  `kwallet5`, `kwallet6`, `gnome_libsecret`, or a compatible Secret Service provider, plus available encryption.
 - Deduplicated agent guardrail wording while preserving root, logging/privacy, header separation, and TypeScript-first rules.
-- Reorganized AI guardrails into focused maintenance sections for language/public docs, versioning, C420UI,
+- Reorganized AI guardrails into focused maintenance sections for language/public docs, versioning, c420ui,
   Action Registry, root/sudo, logging/privacy, TypeScript-first source, CL-EyeDropper, packaging/architecture,
   and changelog/review.
-- Updated manual validation to reflect the current `0.1.4-12` release instead of obsolete development-cycle guidance.
+- Updated manual validation to reflect the current `0.1.4-14` release and consolidated documentation split.
 - Moved the old release checklist to `docs/internal/legacy/RELEASE_CHECKLIST_1.4.10.md` and marked it as historical.
 - Consolidated the public changelog into a release-focused summary and archived granular development-cycle history internally.
 
+### Removed
+- Removed the obsolete npm dependency bootstrap shell script and the repository preflight fallback that referenced it.
+- Removed the `scripts/run-core-entry.sh overview-status` dispatch path so the core wrapper only runs infrastructure checks.
+- Removed stale cross-domain c420ui core contract assertions that duplicated Canva Linux adapter checks.
+- Removed the old `scripts/core/overview-status.ts` product detection entry from shared core tooling.
+- Removed the old `scripts/actions.json` and `scripts/project-ui.json` config locations.
+- Removed the old `scripts/core/action-registry.ts` and `scripts/core/validate-actions.ts` entries.
+- Removed the legacy Action Runner and its manual compatibility validation path after direct CLI and interactive c420ui
+  execution were migrated to the shared c420ui Action Engine.
+
 ### Fixed
-- Fixed C420UI stale-build detection so changes to `scripts/project-ui.json`, `scripts/app-identity-common.sh`,
-  or `scripts/actions.json` are considered build inputs.
+- Routed c420ui terminal diagnostics through the project bridge instead of the removed overview-status entrypoint.
+- Routed Canva Linux artifact workflow actions through the shared c420ui Action Engine and Root Provider instead of calling the project adapter directly.
+- Avoided duplicate action environment preparation in the Canva Linux adapter.
+- Interactive action cancellation now reports a canceled progress state before execution.
+- Restored interactive c420ui root-auth environment propagation and Ctrl+C cancellation for Action Engine-backed actions.
+- Hardened c420ui CLI bridge freshness detection for launcher direct actions.
+- Repaired the shell launcher parser after the direct CLI bridge migration.
+- Added validation coverage to prevent hardcoded launcher action flags and malformed shell parsing.
+- Rebuild the direct c420ui CLI bridge when launcher-relevant bridge sources are newer than the compiled bundle.
+- Fixed the release workflow removed-interface-routing check so it scans active public documentation while excluding
+  archived internal development history.
+- Fixed c420ui stale-build detection so changes to `config/canva-linux/project-ui.json`, `scripts/app-identity-common.sh`,
+  or `config/canva-linux/actions.json` are considered build inputs.
 - Fixed public manual-validation guidance that still referenced obsolete release/version wording and debug-filter terminology.
+
+### Tests
+- Added behavioral launcher parser coverage with a stubbed c420ui CLI entrypoint.
 
 ## [0.1.4-12] - 2026-05-07
 
 ### Added
 - Added root-launch protection for the Canva Linux Install and Development Tool so it runs as a regular user and requests privilege only when needed.
-- Added C420UI Application Settings for general Tool logs and terminal text selection in the logs panel.
-- Added guardrail checks for root launch, C420UI settings, Tool logging, log selection, header layout, branding,
+- Added c420ui Application Settings for general Tool logs and terminal text selection in the logs panel.
+- Added guardrail checks for root launch, c420ui settings, Tool logging, log selection, header layout, branding,
   project boundaries, release contracts, TypeScript-first source, source integrity, and runtime build artifacts.
 - Added F6 plain logs fallback with the session log path for manual log selection.
 - Added release preparation documentation for `0.1.4-12` artifacts and workflow expectations.
 - Added CL-EyeDropper regression coverage for bundled snapshot canvas picking, cleanup, and typed `EyeDropperOpenOptions` handling.
 
 ### Changed
-- Consolidated C420UI as the user-facing terminal interface name and removed obsolete terminal-interface product naming from current public docs.
-- Refactored C420UI into reusable brand and project metadata boundaries, with separate fixed C420UI and project headers.
-- Changed C420UI session logging to append to launcher-created logs instead of truncating them and to surface session stream failures visibly.
-- Separated Tool logs from Action logs in the C420UI logs panel.
-- Hardened C420UI manual text selection so mouse capture is updated globally while keyboard navigation and F5/F6 log copy remain available.
+- Consolidated c420ui as the user-facing terminal interface name and removed obsolete terminal-interface product naming from current public docs.
+- Refactored c420ui into reusable brand and project metadata boundaries, with separate fixed c420ui and project headers.
+- Changed c420ui session logging to append to launcher-created logs instead of truncating them and to surface session stream failures visibly.
+- Separated Tool logs from Action logs in the c420ui logs panel.
+- Hardened c420ui manual text selection so mouse capture is updated globally while keyboard navigation and F5/F6 log copy remain available.
 - Updated release artifact generation and documentation to preserve real generated architecture strings such as `x86_64` or `X86_64`.
 - Updated project identity so release naming, docs, workflow tags, and `package.json` use the npm-compatible `0.1.4-12` version.
 
 ### Fixed
-- Fixed global debug categories to use canonical names, including drag -> dnd compatibility.
-- Fixed window-open logging so internal Canva tabs are distinguished from real OAuth popup flows.
-- Fixed upload diagnostics to preserve ingress context from drop, paste, picker, and file-bearing network handoff.
-- Fixed OAuth popup diagnostics that referenced an undefined tab object during popup title or favicon updates.
-- Fixed Linux startup so Electron hardware acceleration is no longer disabled by default.
-- Fixed GPU diagnostics so they are centralized in `current.log`.
-- Fixed Action Runner planned-action handling so planned exit `78` is not reported as a successful action.
-- Fixed centralized root/sudo handling for privileged actions, user-scope sudo refusal, and C420UI authentication prompts.
+- Fixed planned-action handling so planned exit `78` is not reported as a successful action.
+- Fixed centralized root/sudo handling for privileged actions, user-scope sudo refusal, and c420ui authentication prompts.
 - Fixed startup error reporting around the Electron ready flow so startup failures are caught and logged.
 - Fixed Flatpak and Native system/user install behavior, detection refreshes, scope handling, and post-install warning finalization.
 - Fixed installed-version rendering for Native, Flatpak, and AppImage variants.
-- Fixed C420UI detection and progress refresh behavior so completed results are not overwritten by stale refresh state.
+- Fixed c420ui detection and progress refresh behavior so completed results are not overwritten by stale refresh state.
 - Fixed logging safety for circular objects, BigInt, Error, Function, arbitrary Electron objects, and session write failures.
 - Fixed release validation to fail when expected AppImage, Flatpak, tarball, or checksum artifacts are missing or empty.
-
-### Validated
-- Validated application startup on Linux Wayland.
-- Validated persistent session initialization and fixed Home tab shell behavior.
-- Validated custom eyedropper behavior after the global debug expansion.
-- Validated host drag-and-drop into the Canva editor on Wayland with a real file drop.
-- Validated GPU backend selection with `CANVA_GPU_BACKEND=auto,opengl,vulkan,software,force`.
-- Validated Flatpak DRI access and Chromium GPU feature status logging.
-
-### Under observation
-- Host file picker continuation and clipboard-driven imports inside Canva remain under observation.
-- OAuth popup completion paths after the WebContentsView migration with a clean local session remain under observation.
-- Non-fatal DBus, VAAPI, and compositor warnings that do not block startup remain under observation.
-- Vulkan/ANGLE behavior across Intel, AMD, NVIDIA, Wayland, and X11 remains under observation.
 
 ## Historical development notes
 
 Detailed development-cycle history was archived in:
 - docs/internal/CHANGELOG_DEVELOPMENT_HISTORY.md
+
+## 0.1.4-12 — Commit 13 direct CLI bridge migration
+
+- Migrated direct launcher actions to the c420ui CLI bridge and reusable c420ui
+  Action Engine.
+- Added direct-action validation so multiple direct action flags fail before execution with exit code `64`.
+- Restored confirmation, root/sudo preflight, and stdout/stderr forwarding for direct c420ui CLI bridge execution.
+- Preserved planned direct action exit semantics: planned actions exit `78`, and planned dry-runs exit `0`.
+- Updated launcher branding to use lowercase `c420ui`.

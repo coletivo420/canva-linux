@@ -1,5 +1,3 @@
-"use strict";
-
 type DebugLevel = 0 | 1 | 2;
 type DebugEmitter = (category: string, args: unknown[]) => void;
 

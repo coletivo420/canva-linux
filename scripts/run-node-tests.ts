@@ -207,6 +207,88 @@ export function main(): void {
     process.exit(result.status || 1);
   }
 
+  const c420uiSourceDir = path.join(rootDir, "packages", "c420ui", "src");
+  const c420uiSourceFiles = collectTypeScriptTestFiles(
+    c420uiSourceDir,
+    (entryName) => entryName.endsWith(".ts"),
+  );
+
+  if (c420uiSourceFiles.length) {
+    const relativeC420uiSources = c420uiSourceFiles.map((file) =>
+      normalizePathForNodeTest(path.relative(rootDir, file)),
+    );
+    const c420uiCompileResult = spawnSync(
+      "npx",
+      [
+        "esbuild",
+        ...relativeC420uiSources,
+        "--platform=node",
+        "--target=node20",
+        "--format=cjs",
+        "--outbase=packages",
+        "--outdir=.build/packages",
+        "--sourcemap=inline",
+        "--log-level=warning",
+      ],
+      {
+        cwd: rootDir,
+        stdio: "inherit",
+        shell: false,
+        env: { ...process.env, CANVA_TEST_REPO_ROOT: rootDir },
+      },
+    );
+
+    if (c420uiCompileResult.error || c420uiCompileResult.status !== 0) {
+      console.error(
+        `[error] Failed to compile c420ui package sources${c420uiCompileResult.error ? `: ${c420uiCompileResult.error.message}` : ""}`,
+      );
+      process.exit(c420uiCompileResult.status || 1);
+    }
+  }
+
+  const runtimeSourceDirs = [
+    path.join(rootDir, "scripts", "core"),
+    path.join(rootDir, "scripts", "canva-linux"),
+    path.join(rootDir, "scripts", "c420ui"),
+    path.join(rootDir, "scripts", "c420ui-adapter"),
+  ];
+  const runtimeSourceFiles = runtimeSourceDirs.flatMap((sourceDir) =>
+    collectTypeScriptTestFiles(sourceDir, (entryName) => entryName.endsWith(".ts")),
+  );
+
+  if (runtimeSourceFiles.length) {
+    const relativeRuntimeSources = runtimeSourceFiles.map((file) =>
+      normalizePathForNodeTest(path.relative(rootDir, file)),
+    );
+    const runtimeCompileResult = spawnSync(
+      "npx",
+      [
+        "esbuild",
+        ...relativeRuntimeSources,
+        "--platform=node",
+        "--target=node20",
+        "--format=cjs",
+        "--outbase=scripts",
+        "--outdir=.build/scripts",
+        "--sourcemap=inline",
+        "--log-level=warning",
+      ],
+      {
+        cwd: rootDir,
+        stdio: "inherit",
+        shell: false,
+        env: { ...process.env, CANVA_TEST_REPO_ROOT: rootDir },
+      },
+    );
+
+    if (runtimeCompileResult.error || runtimeCompileResult.status !== 0) {
+      console.error(
+        `[error] Failed to compile runtime test dependencies${runtimeCompileResult.error ? `: ${runtimeCompileResult.error.message}` : ""}`,
+      );
+      process.exit(runtimeCompileResult.status || 1);
+    }
+  }
+
   console.error(
     `[info] Running ${compiledTestFiles.length} compiled Node test file(s).`,
   );

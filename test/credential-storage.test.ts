@@ -28,7 +28,11 @@ test("basic_text Linux credential backend uses an ephemeral non-persist partitio
 
 test("secure Linux credential backends keep the persistent Canva partition", () => {
   for (const backend of ["kwallet", "kwallet5", "kwallet6", "gnome_libsecret"]) {
-    const policy = createCredentialStoragePolicy({ backend, platform: "linux" });
+    const policy = createCredentialStoragePolicy({
+      backend,
+      encryptionAvailable: true,
+      platform: "linux",
+    });
 
     assert.equal(policy.mode, "persistent");
     assert.equal(policy.security, "secure");
@@ -49,6 +53,9 @@ test("unknown Linux credential backend and detection errors are ephemeral by cau
     safeStorage: {
       getSelectedStorageBackend() {
         throw new Error("no dbus");
+      },
+      isEncryptionAvailable() {
+        return true;
       },
     },
   });

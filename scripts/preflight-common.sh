@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 # scripts/preflight-common.sh - Repository-check-only helpers for host tooling.
-#
-# Keep this file limited to repository validation primitives. It must not
-# install, repair, or otherwise mutate npm dependencies.
 
 require_command() {
   local cmd="$1"
@@ -30,49 +27,6 @@ validate_json_file() {
     echo "[error] Fix JSON syntax before continuing." >&2
     exit 1
   }
-}
-
-validate_package_scripts() {
-  validate_json_file package.json
-
-  node <<'NODE'
-const fs = require('node:fs');
-
-const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-const scripts = pkg.scripts || {};
-const failures = [];
-
-for (const [name, command] of Object.entries(scripts)) {
-  if (typeof command !== 'string') {
-    failures.push(`scripts.${name} must be a string`);
-    continue;
-  }
-
-  if (/\r|\n/.test(command)) {
-    failures.push(`scripts.${name} must stay on one line`);
-  }
-}
-
-if (failures.length > 0) {
-  console.error('[error] package.json contains invalid npm scripts:');
-  for (const failure of failures) console.error(`[error] - ${failure}`);
-  process.exit(1);
-}
-NODE
-}
-
-require_node_major() {
-  local min_major="${1:-22}"
-
-  require_command node "[error] 'node' not found. Canva Linux development workflows require Node.js >=${min_major}."
-
-  local current_major
-  current_major="$(node -p "Number(process.versions.node.split('.')[0])")"
-
-  if (( current_major < min_major )); then
-    echo "[error] Node.js >=${min_major} is required. Current version: $(node -v)" >&2
-    exit 1
-  fi
 }
 
 

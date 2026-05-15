@@ -1,5 +1,3 @@
-"use strict";
-
 type LogLevel = "ok" | "warn" | "critical";
 type GpuAccelerationState =
   | "accelerated-vulkan"

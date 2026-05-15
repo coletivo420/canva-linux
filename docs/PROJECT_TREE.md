@@ -1,26 +1,30 @@
-# Project tree notes
+# Project Tree Reference
 
-This file records high-level source ownership and shell-helper classification.
-It is not a generated exhaustive inventory.
+The repository is organized around a stable split between the generic c420ui engine, the Canva Linux dependent project, and internal maintenance policy.
 
-## C420UI and action execution
+## Documentation
 
-- `scripts/c420ui/` contains the current TypeScript C420UI implementation.
-- `scripts/core/action-runner.ts` owns planned, dry-run, root, and confirmation
-  policy for direct CLI actions.
-- `scripts/c420ui/process-runner.ts` executes concrete commands only; it must not
-  implement planned or dry-run fallback policy.
+```text
+docs/
+  c420ui/       Generic c420ui architecture, engines, providers, artifacts, and terminal UI.
+  canva-linux/ Canva Linux dependent-project architecture, CLI, config, packaging, release, and credential storage.
+  internal/    Guardrails, validation policy, project tree notes, development history, and repository inventory.
+```
 
-## Shell helper classification
+## Runtime and tooling
 
-See `docs/checks/SHELL_HELPER_CLASSIFICATION.md` for the authoritative shell
-helper classification.
+```text
+packages/c420ui/           Generic c420ui package source and Linux host helper.
+scripts/c420ui-adapter/    Canva Linux project adapter for c420ui.
+scripts/canva-linux/       Canva Linux project-specific actions, detection, and support tooling.
+scripts/core/              Repository-wide validation and infrastructure checks.
+config/canva-linux/        Canva Linux project declarations for actions, artifacts, dependencies, development, and UI.
+electron/                  Canva Linux Electron runtime and preload source.
+test/                      TypeScript-first unit, wiring, and smoke tests.
+packaging/                 Packaging submission workspaces (e.g., Flathub).
+data/                      Desktop and AppStream metadata.
+build-resources/           Packaging icons and builder resources.
+assets/                    Repository documentation assets.
+```
 
-- Host tool: `scripts/sudo-common.sh` in the current repository layout.
-- Canva Linux recipes: `scripts/build-appimage.sh`,
-  `scripts/build-flatpak-bundle.sh`, `scripts/package-guidance-common.sh`,
-  `scripts/validate-project.sh`, `scripts/validate-appimage.sh`, and
-  `scripts/build-electron-dir.sh`.
-- Repository check helper: `scripts/preflight-common.sh`.
-- Obsolete: npm dependency bootstrap shell entrypoints; use explicit
-  `npm ci --include=dev` instead.
+Generic c420ui code must not hardcode Canva Linux metadata. Canva Linux code must not reimplement c420ui Action Engine, Command Runner, Root Provider, host dependency, or artifact workflow policy.

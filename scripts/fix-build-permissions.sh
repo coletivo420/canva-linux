@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-source "${ROOT_DIR}/scripts/sudo-common.sh"
+source "${ROOT_DIR}/packages/c420ui/host/linux/sudo-helper.sh"
 REAL_USER="${SUDO_USER:-${USER}}"
 TARGET_UID="$(id -u "${REAL_USER}")"
 TARGET_GID="$(id -g "${REAL_USER}")"
@@ -13,7 +13,7 @@ for dir in "${ALLOWED[@]}"; do
     echo "[warn] Skipping symlink: $dir"
     continue
   fi
-  canva_sudo_chown -R "${TARGET_UID}:${TARGET_GID}" "$dir"
+  c420ui_sudo_chown -R "${TARGET_UID}:${TARGET_GID}" "$dir"
   echo "[ok] Restored ownership: $dir"
 done
 echo "[ok] Permission fix completed."

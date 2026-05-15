@@ -93,9 +93,9 @@ This file preserves the detailed development changelog entries that were archive
 ### Fixed
 - Stabilized Native install preflight by using `data/icons/hicolor`, preserving missing-icon tolerance, validating
   system sudo before writes, and keeping post-install warnings non-fatal.
-- Stabilized Flatpak system/user install and uninstall scope behavior, including user-scope sudo refusal and system-scope sudo-common usage.
+- Stabilized Flatpak system/user install and uninstall scope behavior, including user-scope sudo refusal and system-scope c420ui sudo helper usage.
 - Made C420UI action finalization use synchronous overview-status detection so successful installs with warnings finish green instead of red.
-- Hardened sudo-common with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
+- Hardened c420ui sudo helper with clearer non-interactive errors, validation before privileged actions, clean timeout handling, and user-scope sudo blocking.
 
 ### Changed
 - Normalized every `scripts/check-*.js` entrypoint to a minimal `runCore(...)` compatibility wrapper and tightened the
@@ -115,9 +115,9 @@ This file preserves the detailed development changelog entries that were archive
 - Removed "F4 Shell Tool" and "Use C420UI Tool" references.
 
 ### Added
-- Centralized sudo usage via `scripts/sudo-common.sh` across all privileged scripts.
+- Centralized sudo usage via `packages/c420ui/host/linux/sudo-helper.sh` across all privileged scripts.
 - Consolidated TypeScript core for scripts and validations.
-- Hardened `check-no-shell-menu` and `check-sudo-contract` guardrails.
+- Hardened shell-menu validation and consolidated sudo contract guardrails.
 
 ### Changed
 - Updated technical version and phase identity to `0.1.4-dev.11.55` / `0.1.4.11-dev.55`.
@@ -133,7 +133,7 @@ This file preserves the detailed development changelog entries that were archive
 - Removed shell fallback menus from the default launcher flow.
 
 ### Added
-- Added `scripts/sudo-common.sh` as the shared privileged-command contract.
+- Added `packages/c420ui/host/linux/sudo-helper.sh` as the shared privileged-command contract.
 - Added anti-regression checks for removed shell menus, sudo helper usage, and action metadata contracts.
 - Added TypeScript guardrail checks for AI maintenance rules.
 
@@ -379,7 +379,7 @@ This file preserves the detailed development changelog entries that were archive
 - Changed shell CLI actions to resolve through the shared Action Registry.
 
 ### Fixed
-- Fixed duplicate `modalActive` declaration in `scripts/c420ui/app.ts`.
+- Fixed duplicate `modalActive` declaration in `packages/c420ui/src/terminal/app.ts`.
 
 
 ## [0.1.4.11-dev.40] - 2026-05-04
@@ -387,8 +387,9 @@ This file preserves the detailed development changelog entries that were archive
 ### Added
 
 - Enabled the C420UI terminal interface as the default interactive launcher when available.
-- Added npm dependency availability checks for C420UI startup.
-- Documented `blessed` as a required development dependency.
+- Added automatic npm dependency bootstrap for C420UI startup.
+- Added `scripts/ensure-npm-dependencies.sh` as a shared npm dependency bootstrap entrypoint.
+- Added `blessed` to the required npm dependency preflight list.
 - Added shell menu fallback when C420UI startup fails in default mode.
 
 ### Changed
@@ -1643,7 +1644,7 @@ All notable changes to this project are documented in this file.
 ### Changed
 - Changed build-flatpak.sh into a compatibility wrapper for install and bundle workflows.
 - Updated validation and documentation for the split Flatpak workflow.
-- Restored legacy `--skip-npm` compatibility through the wrapper/local install path and improved bundle script repo validation.
+- Restored the removed Flatpak local-install build-skip alias through the wrapper/local install path and improved bundle script repo validation.
 
 ### Notes
 - This is a packaging workflow improvement for the 1.4.10-dev.X cycle.

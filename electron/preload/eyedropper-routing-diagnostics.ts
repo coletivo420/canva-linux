@@ -1,7 +1,4 @@
-// @ts-nocheck
-"use strict";
-
-// @ts-check
+// @ts-nocheck -- These preload modules intentionally use CommonJS/Electron globals until their runtime contracts are fully typed.
 
 // Keep eyedropper routing diagnostics isolated here. These hooks exist only to
 // trace and redirect Canva-facing browser/native picker entrypoints back into

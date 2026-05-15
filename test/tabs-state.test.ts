@@ -156,6 +156,33 @@ test("toolbarState orders tabs and marks home tab as non-closable", () => {
   });
 });
 
+test("toolbarState uses tab id as secondary ordering tiebreaker", () => {
+  const { helpers, state } = createHelpers();
+  state.tabs.set(2, {
+    id: 2,
+    createdAt: 10,
+    title: "Second",
+    url: "https://www.canva.com/design/second",
+    favicon: null,
+    isHome: false,
+    view: createView(2),
+  });
+  state.tabs.set(1, {
+    id: 1,
+    createdAt: 10,
+    title: "First",
+    url: "https://www.canva.com/design/first",
+    favicon: null,
+    isHome: false,
+    view: createView(1),
+  });
+
+  assert.deepEqual(
+    helpers.toolbarState().tabs.map((tab) => tab.id),
+    [1, 2],
+  );
+});
+
 test("updateWindowTitle reflects the active tab", () => {
   const { helpers, mainWindow, state } = createHelpers();
   state.activeTabId = 1;

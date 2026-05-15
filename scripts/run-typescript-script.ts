@@ -18,7 +18,7 @@ function findProjectRoot(): string {
     while (true) {
       if (
         fs.existsSync(path.join(current, "package.json")) &&
-        fs.existsSync(path.join(current, "scripts/actions.json"))
+        fs.existsSync(path.join(current, "config/canva-linux/actions.json"))
       ) {
         return current;
       }

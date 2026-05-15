@@ -1,0 +1,30 @@
+{
+  "displayVersion": "0.1.4-14",
+  "status": "Alpha",
+  "phase": "0.1.4-14",
+  "projectName": "Canva Linux",
+  "projectSubtitle": "Install and Development Workspace",
+  "toolTitle": "Canva Linux — Install and Development Tool",
+  "c420uiTitle": "Canva Linux c420ui terminal interface",
+  "stateDirectoryName": "canva-linux",
+  "appId": "io.github.coletivo420.canva-linux",
+  "executableName": "canva-linux",
+  "repositoryUrl": "https://github.com/coletivo420/canva-linux",
+  "launcherCommand": "./canva-linux.sh",
+  "logoLines": [
+    "┌──────────────────────────────┐",
+    "│ .::==++**########**++==:::.  │",
+    "│ .:=+*#%%%%%%%%%%%%%%%%#*+=:. │",
+    "│ :=*#%%%%#*++==++*#%%%%#*=:   │",
+    "│ =*#%%%#+-:::::::::-+#%%%#*=  │",
+    "│ +#%%%*-::::::::::::-*%%%#+   │",
+    "│ *%%%#-::: CANVA LINUX :::#*  │",
+    "│ +#%%%*-::::::::::::-*%%%#+   │",
+    "│ =*#%%%#+-:::::::::-+#%%%#*=  │",
+    "│ :=*#%%%%#*++==++*#%%%%#*=:   │",
+    "│ .:=+*#%%%%%%%%%%%%%%%%#*+=:. │",
+    "│ .::==++**########**++==:::.  │",
+    "└──────────────────────────────┘"
+  ],
+  "versionReleaseNotes": "Release preparation for c420ui log selection, packaged artifacts, release workflow and documentation."
+}

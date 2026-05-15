@@ -18,6 +18,7 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
   const registeredPopups = [];
   const createdTabs = [];
   const externalUrls = [];
+  const debugLogs = [];
   const wc = {
     id: 42,
     getURL() {
@@ -61,7 +62,8 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
         createdTabs.push(tab);
         return tab;
       },
-      debugLog() {
+      debugLog(...args) {
+        debugLogs.push(args);
         return true;
       },
       isBlankPopupUrl(url) {
@@ -102,6 +104,7 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
     externalUrls,
     listeners,
     registeredPopups,
+    debugLogs,
   };
 }
 
@@ -187,6 +190,54 @@ test("did-create-window closes and opens external browser windows without OAuth 
   assert.equal(closed, true);
   assert.equal(registeredPopups.length, 0);
   assert.deepEqual(externalUrls, ["https://example.com/share"]);
+});
+
+test("did-create-window logs close diagnostics", () => {
+  const { debugLogs, listeners } = createHarness(() => ({
+    category: "tabs",
+    kind: "internal-tab",
+  }));
+
+  listeners.get("did-create-window")(
+    {
+      close() {},
+    },
+    {
+      url: "https://www.canva.com/design/next",
+      frameName: "",
+      referrer: { url: "https://www.canva.com/design" },
+    },
+  );
+
+  assert.ok(
+    debugLogs.some(
+      ([category, event]) =>
+        category === "tabs" && event === "close-created-window",
+    ),
+  );
+});
+
+test("did-create-window logs unavailable close diagnostics", () => {
+  const { debugLogs, listeners } = createHarness(() => ({
+    category: "tabs",
+    kind: "internal-tab",
+  }));
+
+  listeners.get("did-create-window")(
+    {},
+    {
+      url: "https://www.canva.com/design/next",
+      frameName: "",
+      referrer: { url: "https://www.canva.com/design" },
+    },
+  );
+
+  assert.ok(
+    debugLogs.some(
+      ([category, event]) =>
+        category === "tabs" && event === "close-created-window-unavailable",
+    ),
+  );
 });
 
 test("window open external handling does not require injected shell.openExternal", () => {

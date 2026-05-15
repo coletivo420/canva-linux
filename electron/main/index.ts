@@ -1,8 +1,6 @@
-"use strict";
+import path from "path";
 
-const path = require("path");
-
-const {
+import {
   app,
   safeStorage,
   dialog,
@@ -12,11 +10,11 @@ const {
   session,
   ipcMain,
   nativeTheme,
-} = require("electron");
+} from "electron";
 
-const { createDebugTools } = require("../shared/debug");
-const {
-  classifyWindowOpenRequest: sharedClassifyWindowOpenRequest,
+import { createDebugTools } from "../shared/debug";
+import {
+  classifyWindowOpenRequest as sharedClassifyWindowOpenRequest,
   detectCanvaOAuthCallback,
   extractHostname,
   isBlankPopupUrl,
@@ -25,37 +23,35 @@ const {
   isCanvaUrl,
   isSafeExternalUrl,
   shouldGrantRemotePermission,
-} = require("../shared/navigation");
+} from "../shared/navigation";
 
-const { registerEyeDropperBridge } = require("./eyedropper-bridge");
-const {
-  registerGpuDiagnostics: registerGpuDiagnosticsModule,
-} = require("./gpu-diagnostics");
-const { registerMainIpcHandlers } = require("./ipc");
-const { registerAppLifecycle } = require("./lifecycle");
-const { createCentralLogger, createStatusLogger } = require("./logging");
-const { createLoggingHelpers } = require("./logging-helpers");
-const {
+import { registerEyeDropperBridge } from "./eyedropper-bridge";
+import { registerGpuDiagnostics as registerGpuDiagnosticsModule } from "./gpu-diagnostics";
+import { registerMainIpcHandlers } from "./ipc";
+import { registerAppLifecycle } from "./lifecycle";
+import { createCentralLogger, createStatusLogger } from "./logging";
+import { createLoggingHelpers } from "./logging-helpers";
+import {
+  createCredentialStorageWarningCopy,
   createDefaultCredentialStoragePolicy,
   resolveCredentialStoragePolicy,
-} = require("./credential-storage");
-const { createOAuthHelpers } = require("./oauth");
-const {
+} from "./credential-storage";
+import { createOAuthHelpers } from "./oauth";
+import {
   clearEphemeralSessionData,
   configureLinuxRuntime,
   configureSession,
   flushSession,
-  sharedWebPreferences: createSharedWebPreferences,
-} = require("./runtime");
-const { createShellHelpers } = require("./shell");
-const { createTabController } = require("./tab-controller");
-const { createTabHelpers } = require("./tabs");
-const { createWindowOpenPolicy } = require("./window-open-policy");
+  sharedWebPreferences as createSharedWebPreferences,
+} from "./runtime";
+import { createShellHelpers } from "./shell";
+import { createTabController } from "./tab-controller";
+import { createTabHelpers } from "./tabs";
+import { createWindowOpenPolicy } from "./window-open-policy";
 
 const APP_ID = "io.github.coletivo420.canva-linux";
 const APP_URL = "https://www.canva.com/";
 const APP_NAME = "Canva Linux";
-const HOME_URL = APP_URL;
 const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
 const APP_ICON_PATH = path.join(__dirname, "..", "assets", "canva-icon.png");
@@ -106,21 +102,15 @@ configureLinuxRuntime({
 function showEphemeralSessionWarning(
   policy: CredentialStoragePolicy,
 ): Promise<unknown> {
-  if (policy.mode !== "ephemeral") {
+  const warningCopy = createCredentialStorageWarningCopy(policy);
+
+  if (!warningCopy) {
     return Promise.resolve();
   }
 
   return dialog.showMessageBox({
     type: "warning",
-    title: "Secure credential storage was not detected",
-    message: "Secure credential storage was not detected.",
-    detail: [
-      "Canva Linux will start in ephemeral session mode.",
-      "Your login, cookies and credentials will not be saved after closing the app.",
-      "",
-      "To enable persistent login, install or enable a Linux Secret Service backend:",
-      "KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
-    ].join("\n"),
+    ...warningCopy,
     buttons: ["Continue with ephemeral session"],
     defaultId: 0,
     cancelId: 0,
@@ -198,7 +188,7 @@ const tabHelpers = createTabHelpers({
   findTabByWebContentsRef(value: FindTabByWebContents) {
     findTabByWebContents = value;
   },
-  getHomeUrl: () => HOME_URL,
+  getHomeUrl: () => APP_URL,
   mainWindowRef: () => mainWindow,
   nativeTheme,
   setActiveTabId(value: number | null) {
@@ -332,7 +322,7 @@ const tabController = createTabController({
   classifyWindowOpenRequest,
   debugLog,
   getCanvaSession,
-  homeUrl: HOME_URL,
+  homeUrl: APP_URL,
   isBlankPopupUrl,
   isCanvaAuthUrl,
   isCanvaUrl,
