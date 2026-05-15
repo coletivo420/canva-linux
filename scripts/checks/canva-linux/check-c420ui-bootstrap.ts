@@ -123,6 +123,62 @@ function validateBundledBlessedNodeSection(relativePath: string, bundle: string,
   }
 }
 
+function validateBundledCanvaLinuxAdapterSection(relativePath: string, bundle: string, failures: string[]): void {
+  const adapterStart = bundle.indexOf("function createCanvaLinuxC420UIAdapter(rootDir");
+  if (adapterStart === -1) return;
+
+  const adapterEnd = bundle.indexOf("\n// scripts/c420ui-adapter/", adapterStart + 1);
+  if (adapterEnd === -1) {
+    failures.push(`${relativePath}: bundled Canva Linux adapter section is missing the next c420ui-adapter module boundary`);
+    return;
+  }
+
+  const adapterSection = bundle.slice(adapterStart, adapterEnd);
+  const orderedFragments = [
+    "function overviewStatus()",
+    "return buildCanvaLinuxOverviewStatus(resolvedRootDir);",
+    "async function runAction(actionId, context)",
+    "return runC420UICommand({",
+    "args: action.args ?? []",
+    "const adapter = {",
+    "runAction,",
+    "overviewStatus,",
+    "return createC420UIBridge(adapter);",
+  ];
+
+  let previousIndex = -1;
+  for (const fragment of orderedFragments) {
+    const index = adapterSection.indexOf(fragment, previousIndex + 1);
+    if (index === -1) {
+      failures.push(`${relativePath}: missing bundled Canva Linux adapter fragment ${fragment}`);
+      continue;
+    }
+    if (index <= previousIndex) {
+      failures.push(`${relativePath}: bundled Canva Linux adapter fragment is out of order: ${fragment}`);
+    }
+    previousIndex = index;
+  }
+
+  const overviewStart = adapterSection.indexOf("function overviewStatus()");
+  const runActionStart = adapterSection.indexOf("async function runAction(actionId, context)", overviewStart);
+  if (overviewStart !== -1 && runActionStart !== -1) {
+    const overviewSection = adapterSection.slice(overviewStart, runActionStart);
+    if (overviewSection.includes("args: action.args") || overviewSection.includes("emitProgress")) {
+      failures.push(`${relativePath}: bundled overviewStatus contains runAction fragments`);
+    }
+    if (!overviewSection.includes("return buildCanvaLinuxOverviewStatus(resolvedRootDir);")) {
+      failures.push(`${relativePath}: bundled overviewStatus must return buildCanvaLinuxOverviewStatus(resolvedRootDir)`);
+    }
+  }
+
+  if (countOccurrences(adapterSection, "function overviewStatus()") !== 1) {
+    failures.push(`${relativePath}: expected exactly one bundled Canva Linux overviewStatus function`);
+  }
+  if (countOccurrences(adapterSection, "return createC420UIBridge(adapter);") !== 1) {
+    failures.push(`${relativePath}: bundled Canva Linux adapter must return createC420UIBridge(adapter) exactly once`);
+  }
+}
+
 function validateGeneratedArtifactsMatchBuildRecipe(
   rootDir: string,
   relativePaths: readonly string[],
@@ -286,6 +342,7 @@ function main(): void {
     if (!fs.existsSync(path.join(rootDir, relativePath))) continue;
     const bundle = read(rootDir, relativePath);
     validateBundledBlessedNodeSection(relativePath, bundle, failures);
+    validateBundledCanvaLinuxAdapterSection(relativePath, bundle, failures);
 
     for (const forbidden of ["electron-builder", "@typescript-eslint", "playwright", "typescript/lib"]) {
       if (bundle.includes(forbidden)) failures.push(`${relativePath}: must not contain ${forbidden}`);
