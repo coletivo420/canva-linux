@@ -26,9 +26,7 @@ terminal and direct CLI actions.
 npm run c420ui:cli -- --help
 ```
 
-The launcher opens c420ui without arguments. With a direct action flag, the
-launcher invokes `.build/scripts/run-c420ui-cli.js`, which resolves actions
-through c420ui and the Canva Linux action registry.
+The launcher opens c420ui without arguments. With a direct action flag, the launcher invokes `bootstrap/c420ui/run-c420ui-cli.cjs` when the generated bundle is present, with `.build/scripts/run-c420ui-cli.js` kept only as a development fallback. Direct actions resolve through c420ui and the Canva Linux action registry.
 
 ## Implementing files
 
@@ -50,3 +48,19 @@ through c420ui and the Canva Linux action registry.
 - Do not allow multiple direct actions in one invocation.
 - Do not run the tool as root.
 - Do not route direct CLI around the c420ui Action Engine.
+
+## Bootstrap startup policy
+
+The launcher prefers the generated c420ui bootstrap bundle before any development build output:
+
+- `./canva-linux.sh` starts `bootstrap/c420ui/run-c420ui.cjs` when present.
+- Direct actions such as `./canva-linux.sh --doctor --dry-run` start `bootstrap/c420ui/run-c420ui-cli.cjs` when present.
+- `.build/scripts/run-c420ui*.js` remains a development fallback only.
+
+The launcher must not run `npm install`, `npm ci`, or `npm run build:scripts` before trying the bootstrap bundle. The bundle only starts c420ui; full dependency checks and repair remain c420ui Host Dependency Runner responsibilities.
+
+## Interactive dependency ordering
+
+Interactive startup opens c420ui before Canva Linux dependency repair. Dependency checks and repair are shown through the
+c420ui logs after the UI mounts. Direct CLI actions may still validate required dependencies according to c420ui policy
+because they do not have an interactive UI surface.

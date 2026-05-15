@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-const cliEntrypoint = path.join(".build", "scripts", "run-c420ui-cli.js");
+const cliEntrypoint = path.join("bootstrap", "c420ui", "run-c420ui-cli.cjs");
 const stubSource = [
   'const fs = require("node:fs");',
   'const capturePath = process.env.CANVA_LAUNCHER_STUB_ARGS;',
@@ -161,3 +161,35 @@ test("launcher rejects multiple direct actions before calling the bridge stub", 
   assert.equal(result.status, 64, result.stderr || result.stdout);
   assert.deepEqual(readCapturedArgs(capturePath), []);
 });
+
+function readLauncherSource(): string {
+  return fs.readFileSync("canva-linux.sh", "utf8");
+}
+
+test("launcher direct action uses bootstrap CLI bundle when present", () => {
+  const launcher = readLauncherSource();
+
+  assert.match(launcher, /bootstrap\/c420ui\/run-c420ui-cli\.cjs/);
+  assert.match(launcher, /\.build\/scripts\/run-c420ui-cli\.js/);
+  assert.match(launcher, /select_c420ui_cli_entrypoint\(\) \{/);
+  assert.match(launcher, /if \[\[ -s "\$\{bootstrap_entrypoint\}" \]\]; then[\s\S]*printf '%s\\n' "\$\{bootstrap_entrypoint\}"[\s\S]*if \[\[ -s "\$\{build_entrypoint\}" \]\]; then/);
+});
+
+test("launcher interactive path uses bootstrap UI bundle when present", () => {
+  const launcher = readLauncherSource();
+
+  assert.match(launcher, /bootstrap\/c420ui\/run-c420ui\.cjs/);
+  assert.match(launcher, /\.build\/scripts\/run-c420ui\.js/);
+  assert.match(launcher, /select_c420ui_ui_entrypoint\(\) \{/);
+  assert.match(launcher, /run_c420ui_entrypoint\(\) \{[\s\S]*entrypoint="\$\(select_c420ui_ui_entrypoint\)"[\s\S]*node "\$\{entrypoint\}"/);
+});
+
+test("launcher does not invoke npm build or install before bootstrap bundle", () => {
+  const launcher = readLauncherSource();
+
+  assert.equal(launcher.includes("npm run build:scripts"), false);
+  assert.equal(launcher.includes("npm install"), false);
+  assert.equal(launcher.includes("npm ci"), false);
+  assert.equal(launcher.includes("scripts/ensure-npm-dependencies.sh"), false);
+});
+

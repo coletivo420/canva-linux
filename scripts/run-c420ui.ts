@@ -1,30 +1,12 @@
 import path from "node:path";
-import { isC420UIHostDependencyFailure } from "../packages/c420ui/src";
-import { ensureCanvaLinuxHostDependencies } from "./c420ui-adapter/dependencies";
 import { runCanvaLinuxC420UI } from "./c420ui-adapter/run";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 process.chdir(rootDir);
 
-async function ensureHostDependencies(): Promise<void> {
-  const result = ensureCanvaLinuxHostDependencies({
-    rootDir,
-    env: process.env,
-  });
-
-  if (isC420UIHostDependencyFailure(result)) {
-    console.error(result.message || "Failed to ensure host dependencies.");
-    process.exit(result.exitCode ?? 1);
-  }
-}
-
 export async function main(): Promise<void> {
   const argv = process.argv.slice(2);
-
-  if (!argv.includes("--help")) {
-    await ensureHostDependencies();
-  }
 
   runCanvaLinuxC420UI({
     rootDir,

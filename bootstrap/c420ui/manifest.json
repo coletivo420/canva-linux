@@ -1,0 +1,30 @@
+{
+  "kind": "c420ui-bootstrap",
+  "c420uiVersion": "0.1.0",
+  "dependentProject": "canva-linux",
+  "dependentProjectVersion": "0.1.4-14",
+  "entrypoint": "run-c420ui.cjs",
+  "cliEntrypoint": "run-c420ui-cli.cjs",
+  "requiresNode": ">=22.0.0",
+  "buildRecipe": "scripts/build-c420ui-bootstrap.ts",
+  "buildTool": "esbuild",
+  "buildTarget": "node22",
+  "bundleFormat": "cjs",
+  "moduleFormat": "commonjs",
+  "futureModuleFormat": "esm",
+  "typescriptFirst": true,
+  "ownsFullDependencyPolicy": true,
+  "sourceHashAlgorithm": "sha256",
+  "sourceHash": "sha256:149e62f2678e826478fa28962e71805b349bde070b08e394e47a4e1a4d7ca782",
+  "sourceHashInputs": [
+    "packages/c420ui/src",
+    "scripts/c420ui-adapter",
+    "scripts/canva-linux",
+    "scripts/run-c420ui.ts",
+    "scripts/run-c420ui-cli.ts",
+    "scripts/build-c420ui-bootstrap.ts",
+    "config/canva-linux",
+    "packages/c420ui/package.json",
+    "package.json"
+  ]
+}

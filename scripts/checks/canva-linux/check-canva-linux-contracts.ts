@@ -350,11 +350,11 @@ function main(): number {
     }
   }
   const launcher = fs.readFileSync(launcherPath, "utf8");
-  if (!launcher.includes("run-c420ui-cli.js")) failures.push("launcher must call run-c420ui-cli.js for direct actions");
+  if (!launcher.includes("bootstrap/c420ui/run-c420ui-cli.cjs")) failures.push("launcher must call the c420ui CLI bootstrap bundle for direct actions");
   const legacyRunCoreCli = "run-core-entry.sh " + "action-runner" + " --cli";
   if (launcher.includes(legacyRunCoreCli)) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
   if (launcher.includes("--install-native | --install-flatpak")) failures.push("launcher must not hardcode the direct action flag list");
-  if (!launcher.includes("ensure_c420ui_cli_entrypoint")) failures.push("launcher must build the c420ui CLI entrypoint conditionally");
+  if (!launcher.includes("select_c420ui_cli_entrypoint")) failures.push("launcher must select the c420ui CLI bootstrap entrypoint conditionally");
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-contracts] adapter OK");
@@ -606,13 +606,24 @@ function checkHostDependencyProviderContract(failures: string[]): void {
       failures.push(`${dependenciesPath}: missing dependency loader fragment ${fragment}`);
     }
   }
-  for (const fragment of [
+  for (const forbidden of [
     "ensureCanvaLinuxHostDependencies",
     "isC420UIHostDependencyFailure",
     "ensureHostDependencies",
   ] as const) {
-    if (!runEntrypoint.includes(fragment)) {
-      failures.push(`${runEntrypointPath}: must use Canva Linux dependency loader fragment ${fragment}`);
+    if (runEntrypoint.includes(forbidden)) {
+      failures.push(`${runEntrypointPath}: must not repair dependent project dependencies before c420ui starts (${forbidden})`);
+    }
+  }
+
+  const adapterRun = readProjectFile(rootDir, "scripts/c420ui-adapter/run.ts");
+  for (const fragment of [
+    "startupTasks",
+    "Checking dependent project dependencies",
+    "ensureCanvaLinuxHostDependencies",
+  ] as const) {
+    if (!adapterRun.includes(fragment)) {
+      failures.push(`scripts/c420ui-adapter/run.ts: must wire dependency repair as a c420ui startup task (${fragment})`);
     }
   }
   for (const forbidden of [
@@ -1960,6 +1971,49 @@ function checkDevelopmentTaskRecipes(failures: string[]): void {
   }
 }
 
+function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const launcher = readProjectFile(rootDir, "canva-linux.sh");
+
+  for (const fragment of [
+    "bootstrap/c420ui/run-c420ui.cjs",
+    "bootstrap/c420ui/run-c420ui-cli.cjs",
+    ".build/scripts/run-c420ui.js",
+    ".build/scripts/run-c420ui-cli.js",
+    "select_c420ui_ui_entrypoint()",
+    "select_c420ui_cli_entrypoint()",
+    'entrypoint="$(select_c420ui_ui_entrypoint)"',
+    'entrypoint="$(select_c420ui_cli_entrypoint)"',
+    "Run npm run build:c420ui-bootstrap in a prepared development checkout, then retry.",
+  ] as const) {
+    if (!launcher.includes(fragment)) failures.push(`canva-linux.sh: missing bootstrap launcher fragment ${fragment}`);
+  }
+
+  const bootstrapUiIndex = launcher.indexOf("bootstrap/c420ui/run-c420ui.cjs");
+  const buildUiIndex = launcher.indexOf(".build/scripts/run-c420ui.js");
+  const bootstrapCliIndex = launcher.indexOf("bootstrap/c420ui/run-c420ui-cli.cjs");
+  const buildCliIndex = launcher.indexOf(".build/scripts/run-c420ui-cli.js");
+
+  if (bootstrapUiIndex !== -1 && buildUiIndex !== -1 && bootstrapUiIndex > buildUiIndex) {
+    failures.push("canva-linux.sh: interactive c420ui bootstrap bundle must be preferred before .build fallback");
+  }
+  if (bootstrapCliIndex !== -1 && buildCliIndex !== -1 && bootstrapCliIndex > buildCliIndex) {
+    failures.push("canva-linux.sh: c420ui CLI bootstrap bundle must be preferred before .build fallback");
+  }
+
+  for (const forbidden of [
+    "scripts/" + "ensure-npm-dependencies.sh",
+    "CANVA_" + "REQUIRED_NPM_DEPS",
+    "CANVA_" + "SKIP_NPM_INSTALL",
+    "CANVA_" + "NPM_REPAIR",
+    "npm install",
+    "npm ci",
+    "ensure_c420ui_bootstrap_npm_dependencies",
+  ] as const) {
+    if (launcher.includes(forbidden)) failures.push(`canva-linux.sh: must not restore launcher dependency policy fragment ${forbidden}`);
+  }
+}
+
 function checkShellActionIds(failures: string[]): void {
   const rootDir = findProjectRoot();
   const actions = loadCanvaLinuxActions(rootDir);
@@ -2012,6 +2066,7 @@ export function main(): number {
   checkVersionConsistency(failures);
   checkReleaseContract(failures);
   checkDevelopmentTaskRecipes(failures);
+  checkLauncherBootstrapDependencyPolicy(failures);
   checkShellActionIds(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));

@@ -45,6 +45,7 @@ session_log "[session] started id=${SESSION_ID}"
 session_log "[identity] version=${PROJECT_DISPLAY_VERSION:-unknown} phase=${PROJECT_PHASE:-unknown}"
 trap 'session_log "[session] ended"' EXIT
 
+
 ensure_action_runner_available() {
   if command -v node > /dev/null 2>&1; then
     return 0
@@ -55,60 +56,73 @@ ensure_action_runner_available() {
   exit 1
 }
 
-source_newer_than_entrypoint() {
-  local entrypoint="$1"
-  local source="$2"
-
-  [[ -e "${source}" ]] || return 0
-
-  if [[ -d "${source}" ]]; then
-    if [[ "${source}" -nt "${entrypoint}" ]] || find "${source}" -type f \( -name '*.ts' -o -name '*.json' \) -newer "${entrypoint}" | grep -q .; then
-      return 0
-    fi
-    return 1
-  fi
-
-  [[ "${source}" -nt "${entrypoint}" ]]
+c420ui_bootstrap_ui_entrypoint() {
+  printf '%s\n' "${ROOT_DIR}/bootstrap/c420ui/run-c420ui.cjs"
 }
 
-c420ui_cli_entrypoint_is_fresh() {
-  local entrypoint="${ROOT_DIR}/.build/scripts/run-c420ui-cli.js"
-
-  [[ -s "${entrypoint}" ]] || return 1
-
-  local source
-  for source in \
-    "${ROOT_DIR}/scripts/run-c420ui-cli.ts" \
-    "${ROOT_DIR}/scripts/c420ui-adapter" \
-    "${ROOT_DIR}/packages/c420ui/src/terminal" \
-    "${ROOT_DIR}/scripts/canva-linux/actions/registry.ts" \
-    "${ROOT_DIR}/scripts/canva-linux/project-root.ts" \
-    "${ROOT_DIR}/scripts/canva-linux/detection" \
-    "${ROOT_DIR}/packages/c420ui/src" \
-    "${ROOT_DIR}/config/canva-linux/actions.json" \
-    "${ROOT_DIR}/config/canva-linux/project-ui.json"
-  do
-    if source_newer_than_entrypoint "${entrypoint}" "${source}"; then
-      return 1
-    fi
-  done
-
-  return 0
+c420ui_bootstrap_cli_entrypoint() {
+  printf '%s\n' "${ROOT_DIR}/bootstrap/c420ui/run-c420ui-cli.cjs"
 }
 
-ensure_c420ui_cli_entrypoint() {
-  ensure_action_runner_available
+c420ui_build_ui_entrypoint() {
+  printf '%s\n' "${ROOT_DIR}/.build/scripts/run-c420ui.js"
+}
 
-  if c420ui_cli_entrypoint_is_fresh; then
+c420ui_build_cli_entrypoint() {
+  printf '%s\n' "${ROOT_DIR}/.build/scripts/run-c420ui-cli.js"
+}
+
+select_c420ui_ui_entrypoint() {
+  local bootstrap_entrypoint
+  local build_entrypoint
+
+  bootstrap_entrypoint="$(c420ui_bootstrap_ui_entrypoint)"
+  build_entrypoint="$(c420ui_build_ui_entrypoint)"
+
+  if [[ -s "${bootstrap_entrypoint}" ]]; then
+    printf '%s\n' "${bootstrap_entrypoint}"
     return 0
   fi
 
-  CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts
+  if [[ -s "${build_entrypoint}" ]]; then
+    printf '%s\n' "${build_entrypoint}"
+    return 0
+  fi
+
+  ui_error "c420ui bootstrap bundle is missing."
+  ui_info "Expected bootstrap/c420ui/run-c420ui.cjs or .build/scripts/run-c420ui.js."
+  ui_info "Run npm run build:c420ui-bootstrap in a prepared development checkout, then retry."
+  exit 1
+}
+
+select_c420ui_cli_entrypoint() {
+  local bootstrap_entrypoint
+  local build_entrypoint
+
+  bootstrap_entrypoint="$(c420ui_bootstrap_cli_entrypoint)"
+  build_entrypoint="$(c420ui_build_cli_entrypoint)"
+
+  if [[ -s "${bootstrap_entrypoint}" ]]; then
+    printf '%s\n' "${bootstrap_entrypoint}"
+    return 0
+  fi
+
+  if [[ -s "${build_entrypoint}" ]]; then
+    printf '%s\n' "${build_entrypoint}"
+    return 0
+  fi
+
+  ui_error "c420ui CLI bootstrap bundle is missing."
+  ui_info "Expected bootstrap/c420ui/run-c420ui-cli.cjs or .build/scripts/run-c420ui-cli.js."
+  ui_info "Run npm run build:c420ui-bootstrap in a prepared development checkout, then retry."
+  exit 1
 }
 
 run_action_by_cli_flag() {
   local flag="$1"
-  ensure_c420ui_cli_entrypoint
+  local entrypoint
+  ensure_action_runner_available
+  entrypoint="$(select_c420ui_cli_entrypoint)"
 
   local args=("${flag}")
   if [[ "${FORCE}" == true ]]; then
@@ -123,9 +137,9 @@ run_action_by_cli_flag() {
     CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" \
       CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" \
       CANVA_TOOL_SESSION_ID="${SESSION_ID}" \
-      node .build/scripts/run-c420ui-cli.js "${args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
+      node "${entrypoint}" "${args[@]}" 2>&1 | tee -a "${SESSION_LOG}"
   else
-    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node .build/scripts/run-c420ui-cli.js "${args[@]}" 2>&1
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" node "${entrypoint}" "${args[@]}" 2>&1
   fi
 }
 
@@ -181,12 +195,13 @@ can_run_c420ui() {
 }
 
 run_c420ui_entrypoint() {
+  local entrypoint
+  entrypoint="$(select_c420ui_ui_entrypoint)"
+
   if [[ -n "${PROJECT_PHASE:-}" ]]; then
-    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" npm run build:scripts > /dev/null &&
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-c420ui.js
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_PROJECT_PHASE="${PROJECT_PHASE}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node "${entrypoint}"
   else
-    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" npm run build:scripts > /dev/null &&
-      CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node .build/scripts/run-c420ui.js
+    CANVA_SCRIPT_REPO_ROOT="${ROOT_DIR}" CANVA_TOOL_SESSION_LOG="${SESSION_LOG}" CANVA_TOOL_SESSION_ID="${SESSION_ID}" node "${entrypoint}"
   fi
 }
 
