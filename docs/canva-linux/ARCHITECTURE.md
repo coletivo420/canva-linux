@@ -40,10 +40,7 @@ Canva Linux consumes c420ui through `scripts/c420ui-adapter/bridge.ts`,
 `scripts/c420ui-adapter/run.ts`, and the direct CLI bridge. The adapter loads
 project data from `config/canva-linux/` and passes it to c420ui contracts.
 
-The `canva-linux.sh` launcher contains a Stage 0 bootstrap only to make c420ui
-executable from a clean source checkout. That bootstrap may install only
-`esbuild` and `blessed`, does not mutate package metadata or lockfiles, and
-hands full dependency validation and repair to c420ui after startup.
+The `canva-linux.sh` launcher contains a Stage 0 bootstrap only to make c420ui executable from a clean source checkout. That bootstrap selects the generated `bootstrap/c420ui` bundle, does not run npm installation or local builds, and hands full dependency validation and repair to c420ui after startup.
 
 ## Boundary checks
 
@@ -60,3 +57,9 @@ hands full dependency validation and repair to c420ui after startup.
   metadata work.
 - Do not alter OAuth, `CANVA_DEBUG`, AppImage/Flatpak behavior, artifact names,
   or architecture naming.
+
+## Stage 0 c420ui bootstrap
+
+`canva-linux.sh` now treats `bootstrap/c420ui/run-c420ui.cjs` as the primary interactive c420ui entrypoint and `bootstrap/c420ui/run-c420ui-cli.cjs` as the primary direct-action entrypoint. The `.build/scripts` files remain development fallbacks only when the generated bootstrap artifacts are absent.
+
+A release checkout must start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The bundle may include the c420ui engine and the minimum Canva Linux adapter code that reads `config/canva-linux`, but it must not embed the full dependent-project dependency policy. c420ui takes over dependency validation and repair after startup.

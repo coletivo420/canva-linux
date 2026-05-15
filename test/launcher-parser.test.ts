@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-const cliEntrypoint = path.join(".build", "scripts", "run-c420ui-cli.js");
+const cliEntrypoint = path.join("bootstrap", "c420ui", "run-c420ui-cli.cjs");
 const stubSource = [
   'const fs = require("node:fs");',
   'const capturePath = process.env.CANVA_LAUNCHER_STUB_ARGS;',
@@ -166,61 +166,30 @@ function readLauncherSource(): string {
   return fs.readFileSync("canva-linux.sh", "utf8");
 }
 
-function extractLauncherFunction(source: string, functionName: string): string {
-  const lines = source.split(/(?<=\n)/);
-  const signature = `${functionName}() {`;
-  const start = lines.findIndex((line) => line.trimEnd() === signature);
-  assert.notEqual(start, -1, `missing ${functionName}`);
-
-  const nextFunction = lines.findIndex((line, index) => {
-    return (
-      index > start &&
-      /^[_a-zA-Z][_a-zA-Z0-9]*\(\) \{\s*$/.test(line)
-    );
-  });
-
-  return lines.slice(start, nextFunction === -1 ? undefined : nextFunction).join("");
-}
-
-test("launcher contains minimal c420ui npm bootstrap policy", () => {
+test("launcher direct action uses bootstrap CLI bundle when present", () => {
   const launcher = readLauncherSource();
-  const bootstrap = extractLauncherFunction(launcher, "ensure_c420ui_bootstrap_npm_dependencies");
 
-  assert.match(launcher, /c420ui_bootstrap_npm_dependencies_available\(\) \{/);
-  assert.match(launcher, /ensure_c420ui_bootstrap_npm_dependencies\(\) \{/);
-  assert.match(launcher, /node_modules\/\.bin\/esbuild/);
-  assert.match(launcher, /node_modules\/blessed/);
-  assert.match(bootstrap, /local bootstrap_packages=\(esbuild blessed\)/);
-  assert.match(bootstrap, /npm install --no-save --package-lock=false --include=dev --ignore-scripts/);
-  assert.match(bootstrap, /C420UI_SKIP_DEPENDENCY_INSTALL/);
-  assert.match(bootstrap, /c420ui bootstrap dependencies are missing and C420UI_SKIP_DEPENDENCY_INSTALL=1 is set\./);
-  assert.match(launcher, /ensure_c420ui_bootstrap_npm_dependencies\n\n  CANVA_SCRIPT_REPO_ROOT="\$\{ROOT_DIR\}" npm run build:scripts/);
-
-  for (const forbiddenPackage of [
-    "electron",
-    "electron-builder",
-    "eslint",
-    "typescript",
-    "@typescript-eslint/parser",
-    "@typescript-eslint/eslint-plugin",
-  ]) {
-    assert.equal(
-      bootstrap.includes(forbiddenPackage),
-      false,
-      `launcher bootstrap must not install ${forbiddenPackage}`,
-    );
-  }
+  assert.match(launcher, /bootstrap\/c420ui\/run-c420ui-cli\.cjs/);
+  assert.match(launcher, /\.build\/scripts\/run-c420ui-cli\.js/);
+  assert.match(launcher, /select_c420ui_cli_entrypoint\(\) \{/);
+  assert.match(launcher, /if \[\[ -s "\$\{bootstrap_entrypoint\}" \]\]; then[\s\S]*printf '%s\\n' "\$\{bootstrap_entrypoint\}"[\s\S]*if \[\[ -s "\$\{build_entrypoint\}" \]\]; then/);
 });
 
-test("launcher bootstrap does not restore legacy npm dependency policy", () => {
+test("launcher interactive path uses bootstrap UI bundle when present", () => {
   const launcher = readLauncherSource();
-  const bootstrap = extractLauncherFunction(launcher, "ensure_c420ui_bootstrap_npm_dependencies");
 
+  assert.match(launcher, /bootstrap\/c420ui\/run-c420ui\.cjs/);
+  assert.match(launcher, /\.build\/scripts\/run-c420ui\.js/);
+  assert.match(launcher, /select_c420ui_ui_entrypoint\(\) \{/);
+  assert.match(launcher, /run_c420ui_entrypoint\(\) \{[\s\S]*entrypoint="\$\(select_c420ui_ui_entrypoint\)"[\s\S]*node "\$\{entrypoint\}"/);
+});
+
+test("launcher does not invoke npm build or install before bootstrap bundle", () => {
+  const launcher = readLauncherSource();
+
+  assert.equal(launcher.includes("npm run build:scripts"), false);
+  assert.equal(launcher.includes("npm install"), false);
+  assert.equal(launcher.includes("npm ci"), false);
   assert.equal(launcher.includes("scripts/ensure-npm-dependencies.sh"), false);
-  assert.equal(launcher.includes("CANVA_REQUIRED_NPM_DEPS"), false);
-  assert.equal(launcher.includes("CANVA_SKIP_NPM_INSTALL"), false);
-  assert.equal(launcher.includes("CANVA_NPM_REPAIR"), false);
-  assert.equal(bootstrap.includes("npm ci"), false);
-  assert.equal(bootstrap.includes("package-lock=true"), false);
-  assert.equal(/(^|\s)--save(=|\s|$)/.test(bootstrap), false);
 });
+

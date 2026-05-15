@@ -1,4 +1,9 @@
-import blessed from "blessed";
+const tui = {
+  screen: require("blessed/lib/widgets/screen"),
+  box: require("blessed/lib/widgets/box"),
+  list: require("blessed/lib/widgets/list"),
+  log: require("blessed/lib/widgets/log"),
+};
 import {
   confirmDialog,
   inputDialog,

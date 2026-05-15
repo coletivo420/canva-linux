@@ -35,10 +35,7 @@ state.
 requests clean repair behavior through the generic runner.
 
 The Canva Linux launcher bootstrap is not the full dependency policy. It exists
-only because c420ui cannot run before its builder and runtime terminal
-dependencies exist; the launcher may install only `esbuild` and `blessed` so it
-can build and start c420ui, then c420ui owns complete host dependency validation
-and repair.
+only to select the generated `bootstrap/c420ui` bundle and start c420ui from a clean source checkout. The launcher does not install npm dependencies; after startup, c420ui owns complete host dependency validation and repair.
 
 ## Implementing files
 
@@ -60,9 +57,16 @@ and repair.
 
 ## Forbidden regressions
 
-- Do not run broad `npm ci` or full-project `npm install` directly from Canva Linux launchers. The only launcher-side
-  exception is the Stage 0 c420ui bootstrap for `esbuild` and `blessed`.
+- Do not run `npm ci`, `npm install`, or full-project dependency repair directly from Canva Linux launchers.
 - Do not restore `scripts/ensure-npm-dependencies.sh`.
 - Do not put concrete Canva Linux dependency lists in c420ui core.
 - Do not let `scripts/preflight-common.sh` own npm install or repair policy.
 - Do not silently ignore missing required dependencies.
+
+## Standalone bootstrap boundary
+
+Release checkouts must be able to start c420ui from the generated bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The Stage 0 launcher only selects `bootstrap/c420ui/run-c420ui.cjs` or `bootstrap/c420ui/run-c420ui-cli.cjs` and starts Node.
+
+The bootstrap bundle starts c420ui and contains the generic c420ui engine plus the minimal Canva Linux adapter needed to load project configuration. Full dependency validation, npm declared-versus-installed checks, repair, `C420UI_SKIP_DEPENDENCY_INSTALL`, and `C420UI_DEPENDENCY_REPAIR` remain Stage 1 c420ui Host Dependency Runner responsibilities after startup.
+
+The bootstrap artifact is CommonJS for this release. ESM is documented as future work and requires a separate migration phase.
