@@ -167,13 +167,19 @@ function readLauncherSource(): string {
 }
 
 function extractLauncherFunction(source: string, functionName: string): string {
-  const start = source.indexOf(`${functionName}() {`);
+  const lines = source.split(/(?<=\n)/);
+  const signature = `${functionName}() {`;
+  const start = lines.findIndex((line) => line.trimEnd() === signature);
   assert.notEqual(start, -1, `missing ${functionName}`);
 
-  const nextFunction = source.indexOf("\nensure_action_runner_available()", start);
-  assert.notEqual(nextFunction, -1, `could not locate end of ${functionName}`);
+  const nextFunction = lines.findIndex((line, index) => {
+    return (
+      index > start &&
+      /^[_a-zA-Z][_a-zA-Z0-9]*\(\) \{\s*$/.test(line)
+    );
+  });
 
-  return source.slice(start, nextFunction);
+  return lines.slice(start, nextFunction === -1 ? undefined : nextFunction).join("");
 }
 
 test("launcher contains minimal c420ui npm bootstrap policy", () => {
