@@ -69,6 +69,21 @@ Manual dry-runs were executed in the same environment. The npm c420ui launchers 
 
 Release-blocker greps were reviewed with these commands: `git grep -n "0.1.4-12"`; `git grep -n "0.1.4-dev.14\|0.1.4-rc.14\|0.1.4.14"`; `git grep -n "scripts/c420ui-canva-linux"`; `git grep -n "scripts/c420ui/"`; `git grep -n "ensure-npm-dependencies.sh"`; `git grep -n "CANVA_REQUIRED_NPM_DEPS"`; `git grep -n "CANVA_SKIP_NPM_INSTALL\|CANVA_NPM_REPAIR"`; and `git grep -n "x64" docs config scripts packages`. The matches for old versions, forbidden version forms, retired paths, and `x64` are historical changelog entries, guardrails, validation code, tests, or non-artifact contexts such as icon-size paths. No project-owned artifact name was found using `x64`, `CANVA_REQUIRED_NPM_DEPS` was absent, `CANVA_SKIP_NPM_INSTALL` / `CANVA_NPM_REPAIR` were absent, and the retired runtime paths did not exist on disk.
 
+## Standalone c420ui bootstrap validation
+
+Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb42194942b43c94341361` in container `3a93e95dcdd3` with Node.js `v20.20.2` and npm `11.4.2`. The first bootstrap build/check ran before removing `node_modules`; clean-checkout launcher checks then removed `node_modules` and `.build`, confirmed `esbuild` was not resolvable, and exercised the committed bootstrap entrypoints. Direct `./canva-linux.sh` validation remains blocked in this container because it runs as root and the launcher intentionally stops before dispatching to c420ui.
+
+| Check | Status | Evidence |
+| --- | --- | --- |
+| Bootstrap bundle exists | Pass | `bootstrap/c420ui/run-c420ui.cjs` and `bootstrap/c420ui/run-c420ui-cli.cjs` are committed bootstrap entrypoints; `node bootstrap/c420ui/run-c420ui-cli.cjs --help` passed after `rm -rf node_modules .build`. |
+| c420ui version is independent | Pass | `bootstrap/c420ui/manifest.json` records `c420uiVersion` as `0.1.0`. |
+| Dependent project version is separate | Pass | `bootstrap/c420ui/manifest.json` records `dependentProjectVersion` as `0.1.4-14`. |
+| Source hash matches current sources | Pass | `npm run build:c420ui-bootstrap` followed by `npm run check:c420ui-bootstrap` passed after reverting the intentional stale-hash edit. |
+| Stale hash detection works | Pass | After `printf '\n' >> scripts/build-c420ui-bootstrap.ts`, `npm run check:c420ui-bootstrap` failed with `bootstrap/c420ui/manifest.json: sourceHash is stale; run npm run build:c420ui-bootstrap`. |
+| Launcher does not install npm deps | Pass | `rg -n "npm (install\|ci)\|npm\\s+install\|npm\\s+ci" canva-linux.sh` returned no matches; `canva-linux.sh` resolves `bootstrap/c420ui/run-c420ui-cli.cjs` before the `.build` fallback. |
+| Clean checkout starts without esbuild | Blocked: environment limitation | After `rm -rf node_modules .build`, `node -e "require.resolve('esbuild')"` reported `esbuild not resolvable`; `node bootstrap/c420ui/run-c420ui-cli.cjs --help` and `node bootstrap/c420ui/run-c420ui-cli.cjs --doctor --dry-run` passed, but `./canva-linux.sh --help`, `./canva-linux.sh --doctor --dry-run`, and `./canva-linux.sh` exited at the root-user guard before launcher dispatch. |
+| Dependency repair runs after UI startup | Blocked: environment limitation | Source wiring keeps dependency repair in the c420ui startup task list, but the interactive `./canva-linux.sh` UI startup could not be validated in this root, non-interactive container. |
+
 ## Release blockers
 
 The release candidate must not be tagged or published while any blocker below is present:
