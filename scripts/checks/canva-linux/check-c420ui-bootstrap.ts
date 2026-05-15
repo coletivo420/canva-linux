@@ -71,6 +71,58 @@ function validateJavaScriptSyntax(rootDir: string, relativePath: string, failure
   }
 }
 
+function countOccurrences(content: string, fragment: string): number {
+  let count = 0;
+  let index = content.indexOf(fragment);
+
+  while (index !== -1) {
+    count += 1;
+    index = content.indexOf(fragment, index + fragment.length);
+  }
+
+  return count;
+}
+
+function validateBundledBlessedNodeSection(relativePath: string, bundle: string, failures: string[]): void {
+  if (!bundle.includes("Node.prototype.remove = function(element)")) return;
+
+  const requiredSingleDefinitions = [
+    "Node.prototype.emitAncestors = function()",
+    "Node.prototype.hasAncestor = function(target)",
+  ];
+
+  for (const definition of requiredSingleDefinitions) {
+    const count = countOccurrences(bundle, definition);
+    if (count !== 1) {
+      failures.push(`${relativePath}: expected exactly one bundled blessed ${definition} definition, found ${count}`);
+    }
+  }
+
+  const orderedFragments = [
+    "Node.prototype.remove = function(element)",
+    "if (this.screen.focused === element)",
+    "Node.prototype.detach = function()",
+    "Node.prototype.forAncestors = function(iter, s)",
+    "Node.prototype.emitAncestors = function()",
+    "Node.prototype.hasAncestor = function(target)",
+    "return false;",
+    "Node.prototype.get = function(name, value)",
+  ];
+
+  let previousIndex = -1;
+  for (const fragment of orderedFragments) {
+    const index = bundle.indexOf(fragment, previousIndex + 1);
+    if (index === -1) {
+      failures.push(`${relativePath}: missing bundled blessed node fragment ${fragment}`);
+      continue;
+    }
+    if (index <= previousIndex) {
+      failures.push(`${relativePath}: bundled blessed node fragment is out of order: ${fragment}`);
+    }
+    previousIndex = index;
+  }
+}
+
 function validateGeneratedArtifactsMatchBuildRecipe(
   rootDir: string,
   relativePaths: readonly string[],
@@ -233,6 +285,8 @@ function main(): void {
   for (const relativePath of [uiBundlePath, cliBundlePath]) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) continue;
     const bundle = read(rootDir, relativePath);
+    validateBundledBlessedNodeSection(relativePath, bundle, failures);
+
     for (const forbidden of ["electron-builder", "@typescript-eslint", "playwright", "typescript/lib"]) {
       if (bundle.includes(forbidden)) failures.push(`${relativePath}: must not contain ${forbidden}`);
     }
