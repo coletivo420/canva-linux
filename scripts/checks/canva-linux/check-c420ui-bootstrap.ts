@@ -1,6 +1,17 @@
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
+import {
+  C420UI_BOOTSTRAP_BUILD_RECIPE,
+  C420UI_BOOTSTRAP_BUILD_TARGET,
+  C420UI_BOOTSTRAP_BUILD_TOOL,
+  C420UI_BOOTSTRAP_BUNDLE_FORMAT,
+  createC420UIBootstrapEsbuildCliArgs,
+  C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
+  C420UI_BOOTSTRAP_MODULE_FORMAT,
+} from "../../canva-linux/bootstrap/build-recipe";
 import {
   calculateC420UIBootstrapSourceHash,
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
@@ -39,6 +50,66 @@ function indexOfRequired(content: string, fragment: string, failures: string[], 
   return index;
 }
 
+function summarizeCommandFailure(result: ReturnType<typeof spawnSync>): string {
+  const output = `${result.stdout?.toString() || ""}${result.stderr?.toString() || ""}`.trim();
+  if (result.error) return result.error.message;
+  return output.split("\n").find((line) => line.trim().length > 0)?.trim() || `exit status ${result.status}`;
+}
+
+function validateJavaScriptSyntax(rootDir: string, relativePath: string, failures: string[]): void {
+  const absolutePath = path.join(rootDir, relativePath);
+  if (!fs.existsSync(absolutePath)) return;
+
+  const result = spawnSync(process.execPath, ["--check", absolutePath], {
+    cwd: rootDir,
+    encoding: "utf8",
+    shell: false,
+  });
+
+  if (result.error || result.status !== 0) {
+    failures.push(`${relativePath}: generated bootstrap artifact is not valid JavaScript (${summarizeCommandFailure(result)})`);
+  }
+}
+
+function validateGeneratedArtifactsMatchBuildRecipe(
+  rootDir: string,
+  relativePaths: readonly string[],
+  failures: string[],
+): void {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-bootstrap-check-"));
+
+  try {
+    const result = spawnSync(
+      "npx",
+      ["esbuild", ...createC420UIBootstrapEsbuildCliArgs(tempDir)],
+      {
+        cwd: rootDir,
+        encoding: "utf8",
+        shell: false,
+      },
+    );
+
+    if (result.error || result.status !== 0) {
+      failures.push(`bootstrap/c420ui: unable to regenerate bootstrap artifacts for comparison (${summarizeCommandFailure(result)})`);
+      return;
+    }
+
+    for (const relativePath of relativePaths) {
+      const generatedPath = path.join(tempDir, path.basename(relativePath));
+      const committedPath = path.join(rootDir, relativePath);
+      if (!fs.existsSync(generatedPath) || !fs.existsSync(committedPath)) continue;
+
+      const generated = fs.readFileSync(generatedPath);
+      const committed = fs.readFileSync(committedPath);
+      if (!generated.equals(committed)) {
+        failures.push(`${relativePath}: generated bootstrap artifact is stale; run npm run build:c420ui-bootstrap`);
+      }
+    }
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
 function main(): void {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
@@ -70,12 +141,12 @@ function main(): void {
       entrypoint: "run-c420ui.cjs",
       cliEntrypoint: "run-c420ui-cli.cjs",
       requiresNode: ">=22.0.0",
-      buildRecipe: "scripts/build-c420ui-bootstrap.ts",
-      buildTool: "esbuild",
-      buildTarget: "node22",
-      bundleFormat: "cjs",
-      moduleFormat: "commonjs",
-      futureModuleFormat: "esm",
+      buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,
+      buildTool: C420UI_BOOTSTRAP_BUILD_TOOL,
+      buildTarget: C420UI_BOOTSTRAP_BUILD_TARGET,
+      bundleFormat: C420UI_BOOTSTRAP_BUNDLE_FORMAT,
+      moduleFormat: C420UI_BOOTSTRAP_MODULE_FORMAT,
+      futureModuleFormat: C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
       typescriptFirst: true,
       ownsFullDependencyPolicy: true,
     };
@@ -153,6 +224,11 @@ function main(): void {
   ]) {
     if (launcher.includes(forbidden)) failures.push(`canva-linux.sh: must not contain ${forbidden}`);
   }
+
+  for (const relativePath of [uiBundlePath, cliBundlePath]) {
+    validateJavaScriptSyntax(rootDir, relativePath, failures);
+  }
+  validateGeneratedArtifactsMatchBuildRecipe(rootDir, [uiBundlePath, cliBundlePath], failures);
 
   for (const relativePath of [uiBundlePath, cliBundlePath]) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) continue;

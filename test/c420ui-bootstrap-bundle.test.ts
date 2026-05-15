@@ -1,8 +1,13 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import {
+  createC420UIBootstrapEsbuildCliArgs,
+} from "../scripts/canva-linux/bootstrap/build-recipe";
 import {
   calculateC420UIBootstrapSourceHash,
   collectC420UIBootstrapSourceHashFiles,
@@ -118,4 +123,51 @@ test("interactive run-c420ui entrypoint starts c420ui before dependent dependenc
   assert.match(adapterRunSource, /startupTasks/);
   assert.match(adapterRunSource, /ensureCanvaLinuxHostDependencies/);
   assert.match(adapterRunSource, /Checking dependent project dependencies/);
+});
+
+
+test("c420ui bootstrap entrypoints are syntactically valid JavaScript", () => {
+  for (const entrypoint of [uiEntrypoint, cliEntrypoint]) {
+    const result = spawnSync(process.execPath, ["--check", entrypoint], {
+      encoding: "utf8",
+      shell: false,
+    });
+
+    assert.equal(
+      result.status,
+      0,
+      `${entrypoint} must pass node --check: ${result.stderr || result.stdout}`,
+    );
+  }
+});
+
+test("c420ui bootstrap entrypoints match the build recipe", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-bootstrap-test-"));
+
+  try {
+    const result = spawnSync(
+      "npx",
+      ["esbuild", ...createC420UIBootstrapEsbuildCliArgs(tempDir)],
+      {
+        encoding: "utf8",
+        shell: false,
+      },
+    );
+
+    assert.equal(
+      result.status,
+      0,
+      `bootstrap recipe rebuild must succeed: ${result.stderr || result.stdout}`,
+    );
+
+    for (const entrypoint of [uiEntrypoint, cliEntrypoint]) {
+      assert.deepEqual(
+        fs.readFileSync(entrypoint),
+        fs.readFileSync(path.join(tempDir, path.basename(entrypoint))),
+        `${entrypoint} must match the current bootstrap build recipe`,
+      );
+    }
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 });
