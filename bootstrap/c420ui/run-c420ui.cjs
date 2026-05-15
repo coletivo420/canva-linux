@@ -16675,54 +16675,54 @@ var require_node = __commonJS({
     Node.prototype.append = function(element) {
       this.insert(element, this.children.length);
     };
-    Node.prototype.insertBefore = function(element, other) {
-      var i = this.children.indexOf(other);
-      if (~i) this.insert(element, i);
-    };
-    Node.prototype.insertAfter = function(element, other) {
-      var i = this.children.indexOf(other);
-      if (~i) this.insert(element, i + 1);
-    };
-    Node.prototype.remove = function(element) {
-      if (element.parent !== this) return;
-      var i = this.children.indexOf(element);
-      if (!~i) return;
-      element.clearPos();
-      element.parent = null;
-      this.children.splice(i, 1);
-      i = this.screen.clickable.indexOf(element);
-      if (~i) this.screen.clickable.splice(i, 1);
-      i = this.screen.keyable.indexOf(element);
-      if (~i) this.screen.keyable.splice(i, 1);
-      element.emit("reparent", null);
-      this.emit("remove", element);
-      (function emit(el) {
-        var n = el.detached !== true;
-        el.detached = true;
-        if (n) el.emit("detach");
-        el.children.forEach(emit);
-      })(element);
-    Node.prototype.emitAncestors = function() {
-      var args = Array.prototype.slice(arguments), iter;
-      if (typeof args[args.length - 1] === "function") {
-        iter = args.pop();
+      if (this.screen.focused === element) {
+        this.screen.rewindFocus();
       }
-      return this.forAncestors(function(el) {
-        if (iter) iter(el);
-        el.emit.apply(el, args);
-      }, true);
     };
-    Node.prototype.hasDescendant = function(target) {
-      return (function find(el) {
-        for (var i = 0; i < el.children.length; i++) {
-          if (el.children[i] === target) {
-            return true;
-          }
-          if (find(el.children[i]) === true) {
-            return true;
-          }
-        }
-        return false;
+    Node.prototype.detach = function() {
+      if (this.parent) this.parent.remove(this);
+    };
+    Node.prototype.free = function() {
+      return;
+    };
+    Node.prototype.destroy = function() {
+      this.detach();
+      this.forDescendants(function(el) {
+        el.free();
+        el.destroyed = true;
+        el.emit("destroy");
+      }, this);
+    };
+    Node.prototype.forDescendants = function(iter, s) {
+      if (s) iter(this);
+      this.children.forEach(function emit(el) {
+        iter(el);
+        el.children.forEach(emit);
+      });
+    };
+    Node.prototype.forAncestors = function(iter, s) {
+      var el = this;
+      if (s) iter(this);
+      while (el = el.parent) {
+        iter(el);
+      }
+    };
+    Node.prototype.collectDescendants = function(s) {
+      var out = [];
+      this.forDescendants(function(el) {
+        out.push(el);
+      }, s);
+      return out;
+    };
+    Node.prototype.collectAncestors = function(s) {
+      var out = [];
+      this.forAncestors(function(el) {
+        out.push(el);
+      }, s);
+      return out;
+    };
+    Node.prototype.emitDescendants = function() {
+      return this.forDescendants(function(el) {
       })(this);
     };
     Node.prototype.hasAncestor = function(target) {
@@ -17226,36 +17226,52 @@ function validateActionEnv(action) {
         `Action env value must be string: ${String(action.id)} -> ${key}`
       );
     }
-  }
-}
-function validateAllowedValue(value, allowed, message) {
-  if (allowed && !allowed.includes(value)) throw new Error(message);
-}
-function validateC420UIActions(actions, options = {}) {
-  if (!Array.isArray(actions)) throw new Error("actions registry must contain an array");
-  const ids = /* @__PURE__ */ new Set();
-  const cliAliases = /* @__PURE__ */ new Set();
-  for (const item of actions) {
-    if (!isRecord(item)) throw new Error("Action entries must be objects");
-    requireString(item.id, "Action missing id");
-    if (!/^[a-z0-9-]+$/.test(item.id)) {
-      throw new Error(`Invalid action id format: ${item.id}`);
-    }
-    if (ids.has(item.id)) throw new Error(`Duplicate action id: ${item.id}`);
-    ids.add(item.id);
-    requireString(item.label, `Action missing label: ${item.id}`);
-    requireString(item.group, `Action missing group: ${item.id}`);
-    requireString(item.section, `Action missing section: ${item.id}`);
-    requireString(item.kind, `Action missing kind: ${item.id}`);
-    validateAllowedValue(
-      item.group,
-      options.allowedGroups,
-      `Invalid action group: ${item.id} -> ${item.group}`
+      options.allowedSections,
+      `Invalid action section: ${item.id} -> ${item.section}`
     );
     validateAllowedValue(
-      item.section,
-    }
+      item.kind,
+      options.allowedKinds ?? c420uiActionKinds,
+      `Unsupported action kind: ${item.id} -> ${item.kind}`
+    );
+    requireOptionalStringArray(item.args, `Action args must be an array: ${item.id}`);
+    requireOptionalStringArray(
+      item.cli,
+      `Action cli aliases must be an array: ${item.id}`
+    );
+    requireOptionalStringArray(
+      item.cliFlags,
+      `Action cliFlags aliases must be an array: ${item.id}`
+    );
+    if (item.scope !== void 0) {
+      requireString(item.scope, `Action scope must be string: ${item.id}`);
+      validateAllowedValue(
+        item.scope,
+        options.allowedScopes ?? c420uiKnownActionScopes,
+        `Invalid action scope: ${item.id} -> ${item.scope}`
+      );
+      "hidden",
+      "longRunning",
+      "dangerous",
+      "planned",
+      "requiresConfirmation",
+      "requiresRoot"
+    ]) {
+      requireOptionalBoolean(item, key);
     for (const key of [
+      "command",
+      "description",
+      "confirmationTitle",
+      "confirmationMessage",
+      "confirmationPhrase",
+      "warning",
+      "artifactWorkflowId"
+    ]) {
+      requireOptionalString(item, key);
+    validateActionEnv(item);
+    if (item.kind === "planned") {
+      if (item.command || item.args) {
+        throw new Error(`Planned action must not define command/args: ${item.id}`);
       }
       }
     }
@@ -17308,7 +17324,6 @@ function validateC420UIActions(actions, options = {}) {
       emitProgress(event) {
         emit?.(createC420UIEvent({ type: "progress", ...event }));
       }
-    };
     const result = await bridge.runAction(action.id, context);
     emit?.(
       createC420UIEvent({
@@ -17329,21 +17344,6 @@ var init_action_engine = __esm({
     init_actions();
     init_events();
     init_exit_codes();
-    }
-    if (item.kind === "command") {
-      if (!item.command) throw new Error(`Command action missing command: ${item.id}`);
-      if (!Array.isArray(item.args)) {
-        throw new Error(`Command action args must be an array: ${item.id}`);
-    }
-    for (const alias of [...item.cli ?? [], ...item.cliFlags ?? []]) {
-      if (!alias.startsWith("--")) {
-        throw new Error(`CLI alias must start with --: ${item.id} -> ${alias}`);
-      if (cliAliases.has(alias)) throw new Error(`Duplicate cli alias: ${alias}`);
-      cliAliases.add(alias);
-    if (item.dangerous && item.requiresConfirmation !== true) {
-      throw new Error(
-        `Dangerous action must set requiresConfirmation=true: ${item.id}`
-      );
     if (item.dangerous && !(item.description || item.confirmationMessage)) {
       throw new Error(
         `Dangerous action missing description/confirmationMessage: ${item.id}`
@@ -17573,59 +17573,59 @@ function createInteractiveActionRunner(options) {
     if (event.type === "progress") {
       const nextState = toProgressState(event.state);
       state.progressState = nextState;
+      const canceled = status === "canceled";
+      state.running = false;
+      state.progressState = canceled ? "canceled" : success ? "success" : "failed";
+      options.setRunning(false);
       options.setProgress(
-        nextState,
-        event.percent,
-        event.label ?? nextState
+        state.progressState,
+        success ? 100 : 0,
+        canceled ? "Canceled" : success ? "Completed" : `exit code ${String(exitCode ?? "unknown")}`
       );
-      return;
-    }
-    if (event.type === "action:start") {
-      state.running = true;
-      state.progressState = "running";
-      options.setRunning(true);
-      options.setProgress("running", 5, event.message || "Starting");
-      return;
-    }
-    if (event.type === "action:planned") {
-      state.progressState = "warning";
-      options.appendLogText(
-        `[planned] ${event.message}
-`,
-        "system"
-      );
-      options.setProgress("warning", 100, "Planned action");
-      return;
-    }
-    if (event.type === "action:finish") {
-      const status = event.data?.status;
-      const exitCode = event.data?.exitCode;
-      const success = status === "success" || exitCode === c420uiExitCodes.success;
-        activeAbortController = null;
+  const makeEngine = options.createActionEngine ?? createC420UIActionEngine;
+  const engine = makeEngine({
+    bridge: options.bridge,
+    rootDir: options.rootDir,
+    env: options.env,
+    rootProvider: options.rootProvider,
+    requestRootAccess: options.requestRootAccess,
+    emit: applyEvent
+  });
+  async function runAction(action, runOptions = {}) {
+    const dryRun = runOptions.dryRun === true;
+    const confirmed = runOptions.confirmed === true;
+    if (!dryRun && interactiveActionRequiresConfirmation(action) && !confirmed) {
+      const result = {
+        code: c420uiExitCodes.generalError,
+        status: "canceled",
+        message: "Action canceled before execution."
+      };
+      state.running = false;
+      state.progressState = "canceled";
+      options.setRunning(false);
+      options.setProgress("canceled", 0, "Canceled");
+      options.appendLogText("[info] Action canceled before execution.\n", "system");
+      state.lastResult = result;
+      return result;
+    const abortController = new AbortController();
+    activeAbortController = abortController;
+    try {
+      const result = await engine.runAction(action, {
+        dryRun,
+        yes: confirmed,
+        signal: abortController.signal
+      });
+      state.lastResult = result;
+      if (result.status === "failed" && result.message) {
+        options.appendLogText(`${result.message}
+`, "system");
+        state.progressState = "failed";
+        options.setRunning(false);
+        options.setProgress("failed", 0, result.message);
       }
-    }
-  }
-  function cancel() {
-    if (!activeAbortController || activeAbortController.signal.aborted) {
-      return false;
-    }
-    activeAbortController.abort();
-    options.appendLogText("[info] Cancellation requested.\n", "system");
-    state.progressState = "canceled";
-    options.setProgress("canceled", 0, "Canceled");
-    return true;
-  }
-  return {
-    cancel,
-    runAction,
-    state
-  };
-}
-var init_interactive_action_runner = __esm({
-  "packages/c420ui/src/terminal/interactive-action-runner.ts"() {
-    init_action_engine();
-    init_actions();
-    init_exit_codes();
+      return result;
+    } finally {
+      if (activeAbortController === abortController) {
   }
 });
 
@@ -17746,38 +17746,38 @@ function validateConfigShape(value) {
       });
     }
   }
-  if ("npm" in value) {
-    if (!isRecord2(value.npm)) {
-      failures.push("npm must be an object");
-    } else {
-      if (value.npm.packageManager !== "npm") failures.push('npm.packageManager must be "npm"');
-      assertOptionalString(value.npm, "lockfile", failures, "npm");
-      if ("installStrategy" in value.npm && !c420uiKnownNpmInstallStrategies.includes(value.npm.installStrategy)) {
-        failures.push('npm.installStrategy must be "auto", "ci", or "install"');
+  return result.status === "missing" || result.status === "failed";
+}
+var c420uiKnownHostDependencyPurposes, c420uiKnownNpmInstallStrategies;
+var init_host_dependencies = __esm({
+  "packages/c420ui/src/host-dependencies.ts"() {
+    c420uiKnownHostDependencyPurposes = [
+      "terminal",
+      "cli",
+      "development",
+      "build",
+      "package",
+      "validation",
+      "release"
+    ];
+    c420uiKnownNpmInstallStrategies = ["auto", "ci", "install"];
+  }
+});
+
+// packages/c420ui/src/startup-task.ts
+function formatPlannedCommand(result) {
+  const command = result.plannedCommand;
+  if (!command) return null;
+  return [command.command, ...command.args].join(" ");
+}
+async function runC420UIStartupTasks(tasks, log) {
+  for (const task of tasks) {
+    log(`[info] ${task.label}...
+`);
       }
-      assertOptionalBoolean(value.npm, "includeDev", failures, "npm");
-      assertOptionalStringArray(value.npm, "requiredDependencies", failures, "npm");
-      assertOptionalStringArray(value.npm, "requiredDevDependencies", failures, "npm");
-    }
-  }
-  return failures;
-}
-function assertC420UIHostDependencyConfig(value) {
-  const failures = validateConfigShape(value);
-  if (failures.length > 0) {
-    throw new Error(`Invalid c420ui host dependency config: ${failures.join("; ")}.`);
-  }
-}
-function validateC420UIHostDependencyConfig(value) {
-  assertC420UIHostDependencyConfig(value);
-  return value;
-}
-function isC420UIHostDependencyFailure(result) {
-    try {
-      const result = await task.run();
-      const plannedCommand = formatPlannedCommand(result);
-      if (plannedCommand) {
-        log(`[info] Planned dependency command: ${plannedCommand}
+var init_startup_task = __esm({
+  "packages/c420ui/src/startup-task.ts"() {
+    init_host_dependencies();
 `);
       if (isC420UIHostDependencyFailure(result)) {
         log("[error] Failed to prepare dependent project dependencies.\n");
@@ -18190,44 +18190,44 @@ function createApp(options) {
         result = await inputDialog(
           screen,
           "Administrator authorization",
-          [
-            `${request.action.label}`,
-            "",
-            "Enter your sudo password to continue.",
-            `Reason: ${request.reason}`
-          ].join("\n"),
-          3e4
+          message: "[error] Administrator authorization timed out."
+        };
+      }
+      let validation;
+      let submittedInput = result.value;
+      try {
+        validation = rootProvider.validateRootAccessWithInput(
+          opts.rootDir,
+          request.actionEnv,
+          submittedInput
         );
       } catch {
         return {
           ok: false,
-          code: c420uiExitCodes.generalError,
-          message: "[error] Administrator authorization prompt failed."
+          code: c420uiExitCodes.rootPolicyError,
+          message: "[error] Administrator authorization validation failed."
         };
       } finally {
-        modalActive = false;
+        submittedInput = "";
       }
-      if (result.status === "canceled") {
-        return {
-          ok: false,
-          code: c420uiExitCodes.canceled,
-          message: "[info] Administrator authorization canceled."
-        };
+      if (validation.ok) {
+        const env = rootProvider.buildRootActionEnvironment ? rootProvider.buildRootActionEnvironment(
+          request.action,
+          request.actionEnv
+        ) : request.actionEnv;
+        return { ok: true, env };
       }
-      if (result.status === "timeout") {
-        return {
-          ok: false,
-          code: c420uiExitCodes.canceled,
-        `[warn] Administrator authorization failed (${attempt}/${maxAttempts}).
-`,
-        "system"
-      );
-      if (attempt === maxAttempts) {
-        return validation;
-      }
-    }
-    return {
-      ok: false,
+      appendLogText(
+    setProgress(state, percent, label) {
+      if (state === "running") {
+        setProgressRunning(percent ?? 5, label);
+      } else if (state === "success") {
+        setProgressSuccess(label);
+  const sessionLogPath = opts.sessionLogPath || import_node_path2.default.join(
+    process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || ".", ".local/state"),
+      return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
+      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
+      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
       code: c420uiExitCodes.rootPolicyError,
       message: "[error] Administrator authorization failed."
     };
@@ -19104,60 +19104,60 @@ function createApp(options) {
     appendLogText(
       `${result.ok ? "[ok]" : "[warn]"} ${result.message}
 `,
-      "system"
-    );
-  });
-  screen.key(["f6"], () => {
+  screen.key(["home"], () => {
     if (!modalActive) {
-      showPlainLogsView();
+      setFocusedPanelScroll(0);
     }
-  });
-  screen.key(["S-pageup", "M-up"], () => {
-    content.scroll(-5);
     screen.render();
   });
-  screen.key(["S-pagedown", "M-down"], () => {
-    content.scroll(5);
-    screen.render();
-  });
-  screen.key(["pageup"], () => {
+  screen.key(["end"], () => {
     if (!modalActive) {
-      scrollFocusedPanel(-10);
+      setFocusedPanelScroll(100);
     }
     screen.render();
   });
-  screen.key(["pagedown"], () => {
+  screen.key(["?"], () => {
+    if (!running && !modalActive) {
+      setView("help");
+    }
+  });
+  screen.key(["space"], () => {
+    if (!running && !modalActive && focusZone === "menu" && currentView === "settings") {
+      toggleSelectedSetting();
+    }
+  });
+  menu.on("click", () => {
     if (!modalActive) {
-      scrollFocusedPanel(10);
+      setFocusZone("menu");
     }
-    screen.render();
   });
-    if (updatingSettingsMenuItems) {
-      return;
+  diagnostics.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("diagnostics");
     }
-  menu.on("select item", () => {
-    if (updatingSettingsMenuItems) {
-      return;
+  });
+  content.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("content");
     }
-    if (["install", "development", "maintenance"].includes(currentView)) {
+  });
+  logs.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("logs");
+    }
+  });
+  menu.on("keypress", (_, key) => {
+    if ((key.name === "up" || key.name === "down") && ["install", "development", "maintenance"].includes(currentView)) {
       renderSelectionDetails();
       screen.render();
     }
-    if (currentView === "settings") {
+    if ((key.name === "up" || key.name === "down") && currentView === "settings") {
       renderSelectionDetails();
       screen.render();
     }
   });
-  applyLogPanelLabel();
-  importLauncherSessionLog();
-  appendLogText(
-    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
-`,
-    "system"
-  );
-  appendLogText(`[info] Settings loaded from ${settingsPath}.
-`, "system");
-  setView("main");
+  return screen;
+}
   void refreshDetectedInstallations("startup");
   renderDiagnosticsBox();
   menu.focus();
@@ -19246,93 +19246,100 @@ var init_app = __esm({
     ACTION_LOG_PREFIX = "Action |";
     FOCUS_ZONES = ["menu", "diagnostics", "content", "logs"];
     HEADER_GAP = 0;
-    HEADER_BOX_HORIZONTAL_PADDING = 4;
-    c420uiHeaderMinWidth = 28;
-    PROJECT_HEADER_MIN_WIDTH = 40;
-  }
-});
-
-// scripts/run-c420ui.ts
-var run_c420ui_exports = {};
-__export(run_c420ui_exports, {
-  main: () => main
-});
-module.exports = __toCommonJS(run_c420ui_exports);
-var import_node_path13 = __toESM(require("node:path"));
+function printC420UITerminalHelp(options) {
+  console.log(formatC420UITerminalHelp(options));
+}
 
 // packages/c420ui/src/terminal/index.ts
-init_app();
+init_interactive_action_runner();
 
-// packages/c420ui/src/terminal/help.ts
-function formatC420UITerminalHelp(options) {
-  const launcher = options.launcherCommand || options.config.project.launcherCommand;
+// packages/c420ui/src/terminal/root-guard.ts
+function createC420UIRootLaunchGuardMessage(projectName) {
+  const toolName = `${projectName} Install and Development Tool`;
   return [
-    `${options.config.project.projectName} c420ui terminal interface`,
+    `Do not run ${toolName} with sudo or as root.`,
     "",
-    "Usage:",
-    "  npm run c420ui",
-    launcher ? `  ${launcher}` : ""
-  ].filter(Boolean).join("\n");
+    `Run this tool as your regular user. When an operation needs administrator privileges, ${projectName} will ask for authentication only for that specific action.`,
+    "",
+    "Running the whole tool as root may break file ownership, user sessions, build artifacts and desktop integration."
+  ].join("\n");
 }
-// packages/c420ui/src/terminal/runtime.ts
-function loadC420UITerminalApp() {
-  const app = (init_app(), __toCommonJS(app_exports));
-  return app.createApp;
+function isC420UIRootLaunch(getuid = process.getuid) {
+  return typeof getuid === "function" && getuid() === 0;
 }
-function runC420UITerminalApp(options, runtimeOptions = {}) {
-  const writeError = runtimeOptions.writeError ?? console.error;
-  const exit = runtimeOptions.exit ?? process.exit;
-  enforceC420UIRootLaunchGuard({
-    projectName: options.config.project.projectName,
-    getuid: runtimeOptions.getuid,
-    writeError,
-    exit
-  });
-  const create = runtimeOptions.create ?? loadC420UITerminalApp();
-  const screen = create(options);
-  const onUncaughtException = runtimeOptions.onUncaughtException ?? ((listener) => process.on("uncaughtException", listener));
-  onUncaughtException((err) => {
-    try {
-      screen.destroy();
-    } catch {
-    }
-    writeError(err instanceof Error ? err.stack || err.message : String(err));
-    exit(1);
-  });
+function enforceC420UIRootLaunchGuard(options) {
+  if (!isC420UIRootLaunch(options.getuid)) return;
+  const message = createC420UIRootLaunchGuardMessage(options.projectName);
+  options.writeError?.(message);
+  options.exit?.(1);
 }
-// scripts/c420ui-adapter/adapter.ts
-var import_node_fs10 = __toESM(require("node:fs"));
-var import_node_path11 = __toESM(require("node:path"));
-var import_node_child_process2 = require("node:child_process");
-  const runCommand = options.runCommand ?? import_node_child_process2.spawnSync;
-      if (result.error) {
-        return {
-          ok: false,
-          code: 1,
-          message: `[error] Failed to start privilege validation: ${result.error.message}`
-        };
-      }
-      const code = result.status ?? 1;
-      if (code !== 0) {
-        return {
-          ok: false,
-          code,
-          message: "[error] Privilege validation failed before action execution."
-        };
-      }
-      return { ok: true };
+
+
+
+// packages/c420ui/src/index.ts
+init_scopes();
+
+// packages/c420ui/src/linux-root-provider.ts
+
+// packages/c420ui/src/root-provider.ts
+var c420uiRootPolicyExitCode = 64;
+
+// packages/c420ui/src/linux-root-provider.ts
+init_scopes();
+function defaultC420UILinuxRootValidationCommand(sudoHelperPath) {
+  return { command: "bash", args: [sudoHelperPath, "--validate"] };
+}
+function defaultC420UILinuxRootValidationStdinCommand(sudoHelperPath) {
+  return { command: "bash", args: [sudoHelperPath, "--validate-stdin"] };
+}
+function defaultC420UILinuxBuildActionEnvironment(action, baseEnv) {
+  return { ...baseEnv, ...action.env || {} };
+}
+function defaultC420UILinuxActionHasUserScope(action, actionEnv = {}) {
+  void actionEnv;
+  return isC420UIUserScope(action.scope);
+}
+function validateC420UILinuxActionScope(action, actionEnv, actionHasUserScope = defaultC420UILinuxActionHasUserScope) {
+  if (action.requiresRoot === true && actionHasUserScope(action, actionEnv)) {
+    return {
+      ok: false,
+      code: c420uiRootPolicyExitCode,
+      message: `[error] ${action.id}: requiresRoot=true cannot be combined with user scope.`
+    };
+  }
+  return { ok: true };
+}
+function createC420UILinuxRootProviderBase(options) {
+  const buildActionEnvironment = options.buildActionEnvironment ?? defaultC420UILinuxBuildActionEnvironment;
+  const actionHasUserScope = options.actionHasUserScope ?? defaultC420UILinuxActionHasUserScope;
+  const buildRootValidationCommand = options.buildRootValidationCommand ?? defaultC420UILinuxRootValidationCommand;
+  const buildRootValidationStdinCommand = options.buildRootValidationStdinCommand ?? defaultC420UILinuxRootValidationStdinCommand;
+  return {
+    id: options.id ?? "c420ui-linux-root-provider-base",
+    label: options.label ?? "c420ui Linux root provider base",
+    buildActionEnvironment(action, baseEnv) {
+      return buildActionEnvironment(action, baseEnv);
     },
-    validateRootAccessWithInput(rootDir2, actionEnv, input) {
-      const validationCommand = buildRootValidationStdinCommand(
+    validateActionScope(action, actionEnv) {
+      return validateC420UILinuxActionScope(
+        action,
+        actionEnv,
+        actionHasUserScope
+      );
+    },
+    validateRootAccess(rootDir2, actionEnv) {
+      const validationCommand = buildRootValidationCommand(
         options.sudoHelperPath
       );
       const result = runCommand(validationCommand.command, validationCommand.args, {
         cwd: rootDir2,
+        stdio: "inherit",
         env: actionEnv,
-        shell: false,
-        input: `${input}
-`,
-        stdio: ["pipe", "pipe", "pipe"]
+        shell: false
+      });
+          message: `[error] Failed to start privilege validation: ${result.error.message}`
+        };
+      }
       }
     }
 }
@@ -19356,10 +19363,8 @@ var import_node_path4 = __toESM(require("node:path"));
   const packagePath = import_node_path4.default.join(rootDir2, "package.json");
   if (!import_node_fs4.default.existsSync(packagePath)) {
     const packageJson = JSON.parse(import_node_fs4.default.readFileSync(packagePath, "utf8"));
-}
     const projectRequire = (0, import_node_module.createRequire)(import_node_path4.default.join(rootDir2, "package.json"));
   const hasLockfile = import_node_fs4.default.existsSync(import_node_path4.default.join(rootDir2, lockfile));
-    return {
   if (missing.length > 0) {
 var defaultNpmCommandRunner = (command, args, options) => (0, import_node_child_process3.spawnSync)(command, args, {
   const runCommand = options.runCommand ?? defaultNpmCommandRunner;
@@ -19372,11 +19377,6 @@ init_startup_task();
 var import_node_child_process4 = require("node:child_process");
   return {
   const spawnCommand = options.spawnCommand ?? import_node_child_process4.spawn;
-  const buildRootValidationStdinCommand = options.buildRootValidationStdinCommand ?? defaultC420UILinuxRootValidationStdinCommand;
-  return {
-    id: options.id ?? "c420ui-linux-root-provider-base",
-    label: options.label ?? "c420ui Linux root provider base",
-    buildActionEnvironment(action, baseEnv) {
       return buildActionEnvironment(action, baseEnv);
     },
     validateActionScope(action, actionEnv) {
@@ -19857,25 +19857,25 @@ async function runC420UICommand(options) {
     function clearCancelKillTimer() {
       if (!cancelKillTimer) return;
       clearTimeout(cancelKillTimer);
-      cancelKillTimer = void 0;
+    options.emitProgress({ state: "running", label: options.label });
+    try {
+      child = spawnCommand(options.command, args, {
+        cwd: options.cwd,
+        env: options.env,
+        shell: false,
+        stdio: ["ignore", "pipe", "pipe"]
+      });
     }
-    function settle(result) {
-      if (settled) return;
-      settled = true;
-      clearCancelKillTimer();
-      options.signal?.removeEventListener("abort", abortAction);
-      resolve(result);
-    }
-    function abortAction() {
-      cancellationRequested = true;
+      emitRemainingChunk(stdoutStream, "stdout", options.emitLog);
+    child.stderr?.on("end", () => {
       emitOperationalLog(options, {
         source: "action",
-        line: `[action] Cancel requested for ${options.label}`,
-        level: "info"
-      });
-      emitCanceledProgress();
-      child.kill(cancelSignal);
-      cancelKillTimer = setTimeout(() => {
+      const resultCode = code ?? c420uiExitCodes.generalError;
+var import_node_path5 = __toESM(require("node:path"));
+var executableArtifactActionIdFields = [
+  "buildActionId",
+  if (typeof value[field] !== "string" || !value[field].trim()) {
+  return import_node_path5.default.normalize(configPath.replace(/^[\\/]+/, ""));
         if (!closeObserved) child.kill(cancelKillSignal);
       }, cancelKillTimeoutMs);
       cancelKillTimer.unref();
@@ -20215,61 +20215,45 @@ function validateOptionalScope(task) {
     throw new Error(`Invalid development task scope: ${String(task.id)} -> ${task.scope}`);
   }
 }
-function validateRequiredFor(task) {
-  if (task.requiredFor === void 0) return;
-  if (!Array.isArray(task.requiredFor)) {
-    throw new Error(`Development task requiredFor must be an array: ${String(task.id)}`);
+    case "uninstall":
+      return "uninstall";
+    case "purge":
+      return "purge";
+    case "release":
+      return "release";
   }
-  for (const value of task.requiredFor) {
-    if (typeof value !== "string" || !c420uiDevelopmentTaskRequiredForValues.includes(
-      value
-    )) {
-      throw new Error(`Invalid development task requiredFor: ${String(task.id)} -> ${String(value)}`);
+}
+function validateC420UIDevelopmentTasks(tasks) {
+  if (!Array.isArray(tasks)) throw new Error("development tasks must be an array");
+  const ids = /* @__PURE__ */ new Set();
+  for (const item of tasks) {
+    if (!isRecord4(item)) throw new Error("Development task entries must be objects");
+    requireString2(item.id, "Development task missing id");
+    if (ids.has(item.id)) throw new Error(`Duplicate development task id: ${item.id}`);
+    ids.add(item.id);
+    requireString2(item.label, `Development task missing label: ${item.id}`);
+    requireString2(item.kind, `Development task missing kind: ${item.id}`);
+    if (!c420uiDevelopmentTaskKinds.includes(item.kind)) {
+      throw new Error(`Invalid development task kind: ${item.id} -> ${item.kind}`);
     }
+    requireString2(item.actionId, `Development task missing actionId: ${item.id}`);
+    if (item.description !== void 0) {
+      requireString2(item.description, `Development task description must be string: ${item.id}`);
+    }
+    validateOptionalScope(item);
+    requireOptionalBoolean2(item, "requiresRoot");
+    requireOptionalBoolean2(item, "supportsDryRun");
+  if (task.scope !== void 0 && task.scope !== action.scope) {
+    throw new Error(`Development task ${task.id} scope contradicts action ${action.id}`);
+  }
+  if (task.supportsDryRun === true && !supportsDryRunAction(action)) {
+    throw new Error(`Development task ${task.id} promises dry-run but action ${action.id} does not support it`);
+  }
+  const workflowPhase = kindToWorkflowPhase(task.kind);
+  if (action.phase !== void 0 && action.phase !== workflowPhase) {
+    throw new Error(`Development task ${task.id} phase ${workflowPhase} contradicts action ${action.id} phase ${action.phase}`);
   }
 }
-function kindToWorkflowPhase(kind) {
-  switch (kind) {
-    case "doctor":
-    case "clean":
-    case "custom":
-      return "development";
-    case "validate":
-      return "validation";
-    case "build":
-      return "build";
-    case "package":
-      return "package";
-    case "install":
-      return "install";
-    requireOptionalBoolean2(item, "planned");
-    validateRequiredFor(item);
-  }
-}
-function validateC420UIDevelopmentConfig(config) {
-  if (!isRecord4(config)) throw new Error("development config must be an object");
-  validateC420UIDevelopmentTasks(config.tasks);
-}
-function supportsDryRunAction(action) {
-  if (isC420UIPlannedAction(action)) return false;
-  if (action.dryRun === "disabled") return false;
-  return action.kind === "command" || action.dryRun === "supported" || action.dryRun === "required";
-}
-function assertC420UIDevelopmentTaskMatchesAction(task, action) {
-  validateC420UIDevelopmentTasks([task]);
-  if (task.actionId !== action.id) {
-    throw new Error(`Development task ${task.id} actionId does not match action ${action.id}`);
-  }
-  const plannedAction = isC420UIPlannedAction(action);
-  if (task.planned === true && !plannedAction) {
-    throw new Error(`Development task ${task.id} is planned but action ${action.id} is executable`);
-  }
-  if (task.planned !== true && plannedAction) {
-    throw new Error(`Development task ${task.id} is executable but action ${action.id} is planned`);
-  }
-  if (task.requiresRoot !== void 0 && Boolean(task.requiresRoot) !== Boolean(action.requiresRoot)) {
-    throw new Error(`Development task ${task.id} requiresRoot contradicts action ${action.id}`);
-  }
 var import_node_fs6 = __toESM(require("node:fs"));
 var import_node_path7 = __toESM(require("node:path"));
 var import_node_fs5 = __toESM(require("node:fs"));
@@ -20281,166 +20265,182 @@ var import_node_path6 = __toESM(require("node:path"));
     import_node_fs6.default.readFileSync(import_node_path7.default.join(rootDir2, "package.json"), "utf8")
   const content = import_node_fs6.default.readFileSync(
     import_node_path7.default.join(rootDir2, "scripts/app-identity-common.sh"),
-function createC420UIDevelopmentWorkflowFromAction(task, action) {
-  assertC420UIDevelopmentTaskMatchesAction(task, action);
-  const phase = kindToWorkflowPhase(task.kind);
-  const workflowAction = {
-    ...action,
-    phase
+function runInstallDetection(rootDir2, runCommand) {
+  const warnings = [];
+  let ok = true;
+  try {
+    const result = runCommand("bash", ["-c", detectionCommand()], {
+      cwd: rootDir2,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    if (result.error) {
+      ok = false;
+      warnings.push(`Installation detection failed to start: ${result.error.message}`);
+    }
+    const stderr = result.stderr?.trim();
+    if (stderr) warnings.push(stderr);
+    if ((result.status ?? 0) !== 0) {
+      ok = false;
+      warnings.push(
+        `Installation detection exited with status ${result.status ?? "unknown"}.`
+      );
+    }
+    return {
+      ok,
+      values: parseC420UIDetectionKeyValueLines(
+        result.stdout || "",
+        canvaLinuxDetectionKeys
+      ),
+      warnings
+    appImageVersion: values.DETECTED_APPIMAGE_VERSION || ""
   };
+}
+function createCanvaLinuxDetectionProvider(options = {}) {
+  const runCommand = options.runCommand ?? import_node_child_process5.spawnSync;
   return {
-    id: task.id,
-    label: task.label || action.label,
-    phase,
-    actions: [workflowAction],
-    requiresRoot: action.requiresRoot,
-    supportsDryRun: task.supportsDryRun
-  };
-var import_node_fs6 = __toESM(require("node:fs"));
-var import_node_path7 = __toESM(require("node:path"));
-var import_node_fs5 = __toESM(require("node:fs"));
-var import_node_path6 = __toESM(require("node:path"));
-  return import_node_path6.default.resolve(__dirname, "../..");
-  let current = import_node_path6.default.resolve(startDir);
-    if (import_node_fs5.default.existsSync(import_node_path6.default.join(current, "package.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/actions.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/project-ui.json"))) {
-    const parent = import_node_path6.default.dirname(current);
-    import_node_fs6.default.readFileSync(import_node_path7.default.join(rootDir2, "package.json"), "utf8")
-  const content = import_node_fs6.default.readFileSync(
-    import_node_path7.default.join(rootDir2, "scripts/app-identity-common.sh"),
-  const content = import_node_fs6.default.readFileSync(
-    import_node_path7.default.join(rootDir2, "scripts/app-identity-common.sh"),
-  const create = runtimeOptions.create ?? loadC420UITerminalApp();
-  const screen = create(options);
-  const onUncaughtException = runtimeOptions.onUncaughtException ?? ((listener) => process.on("uncaughtException", listener));
-  onUncaughtException((err) => {
-    try {
-      screen.destroy();
-    } catch {
+    id: "canva-linux-detection-provider",
+    label: "Canva Linux detection provider",
+    buildOverviewStatus(rootDir2) {
+      const project = safeProjectMetadata(rootDir2);
+      const probe = createInstallDetectionProbe(runCommand);
+      const detection = probe.run(rootDir2);
+      return {
+        project,
+        installations: {
+          ...emptyInstallations,
+          ...buildInstallations(detection.values)
+        },
+        warnings: detection.warnings ?? []
+      };
     }
-    writeError(err instanceof Error ? err.stack || err.message : String(err));
-    exit(1);
-  });
+  };
 }
+function buildCanvaLinuxOverviewStatus(rootDir2 = findCanvaLinuxProjectRoot()) {
+  return createCanvaLinuxDetectionProvider().buildOverviewStatus(rootDir2);
 
-// scripts/c420ui-adapter/adapter.ts
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
-
-// packages/c420ui/src/terminal/logo.ts
-var c420uiLogoLines = [
-  "\u2584\u2584  \u2588 \u2588 \u2584\u2584\u2584 \u2584\u2580\u2584  \u2584 \u2584  \u2584",
-  "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
-  "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
-];
-
-// scripts/c420ui-adapter/adapter.ts
-init_settings();
-
-// scripts/canva-linux/detection/provider.ts
+// scripts/canva-linux/actions/registry.ts
 var import_node_fs7 = __toESM(require("node:fs"));
 var import_node_path8 = __toESM(require("node:path"));
-var import_node_child_process5 = require("node:child_process");
+  return import_node_path8.default.join(rootDir2, "config/canva-linux/actions.json");
+  const resolvedRoot = import_node_path8.default.resolve(rootDir2);
+    import_node_fs7.default.readFileSync(actionsPath(resolvedRoot), "utf8")
 
-// scripts/canva-linux/project-root.ts
-var import_node_fs6 = __toESM(require("node:fs"));
-var import_node_path7 = __toESM(require("node:path"));
-function defaultRootSearchDir() {
-  return import_node_path7.default.resolve(__dirname, "../..");
-}
-function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
-  let current = import_node_path7.default.resolve(startDir);
-  while (true) {
-    if (import_node_fs6.default.existsSync(import_node_path7.default.join(current, "package.json")) && import_node_fs6.default.existsSync(import_node_path7.default.join(current, "config/canva-linux/actions.json")) && import_node_fs6.default.existsSync(import_node_path7.default.join(current, "config/canva-linux/project-ui.json"))) {
-      return current;
+  if (!import_node_fs8.default.existsSync(filePath)) {
+    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
+  const configPath = import_node_path9.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
+var import_node_fs9 = __toESM(require("node:fs"));
+var import_node_path10 = __toESM(require("node:path"));
+  return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
+  const developmentConfigPath = import_node_path10.default.join(
+// scripts/c420ui-adapter/adapter.ts
+  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
+    const content = import_node_fs10.default.readFileSync(identityPath, "utf8");
+  return import_node_path11.default.join(process.env.HOME || ".", ".local/state");
+  const resolvedRootDir = import_node_path11.default.resolve(rootDir2);
+  const projectUiPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
+  const packageJsonPath = import_node_path11.default.join(resolvedRootDir, "package.json");
+  const actionsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/actions.json");
+  const artifactsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
+  const appIdentityPath = import_node_path11.default.join(
+    return import_node_path11.default.join(
+    if (!import_node_fs10.default.existsSync(actionsJsonPath)) {
+    return buildCanvaLinuxOverviewStatus(resolvedRootDir);
+  }
+  async function runAction(actionId, context) {
+    const action = loadCanvaLinuxActions2().find((item) => item.id === actionId);
+    if (!action) {
+      return {
+        code: c420uiExitCodes.invalidUsage,
+        status: "failed",
+        message: `Unknown action: ${actionId}`
+      };
     }
-    const parent = import_node_path7.default.dirname(current);
-    if (parent === current) return defaultRootSearchDir();
-    current = parent;
-  }
-}
-
-// scripts/canva-linux/detection/provider.ts
-var canvaLinuxDetectionKeys = [
-  "DETECTED_NATIVE_SYSTEM",
-  "DETECTED_NATIVE_USER",
-  "DETECTED_FLATPAK_SYSTEM",
-  "DETECTED_FLATPAK_USER",
-  "DETECTED_APPIMAGE_ARTIFACTS",
-  "DETECTED_NATIVE_SYSTEM_VERSION",
-  "DETECTED_NATIVE_USER_VERSION",
-  "DETECTED_FLATPAK_SYSTEM_VERSION",
-  "DETECTED_FLATPAK_USER_VERSION",
-  "DETECTED_APPIMAGE_VERSION"
-];
-var emptyInstallations = {
-  nativeSystem: false,
-  nativeUser: false,
-  flatpakSystem: false,
-  flatpakUser: false,
-  appImageArtifacts: false,
-  nativeSystemVersion: "",
-  nativeUserVersion: "",
-  flatpakSystemVersion: "",
-  flatpakUserVersion: "",
-  appImageVersion: ""
-};
-function readPackage(rootDir2) {
-  return JSON.parse(
-    import_node_fs7.default.readFileSync(import_node_path8.default.join(rootDir2, "package.json"), "utf8")
-  );
-}
-function readPhase(rootDir2) {
-  const content = import_node_fs7.default.readFileSync(
-    import_node_path8.default.join(rootDir2, "scripts/app-identity-common.sh"),
-    "utf8"
-  );
-  const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
-  return match?.[1] ?? "unknown";
-}
-function safeProjectMetadata(rootDir2) {
-  let version = "unknown";
-  let phase = "unknown";
-  try {
-    version = readPackage(rootDir2).version || "unknown";
-  } catch {
-    version = "unknown";
-  }
-  try {
-    phase = readPhase(rootDir2);
-  } catch {
-    phase = "unknown";
-  }
-  return {
-    version,
-    phase,
-    appId: "io.github.coletivo420.canva-linux",
-    executable: "canva-linux",
-    repository: "https://github.com/coletivo420/canva-linux"
-  };
-}
-function detectionCommand() {
-  return [
-    "source scripts/install-detection-common.sh",
-    "detect_installations",
-    "print_detection_status_env"
-  ].join("\n");
-}
+    if (!action.command) {
+      return {
+        code: c420uiExitCodes.invalidUsage,
+        status: "failed",
+        message: `${actionId} has no command`
+      };
+    }
+    if (context.signal?.aborted) {
+      context.emitProgress({ state: "canceled", percent: 0, label: action.label });
+      return {
+        code: c420uiExitCodes.canceled,
+        status: "canceled",
+        message: "Action canceled before start."
+      };
+    }
+    return runC420UICommand({
+      command: action.command,
+      rootDir: resolvedRootDir,
+      title: projectUi.c420uiTitle,
+      brand: loadBrandConfig(),
+      project: loadProjectConfig(),
+      releaseNotes: projectUi.versionReleaseNotes,
+      sessionLogPath: getSessionLogPath(),
+      sessionId: getSessionId()
     };
-  } catch (error) {
-    warnings.push(
-      `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`
-    );
-    return { ok: false, values: {}, warnings };
   }
+  const adapter = {
+    id: "canva-linux",
+    rootDir: resolvedRootDir,
+    projectInfo,
+    actions,
+    artifactWorkflows,
+    runAction,
+// scripts/c420ui-adapter/dependencies.ts
+var import_node_fs11 = __toESM(require("node:fs"));
+var import_node_path12 = __toESM(require("node:path"));
+function loadCanvaLinuxDependencyConfig(rootDir2) {
+  const relativeConfigPath = "config/canva-linux/dependencies.json";
+  const configPath = import_node_path12.default.join(rootDir2, relativeConfigPath);
+  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs11.default.readFileSync(configPath, "utf8")));
 }
-function createInstallDetectionProbe(runCommand) {
+function ensureCanvaLinuxHostDependencies(options) {
+  return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
+}
+
+    rootAuthEnvValue: "1",
+    runCommand: options.runCommand,
+    buildActionEnvironment: buildCanvaLinuxRootActionEnvironment,
+    actionHasUserScope: hasCanvaLinuxUserScope
+  });
   return {
-    id: "canva-linux-install-detection",
-    label: "Canva Linux installation detection",
-    run(rootDir2) {
-      return runInstallDetection(rootDir2, runCommand);
-    }
-  };
+    ...base,
+    resolveRootPolicy(action, rootDir2, actionEnv) {
+      void actionEnv;
+      if (action.requiresRoot === true) {
+        return { requiresRoot: true, reason: `${action.id}: requiresRoot=true` };
+      }
+      if (conditionalSystemRootActionIds.has(action.id)) {
+        try {
+          const status = buildCanvaLinuxOverviewStatus(rootDir2);
+          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
+            return {
+              requiresRoot: true,
+              reason: `${action.id}: detected system installation`
+            };
+          }
+          if (status.warnings.length) {
+            return {
+              requiresRoot: false,
+              warning: `[warn] Unable to detect system installations for root policy: ${status.warnings.join("; ")}`
+            };
+          }
+        } catch (error) {
+      }
+    rootProvider: createCanvaLinuxRootProvider(),
+    startupTasks: [
+      {
+        id: "host-dependencies",
+        label: "Checking dependent project dependencies",
+        run: () => ensureCanvaLinuxHostDependencies({
+          rootDir: rootDir2,
+          env: options.env
+        })
+      }
+    ]
 }
 function buildInstallations(values) {
   return {
