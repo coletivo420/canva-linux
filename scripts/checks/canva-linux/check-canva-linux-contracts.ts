@@ -350,11 +350,11 @@ function main(): number {
     }
   }
   const launcher = fs.readFileSync(launcherPath, "utf8");
-  if (!launcher.includes("run-c420ui-cli.js")) failures.push("launcher must call run-c420ui-cli.js for direct actions");
+  if (!launcher.includes("bootstrap/c420ui/run-c420ui-cli.cjs")) failures.push("launcher must call the c420ui CLI bootstrap bundle for direct actions");
   const legacyRunCoreCli = "run-core-entry.sh " + "action-runner" + " --cli";
   if (launcher.includes(legacyRunCoreCli)) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
   if (launcher.includes("--install-native | --install-flatpak")) failures.push("launcher must not hardcode the direct action flag list");
-  if (!launcher.includes("ensure_c420ui_cli_entrypoint")) failures.push("launcher must build the c420ui CLI entrypoint conditionally");
+  if (!launcher.includes("select_c420ui_cli_entrypoint")) failures.push("launcher must select the c420ui CLI bootstrap entrypoint conditionally");
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-contracts] adapter OK");
@@ -606,13 +606,24 @@ function checkHostDependencyProviderContract(failures: string[]): void {
       failures.push(`${dependenciesPath}: missing dependency loader fragment ${fragment}`);
     }
   }
-  for (const fragment of [
+  for (const forbidden of [
     "ensureCanvaLinuxHostDependencies",
     "isC420UIHostDependencyFailure",
     "ensureHostDependencies",
   ] as const) {
-    if (!runEntrypoint.includes(fragment)) {
-      failures.push(`${runEntrypointPath}: must use Canva Linux dependency loader fragment ${fragment}`);
+    if (runEntrypoint.includes(forbidden)) {
+      failures.push(`${runEntrypointPath}: must not repair dependent project dependencies before c420ui starts (${forbidden})`);
+    }
+  }
+
+  const adapterRun = readProjectFile(rootDir, "scripts/c420ui-adapter/run.ts");
+  for (const fragment of [
+    "startupTasks",
+    "Checking dependent project dependencies",
+    "ensureCanvaLinuxHostDependencies",
+  ] as const) {
+    if (!adapterRun.includes(fragment)) {
+      failures.push(`scripts/c420ui-adapter/run.ts: must wire dependency repair as a c420ui startup task (${fragment})`);
     }
   }
   for (const forbidden of [
@@ -1960,48 +1971,34 @@ function checkDevelopmentTaskRecipes(failures: string[]): void {
   }
 }
 
-
-function extractShellFunction(source: string, functionName: string): string {
-  const lines = source.split(/(?<=\n)/);
-  const signature = `${functionName}() {`;
-  const start = lines.findIndex((line) => line.trimEnd() === signature);
-  if (start === -1) throw new Error(`canva-linux.sh: missing ${functionName}`);
-
-  const nextFunction = lines.findIndex((line, index) => {
-function extractShellFunction(source: string, functionName: string): string {
-  const start = source.indexOf(`${functionName}() {`);
-  if (start === -1) throw new Error(`canva-linux.sh: missing ${functionName}`);
-  const rest = source.slice(start);
-  const match = rest.match(/\n}\n/);
-  if (!match) throw new Error(`canva-linux.sh: cannot locate end of ${functionName}`);
-  return rest.slice(0, match.index! + 3);
-}
-
 function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
   const rootDir = findProjectRoot();
   const launcher = readProjectFile(rootDir, "canva-linux.sh");
-  let bootstrap = "";
-
-  try {
-    bootstrap = extractShellFunction(launcher, "ensure_c420ui_bootstrap_npm_dependencies");
-  } catch (error) {
-    failures.push(error instanceof Error ? error.message : String(error));
-    return;
-  }
 
   for (const fragment of [
-    "c420ui_bootstrap_npm_dependencies_available()",
-    '[[ -x "${ROOT_DIR}/node_modules/.bin/esbuild" ]]',
-    '[[ -d "${ROOT_DIR}/node_modules/blessed" ]]',
-    "local bootstrap_packages=(esbuild blessed)",
-    "--no-save",
-    "--package-lock=false",
-    "--include=dev",
-    "--ignore-scripts",
-    "C420UI_SKIP_DEPENDENCY_INSTALL",
-    "c420ui bootstrap dependencies are missing and C420UI_SKIP_DEPENDENCY_INSTALL=1 is set.",
+    "bootstrap/c420ui/run-c420ui.cjs",
+    "bootstrap/c420ui/run-c420ui-cli.cjs",
+    ".build/scripts/run-c420ui.js",
+    ".build/scripts/run-c420ui-cli.js",
+    "select_c420ui_ui_entrypoint()",
+    "select_c420ui_cli_entrypoint()",
+    'entrypoint="$(select_c420ui_ui_entrypoint)"',
+    'entrypoint="$(select_c420ui_cli_entrypoint)"',
+    "Run npm run build:c420ui-bootstrap in a prepared development checkout, then retry.",
   ] as const) {
-    if (!launcher.includes(fragment)) failures.push(`canva-linux.sh: missing bootstrap policy fragment ${fragment}`);
+    if (!launcher.includes(fragment)) failures.push(`canva-linux.sh: missing bootstrap launcher fragment ${fragment}`);
+  }
+
+  const bootstrapUiIndex = launcher.indexOf("bootstrap/c420ui/run-c420ui.cjs");
+  const buildUiIndex = launcher.indexOf(".build/scripts/run-c420ui.js");
+  const bootstrapCliIndex = launcher.indexOf("bootstrap/c420ui/run-c420ui-cli.cjs");
+  const buildCliIndex = launcher.indexOf(".build/scripts/run-c420ui-cli.js");
+
+  if (bootstrapUiIndex !== -1 && buildUiIndex !== -1 && bootstrapUiIndex > buildUiIndex) {
+    failures.push("canva-linux.sh: interactive c420ui bootstrap bundle must be preferred before .build fallback");
+  }
+  if (bootstrapCliIndex !== -1 && buildCliIndex !== -1 && bootstrapCliIndex > buildCliIndex) {
+    failures.push("canva-linux.sh: c420ui CLI bootstrap bundle must be preferred before .build fallback");
   }
 
   for (const forbidden of [
@@ -2009,29 +2006,11 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
     "CANVA_" + "REQUIRED_NPM_DEPS",
     "CANVA_" + "SKIP_NPM_INSTALL",
     "CANVA_" + "NPM_REPAIR",
+    "npm install",
     "npm ci",
+    "ensure_c420ui_bootstrap_npm_dependencies",
   ] as const) {
     if (launcher.includes(forbidden)) failures.push(`canva-linux.sh: must not restore launcher dependency policy fragment ${forbidden}`);
-  }
-
-  for (const forbiddenPackage of [
-    "electron",
-    "electron-builder",
-    "eslint",
-    "typescript",
-    "@typescript-eslint/parser",
-    "@typescript-eslint/eslint-plugin",
-  ] as const) {
-    if (bootstrap.includes(forbiddenPackage)) {
-      failures.push(`canva-linux.sh: bootstrap dependency list must not include ${forbiddenPackage}`);
-    }
-  }
-
-  if (/(^|\s)--save(=|\s|$)/.test(bootstrap)) {
-    failures.push("canva-linux.sh: bootstrap must not save dependencies into package.json");
-  }
-  if (bootstrap.includes("package-lock=true")) {
-    failures.push("canva-linux.sh: bootstrap must not enable package-lock mutation");
   }
 }
 

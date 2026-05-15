@@ -28,7 +28,7 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
 
 - Canva Linux is a dependent project; c420ui is the generic engine.
 - Canva Linux does not install dependencies directly from launchers, except for the documented Stage 0 c420ui bootstrap
-  that installs only `esbuild` and `blessed`.
+  that starts the generated `bootstrap/c420ui` bundle without npm dependencies.
 - Canva Linux does not validate generic artifact recipes; c420ui does.
 - The Canva Linux adapter must not duplicate Action Engine policy.
 - `scripts/preflight-common.sh` is repository-check-only and must not own npm
@@ -38,7 +38,7 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
 
 ## Bootstrap dependency policy
 
-The shell launcher may install only the minimal npm dependencies required to build and start c420ui from a clean source checkout.
+The shell launcher must not install npm dependencies or build c420ui before startup; it must prefer the generated `bootstrap/c420ui` bundle and leave full dependency policy to c420ui after startup.
 
 Allowed bootstrap packages:
 
@@ -84,3 +84,23 @@ expected results, owner domains, and release blockers.
 New split docs must explain ownership, forbidden ownership crossings,
 implementing files, consumed configs/adapters, boundary checks, and forbidden
 regressions. Placeholder docs are not acceptable.
+
+## c420ui bootstrap validation policy
+
+Every release validation must confirm that `bootstrap/c420ui/run-c420ui.cjs`, `bootstrap/c420ui/run-c420ui-cli.cjs`, and `bootstrap/c420ui/manifest.json` exist. The manifest must remain `kind: c420ui-bootstrap`, `moduleFormat: commonjs`, and `futureModuleFormat: esm` until a dedicated ESM migration is implemented.
+
+A clean release checkout must be able to start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The launcher must not install npm dependencies; after startup, c420ui owns full host dependency validation, repair, and workflow execution.
+
+
+The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate:
+
+- `c420uiVersion` must match `packages/c420ui/package.json`.
+- `dependentProjectVersion` must match the repository root `package.json`.
+- The manifest must not use an ambiguous top-level `version` field.
+- The c420ui engine version must stay distinct from the Canva Linux dependent-project version unless maintainers explicitly request otherwise.
+
+## Interactive bootstrap dependency ordering
+
+Validation must ensure `scripts/run-c420ui.ts` does not import or call the Canva Linux dependency ensure function before
+starting c420ui. The interactive flow must wire dependent-project dependency repair through c420ui startup tasks, while
+launcher scripts remain free of `npm install`, `npm ci`, and legacy dependency helpers.

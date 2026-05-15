@@ -5,6 +5,7 @@ export * from "./command-dependencies";
 export * from "./node-dependencies";
 export * from "./npm-dependencies";
 export * from "./host-dependency-runner";
+export * from "./startup-task";
 export type * from "./actions";
 export type * from "./artifacts";
 export type * from "./bridge";

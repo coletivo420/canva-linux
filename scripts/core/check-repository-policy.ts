@@ -1455,9 +1455,9 @@ function validateLauncherScriptShape(
     );
   }
 
-  if (!content.includes("run-c420ui-cli.js")) {
+  if (!content.includes("bootstrap/c420ui/run-c420ui-cli.cjs")) {
     failures.push(
-      `${relativePath}: direct CLI actions must route through the c420ui CLI bridge`,
+      `${relativePath}: direct CLI actions must prefer the c420ui CLI bootstrap bundle`,
     );
   }
 
@@ -1471,20 +1471,18 @@ function validateLauncherScriptShape(
     'case "${arg}" in',
     "FORCE=true",
     "DRY_RUN=true",
-    "source_newer_than_entrypoint()",
-    "c420ui_cli_entrypoint_is_fresh()",
-    'find "${source}" -type f',
-    '"${ROOT_DIR}/scripts/c420ui-adapter"',
-    '"${ROOT_DIR}/packages/c420ui/src/terminal"',
-    '"${ROOT_DIR}/scripts/canva-linux/project-root.ts"',
-    '"${ROOT_DIR}/packages/c420ui/src"',
-    '"${ROOT_DIR}/config/canva-linux/actions.json"',
-    '"${ROOT_DIR}/config/canva-linux/project-ui.json"',
     "DIRECT_ACTION_FLAGS=()",
     'DIRECT_ACTION_FLAGS+=("${arg}")',
     'run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"',
-    'local entrypoint="${ROOT_DIR}/.build/scripts/run-c420ui-cli.js"',
-    '[[ -s "${entrypoint}" ]] || return 1',
+    "select_c420ui_ui_entrypoint()",
+    "select_c420ui_cli_entrypoint()",
+    "bootstrap/c420ui/run-c420ui.cjs",
+    "bootstrap/c420ui/run-c420ui-cli.cjs",
+    ".build/scripts/run-c420ui.js",
+    ".build/scripts/run-c420ui-cli.js",
+    'entrypoint="$(select_c420ui_ui_entrypoint)"',
+    'entrypoint="$(select_c420ui_cli_entrypoint)"',
+    'node "${entrypoint}"',
   ] as const;
 
   for (const fragment of requiredLauncherParserFragments) {
@@ -1524,6 +1522,13 @@ function validateLauncherScriptShape(
     failures.push(
       `${relativePath}: direct CLI build errors must remain visible`,
     );
+  }
+
+
+  for (const forbidden of ["npm install", "npm ci", "scripts/ensure-npm-dependencies.sh"] as const) {
+    if (content.includes(forbidden)) {
+      failures.push(`${relativePath}: launcher must not install npm dependencies or call legacy dependency helpers`);
+    }
   }
 
   for (const alias of forbiddenCompatibilityCliAliases) {

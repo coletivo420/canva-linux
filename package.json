@@ -51,10 +51,12 @@
     "build:c420ui-checks": "esbuild packages/c420ui/checks/check-*.ts --bundle --platform=node --format=cjs --outdir=.build/packages/c420ui/checks",
     "check:c420ui-core": "npm run build:c420ui-checks && node .build/packages/c420ui/checks/check-c420ui-core-contracts.js",
     "build:canva-linux-checks": "esbuild scripts/checks/canva-linux/check-*.ts --bundle --platform=node --format=cjs --outdir=.build/scripts/checks/canva-linux",
-    "check:canva-linux": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-canva-linux-contracts.js",
+    "check:canva-linux": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-canva-linux-contracts.js && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js",
     "check:shared-tooling": "npm run build:runtime && npm run build:scripts-core && node .build/scripts/core/check-ai-guardrails.js && node .build/scripts/core/check-doc-links.js && node .build/scripts/core/check-dependency-policy.js && node .build/scripts/core/check-runtime-build.js && node .build/scripts/core/check-repository-policy.js",
     "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
-    "build:c420ui-terminal": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js"
+    "build:c420ui-terminal": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js",
+    "build:c420ui-bootstrap": "esbuild scripts/run-c420ui.ts scripts/run-c420ui-cli.ts --bundle --platform=node --target=node22 --format=cjs --outdir=bootstrap/c420ui --entry-names=[name] --out-extension:.js=.cjs --external:electron --external:term.js --external:pty.js",
+    "check:c420ui-bootstrap": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js"
   },
   "build": {
     "appId": "io.github.coletivo420.canva-linux",

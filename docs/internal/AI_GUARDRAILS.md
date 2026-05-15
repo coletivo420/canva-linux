@@ -33,7 +33,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - The release version format must remain `N.N.N-X`.
 - Canva Linux is the dependent project; c420ui is the generic engine.
 - Canva Linux does not install dependencies directly from launchers or shell helpers, except for the documented Stage 0
-  c420ui bootstrap that installs only `esbuild` and `blessed`.
+  c420ui bootstrap that starts the generated `bootstrap/c420ui` bundle without npm dependencies.
 - Canva Linux does not validate generic artifact recipes; c420ui owns that validation.
 - The Canva Linux adapter must not duplicate Action Engine policy for planned actions, dry-run,
   confirmation, root policy, `requestRootAccess`, or fallback execution.
@@ -45,11 +45,10 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 - c420ui owns host dependency management for command checks, Node minimum checks, npm checks, install strategy, repair/skip modes, messages and exit codes.
 - Dependent projects declare dependency config only; for Canva Linux this is `config/canva-linux/dependencies.json`.
-- Project launchers must not run `npm ci` or broad `npm install` dependency repair directly. The only exception is the
-  Stage 0 launcher bootstrap for `esbuild` and `blessed`.
+- Project launchers must not run `npm ci`, `npm install`, or dependency repair directly. Stage 0 only starts the generated c420ui bootstrap bundle.
 - Project shell helpers must not own npm dependency policy or hardcoded npm dependency lists.
-- Launcher bootstrap may install only c420ui startup dependencies: `esbuild` and `blessed`. Full npm dependency policy
-  remains owned by c420ui.
+- Launcher bootstrap may only select the generated c420ui bootstrap bundle or the `.build` development fallback.
+  Full npm dependency policy remains owned by c420ui.
 
 ## Project tree boundaries
 
@@ -101,7 +100,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui owns generic host dependency contracts but not concrete project dependency lists.
 - Canva Linux owns npm bootstrap policy, Node.js version policy, and `CANVA_*` bootstrap variables.
 - Project launchers must use the host dependency provider instead of calling bootstrap shell scripts directly.
-- Do not run broad npm installation directly from project launchers; c420ui owns host dependency management after the Stage 0 bootstrap.
+- Do not run npm installation directly from project launchers; c420ui owns host dependency management after the Stage 0 bootstrap.
 - Keep project shell out of npm dependency policy; dependent projects declare host dependencies in config.
 - Detection status uses `project`, not the removed legacy `package` shape.
 - Do not reintroduce `package: project` compatibility in detection providers.
@@ -215,7 +214,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Do not narrow the c420ui CLI entrypoint freshness check to a small hardcoded list of files.
 - The launcher must rebuild the c420ui CLI bridge when `packages/c420ui/src`, `scripts/c420ui-adapter`,
   `packages/c420ui/src/terminal`, action registry metadata or project UI metadata changes.
-- Launcher parser tests must not execute real project actions; use a stubbed `.build/scripts/run-c420ui-cli.js`.
+- Launcher parser tests must not execute real project actions; use a stubbed `bootstrap/c420ui/run-c420ui-cli.cjs`.
 - Only one direct action may execute per invocation.
 - Dangerous or confirmation-required direct actions must not execute without `--yes`.
 - Privileged direct actions must run root/sudo preflight before backend scripts start.
@@ -393,3 +392,28 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Project adapters must not duplicate Action Engine policy or restore adapter-owned planned/dry-run fallbacks.
 - `scripts/preflight-common.sh` is repository-check-only; keep npm install, repair, and skip policy in c420ui host dependency management.
 - Keep shell helper classifications in `docs/checks/SHELL_HELPERS.md` up to date when adding, removing, or repurposing shell scripts.
+
+## c420ui bootstrap guardrails
+
+Do not edit `bootstrap/c420ui/*.cjs` by hand. They are generated artifacts built from TypeScript sources with
+`npm run build:c420ui-bootstrap` and kept in the repository so a clean checkout can start c420ui without local npm dependencies.
+
+Do not add `npm install`, `npm ci`, or legacy npm dependency helpers to `canva-linux.sh`. The launcher is Stage 0 only:
+choose the generated c420ui bootstrap bundle first, keep `.build/scripts` as a development fallback, and let c420ui own the
+full dependency policy after startup.
+
+Do not migrate the bootstrap to ESM in incidental changes. The current bundle is explicit CommonJS; ESM remains future work
+that requires its own planned change.
+
+
+## Bootstrap identity
+
+The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
+`c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
+`package.json`. Do not collapse them into a single ambiguous `version` field.
+
+## c420ui startup dependency ordering
+
+Do not add dependent-project dependency repair back to `scripts/run-c420ui.ts`. Interactive startup must start c420ui
+first, then run host dependency validation or repair as a c420ui startup task so failures stay visible in the UI. Keep
+Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adjacent adapter code, not in c420ui core.
