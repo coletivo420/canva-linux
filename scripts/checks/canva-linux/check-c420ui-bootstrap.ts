@@ -260,8 +260,8 @@ function validateBlessedRuntimeAssetsMatchPackage(
   const bootstrapUsrDir = path.join(rootDir, "bootstrap", "usr");
 
   for (const relativePath of relativePaths) {
-    const relativeAsset = path.relative("bootstrap/usr", relativePath);
     const committedPath = path.join(rootDir, relativePath);
+    const relativeAsset = path.relative(bootstrapUsrDir, committedPath);
     const packagePath = path.join(blessedUsrDir, relativeAsset);
 
     if (!fs.existsSync(committedPath) || !fs.existsSync(packagePath)) continue;
@@ -269,7 +269,7 @@ function validateBlessedRuntimeAssetsMatchPackage(
     const committed = fs.readFileSync(committedPath);
     const packaged = fs.readFileSync(packagePath);
     if (!committed.equals(packaged)) {
-      failures.push(`${relativePath}: runtime asset is stale; copy ${path.join(bootstrapUsrDir, relativeAsset)} from node_modules/blessed/usr/${relativeAsset}`);
+      failures.push(`${relativePath}: runtime asset is stale; run npm run build:c420ui-bootstrap`);
     }
   }
 }
