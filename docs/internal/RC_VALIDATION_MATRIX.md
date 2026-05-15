@@ -30,6 +30,7 @@ Every required automated command must be recorded with its status during RC vali
 | `npm run typecheck` | Pass | Standard TypeScript checking completes without type errors. | Maintained TypeScript may no longer satisfy the standard project type contract. | runtime build |
 | `npm run typecheck:strict` | Pass | Strict TypeScript checking completes without type errors. | Strict type-safety expectations for the release candidate may have regressed. | runtime build |
 | `npm test` | Pass | The automated test suite passes without changing runtime behavior. | Behavior covered by tests may have regressed or the test environment may be incomplete. | runtime build |
+| `npm run build:c420ui-bootstrap` then `npm run check:c420ui-bootstrap` | Required before RC sign-off | Regenerates the c420ui bootstrap bundle and manifest, then verifies the manifest source hash without additional generated-file drift. | Bootstrap artifacts may be stale relative to TypeScript sources or project configuration. | c420ui bootstrap |
 | `./scripts/validate-project.sh` | Blocked: environment lacks `flatpak` | The shell-level project validation runner completes the required validation sequence. | The release candidate failed the top-level validation entrypoint or a required command is not runnable from shell validation. | release metadata |
 
 ## Manual RC validation matrix
@@ -95,6 +96,8 @@ The RC matrix must include a clean-checkout startup check for the standalone c42
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate: `c420uiVersion` is sourced
 from `packages/c420ui/package.json`, while `dependentProjectVersion` is sourced from the repository root `package.json`.
+
+The source-hash check must pass without modifying files after the build step. A stale `sourceHash` in `bootstrap/c420ui/manifest.json` blocks RC sign-off until `npm run build:c420ui-bootstrap` refreshes the bundle and manifest.
 
 Interactive bootstrap validation must confirm the UI starts first and dependent-project dependency repair runs as a c420ui
 startup task, not as pre-UI logic in `scripts/run-c420ui.ts`.

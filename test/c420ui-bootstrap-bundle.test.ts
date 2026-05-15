@@ -3,6 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import {
+  calculateC420UIBootstrapSourceHash,
+  C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
+  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
+} from "../scripts/canva-linux/bootstrap/source-hash";
+
 const bootstrapDir = path.join("bootstrap", "c420ui");
 const manifestPath = path.join(bootstrapDir, "manifest.json");
 const uiEntrypoint = path.join(bootstrapDir, "run-c420ui.cjs");
@@ -20,8 +26,12 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     dependentProjectVersion: string;
     entrypoint: string;
     cliEntrypoint: string;
+    requiresNode: string;
     moduleFormat: string;
     futureModuleFormat: string;
+    sourceHashAlgorithm: string;
+    sourceHash: string;
+    sourceHashInputs: string[];
   }>(manifestPath);
   const rootPackageJson = readJson<{ version: string }>("package.json");
   const c420uiPackageJson = readJson<{ version: string }>("packages/c420ui/package.json");
@@ -34,8 +44,20 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
   assert.equal("version" in manifest, false);
   assert.equal(manifest.entrypoint, "run-c420ui.cjs");
   assert.equal(manifest.cliEntrypoint, "run-c420ui-cli.cjs");
+  assert.equal(manifest.requiresNode, ">=22.0.0");
   assert.equal(manifest.moduleFormat, "commonjs");
   assert.equal(manifest.futureModuleFormat, "esm");
+  assert.equal(manifest.sourceHashAlgorithm, C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM);
+  assert.match(manifest.sourceHash, /^sha256:[0-9a-f]{64}$/);
+  assert.equal(Array.isArray(manifest.sourceHashInputs), true);
+  for (const requiredInput of C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS) {
+    assert.equal(
+      manifest.sourceHashInputs.includes(requiredInput),
+      true,
+      `manifest sourceHashInputs must include ${requiredInput}`,
+    );
+  }
+  assert.equal(manifest.sourceHash, calculateC420UIBootstrapSourceHash(process.cwd()));
 });
 
 test("c420ui bootstrap entrypoints exist and are not empty", () => {

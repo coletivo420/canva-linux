@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import {
+  calculateC420UIBootstrapSourceHash,
+  C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
+  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
+} from "../../canva-linux/bootstrap/source-hash";
+
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
   while (true) {
@@ -63,6 +69,7 @@ function main(): void {
       dependentProjectVersion: rootPackageJson.version,
       entrypoint: "run-c420ui.cjs",
       cliEntrypoint: "run-c420ui-cli.cjs",
+      requiresNode: ">=22.0.0",
       moduleFormat: "commonjs",
       futureModuleFormat: "esm",
       typescriptFirst: true,
@@ -72,6 +79,33 @@ function main(): void {
       if (manifest[key] !== value) {
         failures.push(`${manifestPath}: expected ${key} to be ${JSON.stringify(value)}`);
       }
+    }
+
+    if (manifest.sourceHashAlgorithm !== C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM) {
+      failures.push(`${manifestPath}: expected sourceHashAlgorithm to be ${C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM}`);
+    }
+
+    if (typeof manifest.sourceHash !== "string" || !manifest.sourceHash.startsWith("sha256:")) {
+      failures.push(`${manifestPath}: expected sourceHash to start with sha256:`);
+    }
+
+    if (!Array.isArray(manifest.sourceHashInputs)) {
+      failures.push(`${manifestPath}: expected sourceHashInputs to be an array`);
+    } else {
+      for (const requiredInput of C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS) {
+        if (!manifest.sourceHashInputs.includes(requiredInput)) {
+          failures.push(`${manifestPath}: sourceHashInputs must include ${requiredInput}`);
+        }
+      }
+    }
+
+    try {
+      const currentSourceHash = calculateC420UIBootstrapSourceHash(rootDir);
+      if (manifest.sourceHash !== currentSourceHash) {
+        failures.push(`${manifestPath}: sourceHash is stale; run npm run build:c420ui-bootstrap`);
+      }
+    } catch (error) {
+      failures.push(`${manifestPath}: unable to calculate sourceHash: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
