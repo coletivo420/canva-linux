@@ -293,15 +293,17 @@ for arg in "$@"; do
   esac
 done
 
-if [[ "${#DIRECT_ACTION_FLAGS[@]}" -gt 1 ]]; then
-  ui_error "Only one direct action can be executed per invocation."
+if [[ $# -gt 0 ]]; then
+  if [[ "${#DIRECT_ACTION_FLAGS[@]}" -gt 1 ]]; then
+    ui_error "Only one direct action can be executed per invocation."
+    exit 64
+  fi
+
+  if [[ "${#DIRECT_ACTION_FLAGS[@]}" -eq 1 ]]; then
+    run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"
+    exit $?
+  fi
+
+  ui_error "No direct action was provided."
   exit 64
 fi
-
-if [[ "${#DIRECT_ACTION_FLAGS[@]}" -eq 1 ]]; then
-  run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"
-  exit $?
-fi
-
-ui_error "No direct action was provided."
-exit 64
