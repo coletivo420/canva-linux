@@ -70,6 +70,10 @@ function main(): void {
       entrypoint: "run-c420ui.cjs",
       cliEntrypoint: "run-c420ui-cli.cjs",
       requiresNode: ">=22.0.0",
+      buildRecipe: "scripts/build-c420ui-bootstrap.ts",
+      buildTool: "esbuild",
+      buildTarget: "node22",
+      bundleFormat: "cjs",
       moduleFormat: "commonjs",
       futureModuleFormat: "esm",
       typescriptFirst: true,
@@ -96,6 +100,9 @@ function main(): void {
         if (!manifest.sourceHashInputs.includes(requiredInput)) {
           failures.push(`${manifestPath}: sourceHashInputs must include ${requiredInput}`);
         }
+      }
+      if (!manifest.sourceHashInputs.includes("scripts/build-c420ui-bootstrap.ts")) {
+        failures.push(`${manifestPath}: sourceHashInputs must explicitly include scripts/build-c420ui-bootstrap.ts`);
       }
     }
 

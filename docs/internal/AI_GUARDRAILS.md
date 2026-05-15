@@ -5,7 +5,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 ## c420ui bootstrap source-hash guardrail
 
-Any change to c420ui startup sources, the Canva Linux adapter, dependent-project configs, Canva Linux action or detection scripts, or c420ui package metadata must regenerate the bootstrap bundle with `npm run build:c420ui-bootstrap`. Do not leave `bootstrap/c420ui/manifest.json` with a stale `sourceHash`; run `npm run check:c420ui-bootstrap` before handing off release changes.
+Any change to c420ui startup sources, the Canva Linux adapter, dependent-project configs, Canva Linux action or detection scripts, c420ui package metadata, the bootstrap hash helper, or the bootstrap builder must regenerate the bootstrap bundle with `npm run build:c420ui-bootstrap`. Do not leave `bootstrap/c420ui/manifest.json` with a stale `sourceHash`; run `npm run check:c420ui-bootstrap` before handing off release changes.
 
 ## Language and future i18n
 

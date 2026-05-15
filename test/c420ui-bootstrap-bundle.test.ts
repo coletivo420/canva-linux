@@ -5,6 +5,7 @@ import test from "node:test";
 
 import {
   calculateC420UIBootstrapSourceHash,
+  collectC420UIBootstrapSourceHashFiles,
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../scripts/canva-linux/bootstrap/source-hash";
@@ -27,6 +28,10 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     entrypoint: string;
     cliEntrypoint: string;
     requiresNode: string;
+    buildRecipe: string;
+    buildTool: string;
+    buildTarget: string;
+    bundleFormat: string;
     moduleFormat: string;
     futureModuleFormat: string;
     sourceHashAlgorithm: string;
@@ -45,6 +50,10 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
   assert.equal(manifest.entrypoint, "run-c420ui.cjs");
   assert.equal(manifest.cliEntrypoint, "run-c420ui-cli.cjs");
   assert.equal(manifest.requiresNode, ">=22.0.0");
+  assert.equal(manifest.buildRecipe, "scripts/build-c420ui-bootstrap.ts");
+  assert.equal(manifest.buildTool, "esbuild");
+  assert.equal(manifest.buildTarget, "node22");
+  assert.equal(manifest.bundleFormat, "cjs");
   assert.equal(manifest.moduleFormat, "commonjs");
   assert.equal(manifest.futureModuleFormat, "esm");
   assert.equal(manifest.sourceHashAlgorithm, C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM);
@@ -57,6 +66,16 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
       `manifest sourceHashInputs must include ${requiredInput}`,
     );
   }
+  assert.equal(
+    manifest.sourceHashInputs.includes("scripts/build-c420ui-bootstrap.ts"),
+    true,
+  );
+  assert.equal(
+    collectC420UIBootstrapSourceHashFiles(process.cwd()).includes(
+      "scripts/canva-linux/bootstrap/source-hash.ts",
+    ),
+    true,
+  );
   assert.equal(manifest.sourceHash, calculateC420UIBootstrapSourceHash(process.cwd()));
 });
 

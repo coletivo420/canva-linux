@@ -20,4 +20,4 @@ This bootstrap belongs to c420ui, not to the dependent project.
 
 ## Source hash
 
-The manifest `sourceHash` proves that the generated bootstrap bundle matches the current TypeScript sources and project configuration. Run `npm run build:c420ui-bootstrap` after changing c420ui sources, the Canva Linux adapter, Canva Linux action or detection scripts, `config/canva-linux`, or c420ui package metadata.
+The manifest `sourceHash` proves that the generated bootstrap bundle matches the current TypeScript sources and project configuration. Run `npm run build:c420ui-bootstrap` after changing c420ui sources, the Canva Linux adapter, Canva Linux action or detection scripts, `config/canva-linux`, c420ui package metadata, the bootstrap hash helper, or the bootstrap builder.
