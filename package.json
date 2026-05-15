@@ -55,7 +55,7 @@
     "check:shared-tooling": "npm run build:runtime && npm run build:scripts-core && node .build/scripts/core/check-ai-guardrails.js && node .build/scripts/core/check-doc-links.js && node .build/scripts/core/check-dependency-policy.js && node .build/scripts/core/check-runtime-build.js && node .build/scripts/core/check-repository-policy.js",
     "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
     "build:c420ui-terminal": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js",
-    "build:c420ui-bootstrap": "esbuild scripts/run-c420ui.ts scripts/run-c420ui-cli.ts --bundle --platform=node --target=node22 --format=cjs --outdir=bootstrap/c420ui --entry-names=[name] --out-extension:.js=.cjs --external:electron --external:term.js --external:pty.js",
+    "build:c420ui-bootstrap": "esbuild scripts/build-c420ui-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/scripts/build-c420ui-bootstrap.cjs && node .build/scripts/build-c420ui-bootstrap.cjs",
     "check:c420ui-bootstrap": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js"
   },
   "build": {

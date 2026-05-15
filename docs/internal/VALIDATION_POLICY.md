@@ -89,6 +89,8 @@ regressions. Placeholder docs are not acceptable.
 
 Every release validation must confirm that `bootstrap/c420ui/run-c420ui.cjs`, `bootstrap/c420ui/run-c420ui-cli.cjs`, and `bootstrap/c420ui/manifest.json` exist. The manifest must remain `kind: c420ui-bootstrap`, `moduleFormat: commonjs`, and `futureModuleFormat: esm` until a dedicated ESM migration is implemented.
 
+RC validation is blocked when `bootstrap/c420ui/manifest.json` `sourceHash` does not match the current bootstrap source-hash inputs, including the bootstrap hash helper and bootstrap builder. Rebuild with `npm run build:c420ui-bootstrap`, then run `npm run check:c420ui-bootstrap`; the check must pass without requiring additional generated-file changes. The check must also prove that committed bootstrap `.cjs` artifacts are valid JavaScript and match a temporary rebuild from the shared build recipe.
+
 A clean release checkout must be able to start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The launcher must not install npm dependencies; after startup, c420ui owns full host dependency validation, repair, and workflow execution.
 
 

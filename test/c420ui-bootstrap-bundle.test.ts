@@ -1,7 +1,19 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+
+import {
+  createC420UIBootstrapEsbuildCliArgs,
+} from "../scripts/canva-linux/bootstrap/build-recipe";
+import {
+  calculateC420UIBootstrapSourceHash,
+  collectC420UIBootstrapSourceHashFiles,
+  C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
+  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
+} from "../scripts/canva-linux/bootstrap/source-hash";
 
 const bootstrapDir = path.join("bootstrap", "c420ui");
 const manifestPath = path.join(bootstrapDir, "manifest.json");
@@ -20,8 +32,16 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     dependentProjectVersion: string;
     entrypoint: string;
     cliEntrypoint: string;
+    requiresNode: string;
+    buildRecipe: string;
+    buildTool: string;
+    buildTarget: string;
+    bundleFormat: string;
     moduleFormat: string;
     futureModuleFormat: string;
+    sourceHashAlgorithm: string;
+    sourceHash: string;
+    sourceHashInputs: string[];
   }>(manifestPath);
   const rootPackageJson = readJson<{ version: string }>("package.json");
   const c420uiPackageJson = readJson<{ version: string }>("packages/c420ui/package.json");
@@ -34,8 +54,34 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
   assert.equal("version" in manifest, false);
   assert.equal(manifest.entrypoint, "run-c420ui.cjs");
   assert.equal(manifest.cliEntrypoint, "run-c420ui-cli.cjs");
+  assert.equal(manifest.requiresNode, ">=22.0.0");
+  assert.equal(manifest.buildRecipe, "scripts/build-c420ui-bootstrap.ts");
+  assert.equal(manifest.buildTool, "esbuild");
+  assert.equal(manifest.buildTarget, "node22");
+  assert.equal(manifest.bundleFormat, "cjs");
   assert.equal(manifest.moduleFormat, "commonjs");
   assert.equal(manifest.futureModuleFormat, "esm");
+  assert.equal(manifest.sourceHashAlgorithm, C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM);
+  assert.match(manifest.sourceHash, /^sha256:[0-9a-f]{64}$/);
+  assert.equal(Array.isArray(manifest.sourceHashInputs), true);
+  for (const requiredInput of C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS) {
+    assert.equal(
+      manifest.sourceHashInputs.includes(requiredInput),
+      true,
+      `manifest sourceHashInputs must include ${requiredInput}`,
+    );
+  }
+  assert.equal(
+    manifest.sourceHashInputs.includes("scripts/build-c420ui-bootstrap.ts"),
+    true,
+  );
+  assert.equal(
+    collectC420UIBootstrapSourceHashFiles(process.cwd()).includes(
+      "scripts/canva-linux/bootstrap/source-hash.ts",
+    ),
+    true,
+  );
+  assert.equal(manifest.sourceHash, calculateC420UIBootstrapSourceHash(process.cwd()));
 });
 
 test("c420ui bootstrap entrypoints exist and are not empty", () => {
@@ -77,4 +123,51 @@ test("interactive run-c420ui entrypoint starts c420ui before dependent dependenc
   assert.match(adapterRunSource, /startupTasks/);
   assert.match(adapterRunSource, /ensureCanvaLinuxHostDependencies/);
   assert.match(adapterRunSource, /Checking dependent project dependencies/);
+});
+
+
+test("c420ui bootstrap entrypoints are syntactically valid JavaScript", () => {
+  for (const entrypoint of [uiEntrypoint, cliEntrypoint]) {
+    const result = spawnSync(process.execPath, ["--check", entrypoint], {
+      encoding: "utf8",
+      shell: false,
+    });
+
+    assert.equal(
+      result.status,
+      0,
+      `${entrypoint} must pass node --check: ${result.stderr || result.stdout}`,
+    );
+  }
+});
+
+test("c420ui bootstrap entrypoints match the build recipe", () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-bootstrap-test-"));
+
+  try {
+    const result = spawnSync(
+      "npx",
+      ["esbuild", ...createC420UIBootstrapEsbuildCliArgs(tempDir)],
+      {
+        encoding: "utf8",
+        shell: false,
+      },
+    );
+
+    assert.equal(
+      result.status,
+      0,
+      `bootstrap recipe rebuild must succeed: ${result.stderr || result.stdout}`,
+    );
+
+    for (const entrypoint of [uiEntrypoint, cliEntrypoint]) {
+      assert.deepEqual(
+        fs.readFileSync(entrypoint),
+        fs.readFileSync(path.join(tempDir, path.basename(entrypoint))),
+        `${entrypoint} must match the current bootstrap build recipe`,
+      );
+    }
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 });
