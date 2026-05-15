@@ -77,3 +77,10 @@ The bootstrap artifact is CommonJS for this release. ESM is documented as future
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
 `c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
 `package.json`. Do not collapse them into a single ambiguous `version` field.
+
+## Interactive startup ordering
+
+Interactive c420ui startup must mount the terminal UI before running dependent-project dependency repair. The generated
+bootstrap starts `scripts/run-c420ui.ts`, which starts c420ui immediately; dependent-project dependency checks run as a
+c420ui startup task so the result stays visible in the UI logs. Direct CLI flows may remain conservative because they do
+not have an interactive UI to guide dependency repair.

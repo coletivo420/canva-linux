@@ -58,3 +58,9 @@ The launcher prefers the generated c420ui bootstrap bundle before any developmen
 - `.build/scripts/run-c420ui*.js` remains a development fallback only.
 
 The launcher must not run `npm install`, `npm ci`, or `npm run build:scripts` before trying the bootstrap bundle. The bundle only starts c420ui; full dependency checks and repair remain c420ui Host Dependency Runner responsibilities.
+
+## Interactive dependency ordering
+
+Interactive startup opens c420ui before Canva Linux dependency repair. Dependency checks and repair are shown through the
+c420ui logs after the UI mounts. Direct CLI actions may still validate required dependencies according to c420ui policy
+because they do not have an interactive UI surface.

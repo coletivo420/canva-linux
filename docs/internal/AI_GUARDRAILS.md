@@ -411,3 +411,9 @@ that requires its own planned change.
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
 `c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
 `package.json`. Do not collapse them into a single ambiguous `version` field.
+
+## c420ui startup dependency ordering
+
+Do not add dependent-project dependency repair back to `scripts/run-c420ui.ts`. Interactive startup must start c420ui
+first, then run host dependency validation or repair as a c420ui startup task so failures stay visible in the UI. Keep
+Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adjacent adapter code, not in c420ui core.

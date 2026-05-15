@@ -98,3 +98,9 @@ The c420ui bootstrap manifest must keep engine identity and dependent-project id
 - `dependentProjectVersion` must match the repository root `package.json`.
 - The manifest must not use an ambiguous top-level `version` field.
 - The c420ui engine version must stay distinct from the Canva Linux dependent-project version unless maintainers explicitly request otherwise.
+
+## Interactive bootstrap dependency ordering
+
+Validation must ensure `scripts/run-c420ui.ts` does not import or call the Canva Linux dependency ensure function before
+starting c420ui. The interactive flow must wire dependent-project dependency repair through c420ui startup tasks, while
+launcher scripts remain free of `npm install`, `npm ci`, and legacy dependency helpers.

@@ -75,6 +75,20 @@ function main(): void {
     }
   }
 
+  const interactiveEntrypoint = read(rootDir, "scripts/run-c420ui.ts");
+  for (const forbidden of ["ensureCanvaLinuxHostDependencies", "isC420UIHostDependencyFailure"]) {
+    if (interactiveEntrypoint.includes(forbidden)) {
+      failures.push(`scripts/run-c420ui.ts: must not resolve dependent project dependencies before starting c420ui (${forbidden})`);
+    }
+  }
+
+  const adapterRun = read(rootDir, "scripts/c420ui-adapter/run.ts");
+  for (const fragment of ["startupTasks", "Checking dependent project dependencies", "ensureCanvaLinuxHostDependencies"]) {
+    if (!adapterRun.includes(fragment)) {
+      failures.push(`scripts/c420ui-adapter/run.ts: missing startup dependency task fragment ${fragment}`);
+    }
+  }
+
   const launcher = read(rootDir, "canva-linux.sh");
   const bootstrapUiIndex = indexOfRequired(launcher, "bootstrap/c420ui/run-c420ui.cjs", failures, "canva-linux.sh");
   const bootstrapCliIndex = indexOfRequired(launcher, "bootstrap/c420ui/run-c420ui-cli.cjs", failures, "canva-linux.sh");

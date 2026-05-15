@@ -40,7 +40,7 @@ These commands are manual release-candidate checks. Record their output in the r
 | --- | --- | --- | --- | --- |
 | `node -p "require('./bootstrap/c420ui/manifest.json').c420uiVersion" && node -p "require('./bootstrap/c420ui/manifest.json').dependentProjectVersion"` | Required for bootstrap RC validation | Bootstrap identity reports c420ui engine version from `packages/c420ui/package.json` and dependent-project version from the root `package.json`. | The bootstrap manifest may have collapsed engine and dependent-project identity into one ambiguous version. | c420ui bootstrap |
 | `rm -rf node_modules .build && ./canva-linux.sh --doctor --dry-run` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts direct c420ui CLI through `bootstrap/c420ui/run-c420ui-cli.cjs` without a missing `esbuild` failure or launcher-side npm install. | Stage 0 bootstrap or Stage 1 dependency ownership may be broken. | c420ui bootstrap |
-| `rm -rf node_modules .build && ./canva-linux.sh` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts interactive c420ui through `bootstrap/c420ui/run-c420ui.cjs` without a missing `esbuild` failure or launcher-side npm install. | The release checkout may not start c420ui independently. | c420ui bootstrap |
+| `rm -rf node_modules .build && ./canva-linux.sh` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts interactive c420ui through `bootstrap/c420ui/run-c420ui.cjs` before dependent-project dependency repair appears in the UI logs. | The bootstrap may still block on dependency repair before the UI is mounted. | c420ui bootstrap |
 | `npm run c420ui -- --help` | Pass | c420ui help starts through the maintained launcher and documents the current terminal UI and command surface. | The c420ui entrypoint, help text, or launcher path may be broken. | c420ui core |
 | `npm run c420ui:cli -- --doctor --dry-run` | Pass | c420ui CLI doctor resolves the project adapter and reports planned checks without making changes. | The c420ui CLI bridge or dependent-project adapter contract may be broken. | c420ui core |
 | `./canva-linux.sh --help` | Blocked: validation container runs as root | Direct Canva Linux CLI help works and remains aligned with the documented command surface. | The direct CLI launcher or help contract may be broken. | Canva Linux project adapter |
@@ -95,3 +95,6 @@ The RC matrix must include a clean-checkout startup check for the standalone c42
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate: `c420uiVersion` is sourced
 from `packages/c420ui/package.json`, while `dependentProjectVersion` is sourced from the repository root `package.json`.
+
+Interactive bootstrap validation must confirm the UI starts first and dependent-project dependency repair runs as a c420ui
+startup task, not as pre-UI logic in `scripts/run-c420ui.ts`.

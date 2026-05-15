@@ -3,6 +3,7 @@ import {
   runC420UITerminalApp,
 } from "../../packages/c420ui/src/terminal";
 import { createCanvaLinuxC420UIAdapter } from "./adapter";
+import { ensureCanvaLinuxHostDependencies } from "./dependencies";
 import { createCanvaLinuxRootProvider } from "./root-provider";
 
 export type RunCanvaLinuxC420UIOptions = {
@@ -31,5 +32,16 @@ export function runCanvaLinuxC420UI(
     config,
     bridge: adapter,
     rootProvider: createCanvaLinuxRootProvider(),
+    startupTasks: [
+      {
+        id: "host-dependencies",
+        label: "Checking dependent project dependencies",
+        run: () =>
+          ensureCanvaLinuxHostDependencies({
+            rootDir,
+            env: options.env,
+          }),
+      },
+    ],
   });
 }

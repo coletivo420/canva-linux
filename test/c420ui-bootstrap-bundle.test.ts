@@ -65,3 +65,16 @@ test("c420ui bootstrap bundle excludes full project dependency tooling", () => {
     }
   }
 });
+
+
+test("interactive run-c420ui entrypoint starts c420ui before dependent dependency repair", () => {
+  const entrypointSource = fs.readFileSync(path.join("scripts", "run-c420ui.ts"), "utf8");
+  const adapterRunSource = fs.readFileSync(path.join("scripts", "c420ui-adapter", "run.ts"), "utf8");
+
+  assert.equal(entrypointSource.includes("ensureCanvaLinuxHostDependencies"), false);
+  assert.equal(entrypointSource.includes("isC420UIHostDependencyFailure"), false);
+  assert.match(entrypointSource, /runCanvaLinuxC420UI\(\{/);
+  assert.match(adapterRunSource, /startupTasks/);
+  assert.match(adapterRunSource, /ensureCanvaLinuxHostDependencies/);
+  assert.match(adapterRunSource, /Checking dependent project dependencies/);
+});

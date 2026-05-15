@@ -70,3 +70,9 @@ A release checkout must start c420ui from the bootstrap bundle without `node_mod
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
 `c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
 `package.json`. Do not collapse them into a single ambiguous `version` field.
+
+## Dependency repair inside the UI
+
+The Canva Linux interactive launcher starts `bootstrap/c420ui/run-c420ui.cjs` first. Dependency validation and repair for
+Canva Linux are wired through the c420ui startup task in `scripts/c420ui-adapter/run.ts`, so a clean checkout can open the
+UI before any dependent-project npm repair is attempted.

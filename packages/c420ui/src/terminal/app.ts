@@ -40,6 +40,10 @@ import {
   createInteractiveActionRunner,
   interactiveActionRequiresConfirmation,
 } from "./interactive-action-runner";
+import {
+  runC420UIStartupTasks,
+  type c420uiStartupTask,
+} from "../startup-task";
 
 // --- Types ---
 
@@ -72,6 +76,7 @@ export type C420UIAppOptions = {
   config: C420UIConfig;
   bridge: c420uiProjectBridge;
   rootProvider?: c420uiRootProvider;
+  startupTasks?: c420uiStartupTask[];
 };
 
 type FocusZone = "menu" | "diagnostics" | "content" | "logs";
@@ -1768,6 +1773,14 @@ export function createApp(options: C420UIAppOptions) {
   void refreshDetectedInstallations("startup");
   renderDiagnosticsBox();
   menu.focus();
+
+  if (options.startupTasks?.length) {
+    setImmediate(() => {
+      void runC420UIStartupTasks(options.startupTasks ?? [], (text) => {
+        appendLogText(text, "system");
+      }).then(() => screen.render());
+    });
+  }
 
   return screen;
 }

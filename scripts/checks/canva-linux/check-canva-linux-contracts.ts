@@ -606,13 +606,24 @@ function checkHostDependencyProviderContract(failures: string[]): void {
       failures.push(`${dependenciesPath}: missing dependency loader fragment ${fragment}`);
     }
   }
-  for (const fragment of [
+  for (const forbidden of [
     "ensureCanvaLinuxHostDependencies",
     "isC420UIHostDependencyFailure",
     "ensureHostDependencies",
   ] as const) {
-    if (!runEntrypoint.includes(fragment)) {
-      failures.push(`${runEntrypointPath}: must use Canva Linux dependency loader fragment ${fragment}`);
+    if (runEntrypoint.includes(forbidden)) {
+      failures.push(`${runEntrypointPath}: must not repair dependent project dependencies before c420ui starts (${forbidden})`);
+    }
+  }
+
+  const adapterRun = readProjectFile(rootDir, "scripts/c420ui-adapter/run.ts");
+  for (const fragment of [
+    "startupTasks",
+    "Checking dependent project dependencies",
+    "ensureCanvaLinuxHostDependencies",
+  ] as const) {
+    if (!adapterRun.includes(fragment)) {
+      failures.push(`scripts/c420ui-adapter/run.ts: must wire dependency repair as a c420ui startup task (${fragment})`);
     }
   }
   for (const forbidden of [
