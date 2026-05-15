@@ -34,6 +34,12 @@ state.
 `C420UI_SKIP_DEPENDENCY_INSTALL=1` skips npm installation. `C420UI_DEPENDENCY_REPAIR=clean`
 requests clean repair behavior through the generic runner.
 
+The Canva Linux launcher bootstrap is not the full dependency policy. It exists
+only because c420ui cannot run before its builder and runtime terminal
+dependencies exist; the launcher may install only `esbuild` and `blessed` so it
+can build and start c420ui, then c420ui owns complete host dependency validation
+and repair.
+
 ## Implementing files
 
 - `packages/c420ui/src/host-dependencies.ts`
@@ -54,7 +60,8 @@ requests clean repair behavior through the generic runner.
 
 ## Forbidden regressions
 
-- Do not run `npm ci` or `npm install` directly from Canva Linux launchers.
+- Do not run broad `npm ci` or full-project `npm install` directly from Canva Linux launchers. The only launcher-side
+  exception is the Stage 0 c420ui bootstrap for `esbuild` and `blessed`.
 - Do not restore `scripts/ensure-npm-dependencies.sh`.
 - Do not put concrete Canva Linux dependency lists in c420ui core.
 - Do not let `scripts/preflight-common.sh` own npm install or repair policy.

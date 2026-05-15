@@ -32,7 +32,8 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - Current maintained release target is `0.1.4-14`.
 - The release version format must remain `N.N.N-X`.
 - Canva Linux is the dependent project; c420ui is the generic engine.
-- Canva Linux does not install dependencies directly from launchers or shell helpers.
+- Canva Linux does not install dependencies directly from launchers or shell helpers, except for the documented Stage 0
+  c420ui bootstrap that installs only `esbuild` and `blessed`.
 - Canva Linux does not validate generic artifact recipes; c420ui owns that validation.
 - The Canva Linux adapter must not duplicate Action Engine policy for planned actions, dry-run,
   confirmation, root policy, `requestRootAccess`, or fallback execution.
@@ -44,8 +45,11 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 
 - c420ui owns host dependency management for command checks, Node minimum checks, npm checks, install strategy, repair/skip modes, messages and exit codes.
 - Dependent projects declare dependency config only; for Canva Linux this is `config/canva-linux/dependencies.json`.
-- Project launchers must not run `npm ci` or `npm install` directly.
+- Project launchers must not run `npm ci` or broad `npm install` dependency repair directly. The only exception is the
+  Stage 0 launcher bootstrap for `esbuild` and `blessed`.
 - Project shell helpers must not own npm dependency policy or hardcoded npm dependency lists.
+- Launcher bootstrap may install only c420ui startup dependencies: `esbuild` and `blessed`. Full npm dependency policy
+  remains owned by c420ui.
 
 ## Project tree boundaries
 
@@ -97,7 +101,7 @@ This file is auxiliary maintenance policy for AI agents. It is not public user d
 - c420ui owns generic host dependency contracts but not concrete project dependency lists.
 - Canva Linux owns npm bootstrap policy, Node.js version policy, and `CANVA_*` bootstrap variables.
 - Project launchers must use the host dependency provider instead of calling bootstrap shell scripts directly.
-- Do not run npm installation directly from project launchers; c420ui owns host dependency management.
+- Do not run broad npm installation directly from project launchers; c420ui owns host dependency management after the Stage 0 bootstrap.
 - Keep project shell out of npm dependency policy; dependent projects declare host dependencies in config.
 - Detection status uses `project`, not the removed legacy `package` shape.
 - Do not reintroduce `package: project` compatibility in detection providers.

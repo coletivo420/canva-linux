@@ -40,6 +40,11 @@ Canva Linux consumes c420ui through `scripts/c420ui-adapter/bridge.ts`,
 `scripts/c420ui-adapter/run.ts`, and the direct CLI bridge. The adapter loads
 project data from `config/canva-linux/` and passes it to c420ui contracts.
 
+The `canva-linux.sh` launcher contains a Stage 0 bootstrap only to make c420ui
+executable from a clean source checkout. That bootstrap may install only
+`esbuild` and `blessed`, does not mutate package metadata or lockfiles, and
+hands full dependency validation and repair to c420ui after startup.
+
 ## Boundary checks
 
 - `npm run check:canva-linux`

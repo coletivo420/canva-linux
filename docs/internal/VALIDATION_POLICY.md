@@ -27,7 +27,8 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
 ## Boundary policy
 
 - Canva Linux is a dependent project; c420ui is the generic engine.
-- Canva Linux does not install dependencies directly from launchers.
+- Canva Linux does not install dependencies directly from launchers, except for the documented Stage 0 c420ui bootstrap
+  that installs only `esbuild` and `blessed`.
 - Canva Linux does not validate generic artifact recipes; c420ui does.
 - The Canva Linux adapter must not duplicate Action Engine policy.
 - `scripts/preflight-common.sh` is repository-check-only and must not own npm
@@ -35,9 +36,33 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
 - Artifact names must preserve generated architecture strings such as `x86_64`
   or `X86_64`.
 
+## Bootstrap dependency policy
+
+The shell launcher may install only the minimal npm dependencies required to build and start c420ui from a clean source checkout.
+
+Allowed bootstrap packages:
+
+- `esbuild`
+- `blessed`
+
+The launcher bootstrap must not replace the c420ui Host Dependency Runner. After c420ui starts, c420ui owns full host dependency validation and repair.
+
+The launcher bootstrap must not:
+
+- install all project dependencies as policy
+- mutate `package.json`
+- mutate `package-lock.json`
+- reintroduce `scripts/ensure-npm-dependencies.sh`
+- reintroduce `CANVA_REQUIRED_NPM_DEPS`
+- reintroduce `CANVA_SKIP_NPM_INSTALL` or `CANVA_NPM_REPAIR`
+
+`C420UI_SKIP_DEPENDENCY_INSTALL` is allowed and must be respected. The old `CANVA_*` npm dependency controls are not allowed.
+
 ## RC validation matrix
 
-The release candidate for `0.1.4-14` must use the formal [RC Validation Matrix](RC_VALIDATION_MATRIX.md) before `v0.1.4-14` is tagged. The matrix records automated commands, manual dry-run checks, dependency-backed packaging checks, expected results, owner domains, and release blockers.
+The release candidate for `0.1.4-14` must use the formal [RC Validation Matrix](RC_VALIDATION_MATRIX.md) before
+`v0.1.4-14` is tagged. The matrix records automated commands, manual dry-run checks, dependency-backed packaging checks,
+expected results, owner domains, and release blockers.
 
 ## Required validation commands
 
