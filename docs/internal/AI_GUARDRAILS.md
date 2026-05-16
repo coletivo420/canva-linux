@@ -1,8 +1,7 @@
 # AI Guardrails
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-The alias gives this project a clear local command while internal bootstrap/build artifacts remain generic for c420ui-based projects.
-Canva Linux no longer ships a `canva-linux.sh` compatibility entrypoint.
+See [c420ui Builder Alias Policy](../c420ui/BUILDER_ALIAS.md).
 
 This file is auxiliary maintenance policy for AI agents. It is not public user documentation.
 

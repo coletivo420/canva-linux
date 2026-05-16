@@ -1,5 +1,8 @@
 # Gemini Maintenance Policy for Canva Linux
 
+`canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
+See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
+
 This file provides project context for Gemini CLI. It is auxiliary agent policy, not public user documentation.
 
 Required reading:

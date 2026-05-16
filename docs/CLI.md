@@ -1,8 +1,7 @@
 # CLI Commands
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-The alias gives this project a clear local command while internal bootstrap/build artifacts remain generic for c420ui-based projects.
-Canva Linux no longer ships a `canva-linux.sh` compatibility entrypoint.
+See [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
 
 The `canva-linux-c420ui-builder` command is the **Canva Linux Builder powered by c420ui**.
 It provides access to the c420ui terminal interface and direct CLI actions.
@@ -29,6 +28,7 @@ It provides access to the c420ui terminal interface and direct CLI actions.
 | Option | Description |
 | --- | --- |
 | `-y, --yes` | Skip confirmation prompts for dangerous actions (uninstall, purge, etc.). |
+| `--force` | Alias for `--yes`. |
 | `-h, --help` | Show usage information. |
 | `--dry-run` | Resolve direct action metadata without executing command scripts. |
 

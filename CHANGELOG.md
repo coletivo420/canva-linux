@@ -1,5 +1,8 @@
 # Changelog
 
+`canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
+See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
+
 ## Unreleased
 
 - Hardened the Dev.5 builder/runtime split: `canva-linux-c420ui-builder` no longer maintains a direct-action allowlist,

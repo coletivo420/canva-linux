@@ -329,8 +329,8 @@ function main(): void {
   }
 
   for (const forbiddenPath of [
-    "bootstrap/c420ui/canva-linux-c420ui-builder.cjs",
-    "scripts/canva-linux-c420ui-builder.ts",
+    "bootstrap/c420ui/" + "canva-linux-c420ui-builder.cjs",
+    "scripts/" + "canva-linux-c420ui-builder.ts",
   ] as const) {
     if (fs.existsSync(path.join(rootDir, forbiddenPath))) {
       failures.push(`${forbiddenPath}: old Canva Linux-specific internal builder artifact must not exist`);
@@ -402,7 +402,7 @@ function main(): void {
       if (!manifest.sourceHashInputs.includes("scripts/build-c420ui-bootstrap.ts")) {
         failures.push(`${manifestPath}: sourceHashInputs must explicitly include scripts/build-c420ui-bootstrap.ts`);
       }
-      for (const forbiddenInput of ["scripts/canva-linux-c420ui-builder.ts", "bootstrap/c420ui/canva-linux-c420ui-builder.cjs"] as const) {
+      for (const forbiddenInput of ["scripts/" + "canva-linux-c420ui-builder.ts", "bootstrap/c420ui/" + "canva-linux-c420ui-builder.cjs"] as const) {
         if (manifest.sourceHashInputs.includes(forbiddenInput)) {
           failures.push(`${manifestPath}: sourceHashInputs must not include ${forbiddenInput}`);
         }
@@ -472,7 +472,22 @@ function main(): void {
 
   if (fs.existsSync(path.join(rootDir, builderBundlePath))) {
     const bundle = read(rootDir, builderBundlePath);
-    for (const forbidden of ["electron-builder", "@typescript-eslint", "playwright", "typescript/lib"]) {
+    for (const required of [
+      "BUILDER_INTERNAL_NAME",
+      "c420ui-builder",
+      "BUILDER_ALIAS",
+      "canva-linux-c420ui-builder",
+      "runC420UIBuilder",
+    ] as const) {
+      if (!bundle.includes(required)) failures.push(`${builderBundlePath}: must contain ${required}`);
+    }
+    for (const forbidden of [
+      "electron-builder",
+      "@typescript-eslint",
+      "playwright",
+      "typescript/lib",
+      "runCanvaLinuxC420UIBuilder",
+    ] as const) {
       if (bundle.includes(forbidden)) failures.push(`${builderBundlePath}: must not contain ${forbidden}`);
     }
   }
