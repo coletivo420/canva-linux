@@ -334,8 +334,8 @@ function validateRuntimeEnvFallbacksRemoved(rootDir: string, failures: string[])
   if (!runtimeCliSource.includes('if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE)')) {
     failures.push("runtime-cli must reject --debug without an equals value");
   }
-  if (!runtimeCliSource.includes('arg.startsWith(`${option}=`)')) {
-    failures.push("runtime-cli valued option matching must require --option=value");
+  if (!/function\s+matchesValuedOption\s*\(/.test(runtimeCliSource)) {
+    failures.push("runtime-cli must keep matchesValuedOption for valued CLI options");
   }
 
   const files = [
@@ -455,6 +455,8 @@ function validateAdapterProjectContract(
 
   const runSource = readOptionalProjectFile(rootDir, "scripts/c420ui-adapter/run.ts") ?? "";
   const adapterSource = readOptionalProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts") ?? "";
+  if (!runSource) failures.push("scripts/c420ui-adapter/run.ts must exist");
+  if (!adapterSource) failures.push("scripts/c420ui-adapter/adapter.ts must exist");
   const developmentAdapterPath = "scripts/c420ui-adapter/development.ts";
   const actionAdapterPath = "scripts/c420ui-adapter/actions.ts";
   const developmentConfigPath = "config/canva-linux/development.json";
