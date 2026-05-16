@@ -270,6 +270,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## Credential storage
 
+- Persistent login must require a secure Linux credential backend.
 - Persistent login must require a secure Linux Secret Service backend.
 - The secure backend must also have `safeStorage.isEncryptionAvailable() === true`; the selected backend name alone is not sufficient.
 - If Electron reports `basic_text`, Canva Linux must use ephemeral session mode.
@@ -280,14 +281,17 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not claim credentials are securely stored when the backend is unknown, unverifiable,
   or when a secure backend has unavailable encryption.
 - Do not log passwords, cookies, tokens, session values or credential material.
-- Persistent Canva login on Linux depends on a secure Secret Service backend with available encryption;
+- Persistent Canva login on Linux depends on a secure credential backend with available encryption;
   the selected backend name alone is not sufficient.
-- Flatpak credential lookup uses Secret Service/Freedesktop as the primary path. KWallet D-Bus access is a compatibility fallback for KDE/Plasma, including KWallet5.
+- Canva Linux automatically resolves the native credential store for the detected Linux desktop before Electron starts.
+  KDE/Plasma tries KWallet first, then the alternate KWallet generation, then Secret Service/libsecret.
+  GNOME and Secret Service-compatible desktops try Secret Service/libsecret first, then KWallet compatibility paths.
+  Flatpak grants narrow D-Bus access to those credential services without opening the full session bus.
 - Secure Electron backend names include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`.
 - `basic_text` is an insecure fallback and must use ephemeral session mode.
 - Unknown or failed credential-backend detection, failed encryption-availability detection,
   and secure backends with unavailable encryption must use ephemeral session mode by caution.
-- Do not describe login persistence as universal; document it as Secret Service-backed.
+- Do not describe login persistence as universal; document it as native credential-store-backed and safeStorage-gated.
 - Do not use `safeStorage.setUsePlainTextEncryption()` to preserve login.
 - Do not log cookies, tokens, passwords, session contents or credential material while diagnosing credential storage.
 

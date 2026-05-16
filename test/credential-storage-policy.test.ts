@@ -356,18 +356,20 @@ function readRepositoryFile(relativePath) {
   );
 }
 
-test("root Flatpak manifest includes org.kde.kwalletd5", () => {
+test("root Flatpak manifest includes narrow credential D-Bus talk names", () => {
   const manifest = readRepositoryFile("io.github.coletivo420.canva-linux.yml");
 
   assert.match(manifest, /--talk-name=org\.freedesktop\.secrets/);
-  assert.match(manifest, /--talk-name=org\.kde\.kwalletd5/);
   assert.match(manifest, /--talk-name=org\.kde\.kwalletd6/);
+  assert.match(manifest, /--talk-name=org\.kde\.kwalletd5/);
+  assert.doesNotMatch(manifest, /--socket=session-bus/);
 });
 
-test("Flathub manifest includes org.kde.kwalletd5", () => {
+test("Flathub manifest includes narrow credential D-Bus talk names", () => {
   const manifest = readRepositoryFile("packaging/flathub/manifest.yml");
 
   assert.match(manifest, /--talk-name=org\.freedesktop\.secrets/);
-  assert.match(manifest, /--talk-name=org\.kde\.kwalletd5/);
   assert.match(manifest, /--talk-name=org\.kde\.kwalletd6/);
+  assert.match(manifest, /--talk-name=org\.kde\.kwalletd5/);
+  assert.doesNotMatch(manifest, /--socket=session-bus/);
 });

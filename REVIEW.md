@@ -12,12 +12,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.2` for credential persistence bugfix validation:
+Request changes if a PR preparing `0.1.4-15.Dev.3` for credential persistence bugfix validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-15.Dev.2` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.3` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -39,7 +39,7 @@ Direct `./canva-linux.sh` startup was blocked in the validation container becaus
 
 Request changes if a PR:
 
-- changes version `0.1.4-15.Dev.2` without an explicit maintainer request;
+- changes version `0.1.4-15.Dev.3` without an explicit maintainer request;
 - introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
@@ -235,7 +235,10 @@ Request changes if a PR:
 - removes ephemeral fallback for insecure credential storage;
 - removes the user warning for ephemeral sessions;
 - claims persistent login works without Secret Service;
-- omits the Flatpak credential order: Secret Service/Freedesktop primary, with KWallet6 and KWallet5 D-Bus access only as KDE/Plasma compatibility fallbacks;
+- claims persistent login works without a secure native credential store and available safeStorage encryption;
+- omits the automatic desktop-aware Flatpak credential order: KDE/Plasma tries KWallet first,
+  the alternate KWallet generation second, and Secret Service/libsecret third; GNOME and unknown desktops try
+  Secret Service/libsecret first, then KWallet6 and KWallet5;
 - logs cookies, tokens, passwords or credential material.
 
 

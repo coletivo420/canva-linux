@@ -204,159 +204,281 @@ const {
   selectLinuxPasswordStore,
 } = loadRuntimeModule("main/linux-credential-runtime");
 
-test("selects KWallet 6 for non-Flatpak KDE and Plasma desktops", () => {
-  assert.equal(
-    selectLinuxPasswordStore(
-      { XDG_CURRENT_DESKTOP: "KDE" },
-      { fileExists: () => false },
-    ).selectedStore,
-    "kwallet6",
-  );
-  assert.equal(
-    selectLinuxPasswordStore(
-      { XDG_SESSION_DESKTOP: "plasma" },
-      { fileExists: () => false },
-    ).selectedStore,
-    "kwallet6",
-  );
-});
+function credentialProbeRunner(statusByService) {
+  return (command, args) => {
+    if (command === "gdbus" && args[0] === "--version") {
+      return { status: 0, stdout: "2.80.0" };
+    }
 
-test("selects gnome-libsecret for non-Flatpak GNOME and unknown desktops", () => {
-  assert.equal(
-    selectLinuxPasswordStore(
-      { XDG_CURRENT_DESKTOP: "GNOME" },
-      { fileExists: () => false },
-    ).selectedStore,
-    "gnome-libsecret",
-  );
-  assert.equal(
-    selectLinuxPasswordStore({}, { fileExists: () => false }).selectedStore,
-    "gnome-libsecret",
-  );
-});
+    if (command !== "gdbus") {
+      return { status: 1, stdout: "" };
+    }
 
-test("Flatpak on GNOME selects gnome-libsecret", () => {
-  const plan = selectLinuxPasswordStore(
+    const method = args[args.indexOf("--method") + 1];
+    if (method === "org.freedesktop.DBus.NameHasOwner") {
+      const serviceName = args.at(-1);
+      return {
+        status: 0,
+        stdout: statusByService[serviceName] === "available" ? "(true,)" : "(false,)",
+      };
+    }
+
+    if (method === "org.freedesktop.DBus.ListActivatableNames") {
+      const activatableServices = Object.entries(statusByService)
+        .filter(([, status]) => status === "activatable")
+        .map(([service]) => service)
+        .join(" ");
+      return { status: 0, stdout: activatableServices };
+    }
+
+    return { status: 1, stdout: "" };
+  };
+}
+
+function selectWithProbe(env, statusByService) {
+  return selectLinuxPasswordStore(
+    { DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/1000/bus", ...env },
     {
-      FLATPAK_ID: "io.github.coletivo420.canva-linux",
-      XDG_CURRENT_DESKTOP: "GNOME",
+      fileExists: () => false,
+      probeRunner: credentialProbeRunner(statusByService),
     },
-    { fileExists: () => false },
   );
+}
 
-  assert.equal(plan.isFlatpak, true);
-  assert.equal(plan.selectedStore, "gnome-libsecret");
-  assert.deepEqual(plan.candidates[0], {
-    store: "gnome-libsecret",
-    reason: "freedesktop-secret-service",
-  });
-});
+const SERVICES = {
+  secrets: "org.freedesktop.secrets",
+  kwallet6: "org.kde.kwalletd6",
+  kwallet5: "org.kde.kwalletd5",
+};
 
-test("Flatpak on KDE Plasma 6 selects kwallet6 and exposes KWallet fallback candidates", () => {
-  const plan = selectLinuxPasswordStore(
-    {
-      FLATPAK_ID: "io.github.coletivo420.canva-linux",
-      XDG_CURRENT_DESKTOP: "KDE",
-      KDE_SESSION_VERSION: "6",
-    },
-    { fileExists: () => false },
+test("KDE Plasma 6 selects kwallet6 when KWallet 6 is available", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "6" },
+    { [SERVICES.kwallet6]: "available" },
   );
 
   assert.equal(plan.selectedStore, "kwallet6");
-  assert.deepEqual(plan.candidates, [
-    { store: "gnome-libsecret", reason: "freedesktop-secret-service" },
-    { store: "kwallet6", reason: "kde-kwallet6-fallback" },
-    { store: "kwallet5", reason: "kde-kwallet5-fallback" },
-  ]);
+  assert.equal(plan.selectedService, SERVICES.kwallet6);
+  assert.deepEqual(
+    plan.candidates.map((candidate) => candidate.store),
+    ["kwallet6", "kwallet5", "gnome-libsecret"],
+  );
 });
 
-test("Flatpak on KDE Plasma 5 selects kwallet5", () => {
-  const plan = selectLinuxPasswordStore(
+test("KDE Plasma 6 falls back from unavailable kwallet6 to available kwallet5", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "6" },
     {
-      FLATPAK_ID: "io.github.coletivo420.canva-linux",
-      XDG_CURRENT_DESKTOP: "KDE",
-      KDE_SESSION_VERSION: "5",
+      [SERVICES.kwallet6]: "unavailable",
+      [SERVICES.kwallet5]: "available",
+      [SERVICES.secrets]: "available",
     },
-    { fileExists: () => false },
   );
 
   assert.equal(plan.selectedStore, "kwallet5");
+});
+
+test("KDE Plasma 6 falls back to Secret Service when both KWallet services are unavailable", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "6" },
+    {
+      [SERVICES.kwallet6]: "unavailable",
+      [SERVICES.kwallet5]: "unavailable",
+      [SERVICES.secrets]: "available",
+    },
+  );
+
+  assert.equal(plan.selectedStore, "gnome-libsecret");
+});
+
+test("KDE Plasma 6 keeps desktop preference when every service probes unavailable", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "6" },
+    {
+      [SERVICES.kwallet6]: "unavailable",
+      [SERVICES.kwallet5]: "unavailable",
+      [SERVICES.secrets]: "unavailable",
+    },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet6");
+});
+
+test("KDE Plasma 5 selects kwallet5 when KWallet 5 is available", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "5" },
+    { [SERVICES.kwallet5]: "available" },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet5");
+  assert.deepEqual(
+    plan.candidates.map((candidate) => candidate.store),
+    ["kwallet5", "kwallet6", "gnome-libsecret"],
+  );
+});
+
+test("KDE Plasma 5 falls back from unavailable kwallet5 to available kwallet6", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "5" },
+    {
+      [SERVICES.kwallet5]: "unavailable",
+      [SERVICES.kwallet6]: "available",
+      [SERVICES.secrets]: "available",
+    },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet6");
+});
+
+test("KDE Plasma 5 falls back to Secret Service when both KWallet services are unavailable", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "5" },
+    {
+      [SERVICES.kwallet5]: "unavailable",
+      [SERVICES.kwallet6]: "unavailable",
+      [SERVICES.secrets]: "available",
+    },
+  );
+
+  assert.equal(plan.selectedStore, "gnome-libsecret");
+});
+
+test("GNOME selects Secret Service when available", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "GNOME" },
+    { [SERVICES.secrets]: "available", [SERVICES.kwallet6]: "available" },
+  );
+
+  assert.equal(plan.selectedStore, "gnome-libsecret");
   assert.deepEqual(
     plan.candidates.map((candidate) => candidate.store),
     ["gnome-libsecret", "kwallet6", "kwallet5"],
   );
 });
 
-test("Flatpak on KDE with KDE_SESSION_VERSION unset selects kwallet6", () => {
-  const plan = selectLinuxPasswordStore(
+test("GNOME falls back to kwallet6 when Secret Service is unavailable", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "GNOME" },
     {
-      FLATPAK_ID: "io.github.coletivo420.canva-linux",
-      XDG_CURRENT_DESKTOP: "KDE",
+      [SERVICES.secrets]: "unavailable",
+      [SERVICES.kwallet6]: "available",
+      [SERVICES.kwallet5]: "available",
     },
-    { fileExists: () => false },
   );
 
   assert.equal(plan.selectedStore, "kwallet6");
 });
 
-test("Flatpak unknown desktop selects gnome-libsecret", () => {
-  const plan = selectLinuxPasswordStore(
-    { FLATPAK_ID: "io.github.coletivo420.canva-linux" },
-    { fileExists: () => false },
-  );
-
-  assert.equal(plan.isFlatpak, true);
-  assert.equal(plan.isKde, false);
-  assert.equal(plan.desktop, "unknown");
-  assert.equal(plan.selectedStore, "gnome-libsecret");
-});
-
-test("CANVA_LINUX_PASSWORD_STORE=kwallet5 is accepted", () => {
-  const plan = selectLinuxPasswordStore(
-    { CANVA_LINUX_PASSWORD_STORE: "kwallet5" },
-    { fileExists: () => false },
+test("GNOME falls back to kwallet5 when Secret Service and kwallet6 are unavailable", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "GNOME" },
+    {
+      [SERVICES.secrets]: "unavailable",
+      [SERVICES.kwallet6]: "unavailable",
+      [SERVICES.kwallet5]: "available",
+    },
   );
 
   assert.equal(plan.selectedStore, "kwallet5");
 });
 
-test("CANVA_LINUX_PASSWORD_STORE=basic_text is rejected", () => {
-  const warnings = [];
-  const plan = selectLinuxPasswordStore(
-    { CANVA_LINUX_PASSWORD_STORE: "basic_text" },
-    {
-      fileExists: () => false,
-      logger: {
-        info() {},
-        warn(message) {
-          warnings.push(message);
-        },
+test("unknown desktop selects Secret Service first and can fall back to KWallet", () => {
+  assert.equal(
+    selectWithProbe({}, { [SERVICES.secrets]: "available" }).selectedStore,
+    "gnome-libsecret",
+  );
+  assert.equal(
+    selectWithProbe(
+      {},
+      { [SERVICES.secrets]: "unavailable", [SERVICES.kwallet6]: "available" },
+    ).selectedStore,
+    "kwallet6",
+  );
+  assert.equal(
+    selectWithProbe(
+      {},
+      {
+        [SERVICES.secrets]: "unavailable",
+        [SERVICES.kwallet6]: "unavailable",
+        [SERVICES.kwallet5]: "available",
       },
+    ).selectedStore,
+    "kwallet5",
+  );
+});
+
+test("activatable services are selected before unavailable desktop preferences", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "6" },
+    {
+      [SERVICES.kwallet6]: "unavailable",
+      [SERVICES.kwallet5]: "activatable",
+      [SERVICES.secrets]: "available",
     },
   );
 
   assert.equal(plan.selectedStore, "gnome-libsecret");
-  assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /Ignoring unsafe or unsupported/);
 });
 
-test("invalid password store override falls back to auto", () => {
-  const warnings = [];
-  const plan = selectLinuxPasswordStore(
-    { XDG_CURRENT_DESKTOP: "KDE", CANVA_LINUX_PASSWORD_STORE: "basic" },
+test("unavailable probes keep the first desktop-preferred candidate", () => {
+  const plan = selectWithProbe(
+    { XDG_CURRENT_DESKTOP: "GNOME" },
     {
-      fileExists: () => false,
-      logger: {
-        info() {},
-        warn(message) {
-          warnings.push(message);
-        },
-      },
+      [SERVICES.secrets]: "unavailable",
+      [SERVICES.kwallet6]: "unavailable",
+      [SERVICES.kwallet5]: "unavailable",
     },
   );
 
-  assert.equal(plan.selectedStore, "kwallet6");
-  assert.equal(warnings.length, 1);
+  assert.equal(plan.selectedStore, "gnome-libsecret");
+});
+
+test("missing D-Bus probe support keeps desktop-preferred candidate order", () => {
+  const plan = selectLinuxPasswordStore(
+    { XDG_CURRENT_DESKTOP: "KDE", KDE_SESSION_VERSION: "5" },
+    { fileExists: () => false },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet5");
+  assert.equal(plan.candidates[0].probeStatus, "unknown");
+});
+
+test("safe password-store overrides are accepted", () => {
+  for (const override of ["kwallet5", "kwallet6", "gnome-libsecret"]) {
+    const plan = selectWithProbe(
+      { CANVA_LINUX_PASSWORD_STORE: override, XDG_CURRENT_DESKTOP: "GNOME" },
+      { [SERVICES.secrets]: "available" },
+    );
+
+    assert.equal(plan.selectedStore, override);
+  }
+});
+
+test("unsafe password-store overrides are rejected and automatic fallback is used", () => {
+  for (const override of ["basic_text", "basic", "unknown"]) {
+    const warnings = [];
+    const plan = selectLinuxPasswordStore(
+      {
+        CANVA_LINUX_PASSWORD_STORE: override,
+        DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/1000/bus",
+        XDG_CURRENT_DESKTOP: "KDE",
+      },
+      {
+        fileExists: () => false,
+        probeRunner: credentialProbeRunner({ [SERVICES.kwallet6]: "available" }),
+        logger: {
+          info() {},
+          warn(message) {
+            warnings.push(message);
+          },
+        },
+      },
+    );
+
+    assert.equal(plan.selectedStore, "kwallet6");
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /Ignoring unsafe or unsupported/);
+  }
 });
 
 test("configures Chromium password-store before credential backend checks", () => {

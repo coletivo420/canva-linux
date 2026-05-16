@@ -1,13 +1,16 @@
 # RC Validation Matrix
 
-This internal maintenance checklist now tracks the active `0.1.4-15.Dev.2` credential persistence bugfix cycle. It records the commands, manual checks, Flatpak credential diagnostics, and release blockers that must be reviewed before tagging or publishing `v0.1.4-15.Dev.2`.
+This internal maintenance checklist now tracks the active `0.1.4-15.Dev.3` credential persistence bugfix cycle. It records the commands, manual checks, Flatpak credential diagnostics, and release blockers that must be reviewed before tagging or publishing `v0.1.4-15.Dev.3`.
+
+
+Historical baseline: the consolidated split validation remains anchored by `v0.1.4-14`; this matrix extends it for the active credential-storage bugfix cycle.
 
 ## Release candidate metadata
 
 | Field | Value |
 | --- | --- |
-| Release target | `0.1.4-15.Dev.2` |
-| Tag target | `v0.1.4-15.Dev.2` |
+| Release target | `0.1.4-15.Dev.3` |
+| Tag target | `v0.1.4-15.Dev.3` |
 | Versioning rule | `N.N.N-X.Dev.Y` |
 | Validation date | `2026-05-14` (UTC) |
 | Validated commit | `75853e9e08ca56a1b0b6aec13fe5ed3b74625d1a` |
@@ -88,10 +91,10 @@ Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb4219
 
 The release candidate must not be tagged or published while any blocker below is present:
 
-- `package.json` version differs from `0.1.4-15.Dev.2`.
-- `package-lock.json` top-level version differs from `0.1.4-15.Dev.2`.
-- `package-lock.json` root package version differs from `0.1.4-15.Dev.2`.
-- Active project UI metadata does not use display version `0.1.4-15.Dev` and phase `0.1.4-15.Dev.2`.
+- `package.json` version differs from `0.1.4-15.Dev.3`.
+- `package-lock.json` top-level version differs from `0.1.4-15.Dev.3`.
+- `package-lock.json` root package version differs from `0.1.4-15.Dev.3`.
+- Active project UI metadata does not use display version `0.1.4-15.Dev` and phase `0.1.4-15.Dev.3`.
 - Any release identity uses `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
 - Project-owned artifact names use `x64` instead of the generated architecture name such as `x86_64` or `X86_64`.
 - `scripts/c420ui-canva-linux` reappears.
@@ -103,11 +106,11 @@ The release candidate must not be tagged or published while any blocker below is
 
 ## RC decision rule
 
-`v0.1.4-15.Dev.2` may be tagged only after every required automated command has a recorded passing result, every applicable manual dry-run has the expected result, dependency-backed packaging checks are either passing or explicitly recorded as environment-blocked, and no release blocker remains open.
+`v0.1.4-15.Dev.3` may be tagged only after every required automated command has a recorded passing result, every applicable manual dry-run has the expected result, dependency-backed packaging checks are either passing or explicitly recorded as environment-blocked, and no release blocker remains open.
 
 ## c420ui bootstrap release requirement
 
-The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-15.Dev.2`; ESM is future work only.
+The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-15.Dev.3`; ESM is future work only.
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate: `c420uiVersion` is sourced
 from `packages/c420ui/package.json`, while `dependentProjectVersion` is sourced from the repository root `package.json`.
