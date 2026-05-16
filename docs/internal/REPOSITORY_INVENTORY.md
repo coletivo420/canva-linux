@@ -22,7 +22,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `assets/screenshots/upload.png`
 - `assets/screenshots/windowpopup.png`
 - `build-resources/icon.png`
-- `canva-linux.sh`
+- `canva-linux-c420ui-builder`
 - `data/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png`
 - `data/icons/hicolor/16x16/apps/io.github.coletivo420.canva-linux.png`
 - `data/icons/hicolor/22x22/apps/io.github.coletivo420.canva-linux.png`

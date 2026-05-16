@@ -87,6 +87,71 @@ function appendDisableFeature(app: ElectronAppLike, featureName: string): void {
   app.commandLine.appendSwitch(switchName, Array.from(features).join(","));
 }
 
+
+function detectRuntimeDisplayServer(env = process.env): "wayland" | "x11" | "unknown" {
+  if (env.WAYLAND_DISPLAY || env.XDG_SESSION_TYPE === "wayland") return "wayland";
+  if (env.DISPLAY || env.XDG_SESSION_TYPE === "x11") return "x11";
+  return "unknown";
+}
+
+function applyRuntimeGpuCli({
+  app,
+  runtimeCli,
+  detectedDisplayServer,
+}: {
+  app: ElectronAppLike;
+  runtimeCli: CanvaLinuxRuntimeCliOptions;
+  detectedDisplayServer?: "wayland" | "x11" | "unknown";
+}): void {
+  const displayServer = detectedDisplayServer || detectRuntimeDisplayServer();
+
+  switch (runtimeCli.gpuBackend) {
+    case "auto":
+      app.commandLine.appendSwitch("enable-gpu-rasterization");
+      app.commandLine.appendSwitch("enable-zero-copy");
+      break;
+    case "opengl":
+      app.commandLine.appendSwitch("enable-gpu-rasterization");
+      app.commandLine.appendSwitch("enable-zero-copy");
+      app.commandLine.appendSwitch("use-gl", "angle");
+      app.commandLine.appendSwitch("use-angle", "gl");
+      break;
+    case "vulkan":
+      app.commandLine.appendSwitch("enable-gpu-rasterization");
+      app.commandLine.appendSwitch("enable-zero-copy");
+      app.commandLine.appendSwitch(
+        "enable-features",
+        "Vulkan,VulkanFromANGLE,DefaultANGLEVulkan",
+      );
+      app.commandLine.appendSwitch("use-angle", "vulkan");
+      break;
+    case "force":
+      app.commandLine.appendSwitch("enable-gpu-rasterization");
+      app.commandLine.appendSwitch("enable-zero-copy");
+      app.commandLine.appendSwitch("ignore-gpu-blocklist");
+      app.commandLine.appendSwitch("use-gl", "angle");
+      app.commandLine.appendSwitch("use-angle", "gl");
+      break;
+    case "software":
+      app.disableHardwareAcceleration?.();
+      app.commandLine.appendSwitch("disable-gpu");
+      app.commandLine.appendSwitch("disable-gpu-compositing");
+      break;
+  }
+
+  if (runtimeCli.forceX11) {
+    app.commandLine.appendSwitch("ozone-platform", "x11");
+  } else if (runtimeCli.forceWayland) {
+    app.commandLine.appendSwitch("ozone-platform", "wayland");
+  } else if (displayServer === "wayland") {
+    app.commandLine.appendSwitch("ozone-platform", "wayland");
+  }
+
+  if (runtimeCli.disableWaylandColorManager) {
+    appendDisableFeature(app, "WaylandWpColorManagerV1");
+  }
+}
+
 function configureLinuxRuntime({
   app,
   appId,
@@ -130,6 +195,11 @@ function configureLinuxRuntime({
     app.commandLine.appendSwitch("class", wmClass);
     app.commandLine.appendSwitch("font-render-hinting", "medium");
     app.commandLine.appendSwitch("enable-font-antialiasing");
+    applyRuntimeGpuCli({
+      app,
+      runtimeCli,
+      detectedDisplayServer: detectRuntimeDisplayServer(),
+    });
 
     if (process.env.CANVA_DISABLE_GPU === "1") {
       app.disableHardwareAcceleration?.();
@@ -310,6 +380,7 @@ async function configureSession({
 }
 
 export {
+  applyRuntimeGpuCli,
   clearEphemeralSessionData,
   configureLinuxRuntime,
   configureSession,

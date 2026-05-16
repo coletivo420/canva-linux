@@ -96,14 +96,14 @@ Use this fallback only when normal AppImage execution is not possible.
 ## Canva Linux commands
 
 ```bash
-./canva-linux.sh --bundle-appimage
-./canva-linux.sh --validate-appimage
+./canva-linux-c420ui-builder --bundle-appimage
+./canva-linux-c420ui-builder --validate-appimage
 ```
 
 AppImage packaging and AppImage execution are separate concerns:
 
-- `./canva-linux.sh --bundle-appimage` generates the artifact.
-- `./canva-linux.sh --validate-appimage` validates generated files.
+- `./canva-linux-c420ui-builder --bundle-appimage` generates the artifact.
+- `./canva-linux-c420ui-builder --validate-appimage` validates generated files.
 - Running the AppImage may require host FUSE support.
 
 ## Runtime diagnostics
@@ -125,13 +125,13 @@ AppImage packaging and AppImage execution are separate concerns:
 Basic validation:
 
 ```bash
-./canva-linux.sh --validate-appimage
+./canva-linux-c420ui-builder --validate-appimage
 ```
 
 Optional extraction check:
 
 ```bash
-./canva-linux.sh --validate-appimage-extract
+./canva-linux-c420ui-builder --validate-appimage-extract
 ```
 
 The extraction check does not replace a runtime test with FUSE. It only verifies that the AppImage can be unpacked with the AppImage runtime.

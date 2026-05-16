@@ -40,7 +40,7 @@ command -v flatpak-builder >/dev/null 2>&1 || echo "[warn] flatpak-builder missi
 command -v desktop-file-validate >/dev/null 2>&1 || echo "[warn] desktop-file-validate missing — desktop metadata validation will not work"
 command -v appstreamcli >/dev/null 2>&1 || echo "[warn] appstreamcli missing — AppStream validation will not work"
 echo "[info] AppImage packaging: experimental"
-echo "[info] AppImage command: ./canva-linux.sh --bundle-appimage"
+echo "[info] AppImage command: ./canva-linux-c420ui-builder --bundle-appimage"
 echo "[info] AppImage runtime may require FUSE support on some distributions"
 if command -v fusermount3 >/dev/null 2>&1; then
   echo "[ok] fusermount3 found"

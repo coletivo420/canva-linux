@@ -32,12 +32,12 @@ Use this checklist before opening or updating a Flathub submission PR.
 ## Command examples
 
 ```bash
-./canva-linux.sh --validate
+./canva-linux-c420ui-builder --validate
 npm run build:preload
 ./packaging/flathub/scripts/generate-npm-sources.sh
 ./scripts/validate-flathub-submission.sh
 flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
-./canva-linux.sh --install-flatpak --bundle-flatpak
+./canva-linux-c420ui-builder --install-flatpak --bundle-flatpak
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.coletivo420.canva-linux.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo

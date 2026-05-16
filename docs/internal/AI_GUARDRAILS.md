@@ -32,7 +32,9 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Preserve the `N.N.N-X` release versioning rule.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
 - Every behavior change must update `CHANGELOG.md`.
-- Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Do not reintroduce `CANVA_DEBUG`, `CANVA_DEBUG_LEVEL`, or `CANVA_LINUX_PASSWORD_STORE`, and do not add app runtime debug flags to `canva-linux.sh`.
+- Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Do not reintroduce `CANVA_DEBUG`,
+  `CANVA_DEBUG_LEVEL`, or `CANVA_LINUX_PASSWORD_STORE`, and do not add app runtime debug flags to
+  `canva-linux-c420ui-builder`.
 
 
 
@@ -210,15 +212,15 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Runtime app logs remain separate from c420ui operational command logs.
 - Direct CLI actions must pass through the c420ui CLI bridge.
 - Interactive c420ui actions and direct CLI actions must share the c420ui Action Engine.
-- Do not bypass the c420ui Action Engine from `canva-linux.sh`.
+- Do not bypass the c420ui Action Engine from `canva-linux-c420ui-builder`.
 - Do not reintroduce direct process execution from `packages/c420ui/src/terminal/app.ts`.
 - Do not import `./process-runner` from the interactive app after the Action Engine migration.
 - Do not reintroduce `scripts/c420ui/process-runner.ts` as the interactive execution path.
 - Do not keep parallel root/sudo logic for interactive and direct CLI actions.
-- Do not hardcode direct action flags in `canva-linux.sh`; resolve them through the c420ui CLI bridge.
+- Do not hardcode direct action flags in `canva-linux-c420ui-builder`; resolve them through the c420ui CLI bridge.
 - Direct action flags must come from the project action registry.
 - The launcher may parse only global flags such as `--help`, `--yes`, `--force`, and `--dry-run`.
-- Keep `bash -n canva-linux.sh` protected by validation.
+- Keep `bash -n canva-linux-c420ui-builder` protected by validation.
 - Keep direct c420ui CLI bridge freshness protected before launcher execution.
 - Do not narrow the c420ui CLI entrypoint freshness check to a small hardcoded list of files.
 - The launcher must rebuild the c420ui CLI bridge when `packages/c420ui/src`, `scripts/c420ui-adapter`,
@@ -237,8 +239,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## Root/sudo
 
-- Do not run or recommend `./canva-linux.sh` as root.
-- Never instruct users to run `./canva-linux.sh` with sudo.
+- Do not run or recommend `./canva-linux-c420ui-builder` as root.
+- Never instruct users to run `./canva-linux-c420ui-builder` with sudo.
 - The Tool must run as a regular user.
 - Privileged operations must request authentication only when needed.
 - System-wide actions must declare `requiresRoot`.
@@ -412,7 +414,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 Do not edit `bootstrap/c420ui/*.cjs` by hand. They are generated artifacts built from TypeScript sources with
 `npm run build:c420ui-bootstrap` and kept in the repository so a clean checkout can start c420ui without local npm dependencies.
 
-Do not add `npm install`, `npm ci`, or legacy npm dependency helpers to `canva-linux.sh`. The launcher is Stage 0 only:
+Do not add `npm install`, `npm ci`, or legacy npm dependency helpers to `canva-linux-c420ui-builder`. The launcher is Stage 0 only:
 choose the generated c420ui bootstrap bundle first, keep `.build/scripts` as a development fallback, and let c420ui own the
 full dependency policy after startup.
 

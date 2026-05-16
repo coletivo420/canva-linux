@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+if [[ -s "${ROOT_DIR}/bootstrap/c420ui/canva-linux-c420ui-builder.cjs" ]]; then
+  exec node "${ROOT_DIR}/bootstrap/c420ui/canva-linux-c420ui-builder.cjs" "$@"
+fi
+
+if [[ -s "${ROOT_DIR}/.build/scripts/canva-linux-c420ui-builder.js" ]]; then
+  exec node "${ROOT_DIR}/.build/scripts/canva-linux-c420ui-builder.js" "$@"
+fi
+
+printf '%s\n' "canva-linux-c420ui-builder bootstrap bundle is missing." >&2
+printf '%s\n' "Run npm run build:c420ui-bootstrap, then retry." >&2
+exit 1

@@ -3,6 +3,7 @@ import type * as esbuild from "esbuild";
 export const C420UI_BOOTSTRAP_ENTRYPOINTS = [
   "scripts/run-c420ui.ts",
   "scripts/run-c420ui-cli.ts",
+  "scripts/canva-linux-c420ui-builder.ts",
 ] as const;
 
 export const C420UI_BOOTSTRAP_EXTERNALS = [

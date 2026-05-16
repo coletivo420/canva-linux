@@ -109,7 +109,7 @@ This file preserves the detailed development changelog entries that were archive
 ## [0.1.4.11-dev.55] - 2026-05-05
 
 ### Removed
-- Removed legacy interactive shell menu from `canva-linux.sh`.
+- Removed legacy interactive shell menu from `canva-linux-c420ui-builder`.
 - Removed `--tui` and `--no-tui` flags.
 - Removed `CANVA_NO_TUI` and `CANVA_C420UI` environment variable support.
 - Removed "F4 Shell Tool" and "Use C420UI Tool" references.
@@ -121,14 +121,14 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Changed
 - Updated technical version and phase identity to `0.1.4-dev.11.55` / `0.1.4.11-dev.55`.
-- Refactored `canva-linux.sh` to a direct C420UI/CLI router.
+- Refactored `canva-linux-c420ui-builder` to a direct C420UI/CLI router.
 - Cleaned up `scripts/core-wrapper.js` to remove redundant fallbacks.
 - Updated documentation to reflect the final architecture.
 
 ## [0.1.4.11-dev.54] - 2026-05-05
 
 ### Removed
-- Removed the interactive shell menu interface from `canva-linux.sh`.
+- Removed the interactive shell menu interface from `canva-linux-c420ui-builder`.
 - Removed C420UI-to-shell switching and the F4 shell shortcut.
 - Removed shell fallback menus from the default launcher flow.
 
@@ -139,7 +139,7 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Changed
 - Updated technical version and phase identity to `0.1.4-dev.11.54` / `0.1.4.11-dev.54`.
-- Changed `canva-linux.sh` to expose only C420UI startup and direct CLI actions.
+- Changed `canva-linux-c420ui-builder` to expose only C420UI startup and direct CLI actions.
 - Changed `--no-tui` into a non-interactive compatibility flag that requires a direct action.
 - Changed system-wide Native and Flatpak flows to use the shared sudo helper contract.
 
@@ -320,7 +320,7 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Changed
 - Improved README documentation for the default C420UI workflow.
-- Clarified that `./canva-linux.sh` opens the C420UI terminal interface assistant by default when available.
+- Clarified that `./canva-linux-c420ui-builder` opens the C420UI terminal interface assistant by default when available.
 - Expanded documentation for the Shared Action Registry workflow.
 - Consolidated technical documentation around `scripts/actions.json`, `action-runner.js`, the C420UI assistant and shell fallback.
 - Updated planned package notes to point AUR/PKGBUILD work to a later npm-compatible packaging line.
@@ -348,7 +348,7 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Changed
 - Consolidated shell fallback menu actions through the shared Action Registry.
-- Reduced duplicated workflow action logic in `canva-linux.sh`.
+- Reduced duplicated workflow action logic in `canva-linux-c420ui-builder`.
 - Improved Action Registry validation and documentation.
 - Updated documentation to prepare the next release line for AUR/PKGBUILD experimental work.
 
@@ -394,7 +394,7 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Changed
 
-- Changed `./canva-linux.sh` without arguments to open the C420UI terminal interface when supported.
+- Changed `./canva-linux-c420ui-builder` without arguments to open the C420UI terminal interface when supported.
 - Changed `--tui` to explicitly force the C420UI terminal interface.
 - Changed `--no-tui` to explicitly force the shell menu fallback.
 - Changed `npm run check:tui` to use `scripts/run-tui.js`.
@@ -511,7 +511,7 @@ This file preserves the detailed development changelog entries that were archive
 ### Added
 
 - Added an experimental Blessed-based Node/TypeScript C420UI foundation under `scripts/c420ui/`.
-- Added `--tui` and `--no-tui` launcher flags in `canva-linux.sh`.
+- Added `--tui` and `--no-tui` launcher flags in `canva-linux-c420ui-builder`.
 - Added `build:tui`, `tui`, and `check:tui` package scripts.
 - Added `blessed` as a development dependency.
 
@@ -586,8 +586,8 @@ This file preserves the detailed development changelog entries that were archive
 
 - Fixed AppImage artifact detection consistency in `install-detection-common.sh`.
 - Fixed `has_detected_installations` so generated AppImage artifacts are not ignored when reporting detected items.
-- Fixed the direct CLI argument parser in `canva-linux.sh`.
-- Fixed an invalid dangling `--reset-user-data` case entry in `canva-linux.sh`.
+- Fixed the direct CLI argument parser in `canva-linux-c420ui-builder`.
+- Fixed an invalid dangling `--reset-user-data` case entry in `canva-linux-c420ui-builder`.
 - Added confirmation before resetting user data from the interactive menu.
 - Clarified that AppImage artifacts are generated package files and are removed by `--clean`, not by uninstall.
 
@@ -635,7 +635,7 @@ This file preserves the detailed development changelog entries that were archive
 - Introduced shared installer helper architecture for app identity, XDG paths, install layouts, desktop integration, runtime guidance and user-data cleanup.
 - Centralized XDG user-data cleanup instead of duplicating path functions across scripts.
 - Centralized runtime debug guidance for Native Install, Flatpak Install and AppImage.
-- Reworked `canva-linux.sh` into a thin workflow router over shared installer helpers.
+- Reworked `canva-linux-c420ui-builder` into a thin workflow router over shared installer helpers.
 
 ### Notes
 
@@ -668,14 +668,14 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Removed
 
-- Removed the public Flatpak development run workflow from `canva-linux.sh`.
+- Removed the public Flatpak development run workflow from `canva-linux-c420ui-builder`.
 - Removed `--run-flatpak-dev` and the legacy `--run-dev` compatibility alias.
 - Removed the obsolete Flatpak development run path from documentation.
 
 ### Changed
 
 - Standardized installer, scripts, README and docs terminology in English.
-- Rebuilt the `canva-linux.sh` help output around Native Install, Flatpak Install, package generation, build, validation, maintenance and uninstall workflows.
+- Rebuilt the `canva-linux-c420ui-builder` help output around Native Install, Flatpak Install, package generation, build, validation, maintenance and uninstall workflows.
 - Updated Native Install post-install guidance with run, debug, Wayland/X11 and GPU backend commands.
 - Updated Flatpak Install post-install guidance to use the new package workflow commands.
 - Updated README and installation documentation to remove the old Flatpak-dev-run workflow.
@@ -696,7 +696,7 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Added
 
-- Added Native Install support through `./canva-linux.sh --install-native`.
+- Added Native Install support through `./canva-linux-c420ui-builder --install-native`.
 - Added `CANVA_NATIVE_SCOPE=system|user`, with system scope as the default.
 - Added system-scope Native Install under `/opt/canva-linux`.
 - Added user-scope Native Install under `~/.local/opt/canva-linux`.
@@ -1089,7 +1089,7 @@ All notable changes to this project are documented in this file.
 - Added `electron/main/index.js` to the strict TypeScript boundary.
 - Added typed main-process orchestration state documentation.
 - Added configurable Flatpak install scope through `CANVA_FLATPAK_SCOPE=system|user`.
-- Added `./canva-linux.sh --run-dev` to build and run from `build-dir` without installing the app.
+- Added `./canva-linux-c420ui-builder --run-dev` to build and run from `build-dir` without installing the app.
 - Added Flatpak scope validation to prevent unconditional user-scoped Flathub installs.
 
 ### Changed
@@ -1298,7 +1298,7 @@ All notable changes to this project are documented in this file.
 ### Fixed
 - Fixed local install failure when Node.js is missing by moving dependency checks before package metadata reads.
 - Fixed bundle generation preflight order before reading package metadata with Node.js.
-- Aligned `./canva-linux.sh --validate` with the full project validation workflow.
+- Aligned `./canva-linux-c420ui-builder --validate` with the full project validation workflow.
 - Improved preflight messages for missing host tools.
 
 ### Changed
@@ -1616,7 +1616,7 @@ All notable changes to this project are documented in this file.
 ## [1.4.10-dev.2] - 2026-04-24
 
 ### Added
-- Added `canva-linux.sh` as the canonical Linux workflow command.
+- Added `canva-linux-c420ui-builder` as the canonical Linux workflow command.
 - Added interactive workflow mode when no arguments are provided.
 - Added `--install`, `--bundle`, `--validate`, `--uninstall`, `--reset-user-data`, and `--help` actions.
 - Added support for chained workflow actions executed in the order provided.
@@ -1629,7 +1629,7 @@ All notable changes to this project are documented in this file.
 - Improved action parsing to reject incompatible or duplicate action combinations before execution.
 - Simplified the interactive menu by removing duplicated workflow entries.
 - Moved user data reset above uninstall actions for easier OAuth/session testing.
-- Updated documentation to prefer `canva-linux.sh`.
+- Updated documentation to prefer `canva-linux-c420ui-builder`.
 
 ### Notes
 - This is a packaging workflow usability pass for the `1.4.10-dev.X` cycle.
@@ -2073,7 +2073,7 @@ All notable changes to this project are documented in this file.
 ## [0.1.4.11-dev.32] - 2026-05-04
 
 ### Added
-- Added colored interactive menu support to `canva-linux.sh`.
+- Added colored interactive menu support to `canva-linux-c420ui-builder`.
 - Added submenu-based installer navigation.
 - Added shared UI helper functions for status messages, sections, commands and prompts.
 - Added shared installation detection helpers.
@@ -2082,7 +2082,7 @@ All notable changes to this project are documented in this file.
 - Simplified the interactive menu into focused submenus.
 - Moved package generation actions from Install to Development.
 - Merged Maintenance and Uninstall into a single menu.
-- Refactored `canva-linux.sh` into a thinner visual workflow router.
+- Refactored `canva-linux-c420ui-builder` into a thinner visual workflow router.
 
 ### Notes
 - Runtime Electron behavior is unchanged.

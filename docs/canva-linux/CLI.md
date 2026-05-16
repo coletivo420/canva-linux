@@ -5,7 +5,7 @@ terminal and direct CLI actions.
 
 ## Controls
 
-- `canva-linux.sh` launcher argument handling.
+- `canva-linux-c420ui-builder` launcher argument handling.
 - Default terminal startup when no direct action is supplied.
 - Forwarding one direct action flag to the c420ui CLI bridge.
 - Stable user-facing launcher help.
@@ -20,9 +20,9 @@ terminal and direct CLI actions.
 ## Usage
 
 ```bash
-./canva-linux.sh
-./canva-linux.sh --doctor
-./canva-linux.sh --doctor --dry-run
+./canva-linux-c420ui-builder
+./canva-linux-c420ui-builder --doctor
+./canva-linux-c420ui-builder --doctor --dry-run
 npm run c420ui:cli -- --help
 ```
 
@@ -30,7 +30,7 @@ The launcher opens c420ui without arguments. With a direct action flag, the laun
 
 ## Implementing files
 
-- `canva-linux.sh`
+- `canva-linux-c420ui-builder`
 - `scripts/run-c420ui-cli.ts`
 - `scripts/c420ui-adapter/cli.ts`
 - `packages/c420ui/src/cli.ts`
@@ -53,8 +53,8 @@ The launcher opens c420ui without arguments. With a direct action flag, the laun
 
 The launcher prefers the generated c420ui bootstrap bundle before any development build output:
 
-- `./canva-linux.sh` starts `bootstrap/c420ui/run-c420ui.cjs` when present.
-- Direct actions such as `./canva-linux.sh --doctor --dry-run` start `bootstrap/c420ui/run-c420ui-cli.cjs` when present.
+- `./canva-linux-c420ui-builder` starts `bootstrap/c420ui/run-c420ui.cjs` when present.
+- Direct actions such as `./canva-linux-c420ui-builder --doctor --dry-run` start `bootstrap/c420ui/run-c420ui-cli.cjs` when present.
 - `.build/scripts/run-c420ui*.js` remains a development fallback only.
 
 The launcher must not run `npm install`, `npm ci`, or `npm run build:scripts` before trying the bootstrap bundle. The bundle only starts c420ui; full dependency checks and repair remain c420ui Host Dependency Runner responsibilities.
@@ -64,3 +64,6 @@ The launcher must not run `npm install`, `npm ci`, or `npm run build:scripts` be
 Interactive startup opens c420ui before Canva Linux dependency repair. Dependency checks and repair are shown through the
 c420ui logs after the UI mounts. Direct CLI actions may still validate required dependencies according to c420ui policy
 because they do not have an interactive UI surface.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

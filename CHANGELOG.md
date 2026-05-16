@@ -2,32 +2,16 @@
 
 ## Unreleased
 
+## [0.1.4-15.Dev.5] - 2026-05-16
+
 ### Added
-- Opened the `0.1.4-15.Dev.4` credential persistence bugfix cycle.
-- Added Flatpak-aware credential diagnostics and native credential-store selection for Electron startup.
-- Added the compiled runtime CLI for `canva-linux --help`, `--version`, `--debug=1`, `--debug=2`,
-  `--credential-store=auto|gnome-libsecret|kwallet6|kwallet5`, and display/GPU runtime flags.
-- Removed the old `CANVA_DEBUG`, `CANVA_DEBUG_LEVEL`, and `CANVA_LINUX_PASSWORD_STORE` runtime interfaces;
-  runtime diagnostics and credential-store overrides now flow through the compiled app CLI.
-- Hardened Flatpak credential-store planning with automatic desktop-aware fallback: KDE/Plasma probes KWallet first,
-  then the alternate KWallet generation, then Secret Service/libsecret, while GNOME and unknown desktops probe
-  Secret Service/libsecret first and then KWallet compatibility paths.
-- Added committed standalone c420ui bootstrap artifacts for clean checkouts so c420ui can start before dependent-project
-  dependency repair, without requiring launcher-side npm installation.
-- Added an internal RC validation matrix for `0.1.4-14` with required commands, manual dry-runs, dependency-backed packaging checks,
-  expected results, owner domains, and release blockers.
+- Introduced `canva-linux-c420ui-builder` as the official builder application.
+- Added the public builder title: Canva Linux Builder powered by c420ui.
 
 ### Changed
-- Linked the RC validation matrix from release, validation, documentation, and review guidance, and made AI guardrail checks require
-  the matrix before RC validation.
-- Recorded the `2026-05-14` `0.1.4-14` RC validation results, including the validated commit, environment, automated command statuses,
-  manual dry-run outcomes, and release-blocker grep review.
-
-### Fixed
-- Fixed Linux credential-service availability probing so `gdbus` is checked with `gdbus help` instead of `gdbus --version`.
-- Improved Flatpak ephemeral-session warning copy so users know persistent login requires host Secret Service/KWallet access through the sandbox.
-- Documented that Canva Linux never treats `basic_text` as persistent and that Flatpak grants narrow D-Bus access
-  to Secret Service/libsecret and KWallet credential services without opening the full session bus.
+- Separated the builder/c420ui CLI from the compiled `canva-linux` runtime CLI.
+- Applied runtime GPU/display CLI flags outside Flatpak so native, linux-unpacked, and AppImage launches use the same runtime parser behavior.
+- Cleaned runtime CLI review issues from PR #138, including redundant exits, duplicate parser messages, and credential-store normalization.
 
 
 ## [0.1.4-14] - 2026-05-14
@@ -44,7 +28,6 @@
 - Added split documentation depth checks so placeholder docs cannot replace the maintained split references.
 
 ### Fixed
-- Fixed Linux credential-service availability probing so `gdbus` is checked with `gdbus help` instead of `gdbus --version`.
 - Removed stale inline release-status changelog entries from startup logging so release details live only in the changelog.
 - Kept tab creation timestamps as real creation times and use the tab id only as a secondary ordering tiebreaker.
 - Added diagnostics when generated popup windows are closed or cannot be closed by the tab event policy.
@@ -67,8 +50,6 @@
 - Added the Canva Linux c420ui adapter boundary for project-specific metadata, action and path wiring.
 - Added the private future `@coletivo420/c420ui` package skeleton with pure c420ui TypeScript contracts.
 - Added the public c420ui separation roadmap for compatibility-first package and adapter boundary work.
-- Added Secret Service-backed credential storage documentation and validation.
-- Added ephemeral session fallback when Linux credential storage falls back to `basic_text` or when a secure backend cannot provide available encryption.
 - Documented secure Linux credential storage through Secret Service backends plus available safe storage encryption as the requirement for persistent login,
   with ephemeral session fallback guidance.
 - Added auxiliary maintenance policy files for Codex, Claude, and Gemini so AI agents have non-public project guidance without duplicating public documentation.
@@ -138,7 +119,6 @@
   execution were migrated to the shared c420ui Action Engine.
 
 ### Fixed
-- Fixed Linux credential-service availability probing so `gdbus` is checked with `gdbus help` instead of `gdbus --version`.
 - Routed c420ui terminal diagnostics through the project bridge instead of the removed overview-status entrypoint.
 - Routed Canva Linux artifact workflow actions through the shared c420ui Action Engine and Root Provider instead of calling the project adapter directly.
 - Avoided duplicate action environment preparation in the Canva Linux adapter.
@@ -178,7 +158,6 @@
 - Updated project identity so release naming, docs, workflow tags, and `package.json` use the npm-compatible `0.1.4-12` version.
 
 ### Fixed
-- Fixed Linux credential-service availability probing so `gdbus` is checked with `gdbus help` instead of `gdbus --version`.
 - Fixed planned-action handling so planned exit `78` is not reported as a successful action.
 - Fixed centralized root/sudo handling for privileged actions, user-scope sudo refusal, and c420ui authentication prompts.
 - Fixed startup error reporting around the Electron ready flow so startup failures are caught and logged.
@@ -201,3 +180,7 @@ Detailed development-cycle history was archived in:
 - Restored confirmation, root/sudo preflight, and stdout/stderr forwarding for direct c420ui CLI bridge execution.
 - Preserved planned direct action exit semantics: planned actions exit `78`, and planned dry-runs exit `0`.
 - Updated launcher branding to use lowercase `c420ui`.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance,
+and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

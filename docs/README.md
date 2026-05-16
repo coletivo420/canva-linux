@@ -55,3 +55,6 @@ This index separates c420ui engine documentation, Canva Linux dependent-project 
 - [Repository inventory](internal/REPOSITORY_INVENTORY.md)
 - [TypeScript conversion review](internal/TYPESCRIPT_CONVERSION_REVIEW.md)
 - [Flathub notes](notes/FLATHUB.md)
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

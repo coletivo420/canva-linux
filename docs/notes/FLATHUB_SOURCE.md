@@ -14,7 +14,7 @@ sources:
     path: .
 ```
 
-This works for local development because `flatpak-builder` reads the checked-out repository directly. That is convenient for maintainer testing with `./canva-linux.sh`, local installs, and GitHub `.flatpak` bundle generation.
+This works for local development because `flatpak-builder` reads the checked-out repository directly. That is convenient for maintainer testing with `./canva-linux-c420ui-builder`, local installs, and GitHub `.flatpak` bundle generation.
 
 ## Why `type: dir` with `path: .` is not the final Flathub source strategy
 
@@ -63,7 +63,7 @@ That folder contains:
 - `scripts/generate-npm-sources.sh` (shell bootstrap) and `scripts/generate-npm-sources.ts` (lockfile-to-manifest generator)
 - `scripts/prepare-flathub-submission.sh` and `scripts/validate-flathub-submission.sh` (submission-path automation)
 
-The repository-root `io.github.coletivo420.canva-linux.yml` is the canonical **local** workflow manifest used by `./canva-linux.sh`.
+The repository-root `io.github.coletivo420.canva-linux.yml` is the canonical **local** workflow manifest used by `./canva-linux-c420ui-builder`.
 
 The submission manifest in `packaging/flathub/manifest.yml` uses a pinned public archive (`type: archive` + `sha256`) and generates `dist/linux-unpacked` inside the Flatpak build sandbox.
 
@@ -78,7 +78,7 @@ Regenerate `generated-sources.json` with `packaging/flathub/scripts/generate-npm
 GitHub `.flatpak` bundle releases and Flathub source builds are separate workflows.
 
 - Local development installs default to the system Flatpak scope, build as the current user, export `repo/`, then install from that local repo with administrator authorization.
-- Development smoke tests should prefer `./canva-linux.sh --install-flatpak` to verify the full package workflow.
+- Development smoke tests should prefer `./canva-linux-c420ui-builder --install-flatpak` to verify the full package workflow.
 - GitHub bundle releases are generated from the repository workflow (`repo/` export + `flatpak build-bundle`) for direct distribution.
 - Flathub source builds are reviewed separately, should use stable source URLs appropriate for Flathub submission, and should not require `.flatpak` bundle creation.
 
@@ -90,14 +90,14 @@ Canva Linux local workflows must not create a duplicate Flathub user remote by d
 
 Default policy:
 
-- `./canva-linux.sh --install-flatpak` uses the system Flatpak installation.
+- `./canva-linux-c420ui-builder --install-flatpak` uses the system Flatpak installation.
 - Required runtimes and SDK/BaseApp dependencies are installed from the system Flathub remote.
 - The user Flathub remote is never added unless explicitly requested.
 - Local Flatpak artifact ownership is restored to the current user after install, bundle and dev-run workflows.
 - Developers who want a fully user-scoped install may run:
 
 ```bash
-CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak
+CANVA_FLATPAK_SCOPE=user ./canva-linux-c420ui-builder --install-flatpak
 ```
 
 ## Maintainer review requirement

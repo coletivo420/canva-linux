@@ -1,195 +1,38 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import test from "node:test";
 
-const cliEntrypoint = path.join("bootstrap", "c420ui", "run-c420ui-cli.cjs");
-const stubSource = [
-  'const fs = require("node:fs");',
-  'const capturePath = process.env.CANVA_LAUNCHER_STUB_ARGS;',
-  'if (!capturePath) {',
-  '  throw new Error("CANVA_LAUNCHER_STUB_ARGS is required");',
-  '}',
-  'fs.appendFileSync(capturePath, `${JSON.stringify(process.argv.slice(2))}\\n`);',
-  'process.exit(Number(process.env.CANVA_LAUNCHER_STUB_EXIT || "0"));',
-  '',
-].join("\n");
+test("legacy canva-linux.sh is an error-only deprecation stub", () => {
+  const syntax = spawnSync("bash", ["-n", "canva-linux.sh"], { encoding: "utf8" });
+  assert.equal(syntax.status, 0, syntax.stderr);
 
-test("launcher shell syntax is valid", () => {
-  const result = spawnSync("bash", ["-n", "canva-linux.sh"], {
-    encoding: "utf8",
-  });
-
-  assert.equal(result.status, 0, result.stderr);
+  const result = spawnSync("./canva-linux.sh", ["--help"], { encoding: "utf8" });
+  assert.equal(result.status, 64);
+  assert.match(result.stderr, /Use \.\/canva-linux-c420ui-builder/);
 });
 
-function writeStub(): () => void {
-  fs.mkdirSync(path.dirname(cliEntrypoint), { recursive: true });
-
-  const backupPath = `${cliEntrypoint}.launcher-parser-test-backup`;
-  const hadExistingEntrypoint = fs.existsSync(cliEntrypoint);
-
-  if (hadExistingEntrypoint && !fs.existsSync(backupPath)) {
-    fs.renameSync(cliEntrypoint, backupPath);
-  }
-
-  fs.writeFileSync(cliEntrypoint, stubSource, { mode: 0o755 });
-
-  return () => {
-    fs.rmSync(cliEntrypoint, { force: true });
-    if (hadExistingEntrypoint) {
-      fs.renameSync(backupPath, cliEntrypoint);
-    } else {
-      fs.rmSync(backupPath, { force: true });
-    }
-  };
-}
-
-function runLauncher(args: string[], capturePath: string) {
-  const tempDir = path.dirname(capturePath);
-  let launcherPath = process.env.PATH ?? "";
-
-  if (typeof process.getuid === "function" && process.getuid() === 0) {
-    const nodePath = path.join(tempDir, "node");
-    if (!fs.existsSync(nodePath)) {
-      fs.copyFileSync(process.execPath, nodePath);
-      fs.chmodSync(nodePath, 0o755);
-    }
-    launcherPath = `${tempDir}:${launcherPath}`;
-  }
-
-  const envPairs = [
-    `CANVA_LAUNCHER_STUB_ARGS=${capturePath}`,
-    `HOME=${tempDir}`,
-    `PATH=${launcherPath}`,
-    "TERM=xterm",
-    "NO_COLOR=1",
-  ];
-
-  if (typeof process.getuid === "function" && process.getuid() === 0) {
-    return spawnSync(
-      "runuser",
-      ["-u", "nobody", "--", "env", ...envPairs, "./canva-linux.sh", ...args],
-      { encoding: "utf8" },
-    );
-  }
-
-  return spawnSync("./canva-linux.sh", args, {
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      CANVA_LAUNCHER_STUB_ARGS: capturePath,
-      HOME: path.dirname(capturePath),
-      TERM: "xterm",
-      NO_COLOR: "1",
-    },
-  });
-}
-
-function readCapturedArgs(capturePath: string): string[][] {
-  if (!fs.existsSync(capturePath)) {
-    return [];
-  }
-
-  return fs
-    .readFileSync(capturePath, "utf8")
-    .trim()
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => JSON.parse(line) as string[]);
-}
-
-test("launcher forwards direct action flags to the c420ui CLI bridge stub", async (t) => {
-  const restore = writeStub();
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-launcher-parser-"));
-  fs.chmodSync(tempDir, 0o777);
-
-  t.after(() => {
-    restore();
-    fs.rmSync(tempDir, { recursive: true, force: true });
-  });
-
-  const cases: Array<{ name: string; args: string[]; expected: string[] }> = [
-    {
-      name: "forwards --doctor --dry-run",
-      args: ["--doctor", "--dry-run"],
-      expected: ["--doctor", "--dry-run"],
-    },
-    {
-      name: "forwards --purge --yes",
-      args: ["--purge", "--yes"],
-      expected: ["--purge", "--yes"],
-    },
-    {
-      name: "translates --purge --force to --purge --yes",
-      args: ["--purge", "--force"],
-      expected: ["--purge", "--yes"],
-    },
-    {
-      name: "forwards unknown flags to the bridge",
-      args: ["--does-not-exist"],
-      expected: ["--does-not-exist"],
-    },
-  ];
-
-  for (const { name, args, expected } of cases) {
-    await t.test(name, () => {
-      const capturePath = path.join(tempDir, `${name.replaceAll(/\W+/g, "-")}.jsonl`);
-      const result = runLauncher(args, capturePath);
-
-      assert.equal(result.status, 0, result.stderr || result.stdout);
-      assert.deepEqual(readCapturedArgs(capturePath), [expected]);
-    });
-  }
+test("primary builder wrapper prefers bootstrap bundle before build fallback", () => {
+  const wrapper = fs.readFileSync("canva-linux-c420ui-builder", "utf8");
+  assert.match(wrapper, /bootstrap\/c420ui\/canva-linux-c420ui-builder\.cjs/);
+  assert.match(wrapper, /\.build\/scripts\/canva-linux-c420ui-builder\.js/);
+  assert.ok(
+    wrapper.indexOf("bootstrap/c420ui/canva-linux-c420ui-builder.cjs") <
+      wrapper.indexOf(".build/scripts/canva-linux-c420ui-builder.js"),
+  );
 });
 
-test("launcher rejects multiple direct actions before calling the bridge stub", (t) => {
-  const restore = writeStub();
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-launcher-parser-"));
-  fs.chmodSync(tempDir, 0o777);
-  const capturePath = path.join(tempDir, "multiple-actions.jsonl");
-
-  t.after(() => {
-    restore();
-    fs.rmSync(tempDir, { recursive: true, force: true });
-  });
-
-  const result = runLauncher(["--clean", "--purge"], capturePath);
-
-  assert.equal(result.status, 64, result.stderr || result.stdout);
-  assert.deepEqual(readCapturedArgs(capturePath), []);
+test("builder source routes direct actions through c420ui CLI bridge", () => {
+  const source = fs.readFileSync("scripts/canva-linux-c420ui-builder.ts", "utf8");
+  assert.match(source, /DIRECT_ACTION_FLAGS/);
+  assert.match(source, /bootstrap\/c420ui\/run-c420ui-cli\.cjs/);
+  assert.match(source, /\.build\/scripts\/run-c420ui-cli\.js/);
+  assert.match(source, /Only one direct action can be executed per invocation/);
 });
 
-function readLauncherSource(): string {
-  return fs.readFileSync("canva-linux.sh", "utf8");
-}
-
-test("launcher direct action uses bootstrap CLI bundle when present", () => {
-  const launcher = readLauncherSource();
-
-  assert.match(launcher, /bootstrap\/c420ui\/run-c420ui-cli\.cjs/);
-  assert.match(launcher, /\.build\/scripts\/run-c420ui-cli\.js/);
-  assert.match(launcher, /select_c420ui_cli_entrypoint\(\) \{/);
-  assert.match(launcher, /if \[\[ -s "\$\{bootstrap_entrypoint\}" \]\]; then[\s\S]*printf '%s\\n' "\$\{bootstrap_entrypoint\}"[\s\S]*if \[\[ -s "\$\{build_entrypoint\}" \]\]; then/);
+test("builder source opens c420ui UI by default", () => {
+  const source = fs.readFileSync("scripts/canva-linux-c420ui-builder.ts", "utf8");
+  assert.match(source, /bootstrap\/c420ui\/run-c420ui\.cjs/);
+  assert.match(source, /\.build\/scripts\/run-c420ui\.js/);
+  assert.match(source, /parsed\.directAction \? "cli" : "ui"/);
 });
-
-test("launcher interactive path uses bootstrap UI bundle when present", () => {
-  const launcher = readLauncherSource();
-
-  assert.match(launcher, /bootstrap\/c420ui\/run-c420ui\.cjs/);
-  assert.match(launcher, /\.build\/scripts\/run-c420ui\.js/);
-  assert.match(launcher, /select_c420ui_ui_entrypoint\(\) \{/);
-  assert.match(launcher, /run_c420ui_entrypoint\(\) \{[\s\S]*entrypoint="\$\(select_c420ui_ui_entrypoint\)"[\s\S]*node "\$\{entrypoint\}"/);
-});
-
-test("launcher does not invoke npm build or install before bootstrap bundle", () => {
-  const launcher = readLauncherSource();
-
-  assert.equal(launcher.includes("npm run build:scripts"), false);
-  assert.equal(launcher.includes("npm install"), false);
-  assert.equal(launcher.includes("npm ci"), false);
-  assert.equal(launcher.includes("scripts/ensure-npm-dependencies.sh"), false);
-});
-

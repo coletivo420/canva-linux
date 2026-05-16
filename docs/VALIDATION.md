@@ -36,7 +36,7 @@ The validation baseline protects these release facts:
 
 Current direct CLI validation uses:
 
-- `./canva-linux.sh <flag>`
+- `./canva-linux-c420ui-builder <flag>`
 - `npm run c420ui:cli -- <flag>`
 
 The consolidated domain runners are self-contained. New validation should extend the appropriate domain runner.
@@ -67,7 +67,7 @@ Generated dependency source manifests may retain platform package names that con
 
 ## Manual validation summary
 
-- Confirm `./canva-linux.sh` opens c420ui.
+- Confirm `./canva-linux-c420ui-builder` opens c420ui.
 - Confirm direct CLI flags run through the c420ui CLI bridge.
 - Confirm `Release: v0.1.4-14` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.

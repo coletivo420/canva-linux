@@ -152,11 +152,11 @@ If runtime build fails with missing npm modules such as `esbuild`, repair the wo
 
 ```bash
 npm ci --include=dev
-./canva-linux.sh --build-runtime
+./canva-linux-c420ui-builder --build-runtime
 ```
 
 To force a clean reinstall during installer flows:
 
 ```bash
-C420UI_DEPENDENCY_REPAIR=clean ./canva-linux.sh --install-native
+C420UI_DEPENDENCY_REPAIR=clean ./canva-linux-c420ui-builder --install-native
 ```
