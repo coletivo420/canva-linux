@@ -173,7 +173,7 @@ function defaultCredentialProbeCommandRunner(
 ): LinuxCredentialProbeCommandResult {
   const result = spawnSync(command, args, {
     encoding: "utf8",
-    timeout: 1000,
+    timeout: 500,
   });
 
   return {
