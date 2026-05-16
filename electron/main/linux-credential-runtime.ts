@@ -118,6 +118,24 @@ function resolvePasswordStoreOverride(
   return null;
 }
 
+function selectDefaultPasswordStore({
+  isFlatpak,
+  isKde,
+  env,
+  candidates,
+}: {
+  isFlatpak: boolean;
+  isKde: boolean;
+  env: LinuxCredentialRuntimeEnvironment;
+  candidates: LinuxPasswordStoreCandidate[];
+}): LinuxPasswordStorePlan["selectedStore"] {
+  if (isFlatpak && isKde) {
+    return env.KDE_SESSION_VERSION === "5" ? "kwallet5" : "kwallet6";
+  }
+
+  return candidates[0].store;
+}
+
 function selectLinuxPasswordStore(
   env: LinuxCredentialRuntimeEnvironment = process.env,
   options: {
@@ -134,10 +152,14 @@ function selectLinuxPasswordStore(
   const candidates = isFlatpak
     ? createFlatpakPasswordStoreCandidates()
     : createDesktopDefaultPasswordStoreCandidates(isKde, env);
-  const selectedStore = resolvePasswordStoreOverride(env, options.logger)
-    ?? (isFlatpak && isKde && env.KDE_SESSION_VERSION === "5"
-      ? "kwallet5"
-      : candidates[0].store);
+  const selectedStore =
+    resolvePasswordStoreOverride(env, options.logger) ??
+    selectDefaultPasswordStore({
+      isFlatpak,
+      isKde,
+      env,
+      candidates,
+    });
 
   return {
     selectedStore,

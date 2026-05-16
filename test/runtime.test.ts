@@ -235,9 +235,12 @@ test("selects gnome-libsecret for non-Flatpak GNOME and unknown desktops", () =>
   );
 });
 
-test("Flatpak defaults to Freedesktop Secret Service/libsecret path", () => {
+test("Flatpak on GNOME selects gnome-libsecret", () => {
   const plan = selectLinuxPasswordStore(
-    { FLATPAK_ID: "io.github.coletivo420.canva-linux" },
+    {
+      FLATPAK_ID: "io.github.coletivo420.canva-linux",
+      XDG_CURRENT_DESKTOP: "GNOME",
+    },
     { fileExists: () => false },
   );
 
@@ -249,16 +252,17 @@ test("Flatpak defaults to Freedesktop Secret Service/libsecret path", () => {
   });
 });
 
-test("Flatpak on KDE exposes kwallet6 and kwallet5 fallback candidates", () => {
+test("Flatpak on KDE Plasma 6 selects kwallet6 and exposes KWallet fallback candidates", () => {
   const plan = selectLinuxPasswordStore(
     {
       FLATPAK_ID: "io.github.coletivo420.canva-linux",
       XDG_CURRENT_DESKTOP: "KDE",
+      KDE_SESSION_VERSION: "6",
     },
     { fileExists: () => false },
   );
 
-  assert.equal(plan.selectedStore, "gnome-libsecret");
+  assert.equal(plan.selectedStore, "kwallet6");
   assert.deepEqual(plan.candidates, [
     { store: "gnome-libsecret", reason: "freedesktop-secret-service" },
     { store: "kwallet6", reason: "kde-kwallet6-fallback" },
@@ -266,7 +270,7 @@ test("Flatpak on KDE exposes kwallet6 and kwallet5 fallback candidates", () => {
   ]);
 });
 
-test("KDE_SESSION_VERSION=5 selects kwallet5 compatibility in Flatpak", () => {
+test("Flatpak on KDE Plasma 5 selects kwallet5", () => {
   const plan = selectLinuxPasswordStore(
     {
       FLATPAK_ID: "io.github.coletivo420.canva-linux",
@@ -281,6 +285,30 @@ test("KDE_SESSION_VERSION=5 selects kwallet5 compatibility in Flatpak", () => {
     plan.candidates.map((candidate) => candidate.store),
     ["gnome-libsecret", "kwallet6", "kwallet5"],
   );
+});
+
+test("Flatpak on KDE with KDE_SESSION_VERSION unset selects kwallet6", () => {
+  const plan = selectLinuxPasswordStore(
+    {
+      FLATPAK_ID: "io.github.coletivo420.canva-linux",
+      XDG_CURRENT_DESKTOP: "KDE",
+    },
+    { fileExists: () => false },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet6");
+});
+
+test("Flatpak unknown desktop selects gnome-libsecret", () => {
+  const plan = selectLinuxPasswordStore(
+    { FLATPAK_ID: "io.github.coletivo420.canva-linux" },
+    { fileExists: () => false },
+  );
+
+  assert.equal(plan.isFlatpak, true);
+  assert.equal(plan.isKde, false);
+  assert.equal(plan.desktop, "unknown");
+  assert.equal(plan.selectedStore, "gnome-libsecret");
 });
 
 test("CANVA_LINUX_PASSWORD_STORE=kwallet5 is accepted", () => {
