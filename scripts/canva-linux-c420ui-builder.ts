@@ -5,7 +5,7 @@ import path from "node:path";
 
 export const BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
 
-const BUILDER_GLOBAL_FLAGS = new Set(["-y", "--yes", "--force", "--dry-run"]);
+const BUILDER_GLOBAL_FLAGS = new Set(["-y", "--yes", "--dry-run"]);
 
 const RUNTIME_ONLY_VALUED_OPTIONS = [
   "--debug",
