@@ -1,7 +1,7 @@
 type LinuxCredentialRuntimeEnvironment = NodeJS.ProcessEnv;
 
 type LinuxPasswordStorePreference = {
-  preferredStore: "gnome-libsecret" | "kwallet6";
+  preferredStore: "gnome-libsecret" | "kwallet6" | "kwallet5";
   desktop: string;
   isKde: boolean;
 };
