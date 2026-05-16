@@ -22,8 +22,11 @@ Electron sessions, safe storage, cookies, or Canva login persistence.
 ## Runtime policy
 
 Persistent login requires a secure Linux Secret Service backend and available
-safe storage encryption. If Electron reports `basic_text`, Canva Linux uses an
-ephemeral session and must never use the `persist:canva` partition.
+safe storage encryption. Flatpak credential lookup uses Secret Service/Freedesktop
+as the primary path. KWallet D-Bus access is a compatibility fallback for KDE/Plasma,
+including KWallet5. If Electron reports `basic_text`, Canva Linux uses an
+ephemeral session and must never use the `persist:canva` partition. Canva Linux
+never treats `basic_text` as persistent.
 
 Credential material, cookies, tokens, passwords, session values, and sudo input
 must never be logged.

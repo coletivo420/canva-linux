@@ -343,3 +343,26 @@ test("Flatpak ephemeral warning explains host Secret Service and KWallet access"
     /Persistent login requires access to the host Secret Service\/KWallet through the Flatpak sandbox\./,
   );
 });
+
+const fs = require("node:fs");
+const path = require("node:path");
+
+function readRepositoryFile(relativePath) {
+  return fs.readFileSync(path.join(process.env.CANVA_SCRIPT_REPO_ROOT || path.join(__dirname, "..", ".."), relativePath), "utf8");
+}
+
+test("root Flatpak manifest includes org.kde.kwalletd5", () => {
+  const manifest = readRepositoryFile("io.github.coletivo420.canva-linux.yml");
+
+  assert.match(manifest, /--talk-name=org\.freedesktop\.secrets/);
+  assert.match(manifest, /--talk-name=org\.kde\.kwalletd5/);
+  assert.match(manifest, /--talk-name=org\.kde\.kwalletd6/);
+});
+
+test("Flathub manifest includes org.kde.kwalletd5", () => {
+  const manifest = readRepositoryFile("packaging/flathub/manifest.yml");
+
+  assert.match(manifest, /--talk-name=org\.freedesktop\.secrets/);
+  assert.match(manifest, /--talk-name=org\.kde\.kwalletd5/);
+  assert.match(manifest, /--talk-name=org\.kde\.kwalletd6/);
+});

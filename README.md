@@ -1,8 +1,8 @@
 # Canva Linux
 
 Status: **Alpha**
-Version: **0.1.4-15.Dev.1**
-Release target: **v0.1.4-15.Dev.1**
+Version: **0.1.4-15.Dev.2**
+Release target: **v0.1.4-15.Dev.2**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -100,7 +100,7 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 ## Release and Packaging
 
-Current release target: `0.1.4-15.Dev.1`.
+Current release target: `0.1.4-15.Dev.2`.
 
 Versioning format for this bugfix cycle: `N.N.N-X.Dev.Y`.
 
@@ -115,7 +115,7 @@ Artifact names preserve generated architecture strings such as `x86_64` and `X86
 Canva Linux is not official Canva software. Review the code, packaging recipes, and privileged workflows before running them in a
 sensitive environment.
 
-Persistent login depends on Linux Secret Service support. Without secure storage, session behavior can be ephemeral.
+Persistent login depends on Linux Secret Service support. Flatpak uses Secret Service/Freedesktop as the primary credential path, with KWallet6/KWallet5 D-Bus access only as a KDE/Plasma compatibility fallback. Without secure storage, session behavior can be ephemeral, and `basic_text` is never treated as persistent.
 
 Root actions are isolated to explicit install and maintenance workflows. Administrator credentials must never be logged.
 

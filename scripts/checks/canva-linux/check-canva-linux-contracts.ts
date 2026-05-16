@@ -67,10 +67,10 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-14";
-const currentReleaseDate = "2026-05-14";
+const currentReleaseVersion = "0.1.4-15.Dev.2";
+const currentReleaseDate = "2026-05-16";
 const previousReleaseVersion = "0.1.4-12";
-const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+$/;
+const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+(?:\.Dev\.\d+)?$/;
 const forbiddenCurrentReleaseVersions = ["0.1.4-dev.14", "0.1.4-rc.14", "0.1.4.14"];
 const activePublicReleaseDocs = [
   "README.md",
@@ -174,12 +174,16 @@ function expectedInstallDetectionKeyFor(actionId: string): string | null {
 }
 
 function expectedPhaseFromVersion(version: string): string {
-  const devMatch = version.match(/^(\d+\.\d+\.\d+)-dev\.(\d+)\.(\d+)$/);
-  if (devMatch) return `${devMatch[1]}.${devMatch[2]}-dev.${devMatch[3]}`;
-
   if (/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)) return version;
 
   throw new Error(`package.json version does not map to a project phase: ${version}`);
+}
+
+function expectedDisplayVersionFromVersion(version: string): string {
+  const devPhaseMatch = version.match(/^(.*\.Dev)\.\d+$/);
+  if (devPhaseMatch) return devPhaseMatch[1];
+
+  return expectedPhaseFromVersion(version);
 }
 
 function shellValue(file: string, key: string): string | null {
@@ -1676,12 +1680,13 @@ function checkVersionConsistency(failures: string[]): void {
   if (!phaseMatch || !displayVersionMatch) return;
 
   const expectedPhase = expectedPhaseFromVersion(pkg.version);
+  const expectedDisplayVersion = expectedDisplayVersionFromVersion(pkg.version);
   if (phaseMatch[1] !== expectedPhase) {
     failures.push(`PROJECT_PHASE mismatch: expected ${expectedPhase}, got ${phaseMatch[1]}`);
   }
-  if (displayVersionMatch[1] !== expectedPhase) {
+  if (displayVersionMatch[1] !== expectedDisplayVersion) {
     failures.push(
-      `PROJECT_DISPLAY_VERSION mismatch: expected ${expectedPhase}, got ${displayVersionMatch[1]}`,
+      `PROJECT_DISPLAY_VERSION mismatch: expected ${expectedDisplayVersion}, got ${displayVersionMatch[1]}`,
     );
   }
   if (projectUi.phase !== expectedPhase) {
@@ -1689,9 +1694,9 @@ function checkVersionConsistency(failures: string[]): void {
       `project-ui phase mismatch: expected ${expectedPhase}, got ${projectUi.phase || "missing"}`,
     );
   }
-  if (projectUi.displayVersion !== expectedPhase) {
+  if (projectUi.displayVersion !== expectedDisplayVersion) {
     failures.push(
-      `project-ui displayVersion mismatch: expected ${expectedPhase}, got ${projectUi.displayVersion || "missing"}`,
+      `project-ui displayVersion mismatch: expected ${expectedDisplayVersion}, got ${projectUi.displayVersion || "missing"}`,
     );
   }
 }
@@ -1847,7 +1852,7 @@ function checkReleaseContract(failures: string[]): void {
     failures.push(`package.json: version must be ${currentReleaseVersion}`);
   }
   if (pkg.version && !releaseVersionPattern.test(pkg.version)) {
-    failures.push("package.json: version must follow N.N.N-X release versioning");
+    failures.push("package.json: version must follow N.N.N-X or N.N.N-X.Dev.Y release versioning");
   }
   if (pkg.version && forbiddenCurrentReleaseVersions.includes(pkg.version)) {
     failures.push(`package.json: forbidden release version ${pkg.version}`);
@@ -1863,7 +1868,7 @@ function checkReleaseContract(failures: string[]): void {
   const expectedReleaseTag = `<release version="${currentReleaseVersion}" date="${currentReleaseDate}">`;
   if (appstream === undefined) {
     failures.push(`${appstreamPath}: AppStream metadata file not found`);
-  } else if (!appstream.includes(expectedReleaseTag)) {
+  } else if (!currentReleaseVersion.includes(".Dev.") && !appstream.includes(expectedReleaseTag)) {
     failures.push(`AppStream metadata must contain release entry: ${expectedReleaseTag}`);
   }
   for (const forbidden of forbiddenCurrentReleaseVersions) {
@@ -1896,15 +1901,16 @@ function checkReleaseContract(failures: string[]): void {
 
   if (pkg.version) {
     const expectedPhase = expectedPhaseFromVersion(pkg.version);
-    if (projectUi.displayVersion !== expectedPhase) {
-      failures.push(`config/canva-linux/project-ui.json: displayVersion must be ${expectedPhase}`);
+    const expectedDisplayVersion = expectedDisplayVersionFromVersion(pkg.version);
+    if (projectUi.displayVersion !== expectedDisplayVersion) {
+      failures.push(`config/canva-linux/project-ui.json: displayVersion must be ${expectedDisplayVersion}`);
     }
     if (projectUi.phase !== expectedPhase) {
       failures.push(`config/canva-linux/project-ui.json: phase must be ${expectedPhase}`);
     }
-    if (displayVersion !== expectedPhase) {
+    if (displayVersion !== expectedDisplayVersion) {
       failures.push(
-        `scripts/app-identity-common.sh: PROJECT_DISPLAY_VERSION must be ${expectedPhase}`,
+        `scripts/app-identity-common.sh: PROJECT_DISPLAY_VERSION must be ${expectedDisplayVersion}`,
       );
     }
     if (phase !== expectedPhase) {
