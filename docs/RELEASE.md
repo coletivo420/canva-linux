@@ -1,14 +1,14 @@
 # Release
 
-## Canva Linux 0.1.4-15.Dev.4 Alpha
+## Canva Linux 0.1.4-15.Dev.5 Alpha
 
-Release: `v0.1.4-15.Dev.4`
+Release: `v0.1.4-15.Dev.5`
 
 ### Public artifacts
 
-- `canva-linux-0.1.4-15.Dev.4-x86_64.AppImage`
-- `canva-linux-0.1.4-15.Dev.4-x86_64.flatpak`
-- `canva-linux-0.1.4-15.Dev.4-linux-unpacked-x86_64.tar.gz`
+- `canva-linux-0.1.4-15.Dev.5-x86_64.AppImage`
+- `canva-linux-0.1.4-15.Dev.5-x86_64.flatpak`
+- `canva-linux-0.1.4-15.Dev.5-linux-unpacked-x86_64.tar.gz`
 - `SHA256SUMS`
 
 The `.deb`, `.rpm`, and AUR/PKGBUILD outputs remain planned for a later
@@ -32,7 +32,7 @@ The GitHub Release workflow must:
 
 ### Manual validation matrix
 
-- `./canva-linux.sh` opens the c420ui.
+- `./canva-linux-c420ui-builder` opens the c420ui.
 - F5 copies logs to the clipboard.
 - Text selection mode disables c420ui mouse capture globally.
 - F6 opens a plain logs view with the session log path.
@@ -49,7 +49,7 @@ The GitHub Release workflow must:
 
 ### Release notes template
 
-Canva Linux 0.1.4-15.Dev.4 Alpha
+Canva Linux 0.1.4-15.Dev.5 Alpha
 
 Highlights:
 
@@ -76,3 +76,6 @@ Known limitations:
 - `.deb`, `.rpm`, and AUR packaging are planned for a later line.
 - Flathub submission hardening continues separately.
 - Some terminal emulators may still require Shift while selecting text.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

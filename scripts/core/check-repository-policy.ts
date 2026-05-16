@@ -785,6 +785,7 @@ type PackageLockJson = {
 const requiredJsonFiles = ["package.json", "package-lock.json"] as const;
 
 const requiredShellFiles = [
+  "canva-linux-c420ui-builder",
   "canva-linux.sh",
   "scripts/validate-project.sh",
   "scripts/run-core-entry.sh",
@@ -1435,114 +1436,55 @@ function validateLauncherScriptShape(
   rootDir: string,
   failures: string[],
 ): void {
-  const relativePath = "canva-linux.sh";
+  const relativePath = "canva-linux-c420ui-builder";
+  const sourcePath = "scripts/canva-linux-c420ui-builder.ts";
   const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
+  const source = fs.readFileSync(path.join(rootDir, sourcePath), "utf8");
   const lines = content.split(/\r?\n/);
 
   if (lines[0] !== "#!/usr/bin/env bash") {
     failures.push(`${relativePath}: shebang must be the first line by itself`);
   }
-
   if (lines[1] !== "set -euo pipefail") {
-    failures.push(
-      `${relativePath}: strict shell mode must be the second line by itself`,
-    );
+    failures.push(`${relativePath}: strict shell mode must be the second line by itself`);
   }
 
-  if (lines.length < 100) {
-    failures.push(
-      `${relativePath}: launcher appears collapsed; expected readable multiline shell content`,
-    );
+  for (const fragment of [
+    "bootstrap/c420ui/canva-linux-c420ui-builder.cjs",
+    ".build/scripts/canva-linux-c420ui-builder.js",
+    "Run npm run build:c420ui-bootstrap",
+  ] as const) {
+    if (!content.includes(fragment)) {
+      failures.push(`${relativePath}: wrapper is missing required fragment ${JSON.stringify(fragment)}`);
+    }
   }
 
-  if (!content.includes("bootstrap/c420ui/run-c420ui-cli.cjs")) {
-    failures.push(
-      `${relativePath}: direct CLI actions must prefer the c420ui CLI bootstrap bundle`,
-    );
-  }
-
-  if (!content.includes("Only one direct action can be executed per invocation.")) {
-    failures.push(
-      `${relativePath}: launcher must reject multiple direct actions before execution`,
-    );
-  }
-
-  const requiredLauncherParserFragments = [
-    'case "${arg}" in',
-    "FORCE=true",
-    "DRY_RUN=true",
-    "DIRECT_ACTION_FLAGS=()",
-    'DIRECT_ACTION_FLAGS+=("${arg}")',
-    'run_action_by_cli_flag "${DIRECT_ACTION_FLAGS[0]}"',
-    "select_c420ui_ui_entrypoint()",
-    "select_c420ui_cli_entrypoint()",
+  for (const fragment of [
+    "Canva Linux Builder powered by c420ui",
+    "Only one direct action can be executed per invocation.",
+    "selectEntrypoint",
     "bootstrap/c420ui/run-c420ui.cjs",
     "bootstrap/c420ui/run-c420ui-cli.cjs",
     ".build/scripts/run-c420ui.js",
     ".build/scripts/run-c420ui-cli.js",
-    'entrypoint="$(select_c420ui_ui_entrypoint)"',
-    'entrypoint="$(select_c420ui_cli_entrypoint)"',
-    'node "${entrypoint}"',
-  ] as const;
-
-  for (const fragment of requiredLauncherParserFragments) {
-    if (!content.includes(fragment)) {
-      failures.push(
-        `${relativePath}: launcher parser is missing required fragment ${JSON.stringify(fragment)}`,
-      );
-    }
-  }
-
-  const forbiddenLauncherActionFlagFragments = [
-    "--install-native | --install-flatpak",
-    "--bundle-flatpak | --bundle-appimage",
-    "--reset-user-data | --purge",
-  ] as const;
-
-  for (const fragment of forbiddenLauncherActionFlagFragments) {
-    if (content.includes(fragment)) {
-      failures.push(
-        `${relativePath}: direct action flags must be resolved by the c420ui CLI bridge, not hardcoded in Bash`,
-      );
+  ] as const) {
+    if (!source.includes(fragment)) {
+      failures.push(`${sourcePath}: builder source is missing required fragment ${JSON.stringify(fragment)}`);
     }
   }
 
   const legacyRunCoreCli = "scripts/run-core-entry.sh " + legacyActionRunnerStem + " --cli";
-  if (content.includes(legacyRunCoreCli)) {
-    failures.push(
-      `${relativePath}: direct CLI actions must not route through the legacy Action Runner CLI`,
-    );
+  if (source.includes(legacyRunCoreCli) || content.includes(legacyRunCoreCli)) {
+    failures.push(`${sourcePath}: direct CLI actions must not route through the legacy Action Runner CLI`);
   }
-
-  if (
-    /npm run build:scripts > \/dev\/null[\s\S]{0,1000}run-c420ui-cli\.js/.test(
-      content,
-    )
-  ) {
-    failures.push(
-      `${relativePath}: direct CLI build errors must remain visible`,
-    );
-  }
-
 
   for (const forbidden of ["npm install", "npm ci", "scripts/ensure-npm-dependencies.sh"] as const) {
-    if (content.includes(forbidden)) {
-      failures.push(`${relativePath}: launcher must not install npm dependencies or call legacy dependency helpers`);
-    }
-  }
-
-  for (const alias of forbiddenCompatibilityCliAliases) {
-    const escapedAlias = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const aliasPattern = new RegExp(
-      `(^|[\\s|,\\[])["']?${escapedAlias}(?=["'\\s|,)\\]])`,
-    );
-    if (aliasPattern.test(content)) {
-      failures.push(
-        `${relativePath}: removed compatibility alias ${alias} must not be accepted by the launcher`,
-      );
+    if (source.includes(forbidden) || content.includes(forbidden)) {
+      failures.push(`${sourcePath}: builder must not install npm dependencies or call legacy dependency helpers`);
     }
   }
 }
+
 
 function validateRemovedFlatpakLocalInstallAlias(
   rootDir: string,

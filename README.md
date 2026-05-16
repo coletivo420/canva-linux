@@ -1,8 +1,11 @@
 # Canva Linux
 
+**Canva Linux Builder powered by c420ui** is the official builder and installer entrypoint:
+`./canva-linux-c420ui-builder`. The compiled runtime app remains `canva-linux`.
+
 Status: **Alpha**
-Version: **0.1.4-15.Dev.4**
-Release target: **v0.1.4-15.Dev.4**
+Version: **0.1.4-15.Dev.5**
+Release target: **v0.1.4-15.Dev.5**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -37,7 +40,7 @@ TypeScript-first maintained tooling is part of the project contract, with JavaSc
 ```bash
 git clone https://github.com/coletivo420/canva-linux.git
 cd canva-linux
-./canva-linux.sh
+./canva-linux-c420ui-builder
 ```
 
 The launcher opens the c420ui terminal interface by default. Direct CLI flags are available for automation.
@@ -47,11 +50,11 @@ Run Canva Linux as a regular user. Privileged actions request administrator auth
 ## Usage
 
 ```bash
-./canva-linux.sh --help
-./canva-linux.sh --doctor --dry-run
-./canva-linux.sh --bundle-appimage --dry-run
-./canva-linux.sh --bundle-flatpak --dry-run
-./canva-linux.sh --purge --yes --dry-run
+./canva-linux-c420ui-builder --help
+./canva-linux-c420ui-builder --doctor --dry-run
+./canva-linux-c420ui-builder --bundle-appimage --dry-run
+./canva-linux-c420ui-builder --bundle-flatpak --dry-run
+./canva-linux-c420ui-builder --purge --yes --dry-run
 ```
 
 Dry-run commands report planned work without intentionally changing installed packages, bundles, credentials, runtime data, or user
@@ -59,7 +62,8 @@ configuration. Packaging commands depend on the required host tooling being inst
 
 ## Runtime CLI
 
-The compiled Canva Linux app owns runtime flags. The c420ui installer/development launcher (`./canva-linux.sh`) does not implement app runtime debug flags.
+The compiled Canva Linux app owns runtime flags. The c420ui installer/development launcher
+(`./canva-linux-c420ui-builder`) does not implement app runtime debug flags.
 
 ```bash
 canva-linux --help
@@ -117,7 +121,7 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 ## Release and Packaging
 
-Current release target: `0.1.4-15.Dev.4`.
+Current release target: `0.1.4-15.Dev.5`.
 
 Versioning format for this bugfix cycle: `N.N.N-X.Dev.Y`.
 
@@ -160,3 +164,7 @@ configuration and `scripts/c420ui-adapter/`.
 - [Development Provider](docs/c420ui/DEVELOPMENT_PROVIDER.md)
 - [Artifact Workflows](docs/c420ui/ARTIFACTS.md)
 - [Terminal UI](docs/c420ui/TERMINAL_UI.md)
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance,
+and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

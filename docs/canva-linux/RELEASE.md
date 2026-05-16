@@ -64,3 +64,6 @@ informational message because the current release entry must remain first.
 - Do not change AppImage/Flatpak behavior or artifact names.
 - Do not normalize architecture strings to `x64`.
 - Do not publish c420ui, migrate to ESM, or implement DEB/RPM/AUR package builds.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

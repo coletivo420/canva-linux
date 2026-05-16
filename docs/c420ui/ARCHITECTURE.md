@@ -68,3 +68,6 @@ root-provider boundary, artifact recipe validation, and public API exports.
 - Do not reintroduce `scripts/c420ui/` or move terminal UI out of
   `packages/c420ui/src/terminal/`.
 - Do not bypass the Action Engine for terminal or direct CLI actions.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

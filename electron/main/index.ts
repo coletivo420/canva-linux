@@ -69,18 +69,17 @@ try {
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   app.exit(1);
+  throw error;
 }
 
 if (runtimeCli.help) {
   console.log(printCanvaLinuxRuntimeHelp());
   app.exit(0);
-  process.exit(0);
 }
 
 if (runtimeCli.version) {
   console.log(APP_VERSION);
   app.exit(0);
-  process.exit(0);
 }
 
 const centralLogger = createCentralLogger({ app });

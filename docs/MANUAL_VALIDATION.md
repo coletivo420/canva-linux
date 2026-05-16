@@ -45,7 +45,7 @@ Do not remove or weaken validation checks to make the command pass.
 ## c420ui validation
 
 1. Launch c420ui as a regular user:
-   - `./canva-linux.sh`
+   - `./canva-linux-c420ui-builder`
 2. Confirm the interface uses c420ui as the user-facing terminal interface name.
 3. Confirm the install detection/status overview is visible at the top.
 4. Confirm actions are loaded from `config/canva-linux/actions.json`.
@@ -67,7 +67,7 @@ Do not remove or weaken validation checks to make the command pass.
 2. Confirm system-wide actions request authentication only when needed.
 3. Confirm user-scope actions never call sudo.
 4. Confirm system-wide actions use the shared sudo helper contract.
-5. Confirm `./canva-linux.sh` is not run with `sudo` or as root.
+5. Confirm `./canva-linux-c420ui-builder` is not run with `sudo` or as root.
 6. Confirm sudo/root authentication failures appear in c420ui without logging
    password material.
 
@@ -175,3 +175,6 @@ Do not remove or weaken validation checks to make the command pass.
 
 Record observable regressions only; do not treat internal module reshaping as a
 user-facing behavior change by itself.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

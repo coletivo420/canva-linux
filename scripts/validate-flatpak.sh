@@ -99,7 +99,7 @@ ok "Package version detected: ${VERSION}"
 
 ## Script syntax checks
 for script in \
-  canva-linux.sh \
+  canva-linux-c420ui-builder \
   scripts/flatpak-build-common.sh \
   scripts/install-flatpak-local.sh \
   scripts/build-flatpak-bundle.sh \
@@ -271,7 +271,7 @@ if flatpak info org.flatpak.Builder >/dev/null 2>&1 || flatpak --user info org.f
       rm -f "$repo_lint_output"
     else
       warn "repo/ directory not found; skipping flatpak-builder-lint repo repo"
-      warn "Run ./canva-linux.sh --bundle-flatpak to generate repo/ before repo lint"
+      warn "Run ./canva-linux-c420ui-builder --bundle-flatpak to generate repo/ before repo lint"
     fi
 else
   warn "org.flatpak.Builder is not installed; skipping flatpak-builder-lint checks"
@@ -290,7 +290,7 @@ else
     ok "Bundle found: $BUNDLE_PATH"
   else
     warn "Bundle not found (expected for local install workflow): $BUNDLE_PATH"
-    warn "Run ./canva-linux.sh --bundle-flatpak when preparing release artifacts"
+    warn "Run ./canva-linux-c420ui-builder --bundle-flatpak when preparing release artifacts"
   fi
 fi
 

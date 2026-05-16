@@ -40,7 +40,7 @@ Login, cookies and credentials will not be saved.
 ## Native Install
 
 ```bash
-./canva-linux.sh --install-native
+./canva-linux-c420ui-builder --install-native
 ```
 
 Native Install uses system scope by default.
@@ -55,7 +55,7 @@ System scope installs to:
 To install only for the current user:
 
 ```bash
-CANVA_NATIVE_SCOPE=user ./canva-linux.sh --install-native
+CANVA_NATIVE_SCOPE=user ./canva-linux-c420ui-builder --install-native
 ```
 
 User scope installs to:
@@ -80,7 +80,7 @@ Native user data cleanup is XDG-aware. Purge/removal checks the configured XDG h
 ## Flatpak Install
 
 ```bash
-./canva-linux.sh --install-flatpak
+./canva-linux-c420ui-builder --install-flatpak
 ```
 
 Flatpak Install builds and installs the sandboxed Flatpak package.
@@ -88,15 +88,15 @@ Flatpak Install builds and installs the sandboxed Flatpak package.
 To install only for the current user:
 
 ```bash
-CANVA_FLATPAK_SCOPE=user ./canva-linux.sh --install-flatpak
+CANVA_FLATPAK_SCOPE=user ./canva-linux-c420ui-builder --install-flatpak
 ```
 
 ## AppImage package
 
 ```bash
-./canva-linux.sh --bundle-appimage
-./canva-linux.sh --validate-appimage
-./canva-linux.sh --validate-appimage-extract
+./canva-linux-c420ui-builder --bundle-appimage
+./canva-linux-c420ui-builder --validate-appimage
+./canva-linux-c420ui-builder --validate-appimage-extract
 ```
 
 AppImage packaging is experimental in this development line. It creates a portable artifact under `dist/` using electron-builder.
@@ -162,10 +162,10 @@ flatpak run io.github.coletivo420.canva-linux --gpu-backend=software
 ## Package generation
 
 ```bash
-./canva-linux.sh --bundle-flatpak
-./canva-linux.sh --bundle-appimage
-./canva-linux.sh --validate-appimage
-./canva-linux.sh --validate-appimage-extract
+./canva-linux-c420ui-builder --bundle-flatpak
+./canva-linux-c420ui-builder --bundle-appimage
+./canva-linux-c420ui-builder --validate-appimage
+./canva-linux-c420ui-builder --validate-appimage-extract
 ```
 
 Planned package targets:
@@ -196,13 +196,13 @@ AppImage artifacts are portable generated files. They are not removed by `--unin
 ## Uninstall
 
 ```bash
-./canva-linux.sh --uninstall
+./canva-linux-c420ui-builder --uninstall
 ```
 
 ## Purge
 
 ```bash
-./canva-linux.sh --purge
+./canva-linux-c420ui-builder --purge
 ```
 
 
@@ -218,3 +218,6 @@ Invalid: four numeric version segments
 Valid: `0.1.4-14`
 
 Native Install, Flatpak Install and AppImage share the same runtime behavior. Differences are limited to sandbox model, install paths and launch command.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

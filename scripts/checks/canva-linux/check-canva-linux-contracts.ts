@@ -26,7 +26,7 @@ function runCheck(failures: string[], check: ContractCheck): void {
 type CoreCheckFileKind = "shell" | "typescript";
 
 const noParallelShellMenuActiveFiles: Array<{ path: string; kind: CoreCheckFileKind }> = [
-  { path: "canva-linux.sh", kind: "shell" },
+  { path: "scripts/canva-linux-c420ui-builder.ts", kind: "typescript" },
   { path: "packages/c420ui/src/terminal/app.ts", kind: "typescript" },
   { path: "packages/c420ui/src/terminal/index.ts", kind: "typescript" },
 ];
@@ -67,7 +67,7 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-15.Dev.4";
+const currentReleaseVersion = "0.1.4-15.Dev.5";
 const currentReleaseDate = "2026-05-16";
 const previousReleaseVersion = "0.1.4-12";
 const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+(?:\.Dev\.\d+)?$/;
@@ -255,7 +255,7 @@ function main(): number {
 
   const cliBridgePath = path.join(rootDir, "scripts/c420ui-adapter/cli.ts");
   const cliEntrypointPath = path.join(rootDir, "scripts/run-c420ui-cli.ts");
-  const launcherPath = path.join(rootDir, "canva-linux.sh");
+  const launcherPath = path.join(rootDir, "scripts/canva-linux-c420ui-builder.ts");
   const runSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/run.ts"), "utf8");
   if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
   if (!fs.existsSync(cliEntrypointPath)) failures.push("Canva Linux c420ui CLI entrypoint must exist");
@@ -354,11 +354,11 @@ function main(): number {
     }
   }
   const launcher = fs.readFileSync(launcherPath, "utf8");
-  if (!launcher.includes("bootstrap/c420ui/run-c420ui-cli.cjs")) failures.push("launcher must call the c420ui CLI bootstrap bundle for direct actions");
+  if (!launcher.includes("bootstrap/c420ui/run-c420ui-cli.cjs")) failures.push("builder must call the c420ui CLI bootstrap bundle for direct actions");
   const legacyRunCoreCli = "run-core-entry.sh " + "action-runner" + " --cli";
   if (launcher.includes(legacyRunCoreCli)) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
-  if (launcher.includes("--install-native | --install-flatpak")) failures.push("launcher must not hardcode the direct action flag list");
-  if (!launcher.includes("select_c420ui_cli_entrypoint")) failures.push("launcher must select the c420ui CLI bootstrap entrypoint conditionally");
+  if (launcher.includes("--install-native | --install-flatpak")) failures.push("builder must not hardcode pipe-delimited direct action flags");
+  if (!launcher.includes("selectEntrypoint")) failures.push("builder must select the c420ui CLI bootstrap entrypoint conditionally");
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-contracts] adapter OK");
@@ -681,11 +681,11 @@ function isAllowedSudoText(line: string): boolean {
   return [
     "with sudo or as root.",
     "Install and Development Tool with sudo or as root.",
-    "Do not run Canva Linux Install and Development Tool with sudo or as root.",
+    "Do not run Canva Linux Builder powered by c420ui with sudo or as root.",
     "Do not run this tool with sudo or as root.",
     "Do not run the Tool with sudo or as root",
     "root/sudo launch is blocked",
-    "must not instruct users to run ./canva-linux.sh with sudo",
+    "must not instruct users to run ./canva-linux-c420ui-builder with sudo",
     "sudo password must never be written to logs",
     "sudo stdin must never be logged",
   ].some((allowed) => line.includes(allowed));
@@ -698,7 +698,7 @@ function main(): number {
   const tuiAppPath = path.join(rootDir, "packages/c420ui/src/terminal/app.ts");
   const checkedFiles = [
     ...findCheckedFiles(scriptsDir),
-    path.join(rootDir, "canva-linux.sh"),
+    path.join(rootDir, "scripts/canva-linux-c420ui-builder.ts"),
   ].filter((f) => {
     const relative = path.relative(rootDir, f);
     return (
@@ -1183,10 +1183,10 @@ function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
-  const launcher = read(rootDir, "canva-linux.sh");
+  const launcher = read(rootDir, "scripts/canva-linux-c420ui-builder.ts");
 
-  if (!launcher.includes(": > \"${SESSION_LOG}\"")) {
-    failures.push("canva-linux.sh: launcher must create/truncate the session log once");
+  if (!launcher.includes("fs.writeFileSync(sessionLog")) {
+    failures.push("scripts/canva-linux-c420ui-builder.ts: builder must create/truncate the session log once");
   }
   if (!app.includes('flags: "a"')) {
     failures.push("packages/c420ui/src/terminal/app.ts: c420ui must append to the launcher session log");
@@ -1443,21 +1443,21 @@ function checkNoParallelShellMenu(failures: string[]): void {
 
 function checkNoRootLauncherContract(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const launcher = readProjectFile(rootDir, "canva-linux.sh");
+  const launcher = readProjectFile(rootDir, "scripts/canva-linux-c420ui-builder.ts");
   const runTui = readProjectFile(rootDir, "scripts/run-c420ui.ts");
   const adapterRun = readProjectFile(rootDir, "scripts/c420ui-adapter/run.ts");
   const rootMessage =
-    "Do not run Canva Linux Install and Development Tool with sudo or as root.";
+    "Do not run Canva Linux Builder powered by c420ui with sudo or as root.";
 
-  if (!launcher.includes('[[ "${EUID}" -eq 0 ]]')) {
-    failures.push("canva-linux.sh: must block EUID=0 before launching Tool");
+  if (!launcher.includes("process.getuid") || !launcher.includes("=== 0")) {
+    failures.push("scripts/canva-linux-c420ui-builder.ts: must block uid 0 before launching Tool");
   }
-  if (!launcher.includes(rootMessage)) {
-    failures.push("canva-linux.sh: must explain that root/sudo launch is blocked");
+  if (!launcher.includes(rootMessage) && !launcher.includes("Do not run ${BUILDER_TITLE} with sudo or as root.")) {
+    failures.push("scripts/canva-linux-c420ui-builder.ts: must explain that root/sudo launch is blocked");
   }
   if (!launcher.includes("administrator privileges")) {
     failures.push(
-      "canva-linux.sh: root guard must explain privileges are requested only when needed",
+      "scripts/canva-linux-c420ui-builder.ts: root guard must explain privileges are requested only when needed",
     );
   }
   const adapter = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
@@ -1489,9 +1489,9 @@ function checkNoRootLauncherContract(failures: string[]): void {
   const docsToCheck = ["README.md", "docs/CLI.md", "docs/TECHNICAL.md"];
   for (const relativePath of docsToCheck) {
     const content = readProjectFile(rootDir, relativePath);
-    if (/sudo\s+\.\/canva-linux\.sh/.test(content)) {
+    if (/sudo\s+\.\/canva-linux-c420ui-builder/.test(content)) {
       failures.push(
-        `${relativePath}: must not instruct users to run ./canva-linux.sh with sudo`,
+        `${relativePath}: must not instruct users to run ./canva-linux-c420ui-builder with sudo`,
       );
     }
   }
@@ -1979,20 +1979,17 @@ function checkDevelopmentTaskRecipes(failures: string[]): void {
 
 function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const launcher = readProjectFile(rootDir, "canva-linux.sh");
+  const launcher = readProjectFile(rootDir, "scripts/canva-linux-c420ui-builder.ts");
 
   for (const fragment of [
     "bootstrap/c420ui/run-c420ui.cjs",
     "bootstrap/c420ui/run-c420ui-cli.cjs",
     ".build/scripts/run-c420ui.js",
     ".build/scripts/run-c420ui-cli.js",
-    "select_c420ui_ui_entrypoint()",
-    "select_c420ui_cli_entrypoint()",
-    'entrypoint="$(select_c420ui_ui_entrypoint)"',
-    'entrypoint="$(select_c420ui_cli_entrypoint)"',
-    "Run npm run build:c420ui-bootstrap in a prepared development checkout, then retry.",
+    "selectEntrypoint(rootDir, kind)",
+    "Run npm run build:c420ui-bootstrap",
   ] as const) {
-    if (!launcher.includes(fragment)) failures.push(`canva-linux.sh: missing bootstrap launcher fragment ${fragment}`);
+    if (!launcher.includes(fragment)) failures.push(`scripts/canva-linux-c420ui-builder.ts: missing bootstrap launcher fragment ${fragment}`);
   }
 
   const bootstrapUiIndex = launcher.indexOf("bootstrap/c420ui/run-c420ui.cjs");
@@ -2001,10 +1998,10 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
   const buildCliIndex = launcher.indexOf(".build/scripts/run-c420ui-cli.js");
 
   if (bootstrapUiIndex !== -1 && buildUiIndex !== -1 && bootstrapUiIndex > buildUiIndex) {
-    failures.push("canva-linux.sh: interactive c420ui bootstrap bundle must be preferred before .build fallback");
+    failures.push("scripts/canva-linux-c420ui-builder.ts: interactive c420ui bootstrap bundle must be preferred before .build fallback");
   }
   if (bootstrapCliIndex !== -1 && buildCliIndex !== -1 && bootstrapCliIndex > buildCliIndex) {
-    failures.push("canva-linux.sh: c420ui CLI bootstrap bundle must be preferred before .build fallback");
+    failures.push("scripts/canva-linux-c420ui-builder.ts: c420ui CLI bootstrap bundle must be preferred before .build fallback");
   }
 
   for (const forbidden of [
@@ -2016,7 +2013,7 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
     "npm ci",
     "ensure_c420ui_bootstrap_npm_dependencies",
   ] as const) {
-    if (launcher.includes(forbidden)) failures.push(`canva-linux.sh: must not restore launcher dependency policy fragment ${forbidden}`);
+    if (launcher.includes(forbidden)) failures.push(`scripts/canva-linux-c420ui-builder.ts: must not restore launcher dependency policy fragment ${forbidden}`);
   }
 }
 
@@ -2027,8 +2024,8 @@ function checkRuntimeCliDebugGuardrails(rootDir: string, failures: string[]): vo
     { file: "electron/shared/debug.ts", pattern: "CANVA_DEBUG_LEVEL", message: "must not read legacy runtime debug level env" },
     { file: "electron/main/runtime.ts", pattern: "CANVA_DEBUG", message: "must not read legacy runtime debug env" },
     { file: "run.sh", pattern: "CANVA_DEBUG", message: "must not export or interpret legacy runtime debug env" },
-    { file: "canva-linux.sh", pattern: "--debug=1", message: "must not implement runtime debug flags" },
-    { file: "canva-linux.sh", pattern: "--debug=2", message: "must not implement runtime debug flags" },
+    { file: "scripts/canva-linux-c420ui-builder.ts", pattern: "--debug=1", message: "must not implement runtime debug flags" },
+    { file: "scripts/canva-linux-c420ui-builder.ts", pattern: "--debug=2", message: "must not implement runtime debug flags" },
   ];
 
   for (const item of forbidden) {
@@ -2056,7 +2053,7 @@ function checkShellActionIds(failures: string[]): void {
     );
   }
 
-  const shell = fs.readFileSync(path.join(rootDir, "canva-linux.sh"), "utf8");
+  const shell = fs.readFileSync(path.join(rootDir, "scripts/canva-linux-c420ui-builder.ts"), "utf8");
   const ids = [...shell.matchAll(/run_action_by_id\s+["']([^"']+)["']/g)]
     .map((match) => match[1])
     .filter((id): id is string => Boolean(id));

@@ -1,11 +1,11 @@
 # CLI Commands
 
-The `canva-linux.sh` launcher provides access to the c420ui terminal interface and direct CLI actions.
+The `canva-linux-c420ui-builder` launcher provides access to the c420ui terminal interface and direct CLI actions.
 
 ## Usage
 
 ```bash
-./canva-linux.sh [action] [options]
+./canva-linux-c420ui-builder [action] [options]
 ```
 
 - If no action is provided, the c420ui terminal interface starts.
@@ -28,7 +28,7 @@ The `canva-linux.sh` launcher provides access to the c420ui terminal interface a
 | `-h, --help` | Show usage information. |
 | `--dry-run` | Resolve direct action metadata without executing command scripts. |
 
-`./canva-linux.sh --help` is stable launcher help. The compiled bridge help
+`./canva-linux-c420ui-builder --help` is stable launcher help. The compiled bridge help
 (`node .build/scripts/run-c420ui-cli.js --help`) is dynamic and lists the
 action flags exposed by the active project bridge.
 
@@ -112,7 +112,8 @@ Current Tool settings:
 
 ## Compiled Runtime CLI
 
-The compiled `canva-linux` Electron app owns runtime flags. The `./canva-linux.sh` c420ui installer/development launcher does not own or implement app runtime debug flags.
+The compiled `canva-linux` Electron app owns runtime flags. The `./canva-linux-c420ui-builder` c420ui
+installer/development launcher does not own or implement app runtime debug flags.
 
 ```bash
 canva-linux --help
@@ -133,4 +134,9 @@ canva-linux --force-wayland
 canva-linux --disable-wayland-color-manager
 ```
 
-Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The old `CANVA_DEBUG` and `CANVA_DEBUG_LEVEL` environment paths were removed. Credential-store overrides use `--credential-store`; `CANVA_LINUX_PASSWORD_STORE` is not a public runtime interface.
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The old `CANVA_DEBUG` and `CANVA_DEBUG_LEVEL`
+environment paths were removed. Credential-store overrides use `--credential-store`; `CANVA_LINUX_PASSWORD_STORE` is not a public runtime interface.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance,
+and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

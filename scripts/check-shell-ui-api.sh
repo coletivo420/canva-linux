@@ -9,7 +9,7 @@ if ! command -v rg >/dev/null 2>&1; then
   exit 1
 fi
 
-matches=$(rg -n --glob '*.sh' '^\s*(warn|info|ok|err)\s+"' scripts canva-linux.sh || true)
+matches=$(rg -n --glob '*.sh' '^\s*(warn|info|ok|err)\s+"' scripts canva-linux-c420ui-builder || true)
 [[ -z "$matches" ]] && { echo "[ok] Shell UI helper API check passed"; exit 0; }
 
 status=0

@@ -1,6 +1,6 @@
 # RC Validation Matrix
 
-This internal maintenance checklist now tracks the active `0.1.4-15.Dev.4` credential persistence bugfix cycle. It records the commands, manual checks, Flatpak credential diagnostics, and release blockers that must be reviewed before tagging or publishing `v0.1.4-15.Dev.4`.
+This internal maintenance checklist now tracks the active `0.1.4-15.Dev.5` credential persistence bugfix cycle. It records the commands, manual checks, Flatpak credential diagnostics, and release blockers that must be reviewed before tagging or publishing `v0.1.4-15.Dev.5`.
 
 
 Historical baseline: the consolidated split validation remains anchored by `v0.1.4-14`; this matrix extends it for the active credential-storage bugfix cycle.
@@ -9,12 +9,12 @@ Historical baseline: the consolidated split validation remains anchored by `v0.1
 
 | Field | Value |
 | --- | --- |
-| Release target | `0.1.4-15.Dev.4` |
-| Tag target | `v0.1.4-15.Dev.4` |
+| Release target | `0.1.4-15.Dev.5` |
+| Tag target | `v0.1.4-15.Dev.5` |
 | Versioning rule | `N.N.N-X.Dev.Y` |
-| Validation date | `2026-05-14` (UTC) |
+| Validation date | `2026-05-16` (UTC) |
 | Validated commit | `75853e9e08ca56a1b0b6aec13fe5ed3b74625d1a` |
-| Validation environment | Container `74e762e34260`; `Linux 74e762e34260 6.12.47 #1 SMP Mon Oct 27 10:01:15 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux`; Node.js `v20.20.2`; npm `11.4.2` (npm emitted `Unknown env config "http-proxy"` warnings); `electron`, `flatpak`, `appstreamcli`, `desktop-file-validate`, `appimagetool`, and `linuxdeploy` were not installed. Direct `./canva-linux.sh` dry-runs were blocked because the validation container runs as root and the launcher correctly refuses root execution. |
+| Validation environment | Container `74e762e34260`; `Linux 74e762e34260 6.12.47 #1 SMP Mon Oct 27 10:01:15 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux`; Node.js `v20.20.2`; npm `11.4.2` (npm emitted `Unknown env config "http-proxy"` warnings); `electron`, `flatpak`, `appstreamcli`, `desktop-file-validate`, `appimagetool`, and `linuxdeploy` were not installed. Direct `./canva-linux-c420ui-builder` non-dry-run startup is blocked in root containers; direct dry-runs are permitted for validation. |
 
 ## Required automated command matrix
 
@@ -43,15 +43,15 @@ These commands are manual release-candidate checks. Record their output in the r
 | Command | Status | Expected result | Failure meaning | Owner domain |
 | --- | --- | --- | --- | --- |
 | `node -p "require('./bootstrap/c420ui/manifest.json').c420uiVersion" && node -p "require('./bootstrap/c420ui/manifest.json').dependentProjectVersion"` | Required for bootstrap RC validation | Bootstrap identity reports c420ui engine version from `packages/c420ui/package.json` and dependent-project version from the root `package.json`. | The bootstrap manifest may have collapsed engine and dependent-project identity into one ambiguous version. | c420ui bootstrap |
-| `rm -rf node_modules .build && ./canva-linux.sh --doctor --dry-run` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts direct c420ui CLI through `bootstrap/c420ui/run-c420ui-cli.cjs` without a missing `esbuild` failure or launcher-side npm install. | Stage 0 bootstrap or Stage 1 dependency ownership may be broken. | c420ui bootstrap |
-| `rm -rf node_modules .build && ./canva-linux.sh` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts interactive c420ui through `bootstrap/c420ui/run-c420ui.cjs` before dependent-project dependency repair appears in the UI logs. | The bootstrap may still block on dependency repair before the UI is mounted. | c420ui bootstrap |
+| `rm -rf node_modules .build && ./canva-linux-c420ui-builder --doctor --dry-run` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts direct c420ui CLI through `bootstrap/c420ui/run-c420ui-cli.cjs` without a missing `esbuild` failure or launcher-side npm install. | Stage 0 bootstrap or Stage 1 dependency ownership may be broken. | c420ui bootstrap |
+| `rm -rf node_modules .build && ./canva-linux-c420ui-builder` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts interactive c420ui through `bootstrap/c420ui/run-c420ui.cjs` before dependent-project dependency repair appears in the UI logs. | The bootstrap may still block on dependency repair before the UI is mounted. | c420ui bootstrap |
 | `npm run c420ui -- --help` | Pass | c420ui help starts through the maintained launcher and documents the current terminal UI and command surface. | The c420ui entrypoint, help text, or launcher path may be broken. | c420ui core |
 | `npm run c420ui:cli -- --doctor --dry-run` | Pass | c420ui CLI doctor resolves the project adapter and reports planned checks without making changes. | The c420ui CLI bridge or dependent-project adapter contract may be broken. | c420ui core |
-| `./canva-linux.sh --help` | Blocked: validation container runs as root | Direct Canva Linux CLI help works and remains aligned with the documented command surface. | The direct CLI launcher or help contract may be broken. | Canva Linux project adapter |
-| `./canva-linux.sh --doctor --dry-run` | Blocked: validation container runs as root | Doctor runs in dry-run mode without changing host state and reports planned validation actions. | Dry-run or doctor routing may be broken in the dependent project. | Canva Linux project adapter |
-| `./canva-linux.sh --bundle-appimage --dry-run` | Blocked: validation container runs as root | AppImage bundling reports the planned workflow and preserves generated artifact architecture naming. | AppImage workflow routing, dry-run behavior, or artifact naming may have regressed. | release metadata |
-| `./canva-linux.sh --bundle-flatpak --dry-run` | Blocked: validation container runs as root | Flatpak bundling reports the planned workflow and preserves generated artifact architecture naming. | Flatpak workflow routing, dry-run behavior, or artifact naming may have regressed. | release metadata |
-| `./canva-linux.sh --purge --yes --dry-run` | Blocked: validation container runs as root | Purge reports planned destructive actions without deleting files or triggering unintended root behavior. | Purge dry-run, confirmation, or root policy may have regressed. | Canva Linux project adapter |
+| `./canva-linux-c420ui-builder --help` | Blocked: validation container runs as root | Direct Canva Linux CLI help works and remains aligned with the documented command surface. | The direct CLI launcher or help contract may be broken. | Canva Linux project adapter |
+| `./canva-linux-c420ui-builder --doctor --dry-run` | Blocked: validation container runs as root | Doctor runs in dry-run mode without changing host state and reports planned validation actions. | Dry-run or doctor routing may be broken in the dependent project. | Canva Linux project adapter |
+| `./canva-linux-c420ui-builder --bundle-appimage --dry-run` | Blocked: validation container runs as root | AppImage bundling reports the planned workflow and preserves generated artifact architecture naming. | AppImage workflow routing, dry-run behavior, or artifact naming may have regressed. | release metadata |
+| `./canva-linux-c420ui-builder --bundle-flatpak --dry-run` | Blocked: validation container runs as root | Flatpak bundling reports the planned workflow and preserves generated artifact architecture naming. | Flatpak workflow routing, dry-run behavior, or artifact naming may have regressed. | release metadata |
+| `./canva-linux-c420ui-builder --purge --yes --dry-run` | Blocked: validation container runs as root | Purge reports planned destructive actions without deleting files or triggering unintended root behavior. | Purge dry-run, confirmation, or root policy may have regressed. | Canva Linux project adapter |
 
 ## Dependency-backed manual packaging checks
 
@@ -68,13 +68,13 @@ Run these only in an environment with the required packaging dependencies. If de
 
 Automated validation was executed on `2026-05-14` against commit `75853e9e08ca56a1b0b6aec13fe5ed3b74625d1a`. The maintained npm checks passed. The shell-level project validator reached the Flatpak validation step and was environment-blocked because `flatpak` is not installed in this container.
 
-Manual dry-runs were executed in the same environment. The npm c420ui launchers passed. Direct `./canva-linux.sh` invocations were environment-blocked because this non-interactive validation container runs as root, and the launcher correctly refuses root execution before dispatching help, doctor, bundle, or purge flows.
+Manual dry-runs were executed in the same environment. The npm c420ui launchers passed. Direct `./canva-linux-c420ui-builder` invocations were environment-blocked because this non-interactive validation container runs as root, and the launcher correctly refuses root execution before dispatching help, doctor, bundle, or purge flows.
 
 Release-blocker greps were reviewed with these commands: `git grep -n "0.1.4-12"`; `git grep -n "0.1.4-dev.14\|0.1.4-rc.14\|0.1.4.14"`; `git grep -n "scripts/c420ui-canva-linux"`; `git grep -n "scripts/c420ui/"`; `git grep -n "ensure-npm-dependencies.sh"`; `git grep -n "CANVA_REQUIRED_NPM_DEPS"`; `git grep -n "CANVA_SKIP_NPM_INSTALL\|CANVA_NPM_REPAIR"`; and `git grep -n "x64" docs config scripts packages`. The matches for old versions, forbidden version forms, retired paths, and `x64` are historical changelog entries, guardrails, validation code, tests, or non-artifact contexts such as icon-size paths. No project-owned artifact name was found using `x64`, `CANVA_REQUIRED_NPM_DEPS` was absent, `CANVA_SKIP_NPM_INSTALL` / `CANVA_NPM_REPAIR` were absent, and the retired runtime paths did not exist on disk.
 
 ## Standalone c420ui bootstrap validation
 
-Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb42194942b43c94341361` in container `3a93e95dcdd3` with Node.js `v20.20.2` and npm `11.4.2`. The first bootstrap build/check ran before removing `node_modules`; clean-checkout launcher checks then removed `node_modules` and `.build`, confirmed `esbuild` was not resolvable, and exercised the committed bootstrap entrypoints. Direct `./canva-linux.sh` validation remains blocked in this container because it runs as root and the launcher intentionally stops before dispatching to c420ui.
+Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb42194942b43c94341361` in container `3a93e95dcdd3` with Node.js `v20.20.2` and npm `11.4.2`. The first bootstrap build/check ran before removing `node_modules`; clean-checkout launcher checks then removed `node_modules` and `.build`, confirmed `esbuild` was not resolvable, and exercised the committed bootstrap entrypoints. Direct `./canva-linux-c420ui-builder` validation remains blocked in this container because it runs as root and the launcher intentionally stops before dispatching to c420ui.
 
 | Check | Status | Evidence |
 | --- | --- | --- |
@@ -83,18 +83,18 @@ Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb4219
 | Dependent project version is separate | Pass | `bootstrap/c420ui/manifest.json` records `dependentProjectVersion` as `0.1.4-14`. |
 | Source hash matches current sources | Pass | `npm run build:c420ui-bootstrap` followed by `npm run check:c420ui-bootstrap` passed after reverting the intentional stale-hash edit. |
 | Stale hash detection works | Pass | After `printf '\n' >> scripts/build-c420ui-bootstrap.ts`, `npm run check:c420ui-bootstrap` failed with `bootstrap/c420ui/manifest.json: sourceHash is stale; run npm run build:c420ui-bootstrap`. |
-| Launcher does not install npm deps | Pass | `rg -n "npm (install\|ci)\|npm\\s+install\|npm\\s+ci" canva-linux.sh` returned no matches; `canva-linux.sh` resolves `bootstrap/c420ui/run-c420ui-cli.cjs` before the `.build` fallback. |
-| Clean checkout starts without esbuild | Blocked: environment limitation | After `rm -rf node_modules .build`, `node -e "require.resolve('esbuild')"` reported `esbuild not resolvable`; `node bootstrap/c420ui/run-c420ui-cli.cjs --help` and `node bootstrap/c420ui/run-c420ui-cli.cjs --doctor --dry-run` passed, but `./canva-linux.sh --help`, `./canva-linux.sh --doctor --dry-run`, and `./canva-linux.sh` exited at the root-user guard before launcher dispatch. |
-| Dependency repair runs after UI startup | Blocked: environment limitation | Source wiring keeps dependency repair in the c420ui startup task list, but the interactive `./canva-linux.sh` UI startup could not be validated in this root, non-interactive container. |
+| Launcher does not install npm deps | Pass | `rg -n "npm (install\|ci)\|npm\\s+install\|npm\\s+ci" canva-linux-c420ui-builder` returned no matches; `canva-linux-c420ui-builder` resolves `bootstrap/c420ui/run-c420ui-cli.cjs` before the `.build` fallback. |
+| Clean checkout starts without esbuild | Blocked: environment limitation | After `rm -rf node_modules .build`, `node -e "require.resolve('esbuild')"` reported `esbuild not resolvable`; `node bootstrap/c420ui/run-c420ui-cli.cjs --help` and `node bootstrap/c420ui/run-c420ui-cli.cjs --doctor --dry-run` passed, but `./canva-linux-c420ui-builder --help`, `./canva-linux-c420ui-builder --doctor --dry-run`, and `./canva-linux-c420ui-builder` exited at the root-user guard before launcher dispatch. |
+| Dependency repair runs after UI startup | Blocked: environment limitation | Source wiring keeps dependency repair in the c420ui startup task list, but the interactive `./canva-linux-c420ui-builder` UI startup could not be validated in this root, non-interactive container. |
 
 ## Release blockers
 
 The release candidate must not be tagged or published while any blocker below is present:
 
-- `package.json` version differs from `0.1.4-15.Dev.4`.
-- `package-lock.json` top-level version differs from `0.1.4-15.Dev.4`.
-- `package-lock.json` root package version differs from `0.1.4-15.Dev.4`.
-- Active project UI metadata does not use display version `0.1.4-15.Dev` and phase `0.1.4-15.Dev.4`.
+- `package.json` version differs from `0.1.4-15.Dev.5`.
+- `package-lock.json` top-level version differs from `0.1.4-15.Dev.5`.
+- `package-lock.json` root package version differs from `0.1.4-15.Dev.5`.
+- Active project UI metadata does not use display version `0.1.4-15.Dev` and phase `0.1.4-15.Dev.5`.
 - Any release identity uses `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
 - Project-owned artifact names use `x64` instead of the generated architecture name such as `x86_64` or `X86_64`.
 - `scripts/c420ui-canva-linux` reappears.
@@ -106,11 +106,11 @@ The release candidate must not be tagged or published while any blocker below is
 
 ## RC decision rule
 
-`v0.1.4-15.Dev.4` may be tagged only after every required automated command has a recorded passing result, every applicable manual dry-run has the expected result, dependency-backed packaging checks are either passing or explicitly recorded as environment-blocked, and no release blocker remains open.
+`v0.1.4-15.Dev.5` may be tagged only after every required automated command has a recorded passing result, every applicable manual dry-run has the expected result, dependency-backed packaging checks are either passing or explicitly recorded as environment-blocked, and no release blocker remains open.
 
 ## c420ui bootstrap release requirement
 
-The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-15.Dev.4`; ESM is future work only.
+The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-15.Dev.5`; ESM is future work only.
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate: `c420uiVersion` is sourced
 from `packages/c420ui/package.json`, while `dependentProjectVersion` is sourced from the repository root `package.json`.
@@ -119,3 +119,6 @@ The source-hash check must pass without modifying files after the build step. An
 
 Interactive bootstrap validation must confirm the UI starts first and dependent-project dependency repair runs as a c420ui
 startup task, not as pre-UI logic in `scripts/run-c420ui.ts`.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.

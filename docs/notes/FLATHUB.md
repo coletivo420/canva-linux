@@ -17,15 +17,15 @@ This document explains how to prepare this project for a future Flathub submissi
 
 ## Canonical workflow command
 
-Use `./canva-linux.sh` as the canonical Linux/Flatpak workflow command.
+Use `./canva-linux-c420ui-builder` as the canonical Linux/Flatpak workflow command.
 
 ```bash
-./canva-linux.sh --install-flatpak
-./canva-linux.sh --bundle-flatpak
-./canva-linux.sh --validate
-./canva-linux.sh --uninstall
-./canva-linux.sh --reset-user-data
-./canva-linux.sh --help
+./canva-linux-c420ui-builder --install-flatpak
+./canva-linux-c420ui-builder --bundle-flatpak
+./canva-linux-c420ui-builder --validate
+./canva-linux-c420ui-builder --uninstall
+./canva-linux-c420ui-builder --reset-user-data
+./canva-linux-c420ui-builder --help
 ```
 
 Notes:
@@ -37,7 +37,7 @@ Notes:
 
 `0.1.4-dev.22` keeps the Flathub source/readiness focus while standardizing the canonical repository as `coletivo420/canva-linux` and the active app-id as `io.github.coletivo420.canva-linux`.
 
-The preload bundle is generated automatically before the Electron build used by `./canva-linux.sh --install-flatpak` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux.sh --bundle-flatpak` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
+The preload bundle is generated automatically before the Electron build used by `./canva-linux-c420ui-builder --install-flatpak` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux-c420ui-builder --bundle-flatpak` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
 
 The lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` option exists only for explicit local reuse of an already reviewed `repo/`. It should not be used for release publication after source, preload, metadata, or packaging changes.
 
@@ -46,7 +46,7 @@ The lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` option exi
 Run the standard validation command first:
 
 ```bash
-./canva-linux.sh --validate
+./canva-linux-c420ui-builder --validate
 ```
 
 Then run submission-path preparation/validation and lint checks when Flatpak Builder is available:
@@ -57,7 +57,7 @@ Then run submission-path preparation/validation and lint checks when Flatpak Bui
 flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.coletivo420.canva-linux.yml
-./canva-linux.sh --install-flatpak --bundle-flatpak
+./canva-linux-c420ui-builder --install-flatpak --bundle-flatpak
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```
 

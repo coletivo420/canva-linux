@@ -319,11 +319,12 @@ function main(): void {
   const manifestPath = "bootstrap/c420ui/manifest.json";
   const uiBundlePath = "bootstrap/c420ui/run-c420ui.cjs";
   const cliBundlePath = "bootstrap/c420ui/run-c420ui-cli.cjs";
+  const builderBundlePath = "bootstrap/c420ui/canva-linux-c420ui-builder.cjs";
   const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
     (asset) => `bootstrap/usr/${asset}`,
   );
 
-  for (const relativePath of [manifestPath, uiBundlePath, cliBundlePath, ...blessedRuntimeAssets]) {
+  for (const relativePath of [manifestPath, uiBundlePath, cliBundlePath, builderBundlePath, ...blessedRuntimeAssets]) {
     fileExistsAndIsNotEmpty(rootDir, relativePath, failures);
   }
 
@@ -360,6 +361,17 @@ function main(): void {
       if (manifest[key] !== value) {
         failures.push(`${manifestPath}: expected ${key} to be ${JSON.stringify(value)}`);
       }
+    }
+
+    const entrypoints = manifest.entrypoints as Record<string, unknown> | undefined;
+    if (entrypoints?.ui !== "bootstrap/c420ui/run-c420ui.cjs") {
+      failures.push(`${manifestPath}: expected entrypoints.ui to be bootstrap/c420ui/run-c420ui.cjs`);
+    }
+    if (entrypoints?.cli !== "bootstrap/c420ui/run-c420ui-cli.cjs") {
+      failures.push(`${manifestPath}: expected entrypoints.cli to be bootstrap/c420ui/run-c420ui-cli.cjs`);
+    }
+    if (entrypoints?.builder !== "bootstrap/c420ui/canva-linux-c420ui-builder.cjs") {
+      failures.push(`${manifestPath}: expected entrypoints.builder to be bootstrap/c420ui/canva-linux-c420ui-builder.cjs`);
     }
 
     if (manifest.sourceHashAlgorithm !== C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM) {
@@ -407,17 +419,12 @@ function main(): void {
     }
   }
 
-  const launcher = read(rootDir, "canva-linux.sh");
-  const bootstrapUiIndex = indexOfRequired(launcher, "bootstrap/c420ui/run-c420ui.cjs", failures, "canva-linux.sh");
-  const bootstrapCliIndex = indexOfRequired(launcher, "bootstrap/c420ui/run-c420ui-cli.cjs", failures, "canva-linux.sh");
-  const buildUiIndex = indexOfRequired(launcher, ".build/scripts/run-c420ui.js", failures, "canva-linux.sh");
-  const buildCliIndex = indexOfRequired(launcher, ".build/scripts/run-c420ui-cli.js", failures, "canva-linux.sh");
+  const launcher = read(rootDir, "canva-linux-c420ui-builder");
+  const bootstrapBuilderIndex = indexOfRequired(launcher, "bootstrap/c420ui/canva-linux-c420ui-builder.cjs", failures, "canva-linux-c420ui-builder");
+  const buildBuilderIndex = indexOfRequired(launcher, ".build/scripts/canva-linux-c420ui-builder.js", failures, "canva-linux-c420ui-builder");
 
-  if (bootstrapUiIndex !== -1 && buildUiIndex !== -1 && bootstrapUiIndex > buildUiIndex) {
-    failures.push("canva-linux.sh: interactive launcher must check bootstrap/c420ui/run-c420ui.cjs before .build fallback");
-  }
-  if (bootstrapCliIndex !== -1 && buildCliIndex !== -1 && bootstrapCliIndex > buildCliIndex) {
-    failures.push("canva-linux.sh: direct CLI launcher must check bootstrap/c420ui/run-c420ui-cli.cjs before .build fallback");
+  if (bootstrapBuilderIndex !== -1 && buildBuilderIndex !== -1 && bootstrapBuilderIndex > buildBuilderIndex) {
+    failures.push("canva-linux-c420ui-builder: launcher must check bootstrap/c420ui/canva-linux-c420ui-builder.cjs before .build fallback");
   }
 
   for (const forbidden of [
@@ -428,13 +435,13 @@ function main(): void {
     "CANVA_SKIP_NPM_INSTALL",
     "CANVA_NPM_REPAIR",
   ]) {
-    if (launcher.includes(forbidden)) failures.push(`canva-linux.sh: must not contain ${forbidden}`);
+    if (launcher.includes(forbidden)) failures.push(`canva-linux-c420ui-builder: must not contain ${forbidden}`);
   }
 
-  for (const relativePath of [uiBundlePath, cliBundlePath]) {
+  for (const relativePath of [uiBundlePath, cliBundlePath, builderBundlePath]) {
     validateJavaScriptSyntax(rootDir, relativePath, failures);
   }
-  validateGeneratedArtifactsMatchBuildRecipe(rootDir, [uiBundlePath, cliBundlePath], failures);
+  validateGeneratedArtifactsMatchBuildRecipe(rootDir, [uiBundlePath, cliBundlePath, builderBundlePath], failures);
   validateBlessedRuntimeAssetsMatchPackage(rootDir, blessedRuntimeAssets, failures);
 
   for (const relativePath of [uiBundlePath, cliBundlePath]) {
@@ -446,6 +453,13 @@ function main(): void {
 
     for (const forbidden of ["electron-builder", "@typescript-eslint", "playwright", "typescript/lib"]) {
       if (bundle.includes(forbidden)) failures.push(`${relativePath}: must not contain ${forbidden}`);
+    }
+  }
+
+  if (fs.existsSync(path.join(rootDir, builderBundlePath))) {
+    const bundle = read(rootDir, builderBundlePath);
+    for (const forbidden of ["electron-builder", "@typescript-eslint", "playwright", "typescript/lib"]) {
+      if (bundle.includes(forbidden)) failures.push(`${builderBundlePath}: must not contain ${forbidden}`);
     }
   }
 

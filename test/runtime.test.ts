@@ -12,6 +12,7 @@ const { loadRuntimeModule } = require("./helpers/runtime-module");
 
 const {
   clearEphemeralSessionData,
+  applyRuntimeGpuCli,
   configureSession,
   sanitizeDownloadFilename,
   sharedWebPreferences,
@@ -32,6 +33,94 @@ test("debugLevel=2 enables Chromium capture verbose logging", () => {
 test("debugLevel=0 keeps Chromium capture verbose logging disabled", () => {
   assert.equal(shouldEnableCaptureVerboseLogging(0), false);
 });
+
+function createFakeApp() {
+  const switches = [];
+  const switchValues = new Map();
+  let hardwareDisabled = false;
+  return {
+    app: {
+      commandLine: {
+        appendSwitch(name, value) {
+          switches.push([name, value]);
+          switchValues.set(name, value || "");
+        },
+        getSwitchValue(name) {
+          return switchValues.get(name) || "";
+        },
+      },
+      disableHardwareAcceleration() {
+        hardwareDisabled = true;
+      },
+    },
+    switches,
+    get hardwareDisabled() {
+      return hardwareDisabled;
+    },
+  };
+}
+
+const defaultRuntimeCli = {
+  help: false,
+  version: false,
+  debugLevel: 0,
+  credentialStore: "auto",
+  gpuBackend: "auto",
+  forceX11: false,
+  forceWayland: false,
+  disableWaylandColorManager: false,
+  passthroughArgs: [],
+};
+
+test("runtime applies --gpu-backend=software outside Flatpak", () => {
+  const fake = createFakeApp();
+  applyRuntimeGpuCli({
+    app: fake.app,
+    runtimeCli: { ...defaultRuntimeCli, gpuBackend: "software" },
+    detectedDisplayServer: "x11",
+  });
+
+  assert.equal(fake.hardwareDisabled, true);
+  assert.deepEqual(fake.switches, [
+    ["disable-gpu", undefined],
+    ["disable-gpu-compositing", undefined],
+  ]);
+});
+
+test("runtime applies --gpu-backend=vulkan outside Flatpak", () => {
+  const fake = createFakeApp();
+  applyRuntimeGpuCli({
+    app: fake.app,
+    runtimeCli: { ...defaultRuntimeCli, gpuBackend: "vulkan" },
+    detectedDisplayServer: "x11",
+  });
+
+  assert.deepEqual(fake.switches, [
+    ["enable-gpu-rasterization", undefined],
+    ["enable-zero-copy", undefined],
+    ["enable-features", "Vulkan,VulkanFromANGLE,DefaultANGLEVulkan"],
+    ["use-angle", "vulkan"],
+  ]);
+});
+
+test("runtime applies --force-x11 and --force-wayland outside Flatpak", () => {
+  const x11 = createFakeApp();
+  applyRuntimeGpuCli({
+    app: x11.app,
+    runtimeCli: { ...defaultRuntimeCli, forceX11: true },
+    detectedDisplayServer: "wayland",
+  });
+  assert.deepEqual(x11.switches.at(-1), ["ozone-platform", "x11"]);
+
+  const wayland = createFakeApp();
+  applyRuntimeGpuCli({
+    app: wayland.app,
+    runtimeCli: { ...defaultRuntimeCli, forceWayland: true },
+    detectedDisplayServer: "x11",
+  });
+  assert.deepEqual(wayland.switches.at(-1), ["ozone-platform", "wayland"]);
+});
+
 
 
 test("clears ephemeral session storage, cache and cookie store", async () => {

@@ -9,27 +9,27 @@ sudo_builder_pattern="sudo[[:space:]]\\+flatpak-""builder"
 scope_prefix_name="flatpak_scope_""prefix"
 scope_prefix_builder_pattern="${scope_prefix_name}).*flatpak-builder\\|"'$('"${scope_prefix_name}"')[[:space:]]\+flatpak-builder'
 
-if grep -RIn "${remote_user_pattern}" scripts canva-linux.sh; then
+if grep -RIn "${remote_user_pattern}" scripts canva-linux-c420ui-builder; then
   echo "[flatpak-scope] forbidden unconditional user Flathub remote"
   failed=true
 fi
 
-if grep -RIn "${install_user_pattern}" scripts canva-linux.sh; then
+if grep -RIn "${install_user_pattern}" scripts canva-linux-c420ui-builder; then
   echo "[flatpak-scope] forbidden unconditional user Flathub install"
   failed=true
 fi
 
-if grep -RIn "${builder_user_install_pattern}" scripts canva-linux.sh; then
+if grep -RIn "${builder_user_install_pattern}" scripts canva-linux-c420ui-builder; then
   echo "[flatpak-scope] forbidden unconditional user Flatpak install"
   failed=true
 fi
 
-if grep -RIn "${sudo_builder_pattern}" scripts canva-linux.sh; then
+if grep -RIn "${sudo_builder_pattern}" scripts canva-linux-c420ui-builder; then
   echo "[flatpak-scope] forbidden sudo-flatpak-builder pattern"
   failed=true
 fi
 
-if grep -RIn "${scope_prefix_builder_pattern}" scripts canva-linux.sh; then
+if grep -RIn "${scope_prefix_builder_pattern}" scripts canva-linux-c420ui-builder; then
   echo "[flatpak-scope] forbidden flatpak_scope_prefix with flatpak-builder"
   failed=true
 fi
@@ -48,7 +48,7 @@ for workflow_script in \
   fi
 done
 
-if ! grep -RIn "CANVA_FLATPAK_SCOPE" scripts canva-linux.sh >/dev/null; then
+if ! grep -RIn "CANVA_FLATPAK_SCOPE" scripts canva-linux-c420ui-builder >/dev/null; then
   echo "[flatpak-scope] CANVA_FLATPAK_SCOPE is not documented in scripts"
   failed=true
 fi

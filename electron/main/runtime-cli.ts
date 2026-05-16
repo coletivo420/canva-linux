@@ -35,8 +35,19 @@ const GPU_BACKENDS = new Set<RuntimeGpuBackend>([
   "force",
 ]);
 
+const UNSUPPORTED_DEBUG_MESSAGE =
+  "Unsupported --debug value. Use --debug=1 or --debug=2.";
+const UNSUPPORTED_CREDENTIAL_STORE_MESSAGE =
+  "Unsupported --credential-store value. Use auto, gnome-libsecret, kwallet6, or kwallet5.";
+const UNSUPPORTED_GPU_BACKEND_MESSAGE =
+  "Unsupported --gpu-backend value. Use auto, opengl, vulkan, software, or force.";
+
 function unsupportedDebugValue(): Error {
-  return new Error("Unsupported --debug value. Use --debug=1 or --debug=2.");
+  return new Error(UNSUPPORTED_DEBUG_MESSAGE);
+}
+
+function matchesValuedOption(arg: string, option: string): boolean {
+  return arg === option || arg.startsWith(`${option}=`);
 }
 
 function readRequiredValue(arg: string, option: string, message: string): string {
@@ -70,36 +81,32 @@ function parseCanvaLinuxRuntimeCli(
       options.version = true;
       continue;
     }
-    if (arg.startsWith("--debug")) {
-      const value = readRequiredValue(arg, "--debug", unsupportedDebugValue().message);
+    if (matchesValuedOption(arg, "--debug")) {
+      const value = readRequiredValue(arg, "--debug", UNSUPPORTED_DEBUG_MESSAGE);
       if (value !== "1" && value !== "2") throw unsupportedDebugValue();
       options.debugLevel = Number(value) as 1 | 2;
       continue;
     }
-    if (arg === "--credential-store" || arg.startsWith("--credential-store=")) {
+    if (matchesValuedOption(arg, "--credential-store")) {
       const value = readRequiredValue(
         arg,
         "--credential-store",
-        "Unsupported --credential-store value. Use auto, gnome-libsecret, kwallet6, or kwallet5.",
+        UNSUPPORTED_CREDENTIAL_STORE_MESSAGE,
       );
       if (!CREDENTIAL_STORES.has(value as RuntimeCredentialStore)) {
-        throw new Error(
-          "Unsupported --credential-store value. Use auto, gnome-libsecret, kwallet6, or kwallet5.",
-        );
+        throw new Error(UNSUPPORTED_CREDENTIAL_STORE_MESSAGE);
       }
       options.credentialStore = value as RuntimeCredentialStore;
       continue;
     }
-    if (arg === "--gpu-backend" || arg.startsWith("--gpu-backend=")) {
+    if (matchesValuedOption(arg, "--gpu-backend")) {
       const value = readRequiredValue(
         arg,
         "--gpu-backend",
-        "Unsupported --gpu-backend value. Use auto, opengl, vulkan, software, or force.",
+        UNSUPPORTED_GPU_BACKEND_MESSAGE,
       );
       if (!GPU_BACKENDS.has(value as RuntimeGpuBackend)) {
-        throw new Error(
-          "Unsupported --gpu-backend value. Use auto, opengl, vulkan, software, or force.",
-        );
+        throw new Error(UNSUPPORTED_GPU_BACKEND_MESSAGE);
       }
       options.gpuBackend = value as RuntimeGpuBackend;
       continue;

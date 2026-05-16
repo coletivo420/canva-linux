@@ -16,7 +16,7 @@ This checklist tracks the stable `1.4.10` release closure.
 - [ ] `npm run lint`
 - [ ] `npm test`
 - [ ] `npm run test:smoke`
-- [ ] `./canva-linux.sh --validate`
+- [ ] `./canva-linux-c420ui-builder --validate`
 - [ ] `git diff --check`
 
 ## 3) Optional validator checks (when tools are installed)
@@ -31,7 +31,7 @@ This checklist tracks the stable `1.4.10` release closure.
 - [ ] Confirm app launches locally.
 - [ ] Confirm OAuth popup/login flow still works.
 - [ ] Confirm Canva editor opens and custom eyedropper flow remains active.
-- [ ] Confirm local release artifact workflow is documented (`npm run dist` + `./canva-linux.sh --bundle-flatpak`).
+- [ ] Confirm local release artifact workflow is documented (`npm run dist` + `./canva-linux-c420ui-builder --bundle-flatpak`).
 
 ## 5) Scope freeze confirmation
 

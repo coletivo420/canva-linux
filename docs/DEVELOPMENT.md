@@ -100,9 +100,9 @@ Recommended flow:
 1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.
 2. Add entry in `config/canva-linux/actions.json`.
 3. Run `npm run check:canva-linux`.
-4. Test direct CLI through the launcher: `./canva-linux.sh <action-flag> --dry-run`.
+4. Test direct CLI through the launcher: `./canva-linux-c420ui-builder <action-flag> --dry-run`.
 5. Test the compiled c420ui CLI bridge when needed: `npm run c420ui:cli -- <action-flag> --dry-run`.
-6. Test c420ui interactively: `./canva-linux.sh`.
+6. Test c420ui interactively: `./canva-linux-c420ui-builder`.
 
 ## Sudo and Privileged Actions
 
@@ -152,7 +152,7 @@ Action execution is no longer validated through the legacy Action Runner.
 ## Direct CLI bridge development
 
 Direct launcher actions are built with `npm run build:scripts` and executed through
-`.build/scripts/run-c420ui-cli.js`. Validate direct actions with `./canva-linux.sh <action-flag> --dry-run`
+`.build/scripts/run-c420ui-cli.js`. Validate direct actions with `./canva-linux-c420ui-builder <action-flag> --dry-run`
 or `npm run c420ui:cli -- <action-flag> --dry-run`. The concrete Canva Linux wiring lives in
 `scripts/c420ui-adapter/cli.ts`; reusable parsing and action execution live in
 `packages/c420ui/src/cli.ts`.

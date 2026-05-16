@@ -1,6 +1,6 @@
 {
   "name": "canva-linux",
-  "version": "0.1.4-15.Dev.4",
+  "version": "0.1.4-15.Dev.5",
   "description": "A community open-source desktop wrapper for use with Canva",
   "main": ".build/electron/main/index.js",
   "author": "Community",
@@ -22,7 +22,7 @@
     "bootstrap:typescript": "esbuild scripts/run-typescript-script.ts --bundle --platform=node --target=node20 --format=cjs --external:esbuild --outfile=.build/scripts/bootstrap/run-typescript-script.js",
     "bootstrap:electron-builder": "esbuild scripts/electron-builder-before-build.ts --bundle --platform=node --target=node22 --format=cjs --external:electron --external:esbuild --outfile=.build/scripts/bootstrap/electron-builder-before-build.js",
     "run:ts": "npm run bootstrap:typescript --silent && node .build/scripts/bootstrap/run-typescript-script.js",
-    "build:scripts": "esbuild scripts/build-runtime.ts scripts/build-preload-bundle.ts scripts/copy-runtime-assets.ts scripts/clean-runtime-build.ts scripts/run-node-tests.ts scripts/run-c420ui.ts scripts/run-c420ui-cli.ts --bundle --platform=node --target=node20 --format=cjs --external:electron --external:blessed --external:esbuild --external:typescript --outdir=.build/scripts --entry-names=[name]",
+    "build:scripts": "esbuild scripts/build-runtime.ts scripts/build-preload-bundle.ts scripts/copy-runtime-assets.ts scripts/clean-runtime-build.ts scripts/run-node-tests.ts scripts/run-c420ui.ts scripts/run-c420ui-cli.ts scripts/canva-linux-c420ui-builder.ts --bundle --platform=node --target=node20 --format=cjs --external:electron --external:blessed --external:esbuild --external:typescript --outdir=.build/scripts --entry-names=[name]",
     "test": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-node-tests.js",
     "test:unit": "npm run test -- test/window-open-policy.test.ts",
     "test:wiring": "npm run test -- test/tab-controller-wiring.test.ts",

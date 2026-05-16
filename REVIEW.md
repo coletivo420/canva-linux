@@ -12,12 +12,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.4` for credential persistence bugfix validation:
+Request changes if a PR preparing `0.1.4-15.Dev.5` for credential persistence bugfix validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-15.Dev.4` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.5` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -33,7 +33,7 @@ Validated guarantees:
 - The launcher does not run `npm install` or `npm ci`.
 - Full dependency validation and repair remain owned by c420ui after startup.
 
-Direct `./canva-linux.sh` startup was blocked in the validation container because it runs as root and the launcher correctly refuses root execution.
+Direct `./canva-linux-c420ui-builder` startup was blocked in the validation container because it runs as root and the launcher correctly refuses root execution.
 
 ## Runtime CLI review
 
@@ -41,7 +41,7 @@ Request changes if a PR:
 
 - reintroduces `CANVA_DEBUG` or `CANVA_DEBUG_LEVEL` as runtime debug input;
 - reintroduces `CANVA_LINUX_PASSWORD_STORE` as the public credential-store override;
-- adds `--debug=1` or `--debug=2` to `canva-linux.sh`;
+- adds `--debug=1` or `--debug=2` to `canva-linux-c420ui-builder`;
 - accepts module-specific debug values instead of only `--debug=1` and `--debug=2`;
 - allows `basic_text` as persistent credential storage.
 
@@ -51,7 +51,7 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The c
 
 Request changes if a PR:
 
-- changes version `0.1.4-15.Dev.4` without an explicit maintainer request;
+- changes version `0.1.4-15.Dev.5` without an explicit maintainer request;
 - introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
@@ -309,7 +309,7 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- breaks `bash -n canva-linux.sh`;
+- breaks `bash -n canva-linux-c420ui-builder`;
 - hardcodes project action flags in the launcher parser;
 - routes direct CLI actions around `run-c420ui-cli.js`;
 - removes `--dry-run` propagation from the launcher;
@@ -319,7 +319,7 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- lets `canva-linux.sh` execute a stale `.build/scripts/run-c420ui-cli.js`;
+- lets `canva-linux-c420ui-builder` execute a stale `.build/scripts/run-c420ui-cli.js`;
 - removes freshness coverage for `packages/c420ui/src`;
 - removes freshness coverage for `scripts/c420ui-adapter`;
 - tests launcher behavior by executing real destructive actions instead of a stub.
@@ -360,7 +360,7 @@ Request changes if a PR:
 Request changes if a PR:
 
 - documents removed legacy runner commands as an execution path;
-- introduces new direct CLI validation paths outside `./canva-linux.sh` or `npm run c420ui:cli`;
+- introduces new direct CLI validation paths outside `./canva-linux-c420ui-builder` or `npm run c420ui:cli`;
 - adds new compatibility checks for removed legacy runner surfaces;
 - documents c420ui separation as incomplete when the relevant boundary already exists.
 
@@ -422,3 +422,6 @@ Request changes if a PR:
 - runs `npm ci` or `npm install` directly from project launchers;
 - moves project dependency lists into c420ui core instead of project config;
 - moves npm dependency policy back into project shell helpers.
+
+
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
