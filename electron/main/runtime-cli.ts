@@ -70,7 +70,7 @@ function parseCanvaLinuxRuntimeCli(
       options.version = true;
       continue;
     }
-    if (arg === "--debug" || arg.startsWith("--debug=")) {
+    if (arg.startsWith("--debug")) {
       const value = readRequiredValue(arg, "--debug", unsupportedDebugValue().message);
       if (value !== "1" && value !== "2") throw unsupportedDebugValue();
       options.debugLevel = Number(value) as 1 | 2;
