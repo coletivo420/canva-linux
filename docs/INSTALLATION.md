@@ -1,7 +1,7 @@
 # Installation
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-See [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
+For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
 
 ## Requirements / Install Instructions
 

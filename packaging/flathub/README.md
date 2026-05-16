@@ -1,7 +1,7 @@
 # Flathub submission workspace
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-See [c420ui Builder Alias Policy](../../docs/c420ui/BUILDER_ALIAS.md).
+For the builder naming contract, see [c420ui Builder Alias Policy](../../docs/c420ui/BUILDER_ALIAS.md).
 
 This directory contains assets specific to the **Flathub submission path**.
 

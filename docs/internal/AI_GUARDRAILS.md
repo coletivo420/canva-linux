@@ -1,7 +1,7 @@
 # AI Guardrails
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-See [c420ui Builder Alias Policy](../c420ui/BUILDER_ALIAS.md).
+For the builder naming contract, see [c420ui Builder Alias Policy](../c420ui/BUILDER_ALIAS.md).
 
 This file is auxiliary maintenance policy for AI agents. It is not public user documentation.
 
@@ -30,9 +30,9 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## Versioning
 
-- Preserve version `0.1.4-14` unless the maintainer explicitly requests a versioning change.
+- Preserve version `0.1.4-15.Dev.5` unless the maintainer explicitly requests a versioning change.
 - Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
-- Preserve the `N.N.N-X` release versioning rule.
+- Preserve the `N.N.N-X` release versioning rule with optional `.Dev.N` development phase suffixes.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
 - Every behavior change must update `CHANGELOG.md`.
 - Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Do not reintroduce `CANVA_DEBUG`,
@@ -43,10 +43,10 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## 0.1.4-14 split documentation policy
 
-- Current maintained release target is `0.1.4-14`.
-- The release version format must remain `N.N.N-X`.
+- Current maintained release target is `0.1.4-15.Dev.5`.
+- The release version format must remain `N.N.N-X` with optional `.Dev.N` development phase suffixes.
 - Canva Linux is the dependent project; c420ui is the generic engine.
-- Canva Linux does not install dependencies directly from launchers or shell helpers, except for the documented Stage 0
+- Canva Linux does not install dependencies directly from builder commands or shell helpers, except for the documented Stage 0
   c420ui bootstrap that starts the generated `bootstrap/c420ui` bundle without npm dependencies.
 - Canva Linux does not validate generic artifact recipes; c420ui owns that validation.
 - The Canva Linux adapter must not duplicate Action Engine policy for planned actions, dry-run,
@@ -59,9 +59,9 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 - c420ui owns host dependency management for command checks, Node minimum checks, npm checks, install strategy, repair/skip modes, messages and exit codes.
 - Dependent projects declare dependency config only; for Canva Linux this is `config/canva-linux/dependencies.json`.
-- Project launchers must not run `npm ci`, `npm install`, or dependency repair directly. Stage 0 only starts the generated c420ui bootstrap bundle.
+- Project builder commands must not run `npm ci`, `npm install`, or dependency repair directly. Stage 0 only starts the generated c420ui bootstrap bundle.
 - Project shell helpers must not own npm dependency policy or hardcoded npm dependency lists.
-- Launcher bootstrap may only select the generated c420ui bootstrap bundle or the `.build` development fallback.
+- Builder command bootstrap may only select the generated c420ui bootstrap bundle or the `.build` development fallback.
   Full npm dependency policy remains owned by c420ui.
 
 ## Project tree boundaries
@@ -113,8 +113,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - c420ui owns the detection engine; Canva Linux owns the concrete probes.
 - c420ui owns generic host dependency contracts but not concrete project dependency lists.
 - Canva Linux owns npm bootstrap policy, Node.js version policy, and `CANVA_*` bootstrap variables.
-- Project launchers must use the host dependency provider instead of calling bootstrap shell scripts directly.
-- Do not run npm installation directly from project launchers; c420ui owns host dependency management after the Stage 0 bootstrap.
+- Project builder commands must use the host dependency provider instead of calling bootstrap shell scripts directly.
+- Do not run npm installation directly from project builder commands; c420ui owns host dependency management after the Stage 0 bootstrap.
 - Keep project shell out of npm dependency policy; dependent projects declare host dependencies in config.
 - Detection status uses `project`, not the removed legacy `package` shape.
 - Do not reintroduce `package: project` compatibility in detection providers.
@@ -139,7 +139,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not use TUI as product name.
 - The interactive shell menu has been removed. Do not reintroduce `run_interactive_mode`, `menu_install`, `menu_dev`, `menu_maint`, or tool switching.
 - The project exposes only c420ui and direct CLI actions.
-- Legacy explicit c420ui routing flags are removed. The launcher opens c420ui when called without args; any argument is resolved as direct CLI.
+- Legacy explicit c420ui routing flags are removed. The builder command opens c420ui when called without args; any argument is resolved as direct CLI.
 - Legacy interface-routing environment variables are removed and must not be read for interface routing.
 - Backend shell scripts may remain shell scripts, but shell UI menus are forbidden.
 - Application Settings are c420ui state, not shell actions.
@@ -189,7 +189,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not reintroduce `scripts/core/action-registry.ts`.
 - Do not reintroduce `scripts/core/validate-actions.ts`.
 - Generic c420ui action validation belongs in `packages/c420ui/src/actions.ts`.
-- Do not duplicate action logic in c420ui or launcher code.
+- Do not duplicate action logic in c420ui or builder command code.
 - Do not ignore `action.env` from `config/canva-linux/actions.json`.
 - Any `system`/`user` scope action must behave the same in c420ui and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
@@ -223,13 +223,13 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not hardcode direct action flags in `canva-linux-c420ui-builder`; it does not maintain its own action allowlist.
   Action flags must resolve through the c420ui CLI bridge and Action Registry.
 - Direct action flags must come from the project action registry.
-- The launcher may parse only global flags such as `--help`, `--yes`, `--force`, and `--dry-run`.
+- The builder command may parse only global flags such as `--help`, `--yes`, `--force`, and `--dry-run`.
 - Keep `bash -n canva-linux-c420ui-builder` protected by validation.
-- Keep direct c420ui CLI bridge freshness protected before launcher execution.
+- Keep direct c420ui CLI bridge freshness protected before builder command execution.
 - Do not narrow the c420ui CLI entrypoint freshness check to a small hardcoded list of files.
-- The launcher must rebuild the c420ui CLI bridge when `packages/c420ui/src`, `scripts/c420ui-adapter`,
+- The builder command must rebuild the c420ui CLI bridge when `packages/c420ui/src`, `scripts/c420ui-adapter`,
   `packages/c420ui/src/terminal`, action registry metadata or project UI metadata changes.
-- Launcher parser tests must not execute real project actions; use a stubbed `bootstrap/c420ui/run-c420ui-cli.cjs`.
+- Builder parser tests must not execute real project actions; use a stubbed `bootstrap/c420ui/run-c420ui-cli.cjs`.
 - Only one direct action may execute per invocation.
 - Dangerous or confirmation-required direct actions must not execute without `--yes`.
 - Privileged direct actions must run root/sudo preflight before backend scripts start.
@@ -325,7 +325,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - JavaScript may exist only as project-generated output under `.build`, package-managed dependencies under `node_modules`,
   generated coverage output under `coverage`, or distributable output under `dist`.
 - Project-generated JavaScript belongs in `.build` only; do not place maintained or project-generated script artifacts elsewhere.
-- Shell scripts are allowed only for Linux host operations, launcher glue, Flatpak/native install, sudo, purge, XDG,
+- Shell scripts are allowed only for Linux host operations, builder command glue, Flatpak/native install, sudo, purge, XDG,
   and validation that must run before Node.
 - JSON/YAML/XML/Desktop files remain native data formats and must be validated by TypeScript checks where appropriate.
 - Flathub source generation must be TypeScript-backed.
@@ -418,7 +418,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 Do not edit `bootstrap/c420ui/*.cjs` by hand. They are generated artifacts built from TypeScript sources with
 `npm run build:c420ui-bootstrap` and kept in the repository so a clean checkout can start c420ui without local npm dependencies.
 
-Do not add `npm install`, `npm ci`, or legacy npm dependency helpers to `canva-linux-c420ui-builder`. The launcher is Stage 0 only:
+Do not add `npm install`, `npm ci`, or legacy npm dependency helpers to `canva-linux-c420ui-builder`. The builder command is Stage 0 only:
 choose the generated c420ui bootstrap bundle first, keep `.build/scripts` as a development fallback, and let c420ui own the
 full dependency policy after startup.
 

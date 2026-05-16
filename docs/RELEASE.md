@@ -1,7 +1,7 @@
 # Release
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-See [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
+For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
 
 ## Canva Linux 0.1.4-15.Dev.5 Alpha
 
@@ -47,7 +47,7 @@ The GitHub Release workflow must:
 - Flatpak bundle builds and installs.
 - Uninstall removes only the selected scope.
 - Purge removes installations and data only after confirmation.
-- Any launcher argument runs direct CLI mode.
+- Any builder command argument runs direct CLI mode.
 - Active docs do not cite removed interface routing flags.
 
 ### Release notes template
