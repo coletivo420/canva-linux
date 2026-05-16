@@ -47,7 +47,7 @@ function unsupportedDebugValue(): Error {
 }
 
 function matchesValuedOption(arg: string, option: string): boolean {
-  return arg === option || arg.startsWith(`${option}=`);
+  return arg.startsWith(`${option}=`);
 }
 
 function readRequiredValue(arg: string, option: string, message: string): string {
