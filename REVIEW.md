@@ -12,12 +12,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.3` for credential persistence bugfix validation:
+Request changes if a PR preparing `0.1.4-15.Dev.4` for credential persistence bugfix validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-15.Dev.3` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.4` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -35,11 +35,23 @@ Validated guarantees:
 
 Direct `./canva-linux.sh` startup was blocked in the validation container because it runs as root and the launcher correctly refuses root execution.
 
+## Runtime CLI review
+
+Request changes if a PR:
+
+- reintroduces `CANVA_DEBUG` or `CANVA_DEBUG_LEVEL` as runtime debug input;
+- reintroduces `CANVA_LINUX_PASSWORD_STORE` as the public credential-store override;
+- adds `--debug=1` or `--debug=2` to `canva-linux.sh`;
+- accepts module-specific debug values instead of only `--debug=1` and `--debug=2`;
+- allows `basic_text` as persistent credential storage.
+
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The c420ui installer/development launcher does not own runtime debug flags.
+
 ## Versioning review
 
 Request changes if a PR:
 
-- changes version `0.1.4-15.Dev.3` without an explicit maintainer request;
+- changes version `0.1.4-15.Dev.4` without an explicit maintainer request;
 - introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.

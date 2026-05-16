@@ -87,7 +87,7 @@ Focus on user-support diagnostics.
 
 Deliverables:
 
-- preserve `CANVA_DEBUG=1` and `CANVA_DEBUG=2` as the only public debug modes;
+- preserve `canva-linux --debug=1` and `canva-linux --debug=2` as the only public debug modes;
 - preserve central `logs/current.log` behavior;
 - review post-install guidance wording;
 - keep GPU, OAuth, upload, drag-and-drop and EyeDropper diagnostics visible in internal logs;

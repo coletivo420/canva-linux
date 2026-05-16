@@ -1,8 +1,8 @@
 # Canva Linux
 
 Status: **Alpha**
-Version: **0.1.4-15.Dev.2**
-Release target: **v0.1.4-15.Dev.2**
+Version: **0.1.4-15.Dev.4**
+Release target: **v0.1.4-15.Dev.4**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -57,6 +57,23 @@ Run Canva Linux as a regular user. Privileged actions request administrator auth
 Dry-run commands report planned work without intentionally changing installed packages, bundles, credentials, runtime data, or user
 configuration. Packaging commands depend on the required host tooling being installed for the target environment.
 
+## Runtime CLI
+
+The compiled Canva Linux app owns runtime flags. The c420ui installer/development launcher (`./canva-linux.sh`) does not implement app runtime debug flags.
+
+```bash
+canva-linux --help
+canva-linux --version
+canva-linux --debug=1
+canva-linux --debug=2
+canva-linux --credential-store=auto
+canva-linux --credential-store=gnome-libsecret
+canva-linux --credential-store=kwallet6
+canva-linux --credential-store=kwallet5
+```
+
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The old `CANVA_DEBUG` environment path was removed.
+
 ## Canva Linux Documentation
 
 - [Documentation index](docs/README.md)
@@ -100,7 +117,7 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 ## Release and Packaging
 
-Current release target: `0.1.4-15.Dev.2`.
+Current release target: `0.1.4-15.Dev.4`.
 
 Versioning format for this bugfix cycle: `N.N.N-X.Dev.Y`.
 

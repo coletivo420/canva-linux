@@ -32,6 +32,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Preserve the `N.N.N-X` release versioning rule.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
 - Every behavior change must update `CHANGELOG.md`.
+- Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Do not reintroduce `CANVA_DEBUG`, `CANVA_DEBUG_LEVEL`, or `CANVA_LINUX_PASSWORD_STORE`, and do not add app runtime debug flags to `canva-linux.sh`.
 
 
 

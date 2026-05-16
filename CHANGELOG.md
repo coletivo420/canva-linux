@@ -3,12 +3,15 @@
 ## Unreleased
 
 ### Added
-- Opened the `0.1.4-15.Dev.3` credential persistence bugfix cycle.
+- Opened the `0.1.4-15.Dev.4` credential persistence bugfix cycle.
 - Added Flatpak-aware credential diagnostics and native credential-store selection for Electron startup.
+- Added the compiled runtime CLI for `canva-linux --help`, `--version`, `--debug=1`, `--debug=2`,
+  `--credential-store=auto|gnome-libsecret|kwallet6|kwallet5`, and display/GPU runtime flags.
+- Removed the old `CANVA_DEBUG`, `CANVA_DEBUG_LEVEL`, and `CANVA_LINUX_PASSWORD_STORE` runtime interfaces;
+  runtime diagnostics and credential-store overrides now flow through the compiled app CLI.
 - Hardened Flatpak credential-store planning with automatic desktop-aware fallback: KDE/Plasma probes KWallet first,
   then the alternate KWallet generation, then Secret Service/libsecret, while GNOME and unknown desktops probe
-  Secret Service/libsecret first and then KWallet compatibility paths. Safe `CANVA_LINUX_PASSWORD_STORE` overrides
-  remain available for manual testing.
+  Secret Service/libsecret first and then KWallet compatibility paths.
 - Added committed standalone c420ui bootstrap artifacts for clean checkouts so c420ui can start before dependent-project
   dependency repair, without requiring launcher-side npm installation.
 - Added an internal RC validation matrix for `0.1.4-14` with required commands, manual dry-runs, dependency-backed packaging checks,
@@ -21,6 +24,7 @@
   manual dry-run outcomes, and release-blocker grep review.
 
 ### Fixed
+- Fixed Linux credential-service availability probing so `gdbus` is checked with `gdbus help` instead of `gdbus --version`.
 - Improved Flatpak ephemeral-session warning copy so users know persistent login requires host Secret Service/KWallet access through the sandbox.
 - Documented that Canva Linux never treats `basic_text` as persistent and that Flatpak grants narrow D-Bus access
   to Secret Service/libsecret and KWallet credential services without opening the full session bus.
@@ -40,6 +44,7 @@
 - Added split documentation depth checks so placeholder docs cannot replace the maintained split references.
 
 ### Fixed
+- Fixed Linux credential-service availability probing so `gdbus` is checked with `gdbus help` instead of `gdbus --version`.
 - Removed stale inline release-status changelog entries from startup logging so release details live only in the changelog.
 - Kept tab creation timestamps as real creation times and use the tab id only as a secondary ordering tiebreaker.
 - Added diagnostics when generated popup windows are closed or cannot be closed by the tab event policy.
@@ -133,6 +138,7 @@
   execution were migrated to the shared c420ui Action Engine.
 
 ### Fixed
+- Fixed Linux credential-service availability probing so `gdbus` is checked with `gdbus help` instead of `gdbus --version`.
 - Routed c420ui terminal diagnostics through the project bridge instead of the removed overview-status entrypoint.
 - Routed Canva Linux artifact workflow actions through the shared c420ui Action Engine and Root Provider instead of calling the project adapter directly.
 - Avoided duplicate action environment preparation in the Canva Linux adapter.
@@ -172,6 +178,7 @@
 - Updated project identity so release naming, docs, workflow tags, and `package.json` use the npm-compatible `0.1.4-12` version.
 
 ### Fixed
+- Fixed Linux credential-service availability probing so `gdbus` is checked with `gdbus help` instead of `gdbus --version`.
 - Fixed planned-action handling so planned exit `78` is not reported as a successful action.
 - Fixed centralized root/sudo handling for privileged actions, user-scope sudo refusal, and c420ui authentication prompts.
 - Fixed startup error reporting around the Electron ready flow so startup failures are caught and logged.

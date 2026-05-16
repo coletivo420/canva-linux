@@ -121,42 +121,42 @@ See [AppImage FUSE Requirements](APPIMAGE_FUSE.md).
 
 ```bash
 canva-linux
-CANVA_DEBUG=1 canva-linux
-CANVA_DEBUG=2 canva-linux
-CANVA_FORCE_WAYLAND=1 canva-linux
-CANVA_FORCE_X11=1 canva-linux
-CANVA_GPU_BACKEND=auto canva-linux
-CANVA_GPU_BACKEND=opengl canva-linux
-CANVA_GPU_BACKEND=vulkan canva-linux
-CANVA_GPU_BACKEND=software canva-linux
+canva-linux --debug=1
+canva-linux --debug=2
+canva-linux --force-wayland
+canva-linux --force-x11
+canva-linux --gpu-backend=auto
+canva-linux --gpu-backend=opengl
+canva-linux --gpu-backend=vulkan
+canva-linux --gpu-backend=software
 ```
 
 ### Flatpak Install
 
 ```bash
 flatpak run io.github.coletivo420.canva-linux
-CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux
-CANVA_FORCE_WAYLAND=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_FORCE_X11=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=auto flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=opengl flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=vulkan flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=software flatpak run io.github.coletivo420.canva-linux
+flatpak run io.github.coletivo420.canva-linux --debug=1
+flatpak run io.github.coletivo420.canva-linux --debug=2
+flatpak run io.github.coletivo420.canva-linux --force-wayland
+flatpak run io.github.coletivo420.canva-linux --force-x11
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=auto
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=opengl
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=vulkan
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=software
 ```
 
 ### AppImage
 
 ```bash
 ./dist/<artifact>.AppImage
-CANVA_DEBUG=1 ./dist/<artifact>.AppImage
-CANVA_DEBUG=2 ./dist/<artifact>.AppImage
-CANVA_FORCE_WAYLAND=1 ./dist/<artifact>.AppImage
-CANVA_FORCE_X11=1 ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=auto ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=opengl ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=vulkan ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
+./dist/<artifact>.AppImage --debug=1
+./dist/<artifact>.AppImage --debug=2
+./dist/<artifact>.AppImage --force-wayland
+./dist/<artifact>.AppImage --force-x11
+./dist/<artifact>.AppImage --gpu-backend=auto
+./dist/<artifact>.AppImage --gpu-backend=opengl
+./dist/<artifact>.AppImage --gpu-backend=vulkan
+./dist/<artifact>.AppImage --gpu-backend=software
 ```
 
 ## Package generation
@@ -179,11 +179,11 @@ Planned package targets:
 Future package formats should use the same diagnostic command structure:
 
 - Run command
-- `CANVA_DEBUG=1`
-- `CANVA_DEBUG=2`
-- `CANVA_FORCE_WAYLAND=1`
-- `CANVA_FORCE_X11=1`
-- `CANVA_GPU_BACKEND=auto|opengl|vulkan|software`
+- `canva-linux --debug=1`
+- `canva-linux --debug=2`
+- `--force-wayland`
+- `--force-x11`
+- `--gpu-backend=auto|opengl|vulkan|software`
 - Sandbox/security note
 - Uninstall command
 

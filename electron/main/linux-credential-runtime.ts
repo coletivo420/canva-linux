@@ -34,6 +34,7 @@ type LinuxPasswordStorePlan = {
 };
 
 type LinuxPasswordStoreOverride = LinuxPasswordStoreName;
+type LinuxCredentialStoreCliOverride = LinuxPasswordStoreName | "auto";
 type LinuxPasswordStoreLogger = Pick<Console, "info" | "warn">;
 
 type LinuxCredentialProbeCommandResult = {
@@ -143,18 +144,18 @@ function createSecretServicePasswordStoreCandidates(): LinuxPasswordStoreCandida
 }
 
 function resolvePasswordStoreOverride(
-  env: LinuxCredentialRuntimeEnvironment,
+  credentialStore: LinuxCredentialStoreCliOverride = "auto",
   logger?: LinuxPasswordStoreLogger,
 ): LinuxPasswordStoreOverride | null {
-  const override = String(env.CANVA_LINUX_PASSWORD_STORE || "").trim();
-  if (!override) return null;
+  const override = String(credentialStore).trim();
+  if (!override || override === "auto") return null;
 
   if (SAFE_PASSWORD_STORE_OVERRIDES.has(override as LinuxPasswordStoreOverride)) {
     return override as LinuxPasswordStoreOverride;
   }
 
   logger?.warn(
-    `[canva-linux] Ignoring unsafe or unsupported CANVA_LINUX_PASSWORD_STORE=${override}; falling back to automatic Linux credential-store selection.`,
+    `[canva-linux] Ignoring unsafe or unsupported --credential-store=${override}; falling back to automatic Linux credential-store selection.`,
   );
   return null;
 }
@@ -184,12 +185,16 @@ function defaultCredentialProbeCommandRunner(
   };
 }
 
+function commandAvailabilityArgs(command: "gdbus" | "busctl"): string[] {
+  return command === "gdbus" ? ["help"] : ["--version"];
+}
+
 function commandIsAvailable(
   command: "gdbus" | "busctl",
   runner: LinuxCredentialProbeCommandRunner,
 ): boolean {
   try {
-    return probeCommandSucceeded(runner(command, ["--version"]));
+    return probeCommandSucceeded(runner(command, commandAvailabilityArgs(command)));
   } catch {
     return false;
   }
@@ -346,6 +351,7 @@ function selectLinuxPasswordStore(
     fileExists?: (path: string) => boolean;
     logger?: LinuxPasswordStoreLogger;
     probeRunner?: LinuxCredentialProbeCommandRunner;
+    credentialStore?: LinuxCredentialStoreCliOverride;
   } = {},
 ): LinuxPasswordStorePlan {
   const desktopHints = collectDesktopHints(env);
@@ -358,7 +364,7 @@ function selectLinuxPasswordStore(
     createDesktopAwarePasswordStoreCandidates(isKde, env),
     { env, runner: options.probeRunner },
   );
-  const override = resolvePasswordStoreOverride(env, options.logger);
+  const override = resolvePasswordStoreOverride(options.credentialStore, options.logger);
   const selectedCandidate = override
     ? candidateFor(override, "desktop-preferred")
     : selectFirstAvailablePasswordStore(automaticCandidates);
@@ -377,12 +383,8 @@ function selectLinuxPasswordStore(
   };
 }
 
-function shouldLogCredentialStorePlan(
-  env: LinuxCredentialRuntimeEnvironment = process.env,
-): boolean {
-  const debug = String(env.CANVA_DEBUG || "").trim();
-  const debugLevel = String(env.CANVA_DEBUG_LEVEL || "").trim();
-  return debug === "1" || debug === "2" || debugLevel === "1" || debugLevel === "2";
+function shouldLogCredentialStorePlan(debugLevel = 0): boolean {
+  return debugLevel === 1 || debugLevel === 2;
 }
 
 function logLinuxPasswordStorePlan(
@@ -414,20 +416,24 @@ function configureLinuxNativeCredentialStore({
   env = process.env,
   platform = process.platform,
   logger = console,
+  credentialStore = "auto",
+  debugLevel = 0,
 }: {
   app: ElectronAppLike;
   env?: LinuxCredentialRuntimeEnvironment;
   platform?: NodeJS.Platform;
   logger?: LinuxPasswordStoreLogger;
+  credentialStore?: LinuxCredentialStoreCliOverride;
+  debugLevel?: 0 | 1 | 2;
 }): LinuxPasswordStorePlan | null {
   if (platform !== "linux") {
     return null;
   }
 
-  const plan = selectLinuxPasswordStore(env, { logger });
+  const plan = selectLinuxPasswordStore(env, { logger, credentialStore });
   app.commandLine.appendSwitch("password-store", plan.selectedStore);
 
-  if (shouldLogCredentialStorePlan(env)) {
+  if (shouldLogCredentialStorePlan(debugLevel)) {
     logLinuxPasswordStorePlan(plan, logger);
   }
 
@@ -442,6 +448,8 @@ export {
   detectFlatpakRuntime,
   getFallbackKwalletStore,
   getPreferredKwalletStore,
+  commandAvailabilityArgs,
+  commandIsAvailable,
   logLinuxPasswordStorePlan,
   probeCredentialService,
   selectFirstAvailablePasswordStore,
@@ -454,4 +462,5 @@ export type {
   LinuxCredentialServiceProbeStatus,
   LinuxPasswordStoreCandidate,
   LinuxPasswordStorePlan,
+  LinuxCredentialStoreCliOverride,
 };

@@ -15,12 +15,11 @@ function normalizeDebugCategory(category: unknown = "app"): string {
 }
 
 function getDebugLevel(): number {
-  const explicit = String(process?.env?.CANVA_DEBUG_LEVEL || "").trim();
-  if (explicit === "1" || explicit === "2") return Number(explicit);
-
-  const fallback = String(process?.env?.CANVA_DEBUG || "").trim();
-  if (fallback === "1" || fallback === "2") return Number(fallback);
-
+  const debugArg = process.argv.find(
+    (arg) => arg === "--debug=1" || arg === "--debug=2",
+  );
+  if (debugArg === "--debug=1") return 1;
+  if (debugArg === "--debug=2") return 2;
   return 0;
 }
 

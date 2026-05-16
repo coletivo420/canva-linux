@@ -19,6 +19,19 @@ Electron sessions, safe storage, cookies, or Canva login persistence.
 - c420ui Action Engine policy.
 - Packaging artifact naming.
 
+## Runtime CLI overrides
+
+Credential-store overrides are runtime CLI flags on the compiled app:
+
+```bash
+canva-linux --credential-store=auto
+canva-linux --credential-store=gnome-libsecret
+canva-linux --credential-store=kwallet6
+canva-linux --credential-store=kwallet5
+```
+
+`--credential-store=auto` keeps desktop/D-Bus automatic fallback. Unsafe stores such as `basic_text` are rejected and never become persistent session policy. `CANVA_LINUX_PASSWORD_STORE` is not a public runtime interface.
+
 ## Runtime policy
 
 Persistent login requires a secure Linux credential backend and available

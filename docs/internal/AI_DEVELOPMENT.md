@@ -176,7 +176,7 @@ AI patches must not:
 
 - reintroduce module-specific `CANVA_DEBUG` modes
 - create separate log files
-- remove GPU diagnostics from `CANVA_DEBUG=1`
+- remove GPU diagnostics from `canva-linux --debug=1`
 - use unsafe `JSON.stringify(args)`
 - allow logging errors to crash the main process
 

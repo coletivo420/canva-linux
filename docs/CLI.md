@@ -91,7 +91,6 @@ The c420ui and scripts honor the following environment variables:
 | `CANVA_FLATPAK_SCOPE` | Set to `system` (default) or `user` for Flatpak actions. |
 | `CANVA_NATIVE_SCOPE` | Set to `system` (default) or `user` for Native actions. |
 | `CANVA_TOOL_SESSION_LOG` | Path to the tool session log file. |
-| `CANVA_DEBUG` | Set to `1` or `2` for verbose Electron runtime diagnostics. |
 
 ## Tool Settings
 
@@ -110,3 +109,28 @@ Current Tool settings:
   Changes take effect immediately and are saved for the next c420ui start.
   Keyboard log scrolling and F5 copy remain available. F6 opens a plain logs
   view with the session log path as a fallback for manual selection.
+
+## Compiled Runtime CLI
+
+The compiled `canva-linux` Electron app owns runtime flags. The `./canva-linux.sh` c420ui installer/development launcher does not own or implement app runtime debug flags.
+
+```bash
+canva-linux --help
+canva-linux --version
+canva-linux --debug=1
+canva-linux --debug=2
+canva-linux --credential-store=auto
+canva-linux --credential-store=gnome-libsecret
+canva-linux --credential-store=kwallet6
+canva-linux --credential-store=kwallet5
+canva-linux --gpu-backend=auto
+canva-linux --gpu-backend=opengl
+canva-linux --gpu-backend=vulkan
+canva-linux --gpu-backend=software
+canva-linux --gpu-backend=force
+canva-linux --force-x11
+canva-linux --force-wayland
+canva-linux --disable-wayland-color-manager
+```
+
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The old `CANVA_DEBUG` and `CANVA_DEBUG_LEVEL` environment paths were removed. Credential-store overrides use `--credential-store`; `CANVA_LINUX_PASSWORD_STORE` is not a public runtime interface.
