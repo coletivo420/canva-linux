@@ -354,7 +354,40 @@ function main(): number {
     }
   }
   const launcher = fs.readFileSync(launcherPath, "utf8");
+  if (launcher.includes("DIRECT_ACTION_FLAGS")) failures.push("builder must not contain a direct action allowlist");
   if (!launcher.includes("bootstrap/c420ui/run-c420ui-cli.cjs")) failures.push("builder must call the c420ui CLI bootstrap bundle for direct actions");
+  if (!launcher.includes("hasBridgeAction") || !launcher.includes('arg.startsWith("--")')) {
+    failures.push("builder must delegate unknown action flags to the c420ui CLI bridge");
+  }
+  for (const fragment of ["RUNTIME_ONLY_VALUED_OPTIONS", "RUNTIME_ONLY_BOOLEAN_OPTIONS", "isRuntimeOnlyFlag"] as const) {
+    if (!launcher.includes(fragment)) failures.push(`builder must reject runtime flag namespaces: ${fragment}`);
+  }
+  if (launcher.includes("allowRootDryRun") || launcher.includes("parsed.directAction") || launcher.includes("Boolean(parsed")) {
+    failures.push("builder must never allow a root dry-run bypass");
+  }
+  const runtimeCliSource = fs.readFileSync(path.join(rootDir, "electron/main/runtime-cli.ts"), "utf8");
+  if (!runtimeCliSource.includes('if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE)')) {
+    failures.push("runtime-cli must reject --debug without an equals value");
+  }
+  if (!runtimeCliSource.includes('arg.startsWith(`${option}=`)')) {
+    failures.push("runtime-cli valued option matching must require --option=value");
+  }
+  const runtimeSource = fs.readFileSync(path.join(rootDir, "electron/main/runtime.ts"), "utf8");
+  for (const fragment of [
+    "CANVA_DISABLE_GPU",
+    "CANVA_GPU_BACKEND",
+    "CANVA_FORCE_X11",
+    "CANVA_FORCE_WAYLAND",
+    "CANVA_DISABLE_WAYLAND_COLOR_MANAGER",
+  ] as const) {
+    if (runtimeSource.includes(fragment)) {
+      failures.push(`runtime.ts must not contain legacy GPU/display env fallback ${fragment}`);
+    }
+  }
+  const docsCli = fs.readFileSync(path.join(rootDir, "docs/CLI.md"), "utf8");
+  if (docsCli.includes("shell launcher") || docsCli.includes("Install and Development Tool")) {
+    failures.push("docs/CLI.md must describe Canva Linux Builder powered by c420ui, not legacy launcher names");
+  }
   const legacyRunCoreCli = "run-core-entry.sh " + "action-runner" + " --cli";
   if (launcher.includes(legacyRunCoreCli)) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
   if (launcher.includes("--install-native | --install-flatpak")) failures.push("builder must not hardcode pipe-delimited direct action flags");
@@ -680,7 +713,6 @@ function findCheckedFiles(dir: string): string[] {
 function isAllowedSudoText(line: string): boolean {
   return [
     "with sudo or as root.",
-    "Install and Development Tool with sudo or as root.",
     "Do not run Canva Linux Builder powered by c420ui with sudo or as root.",
     "Do not run this tool with sudo or as root.",
     "Do not run the Tool with sudo or as root",

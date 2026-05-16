@@ -5,35 +5,25 @@ import path from "node:path";
 
 export const BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
 
-const DIRECT_ACTION_FLAGS = new Set([
-  "--install-native",
-  "--install-flatpak",
-  "--build-runtime",
-  "--build-dir",
-  "--validate",
-  "--validate-appimage",
-  "--validate-appimage-extract",
-  "--doctor",
-  "--bundle-flatpak",
-  "--bundle-appimage",
-  "--clean",
-  "--uninstall",
-  "--uninstall-native",
-  "--uninstall-flatpak",
-  "--reset-user-data",
-  "--purge",
-]);
+const BUILDER_GLOBAL_FLAGS = new Set(["-y", "--yes", "--force", "--dry-run"]);
 
-const BUILDER_OPTION_FLAGS = new Set(["-y", "--yes", "--force", "-h", "--help", "--dry-run"]);
+const RUNTIME_ONLY_VALUED_OPTIONS = [
+  "--debug",
+  "--credential-store",
+  "--gpu-backend",
+];
 
-const RUNTIME_ONLY_FLAGS = [
-  `--${"debug"}=1`,
-  `--${"debug"}=2`,
-  `--${"credential-store"}`,
-  `--${"gpu-backend"}`,
-  `--${"force-x11"}`,
-  `--${"force-wayland"}`,
-] as const;
+const RUNTIME_ONLY_BOOLEAN_OPTIONS = [
+  "--force-x11",
+  "--force-wayland",
+  "--disable-wayland-color-manager",
+];
+
+type NormalizedBuilderArgs = {
+  help: boolean;
+  bridgeArgs: string[];
+  hasBridgeAction: boolean;
+};
 
 const ROOT_LAUNCH_GUARD_MESSAGE = `Do not run ${BUILDER_TITLE} with sudo or as root.
 
@@ -69,23 +59,12 @@ Builder options:
   -h, --help
   --dry-run
 
-Builder actions:
-  --install-native
-  --install-flatpak
-  --build-runtime
-  --build-dir
-  --validate
-  --validate-appimage
-  --validate-appimage-extract
-  --doctor
-  --bundle-flatpak
-  --bundle-appimage
-  --clean
-  --uninstall
-  --uninstall-native
-  --uninstall-flatpak
-  --reset-user-data
-  --purge`;
+Direct actions:
+  Any action flag starting with -- is delegated to the c420ui CLI bridge.
+  The c420ui Action Registry decides whether an action is concrete, planned, or invalid.
+
+Runtime options belong to the compiled Canva Linux app:
+  canva-linux --help`;
 }
 
 function sessionLogPath(): string {
@@ -141,41 +120,53 @@ function selectEntrypoint(rootDir: string, kind: "ui" | "cli"): string {
 }
 
 function isRuntimeOnlyFlag(arg: string): boolean {
-  return RUNTIME_ONLY_FLAGS.some((flag) => arg === flag || arg.startsWith(`${flag}=`));
+  return (
+    RUNTIME_ONLY_BOOLEAN_OPTIONS.includes(arg) ||
+    RUNTIME_ONLY_VALUED_OPTIONS.some(
+      (option) => arg === option || arg.startsWith(`${option}=`),
+    )
+  );
 }
 
-function normalizeArgs(argv: string[]): { directAction?: string; cliArgs: string[]; help: boolean } {
-  const cliArgs: string[] = [];
-  let directAction: string | undefined;
+export function normalizeArgs(argv: string[]): NormalizedBuilderArgs {
+  const bridgeArgs: string[] = [];
   let help = false;
+  let hasBridgeAction = false;
 
   for (const arg of argv) {
     if (arg === "-h" || arg === "--help") {
       help = true;
       continue;
     }
+
     if (isRuntimeOnlyFlag(arg)) {
       throw new Error(`${arg} is a Canva Linux runtime option. Use canva-linux --help.`);
     }
-    if (DIRECT_ACTION_FLAGS.has(arg)) {
-      if (directAction) throw new Error("Only one direct action can be executed per invocation.");
-      directAction = arg;
-      cliArgs.push(arg);
+
+    if (arg === "--force") {
+      bridgeArgs.push("--yes");
       continue;
     }
-    if (BUILDER_OPTION_FLAGS.has(arg)) {
-      if (arg === "--force") cliArgs.push("--yes");
-      else cliArgs.push(arg);
+
+    if (BUILDER_GLOBAL_FLAGS.has(arg)) {
+      bridgeArgs.push(arg);
       continue;
     }
+
+    if (arg.startsWith("--")) {
+      hasBridgeAction = true;
+      bridgeArgs.push(arg);
+      continue;
+    }
+
     throw new Error(`Unsupported builder argument: ${arg}`);
   }
 
-  return { directAction, cliArgs, help };
+  return { help, bridgeArgs, hasBridgeAction };
 }
 
-function assertNonRoot(allowRootDryRun = false): void {
-  if (!allowRootDryRun && typeof process.getuid === "function" && process.getuid() === 0) {
+function assertNonRoot(): void {
+  if (typeof process.getuid === "function" && process.getuid() === 0) {
     throw new Error(ROOT_LAUNCH_GUARD_MESSAGE);
   }
 }
@@ -187,12 +178,16 @@ export function runCanvaLinuxC420UIBuilder(argv = process.argv.slice(2)): number
     return 0;
   }
 
-  assertNonRoot(Boolean(parsed.directAction && parsed.cliArgs.includes("--dry-run")));
+  if (!parsed.hasBridgeAction && parsed.bridgeArgs.length > 0) {
+    throw new Error("No direct action was provided.");
+  }
+
+  assertNonRoot();
   const rootDir = findProjectRoot(path.resolve(__dirname, ".."));
   const session = createSession(rootDir);
-  const kind = parsed.directAction ? "cli" : "ui";
+  const kind = parsed.hasBridgeAction ? "cli" : "ui";
   const entrypoint = selectEntrypoint(rootDir, kind);
-  const result = spawnSync(process.execPath, [entrypoint, ...parsed.cliArgs], {
+  const result = spawnSync(process.execPath, [entrypoint, ...parsed.bridgeArgs], {
     cwd: rootDir,
     env: session.env,
     stdio: "inherit",

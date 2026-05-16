@@ -79,3 +79,7 @@ Known limitations:
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
+
+Canva Linux Builder powered by c420ui does not maintain its own action allowlist;
+direct action flags are delegated to the c420ui CLI bridge and resolved by the Action Registry,
+while runtime flags belong to the compiled `canva-linux` app.

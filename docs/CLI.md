@@ -1,6 +1,7 @@
 # CLI Commands
 
-The `canva-linux-c420ui-builder` launcher provides access to the c420ui terminal interface and direct CLI actions.
+The `canva-linux-c420ui-builder` command is the **Canva Linux Builder powered by c420ui**.
+It provides access to the c420ui terminal interface and direct CLI actions.
 
 ## Usage
 
@@ -9,15 +10,14 @@ The `canva-linux-c420ui-builder` launcher provides access to the c420ui terminal
 ```
 
 - If no action is provided, the c420ui terminal interface starts.
-- If an action flag is provided, the command is executed directly.
-- The shell launcher only parses global flags.
-- Direct CLI actions are resolved by the c420ui CLI bridge from the project action registry.
+- If an action flag is provided, the builder delegates it to the c420ui CLI bridge.
+- The builder only parses global builder flags. It does not maintain its own action allowlist.
+- Direct CLI actions are resolved by the c420ui CLI bridge from the project Action Registry.
 - Direct CLI actions are routed through the c420ui CLI bridge and the c420ui Action Engine.
 - The launcher rebuilds the c420ui CLI bridge when relevant TypeScript sources, project adapter files or
   action registry metadata are newer than `.build/scripts/run-c420ui-cli.js`.
-- Only one direct action can be passed per invocation.
-- Only one direct action can be executed per invocation.
-- Do not run the Tool as root. When an operation needs administrator privileges,
+- The builder does not decide whether an action is concrete, planned, or invalid; the Action Registry and Action Engine own that policy.
+- Do not run Canva Linux Builder powered by c420ui as root. When an operation needs administrator privileges,
   Canva Linux asks for authentication only for that specific action.
 
 ## Global Options
@@ -92,18 +92,18 @@ The c420ui and scripts honor the following environment variables:
 | `CANVA_NATIVE_SCOPE` | Set to `system` (default) or `user` for Native actions. |
 | `CANVA_TOOL_SESSION_LOG` | Path to the tool session log file. |
 
-## Tool Settings
+## Builder Settings
 
 Application Settings are persistent c420ui state, not shell actions. They are stored
 in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, or
 `~/.config/canva-linux/tool-settings.json` when `XDG_CONFIG_HOME` is unset.
 
-Current Tool settings:
+Current builder settings:
 
-- `Enable general logs for Canva Linux Install and Development Tool`: shows
-  Tool-level startup, settings, detection and authentication events in the c420ui
-  logs panel. Action logs remain visible either way, and critical Tool warnings
-  or errors still appear when general Tool logs are disabled.
+- `Enable general logs for Canva Linux Builder powered by c420ui`: shows
+  Builder-level startup, settings, detection and authentication events in the c420ui
+  logs panel. Action logs remain visible either way, and critical builder warnings
+  or errors still appear when general builder logs are disabled.
 - `Manual text selection mode`: disables c420ui mouse capture globally so the terminal
   can perform native text selection while keyboard navigation remains active.
   Changes take effect immediately and are saved for the next c420ui start.

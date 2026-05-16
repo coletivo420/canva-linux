@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Hardened the Dev.5 builder/runtime split: `canva-linux-c420ui-builder` no longer maintains a direct-action allowlist,
+  delegates action flags to the c420ui CLI bridge and Action Registry, rejects runtime flag namespaces,
+  and never bypasses the root launch guard for dry-runs.
+- Tightened runtime CLI parsing so valued options require `--option=value`, conflicting X11/Wayland forcing is rejected,
+  `--force-wayland` requires a Wayland session, and the legacy `CANVA_DISABLE_GPU` fallback stays removed.
+
 ## [0.1.4-15.Dev.5] - 2026-05-16
 
 ### Added

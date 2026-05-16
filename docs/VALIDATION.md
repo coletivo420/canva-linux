@@ -73,3 +73,7 @@ Generated dependency source manifests may retain platform package names that con
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.
+
+Canva Linux Builder powered by c420ui does not maintain its own action allowlist;
+direct action flags are delegated to the c420ui CLI bridge and resolved by the Action Registry,
+while runtime flags belong to the compiled `canva-linux` app.

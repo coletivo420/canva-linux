@@ -165,3 +165,7 @@ c420ui Action Engine, and keep Canva Linux privilege validation in the root prov
 - Generic detection parsing and overview status normalization live in `packages/c420ui/src/detection.ts`.
 - Canva Linux installation probes and shell glue live in `scripts/canva-linux/detection/`.
 - Shared repository tooling under `scripts/core/` must not contain Canva Linux product detection logic.
+
+Canva Linux Builder powered by c420ui does not maintain its own action allowlist;
+direct action flags are delegated to the c420ui CLI bridge and resolved by the Action Registry,
+while runtime flags belong to the compiled `canva-linux` app.

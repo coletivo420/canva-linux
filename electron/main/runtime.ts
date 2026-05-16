@@ -142,6 +142,9 @@ function applyRuntimeGpuCli({
   if (runtimeCli.forceX11) {
     app.commandLine.appendSwitch("ozone-platform", "x11");
   } else if (runtimeCli.forceWayland) {
+    if (displayServer !== "wayland") {
+      throw new Error("--force-wayland was set, but no Wayland session was detected.");
+    }
     app.commandLine.appendSwitch("ozone-platform", "wayland");
   } else if (displayServer === "wayland") {
     app.commandLine.appendSwitch("ozone-platform", "wayland");
@@ -200,12 +203,6 @@ function configureLinuxRuntime({
       runtimeCli,
       detectedDisplayServer: detectRuntimeDisplayServer(),
     });
-
-    if (process.env.CANVA_DISABLE_GPU === "1") {
-      app.disableHardwareAcceleration?.();
-      app.commandLine.appendSwitch("disable-gpu");
-      app.commandLine.appendSwitch("disable-gpu-compositing");
-    }
   }
 
   if (shouldEnableCaptureVerboseLogging(runtimeCli.debugLevel)) {
