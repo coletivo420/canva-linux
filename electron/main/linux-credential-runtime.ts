@@ -247,7 +247,7 @@ function parseActivatableNames(
   output: string,
   serviceName: LinuxCredentialServiceName,
 ): boolean {
-  return output.includes(serviceName);
+  return output.includes("'" + serviceName + "'") || output.includes('"' + serviceName + '"');
 }
 
 function probeCredentialServiceWithTool(
