@@ -94,6 +94,18 @@ test("builder title and help separate c420ui builder from runtime canva-linux", 
   assert.match(source, /--force                       Alias for --yes/);
 });
 
+
+test("active builder docs use builder command wording", () => {
+  const readme = read("README.md");
+  assert.match(readme, /The builder command opens the c420ui terminal interface by default\./);
+  assert.doesNotMatch(readme, /The launcher opens/);
+
+  for (const file of ["README.md", "docs/CLI.md", "docs/DEVELOPMENT.md", "docs/RELEASE.md"] as const) {
+    const contents = read(file);
+    assert.doesNotMatch(contents, /shell launcher|Install and Development Tool|installer\/development launcher/);
+  }
+});
+
 test("builder help does not advertise runtime-only flags", () => {
   const source = read("scripts/c420ui-builder.ts");
   const helpBody = source.slice(source.indexOf("function builderHelp"), source.indexOf("function sessionLogPath"));

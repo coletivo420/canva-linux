@@ -1,7 +1,7 @@
 # Development
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-See [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
+For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
 
 ## Requirements
 
@@ -37,7 +37,8 @@ npm ci --include=dev
 
 - All maintained Node.js source code is TypeScript.
 - JavaScript is generated output only; do not add maintained `.js` files under `scripts/`, `test/`, configs, or Flathub helper script paths.
-- Shell remains shell for host operations such as launcher glue, native/Flatpak install, sudo, purge, XDG integration, and validation that must run before Node.
+- Shell remains shell for host operations such as builder command glue, native/Flatpak install, sudo, purge, XDG
+  integration, and validation that must run before Node.
 - New scripts must be TypeScript unless they are shell scripts for those host operations.
 - New tests must be TypeScript.
 - New configs should be TypeScript when tool-supported.
@@ -89,7 +90,7 @@ All workflow actions must be registered in:
 config/canva-linux/actions.json
 ```
 
-Do not add hardcoded action lists directly in c420ui or launcher code.
+Do not add hardcoded action lists directly in c420ui or builder command code.
 
 New direct action execution logic must be modeled in the c420ui action engine first. Project adapters provide concrete
 action execution; they must not duplicate generic planned-action, dry-run or exit-code behavior.
@@ -103,7 +104,7 @@ Recommended flow:
 1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.
 2. Add entry in `config/canva-linux/actions.json`.
 3. Run `npm run check:canva-linux`.
-4. Test direct CLI through the launcher: `./canva-linux-c420ui-builder <action-flag> --dry-run`.
+4. Test direct CLI through the public builder alias: `./canva-linux-c420ui-builder <action-flag> --dry-run`.
 5. Test the compiled c420ui CLI bridge when needed: `npm run c420ui:cli -- <action-flag> --dry-run`.
 6. Test c420ui interactively: `./canva-linux-c420ui-builder`.
 
@@ -154,7 +155,7 @@ Action execution is no longer validated through the legacy Action Runner.
 
 ## Direct CLI bridge development
 
-Direct launcher actions are built with `npm run build:scripts` and executed through
+Direct builder actions are built with `npm run build:scripts` and executed through
 `.build/scripts/run-c420ui-cli.js`. Validate direct actions with `./canva-linux-c420ui-builder <action-flag> --dry-run`
 or `npm run c420ui:cli -- <action-flag> --dry-run`. The concrete Canva Linux wiring lives in
 `scripts/c420ui-adapter/cli.ts`; reusable parsing and action execution live in

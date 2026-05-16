@@ -46,7 +46,7 @@ cd canva-linux
 ./canva-linux-c420ui-builder
 ```
 
-The launcher opens the c420ui terminal interface by default. Direct CLI flags are available for automation.
+The builder command opens the c420ui terminal interface by default. Direct CLI flags are available for automation.
 
 Run Canva Linux as a regular user. Privileged actions request administrator authentication only when needed.
 
@@ -65,7 +65,7 @@ configuration. Packaging commands depend on the required host tooling being inst
 
 ## Runtime CLI
 
-The compiled Canva Linux app owns runtime flags. The c420ui installer/development launcher
+The compiled Canva Linux app owns runtime flags. The public builder alias
 (`./canva-linux-c420ui-builder`) does not implement app runtime debug flags.
 
 ```bash

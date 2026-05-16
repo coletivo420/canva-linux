@@ -1,7 +1,7 @@
 # CLI Commands
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-See [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
+For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
 
 The `canva-linux-c420ui-builder` command is the **Canva Linux Builder powered by c420ui**.
 It provides access to the c420ui terminal interface and direct CLI actions.
@@ -17,7 +17,7 @@ It provides access to the c420ui terminal interface and direct CLI actions.
 - The builder only parses global builder flags. It does not maintain its own action allowlist.
 - Direct CLI actions are resolved by the c420ui CLI bridge from the project Action Registry.
 - Direct CLI actions are routed through the c420ui CLI bridge and the c420ui Action Engine.
-- The launcher rebuilds the c420ui CLI bridge when relevant TypeScript sources, project adapter files or
+- The builder command rebuilds the c420ui CLI bridge when relevant TypeScript sources, project adapter files or
   action registry metadata are newer than `.build/scripts/run-c420ui-cli.js`.
 - The builder does not decide whether an action is concrete, planned, or invalid; the Action Registry and Action Engine own that policy.
 - Do not run Canva Linux Builder powered by c420ui as root. When an operation needs administrator privileges,
@@ -32,7 +32,7 @@ It provides access to the c420ui terminal interface and direct CLI actions.
 | `-h, --help` | Show usage information. |
 | `--dry-run` | Resolve direct action metadata without executing command scripts. |
 
-`./canva-linux-c420ui-builder --help` is stable launcher help. The compiled bridge help
+`./canva-linux-c420ui-builder --help` is stable builder command help. The compiled bridge help
 (`node .build/scripts/run-c420ui-cli.js --help`) is dynamic and lists the
 action flags exposed by the active project bridge.
 
@@ -42,7 +42,7 @@ must be added deliberately to the generic parser before use.
 ## Actions
 
 Direct actions are resolved through the shared Action Registry (`config/canva-linux/actions.json`)
-by the c420ui CLI bridge; the launcher does not maintain a separate executable
+by the c420ui CLI bridge; the builder command does not maintain a separate executable
 action flag list.
 Planned actions are shown in c420ui so users can see future packaging targets,
 but they are not executable. Running a planned action without `--dry-run` exits
@@ -117,7 +117,7 @@ Current builder settings:
 ## Compiled Runtime CLI
 
 The compiled `canva-linux` Electron app owns runtime flags. The `./canva-linux-c420ui-builder` c420ui
-installer/development launcher does not own or implement app runtime debug flags.
+public builder alias does not own or implement app runtime debug flags.
 
 ```bash
 canva-linux --help

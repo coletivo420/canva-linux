@@ -309,6 +309,7 @@ function validateInternalBuilderSource(rootDir: string, failures: string[]): voi
     "hasBridgeAction",
     'arg.startsWith("--")',
     "--force                       Alias for --yes",
+    "selectEntrypoint",
   ] as const) {
     if (!source.includes(fragment)) failures.push(`${relativePath}: missing ${fragment}`);
   }
@@ -323,9 +324,20 @@ function validateInternalBuilderSource(rootDir: string, failures: string[]): voi
   ] as const) {
     if (source.includes(forbidden)) failures.push(`${relativePath}: must not contain ${forbidden}`);
   }
+
+  const legacyRunCoreCli = "run-core-entry.sh " + "action-runner" + " --cli";
+  if (source.includes(legacyRunCoreCli)) failures.push("builder direct actions must not call the legacy Action Runner CLI");
 }
 
 function validateRuntimeEnvFallbacksRemoved(rootDir: string, failures: string[]): void {
+  const runtimeCliSource = readOptionalProjectFile(rootDir, "electron/main/runtime-cli.ts") ?? "";
+  if (!runtimeCliSource.includes('if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE)')) {
+    failures.push("runtime-cli must reject --debug without an equals value");
+  }
+  if (!runtimeCliSource.includes('arg.startsWith(`${option}=`)')) {
+    failures.push("runtime-cli valued option matching must require --option=value");
+  }
+
   const files = [
     "electron/shared/debug.ts",
     "electron/main/runtime.ts",
@@ -422,11 +434,12 @@ function validateLegacyBuilderPathReferences(rootDir: string, failures: string[]
   }
 }
 
-const checkAdapterContractRunner = (() => {
-function main(): number {
-  const rootDir = process.cwd();
-  const adapter = createCanvaLinuxC420UIAdapter(rootDir);
-  const failures: string[] = [];
+
+function validateAdapterProjectContract(
+  rootDir: string,
+  adapter: ReturnType<typeof createCanvaLinuxC420UIAdapter>,
+  failures: string[],
+): void {
   const project = adapter.projectInfo();
   const capabilities = adapter.loadCapabilities();
   if (adapter.id !== "canva-linux") failures.push("adapter id must identify the project adapter");
@@ -440,41 +453,8 @@ function main(): number {
   if (typeof adapter.runAction !== "function") failures.push("adapter must implement runAction");
   if (typeof adapter.overviewStatus !== "function") failures.push("adapter must implement overviewStatus");
 
-  const cliBridgePath = path.join(rootDir, "scripts/c420ui-adapter/cli.ts");
-  const cliEntrypointPath = path.join(rootDir, "scripts/run-c420ui-cli.ts");
-  const launcherPath = path.join(rootDir, "scripts/c420ui-builder.ts");
-  const publicBuilderPath = path.join(rootDir, "canva-linux-c420ui-builder");
-  if (!fs.existsSync(launcherPath)) failures.push("scripts/c420ui-builder.ts must exist");
-  if (fs.existsSync(path.join(rootDir, "scripts/" + "canva-linux-c420ui-builder.ts"))) {
-    failures.push("scripts/" + "canva-linux-c420ui-builder.ts must not exist");
-  }
-  if (!fs.existsSync(publicBuilderPath)) {
-    failures.push("canva-linux-c420ui-builder wrapper must exist");
-  } else {
-    const mode = fs.statSync(publicBuilderPath).mode;
-    if ((mode & 0o111) === 0) failures.push("canva-linux-c420ui-builder wrapper must be executable");
-    const wrapper = fs.readFileSync(publicBuilderPath, "utf8");
-    if (!wrapper.includes("bootstrap/c420ui/c420ui-builder.cjs")) failures.push("canva-linux-c420ui-builder wrapper must call c420ui-builder.cjs");
-    if (!wrapper.includes(".build/scripts/c420ui-builder.js")) failures.push("canva-linux-c420ui-builder wrapper must fallback to .build/scripts/c420ui-builder.js");
-    for (const forbidden of ["canva-linux-c420ui-builder" + ".cjs", ".build/scripts/" + "canva-linux-c420ui-builder.js"] as const) {
-      if (wrapper.includes(forbidden)) failures.push(`canva-linux-c420ui-builder wrapper must not reference ${forbidden}`);
-    }
-  }
-  if (fs.existsSync(path.join(rootDir, "canva-linux" + ".sh"))) failures.push("canva-linux" + ".sh must not exist");
-  if (!fs.existsSync(path.join(rootDir, "bootstrap/c420ui/c420ui-builder.cjs"))) failures.push("bootstrap/c420ui/c420ui-builder.cjs must exist");
-  if (fs.existsSync(path.join(rootDir, "bootstrap/c420ui/" + "canva-linux-c420ui-builder.cjs"))) {
-    failures.push("bootstrap/c420ui/" + "canva-linux-c420ui-builder.cjs must not exist");
-  }
-  const runSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/run.ts"), "utf8");
-  if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
-  if (!fs.existsSync(cliEntrypointPath)) failures.push("Canva Linux c420ui CLI entrypoint must exist");
-  const cliBridge = fs.readFileSync(cliBridgePath, "utf8");
-  const bridgeSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/bridge.ts"), "utf8");
-  if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
-  if (!cliBridge.includes("runC420UICli")) failures.push("scripts/c420ui-adapter/cli.ts must route direct actions through runC420UICli");
-  if (!bridgeSource.includes("createC420UIActionEngine")) failures.push("scripts/c420ui-adapter/bridge.ts must route artifact actions through createC420UIActionEngine");
-  if (!bridgeSource.includes("runC420UIArtifactWorkflow")) failures.push("scripts/c420ui-adapter/bridge.ts must use runC420UIArtifactWorkflow");
-  const adapterSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/adapter.ts"), "utf8");
+  const runSource = readOptionalProjectFile(rootDir, "scripts/c420ui-adapter/run.ts") ?? "";
+  const adapterSource = readOptionalProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts") ?? "";
   const developmentAdapterPath = "scripts/c420ui-adapter/development.ts";
   const actionAdapterPath = "scripts/c420ui-adapter/actions.ts";
   const developmentConfigPath = "config/canva-linux/development.json";
@@ -487,9 +467,7 @@ function main(): number {
   if (!fs.existsSync(path.join(rootDir, actionAdapterPath))) {
     failures.push(`${actionAdapterPath}: shared action descriptor loader is required`);
   }
-  const developmentSource = fs.existsSync(path.join(rootDir, developmentAdapterPath))
-    ? fs.readFileSync(path.join(rootDir, developmentAdapterPath), "utf8")
-    : "";
+  const developmentSource = readOptionalProjectFile(rootDir, developmentAdapterPath) ?? "";
   if (!adapterSource.includes("loadCanvaLinuxDevelopmentWorkflows")) {
     failures.push("scripts/c420ui-adapter/adapter.ts must use loadCanvaLinuxDevelopmentWorkflows");
   }
@@ -562,45 +540,37 @@ function main(): number {
       failures.push(`adapter must not contain sudo/password/root prompt logic: ${forbidden}`);
     }
   }
-  const launcher = fs.readFileSync(launcherPath, "utf8");
-  if (launcher.includes("DIRECT_ACTION_FLAGS")) failures.push("builder must not contain a direct action allowlist");
-  if (!launcher.includes("bootstrap/c420ui/run-c420ui-cli.cjs")) failures.push("builder must call the c420ui CLI bootstrap bundle for direct actions");
-  if (!launcher.includes("hasBridgeAction") || !launcher.includes('arg.startsWith("--")')) {
-    failures.push("builder must delegate unknown action flags to the c420ui CLI bridge");
-  }
-  for (const fragment of ["RUNTIME_ONLY_VALUED_OPTIONS", "RUNTIME_ONLY_BOOLEAN_OPTIONS", "isRuntimeOnlyFlag"] as const) {
-    if (!launcher.includes(fragment)) failures.push(`builder must reject runtime flag namespaces: ${fragment}`);
-  }
-  if (launcher.includes("allowRootDryRun") || launcher.includes("parsed.directAction") || launcher.includes("Boolean(parsed")) {
-    failures.push("builder must never allow a root dry-run bypass");
-  }
-  const runtimeCliSource = fs.readFileSync(path.join(rootDir, "electron/main/runtime-cli.ts"), "utf8");
-  if (!runtimeCliSource.includes('if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE)')) {
-    failures.push("runtime-cli must reject --debug without an equals value");
-  }
-  if (!runtimeCliSource.includes('arg.startsWith(`${option}=`)')) {
-    failures.push("runtime-cli valued option matching must require --option=value");
-  }
-  const runtimeSource = fs.readFileSync(path.join(rootDir, "electron/main/runtime.ts"), "utf8");
-  for (const fragment of [
-    "CANVA_DISABLE_GPU",
-    "CANVA_GPU_BACKEND",
-    "CANVA_FORCE_X11",
-    "CANVA_FORCE_WAYLAND",
-    "CANVA_DISABLE_WAYLAND_COLOR_MANAGER",
-  ] as const) {
-    if (runtimeSource.includes(fragment)) {
-      failures.push(`runtime.ts must not contain legacy GPU/display env fallback ${fragment}`);
-    }
-  }
-  const docsCli = fs.readFileSync(path.join(rootDir, "docs/CLI.md"), "utf8");
-  if (docsCli.includes("shell launcher") || docsCli.includes("Install and Development Tool")) {
-    failures.push("docs/CLI.md must describe Canva Linux Builder powered by c420ui, not legacy launcher names");
-  }
-  const legacyRunCoreCli = "run-core-entry.sh " + "action-runner" + " --cli";
-  if (launcher.includes(legacyRunCoreCli)) failures.push("launcher direct actions must not call the legacy Action Runner CLI");
-  if (launcher.includes("--install-native | --install-flatpak")) failures.push("builder must not hardcode pipe-delimited direct action flags");
-  if (!launcher.includes("selectEntrypoint")) failures.push("builder must select the c420ui CLI bootstrap entrypoint conditionally");
+}
+
+function validateC420UIBridgeContract(rootDir: string, failures: string[]): void {
+  const cliBridgePath = "scripts/c420ui-adapter/cli.ts";
+  const cliEntrypointPath = "scripts/run-c420ui-cli.ts";
+  if (!fs.existsSync(path.join(rootDir, cliBridgePath))) failures.push("Canva Linux c420ui CLI bridge must exist");
+  if (!fs.existsSync(path.join(rootDir, cliEntrypointPath))) failures.push("Canva Linux c420ui CLI entrypoint must exist");
+
+  const cliBridge = readOptionalProjectFile(rootDir, cliBridgePath) ?? "";
+  const bridgeSource = readOptionalProjectFile(rootDir, "scripts/c420ui-adapter/bridge.ts") ?? "";
+  if (!cliBridge.includes("emit:")) failures.push("Canva Linux c420ui CLI must forward emitted action logs");
+  if (!cliBridge.includes("runC420UICli")) failures.push("scripts/c420ui-adapter/cli.ts must route direct actions through runC420UICli");
+  if (!bridgeSource.includes("createC420UIActionEngine")) failures.push("scripts/c420ui-adapter/bridge.ts must route artifact actions through createC420UIActionEngine");
+  if (!bridgeSource.includes("runC420UIArtifactWorkflow")) failures.push("scripts/c420ui-adapter/bridge.ts must use runC420UIArtifactWorkflow");
+}
+
+const checkAdapterContractRunner = (() => {
+function main(): number {
+  const rootDir = process.cwd();
+  const adapter = createCanvaLinuxC420UIAdapter(rootDir);
+  const failures: string[] = [];
+
+  validateAdapterProjectContract(rootDir, adapter, failures);
+  validateC420UIBridgeContract(rootDir, failures);
+  validateBuilderArtifactsExist(rootDir, failures);
+  validateLegacyBuilderArtifactsRemoved(rootDir, failures);
+  validatePublicBuilderWrapper(rootDir, failures);
+  validateInternalBuilderSource(rootDir, failures);
+  validateRuntimeEnvFallbacksRemoved(rootDir, failures);
+  validateBuilderAliasDocs(rootDir, failures);
+  validateLegacyBuilderPathReferences(rootDir, failures);
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-contracts] adapter OK");
