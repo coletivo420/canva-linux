@@ -37,10 +37,15 @@ function selectLinuxPasswordStore(
     hint.split(" ").some((token) => token === "kde" || token === "plasma"),
   );
 
+  let preferredStore: LinuxPasswordStorePreference["preferredStore"] = "gnome-libsecret";
+  if (isKde) {
+    preferredStore = env.KDE_SESSION_VERSION === "5" ? "kwallet5" : "kwallet6";
+  }
+
   return {
     desktop,
     isKde,
-    preferredStore: isKde ? "kwallet6" : "gnome-libsecret",
+    preferredStore,
   };
 }
 
