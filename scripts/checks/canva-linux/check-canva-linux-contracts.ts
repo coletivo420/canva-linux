@@ -453,8 +453,8 @@ function validateAdapterProjectContract(
   if (typeof adapter.runAction !== "function") failures.push("adapter must implement runAction");
   if (typeof adapter.overviewStatus !== "function") failures.push("adapter must implement overviewStatus");
 
-  const runSource = readProjectFile(rootDir, "scripts/c420ui-adapter/run.ts");
-  const adapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
+  const runSource = readOptionalProjectFile(rootDir, "scripts/c420ui-adapter/run.ts") ?? "";
+  const adapterSource = readOptionalProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts") ?? "";
   const developmentAdapterPath = "scripts/c420ui-adapter/development.ts";
   const actionAdapterPath = "scripts/c420ui-adapter/actions.ts";
   const developmentConfigPath = "config/canva-linux/development.json";
