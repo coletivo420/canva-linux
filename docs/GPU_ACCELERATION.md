@@ -4,11 +4,11 @@ Canva Linux 1.4.11-dev.4 enables GPU acceleration by default when a DRI render n
 
 ## Runtime modes
 
-- `CANVA_GPU_BACKEND=auto`: default accelerated mode without forcing ANGLE/OpenGL.
-- `CANVA_GPU_BACKEND=opengl`: force ANGLE/OpenGL.
-- `CANVA_GPU_BACKEND=vulkan`: experimental Vulkan/ANGLE mode.
-- `CANVA_GPU_BACKEND=software`: explicit software fallback.
-- `CANVA_GPU_BACKEND=force`: accelerated test mode with GPU blocklist ignored.
+- `--gpu-backend=auto`: default accelerated mode without forcing ANGLE/OpenGL.
+- `--gpu-backend=opengl`: force ANGLE/OpenGL.
+- `--gpu-backend=vulkan`: experimental Vulkan/ANGLE mode.
+- `--gpu-backend=software`: explicit software fallback.
+- `--gpu-backend=force`: accelerated test mode with GPU blocklist ignored.
 
 ## GPU logs
 
@@ -21,7 +21,7 @@ logs/current.log
 Use:
 
 ```bash
-CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+flatpak run io.github.coletivo420.canva-linux --debug=1
 ```
 
 Expected GPU entries:
@@ -30,16 +30,16 @@ Expected GPU entries:
 - `runtime-env backend=`
 - `feature-status acceleration=`
 
-Module-specific debug selection, such as `CANVA_DEBUG=gpu`, is no longer supported.
+Module-specific debug selection, such as `--debug=gpu`, is no longer supported.
 See `docs/DEBUGGING.md`.
 
 ## Backend checks
 
 ```bash
-CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=auto --debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=opengl --debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=vulkan --debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=software --debug=1
 ```
 
 ## TypeScript validation

@@ -14,4 +14,4 @@ Actions=X11Fallback;
 
 [Desktop Action X11Fallback]
 Name=Canva Linux (X11 fallback)
-Exec=env CANVA_FORCE_X11=1 run.sh
+Exec=run.sh --force-x11

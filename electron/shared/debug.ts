@@ -1,31 +1,8 @@
 type DebugLevel = 0 | 1 | 2;
 type DebugEmitter = (category: string, args: unknown[]) => void;
 
-function getDebugLevel(): DebugLevel {
-  const explicitLevel = String(process?.env?.CANVA_DEBUG_LEVEL || "").trim();
-  if (explicitLevel === "1" || explicitLevel === "2") {
-    return Number(explicitLevel) as 1 | 2;
-  }
-
-  const raw = String(process?.env?.CANVA_DEBUG || "")
-    .trim()
-    .toLowerCase();
-  if (raw === "1") return 1;
-  if (raw === "2") return 2;
-
-  return 0;
-}
-
-function isDebugEnabled(): boolean {
-  return getDebugLevel() > 0;
-}
-
-function shouldLogDebugCategory(): boolean {
-  return isDebugEnabled();
-}
-
-function isDebugCategoryEnabled(): boolean {
-  return isDebugEnabled();
+function normalizeDebugLevel(value: unknown): DebugLevel {
+  return value === 1 || value === 2 ? value : 0;
 }
 
 function normalizeDebugCategory(category = "app"): string {
@@ -40,11 +17,33 @@ function normalizeDebugCategory(category = "app"): string {
   return raw || "app";
 }
 
-function createDebugTools({ emit }: { emit: DebugEmitter }) {
-  const debugLevel = getDebugLevel();
+function createDebugTools({
+  emit,
+  debugLevel,
+}: {
+  emit: DebugEmitter;
+  debugLevel: DebugLevel;
+}) {
+  const normalizedDebugLevel = normalizeDebugLevel(debugLevel);
+
+  function getDebugLevel(): DebugLevel {
+    return normalizedDebugLevel;
+  }
 
   function debugEnabled(): boolean {
-    return debugLevel > 0;
+    return normalizedDebugLevel > 0;
+  }
+
+  function isDebugEnabled(): boolean {
+    return debugEnabled();
+  }
+
+  function shouldLogDebugCategory(): boolean {
+    return debugEnabled();
+  }
+
+  function isDebugCategoryEnabled(): boolean {
+    return debugEnabled();
   }
 
   function debugLog(category: string, ...args: unknown[]): boolean {
@@ -59,8 +58,8 @@ function createDebugTools({ emit }: { emit: DebugEmitter }) {
   }
 
   return {
-    debugLevel,
-    debugSpec: String(debugLevel),
+    debugLevel: normalizedDebugLevel,
+    debugSpec: String(normalizedDebugLevel),
     debugEnabled,
     debugLog,
     getDebugLevel,
@@ -71,20 +70,10 @@ function createDebugTools({ emit }: { emit: DebugEmitter }) {
   };
 }
 
-export {
-  createDebugTools,
-  getDebugLevel,
-  isDebugEnabled,
-  isDebugCategoryEnabled,
-  normalizeDebugCategory,
-  shouldLogDebugCategory,
-};
+export { createDebugTools, normalizeDebugCategory, normalizeDebugLevel };
 
 module.exports = {
   createDebugTools,
-  getDebugLevel,
-  isDebugEnabled,
-  isDebugCategoryEnabled,
   normalizeDebugCategory,
-  shouldLogDebugCategory,
+  normalizeDebugLevel,
 };

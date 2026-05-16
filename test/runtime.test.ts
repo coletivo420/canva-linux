@@ -21,47 +21,16 @@ const {
 const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
 
-/**
- * @param {{ CANVA_DEBUG?: string, CANVA_DEBUG_LEVEL?: string }} env
- * @param {() => void} fn
- */
-function withDebugEnv(env, fn) {
-  const previousDebug = process.env.CANVA_DEBUG;
-  const previousLevel = process.env.CANVA_DEBUG_LEVEL;
-  try {
-    if ("CANVA_DEBUG" in env) process.env.CANVA_DEBUG = env.CANVA_DEBUG;
-    else delete process.env.CANVA_DEBUG;
-
-    if ("CANVA_DEBUG_LEVEL" in env)
-      process.env.CANVA_DEBUG_LEVEL = env.CANVA_DEBUG_LEVEL;
-    else delete process.env.CANVA_DEBUG_LEVEL;
-
-    fn();
-  } finally {
-    if (previousDebug === undefined) delete process.env.CANVA_DEBUG;
-    else process.env.CANVA_DEBUG = previousDebug;
-
-    if (previousLevel === undefined) delete process.env.CANVA_DEBUG_LEVEL;
-    else process.env.CANVA_DEBUG_LEVEL = previousLevel;
-  }
-}
-
-test("CANVA_DEBUG=1 does not enable Chromium capture verbose logging", () => {
-  withDebugEnv({ CANVA_DEBUG: "1" }, () => {
-    assert.equal(shouldEnableCaptureVerboseLogging(), false);
-  });
+test("debugLevel=1 does not enable Chromium capture verbose logging", () => {
+  assert.equal(shouldEnableCaptureVerboseLogging(1), false);
 });
 
-test("CANVA_DEBUG=2 enables Chromium capture verbose logging", () => {
-  withDebugEnv({ CANVA_DEBUG: "2" }, () => {
-    assert.equal(shouldEnableCaptureVerboseLogging(), true);
-  });
+test("debugLevel=2 enables Chromium capture verbose logging", () => {
+  assert.equal(shouldEnableCaptureVerboseLogging(2), true);
 });
 
-test("module-specific debug values do not enable verbose logging", () => {
-  withDebugEnv({ CANVA_DEBUG: "gpu" }, () => {
-    assert.equal(shouldEnableCaptureVerboseLogging(), false);
-  });
+test("debugLevel=0 keeps Chromium capture verbose logging disabled", () => {
+  assert.equal(shouldEnableCaptureVerboseLogging(0), false);
 });
 
 
@@ -206,8 +175,8 @@ const {
 
 function credentialProbeRunner(statusByService) {
   return (command, args) => {
-    if (command === "gdbus" && args[0] === "--version") {
-      return { status: 0, stdout: "2.80.0" };
+    if (command === "gdbus" && args[0] === "help") {
+      return { status: 0, stdout: "Usage: gdbus" };
     }
 
     if (command !== "gdbus") {
@@ -235,12 +204,13 @@ function credentialProbeRunner(statusByService) {
   };
 }
 
-function selectWithProbe(env, statusByService) {
+function selectWithProbe(env, statusByService, options = {}) {
   return selectLinuxPasswordStore(
     { DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/1000/bus", ...env },
     {
       fileExists: () => false,
       probeRunner: credentialProbeRunner(statusByService),
+      ...options,
     },
   );
 }
@@ -250,6 +220,39 @@ const SERVICES = {
   kwallet6: "org.kde.kwalletd6",
   kwallet5: "org.kde.kwalletd5",
 };
+
+
+test("gdbus availability uses help and gdbus-only probes work", () => {
+  const calls = [];
+  const plan = selectLinuxPasswordStore(
+    {
+      DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/1000/bus",
+      XDG_CURRENT_DESKTOP: "GNOME",
+    },
+    {
+      fileExists: () => false,
+      probeRunner(command, args) {
+        calls.push([command, args]);
+        if (command === "gdbus" && args[0] === "help") {
+          return { status: 0, stdout: "Usage: gdbus" };
+        }
+        if (command === "busctl") return { status: 127, stdout: "" };
+        const method = args[args.indexOf("--method") + 1];
+        if (method === "org.freedesktop.DBus.NameHasOwner") {
+          return { status: 0, stdout: args.at(-1) === SERVICES.secrets ? "(true,)" : "(false,)" };
+        }
+        if (method === "org.freedesktop.DBus.ListActivatableNames") {
+          return { status: 0, stdout: "org.kde.kwalletd6 org.kde.kwalletd5" };
+        }
+        return { status: 1, stdout: "" };
+      },
+    },
+  );
+
+  assert.equal(plan.selectedStore, "gnome-libsecret");
+  assert.deepEqual(calls[0], ["gdbus", ["help"]]);
+  assert.equal(calls.some(([command]) => command === "busctl"), false);
+});
 
 test("KDE Plasma 6 selects kwallet6 when KWallet 6 is available", () => {
   const plan = selectWithProbe(
@@ -443,29 +446,30 @@ test("missing D-Bus probe support keeps desktop-preferred candidate order", () =
   assert.equal(plan.candidates[0].probeStatus, "unknown");
 });
 
-test("safe password-store overrides are accepted", () => {
+test("CLI credential-store overrides are accepted", () => {
   for (const override of ["kwallet5", "kwallet6", "gnome-libsecret"]) {
     const plan = selectWithProbe(
-      { CANVA_LINUX_PASSWORD_STORE: override, XDG_CURRENT_DESKTOP: "GNOME" },
+      { XDG_CURRENT_DESKTOP: "GNOME" },
       { [SERVICES.secrets]: "available" },
+      { credentialStore: override },
     );
 
     assert.equal(plan.selectedStore, override);
   }
 });
 
-test("unsafe password-store overrides are rejected and automatic fallback is used", () => {
+test("unsafe CLI credential-store overrides are rejected and automatic fallback is used", () => {
   for (const override of ["basic_text", "basic", "unknown"]) {
     const warnings = [];
     const plan = selectLinuxPasswordStore(
       {
-        CANVA_LINUX_PASSWORD_STORE: override,
         DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/user/1000/bus",
         XDG_CURRENT_DESKTOP: "KDE",
       },
       {
         fileExists: () => false,
         probeRunner: credentialProbeRunner({ [SERVICES.kwallet6]: "available" }),
+        credentialStore: override,
         logger: {
           info() {},
           warn(message) {

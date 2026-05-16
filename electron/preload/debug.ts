@@ -53,7 +53,9 @@ function createPreloadDebug({ source = "preload" }) {
     }
   }
 
+  const debugArg = process.argv.find((arg) => arg === "--debug=1" || arg === "--debug=2");
   const { debugEnabled, debugLog } = createDebugTools({
+    debugLevel: debugArg === "--debug=2" ? 2 : debugArg === "--debug=1" ? 1 : 0,
     emit(category, args) {
       routeDebug(category, ...args);
     },

@@ -7,6 +7,12 @@ Canva Linux is the dependent desktop-wrapper project that consumes c420ui as its
 generic terminal and action engine. Canva Linux owns product behavior and
 project data; c420ui owns reusable orchestration.
 
+## Runtime CLI ownership
+
+The compiled `canva-linux` Electron runtime owns app flags such as `--help`, `--version`, `--debug=1`, `--debug=2`, `--credential-store=...`, and display/GPU runtime controls. `canva-linux.sh` remains the c420ui installer/development launcher and must not implement app runtime debug flags.
+
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The old `CANVA_DEBUG` environment path was removed.
+
 ## Controls
 
 - Electron runtime: main, preload, UI asset, browser, OAuth, tab, upload, and CL-EyeDropper
@@ -55,7 +61,7 @@ The `canva-linux.sh` launcher contains a Stage 0 bootstrap only to make c420ui e
 - Do not duplicate c420ui Action Engine policy in the Canva Linux adapter.
 - Do not alter runtime Electron behavior as part of documentation or release
   metadata work.
-- Do not alter OAuth, `CANVA_DEBUG`, AppImage/Flatpak behavior, artifact names,
+- Do not alter OAuth, runtime CLI diagnostics, AppImage/Flatpak behavior, artifact names,
   or architecture naming.
 
 ## Stage 0 c420ui bootstrap

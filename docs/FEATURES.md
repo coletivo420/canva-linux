@@ -20,7 +20,7 @@ Protected features:
 - custom EyeDropper compatibility layer
 - GPU acceleration and diagnostics
 - central logging in `logs/current.log`
-- `CANVA_DEBUG=1` and `CANVA_DEBUG=2`
+- runtime CLI diagnostics with `canva-linux --debug=1` and `canva-linux --debug=2`
 - JSON/package preflight validation
 
 Do not remove feature-specific code because it looks verbose.

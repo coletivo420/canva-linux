@@ -1,4 +1,5 @@
 import { configureLinuxNativeCredentialStore } from "./linux-credential-runtime";
+import type { CanvaLinuxRuntimeCliOptions, RuntimeDebugLevel } from "./runtime-cli";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type CommandLineLike = {
@@ -91,11 +92,23 @@ function configureLinuxRuntime({
   appId,
   wmClass,
   path,
+  runtimeCli = {
+    help: false,
+    version: false,
+    debugLevel: 0,
+    credentialStore: "auto",
+    gpuBackend: "auto",
+    forceX11: false,
+    forceWayland: false,
+    disableWaylandColorManager: false,
+    passthroughArgs: [],
+  },
 }: {
   app: ElectronAppLike;
   appId: string;
   wmClass: string;
   path: PathLike;
+  runtimeCli?: CanvaLinuxRuntimeCliOptions;
 }): void {
   app.setName?.("Canva Linux");
   app.commandLine.appendSwitch("disable-component-update");
@@ -109,7 +122,11 @@ function configureLinuxRuntime({
 
   if (process.platform === "linux") {
     app.setDesktopName?.(`${appId}.desktop`);
-    configureLinuxNativeCredentialStore({ app });
+    configureLinuxNativeCredentialStore({
+      app,
+      credentialStore: runtimeCli.credentialStore,
+      debugLevel: runtimeCli.debugLevel,
+    });
     app.commandLine.appendSwitch("class", wmClass);
     app.commandLine.appendSwitch("font-render-hinting", "medium");
     app.commandLine.appendSwitch("enable-font-antialiasing");
@@ -121,7 +138,7 @@ function configureLinuxRuntime({
     }
   }
 
-  if (shouldEnableCaptureVerboseLogging()) {
+  if (shouldEnableCaptureVerboseLogging(runtimeCli.debugLevel)) {
     app.commandLine.appendSwitch("enable-logging");
     app.commandLine.appendSwitch("v", "1");
     app.commandLine.appendSwitch(
@@ -138,12 +155,10 @@ function configureLinuxRuntime({
   app.setPath("sessionData", path.join(app.getPath("userData"), "session"));
 }
 
-function shouldEnableCaptureVerboseLogging(): boolean {
-  const level = String(process.env.CANVA_DEBUG_LEVEL || "").trim();
-
-  if (level === "2") return true;
-
-  return String(process.env.CANVA_DEBUG || "").trim() === "2";
+function shouldEnableCaptureVerboseLogging(
+  debugLevel: RuntimeDebugLevel,
+): boolean {
+  return debugLevel === 2;
 }
 
 async function flushSession(ses: SessionLike): Promise<void> {

@@ -67,7 +67,7 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-15.Dev.3";
+const currentReleaseVersion = "0.1.4-15.Dev.4";
 const currentReleaseDate = "2026-05-16";
 const previousReleaseVersion = "0.1.4-12";
 const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+(?:\.Dev\.\d+)?$/;
@@ -2020,6 +2020,25 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
   }
 }
 
+
+function checkRuntimeCliDebugGuardrails(rootDir: string, failures: string[]): void {
+  const forbidden: Array<{ file: string; pattern: string; message: string }> = [
+    { file: "electron/shared/debug.ts", pattern: "CANVA_DEBUG", message: "must not read legacy runtime debug env" },
+    { file: "electron/shared/debug.ts", pattern: "CANVA_DEBUG_LEVEL", message: "must not read legacy runtime debug level env" },
+    { file: "electron/main/runtime.ts", pattern: "CANVA_DEBUG", message: "must not read legacy runtime debug env" },
+    { file: "run.sh", pattern: "CANVA_DEBUG", message: "must not export or interpret legacy runtime debug env" },
+    { file: "canva-linux.sh", pattern: "--debug=1", message: "must not implement runtime debug flags" },
+    { file: "canva-linux.sh", pattern: "--debug=2", message: "must not implement runtime debug flags" },
+  ];
+
+  for (const item of forbidden) {
+    const contents = readOptionalProjectFile(rootDir, item.file);
+    if (contents?.includes(item.pattern)) {
+      failures.push(`${item.file}: ${item.message}: ${item.pattern}`);
+    }
+  }
+}
+
 function checkShellActionIds(failures: string[]): void {
   const rootDir = findProjectRoot();
   const actions = loadCanvaLinuxActions(rootDir);
@@ -2049,6 +2068,7 @@ function checkShellActionIds(failures: string[]): void {
 
 export function main(): number {
   const failures: string[] = [];
+  const rootDir = findProjectRoot();
 
   checkAdapterContract(failures);
   checkRootProviderContract(failures);
@@ -2073,6 +2093,7 @@ export function main(): number {
   checkReleaseContract(failures);
   checkDevelopmentTaskRecipes(failures);
   checkLauncherBootstrapDependencyPolicy(failures);
+  checkRuntimeCliDebugGuardrails(rootDir, failures);
   checkShellActionIds(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));

@@ -3,29 +3,48 @@
 
 export CHROME_DESKTOP=io.github.coletivo420.canva-linux.desktop
 
-canva_debug_level() {
-  case "${CANVA_DEBUG:-}" in
-    ""|0|false|FALSE)
-      echo "0"
-      ;;
-    1)
-      echo "1"
-      ;;
-    2)
-      echo "2"
-      ;;
-    *)
-      echo "canva-linux: warning: unsupported CANVA_DEBUG='${CANVA_DEBUG}'. Use CANVA_DEBUG=1 or CANVA_DEBUG=2." >&2
-      echo "0"
-      ;;
-  esac
+runtime_debug_level() {
+  level="0"
+  for arg in "$@"; do
+    case "$arg" in
+      --debug=1) level="1" ;;
+      --debug=2) level="2" ;;
+      --debug|--debug=*)
+        echo "canva-linux: error: Unsupported --debug value. Use --debug=1 or --debug=2." >&2
+        exit 1
+        ;;
+    esac
+  done
+  echo "$level"
 }
 
-CANVA_DEBUG_LEVEL="$(canva_debug_level)"
-export CANVA_DEBUG_LEVEL
+runtime_gpu_backend() {
+  backend="auto"
+  for arg in "$@"; do
+    case "$arg" in
+      --gpu-backend=*) backend="${arg#--gpu-backend=}" ;;
+      --gpu-backend)
+        echo "canva-linux: error: unsupported --gpu-backend value" >&2
+        exit 1
+        ;;
+    esac
+  done
+  echo "$backend"
+}
+
+has_runtime_flag() {
+  needle="$1"
+  shift
+  for arg in "$@"; do
+    [ "$arg" = "$needle" ] && return 0
+  done
+  return 1
+}
+
+RUNTIME_DEBUG_LEVEL="$(runtime_debug_level "$@")"
 
 debug_enabled() {
-  [ "${CANVA_DEBUG_LEVEL:-0}" = "1" ] || [ "${CANVA_DEBUG_LEVEL:-0}" = "2" ]
+  [ "${RUNTIME_DEBUG_LEVEL:-0}" = "1" ] || [ "${RUNTIME_DEBUG_LEVEL:-0}" = "2" ]
 }
 
 launcher_log() {
@@ -68,7 +87,7 @@ detect_display_server() {
   echo "unknown"
 }
 
-if [ "$CANVA_DEBUG_LEVEL" = "2" ]; then
+if [ "$RUNTIME_DEBUG_LEVEL" = "2" ]; then
   set -- \
     --enable-logging=stderr \
     --log-level=0 \
@@ -77,7 +96,7 @@ fi
 
 DISPLAY_SERVER="$(detect_display_server)"
 GPU_VENDOR="$(detect_gpu_vendor)"
-GPU_BACKEND="${CANVA_GPU_BACKEND:-auto}"
+GPU_BACKEND="$(runtime_gpu_backend "$@")"
 
 if has_dri_render_node; then
   GPU_DRI_RENDER_NODE=1
@@ -85,13 +104,13 @@ else
   GPU_DRI_RENDER_NODE=0
 fi
 
-if [ "${CANVA_FORCE_X11:-0}" = "1" ]; then
+if has_runtime_flag --force-x11 "$@"; then
   unset GDK_BACKEND
   DISPLAY_SERVER="x11"
   set -- --ozone-platform=x11 "$@"
-elif [ "${CANVA_FORCE_WAYLAND:-0}" = "1" ]; then
+elif has_runtime_flag --force-wayland "$@"; then
   if [ "$DISPLAY_SERVER" != "wayland" ]; then
-    echo "canva-linux: error: CANVA_FORCE_WAYLAND=1 was set, but no Wayland session was detected." >&2
+    echo "canva-linux: error: --force-wayland was set, but no Wayland session was detected." >&2
     exit 1
   fi
   set -- --ozone-platform=wayland "$@"
@@ -99,7 +118,7 @@ elif [ "$DISPLAY_SERVER" = "wayland" ]; then
   set -- --ozone-platform=wayland "$@"
 fi
 
-if [ "${CANVA_DISABLE_WAYLAND_COLOR_MANAGER:-0}" = "1" ]; then
+if has_runtime_flag --disable-wayland-color-manager "$@"; then
   set -- \
     --disable-features=WaylandWpColorManagerV1 \
     "$@"
@@ -155,14 +174,13 @@ case "$GPU_BACKEND" in
     ;;
 
   *)
-    echo "canva-linux: error: invalid CANVA_GPU_BACKEND='$GPU_BACKEND'" >&2
+    echo "canva-linux: error: invalid --gpu-backend='$GPU_BACKEND'" >&2
     echo "canva-linux: valid values: auto, opengl, vulkan, software, force" >&2
     exit 1
     ;;
 esac
 
 export CANVA_GPU_VENDOR="$GPU_VENDOR"
-export CANVA_GPU_BACKEND="$GPU_BACKEND"
 export CANVA_GPU_DRI_RENDER_NODE="$GPU_DRI_RENDER_NODE"
 export CANVA_GPU_DISPLAY_SERVER="$DISPLAY_SERVER"
 export CANVA_GPU_LAUNCHER_REPORT="vendor=$GPU_VENDOR backend=$GPU_BACKEND dri=$GPU_DRI_RENDER_NODE display=$DISPLAY_SERVER"

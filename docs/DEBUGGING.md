@@ -8,12 +8,12 @@ logs/current.log
 
 ## Debug levels
 
-### `CANVA_DEBUG=1`
+### `canva-linux --debug=1`
 
 Shows all internal Canva Linux diagnostics:
 
 ```bash
-CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+flatpak run io.github.coletivo420.canva-linux --debug=1
 ```
 
 Includes:
@@ -32,12 +32,12 @@ Includes:
 - preload
 - GPU acceleration monitoring
 
-### `CANVA_DEBUG=2`
+### `canva-linux --debug=2`
 
 Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron stderr logs:
 
 ```bash
-CANVA_DEBUG=2 flatpak run io.github.coletivo420.canva-linux
+flatpak run io.github.coletivo420.canva-linux --debug=2
 ```
 
 Use this mode when debugging:
@@ -57,17 +57,17 @@ Canva Linux no longer supports selecting debug modules from the command line.
 
 Unsupported examples:
 
-- `CANVA_DEBUG=gpu`
-- `CANVA_DEBUG=oauth`
-- `CANVA_DEBUG=dnd`
-- `CANVA_DEBUG=eyedropper`
-- `CANVA_DEBUG=tabs`
-- `CANVA_DEBUG=toolbar`
-- `CANVA_DEBUG=permissions`
+- `--debug=gpu`
+- `--debug=oauth`
+- `--debug=dnd`
+- `--debug=eyedropper`
+- `--debug=tabs`
+- `--debug=toolbar`
+- `--debug=permissions`
 
-Use `CANVA_DEBUG=1` for all internal Canva Linux diagnostics.
+Use `canva-linux --debug=1` for all internal Canva Linux diagnostics.
 
-Use `CANVA_DEBUG=2` for all internal diagnostics plus Chromium/Electron verbose logs.
+Use `canva-linux --debug=2` for all internal diagnostics plus Chromium/Electron verbose logs.
 
 ## Credential storage diagnostics
 
@@ -92,7 +92,7 @@ Logs must not contain cookies, tokens, passwords or credential material.
 
 ## GPU diagnostics
 
-GPU diagnostics are included in `CANVA_DEBUG=1`.
+GPU diagnostics are included in `canva-linux --debug=1`.
 
 Expected entries:
 
@@ -103,17 +103,17 @@ Expected entries:
 ## GPU backend checks
 
 ```bash
-CANVA_GPU_BACKEND=auto CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=opengl CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=vulkan CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_GPU_BACKEND=software CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=auto --debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=opengl --debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=vulkan --debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=software --debug=1
 ```
 
 ## Display backend checks
 
 ```bash
-CANVA_FORCE_WAYLAND=1 CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
-CANVA_FORCE_X11=1 CANVA_DEBUG=1 flatpak run io.github.coletivo420.canva-linux
+flatpak run io.github.coletivo420.canva-linux --force-wayland --debug=1
+flatpak run io.github.coletivo420.canva-linux --force-x11 --debug=1
 ```
 
 ## Post-install terminal guidance
@@ -135,7 +135,7 @@ This keeps CI logs and redirected output clean.
 For NVIDIA/KDE/Wayland color-manager warnings:
 
 ```bash
-CANVA_DISABLE_WAYLAND_COLOR_MANAGER=1 flatpak run io.github.coletivo420.canva-linux
+flatpak run io.github.coletivo420.canva-linux --disable-wayland-color-manager
 ```
 
 ## Google One Tap / FedCM warning
@@ -144,7 +144,7 @@ Canva may emit a `[GSI_LOGGER]` warning from `static.canva.com` about Google One
 
 This warning is emitted by Canva/Google Identity Services page code, not by Canva Linux. Canva Linux must not monkeypatch Google Identity Services APIs to silence it.
 
-Treat it as an upstream compatibility warning unless Google login stops working. With `CANVA_DEBUG=1`, known warnings from `static.canva.com` are classified as upstream FedCM warnings while preserving the original console log.
+Treat it as an upstream compatibility warning unless Google login stops working. With `canva-linux --debug=1`, known warnings from `static.canva.com` are classified as upstream FedCM warnings while preserving the original console log.
 
 ## Build dependency bootstrap troubleshooting
 

@@ -109,14 +109,14 @@ AppImage packaging and AppImage execution are separate concerns:
 ## Runtime diagnostics
 
 ```bash
-CANVA_DEBUG=1 ./dist/<artifact>.AppImage
-CANVA_DEBUG=2 ./dist/<artifact>.AppImage
-CANVA_FORCE_WAYLAND=1 ./dist/<artifact>.AppImage
-CANVA_FORCE_X11=1 ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=auto ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=opengl ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=vulkan ./dist/<artifact>.AppImage
-CANVA_GPU_BACKEND=software ./dist/<artifact>.AppImage
+./dist/<artifact>.AppImage --debug=1
+./dist/<artifact>.AppImage --debug=2
+./dist/<artifact>.AppImage --force-wayland
+./dist/<artifact>.AppImage --force-x11
+./dist/<artifact>.AppImage --gpu-backend=auto
+./dist/<artifact>.AppImage --gpu-backend=opengl
+./dist/<artifact>.AppImage --gpu-backend=vulkan
+./dist/<artifact>.AppImage --gpu-backend=software
 ```
 
 
