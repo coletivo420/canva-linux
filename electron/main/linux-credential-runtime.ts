@@ -147,7 +147,7 @@ function resolvePasswordStoreOverride(
   credentialStore: LinuxCredentialStoreCliOverride = "auto",
   logger?: LinuxPasswordStoreLogger,
 ): LinuxPasswordStoreOverride | null {
-  const override = String(credentialStore || "auto").trim();
+  const override = String(credentialStore).trim();
   if (!override || override === "auto") return null;
 
   if (SAFE_PASSWORD_STORE_OVERRIDES.has(override as LinuxPasswordStoreOverride)) {
