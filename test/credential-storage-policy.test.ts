@@ -290,3 +290,56 @@ test("credential storage warning copy falls back when policy warning is unavaila
     true,
   );
 });
+
+test("detects Flatpak runtime from FLATPAK_ID and /.flatpak-info", () => {
+  const { detectFlatpakRuntimeInfo } = loadRuntimeModule("main/credential-storage");
+  const fromEnv = detectFlatpakRuntimeInfo({
+    env: { FLATPAK_ID: "io.github.coletivo420.canva-linux" },
+    fileExists() {
+      return false;
+    },
+  });
+
+  assert.equal(fromEnv.isFlatpak, true);
+  assert.equal(fromEnv.flatpakId, "io.github.coletivo420.canva-linux");
+  assert.equal(fromEnv.hasFlatpakInfo, false);
+
+  const fromFile = detectFlatpakRuntimeInfo({
+    env: {},
+    fileExists(path) {
+      assert.equal(path, "/.flatpak-info");
+      return true;
+    },
+  });
+
+  assert.equal(fromFile.isFlatpak, true);
+  assert.equal(fromFile.flatpakId, null);
+  assert.equal(fromFile.hasFlatpakInfo, true);
+});
+
+test("Flatpak ephemeral warning explains host Secret Service and KWallet access", () => {
+  const policy = resolveCredentialStoragePolicy({
+    platform: "linux",
+    flatpak: {
+      isFlatpak: true,
+      flatpakId: "io.github.coletivo420.canva-linux",
+      hasFlatpakInfo: true,
+    },
+    safeStorage: safeStorageMock({
+      backend: "unknown",
+      encryptionAvailable: false,
+    }),
+  });
+  const warning = createCredentialStorageWarningCopy(policy);
+
+  assert.equal(policy.flatpak.isFlatpak, true);
+  assert.equal(policy.flatpak.flatpakId, "io.github.coletivo420.canva-linux");
+  assert.match(
+    policy.warning,
+    /Canva Linux is running inside Flatpak, but Electron could not verify a secure native credential backend\./,
+  );
+  assert.match(
+    warning.detail,
+    /Persistent login requires access to the host Secret Service\/KWallet through the Flatpak sandbox\./,
+  );
+});

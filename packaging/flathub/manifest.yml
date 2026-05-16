@@ -24,7 +24,11 @@ finish-args:
   - --filesystem=xdg-run/pipewire-0
   - --filesystem=xdg-download
   - --talk-name=org.freedesktop.FileManager1
+  # Primary credential path: Secret Service/libsecret.
   - --talk-name=org.freedesktop.secrets
+  # Compatibility fallback when Chromium/Electron selects KWallet directly.
+  - --talk-name=org.kde.kwalletd5
+  - --talk-name=org.kde.kwalletd6
   - --env=ELECTRON_TRASH=gio
   - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
 

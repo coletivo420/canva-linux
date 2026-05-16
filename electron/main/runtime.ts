@@ -1,3 +1,5 @@
+import { configureLinuxNativeCredentialStore } from "./linux-credential-runtime";
+
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type CommandLineLike = {
   appendSwitch(name: string, value?: string): void;
@@ -107,6 +109,7 @@ function configureLinuxRuntime({
 
   if (process.platform === "linux") {
     app.setDesktopName?.(`${appId}.desktop`);
+    configureLinuxNativeCredentialStore({ app });
     app.commandLine.appendSwitch("class", wmClass);
     app.commandLine.appendSwitch("font-render-hinting", "medium");
     app.commandLine.appendSwitch("enable-font-antialiasing");

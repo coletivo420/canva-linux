@@ -168,8 +168,10 @@ function createStatusLogger({
   }
 
   function logCredentialStoragePolicy(policy: CredentialStoragePolicy) {
+    const flatpakId = policy.flatpak.flatpakId || "unknown";
     const summary =
-      `credential-storage-policy backend=${policy.backend} ` +
+      `credential-storage-policy flatpak=${String(policy.flatpak.isFlatpak)} ` +
+      `flatpakId=${flatpakId} backend=${policy.backend} ` +
       `mode=${policy.mode} security=${policy.security} ` +
       `encryptionAvailable=${String(policy.encryptionAvailable)} ` +
       `encryptionAvailableVerified=${String(policy.encryptionAvailableVerified)} ` +
