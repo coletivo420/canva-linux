@@ -12,12 +12,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-14` for RC validation:
+Request changes if a PR preparing `0.1.4-15.Dev.1` for credential persistence bugfix validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-14` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.1` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -39,8 +39,8 @@ Direct `./canva-linux.sh` startup was blocked in the validation container becaus
 
 Request changes if a PR:
 
-- changes version `0.1.4-14` without an explicit maintainer request;
-- introduces `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`;
+- changes version `0.1.4-15.Dev.1` without an explicit maintainer request;
+- introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
 

@@ -1,14 +1,14 @@
 # RC Validation Matrix
 
-This internal maintenance checklist turns the `0.1.4-14` release candidate preparation into an objective validation gate. It records the commands, manual checks, and release blockers that must be reviewed before tagging or publishing `v0.1.4-14`.
+This internal maintenance checklist now tracks the active `0.1.4-15.Dev.1` credential persistence bugfix cycle. It records the commands, manual checks, Flatpak credential diagnostics, and release blockers that must be reviewed before tagging or publishing `v0.1.4-15.Dev.1`.
 
 ## Release candidate metadata
 
 | Field | Value |
 | --- | --- |
-| Release target | `0.1.4-14` |
-| Tag target | `v0.1.4-14` |
-| Versioning rule | `N.N.N-X` |
+| Release target | `0.1.4-15.Dev.1` |
+| Tag target | `v0.1.4-15.Dev.1` |
+| Versioning rule | `N.N.N-X.Dev.Y` |
 | Validation date | `2026-05-14` (UTC) |
 | Validated commit | `75853e9e08ca56a1b0b6aec13fe5ed3b74625d1a` |
 | Validation environment | Container `74e762e34260`; `Linux 74e762e34260 6.12.47 #1 SMP Mon Oct 27 10:01:15 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux`; Node.js `v20.20.2`; npm `11.4.2` (npm emitted `Unknown env config "http-proxy"` warnings); `electron`, `flatpak`, `appstreamcli`, `desktop-file-validate`, `appimagetool`, and `linuxdeploy` were not installed. Direct `./canva-linux.sh` dry-runs were blocked because the validation container runs as root and the launcher correctly refuses root execution. |
@@ -88,10 +88,10 @@ Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb4219
 
 The release candidate must not be tagged or published while any blocker below is present:
 
-- `package.json` version differs from `0.1.4-14`.
-- `package-lock.json` top-level version differs from `0.1.4-14`.
-- `package-lock.json` root package version differs from `0.1.4-14`.
-- AppStream metadata does not contain release `0.1.4-14`.
+- `package.json` version differs from `0.1.4-15.Dev.1`.
+- `package-lock.json` top-level version differs from `0.1.4-15.Dev.1`.
+- `package-lock.json` root package version differs from `0.1.4-15.Dev.1`.
+- Active project UI metadata does not use phase `0.1.4-15.Dev.1`.
 - Any release identity uses `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
 - Project-owned artifact names use `x64` instead of the generated architecture name such as `x86_64` or `X86_64`.
 - `scripts/c420ui-canva-linux` reappears.
@@ -103,11 +103,11 @@ The release candidate must not be tagged or published while any blocker below is
 
 ## RC decision rule
 
-`v0.1.4-14` may be tagged only after every required automated command has a recorded passing result, every applicable manual dry-run has the expected result, dependency-backed packaging checks are either passing or explicitly recorded as environment-blocked, and no release blocker remains open.
+`v0.1.4-15.Dev.1` may be tagged only after every required automated command has a recorded passing result, every applicable manual dry-run has the expected result, dependency-backed packaging checks are either passing or explicitly recorded as environment-blocked, and no release blocker remains open.
 
 ## c420ui bootstrap release requirement
 
-The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-14`; ESM is future work only.
+The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-15.Dev.1`; ESM is future work only.
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate: `c420uiVersion` is sourced
 from `packages/c420ui/package.json`, while `dependentProjectVersion` is sourced from the repository root `package.json`.

@@ -198,3 +198,45 @@ test("download filename sanitizer falls back for empty or directory-only names",
     "bad_name___.png",
   );
 });
+
+const {
+  configureLinuxNativeCredentialStore,
+  selectLinuxPasswordStore,
+} = loadRuntimeModule("main/linux-credential-runtime");
+
+test("selects KWallet 6 for KDE and Plasma desktops", () => {
+  assert.equal(
+    selectLinuxPasswordStore({ XDG_CURRENT_DESKTOP: "KDE" }).preferredStore,
+    "kwallet6",
+  );
+  assert.equal(
+    selectLinuxPasswordStore({ XDG_SESSION_DESKTOP: "plasma" }).preferredStore,
+    "kwallet6",
+  );
+});
+
+test("selects gnome-libsecret for GNOME and unknown desktops", () => {
+  assert.equal(
+    selectLinuxPasswordStore({ XDG_CURRENT_DESKTOP: "GNOME" }).preferredStore,
+    "gnome-libsecret",
+  );
+  assert.equal(selectLinuxPasswordStore({}).preferredStore, "gnome-libsecret");
+});
+
+test("configures Chromium password-store before credential backend checks", () => {
+  const switches = [];
+  const preference = configureLinuxNativeCredentialStore({
+    platform: "linux",
+    env: { XDG_CURRENT_DESKTOP: "KDE" },
+    app: {
+      commandLine: {
+        appendSwitch(name, value) {
+          switches.push([name, value]);
+        },
+      },
+    },
+  });
+
+  assert.equal(preference.preferredStore, "kwallet6");
+  assert.deepEqual(switches, [["password-store", "kwallet6"]]);
+});

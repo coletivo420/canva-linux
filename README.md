@@ -1,8 +1,8 @@
 # Canva Linux
 
 Status: **Alpha**
-Version: **0.1.4-14**
-Release target: **v0.1.4-14**
+Version: **0.1.4-15.Dev.1**
+Release target: **v0.1.4-15.Dev.1**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -100,9 +100,9 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 ## Release and Packaging
 
-Current release target: `0.1.4-14`.
+Current release target: `0.1.4-15.Dev.1`.
 
-Versioning format: `N.N.N-X`.
+Versioning format for this bugfix cycle: `N.N.N-X.Dev.Y`.
 
 Artifact names preserve generated architecture strings such as `x86_64` and `X86_64`. Do not normalize architecture names to `x64`.
 

@@ -1,3 +1,5 @@
+import fs from "node:fs";
+
 const PERSISTENT_PARTITION = "persist:canva";
 const EPHEMERAL_PARTITION = "canva-ephemeral";
 
@@ -23,8 +25,15 @@ export type CredentialStorageWarningCopy = {
   detail: string;
 };
 
+export type FlatpakRuntimeInfo = {
+  isFlatpak: boolean;
+  flatpakId: string | null;
+  hasFlatpakInfo: boolean;
+};
+
 export type CredentialStoragePolicy = {
   backend: string;
+  flatpak: FlatpakRuntimeInfo;
   encryptionAvailable: boolean;
   encryptionAvailableVerified: boolean;
   mode: CredentialStorageMode;
@@ -42,15 +51,49 @@ type SafeStorageLike = {
 
 const EPHEMERAL_WARNING =
   "Secure Linux credential encryption was not verified. Canva Linux will use an ephemeral session; credentials, cookies and login state will not be saved.";
+const FLATPAK_EPHEMERAL_WARNING =
+  "Canva Linux is running inside Flatpak, but Electron could not verify a secure native credential backend. Persistent login requires access to the host Secret Service/KWallet through the Flatpak sandbox.";
+const DEFAULT_FLATPAK_RUNTIME_INFO: FlatpakRuntimeInfo = {
+  isFlatpak: false,
+  flatpakId: null,
+  hasFlatpakInfo: false,
+};
+
+function detectFlatpakRuntimeInfo({
+  env = process.env,
+  flatpakInfoPath = "/.flatpak-info",
+  fileExists = fs.existsSync,
+}: {
+  env?: NodeJS.ProcessEnv;
+  flatpakInfoPath?: string;
+  fileExists?: (path: string) => boolean;
+} = {}): FlatpakRuntimeInfo {
+  const flatpakId = String(env.FLATPAK_ID || "").trim() || null;
+  let hasFlatpakInfo = false;
+
+  try {
+    hasFlatpakInfo = fileExists(flatpakInfoPath);
+  } catch {
+    hasFlatpakInfo = false;
+  }
+
+  return {
+    isFlatpak: Boolean(flatpakId || hasFlatpakInfo),
+    flatpakId,
+    hasFlatpakInfo,
+  };
+}
 
 function createEphemeralLinuxPolicy({
   backend,
   encryptionAvailable,
   encryptionAvailableVerified,
+  flatpak = DEFAULT_FLATPAK_RUNTIME_INFO,
 }: {
   backend: string;
   encryptionAvailable: boolean;
   encryptionAvailableVerified: boolean;
+  flatpak?: FlatpakRuntimeInfo;
 }): CredentialStoragePolicy {
   let security: CredentialStorageSecurity = "unknown";
 
@@ -66,6 +109,7 @@ function createEphemeralLinuxPolicy({
 
   return {
     backend,
+    flatpak,
     encryptionAvailable,
     encryptionAvailableVerified,
     mode: "ephemeral",
@@ -73,7 +117,7 @@ function createEphemeralLinuxPolicy({
     partition: EPHEMERAL_PARTITION,
     cache: false,
     persistentLoginAvailable: false,
-    warning: EPHEMERAL_WARNING,
+    warning: flatpak.isFlatpak ? FLATPAK_EPHEMERAL_WARNING : EPHEMERAL_WARNING,
   };
 }
 
@@ -89,16 +133,19 @@ function createCredentialStoragePolicy({
   backend,
   encryptionAvailable = false,
   encryptionAvailableVerified = true,
+  flatpak = DEFAULT_FLATPAK_RUNTIME_INFO,
   platform = process.platform,
 }: {
   backend: string;
   encryptionAvailable?: boolean;
   encryptionAvailableVerified?: boolean;
+  flatpak?: FlatpakRuntimeInfo;
   platform?: NodeJS.Platform;
 }): CredentialStoragePolicy {
   if (platform !== "linux") {
     return {
       backend: "platform-default",
+      flatpak,
       encryptionAvailable: true,
       encryptionAvailableVerified: false,
       mode: "persistent",
@@ -117,6 +164,7 @@ function createCredentialStoragePolicy({
   ) {
     return {
       backend,
+      flatpak,
       encryptionAvailable,
       encryptionAvailableVerified,
       mode: "persistent",
@@ -130,6 +178,7 @@ function createCredentialStoragePolicy({
 
   return createEphemeralLinuxPolicy({
     backend,
+    flatpak,
     encryptionAvailable,
     encryptionAvailableVerified,
   });
@@ -156,22 +205,29 @@ function createCredentialStorageWarningCopy(
         ? policy.warning
         : "Canva Linux will start in ephemeral session mode; credentials, cookies and login state will not be saved.",
       "",
-      "Persistent login requires both a secure Linux Secret Service backend and available safeStorage encryption.",
-      "Install, enable, and unlock KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
+      policy.flatpak.isFlatpak
+        ? "Persistent login requires access to the host Secret Service/KWallet through the Flatpak sandbox."
+        : "Persistent login requires both a secure Linux Secret Service backend and available safeStorage encryption.",
+      policy.flatpak.isFlatpak
+        ? "Allow the Flatpak to talk to org.freedesktop.secrets, with KWallet D-Bus access used as a compatibility fallback when Chromium selects KWallet directly."
+        : "Install, enable, and unlock KWallet on KDE Plasma, GNOME Keyring/libsecret on GNOME, or a compatible Secret Service provider.",
     ].join("\n"),
   };
 }
 
 function resolveCredentialStoragePolicy({
   safeStorage,
+  flatpak = detectFlatpakRuntimeInfo(),
   platform = process.platform,
 }: {
   safeStorage: SafeStorageLike;
+  flatpak?: FlatpakRuntimeInfo;
   platform?: NodeJS.Platform;
 }): CredentialStoragePolicy {
   if (platform !== "linux") {
     return createCredentialStoragePolicy({
       backend: "platform-default",
+      flatpak,
       platform,
     });
   }
@@ -185,6 +241,7 @@ function resolveCredentialStoragePolicy({
       backend,
       encryptionAvailable: false,
       encryptionAvailableVerified: false,
+      flatpak,
       platform,
     });
   }
@@ -194,6 +251,7 @@ function resolveCredentialStoragePolicy({
       backend,
       encryptionAvailable: safeStorage.isEncryptionAvailable(),
       encryptionAvailableVerified: true,
+      flatpak,
       platform,
     });
   } catch {
@@ -201,18 +259,22 @@ function resolveCredentialStoragePolicy({
       backend,
       encryptionAvailable: false,
       encryptionAvailableVerified: false,
+      flatpak,
       platform,
     });
   }
 }
 
 export {
+  DEFAULT_FLATPAK_RUNTIME_INFO,
   EPHEMERAL_PARTITION,
   EPHEMERAL_WARNING,
+  FLATPAK_EPHEMERAL_WARNING,
   PERSISTENT_PARTITION,
   SECURE_LINUX_BACKENDS,
   createCredentialStoragePolicy,
   createCredentialStorageWarningCopy,
   createDefaultCredentialStoragePolicy,
+  detectFlatpakRuntimeInfo,
   resolveCredentialStoragePolicy,
 };
