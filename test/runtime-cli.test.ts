@@ -35,6 +35,7 @@ test("rejects unsupported debug forms", () => {
   ]) {
     assert.throws(() => parse(arg), /Unsupported --debug value/);
   }
+  assert.throws(() => parse("--debug", "1"), /Unsupported --debug value/);
 });
 
 test("parses supported credential stores", () => {
@@ -44,6 +45,7 @@ test("parses supported credential stores", () => {
 });
 
 test("rejects unsupported credential stores", () => {
+  assert.throws(() => parse("--credential-store"), /Unsupported --credential-store value/);
   for (const store of ["basic_text", "basic", "unknown"]) {
     assert.throws(
       () => parse(`--credential-store=${store}`),
@@ -64,8 +66,16 @@ test("parses supported GPU and display flags", () => {
 });
 
 test("rejects unsupported GPU backend", () => {
+  assert.throws(() => parse("--gpu-backend"), /Unsupported --gpu-backend value/);
   assert.throws(
     () => parse("--gpu-backend=metal"),
     /Unsupported --gpu-backend value/,
+  );
+});
+
+test("rejects conflicting display forcing flags", () => {
+  assert.throws(
+    () => parse("--force-x11", "--force-wayland"),
+    /Use either --force-x11 or --force-wayland, not both\./,
   );
 });

@@ -81,6 +81,11 @@ function parseCanvaLinuxRuntimeCli(
       options.version = true;
       continue;
     }
+    if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE);
+    if (arg === "--credential-store") {
+      throw new Error(UNSUPPORTED_CREDENTIAL_STORE_MESSAGE);
+    }
+    if (arg === "--gpu-backend") throw new Error(UNSUPPORTED_GPU_BACKEND_MESSAGE);
     if (matchesValuedOption(arg, "--debug")) {
       const value = readRequiredValue(arg, "--debug", UNSUPPORTED_DEBUG_MESSAGE);
       if (value !== "1" && value !== "2") throw unsupportedDebugValue();
@@ -125,6 +130,10 @@ function parseCanvaLinuxRuntimeCli(
     }
 
     options.passthroughArgs.push(arg);
+  }
+
+  if (options.forceX11 && options.forceWayland) {
+    throw new Error("Use either --force-x11 or --force-wayland, not both.");
   }
 
   return options;

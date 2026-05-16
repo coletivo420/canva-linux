@@ -116,9 +116,27 @@ test("runtime applies --force-x11 and --force-wayland outside Flatpak", () => {
   applyRuntimeGpuCli({
     app: wayland.app,
     runtimeCli: { ...defaultRuntimeCli, forceWayland: true },
-    detectedDisplayServer: "x11",
+    detectedDisplayServer: "wayland",
   });
   assert.deepEqual(wayland.switches.at(-1), ["ozone-platform", "wayland"]);
+});
+
+test("runtime rejects --force-wayland without a Wayland session", () => {
+  const fake = createFakeApp();
+  assert.throws(
+    () =>
+      applyRuntimeGpuCli({
+        app: fake.app,
+        runtimeCli: { ...defaultRuntimeCli, forceWayland: true },
+        detectedDisplayServer: "x11",
+      }),
+    /--force-wayland was set, but no Wayland session was detected\./,
+  );
+});
+
+test("runtime.ts does not expose CANVA_DISABLE_GPU fallback", () => {
+  const source = fs.readFileSync(path.join(repoRoot, "electron/main/runtime.ts"), "utf8");
+  assert.doesNotMatch(source, /CANVA_DISABLE_GPU/);
 });
 
 

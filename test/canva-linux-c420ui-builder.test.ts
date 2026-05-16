@@ -44,12 +44,66 @@ test("builder help does not advertise runtime-only flags", () => {
   }
 });
 
-test("builder routes direct actions through c420ui CLI bridge", () => {
+test("builder delegates direct action flags through c420ui CLI bridge", () => {
   const source = read("scripts/canva-linux-c420ui-builder.ts");
   assert.match(source, /selectEntrypoint\(rootDir, kind\)/);
   assert.match(source, /bootstrap\/c420ui\/run-c420ui-cli\.cjs/);
   assert.match(source, /\.build\/scripts\/run-c420ui-cli\.js/);
-  assert.match(source, /DIRECT_ACTION_FLAGS/);
+  assert.doesNotMatch(source, /DIRECT_ACTION_FLAGS/);
+  assert.match(source, /hasBridgeAction/);
+});
+
+test("builder normalizeArgs delegates registry-backed planned actions", () => {
+  const { normalizeArgs } = require(path.join(
+    repoRoot,
+    ".build/scripts/canva-linux-c420ui-builder.js",
+  ));
+
+  for (const action of ["--prepare-aur", "--bundle-deb", "--bundle-rpm"]) {
+    assert.deepEqual(normalizeArgs([action, "--dry-run"]), {
+      help: false,
+      bridgeArgs: [action, "--dry-run"],
+      hasBridgeAction: true,
+    });
+  }
+
+  assert.deepEqual(normalizeArgs(["--bundle-deb", "--force"]).bridgeArgs, [
+    "--bundle-deb",
+    "--yes",
+  ]);
+});
+
+test("builder rejects runtime-only namespaces and non-flag arguments", () => {
+  const { normalizeArgs } = require(path.join(
+    repoRoot,
+    ".build/scripts/canva-linux-c420ui-builder.js",
+  ));
+
+  for (const arg of [
+    "--debug",
+    "--debug=1",
+    "--debug=3",
+    "--credential-store=kwallet6",
+    "--gpu-backend=vulkan",
+    "--force-x11",
+    "--force-wayland",
+    "--disable-wayland-color-manager",
+  ]) {
+    assert.throws(
+      () => normalizeArgs([arg]),
+      new RegExp(`${arg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} is a Canva Linux runtime option`),
+    );
+  }
+
+  assert.throws(() => normalizeArgs(["install-native"]), /Unsupported builder argument/);
+});
+
+test("builder rejects builder globals without a direct action and has no root dry-run bypass", () => {
+  const source = read("scripts/canva-linux-c420ui-builder.ts");
+  assert.match(source, /No direct action was provided/);
+  assert.match(source, /assertNonRoot\(\)/);
+  assert.doesNotMatch(source, /allowRootDryRun/);
+  assert.doesNotMatch(source, /parsed\.directAction/);
 });
 
 test("compiled Electron runtime remains canva-linux", () => {

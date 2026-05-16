@@ -217,7 +217,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not import `./process-runner` from the interactive app after the Action Engine migration.
 - Do not reintroduce `scripts/c420ui/process-runner.ts` as the interactive execution path.
 - Do not keep parallel root/sudo logic for interactive and direct CLI actions.
-- Do not hardcode direct action flags in `canva-linux-c420ui-builder`; resolve them through the c420ui CLI bridge.
+- Do not hardcode direct action flags in `canva-linux-c420ui-builder`; it does not maintain its own action allowlist.
+  Action flags must resolve through the c420ui CLI bridge and Action Registry.
 - Direct action flags must come from the project action registry.
 - The launcher may parse only global flags such as `--help`, `--yes`, `--force`, and `--dry-run`.
 - Keep `bash -n canva-linux-c420ui-builder` protected by validation.

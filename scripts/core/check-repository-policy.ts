@@ -1461,7 +1461,8 @@ function validateLauncherScriptShape(
 
   for (const fragment of [
     "Canva Linux Builder powered by c420ui",
-    "Only one direct action can be executed per invocation.",
+    "No direct action was provided.",
+    "hasBridgeAction",
     "selectEntrypoint",
     "bootstrap/c420ui/run-c420ui.cjs",
     "bootstrap/c420ui/run-c420ui-cli.cjs",

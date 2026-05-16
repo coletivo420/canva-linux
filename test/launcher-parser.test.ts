@@ -22,17 +22,18 @@ test("primary builder wrapper prefers bootstrap bundle before build fallback", (
   );
 });
 
-test("builder source routes direct actions through c420ui CLI bridge", () => {
+test("builder source delegates direct actions through c420ui CLI bridge", () => {
   const source = fs.readFileSync("scripts/canva-linux-c420ui-builder.ts", "utf8");
-  assert.match(source, /DIRECT_ACTION_FLAGS/);
+  assert.doesNotMatch(source, /DIRECT_ACTION_FLAGS/);
+  assert.match(source, /hasBridgeAction/);
   assert.match(source, /bootstrap\/c420ui\/run-c420ui-cli\.cjs/);
   assert.match(source, /\.build\/scripts\/run-c420ui-cli\.js/);
-  assert.match(source, /Only one direct action can be executed per invocation/);
+  assert.match(source, /No direct action was provided/);
 });
 
 test("builder source opens c420ui UI by default", () => {
   const source = fs.readFileSync("scripts/canva-linux-c420ui-builder.ts", "utf8");
   assert.match(source, /bootstrap\/c420ui\/run-c420ui\.cjs/);
   assert.match(source, /\.build\/scripts\/run-c420ui\.js/);
-  assert.match(source, /parsed\.directAction \? "cli" : "ui"/);
+  assert.match(source, /parsed\.hasBridgeAction \? "cli" : "ui"/);
 });

@@ -61,26 +61,34 @@ const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
 const APP_ICON_PATH = path.join(__dirname, "..", "assets", "canva-icon.png");
 const APP_VERSION = app.getVersion();
-let runtimeCli;
-try {
-  runtimeCli = applyCanvaLinuxRuntimeCliEarly(
-    parseCanvaLinuxRuntimeCli(process.argv),
-  );
-} catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
-  app.exit(1);
+type RuntimeCli = ReturnType<typeof applyCanvaLinuxRuntimeCliEarly>;
+
+function parseRuntimeCliOrExit(): RuntimeCli | null {
+  try {
+    return applyCanvaLinuxRuntimeCliEarly(
+      parseCanvaLinuxRuntimeCli(process.argv),
+    );
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    return null;
+  }
 }
 
-if (runtimeCli.help) {
+const runtimeCli = parseRuntimeCliOrExit();
+
+if (!runtimeCli) {
+  app.exit(1);
+} else if (runtimeCli.help) {
   console.log(printCanvaLinuxRuntimeHelp());
   app.exit(0);
-}
-
-if (runtimeCli.version) {
+} else if (runtimeCli.version) {
   console.log(APP_VERSION);
   app.exit(0);
+} else {
+  startRuntime(runtimeCli);
 }
 
+function startRuntime(runtimeCli: RuntimeCli): void {
 const centralLogger = createCentralLogger({ app });
 const { debugLevel, debugEnabled, debugLog } = createDebugTools({
   debugLevel: runtimeCli.debugLevel,
@@ -437,3 +445,4 @@ registerAppLifecycle({
   shouldGrantRemotePermission,
   tabController,
 });
+}
