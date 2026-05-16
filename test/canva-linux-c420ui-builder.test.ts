@@ -17,6 +17,32 @@ function exists(relativePath) {
   return fs.existsSync(path.join(repoRoot, relativePath));
 }
 
+function commandExists(command) {
+  return spawnSync("command", ["-v", command], { encoding: "utf8", shell: true }).status === 0;
+}
+
+function userExists(user) {
+  return spawnSync("id", ["-u", user], { encoding: "utf8" }).status === 0;
+}
+
+function groupExists(group) {
+  return spawnSync("getent", ["group", group], { encoding: "utf8" }).status === 0;
+}
+
+function rootSafeBuilderPrefix() {
+  if (typeof process.getuid !== "function" || process.getuid() !== 0) return { skip: null, command: "./canva-linux-c420ui-builder", args: [] };
+  if (!commandExists("setpriv")) return { skip: "setpriv is unavailable for root-container builder smoke tests" };
+  if (!userExists("nobody")) return { skip: "nobody user is unavailable for root-container builder smoke tests" };
+  const group = ["nogroup", "nobody"].find(groupExists);
+  if (!group) return { skip: "neither nogroup nor nobody group is available for root-container builder smoke tests" };
+  const probe = spawnSync("setpriv", ["--reuid", "nobody", "--regid", group, "--clear-groups", "env", `PATH=${process.env.PATH || ""}`, "bash", "-c", "command -v node >/dev/null 2>&1"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+  if (probe.status !== 0) return { skip: "Node.js is unavailable in the non-root smoke-test context" };
+  return { skip: null, command: "setpriv", args: ["--reuid", "nobody", "--regid", group, "--clear-groups", "./canva-linux-c420ui-builder"] };
+}
+
 function runBuilder(args) {
   const env = {
     ...process.env,
@@ -24,16 +50,15 @@ function runBuilder(args) {
     HOME: process.env.HOME || "/tmp",
     XDG_STATE_HOME: path.join("/tmp", "canva-linux-test-state"),
   };
-  const setpriv = spawnSync("command", ["-v", "setpriv"], { encoding: "utf8", shell: true });
-  if (typeof process.getuid === "function" && process.getuid() === 0 && setpriv.status === 0) {
-    return spawnSync("setpriv", ["--reuid", "nobody", "--regid", "nogroup", "--clear-groups", "./canva-linux-c420ui-builder", ...args], {
-      cwd: repoRoot,
-      env: { ...env, HOME: "/tmp" },
-      encoding: "utf8",
-    });
-  }
-  return spawnSync("./canva-linux-c420ui-builder", args, { cwd: repoRoot, env, encoding: "utf8" });
+  const prefix = rootSafeBuilderPrefix();
+  if (prefix.skip) return { skipped: true, status: 0, stdout: "", stderr: prefix.skip };
+  return spawnSync(prefix.command, [...prefix.args, ...args], {
+    cwd: repoRoot,
+    env: { ...env, HOME: typeof process.getuid === "function" && process.getuid() === 0 ? "/tmp" : env.HOME },
+    encoding: "utf8",
+  });
 }
+
 
 test("canva-linux-c420ui-builder entrypoint exists and selects c420ui-builder bootstrap before build fallback", () => {
   const wrapper = read("canva-linux-c420ui-builder");
@@ -66,6 +91,7 @@ test("builder title and help separate c420ui builder from runtime canva-linux", 
   assert.match(source, /Canva Linux Builder powered by c420ui/);
   assert.match(source, /opens the c420ui install and development workspace by default/);
   assert.match(source, /canva-linux --help/);
+  assert.match(source, /--force                       Alias for --yes/);
 });
 
 test("builder help does not advertise runtime-only flags", () => {
@@ -145,7 +171,7 @@ test("builder rejects builder globals without a direct action and has no root dr
   assert.doesNotMatch(source, /parsed\.directAction/);
 });
 
-test("public alias smoke tests expose help and reject runtime options", () => {
+test("public alias smoke tests expose help and reject builder globals without actions", (t) => {
   const help = spawnSync("./canva-linux-c420ui-builder", ["--help"], {
     cwd: repoRoot,
     env: { ...process.env, CANVA_SCRIPT_REPO_ROOT: repoRoot },
@@ -153,33 +179,42 @@ test("public alias smoke tests expose help and reject runtime options", () => {
   });
   assert.equal(help.status, 0, help.stderr);
   assert.match(help.stdout, /Canva Linux Builder powered by c420ui/);
+  assert.match(help.stdout, /--force\s+Alias for --yes/);
 
-  const debug = spawnSync("./canva-linux-c420ui-builder", ["--debug=1"], {
-    cwd: repoRoot,
-    env: { ...process.env, CANVA_SCRIPT_REPO_ROOT: repoRoot },
-    encoding: "utf8",
-  });
-  assert.notEqual(debug.status, 0);
-  assert.match(debug.stderr, /--debug=1 is a Canva Linux runtime option/);
+  for (const arg of ["--dry-run", "--yes", "--force"]) {
+    const result = runBuilder([arg]);
+    if (result.skipped) {
+      t.skip(result.stderr);
+      return;
+    }
+    assert.notEqual(result.status, 0, `${arg} unexpectedly succeeded`);
+    assert.match(result.stderr, /No direct action was provided\./);
+  }
+});
+
+test("public alias smoke tests reject runtime-only namespaces", (t) => {
+  for (const arg of ["--debug=1", "--credential-store=kwallet6", "--gpu-backend=vulkan", "--force-wayland"]) {
+    const result = runBuilder([arg]);
+    if (result.skipped) {
+      t.skip(result.stderr);
+      return;
+    }
+    assert.notEqual(result.status, 0, `${arg} unexpectedly succeeded`);
+    assert.match(result.stderr, /is a Canva Linux runtime option/);
+  }
 });
 
 test("public alias planned dry-run smoke tests route through c420ui-builder", (t) => {
-  if (typeof process.getuid === "function" && process.getuid() === 0) {
-    const probe = spawnSync("setpriv", ["--reuid", "nobody", "--regid", "nogroup", "--clear-groups", "env", `PATH=${process.env.PATH || ""}`, "bash", "-c", "command -v node >/dev/null 2>&1"], {
-      cwd: repoRoot,
-      encoding: "utf8",
-    });
-    if (probe.status !== 0) {
-      t.skip("non-root node is unavailable for root-container builder dry-run smoke tests");
-      return;
-    }
-  }
-
   for (const action of ["--prepare-aur", "--bundle-deb", "--bundle-rpm"]) {
     const result = runBuilder([action, "--dry-run"]);
+    if (result.skipped) {
+      t.skip(result.stderr);
+      return;
+    }
     assert.equal(result.status, 0, `${action} stdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
   }
 });
+
 
 test("compiled Electron runtime remains canva-linux", () => {
   const pkg = JSON.parse(read("package.json"));

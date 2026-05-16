@@ -1,8 +1,7 @@
 # Canva Linux Architecture
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-The alias gives this project a clear local command while internal bootstrap/build artifacts remain generic for c420ui-based projects.
-Canva Linux no longer ships a `canva-linux.sh` compatibility entrypoint.
+See [c420ui Builder Alias Policy](../c420ui/BUILDER_ALIAS.md).
 
 Canva Linux is the dependent project in this repository; c420ui is the engine
 that supplies reusable terminal, action, dependency, root, and artifact behavior.

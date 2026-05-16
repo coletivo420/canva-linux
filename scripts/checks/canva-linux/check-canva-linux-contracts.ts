@@ -235,6 +235,193 @@ function validateReleaseShellScript(
   }
 }
 
+function legacyBuilderPaths(): string[] {
+  return [
+    "canva-linux" + ".sh",
+    "scripts/" + "canva-linux-c420ui-builder.ts",
+    "bootstrap/c420ui/" + "canva-linux-c420ui-builder" + ".cjs",
+    ".build/scripts/" + "canva-linux-c420ui-builder.js",
+  ];
+}
+
+function validateBuilderArtifactsExist(rootDir: string, failures: string[]): void {
+  for (const relativePath of [
+    "scripts/c420ui-builder.ts",
+    "canva-linux-c420ui-builder",
+    "bootstrap/c420ui/c420ui-builder.cjs",
+  ] as const) {
+    if (!fs.existsSync(path.join(rootDir, relativePath))) failures.push(`${relativePath} must exist`);
+  }
+}
+
+function validateLegacyBuilderArtifactsRemoved(rootDir: string, failures: string[]): void {
+  for (const relativePath of legacyBuilderPaths()) {
+    if (fs.existsSync(path.join(rootDir, relativePath))) failures.push(`${relativePath} must not exist`);
+  }
+}
+
+function validatePublicBuilderWrapper(rootDir: string, failures: string[]): void {
+  const relativePath = "canva-linux-c420ui-builder";
+  const fullPath = path.join(rootDir, relativePath);
+  if (!fs.existsSync(fullPath)) {
+    failures.push(`${relativePath} wrapper must exist`);
+    return;
+  }
+
+  const mode = fs.statSync(fullPath).mode;
+  if ((mode & 0o111) === 0) failures.push(`${relativePath} wrapper must be executable`);
+  const wrapper = readProjectFile(rootDir, relativePath);
+  for (const required of [
+    "command -v node",
+    "exit 127",
+    "bootstrap/c420ui/c420ui-builder.cjs",
+    ".build/scripts/c420ui-builder.js",
+  ] as const) {
+    if (!wrapper.includes(required)) failures.push(`${relativePath} wrapper must contain ${required}`);
+  }
+  for (const forbidden of [
+    "canva-linux-c420ui-builder" + ".cjs",
+    ".build/scripts/" + "canva-linux-c420ui-builder.js",
+    "scripts/" + "canva-linux-c420ui-builder.ts",
+  ] as const) {
+    if (wrapper.includes(forbidden)) failures.push(`${relativePath} wrapper must not reference ${forbidden}`);
+  }
+}
+
+function validateInternalBuilderSource(rootDir: string, failures: string[]): void {
+  const relativePath = "scripts/c420ui-builder.ts";
+  const source = readOptionalProjectFile(rootDir, relativePath);
+  if (!source) {
+    failures.push(`${relativePath} must exist`);
+    return;
+  }
+
+  for (const fragment of [
+    'BUILDER_INTERNAL_NAME = "c420ui-builder"',
+    'BUILDER_ALIAS = "canva-linux-c420ui-builder"',
+    'BUILDER_TITLE = "Canva Linux Builder powered by c420ui"',
+    "runC420UIBuilder",
+    "normalizeBuilderArgs",
+    "RUNTIME_ONLY_VALUED_OPTIONS",
+    "RUNTIME_ONLY_BOOLEAN_OPTIONS",
+    "isRuntimeOnlyFlag",
+    "bootstrap/c420ui/run-c420ui-cli.cjs",
+    "hasBridgeAction",
+    'arg.startsWith("--")',
+    "--force                       Alias for --yes",
+  ] as const) {
+    if (!source.includes(fragment)) failures.push(`${relativePath}: missing ${fragment}`);
+  }
+
+  for (const forbidden of [
+    "runCanvaLinuxC420UIBuilder",
+    "DIRECT_ACTION_FLAGS",
+    "allowRootDryRun",
+    "parsed.directAction",
+    "Boolean(parsed",
+    "--install-native | --install-flatpak",
+  ] as const) {
+    if (source.includes(forbidden)) failures.push(`${relativePath}: must not contain ${forbidden}`);
+  }
+}
+
+function validateRuntimeEnvFallbacksRemoved(rootDir: string, failures: string[]): void {
+  const files = [
+    "electron/shared/debug.ts",
+    "electron/main/runtime.ts",
+    "run.sh",
+  ] as const;
+  const forbiddenEnvNames = [
+    "CANVA_" + "DEBUG",
+    "CANVA_" + "DEBUG_LEVEL",
+    "CANVA_" + "LINUX_PASSWORD_STORE",
+    "CANVA_" + "DISABLE_GPU",
+    "CANVA_" + "GPU_BACKEND",
+    "CANVA_" + "FORCE_X11",
+    "CANVA_" + "FORCE_WAYLAND",
+    "CANVA_" + "DISABLE_WAYLAND_COLOR_MANAGER",
+  ] as const;
+
+  for (const file of files) {
+    const contents = readOptionalProjectFile(rootDir, file);
+    if (!contents) continue;
+    for (const envName of forbiddenEnvNames) {
+      if (contents.includes(envName)) failures.push(`${file}: must not restore legacy runtime env fallback ${envName}`);
+    }
+  }
+}
+
+function validateBuilderAliasDocs(rootDir: string, failures: string[]): void {
+  const policyPath = "docs/c420ui/BUILDER_ALIAS.md";
+  if (!fs.existsSync(path.join(rootDir, policyPath))) failures.push(`${policyPath} must exist`);
+  const policy = readOptionalProjectFile(rootDir, policyPath) ?? "";
+  for (const fragment of [
+    "c420ui-builder",
+    "canva-linux-c420ui-builder",
+    "Canva Linux Builder powered by c420ui",
+    "canva-linux",
+    "canva-linux" + ".sh",
+    "--force",
+  ] as const) {
+    if (!policy.includes(fragment)) failures.push(`${policyPath}: missing ${fragment}`);
+  }
+
+  const expectedLinks: Array<[string, string]> = [
+    ["README.md", "docs/c420ui/BUILDER_ALIAS.md"],
+    ["docs/CLI.md", "c420ui/BUILDER_ALIAS.md"],
+    ["docs/DEVELOPMENT.md", "c420ui/BUILDER_ALIAS.md"],
+    ["docs/INSTALLATION.md", "c420ui/BUILDER_ALIAS.md"],
+    ["docs/RELEASE.md", "c420ui/BUILDER_ALIAS.md"],
+    ["docs/VALIDATION.md", "c420ui/BUILDER_ALIAS.md"],
+    ["docs/c420ui/ARCHITECTURE.md", "BUILDER_ALIAS.md"],
+    ["docs/canva-linux/ARCHITECTURE.md", "../c420ui/BUILDER_ALIAS.md"],
+    ["docs/internal/AI_GUARDRAILS.md", "../c420ui/BUILDER_ALIAS.md"],
+    ["docs/internal/REPOSITORY_INVENTORY.md", "../c420ui/BUILDER_ALIAS.md"],
+    ["CHANGELOG.md", "docs/c420ui/BUILDER_ALIAS.md"],
+    ["REVIEW.md", "docs/c420ui/BUILDER_ALIAS.md"],
+    ["CLAUDE.md", "docs/c420ui/BUILDER_ALIAS.md"],
+    ["GEMINI.md", "docs/c420ui/BUILDER_ALIAS.md"],
+    ["packaging/flathub/README.md", "../../docs/c420ui/BUILDER_ALIAS.md"],
+  ];
+  const longDuplicate = "The alias gives this project a clear local command while internal bootstrap/build artifacts remain generic for c420ui-based projects.";
+  for (const [file, link] of expectedLinks) {
+    const contents = readOptionalProjectFile(rootDir, file);
+    if (!contents) {
+      failures.push(`${file}: builder alias documentation target is missing`);
+      continue;
+    }
+    if (!contents.includes(link)) failures.push(`${file}: must link to ${link}`);
+    if (contents.includes(longDuplicate)) failures.push(`${file}: must not duplicate the long builder alias explanation`);
+    for (const line of contents.split(/\r?\n/)) {
+      if (/canva-linux\.sh/.test(line) && !/removed|must not|forbidden|not restored|without restoring/i.test(line)) {
+        failures.push(`${file}: must not recommend ${"canva-linux" + ".sh"}`);
+      }
+    }
+  }
+}
+
+function validateLegacyBuilderPathReferences(rootDir: string, failures: string[]): void {
+  const criticalFiles = [
+    "package.json",
+    "scripts/build-c420ui-bootstrap.ts",
+    "scripts/canva-linux/bootstrap/source-hash.ts",
+    "scripts/canva-linux/bootstrap/build-recipe.ts",
+    "scripts/checks/canva-linux/check-c420ui-bootstrap.ts",
+    "scripts/checks/canva-linux/check-canva-linux-contracts.ts",
+    "bootstrap/c420ui/manifest.json",
+    "canva-linux-c420ui-builder",
+    "README.md",
+    "docs/CLI.md",
+  ] as const;
+  for (const file of criticalFiles) {
+    const contents = readOptionalProjectFile(rootDir, file);
+    if (!contents) continue;
+    for (const forbidden of legacyBuilderPaths()) {
+      if (contents.includes(forbidden)) failures.push(`${file}: active path must not reference removed builder path ${forbidden}`);
+    }
+  }
+}
+
 const checkAdapterContractRunner = (() => {
 function main(): number {
   const rootDir = process.cwd();
@@ -258,8 +445,8 @@ function main(): number {
   const launcherPath = path.join(rootDir, "scripts/c420ui-builder.ts");
   const publicBuilderPath = path.join(rootDir, "canva-linux-c420ui-builder");
   if (!fs.existsSync(launcherPath)) failures.push("scripts/c420ui-builder.ts must exist");
-  if (fs.existsSync(path.join(rootDir, "scripts/canva-linux-c420ui-builder.ts"))) {
-    failures.push("scripts/canva-linux-c420ui-builder.ts must not exist");
+  if (fs.existsSync(path.join(rootDir, "scripts/" + "canva-linux-c420ui-builder.ts"))) {
+    failures.push("scripts/" + "canva-linux-c420ui-builder.ts must not exist");
   }
   if (!fs.existsSync(publicBuilderPath)) {
     failures.push("canva-linux-c420ui-builder wrapper must exist");
@@ -269,14 +456,14 @@ function main(): number {
     const wrapper = fs.readFileSync(publicBuilderPath, "utf8");
     if (!wrapper.includes("bootstrap/c420ui/c420ui-builder.cjs")) failures.push("canva-linux-c420ui-builder wrapper must call c420ui-builder.cjs");
     if (!wrapper.includes(".build/scripts/c420ui-builder.js")) failures.push("canva-linux-c420ui-builder wrapper must fallback to .build/scripts/c420ui-builder.js");
-    for (const forbidden of ["canva-linux-c420ui-builder.cjs", ".build/scripts/canva-linux-c420ui-builder.js"] as const) {
+    for (const forbidden of ["canva-linux-c420ui-builder" + ".cjs", ".build/scripts/" + "canva-linux-c420ui-builder.js"] as const) {
       if (wrapper.includes(forbidden)) failures.push(`canva-linux-c420ui-builder wrapper must not reference ${forbidden}`);
     }
   }
-  if (fs.existsSync(path.join(rootDir, "canva-linux.sh"))) failures.push("canva-linux.sh must not exist");
+  if (fs.existsSync(path.join(rootDir, "canva-linux" + ".sh"))) failures.push("canva-linux" + ".sh must not exist");
   if (!fs.existsSync(path.join(rootDir, "bootstrap/c420ui/c420ui-builder.cjs"))) failures.push("bootstrap/c420ui/c420ui-builder.cjs must exist");
-  if (fs.existsSync(path.join(rootDir, "bootstrap/c420ui/canva-linux-c420ui-builder.cjs"))) {
-    failures.push("bootstrap/c420ui/canva-linux-c420ui-builder.cjs must not exist");
+  if (fs.existsSync(path.join(rootDir, "bootstrap/c420ui/" + "canva-linux-c420ui-builder.cjs"))) {
+    failures.push("bootstrap/c420ui/" + "canva-linux-c420ui-builder.cjs must not exist");
   }
   const runSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/run.ts"), "utf8");
   if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
@@ -2145,6 +2332,13 @@ export function main(): number {
   checkDevelopmentTaskRecipes(failures);
   checkLauncherBootstrapDependencyPolicy(failures);
   checkRuntimeCliDebugGuardrails(rootDir, failures);
+  validateBuilderArtifactsExist(rootDir, failures);
+  validateLegacyBuilderArtifactsRemoved(rootDir, failures);
+  validatePublicBuilderWrapper(rootDir, failures);
+  validateInternalBuilderSource(rootDir, failures);
+  validateRuntimeEnvFallbacksRemoved(rootDir, failures);
+  validateBuilderAliasDocs(rootDir, failures);
+  validateLegacyBuilderPathReferences(rootDir, failures);
   checkShellActionIds(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));

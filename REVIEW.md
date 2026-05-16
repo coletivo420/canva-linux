@@ -1,5 +1,8 @@
 # Review Checklist
 
+`canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
+See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
+
 ## Agent policy review
 
 Request changes if a PR:
@@ -424,7 +427,8 @@ Request changes if a PR:
 - moves npm dependency policy back into project shell helpers.
 
 
-Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
+Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging,
+maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
 
 Canva Linux Builder powered by c420ui does not maintain its own action allowlist;
 direct action flags are delegated to the c420ui CLI bridge and resolved by the Action Registry,

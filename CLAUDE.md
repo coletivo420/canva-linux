@@ -1,5 +1,8 @@
 # Claude Maintenance Policy for Canva Linux
 
+`canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
+See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
+
 This file provides auxiliary maintenance instructions for Claude agents. It is not public user documentation.
 
 Always read:
@@ -61,7 +64,8 @@ The logger must handle circular objects, BigInt, Error, Function and arbitrary E
 
 Before approving cleanup or simplification, compare the proposed change against `CHANGELOG.md`.
 
-Do not approve changes that remove, weaken, bypass, or silently alter behavior already documented in `CHANGELOG.md` unless the maintainer explicitly requested that change.
+Do not approve changes that remove, weaken, bypass, or silently alter behavior already documented in `CHANGELOG.md`
+unless the maintainer explicitly requested that change.
 
 When in doubt, ask for clarification instead of assuming old behavior is disposable.
 

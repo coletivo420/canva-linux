@@ -83,6 +83,7 @@ The compiled Canva Linux runtime app is separate:
 
 Builder options:
   -y, --yes
+  --force                       Alias for --yes
   -h, --help
   --dry-run
 

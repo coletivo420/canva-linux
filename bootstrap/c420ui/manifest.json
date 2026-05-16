@@ -20,7 +20,7 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "sourceHashAlgorithm": "sha256",
-  "sourceHash": "sha256:83fd596add0075dc2290e7854f2707c6c6f71e120023e004aabb7a004e9cc820",
+  "sourceHash": "sha256:6c9f3c6ecb655428465020cc70ffb36ae450dce262baf2351c68ab4b9d02836c",
   "sourceHashInputs": [
     "packages/c420ui/src",
     "scripts/c420ui-adapter",
