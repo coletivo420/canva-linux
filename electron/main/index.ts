@@ -69,7 +69,6 @@ try {
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   app.exit(1);
-  process.exit(1);
 }
 
 if (runtimeCli.help) {
