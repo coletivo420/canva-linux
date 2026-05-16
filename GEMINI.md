@@ -14,7 +14,7 @@ Required reading:
 - docs/DEBUGGING.md
 
 Non-regression rules:
-- Do not run or recommend ./canva-linux.sh as root.
+- Do not run or recommend ./canva-linux-c420ui-builder as root.
 - Preserve version 0.1.4-14 unless explicitly instructed otherwise.
 - Do not introduce 0.1.4-dev.14, 0.1.4-rc.14, or 0.1.4.14.
 - Preserve the N.N.N-X release versioning rule.

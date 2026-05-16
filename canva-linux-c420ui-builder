@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-if [[ -s "${ROOT_DIR}/bootstrap/c420ui/canva-linux-c420ui-builder.cjs" ]]; then
-  exec node "${ROOT_DIR}/bootstrap/c420ui/canva-linux-c420ui-builder.cjs" "$@"
+if ! command -v node >/dev/null 2>&1; then
+  printf '%s\n' "Node.js is required to run Canva Linux Builder powered by c420ui." >&2
+  printf '%s\n' "Install Node.js or use the packaged Canva Linux runtime app instead." >&2
+  exit 127
 fi
 
-if [[ -s "${ROOT_DIR}/.build/scripts/canva-linux-c420ui-builder.js" ]]; then
-  exec node "${ROOT_DIR}/.build/scripts/canva-linux-c420ui-builder.js" "$@"
+if [[ -s "${ROOT_DIR}/bootstrap/c420ui/c420ui-builder.cjs" ]]; then
+  exec node "${ROOT_DIR}/bootstrap/c420ui/c420ui-builder.cjs" "$@"
 fi
 
-printf '%s\n' "canva-linux-c420ui-builder bootstrap bundle is missing." >&2
+if [[ -s "${ROOT_DIR}/.build/scripts/c420ui-builder.js" ]]; then
+  exec node "${ROOT_DIR}/.build/scripts/c420ui-builder.js" "$@"
+fi
+
+printf '%s\n' "c420ui-builder bootstrap bundle is missing." >&2
 printf '%s\n' "Run npm run build:c420ui-bootstrap, then retry." >&2
 exit 1

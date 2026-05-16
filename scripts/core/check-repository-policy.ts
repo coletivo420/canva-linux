@@ -786,7 +786,6 @@ const requiredJsonFiles = ["package.json", "package-lock.json"] as const;
 
 const requiredShellFiles = [
   "canva-linux-c420ui-builder",
-  "canva-linux.sh",
   "scripts/validate-project.sh",
   "scripts/run-core-entry.sh",
   "scripts/preflight-common.sh",
@@ -1437,9 +1436,13 @@ function validateLauncherScriptShape(
   failures: string[],
 ): void {
   const relativePath = "canva-linux-c420ui-builder";
-  const sourcePath = "scripts/canva-linux-c420ui-builder.ts";
+  const sourcePath = "scripts/c420ui-builder.ts";
   const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
   const source = fs.readFileSync(path.join(rootDir, sourcePath), "utf8");
+  const legacyPath = path.join(rootDir, "canva-linux.sh");
+  if (fs.existsSync(legacyPath)) {
+    failures.push("canva-linux.sh: legacy compatibility entrypoint must not exist");
+  }
   const lines = content.split(/\r?\n/);
 
   if (lines[0] !== "#!/usr/bin/env bash") {
@@ -1450,8 +1453,8 @@ function validateLauncherScriptShape(
   }
 
   for (const fragment of [
-    "bootstrap/c420ui/canva-linux-c420ui-builder.cjs",
-    ".build/scripts/canva-linux-c420ui-builder.js",
+    "bootstrap/c420ui/c420ui-builder.cjs",
+    ".build/scripts/c420ui-builder.js",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
     if (!content.includes(fragment)) {

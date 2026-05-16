@@ -86,7 +86,7 @@ async function main(): Promise<void> {
     entrypoints: {
       ui: "bootstrap/c420ui/run-c420ui.cjs",
       cli: "bootstrap/c420ui/run-c420ui-cli.cjs",
-      builder: "bootstrap/c420ui/canva-linux-c420ui-builder.cjs",
+      builder: "bootstrap/c420ui/c420ui-builder.cjs",
     },
     requiresNode: ">=22.0.0",
     buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,

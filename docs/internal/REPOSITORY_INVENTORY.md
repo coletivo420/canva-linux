@@ -2,6 +2,10 @@
 
 This generated inventory is kept outside `REVIEW.md` so the review checklist remains a stable process document.
 
+`canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
+The alias gives this project a clear local command while internal bootstrap/build artifacts remain generic for c420ui-based projects.
+Canva Linux no longer ships a `canva-linux.sh` compatibility entrypoint.
+
 ## Files
 
 - `.codex`
@@ -197,3 +201,5 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `tsconfig.json`
 - `tsconfig.strict.json`
 - `types/blessed.d.ts`
+
+- `scripts/c420ui-builder.ts`

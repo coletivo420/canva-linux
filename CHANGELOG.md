@@ -15,6 +15,9 @@
 - Added the public builder title: Canva Linux Builder powered by c420ui.
 
 ### Changed
+- Removed the legacy `canva-linux.sh` compatibility entrypoint.
+- Kept `canva-linux-c420ui-builder` as the Canva Linux public alias for the builder.
+- Renamed internal builder source and bootstrap artifacts to `c420ui-builder`.
 - Separated the builder/c420ui CLI from the compiled `canva-linux` runtime CLI.
 - Applied runtime GPU/display CLI flags outside Flatpak so native, linux-unpacked, and AppImage launches use the same runtime parser behavior.
 - Cleaned runtime CLI review issues from PR #138, including redundant exits, duplicate parser messages, and credential-store normalization.

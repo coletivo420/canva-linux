@@ -429,3 +429,11 @@ Canva Linux Builder powered by c420ui is the primary builder, installer, validat
 Canva Linux Builder powered by c420ui does not maintain its own action allowlist;
 direct action flags are delegated to the c420ui CLI bridge and resolved by the Action Registry,
 while runtime flags belong to the compiled `canva-linux` app.
+
+## Builder rename checklist
+
+- [x] Internal builder paths use `c420ui-builder`.
+- [x] Public alias remains `canva-linux-c420ui-builder`.
+- [x] Legacy `canva-linux.sh` is removed.
+- [x] Runtime remains `canva-linux`.
+- [x] No `canva-linux-c420ui-builder.cjs` bootstrap artifact remains.
