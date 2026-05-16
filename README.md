@@ -115,7 +115,10 @@ Artifact names preserve generated architecture strings such as `x86_64` and `X86
 Canva Linux is not official Canva software. Review the code, packaging recipes, and privileged workflows before running them in a
 sensitive environment.
 
-Persistent login depends on Linux Secret Service support. Flatpak uses Secret Service/Freedesktop as the primary credential path, with KWallet6/KWallet5 D-Bus access only as a KDE/Plasma compatibility fallback. Without secure storage, session behavior can be ephemeral, and `basic_text` is never treated as persistent.
+Persistent login depends on Linux native credential storage and available safeStorage encryption.
+KDE/Plasma tries KWallet first, then the alternate KWallet generation, then Secret Service/libsecret.
+GNOME and unknown desktops try Secret Service/libsecret first, then KWallet compatibility paths.
+Without secure storage, session behavior can be ephemeral, and `basic_text` is never treated as persistent.
 
 Root actions are isolated to explicit install and maintenance workflows. Administrator credentials must never be logged.
 

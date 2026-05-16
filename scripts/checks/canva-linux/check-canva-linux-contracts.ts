@@ -67,7 +67,7 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-15.Dev.2";
+const currentReleaseVersion = "0.1.4-15.Dev.3";
 const currentReleaseDate = "2026-05-16";
 const previousReleaseVersion = "0.1.4-12";
 const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+(?:\.Dev\.\d+)?$/;
