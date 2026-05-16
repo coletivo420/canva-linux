@@ -1,8 +1,8 @@
 # Canva Linux
 
 Status: **Alpha**
-Version: **0.1.4-15.Dev.2**
-Release target: **v0.1.4-15.Dev.2**
+Version: **0.1.4-15.Dev.3**
+Release target: **v0.1.4-15.Dev.3**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -100,7 +100,7 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 ## Release and Packaging
 
-Current release target: `0.1.4-15.Dev.2`.
+Current release target: `0.1.4-15.Dev.3`.
 
 Versioning format for this bugfix cycle: `N.N.N-X.Dev.Y`.
 

@@ -29,12 +29,12 @@ finish-args:
   # The app relies on Flatpak portals for file access when possible; explicit
   # portal bus access is intentionally omitted because Flatpak grants portal
   # mediation without a finish-arg.
-  # Primary credential path: Secret Service/libsecret.
+  # Primary credential path: Freedesktop Secret Service / libsecret.
   - --talk-name=org.freedesktop.secrets
-  # Compatibility fallback when Chromium/Electron selects KWallet directly,
-  # including KWallet5 on Plasma 5 hosts.
-  - --talk-name=org.kde.kwalletd5
+  # KDE compatibility fallback when Chromium/Electron is explicitly configured
+  # to use KWallet directly.
   - --talk-name=org.kde.kwalletd6
+  - --talk-name=org.kde.kwalletd5
 
   ## Runtime environment tweaks
   - --env=ELECTRON_TRASH=gio

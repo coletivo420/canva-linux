@@ -80,6 +80,12 @@ function createFlatpakPasswordStoreCandidates(): LinuxPasswordStoreCandidate[] {
   ];
 }
 
+function getPreferredKwalletStore(
+  env: LinuxCredentialRuntimeEnvironment,
+): "kwallet5" | "kwallet6" {
+  return env.KDE_SESSION_VERSION === "5" ? "kwallet5" : "kwallet6";
+}
+
 function createDesktopDefaultPasswordStoreCandidates(
   isKde: boolean,
   env: LinuxCredentialRuntimeEnvironment,
@@ -87,7 +93,7 @@ function createDesktopDefaultPasswordStoreCandidates(
   if (isKde) {
     return [
       {
-        store: env.KDE_SESSION_VERSION === "5" ? "kwallet5" : "kwallet6",
+        store: getPreferredKwalletStore(env),
         reason: "desktop-default",
       },
     ];
@@ -129,8 +135,12 @@ function selectDefaultPasswordStore({
   env: LinuxCredentialRuntimeEnvironment;
   candidates: LinuxPasswordStoreCandidate[];
 }): LinuxPasswordStorePlan["selectedStore"] {
-  if (isFlatpak && isKde) {
-    return env.KDE_SESSION_VERSION === "5" ? "kwallet5" : "kwallet6";
+  if (isFlatpak) {
+    return "gnome-libsecret";
+  }
+
+  if (isKde) {
+    return getPreferredKwalletStore(env);
   }
 
   return candidates[0].store;
@@ -230,6 +240,7 @@ export {
   collectDesktopHints,
   configureLinuxNativeCredentialStore,
   detectFlatpakRuntime,
+  getPreferredKwalletStore,
   logLinuxPasswordStorePlan,
   selectLinuxPasswordStore,
 };

@@ -201,6 +201,7 @@ test("download filename sanitizer falls back for empty or directory-only names",
 
 const {
   configureLinuxNativeCredentialStore,
+  getPreferredKwalletStore,
   selectLinuxPasswordStore,
 } = loadRuntimeModule("main/linux-credential-runtime");
 
@@ -252,7 +253,7 @@ test("Flatpak on GNOME selects gnome-libsecret", () => {
   });
 });
 
-test("Flatpak on KDE Plasma 6 selects kwallet6 and exposes KWallet fallback candidates", () => {
+test("Flatpak on KDE Plasma 6 selects gnome-libsecret and exposes KWallet fallback candidates", () => {
   const plan = selectLinuxPasswordStore(
     {
       FLATPAK_ID: "io.github.coletivo420.canva-linux",
@@ -262,7 +263,7 @@ test("Flatpak on KDE Plasma 6 selects kwallet6 and exposes KWallet fallback cand
     { fileExists: () => false },
   );
 
-  assert.equal(plan.selectedStore, "kwallet6");
+  assert.equal(plan.selectedStore, "gnome-libsecret");
   assert.deepEqual(plan.candidates, [
     { store: "gnome-libsecret", reason: "freedesktop-secret-service" },
     { store: "kwallet6", reason: "kde-kwallet6-fallback" },
@@ -270,7 +271,7 @@ test("Flatpak on KDE Plasma 6 selects kwallet6 and exposes KWallet fallback cand
   ]);
 });
 
-test("Flatpak on KDE Plasma 5 selects kwallet5", () => {
+test("Flatpak on KDE Plasma 5 selects gnome-libsecret and exposes KWallet candidates", () => {
   const plan = selectLinuxPasswordStore(
     {
       FLATPAK_ID: "io.github.coletivo420.canva-linux",
@@ -280,14 +281,14 @@ test("Flatpak on KDE Plasma 5 selects kwallet5", () => {
     { fileExists: () => false },
   );
 
-  assert.equal(plan.selectedStore, "kwallet5");
+  assert.equal(plan.selectedStore, "gnome-libsecret");
   assert.deepEqual(
     plan.candidates.map((candidate) => candidate.store),
     ["gnome-libsecret", "kwallet6", "kwallet5"],
   );
 });
 
-test("Flatpak on KDE with KDE_SESSION_VERSION unset selects kwallet6", () => {
+test("Flatpak on KDE with KDE_SESSION_VERSION unset selects gnome-libsecret", () => {
   const plan = selectLinuxPasswordStore(
     {
       FLATPAK_ID: "io.github.coletivo420.canva-linux",
@@ -296,7 +297,13 @@ test("Flatpak on KDE with KDE_SESSION_VERSION unset selects kwallet6", () => {
     { fileExists: () => false },
   );
 
-  assert.equal(plan.selectedStore, "kwallet6");
+  assert.equal(plan.selectedStore, "gnome-libsecret");
+});
+
+test("getPreferredKwalletStore selects kwallet5 only for KDE_SESSION_VERSION=5", () => {
+  assert.equal(getPreferredKwalletStore({ KDE_SESSION_VERSION: "5" }), "kwallet5");
+  assert.equal(getPreferredKwalletStore({ KDE_SESSION_VERSION: "6" }), "kwallet6");
+  assert.equal(getPreferredKwalletStore({}), "kwallet6");
 });
 
 test("Flatpak unknown desktop selects gnome-libsecret", () => {
@@ -309,6 +316,19 @@ test("Flatpak unknown desktop selects gnome-libsecret", () => {
   assert.equal(plan.isKde, false);
   assert.equal(plan.desktop, "unknown");
   assert.equal(plan.selectedStore, "gnome-libsecret");
+});
+
+test("CANVA_LINUX_PASSWORD_STORE=kwallet6 is accepted in Flatpak", () => {
+  const plan = selectLinuxPasswordStore(
+    {
+      FLATPAK_ID: "io.github.coletivo420.canva-linux",
+      XDG_CURRENT_DESKTOP: "KDE",
+      CANVA_LINUX_PASSWORD_STORE: "kwallet6",
+    },
+    { fileExists: () => false },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet6");
 });
 
 test("CANVA_LINUX_PASSWORD_STORE=kwallet5 is accepted", () => {

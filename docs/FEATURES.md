@@ -36,7 +36,7 @@ Supported secure examples include:
 - GNOME Keyring / libsecret on GNOME and compatible desktops (`gnome_libsecret`)
 - compatible Secret Service providers used by desktops such as XFCE, Cinnamon, Pantheon and others when exposed through libsecret
 
-Flatpak credential lookup uses Secret Service/Freedesktop as the primary path. KWallet D-Bus access is a compatibility fallback for KDE/Plasma, including KWallet5.
+Flatpak uses Secret Service/Freedesktop through `gnome-libsecret` as the default credential path. KWallet6 and KWallet5 are available as KDE compatibility paths through narrow D-Bus permissions and safe manual override. Canva Linux does not claim runtime fallback unless a real probe is implemented.
 
 Canva Linux never treats `basic_text` as persistent. If Electron reports `basic_text`, an unknown backend, a detection error, or a nominally secure backend
 with unavailable encryption (for example a locked or cancelled keyring prompt), Canva Linux starts in ephemeral session mode.
