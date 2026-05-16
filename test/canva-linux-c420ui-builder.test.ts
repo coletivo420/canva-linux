@@ -2,6 +2,7 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
@@ -12,25 +13,63 @@ function read(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
 }
 
-test("canva-linux-c420ui-builder entrypoint exists and selects bootstrap before build fallback", () => {
+function exists(relativePath) {
+  return fs.existsSync(path.join(repoRoot, relativePath));
+}
+
+function runBuilder(args) {
+  const env = {
+    ...process.env,
+    CANVA_SCRIPT_REPO_ROOT: repoRoot,
+    HOME: process.env.HOME || "/tmp",
+    XDG_STATE_HOME: path.join("/tmp", "canva-linux-test-state"),
+  };
+  const setpriv = spawnSync("command", ["-v", "setpriv"], { encoding: "utf8", shell: true });
+  if (typeof process.getuid === "function" && process.getuid() === 0 && setpriv.status === 0) {
+    return spawnSync("setpriv", ["--reuid", "nobody", "--regid", "nogroup", "--clear-groups", "./canva-linux-c420ui-builder", ...args], {
+      cwd: repoRoot,
+      env: { ...env, HOME: "/tmp" },
+      encoding: "utf8",
+    });
+  }
+  return spawnSync("./canva-linux-c420ui-builder", args, { cwd: repoRoot, env, encoding: "utf8" });
+}
+
+test("canva-linux-c420ui-builder entrypoint exists and selects c420ui-builder bootstrap before build fallback", () => {
   const wrapper = read("canva-linux-c420ui-builder");
-  assert.match(wrapper, /bootstrap\/c420ui\/canva-linux-c420ui-builder\.cjs/);
-  assert.match(wrapper, /\.build\/scripts\/canva-linux-c420ui-builder\.js/);
+  assert.ok(exists("scripts/c420ui-builder.ts"));
+  assert.equal(exists("scripts/canva-linux-c420ui-builder.ts"), false);
+  assert.ok(exists("bootstrap/c420ui/c420ui-builder.cjs"));
+  assert.equal(exists("bootstrap/c420ui/canva-linux-c420ui-builder.cjs"), false);
+  assert.equal(exists("canva-linux.sh"), false);
+  assert.match(wrapper, /bootstrap\/c420ui\/c420ui-builder\.cjs/);
+  assert.match(wrapper, /\.build\/scripts\/c420ui-builder\.js/);
+  assert.doesNotMatch(wrapper, /canva-linux-c420ui-builder\.cjs/);
+  assert.doesNotMatch(wrapper, /canva-linux-c420ui-builder\.js/);
   assert.ok(
-    wrapper.indexOf("bootstrap/c420ui/canva-linux-c420ui-builder.cjs") <
-      wrapper.indexOf(".build/scripts/canva-linux-c420ui-builder.js"),
+    wrapper.indexOf("bootstrap/c420ui/c420ui-builder.cjs") <
+      wrapper.indexOf(".build/scripts/c420ui-builder.js"),
   );
 });
 
+test("bootstrap manifest points builder at c420ui-builder", () => {
+  const manifest = JSON.parse(read("bootstrap/c420ui/manifest.json"));
+  assert.equal(manifest.entrypoints.builder, "bootstrap/c420ui/c420ui-builder.cjs");
+  assert.ok(manifest.sourceHashInputs.includes("scripts/c420ui-builder.ts"));
+  assert.equal(manifest.sourceHashInputs.includes("scripts/canva-linux-c420ui-builder.ts"), false);
+});
+
 test("builder title and help separate c420ui builder from runtime canva-linux", () => {
-  const source = read("scripts/canva-linux-c420ui-builder.ts");
+  const source = read("scripts/c420ui-builder.ts");
+  assert.match(source, /BUILDER_INTERNAL_NAME = "c420ui-builder"/);
+  assert.match(source, /BUILDER_ALIAS = "canva-linux-c420ui-builder"/);
   assert.match(source, /Canva Linux Builder powered by c420ui/);
   assert.match(source, /opens the c420ui install and development workspace by default/);
   assert.match(source, /canva-linux --help/);
 });
 
 test("builder help does not advertise runtime-only flags", () => {
-  const source = read("scripts/canva-linux-c420ui-builder.ts");
+  const source = read("scripts/c420ui-builder.ts");
   const helpBody = source.slice(source.indexOf("function builderHelp"), source.indexOf("function sessionLogPath"));
   for (const forbidden of [
     "--debug=1",
@@ -45,7 +84,7 @@ test("builder help does not advertise runtime-only flags", () => {
 });
 
 test("builder delegates direct action flags through c420ui CLI bridge", () => {
-  const source = read("scripts/canva-linux-c420ui-builder.ts");
+  const source = read("scripts/c420ui-builder.ts");
   assert.match(source, /selectEntrypoint\(rootDir, kind\)/);
   assert.match(source, /bootstrap\/c420ui\/run-c420ui-cli\.cjs/);
   assert.match(source, /\.build\/scripts\/run-c420ui-cli\.js/);
@@ -53,30 +92,30 @@ test("builder delegates direct action flags through c420ui CLI bridge", () => {
   assert.match(source, /hasBridgeAction/);
 });
 
-test("builder normalizeArgs delegates registry-backed planned actions", () => {
-  const { normalizeArgs } = require(path.join(
+test("builder normalizeBuilderArgs delegates registry-backed planned actions", () => {
+  const { normalizeBuilderArgs } = require(path.join(
     repoRoot,
-    ".build/scripts/canva-linux-c420ui-builder.js",
+    ".build/scripts/c420ui-builder.js",
   ));
 
   for (const action of ["--prepare-aur", "--bundle-deb", "--bundle-rpm"]) {
-    assert.deepEqual(normalizeArgs([action, "--dry-run"]), {
+    assert.deepEqual(normalizeBuilderArgs([action, "--dry-run"]), {
       help: false,
       bridgeArgs: [action, "--dry-run"],
       hasBridgeAction: true,
     });
   }
 
-  assert.deepEqual(normalizeArgs(["--bundle-deb", "--force"]).bridgeArgs, [
+  assert.deepEqual(normalizeBuilderArgs(["--bundle-deb", "--force"]).bridgeArgs, [
     "--bundle-deb",
     "--yes",
   ]);
 });
 
 test("builder rejects runtime-only namespaces and non-flag arguments", () => {
-  const { normalizeArgs } = require(path.join(
+  const { normalizeBuilderArgs } = require(path.join(
     repoRoot,
-    ".build/scripts/canva-linux-c420ui-builder.js",
+    ".build/scripts/c420ui-builder.js",
   ));
 
   for (const arg of [
@@ -90,20 +129,56 @@ test("builder rejects runtime-only namespaces and non-flag arguments", () => {
     "--disable-wayland-color-manager",
   ]) {
     assert.throws(
-      () => normalizeArgs([arg]),
+      () => normalizeBuilderArgs([arg]),
       new RegExp(`${arg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} is a Canva Linux runtime option`),
     );
   }
 
-  assert.throws(() => normalizeArgs(["install-native"]), /Unsupported builder argument/);
+  assert.throws(() => normalizeBuilderArgs(["install-native"]), /Unsupported builder argument/);
 });
 
 test("builder rejects builder globals without a direct action and has no root dry-run bypass", () => {
-  const source = read("scripts/canva-linux-c420ui-builder.ts");
+  const source = read("scripts/c420ui-builder.ts");
   assert.match(source, /No direct action was provided/);
   assert.match(source, /assertNonRoot\(\)/);
   assert.doesNotMatch(source, /allowRootDryRun/);
   assert.doesNotMatch(source, /parsed\.directAction/);
+});
+
+test("public alias smoke tests expose help and reject runtime options", () => {
+  const help = spawnSync("./canva-linux-c420ui-builder", ["--help"], {
+    cwd: repoRoot,
+    env: { ...process.env, CANVA_SCRIPT_REPO_ROOT: repoRoot },
+    encoding: "utf8",
+  });
+  assert.equal(help.status, 0, help.stderr);
+  assert.match(help.stdout, /Canva Linux Builder powered by c420ui/);
+
+  const debug = spawnSync("./canva-linux-c420ui-builder", ["--debug=1"], {
+    cwd: repoRoot,
+    env: { ...process.env, CANVA_SCRIPT_REPO_ROOT: repoRoot },
+    encoding: "utf8",
+  });
+  assert.notEqual(debug.status, 0);
+  assert.match(debug.stderr, /--debug=1 is a Canva Linux runtime option/);
+});
+
+test("public alias planned dry-run smoke tests route through c420ui-builder", (t) => {
+  if (typeof process.getuid === "function" && process.getuid() === 0) {
+    const probe = spawnSync("setpriv", ["--reuid", "nobody", "--regid", "nogroup", "--clear-groups", "env", `PATH=${process.env.PATH || ""}`, "bash", "-c", "command -v node >/dev/null 2>&1"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    });
+    if (probe.status !== 0) {
+      t.skip("non-root node is unavailable for root-container builder dry-run smoke tests");
+      return;
+    }
+  }
+
+  for (const action of ["--prepare-aur", "--bundle-deb", "--bundle-rpm"]) {
+    const result = runBuilder([action, "--dry-run"]);
+    assert.equal(result.status, 0, `${action} stdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
+  }
 });
 
 test("compiled Electron runtime remains canva-linux", () => {

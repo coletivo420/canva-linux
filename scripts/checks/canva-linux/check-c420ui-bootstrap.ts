@@ -319,13 +319,22 @@ function main(): void {
   const manifestPath = "bootstrap/c420ui/manifest.json";
   const uiBundlePath = "bootstrap/c420ui/run-c420ui.cjs";
   const cliBundlePath = "bootstrap/c420ui/run-c420ui-cli.cjs";
-  const builderBundlePath = "bootstrap/c420ui/canva-linux-c420ui-builder.cjs";
+  const builderBundlePath = "bootstrap/c420ui/c420ui-builder.cjs";
   const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
     (asset) => `bootstrap/usr/${asset}`,
   );
 
   for (const relativePath of [manifestPath, uiBundlePath, cliBundlePath, builderBundlePath, ...blessedRuntimeAssets]) {
     fileExistsAndIsNotEmpty(rootDir, relativePath, failures);
+  }
+
+  for (const forbiddenPath of [
+    "bootstrap/c420ui/canva-linux-c420ui-builder.cjs",
+    "scripts/canva-linux-c420ui-builder.ts",
+  ] as const) {
+    if (fs.existsSync(path.join(rootDir, forbiddenPath))) {
+      failures.push(`${forbiddenPath}: old Canva Linux-specific internal builder artifact must not exist`);
+    }
   }
 
   if (fs.existsSync(path.join(rootDir, manifestPath))) {
@@ -370,8 +379,8 @@ function main(): void {
     if (entrypoints?.cli !== "bootstrap/c420ui/run-c420ui-cli.cjs") {
       failures.push(`${manifestPath}: expected entrypoints.cli to be bootstrap/c420ui/run-c420ui-cli.cjs`);
     }
-    if (entrypoints?.builder !== "bootstrap/c420ui/canva-linux-c420ui-builder.cjs") {
-      failures.push(`${manifestPath}: expected entrypoints.builder to be bootstrap/c420ui/canva-linux-c420ui-builder.cjs`);
+    if (entrypoints?.builder !== "bootstrap/c420ui/c420ui-builder.cjs") {
+      failures.push(`${manifestPath}: expected entrypoints.builder to be bootstrap/c420ui/c420ui-builder.cjs`);
     }
 
     if (manifest.sourceHashAlgorithm !== C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM) {
@@ -392,6 +401,11 @@ function main(): void {
       }
       if (!manifest.sourceHashInputs.includes("scripts/build-c420ui-bootstrap.ts")) {
         failures.push(`${manifestPath}: sourceHashInputs must explicitly include scripts/build-c420ui-bootstrap.ts`);
+      }
+      for (const forbiddenInput of ["scripts/canva-linux-c420ui-builder.ts", "bootstrap/c420ui/canva-linux-c420ui-builder.cjs"] as const) {
+        if (manifest.sourceHashInputs.includes(forbiddenInput)) {
+          failures.push(`${manifestPath}: sourceHashInputs must not include ${forbiddenInput}`);
+        }
       }
     }
 
@@ -420,11 +434,11 @@ function main(): void {
   }
 
   const launcher = read(rootDir, "canva-linux-c420ui-builder");
-  const bootstrapBuilderIndex = indexOfRequired(launcher, "bootstrap/c420ui/canva-linux-c420ui-builder.cjs", failures, "canva-linux-c420ui-builder");
-  const buildBuilderIndex = indexOfRequired(launcher, ".build/scripts/canva-linux-c420ui-builder.js", failures, "canva-linux-c420ui-builder");
+  const bootstrapBuilderIndex = indexOfRequired(launcher, "bootstrap/c420ui/c420ui-builder.cjs", failures, "canva-linux-c420ui-builder");
+  const buildBuilderIndex = indexOfRequired(launcher, ".build/scripts/c420ui-builder.js", failures, "canva-linux-c420ui-builder");
 
   if (bootstrapBuilderIndex !== -1 && buildBuilderIndex !== -1 && bootstrapBuilderIndex > buildBuilderIndex) {
-    failures.push("canva-linux-c420ui-builder: launcher must check bootstrap/c420ui/canva-linux-c420ui-builder.cjs before .build fallback");
+    failures.push("canva-linux-c420ui-builder: launcher must check bootstrap/c420ui/c420ui-builder.cjs before .build fallback");
   }
 
   for (const forbidden of [

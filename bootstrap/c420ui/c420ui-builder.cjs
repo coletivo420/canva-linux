@@ -27,19 +27,23 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// scripts/canva-linux-c420ui-builder.ts
-var canva_linux_c420ui_builder_exports = {};
-__export(canva_linux_c420ui_builder_exports, {
+// scripts/c420ui-builder.ts
+var c420ui_builder_exports = {};
+__export(c420ui_builder_exports, {
+  BUILDER_ALIAS: () => BUILDER_ALIAS,
+  BUILDER_INTERNAL_NAME: () => BUILDER_INTERNAL_NAME,
   BUILDER_TITLE: () => BUILDER_TITLE,
-  normalizeArgs: () => normalizeArgs,
-  runCanvaLinuxC420UIBuilder: () => runCanvaLinuxC420UIBuilder
+  normalizeBuilderArgs: () => normalizeBuilderArgs,
+  runC420UIBuilder: () => runC420UIBuilder
 });
-module.exports = __toCommonJS(canva_linux_c420ui_builder_exports);
+module.exports = __toCommonJS(c420ui_builder_exports);
 var import_node_child_process = require("node:child_process");
 var import_node_fs = __toESM(require("node:fs"));
 var import_node_path = __toESM(require("node:path"));
+var BUILDER_INTERNAL_NAME = "c420ui-builder";
+var BUILDER_ALIAS = "canva-linux-c420ui-builder";
 var BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
-var BUILDER_GLOBAL_FLAGS = /* @__PURE__ */ new Set(["-y", "--yes", "--force", "--dry-run"]);
+var BUILDER_GLOBAL_FLAGS = /* @__PURE__ */ new Set(["-y", "--yes", "--dry-run"]);
 var RUNTIME_ONLY_VALUED_OPTIONS = [
   "--debug",
   "--credential-store",
@@ -68,8 +72,8 @@ function builderHelp() {
   return `${BUILDER_TITLE}
 
 Usage:
-  canva-linux-c420ui-builder
-  canva-linux-c420ui-builder [direct action] [--yes] [--dry-run]
+  ${BUILDER_ALIAS}
+  ${BUILDER_ALIAS} [direct action] [--yes] [--dry-run]
 
 This builder opens the c420ui install and development workspace by default.
 It builds, installs, validates, packages, repairs and maintains Canva Linux.
@@ -138,7 +142,7 @@ function isRuntimeOnlyFlag(arg) {
     (option) => arg === option || arg.startsWith(`${option}=`)
   );
 }
-function normalizeArgs(argv) {
+function normalizeBuilderArgs(argv) {
   const bridgeArgs = [];
   let help = false;
   let hasBridgeAction = false;
@@ -172,8 +176,8 @@ function assertNonRoot() {
     throw new Error(ROOT_LAUNCH_GUARD_MESSAGE);
   }
 }
-function runCanvaLinuxC420UIBuilder(argv = process.argv.slice(2)) {
-  const parsed = normalizeArgs(argv);
+function runC420UIBuilder(argv = process.argv.slice(2)) {
+  const parsed = normalizeBuilderArgs(argv);
   if (parsed.help) {
     console.log(builderHelp());
     return 0;
@@ -198,7 +202,7 @@ function runCanvaLinuxC420UIBuilder(argv = process.argv.slice(2)) {
 }
 if (require.main === module) {
   try {
-    process.exit(runCanvaLinuxC420UIBuilder());
+    process.exit(runC420UIBuilder());
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
@@ -206,7 +210,9 @@ if (require.main === module) {
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  BUILDER_ALIAS,
+  BUILDER_INTERNAL_NAME,
   BUILDER_TITLE,
-  normalizeArgs,
-  runCanvaLinuxC420UIBuilder
+  normalizeBuilderArgs,
+  runC420UIBuilder
 });

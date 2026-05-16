@@ -3,6 +3,8 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+export const BUILDER_INTERNAL_NAME = "c420ui-builder";
+export const BUILDER_ALIAS = "canva-linux-c420ui-builder";
 export const BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
 
 const BUILDER_GLOBAL_FLAGS = new Set(["-y", "--yes", "--dry-run"]);
@@ -45,8 +47,8 @@ function builderHelp(): string {
   return `${BUILDER_TITLE}
 
 Usage:
-  canva-linux-c420ui-builder
-  canva-linux-c420ui-builder [direct action] [--yes] [--dry-run]
+  ${BUILDER_ALIAS}
+  ${BUILDER_ALIAS} [direct action] [--yes] [--dry-run]
 
 This builder opens the c420ui install and development workspace by default.
 It builds, installs, validates, packages, repairs and maintains Canva Linux.
@@ -128,7 +130,7 @@ function isRuntimeOnlyFlag(arg: string): boolean {
   );
 }
 
-export function normalizeArgs(argv: string[]): NormalizedBuilderArgs {
+export function normalizeBuilderArgs(argv: string[]): NormalizedBuilderArgs {
   const bridgeArgs: string[] = [];
   let help = false;
   let hasBridgeAction = false;
@@ -171,8 +173,8 @@ function assertNonRoot(): void {
   }
 }
 
-export function runCanvaLinuxC420UIBuilder(argv = process.argv.slice(2)): number {
-  const parsed = normalizeArgs(argv);
+export function runC420UIBuilder(argv = process.argv.slice(2)): number {
+  const parsed = normalizeBuilderArgs(argv);
   if (parsed.help) {
     console.log(builderHelp());
     return 0;
@@ -201,9 +203,10 @@ export function runCanvaLinuxC420UIBuilder(argv = process.argv.slice(2)): number
 
 if (require.main === module) {
   try {
-    process.exit(runCanvaLinuxC420UIBuilder());
+    process.exit(runC420UIBuilder());
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
+

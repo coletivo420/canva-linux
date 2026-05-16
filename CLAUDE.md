@@ -34,7 +34,7 @@ Always read:
 
 ## Root and sudo policy
 
-- Do not run or recommend `./canva-linux.sh` as root.
+- Do not run or recommend `./canva-linux-c420ui-builder` as root.
 - Prefer shared sudo helpers over direct sudo calls.
 - Never log passwords, sudo stdin, cookies, tokens, or credential material.
 - Privileged operations must request authentication only when needed.

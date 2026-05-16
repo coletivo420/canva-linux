@@ -26,7 +26,7 @@ function runCheck(failures: string[], check: ContractCheck): void {
 type CoreCheckFileKind = "shell" | "typescript";
 
 const noParallelShellMenuActiveFiles: Array<{ path: string; kind: CoreCheckFileKind }> = [
-  { path: "scripts/canva-linux-c420ui-builder.ts", kind: "typescript" },
+  { path: "scripts/c420ui-builder.ts", kind: "typescript" },
   { path: "packages/c420ui/src/terminal/app.ts", kind: "typescript" },
   { path: "packages/c420ui/src/terminal/index.ts", kind: "typescript" },
 ];
@@ -255,7 +255,29 @@ function main(): number {
 
   const cliBridgePath = path.join(rootDir, "scripts/c420ui-adapter/cli.ts");
   const cliEntrypointPath = path.join(rootDir, "scripts/run-c420ui-cli.ts");
-  const launcherPath = path.join(rootDir, "scripts/canva-linux-c420ui-builder.ts");
+  const launcherPath = path.join(rootDir, "scripts/c420ui-builder.ts");
+  const publicBuilderPath = path.join(rootDir, "canva-linux-c420ui-builder");
+  if (!fs.existsSync(launcherPath)) failures.push("scripts/c420ui-builder.ts must exist");
+  if (fs.existsSync(path.join(rootDir, "scripts/canva-linux-c420ui-builder.ts"))) {
+    failures.push("scripts/canva-linux-c420ui-builder.ts must not exist");
+  }
+  if (!fs.existsSync(publicBuilderPath)) {
+    failures.push("canva-linux-c420ui-builder wrapper must exist");
+  } else {
+    const mode = fs.statSync(publicBuilderPath).mode;
+    if ((mode & 0o111) === 0) failures.push("canva-linux-c420ui-builder wrapper must be executable");
+    const wrapper = fs.readFileSync(publicBuilderPath, "utf8");
+    if (!wrapper.includes("bootstrap/c420ui/c420ui-builder.cjs")) failures.push("canva-linux-c420ui-builder wrapper must call c420ui-builder.cjs");
+    if (!wrapper.includes(".build/scripts/c420ui-builder.js")) failures.push("canva-linux-c420ui-builder wrapper must fallback to .build/scripts/c420ui-builder.js");
+    for (const forbidden of ["canva-linux-c420ui-builder.cjs", ".build/scripts/canva-linux-c420ui-builder.js"] as const) {
+      if (wrapper.includes(forbidden)) failures.push(`canva-linux-c420ui-builder wrapper must not reference ${forbidden}`);
+    }
+  }
+  if (fs.existsSync(path.join(rootDir, "canva-linux.sh"))) failures.push("canva-linux.sh must not exist");
+  if (!fs.existsSync(path.join(rootDir, "bootstrap/c420ui/c420ui-builder.cjs"))) failures.push("bootstrap/c420ui/c420ui-builder.cjs must exist");
+  if (fs.existsSync(path.join(rootDir, "bootstrap/c420ui/canva-linux-c420ui-builder.cjs"))) {
+    failures.push("bootstrap/c420ui/canva-linux-c420ui-builder.cjs must not exist");
+  }
   const runSource = fs.readFileSync(path.join(rootDir, "scripts/c420ui-adapter/run.ts"), "utf8");
   if (!fs.existsSync(cliBridgePath)) failures.push("Canva Linux c420ui CLI bridge must exist");
   if (!fs.existsSync(cliEntrypointPath)) failures.push("Canva Linux c420ui CLI entrypoint must exist");
@@ -730,7 +752,7 @@ function main(): number {
   const tuiAppPath = path.join(rootDir, "packages/c420ui/src/terminal/app.ts");
   const checkedFiles = [
     ...findCheckedFiles(scriptsDir),
-    path.join(rootDir, "scripts/canva-linux-c420ui-builder.ts"),
+    path.join(rootDir, "scripts/c420ui-builder.ts"),
   ].filter((f) => {
     const relative = path.relative(rootDir, f);
     return (
@@ -1215,10 +1237,10 @@ function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
-  const launcher = read(rootDir, "scripts/canva-linux-c420ui-builder.ts");
+  const launcher = read(rootDir, "scripts/c420ui-builder.ts");
 
   if (!launcher.includes("fs.writeFileSync(sessionLog")) {
-    failures.push("scripts/canva-linux-c420ui-builder.ts: builder must create/truncate the session log once");
+    failures.push("scripts/c420ui-builder.ts: builder must create/truncate the session log once");
   }
   if (!app.includes('flags: "a"')) {
     failures.push("packages/c420ui/src/terminal/app.ts: c420ui must append to the launcher session log");
@@ -1475,21 +1497,21 @@ function checkNoParallelShellMenu(failures: string[]): void {
 
 function checkNoRootLauncherContract(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const launcher = readProjectFile(rootDir, "scripts/canva-linux-c420ui-builder.ts");
+  const launcher = readProjectFile(rootDir, "scripts/c420ui-builder.ts");
   const runTui = readProjectFile(rootDir, "scripts/run-c420ui.ts");
   const adapterRun = readProjectFile(rootDir, "scripts/c420ui-adapter/run.ts");
   const rootMessage =
     "Do not run Canva Linux Builder powered by c420ui with sudo or as root.";
 
   if (!launcher.includes("process.getuid") || !launcher.includes("=== 0")) {
-    failures.push("scripts/canva-linux-c420ui-builder.ts: must block uid 0 before launching Tool");
+    failures.push("scripts/c420ui-builder.ts: must block uid 0 before launching Tool");
   }
   if (!launcher.includes(rootMessage) && !launcher.includes("Do not run ${BUILDER_TITLE} with sudo or as root.")) {
-    failures.push("scripts/canva-linux-c420ui-builder.ts: must explain that root/sudo launch is blocked");
+    failures.push("scripts/c420ui-builder.ts: must explain that root/sudo launch is blocked");
   }
   if (!launcher.includes("administrator privileges")) {
     failures.push(
-      "scripts/canva-linux-c420ui-builder.ts: root guard must explain privileges are requested only when needed",
+      "scripts/c420ui-builder.ts: root guard must explain privileges are requested only when needed",
     );
   }
   const adapter = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
@@ -2011,7 +2033,7 @@ function checkDevelopmentTaskRecipes(failures: string[]): void {
 
 function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const launcher = readProjectFile(rootDir, "scripts/canva-linux-c420ui-builder.ts");
+  const launcher = readProjectFile(rootDir, "scripts/c420ui-builder.ts");
 
   for (const fragment of [
     "bootstrap/c420ui/run-c420ui.cjs",
@@ -2021,7 +2043,7 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
     "selectEntrypoint(rootDir, kind)",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
-    if (!launcher.includes(fragment)) failures.push(`scripts/canva-linux-c420ui-builder.ts: missing bootstrap launcher fragment ${fragment}`);
+    if (!launcher.includes(fragment)) failures.push(`scripts/c420ui-builder.ts: missing bootstrap launcher fragment ${fragment}`);
   }
 
   const bootstrapUiIndex = launcher.indexOf("bootstrap/c420ui/run-c420ui.cjs");
@@ -2030,10 +2052,10 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
   const buildCliIndex = launcher.indexOf(".build/scripts/run-c420ui-cli.js");
 
   if (bootstrapUiIndex !== -1 && buildUiIndex !== -1 && bootstrapUiIndex > buildUiIndex) {
-    failures.push("scripts/canva-linux-c420ui-builder.ts: interactive c420ui bootstrap bundle must be preferred before .build fallback");
+    failures.push("scripts/c420ui-builder.ts: interactive c420ui bootstrap bundle must be preferred before .build fallback");
   }
   if (bootstrapCliIndex !== -1 && buildCliIndex !== -1 && bootstrapCliIndex > buildCliIndex) {
-    failures.push("scripts/canva-linux-c420ui-builder.ts: c420ui CLI bootstrap bundle must be preferred before .build fallback");
+    failures.push("scripts/c420ui-builder.ts: c420ui CLI bootstrap bundle must be preferred before .build fallback");
   }
 
   for (const forbidden of [
@@ -2045,7 +2067,7 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
     "npm ci",
     "ensure_c420ui_bootstrap_npm_dependencies",
   ] as const) {
-    if (launcher.includes(forbidden)) failures.push(`scripts/canva-linux-c420ui-builder.ts: must not restore launcher dependency policy fragment ${forbidden}`);
+    if (launcher.includes(forbidden)) failures.push(`scripts/c420ui-builder.ts: must not restore launcher dependency policy fragment ${forbidden}`);
   }
 }
 
@@ -2056,8 +2078,8 @@ function checkRuntimeCliDebugGuardrails(rootDir: string, failures: string[]): vo
     { file: "electron/shared/debug.ts", pattern: "CANVA_DEBUG_LEVEL", message: "must not read legacy runtime debug level env" },
     { file: "electron/main/runtime.ts", pattern: "CANVA_DEBUG", message: "must not read legacy runtime debug env" },
     { file: "run.sh", pattern: "CANVA_DEBUG", message: "must not export or interpret legacy runtime debug env" },
-    { file: "scripts/canva-linux-c420ui-builder.ts", pattern: "--debug=1", message: "must not implement runtime debug flags" },
-    { file: "scripts/canva-linux-c420ui-builder.ts", pattern: "--debug=2", message: "must not implement runtime debug flags" },
+    { file: "scripts/c420ui-builder.ts", pattern: "--debug=1", message: "must not implement runtime debug flags" },
+    { file: "scripts/c420ui-builder.ts", pattern: "--debug=2", message: "must not implement runtime debug flags" },
   ];
 
   for (const item of forbidden) {
@@ -2085,7 +2107,7 @@ function checkShellActionIds(failures: string[]): void {
     );
   }
 
-  const shell = fs.readFileSync(path.join(rootDir, "scripts/canva-linux-c420ui-builder.ts"), "utf8");
+  const shell = fs.readFileSync(path.join(rootDir, "scripts/c420ui-builder.ts"), "utf8");
   const ids = [...shell.matchAll(/run_action_by_id\s+["']([^"']+)["']/g)]
     .map((match) => match[1])
     .filter((id): id is string => Boolean(id));
