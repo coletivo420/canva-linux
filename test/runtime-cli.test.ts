@@ -57,6 +57,7 @@ test("rejects unsupported credential stores", () => {
 test("parses supported GPU and display flags", () => {
   assert.equal(parse("--gpu-backend=auto").gpuBackend, "auto");
   assert.equal(parse("--gpu-backend=vulkan").gpuBackend, "vulkan");
+  assert.equal(parse("--gpu-backend=software").gpuBackend, "software");
   assert.equal(parse("--force-x11").forceX11, true);
   assert.equal(parse("--force-wayland").forceWayland, true);
   assert.equal(
