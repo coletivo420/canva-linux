@@ -3,8 +3,9 @@
 ## Unreleased
 
 ### Added
-- Opened the `0.1.4-15.Dev.1` credential persistence bugfix cycle.
+- Opened the `0.1.4-15.Dev.2` credential persistence bugfix cycle.
 - Added Flatpak-aware credential diagnostics and native credential-store selection for Electron startup.
+- Hardened Flatpak credential-store planning with Secret Service/Freedesktop as the primary path, KWallet6/KWallet5 fallback candidates, and a safe `CANVA_LINUX_PASSWORD_STORE` override for manual testing.
 - Added committed standalone c420ui bootstrap artifacts for clean checkouts so c420ui can start before dependent-project
   dependency repair, without requiring launcher-side npm installation.
 - Added an internal RC validation matrix for `0.1.4-14` with required commands, manual dry-runs, dependency-backed packaging checks,
@@ -18,6 +19,7 @@
 
 ### Fixed
 - Improved Flatpak ephemeral-session warning copy so users know persistent login requires host Secret Service/KWallet access through the sandbox.
+- Documented that Canva Linux never treats `basic_text` as persistent and that Flatpak KWallet D-Bus access is only a compatibility fallback.
 
 
 ## [0.1.4-14] - 2026-05-14

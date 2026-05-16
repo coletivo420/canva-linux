@@ -26,7 +26,8 @@ finish-args:
   - --talk-name=org.freedesktop.FileManager1
   # Primary credential path: Secret Service/libsecret.
   - --talk-name=org.freedesktop.secrets
-  # Compatibility fallback when Chromium/Electron selects KWallet directly.
+  # Compatibility fallback when Chromium/Electron selects KWallet directly,
+  # including KWallet5 on Plasma 5 hosts.
   - --talk-name=org.kde.kwalletd5
   - --talk-name=org.kde.kwalletd6
   - --env=ELECTRON_TRASH=gio

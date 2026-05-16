@@ -204,30 +204,139 @@ const {
   selectLinuxPasswordStore,
 } = loadRuntimeModule("main/linux-credential-runtime");
 
-test("selects KWallet 6 for KDE and Plasma desktops", () => {
+test("selects KWallet 6 for non-Flatpak KDE and Plasma desktops", () => {
   assert.equal(
-    selectLinuxPasswordStore({ XDG_CURRENT_DESKTOP: "KDE" }).preferredStore,
+    selectLinuxPasswordStore(
+      { XDG_CURRENT_DESKTOP: "KDE" },
+      { fileExists: () => false },
+    ).selectedStore,
     "kwallet6",
   );
   assert.equal(
-    selectLinuxPasswordStore({ XDG_SESSION_DESKTOP: "plasma" }).preferredStore,
+    selectLinuxPasswordStore(
+      { XDG_SESSION_DESKTOP: "plasma" },
+      { fileExists: () => false },
+    ).selectedStore,
     "kwallet6",
   );
 });
 
-test("selects gnome-libsecret for GNOME and unknown desktops", () => {
+test("selects gnome-libsecret for non-Flatpak GNOME and unknown desktops", () => {
   assert.equal(
-    selectLinuxPasswordStore({ XDG_CURRENT_DESKTOP: "GNOME" }).preferredStore,
+    selectLinuxPasswordStore(
+      { XDG_CURRENT_DESKTOP: "GNOME" },
+      { fileExists: () => false },
+    ).selectedStore,
     "gnome-libsecret",
   );
-  assert.equal(selectLinuxPasswordStore({}).preferredStore, "gnome-libsecret");
+  assert.equal(
+    selectLinuxPasswordStore({}, { fileExists: () => false }).selectedStore,
+    "gnome-libsecret",
+  );
+});
+
+test("Flatpak defaults to Freedesktop Secret Service/libsecret path", () => {
+  const plan = selectLinuxPasswordStore(
+    { FLATPAK_ID: "io.github.coletivo420.canva-linux" },
+    { fileExists: () => false },
+  );
+
+  assert.equal(plan.isFlatpak, true);
+  assert.equal(plan.selectedStore, "gnome-libsecret");
+  assert.deepEqual(plan.candidates[0], {
+    store: "gnome-libsecret",
+    reason: "freedesktop-secret-service",
+  });
+});
+
+test("Flatpak on KDE exposes kwallet6 and kwallet5 fallback candidates", () => {
+  const plan = selectLinuxPasswordStore(
+    {
+      FLATPAK_ID: "io.github.coletivo420.canva-linux",
+      XDG_CURRENT_DESKTOP: "KDE",
+    },
+    { fileExists: () => false },
+  );
+
+  assert.equal(plan.selectedStore, "gnome-libsecret");
+  assert.deepEqual(plan.candidates, [
+    { store: "gnome-libsecret", reason: "freedesktop-secret-service" },
+    { store: "kwallet6", reason: "kde-kwallet6-fallback" },
+    { store: "kwallet5", reason: "kde-kwallet5-fallback" },
+  ]);
+});
+
+test("KDE_SESSION_VERSION=5 selects kwallet5 compatibility in Flatpak", () => {
+  const plan = selectLinuxPasswordStore(
+    {
+      FLATPAK_ID: "io.github.coletivo420.canva-linux",
+      XDG_CURRENT_DESKTOP: "KDE",
+      KDE_SESSION_VERSION: "5",
+    },
+    { fileExists: () => false },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet5");
+  assert.deepEqual(
+    plan.candidates.map((candidate) => candidate.store),
+    ["gnome-libsecret", "kwallet6", "kwallet5"],
+  );
+});
+
+test("CANVA_LINUX_PASSWORD_STORE=kwallet5 is accepted", () => {
+  const plan = selectLinuxPasswordStore(
+    { CANVA_LINUX_PASSWORD_STORE: "kwallet5" },
+    { fileExists: () => false },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet5");
+});
+
+test("CANVA_LINUX_PASSWORD_STORE=basic_text is rejected", () => {
+  const warnings = [];
+  const plan = selectLinuxPasswordStore(
+    { CANVA_LINUX_PASSWORD_STORE: "basic_text" },
+    {
+      fileExists: () => false,
+      logger: {
+        info() {},
+        warn(message) {
+          warnings.push(message);
+        },
+      },
+    },
+  );
+
+  assert.equal(plan.selectedStore, "gnome-libsecret");
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /Ignoring unsafe or unsupported/);
+});
+
+test("invalid password store override falls back to auto", () => {
+  const warnings = [];
+  const plan = selectLinuxPasswordStore(
+    { XDG_CURRENT_DESKTOP: "KDE", CANVA_LINUX_PASSWORD_STORE: "basic" },
+    {
+      fileExists: () => false,
+      logger: {
+        info() {},
+        warn(message) {
+          warnings.push(message);
+        },
+      },
+    },
+  );
+
+  assert.equal(plan.selectedStore, "kwallet6");
+  assert.equal(warnings.length, 1);
 });
 
 test("configures Chromium password-store before credential backend checks", () => {
   const switches = [];
-  const preference = configureLinuxNativeCredentialStore({
+  const plan = configureLinuxNativeCredentialStore({
     platform: "linux",
     env: { XDG_CURRENT_DESKTOP: "KDE" },
+    logger: { info() {}, warn() {} },
     app: {
       commandLine: {
         appendSwitch(name, value) {
@@ -237,6 +346,6 @@ test("configures Chromium password-store before credential backend checks", () =
     },
   });
 
-  assert.equal(preference.preferredStore, "kwallet6");
+  assert.equal(plan.selectedStore, "kwallet6");
   assert.deepEqual(switches, [["password-store", "kwallet6"]]);
 });

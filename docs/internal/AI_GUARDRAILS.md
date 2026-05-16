@@ -282,6 +282,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not log passwords, cookies, tokens, session values or credential material.
 - Persistent Canva login on Linux depends on a secure Secret Service backend with available encryption;
   the selected backend name alone is not sufficient.
+- Flatpak credential lookup uses Secret Service/Freedesktop as the primary path. KWallet D-Bus access is a compatibility fallback for KDE/Plasma, including KWallet5.
 - Secure Electron backend names include `kwallet`, `kwallet5`, `kwallet6`, and `gnome_libsecret`.
 - `basic_text` is an insecure fallback and must use ephemeral session mode.
 - Unknown or failed credential-backend detection, failed encryption-availability detection,
