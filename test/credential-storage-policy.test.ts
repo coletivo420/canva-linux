@@ -2,6 +2,8 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const test = require("node:test");
 
 const { loadRuntimeModule } = require("./helpers/runtime-module");
@@ -344,11 +346,14 @@ test("Flatpak ephemeral warning explains host Secret Service and KWallet access"
   );
 });
 
-const fs = require("node:fs");
-const path = require("node:path");
-
 function readRepositoryFile(relativePath) {
-  return fs.readFileSync(path.join(process.env.CANVA_SCRIPT_REPO_ROOT || path.join(__dirname, "..", ".."), relativePath), "utf8");
+  return fs.readFileSync(
+    path.join(
+      process.env.CANVA_SCRIPT_REPO_ROOT || path.join(__dirname, "..", ".."),
+      relativePath,
+    ),
+    "utf8",
+  );
 }
 
 test("root Flatpak manifest includes org.kde.kwalletd5", () => {
