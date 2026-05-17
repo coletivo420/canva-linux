@@ -174,7 +174,7 @@ Before changing logging code, read:
 
 AI patches must not:
 
-- reintroduce module-specific `CANVA_DEBUG` modes
+- reintroduce module-specific runtime debug modes
 - create separate log files
 - remove GPU diagnostics from `canva-linux --debug=1`
 - use unsafe `JSON.stringify(args)`

@@ -57,24 +57,12 @@ type GpuDiagnosticsApp = {
 };
 type StatusLogArg = string | number | boolean | null | undefined;
 type RuntimeEnvironment = {
-  backend: string;
-  vendor: string;
-  dri: string;
-  display: string;
-  disableGpu: string;
-  launcherReport: string;
+  source: string;
 };
 
-function getGpuRuntimeEnvironment(
-  env: NodeJS.ProcessEnv = process.env,
-): RuntimeEnvironment {
+function getGpuRuntimeEnvironment(): RuntimeEnvironment {
   return {
-    backend: env.CANVA_GPU_BACKEND || "unknown",
-    vendor: env.CANVA_GPU_VENDOR || "unknown",
-    dri: env.CANVA_GPU_DRI_RENDER_NODE || "unknown",
-    display: env.CANVA_GPU_DISPLAY_SERVER || "unknown",
-    disableGpu: env.CANVA_DISABLE_GPU || "0",
-    launcherReport: env.CANVA_GPU_LAUNCHER_REPORT || "unavailable",
+    source: "runtime-cli",
   };
 }
 
@@ -148,18 +136,7 @@ function registerGpuDiagnostics({
   const runtimeEnv = getGpuRuntimeEnvironment();
 
   logGpu("ok", "gpu:runtime", "central-log-file", logFilePath);
-  logGpu("ok", "gpu:launcher", "launcher-report", runtimeEnv.launcherReport);
-
-  logGpu(
-    "ok",
-    "gpu:runtime",
-    "runtime-env",
-    `backend=${runtimeEnv.backend}`,
-    `vendor=${runtimeEnv.vendor}`,
-    `dri=${runtimeEnv.dri}`,
-    `display=${runtimeEnv.display}`,
-    `disableGpu=${runtimeEnv.disableGpu}`,
-  );
+  logGpu("ok", "gpu:runtime", "runtime-options-source", runtimeEnv.source);
 
   app.on("gpu-info-update", async () => {
     try {

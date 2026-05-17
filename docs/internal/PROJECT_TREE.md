@@ -45,7 +45,7 @@ data/                      Desktop and AppStream metadata.
 - c420ui owns Action Engine, Command Runner, Root Provider, host dependency
   policy, development provider, artifact recipe validation, workflow runner, and
   terminal UI.
-- Canva Linux owns Electron runtime, OAuth behavior, `CANVA_DEBUG`, package
+- Canva Linux owns Electron runtime, OAuth behavior, runtime debug flags, package
   recipes, metadata, and project config.
 - Canva Linux launchers do not run dependency installation directly.
 - Canva Linux does not validate generic artifact recipes.

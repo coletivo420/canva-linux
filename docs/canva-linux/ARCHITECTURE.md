@@ -14,7 +14,7 @@ project data; c420ui owns reusable orchestration.
 
 The compiled `canva-linux` Electron runtime owns app flags such as `--help`, `--version`, `--debug=1`, `--debug=2`, `--credential-store=...`, and display/GPU runtime controls. `canva-linux-c420ui-builder` remains the c420ui installer/development launcher and must not implement app runtime debug flags.
 
-Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The old `CANVA_DEBUG` environment path was removed.
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Runtime settings are parsed from explicit CLI flags.
 
 ## Controls
 

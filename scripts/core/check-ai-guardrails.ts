@@ -117,7 +117,7 @@ const requiredSplitDocFragments: Record<string, string[]> = {
     "dependent project",
     "c420ui",
     "Electron runtime",
-    "CANVA_DEBUG",
+    "runtime debug flags",
     "Implementing files",
     "Boundary checks",
     "Forbidden regressions",

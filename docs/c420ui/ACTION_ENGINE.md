@@ -19,7 +19,7 @@ action is allowed to execute.
 
 - Concrete Canva Linux command recipes.
 - Canva Linux shell script internals.
-- Electron runtime behavior, OAuth behavior, or `CANVA_DEBUG` behavior.
+- Electron runtime behavior, OAuth behavior, or runtime debug behavior.
 - Project-specific fallback execution in adapters.
 
 ## Planned actions

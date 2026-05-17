@@ -21,7 +21,7 @@ dependent project that supplies metadata, actions, recipes, and runtime scripts.
 
 ## Must not control
 
-- Canva Linux Electron runtime behavior, OAuth behavior, `CANVA_DEBUG`, tabs,
+- Canva Linux Electron runtime behavior, OAuth behavior, runtime debug flags, tabs,
   uploads, CL-EyeDropper, credential-storage decisions, or browser policy.
 - Canva Linux action IDs, AppStream metadata, desktop file IDs, package names,
   shell scripts, or package recipes.

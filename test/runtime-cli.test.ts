@@ -74,6 +74,24 @@ test("rejects unsupported GPU backend", () => {
   );
 });
 
+
+test("rejects near-miss valued option prefixes", () => {
+  for (const arg of [
+    "--debugger=1",
+    "--debug-mode=1",
+    "--credential-store-extra=kwallet6",
+    "--gpu-backendfoo=software",
+    "--gpu-backend-mode=software",
+  ]) {
+    assert.doesNotThrow(() => parse(arg));
+    const parsed = parse(arg);
+    assert.equal(parsed.debugLevel, 0);
+    assert.equal(parsed.credentialStore, "auto");
+    assert.equal(parsed.gpuBackend, "auto");
+    assert.ok(parsed.passthroughArgs.includes(arg));
+  }
+});
+
 test("rejects conflicting display forcing flags", () => {
   assert.throws(
     () => parse("--force-x11", "--force-wayland"),
