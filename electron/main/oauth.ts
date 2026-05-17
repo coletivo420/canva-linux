@@ -6,8 +6,12 @@ export type CanvaTabEntry = {
     webContents: {
       id?: number;
       getURL?(): string;
+      getTitle?(): string;
+      loadURL?(url: string): Promise<void> | void;
       reload(): void;
       reloadIgnoringCache?(): void;
+      executeJavaScript?(code: string): Promise<unknown>;
+      once?(event: string, listener: (...args: any[]) => void): unknown;
     };
   };
 };
@@ -52,15 +56,16 @@ export type RegisterAuthPopupOptions = {
 };
 
 const CANVA_COOKIE_SUMMARY_URL = "https://www.canva.com";
+const CANVA_CANONICAL_HOME_URL = "https://www.canva.com/";
 
 /**
  * After Canva's authorized OAuth callback loads, Electron's session flush
  * resolves once Chromium has accepted the storage flush request, but the source
  * WebContents can still observe stale cookies/storage if it is reloaded in the
- * same tick as the popup callback. This short settle window prevents the source
- * tab reload from racing the shared session propagation across WebContents.
+ * same tick as the popup callback. This settle window prevents the source tab
+ * reload from racing Canva's internal storage propagation across WebContents.
  */
-const DEFAULT_POST_OAUTH_SESSION_FLUSH_DELAY_MS = 250;
+const DEFAULT_POST_OAUTH_SESSION_FLUSH_DELAY_MS = 1000;
 
 /**
  * Some providers complete the callback through redirects where Electron may
@@ -121,6 +126,10 @@ function redactSensitiveUrlParams(url: string): string {
     return url;
   }
 }
+
+type StorageSummaryWebContents = {
+  executeJavaScript?(code: string): Promise<unknown>;
+};
 
 type CreateOAuthPopupInitialStateOptions = {
   popupId: number;
@@ -341,6 +350,175 @@ export function createOAuthHelpers({
     }
   }
 
+  async function logCanvaStorageSummary(
+    webContents: StorageSummaryWebContents,
+    context: string,
+  ): Promise<void> {
+    if (!webContents.executeJavaScript) {
+      debugLog(
+        "oauth",
+        "oauth-storage-summary-unavailable",
+        `context=${context}`,
+      );
+      return;
+    }
+
+    try {
+      const summary = await webContents.executeJavaScript(`
+        (async () => {
+          const safeCount = (read) => {
+            try { return read(); } catch { return null; }
+          };
+          const indexedDbDatabases = await (async () => {
+            try {
+              if (!globalThis.indexedDB?.databases) return null;
+              const databases = await globalThis.indexedDB.databases();
+              return Array.isArray(databases) ? databases.length : null;
+            } catch {
+              return null;
+            }
+          })();
+          const cacheStorageKeys = await (async () => {
+            try {
+              if (!globalThis.caches?.keys) return null;
+              const keys = await globalThis.caches.keys();
+              return Array.isArray(keys) ? keys.length : null;
+            } catch {
+              return null;
+            }
+          })();
+
+          return {
+            localStorageKeys: safeCount(() => globalThis.localStorage.length),
+            sessionStorageKeys: safeCount(() => globalThis.sessionStorage.length),
+            indexedDbDatabases,
+            cacheStorageKeys,
+          };
+        })();
+      `);
+      const values = (summary && typeof summary === "object" ? summary : {}) as {
+        cacheStorageKeys?: number | null;
+        indexedDbDatabases?: number | null;
+        localStorageKeys?: number | null;
+        sessionStorageKeys?: number | null;
+      };
+      const formatCount = (value: number | null | undefined) =>
+        typeof value === "number" && Number.isFinite(value)
+          ? String(value)
+          : "unavailable";
+
+      debugLog(
+        "oauth",
+        "oauth-storage-summary",
+        `context=${context}`,
+        `localStorageKeys=${formatCount(values.localStorageKeys)}`,
+        `sessionStorageKeys=${formatCount(values.sessionStorageKeys)}`,
+        `indexedDbDatabases=${formatCount(values.indexedDbDatabases)}`,
+        `cacheStorageKeys=${formatCount(values.cacheStorageKeys)}`,
+      );
+    } catch (error) {
+      debugLog(
+        "oauth",
+        "oauth-storage-summary-error",
+        `context=${context}`,
+        String(error),
+      );
+    }
+  }
+
+  function looksLikeLocalizedPublicLanding(url: string, title: string): boolean {
+    try {
+      const parsed = new URL(url);
+      return (
+        parsed.hostname === "www.canva.com" &&
+        /^\/pt_br(?:\/|$)/i.test(parsed.pathname) &&
+        /(?:log in|login|sign up|signup|entrar|cadastre|registr)/i.test(title)
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  async function logPostOAuthSourceLoad(
+    entry: OAuthPopupEntry,
+    sourceTab: CanvaTabEntry,
+    reason: string,
+  ): Promise<void> {
+    const webContents = sourceTab.view.webContents;
+    const url = webContents.getURL?.() || "unknown";
+    const title = webContents.getTitle?.() || "unknown";
+
+    debugLog(
+      "oauth",
+      "post-oauth-source-load",
+      `popup=${entry.id}`,
+      `tab=${sourceTab.id}`,
+      `url=${redactSensitiveUrlParams(url)}`,
+      `title=${title}`,
+      `reason=${reason}`,
+    );
+    await logCanvaCookieSummary(getCanvaSession());
+    await logCanvaStorageSummary(webContents, "post-oauth-source-load");
+  }
+
+  function attachPostOAuthSourceProbe(
+    entry: OAuthPopupEntry,
+    sourceTab: CanvaTabEntry,
+    reason: string,
+  ): void {
+    const webContents = sourceTab.view.webContents;
+    let canonicalFallbackAttempted = false;
+    const onSourceLoad = () => {
+      logPostOAuthSourceLoad(entry, sourceTab, reason)
+        .then(() => {
+          const url = webContents.getURL?.() || "";
+          const title = webContents.getTitle?.() || "";
+          if (
+            canonicalFallbackAttempted ||
+            !webContents.loadURL ||
+            !looksLikeLocalizedPublicLanding(url, title)
+          ) {
+            return;
+          }
+
+          canonicalFallbackAttempted = true;
+          debugLog(
+            "oauth",
+            "post-oauth-canonical-home-fallback",
+            `popup=${entry.id}`,
+            `tab=${sourceTab.id}`,
+            `from=${redactSensitiveUrlParams(url)}`,
+            `to=${CANVA_CANONICAL_HOME_URL}`,
+          );
+          webContents.once?.("did-finish-load", () => {
+            logPostOAuthSourceLoad(
+              entry,
+              sourceTab,
+              "canonical-home-fallback",
+            ).catch((error) => {
+              debugLog("oauth", "post-oauth-source-load-error", String(error));
+            });
+          });
+          webContents.loadURL(CANVA_CANONICAL_HOME_URL);
+        })
+        .catch((error) => {
+          debugLog("oauth", "post-oauth-source-load-error", String(error));
+        });
+    };
+
+    if (webContents.once) {
+      webContents.once("did-finish-load", onSourceLoad);
+    } else {
+      debugLog(
+        "oauth",
+        "post-oauth-source-load-probe-unavailable",
+        `popup=${entry.id}`,
+        `tab=${sourceTab.id}`,
+        "reason=missing-did-finish-load-listener",
+      );
+    }
+  }
+
   function reloadOAuthSourceTab(entry: OAuthPopupEntry, reason: string): void {
     const { sourceTab } = resolveOAuthSourceTab(entry);
 
@@ -356,9 +534,17 @@ export function createOAuthHelpers({
       return;
     }
 
-    const url = sourceTab.view.webContents.getURL?.() || "unknown";
-    const reloadIgnoringCache = sourceTab.view.webContents.reloadIgnoringCache;
-    const mode = reloadIgnoringCache ? "reloadIgnoringCache" : "reload";
+    const webContents = sourceTab.view.webContents;
+    const url = webContents.getURL?.() || "unknown";
+    const reloadIgnoringCache = webContents.reloadIgnoringCache;
+    const canLoadCanonicalHome = Boolean(webContents.loadURL);
+    const mode = canLoadCanonicalHome
+      ? "loadURL"
+      : reloadIgnoringCache
+        ? "reloadIgnoringCache"
+        : "reload";
+
+    attachPostOAuthSourceProbe(entry, sourceTab, reason);
 
     debugLog(
       "oauth",
@@ -367,13 +553,16 @@ export function createOAuthHelpers({
       `tab=${sourceTab.id}`,
       `mode=${mode}`,
       `url=${redactSensitiveUrlParams(url)}`,
+      ...(canLoadCanonicalHome ? [`target=${CANVA_CANONICAL_HOME_URL}`] : []),
       `reason=${reason}`,
     );
 
-    if (reloadIgnoringCache) {
-      reloadIgnoringCache.call(sourceTab.view.webContents);
+    if (webContents.loadURL) {
+      webContents.loadURL(CANVA_CANONICAL_HOME_URL);
+    } else if (reloadIgnoringCache) {
+      reloadIgnoringCache.call(webContents);
     } else {
-      sourceTab.view.webContents.reload();
+      webContents.reload();
     }
   }
 
@@ -405,7 +594,10 @@ export function createOAuthHelpers({
     loadedUrl: string,
     options: {
       loadedCallbackType: "authorized" | "oauth" | null;
-      trigger: "did-finish-load" | "fallback";
+      trigger:
+        | "did-finish-load"
+        | "fallback"
+        | "popup-close-after-authorized-callback";
     },
   ): Promise<void> {
     if (entry.completionHandled) {
@@ -445,6 +637,10 @@ export function createOAuthHelpers({
     );
     await delay(postOAuthSessionFlushDelayMs);
     await logCanvaCookieSummary(canvaSession);
+    await logCanvaStorageSummary(
+      entry.window.webContents,
+      "authorized-callback-post-flush",
+    );
 
     debugLog(
       "oauth",
@@ -687,6 +883,26 @@ export function createOAuthHelpers({
     window.on("close", (event?: { preventDefault?: () => void }) => {
       if (!entry.allowClose && !entry.completionHandled) {
         event?.preventDefault?.();
+        if (entry.sawAuthorizedCallback) {
+          entry.closeReason = "close-after-authorized-callback";
+          debugLog(
+            "oauth",
+            "popup-close-after-authorized-callback",
+            `popup=${popupId}`,
+          );
+          finalizeAuthorizedOAuthCallback(
+            entry,
+            entry.pendingCallbackUrl || window.webContents.getURL() || startUrl,
+            {
+              loadedCallbackType: entry.pendingCallbackType,
+              trigger: "popup-close-after-authorized-callback",
+            },
+          ).catch((error) => {
+            debugLog("oauth", "finalize-authorized-callback-error", String(error));
+          });
+          return;
+        }
+
         entry.closeReason = "closed-before-callback";
         debugLog("oauth", "popup-close-before-callback", `popup=${popupId}`);
         return;
