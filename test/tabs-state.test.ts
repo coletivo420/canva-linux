@@ -112,7 +112,7 @@ function createHelpers() {
   return { helpers, mainWindow, state, toolbarView };
 }
 
-test("toolbarState orders tabs and marks home tab as non-closable", () => {
+test("toolbarState separates pinned home from regular tabs", () => {
   const { helpers, state } = createHelpers();
   state.activeTabId = 2;
   state.tabs.set(2, {
@@ -120,7 +120,7 @@ test("toolbarState orders tabs and marks home tab as non-closable", () => {
     createdAt: 20,
     title: "Design",
     url: "https://www.canva.com/design",
-    favicon: "icon.png",
+    favicon: "./icon.png",
     isHome: false,
     view: createView(2),
   });
@@ -136,24 +136,27 @@ test("toolbarState orders tabs and marks home tab as non-closable", () => {
 
   assert.deepEqual(helpers.toolbarState(), {
     activeTabId: 2,
+    pinnedHomeTab: {
+      id: 1,
+      title: "Home",
+      url: "https://www.canva.com/",
+      favicon: null,
+      canClose: false,
+      isHome: true,
+    },
     tabs: [
-      {
-        id: 1,
-        title: "Home",
-        url: "https://www.canva.com/",
-        favicon: null,
-        canClose: false,
-      },
       {
         id: 2,
         title: "Design",
         url: "https://www.canva.com/design",
-        favicon: "icon.png",
+        favicon: "./icon.png",
         canClose: true,
+        isHome: false,
       },
     ],
     theme: "dark",
   });
+  assert.equal(helpers.toolbarState().tabs.some((tab) => tab.isHome), false);
 });
 
 test("toolbarState uses tab id as secondary ordering tiebreaker", () => {
@@ -214,4 +217,31 @@ test("findTabByWebContents resolves by webContents id", () => {
 
   assert.equal(helpers.findTabByWebContents({ id: 55 })?.id, 1);
   assert.equal(helpers.findTabByWebContents({ id: 99 }), null);
+});
+
+
+test("toolbarState blocks remote favicon URLs from the toolbar state", () => {
+  const { helpers, state } = createHelpers();
+  state.tabs.set(1, {
+    id: 1,
+    createdAt: 1,
+    title: "Home",
+    url: "https://www.canva.com/",
+    favicon: "https://www.canva.com/favicon.ico",
+    isHome: true,
+    view: createView(1),
+  });
+  state.tabs.set(2, {
+    id: 2,
+    createdAt: 2,
+    title: "Design",
+    url: "https://www.canva.com/design",
+    favicon: "data:image/png;base64,abc",
+    isHome: false,
+    view: createView(2),
+  });
+
+  const toolbarState = helpers.toolbarState();
+  assert.equal(toolbarState.pinnedHomeTab?.favicon, null);
+  assert.equal(toolbarState.tabs[0]?.favicon, "data:image/png;base64,abc");
 });

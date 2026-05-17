@@ -12,22 +12,22 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-14` for RC validation:
+Request changes if a PR preparing `0.1.4-15.Dev.8` for RC validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-14` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.8` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
-The `0.1.4-14` RC validation confirmed that the committed c420ui bootstrap bundle can start without local `node_modules`,
+The `0.1.4-15.Dev.8` RC validation confirmed that the committed c420ui bootstrap bundle can start without local `node_modules`,
 local `esbuild`, or launcher-side npm installation.
 
 Validated guarantees:
 
 - `c420uiVersion` remains independent from the Canva Linux dependent-project version.
-- `dependentProjectVersion` remains `0.1.4-14`.
+- `dependentProjectVersion` remains `0.1.4-15.Dev.8`.
 - `bootstrap/c420ui/manifest.json` sourceHash matches current TypeScript sources and project configuration.
 - Stale sourceHash detection fails as expected when bootstrap inputs are edited without rebuilding.
 - The launcher does not run `npm install` or `npm ci`.
@@ -39,8 +39,8 @@ Direct `./canva-linux.sh` startup was blocked in the validation container becaus
 
 Request changes if a PR:
 
-- changes version `0.1.4-14` without an explicit maintainer request;
-- introduces `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`;
+- changes version `0.1.4-15.Dev.8` without an explicit maintainer request;
+- introduces `0.1.4-dev.15.8`, `0.1.4-rc.15`, or `0.1.4.15.8`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
 
@@ -406,3 +406,12 @@ Request changes if a PR:
 - runs `npm ci` or `npm install` directly from project launchers;
 - moves project dependency lists into c420ui core instead of project config;
 - moves npm dependency policy back into project shell helpers.
+
+## Dev.8 pinned home tab-strip review guardrail
+
+- Dev.8 starts the internal tab-strip redesign. The pinned home tab remains part of the tab model.
+  It must be rendered by a dedicated pinned-home renderer and must never be rendered as a regular tab item.
+- The pinned home tab belongs to the tab strip, not the window titlebar.
+  Do not change BrowserWindow title logic for this feature. Do not render the home tab twice.
+- Confirm that `toolbarState().tabs` excludes the home tab and that the toolbar UI renders exactly one `.pinned-home` control with no duplicate `#home` action.
+

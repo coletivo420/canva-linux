@@ -15,6 +15,14 @@
   manual dry-run outcomes, and release-blocker grep review.
 
 
+## [0.1.4-15.Dev.8] - 2026-05-17
+
+### Added
+- Dev.8 starts the internal tab-strip redesign. The pinned home tab remains part of the tab model.
+  It must be rendered by a dedicated pinned-home renderer and must never be rendered as a regular tab item.
+- The pinned home tab belongs to the tab strip, not the window titlebar.
+  Do not change BrowserWindow title logic for this feature. Do not render the home tab twice.
+
 ## [0.1.4-14] - 2026-05-14
 
 ### Changed

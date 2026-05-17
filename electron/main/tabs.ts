@@ -33,15 +33,19 @@ type CreateTabHelpersOptions = {
   toolbarViewRef: () => WebContentsViewLike | null | undefined;
 };
 
+export type ToolbarTabItem = {
+  id: number;
+  title: string;
+  url: string;
+  favicon?: string | null;
+  canClose: boolean;
+  isHome: boolean;
+};
+
 export type ToolbarState = {
   activeTabId: number | null;
-  tabs: Array<{
-    id: number;
-    title: string;
-    url: string;
-    favicon?: string | null;
-    canClose: boolean;
-  }>;
+  pinnedHomeTab: ToolbarTabItem | null;
+  tabs: ToolbarTabItem[];
   theme: string;
 };
 
@@ -97,17 +101,41 @@ export function createTabHelpers({
     );
   }
 
-  /** @returns {{ activeTabId: number | null, tabs: Array<{ id: number, title: string, url: string, favicon?: string | null, canClose: boolean }>, theme: string }} */
+  /**
+   * @param {string | null | undefined} favicon
+   * @returns {string | null}
+   */
+  function safeToolbarFaviconUrl(favicon: string | null | undefined): string | null {
+    if (!favicon) return null;
+    if (/^(?:data:|file:)/i.test(favicon)) return favicon;
+    if (/^[./]/.test(favicon)) return favicon;
+    return null;
+  }
+
+  /**
+   * @param {TabEntry} tab
+   * @returns {ToolbarTabItem}
+   */
+  function toToolbarTabItem(tab: TabEntry): ToolbarTabItem {
+    return {
+      id: tab.id,
+      title: tab.title,
+      url: tab.url,
+      favicon: safeToolbarFaviconUrl(tab.favicon),
+      canClose: !tab.isHome,
+      isHome: Boolean(tab.isHome),
+    };
+  }
+
+  /** @returns {{ activeTabId: number | null, pinnedHomeTab: ToolbarTabItem | null, tabs: ToolbarTabItem[], theme: string }} */
   function toolbarState(): ToolbarState {
+    const orderedTabs = getOrderedTabs();
+    const homeTab = orderedTabs.find((tab) => tab.isHome) ?? null;
+
     return {
       activeTabId: state.activeTabId,
-      tabs: getOrderedTabs().map((tab) => ({
-        id: tab.id,
-        title: tab.title,
-        url: tab.url,
-        favicon: tab.favicon,
-        canClose: !tab.isHome,
-      })),
+      pinnedHomeTab: homeTab ? toToolbarTabItem(homeTab) : null,
+      tabs: orderedTabs.filter((tab) => !tab.isHome).map(toToolbarTabItem),
       theme: nativeTheme.shouldUseDarkColors ? "dark" : "light",
     };
   }

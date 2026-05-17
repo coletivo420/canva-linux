@@ -27,17 +27,17 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## Versioning
 
-- Preserve version `0.1.4-14` unless the maintainer explicitly requests a versioning change.
-- Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
+- Preserve version `0.1.4-15.Dev.8` unless the maintainer explicitly requests a versioning change.
+- Do not introduce `0.1.4-dev.15.8`, `0.1.4-rc.15`, or `0.1.4.15.8`.
 - Preserve the `N.N.N-X` release versioning rule.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
 - Every behavior change must update `CHANGELOG.md`.
 
 
 
-## 0.1.4-14 split documentation policy
+## 0.1.4-15.Dev.8 split documentation policy
 
-- Current maintained release target is `0.1.4-14`.
+- Current maintained Dev.8 phase target is `0.1.4-15.Dev.8`.
 - The release version format must remain `N.N.N-X`.
 - Canva Linux is the dependent project; c420ui is the generic engine.
 - Canva Linux does not install dependencies directly from launchers or shell helpers, except for the documented Stage 0
@@ -425,3 +425,18 @@ The c420ui bootstrap manifest must keep engine identity and dependent-project id
 Do not add dependent-project dependency repair back to `scripts/run-c420ui.ts`. Interactive startup must start c420ui
 first, then run host dependency validation or repair as a c420ui startup task so failures stay visible in the UI. Keep
 Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adjacent adapter code, not in c420ui core.
+
+## Dev.8 pinned home tab-strip guardrail
+
+- Dev.8 starts the internal tab-strip redesign. The pinned home tab remains part of the tab model.
+  It must be rendered by a dedicated pinned-home renderer and must never be rendered as a regular tab item.
+- The pinned home tab belongs to the tab strip, not the window titlebar.
+  Do not change BrowserWindow title logic for this feature. Do not render the home tab twice.
+- Do not remove the internal home tab, change OAuth, credential storage, GPU diagnostics, c420ui metadata logic,
+  or alter favicon CSP policy while working on this feature.
+
+
+## Historical release-policy reference
+
+- Historical `0.1.4-14` and `N.N.N-X` release-policy references remain documented for split-documentation continuity.
+  The active Dev.8 phase is `0.1.4-15.Dev.8`.

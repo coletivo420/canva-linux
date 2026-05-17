@@ -1,10 +1,10 @@
 {
-  "displayVersion": "0.1.4-14",
+  "displayVersion": "0.1.4-15.Dev",
   "status": "Alpha",
-  "phase": "0.1.4-14",
+  "phase": "0.1.4-15.Dev.8",
   "projectName": "Canva Linux",
   "projectSubtitle": "Install and Development Workspace",
-  "toolTitle": "Canva Linux — Install and Development Tool",
+  "toolTitle": "Canva Linux \u2014 Install and Development Tool",
   "c420uiTitle": "Canva Linux c420ui terminal interface",
   "stateDirectoryName": "canva-linux",
   "appId": "io.github.coletivo420.canva-linux",
@@ -12,19 +12,19 @@
   "repositoryUrl": "https://github.com/coletivo420/canva-linux",
   "launcherCommand": "./canva-linux.sh",
   "logoLines": [
-    "┌──────────────────────────────┐",
-    "│ .::==++**########**++==:::.  │",
-    "│ .:=+*#%%%%%%%%%%%%%%%%#*+=:. │",
-    "│ :=*#%%%%#*++==++*#%%%%#*=:   │",
-    "│ =*#%%%#+-:::::::::-+#%%%#*=  │",
-    "│ +#%%%*-::::::::::::-*%%%#+   │",
-    "│ *%%%#-::: CANVA LINUX :::#*  │",
-    "│ +#%%%*-::::::::::::-*%%%#+   │",
-    "│ =*#%%%#+-:::::::::-+#%%%#*=  │",
-    "│ :=*#%%%%#*++==++*#%%%%#*=:   │",
-    "│ .:=+*#%%%%%%%%%%%%%%%%#*+=:. │",
-    "│ .::==++**########**++==:::.  │",
-    "└──────────────────────────────┘"
+    "\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510",
+    "\u2502 .::==++**########**++==:::.  \u2502",
+    "\u2502 .:=+*#%%%%%%%%%%%%%%%%#*+=:. \u2502",
+    "\u2502 :=*#%%%%#*++==++*#%%%%#*=:   \u2502",
+    "\u2502 =*#%%%#+-:::::::::-+#%%%#*=  \u2502",
+    "\u2502 +#%%%*-::::::::::::-*%%%#+   \u2502",
+    "\u2502 *%%%#-::: CANVA LINUX :::#*  \u2502",
+    "\u2502 +#%%%*-::::::::::::-*%%%#+   \u2502",
+    "\u2502 =*#%%%#+-:::::::::-+#%%%#*=  \u2502",
+    "\u2502 :=*#%%%%#*++==++*#%%%%#*=:   \u2502",
+    "\u2502 .:=+*#%%%%%%%%%%%%%%%%#*+=:. \u2502",
+    "\u2502 .::==++**########**++==:::.  \u2502",
+    "\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2518"
   ],
-  "versionReleaseNotes": "Release preparation for c420ui log selection, packaged artifacts, release workflow and documentation."
+  "versionReleaseNotes": "Dev.8 starts the tab-strip structure redesign by rendering the pinned home tab through a dedicated pinned-home renderer instead of the regular tab renderer."
 }

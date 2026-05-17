@@ -67,11 +67,12 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-14";
-const currentReleaseDate = "2026-05-14";
-const previousReleaseVersion = "0.1.4-12";
-const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+$/;
-const forbiddenCurrentReleaseVersions = ["0.1.4-dev.14", "0.1.4-rc.14", "0.1.4.14"];
+const currentReleaseVersion = "0.1.4-15.Dev.8";
+const currentDisplayVersion = "0.1.4-15.Dev";
+const currentReleaseDate = "2026-05-17";
+const previousReleaseVersion = "0.1.4-14";
+const releaseVersionPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+const forbiddenCurrentReleaseVersions = ["0.1.4-dev.15.8", "0.1.4-rc.15", "0.1.4.15.8"];
 const activePublicReleaseDocs = [
   "README.md",
   "docs/README.md",
@@ -1657,6 +1658,55 @@ function checkInstallationDetectionContract(failures: string[]): void {
   }
 }
 
+function checkPinnedHomeTabStripContract(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const tabsPath = "electron/main/tabs.ts";
+  const toolbarPath = "electron/ui/toolbar.html";
+  const tabsSource = readProjectFile(rootDir, tabsPath);
+  const toolbarSource = readProjectFile(rootDir, toolbarPath);
+
+  for (const fragment of [
+    "export type ToolbarTabItem",
+    "isHome: boolean",
+    "pinnedHomeTab: ToolbarTabItem | null",
+    "function toToolbarTabItem(tab: TabEntry): ToolbarTabItem",
+    "pinnedHomeTab: homeTab ? toToolbarTabItem(homeTab) : null",
+    "tabs: orderedTabs.filter((tab) => !tab.isHome).map(toToolbarTabItem)",
+  ]) {
+    if (!tabsSource.includes(fragment)) failures.push(`${tabsPath}: missing pinned-home state fragment ${fragment}`);
+  }
+
+  for (const fragment of [
+    "pinned-home-slot",
+    "function renderPinnedHomeTab(tab, activeTabId)",
+    "function renderRegularTabs(tabs, activeTabId)",
+    "renderPinnedHomeTab(state?.pinnedHomeTab || null",
+    "renderRegularTabs(regularTabs",
+    "window.canvaTabs.send('go-home')",
+    "[toolbar-ui] pinned-home-click",
+  ]) {
+    if (!toolbarSource.includes(fragment)) failures.push(`${toolbarPath}: missing pinned-home renderer fragment ${fragment}`);
+  }
+
+  const pinnedRendererStart = toolbarSource.indexOf("function renderPinnedHomeTab");
+  const regularRendererStart = toolbarSource.indexOf("function renderRegularTabs");
+  if (pinnedRendererStart === -1 || regularRendererStart === -1 || pinnedRendererStart > regularRendererStart) {
+    failures.push(`${toolbarPath}: dedicated pinned-home renderer must be defined before the regular tab renderer`);
+  } else {
+    const pinnedRenderer = toolbarSource.slice(pinnedRendererStart, regularRendererStart);
+    if (pinnedRenderer.includes("tab-close")) {
+      failures.push(`${toolbarPath}: pinned home renderer must not create tab-close`);
+    }
+  }
+
+  if (toolbarSource.includes('id="home"') || toolbarSource.includes("getElementById('home')")) {
+    failures.push(`${toolbarPath}: must not contain a duplicate visible #home action`);
+  }
+  if (toolbarSource.includes("for (const tab of state.tabs)")) {
+    failures.push(`${toolbarPath}: regular tab renderer must not iterate state.tabs directly`);
+  }
+}
+
 function checkVersionConsistency(failures: string[]): void {
   const rootDir = findProjectRoot();
   const pkg = JSON.parse(readProjectFile(rootDir, "package.json")) as { version?: string };
@@ -1679,9 +1729,9 @@ function checkVersionConsistency(failures: string[]): void {
   if (phaseMatch[1] !== expectedPhase) {
     failures.push(`PROJECT_PHASE mismatch: expected ${expectedPhase}, got ${phaseMatch[1]}`);
   }
-  if (displayVersionMatch[1] !== expectedPhase) {
+  if (displayVersionMatch[1] !== projectUi.displayVersion) {
     failures.push(
-      `PROJECT_DISPLAY_VERSION mismatch: expected ${expectedPhase}, got ${displayVersionMatch[1]}`,
+      `PROJECT_DISPLAY_VERSION mismatch: expected ${projectUi.displayVersion || "missing"}, got ${displayVersionMatch[1]}`,
     );
   }
   if (projectUi.phase !== expectedPhase) {
@@ -1689,9 +1739,9 @@ function checkVersionConsistency(failures: string[]): void {
       `project-ui phase mismatch: expected ${expectedPhase}, got ${projectUi.phase || "missing"}`,
     );
   }
-  if (projectUi.displayVersion !== expectedPhase) {
+  if (projectUi.displayVersion !== currentDisplayVersion) {
     failures.push(
-      `project-ui displayVersion mismatch: expected ${expectedPhase}, got ${projectUi.displayVersion || "missing"}`,
+      `project-ui displayVersion mismatch: expected ${currentDisplayVersion}, got ${projectUi.displayVersion || "missing"}`,
     );
   }
 }
@@ -1896,15 +1946,15 @@ function checkReleaseContract(failures: string[]): void {
 
   if (pkg.version) {
     const expectedPhase = expectedPhaseFromVersion(pkg.version);
-    if (projectUi.displayVersion !== expectedPhase) {
-      failures.push(`config/canva-linux/project-ui.json: displayVersion must be ${expectedPhase}`);
+    if (projectUi.displayVersion !== currentDisplayVersion) {
+      failures.push(`config/canva-linux/project-ui.json: displayVersion must be ${currentDisplayVersion}`);
     }
     if (projectUi.phase !== expectedPhase) {
       failures.push(`config/canva-linux/project-ui.json: phase must be ${expectedPhase}`);
     }
-    if (displayVersion !== expectedPhase) {
+    if (displayVersion !== projectUi.displayVersion) {
       failures.push(
-        `scripts/app-identity-common.sh: PROJECT_DISPLAY_VERSION must be ${expectedPhase}`,
+        `scripts/app-identity-common.sh: PROJECT_DISPLAY_VERSION must be ${projectUi.displayVersion || "missing"}`,
       );
     }
     if (phase !== expectedPhase) {
@@ -2064,6 +2114,7 @@ export function main(): number {
   checkDetectionProviderContract(failures);
   checkInstallationDetectionContract(failures);
   checkVersionConsistency(failures);
+  checkPinnedHomeTabStripContract(failures);
   checkReleaseContract(failures);
   checkDevelopmentTaskRecipes(failures);
   checkLauncherBootstrapDependencyPolicy(failures);

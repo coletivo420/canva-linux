@@ -45,6 +45,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.1.4-15.Dev.8" date="2026-05-17">
+      <description>
+        <p>Dev.8 starts the tab-strip structure redesign by rendering the pinned home tab through a dedicated pinned-home renderer instead of the regular tab renderer.</p>
+      </description>
+    </release>
     <release version="0.1.4-14" date="2026-05-14">
       <description>
         <p>Completed the c420ui separation cleanup, centralized host dependency and artifact recipe validation, and refreshed release-readiness documentation while preserving runtime behavior.</p>

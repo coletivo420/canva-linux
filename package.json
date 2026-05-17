@@ -1,6 +1,6 @@
 {
   "name": "canva-linux",
-  "version": "0.1.4-14",
+  "version": "0.1.4-15.Dev.8",
   "description": "A community open-source desktop wrapper for use with Canva",
   "main": ".build/electron/main/index.js",
   "author": "Community",
@@ -56,7 +56,8 @@
     "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
     "build:c420ui-terminal": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js",
     "build:c420ui-bootstrap": "esbuild scripts/build-c420ui-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/scripts/build-c420ui-bootstrap.cjs && node .build/scripts/build-c420ui-bootstrap.cjs",
-    "check:c420ui-bootstrap": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js"
+    "check:c420ui-bootstrap": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js",
+    "build:metadata": "esbuild scripts/build-metadata.ts --bundle --platform=node --target=node22 --format=cjs --outfile=.build/scripts/build-metadata.cjs && node .build/scripts/build-metadata.cjs"
   },
   "build": {
     "appId": "io.github.coletivo420.canva-linux",
