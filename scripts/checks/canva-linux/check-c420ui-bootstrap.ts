@@ -35,6 +35,23 @@ function read(rootDir: string, relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
 }
 
+const C420UI_RUNTIME_CORRUPTION_MESSAGE =
+  "bootstrap/c420ui/run-c420ui.cjs appears structurally corrupted. Regenerate c420ui bootstrap from TypeScript sources.";
+
+function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: string[]): void {
+  const malformedSigcontClosure = /process\.once\("SIGCONT", function\(\) \{[\s\S]{0,600}?\n\s*};\s*\n\s*process\.kill\(process\.pid, "SIGTSTP"\)/.test(content);
+  const interactiveRunnerStart = content.indexOf("function createInteractiveActionRunner(options) {");
+  const hostDependenciesStart = content.indexOf("\n// packages/c420ui/src/host-dependencies.ts", interactiveRunnerStart);
+  const interactiveRunnerPrefix = interactiveRunnerStart === -1 || hostDependenciesStart === -1
+    ? ""
+    : content.slice(interactiveRunnerStart, hostDependenciesStart);
+  const assertOptionalInjectedInInteractiveRunner = /function assertOptional(?:Boolean|String|StringArray)\b/.test(interactiveRunnerPrefix);
+
+  if (malformedSigcontClosure || assertOptionalInjectedInInteractiveRunner) {
+    failures.push(C420UI_RUNTIME_CORRUPTION_MESSAGE);
+  }
+}
+
 function fileExistsAndIsNotEmpty(rootDir: string, relativePath: string, failures: string[]): void {
   const absolutePath = path.join(rootDir, relativePath);
   if (!fs.existsSync(absolutePath)) {
@@ -353,6 +370,9 @@ function main(): void {
 
   for (const relativePath of [uiBundlePath, cliBundlePath, builderBundlePath]) {
     validateJavaScriptSyntax(rootDir, relativePath, failures);
+  }
+  if (fs.existsSync(path.join(rootDir, uiBundlePath))) {
+    validateC420UIRuntimeBundleKnownCorruption(read(rootDir, uiBundlePath), failures);
   }
   validateGeneratedArtifactsMatchBuildRecipe(rootDir, [uiBundlePath, cliBundlePath, builderBundlePath], failures);
   validateBlessedRuntimeAssetsMatchPackage(rootDir, blessedRuntimeAssets, failures);
