@@ -36,18 +36,23 @@ function read(rootDir: string, relativePath: string): string {
 }
 
 const C420UI_RUNTIME_CORRUPTION_MESSAGE =
-  "bootstrap/c420ui/run-c420ui.cjs appears structurally corrupted. Regenerate c420ui bootstrap from TypeScript sources.";
+  "bootstrap/c420ui/run-c420ui.cjs appears structurally corrupted: host-dependency validators were interleaved into the interactive action runner. Regenerate bootstrap from TypeScript sources.";
+const C420UI_RUNTIME_SYNTAX_MESSAGE =
+  "c420ui bootstrap bundle failed syntax validation. Regenerate bootstrap from TypeScript sources.";
+const C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE =
+  "Generated c420ui bootstrap artifacts are stale. Run npm run build:c420ui-bootstrap.";
 
 function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: string[]): void {
   const malformedSigcontClosure = /process\.once\("SIGCONT", function\(\) \{[\s\S]{0,600}?\n\s*};\s*\n\s*process\.kill\(process\.pid, "SIGTSTP"\)/.test(content);
   const interactiveRunnerStart = content.indexOf("function createInteractiveActionRunner(options) {");
-  const hostDependenciesStart = content.indexOf("\n// packages/c420ui/src/host-dependencies.ts", interactiveRunnerStart);
-  const interactiveRunnerPrefix = interactiveRunnerStart === -1 || hostDependenciesStart === -1
+  const interactiveRunnerEnd = content.indexOf("var init_interactive_action_runner", interactiveRunnerStart);
+  const interactiveRunnerBlock = interactiveRunnerStart === -1 || interactiveRunnerEnd === -1
     ? ""
-    : content.slice(interactiveRunnerStart, hostDependenciesStart);
-  const assertOptionalInjectedInInteractiveRunner = /function assertOptional(?:Boolean|String|StringArray)\b/.test(interactiveRunnerPrefix);
+    : content.slice(interactiveRunnerStart, interactiveRunnerEnd);
+  const assertOptionalInjectedInInteractiveRunner = /function assertOptional(?:Boolean|String|StringArray|PurposeArray)\b/.test(interactiveRunnerBlock);
+  const hostValidatorsNearRunnerState = /(?:createInteractiveActionRunner|runAction|cancel|options\.appendLogText|state\.progressState)[\s\S]{0,2000}function assertOptional(?:Boolean|String|StringArray|PurposeArray)\b/.test(interactiveRunnerBlock);
 
-  if (malformedSigcontClosure || assertOptionalInjectedInInteractiveRunner) {
+  if (malformedSigcontClosure || assertOptionalInjectedInInteractiveRunner || hostValidatorsNearRunnerState) {
     failures.push(C420UI_RUNTIME_CORRUPTION_MESSAGE);
   }
 }
@@ -87,7 +92,7 @@ function validateJavaScriptSyntax(rootDir: string, relativePath: string, failure
   });
 
   if (result.error || result.status !== 0) {
-    failures.push(`${relativePath}: c420ui bootstrap bundles must be regenerated from TypeScript sources and pass node --check (${summarizeCommandFailure(result)})`);
+    failures.push(`${relativePath}: ${C420UI_RUNTIME_SYNTAX_MESSAGE} (${summarizeCommandFailure(result)})`);
   }
 }
 
@@ -149,7 +154,7 @@ function validateGeneratedArtifactsMatchBuildRecipe(
       const generated = fs.readFileSync(generatedPath);
       const committed = fs.readFileSync(committedPath);
       if (!generated.equals(committed)) {
-        failures.push(`${relativePath}: generated bootstrap artifact is stale; run npm run build:c420ui-bootstrap`);
+        failures.push(`${relativePath}: ${C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE}`);
       }
     }
   } finally {

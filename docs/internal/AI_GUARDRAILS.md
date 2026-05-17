@@ -34,6 +34,15 @@ boundary. GPU/display selected runtime CLI options are active diagnostics: RC va
 
 ## c420ui bootstrap source-hash guardrail
 
+## c420ui generated-artifact anti-corruption guardrail
+
+bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
+Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
+
+The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
+malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
+
+
 Any change to c420ui startup sources, the Canva Linux adapter, dependent-project configs, Canva Linux action or detection scripts,
 c420ui package metadata, the bootstrap hash helper, or the bootstrap builder must regenerate the bootstrap bundle with
 `npm run build:c420ui-bootstrap`. Do not manually edit generated bootstrap `.cjs` files. Do not leave
