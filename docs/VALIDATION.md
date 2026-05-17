@@ -2,6 +2,21 @@
 
 ## Dev.8 pinned home tab-strip guardrail
 
+## c420ui bootstrap artifact validation
+
+bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
+Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
+
+The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
+malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner. Validate this with:
+
+- `node --check bootstrap/c420ui/run-c420ui.cjs`
+- `node --check bootstrap/c420ui/run-c420ui-cli.cjs`
+- `node --check bootstrap/c420ui/c420ui-builder.cjs`
+- `npm run check:c420ui-bootstrap`
+- `npm run test -- test/c420ui-bootstrap-artifacts.test.ts`
+
+
 - Dev.8 starts the internal tab-strip redesign. The pinned home tab remains part of the tab model, but it must be rendered
   by a dedicated pinned-home renderer and must never be rendered as a regular tab item.
 - The pinned home tab belongs to the tab strip, not the window titlebar. Do not change BrowserWindow title logic,

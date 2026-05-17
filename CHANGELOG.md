@@ -5,6 +5,13 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+
+- Restored the c420ui bootstrap as a TypeScript-generated artifact and hardened artifact validation.
+  bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
+  Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
+- Added anti-corruption coverage so the c420ui bootstrap check must fail on syntax errors, stale generated output,
+  malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
+
 ## Dev.8 tab-strip redesign
 
 - Opened `0.1.4-15.Dev.8` for the internal tab-strip redesign: the pinned home tab remains part of the tab model,
