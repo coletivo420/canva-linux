@@ -262,7 +262,7 @@
       const favicon = document.createElement('img');
       favicon.alt = '';
       favicon.src = tab.favicon || iconPath;
-      favicon.onerror = () => { favicon.src = iconPath; };
+      favicon.onerror = () => { favicon.onerror = null; favicon.src = iconPath; };
 
       const title = document.createElement('span');
       const title = document.createElement('span');
