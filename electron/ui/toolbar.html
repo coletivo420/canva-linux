@@ -265,8 +265,8 @@
       favicon.onerror = () => { favicon.src = iconPath; };
 
       const title = document.createElement('span');
-      title.textContent = 'Canva';
-
+      const title = document.createElement('span');
+      title.textContent = tab.title || 'Canva';
       button.appendChild(favicon);
       button.appendChild(title);
 
