@@ -2310,6 +2310,7 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   const buildMetadataSource = readProjectFile(rootDir, "electron/main/build-metadata.ts");
   const buildMetadataLoaderSource = readProjectFile(rootDir, "scripts/canva-linux/build-metadata-loader.ts");
   const c420uiAdapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
+  const bootstrapCheckSource = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-bootstrap.ts");
   const packageJsonSource = readProjectFile(rootDir, "package.json");
   const bootstrapManifest = JSON.parse(
     readProjectFile(rootDir, "bootstrap/c420ui/manifest.json"),
@@ -2385,6 +2386,19 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
     if (typeof bootstrapManifest[field] !== "string" || !bootstrapManifest[field]) {
       failures.push(`bootstrap/c420ui/manifest.json: missing ${field}`);
     }
+  }
+
+  if (!bootstrapCheckSource.includes("--check") || !bootstrapCheckSource.includes("validateGeneratedArtifactsMatchBuildRecipe")) {
+    failures.push("c420ui bootstrap check must validate generated .cjs syntax and compare bundles against TypeScript build recipe");
+  }
+  if (!bootstrapCheckSource.includes("c420ui bootstrap bundles must be regenerated from TypeScript sources and pass node --check")) {
+    failures.push("c420ui bootstrap check must fail with the TypeScript-first node --check guidance");
+  }
+  if (!bootstrapCheckSource.includes("calculateC420UIBootstrapSourceHash")) {
+    failures.push("c420ui bootstrap check must validate manifest.sourceHash from official source inputs");
+  }
+  if (!bootstrapCheckSource.includes("loadEffectiveBuildMetadata") || !bootstrapCheckSource.includes("dependentProjectBuildRevision") || !bootstrapCheckSource.includes("dependentProjectFullVersion")) {
+    failures.push("c420ui bootstrap check must validate manifest dependent project metadata consistency");
   }
   if (!/PUBLIC_AUTH_TITLE_PATTERN[\s\S]*sign\\s\*in/.test(oauthSource) || !/PUBLIC_AUTH_TITLE_PATTERN[\s\S]*signin/.test(oauthSource)) {
     failures.push("OAuth public auth title pattern must recognize sign in and signin");

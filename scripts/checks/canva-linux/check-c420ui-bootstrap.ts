@@ -19,6 +19,7 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../../canva-linux/bootstrap/source-hash";
+import { loadEffectiveBuildMetadata } from "../../canva-linux/build-metadata-loader";
 
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
@@ -69,7 +70,7 @@ function validateJavaScriptSyntax(rootDir: string, relativePath: string, failure
   });
 
   if (result.error || result.status !== 0) {
-    failures.push(`${relativePath}: generated bootstrap artifact is not valid JavaScript (${summarizeCommandFailure(result)})`);
+    failures.push(`${relativePath}: c420ui bootstrap bundles must be regenerated from TypeScript sources and pass node --check (${summarizeCommandFailure(result)})`);
   }
 }
 
@@ -136,6 +137,76 @@ function validateGeneratedArtifactsMatchBuildRecipe(
     }
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+type BootstrapManifestBuildMetadata = {
+  dependentProjectBuildRevision?: unknown;
+  dependentProjectFullVersion?: unknown;
+  dependentProjectDisplayVersion?: unknown;
+  dependentProjectPhase?: unknown;
+};
+
+type BuildMetadataJson = {
+  buildRevision?: string;
+  fullVersion?: string;
+  displayVersion?: string;
+  phase?: string;
+};
+
+function readJson<T>(rootDir: string, relativePath: string): T | null {
+  try {
+    return JSON.parse(read(rootDir, relativePath)) as T;
+  } catch {
+    return null;
+  }
+}
+
+function hasRevisionOverride(): boolean {
+  return [
+    "CANVA_LINUX_BUILD_REVISION",
+    "GITHUB_SHA",
+    "CI_COMMIT_SHA",
+    "SOURCE_COMMIT",
+  ].some((key) => Boolean(process.env[key]?.trim()));
+}
+
+function validateManifestBuildMetadata(
+  rootDir: string,
+  manifest: BootstrapManifestBuildMetadata,
+  failures: string[],
+): void {
+  const metadataPath = "config/canva-linux/build-metadata.json";
+  const packagedMetadata = readJson<BuildMetadataJson>(rootDir, metadataPath);
+  if (!packagedMetadata) {
+    failures.push(`${metadataPath}: missing generated build metadata for c420ui bootstrap consistency checks`);
+    return;
+  }
+
+  for (const [manifestField, metadataField] of [
+    ["dependentProjectBuildRevision", "buildRevision"],
+    ["dependentProjectFullVersion", "fullVersion"],
+    ["dependentProjectDisplayVersion", "displayVersion"],
+    ["dependentProjectPhase", "phase"],
+  ] as const) {
+    if (manifest[manifestField] !== packagedMetadata[metadataField]) {
+      failures.push(`bootstrap/c420ui/manifest.json: ${manifestField} must match ${metadataPath} ${metadataField}; run npm run build:c420ui-bootstrap`);
+    }
+  }
+
+  // Exact effective metadata checks are deterministic in packaged mode and in
+  // CI/env override mode. A local source checkout without an override can move
+  // HEAD after generated files are committed, so the stale-HEAD case remains
+  // covered by build:c420ui-bootstrap using loadEffectiveBuildMetadata and by
+  // the generated-metadata comparison above.
+  if (!fs.existsSync(path.join(rootDir, ".git")) || hasRevisionOverride()) {
+    const effectiveMetadata = loadEffectiveBuildMetadata(rootDir);
+    if (manifest.dependentProjectBuildRevision !== effectiveMetadata.buildRevision) {
+      failures.push("bootstrap/c420ui/manifest.json: dependentProjectBuildRevision must match loadEffectiveBuildMetadata(rootDir).buildRevision");
+    }
+    if (manifest.dependentProjectFullVersion !== effectiveMetadata.fullVersion) {
+      failures.push("bootstrap/c420ui/manifest.json: dependentProjectFullVersion must match loadEffectiveBuildMetadata(rootDir).fullVersion");
+    }
   }
 }
 
@@ -234,6 +305,8 @@ function main(): void {
         }
       }
     }
+
+    validateManifestBuildMetadata(rootDir, manifest, failures);
 
     try {
       const currentSourceHash = calculateC420UIBootstrapSourceHash(rootDir);
