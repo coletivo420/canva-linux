@@ -50,6 +50,12 @@ function createFakeWindow(initialUrl = "https://www.canva.com/login") {
       loadURL(url) {
         currentUrl = url;
       },
+      executeJavaScript: async () => ({
+        localStorageKeys: 2,
+        sessionStorageKeys: 1,
+        indexedDbDatabases: 3,
+        cacheStorageKeys: 4,
+      }),
     },
     isDestroyed: () => destroyed,
     destroy() {
@@ -76,19 +82,45 @@ function createFakeWindow(initialUrl = "https://www.canva.com/login") {
 }
 
 function createTab(id, webContentsId, order, options = {}) {
+  let currentUrl = options.url || "https://www.canva.com/pt_br/";
+  let title = options.title || "Canva";
+  const listeners = new Map();
+  const webContents = {
+    id: webContentsId,
+    getURL: () => currentUrl,
+    getTitle: () => title,
+    setTitle(nextTitle) {
+      title = nextTitle;
+    },
+    reload() {
+      order.push(`reload:${id}`);
+      listeners.get("once:did-finish-load")?.();
+      listeners.delete("once:did-finish-load");
+    },
+    reloadIgnoringCache: options.reloadIgnoringCache
+      ? () => {
+          order.push(`reloadIgnoringCache:${id}`);
+          listeners.get("once:did-finish-load")?.();
+          listeners.delete("once:did-finish-load");
+        }
+      : undefined,
+    loadURL: options.loadURL
+      ? (url) => {
+          currentUrl = url;
+          order.push(`loadURL:${id}:${url}`);
+          listeners.get("once:did-finish-load")?.();
+          listeners.delete("once:did-finish-load");
+        }
+      : undefined,
+    executeJavaScript: options.executeJavaScript,
+    once(event, listener) {
+      listeners.set(`once:${event}`, listener);
+    },
+  };
   return {
     id,
     view: {
-      webContents: {
-        id: webContentsId,
-        getURL: () => options.url || "https://www.canva.com/pt_br/",
-        reload() {
-          order.push(`reload:${id}`);
-        },
-        reloadIgnoringCache: options.reloadIgnoringCache
-          ? () => order.push(`reloadIgnoringCache:${id}`)
-          : undefined,
-      },
+      webContents,
     },
   };
 }
@@ -646,6 +678,115 @@ test("reloadIgnoringCache is preferred when available", async () => {
       (event) =>
         event[1] === "reload-source-tab-after-oauth" &&
         event.includes("mode=reloadIgnoringCache"),
+    ),
+    true,
+  );
+});
+
+test("closing popup after authorized callback finalizes instead of logging before-callback close", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, { reloadIgnoringCache: true });
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+  let prevented = false;
+
+  harness.webContentsListeners.get("did-redirect-navigation")(null, callbackUrl);
+  harness.windowListeners.get("close")({ preventDefault: () => { prevented = true; } });
+  await waitForDebugEvent(harness.debugEvents, "oauth-finalize-authorized-callback-done");
+
+  assert.equal(prevented, true);
+  assert.equal(order.includes("flush"), true);
+  assert.equal(order.includes("reloadIgnoringCache:1"), true);
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-finalize-authorized-callback-start" &&
+        event.includes("trigger=popup-close-after-authorized-callback"),
+    ),
+    true,
+  );
+  assert.equal(
+    harness.debugEvents.some((event) => event[1] === "popup-close-before-callback"),
+    false,
+  );
+});
+
+test("OAuth storage diagnostics log only safe counts", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order);
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+  harness.window.webContents.setURL(callbackUrl);
+  harness.webContentsListeners.get("did-finish-load")();
+  await waitForDebugEvent(harness.debugEvents, "oauth-finalize-authorized-callback-done");
+
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-storage-summary" &&
+        event.includes("context=authorized-callback-post-flush") &&
+        event.includes("localStorageKeys=2") &&
+        event.includes("sessionStorageKeys=1") &&
+        event.includes("indexedDbDatabases=3") &&
+        event.includes("cacheStorageKeys=4"),
+    ),
+    true,
+  );
+});
+
+test("post-login navigation prefers canonical Canva home and logs source probe", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, {
+    loadURL: true,
+    executeJavaScript: async () => ({
+      localStorageKeys: 5,
+      sessionStorageKeys: 6,
+      indexedDbDatabases: 7,
+      cacheStorageKeys: 8,
+    }),
+  });
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+  harness.window.webContents.setURL(callbackUrl);
+  harness.webContentsListeners.get("did-finish-load")();
+  await waitForDebugEvent(harness.debugEvents, "oauth-finalize-authorized-callback-done");
+  await waitForDebugEvent(harness.debugEvents, "post-oauth-source-load");
+
+  assert.equal(order.includes("loadURL:1:https://www.canva.com/"), true);
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "reload-source-tab-after-oauth" &&
+        event.includes("mode=loadURL") &&
+        event.includes("target=https://www.canva.com/"),
+    ),
+    true,
+  );
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "post-oauth-source-load" &&
+        event.includes("url=https://www.canva.com/") &&
+        event.includes("title=Canva"),
+    ),
+    true,
+  );
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-storage-summary" &&
+        event.includes("context=post-oauth-source-load") &&
+        event.includes("localStorageKeys=5") &&
+        event.includes("sessionStorageKeys=6") &&
+        event.includes("indexedDbDatabases=7") &&
+        event.includes("cacheStorageKeys=8"),
     ),
     true,
   );
