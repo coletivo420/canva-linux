@@ -15,6 +15,10 @@ export type CanvaLinuxBuildMetadata = {
 type PackageJson = { version?: string };
 type ProjectUiJson = { displayVersion?: string; phase?: string };
 
+const UNKNOWN_BASE_VERSION = "0.0.0";
+const UNKNOWN_DISPLAY_VERSION = "0.0.0";
+const UNKNOWN_BUILD_REVISION = "unknown";
+
 export function normalizeBuildRevision(input: string | null | undefined): string {
   if (!input) return "unknown";
 
@@ -71,29 +75,49 @@ function candidateMetadataPaths(): string[] {
   ];
 }
 
-function fallbackBaseMetadata(): CanvaLinuxBuildMetadata {
+export function fallbackBaseMetadata(): CanvaLinuxBuildMetadata {
   const packageJson =
     readJsonFile<PackageJson>(path.join(process.cwd(), "package.json")) ?? {};
   const projectUi =
     readJsonFile<ProjectUiJson>(
       path.join(process.cwd(), "config", "canva-linux", "project-ui.json"),
     ) ?? {};
-  const baseVersion = packageJson.version || "0.1.4-15.Dev.7";
-  const baseDisplayVersion = projectUi.displayVersion || "0.1.4-15.Dev";
+  const baseVersion = packageJson.version || UNKNOWN_BASE_VERSION;
+  const baseDisplayVersion = projectUi.displayVersion || UNKNOWN_DISPLAY_VERSION;
   const basePhase = projectUi.phase || baseVersion;
 
   return createBuildMetadata({
     baseVersion,
     baseDisplayVersion,
     basePhase,
-    buildRevision: "unknown",
+    buildRevision: UNKNOWN_BUILD_REVISION,
+  });
+}
+
+export function normalizeLoadedBuildMetadata(
+  metadata: Partial<CanvaLinuxBuildMetadata>,
+): CanvaLinuxBuildMetadata | null {
+  if (
+    !metadata.baseVersion ||
+    !metadata.baseDisplayVersion ||
+    !metadata.basePhase
+  ) {
+    return null;
+  }
+
+  return createBuildMetadata({
+    baseVersion: metadata.baseVersion,
+    baseDisplayVersion: metadata.baseDisplayVersion,
+    basePhase: metadata.basePhase,
+    buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION,
   });
 }
 
 export function loadCanvaLinuxBuildMetadata(): CanvaLinuxBuildMetadata {
   for (const filePath of candidateMetadataPaths()) {
-    const metadata = readJsonFile<CanvaLinuxBuildMetadata>(filePath);
-    if (metadata) return createBuildMetadata(metadata);
+    const metadata = readJsonFile<Partial<CanvaLinuxBuildMetadata>>(filePath);
+    const normalized = metadata ? normalizeLoadedBuildMetadata(metadata) : null;
+    if (normalized) return normalized;
   }
 
   return fallbackBaseMetadata();

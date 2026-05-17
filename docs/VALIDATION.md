@@ -94,7 +94,14 @@ reload-source-tab-after-oauth tab=...
 did-finish-load https://www.canva.com/...
 ```
 
-Confirm the reloaded main Canva tab is the OAuth source tab, uses the shared flushed session, and enters authenticated state. OAuth finalization must be based on the authorized callback type rather than exact callback URL string equality; if Electron reports an authorized callback during navigation but no matching `did-finish-load` closes the loop, the log should show `oauth-authorized-callback-fallback-scheduled` and `oauth-authorized-callback-fallback-fired`. On slow callback loads, the fallback must distinguish the slow load from a missing `did-finish-load` by logging `oauth-authorized-callback-fallback-deferred reason=still-loading` while the callback WebContents remains loading, and may only force completion after the bounded max-attempt safety limit. If the source webContents id cannot be resolved, the fallback to the active tab must be logged with `fallback=true`.
+Confirm the reloaded main Canva tab is the OAuth source tab, uses the shared flushed session, and enters authenticated state.
+OAuth finalization must be based on the authorized callback type rather than exact callback URL string equality. If Electron
+reports an authorized callback during navigation but no matching `did-finish-load` closes the loop, the log should show
+`oauth-authorized-callback-fallback-scheduled` and `oauth-authorized-callback-fallback-fired`. On slow callback loads, the
+fallback must distinguish the slow load from a missing `did-finish-load` by logging
+`oauth-authorized-callback-fallback-deferred reason=still-loading` while the callback WebContents remains loading, and may
+only force completion after the bounded max-attempt safety limit. If the source webContents id cannot be resolved, the
+fallback to the active tab must be logged with `fallback=true`.
 
 ## GPU/display runtime diagnostics manual validation
 
@@ -168,6 +175,9 @@ while runtime flags belong to the compiled `canva-linux` app.
 
 ## Effective build metadata validation
 
-Validation checks that source versions remain clean, generated effective versions append `+g<short-hash>` when a build revision is known, and build revisions come from deterministic commit metadata rather than random values, timestamps, or counters.
+Validation checks that source versions remain clean and generated effective versions append `+g<short-hash>` when a build
+revision is known. Build revisions must come from deterministic commit metadata rather than random values, timestamps, or
+counters.
 
-OAuth validation also checks that the first post-OAuth reload targets the current source tab URL and that `https://www.canva.com/` appears only as the fallback navigation after localized public logged-out landing detection.
+OAuth validation also checks that the first post-OAuth reload targets the current source tab URL and that
+`https://www.canva.com/` appears only as the fallback navigation after localized public logged-out landing detection.

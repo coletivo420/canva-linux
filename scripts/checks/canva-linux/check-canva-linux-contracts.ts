@@ -2307,6 +2307,7 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
     readProjectFile(rootDir, "packages/c420ui/package.json"),
   ) as { version?: string };
   const oauthSource = readProjectFile(rootDir, "electron/main/oauth.ts");
+  const buildMetadataSource = readProjectFile(rootDir, "electron/main/build-metadata.ts");
   const generatorSource = readProjectFile(rootDir, "scripts/generate-build-metadata.ts");
 
   if (packageJson.version?.includes("+g")) failures.push("package.json source version must not contain +g");
@@ -2332,10 +2333,30 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
       }
     }
   }
+  for (const forbidden of ["0.1.4-15.Dev.7", "0.1.4-15.Dev"] as const) {
+    if (buildMetadataSource.includes(forbidden)) {
+      failures.push(`electron/main/build-metadata.ts: must not hardcode current release fallback literal ${forbidden}`);
+    }
+  }
+  if (!buildMetadataSource.includes('"0.0.0"') || !buildMetadataSource.includes('"unknown"')) {
+    failures.push("electron/main/build-metadata.ts: fallback metadata must be neutral 0.0.0/unknown");
+  }
+  if (!buildMetadataSource.includes("normalizeLoadedBuildMetadata")) {
+    failures.push("electron/main/build-metadata.ts: loaded metadata must be normalized before use");
+  }
   for (const forbidden of ["Math.random", "Date.now", "new Date(", "timestamp"] as const) {
     if (generatorSource.includes(forbidden)) failures.push(`build metadata generator must not use ${forbidden}`);
   }
   if (c420uiPackage.version !== "0.1.0") failures.push("packages/c420ui/package.json version must remain independent at 0.1.0");
+  if (!/PUBLIC_AUTH_TITLE_PATTERN[\s\S]*sign\\s\*in/.test(oauthSource) || !/PUBLIC_AUTH_TITLE_PATTERN[\s\S]*signin/.test(oauthSource)) {
+    failures.push("OAuth public auth title pattern must recognize sign in and signin");
+  }
+  if (oauthSource.includes(`authButtons: count('[data-testid*="login"], [data-testid*="signup"], button[aria-label*="Log in"], button[aria-label*="Sign up"]')`)) {
+    failures.push("OAuth public landing auth probe must not depend only on English aria-label selectors");
+  }
+  if (!oauthSource.includes("localizedAuthButtonKeywords") || !oauthSource.includes('href.includes("/signin")')) {
+    failures.push("OAuth public landing auth probe must include localized/generic auth signal matching");
+  }
   if (oauthSource.includes("mode = canLoadCanonicalHome") || oauthSource.includes("webContents.loadURL(CANVA_CANONICAL_HOME_URL);\n    } else if (reloadIgnoringCache)")) {
     failures.push("OAuth must not use canonical home as the default post-OAuth reload target");
   }

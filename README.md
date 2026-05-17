@@ -199,6 +199,9 @@ while runtime flags belong to the compiled `canva-linux` app.
 
 ## Build metadata and OAuth context
 
-Canva Linux keeps the source base version at `0.1.4-15.Dev.7` and generates an effective build version with `+g<short-hash>` for runtime logs, `--version`, manifests, and artifacts. See `docs/VERSIONING.md` for the source/effective version contract.
+Canva Linux keeps the source base version at `0.1.4-15.Dev.7` and generates an effective build version with
+`+g<short-hash>` for runtime logs, `--version`, manifests, and artifacts. See `docs/VERSIONING.md` for the
+source/effective version contract.
 
-After OAuth completes, the source tab preserves its current Canva context on the first reload. Canonical home navigation is used only as a post-load fallback when a localized public logged-out landing page is detected.
+After OAuth completes, the source tab preserves its current Canva context on the first reload. Canonical home navigation
+is used only as a post-load fallback when a localized public logged-out landing page is detected.

@@ -32,14 +32,29 @@ The effective version is used by startup logs, `--version`, generated manifests,
 5. `git rev-parse --short=7 HEAD`
 6. `unknown`
 
-Known revisions are normalized to `g<7-character-short-hash>`. Unknown revisions keep the base version unchanged. Do not use random values, timestamps, or local counters.
+Known revisions are normalized to `g<7-character-short-hash>`. Unknown revisions keep the base version unchanged. Do not use
+random values, timestamps, or local counters.
+
+## Runtime fallback metadata
+
+Runtime fallback metadata must never hardcode the current Canva Linux phase as a safety net. If generated metadata and
+source files are unavailable, the runtime falls back to neutral `0.0.0` base/display/phase values with
+`buildRevision: "unknown"`. Partially loaded generated metadata is ignored unless it contains `baseVersion`,
+`baseDisplayVersion`, and `basePhase`.
 
 ## OAuth rule
 
-Post-OAuth reload preserves source context by default. The source tab reloads its current URL with `reloadIgnoringCache` when available, otherwise `reload`.
+Post-OAuth reload preserves source context by default. The source tab reloads its current URL with `reloadIgnoringCache`
+when available, otherwise `reload`.
 
-Canonical Canva home navigation (`https://www.canva.com/`) is fallback-only after the post-load probe detects a localized public logged-out landing page. Design, editor, and folder URLs must not be redirected by the first post-OAuth reload.
+Canonical Canva home navigation (`https://www.canva.com/`) is fallback-only after the post-load probe detects a localized
+public logged-out landing page. Design, editor, and folder URLs must not be redirected by the first post-OAuth reload.
+
+Localized public landing detection uses generic auth-signal counts for login/signup links and auth buttons. It must not log
+DOM text, `aria-label`, `href`, `data-testid`, or other attribute values.
 
 ## c420ui future
 
-The c420ui package remains independently versioned (`0.1.0`). The Canva Linux bootstrap manifest records Canva Linux effective build metadata, and c420ui will receive the same build metadata policy in a future phase as an independent project.
+The c420ui package remains independently versioned (`0.1.0`). The Canva Linux bootstrap manifest records Canva Linux
+effective build metadata, and c420ui will receive the same build metadata policy in a future phase as an independent
+project.

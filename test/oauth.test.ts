@@ -6,7 +6,11 @@ const test = require("node:test");
 
 const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const { createOAuthHelpers } = loadRuntimeModule("main/oauth");
+const {
+  PUBLIC_AUTH_TITLE_PATTERN,
+  createOAuthHelpers,
+  publicLandingSignalsProbeScript,
+} = loadRuntimeModule("main/oauth");
 
 function createFakeWindow(initialUrl = "https://www.canva.com/login") {
   const windowListeners = new Map();
@@ -959,4 +963,99 @@ test("post-OAuth storage diagnostics continue to log safe counts", async () => {
     ),
     true,
   );
+});
+
+function runPublicLandingProbe(elements) {
+  const vm = require("node:vm");
+  const document = {
+    querySelectorAll(selector) {
+      if (selector === "button, [role='button'], a") {
+        return elements.filter(
+          (element) =>
+            element.tag === "button" ||
+            element.tag === "a" ||
+            element.attrs.role === "button",
+        );
+      }
+      if (selector === 'a[href*="/login"], a[href*="/signin"]') {
+        return elements.filter(
+          (element) =>
+            element.tag === "a" &&
+            (String(element.attrs.href || "").includes("/login") ||
+              String(element.attrs.href || "").includes("/signin")),
+        );
+      }
+      if (selector === 'a[href*="/signup"], a[href*="/register"]') {
+        return elements.filter(
+          (element) =>
+            element.tag === "a" &&
+            (String(element.attrs.href || "").includes("/signup") ||
+              String(element.attrs.href || "").includes("/register")),
+        );
+      }
+      return [];
+    },
+  };
+
+  const context = { document };
+  return vm.runInNewContext(publicLandingSignalsProbeScript(), context);
+}
+
+function element(tag, attrs = {}) {
+  return {
+    tag,
+    attrs,
+    getAttribute(name) {
+      return Object.prototype.hasOwnProperty.call(attrs, name) ? attrs[name] : null;
+    },
+  };
+}
+
+test("PUBLIC_AUTH_TITLE_PATTERN recognizes Sign in and signin titles", () => {
+  assert.equal(PUBLIC_AUTH_TITLE_PATTERN.test("Sign in to Canva"), true);
+  assert.equal(PUBLIC_AUTH_TITLE_PATTERN.test("signin"), true);
+});
+
+test("public landing probe counts data-testid and href auth signals", () => {
+  const signals = runPublicLandingProbe([
+    element("button", { "data-testid": "header-login-button" }),
+    element("div", { role: "button", "data-testid": "signup-cta" }),
+    element("a", { href: "https://www.canva.com/login" }),
+    element("a", { href: "https://www.canva.com/register" }),
+  ]);
+
+  assert.equal(signals.loginLinks, 1);
+  assert.equal(signals.signupLinks, 1);
+  assert.equal(signals.authButtons, 4);
+});
+
+test("public landing probe recognizes localized aria-label without exposing values", async () => {
+  const localizedAria = "Entrar na sua conta Canva";
+  const signals = runPublicLandingProbe([
+    element("button", { "aria-label": localizedAria }),
+    element("a", { href: "https://www.canva.com/templates/" }),
+  ]);
+
+  assert.equal(signals.authButtons, 1);
+
+  const order = [];
+  const sourceTab = createTab(1, 300, order, {
+    publicSignals: signals,
+    title: "Canva",
+    url: "https://www.canva.com/pt_br/",
+  });
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+  harness.window.webContents.setURL(callbackUrl);
+  harness.webContentsListeners.get("did-finish-load")();
+  await waitForDebugEvent(harness.debugEvents, "oauth-public-landing-signals");
+
+  const flattenedLogs = JSON.stringify(harness.debugEvents);
+  assert.equal(flattenedLogs.includes(localizedAria), false);
+  assert.equal(flattenedLogs.includes("aria-label"), false);
+  assert.equal(flattenedLogs.includes("href"), false);
+  assert.equal(flattenedLogs.includes("data-testid"), false);
 });

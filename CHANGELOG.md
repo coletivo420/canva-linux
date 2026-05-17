@@ -5,11 +5,18 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
-- OAuth fallback finalization now defers while the authorized callback WebContents is still loading, so the fallback distinguishes a missing `did-finish-load` from a slow callback load and only uses the bounded max-attempt safety limit to avoid stalls.
-- OAuth finalization no longer depends on exact callback URL string equality; authorized callbacks finalize by callback type, use a guarded fallback timer for redirect sequences without a matching `did-finish-load`, and document the post-flush settle delay as a shared-session propagation guard between popup and source WebContents.
-- OAuth login now finalizes the authorized callback before closing the popup, flushes persistent session data, logs a safe `canva.com` cookie metadata summary, and reloads the OAuth source tab with `reloadIgnoringCache` when available.
-- Opened `0.1.4-15.Dev.7` and renamed the public runtime diagnostics flag from Electron-reserved `--debug` to `--canva-debug=1` / `--canva-debug=2`.
-- Added Flatpak/runtime/builder guardrails so `--debug` and `--debug=*` are rejected as reserved Electron/Node flags before they can collide with Electron.
+- OAuth fallback finalization now defers while the authorized callback WebContents is still loading, so the fallback
+  distinguishes a missing `did-finish-load` from a slow callback load and only uses the bounded max-attempt safety limit
+  to avoid stalls.
+- OAuth finalization no longer depends on exact callback URL string equality; authorized callbacks finalize by callback type,
+  use a guarded fallback timer for redirect sequences without a matching `did-finish-load`, and document the post-flush
+  settle delay as a shared-session propagation guard between popup and source WebContents.
+- OAuth login now finalizes the authorized callback before closing the popup, flushes persistent session data, logs a safe
+  `canva.com` cookie metadata summary, and reloads the OAuth source tab with `reloadIgnoringCache` when available.
+- Opened `0.1.4-15.Dev.7` and renamed the public runtime diagnostics flag from Electron-reserved `--debug` to
+  `--canva-debug=1` / `--canva-debug=2`.
+- Added Flatpak/runtime/builder guardrails so `--debug` and `--debug=*` are rejected as reserved Electron/Node flags
+  before they can collide with Electron.
 
 - Hardened the builder/runtime split: `canva-linux-c420ui-builder` no longer maintains a direct-action allowlist,
   delegates action flags to the c420ui CLI bridge and Action Registry, rejects runtime flag namespaces,
@@ -229,6 +236,12 @@ and project diagnostics entrypoint. The compiled `canva-linux` Electron app rema
 
 ## 0.1.4-15.Dev.7 effective build metadata and OAuth context
 
-- Added deterministic effective build metadata with `+g<short-hash>` for runtime, `--version`, generated manifests, and artifacts while keeping source versions clean.
-- Preserved post-OAuth source tab context on first reload; canonical Canva home is now fallback-only after localized public landing detection.
+- Added deterministic effective build metadata with `+g<short-hash>` for runtime, `--version`, generated manifests,
+  and artifacts while keeping source versions clean.
+- Preserved post-OAuth source tab context on first reload; canonical Canva home is now fallback-only after localized public
+  landing detection.
 - Documented that c420ui remains independently versioned and will receive matching build metadata policy in a future phase.
+- Removed hardcoded Dev.7 runtime metadata fallbacks in favor of neutral `0.0.0`/`unknown` fallback metadata and
+  normalized generated metadata before use.
+- Strengthened localized OAuth public landing detection with safe auth-signal counts for sign-in/sign-up controls without
+  logging DOM text or attribute values.

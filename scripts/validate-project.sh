@@ -32,8 +32,9 @@ run_step() {
   log_ok "$label"
 }
 
-# Validation remains source-first. Build metadata is deterministic and must exist before
-# lint, typecheck, tests, docs checks, AI/Flatpak guardrails, and runtime builds.
+# Validation remains source-first. Do not move runtime build before lint,
+# typecheck, tests, docs checks, AI/Flatpak guardrails, and contract checks.
+# Build metadata is deterministic and must exist before those checks run.
 run_step "npm run build:metadata" npm run build:metadata
 run_step "npm run lint" npm run lint
 run_step "npm run typecheck" npm run typecheck

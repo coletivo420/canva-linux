@@ -65,8 +65,62 @@ const CANVA_COOKIE_SUMMARY_URL = "https://www.canva.com";
 const CANVA_CANONICAL_HOME_URL = "https://www.canva.com/";
 const CANVA_LOCALIZED_LANDING_PATH_PATTERN =
   /^\/[a-z]{2}(?:[_-][a-z]{2})?(?:\/|$)/i;
-const PUBLIC_AUTH_TITLE_PATTERN =
+export const PUBLIC_AUTH_TITLE_PATTERN =
   /(?:log\s*in|login|sign\s*in|signin|sign\s*up|signup|register|registr|entrar|cadastre|iniciar\s+sesi[oó]n|registrarse|connexion|inscription|anmelden|registrieren|accedi|iscriviti)/i;
+
+export function publicLandingSignalsProbeScript(): string {
+  return `(() => {
+  const count = (selector) => document.querySelectorAll(selector).length;
+
+  const localizedAuthButtonKeywords = [
+    "log in",
+    "login",
+    "sign in",
+    "signin",
+    "sign up",
+    "signup",
+    "register",
+    "entrar",
+    "cadastre",
+    "iniciar sesión",
+    "registrarse",
+    "connexion",
+    "inscription",
+    "anmelden",
+    "registrieren",
+    "accedi",
+    "iscriviti",
+  ];
+
+  const normalized = (value) =>
+    String(value || "").toLowerCase().normalize("NFKD");
+
+  const authButtons = Array.from(
+    document.querySelectorAll("button, [role='button'], a"),
+  ).filter((element) => {
+    const testId = normalized(element.getAttribute("data-testid"));
+    const aria = normalized(element.getAttribute("aria-label"));
+    const href = normalized(element.getAttribute("href"));
+
+    return (
+      testId.includes("login") ||
+      testId.includes("signin") ||
+      testId.includes("signup") ||
+      href.includes("/login") ||
+      href.includes("/signin") ||
+      href.includes("/signup") ||
+      href.includes("/register") ||
+      localizedAuthButtonKeywords.some((keyword) => aria.includes(keyword))
+    );
+  }).length;
+
+  return {
+    loginLinks: count('a[href*="/login"], a[href*="/signin"]'),
+    signupLinks: count('a[href*="/signup"], a[href*="/register"]'),
+    authButtons,
+  };
+})()`;
+}
 
 /**
  * After Canva's authorized OAuth callback loads, Electron's session flush
@@ -460,14 +514,7 @@ export function createOAuthHelpers({
     if (!webContents.executeJavaScript) return {};
     try {
       return normalizePublicLandingSignals(
-        await webContents.executeJavaScript(`(() => {
-  const count = (selector) => document.querySelectorAll(selector).length;
-  return {
-    loginLinks: count('a[href*="/login"], a[href*="/signin"]'),
-    signupLinks: count('a[href*="/signup"], a[href*="/register"]'),
-    authButtons: count('[data-testid*="login"], [data-testid*="signup"], button[aria-label*="Log in"], button[aria-label*="Sign up"]'),
-  };
-})()`),
+        await webContents.executeJavaScript(publicLandingSignalsProbeScript()),
       );
     } catch {
       return {};
