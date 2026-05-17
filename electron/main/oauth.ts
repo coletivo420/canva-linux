@@ -66,7 +66,7 @@ const CANVA_CANONICAL_HOME_URL = "https://www.canva.com/";
 const CANVA_LOCALIZED_LANDING_PATH_PATTERN =
   /^\/[a-z]{2}(?:[_-][a-z]{2})?(?:\/|$)/i;
 const PUBLIC_AUTH_TITLE_PATTERN =
-  /(?:log\s*in|login|sign\s*up|signup|register|registr|entrar|cadastre|iniciar\s+sesi[oó]n|registrarse|connexion|inscription|anmelden|registrieren|accedi|iscriviti)/i;
+  /(?:log\s*in|login|sign\s*in|signin|sign\s*up|signup|register|registr|entrar|cadastre|iniciar\s+sesi[oó]n|registrarse|connexion|inscription|anmelden|registrieren|accedi|iscriviti)/i;
 
 /**
  * After Canva's authorized OAuth callback loads, Electron's session flush
