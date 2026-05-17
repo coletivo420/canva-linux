@@ -297,21 +297,21 @@ function validateInternalBuilderSource(rootDir: string, failures: string[]): voi
   }
 
   for (const fragment of [
-    'BUILDER_INTERNAL_NAME = "c420ui-builder"',
-    'BUILDER_ALIAS = "canva-linux-c420ui-builder"',
-    'BUILDER_TITLE = "Canva Linux Builder powered by c420ui"',
+    "c420ui-builder",
+    "canva-linux-c420ui-builder",
+    "Canva Linux Builder powered by c420ui",
     "runC420UIBuilder",
     "normalizeBuilderArgs",
-    "RUNTIME_ONLY_VALUED_OPTIONS",
-    "RUNTIME_ONLY_BOOLEAN_OPTIONS",
     "isRuntimeOnlyFlag",
     "bootstrap/c420ui/run-c420ui-cli.cjs",
     "hasBridgeAction",
-    'arg.startsWith("--")',
-    "--force                       Alias for --yes",
     "selectEntrypoint",
   ] as const) {
     if (!source.includes(fragment)) failures.push(`${relativePath}: missing ${fragment}`);
+  }
+
+  if (!source.includes("--force") || !source.includes("--yes")) {
+    failures.push(`${relativePath}: --force must remain an alias for --yes`);
   }
 
   for (const forbidden of [

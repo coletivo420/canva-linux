@@ -46,7 +46,10 @@ Request changes if a PR:
 - reintroduces `CANVA_LINUX_PASSWORD_STORE` as the public credential-store override;
 - adds `--debug=1` or `--debug=2` to `canva-linux-c420ui-builder`;
 - accepts module-specific debug values instead of only `--debug=1` and `--debug=2`;
-- allows `basic_text` as persistent credential storage.
+- allows `basic_text` as persistent credential storage;
+- weakens active `--option=value` boundary coverage for valued runtime CLI flags;
+- reduces GPU diagnostics to source-only logging instead of selected `gpuBackend`, `forceX11`, `forceWayland`,
+  `disableWaylandColorManager`, and `displayOverride` values.
 
 Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The c420ui installer/development launcher does not own runtime debug flags.
 

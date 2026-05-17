@@ -127,6 +127,9 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 Current release target: `0.1.4-15.Dev.6`.
 
+Dev.6 cleanup removes obsolete migration checks and dead-code-era validation while preserving active behavior boundaries,
+including `--option=value` runtime CLI parsing and runtime GPU/display diagnostics that log the selected CLI values.
+
 Versioning format for this bugfix cycle: `N.N.N-X.Dev.Y`.
 
 Artifact names preserve generated architecture strings such as `x86_64` and `X86_64`. Do not normalize architecture names to `x64`.

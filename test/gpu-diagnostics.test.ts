@@ -10,6 +10,7 @@ const {
   classifyGpuAcceleration,
   getGpuRuntimeEnvironment,
   serializeGpuFeatureStatus,
+  serializeGpuRuntimeEnvironment,
 } = loadRuntimeModule("main/gpu-diagnostics");
 
 test("classifies Vulkan accelerated GPU status", () => {
@@ -59,8 +60,42 @@ test("serializes GPU feature status with unknown fallbacks", () => {
   ]);
 });
 
-test("reports runtime CLI as the GPU runtime option source", () => {
-  assert.deepEqual(getGpuRuntimeEnvironment(), {
-    source: "runtime-cli",
-  });
+test("reports selected runtime CLI GPU options", () => {
+  assert.deepEqual(
+    getGpuRuntimeEnvironment({
+      gpuBackend: "software",
+      forceX11: false,
+      forceWayland: true,
+      disableWaylandColorManager: true,
+    }),
+    {
+      source: "runtime-cli",
+      gpuBackend: "software",
+      forceX11: false,
+      forceWayland: true,
+      disableWaylandColorManager: true,
+      displayOverride: "wayland",
+    },
+  );
+});
+
+test("serializes selected runtime CLI GPU options", () => {
+  assert.deepEqual(
+    serializeGpuRuntimeEnvironment({
+      source: "runtime-cli",
+      gpuBackend: "vulkan",
+      forceX11: false,
+      forceWayland: false,
+      disableWaylandColorManager: false,
+      displayOverride: "auto",
+    }),
+    [
+      "source=runtime-cli",
+      "gpuBackend=vulkan",
+      "displayOverride=auto",
+      "forceX11=false",
+      "forceWayland=false",
+      "disableWaylandColorManager=false",
+    ],
+  );
 });

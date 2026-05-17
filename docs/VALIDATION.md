@@ -37,7 +37,9 @@ Validation is layered so fast behavioral checks stay close to the code while rel
 
 Historical anti-regression string checks against removed migration names should be simplified once a migration stabilizes.
 Checks that protect active behavior boundaries, such as valued runtime options requiring `--option=value`, should remain covered
-by contracts and behavioral tests.
+by contracts and behavioral tests. Runtime GPU diagnostics must also remain active evidence: logs must include the selected
+runtime CLI GPU/display values (`gpuBackend`, `forceX11`, `forceWayland`, `disableWaylandColorManager`, and `displayOverride`),
+not just the fact that options came from `runtime-cli`.
 
 ## Validation domains
 

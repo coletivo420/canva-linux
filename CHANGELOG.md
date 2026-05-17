@@ -12,6 +12,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   `--force-wayland` requires a Wayland session, and runtime GPU controls stay CLI-only.
 
 ## [0.1.4-15.Dev.6] - 2026-05-16
+- Preserved PR #145 runtime GPU diagnostics by logging selected CLI GPU/display values (`gpuBackend`, `forceX11`,
+  `forceWayland`, `disableWaylandColorManager`, and `displayOverride`) instead of source-only runtime logging.
+- Further softened Dev.6 builder contract checks away from exact implementation formatting while keeping active builder/runtime
+  boundaries, direct CLI bridge delegation, and `--option=value` runtime parsing protection.
 
 ### Changed
 - Opened the Dev.6 cleanup phase for post-migration dead-code auditing, obsolete contract pruning,

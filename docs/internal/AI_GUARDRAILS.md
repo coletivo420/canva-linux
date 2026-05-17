@@ -18,7 +18,8 @@ Use validation layers intentionally:
 
 After a migration stabilizes, simplify historical anti-regression string checks that only look for removed names in generated artifacts.
 Keep checks and tests for active behavior boundaries, including valued runtime CLI parsing that must require an explicit
-`--option=value` boundary.
+`--option=value` boundary. GPU diagnostics must log selected runtime CLI GPU/display options: `gpuBackend`, `forceX11`,
+`forceWayland`, `disableWaylandColorManager`, and `displayOverride`. Do not replace those values with source-only logging.
 
 ## c420ui bootstrap source-hash guardrail
 
