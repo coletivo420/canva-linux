@@ -81,7 +81,7 @@ After permission updates, run at minimum:
 Optional session-storage diagnostic:
 
 ```bash
-flatpak run io.github.coletivo420.canva-linux --debug=1
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
 ```
 
 ## Guardrails

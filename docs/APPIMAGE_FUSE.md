@@ -109,8 +109,8 @@ AppImage packaging and AppImage execution are separate concerns:
 ## Runtime diagnostics
 
 ```bash
-./dist/<artifact>.AppImage --debug=1
-./dist/<artifact>.AppImage --debug=2
+./dist/<artifact>.AppImage --canva-debug=1
+./dist/<artifact>.AppImage --canva-debug=2
 ./dist/<artifact>.AppImage --force-wayland
 ./dist/<artifact>.AppImage --force-x11
 ./dist/<artifact>.AppImage --gpu-backend=auto

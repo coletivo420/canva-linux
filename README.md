@@ -7,8 +7,8 @@ For the builder naming contract, see [c420ui Builder Alias Policy](docs/c420ui/B
 `./canva-linux-c420ui-builder`. The compiled runtime app remains `canva-linux`.
 
 Status: **Alpha**
-Version: **0.1.4-15.Dev.6**
-Release target: **v0.1.4-15.Dev.6**
+Version: **0.1.4-15.Dev.7**
+Release target: **v0.1.4-15.Dev.7**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -71,16 +71,32 @@ The compiled Canva Linux app owns runtime flags. The public builder alias
 ```bash
 canva-linux --help
 canva-linux --version
-canva-linux --debug=1
-canva-linux --debug=2
+canva-linux --canva-debug=1
+canva-linux --canva-debug=2
 canva-linux --credential-store=auto
 canva-linux --credential-store=gnome-libsecret
 canva-linux --credential-store=kwallet6
 canva-linux --credential-store=kwallet5
 ```
 
-Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Use `--debug=1` or `--debug=2` on the runtime command
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Use `--canva-debug=1` or `--canva-debug=2` on the runtime command
 instead of environment fallbacks.
+
+Do not use `--debug`. It is reserved by Electron/Node and may be consumed before Canva Linux receives the arguments.
+Use `--canva-debug=1` or `--canva-debug=2`.
+
+Flatpak examples:
+
+```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
+flatpak run io.github.coletivo420.canva-linux \
+  --canva-debug=2 \
+  --gpu-backend=software \
+  --force-wayland \
+  --disable-wayland-color-manager
+```
+
 
 ## Canva Linux Documentation
 
@@ -125,7 +141,7 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 ## Release and Packaging
 
-Current release target: `0.1.4-15.Dev.6`.
+Current release target: `0.1.4-15.Dev.7`.
 
 Dev.6 is the post-migration cleanup handoff for dead-code auditing, obsolete validation-contract cleanup, streamlined smoke tests,
 runtime CLI diagnostics cleanup, and GPU/display `runtime-options` logging. It preserves active behavior boundaries, including

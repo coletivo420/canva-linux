@@ -10,7 +10,7 @@ export const BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
 const BUILDER_GLOBAL_FLAGS = new Set(["-y", "--yes", "--dry-run"]);
 
 const RUNTIME_ONLY_VALUED_OPTIONS = [
-  "--debug",
+  "--canva-debug",
   "--credential-store",
   "--gpu-backend",
 ];
@@ -122,6 +122,10 @@ function selectEntrypoint(rootDir: string, kind: "ui" | "cli"): string {
   );
 }
 
+function isReservedDebugFlag(arg: string): boolean {
+  return arg === "--debug" || arg.startsWith("--debug=");
+}
+
 function isRuntimeOnlyFlag(arg: string): boolean {
   return (
     RUNTIME_ONLY_BOOLEAN_OPTIONS.includes(arg) ||
@@ -140,6 +144,10 @@ export function normalizeBuilderArgs(argv: string[]): NormalizedBuilderArgs {
     if (arg === "-h" || arg === "--help") {
       help = true;
       continue;
+    }
+
+    if (isReservedDebugFlag(arg)) {
+      throw new Error("--debug is reserved by Electron/Node. Use canva-linux --canva-debug=1 or --canva-debug=2.");
     }
 
     if (isRuntimeOnlyFlag(arg)) {

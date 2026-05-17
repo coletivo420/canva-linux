@@ -1,8 +1,8 @@
 # RC Validation Matrix
 
-This internal maintenance checklist tracks the active `0.1.4-15.Dev.6` cleanup handoff. It records the commands, manual
+This internal maintenance checklist tracks the active `0.1.4-15.Dev.7` cleanup handoff. It records the commands, manual
 checks, GPU/display runtime diagnostics, Flatpak credential diagnostics, and release blockers that must be reviewed before
-tagging or publishing `v0.1.4-15.Dev.6`.
+tagging or publishing `v0.1.4-15.Dev.7`.
 
 Dev.6 closes the post-migration cleanup phase: dead-code audit, obsolete validation-contract cleanup, streamlined smoke tests,
 runtime CLI diagnostics cleanup, and GPU/display `runtime-options` logging. Historical migration checks should be simplified after
@@ -14,8 +14,8 @@ validation must inspect the central log for `gpu:runtime runtime-options`; the l
 
 | Field | Value |
 | --- | --- |
-| Release target | `0.1.4-15.Dev.6` |
-| Tag target | `v0.1.4-15.Dev.6` |
+| Release target | `0.1.4-15.Dev.7` |
+| Tag target | `v0.1.4-15.Dev.7` |
 | Versioning rule | `N.N.N-X.Dev.Y` |
 | Validation date | `2026-05-16` (UTC) |
 | Validated commit | `75853e9e08ca56a1b0b6aec13fe5ed3b74625d1a` |
@@ -54,7 +54,8 @@ These commands are manual release-candidate checks. Record their output in the r
 | `npm run c420ui:cli -- --doctor --dry-run` | Pass | c420ui CLI doctor resolves the project adapter and reports planned checks without making changes. | The c420ui CLI bridge or dependent-project adapter contract may be broken. | c420ui core |
 | `./canva-linux-c420ui-builder --help` | Blocked: validation container runs as root | Direct Canva Linux CLI help works and remains aligned with the documented command surface. | The direct CLI launcher or help contract may be broken. | Canva Linux project adapter |
 | `./canva-linux-c420ui-builder --prepare-aur --dry-run` | Required; root containers may record blocked | One planned-action dry-run resolves through the c420ui CLI bridge without expanding builder smoke coverage. | Planned-action routing, dry-run behavior, or c420ui bridge delegation may have regressed. | Canva Linux project adapter |
-| `./canva-linux-c420ui-builder --debug=1` | Required; root containers may record blocked before dispatch | Runtime flags are rejected by the builder and remain owned by the compiled runtime app. | Builder/runtime separation may have been weakened. | Canva Linux project adapter |
+| `./canva-linux-c420ui-builder --canva-debug=1` | Required; root containers may record blocked before dispatch | Runtime flags are rejected by the builder and remain owned by the compiled runtime app. | Builder/runtime separation may have been weakened. | Canva Linux project adapter |
+| `flatpak run io.github.coletivo420.canva-linux --debug=1` | Required in a Flatpak-capable environment | The wrapper exits with `Canva Linux: --debug is reserved by Electron/Node.` and tells users to use `--canva-debug=1` or `--canva-debug=2`. | Flatpak may pass Electron-reserved debug flags through before Canva Linux can reject them. | Canva Linux runtime |
 
 
 ## GPU/display runtime diagnostics manual validation
@@ -70,6 +71,13 @@ gpuBackend=<value> displayOverride=<auto|x11|wayland> forceX11=<bool> forceWayla
 Minimum manual examples:
 
 ```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
+flatpak run io.github.coletivo420.canva-linux \
+  --canva-debug=2 \
+  --gpu-backend=software \
+  --force-wayland \
+  --disable-wayland-color-manager
 electron . --gpu-backend=software
 electron . --force-wayland
 electron . --disable-wayland-color-manager
@@ -87,8 +95,8 @@ Run these only in an environment with the required packaging dependencies. If de
 
 | Command | Status | Expected result | Failure meaning | Owner domain |
 | --- | --- | --- | --- | --- |
-| `./scripts/build-appimage.sh` | Blocked: environment lacks AppImage tooling | Builds the AppImage artifact for `0.1.4-15.Dev.6` with the generated architecture string preserved in the artifact name. | AppImage build prerequisites, packaging scripts, release metadata, or artifact naming may be broken. | release metadata |
-| `./scripts/build-flatpak-bundle.sh` | Blocked: environment lacks `flatpak` | Builds the Flatpak bundle for `0.1.4-15.Dev.6` with AppStream metadata and generated architecture naming intact. | Flatpak build prerequisites, packaging scripts, AppStream metadata, or artifact naming may be broken. | release metadata |
+| `./scripts/build-appimage.sh` | Blocked: environment lacks AppImage tooling | Builds the AppImage artifact for `0.1.4-15.Dev.7` with the generated architecture string preserved in the artifact name. | AppImage build prerequisites, packaging scripts, release metadata, or artifact naming may be broken. | release metadata |
+| `./scripts/build-flatpak-bundle.sh` | Blocked: environment lacks `flatpak` | Builds the Flatpak bundle for `0.1.4-15.Dev.7` with AppStream metadata and generated architecture naming intact. | Flatpak build prerequisites, packaging scripts, AppStream metadata, or artifact naming may be broken. | release metadata |
 | `./scripts/validate-flatpak.sh` | Blocked: environment lacks `flatpak`, `appstreamcli`, and `desktop-file-validate` | Validates Flatpak metadata and bundle policy for the current release candidate. | Flatpak metadata, AppStream, desktop integration, or bundle validation policy may have regressed. | release metadata |
 
 
@@ -110,7 +118,7 @@ Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb4219
 | --- | --- | --- |
 | Bootstrap bundle exists | Pass | `bootstrap/c420ui/run-c420ui.cjs` and `bootstrap/c420ui/run-c420ui-cli.cjs` are committed bootstrap entrypoints; `node bootstrap/c420ui/run-c420ui-cli.cjs --help` passed after `rm -rf node_modules .build`. |
 | c420ui version is independent | Pass | `bootstrap/c420ui/manifest.json` records `c420uiVersion` as `0.1.0`. |
-| Dependent project version is separate | Pass | `bootstrap/c420ui/manifest.json` records `dependentProjectVersion` as `0.1.4-15.Dev.6`. |
+| Dependent project version is separate | Pass | `bootstrap/c420ui/manifest.json` records `dependentProjectVersion` as `0.1.4-15.Dev.7`. |
 | Source hash matches current sources | Pass | `npm run build:c420ui-bootstrap` followed by `npm run check:c420ui-bootstrap` passed after reverting the intentional stale-hash edit. |
 | Stale hash detection works | Pass | After `printf '\n' >> scripts/build-c420ui-bootstrap.ts`, `npm run check:c420ui-bootstrap` failed with `bootstrap/c420ui/manifest.json: sourceHash is stale; run npm run build:c420ui-bootstrap`. |
 | Launcher does not install npm deps | Pass | `rg -n "npm (install\|ci)\|npm\\s+install\|npm\\s+ci" canva-linux-c420ui-builder` returned no matches; `canva-linux-c420ui-builder` resolves `bootstrap/c420ui/run-c420ui-cli.cjs` before the `.build` fallback. |
@@ -121,10 +129,10 @@ Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb4219
 
 The release candidate must not be tagged or published while any blocker below is present:
 
-- `package.json` version differs from `0.1.4-15.Dev.6`.
-- `package-lock.json` top-level version differs from `0.1.4-15.Dev.6`.
-- `package-lock.json` root package version differs from `0.1.4-15.Dev.6`.
-- Active project UI metadata does not use display version `0.1.4-15.Dev` and phase `0.1.4-15.Dev.6`.
+- `package.json` version differs from `0.1.4-15.Dev.7`.
+- `package-lock.json` top-level version differs from `0.1.4-15.Dev.7`.
+- `package-lock.json` root package version differs from `0.1.4-15.Dev.7`.
+- Active project UI metadata does not use display version `0.1.4-15.Dev` and phase `0.1.4-15.Dev.7`.
 - Any release identity uses `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
 - Project-owned artifact names use `x64` instead of the generated architecture name such as `x86_64` or `X86_64`.
 - `scripts/c420ui-canva-linux` reappears.
@@ -136,11 +144,11 @@ The release candidate must not be tagged or published while any blocker below is
 
 ## RC decision rule
 
-`v0.1.4-15.Dev.6` may be tagged only after every required automated command has a recorded passing result, every applicable manual dry-run has the expected result, dependency-backed packaging checks are either passing or explicitly recorded as environment-blocked, and no release blocker remains open.
+`v0.1.4-15.Dev.7` may be tagged only after every required automated command has a recorded passing result, every applicable manual dry-run has the expected result, dependency-backed packaging checks are either passing or explicitly recorded as environment-blocked, and no release blocker remains open.
 
 ## c420ui bootstrap release requirement
 
-The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-15.Dev.6`; ESM is future work only.
+The RC matrix must include a clean-checkout startup check for the standalone c420ui bootstrap bundle. The expected behavior is that c420ui starts from `bootstrap/c420ui` without `node_modules`, local `esbuild`, or a prior npm install; full dependency validation and repair then continue inside c420ui. The bootstrap remains CommonJS for `0.1.4-15.Dev.7`; ESM is future work only.
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate: `c420uiVersion` is sourced
 from `packages/c420ui/package.json`, while `dependentProjectVersion` is sourced from the repository root `package.json`.

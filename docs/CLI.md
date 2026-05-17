@@ -122,8 +122,8 @@ public builder alias does not own or implement app runtime debug flags.
 ```bash
 canva-linux --help
 canva-linux --version
-canva-linux --debug=1
-canva-linux --debug=2
+canva-linux --canva-debug=1
+canva-linux --canva-debug=2
 canva-linux --credential-store=auto
 canva-linux --credential-store=gnome-libsecret
 canva-linux --credential-store=kwallet6
@@ -138,8 +138,24 @@ canva-linux --force-wayland
 canva-linux --disable-wayland-color-manager
 ```
 
-Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Use `--debug=1` or `--debug=2` for diagnostics,
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Use `--canva-debug=1` or `--canva-debug=2` for diagnostics,
 and use `--credential-store=...` for credential-store selection.
+
+Do not use `--debug`. It is reserved by Electron/Node and may be consumed before Canva Linux receives the arguments.
+Use `--canva-debug=1` or `--canva-debug=2`.
+
+Flatpak examples:
+
+```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
+flatpak run io.github.coletivo420.canva-linux \
+  --canva-debug=2 \
+  --gpu-backend=software \
+  --force-wayland \
+  --disable-wayland-color-manager
+```
+
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance,

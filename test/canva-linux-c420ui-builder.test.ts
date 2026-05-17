@@ -93,11 +93,15 @@ test("builder normalizeBuilderArgs delegates a registry-backed planned action", 
   ]);
 });
 
-test("builder normalizeBuilderArgs rejects a runtime-only flag", () => {
+test("builder normalizeBuilderArgs rejects runtime debug flags", () => {
   const { normalizeBuilderArgs } = require(path.join(repoRoot, ".build/scripts/c420ui-builder.js"));
   assert.throws(
+    () => normalizeBuilderArgs(["--canva-debug=1"]),
+    /--canva-debug=1 is a Canva Linux runtime option/,
+  );
+  assert.throws(
     () => normalizeBuilderArgs(["--debug=1"]),
-    /--debug=1 is a Canva Linux runtime option/,
+    /--debug is reserved by Electron\/Node/,
   );
 });
 
@@ -121,14 +125,24 @@ test("public alias planned action dry-run smoke test routes through c420ui-build
   assert.equal(result.status, 0, `stdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
 });
 
-test("public alias rejects a runtime-only flag", (t) => {
+test("public alias rejects a runtime-only debug flag", (t) => {
+  const result = runBuilder(["--canva-debug=1"]);
+  if (result.skipped) {
+    t.skip(result.stderr);
+    return;
+  }
+  assert.notEqual(result.status, 0, "--canva-debug=1 unexpectedly succeeded");
+  assert.match(result.stderr, /--canva-debug=1 is a Canva Linux runtime option/);
+});
+
+test("public alias rejects reserved Electron debug flag", (t) => {
   const result = runBuilder(["--debug=1"]);
   if (result.skipped) {
     t.skip(result.stderr);
     return;
   }
   assert.notEqual(result.status, 0, "--debug=1 unexpectedly succeeded");
-  assert.match(result.stderr, /--debug=1 is a Canva Linux runtime option/);
+  assert.match(result.stderr, /--debug is reserved by Electron\/Node/);
 });
 
 test("compiled Electron runtime remains canva-linux", () => {

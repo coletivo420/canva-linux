@@ -4,7 +4,7 @@ Canva Linux logging is infrastructure and must not crash the Electron main proce
 
 ## Core contract
 
-- Public debug modes must remain `canva-linux --debug=1` and `canva-linux --debug=2`.
+- Public debug modes must remain `canva-linux --canva-debug=1` and `canva-linux --canva-debug=2`.
 - Runtime logging must remain centralized in `logs/current.log`.
 - Logger argument handling must be crash-safe for arbitrary values.
 

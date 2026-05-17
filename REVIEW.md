@@ -6,7 +6,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Dev.6 cleanup handoff review
 
-Request changes if a PR closing `0.1.4-15.Dev.6`:
+Request changes if a PR closing `0.1.4-15.Dev.7`:
 
 - describes Dev.6 as feature expansion instead of post-migration cleanup;
 - omits the dead-code audit, obsolete validation-contract cleanup, streamlined smoke tests, runtime CLI diagnostics cleanup,
@@ -29,12 +29,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.6` for cleanup handoff validation:
+Request changes if a PR preparing `0.1.4-15.Dev.7` for cleanup handoff validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-15.Dev.6` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.7` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -58,8 +58,9 @@ Request changes if a PR:
 
 - reintroduces `CANVA_DEBUG` or `CANVA_DEBUG_LEVEL` as runtime debug input;
 - reintroduces `CANVA_LINUX_PASSWORD_STORE` as the public credential-store override;
-- adds `--debug=1` or `--debug=2` to `canva-linux-c420ui-builder`;
-- accepts module-specific debug values instead of only `--debug=1` and `--debug=2`;
+- adds `--canva-debug=1` or `--canva-debug=2` to `canva-linux-c420ui-builder`;
+- accepts module-specific debug values instead of only `--canva-debug=1` and `--canva-debug=2`;
+- allows `--debug` or `--debug=*` as a supported Canva Linux runtime flag instead of reserving it for Electron/Node;
 - allows `basic_text` as persistent credential storage;
 - weakens active `--option=value` boundary coverage for valued runtime CLI flags;
 - reduces GPU diagnostics to source-only logging instead of selected `gpuBackend`, `forceX11`, `forceWayland`,
@@ -71,7 +72,7 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The c
 
 Request changes if a PR:
 
-- changes version `0.1.4-15.Dev.6` without an explicit maintainer request;
+- changes version `0.1.4-15.Dev.7` without an explicit maintainer request;
 - introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.

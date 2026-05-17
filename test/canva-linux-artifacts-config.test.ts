@@ -101,7 +101,7 @@ test("appimage, flatpak, native, release, and planned workflows exist", () => {
 
 test("artifact outputPattern expands package.json version without x64 normalization", () => {
   const version = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")).version as string;
-  assert.equal(version, "0.1.4-15.Dev.6");
+  assert.equal(version, "0.1.4-15.Dev.7");
   const workflowsById = new Map(loadWorkflows().map((workflow) => [workflow.id, workflow]));
 
   assert.equal(

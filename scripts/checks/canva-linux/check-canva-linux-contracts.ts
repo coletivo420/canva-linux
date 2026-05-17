@@ -67,7 +67,7 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-15.Dev.6";
+const currentReleaseVersion = "0.1.4-15.Dev.7";
 const currentReleaseDate = "2026-05-16";
 const previousReleaseVersion = "0.1.4-12";
 const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+(?:\.Dev\.\d+)?$/;
@@ -332,14 +332,35 @@ function validateRuntimeEnvFallbacksRemoved(rootDir: string, failures: string[])
   if (!runtimeCliSource) {
     failures.push(`${runtimeCliPath} must exist`);
   } else {
-    if (!runtimeCliSource.includes('if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE)')) {
-      failures.push("runtime-cli must reject --debug without an equals value");
+    if (!runtimeCliSource.includes('"--canva-debug"')) {
+      failures.push("runtime-cli must support --canva-debug as the public debug flag");
+    }
+    if (!runtimeCliSource.includes('if (arg === "--debug") throw new Error(RESERVED_DEBUG_MESSAGE)')) {
+      failures.push("runtime-cli must reject --debug as an Electron/Node-reserved flag");
+    }
+    if (!runtimeCliSource.includes('matchesValuedOption(arg, "--debug")')) {
+      failures.push("runtime-cli must reject --debug=* as Electron/Node-reserved flags");
+    }
+    if (!runtimeCliSource.includes('reserved by Electron/Node')) {
+      failures.push("runtime-cli must explain that --debug is reserved by Electron/Node");
     }
     if (!/function\s+matchesValuedOption\s*\(/.test(runtimeCliSource) || !/startsWith\s*\([^)]*=/.test(runtimeCliSource)) {
       failures.push("runtime-cli valued option matching must require --option=value boundaries");
     }
     if (/startsWith\s*\(\s*option\s*\)/.test(runtimeCliSource)) {
       failures.push("runtime-cli must not use broad startsWith(option) matching for valued options");
+    }
+  }
+
+  const runShSource = readOptionalProjectFile(rootDir, "run.sh");
+  if (!runShSource) {
+    failures.push("run.sh must exist");
+  } else {
+    if (!runShSource.includes('--debug|--debug=*')) {
+      failures.push("run.sh must block --debug and --debug=* before invoking Electron");
+    }
+    if (!runShSource.includes('Use --canva-debug=1 or --canva-debug=2 instead.')) {
+      failures.push("run.sh must direct users to --canva-debug=1 or --canva-debug=2");
     }
   }
 
@@ -2236,6 +2257,29 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
 
 
 function checkRuntimeCliDebugGuardrails(rootDir: string, failures: string[]): void {
+  const runtimeCli = readOptionalProjectFile(rootDir, "electron/main/runtime-cli.ts") || "";
+  const builder = readOptionalProjectFile(rootDir, "scripts/c420ui-builder.ts") || "";
+  const runSh = readOptionalProjectFile(rootDir, "run.sh") || "";
+
+  if (!runtimeCli.includes("--canva-debug=1") || !runtimeCli.includes("--canva-debug=2")) {
+    failures.push("runtime-cli must document --canva-debug=1 and --canva-debug=2");
+  }
+  if (runtimeCli.includes("--debug=1                      Enable") || runtimeCli.includes("--debug=2                      Enable")) {
+    failures.push("runtime-cli must not document --debug as a supported debug flag");
+  }
+  if (!runtimeCli.includes("RESERVED_DEBUG_MESSAGE") || !runtimeCli.includes("reserved by Electron/Node")) {
+    failures.push("runtime-cli must treat --debug as reserved/prohibited");
+  }
+  if (!runSh.includes('--debug|--debug=*') || !runSh.includes('Use --canva-debug=1 or --canva-debug=2 instead.')) {
+    failures.push("run.sh must block --debug/--debug=* and orient users to --canva-debug=1/2");
+  }
+  if (!builder.includes('"--canva-debug"') || !builder.includes("isRuntimeOnlyFlag")) {
+    failures.push("builder must reject --canva-debug as a runtime-only option");
+  }
+  if (!builder.includes("isReservedDebugFlag") || !builder.includes("reserved by Electron/Node")) {
+    failures.push("builder must reject --debug as reserved/runtime-owned");
+  }
+
   const forbidden: Array<{ file: string; pattern: string; message: string }> = [
     { file: "electron/shared/debug.ts", pattern: "CANVA_DEBUG", message: "must not read legacy runtime debug env" },
     { file: "electron/shared/debug.ts", pattern: "CANVA_DEBUG_LEVEL", message: "must not read legacy runtime debug level env" },

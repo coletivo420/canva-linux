@@ -8,9 +8,9 @@ print_debug_guidance_for_command(){
   ui_cmd "${run_cmd}"
   echo
   ui_subsection "Internal Canva Linux logs"
-  ui_cmd "${run_cmd} --debug=1"
+  ui_cmd "${run_cmd} --canva-debug=1"
   ui_info "Shows all internal Canva Linux diagnostics, including startup, session, tabs, toolbar, permissions, uploads, OAuth, drag-and-drop, eyedropper, preload and GPU acceleration monitoring."
-  ui_cmd "${run_cmd} --debug=2"
+  ui_cmd "${run_cmd} --canva-debug=2"
   ui_info "Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron stderr logs."
   echo
   print_display_backend_guidance "${run_cmd}"

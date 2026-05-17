@@ -35,15 +35,17 @@ const GPU_BACKENDS = new Set<RuntimeGpuBackend>([
   "force",
 ]);
 
-const UNSUPPORTED_DEBUG_MESSAGE =
-  "Unsupported --debug value. Use --debug=1 or --debug=2.";
+const UNSUPPORTED_CANVA_DIAGNOSTICS_MESSAGE =
+  "Unsupported --canva-debug value. Use --canva-debug=1 or --canva-debug=2.";
+const RESERVED_DEBUG_MESSAGE =
+  "--debug is reserved by Electron/Node. Use --canva-debug=1 or --canva-debug=2.";
 const UNSUPPORTED_CREDENTIAL_STORE_MESSAGE =
   "Unsupported --credential-store value. Use auto, gnome-libsecret, kwallet6, or kwallet5.";
 const UNSUPPORTED_GPU_BACKEND_MESSAGE =
   "Unsupported --gpu-backend value. Use auto, opengl, vulkan, software, or force.";
 
 function unsupportedDebugValue(): Error {
-  return new Error(UNSUPPORTED_DEBUG_MESSAGE);
+  return new Error(UNSUPPORTED_CANVA_DIAGNOSTICS_MESSAGE);
 }
 
 function matchesValuedOption(arg: string, option: string): boolean {
@@ -81,13 +83,21 @@ function parseCanvaLinuxRuntimeCli(
       options.version = true;
       continue;
     }
-    if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE);
+    if (arg === "--debug") throw new Error(RESERVED_DEBUG_MESSAGE);
+    if (matchesValuedOption(arg, "--debug")) {
+      throw new Error(RESERVED_DEBUG_MESSAGE);
+    }
+    if (arg === "--canva-debug") throw unsupportedDebugValue();
     if (arg === "--credential-store") {
       throw new Error(UNSUPPORTED_CREDENTIAL_STORE_MESSAGE);
     }
     if (arg === "--gpu-backend") throw new Error(UNSUPPORTED_GPU_BACKEND_MESSAGE);
-    if (matchesValuedOption(arg, "--debug")) {
-      const value = readRequiredValue(arg, "--debug", UNSUPPORTED_DEBUG_MESSAGE);
+    if (matchesValuedOption(arg, "--canva-debug")) {
+      const value = readRequiredValue(
+        arg,
+        "--canva-debug",
+        UNSUPPORTED_CANVA_DIAGNOSTICS_MESSAGE,
+      );
       if (value !== "1" && value !== "2") throw unsupportedDebugValue();
       options.debugLevel = Number(value) as 1 | 2;
       continue;
@@ -150,8 +160,10 @@ Options:
   --version                      Show version
 
 Debug:
-  --debug=1                      Enable Canva Linux internal diagnostics
-  --debug=2                      Enable internal diagnostics plus verbose Chromium/Electron stderr logging
+  --canva-debug=1                Enable Canva Linux internal diagnostics
+  --canva-debug=2                Enable internal diagnostics plus verbose Chromium/Electron stderr logging
+
+  --debug is reserved by Electron/Node and is not supported by Canva Linux.
 
 Credential storage:
   --credential-store=auto        Automatically resolve native Linux credential storage
