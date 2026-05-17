@@ -69,6 +69,7 @@ const DEFAULT_POST_OAUTH_SESSION_FLUSH_DELAY_MS = 250;
  * login completion from stalling while completionHandled prevents double reload.
  */
 const DEFAULT_AUTHORIZED_CALLBACK_FALLBACK_DELAY_MS = 1000;
+const DEFAULT_AUTHORIZED_CALLBACK_FALLBACK_MAX_ATTEMPTS = 3;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -165,6 +166,7 @@ type CreateOAuthHelpersOptions = {
   windowLabel: (window: BrowserWindowLike) => string;
   postOAuthSessionFlushDelayMs?: number;
   authorizedCallbackFallbackDelayMs?: number;
+  authorizedCallbackFallbackMaxAttempts?: number;
 };
 
 /**
@@ -251,6 +253,7 @@ export function createOAuthPopupOptionsSummary(window: BrowserWindowLike): {
  *   windowLabel: (window: BrowserWindowLike) => string;
  *   postOAuthSessionFlushDelayMs?: number;
  *   authorizedCallbackFallbackDelayMs?: number;
+ *   authorizedCallbackFallbackMaxAttempts?: number;
  * }} options
  */
 export function createOAuthHelpers({
@@ -279,6 +282,8 @@ export function createOAuthHelpers({
   windowLabel,
   postOAuthSessionFlushDelayMs = DEFAULT_POST_OAUTH_SESSION_FLUSH_DELAY_MS,
   authorizedCallbackFallbackDelayMs = DEFAULT_AUTHORIZED_CALLBACK_FALLBACK_DELAY_MS,
+  authorizedCallbackFallbackMaxAttempts =
+    DEFAULT_AUTHORIZED_CALLBACK_FALLBACK_MAX_ATTEMPTS,
 }: CreateOAuthHelpersOptions) {
   function resolveOAuthSourceTab(entry: OAuthPopupEntry): {
     fallback: boolean;
@@ -457,6 +462,79 @@ export function createOAuthHelpers({
     );
   }
 
+  function isAuthPopupLoading(entry: OAuthPopupEntry): boolean {
+    try {
+      return Boolean(entry.window.webContents.isLoading?.());
+    } catch {
+      return false;
+    }
+  }
+
+  function scheduleAuthorizedOAuthFallbackAttempt(
+    entry: OAuthPopupEntry,
+    url: string,
+    trigger: string,
+    attempt = 1,
+  ): void {
+    setTimeout(() => {
+      if (entry.completionHandled) {
+        debugLog(
+          "oauth",
+          "oauth-authorized-callback-fallback-skipped",
+          `popup=${entry.id}`,
+          "reason=already-handled",
+          `attempt=${attempt}`,
+          `trigger=${trigger}`,
+        );
+        return;
+      }
+
+      if (!authPopups.has(entry.id) || entry.window.isDestroyed()) {
+        debugLog(
+          "oauth",
+          "oauth-authorized-callback-fallback-skipped",
+          `popup=${entry.id}`,
+          "reason=popup-gone",
+          `attempt=${attempt}`,
+          `trigger=${trigger}`,
+        );
+        return;
+      }
+
+      const loading = isAuthPopupLoading(entry);
+      if (loading && attempt < authorizedCallbackFallbackMaxAttempts) {
+        debugLog(
+          "oauth",
+          "oauth-authorized-callback-fallback-deferred",
+          `popup=${entry.id}`,
+          "reason=still-loading",
+          `attempt=${attempt}`,
+          `trigger=${trigger}`,
+        );
+        scheduleAuthorizedOAuthFallbackAttempt(entry, url, trigger, attempt + 1);
+        return;
+      }
+
+      debugLog(
+        "oauth",
+        "oauth-authorized-callback-fallback-fired",
+        `popup=${entry.id}`,
+        `loading=${loading ? "true" : "false"}`,
+        `attempt=${attempt}`,
+        `trigger=${trigger}`,
+        ...(loading ? ["reason=max-attempts"] : []),
+        redactSensitiveUrlParams(url),
+      );
+
+      finalizeAuthorizedOAuthCallback(entry, url, {
+        loadedCallbackType: detectCanvaOAuthCallback(url),
+        trigger: "fallback",
+      }).catch((error) => {
+        debugLog("oauth", "finalize-authorized-callback-error", String(error));
+      });
+    }, authorizedCallbackFallbackDelayMs);
+  }
+
   function queueAuthorizedOAuthFinalization(
     entry: OAuthPopupEntry,
     url: string,
@@ -479,45 +557,12 @@ export function createOAuthHelpers({
       "oauth-authorized-callback-fallback-scheduled",
       `popup=${entry.id}`,
       `delayMs=${authorizedCallbackFallbackDelayMs}`,
+      `maxAttempts=${authorizedCallbackFallbackMaxAttempts}`,
       `trigger=${trigger}`,
       redactSensitiveUrlParams(url),
     );
 
-    setTimeout(() => {
-      if (entry.completionHandled) {
-        debugLog(
-          "oauth",
-          "oauth-authorized-callback-fallback-skipped",
-          `popup=${entry.id}`,
-          "reason=already-handled",
-        );
-        return;
-      }
-
-      if (!authPopups.has(entry.id) || entry.window.isDestroyed()) {
-        debugLog(
-          "oauth",
-          "oauth-authorized-callback-fallback-skipped",
-          `popup=${entry.id}`,
-          "reason=popup-gone",
-        );
-        return;
-      }
-
-      debugLog(
-        "oauth",
-        "oauth-authorized-callback-fallback-fired",
-        `popup=${entry.id}`,
-        redactSensitiveUrlParams(url),
-      );
-
-      finalizeAuthorizedOAuthCallback(entry, url, {
-        loadedCallbackType: detectCanvaOAuthCallback(url),
-        trigger: "fallback",
-      }).catch((error) => {
-        debugLog("oauth", "finalize-authorized-callback-error", String(error));
-      });
-    }, authorizedCallbackFallbackDelayMs);
+    scheduleAuthorizedOAuthFallbackAttempt(entry, url, trigger, 1);
   }
 
   /**

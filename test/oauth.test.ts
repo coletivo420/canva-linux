@@ -13,6 +13,7 @@ function createFakeWindow(initialUrl = "https://www.canva.com/login") {
   const webContentsListeners = new Map();
   let destroyed = false;
   let currentUrl = initialUrl;
+  let loading = false;
   const session = {
     partition: "persist:canva",
     cookies: {
@@ -25,6 +26,10 @@ function createFakeWindow(initialUrl = "https://www.canva.com/login") {
       id: 900,
       session,
       getURL: () => currentUrl,
+      isLoading: () => loading,
+      setLoading(value) {
+        loading = value;
+      },
       setURL(url) {
         currentUrl = url;
       },
@@ -90,6 +95,8 @@ function createTab(id, webContentsId, order, options = {}) {
 
 function createHarness({
   activeTab,
+  authorizedCallbackFallbackDelayMs = 0,
+  authorizedCallbackFallbackMaxAttempts = 2,
   cookieGet,
   sourceTab,
   sourceWebContentsId = 300,
@@ -165,7 +172,8 @@ function createHarness({
       return "oauth-popup";
     },
     postOAuthSessionFlushDelayMs: 0,
-    authorizedCallbackFallbackDelayMs: 0,
+    authorizedCallbackFallbackDelayMs,
+    authorizedCallbackFallbackMaxAttempts,
   });
 
   const entry = helpers.registerAuthPopupWindow(
@@ -306,6 +314,142 @@ test("authorized callback fallback finalizes when did-finish-load does not fire"
       (event) =>
         event[1] === "oauth-finalize-authorized-callback-start" &&
         event.includes("trigger=fallback"),
+    ),
+    true,
+  );
+});
+
+test("authorized callback fallback defers while popup is still loading", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, { reloadIgnoringCache: true });
+  const harness = createHarness({
+    authorizedCallbackFallbackDelayMs: 50,
+    sourceTab,
+  });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.window.webContents.setLoading(true);
+  harness.webContentsListeners.get("did-redirect-navigation")(null, callbackUrl);
+  await waitForDebugEvent(
+    harness.debugEvents,
+    "oauth-authorized-callback-fallback-deferred",
+  );
+
+  assert.equal(order.includes("flush"), false);
+  assert.equal(order.includes("reloadIgnoringCache:1"), false);
+  assert.equal(harness.window.isDestroyed(), false);
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-authorized-callback-fallback-deferred" &&
+        event.includes("reason=still-loading") &&
+        event.includes("attempt=1"),
+    ),
+    true,
+  );
+
+  harness.window.webContents.setLoading(false);
+  await waitForDebugEvent(harness.debugEvents, "oauth-finalize-authorized-callback-done");
+});
+
+test("authorized callback fallback fires after popup loading finishes", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, { reloadIgnoringCache: true });
+  const harness = createHarness({
+    authorizedCallbackFallbackDelayMs: 50,
+    sourceTab,
+  });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.window.webContents.setLoading(true);
+  harness.webContentsListeners.get("did-redirect-navigation")(null, callbackUrl);
+  await waitForDebugEvent(
+    harness.debugEvents,
+    "oauth-authorized-callback-fallback-deferred",
+  );
+  harness.window.webContents.setLoading(false);
+  await waitForDebugEvent(harness.debugEvents, "oauth-authorized-callback-fallback-fired");
+  await waitForDebugEvent(harness.debugEvents, "oauth-finalize-authorized-callback-done");
+
+  assert.equal(order.includes("flush"), true);
+  assert.equal(order.includes("destroy"), true);
+  assert.equal(order.includes("reloadIgnoringCache:1"), true);
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-authorized-callback-fallback-fired" &&
+        event.includes("loading=false") &&
+        event.includes("attempt=2"),
+    ),
+    true,
+  );
+});
+
+test("did-finish-load finalization wins over delayed fallback while loading", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, { reloadIgnoringCache: true });
+  const harness = createHarness({
+    authorizedCallbackFallbackDelayMs: 50,
+    sourceTab,
+  });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.window.webContents.setLoading(true);
+  harness.webContentsListeners.get("did-redirect-navigation")(null, callbackUrl);
+  harness.window.webContents.setURL(callbackUrl);
+  harness.webContentsListeners.get("did-finish-load")();
+  await waitForDebugEvent(harness.debugEvents, "oauth-finalize-authorized-callback-done");
+  await waitForDebugEvent(harness.debugEvents, "oauth-authorized-callback-fallback-skipped");
+
+  assert.equal(order.filter((entry) => entry === "reloadIgnoringCache:1").length, 1);
+  assert.equal(order.filter((entry) => entry === "destroy").length, 1);
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-finalize-authorized-callback-start" &&
+        event.includes("trigger=did-finish-load"),
+    ),
+    true,
+  );
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-authorized-callback-fallback-skipped" &&
+        event.includes("reason=already-handled") &&
+        event.includes("attempt=1"),
+    ),
+    true,
+  );
+});
+
+test("authorized callback fallback fires at max attempts if loading stays true", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, { reloadIgnoringCache: true });
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.window.webContents.setLoading(true);
+  harness.webContentsListeners.get("did-redirect-navigation")(null, callbackUrl);
+  await waitForDebugEvent(
+    harness.debugEvents,
+    "oauth-authorized-callback-fallback-deferred",
+  );
+  await waitForDebugEvent(harness.debugEvents, "oauth-authorized-callback-fallback-fired");
+  await waitForDebugEvent(harness.debugEvents, "oauth-finalize-authorized-callback-done");
+
+  assert.equal(order.includes("flush"), true);
+  assert.equal(order.includes("reloadIgnoringCache:1"), true);
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-authorized-callback-fallback-fired" &&
+        event.includes("loading=true") &&
+        event.includes("attempt=2") &&
+        event.includes("reason=max-attempts"),
     ),
     true,
   );

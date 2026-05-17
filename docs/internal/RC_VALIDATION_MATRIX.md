@@ -70,6 +70,8 @@ Expected sequence:
 ```text
 popup-canva-callback-detected type=authorized
 oauth-authorized-callback-ready
+# On slow callback loads before fallback finalization:
+# oauth-authorized-callback-fallback-deferred reason=still-loading attempt=...
 oauth-finalize-authorized-callback-start
 session flush done
 oauth-post-flush-settle
@@ -79,7 +81,7 @@ reload-source-tab-after-oauth tab=...
 did-finish-load https://www.canva.com/...
 ```
 
-The cookie summary may include counts for persistent, session, secure, and HTTP-only cookies only. It must not include cookie values, OAuth codes, states, tokens, or session IDs. OAuth finalization must no longer depend on exact callback URL string equality: authorized callbacks are finalized by callback type, the guarded fallback timer covers redirect sequences where Electron reports the callback in navigation events without a matching `did-finish-load`, and the post-flush settle delay is documented as a shared-session propagation guard between popup and source WebContents. The post-OAuth reload must target the recorded source tab when its `sourceWebContentsId` resolves; fallback to the active tab is acceptable only when logged with `fallback=true`.
+The cookie summary may include counts for persistent, session, secure, and HTTP-only cookies only. It must not include cookie values, OAuth codes, states, tokens, or session IDs. OAuth finalization must no longer depend on exact callback URL string equality: authorized callbacks are finalized by callback type, the guarded fallback timer covers redirect sequences where Electron reports the callback in navigation events without a matching `did-finish-load`, defers while the authorized callback WebContents is still loading except after a bounded max-attempt safety limit, and the post-flush settle delay is documented as a shared-session propagation guard between popup and source WebContents. The post-OAuth reload must target the recorded source tab when its `sourceWebContentsId` resolves; fallback to the active tab is acceptable only when logged with `fallback=true`.
 
 ## GPU/display runtime diagnostics manual validation
 
