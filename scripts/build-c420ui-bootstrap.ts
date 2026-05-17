@@ -23,6 +23,13 @@ type PackageJson = {
   version?: string;
 };
 
+type BuildMetadata = {
+  buildRevision?: string;
+  fullVersion?: string;
+  displayVersion?: string;
+  phase?: string;
+};
+
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
   while (true) {
@@ -68,6 +75,7 @@ async function main(): Promise<void> {
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
   const c420uiPackageJson = readJson<PackageJson>(rootDir, "packages/c420ui/package.json");
+  const buildMetadata = readJson<BuildMetadata>(rootDir, "config/canva-linux/build-metadata.json");
   const dependentProjectVersion = requirePackageVersion(rootPackageJson, "package.json");
   const c420uiVersion = requirePackageVersion(c420uiPackageJson, "packages/c420ui/package.json");
 
@@ -81,6 +89,11 @@ async function main(): Promise<void> {
     c420uiVersion,
     dependentProject: "canva-linux",
     dependentProjectVersion,
+    dependentProjectBuildRevision: buildMetadata.buildRevision ?? "unknown",
+    dependentProjectFullVersion: buildMetadata.fullVersion ?? dependentProjectVersion,
+    dependentProjectDisplayVersion:
+      buildMetadata.displayVersion ?? dependentProjectVersion,
+    dependentProjectPhase: buildMetadata.phase ?? dependentProjectVersion,
     entrypoint: "run-c420ui.cjs",
     cliEntrypoint: "run-c420ui-cli.cjs",
     entrypoints: {

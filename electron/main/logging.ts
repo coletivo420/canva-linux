@@ -4,6 +4,7 @@ import path from "path";
 import { normalizeArgs, createLogSignature } from "./logging-normalize";
 
 type CredentialStoragePolicy = import("./credential-storage").CredentialStoragePolicy;
+type BuildMetadata = import("./build-metadata").CanvaLinuxBuildMetadata;
 
 type StatusLevel = "ok" | "warn" | "critical";
 type LogOptions = { source?: string; level?: StatusLevel };
@@ -150,17 +151,22 @@ function createStatusLogger({
   debugLog,
   logStatus,
   appVersion,
+  buildMetadata,
 }: {
   app: AppLike;
   debugLog: DebugLog;
   logStatus: StatusLogger;
   appVersion: string;
+  buildMetadata?: BuildMetadata;
 }) {
   function logReleaseStatus() {
     debugLog(
       "startup",
       "release",
-      `version=${appVersion}`,
+      `version=${buildMetadata?.version ?? appVersion}`,
+      `displayVersion=${buildMetadata?.displayVersion ?? appVersion}`,
+      `phase=${buildMetadata?.phase ?? appVersion}`,
+      `buildRevision=${buildMetadata?.buildRevision ?? "unknown"}`,
       `platform=${process.platform}`,
       `arch=${process.arch}`,
       `downloads=${app.getPath("downloads")}`,

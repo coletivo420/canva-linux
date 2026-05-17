@@ -6,6 +6,7 @@ const test = require("node:test");
 
 const { loadRuntimeModule } = require("./helpers/runtime-module");
 
+const { formatCanvaLinuxVersion } = loadRuntimeModule("main/build-metadata");
 const { parseCanvaLinuxRuntimeCli, printCanvaLinuxRuntimeHelp } =
   loadRuntimeModule("main/runtime-cli");
 
@@ -17,6 +18,10 @@ test("parses help and version", () => {
   assert.equal(parse("--help").help, true);
   assert.equal(parse("--version").version, true);
   assert.match(printCanvaLinuxRuntimeHelp(), /canva-linux \[options\]/);
+  assert.equal(
+    formatCanvaLinuxVersion({ version: "0.1.4-15.Dev.7+gabc1234" }),
+    "Canva Linux 0.1.4-15.Dev.7+gabc1234",
+  );
 });
 
 test("parses supported Canva debug levels", () => {

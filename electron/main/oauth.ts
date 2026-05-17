@@ -15,6 +15,12 @@ export type CanvaTabEntry = {
     };
   };
 };
+
+type PublicLandingSignals = {
+  loginLinks?: number | null;
+  signupLinks?: number | null;
+  authButtons?: number | null;
+};
 export type OAuthPopupEntry = {
   id: number;
   window: BrowserWindowLike;
@@ -57,6 +63,10 @@ export type RegisterAuthPopupOptions = {
 
 const CANVA_COOKIE_SUMMARY_URL = "https://www.canva.com";
 const CANVA_CANONICAL_HOME_URL = "https://www.canva.com/";
+const CANVA_LOCALIZED_LANDING_PATH_PATTERN =
+  /^\/[a-z]{2}(?:[_-][a-z]{2})?(?:\/|$)/i;
+const PUBLIC_AUTH_TITLE_PATTERN =
+  /(?:log\s*in|login|sign\s*up|signup|register|registr|entrar|cadastre|iniciar\s+sesi[oó]n|registrarse|connexion|inscription|anmelden|registrieren|accedi|iscriviti)/i;
 
 /**
  * After Canva's authorized OAuth callback loads, Electron's session flush
@@ -426,14 +436,62 @@ export function createOAuthHelpers({
     }
   }
 
-  function looksLikeLocalizedPublicLanding(url: string, title: string): boolean {
+  function normalizePublicLandingSignals(input: unknown): PublicLandingSignals {
+    if (!input || typeof input !== "object") return {};
+    const values = input as Record<string, unknown>;
+    const count = (value: unknown): number | null =>
+      typeof value === "number" && Number.isFinite(value) ? value : null;
+    return {
+      loginLinks: count(values.loginLinks),
+      signupLinks: count(values.signupLinks),
+      authButtons: count(values.authButtons),
+    };
+  }
+
+  function formatPublicSignal(value: number | null | undefined): string {
+    return typeof value === "number" && Number.isFinite(value)
+      ? String(value)
+      : "0";
+  }
+
+  async function probePublicLandingSignals(
+    webContents: CanvaTabEntry["view"]["webContents"],
+  ): Promise<PublicLandingSignals> {
+    if (!webContents.executeJavaScript) return {};
+    try {
+      return normalizePublicLandingSignals(
+        await webContents.executeJavaScript(`(() => {
+  const count = (selector) => document.querySelectorAll(selector).length;
+  return {
+    loginLinks: count('a[href*="/login"], a[href*="/signin"]'),
+    signupLinks: count('a[href*="/signup"], a[href*="/register"]'),
+    authButtons: count('[data-testid*="login"], [data-testid*="signup"], button[aria-label*="Log in"], button[aria-label*="Sign up"]'),
+  };
+})()`),
+      );
+    } catch {
+      return {};
+    }
+  }
+
+  function looksLikeLocalizedPublicLanding(
+    url: string,
+    title: string,
+    signals: PublicLandingSignals = {},
+  ): boolean {
     try {
       const parsed = new URL(url);
-      return (
-        parsed.hostname === "www.canva.com" &&
-        /^\/pt_br(?:\/|$)/i.test(parsed.pathname) &&
-        /(?:log in|login|sign up|signup|entrar|cadastre|registr)/i.test(title)
-      );
+
+      if (parsed.hostname !== "www.canva.com") return false;
+      if (!CANVA_LOCALIZED_LANDING_PATH_PATTERN.test(parsed.pathname)) return false;
+
+      const titleLooksPublic = PUBLIC_AUTH_TITLE_PATTERN.test(title);
+      const domLooksPublic =
+        Number(signals.loginLinks ?? 0) > 0 ||
+        Number(signals.signupLinks ?? 0) > 0 ||
+        Number(signals.authButtons ?? 0) > 0;
+
+      return titleLooksPublic || domLooksPublic;
     } catch {
       return false;
     }
@@ -443,7 +501,7 @@ export function createOAuthHelpers({
     entry: OAuthPopupEntry,
     sourceTab: CanvaTabEntry,
     reason: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const webContents = sourceTab.view.webContents;
     const url = webContents.getURL?.() || "unknown";
     const title = webContents.getTitle?.() || "unknown";
@@ -459,6 +517,29 @@ export function createOAuthHelpers({
     );
     await logCanvaCookieSummary(getCanvaSession());
     await logCanvaStorageSummary(webContents, "post-oauth-source-load");
+    const publicSignals = await probePublicLandingSignals(webContents);
+    debugLog(
+      "oauth",
+      "oauth-public-landing-signals",
+      `popup=${entry.id}`,
+      `tab=${sourceTab.id}`,
+      `loginLinks=${formatPublicSignal(publicSignals.loginLinks)}`,
+      `signupLinks=${formatPublicSignal(publicSignals.signupLinks)}`,
+      `authButtons=${formatPublicSignal(publicSignals.authButtons)}`,
+    );
+    const localizedPublicLanding = looksLikeLocalizedPublicLanding(
+      url,
+      title,
+      publicSignals,
+    );
+    debugLog(
+      "oauth",
+      "post-oauth-source-load-classification",
+      `popup=${entry.id}`,
+      `tab=${sourceTab.id}`,
+      `localizedPublicLanding=${String(localizedPublicLanding)}`,
+    );
+    return localizedPublicLanding;
   }
 
   function attachPostOAuthSourceProbe(
@@ -470,13 +551,12 @@ export function createOAuthHelpers({
     let canonicalFallbackAttempted = false;
     const onSourceLoad = () => {
       logPostOAuthSourceLoad(entry, sourceTab, reason)
-        .then(() => {
+        .then((localizedPublicLanding) => {
           const url = webContents.getURL?.() || "";
-          const title = webContents.getTitle?.() || "";
           if (
             canonicalFallbackAttempted ||
             !webContents.loadURL ||
-            !looksLikeLocalizedPublicLanding(url, title)
+            !localizedPublicLanding
           ) {
             return;
           }
@@ -537,12 +617,7 @@ export function createOAuthHelpers({
     const webContents = sourceTab.view.webContents;
     const url = webContents.getURL?.() || "unknown";
     const reloadIgnoringCache = webContents.reloadIgnoringCache;
-    const canLoadCanonicalHome = Boolean(webContents.loadURL);
-    const mode = canLoadCanonicalHome
-      ? "loadURL"
-      : reloadIgnoringCache
-        ? "reloadIgnoringCache"
-        : "reload";
+    const mode = reloadIgnoringCache ? "reloadIgnoringCache" : "reload";
 
     attachPostOAuthSourceProbe(entry, sourceTab, reason);
 
@@ -552,14 +627,12 @@ export function createOAuthHelpers({
       `popup=${entry.id}`,
       `tab=${sourceTab.id}`,
       `mode=${mode}`,
+      `target=current`,
       `url=${redactSensitiveUrlParams(url)}`,
-      ...(canLoadCanonicalHome ? [`target=${CANVA_CANONICAL_HOME_URL}`] : []),
       `reason=${reason}`,
     );
 
-    if (webContents.loadURL) {
-      webContents.loadURL(CANVA_CANONICAL_HOME_URL);
-    } else if (reloadIgnoringCache) {
+    if (reloadIgnoringCache) {
       reloadIgnoringCache.call(webContents);
     } else {
       webContents.reload();

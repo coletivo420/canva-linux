@@ -165,3 +165,9 @@ Generated dependency source manifests may retain platform package names that con
 Canva Linux Builder powered by c420ui does not maintain its own action allowlist;
 direct action flags are delegated to the c420ui CLI bridge and resolved by the Action Registry,
 while runtime flags belong to the compiled `canva-linux` app.
+
+## Effective build metadata validation
+
+Validation checks that source versions remain clean, generated effective versions append `+g<short-hash>` when a build revision is known, and build revisions come from deterministic commit metadata rather than random values, timestamps, or counters.
+
+OAuth validation also checks that the first post-OAuth reload targets the current source tab URL and that `https://www.canva.com/` appears only as the fallback navigation after localized public logged-out landing detection.
