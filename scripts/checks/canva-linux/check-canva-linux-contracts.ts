@@ -2456,13 +2456,32 @@ function checkPinnedHomeTabStripContract(rootDir: string, failures: string[]): v
   if (toolbarSource.includes('id="home"')) {
     failures.push(`${toolbarPath}: visible duplicate #home action must not exist when pinnedHomeTab is available`);
   }
-  const pinnedHomeRenderer = toolbarSource.match(/function renderPinnedHomeTab[\s\S]*?function renderRegularTabs/)?.[0] ?? "";
+  const pinnedHomeRenderer = toolbarSource.match(/function renderPinnedHomeTab[\s\S]*?\n    }\n\n    function renderRegularTabs/)?.[0] ?? "";
+  const regularRenderer = toolbarSource.match(/function renderRegularTabs[\s\S]*?\n    }\n\n    if \(!window\.canvaTabs\)/)?.[0] ?? "";
+
+  if (!toolbarSource.includes("function installIconFallback(favicon)")) {
+    failures.push(`${toolbarPath}: toolbar must use a shared installIconFallback helper`);
+  }
+  if (!/function installIconFallback\(favicon\)[\s\S]*favicon\.onerror = null;[\s\S]*favicon\.src = iconPath;/.test(toolbarSource)) {
+    failures.push(`${toolbarPath}: installIconFallback must clear favicon.onerror before falling back to iconPath`);
+  }
+  if (!pinnedHomeRenderer.includes("title.textContent = tab.title || 'Canva'")) {
+    failures.push(`${toolbarPath}: pinned home renderer must use tab.title || 'Canva' for its visible label`);
+  }
+  if (pinnedHomeRenderer.includes("title.textContent = 'Canva'")) {
+    failures.push(`${toolbarPath}: pinned home renderer must not hardcode the visible label to Canva`);
+  }
+  if (!pinnedHomeRenderer.includes("installIconFallback(favicon)")) {
+    failures.push(`${toolbarPath}: pinned home renderer must install the shared favicon fallback`);
+  }
   if (pinnedHomeRenderer.includes("tab-close") || pinnedHomeRenderer.includes("close-tab")) {
     failures.push(`${toolbarPath}: pinned home renderer must not render a close button`);
   }
-  const regularRenderer = toolbarSource.match(/function renderRegularTabs[\s\S]*?\n    }\n\n    if \(!window\.canvaTabs\)/)?.[0] ?? "";
   if (!regularRenderer.includes("for (const tab of tabs)")) {
     failures.push(`${toolbarPath}: regular tab renderer must iterate only its tabs argument`);
+  }
+  if (!regularRenderer.includes("installIconFallback(favicon)")) {
+    failures.push(`${toolbarPath}: regular tab renderer must install the shared favicon fallback`);
   }
   if (regularRenderer.includes("pinnedHomeTab") || regularRenderer.includes("isHome")) {
     failures.push(`${toolbarPath}: regular tab renderer must not render pinnedHomeTab/home items`);

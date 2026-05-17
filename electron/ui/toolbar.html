@@ -242,6 +242,13 @@
       document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
     }
 
+    function installIconFallback(favicon) {
+      favicon.onerror = () => {
+        favicon.onerror = null;
+        favicon.src = iconPath;
+      };
+    }
+
     // Render the tab strip from the shell state sent by the main process.
     function render(state) {
       console.log('[toolbar-ui] render', JSON.stringify({
@@ -270,7 +277,7 @@
       const favicon = document.createElement('img');
       favicon.alt = '';
       favicon.src = tab.favicon || iconPath;
-      favicon.onerror = () => { favicon.src = iconPath; };
+      installIconFallback(favicon);
 
       const title = document.createElement('span');
       title.textContent = tab.title || 'Canva';
@@ -307,7 +314,7 @@
         favicon.className = 'tab-favicon';
         favicon.alt = '';
         favicon.src = tab.favicon || iconPath;
-        favicon.onerror = () => { favicon.src = iconPath; };
+        installIconFallback(favicon);
 
         const title = document.createElement('span');
         title.className = 'tab-title';
