@@ -440,6 +440,7 @@ registerAppLifecycle({
       app,
       centralLogger,
       debugLog: debugLog.bind(null, "gpu"),
+      runtimeCli,
     });
   },
   shouldGrantRemotePermission,

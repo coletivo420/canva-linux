@@ -26,5 +26,5 @@
     "│ .::==++**########**++==:::.  │",
     "└──────────────────────────────┘"
   ],
-  "versionReleaseNotes": "Release preparation for c420ui log selection, packaged artifacts, release workflow and documentation."
+  "versionReleaseNotes": "Dev.6 cleanup for dead code, obsolete validation contracts, streamlined smoke tests, runtime CLI diagnostics, and post-migration documentation."
 }

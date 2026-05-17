@@ -56,14 +56,45 @@ type GpuDiagnosticsApp = {
   ): void;
 };
 type StatusLogArg = string | number | boolean | null | undefined;
-type RuntimeEnvironment = {
-  source: string;
+type RuntimeGpuOptions = {
+  gpuBackend: "auto" | "opengl" | "vulkan" | "software" | "force";
+  forceX11: boolean;
+  forceWayland: boolean;
+  disableWaylandColorManager: boolean;
+};
+type RuntimeEnvironment = RuntimeGpuOptions & {
+  source: "runtime-cli";
+  displayOverride: "auto" | "x11" | "wayland";
 };
 
-function getGpuRuntimeEnvironment(): RuntimeEnvironment {
+function getGpuRuntimeEnvironment(
+  runtimeCli: RuntimeGpuOptions,
+): RuntimeEnvironment {
   return {
     source: "runtime-cli",
+    gpuBackend: runtimeCli.gpuBackend,
+    forceX11: runtimeCli.forceX11,
+    forceWayland: runtimeCli.forceWayland,
+    disableWaylandColorManager: runtimeCli.disableWaylandColorManager,
+    displayOverride: runtimeCli.forceWayland
+      ? "wayland"
+      : runtimeCli.forceX11
+        ? "x11"
+        : "auto",
   };
+}
+
+function serializeGpuRuntimeEnvironment(
+  environment: RuntimeEnvironment,
+): string[] {
+  return [
+    `source=${environment.source}`,
+    `gpuBackend=${environment.gpuBackend}`,
+    `displayOverride=${environment.displayOverride}`,
+    `forceX11=${environment.forceX11}`,
+    `forceWayland=${environment.forceWayland}`,
+    `disableWaylandColorManager=${environment.disableWaylandColorManager}`,
+  ];
 }
 
 function serializeGpuFeatureStatus(status: GpuFeatureStatus = {}): string[] {
@@ -126,17 +157,24 @@ function registerGpuDiagnostics({
   app,
   centralLogger,
   debugLog,
+  runtimeCli,
 }: {
   app: GpuDiagnosticsApp;
   centralLogger: CentralLogger;
   debugLog: (...args: unknown[]) => void;
+  runtimeCli: RuntimeGpuOptions;
 }): void {
   const logFilePath = centralLogger.getLogFilePath() || "unavailable";
   const { logGpu, debugGpu } = createGpuLogger({ centralLogger });
-  const runtimeEnv = getGpuRuntimeEnvironment();
+  const runtimeEnv = getGpuRuntimeEnvironment(runtimeCli);
 
   logGpu("ok", "gpu:runtime", "central-log-file", logFilePath);
-  logGpu("ok", "gpu:runtime", "runtime-options-source", runtimeEnv.source);
+  logGpu(
+    "ok",
+    "gpu:runtime",
+    "runtime-options",
+    ...serializeGpuRuntimeEnvironment(runtimeEnv),
+  );
 
   app.on("gpu-info-update", async () => {
     try {
@@ -202,5 +240,6 @@ export {
   classifyGpuAcceleration,
   getGpuRuntimeEnvironment,
   serializeGpuFeatureStatus,
+  serializeGpuRuntimeEnvironment,
   registerGpuDiagnostics,
 };
