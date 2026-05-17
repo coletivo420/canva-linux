@@ -8,7 +8,7 @@ const test = require("node:test");
 
 const { loadRuntimeModule } = require("./helpers/runtime-module");
 
-const { createTabHelpers } = loadRuntimeModule("main/tabs");
+const { createTabHelpers, safeToolbarFaviconUrl } = loadRuntimeModule("main/tabs");
 
 /**
  * @param {number} id
@@ -112,6 +112,16 @@ function createHelpers() {
   return { helpers, mainWindow, state, toolbarView };
 }
 
+
+test("safeToolbarFaviconUrl only permits CSP-safe toolbar image sources", () => {
+  assert.equal(safeToolbarFaviconUrl(undefined), null);
+  assert.equal(safeToolbarFaviconUrl(null), null);
+  assert.equal(safeToolbarFaviconUrl("https://static.canva.com/icon.png"), null);
+  assert.equal(safeToolbarFaviconUrl("http://static.canva.com/icon.png"), null);
+  assert.equal(safeToolbarFaviconUrl("data:image/png;base64,abc"), "data:image/png;base64,abc");
+  assert.equal(safeToolbarFaviconUrl("file:///tmp/canva.png"), "file:///tmp/canva.png");
+});
+
 test("toolbarState orders tabs and marks home tab as non-closable", () => {
   const { helpers, state } = createHelpers();
   state.activeTabId = 2;
@@ -148,7 +158,7 @@ test("toolbarState orders tabs and marks home tab as non-closable", () => {
         id: 2,
         title: "Design",
         url: "https://www.canva.com/design",
-        favicon: "icon.png",
+        favicon: null,
         canClose: true,
       },
     ],

@@ -162,6 +162,8 @@ function installMediaDevicesDiagnostics({
     target:
       /** @type {Record<string, unknown> | null | undefined} */ /** @type {unknown} */ mediaDevices,
     methodName: "getDisplayMedia",
+    receiverFallback:
+      /** @type {Record<string, unknown> | null | undefined} */ /** @type {unknown} */ mediaDevices,
     debugLog,
     logEyeDropper,
     debugActive,
@@ -179,6 +181,8 @@ function installMediaDevicesDiagnostics({
     target:
       /** @type {Record<string, unknown> | null | undefined} */ /** @type {unknown} */ mediaDevices,
     methodName: "getUserMedia",
+    receiverFallback:
+      /** @type {Record<string, unknown> | null | undefined} */ /** @type {unknown} */ mediaDevices,
     debugLog,
     logEyeDropper,
     debugActive,
@@ -245,12 +249,13 @@ function installLegacyGetUserMediaDiagnostics({
 }
 
 /**
- * @param {{ target: Record<string, unknown> | null | undefined, methodName: string, debugLog: DebugLog, logEyeDropper: EyeDropperLog, debugActive: boolean, label: string }} options
+ * @param {{ target: Record<string, unknown> | null | undefined, receiverFallback?: Record<string, unknown> | null | undefined, methodName: string, debugLog: DebugLog, logEyeDropper: EyeDropperLog, debugActive: boolean, label: string }} options
  * @returns {boolean}
  */
 function wrapMethod({
   target,
   methodName,
+  receiverFallback,
   debugLog,
   logEyeDropper,
   debugActive,
@@ -297,7 +302,8 @@ function wrapMethod({
 
       let result;
       try {
-        result = original.apply(this, args);
+        const receiver = safeNativeReceiver(this, receiverFallback ?? target);
+        result = original.apply(receiver, args);
       } catch (error) {
         const message = errorMessage(error);
         if (debugActive) {
@@ -407,6 +413,23 @@ function wrapMethod({
     );
   }
   return true;
+}
+
+/**
+ * @param {unknown} candidate
+ * @param {unknown} fallback
+ * @returns {unknown}
+ */
+function safeNativeReceiver(candidate, fallback) {
+  const windowObject = typeof window === "undefined" ? undefined : window;
+  if (
+    candidate &&
+    candidate !== globalThis &&
+    candidate !== windowObject
+  ) {
+    return candidate;
+  }
+  return fallback;
 }
 
 /**
@@ -770,7 +793,9 @@ function serializeValue(value) {
   if (value === undefined) return "undefined";
   if (value === null) return "null";
   try {
-    return JSON.stringify(value);
+    return JSON.stringify(value, (key, nestedValue) =>
+      /(?:cookie|token|code|state)/i.test(key) ? "[redacted]" : nestedValue,
+    );
   } catch {
     return "[unserializable]";
   }

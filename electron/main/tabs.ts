@@ -45,6 +45,13 @@ export type ToolbarState = {
   theme: string;
 };
 
+export function safeToolbarFaviconUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("data:")) return url;
+  if (url.startsWith("file:")) return url;
+  return null;
+}
+
 /**
  * @param {{
  *   appName: string;
@@ -105,7 +112,7 @@ export function createTabHelpers({
         id: tab.id,
         title: tab.title,
         url: tab.url,
-        favicon: tab.favicon,
+        favicon: safeToolbarFaviconUrl(tab.favicon),
         canClose: !tab.isHome,
       })),
       theme: nativeTheme.shouldUseDarkColors ? "dark" : "light",

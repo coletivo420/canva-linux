@@ -1029,6 +1029,17 @@ test("public landing probe counts data-testid and href auth signals", () => {
   assert.equal(signals.authButtons, 4);
 });
 
+
+test("public landing probe normalizes composed and decomposed localized aria-labels", () => {
+  for (const localizedAria of ["Iniciar sesión", "Iniciar sesio\u0301n"]) {
+    const signals = runPublicLandingProbe([
+      element("button", { "aria-label": localizedAria }),
+    ]);
+
+    assert.equal(signals.authButtons, 1);
+  }
+});
+
 test("public landing probe recognizes localized aria-label without exposing values", async () => {
   const localizedAria = "Entrar na sua conta Canva";
   const signals = runPublicLandingProbe([

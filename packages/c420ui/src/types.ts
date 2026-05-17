@@ -9,6 +9,8 @@ export type C420UIProjectConfig = {
   projectSubtitle: string;
   displayVersion: string;
   phase?: string;
+  fullVersion?: string;
+  buildRevision?: string;
   status?: string;
   logoLines: string[];
   appId: string;

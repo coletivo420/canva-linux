@@ -16,6 +16,7 @@ import {
 import { c420uiLogoLines } from "../../packages/c420ui/src/terminal/logo";
 import { toolSettingsPath } from "../../packages/c420ui/src/terminal/settings";
 import { buildCanvaLinuxOverviewStatus } from "../canva-linux/detection/provider";
+import { loadEffectiveBuildMetadata } from "../canva-linux/build-metadata-loader";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
@@ -43,6 +44,17 @@ type PackageJson = {
   version?: string;
 };
 
+type BuildMetadata = {
+  baseVersion?: string;
+  baseDisplayVersion?: string;
+  basePhase?: string;
+  buildRevision?: string;
+  version?: string;
+  displayVersion?: string;
+  phase?: string;
+  fullVersion?: string;
+};
+
 type AppIdentity = {
   projectDisplayVersion?: string;
   projectPhase?: string;
@@ -55,13 +67,20 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
     actionsJson: string;
     artifactsJson: string;
     appIdentity: string;
+    buildMetadata: string;
+    c420uiPackageJson: string;
   };
   loadProjectUi(): ProjectUiJson;
   loadPackageJson(): PackageJson;
   loadAppIdentity(): AppIdentity;
+  loadBuildMetadata(): BuildMetadata;
   loadProjectConfig(): C420UIProjectConfig;
   loadBrandConfig(): C420UIConfig["brand"];
   getProjectPhase(): string;
+  getEffectiveProjectDisplayVersion(): string;
+  getEffectiveProjectPhase(): string;
+  getEffectiveProjectFullVersion(): string;
+  getEffectiveProjectBuildRevision(): string;
   getSessionLogPath(): string;
   getSessionId(): string;
   getToolSettingsPath(): string;
@@ -103,6 +122,14 @@ export function createCanvaLinuxC420UIAdapter(
     resolvedRootDir,
     "scripts/app-identity-common.sh",
   );
+  const buildMetadataPath = path.join(
+    resolvedRootDir,
+    "config/canva-linux/build-metadata.json",
+  );
+  const c420uiPackageJsonPath = path.join(
+    resolvedRootDir,
+    "packages/c420ui/package.json",
+  );
 
   function loadProjectUi(): ProjectUiJson {
     return readJsonFile<ProjectUiJson>(projectUiPath);
@@ -114,6 +141,14 @@ export function createCanvaLinuxC420UIAdapter(
 
   function loadAppIdentity(): AppIdentity {
     return readAppIdentity(appIdentityPath);
+  }
+
+  function loadBuildMetadata(): BuildMetadata {
+    return loadEffectiveBuildMetadata(resolvedRootDir);
+  }
+
+  function loadC420UIPackageJson(): PackageJson {
+    return readJsonFile<PackageJson>(c420uiPackageJsonPath);
   }
 
   function getPackageVersion(): string {
@@ -128,13 +163,40 @@ export function createCanvaLinuxC420UIAdapter(
     return loadProjectUi().phase || "unknown";
   }
 
+  function getEffectiveProjectDisplayVersion(): string {
+    const buildMetadata = loadBuildMetadata();
+    if (buildMetadata.displayVersion) return buildMetadata.displayVersion;
+    const projectUi = loadProjectUi();
+    if (projectUi.displayVersion) return projectUi.displayVersion;
+    return getPackageVersion();
+  }
+
+  function getEffectiveProjectPhase(): string {
+    const buildMetadata = loadBuildMetadata();
+    if (buildMetadata.phase) return buildMetadata.phase;
+    return getProjectPhase();
+  }
+
+  function getEffectiveProjectFullVersion(): string {
+    const buildMetadata = loadBuildMetadata();
+    if (buildMetadata.fullVersion) return buildMetadata.fullVersion;
+    if (buildMetadata.version) return buildMetadata.version;
+    return getPackageVersion();
+  }
+
+  function getEffectiveProjectBuildRevision(): string {
+    return loadBuildMetadata().buildRevision || "unknown";
+  }
+
   function loadProjectConfig(): C420UIProjectConfig {
     const projectUi = loadProjectUi();
     return {
       projectName: projectUi.projectName,
       projectSubtitle: projectUi.projectSubtitle,
-      displayVersion: projectUi.displayVersion ?? getPackageVersion(),
-      phase: getProjectPhase(),
+      displayVersion: getEffectiveProjectDisplayVersion(),
+      phase: getEffectiveProjectPhase(),
+      fullVersion: getEffectiveProjectFullVersion(),
+      buildRevision: getEffectiveProjectBuildRevision(),
       status: projectUi.status,
       logoLines: [...projectUi.logoLines],
       appId: projectUi.appId,
@@ -148,7 +210,7 @@ export function createCanvaLinuxC420UIAdapter(
   function loadBrandConfig(): C420UIConfig["brand"] {
     return {
       name: "c420ui",
-      version: "0.1",
+      version: loadC420UIPackageJson().version ?? "unknown",
       logoLines: [...c420uiLogoLines],
     };
   }
@@ -195,8 +257,10 @@ export function createCanvaLinuxC420UIAdapter(
     return {
       projectName: project.projectName,
       projectSubtitle: project.projectSubtitle,
-      displayVersion: project.displayVersion,
+      displayVersion: project.fullVersion ?? getEffectiveProjectFullVersion(),
       phase: project.phase,
+      fullVersion: project.fullVersion,
+      buildRevision: project.buildRevision,
       status: project.status,
       appId: project.appId,
       repositoryUrl: project.repositoryUrl,
@@ -284,12 +348,15 @@ export function createCanvaLinuxC420UIAdapter(
       actionsJson: actionsJsonPath,
       artifactsJson: artifactsJsonPath,
       appIdentity: appIdentityPath,
+      buildMetadata: buildMetadataPath,
+      c420uiPackageJson: c420uiPackageJsonPath,
     },
     loadProjectInfo: loadProjectConfig,
     loadConfig: toC420UIConfig,
     loadProjectUi,
     loadPackageJson,
     loadAppIdentity,
+    loadBuildMetadata,
     loadProjectConfig,
     loadBrandConfig,
     loadActions: loadCanvaLinuxActions,
@@ -297,6 +364,10 @@ export function createCanvaLinuxC420UIAdapter(
     loadWorkflows,
     loadCapabilities: () => loadCanvaLinuxCapabilities(resolvedRootDir),
     getProjectPhase,
+    getEffectiveProjectDisplayVersion,
+    getEffectiveProjectPhase,
+    getEffectiveProjectFullVersion,
+    getEffectiveProjectBuildRevision,
     getSessionLogPath,
     getSessionId,
     getToolSettingsPath,

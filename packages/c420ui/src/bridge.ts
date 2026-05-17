@@ -11,6 +11,8 @@ export type c420uiProjectInfo = {
   projectSubtitle?: string;
   displayVersion?: string;
   phase?: string;
+  fullVersion?: string;
+  buildRevision?: string;
   status?: string;
   appId?: string;
   repositoryUrl?: string;

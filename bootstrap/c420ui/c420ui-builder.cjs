@@ -37,9 +37,136 @@ __export(c420ui_builder_exports, {
   runC420UIBuilder: () => runC420UIBuilder
 });
 module.exports = __toCommonJS(c420ui_builder_exports);
+var import_node_child_process2 = require("node:child_process");
+var import_node_fs2 = __toESM(require("node:fs"));
+var import_node_path2 = __toESM(require("node:path"));
+
+// scripts/canva-linux/build-metadata-loader.ts
 var import_node_child_process = require("node:child_process");
 var import_node_fs = __toESM(require("node:fs"));
 var import_node_path = __toESM(require("node:path"));
+
+// electron/main/build-metadata.ts
+var UNKNOWN_BUILD_REVISION = "unknown";
+function normalizeBuildRevision(input) {
+  if (!input) return "unknown";
+  const trimmed = input.trim();
+  if (!trimmed || trimmed === "unknown") return "unknown";
+  const withoutPrefix = trimmed.replace(/^g/i, "");
+  const shortHash = withoutPrefix.slice(0, 7);
+  return `g${shortHash}`;
+}
+function appendBuildRevision(base, buildRevision) {
+  return buildRevision && buildRevision !== "unknown" ? `${base}+${buildRevision}` : base;
+}
+function createBuildMetadata(input) {
+  const buildRevision = normalizeBuildRevision(input.buildRevision);
+  return {
+    baseVersion: input.baseVersion,
+    baseDisplayVersion: input.baseDisplayVersion,
+    basePhase: input.basePhase,
+    buildRevision,
+    version: appendBuildRevision(input.baseVersion, buildRevision),
+    displayVersion: appendBuildRevision(input.baseDisplayVersion, buildRevision),
+    phase: appendBuildRevision(input.basePhase, buildRevision),
+    fullVersion: appendBuildRevision(input.basePhase, buildRevision)
+  };
+}
+function normalizeLoadedBuildMetadata(metadata) {
+  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) {
+    return null;
+  }
+  return createBuildMetadata({
+    baseVersion: metadata.baseVersion,
+    baseDisplayVersion: metadata.baseDisplayVersion,
+    basePhase: metadata.basePhase,
+    buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION
+  });
+}
+
+// scripts/canva-linux/build-metadata-loader.ts
+var UNKNOWN_BASE_VERSION = "0.0.0";
+var UNKNOWN_BUILD_REVISION2 = "unknown";
+function readJsonFile(filePath) {
+  try {
+    return JSON.parse(import_node_fs.default.readFileSync(filePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+function hasGitRepository(rootDir) {
+  return import_node_fs.default.existsSync(import_node_path.default.join(rootDir, ".git"));
+}
+function resolveEnvBuildRevision() {
+  for (const key of [
+    "CANVA_LINUX_BUILD_REVISION",
+    "GITHUB_SHA",
+    "CI_COMMIT_SHA",
+    "SOURCE_COMMIT"
+  ]) {
+    const value = process.env[key]?.trim();
+    if (value) return value;
+  }
+  return null;
+}
+function resolveGitBuildRevision(rootDir) {
+  if (!hasGitRepository(rootDir)) return null;
+  try {
+    const value = (0, import_node_child_process.execFileSync)("git", ["rev-parse", "--short=7", "HEAD"], {
+      cwd: rootDir,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    }).trim();
+    return value || null;
+  } catch {
+    return null;
+  }
+}
+function createSourceMetadata(rootDir, buildRevision) {
+  const packageJson = readJsonFile(import_node_path.default.join(rootDir, "package.json"));
+  const projectUi = readJsonFile(
+    import_node_path.default.join(rootDir, "config", "canva-linux", "project-ui.json")
+  );
+  if (!packageJson?.version || !projectUi?.displayVersion || !projectUi?.phase) {
+    return null;
+  }
+  return createBuildMetadata({
+    baseVersion: packageJson.version,
+    baseDisplayVersion: projectUi.displayVersion,
+    basePhase: projectUi.phase,
+    buildRevision
+  });
+}
+function loadPackagedMetadata(rootDir) {
+  const metadata = readJsonFile(
+    import_node_path.default.join(rootDir, "config", "canva-linux", "build-metadata.json")
+  );
+  return metadata ? normalizeLoadedBuildMetadata(metadata) : null;
+}
+function fallbackEffectiveBuildMetadata() {
+  return createBuildMetadata({
+    baseVersion: UNKNOWN_BASE_VERSION,
+    baseDisplayVersion: UNKNOWN_BASE_VERSION,
+    basePhase: UNKNOWN_BASE_VERSION,
+    buildRevision: UNKNOWN_BUILD_REVISION2
+  });
+}
+function loadEffectiveBuildMetadata(rootDir) {
+  const resolvedRootDir = import_node_path.default.resolve(rootDir);
+  const envRevision = resolveEnvBuildRevision();
+  if (envRevision) {
+    const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision);
+    if (sourceMetadata) return sourceMetadata;
+  }
+  const gitRevision = resolveGitBuildRevision(resolvedRootDir);
+  if (gitRevision) {
+    const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision);
+    if (sourceMetadata) return sourceMetadata;
+  }
+  return loadPackagedMetadata(resolvedRootDir) ?? fallbackEffectiveBuildMetadata();
+}
+
+// scripts/c420ui-builder.ts
 var BUILDER_INTERNAL_NAME = "c420ui-builder";
 var BUILDER_ALIAS = "canva-linux-c420ui-builder";
 var BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
@@ -62,14 +189,37 @@ Running the whole builder as root may break file ownership, user sessions, build
 function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()) {
   let current = startDir;
   while (true) {
-    if (import_node_fs.default.existsSync(import_node_path.default.join(current, "package.json"))) return current;
-    const parent = import_node_path.default.dirname(current);
+    if (import_node_fs2.default.existsSync(import_node_path2.default.join(current, "package.json"))) return current;
+    const parent = import_node_path2.default.dirname(current);
     if (parent === current) throw new Error("Unable to locate Canva Linux project root.");
     current = parent;
   }
 }
-function builderHelp() {
+function readJsonFile2(filePath) {
+  try {
+    return JSON.parse(import_node_fs2.default.readFileSync(filePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+function c420uiVersion(rootDir) {
+  return readJsonFile2(
+    import_node_path2.default.join(rootDir, "packages", "c420ui", "package.json")
+  )?.version ?? "unknown";
+}
+function builderVersionBlock(rootDir) {
+  const metadata = loadEffectiveBuildMetadata(rootDir);
+  return `Project:
+  Canva Linux ${metadata.fullVersion || metadata.version || metadata.baseVersion}
+  buildRevision ${metadata.buildRevision || "unknown"}
+
+Builder:
+  c420ui ${c420uiVersion(rootDir)}`;
+}
+function builderHelp(rootDir = findProjectRoot()) {
   return `${BUILDER_TITLE}
+
+${builderVersionBlock(rootDir)}
 
 Usage:
   ${BUILDER_ALIAS}
@@ -96,18 +246,20 @@ Runtime options belong to the compiled Canva Linux app:
 }
 function sessionLogPath() {
   if (process.env.CANVA_TOOL_SESSION_LOG) return process.env.CANVA_TOOL_SESSION_LOG;
-  const stateHome = process.env.XDG_STATE_HOME || import_node_path.default.join(process.env.HOME || "/tmp", ".local", "state");
-  return import_node_path.default.join(stateHome, "canva-linux", "tool-session.log");
+  const stateHome = process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || "/tmp", ".local", "state");
+  return import_node_path2.default.join(stateHome, "canva-linux", "tool-session.log");
 }
 function createSession(rootDir) {
   const sessionId = process.env.CANVA_TOOL_SESSION_ID || `builder-${process.pid}-${Date.now()}`;
   let sessionLog = sessionLogPath();
   try {
-    import_node_fs.default.mkdirSync(import_node_path.default.dirname(sessionLog), { recursive: true });
-    import_node_fs.default.writeFileSync(sessionLog, "");
-    import_node_fs.default.appendFileSync(sessionLog, `[session] started id=${sessionId}
+    import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(sessionLog), { recursive: true });
+    import_node_fs2.default.writeFileSync(sessionLog, "");
+    import_node_fs2.default.appendFileSync(sessionLog, `[session] started id=${sessionId}
 `);
-    import_node_fs.default.appendFileSync(sessionLog, `[builder] ${BUILDER_TITLE}
+    import_node_fs2.default.appendFileSync(sessionLog, `[builder] ${BUILDER_TITLE}
+`);
+    import_node_fs2.default.appendFileSync(sessionLog, `${builderVersionBlock(rootDir)}
 `);
   } catch {
     sessionLog = void 0;
@@ -125,14 +277,14 @@ function createSession(rootDir) {
 }
 function selectEntrypoint(rootDir, kind) {
   const candidates = kind === "ui" ? [
-    import_node_path.default.join(rootDir, "bootstrap/c420ui/run-c420ui.cjs"),
-    import_node_path.default.join(rootDir, ".build/scripts/run-c420ui.js")
+    import_node_path2.default.join(rootDir, "bootstrap/c420ui/run-c420ui.cjs"),
+    import_node_path2.default.join(rootDir, ".build/scripts/run-c420ui.js")
   ] : [
-    import_node_path.default.join(rootDir, "bootstrap/c420ui/run-c420ui-cli.cjs"),
-    import_node_path.default.join(rootDir, ".build/scripts/run-c420ui-cli.js")
+    import_node_path2.default.join(rootDir, "bootstrap/c420ui/run-c420ui-cli.cjs"),
+    import_node_path2.default.join(rootDir, ".build/scripts/run-c420ui-cli.js")
   ];
   for (const candidate of candidates) {
-    if (import_node_fs.default.existsSync(candidate) && import_node_fs.default.statSync(candidate).size > 0) return candidate;
+    if (import_node_fs2.default.existsSync(candidate) && import_node_fs2.default.statSync(candidate).size > 0) return candidate;
   }
   throw new Error(
     kind === "ui" ? "c420ui bootstrap bundle is missing. Run npm run build:c420ui-bootstrap, then retry." : "c420ui CLI bootstrap bundle is missing. Run npm run build:c420ui-bootstrap, then retry."
@@ -186,24 +338,24 @@ function assertNonRoot() {
 function runC420UIBuilder(argv = process.argv.slice(2)) {
   const parsed = normalizeBuilderArgs(argv);
   if (parsed.help) {
-    console.log(builderHelp());
+    console.log(builderHelp(findProjectRoot(import_node_path2.default.resolve(__dirname, ".."))));
     return 0;
   }
   if (!parsed.hasBridgeAction && parsed.bridgeArgs.length > 0) {
     throw new Error("No direct action was provided.");
   }
   assertNonRoot();
-  const rootDir = findProjectRoot(import_node_path.default.resolve(__dirname, ".."));
+  const rootDir = findProjectRoot(import_node_path2.default.resolve(__dirname, ".."));
   const session = createSession(rootDir);
   const kind = parsed.hasBridgeAction ? "cli" : "ui";
   const entrypoint = selectEntrypoint(rootDir, kind);
-  const result = (0, import_node_child_process.spawnSync)(process.execPath, [entrypoint, ...parsed.bridgeArgs], {
+  const result = (0, import_node_child_process2.spawnSync)(process.execPath, [entrypoint, ...parsed.bridgeArgs], {
     cwd: rootDir,
     env: session.env,
     stdio: "inherit",
     shell: false
   });
-  if (session.sessionLog) import_node_fs.default.appendFileSync(session.sessionLog, "[session] ended\n");
+  if (session.sessionLog) import_node_fs2.default.appendFileSync(session.sessionLog, "[session] ended\n");
   if (result.error) throw result.error;
   return result.status ?? 1;
 }

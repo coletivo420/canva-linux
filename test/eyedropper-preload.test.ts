@@ -11,10 +11,73 @@ const { loadRuntimeModule } = require("./helpers/runtime-module");
 
 const {
   describeTarget,
+  installEyeDropperRoutingDiagnostics,
   normalizeHex: normalizeRoutingHex,
   serializeValue,
   summarizeStream,
 } = loadRuntimeModule("preload/eyedropper-routing-diagnostics");
+
+
+
+function createDiagnosticsOptions(logs) {
+  return {
+    debugEnabled(category) {
+      return category === "eyedropper" || category === "eyedropper:routing";
+    },
+    debugLog(...args) {
+      logs.push(["debug", ...args]);
+      return true;
+    },
+    logEyeDropper(...args) {
+      logs.push(["eye", ...args]);
+    },
+  };
+}
+
+async function withMediaDeviceScope(mediaDevices, fn) {
+  const previousNavigator = globalThis.navigator;
+  const previousMediaDevices = globalThis.MediaDevices;
+  const previousWindow = globalThis.window;
+  const previousLocation = globalThis.location;
+  const previousProcessIsMainFrame = process.isMainFrame;
+  const previousInstalled = globalThis.__canvaEyeDropperRoutingDiagnosticsInstalled;
+
+  function MediaDevices() {}
+  MediaDevices.prototype = Object.getPrototypeOf(mediaDevices);
+
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { mediaDevices },
+  });
+  globalThis.MediaDevices = MediaDevices;
+  globalThis.window = { addEventListener() {} };
+  globalThis.location = { href: "https://www.canva.com/design" };
+  process.isMainFrame = true;
+  delete globalThis.__canvaEyeDropperRoutingDiagnosticsInstalled;
+
+  try {
+    return await fn();
+  } finally {
+    if (previousNavigator === undefined) {
+      delete globalThis.navigator;
+    } else {
+      Object.defineProperty(globalThis, "navigator", {
+        configurable: true,
+        value: previousNavigator,
+      });
+    }
+    if (previousMediaDevices === undefined) delete globalThis.MediaDevices;
+    else globalThis.MediaDevices = previousMediaDevices;
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+    if (previousLocation === undefined) delete globalThis.location;
+    else globalThis.location = previousLocation;
+    if (previousProcessIsMainFrame === undefined) delete process.isMainFrame;
+    else process.isMainFrame = previousProcessIsMainFrame;
+    if (previousInstalled === undefined) delete globalThis.__canvaEyeDropperRoutingDiagnosticsInstalled;
+    else globalThis.__canvaEyeDropperRoutingDiagnosticsInstalled = previousInstalled;
+  }
+}
 
 const { installNativeEyeDropperWrapper, isWrappedEyeDropperInstalledInScope } =
   loadRuntimeModule("preload/native-eyedropper-wrapper");
@@ -135,4 +198,69 @@ test("native wrapper exports installer shape", () => {
     },
   });
   assert.equal(typeof wrapper.ensureWrappedEyeDropperInstalled, "function");
+});
+
+
+test("MediaDevices diagnostics preserve receiver for normal and detached calls", async () => {
+  const stream = { getTracks: () => [{ kind: "audio", readyState: "live", label: "mic" }] };
+  const calls = [];
+  const mediaDevices = {
+    getUserMedia(constraints) {
+      assert.equal(this, mediaDevices);
+      calls.push(["getUserMedia", constraints]);
+      return Promise.resolve(stream);
+    },
+    getDisplayMedia(constraints) {
+      assert.equal(this, mediaDevices);
+      calls.push(["getDisplayMedia", constraints]);
+      return Promise.resolve(stream);
+    },
+  };
+  const logs = [];
+
+  await withMediaDeviceScope(mediaDevices, async () => {
+    installEyeDropperRoutingDiagnostics(createDiagnosticsOptions(logs));
+    await mediaDevices.getUserMedia({ audio: true });
+    const detachedUserMedia = mediaDevices.getUserMedia;
+    await detachedUserMedia({ video: true });
+    const detachedDisplayMedia = mediaDevices.getDisplayMedia;
+    await detachedDisplayMedia({ video: { cursor: "always" } });
+  });
+
+  assert.deepEqual(calls.map((call) => call[0]), [
+    "getUserMedia",
+    "getUserMedia",
+    "getDisplayMedia",
+  ]);
+  assert.equal(
+    logs.some((entry) => entry.includes("getUserMedia-call")),
+    true,
+  );
+  assert.equal(
+    logs.some((entry) => entry.includes("getDisplayMedia-resolved")),
+    true,
+  );
+});
+
+test("MediaDevices diagnostics log rejections without sensitive constraint values", async () => {
+  const mediaDevices = {
+    getUserMedia() {
+      assert.equal(this, mediaDevices);
+      return Promise.reject(new Error("Permission denied"));
+    },
+  };
+  const logs = [];
+
+  await withMediaDeviceScope(mediaDevices, async () => {
+    installEyeDropperRoutingDiagnostics(createDiagnosticsOptions(logs));
+    const detachedUserMedia = mediaDevices.getUserMedia;
+    await assert.rejects(
+      () => detachedUserMedia({ token: "secret", audio: true }),
+      /Permission denied/,
+    );
+  });
+
+  const flattenedLogs = JSON.stringify(logs);
+  assert.equal(flattenedLogs.includes("getUserMedia-rejected"), true);
+  assert.equal(flattenedLogs.includes("secret"), false);
 });
