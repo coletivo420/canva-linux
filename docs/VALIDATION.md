@@ -20,7 +20,6 @@ The validation baseline protects these release facts:
 - Active release docs point to `v0.1.4-15.Dev.7`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 
-
 ## Validation tiers
 
 Validation is layered so fast behavioral checks stay close to the code while handoff-only work remains explicit. Dev.6 closes the
@@ -71,6 +70,27 @@ The consolidated domain runners are self-contained. New validation should extend
 Do not create one-off check files or validation directories for domain-specific coverage.
 Introduce shared helpers only when the policy applies across domains.
 
+## OAuth login completion manual validation
+
+Run the Flatpak runtime with Canva debug logging enabled:
+
+```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
+```
+
+Complete Google login in the OAuth popup. The central log must show the authorized callback finalization sequence without cookie or token values:
+
+```text
+popup-canva-callback-detected type=authorized
+oauth-finalize-authorized-callback-start
+session flush done
+oauth-cookie-summary url=https://www.canva.com count=...
+close-popup reason=authorized-callback-loaded
+reload-source-tab-after-oauth tab=...
+did-finish-load https://www.canva.com/...
+```
+
+Confirm the reloaded main Canva tab is the OAuth source tab, uses the shared flushed session, and enters authenticated state. If the source webContents id cannot be resolved, the fallback to the active tab must be logged with `fallback=true`.
 
 ## GPU/display runtime diagnostics manual validation
 

@@ -3,6 +3,17 @@
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
+## Dev.7 OAuth completion review
+
+Request changes if a PR preparing `0.1.4-15.Dev.7` OAuth completion:
+
+- reloads a generic active tab instead of resolving the tab that opened the OAuth popup by `sourceWebContentsId`;
+- closes the popup or reloads the source tab before the authorized Canva callback has reached `did-finish-load` and the persistent session flush has completed;
+- omits the safe `oauth-cookie-summary` diagnostics for `https://www.canva.com` when the Electron cookies API is available;
+- logs cookie values, OAuth `code`, `state`, tokens, session IDs, or other sensitive callback material;
+- removes the fallback to the active tab when the source webContents id cannot be resolved, or fails to log that fallback;
+- uses plain `reload()` when `reloadIgnoringCache()` is available for the post-OAuth source-tab reload;
+- allows duplicate authorized callback signals to close or reload the same popup more than once.
 
 ## Dev.6 cleanup handoff review
 
@@ -151,8 +162,6 @@ Request changes if a PR:
 - adds Canva Linux-specific metadata to `packages/c420ui/src/action-engine.ts`;
 - changes runtime app logs while implementing action-engine contracts.
 
-
-
 ## Adapter and shell helper review
 
 Request changes if a PR:
@@ -174,7 +183,6 @@ Request changes if a PR:
 - changes artifact architecture naming to x64;
 - bypasses Action Engine / Command Runner for artifact actions.
 
-
 ## Artifact workflow execution review
 
 Request changes if a PR:
@@ -184,7 +192,6 @@ Request changes if a PR:
 - bypasses the Canva Linux Root Provider for system install/uninstall/purge phases;
 - makes planned package workflows return success as if implemented;
 - triggers sudo during dry-run.
-
 
 ## c420ui split audit review
 
@@ -274,7 +281,6 @@ Request changes if a PR:
   Secret Service/libsecret first, then KWallet6 and KWallet5;
 - logs cookies, tokens, passwords or credential material.
 
-
 ## c420ui root launch guard review
 
 Request changes if a PR:
@@ -344,7 +350,6 @@ Request changes if a PR:
 - removes freshness coverage for `packages/c420ui/src`;
 - removes freshness coverage for `scripts/c420ui-adapter`;
 - tests launcher behavior by executing real destructive actions instead of a stub.
-
 
 ## c420ui command runner review
 
