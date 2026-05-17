@@ -377,7 +377,7 @@ function validateBuilderAliasDocs(rootDir: string, failures: string[]): void {
     "canva-linux-c420ui-builder",
     "Canva Linux Builder powered by c420ui",
     "canva-linux",
-    "canva-linux" + ".sh",
+    "no separate shell launcher",
     "--force",
   ] as const) {
     if (!policy.includes(fragment)) failures.push(`${policyPath}: missing ${fragment}`);

@@ -12,6 +12,8 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   `--force-wayland` requires a Wayland session, and runtime GPU controls stay CLI-only.
 - Derived GPU diagnostics runtime option typing from the runtime CLI contract and added behavioral coverage for the real
   `gpu:runtime runtime-options` central-log line used during GPU/display RC validation.
+- Finalized the Dev.6 cleanup handoff docs for post-migration dead-code audit closure, obsolete validation-contract
+  cleanup, streamlined smoke tests, runtime CLI diagnostics cleanup, and GPU/display `runtime-options` validation.
 
 ## [0.1.4-15.Dev.6] - 2026-05-16
 - Preserved PR #145 runtime GPU diagnostics by logging selected CLI GPU/display values (`gpuBackend`, `forceX11`,

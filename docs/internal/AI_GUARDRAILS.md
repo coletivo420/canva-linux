@@ -16,11 +16,11 @@ Use validation layers intentionally:
 3. **Minimal smoke tests** cover builder `--help`, one planned action with `--dry-run`, one runtime-flag rejection, and runtime `--help`.
 4. **RC/manual validation** covers Flatpak, AppImage, credential persistence, OAuth, GPU/display behavior, and complete packaging.
 
-After a migration stabilizes, simplify historical anti-regression string checks that only look for removed names in generated artifacts.
-Keep checks and tests for active behavior boundaries, including valued runtime CLI parsing that must require an explicit
-`--option=value` boundary. GPU/display RC validation must inspect the central log for `gpu:runtime runtime-options`.
-The log must include `gpuBackend`, `displayOverride`, `forceX11`, `forceWayland`, and `disableWaylandColorManager`.
-Do not replace those values with source-only logging.
+Historical migration checks should be simplified after stabilization instead of string-hunting old generated names forever.
+Active behavior boundaries must remain covered, including valued runtime CLI parsing that requires an explicit `--option=value`
+boundary. GPU/display selected runtime CLI options are active diagnostics: RC validation must inspect the central log for
+`gpu:runtime runtime-options`, and those diagnostics must not be reduced to source-only logging. The log must include
+`gpuBackend`, `displayOverride`, `forceX11`, `forceWayland`, and `disableWaylandColorManager`.
 
 ## c420ui bootstrap source-hash guardrail
 
@@ -51,9 +51,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Preserve the `N.N.N-X` release versioning rule with optional `.Dev.N` development phase suffixes.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
 - Every behavior change must update `CHANGELOG.md`.
-- Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Do not reintroduce `CANVA_DEBUG`,
-  `CANVA_DEBUG_LEVEL`, or `CANVA_LINUX_PASSWORD_STORE`, and do not add app runtime debug flags to
-  `canva-linux-c420ui-builder`.
+- Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Do not reintroduce legacy environment fallback
+  inputs for runtime debug or credential-store selection, and do not add app runtime debug flags to `canva-linux-c420ui-builder`.
 
 
 

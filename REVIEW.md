@@ -3,6 +3,20 @@
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
+
+## Dev.6 cleanup handoff review
+
+Request changes if a PR closing `0.1.4-15.Dev.6`:
+
+- describes Dev.6 as feature expansion instead of post-migration cleanup;
+- omits the dead-code audit, obsolete validation-contract cleanup, streamlined smoke tests, runtime CLI diagnostics cleanup,
+  or GPU/display `runtime-options` logging from the handoff narrative;
+- weakens active behavior boundaries such as valued runtime CLI `--option=value` parsing;
+- reduces GPU/display diagnostics to source-only logging instead of selected runtime CLI option values;
+- expands builder smoke coverage beyond the lean help, planned-action dry-run, runtime-flag rejection, runtime name,
+  and App ID surface without an explicit maintainer request;
+- opens Dev.7 work, including OAuth reload implementation, before Dev.6 is merged.
+
 ## Agent policy review
 
 Request changes if a PR:
@@ -15,7 +29,7 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.6` for credential persistence bugfix validation:
+Request changes if a PR preparing `0.1.4-15.Dev.6` for cleanup handoff validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
