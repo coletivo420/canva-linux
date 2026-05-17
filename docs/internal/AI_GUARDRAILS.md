@@ -61,7 +61,11 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 ## 0.1.4-14 split documentation policy
 
 - Current maintained release target is `0.1.4-15.Dev.7`.
-- OAuth login completion must finalize authorized callbacks by callback type instead of exact URL string equality, keep a guarded fallback timer for redirect sequences without a matching `did-finish-load`, defer that fallback while the authorized callback WebContents is still loading except after a bounded max-attempt safety limit, flush the shared persistent session, run the documented post-flush settle guard, log only safe cookie metadata for `https://www.canva.com`, close the popup, and reload the OAuth source tab rather than a generic active tab.
+- OAuth login completion must finalize authorized callbacks by callback type instead of exact URL string equality,
+  keep a guarded fallback timer for redirect sequences without a matching `did-finish-load`, defer that fallback while the
+  authorized callback WebContents is still loading except after a bounded max-attempt safety limit, flush the shared persistent
+  session, run the documented post-flush settle guard, log only safe cookie metadata for `https://www.canva.com`, close the
+  popup, and reload the OAuth source tab rather than a generic active tab.
 - The release version format must remain `N.N.N-X` with optional `.Dev.N` development phase suffixes.
 - Canva Linux is the dependent project; c420ui is the generic engine.
 - Canva Linux does not install dependencies directly from builder commands or shell helpers, except for the documented Stage 0
@@ -460,5 +464,10 @@ Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adj
 
 - Do not open `Dev.8` or add `+g<hash>` to source `package.json` / `project-ui.json` values in this phase.
 - Generate effective build metadata deterministically from commit metadata only.
+- Runtime fallback metadata must never hardcode the current Canva Linux phase; if generated metadata and source files are
+  unavailable, use neutral `0.0.0` values with `buildRevision: "unknown"`.
+- Normalize generated metadata before using it; partial generated metadata must be ignored rather than converted into broken effective versions.
 - Keep post-OAuth reload context-preserving by default; use canonical Canva home only as the post-probe localized public landing fallback.
+- Localized OAuth landing detection may use generic auth-signal counts, but must not log DOM text, `aria-label`, `href`,
+  `data-testid`, or attribute values.
 - Do not log cookie values, token values, OAuth `code`/`state`, or storage values; log only safe counts.

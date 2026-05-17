@@ -8,10 +8,13 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 Request changes if a PR preparing `0.1.4-15.Dev.7` OAuth completion:
 
 - reloads a generic active tab instead of resolving the tab that opened the OAuth popup by `sourceWebContentsId`;
-- closes the popup or reloads the source tab before an authorized Canva callback is finalized by callback type, the persistent session flush has completed, and the documented post-flush settle guard has run;
+- closes the popup or reloads the source tab before an authorized Canva callback is finalized by callback type, the
+  persistent session flush has completed, and the documented post-flush settle guard has run;
 - depends on exact callback URL string equality instead of treating `/oauth/authorized/...` URLs as authorized callbacks by type;
-- omits the guarded authorized-callback fallback timer for redirect sequences where Electron reports the callback in navigation events without a matching `did-finish-load`;
-- allows the OAuth fallback to close the popup while the authorized callback WebContents is still loading, except after the bounded max-attempt safety limit;
+- omits the guarded authorized-callback fallback timer for redirect sequences where Electron reports the callback in
+  navigation events without a matching `did-finish-load`;
+- allows the OAuth fallback to close the popup while the authorized callback WebContents is still loading, except after the
+  bounded max-attempt safety limit;
 - omits the safe `oauth-cookie-summary` diagnostics for `https://www.canva.com` when the Electron cookies API is available;
 - logs cookie values, OAuth `code`, `state`, tokens, session IDs, or other sensitive callback material;
 - removes the fallback to the active tab when the source webContents id cannot be resolved, or fails to log that fallback;
@@ -473,4 +476,9 @@ while runtime flags belong to the compiled `canva-linux` app.
 - Source identity remains `0.1.4-15.Dev.7` / `0.1.4-15.Dev` / `0.1.4-15.Dev.7`.
 - Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
 - The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
+- Runtime metadata fallback must be neutral `0.0.0`/`unknown`; request changes if `electron/main/build-metadata.ts`
+  hardcodes the current Dev.7 phase as a fallback.
+- Generated build metadata must be normalized before use so partial metadata cannot produce broken effective version strings.
+- Localized OAuth landing probes may log only `loginLinks`, `signupLinks`, and `authButtons` counts; request changes if DOM
+  text, `aria-label`, `href`, or `data-testid` values are logged.
 - c420ui remains `0.1.0` and independent; future c420ui build metadata should be added in its own project phase.
