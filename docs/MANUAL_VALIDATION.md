@@ -101,9 +101,9 @@ Do not remove or weaken validation checks to make the command pass.
 1. Launch normally:
    - `flatpak run io.github.coletivo420.canva-linux`
 2. Launch with startup diagnostics:
-   - `flatpak run io.github.coletivo420.canva-linux --debug=1`
+   - `flatpak run io.github.coletivo420.canva-linux --canva-debug=1`
 3. Launch with verbose diagnostics:
-   - `flatpak run io.github.coletivo420.canva-linux --debug=2`
+   - `flatpak run io.github.coletivo420.canva-linux --canva-debug=2`
 4. Confirm the app window renders and loads Canva.
 5. Confirm a fresh `current.log` is created for each debug run.
 6. Confirm debug logs do not include passwords, sudo stdin, cookies, tokens, or
@@ -130,7 +130,7 @@ Do not remove or weaken validation checks to make the command pass.
 1. Drag and drop a test asset into Canva.
 2. Use the file picker from Canva upload flow.
 3. Paste clipboard content if applicable.
-4. When troubleshooting, rerun with `canva-linux --debug=1` and then `canva-linux --debug=2` to
+4. When troubleshooting, rerun with `canva-linux --canva-debug=1` and then `canva-linux --canva-debug=2` to
    compare startup and verbose diagnostics.
 
 ## CL-EyeDropper validation
@@ -160,15 +160,15 @@ Do not remove or weaken validation checks to make the command pass.
    `main`, `canva-preload`, or `toolbar-preload`.
 2. Confirm the file-backed debug log contains the same run and does not include
    stale content from a previous launch.
-3. Confirm `canva-linux --debug=1` produces startup/runtime diagnostics appropriate for
+3. Confirm `canva-linux --canva-debug=1` produces startup/runtime diagnostics appropriate for
    normal troubleshooting.
-4. Confirm `canva-linux --debug=2` produces verbose diagnostics without leaking
+4. Confirm `canva-linux --canva-debug=2` produces verbose diagnostics without leaking
    credential material.
 
 ## Bluetooth/Floss runtime-noise check
 
 1. Run:
-   - `flatpak run io.github.coletivo420.canva-linux --debug=1 2>&1 | grep -Ei 'floss|bluetooth|bluez'`
+   - `flatpak run io.github.coletivo420.canva-linux --canva-debug=1 2>&1 | grep -Ei 'floss|bluetooth|bluez'`
 2. Confirm Floss manager warnings are reduced compared with previous builds.
 3. Treat remaining Bluetooth-related lines as diagnostics unless they are tied to
    a user-facing regression.

@@ -12,7 +12,7 @@ project data; c420ui owns reusable orchestration.
 
 ## Runtime CLI ownership
 
-The compiled `canva-linux` Electron runtime owns app flags such as `--help`, `--version`, `--debug=1`, `--debug=2`, `--credential-store=...`, and display/GPU runtime controls. `canva-linux-c420ui-builder` remains the c420ui installer/development launcher and must not implement app runtime debug flags.
+The compiled `canva-linux` Electron runtime owns app flags such as `--help`, `--version`, `--canva-debug=1`, `--canva-debug=2`, `--credential-store=...`, and display/GPU runtime controls. `canva-linux-c420ui-builder` remains the c420ui installer/development launcher and must not implement app runtime debug flags.
 
 Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Runtime settings are parsed from explicit CLI flags. GPU diagnostics must preserve the selected runtime CLI GPU/display values (`gpuBackend`, `forceX11`, `forceWayland`, `disableWaylandColorManager`, and `displayOverride`) in logs so support and RC checks can prove active behavior.
 

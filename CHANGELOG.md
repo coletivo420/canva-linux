@@ -5,6 +5,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- Opened `0.1.4-15.Dev.7` and renamed the public runtime diagnostics flag from Electron-reserved `--debug` to `--canva-debug=1` / `--canva-debug=2`.
+- Added Flatpak/runtime/builder guardrails so `--debug` and `--debug=*` are rejected as reserved Electron/Node flags before they can collide with Electron.
+
 - Hardened the builder/runtime split: `canva-linux-c420ui-builder` no longer maintains a direct-action allowlist,
   delegates action flags to the c420ui CLI bridge and Action Registry, rejects runtime flag namespaces,
   and never bypasses the root launch guard for dry-runs.
@@ -15,7 +18,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Finalized the Dev.6 cleanup handoff docs for post-migration dead-code audit closure, obsolete validation-contract
   cleanup, streamlined smoke tests, runtime CLI diagnostics cleanup, and GPU/display `runtime-options` validation.
 
-## [0.1.4-15.Dev.6] - 2026-05-16
+## [0.1.4-15.Dev.7] - 2026-05-16
 - Preserved PR #145 runtime GPU diagnostics by logging selected CLI GPU/display values (`gpuBackend`, `forceX11`,
   `forceWayland`, `disableWaylandColorManager`, and `displayOverride`) instead of source-only runtime logging.
 - Further softened Dev.6 builder contract checks away from exact implementation formatting while keeping active builder/runtime

@@ -124,8 +124,8 @@ See [AppImage FUSE Requirements](APPIMAGE_FUSE.md).
 
 ```bash
 canva-linux
-canva-linux --debug=1
-canva-linux --debug=2
+canva-linux --canva-debug=1
+canva-linux --canva-debug=2
 canva-linux --force-wayland
 canva-linux --force-x11
 canva-linux --gpu-backend=auto
@@ -138,8 +138,8 @@ canva-linux --gpu-backend=software
 
 ```bash
 flatpak run io.github.coletivo420.canva-linux
-flatpak run io.github.coletivo420.canva-linux --debug=1
-flatpak run io.github.coletivo420.canva-linux --debug=2
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
 flatpak run io.github.coletivo420.canva-linux --force-wayland
 flatpak run io.github.coletivo420.canva-linux --force-x11
 flatpak run io.github.coletivo420.canva-linux --gpu-backend=auto
@@ -152,8 +152,8 @@ flatpak run io.github.coletivo420.canva-linux --gpu-backend=software
 
 ```bash
 ./dist/<artifact>.AppImage
-./dist/<artifact>.AppImage --debug=1
-./dist/<artifact>.AppImage --debug=2
+./dist/<artifact>.AppImage --canva-debug=1
+./dist/<artifact>.AppImage --canva-debug=2
 ./dist/<artifact>.AppImage --force-wayland
 ./dist/<artifact>.AppImage --force-x11
 ./dist/<artifact>.AppImage --gpu-backend=auto
@@ -182,8 +182,8 @@ Planned package targets:
 Future package formats should use the same diagnostic command structure:
 
 - Run command
-- `canva-linux --debug=1`
-- `canva-linux --debug=2`
+- `canva-linux --canva-debug=1`
+- `canva-linux --canva-debug=2`
 - `--force-wayland`
 - `--force-x11`
 - `--gpu-backend=auto|opengl|vulkan|software`

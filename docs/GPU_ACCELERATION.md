@@ -21,7 +21,7 @@ logs/current.log
 Use:
 
 ```bash
-flatpak run io.github.coletivo420.canva-linux --debug=1
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
 ```
 
 Expected GPU entries:
@@ -36,10 +36,10 @@ See `docs/DEBUGGING.md`.
 ## Backend checks
 
 ```bash
-flatpak run io.github.coletivo420.canva-linux --gpu-backend=auto --debug=1
-flatpak run io.github.coletivo420.canva-linux --gpu-backend=opengl --debug=1
-flatpak run io.github.coletivo420.canva-linux --gpu-backend=vulkan --debug=1
-flatpak run io.github.coletivo420.canva-linux --gpu-backend=software --debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=auto --canva-debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=opengl --canva-debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=vulkan --canva-debug=1
+flatpak run io.github.coletivo420.canva-linux --gpu-backend=software --canva-debug=1
 ```
 
 ## TypeScript validation

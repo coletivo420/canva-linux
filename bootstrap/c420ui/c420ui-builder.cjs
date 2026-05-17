@@ -45,7 +45,7 @@ var BUILDER_ALIAS = "canva-linux-c420ui-builder";
 var BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
 var BUILDER_GLOBAL_FLAGS = /* @__PURE__ */ new Set(["-y", "--yes", "--dry-run"]);
 var RUNTIME_ONLY_VALUED_OPTIONS = [
-  "--debug",
+  "--canva-debug",
   "--credential-store",
   "--gpu-backend"
 ];
@@ -138,6 +138,9 @@ function selectEntrypoint(rootDir, kind) {
     kind === "ui" ? "c420ui bootstrap bundle is missing. Run npm run build:c420ui-bootstrap, then retry." : "c420ui CLI bootstrap bundle is missing. Run npm run build:c420ui-bootstrap, then retry."
   );
 }
+function isReservedDebugFlag(arg) {
+  return arg === "--debug" || arg.startsWith("--debug=");
+}
 function isRuntimeOnlyFlag(arg) {
   return RUNTIME_ONLY_BOOLEAN_OPTIONS.includes(arg) || RUNTIME_ONLY_VALUED_OPTIONS.some(
     (option) => arg === option || arg.startsWith(`${option}=`)
@@ -151,6 +154,9 @@ function normalizeBuilderArgs(argv) {
     if (arg === "-h" || arg === "--help") {
       help = true;
       continue;
+    }
+    if (isReservedDebugFlag(arg)) {
+      throw new Error("--debug is reserved by Electron/Node. Use canva-linux --canva-debug=1 or --canva-debug=2.");
     }
     if (isRuntimeOnlyFlag(arg)) {
       throw new Error(`${arg} is a Canva Linux runtime option. Use canva-linux --help.`);

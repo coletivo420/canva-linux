@@ -1,23 +1,23 @@
-# Validation Checklist (0.1.4-15.Dev.6)
+# Validation Checklist (0.1.4-15.Dev.7)
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
 
 Current target:
 
-- Version: `0.1.4-15.Dev.6 (Alpha)`
-- Release: `v0.1.4-15.Dev.6`
+- Version: `0.1.4-15.Dev.7 (Alpha)`
+- Release: `v0.1.4-15.Dev.7`
 - Versioning rule: `N.N.N-X` with optional `.Dev.N` development phase suffixes
 
 ## Release metadata checks
 
 The validation baseline protects these release facts:
 
-- `package.json` version is `0.1.4-15.Dev.6`.
-- `package-lock.json` top-level version is `0.1.4-15.Dev.6`.
-- `package-lock.json` root package version is `0.1.4-15.Dev.6`.
+- `package.json` version is `0.1.4-15.Dev.7`.
+- `package-lock.json` top-level version is `0.1.4-15.Dev.7`.
+- `package-lock.json` root package version is `0.1.4-15.Dev.7`.
 - `data/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
-- Active release docs point to `v0.1.4-15.Dev.6`.
+- Active release docs point to `v0.1.4-15.Dev.7`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 
 
@@ -33,7 +33,7 @@ runtime CLI diagnostics cleanup, and GPU/display `runtime-options` logging:
    - Protect current entrypoints, package identity, App ID, runtime executable name, bootstrap manifest entrypoints, and `sourceHash` freshness.
 3. **Minimal smoke tests**
    - Exercise `./canva-linux-c420ui-builder --help`, one planned action such as `--prepare-aur --dry-run`,
-     one runtime-flag rejection such as `--debug=1`, and runtime `canva-linux --help`.
+     one runtime-flag rejection such as `--canva-debug=1`, and runtime `canva-linux --help`.
 4. **RC/manual validation**
    - Covers Flatpak, AppImage, credential persistence, OAuth, GPU/display behavior, complete packaging, and release-artifact handoff.
 
@@ -41,6 +41,9 @@ Historical migration checks should be simplified after stabilization. Active beh
 options requiring `--option=value`, must remain covered by contracts and behavioral tests. GPU/display RC validation must
 inspect the central log for `gpu:runtime runtime-options`; selected runtime CLI options are active diagnostics and must not
 be reduced to source-only logging.
+
+Do not use `--debug`. It is reserved by Electron/Node and may be consumed before Canva Linux receives the arguments.
+Use `--canva-debug=1` or `--canva-debug=2`.
 
 ## Validation domains
 
@@ -82,6 +85,13 @@ gpuBackend=<value> displayOverride=<auto|x11|wayland> forceX11=<bool> forceWayla
 Minimum manual examples:
 
 ```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
+flatpak run io.github.coletivo420.canva-linux \
+  --canva-debug=2 \
+  --gpu-backend=software \
+  --force-wayland \
+  --disable-wayland-color-manager
 electron . --gpu-backend=software
 electron . --force-wayland
 electron . --disable-wayland-color-manager
@@ -119,9 +129,10 @@ Generated dependency source manifests may retain platform package names that con
 
 - Confirm `./canva-linux-c420ui-builder --help` exposes the current builder surface.
 - Confirm `./canva-linux-c420ui-builder --prepare-aur --dry-run` exercises one planned-action dry-run without expanding builder smoke coverage.
-- Confirm `./canva-linux-c420ui-builder --debug=1` is rejected because runtime flags belong to the compiled runtime app.
-- Confirm runtime `electron . --help` and `electron . --debug=1` remain runtime-owned.
-- Confirm `Release: v0.1.4-15.Dev.6` appears in current release docs.
+- Confirm `./canva-linux-c420ui-builder --canva-debug=1` is rejected because runtime flags belong to the compiled runtime app.
+- Confirm runtime `electron . --help` and `electron . --canva-debug=1` remain runtime-owned.
+- Confirm `flatpak run io.github.coletivo420.canva-linux --debug=1` fails with the reserved Electron/Node flag message before the runtime starts.
+- Confirm `Release: v0.1.4-15.Dev.7` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.

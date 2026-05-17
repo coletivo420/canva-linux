@@ -238,8 +238,8 @@ function normalizeWhitespace(value: string): string {
 }
 
 const requiredRcValidationFragments = [
-  "0.1.4-15.Dev.6",
-  "v0.1.4-15.Dev.6",
+  "0.1.4-15.Dev.7",
+  "v0.1.4-15.Dev.7",
   "N.N.N-X",
   "Validation date",
   "Validated commit",
@@ -260,7 +260,7 @@ const requiredRcValidationFragments = [
   "npm run c420ui:cli -- --doctor --dry-run",
   "./canva-linux-c420ui-builder --help",
   "./canva-linux-c420ui-builder --prepare-aur --dry-run",
-  "./canva-linux-c420ui-builder --debug=1",
+  "./canva-linux-c420ui-builder --canva-debug=1",
   "gpu:runtime runtime-options",
   "displayOverride",
   "./scripts/build-appimage.sh",

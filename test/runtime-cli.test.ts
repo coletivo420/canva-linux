@@ -19,23 +19,26 @@ test("parses help and version", () => {
   assert.match(printCanvaLinuxRuntimeHelp(), /canva-linux \[options\]/);
 });
 
-test("parses supported debug levels", () => {
-  assert.equal(parse("--debug=1").debugLevel, 1);
-  assert.equal(parse("--debug=2").debugLevel, 2);
+test("parses supported Canva debug levels", () => {
+  assert.equal(parse("--canva-debug=1").debugLevel, 1);
+  assert.equal(parse("--canva-debug=2").debugLevel, 2);
 });
 
-test("rejects unsupported debug forms", () => {
+test("rejects unsupported Canva debug forms", () => {
   for (const arg of [
-    "--debug",
-    "--debug=0",
-    "--debug=3",
-    "--debug=gpu",
-    "--debug=session",
-    "--debug=credentials",
+    "--canva-debug",
+    "--canva-debug=0",
+    "--canva-debug=3",
+    "--canva-debug=gpu",
   ]) {
-    assert.throws(() => parse(arg), /Unsupported --debug value/);
+    assert.throws(() => parse(arg), /Unsupported --canva-debug value/);
   }
-  assert.throws(() => parse("--debug", "1"), /Unsupported --debug value/);
+});
+
+test("rejects reserved Electron debug flags", () => {
+  for (const arg of ["--debug", "--debug=1", "--debug=2"]) {
+    assert.throws(() => parse(arg), /--debug is reserved by Electron\/Node/);
+  }
 });
 
 test("parses supported credential stores", () => {
