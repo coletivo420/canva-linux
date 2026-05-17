@@ -90,7 +90,7 @@ export function publicLandingSignalsProbeScript(): string {
     "registrieren",
     "accedi",
     "iscriviti",
-  ];
+  ].map((k) => k.normalize("NFKD"));
 
   const normalized = (value) =>
     String(value || "").toLowerCase().normalize("NFKD");
