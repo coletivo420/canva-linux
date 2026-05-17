@@ -5,6 +5,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- OAuth finalization no longer depends on exact callback URL string equality; authorized callbacks finalize by callback type, use a guarded fallback timer for redirect sequences without a matching `did-finish-load`, and document the post-flush settle delay as a shared-session propagation guard between popup and source WebContents.
 - OAuth login now finalizes the authorized callback before closing the popup, flushes persistent session data, logs a safe `canva.com` cookie metadata summary, and reloads the OAuth source tab with `reloadIgnoringCache` when available.
 - Opened `0.1.4-15.Dev.7` and renamed the public runtime diagnostics flag from Electron-reserved `--debug` to `--canva-debug=1` / `--canva-debug=2`.
 - Added Flatpak/runtime/builder guardrails so `--debug` and `--debug=*` are rejected as reserved Electron/Node flags before they can collide with Electron.

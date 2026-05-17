@@ -59,6 +59,8 @@ test("creates OAuth popup initial state for Canva auth opener", () => {
   assert.equal(entry.sawAuthorizedCallback, false);
   assert.equal(entry.completionHandled, false);
   assert.equal(entry.pendingCallbackUrl, "");
+  assert.equal(entry.pendingCallbackType, null);
+  assert.equal(entry.authorizedCallbackFallbackQueued, false);
   assert.equal(entry.closeReason, "unknown");
   assert.equal(entry.sourceWebContentsId, 10);
 });
@@ -526,6 +528,7 @@ test("OAuth callback navigation is logged separately from authorized callback", 
   await new Promise((resolve) => setImmediate(resolve));
 
   assert.equal(entry.pendingCallbackUrl, callbackUrl);
+  assert.equal(entry.pendingCallbackType, "oauth");
   assert.equal(entry.sawAuthorizedCallback, false);
   assert.equal(
     debugEvents.some(

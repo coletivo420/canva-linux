@@ -8,7 +8,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 Request changes if a PR preparing `0.1.4-15.Dev.7` OAuth completion:
 
 - reloads a generic active tab instead of resolving the tab that opened the OAuth popup by `sourceWebContentsId`;
-- closes the popup or reloads the source tab before the authorized Canva callback has reached `did-finish-load` and the persistent session flush has completed;
+- closes the popup or reloads the source tab before an authorized Canva callback is finalized by callback type, the persistent session flush has completed, and the documented post-flush settle guard has run;
+- depends on exact callback URL string equality instead of treating `/oauth/authorized/...` URLs as authorized callbacks by type;
+- omits the guarded authorized-callback fallback timer for redirect sequences where Electron reports the callback in navigation events without a matching `did-finish-load`;
 - omits the safe `oauth-cookie-summary` diagnostics for `https://www.canva.com` when the Electron cookies API is available;
 - logs cookie values, OAuth `code`, `state`, tokens, session IDs, or other sensitive callback material;
 - removes the fallback to the active tab when the source webContents id cannot be resolved, or fails to log that fallback;

@@ -19,6 +19,8 @@ export type OAuthPopupEntry = {
   sawAuthorizedCallback: boolean;
   completionHandled: boolean;
   pendingCallbackUrl: string;
+  pendingCallbackType: "authorized" | "oauth" | null;
+  authorizedCallbackFallbackQueued: boolean;
   allowClose: boolean;
   closeReason: string;
   sourceWebContentsId: number | null;
@@ -50,7 +52,23 @@ export type RegisterAuthPopupOptions = {
 };
 
 const CANVA_COOKIE_SUMMARY_URL = "https://www.canva.com";
-const POST_OAUTH_SESSION_FLUSH_DELAY_MS = 250;
+
+/**
+ * After Canva's authorized OAuth callback loads, Electron's session flush
+ * resolves once Chromium has accepted the storage flush request, but the source
+ * WebContents can still observe stale cookies/storage if it is reloaded in the
+ * same tick as the popup callback. This short settle window prevents the source
+ * tab reload from racing the shared session propagation across WebContents.
+ */
+const DEFAULT_POST_OAUTH_SESSION_FLUSH_DELAY_MS = 250;
+
+/**
+ * Some providers complete the callback through redirects where Electron may
+ * report the authorized URL in did-navigate/did-redirect-navigation but not
+ * emit a matching did-finish-load for the same literal URL. The fallback keeps
+ * login completion from stalling while completionHandled prevents double reload.
+ */
+const DEFAULT_AUTHORIZED_CALLBACK_FALLBACK_DELAY_MS = 1000;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -145,6 +163,8 @@ type CreateOAuthHelpersOptions = {
   ) => Record<string, unknown>;
   summarizeOauthEntry: (entry: OAuthPopupEntry | undefined) => string;
   windowLabel: (window: BrowserWindowLike) => string;
+  postOAuthSessionFlushDelayMs?: number;
+  authorizedCallbackFallbackDelayMs?: number;
 };
 
 /**
@@ -176,6 +196,8 @@ export function createOAuthPopupInitialState({
     sawAuthorizedCallback: false,
     completionHandled: false,
     pendingCallbackUrl: "",
+    pendingCallbackType: null,
+    authorizedCallbackFallbackQueued: false,
     allowClose: false,
     closeReason: "unknown",
     sourceWebContentsId,
@@ -227,6 +249,8 @@ export function createOAuthPopupOptionsSummary(window: BrowserWindowLike): {
  *   sharedWebPreferences: (extra?: Record<string, unknown>) => Record<string, unknown>;
  *   summarizeOauthEntry: (entry: OAuthPopupEntry | undefined) => string;
  *   windowLabel: (window: BrowserWindowLike) => string;
+ *   postOAuthSessionFlushDelayMs?: number;
+ *   authorizedCallbackFallbackDelayMs?: number;
  * }} options
  */
 export function createOAuthHelpers({
@@ -253,6 +277,8 @@ export function createOAuthHelpers({
   sharedWebPreferences,
   summarizeOauthEntry,
   windowLabel,
+  postOAuthSessionFlushDelayMs = DEFAULT_POST_OAUTH_SESSION_FLUSH_DELAY_MS,
+  authorizedCallbackFallbackDelayMs = DEFAULT_AUTHORIZED_CALLBACK_FALLBACK_DELAY_MS,
 }: CreateOAuthHelpersOptions) {
   function resolveOAuthSourceTab(entry: OAuthPopupEntry): {
     fallback: boolean;
@@ -372,6 +398,10 @@ export function createOAuthHelpers({
   async function finalizeAuthorizedOAuthCallback(
     entry: OAuthPopupEntry,
     loadedUrl: string,
+    options: {
+      loadedCallbackType: "authorized" | "oauth" | null;
+      trigger: "did-finish-load" | "fallback";
+    },
   ): Promise<void> {
     if (entry.completionHandled) {
       debugLog(
@@ -388,6 +418,9 @@ export function createOAuthHelpers({
       "oauth",
       "oauth-finalize-authorized-callback-start",
       `popup=${entry.id}`,
+      `trigger=${options.trigger}`,
+      `loadedType=${options.loadedCallbackType ?? "null"}`,
+      `pendingType=${entry.pendingCallbackType ?? "null"}`,
       redactSensitiveUrlParams(loadedUrl),
     );
 
@@ -399,7 +432,13 @@ export function createOAuthHelpers({
       debugLog("session", "flush-error", String(error));
     }
 
-    await delay(POST_OAUTH_SESSION_FLUSH_DELAY_MS);
+    debugLog(
+      "oauth",
+      "oauth-post-flush-settle",
+      `popup=${entry.id}`,
+      `delayMs=${postOAuthSessionFlushDelayMs}`,
+    );
+    await delay(postOAuthSessionFlushDelayMs);
     await logCanvaCookieSummary(canvaSession);
 
     debugLog(
@@ -416,6 +455,69 @@ export function createOAuthHelpers({
       `popup=${entry.id}`,
       redactSensitiveUrlParams(loadedUrl),
     );
+  }
+
+  function queueAuthorizedOAuthFinalization(
+    entry: OAuthPopupEntry,
+    url: string,
+    trigger: string,
+  ): void {
+    if (entry.authorizedCallbackFallbackQueued) {
+      debugLog(
+        "oauth",
+        "oauth-authorized-callback-fallback-skipped",
+        `popup=${entry.id}`,
+        "reason=already-queued",
+        `trigger=${trigger}`,
+      );
+      return;
+    }
+
+    entry.authorizedCallbackFallbackQueued = true;
+    debugLog(
+      "oauth",
+      "oauth-authorized-callback-fallback-scheduled",
+      `popup=${entry.id}`,
+      `delayMs=${authorizedCallbackFallbackDelayMs}`,
+      `trigger=${trigger}`,
+      redactSensitiveUrlParams(url),
+    );
+
+    setTimeout(() => {
+      if (entry.completionHandled) {
+        debugLog(
+          "oauth",
+          "oauth-authorized-callback-fallback-skipped",
+          `popup=${entry.id}`,
+          "reason=already-handled",
+        );
+        return;
+      }
+
+      if (!authPopups.has(entry.id) || entry.window.isDestroyed()) {
+        debugLog(
+          "oauth",
+          "oauth-authorized-callback-fallback-skipped",
+          `popup=${entry.id}`,
+          "reason=popup-gone",
+        );
+        return;
+      }
+
+      debugLog(
+        "oauth",
+        "oauth-authorized-callback-fallback-fired",
+        `popup=${entry.id}`,
+        redactSensitiveUrlParams(url),
+      );
+
+      finalizeAuthorizedOAuthCallback(entry, url, {
+        loadedCallbackType: detectCanvaOAuthCallback(url),
+        trigger: "fallback",
+      }).catch((error) => {
+        debugLog("oauth", "finalize-authorized-callback-error", String(error));
+      });
+    }, authorizedCallbackFallbackDelayMs);
   }
 
   /**
@@ -571,8 +673,27 @@ export function createOAuthHelpers({
         `popup=${popupId}`,
         redactSensitiveUrlParams(loadedUrl),
       );
-      if (entry.sawAuthorizedCallback && entry.pendingCallbackUrl === loadedUrl) {
-        finalizeAuthorizedOAuthCallback(entry, loadedUrl).catch((error) => {
+
+      const loadedCallbackType = detectCanvaOAuthCallback(loadedUrl);
+      const shouldFinalize =
+        !entry.completionHandled &&
+        (loadedCallbackType === "authorized" ||
+          entry.pendingCallbackType === "authorized");
+
+      if (shouldFinalize) {
+        debugLog(
+          "oauth",
+          "oauth-authorized-callback-ready",
+          `popup=${popupId}`,
+          "trigger=did-finish-load",
+          `loadedType=${loadedCallbackType ?? "null"}`,
+          `pendingType=${entry.pendingCallbackType ?? "null"}`,
+          `urlMatch=${entry.pendingCallbackUrl === loadedUrl ? "true" : "false"}`,
+        );
+        finalizeAuthorizedOAuthCallback(entry, loadedUrl, {
+          loadedCallbackType,
+          trigger: "did-finish-load",
+        }).catch((error) => {
           debugLog("oauth", "finalize-authorized-callback-error", String(error));
         });
       }
@@ -691,6 +812,9 @@ export function createOAuthHelpers({
       const callbackType = detectCanvaOAuthCallback(url);
       if (!callbackType) return;
 
+      entry.pendingCallbackType = callbackType;
+      entry.pendingCallbackUrl = url;
+
       debugLog(
         "oauth",
         "popup-canva-callback-detected",
@@ -709,11 +833,13 @@ export function createOAuthHelpers({
           return;
         }
         entry.sawAuthorizedCallback = true;
-        entry.pendingCallbackUrl = url;
+        queueAuthorizedOAuthFinalization(
+          entry,
+          url,
+          "authorized-callback-detected",
+        );
         return;
       }
-
-      entry.pendingCallbackUrl = url;
     };
 
     wc.on("did-navigate", (_event: unknown, url: string) => {
