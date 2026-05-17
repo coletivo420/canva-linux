@@ -1,11 +1,21 @@
 # Review Checklist
 
+## Dev.8 pinned home tab-strip guardrail
+
+- Dev.8 starts the internal tab-strip redesign. The pinned home tab remains part of the tab model, but it must be rendered
+  by a dedicated pinned-home renderer and must never be rendered as a regular tab item.
+- The pinned home tab belongs to the tab strip, not the window titlebar. Do not change BrowserWindow title logic,
+  native title handling, OAuth, credential storage, GPU diagnostics, or c420ui metadata/bootstrap logic for this feature.
+- Do not render the home tab twice: regular tab state must exclude home, the pinned home control is the only visible
+  home-return control, and it must send `go-home`.
+
+
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Dev.7 OAuth completion review
 
-Request changes if a PR preparing `0.1.4-15.Dev.7` OAuth completion:
+Request changes if a PR preparing `0.1.4-15.Dev.8` OAuth completion:
 
 - reloads a generic active tab instead of resolving the tab that opened the OAuth popup by `sourceWebContentsId`;
 - closes the popup or reloads the source tab before an authorized Canva callback is finalized by callback type, the
@@ -23,7 +33,7 @@ Request changes if a PR preparing `0.1.4-15.Dev.7` OAuth completion:
 
 ## Dev.6 cleanup handoff review
 
-Request changes if a PR closing `0.1.4-15.Dev.7`:
+Request changes if a PR closing `0.1.4-15.Dev.8`:
 
 - describes Dev.6 as feature expansion instead of post-migration cleanup;
 - omits the dead-code audit, obsolete validation-contract cleanup, streamlined smoke tests, runtime CLI diagnostics cleanup,
@@ -46,12 +56,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.7` for cleanup handoff validation:
+Request changes if a PR preparing `0.1.4-15.Dev.8` for cleanup handoff validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-15.Dev.7` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.8` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -89,7 +99,7 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The c
 
 Request changes if a PR:
 
-- changes version `0.1.4-15.Dev.7` without an explicit maintainer request;
+- changes version `0.1.4-15.Dev.8` without an explicit maintainer request;
 - introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
@@ -473,7 +483,7 @@ while runtime flags belong to the compiled `canva-linux` app.
 
 ## Dev.7 review note: effective versions and OAuth fallback
 
-- Source identity remains `0.1.4-15.Dev.7` / `0.1.4-15.Dev` / `0.1.4-15.Dev.7`.
+- Source identity remains `0.1.4-15.Dev.8` / `0.1.4-15.Dev` / `0.1.4-15.Dev.8`.
 - Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
 - The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
 - Runtime metadata fallback must be neutral `0.0.0`/`unknown`; request changes if `electron/main/build-metadata.ts`

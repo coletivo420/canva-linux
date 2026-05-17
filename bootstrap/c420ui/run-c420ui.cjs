@@ -6833,16 +6833,16 @@ var require_program = __commonJS({
       process.once("SIGCONT", function() {
         resume();
         if (callback) callback();
-      });
-      process.kill(process.pid, "SIGTSTP");
+      };
     };
-    Program.prototype.pause = function(callback) {
-      var self = this, isAlt = this.isAlt, mouseEnabled = this.mouseEnabled;
-      this.lsaveCursor("pause");
-      if (isAlt) this.normalBuffer();
-      this.showCursor();
-      if (mouseEnabled) this.disableMouse();
-      var write = this.output.write;
+    Program.prototype.resume = function() {
+      if (this._resume) return this._resume();
+    };
+    var fs13 = require("fs");
+    var path15 = require("path");
+        this.file = path15.resolve(process.cwd(), file);
+        buf = fs13.readFileSync(this.file);
+      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
       this.output.write = function() {
       };
       if (this.input.setRawMode) {
@@ -7990,10 +7990,10 @@ var require_tng = __commonJS({
         3608007406,
         1308918612,
         956543938,
-        2808555105,
-        3495958263,
-        1231636301,
-        1047427035,
+      ];
+      return function crc32(buf) {
+        file = path15.resolve(process.cwd(), file);
+        buf = fs13.readFileSync(file);
         2932959818,
         3654703836,
         1088359270,
@@ -8437,10 +8437,10 @@ var require_ansiimage = __commonJS({
           height,
           scale: this.scale,
           ascii: this.options.ascii,
-          speed: this.options.speed,
-          filename: this.file
-        });
-        if (width == null || height == null) {
+      return this.img.pause();
+    };
+    var fs13 = require("fs");
+      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
           this.width = this.img.cellmap[0].length;
           this.height = this.img.cellmap.length;
         }
@@ -8662,12 +8662,12 @@ var require_checkbox = __commonJS({
     function Checkbox(options) {
       var self = this;
       if (!(this instanceof Node)) {
-        return new Checkbox(options);
-      }
-      options = options || {};
-      Input.call(this, options);
-      this.text = options.content || options.text || "";
-      this.checked = this.value = options.checked || false;
+    }
+    Checkbox.prototype.__proto__ = Input.prototype;
+    Checkbox.prototype.type = "checkbox";
+    var fs13 = require("fs");
+          files = fs13.readdirSync(dir);
+            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
       this.on("keypress", function(ch, key) {
         if (key.name === "enter" || key.name === "space") {
           self.toggle();
@@ -11353,20 +11353,20 @@ var require_list = __commonJS({
       this._listInitialized = true;
       this.selected = index;
       this.value = helpers.cleanTags(this.ritems[this.selected]);
-      if (!this.parent) return;
-      this.scrollTo(this.selected);
-      this.emit("select item", this.items[this.selected], this.selected);
-    };
-    List.prototype.move = function(offset) {
-      this.select(this.selected + offset);
-    };
-    List.prototype.up = function(offset) {
-      this.move(-(offset || 1));
-    };
-    List.prototype.down = function(offset) {
-      this.move(offset || 1);
-    };
-    List.prototype.pick = function(label, callback) {
+      if (label) this.setLabel(label);
+      this.screen.render();
+      this.once("action", function(el, selected) {
+        if (label) self.removeLabel();
+        self.screen.restoreFocus();
+        self.hide();
+        self.screen.render();
+    var path15 = require("path");
+    var fs13 = require("fs");
+        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
+        return fs13.stat(file, function(err, stat) {
+      return fs13.readdir(cwd, function(err, list) {
+          var f = path15.resolve(cwd, name), stat;
+            stat = fs13.lstatSync(f);
       if (!callback) {
         callback = label;
         label = null;
@@ -11713,11 +11713,11 @@ var require_form = __commonJS({
             break;
           case "input":
             break;
-          case "textbox":
-            el.clearInput();
+          case "message":
+            break;
             return;
-          case "textarea":
-            el.clearInput();
+    var fs13 = require("fs");
+        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
             return;
           case "button":
             delete el.value;
@@ -14854,10 +14854,10 @@ var require_unicode = __commonJS({
           throw RangeError("Invalid code point: " + codePoint);
         }
         if (codePoint <= 65535) {
-          codeUnits.push(codePoint);
-        } else {
-          codePoint -= 65536;
-          highSurrogate = (codePoint >> 10) + 55296;
+        high = [
+          hexify(high.charCodeAt(0)),
+    var path15 = require("path");
+    var fs13 = require("fs");
           lowSurrogate = codePoint % 1024 + 56320;
           codeUnits.push(highSurrogate, lowSurrogate);
         }
@@ -16128,14 +16128,14 @@ var require_screen = __commonJS({
       }
       var resume = function() {
         if (resume.done) return;
-        resume.done = true;
-        if (program2.input.setRawMode) {
-          program2.input.setRawMode(true);
-        }
-        program2.input.resume();
-        program2.output.write = write;
-        program2.alternateBuffer();
-        if (mouse) {
+      ps.on("exit", function(code) {
+        if (!callback) return;
+        return callback(null, code === 0);
+      return ps;
+        return fs13.writeFile(file, options.value, callback2);
+          return fs13.readFile(file, "utf8", function(err3, data) {
+            return fs13.unlink(file, function() {
+      file = path15.resolve(process.cwd(), file);
           program2.enableMouse();
           if (screen.options.sendFocus) {
             screen.program.setMouse({ sendFocus: true }, true);
@@ -17633,22 +17633,22 @@ function createInteractiveActionRunner(options) {
       state.running = false;
       state.progressState = "canceled";
       options.setRunning(false);
-      options.setProgress("canceled", 0, "Canceled");
-      options.appendLogText("[info] Action canceled before execution.\n", "system");
-      state.lastResult = result;
-      return result;
+  function cancel() {
+    if (!activeAbortController || activeAbortController.signal.aborted) {
+      return false;
     }
-    const abortController = new AbortController();
-    activeAbortController = abortController;
-    try {
-      const result = await engine.runAction(action, {
-        dryRun,
-        yes: confirmed,
-        signal: abortController.signal
-      });
-      state.lastResult = result;
-      if (result.status === "failed" && result.message) {
-        options.appendLogText(`${result.message}
+    activeAbortController.abort();
+    options.appendLogText("[info] Cancellation requested.\n", "system");
+    state.progressState = "canceled";
+    options.setProgress("canceled", 0, "Canceled");
+function assertOptionalBoolean(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a boolean`);
+function assertOptionalString(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a string`);
+function assertOptionalStringArray(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a string array`);
+function assertOptionalPurposeArray(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
 `, "system");
         state.progressState = "failed";
         options.setRunning(false);
@@ -19202,12 +19202,12 @@ function createApp(options) {
   });
   applyLogPanelLabel();
   importLauncherSessionLog();
-  appendLogText(
-    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
-`,
-    "system"
-  );
-  appendLogText(`[info] Settings loaded from ${settingsPath}.
+    import_node_path2 = __toESM(require("node:path"));
+var import_node_path14 = __toESM(require("node:path"));
+// packages/c420ui/src/terminal/runtime.ts
+function loadC420UITerminalApp() {
+var import_node_fs11 = __toESM(require("node:fs"));
+var import_node_path12 = __toESM(require("node:path"));
 `, "system");
   setView("main");
   void refreshDetectedInstallations("startup");
@@ -20452,6 +20452,34 @@ function runInstallDetection(rootDir2, runCommand) {
         result.stdout || "",
         canvaLinuxDetectionKeys
       ),
+    flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
+    appImageVersion: values.DETECTED_APPIMAGE_VERSION || ""
+  };
+}
+function createCanvaLinuxDetectionProvider(options = {}) {
+  const runCommand = options.runCommand ?? import_node_child_process5.spawnSync;
+  return {
+    id: "canva-linux-detection-provider",
+    label: "Canva Linux detection provider",
+    buildOverviewStatus(rootDir2) {
+      const project = safeProjectMetadata(rootDir2);
+      const probe = createInstallDetectionProbe(runCommand);
+      const detection = probe.run(rootDir2);
+      return {
+        project,
+        installations: {
+          ...emptyInstallations,
+          ...buildInstallations(detection.values)
+        },
+        warnings: detection.warnings ?? []
+      };
+    }
+  };
+}
+function buildCanvaLinuxOverviewStatus(rootDir2 = findCanvaLinuxProjectRoot()) {
+  return createCanvaLinuxDetectionProvider().buildOverviewStatus(rootDir2);
+}
+
       warnings
     };
   } catch (error) {
@@ -20577,38 +20605,10 @@ function createSourceMetadata(rootDir2, buildRevision) {
   });
 }
 function loadPackagedMetadata(rootDir2) {
-  const metadata = readJsonFile(
-    import_node_path8.default.join(rootDir2, "config", "canva-linux", "build-metadata.json")
-  );
-  return metadata ? normalizeLoadedBuildMetadata(metadata) : null;
-}
-function fallbackEffectiveBuildMetadata() {
-  return createBuildMetadata({
-    baseVersion: UNKNOWN_BASE_VERSION,
-    baseDisplayVersion: UNKNOWN_BASE_VERSION,
-    basePhase: UNKNOWN_BASE_VERSION,
-    buildRevision: UNKNOWN_BUILD_REVISION2
-  });
-}
-function loadEffectiveBuildMetadata(rootDir2) {
-  const resolvedRootDir = import_node_path8.default.resolve(rootDir2);
-  const envRevision = resolveEnvBuildRevision();
-  if (envRevision) {
-    const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision);
-    if (sourceMetadata) return sourceMetadata;
-  }
-  const gitRevision = resolveGitBuildRevision(resolvedRootDir);
-  if (gitRevision) {
-    const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision);
-    if (sourceMetadata) return sourceMetadata;
-  }
-  return loadPackagedMetadata(resolvedRootDir) ?? fallbackEffectiveBuildMetadata();
-}
+// scripts/c420ui-adapter/artifacts.ts
 
-var import_node_fs9 = __toESM(require("node:fs"));
-var import_node_path10 = __toESM(require("node:path"));
-var import_node_fs8 = __toESM(require("node:fs"));
-var import_node_path9 = __toESM(require("node:path"));
+// scripts/canva-linux/actions/registry.ts
+init_actions();
   return import_node_path9.default.join(rootDir2, "config/canva-linux/actions.json");
   const resolvedRoot = import_node_path9.default.resolve(rootDir2);
     import_node_fs8.default.readFileSync(actionsPath(resolvedRoot), "utf8")
@@ -20616,6 +20616,7 @@ function readJsonFile2(filePath) {
   if (!import_node_fs9.default.existsSync(filePath)) {
     return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
   const configPath = import_node_path10.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
+  }
   const config = readJsonFile2(configPath);
 var import_node_fs10 = __toESM(require("node:fs"));
 var import_node_path11 = __toESM(require("node:path"));
@@ -20626,6 +20627,7 @@ function readJsonFile3(filePath) {
 function readJsonFile4(filePath) {
   return JSON.parse(import_node_fs11.default.readFileSync(filePath, "utf8"));
     const content = import_node_fs11.default.readFileSync(identityPath, "utf8");
+  }
   return import_node_path12.default.join(process.env.HOME || ".", ".local/state");
   const resolvedRootDir = import_node_path12.default.resolve(rootDir2);
   const projectUiPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
@@ -20680,26 +20682,24 @@ function readJsonFile4(filePath) {
       displayVersion: project.fullVersion ?? getEffectiveProjectFullVersion(),
       fullVersion: project.fullVersion,
       buildRevision: project.buildRevision,
-var ACTION_GROUPS = ["install", "development", "maintenance"];
-var ACTION_SECTIONS = [
-  "Install",
-  "Package generation",
-  "Build",
-  "Validation",
-  "Maintenance",
-  "Uninstall"
-];
-var ACTION_KINDS = ["command", "planned"];
-var INSTALL_SCOPES = ["system", "user"];
-var cachedRoot = null;
-var cachedActions = null;
-function findProjectRoot(startDir) {
-  return findCanvaLinuxProjectRoot(startDir);
+      emitProgress: context.emitProgress
+    });
+  }
+  function toC420UIConfig() {
+    const projectUi = loadProjectUi();
+      appIdentity: appIdentityPath,
+      buildMetadata: buildMetadataPath,
+      c420uiPackageJson: c420uiPackageJsonPath
+    loadBuildMetadata,
+    getEffectiveProjectDisplayVersion,
+    getEffectiveProjectPhase,
+    getEffectiveProjectFullVersion,
+    getEffectiveProjectBuildRevision,
 }
-function actionsPath(rootDir2 = findProjectRoot()) {
-  return import_node_path8.default.join(rootDir2, "config/canva-linux/actions.json");
-}
-function validateCanvaLinuxGroupSection(action) {
+var import_node_fs12 = __toESM(require("node:fs"));
+var import_node_path13 = __toESM(require("node:path"));
+  const configPath = import_node_path13.default.join(rootDir2, relativeConfigPath);
+  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs12.default.readFileSync(configPath, "utf8")));
   if (action.group === "install" && action.section !== "Install") {
     throw new Error(`Group/section mismatch: ${action.id}`);
   }
@@ -21102,8 +21102,8 @@ function createCanvaLinuxRootProvider(options = {}) {
       if (conditionalSystemRootActionIds.has(action.id)) {
         try {
           const status = buildCanvaLinuxOverviewStatus(rootDir2);
-          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
-            return {
+  const argv = options.argv ?? process.argv.slice(2);
+var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
               requiresRoot: true,
               reason: `${action.id}: detected system installation`
             };
