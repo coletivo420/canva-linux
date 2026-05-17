@@ -127,8 +127,9 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 Current release target: `0.1.4-15.Dev.6`.
 
-Dev.6 cleanup removes obsolete migration checks and dead-code-era validation while preserving active behavior boundaries,
-including `--option=value` runtime CLI parsing and runtime GPU/display diagnostics that log the selected CLI values.
+Dev.6 is the post-migration cleanup handoff for dead-code auditing, obsolete validation-contract cleanup, streamlined smoke tests,
+runtime CLI diagnostics cleanup, and GPU/display `runtime-options` logging. It preserves active behavior boundaries, including
+`--option=value` runtime CLI parsing, so the next functional phase can focus on OAuth reload work without reopening cleanup scope.
 
 Versioning format for this bugfix cycle: `N.N.N-X.Dev.Y`.
 

@@ -23,7 +23,9 @@ The validation baseline protects these release facts:
 
 ## Validation tiers
 
-Validation is layered so fast behavioral checks stay close to the code while release-only work remains explicit:
+Validation is layered so fast behavioral checks stay close to the code while handoff-only work remains explicit. Dev.6 closes the
+post-migration cleanup phase by combining dead-code audit evidence, obsolete validation-contract cleanup, streamlined smoke tests,
+runtime CLI diagnostics cleanup, and GPU/display `runtime-options` logging:
 
 1. **Fast unit tests**
    - Cover parsers, the runtime CLI, `normalizeBuilderArgs`, credential-store selection, and small behavior-focused helpers.
@@ -35,11 +37,10 @@ Validation is layered so fast behavioral checks stay close to the code while rel
 4. **RC/manual validation**
    - Covers Flatpak, AppImage, credential persistence, OAuth, GPU/display behavior, complete packaging, and release-artifact handoff.
 
-Historical anti-regression string checks against removed migration names should be simplified once a migration stabilizes.
-Checks that protect active behavior boundaries, such as valued runtime options requiring `--option=value`, should remain covered
-by contracts and behavioral tests. Runtime GPU diagnostics must also remain active evidence: logs must include the selected
-runtime CLI GPU/display values (`gpuBackend`, `forceX11`, `forceWayland`, `disableWaylandColorManager`, and `displayOverride`),
-not just the fact that options came from `runtime-cli`.
+Historical migration checks should be simplified after stabilization. Active behavior boundaries, such as valued runtime
+options requiring `--option=value`, must remain covered by contracts and behavioral tests. GPU/display RC validation must
+inspect the central log for `gpu:runtime runtime-options`; selected runtime CLI options are active diagnostics and must not
+be reduced to source-only logging.
 
 ## Validation domains
 
@@ -67,6 +68,31 @@ The consolidated domain runners are self-contained. New validation should extend
 Do not create one-off check files or validation directories for domain-specific coverage.
 Introduce shared helpers only when the policy applies across domains.
 
+
+## GPU/display runtime diagnostics manual validation
+
+Run Canva Linux with GPU/display runtime flags and inspect the central log for `gpu:runtime runtime-options`. The expected
+line shape is:
+
+```text
+gpu:runtime runtime-options source=runtime-cli
+gpuBackend=<value> displayOverride=<auto|x11|wayland> forceX11=<bool> forceWayland=<bool> disableWaylandColorManager=<bool>
+```
+
+Minimum manual examples:
+
+```bash
+electron . --gpu-backend=software
+electron . --force-wayland
+electron . --disable-wayland-color-manager
+```
+
+When the software backend is combined with Wayland forcing and Wayland color-manager disabling, the central log must include:
+
+```text
+gpu:runtime runtime-options source=runtime-cli gpuBackend=software displayOverride=wayland forceX11=false forceWayland=true disableWaylandColorManager=true
+```
+
 ## Required automated validation
 
 - `npm run check:c420ui-core`
@@ -91,12 +117,15 @@ Generated dependency source manifests may retain platform package names that con
 
 ## Manual validation summary
 
-- Confirm `./canva-linux-c420ui-builder` opens c420ui.
-- Confirm direct CLI flags run through the c420ui CLI bridge.
+- Confirm `./canva-linux-c420ui-builder --help` exposes the current builder surface.
+- Confirm `./canva-linux-c420ui-builder --prepare-aur --dry-run` exercises one planned-action dry-run without expanding builder smoke coverage.
+- Confirm `./canva-linux-c420ui-builder --debug=1` is rejected because runtime flags belong to the compiled runtime app.
+- Confirm runtime `electron . --help` and `electron . --debug=1` remain runtime-owned.
 - Confirm `Release: v0.1.4-15.Dev.6` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.
+- Confirm the GPU/display central-log line matches the runtime diagnostics validation section above.
 
 Canva Linux Builder powered by c420ui does not maintain its own action allowlist;
 direct action flags are delegated to the c420ui CLI bridge and resolved by the Action Registry,

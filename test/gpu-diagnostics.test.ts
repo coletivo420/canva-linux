@@ -11,6 +11,7 @@ const {
   getGpuRuntimeEnvironment,
   serializeGpuFeatureStatus,
   serializeGpuRuntimeEnvironment,
+  registerGpuDiagnostics,
 } = loadRuntimeModule("main/gpu-diagnostics");
 
 test("classifies Vulkan accelerated GPU status", () => {
@@ -98,4 +99,55 @@ test("serializes selected runtime CLI GPU options", () => {
       "disableWaylandColorManager=false",
     ],
   );
+});
+
+test("registers real runtime-options GPU status log", () => {
+  const statusLogs = [];
+  const centralLogger = {
+    getLogFilePath: () => "/tmp/canva.log",
+    logStatus(category, level, message, options) {
+      statusLogs.push({ category, level, message, options });
+    },
+    logDebug() {},
+  };
+  const app = {
+    on() {},
+    getGPUFeatureStatus() {
+      return {};
+    },
+    isHardwareAccelerationEnabled() {
+      return false;
+    },
+    async getGPUInfo() {
+      return {};
+    },
+  };
+
+  registerGpuDiagnostics({
+    app,
+    centralLogger,
+    debugLog() {},
+    runtimeCli: {
+      gpuBackend: "software",
+      forceX11: false,
+      forceWayland: true,
+      disableWaylandColorManager: true,
+    },
+  });
+
+  const runtimeOptionsLog = statusLogs.find(
+    (entry) =>
+      entry.category === "gpu:runtime" &&
+      entry.level === "ok" &&
+      entry.message.includes("runtime-options"),
+  );
+
+  assert.ok(runtimeOptionsLog, "expected a gpu:runtime runtime-options log");
+  assert.match(runtimeOptionsLog.message, /source=runtime-cli/);
+  assert.match(runtimeOptionsLog.message, /gpuBackend=software/);
+  assert.match(runtimeOptionsLog.message, /displayOverride=wayland/);
+  assert.match(runtimeOptionsLog.message, /forceX11=false/);
+  assert.match(runtimeOptionsLog.message, /forceWayland=true/);
+  assert.match(runtimeOptionsLog.message, /disableWaylandColorManager=true/);
+  assert.equal(runtimeOptionsLog.options.source, "gpu");
 });

@@ -8,7 +8,7 @@
 
 `canva-linux` remains the compiled Electron runtime app.
 
-`canva-linux.sh` was removed and must not be restored as a compatibility launcher.
+Use the builder alias for builder workflows and the compiled runtime app for runtime flags; no separate shell launcher is part of the current contract.
 
 ## Builder options
 
