@@ -1,5 +1,15 @@
 # AI Guardrails
 
+## Dev.8 pinned home tab-strip guardrail
+
+- Dev.8 starts the internal tab-strip redesign. The pinned home tab remains part of the tab model, but it must be rendered
+  by a dedicated pinned-home renderer and must never be rendered as a regular tab item.
+- The pinned home tab belongs to the tab strip, not the window titlebar. Do not change BrowserWindow title logic,
+  native title handling, OAuth, credential storage, GPU diagnostics, or c420ui metadata/bootstrap logic for this feature.
+- Do not render the home tab twice: regular tab state must exclude home, the pinned home control is the only visible
+  home-return control, and it must send `go-home`.
+
+
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 For the builder naming contract, see [c420ui Builder Alias Policy](../c420ui/BUILDER_ALIAS.md).
 
@@ -46,7 +56,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## Versioning
 
-- Preserve version `0.1.4-15.Dev.7` unless the maintainer explicitly requests a versioning change.
+- Preserve version `0.1.4-15.Dev.8` unless the maintainer explicitly requests a versioning change.
 - Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
 - Preserve the `N.N.N-X` release versioning rule with optional `.Dev.N` development phase suffixes.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
@@ -60,7 +70,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## 0.1.4-14 split documentation policy
 
-- Current maintained release target is `0.1.4-15.Dev.7`.
+- Current maintained release target is `0.1.4-15.Dev.8`.
 - OAuth login completion must finalize authorized callbacks by callback type instead of exact URL string equality,
   keep a guarded fallback timer for redirect sequences without a matching `did-finish-load`, defer that fallback while the
   authorized callback WebContents is still loading except after a bounded max-attempt safety limit, flush the shared persistent

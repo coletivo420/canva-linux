@@ -4,20 +4,20 @@
 
 The source tree keeps clean base identifiers without build metadata:
 
-- `package.json` `version`: `0.1.4-15.Dev.7`
+- `package.json` `version`: `0.1.4-15.Dev.8`
 - `config/canva-linux/project-ui.json` `displayVersion`: `0.1.4-15.Dev`
-- `config/canva-linux/project-ui.json` `phase`: `0.1.4-15.Dev.7`
+- `config/canva-linux/project-ui.json` `phase`: `0.1.4-15.Dev.8`
 
-Do not open `Dev.8` until a dedicated version-bump change does so.
+Dev.8 is open for the internal tab-strip redesign; source versions must remain clean base identifiers without `+g` metadata.
 
 ## Effective version
 
 Builds generate `config/canva-linux/build-metadata.json` and append the deterministic build revision to runtime and artifact-facing fields:
 
-- `version`: `0.1.4-15.Dev.7+g<short-hash>`
+- `version`: `0.1.4-15.Dev.8+g<short-hash>`
 - `displayVersion`: `0.1.4-15.Dev+g<short-hash>`
-- `phase`: `0.1.4-15.Dev.7+g<short-hash>`
-- `fullVersion`: `0.1.4-15.Dev.7+g<short-hash>`
+- `phase`: `0.1.4-15.Dev.8+g<short-hash>`
+- `fullVersion`: `0.1.4-15.Dev.8+g<short-hash>`
 
 The effective version is used by startup logs, `--version`, generated manifests, and build artifacts. Source versions must not be rewritten to include `+g`.
 
@@ -41,6 +41,14 @@ Runtime fallback metadata must never hardcode the current Canva Linux phase as a
 source files are unavailable, the runtime falls back to neutral `0.0.0` base/display/phase values with
 `buildRevision: "unknown"`. Partially loaded generated metadata is ignored unless it contains `baseVersion`,
 `baseDisplayVersion`, and `basePhase`.
+
+## Dev.8 tab-strip version guardrails
+
+Dev.8 starts the internal tab-strip redesign. The pinned home tab remains part of the tab model, but it must be rendered
+by a dedicated pinned-home renderer and must never be rendered as a regular tab item.
+
+The pinned home tab belongs to the tab strip, not the window titlebar. Do not change BrowserWindow title logic for this
+feature, and do not render the home tab twice.
 
 ## OAuth rule
 

@@ -122,7 +122,7 @@ test("safeToolbarFaviconUrl only permits CSP-safe toolbar image sources", () => 
   assert.equal(safeToolbarFaviconUrl("file:///tmp/canva.png"), "file:///tmp/canva.png");
 });
 
-test("toolbarState orders tabs and marks home tab as non-closable", () => {
+test("toolbarState exposes pinned home separately and excludes it from regular tabs", () => {
   const { helpers, state } = createHelpers();
   state.activeTabId = 2;
   state.tabs.set(2, {
@@ -146,24 +146,55 @@ test("toolbarState orders tabs and marks home tab as non-closable", () => {
 
   assert.deepEqual(helpers.toolbarState(), {
     activeTabId: 2,
+    pinnedHomeTab: {
+      id: 1,
+      title: "Home",
+      url: "https://www.canva.com/",
+      favicon: null,
+      canClose: false,
+      isHome: true,
+    },
     tabs: [
-      {
-        id: 1,
-        title: "Home",
-        url: "https://www.canva.com/",
-        favicon: null,
-        canClose: false,
-      },
       {
         id: 2,
         title: "Design",
         url: "https://www.canva.com/design",
         favicon: null,
         canClose: true,
+        isHome: false,
       },
     ],
     theme: "dark",
   });
+});
+
+test("toolbarState never returns home in regular tabs", () => {
+  const { helpers, state } = createHelpers();
+  state.tabs.set(1, {
+    id: 1,
+    createdAt: 10,
+    title: "Home",
+    url: "https://www.canva.com/",
+    favicon: null,
+    isHome: true,
+    view: createView(1),
+  });
+  state.tabs.set(2, {
+    id: 2,
+    createdAt: 20,
+    title: "Design",
+    url: "https://www.canva.com/design",
+    favicon: null,
+    isHome: false,
+    view: createView(2),
+  });
+
+  const toolbar = helpers.toolbarState();
+
+  assert.equal(toolbar.pinnedHomeTab?.isHome, true);
+  assert.equal(toolbar.pinnedHomeTab?.canClose, false);
+  assert.deepEqual(toolbar.tabs.map((tab) => tab.isHome), [false]);
+  assert.equal(toolbar.tabs.some((tab) => tab.isHome), false);
 });
 
 test("toolbarState uses tab id as secondary ordering tiebreaker", () => {

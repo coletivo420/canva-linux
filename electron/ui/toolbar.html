@@ -78,6 +78,48 @@
       font-weight: 700;
       letter-spacing: 0.01em;
     }
+    .tab-strip {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+    .pinned-home-slot {
+      display: flex;
+      align-items: stretch;
+      flex: 0 0 auto;
+    }
+    .pinned-home {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 118px;
+      height: 100%;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--tab-text);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+    }
+    .pinned-home:hover { background: var(--button-hover-bg); }
+    .pinned-home.active {
+      background: rgba(0, 198, 204, .14);
+      color: var(--brand-a);
+    }
+    .pinned-home img {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      flex: 0 0 auto;
+    }
+    .pinned-home:focus-visible {
+      outline: 2px solid var(--brand-b);
+      outline-offset: 1px;
+    }
     .tabs {
       display: flex;
       align-items: stretch;
@@ -142,13 +184,11 @@
       font: inherit;
     }
     .tab-activate:focus-visible,
-    .tab-close:focus-visible,
-    .icon-btn:focus-visible {
+    .tab-close:focus-visible {
       outline: 2px solid var(--brand-b);
       outline-offset: 1px;
     }
-    .tab-close,
-    .icon-btn {
+    .tab-close {
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -161,8 +201,7 @@
       cursor: pointer;
       flex: 0 0 auto;
     }
-    .tab-close:hover,
-    .icon-btn:hover { background: var(--button-hover-bg); color: var(--button-hover-fg); }
+    .tab-close:hover { background: var(--button-hover-bg); color: var(--button-hover-fg); }
     .actions {
       display: flex;
       align-items: center;
@@ -177,14 +216,15 @@
       <img src="../assets/canva-icon.png" alt="Canva" />
       <span>Canva</span>
     </div>
-    <div class="tabs" id="tabs"></div>
-    <div class="actions">
-      <button class="icon-btn" id="home" title="Go to Home tab">⌂</button>
+    <div class="tab-strip">
+      <div class="pinned-home-slot" id="pinned-home-slot"></div>
+      <div class="tabs" id="tabs"></div>
     </div>
+    <div class="actions"></div>
   </div>
   <script>
+    const pinnedHomeSlot = document.getElementById('pinned-home-slot');
     const tabsEl = document.getElementById('tabs');
-    const homeEl = document.getElementById('home');
     const bridgeAvailable = Boolean(window.canvaTabs);
     const iconPath = '../assets/canva-icon.png';
 
@@ -206,16 +246,54 @@
     function render(state) {
       console.log('[toolbar-ui] render', JSON.stringify({
         activeTabId: state?.activeTabId ?? null,
+        pinnedHomeTab: Boolean(state?.pinnedHomeTab),
         count: state?.tabs?.length || 0,
       }));
       applyTheme(state.theme || window.canvaTabs.getSystemTheme());
+
+      renderPinnedHomeTab(state.pinnedHomeTab, state.activeTabId);
+      renderRegularTabs(state.tabs || [], state.activeTabId);
+    }
+
+    function renderPinnedHomeTab(tab, activeTabId) {
+      pinnedHomeSlot.textContent = '';
+
+      if (!tab) return;
+
+      const button = document.createElement('button');
+      button.className = 'pinned-home' + (tab.id === activeTabId ? ' active' : '');
+      button.type = 'button';
+      button.title = tab.title || 'Canva';
+      button.setAttribute('role', 'tab');
+      button.setAttribute('aria-selected', tab.id === activeTabId ? 'true' : 'false');
+
+      const favicon = document.createElement('img');
+      favicon.alt = '';
+      favicon.src = tab.favicon || iconPath;
+      favicon.onerror = () => { favicon.src = iconPath; };
+
+      const title = document.createElement('span');
+      title.textContent = tab.title || 'Canva';
+
+      button.appendChild(favicon);
+      button.appendChild(title);
+
+      button.addEventListener('click', () => {
+        console.log('[toolbar-ui] pinned-home-click');
+        window.canvaTabs.send('go-home');
+      });
+
+      pinnedHomeSlot.appendChild(button);
+    }
+
+    function renderRegularTabs(tabs, activeTabId) {
       tabsEl.textContent = '';
-      for (const tab of state.tabs) {
+      for (const tab of tabs) {
         const tabEl = document.createElement('div');
-        tabEl.className = 'tab' + (tab.id === state.activeTabId ? ' active' : '');
+        tabEl.className = 'tab' + (tab.id === activeTabId ? ' active' : '');
         tabEl.title = tab.title || tab.url || 'Canva';
         tabEl.setAttribute('role', 'tab');
-        tabEl.setAttribute('aria-selected', tab.id === state.activeTabId ? 'true' : 'false');
+        tabEl.setAttribute('aria-selected', tab.id === activeTabId ? 'true' : 'false');
 
         // Keep activation and close as separate controls so the tab strip does
         // not rely on invalid nested <button> elements.
@@ -254,11 +332,6 @@
         tabsEl.appendChild(tabEl);
       }
     }
-
-    homeEl.addEventListener('click', () => {
-      console.log('[toolbar-ui] home-click');
-      window.canvaTabs.send('go-home');
-    });
 
     if (!window.canvaTabs) {
       console.error('[toolbar-ui] missing-bridge');

@@ -67,7 +67,7 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-15.Dev.7";
+const currentReleaseVersion = "0.1.4-15.Dev.8";
 const currentReleaseDate = "2026-05-16";
 const previousReleaseVersion = "0.1.4-12";
 const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+(?:\.Dev\.\d+)?$/;
@@ -2424,6 +2424,51 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   }
 }
 
+
+function checkPinnedHomeTabStripContract(rootDir: string, failures: string[]): void {
+  const tabsPath = "electron/main/tabs.ts";
+  const toolbarPath = "electron/ui/toolbar.html";
+  const tabsSource = readProjectFile(rootDir, tabsPath);
+  const toolbarSource = readProjectFile(rootDir, toolbarPath);
+
+  assertIncludes(failures, tabsPath, tabsSource, "export type ToolbarTabItem");
+  assertIncludes(failures, tabsPath, tabsSource, "pinnedHomeTab: ToolbarTabItem | null");
+  assertIncludes(failures, tabsPath, tabsSource, "isHome: boolean");
+  assertIncludes(failures, tabsPath, tabsSource, "function toToolbarTabItem(tab: TabEntry): ToolbarTabItem");
+  if (!/pinnedHomeTab:\s*homeTab\s*\?\s*toToolbarTabItem\(homeTab\)\s*:\s*null/.test(tabsSource)) {
+    failures.push(`${tabsPath}: toolbarState must expose the internal home tab as pinnedHomeTab`);
+  }
+  if (!/orderedTabs\.filter\(\(tab\)\s*=>\s*!tab\.isHome\)\.map\(toToolbarTabItem\)/.test(tabsSource)) {
+    failures.push(`${tabsPath}: toolbarState().tabs must filter out home tabs before regular tab rendering`);
+  }
+
+  for (const expected of [
+    'id="pinned-home-slot"',
+    "function renderPinnedHomeTab(tab, activeTabId)",
+    "function renderRegularTabs(tabs, activeTabId)",
+    "renderPinnedHomeTab(state.pinnedHomeTab, state.activeTabId)",
+    "renderRegularTabs(state.tabs || [], state.activeTabId)",
+    "button.className = 'pinned-home'",
+    "window.canvaTabs.send('go-home')",
+  ] as const) {
+    assertIncludes(failures, toolbarPath, toolbarSource, expected);
+  }
+  if (toolbarSource.includes('id="home"')) {
+    failures.push(`${toolbarPath}: visible duplicate #home action must not exist when pinnedHomeTab is available`);
+  }
+  const pinnedHomeRenderer = toolbarSource.match(/function renderPinnedHomeTab[\s\S]*?function renderRegularTabs/)?.[0] ?? "";
+  if (pinnedHomeRenderer.includes("tab-close") || pinnedHomeRenderer.includes("close-tab")) {
+    failures.push(`${toolbarPath}: pinned home renderer must not render a close button`);
+  }
+  const regularRenderer = toolbarSource.match(/function renderRegularTabs[\s\S]*?\n    }\n\n    if \(!window\.canvaTabs\)/)?.[0] ?? "";
+  if (!regularRenderer.includes("for (const tab of tabs)")) {
+    failures.push(`${toolbarPath}: regular tab renderer must iterate only its tabs argument`);
+  }
+  if (regularRenderer.includes("pinnedHomeTab") || regularRenderer.includes("isHome")) {
+    failures.push(`${toolbarPath}: regular tab renderer must not render pinnedHomeTab/home items`);
+  }
+}
+
 function checkShellActionIds(failures: string[]): void {
   const rootDir = findProjectRoot();
   const actions = loadCanvaLinuxActions(rootDir);
@@ -2480,6 +2525,7 @@ export function main(): number {
   checkLauncherBootstrapDependencyPolicy(failures);
   checkRuntimeCliDebugGuardrails(rootDir, failures);
   checkEffectiveBuildMetadataContract(rootDir, failures);
+  checkPinnedHomeTabStripContract(rootDir, failures);
   validateBuilderArtifactsExist(rootDir, failures);
   validateLegacyBuilderArtifactsRemoved(rootDir, failures);
   validatePublicBuilderWrapper(rootDir, failures);

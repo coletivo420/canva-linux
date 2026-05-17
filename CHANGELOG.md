@@ -5,6 +5,17 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+## Dev.8 tab-strip redesign
+
+- Opened `0.1.4-15.Dev.8` for the internal tab-strip redesign: the pinned home tab remains part of the tab model,
+  but it is exposed as `pinnedHomeTab` and rendered by a dedicated pinned-home renderer instead of the regular
+  `.tab` renderer.
+- The pinned home tab belongs to the internal tab strip, not the window titlebar; BrowserWindow title logic and the
+  top/window titlebar remain out of scope for this phase.
+- The home tab must never be rendered twice: regular tabs exclude home, the pinned home control sends `go-home`, and no
+  duplicate visible `#home` action competes with it.
+
+
 ## Dev.7 hotfix guardrails
 
 - c420ui must display Canva Linux effective build metadata when `config/canva-linux/build-metadata.json`, CI revision
