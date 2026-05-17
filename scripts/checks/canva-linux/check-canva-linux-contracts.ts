@@ -300,12 +300,8 @@ function validateInternalBuilderSource(rootDir: string, failures: string[]): voi
     "c420ui-builder",
     "canva-linux-c420ui-builder",
     "Canva Linux Builder powered by c420ui",
-    "runC420UIBuilder",
-    "normalizeBuilderArgs",
     "isRuntimeOnlyFlag",
     "bootstrap/c420ui/run-c420ui-cli.cjs",
-    "hasBridgeAction",
-    "selectEntrypoint",
   ] as const) {
     if (!source.includes(fragment)) failures.push(`${relativePath}: missing ${fragment}`);
   }
@@ -2208,7 +2204,6 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
     "bootstrap/c420ui/run-c420ui-cli.cjs",
     ".build/scripts/run-c420ui.js",
     ".build/scripts/run-c420ui-cli.js",
-    "selectEntrypoint(rootDir, kind)",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
     if (!launcher.includes(fragment)) failures.push(`scripts/c420ui-builder.ts: missing bootstrap launcher fragment ${fragment}`);

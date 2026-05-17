@@ -1,3 +1,5 @@
+import type { CanvaLinuxRuntimeCliOptions } from "./runtime-cli";
+
 type LogLevel = "ok" | "warn" | "critical";
 type GpuAccelerationState =
   | "accelerated-vulkan"
@@ -56,12 +58,10 @@ type GpuDiagnosticsApp = {
   ): void;
 };
 type StatusLogArg = string | number | boolean | null | undefined;
-type RuntimeGpuOptions = {
-  gpuBackend: "auto" | "opengl" | "vulkan" | "software" | "force";
-  forceX11: boolean;
-  forceWayland: boolean;
-  disableWaylandColorManager: boolean;
-};
+type RuntimeGpuOptions = Pick<
+  CanvaLinuxRuntimeCliOptions,
+  "gpuBackend" | "forceX11" | "forceWayland" | "disableWaylandColorManager"
+>;
 type RuntimeEnvironment = RuntimeGpuOptions & {
   source: "runtime-cli";
   displayOverride: "auto" | "x11" | "wayland";

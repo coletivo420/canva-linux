@@ -3,7 +3,7 @@
 This internal maintenance checklist now tracks the active `0.1.4-15.Dev.6` credential persistence bugfix cycle. It records the commands, manual checks, Flatpak credential diagnostics, and release blockers that must be reviewed before tagging or publishing `v0.1.4-15.Dev.6`.
 
 
-Historical baseline: the consolidated split validation remains anchored by `v0.1.4-14`; this matrix extends it for the active credential-storage bugfix cycle. Dev.6 validation should simplify stabilized migration string checks, but must keep active behavior boundaries such as `--option=value` runtime CLI parsing and GPU/display diagnostics that log selected runtime CLI values.
+Historical baseline: the consolidated split validation remains anchored by `v0.1.4-14`; this matrix extends it for the active credential-storage bugfix cycle. Dev.6 validation should simplify stabilized migration string checks, but must keep active behavior boundaries such as `--option=value` runtime CLI parsing. GPU/display RC validation must inspect the central log for `gpu:runtime runtime-options`; the log must include `gpuBackend`, `displayOverride`, `forceX11`, `forceWayland`, and `disableWaylandColorManager`.
 
 ## Release candidate metadata
 
