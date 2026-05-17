@@ -1,24 +1,43 @@
-# Validation Checklist (0.1.4-15.Dev.5)
+# Validation Checklist (0.1.4-15.Dev.6)
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
 
 Current target:
 
-- Version: `0.1.4-15.Dev.5 (Alpha)`
-- Release: `v0.1.4-15.Dev.5`
+- Version: `0.1.4-15.Dev.6 (Alpha)`
+- Release: `v0.1.4-15.Dev.6`
 - Versioning rule: `N.N.N-X` with optional `.Dev.N` development phase suffixes
 
 ## Release metadata checks
 
 The validation baseline protects these release facts:
 
-- `package.json` version is `0.1.4-15.Dev.5`.
-- `package-lock.json` top-level version is `0.1.4-15.Dev.5`.
-- `package-lock.json` root package version is `0.1.4-15.Dev.5`.
+- `package.json` version is `0.1.4-15.Dev.6`.
+- `package-lock.json` top-level version is `0.1.4-15.Dev.6`.
+- `package-lock.json` root package version is `0.1.4-15.Dev.6`.
 - `data/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
-- Active release docs point to `v0.1.4-15.Dev.5`.
+- Active release docs point to `v0.1.4-15.Dev.6`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
+
+
+## Validation tiers
+
+Validation is layered so fast behavioral checks stay close to the code while release-only work remains explicit:
+
+1. **Fast unit tests**
+   - Cover parsers, the runtime CLI, `normalizeBuilderArgs`, credential-store selection, and small behavior-focused helpers.
+2. **Lightweight contract checks**
+   - Protect current entrypoints, package identity, App ID, runtime executable name, bootstrap manifest entrypoints, and `sourceHash` freshness.
+3. **Minimal smoke tests**
+   - Exercise `./canva-linux-c420ui-builder --help`, one planned action such as `--prepare-aur --dry-run`,
+     one runtime-flag rejection such as `--debug=1`, and runtime `canva-linux --help`.
+4. **RC/manual validation**
+   - Covers Flatpak, AppImage, credential persistence, OAuth, GPU/display behavior, complete packaging, and release-artifact handoff.
+
+Historical anti-regression string checks against removed migration names should be simplified once a migration stabilizes.
+Checks that protect active behavior boundaries, such as valued runtime options requiring `--option=value`, should remain covered
+by contracts and behavioral tests.
 
 ## Validation domains
 
@@ -72,7 +91,7 @@ Generated dependency source manifests may retain platform package names that con
 
 - Confirm `./canva-linux-c420ui-builder` opens c420ui.
 - Confirm direct CLI flags run through the c420ui CLI bridge.
-- Confirm `Release: v0.1.4-15.Dev.5` appears in current release docs.
+- Confirm `Release: v0.1.4-15.Dev.6` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.

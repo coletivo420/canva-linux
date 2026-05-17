@@ -5,11 +5,27 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
-- Hardened the Dev.5 builder/runtime split: `canva-linux-c420ui-builder` no longer maintains a direct-action allowlist,
+- Hardened the builder/runtime split: `canva-linux-c420ui-builder` no longer maintains a direct-action allowlist,
   delegates action flags to the c420ui CLI bridge and Action Registry, rejects runtime flag namespaces,
   and never bypasses the root launch guard for dry-runs.
 - Tightened runtime CLI parsing so valued options require `--option=value`, conflicting X11/Wayland forcing is rejected,
-  `--force-wayland` requires a Wayland session, and the legacy `CANVA_DISABLE_GPU` fallback stays removed.
+  `--force-wayland` requires a Wayland session, and runtime GPU controls stay CLI-only.
+
+## [0.1.4-15.Dev.6] - 2026-05-16
+
+### Changed
+- Opened the Dev.6 cleanup phase for post-migration dead-code auditing, obsolete contract pruning,
+  redundant builder-test reduction, and validation-tier documentation.
+- Simplified c420ui bootstrap checks so generated bundles are validated by existence, manifest entrypoints, sourceHash,
+  syntax, and build-recipe regeneration instead of historical internal string hunting.
+- Reduced builder smoke coverage to the current supported surface: help, one planned-action dry-run, one runtime-flag rejection,
+  runtime executable name, and App ID.
+
+### Fixed
+- Added explicit `electron/main/runtime-cli.ts` existence validation to the Canva Linux contract check.
+- Preserved the active `--option=value` boundary contract for valued runtime CLI options and blocked broad prefix matching regressions.
+- Added near-miss runtime CLI coverage so option prefixes such as `--debugger=1`, `--gpu-backendfoo=software`,
+  and credential-store near misses remain passthrough arguments without changing runtime settings.
 
 ## [0.1.4-15.Dev.5] - 2026-05-16
 

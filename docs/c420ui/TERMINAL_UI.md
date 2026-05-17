@@ -15,7 +15,7 @@ logic.
 ## Must not control
 
 - Electron windows, tabs, OAuth popups, upload/export behavior, CL-EyeDropper, or
-  `CANVA_DEBUG` behavior.
+  runtime debug behavior.
 - Concrete Canva Linux action recipes.
 - Package build implementation.
 

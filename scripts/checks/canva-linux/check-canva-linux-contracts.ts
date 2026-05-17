@@ -67,7 +67,7 @@ const detectionVersionFields = [
   "appImageVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-15.Dev.5";
+const currentReleaseVersion = "0.1.4-15.Dev.6";
 const currentReleaseDate = "2026-05-16";
 const previousReleaseVersion = "0.1.4-12";
 const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+(?:\.Dev\.\d+)?$/;
@@ -330,12 +330,21 @@ function validateInternalBuilderSource(rootDir: string, failures: string[]): voi
 }
 
 function validateRuntimeEnvFallbacksRemoved(rootDir: string, failures: string[]): void {
-  const runtimeCliSource = readOptionalProjectFile(rootDir, "electron/main/runtime-cli.ts") ?? "";
-  if (!runtimeCliSource.includes('if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE)')) {
-    failures.push("runtime-cli must reject --debug without an equals value");
-  }
-  if (!/function\s+matchesValuedOption\s*\(/.test(runtimeCliSource)) {
-    failures.push("runtime-cli must keep matchesValuedOption for valued CLI options");
+  const runtimeCliPath = "electron/main/runtime-cli.ts";
+  const runtimeCliSource = readOptionalProjectFile(rootDir, runtimeCliPath);
+
+  if (!runtimeCliSource) {
+    failures.push(`${runtimeCliPath} must exist`);
+  } else {
+    if (!runtimeCliSource.includes('if (arg === "--debug") throw new Error(UNSUPPORTED_DEBUG_MESSAGE)')) {
+      failures.push("runtime-cli must reject --debug without an equals value");
+    }
+    if (!/function\s+matchesValuedOption\s*\(/.test(runtimeCliSource) || !/startsWith\s*\([^)]*=/.test(runtimeCliSource)) {
+      failures.push("runtime-cli valued option matching must require --option=value boundaries");
+    }
+    if (/startsWith\s*\(\s*option\s*\)/.test(runtimeCliSource)) {
+      failures.push("runtime-cli must not use broad startsWith(option) matching for valued options");
+    }
   }
 
   const files = [

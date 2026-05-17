@@ -6,6 +6,20 @@ For the builder naming contract, see [c420ui Builder Alias Policy](../c420ui/BUI
 This file is auxiliary maintenance policy for AI agents. It is not public user documentation.
 
 
+
+## Validation layering policy
+
+Use validation layers intentionally:
+
+1. **Fast unit tests** cover parsers, runtime CLI behavior, `normalizeBuilderArgs`, credential-store selection, and focused helpers.
+2. **Lightweight contract checks** cover current entrypoints, App ID, runtime name, package identity, manifest entrypoints, and bootstrap `sourceHash`.
+3. **Minimal smoke tests** cover builder `--help`, one planned action with `--dry-run`, one runtime-flag rejection, and runtime `--help`.
+4. **RC/manual validation** covers Flatpak, AppImage, credential persistence, OAuth, GPU/display behavior, and complete packaging.
+
+After a migration stabilizes, simplify historical anti-regression string checks that only look for removed names in generated artifacts.
+Keep checks and tests for active behavior boundaries, including valued runtime CLI parsing that must require an explicit
+`--option=value` boundary.
+
 ## c420ui bootstrap source-hash guardrail
 
 Any change to c420ui startup sources, the Canva Linux adapter, dependent-project configs, Canva Linux action or detection scripts,
@@ -30,7 +44,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## Versioning
 
-- Preserve version `0.1.4-15.Dev.5` unless the maintainer explicitly requests a versioning change.
+- Preserve version `0.1.4-15.Dev.6` unless the maintainer explicitly requests a versioning change.
 - Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
 - Preserve the `N.N.N-X` release versioning rule with optional `.Dev.N` development phase suffixes.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
@@ -43,7 +57,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## 0.1.4-14 split documentation policy
 
-- Current maintained release target is `0.1.4-15.Dev.5`.
+- Current maintained release target is `0.1.4-15.Dev.6`.
 - The release version format must remain `N.N.N-X` with optional `.Dev.N` development phase suffixes.
 - Canva Linux is the dependent project; c420ui is the generic engine.
 - Canva Linux does not install dependencies directly from builder commands or shell helpers, except for the documented Stage 0

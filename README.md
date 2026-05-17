@@ -7,8 +7,8 @@ For the builder naming contract, see [c420ui Builder Alias Policy](docs/c420ui/B
 `./canva-linux-c420ui-builder`. The compiled runtime app remains `canva-linux`.
 
 Status: **Alpha**
-Version: **0.1.4-15.Dev.5**
-Release target: **v0.1.4-15.Dev.5**
+Version: **0.1.4-15.Dev.6**
+Release target: **v0.1.4-15.Dev.6**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -79,7 +79,8 @@ canva-linux --credential-store=kwallet6
 canva-linux --credential-store=kwallet5
 ```
 
-Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The old `CANVA_DEBUG` environment path was removed.
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Use `--debug=1` or `--debug=2` on the runtime command
+instead of environment fallbacks.
 
 ## Canva Linux Documentation
 
@@ -124,7 +125,7 @@ c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` con
 
 ## Release and Packaging
 
-Current release target: `0.1.4-15.Dev.5`.
+Current release target: `0.1.4-15.Dev.6`.
 
 Versioning format for this bugfix cycle: `N.N.N-X.Dev.Y`.
 

@@ -138,8 +138,8 @@ canva-linux --force-wayland
 canva-linux --disable-wayland-color-manager
 ```
 
-Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The old `CANVA_DEBUG` and `CANVA_DEBUG_LEVEL`
-environment paths were removed. Credential-store overrides use `--credential-store`; `CANVA_LINUX_PASSWORD_STORE` is not a public runtime interface.
+Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Use `--debug=1` or `--debug=2` for diagnostics,
+and use `--credential-store=...` for credential-store selection.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance,

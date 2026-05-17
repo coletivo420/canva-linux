@@ -30,7 +30,7 @@ canva-linux --credential-store=kwallet6
 canva-linux --credential-store=kwallet5
 ```
 
-`--credential-store=auto` keeps desktop/D-Bus automatic fallback. Unsafe stores such as `basic_text` are rejected and never become persistent session policy. `CANVA_LINUX_PASSWORD_STORE` is not a public runtime interface.
+`--credential-store=auto` keeps desktop/D-Bus automatic fallback. Unsafe stores such as `basic_text` are rejected and never become persistent session policy.
 
 ## Runtime policy
 

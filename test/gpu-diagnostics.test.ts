@@ -59,35 +59,8 @@ test("serializes GPU feature status with unknown fallbacks", () => {
   ]);
 });
 
-test("parses GPU runtime environment with fallbacks", () => {
-  assert.deepEqual(getGpuRuntimeEnvironment({}), {
-    backend: "unknown",
-    vendor: "unknown",
-    dri: "unknown",
-    display: "unknown",
-    disableGpu: "0",
-    launcherReport: "unavailable",
+test("reports runtime CLI as the GPU runtime option source", () => {
+  assert.deepEqual(getGpuRuntimeEnvironment(), {
+    source: "runtime-cli",
   });
-});
-
-test("parses GPU runtime environment from CANVA variables", () => {
-  assert.deepEqual(
-    getGpuRuntimeEnvironment({
-      CANVA_GPU_BACKEND: "auto",
-      CANVA_GPU_VENDOR: "nvidia",
-      CANVA_GPU_DRI_RENDER_NODE: "1",
-      CANVA_GPU_DISPLAY_SERVER: "wayland",
-      CANVA_DISABLE_GPU: "0",
-      CANVA_GPU_LAUNCHER_REPORT:
-        "vendor=nvidia backend=auto dri=1 display=wayland",
-    }),
-    {
-      backend: "auto",
-      vendor: "nvidia",
-      dri: "1",
-      display: "wayland",
-      disableGpu: "0",
-      launcherReport: "vendor=nvidia backend=auto dri=1 display=wayland",
-    },
-  );
 });
