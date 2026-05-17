@@ -230,6 +230,38 @@ test("render with home and regular tabs keeps home out of regular renderer", () 
   assert.match(document.querySelector(".tab.active").textContent, /Design/);
 });
 
+test("pinned home renders tab.title as label", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({ activeTabId: 1, pinnedHomeTab: homeTab, tabs: [], theme: "light" });
+
+  assert.equal(document.querySelector(".pinned-home").textContent, "Home");
+});
+
+test("pinned home favicon fallback clears onerror before setting iconPath", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({ activeTabId: 1, pinnedHomeTab: homeTab, tabs: [], theme: "light" });
+  const favicon = document.querySelector(".pinned-home img");
+
+  favicon.onerror();
+
+  assert.equal(favicon.onerror, null);
+  assert.equal(favicon.src, "../assets/canva-icon.png");
+});
+
+test("regular tab favicon fallback clears onerror before setting iconPath", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({ activeTabId: 2, pinnedHomeTab: homeTab, tabs: [designTab], theme: "light" });
+  const favicon = document.querySelector(".tab-favicon");
+
+  favicon.onerror();
+
+  assert.equal(favicon.onerror, null);
+  assert.equal(favicon.src, "../assets/canva-icon.png");
+});
+
 test("pinned home click sends go-home and no duplicate home button exists", () => {
   const { actions, document, render, sent } = createToolbarHarness();
 

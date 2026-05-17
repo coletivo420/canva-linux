@@ -6777,34 +6777,6 @@ var require_program = __commonJS({
     Program.prototype.decsmbv = Program.prototype.setMarginBellVolume = function(param) {
       return this._write("\x1B[" + (param || "") + " u");
     };
-    Program.prototype.deccra = Program.prototype.copyRectangle = function() {
-      return this._write("\x1B[" + slice.call(arguments).join(";") + "$v");
-    };
-    Program.prototype.decefr = Program.prototype.enableFilterRectangle = function() {
-      return this._write("\x1B[" + slice.call(arguments).join(";") + "'w");
-    };
-    Program.prototype.decreqtparm = Program.prototype.requestParameters = function(param) {
-      return this._write("\x1B[" + (param || 0) + "x");
-    };
-    Program.prototype.decsace = Program.prototype.selectChangeExtent = function(param) {
-      return this._write("\x1B[" + (param || 0) + "x");
-    };
-    Program.prototype.decfra = Program.prototype.fillRectangle = function() {
-      return this._write("\x1B[" + slice.call(arguments).join(";") + "$x");
-    };
-    Program.prototype.decelr = Program.prototype.enableLocatorReporting = function() {
-      return this._write("\x1B[" + slice.call(arguments).join(";") + "'z");
-    };
-    Program.prototype.decera = Program.prototype.eraseRectangle = function() {
-      return this._write("\x1B[" + slice.call(arguments).join(";") + "$z");
-    };
-    Program.prototype.decsle = Program.prototype.setLocatorEvents = function() {
-      return this._write("\x1B[" + slice.call(arguments).join(";") + "'{");
-    };
-    Program.prototype.decsera = Program.prototype.selectiveEraseRectangle = function() {
-      return this._write("\x1B[" + slice.call(arguments).join(";") + "${");
-    };
-    Program.prototype.decrqlp = Program.prototype.req_mouse_pos = Program.prototype.reqmp = Program.prototype.requestLocatorPosition = function(param, callback) {
       if (this.has("req_mouse_pos")) {
         var code = this.tput.req_mouse_pos(param);
         return this.response("locator-position", code, callback);
@@ -6825,6 +6797,34 @@ var require_program = __commonJS({
       var args = Array.prototype.slice.call(arguments, 1);
       this.ret = true;
       var out = this[name].apply(this, args);
+    };
+      });
+      process.kill(process.pid, "SIGTSTP");
+    Program.prototype.pause = function(callback) {
+      var self = this, isAlt = this.isAlt, mouseEnabled = this.mouseEnabled;
+      this.lsaveCursor("pause");
+      if (isAlt) this.normalBuffer();
+      this.showCursor();
+      if (mouseEnabled) this.disableMouse();
+      var write = this.output.write;
+      };
+    };
+    Program.prototype.resume = function() {
+      if (this._resume) return this._resume();
+    };
+    var fs13 = require("fs");
+    var path15 = require("path");
+        this.file = path15.resolve(process.cwd(), file);
+        buf = fs13.readFileSync(this.file);
+      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
+    Program.prototype.resume = function() {
+      if (this._resume) return this._resume();
+    };
+    var fs13 = require("fs");
+    var path15 = require("path");
+        this.file = path15.resolve(process.cwd(), file);
+        buf = fs13.readFileSync(this.file);
+      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
       this.ret = false;
       return out;
     };
@@ -7934,22 +7934,22 @@ var require_tng = __commonJS({
         2936675148,
         906185462,
         1090812512,
-        3747672003,
-        2825379669,
-        829329135,
-        1181335161,
-        3412177804,
-        3160834842,
-        628085408,
-        1382605366,
-        3423369109,
-        3138078467,
-        570562233,
-        1426400815,
-        3317316542,
-        2998733608,
-        733239954,
-        1555261956,
+        2512341634,
+        3803740692,
+        2075208622,
+        213261112,
+        2463272603,
+        3855990285,
+        2094854071,
+        198958881,
+        2808555105,
+        3495958263,
+        1231636301,
+        1047427035,
+      ];
+      return function crc32(buf) {
+        file = path15.resolve(process.cwd(), file);
+        buf = fs13.readFileSync(file);
         3268935591,
         3050360625,
         752459403,
@@ -7962,14 +7962,14 @@ var require_tng = __commonJS({
         3943577151,
         1913087877,
         83908371,
-        2512341634,
-        3803740692,
-        2075208622,
-        213261112,
-        2463272603,
-        3855990285,
-        2094854071,
-        198958881,
+        2808555105,
+        3495958263,
+        1231636301,
+        1047427035,
+      ];
+      return function crc32(buf) {
+        file = path15.resolve(process.cwd(), file);
+        buf = fs13.readFileSync(file);
         2262029012,
         4057260610,
         1759359992,
@@ -8381,21 +8381,21 @@ var require_ansiimage = __commonJS({
       this.scale = this.options.scale || 1;
       this.options.animate = this.options.animate !== false;
       this._noFill = true;
-      if (this.options.file) {
-        this.setImage(this.options.file);
-      }
-      this.screen.on("prerender", function() {
-        var lpos = self.lpos;
-        if (!lpos) return;
-        self.screen.clearRegion(lpos.xi, lpos.xl, lpos.yi, lpos.yl);
-      });
-      this.on("destroy", function() {
-        self.stop();
-      });
-    }
-    ANSIImage.prototype.__proto__ = Box.prototype;
-    ANSIImage.prototype.type = "ansiimage";
-    ANSIImage.curl = function(url) {
+          { stdio: ["ignore", "pipe", "ignore"] }
+        );
+      } catch (e) {
+        ;
+      throw new Error("curl or wget failed.");
+    ANSIImage.prototype.setImage = function(file) {
+      this.file = typeof file === "string" ? file : null;
+          speed: this.options.speed,
+          filename: this.file
+        });
+        if (width == null || height == null) {
+      return this.img.pause();
+    };
+    var fs13 = require("fs");
+      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
       try {
         return cp.execFileSync(
           "curl",
@@ -8409,15 +8409,15 @@ var require_ansiimage = __commonJS({
         return cp.execFileSync(
           "wget",
           ["-U", "", "-O", "-", url],
-          { stdio: ["ignore", "pipe", "ignore"] }
-        );
-      } catch (e) {
-        ;
+          speed: this.options.speed,
+          filename: this.file
+        });
+        if (width == null || height == null) {
       }
-      throw new Error("curl or wget failed.");
+      return this.img.pause();
     };
-    ANSIImage.prototype.setImage = function(file) {
-      this.file = typeof file === "string" ? file : null;
+    var fs13 = require("fs");
+      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
       if (/^https?:/.test(file)) {
         file = ANSIImage.curl(file);
       }
@@ -8607,45 +8607,45 @@ var require_input = __commonJS({
         return new Input(options);
       }
       options = options || {};
-      Box.call(this, options);
-    }
-    Input.prototype.__proto__ = Box.prototype;
-    Input.prototype.type = "input";
-    module2.exports = Input;
-  }
-});
-
-// node_modules/blessed/lib/widgets/button.js
-var require_button = __commonJS({
-  "node_modules/blessed/lib/widgets/button.js"(exports2, module2) {
-    var Node = require_node();
-    var Input = require_input();
-    function Button(options) {
-      var self = this;
-      if (!(this instanceof Node)) {
-        return new Button(options);
-      }
-      options = options || {};
-      if (options.autoFocus == null) {
-        options.autoFocus = false;
-      }
-      Input.call(this, options);
-      this.on("keypress", function(ch, key) {
-        if (key.name === "enter" || key.name === "space") {
-          return self.press();
-        }
       });
       if (this.options.mouse) {
         this.on("click", function() {
           return self.press();
         });
-      }
-    }
     Button.prototype.__proto__ = Input.prototype;
     Button.prototype.type = "button";
     Button.prototype.press = function() {
       this.focus();
       this.value = true;
+        return new Checkbox(options);
+      }
+      options = options || {};
+      Input.call(this, options);
+      this.text = options.content || options.text || "";
+      this.checked = this.value = options.checked || false;
+    }
+    Checkbox.prototype.__proto__ = Input.prototype;
+    Checkbox.prototype.type = "checkbox";
+    var fs13 = require("fs");
+          files = fs13.readdirSync(dir);
+            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
+      Input.call(this, options);
+      this.on("keypress", function(ch, key) {
+        if (key.name === "enter" || key.name === "space") {
+          return self.press();
+        }
+        return new Checkbox(options);
+      }
+      options = options || {};
+      Input.call(this, options);
+      this.text = options.content || options.text || "";
+      this.checked = this.value = options.checked || false;
+    }
+    Checkbox.prototype.__proto__ = Input.prototype;
+    Checkbox.prototype.type = "checkbox";
+    var fs13 = require("fs");
+          files = fs13.readdirSync(dir);
+            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
       var result = this.emit("press");
       delete this.value;
       return result;
@@ -11298,33 +11298,6 @@ var require_list = __commonJS({
         }
         return this.selected;
       }
-      if (!back) {
-        for (i = start; i < this.ritems.length; i++) {
-          if (test(helpers.cleanTags(this.ritems[i]))) return i;
-        }
-        for (i = 0; i < start; i++) {
-          if (test(helpers.cleanTags(this.ritems[i]))) return i;
-        }
-      } else {
-        for (i = start; i >= 0; i--) {
-          if (test(helpers.cleanTags(this.ritems[i]))) return i;
-        }
-        for (i = this.ritems.length - 1; i > start; i--) {
-          if (test(helpers.cleanTags(this.ritems[i]))) return i;
-        }
-      }
-      return this.selected;
-    };
-    List.prototype.getItemIndex = function(child) {
-      if (typeof child === "number") {
-        return child;
-      } else if (typeof child === "string") {
-        var i = this.ritems.indexOf(child);
-        if (~i) return i;
-        for (i = 0; i < this.ritems.length; i++) {
-          if (helpers.cleanTags(this.ritems[i]) === child) {
-            return i;
-          }
         }
         return -1;
       } else {
@@ -11354,6 +11327,33 @@ var require_list = __commonJS({
       this.selected = index;
       this.value = helpers.cleanTags(this.ritems[this.selected]);
       if (label) this.setLabel(label);
+      this.screen.render();
+      this.once("action", function(el, selected) {
+        if (label) self.removeLabel();
+        self.screen.restoreFocus();
+        self.hide();
+        self.screen.render();
+    var path15 = require("path");
+    var fs13 = require("fs");
+        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
+        return fs13.stat(file, function(err, stat) {
+      return fs13.readdir(cwd, function(err, list) {
+          var f = path15.resolve(cwd, name), stat;
+            stat = fs13.lstatSync(f);
+      this.screen.render();
+      this.once("action", function(el, selected) {
+        if (label) self.removeLabel();
+        self.screen.restoreFocus();
+        self.hide();
+        self.screen.render();
+    var path15 = require("path");
+    var fs13 = require("fs");
+      }
+        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
+        return fs13.stat(file, function(err, stat) {
+      return fs13.readdir(cwd, function(err, list) {
+          var f = path15.resolve(cwd, name), stat;
+            stat = fs13.lstatSync(f);
       this.screen.render();
       this.once("action", function(el, selected) {
         if (label) self.removeLabel();
@@ -11657,23 +11657,23 @@ var require_form = __commonJS({
       var next = this.next();
       if (next) next.focus();
     };
-    Form.prototype.focusPrevious = function() {
-      var previous = this.previous();
-      if (previous) previous.focus();
+        el.children.forEach(fn);
+      });
+      this.emit("submit", out);
+      return this.submission = out;
     };
-    Form.prototype.resetSelected = function() {
-      this._selected = null;
+    Form.prototype.cancel = function() {
+      this.emit("cancel");
     };
-    Form.prototype.focusFirst = function() {
-      this.resetSelected();
-      this.focusNext();
+          case "textbox":
+            el.clearInput();
+          case "textarea":
+            el.clearInput();
+          case "message":
+            break;
     };
-    Form.prototype.focusLast = function() {
-      this.resetSelected();
-      this.focusPrevious();
-    };
-    Form.prototype.submit = function() {
-      var out = {};
+    var fs13 = require("fs");
+        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
       this.children.forEach(function fn(el) {
         if (el.value != null) {
           var name = el.name || el.type;
@@ -11685,14 +11685,14 @@ var require_form = __commonJS({
             out[name] = el.value;
           }
         }
-        el.children.forEach(fn);
-      });
-      this.emit("submit", out);
-      return this.submission = out;
-    };
-    Form.prototype.cancel = function() {
-      this.emit("cancel");
-    };
+          case "textbox":
+            el.clearInput();
+          case "textarea":
+            el.clearInput();
+          case "message":
+            break;
+    var fs13 = require("fs");
+        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
     Form.prototype.reset = function() {
       this.children.forEach(function fn(el) {
         switch (el.type) {
@@ -14798,22 +14798,22 @@ var require_unicode = __commonJS({
       return out;
     }, {});
     exports2.isCombining = function(str, i) {
-      var point = typeof str !== "number" ? exports2.codePointAt(str, i || 0) : str;
-      return exports2.combining[point] === true;
-    };
-    exports2.codePointAt = function(str, position) {
-      if (str == null) {
-        throw TypeError();
+          return (first - 55296) * 1024 + second - 56320 + 65536;
+        }
       }
-      var string = String(str);
-      if (string.codePointAt) {
-        return string.codePointAt(position);
+      return first;
+    exports2.fromCodePoint = function() {
+      if (String.fromCodePoint) {
+        return String.fromCodePoint.apply(String, arguments);
       }
-      var size = string.length;
-      var index = position ? Number(position) : 0;
-      if (index !== index) {
-        index = 0;
-      }
+          codeUnits.push(codePoint);
+        } else {
+          codePoint -= 65536;
+          highSurrogate = (codePoint >> 10) + 55296;
+        high = [
+          hexify(high.charCodeAt(0)),
+    var path15 = require("path");
+    var fs13 = require("fs");
       if (index < 0 || index >= size) {
         return void 0;
       }
@@ -14826,15 +14826,15 @@ var require_unicode = __commonJS({
       ) {
         second = string.charCodeAt(index + 1);
         if (second >= 56320 && second <= 57343) {
-          return (first - 55296) * 1024 + second - 56320 + 65536;
-        }
-      }
-      return first;
+          codeUnits.push(codePoint);
+        } else {
+          codePoint -= 65536;
+          highSurrogate = (codePoint >> 10) + 55296;
     };
-    exports2.fromCodePoint = function() {
-      if (String.fromCodePoint) {
-        return String.fromCodePoint.apply(String, arguments);
-      }
+        high = [
+          hexify(high.charCodeAt(0)),
+    var path15 = require("path");
+    var fs13 = require("fs");
       var MAX_SIZE = 16384;
       var codeUnits = [];
       var highSurrogate;
@@ -16073,34 +16073,6 @@ var require_screen = __commonJS({
       self.emit("focus", old);
     };
     Screen.prototype.__defineGetter__("focused", function() {
-      return this.history[this.history.length - 1];
-    });
-    Screen.prototype.__defineSetter__("focused", function(el) {
-      return this.focusPush(el);
-    });
-    Screen.prototype.clearRegion = function(xi, xl, yi, yl, override) {
-      return this.fillRegion(this.dattr, " ", xi, xl, yi, yl, override);
-    };
-    Screen.prototype.fillRegion = function(attr, ch, xi, xl, yi, yl, override) {
-      var lines = this.lines, cell, xx;
-      if (xi < 0) xi = 0;
-      if (yi < 0) yi = 0;
-      for (; yi < yl; yi++) {
-        if (!lines[yi]) break;
-        for (xx = xi; xx < xl; xx++) {
-          cell = lines[yi][xx];
-          if (!cell) break;
-          if (override || attr !== cell[0] || ch !== cell[1]) {
-            lines[yi][xx][0] = attr;
-            lines[yi][xx][1] = ch;
-            lines[yi].dirty = true;
-          }
-        }
-      }
-    };
-    Screen.prototype.key = function() {
-      return this.program.key.apply(this, arguments);
-    };
     Screen.prototype.onceKey = function() {
       return this.program.onceKey.apply(this, arguments);
     };
@@ -16113,11 +16085,39 @@ var require_screen = __commonJS({
         args = [];
       }
       var screen = this, program2 = screen.program, spawn2 = require("child_process").spawn, mouse = program2.mouseEnabled, ps;
-      options = options || {};
       options.stdio = options.stdio || "inherit";
       program2.lsaveCursor("spawn");
       program2.normalBuffer();
       program2.showCursor();
+        resume.done = true;
+        if (program2.input.setRawMode) {
+          program2.input.setRawMode(true);
+        }
+        program2.input.resume();
+        program2.output.write = write;
+        program2.alternateBuffer();
+        if (mouse) {
+    };
+      ps.on("exit", function(code) {
+        if (!callback) return;
+        return callback(null, code === 0);
+      return ps;
+        return fs13.writeFile(file, options.value, callback2);
+          return fs13.readFile(file, "utf8", function(err3, data) {
+            return fs13.unlink(file, function() {
+      file = path15.resolve(process.cwd(), file);
+        program2.output.write = write;
+        program2.alternateBuffer();
+        if (mouse) {
+      ps.on("exit", function(code) {
+        if (!callback) return;
+        return callback(null, code === 0);
+      return ps;
+      options = options || {};
+        return fs13.writeFile(file, options.value, callback2);
+          return fs13.readFile(file, "utf8", function(err3, data) {
+            return fs13.unlink(file, function() {
+      file = path15.resolve(process.cwd(), file);
       if (mouse) program2.disableMouse();
       var write = program2.output.write;
       program2.output.write = function() {
@@ -17580,31 +17580,6 @@ function createInteractiveActionRunner(options) {
       );
       return;
     }
-    if (event.type === "action:start") {
-      state.running = true;
-      state.progressState = "running";
-      options.setRunning(true);
-      options.setProgress("running", 5, event.message || "Starting");
-      return;
-    }
-    if (event.type === "action:planned") {
-      state.progressState = "warning";
-      options.appendLogText(
-        `[planned] ${event.message}
-`,
-        "system"
-      );
-      options.setProgress("warning", 100, "Planned action");
-      return;
-    }
-    if (event.type === "action:finish") {
-      const status = event.data?.status;
-      const exitCode = event.data?.exitCode;
-      const success = status === "success" || exitCode === c420uiExitCodes.success;
-      const canceled = status === "canceled";
-      state.running = false;
-      state.progressState = canceled ? "canceled" : success ? "success" : "failed";
-      options.setRunning(false);
       options.setProgress(
         state.progressState,
         success ? 100 : 0,
@@ -17633,9 +17608,34 @@ function createInteractiveActionRunner(options) {
       state.running = false;
       state.progressState = "canceled";
       options.setRunning(false);
+    }
   function cancel() {
     if (!activeAbortController || activeAbortController.signal.aborted) {
       return false;
+    }
+    activeAbortController.abort();
+    options.appendLogText("[info] Cancellation requested.\n", "system");
+    state.progressState = "canceled";
+    options.setProgress("canceled", 0, "Canceled");
+function assertOptionalBoolean(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a boolean`);
+function assertOptionalString(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a string`);
+function assertOptionalStringArray(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a string array`);
+function assertOptionalPurposeArray(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
+    options.appendLogText("[info] Cancellation requested.\n", "system");
+    state.progressState = "canceled";
+    options.setProgress("canceled", 0, "Canceled");
+function assertOptionalBoolean(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a boolean`);
+function assertOptionalString(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a string`);
+function assertOptionalStringArray(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must be a string array`);
+function assertOptionalPurposeArray(value, key, failures, path15) {
+    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
     }
     activeAbortController.abort();
     options.appendLogText("[info] Cancellation requested.\n", "system");
@@ -19146,34 +19146,6 @@ function createApp(options) {
   });
   screen.key(["?"], () => {
     if (!running && !modalActive) {
-      setView("help");
-    }
-  });
-  screen.key(["space"], () => {
-    if (!running && !modalActive && focusZone === "menu" && currentView === "settings") {
-      toggleSelectedSetting();
-    }
-  });
-  menu.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("menu");
-    }
-  });
-  diagnostics.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("diagnostics");
-    }
-  });
-  content.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("content");
-    }
-  });
-  logs.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("logs");
-    }
-  });
   menu.on("keypress", (_, key) => {
     if (updatingSettingsMenuItems) {
       return;
@@ -19186,6 +19158,34 @@ function createApp(options) {
       renderSelectionDetails();
       screen.render();
     }
+  });
+  appendLogText(
+    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
+`,
+    "system"
+  );
+  appendLogText(`[info] Settings loaded from ${settingsPath}.
+    import_node_path2 = __toESM(require("node:path"));
+var import_node_path14 = __toESM(require("node:path"));
+// packages/c420ui/src/terminal/runtime.ts
+function loadC420UITerminalApp() {
+var import_node_fs11 = __toESM(require("node:fs"));
+var import_node_path12 = __toESM(require("node:path"));
+      setFocusZone("logs");
+    }
+  });
+  appendLogText(
+    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
+`,
+    "system"
+  );
+  appendLogText(`[info] Settings loaded from ${settingsPath}.
+    import_node_path2 = __toESM(require("node:path"));
+var import_node_path14 = __toESM(require("node:path"));
+// packages/c420ui/src/terminal/runtime.ts
+function loadC420UITerminalApp() {
+var import_node_fs11 = __toESM(require("node:fs"));
+var import_node_path12 = __toESM(require("node:path"));
   });
   menu.on("select item", () => {
     if (updatingSettingsMenuItems) {
@@ -20397,34 +20397,6 @@ function readPhase(rootDir2) {
   const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
   return match?.[1] ?? "unknown";
 }
-function safeProjectMetadata(rootDir2) {
-  let version = "unknown";
-  let phase = "unknown";
-  try {
-    version = readPackage(rootDir2).version || "unknown";
-  } catch {
-    version = "unknown";
-  }
-  try {
-    phase = readPhase(rootDir2);
-  } catch {
-    phase = "unknown";
-  }
-  return {
-    version,
-    phase,
-    appId: "io.github.coletivo420.canva-linux",
-    executable: "canva-linux",
-    repository: "https://github.com/coletivo420/canva-linux"
-  };
-}
-function detectionCommand() {
-  return [
-    "source scripts/install-detection-common.sh",
-    "detect_installations",
-    "print_detection_status_env"
-  ].join("\n");
-}
 function runInstallDetection(rootDir2, runCommand) {
   const warnings = [];
   let ok = true;
@@ -20452,6 +20424,34 @@ function runInstallDetection(rootDir2, runCommand) {
         result.stdout || "",
         canvaLinuxDetectionKeys
       ),
+      warnings
+    };
+  } catch (error) {
+    warnings.push(
+      `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return { ok: false, values: {}, warnings };
+  }
+}
+function createInstallDetectionProbe(runCommand) {
+    id: "canva-linux-install-detection",
+    label: "Canva Linux installation detection",
+    run(rootDir2) {
+      return runInstallDetection(rootDir2, runCommand);
+  };
+}
+function buildInstallations(values) {
+  return {
+    nativeSystem: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_SYSTEM),
+    nativeUser: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_USER),
+    flatpakSystem: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_SYSTEM),
+    flatpakUser: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_USER),
+    appImageArtifacts: boolFromC420UIDetectionValue(values.DETECTED_APPIMAGE_ARTIFACTS),
+    nativeSystemVersion: values.DETECTED_NATIVE_SYSTEM_VERSION || "",
+    nativeUserVersion: values.DETECTED_NATIVE_USER_VERSION || "",
+    flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
+}
+
     flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
     appImageVersion: values.DETECTED_APPIMAGE_VERSION || ""
   };
@@ -20550,33 +20550,6 @@ function normalizeLoadedBuildMetadata(metadata) {
     buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION
   });
 }
-
-// scripts/canva-linux/build-metadata-loader.ts
-var UNKNOWN_BASE_VERSION = "0.0.0";
-var UNKNOWN_BUILD_REVISION2 = "unknown";
-function readJsonFile(filePath) {
-  try {
-    return JSON.parse(import_node_fs7.default.readFileSync(filePath, "utf8"));
-  } catch {
-    return null;
-  }
-}
-function hasGitRepository(rootDir2) {
-  return import_node_fs7.default.existsSync(import_node_path8.default.join(rootDir2, ".git"));
-}
-function resolveEnvBuildRevision() {
-  for (const key of [
-    "CANVA_LINUX_BUILD_REVISION",
-    "GITHUB_SHA",
-    "CI_COMMIT_SHA",
-    "SOURCE_COMMIT"
-  ]) {
-    const value = process.env[key]?.trim();
-    if (value) return value;
-  }
-  return null;
-}
-function resolveGitBuildRevision(rootDir2) {
   if (!hasGitRepository(rootDir2)) return null;
   try {
     const value = (0, import_node_child_process6.execFileSync)("git", ["rev-parse", "--short=7", "HEAD"], {
@@ -20605,18 +20578,35 @@ function createSourceMetadata(rootDir2, buildRevision) {
   });
 }
 function loadPackagedMetadata(rootDir2) {
+
 // scripts/c420ui-adapter/artifacts.ts
 
 // scripts/canva-linux/actions/registry.ts
 init_actions();
   return import_node_path9.default.join(rootDir2, "config/canva-linux/actions.json");
+}
+  if (action.group === "install" && action.section !== "Install") {
+    throw new Error(`Group/section mismatch: ${action.id}`);
+  if (action.group === "development" && !["Package generation", "Build", "Validation"].includes(action.section)) {
+    throw new Error(`Group/section mismatch: ${action.id}`);
+  if (action.group === "maintenance" && !["Maintenance", "Uninstall"].includes(action.section)) {
+    throw new Error(`Group/section mismatch: ${action.id}`);
+}
+function validateCanvaLinuxActions(actions) {
+  validateC420UIActionRegistry(actions, {
+    allowedGroups: ACTION_GROUPS,
+    allowedSections: ACTION_SECTIONS,
+    allowedKinds: ACTION_KINDS,
+    allowedScopes: INSTALL_SCOPES
+  });
+  for (const action of actions) {
+    validateCanvaLinuxGroupSection(action);
   const resolvedRoot = import_node_path9.default.resolve(rootDir2);
     import_node_fs8.default.readFileSync(actionsPath(resolvedRoot), "utf8")
 function readJsonFile2(filePath) {
   if (!import_node_fs9.default.existsSync(filePath)) {
     return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
   const configPath = import_node_path10.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-  }
   const config = readJsonFile2(configPath);
 var import_node_fs10 = __toESM(require("node:fs"));
 var import_node_path11 = __toESM(require("node:path"));
@@ -20627,7 +20617,6 @@ function readJsonFile3(filePath) {
 function readJsonFile4(filePath) {
   return JSON.parse(import_node_fs11.default.readFileSync(filePath, "utf8"));
     const content = import_node_fs11.default.readFileSync(identityPath, "utf8");
-  }
   return import_node_path12.default.join(process.env.HOME || ".", ".local/state");
   const resolvedRootDir = import_node_path12.default.resolve(rootDir2);
   const projectUiPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
@@ -20695,30 +20684,41 @@ function readJsonFile4(filePath) {
     getEffectiveProjectPhase,
     getEffectiveProjectFullVersion,
     getEffectiveProjectBuildRevision,
-}
 var import_node_fs12 = __toESM(require("node:fs"));
 var import_node_path13 = __toESM(require("node:path"));
   const configPath = import_node_path13.default.join(rootDir2, relativeConfigPath);
   return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs12.default.readFileSync(configPath, "utf8")));
-  if (action.group === "install" && action.section !== "Install") {
-    throw new Error(`Group/section mismatch: ${action.id}`);
+          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
+            return {
+  const argv = options.argv ?? process.argv.slice(2);
+var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
+      version: loadC420UIPackageJson().version ?? "unknown",
+    return import_node_path12.default.join(
+    if (!import_node_fs11.default.existsSync(actionsJsonPath)) {
+      displayVersion: project.fullVersion ?? getEffectiveProjectFullVersion(),
+      fullVersion: project.fullVersion,
+      buildRevision: project.buildRevision,
+      emitProgress: context.emitProgress
+    });
   }
-  if (action.group === "development" && !["Package generation", "Build", "Validation"].includes(action.section)) {
-    throw new Error(`Group/section mismatch: ${action.id}`);
-  }
-  if (action.group === "maintenance" && !["Maintenance", "Uninstall"].includes(action.section)) {
-    throw new Error(`Group/section mismatch: ${action.id}`);
-  }
-}
-function validateCanvaLinuxActions(actions) {
-  validateC420UIActionRegistry(actions, {
-    allowedGroups: ACTION_GROUPS,
-    allowedSections: ACTION_SECTIONS,
-    allowedKinds: ACTION_KINDS,
-    allowedScopes: INSTALL_SCOPES
-  });
-  for (const action of actions) {
-    validateCanvaLinuxGroupSection(action);
+  function toC420UIConfig() {
+    const projectUi = loadProjectUi();
+      appIdentity: appIdentityPath,
+      buildMetadata: buildMetadataPath,
+      c420uiPackageJson: c420uiPackageJsonPath
+    loadBuildMetadata,
+    getEffectiveProjectDisplayVersion,
+    getEffectiveProjectPhase,
+    getEffectiveProjectFullVersion,
+    getEffectiveProjectBuildRevision,
+var import_node_fs12 = __toESM(require("node:fs"));
+var import_node_path13 = __toESM(require("node:path"));
+  const configPath = import_node_path13.default.join(rootDir2, relativeConfigPath);
+  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs12.default.readFileSync(configPath, "utf8")));
+          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
+            return {
+  const argv = options.argv ?? process.argv.slice(2);
+var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
   }
 }
 function loadCanvaLinuxActionRegistry(rootDir2 = findProjectRoot()) {
