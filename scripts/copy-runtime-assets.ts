@@ -6,6 +6,7 @@ const repoRoot =
 const copies: ReadonlyArray<readonly [from: string, to: string]> = [
   ["electron/assets", ".build/electron/assets"],
   ["electron/ui", ".build/electron/ui"],
+  ["config/canva-linux/build-metadata.json", ".build/electron/config/canva-linux/build-metadata.json"],
 ];
 
 export function main(): void {

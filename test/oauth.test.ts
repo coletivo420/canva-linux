@@ -112,7 +112,19 @@ function createTab(id, webContentsId, order, options = {}) {
           listeners.delete("once:did-finish-load");
         }
       : undefined,
-    executeJavaScript: options.executeJavaScript,
+    executeJavaScript:
+      options.executeJavaScript ||
+      (async (code) => {
+        if (String(code).includes("loginLinks")) {
+          return options.publicSignals || { loginLinks: 0, signupLinks: 0, authButtons: 0 };
+        }
+        return {
+          localStorageKeys: 2,
+          sessionStorageKeys: 1,
+          indexedDbDatabases: 3,
+          cacheStorageKeys: 4,
+        };
+      }),
     once(event, listener) {
       listeners.set(`once:${event}`, listener);
     },
@@ -738,16 +750,12 @@ test("OAuth storage diagnostics log only safe counts", async () => {
   );
 });
 
-test("post-login navigation prefers canonical Canva home and logs source probe", async () => {
+test("default post-OAuth reload preserves current URL even when loadURL exists", async () => {
   const order = [];
   const sourceTab = createTab(1, 300, order, {
     loadURL: true,
-    executeJavaScript: async () => ({
-      localStorageKeys: 5,
-      sessionStorageKeys: 6,
-      indexedDbDatabases: 7,
-      cacheStorageKeys: 8,
-    }),
+    reloadIgnoringCache: true,
+    url: "https://www.canva.com/design/DAF123/edit",
   });
   const harness = createHarness({ sourceTab });
   harness.order.push = order.push.bind(order);
@@ -756,28 +764,189 @@ test("post-login navigation prefers canonical Canva home and logs source probe",
   harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
   harness.window.webContents.setURL(callbackUrl);
   harness.webContentsListeners.get("did-finish-load")();
-  await waitForDebugEvent(harness.debugEvents, "oauth-finalize-authorized-callback-done");
-  await waitForDebugEvent(harness.debugEvents, "post-oauth-source-load");
+  await waitForDebugEvent(harness.debugEvents, "post-oauth-source-load-classification");
 
-  assert.equal(order.includes("loadURL:1:https://www.canva.com/"), true);
+  assert.equal(order.includes("reloadIgnoringCache:1"), true);
+  assert.equal(order.includes("loadURL:1:https://www.canva.com/"), false);
   assert.equal(
     harness.debugEvents.some(
       (event) =>
         event[1] === "reload-source-tab-after-oauth" &&
-        event.includes("mode=loadURL") &&
-        event.includes("target=https://www.canva.com/"),
+        event.includes("mode=reloadIgnoringCache") &&
+        event.includes("target=current") &&
+        event.includes("url=https://www.canva.com/design/DAF123/edit"),
     ),
     true,
   );
+});
+
+test("design editor and folder URLs are not canonical-home fallback targets", async () => {
+  for (const url of [
+    "https://www.canva.com/design/DAF123/edit",
+    "https://www.canva.com/folder/all-designs",
+  ]) {
+    const order = [];
+    const sourceTab = createTab(1, 300, order, { loadURL: true, url });
+    const harness = createHarness({ sourceTab });
+    harness.order.push = order.push.bind(order);
+    const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+    harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+    harness.window.webContents.setURL(callbackUrl);
+    harness.webContentsListeners.get("did-finish-load")();
+    await waitForDebugEvent(harness.debugEvents, "post-oauth-source-load-classification");
+
+    assert.equal(order.includes("loadURL:1:https://www.canva.com/"), false);
+    assert.equal(
+      harness.debugEvents.some(
+        (event) =>
+          event[1] === "post-oauth-source-load-classification" &&
+          event.includes("localizedPublicLanding=false"),
+      ),
+      true,
+    );
+  }
+});
+
+test("canonical fallback occurs only after localized public landing detection", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, {
+    loadURL: true,
+    url: "https://www.canva.com/pt_br/",
+    title: "Entrar no Canva",
+    publicSignals: { loginLinks: 1, signupLinks: 1, authButtons: 0 },
+  });
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+  harness.window.webContents.setURL(callbackUrl);
+  harness.webContentsListeners.get("did-finish-load")();
+  await waitForDebugEvent(harness.debugEvents, "post-oauth-canonical-home-fallback");
+
+  assert.deepEqual(order, ["flush", "destroy", "reload:1", "loadURL:1:https://www.canva.com/"]);
   assert.equal(
     harness.debugEvents.some(
       (event) =>
-        event[1] === "post-oauth-source-load" &&
-        event.includes("url=https://www.canva.com/") &&
-        event.includes("title=Canva"),
+        event[1] === "reload-source-tab-after-oauth" &&
+        event.includes("target=current") &&
+        !event.includes("target=https://www.canva.com/"),
     ),
     true,
   );
+});
+
+test("localized landing paths require public auth signals", async () => {
+  for (const path of ["/pt_br/", "/es/", "/fr/", "/de/", "/en_gb/"]) {
+    const order = [];
+    const sourceTab = createTab(1, 300, order, {
+      loadURL: true,
+      url: `https://www.canva.com${path}`,
+      publicSignals: { loginLinks: 1, signupLinks: 0, authButtons: 0 },
+    });
+    const harness = createHarness({ sourceTab });
+    harness.order.push = order.push.bind(order);
+    const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+    harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+    harness.window.webContents.setURL(callbackUrl);
+    harness.webContentsListeners.get("did-finish-load")();
+    await waitForDebugEvent(harness.debugEvents, "post-oauth-source-load-classification");
+
+    assert.equal(
+      harness.debugEvents.some(
+        (event) =>
+          event[1] === "post-oauth-source-load-classification" &&
+          event.includes("localizedPublicLanding=true"),
+      ),
+      true,
+    );
+  }
+});
+
+test("canonical home is not classified as localized public landing", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, {
+    loadURL: true,
+    url: "https://www.canva.com/",
+    title: "Log in to Canva",
+    publicSignals: { loginLinks: 1, signupLinks: 1, authButtons: 1 },
+  });
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+  harness.window.webContents.setURL(callbackUrl);
+  harness.webContentsListeners.get("did-finish-load")();
+  await waitForDebugEvent(harness.debugEvents, "post-oauth-source-load-classification");
+
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "post-oauth-source-load-classification" &&
+        event.includes("localizedPublicLanding=false"),
+    ),
+    true,
+  );
+});
+
+test("oauth-public-landing-signals logs only safe counts", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, {
+    publicSignals: { loginLinks: 1, signupLinks: 1, authButtons: 0 },
+  });
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google?code=secret-code&state=secret-state";
+
+  harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+  harness.window.webContents.setURL(callbackUrl);
+  harness.webContentsListeners.get("did-finish-load")();
+  await waitForDebugEvent(harness.debugEvents, "oauth-public-landing-signals");
+
+  assert.equal(
+    harness.debugEvents.some(
+      (event) =>
+        event[1] === "oauth-public-landing-signals" &&
+        event.includes("loginLinks=1") &&
+        event.includes("signupLinks=1") &&
+        event.includes("authButtons=0"),
+    ),
+    true,
+  );
+  const flattenedLogs = JSON.stringify(harness.debugEvents);
+  assert.equal(flattenedLogs.includes("secret-code"), false);
+  assert.equal(flattenedLogs.includes("secret-state"), false);
+  assert.equal(flattenedLogs.includes("href"), false);
+  assert.equal(flattenedLogs.includes("data-testid"), false);
+});
+
+test("post-OAuth storage diagnostics continue to log safe counts", async () => {
+  const order = [];
+  const sourceTab = createTab(1, 300, order, {
+    executeJavaScript: async (code) => {
+      if (String(code).includes("loginLinks")) {
+        return { loginLinks: 0, signupLinks: 0, authButtons: 0 };
+      }
+      return {
+        localStorageKeys: 5,
+        sessionStorageKeys: 6,
+        indexedDbDatabases: 7,
+        cacheStorageKeys: 8,
+      };
+    },
+  });
+  const harness = createHarness({ sourceTab });
+  harness.order.push = order.push.bind(order);
+  const callbackUrl = "https://www.canva.com/oauth/authorized/google";
+
+  harness.webContentsListeners.get("did-navigate")(null, callbackUrl);
+  harness.window.webContents.setURL(callbackUrl);
+  harness.webContentsListeners.get("did-finish-load")();
+  await waitForDebugEvent(harness.debugEvents, "post-oauth-source-load-classification");
+
   assert.equal(
     harness.debugEvents.some(
       (event) =>

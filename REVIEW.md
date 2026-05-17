@@ -467,3 +467,10 @@ while runtime flags belong to the compiled `canva-linux` app.
 - [x] Legacy `canva-linux.sh` is removed.
 - [x] Runtime remains `canva-linux`.
 - [x] No `canva-linux-c420ui-builder.cjs` bootstrap artifact remains.
+
+## Dev.7 review note: effective versions and OAuth fallback
+
+- Source identity remains `0.1.4-15.Dev.7` / `0.1.4-15.Dev` / `0.1.4-15.Dev.7`.
+- Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
+- The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
+- c420ui remains `0.1.0` and independent; future c420ui build metadata should be added in its own project phase.

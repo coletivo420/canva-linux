@@ -226,3 +226,9 @@ Detailed development-cycle history was archived in:
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance,
 and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
+
+## 0.1.4-15.Dev.7 effective build metadata and OAuth context
+
+- Added deterministic effective build metadata with `+g<short-hash>` for runtime, `--version`, generated manifests, and artifacts while keeping source versions clean.
+- Preserved post-OAuth source tab context on first reload; canonical Canva home is now fallback-only after localized public landing detection.
+- Documented that c420ui remains independently versioned and will receive matching build metadata policy in a future phase.

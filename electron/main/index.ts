@@ -25,6 +25,10 @@ import {
   shouldGrantRemotePermission,
 } from "../shared/navigation";
 
+import {
+  formatCanvaLinuxVersion,
+  loadCanvaLinuxBuildMetadata,
+} from "./build-metadata";
 import { registerEyeDropperBridge } from "./eyedropper-bridge";
 import {
   applyCanvaLinuxRuntimeCliEarly,
@@ -60,7 +64,8 @@ const APP_NAME = "Canva Linux";
 const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
 const APP_ICON_PATH = path.join(__dirname, "..", "assets", "canva-icon.png");
-const APP_VERSION = app.getVersion();
+const BUILD_METADATA = loadCanvaLinuxBuildMetadata();
+const APP_VERSION = BUILD_METADATA.version || app.getVersion();
 type RuntimeCli = ReturnType<typeof applyCanvaLinuxRuntimeCliEarly>;
 
 function parseRuntimeCliOrExit(): RuntimeCli | null {
@@ -82,7 +87,7 @@ if (!runtimeCli) {
   console.log(printCanvaLinuxRuntimeHelp());
   app.exit(0);
 } else if (runtimeCli.version) {
-  console.log(APP_VERSION);
+  console.log(formatCanvaLinuxVersion(BUILD_METADATA));
   app.exit(0);
 } else {
   startRuntime(runtimeCli);
@@ -165,6 +170,7 @@ function getCanvaSession(): ElectronSession {
 const { logCredentialStoragePolicy, logReleaseStatus } = createStatusLogger({
   app,
   appVersion: APP_VERSION,
+  buildMetadata: BUILD_METADATA,
   debugLog,
   logStatus: centralLogger.logStatus,
 });

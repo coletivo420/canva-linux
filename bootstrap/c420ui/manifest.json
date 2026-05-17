@@ -3,6 +3,10 @@
   "c420uiVersion": "0.1.0",
   "dependentProject": "canva-linux",
   "dependentProjectVersion": "0.1.4-15.Dev.7",
+  "dependentProjectBuildRevision": "gf529ee3",
+  "dependentProjectFullVersion": "0.1.4-15.Dev.7+gf529ee3",
+  "dependentProjectDisplayVersion": "0.1.4-15.Dev+gf529ee3",
+  "dependentProjectPhase": "0.1.4-15.Dev.7+gf529ee3",
   "entrypoint": "run-c420ui.cjs",
   "cliEntrypoint": "run-c420ui-cli.cjs",
   "entrypoints": {
@@ -20,7 +24,7 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "sourceHashAlgorithm": "sha256",
-  "sourceHash": "sha256:4253bfc9ee58a56b173b6fc835c269796ca3c6666a2b57d3a01d966fc825ab50",
+  "sourceHash": "sha256:10bde38c86e0b4c59f909807c49408a33be409afe22df8d8c78e34681420bc48",
   "sourceHashInputs": [
     "packages/c420ui/src",
     "scripts/c420ui-adapter",

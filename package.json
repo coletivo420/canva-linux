@@ -22,7 +22,7 @@
     "bootstrap:typescript": "esbuild scripts/run-typescript-script.ts --bundle --platform=node --target=node20 --format=cjs --external:esbuild --outfile=.build/scripts/bootstrap/run-typescript-script.js",
     "bootstrap:electron-builder": "esbuild scripts/electron-builder-before-build.ts --bundle --platform=node --target=node22 --format=cjs --external:electron --external:esbuild --outfile=.build/scripts/bootstrap/electron-builder-before-build.js",
     "run:ts": "npm run bootstrap:typescript --silent && node .build/scripts/bootstrap/run-typescript-script.js",
-    "build:scripts": "esbuild scripts/build-runtime.ts scripts/build-preload-bundle.ts scripts/copy-runtime-assets.ts scripts/clean-runtime-build.ts scripts/run-node-tests.ts scripts/run-c420ui.ts scripts/run-c420ui-cli.ts scripts/c420ui-builder.ts --bundle --platform=node --target=node20 --format=cjs --external:electron --external:blessed --external:esbuild --external:typescript --outdir=.build/scripts --entry-names=[name]",
+    "build:scripts": "npm run build:metadata && esbuild scripts/build-runtime.ts scripts/build-preload-bundle.ts scripts/copy-runtime-assets.ts scripts/clean-runtime-build.ts scripts/run-node-tests.ts scripts/run-c420ui.ts scripts/run-c420ui-cli.ts scripts/c420ui-builder.ts --bundle --platform=node --target=node20 --format=cjs --external:electron --external:blessed --external:esbuild --external:typescript --outdir=.build/scripts --entry-names=[name]",
     "test": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-node-tests.js",
     "test:unit": "npm run test -- test/window-open-policy.test.ts",
     "test:wiring": "npm run test -- test/tab-controller-wiring.test.ts",
@@ -31,7 +31,7 @@
     "lint:fix": "eslint --config eslint.config.ts --fix .",
     "build:preload": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/build-preload-bundle.js",
     "clean:runtime": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/clean-runtime-build.js",
-    "build:runtime": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/build-runtime.js",
+    "build:runtime": "npm run build:metadata && CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/build-runtime.js",
     "build:check": "npm run build:scripts-core && node .build/scripts/core/check-runtime-build.js",
     "build": "npm run build:runtime",
     "prestart": "npm run build:runtime",
@@ -39,7 +39,7 @@
     "docs:check-links": "npm run build:scripts-core && node .build/scripts/core/check-doc-links.js",
     "deps:check-policy": "npm run build:scripts-core && node .build/scripts/core/check-dependency-policy.js",
     "typecheck": "tsc --noEmit",
-    "validate:project": "./scripts/validate-project.sh",
+    "validate:project": "npm run build:metadata && ./scripts/validate-project.sh",
     "validate": "npm run check:scripts-core",
     "docs:check-ai": "npm run build:scripts-core && node .build/scripts/core/check-ai-guardrails.js",
     "typecheck:strict": "tsc -p tsconfig.strict.json",
@@ -55,8 +55,9 @@
     "check:shared-tooling": "npm run build:runtime && npm run build:scripts-core && node .build/scripts/core/check-ai-guardrails.js && node .build/scripts/core/check-doc-links.js && node .build/scripts/core/check-dependency-policy.js && node .build/scripts/core/check-runtime-build.js && node .build/scripts/core/check-repository-policy.js",
     "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
     "build:c420ui-terminal": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js",
-    "build:c420ui-bootstrap": "esbuild scripts/build-c420ui-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/scripts/build-c420ui-bootstrap.cjs && node .build/scripts/build-c420ui-bootstrap.cjs",
-    "check:c420ui-bootstrap": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js"
+    "build:c420ui-bootstrap": "npm run build:metadata && esbuild scripts/build-c420ui-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/scripts/build-c420ui-bootstrap.cjs && node .build/scripts/build-c420ui-bootstrap.cjs",
+    "check:c420ui-bootstrap": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js",
+    "build:metadata": "npm run run:ts -- scripts/generate-build-metadata.ts"
   },
   "build": {
     "appId": "io.github.coletivo420.canva-linux",

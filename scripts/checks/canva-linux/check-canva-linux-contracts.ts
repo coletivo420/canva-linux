@@ -2285,6 +2285,65 @@ function checkRuntimeCliDebugGuardrails(rootDir: string, failures: string[]): vo
   }
 }
 
+function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]): void {
+  const packageJson = JSON.parse(readProjectFile(rootDir, "package.json")) as {
+    version?: string;
+  };
+  const projectUi = JSON.parse(
+    readProjectFile(rootDir, "config/canva-linux/project-ui.json"),
+  ) as { displayVersion?: string; phase?: string };
+  const metadataPath = "config/canva-linux/build-metadata.json";
+  const metadata = JSON.parse(readProjectFile(rootDir, metadataPath)) as {
+    baseVersion?: string;
+    baseDisplayVersion?: string;
+    basePhase?: string;
+    buildRevision?: string;
+    version?: string;
+    displayVersion?: string;
+    phase?: string;
+    fullVersion?: string;
+  };
+  const c420uiPackage = JSON.parse(
+    readProjectFile(rootDir, "packages/c420ui/package.json"),
+  ) as { version?: string };
+  const oauthSource = readProjectFile(rootDir, "electron/main/oauth.ts");
+  const generatorSource = readProjectFile(rootDir, "scripts/generate-build-metadata.ts");
+
+  if (packageJson.version?.includes("+g")) failures.push("package.json source version must not contain +g");
+  if (projectUi.displayVersion?.includes("+g")) failures.push("project-ui displayVersion must not contain +g");
+  if (projectUi.phase?.includes("+g")) failures.push("project-ui phase must not contain +g");
+  if (metadata.baseVersion !== packageJson.version) failures.push(`${metadataPath}: baseVersion must match package.json version`);
+  if (metadata.baseDisplayVersion !== projectUi.displayVersion) failures.push(`${metadataPath}: baseDisplayVersion must match project UI displayVersion`);
+  if (metadata.basePhase !== projectUi.phase) failures.push(`${metadataPath}: basePhase must match project UI phase`);
+
+  const revision = metadata.buildRevision || "unknown";
+  if (revision !== "unknown" && !/^g[0-9a-fA-F]{7}$/.test(revision)) {
+    failures.push(`${metadataPath}: buildRevision must be g<7-hex> or unknown`);
+  }
+  if (revision !== "unknown") {
+    for (const [field, base] of [
+      ["version", metadata.baseVersion],
+      ["displayVersion", metadata.baseDisplayVersion],
+      ["phase", metadata.basePhase],
+      ["fullVersion", metadata.basePhase],
+    ] as const) {
+      if (metadata[field] !== `${base}+${revision}`) {
+        failures.push(`${metadataPath}: ${field} must append +${revision}`);
+      }
+    }
+  }
+  for (const forbidden of ["Math.random", "Date.now", "new Date(", "timestamp"] as const) {
+    if (generatorSource.includes(forbidden)) failures.push(`build metadata generator must not use ${forbidden}`);
+  }
+  if (c420uiPackage.version !== "0.1.0") failures.push("packages/c420ui/package.json version must remain independent at 0.1.0");
+  if (oauthSource.includes("mode = canLoadCanonicalHome") || oauthSource.includes("webContents.loadURL(CANVA_CANONICAL_HOME_URL);\n    } else if (reloadIgnoringCache)")) {
+    failures.push("OAuth must not use canonical home as the default post-OAuth reload target");
+  }
+  if (!oauthSource.includes('"post-oauth-canonical-home-fallback"')) {
+    failures.push("OAuth canonical home must remain fallback-only after the post-load probe");
+  }
+}
+
 function checkShellActionIds(failures: string[]): void {
   const rootDir = findProjectRoot();
   const actions = loadCanvaLinuxActions(rootDir);
@@ -2340,6 +2399,7 @@ export function main(): number {
   checkDevelopmentTaskRecipes(failures);
   checkLauncherBootstrapDependencyPolicy(failures);
   checkRuntimeCliDebugGuardrails(rootDir, failures);
+  checkEffectiveBuildMetadataContract(rootDir, failures);
   validateBuilderArtifactsExist(rootDir, failures);
   validateLegacyBuilderArtifactsRemoved(rootDir, failures);
   validatePublicBuilderWrapper(rootDir, failures);

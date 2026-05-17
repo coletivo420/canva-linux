@@ -18,6 +18,12 @@ test("release status logs runtime metadata without inline changelog entries", ()
       },
     },
     appVersion: "1.2.3",
+    buildMetadata: {
+      version: "1.2.3+gabc1234",
+      displayVersion: "1.2.3+gabc1234",
+      phase: "1.2.3+gabc1234",
+      buildRevision: "gabc1234",
+    },
     debugLog(...args) {
       calls.push(args);
       return true;
@@ -36,7 +42,10 @@ test("release status logs runtime metadata without inline changelog entries", ()
     [
       "startup",
       "release",
-      "version=1.2.3",
+      "version=1.2.3+gabc1234",
+      "displayVersion=1.2.3+gabc1234",
+      "phase=1.2.3+gabc1234",
+      "buildRevision=gabc1234",
       `platform=${process.platform}`,
       `arch=${process.arch}`,
       "downloads=/tmp/downloads",

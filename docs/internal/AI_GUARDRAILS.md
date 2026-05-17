@@ -455,3 +455,10 @@ The c420ui bootstrap manifest must keep engine identity and dependent-project id
 Do not add dependent-project dependency repair back to `scripts/run-c420ui.ts`. Interactive startup must start c420ui
 first, then run host dependency validation or repair as a c420ui startup task so failures stay visible in the UI. Keep
 Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adjacent adapter code, not in c420ui core.
+
+## Versioning and OAuth guardrails
+
+- Do not open `Dev.8` or add `+g<hash>` to source `package.json` / `project-ui.json` values in this phase.
+- Generate effective build metadata deterministically from commit metadata only.
+- Keep post-OAuth reload context-preserving by default; use canonical Canva home only as the post-probe localized public landing fallback.
+- Do not log cookie values, token values, OAuth `code`/`state`, or storage values; log only safe counts.

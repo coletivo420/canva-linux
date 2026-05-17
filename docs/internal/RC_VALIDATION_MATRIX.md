@@ -184,3 +184,10 @@ startup task, not as pre-UI logic in `scripts/run-c420ui.ts`.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
+
+## Dev.7 effective-version and OAuth checks
+
+- Confirm source version remains `0.1.4-15.Dev.7`, display version remains `0.1.4-15.Dev`, and phase remains `0.1.4-15.Dev.7`.
+- Confirm runtime startup logs and `--version` expose effective `+g<short-hash>` metadata when the build revision is known.
+- Confirm OAuth post-login reload preserves editor/design/folder URLs and only falls back to `https://www.canva.com/` after localized public landing detection.
+- Confirm c420ui remains independently versioned at `0.1.0`; future c420ui build metadata belongs to a later independent c420ui phase.
