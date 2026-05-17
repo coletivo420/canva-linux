@@ -25,9 +25,21 @@ type DownloadItemLike = {
   getFilename(): string;
   setSavePath(path: string): void;
 };
+type CookieLike = {
+  name: string;
+  domain?: string;
+  path?: string;
+  secure?: boolean;
+  httpOnly?: boolean;
+  session?: boolean;
+  expirationDate?: number;
+};
 type SessionLike = {
   partition?: string;
-  cookies: { flushStore?(): Promise<void> };
+  cookies: {
+    flushStore?(): Promise<void>;
+    get?(filter: { url?: string; domain?: string }): Promise<CookieLike[]>;
+  };
   clearCache?: () => Promise<void>;
   clearStorageData?: () => Promise<void>;
   flushStorageData(): Promise<void> | void;

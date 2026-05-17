@@ -255,6 +255,17 @@ const oauthHelpers = createOAuthHelpers({
     (activeTabId === null ? undefined : tabs.get(activeTabId)) as unknown as
       | import("./oauth").CanvaTabEntry
       | undefined,
+  getSourceTabByWebContentsId(sourceWebContentsId) {
+    if (sourceWebContentsId === null) return undefined;
+
+    for (const tab of tabs.values()) {
+      if (tab.view.webContents.id === sourceWebContentsId) {
+        return tab as unknown as import("./oauth").CanvaTabEntry;
+      }
+    }
+
+    return undefined;
+  },
   getCanvaSession,
   isBlankPopupUrl,
   isCanvaAuthUrl,

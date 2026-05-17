@@ -57,6 +57,27 @@ These commands are manual release-candidate checks. Record their output in the r
 | `./canva-linux-c420ui-builder --canva-debug=1` | Required; root containers may record blocked before dispatch | Runtime flags are rejected by the builder and remain owned by the compiled runtime app. | Builder/runtime separation may have been weakened. | Canva Linux project adapter |
 | `flatpak run io.github.coletivo420.canva-linux --debug=1` | Required in a Flatpak-capable environment | The wrapper exits with `Canva Linux: --debug is reserved by Electron/Node.` and tells users to use `--canva-debug=1` or `--canva-debug=2`. | Flatpak may pass Electron-reserved debug flags through before Canva Linux can reject them. | Canva Linux runtime |
 
+## OAuth source-tab login validation
+
+Run the runtime with debug logging, complete Google OAuth, and inspect the central log:
+
+```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=1
+```
+
+Expected sequence:
+
+```text
+popup-canva-callback-detected type=authorized
+oauth-finalize-authorized-callback-start
+session flush done
+oauth-cookie-summary url=https://www.canva.com count=...
+close-popup reason=authorized-callback-loaded
+reload-source-tab-after-oauth tab=...
+did-finish-load https://www.canva.com/...
+```
+
+The cookie summary may include counts for persistent, session, secure, and HTTP-only cookies only. It must not include cookie values, OAuth codes, states, tokens, or session IDs. The post-OAuth reload must target the recorded source tab when its `sourceWebContentsId` resolves; fallback to the active tab is acceptable only when logged with `fallback=true`.
 
 ## GPU/display runtime diagnostics manual validation
 
@@ -98,7 +119,6 @@ Run these only in an environment with the required packaging dependencies. If de
 | `./scripts/build-appimage.sh` | Blocked: environment lacks AppImage tooling | Builds the AppImage artifact for `0.1.4-15.Dev.7` with the generated architecture string preserved in the artifact name. | AppImage build prerequisites, packaging scripts, release metadata, or artifact naming may be broken. | release metadata |
 | `./scripts/build-flatpak-bundle.sh` | Blocked: environment lacks `flatpak` | Builds the Flatpak bundle for `0.1.4-15.Dev.7` with AppStream metadata and generated architecture naming intact. | Flatpak build prerequisites, packaging scripts, AppStream metadata, or artifact naming may be broken. | release metadata |
 | `./scripts/validate-flatpak.sh` | Blocked: environment lacks `flatpak`, `appstreamcli`, and `desktop-file-validate` | Validates Flatpak metadata and bundle policy for the current release candidate. | Flatpak metadata, AppStream, desktop integration, or bundle validation policy may have regressed. | release metadata |
-
 
 ## RC validation execution log
 

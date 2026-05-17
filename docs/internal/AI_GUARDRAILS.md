@@ -61,6 +61,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 ## 0.1.4-14 split documentation policy
 
 - Current maintained release target is `0.1.4-15.Dev.7`.
+- OAuth login completion must wait for the authorized callback `did-finish-load`, flush the shared persistent session, log only safe cookie metadata for `https://www.canva.com`, close the popup, and reload the OAuth source tab rather than a generic active tab.
 - The release version format must remain `N.N.N-X` with optional `.Dev.N` development phase suffixes.
 - Canva Linux is the dependent project; c420ui is the generic engine.
 - Canva Linux does not install dependencies directly from builder commands or shell helpers, except for the documented Stage 0

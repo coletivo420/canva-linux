@@ -2,7 +2,14 @@ import type { DebugLog, WebContentsLike } from "../shared/types";
 import type { SessionLike } from "./runtime";
 export type CanvaTabEntry = {
   id: number;
-  view: { webContents: { reload(): void } };
+  view: {
+    webContents: {
+      id?: number;
+      getURL?(): string;
+      reload(): void;
+      reloadIgnoringCache?(): void;
+    };
+  };
 };
 export type OAuthPopupEntry = {
   id: number;
@@ -33,7 +40,7 @@ export type BrowserWindowLike = {
   on(event: string, listener: (...args: any[]) => void): unknown;
 };
 export type CloseAuthPopupOptions = {
-  reloadActiveTab?: boolean;
+  reloadSourceTab?: boolean;
   reason?: string;
 };
 export type RegisterAuthPopupOptions = {
@@ -41,6 +48,13 @@ export type RegisterAuthPopupOptions = {
   shellBackgroundColor?: () => string;
   sourceWebContentsId?: number | null;
 };
+
+const CANVA_COOKIE_SUMMARY_URL = "https://www.canva.com";
+const POST_OAUTH_SESSION_FLUSH_DELAY_MS = 250;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 const SENSITIVE_OAUTH_LOG_PARAMS = new Set([
   "access_token",
@@ -103,6 +117,9 @@ type CreateOAuthHelpersOptions = {
   appName: string;
   authPopups: AuthPopupMap;
   getActiveTab: () => CanvaTabEntry | undefined;
+  getSourceTabByWebContentsId?: (
+    sourceWebContentsId: number | null,
+  ) => CanvaTabEntry | undefined;
   BrowserWindow: new (options: Record<string, unknown>) => BrowserWindowLike;
   classifyNavigationRequest: (input: {
     url?: string;
@@ -191,6 +208,7 @@ export function createOAuthPopupOptionsSummary(window: BrowserWindowLike): {
  *   appName: string;
  *   authPopups: AuthPopupMap;
  *   getActiveTab: () => CanvaTabEntry | undefined;
+ *   getSourceTabByWebContentsId?: (sourceWebContentsId: number | null) => CanvaTabEntry | undefined;
  *   BrowserWindow: new (options: Record<string, unknown>) => BrowserWindowLike;
  *   classifyNavigationRequest: (input: { url?: string; openerUrl?: string; disposition?: string; frameName?: string }) => { kind: string; url?: string };
  *   debugLog: DebugLog;
@@ -216,6 +234,7 @@ export function createOAuthHelpers({
   appName,
   authPopups,
   getActiveTab,
+  getSourceTabByWebContentsId = () => undefined,
   BrowserWindow,
   classifyNavigationRequest,
   debugLog,
@@ -235,18 +254,99 @@ export function createOAuthHelpers({
   summarizeOauthEntry,
   windowLabel,
 }: CreateOAuthHelpersOptions) {
-  /**
-   * @param {number} popupId
-   * @param {CloseAuthPopupOptions} [options]
-   * @returns {void}
-   */
-  function closeAuthPopup(
-    popupId: number,
-    {
-      reloadActiveTab = true,
-      reason = "manual-close",
-    }: CloseAuthPopupOptions = {},
-  ): void {
+  function resolveOAuthSourceTab(entry: OAuthPopupEntry): {
+    fallback: boolean;
+    sourceTab: CanvaTabEntry | undefined;
+  } {
+    const resolvedSourceTab = getSourceTabByWebContentsId(
+      entry.sourceWebContentsId,
+    );
+    const fallback = !resolvedSourceTab;
+    const sourceTab = resolvedSourceTab ?? getActiveTab();
+
+    debugLog(
+      "oauth",
+      "oauth-source-tab-resolved",
+      `popup=${entry.id}`,
+      `sourceWebContentsId=${entry.sourceWebContentsId ?? "null"}`,
+      sourceTab ? `tab=${sourceTab.id}` : "tab=none",
+      `fallback=${fallback ? "true" : "false"}`,
+    );
+
+    return { fallback, sourceTab };
+  }
+
+  async function logCanvaCookieSummary(session: SessionLike): Promise<void> {
+    if (!session.cookies.get) {
+      debugLog(
+        "oauth",
+        "oauth-cookie-summary-unavailable",
+        `url=${CANVA_COOKIE_SUMMARY_URL}`,
+      );
+      return;
+    }
+
+    try {
+      const cookies = await session.cookies.get({
+        url: CANVA_COOKIE_SUMMARY_URL,
+      });
+      const sessionCookies = cookies.filter((cookie) => cookie.session).length;
+      const persistentCookies = cookies.length - sessionCookies;
+      const secureCookies = cookies.filter((cookie) => cookie.secure).length;
+      const httpOnlyCookies = cookies.filter((cookie) => cookie.httpOnly).length;
+
+      debugLog(
+        "oauth",
+        "oauth-cookie-summary",
+        `url=${CANVA_COOKIE_SUMMARY_URL}`,
+        `count=${cookies.length}`,
+        `persistent=${persistentCookies}`,
+        `session=${sessionCookies}`,
+        `secure=${secureCookies}`,
+        `httpOnly=${httpOnlyCookies}`,
+      );
+    } catch (error) {
+      debugLog("oauth", "oauth-cookie-summary-error", String(error));
+    }
+  }
+
+  function reloadOAuthSourceTab(entry: OAuthPopupEntry, reason: string): void {
+    const { sourceTab } = resolveOAuthSourceTab(entry);
+
+    if (!sourceTab) {
+      debugLog(
+        "oauth",
+        "reload-source-tab-after-oauth",
+        `popup=${entry.id}`,
+        "tab=none",
+        "mode=none",
+        `reason=${reason}`,
+      );
+      return;
+    }
+
+    const url = sourceTab.view.webContents.getURL?.() || "unknown";
+    const reloadIgnoringCache = sourceTab.view.webContents.reloadIgnoringCache;
+    const mode = reloadIgnoringCache ? "reloadIgnoringCache" : "reload";
+
+    debugLog(
+      "oauth",
+      "reload-source-tab-after-oauth",
+      `popup=${entry.id}`,
+      `tab=${sourceTab.id}`,
+      `mode=${mode}`,
+      `url=${redactSensitiveUrlParams(url)}`,
+      `reason=${reason}`,
+    );
+
+    if (reloadIgnoringCache) {
+      reloadIgnoringCache.call(sourceTab.view.webContents);
+    } else {
+      sourceTab.view.webContents.reload();
+    }
+  }
+
+  function closeAuthPopupWindow(popupId: number, reason: string): void {
     const entry = authPopups.get(popupId);
     if (entry) {
       entry.closeReason = reason;
@@ -256,7 +356,6 @@ export function createOAuthHelpers({
       "oauth",
       "close-popup",
       popupId,
-      `reload=${reloadActiveTab}`,
       `reason=${reason}`,
       summarizeOauthEntry(entry),
     );
@@ -267,18 +366,76 @@ export function createOAuthHelpers({
       entry.window.destroy();
     }
 
-    if (reloadActiveTab) {
-      const activeTab = getActiveTab();
+    mainWindowRef()?.focus();
+  }
+
+  async function finalizeAuthorizedOAuthCallback(
+    entry: OAuthPopupEntry,
+    loadedUrl: string,
+  ): Promise<void> {
+    if (entry.completionHandled) {
       debugLog(
         "oauth",
-        "reload-active-tab-after-popup",
-        popupId,
-        activeTab ? `tab=${activeTab.id}` : "tab=none",
+        "authorized-callback-ignored-already-handled",
+        `popup=${entry.id}`,
+        redactSensitiveUrlParams(loadedUrl),
       );
-      activeTab?.view.webContents.reload();
+      return;
     }
 
-    mainWindowRef()?.focus();
+    entry.completionHandled = true;
+    debugLog(
+      "oauth",
+      "oauth-finalize-authorized-callback-start",
+      `popup=${entry.id}`,
+      redactSensitiveUrlParams(loadedUrl),
+    );
+
+    const canvaSession = getCanvaSession();
+    try {
+      await flushSession(canvaSession);
+      debugLog("session", "flush", "done", `popup=${entry.id}`);
+    } catch (error) {
+      debugLog("session", "flush-error", String(error));
+    }
+
+    await delay(POST_OAUTH_SESSION_FLUSH_DELAY_MS);
+    await logCanvaCookieSummary(canvaSession);
+
+    debugLog(
+      "oauth",
+      "popup-authorized-callback",
+      `popup=${entry.id}`,
+      redactSensitiveUrlParams(loadedUrl),
+    );
+    closeAuthPopupWindow(entry.id, "authorized-callback-loaded");
+    reloadOAuthSourceTab(entry, "authorized-callback-loaded");
+    debugLog(
+      "oauth",
+      "oauth-finalize-authorized-callback-done",
+      `popup=${entry.id}`,
+      redactSensitiveUrlParams(loadedUrl),
+    );
+  }
+
+  /**
+   * @param {number} popupId
+   * @param {CloseAuthPopupOptions} [options]
+   * @returns {void}
+   */
+  function closeAuthPopup(
+    popupId: number,
+    {
+      reloadSourceTab = true,
+      reason = "manual-close",
+    }: CloseAuthPopupOptions = {},
+  ): void {
+    const entry = authPopups.get(popupId);
+    closeAuthPopupWindow(popupId, reason);
+
+    if (entry && reloadSourceTab) {
+      reloadOAuthSourceTab(entry, reason);
+    }
   }
 
   /**
@@ -414,28 +571,10 @@ export function createOAuthHelpers({
         `popup=${popupId}`,
         redactSensitiveUrlParams(loadedUrl),
       );
-      if (
-        entry.sawAuthorizedCallback &&
-        entry.pendingCallbackUrl === loadedUrl &&
-        !entry.completionHandled
-      ) {
-        entry.completionHandled = true;
-        flushSession(getCanvaSession())
-          .catch((error) => {
-            debugLog("session", "flush-error", String(error));
-          })
-          .finally(() => {
-            debugLog(
-              "oauth",
-              "popup-authorized-callback",
-              `popup=${popupId}`,
-              redactSensitiveUrlParams(loadedUrl),
-            );
-            closeAuthPopup(popupId, {
-              reloadActiveTab: true,
-              reason: "authorized-callback-loaded",
-            });
-          });
+      if (entry.sawAuthorizedCallback && entry.pendingCallbackUrl === loadedUrl) {
+        finalizeAuthorizedOAuthCallback(entry, loadedUrl).catch((error) => {
+          debugLog("oauth", "finalize-authorized-callback-error", String(error));
+        });
       }
     });
 
@@ -560,6 +699,15 @@ export function createOAuthHelpers({
         redactSensitiveUrlParams(url),
       );
       if (callbackType === "authorized") {
+        if (entry.completionHandled) {
+          debugLog(
+            "oauth",
+            "authorized-callback-ignored-already-handled",
+            `popup=${popupId}`,
+            redactSensitiveUrlParams(url),
+          );
+          return;
+        }
         entry.sawAuthorizedCallback = true;
         entry.pendingCallbackUrl = url;
         return;
