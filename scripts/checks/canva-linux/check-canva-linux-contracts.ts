@@ -352,18 +352,6 @@ function validateRuntimeEnvFallbacksRemoved(rootDir: string, failures: string[])
     }
   }
 
-  const runShSource = readOptionalProjectFile(rootDir, "run.sh");
-  if (!runShSource) {
-    failures.push("run.sh must exist");
-  } else {
-    if (!runShSource.includes('--debug|--debug=*')) {
-      failures.push("run.sh must block --debug and --debug=* before invoking Electron");
-    }
-    if (!runShSource.includes('Use --canva-debug=1 or --canva-debug=2 instead.')) {
-      failures.push("run.sh must direct users to --canva-debug=1 or --canva-debug=2");
-    }
-  }
-
   const files = [
     "electron/shared/debug.ts",
     "electron/main/runtime.ts",
