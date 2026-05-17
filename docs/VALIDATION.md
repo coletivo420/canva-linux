@@ -82,15 +82,19 @@ Complete Google login in the OAuth popup. The central log must show the authoriz
 
 ```text
 popup-canva-callback-detected type=authorized
+oauth-authorized-callback-ready
+# On slow callback loads before fallback finalization:
+# oauth-authorized-callback-fallback-deferred reason=still-loading attempt=...
 oauth-finalize-authorized-callback-start
 session flush done
+oauth-post-flush-settle
 oauth-cookie-summary url=https://www.canva.com count=...
 close-popup reason=authorized-callback-loaded
 reload-source-tab-after-oauth tab=...
 did-finish-load https://www.canva.com/...
 ```
 
-Confirm the reloaded main Canva tab is the OAuth source tab, uses the shared flushed session, and enters authenticated state. If the source webContents id cannot be resolved, the fallback to the active tab must be logged with `fallback=true`.
+Confirm the reloaded main Canva tab is the OAuth source tab, uses the shared flushed session, and enters authenticated state. OAuth finalization must be based on the authorized callback type rather than exact callback URL string equality; if Electron reports an authorized callback during navigation but no matching `did-finish-load` closes the loop, the log should show `oauth-authorized-callback-fallback-scheduled` and `oauth-authorized-callback-fallback-fired`. On slow callback loads, the fallback must distinguish the slow load from a missing `did-finish-load` by logging `oauth-authorized-callback-fallback-deferred reason=still-loading` while the callback WebContents remains loading, and may only force completion after the bounded max-attempt safety limit. If the source webContents id cannot be resolved, the fallback to the active tab must be logged with `fallback=true`.
 
 ## GPU/display runtime diagnostics manual validation
 

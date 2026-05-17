@@ -4,6 +4,7 @@ export type WebContentsLike = {
   id?: number;
   session?: { partition?: string };
   getURL(): string;
+  isLoading?(): boolean;
   getLastWebPreferences?():
     | {
         contextIsolation?: boolean;
