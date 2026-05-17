@@ -18,16 +18,10 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "./canva-linux/bootstrap/source-hash";
+import { loadEffectiveBuildMetadata } from "./canva-linux/build-metadata-loader";
 
 type PackageJson = {
   version?: string;
-};
-
-type BuildMetadata = {
-  buildRevision?: string;
-  fullVersion?: string;
-  displayVersion?: string;
-  phase?: string;
 };
 
 function findProjectRoot(): string {
@@ -75,7 +69,7 @@ async function main(): Promise<void> {
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
   const c420uiPackageJson = readJson<PackageJson>(rootDir, "packages/c420ui/package.json");
-  const buildMetadata = readJson<BuildMetadata>(rootDir, "config/canva-linux/build-metadata.json");
+  const buildMetadata = loadEffectiveBuildMetadata(rootDir);
   const dependentProjectVersion = requirePackageVersion(rootPackageJson, "package.json");
   const c420uiVersion = requirePackageVersion(c420uiPackageJson, "packages/c420ui/package.json");
 

@@ -58,3 +58,19 @@ DOM text, `aria-label`, `href`, `data-testid`, or other attribute values.
 The c420ui package remains independently versioned (`0.1.0`). The Canva Linux bootstrap manifest records Canva Linux
 effective build metadata, and c420ui will receive the same build metadata policy in a future phase as an independent
 project.
+## Dev.7 hotfix guardrails
+
+- c420ui must display Canva Linux effective build metadata when `config/canva-linux/build-metadata.json`, CI revision
+  variables, or a source checkout `.git` HEAD can provide it; source `package.json` and `project-ui.json` stay free of
+  committed `+g<hash>` metadata.
+- The c420ui brand version remains independent and comes from `packages/c420ui/package.json`; c420ui-specific
+  `0.1.0+g<hash-do-c420ui>` metadata is future work, not part of this hotfix.
+- `build:c420ui-bootstrap` must refresh or resolve effective build metadata before writing the bootstrap manifest, including
+  dependent project full version, build revision, display version, and phase.
+- MediaDevices diagnostics must preserve native receiver binding for `getUserMedia` and `getDisplayMedia`, including detached
+  calls, and must not log token/cookie/code/state values.
+- Toolbar favicons must respect the internal CSP by rendering only `data:` and `file:` image URLs, falling back instead of
+  rendering remote `https:` favicons.
+- OAuth localized public-landing probes must normalize both DOM attributes and localized keywords with NFKD so composed and
+  decomposed labels are equivalent.
+

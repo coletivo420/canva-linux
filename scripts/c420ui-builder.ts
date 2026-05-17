@@ -3,6 +3,8 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import { loadEffectiveBuildMetadata } from "./canva-linux/build-metadata-loader";
+
 export const BUILDER_INTERNAL_NAME = "c420ui-builder";
 export const BUILDER_ALIAS = "canva-linux-c420ui-builder";
 export const BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
@@ -20,6 +22,8 @@ const RUNTIME_ONLY_BOOLEAN_OPTIONS = [
   "--force-wayland",
   "--disable-wayland-color-manager",
 ];
+
+type PackageJson = { version?: string };
 
 type NormalizedBuilderArgs = {
   help: boolean;
@@ -43,8 +47,34 @@ function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || proces
   }
 }
 
-function builderHelp(): string {
+function readJsonFile<T>(filePath: string): T | null {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
+  } catch {
+    return null;
+  }
+}
+
+function c420uiVersion(rootDir: string): string {
+  return readJsonFile<PackageJson>(
+    path.join(rootDir, "packages", "c420ui", "package.json"),
+  )?.version ?? "unknown";
+}
+
+function builderVersionBlock(rootDir: string): string {
+  const metadata = loadEffectiveBuildMetadata(rootDir);
+  return `Project:
+  Canva Linux ${metadata.fullVersion || metadata.version || metadata.baseVersion}
+  buildRevision ${metadata.buildRevision || "unknown"}
+
+Builder:
+  c420ui ${c420uiVersion(rootDir)}`;
+}
+
+function builderHelp(rootDir = findProjectRoot()): string {
   return `${BUILDER_TITLE}
+
+${builderVersionBlock(rootDir)}
 
 Usage:
   ${BUILDER_ALIAS}
@@ -84,6 +114,7 @@ function createSession(rootDir: string): { sessionLog?: string; sessionId: strin
     fs.writeFileSync(sessionLog, "");
     fs.appendFileSync(sessionLog, `[session] started id=${sessionId}\n`);
     fs.appendFileSync(sessionLog, `[builder] ${BUILDER_TITLE}\n`);
+    fs.appendFileSync(sessionLog, `${builderVersionBlock(rootDir)}\n`);
   } catch {
     sessionLog = undefined;
   }
@@ -185,7 +216,7 @@ function assertNonRoot(): void {
 export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   const parsed = normalizeBuilderArgs(argv);
   if (parsed.help) {
-    console.log(builderHelp());
+    console.log(builderHelp(findProjectRoot(path.resolve(__dirname, ".."))));
     return 0;
   }
 

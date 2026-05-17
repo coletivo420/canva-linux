@@ -2308,6 +2308,12 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   ) as { version?: string };
   const oauthSource = readProjectFile(rootDir, "electron/main/oauth.ts");
   const buildMetadataSource = readProjectFile(rootDir, "electron/main/build-metadata.ts");
+  const buildMetadataLoaderSource = readProjectFile(rootDir, "scripts/canva-linux/build-metadata-loader.ts");
+  const c420uiAdapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
+  const packageJsonSource = readProjectFile(rootDir, "package.json");
+  const bootstrapManifest = JSON.parse(
+    readProjectFile(rootDir, "bootstrap/c420ui/manifest.json"),
+  ) as Record<string, unknown>;
   const generatorSource = readProjectFile(rootDir, "scripts/generate-build-metadata.ts");
 
   if (packageJson.version?.includes("+g")) failures.push("package.json source version must not contain +g");
@@ -2348,6 +2354,38 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
     if (generatorSource.includes(forbidden)) failures.push(`build metadata generator must not use ${forbidden}`);
   }
   if (c420uiPackage.version !== "0.1.0") failures.push("packages/c420ui/package.json version must remain independent at 0.1.0");
+
+  if (!buildMetadataLoaderSource.includes("loadEffectiveBuildMetadata")) {
+    failures.push("scripts/canva-linux/build-metadata-loader.ts: must expose loadEffectiveBuildMetadata");
+  }
+  if (!buildMetadataLoaderSource.includes("CANVA_LINUX_BUILD_REVISION") || !buildMetadataLoaderSource.includes("git") || !buildMetadataLoaderSource.includes("build-metadata.json")) {
+    failures.push("build metadata loader must resolve env/git revisions before packaged metadata fallback");
+  }
+  if (!c420uiAdapterSource.includes("buildMetadata:") || !c420uiAdapterSource.includes("config/canva-linux/build-metadata.json")) {
+    failures.push("c420ui adapter must expose and read config/canva-linux/build-metadata.json");
+  }
+  if (!c420uiAdapterSource.includes("getEffectiveProjectDisplayVersion") || !c420uiAdapterSource.includes("getEffectiveProjectPhase")) {
+    failures.push("c420ui adapter must use effective displayVersion/phase helpers");
+  }
+  if (c420uiAdapterSource.includes('version: "0.1"')) {
+    failures.push('c420ui brand version must not be hardcoded as "0.1"');
+  }
+  if (!c420uiAdapterSource.includes("packages/c420ui/package.json")) {
+    failures.push("c420ui brand version must come from packages/c420ui/package.json");
+  }
+  if (!/"build:c420ui-bootstrap"\s*:\s*"[^"]*build:metadata/.test(packageJsonSource) && !readProjectFile(rootDir, "scripts/build-c420ui-bootstrap.ts").includes("loadEffectiveBuildMetadata")) {
+    failures.push("build:c420ui-bootstrap must refresh or resolve effective build metadata before manifest generation");
+  }
+  for (const field of [
+    "dependentProjectFullVersion",
+    "dependentProjectBuildRevision",
+    "dependentProjectDisplayVersion",
+    "dependentProjectPhase",
+  ] as const) {
+    if (typeof bootstrapManifest[field] !== "string" || !bootstrapManifest[field]) {
+      failures.push(`bootstrap/c420ui/manifest.json: missing ${field}`);
+    }
+  }
   if (!/PUBLIC_AUTH_TITLE_PATTERN[\s\S]*sign\\s\*in/.test(oauthSource) || !/PUBLIC_AUTH_TITLE_PATTERN[\s\S]*signin/.test(oauthSource)) {
     failures.push("OAuth public auth title pattern must recognize sign in and signin");
   }
@@ -2356,6 +2394,13 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   }
   if (!oauthSource.includes("localizedAuthButtonKeywords") || !oauthSource.includes('href.includes("/signin")')) {
     failures.push("OAuth public landing auth probe must include localized/generic auth signal matching");
+  }
+
+  if (!/localizedAuthButtonKeywords[\s\S]*\.map\(\(k\) => k\.normalize\("NFKD"\)\)/.test(oauthSource)) {
+    failures.push('OAuth localizedAuthButtonKeywords must normalize keywords with normalize("NFKD")');
+  }
+  if (!/String\(value \|\| ""\)[\s\S]*\.toLowerCase\(\)[\s\S]*\.normalize\("NFKD"\)/.test(oauthSource)) {
+    failures.push('OAuth publicLandingSignalsProbeScript must normalize DOM attributes with normalize("NFKD")');
   }
   if (oauthSource.includes("mode = canLoadCanonicalHome") || oauthSource.includes("webContents.loadURL(CANVA_CANONICAL_HOME_URL);\n    } else if (reloadIgnoringCache)")) {
     failures.push("OAuth must not use canonical home as the default post-OAuth reload target");
