@@ -5,10 +5,13 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- c420ui runtime/build/check/test ownership now lives under `packages/c420ui`. The adapter layer is reserved for Canva Linux integration glue only.
+- Detection providers must avoid repeated `package.json` parsing and repeated npm process spawning during UI refresh cycles.
 - The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
 
 - Dev.9 corrected the c420ui adapter boundary: registry-driven artifact fragment detection, overview detection,
-  build metadata resolution, and bootstrap helpers now live under `scripts/c420ui-adapter`. Generated artifact
+  build metadata resolution, and integration glue now live under `scripts/c420ui-adapter`; bootstrap helpers live under
+  `packages/c420ui`. Generated artifact
   detection lists all declared registry workflows, including planned workflows without `outputPattern` as not detected,
   and artifact selection uses numeric-aware sorting.
 - Dev.9 keeps c420ui integration modules under `scripts/c420ui-adapter` while allowing project registry/config modules

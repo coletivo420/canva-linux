@@ -22,9 +22,9 @@ Action Engine.
 
 ## Packaging scripts
 
-- `scripts/build-appimage.sh` builds AppImage artifacts and AppImage-specific
+- `packages/c420ui/scripts/build-appimage.sh` builds AppImage artifacts and AppImage-specific
   checksums.
-- `scripts/build-flatpak-bundle.sh` builds Flatpak bundles and preserves the
+- `packages/c420ui/scripts/build-flatpak-bundle.sh` builds Flatpak bundles and preserves the
   Flatpak architecture string.
 - `scripts/package-guidance-common.sh` prints package-generation guidance without
   changing artifact names.

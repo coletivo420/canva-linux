@@ -91,8 +91,8 @@ const activePublicReleaseDocs = [
 ];
 
 const releaseScripts = [
-  "scripts/build-appimage.sh",
-  "scripts/build-flatpak-bundle.sh",
+  "packages/c420ui/scripts/build-appimage.sh",
+  "packages/c420ui/scripts/build-flatpak-bundle.sh",
   "scripts/package-guidance-common.sh",
   "scripts/validate-project.sh",
   "scripts/app-identity-common.sh",
@@ -465,9 +465,8 @@ function validateLegacyBuilderPathReferences(rootDir: string, failures: string[]
   const criticalFiles = [
     "package.json",
     "scripts/build-c420ui-bootstrap.ts",
-    "scripts/c420ui-adapter/bootstrap/source-hash.ts",
-    "scripts/c420ui-adapter/bootstrap/build-recipe.ts",
-    "scripts/checks/canva-linux/check-c420ui-bootstrap.ts",
+    "packages/c420ui/checks/bootstrap-check-helpers.ts",
+    "packages/c420ui/checks/check-bootstrap.ts",
     "scripts/checks/canva-linux/check-canva-linux-contracts.ts",
     "bootstrap/c420ui/manifest.json",
     "canva-linux-c420ui-builder",
@@ -1629,22 +1628,22 @@ function main(): number {
 
 function checkMetadataAndModalContracts(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const installNative = readProjectFile(rootDir, "scripts/install-native.sh");
-  const buildAppImage = readProjectFile(rootDir, "scripts/build-appimage.sh");
-  const buildFlatpakBundle = readProjectFile(rootDir, "scripts/build-flatpak-bundle.sh");
-  const detectionCommon = readProjectFile(rootDir, "scripts/install-detection-common.sh");
+  const installNative = readProjectFile(rootDir, "packages/c420ui/scripts/install-native.sh");
+  const buildAppImage = readProjectFile(rootDir, "packages/c420ui/scripts/build-appimage.sh");
+  const buildFlatpakBundle = readProjectFile(rootDir, "packages/c420ui/scripts/build-flatpak-bundle.sh");
+  const detectionCommon = readProjectFile(rootDir, "packages/c420ui/scripts/install-detection-common.sh");
   const modalTs = readProjectFile(rootDir, "packages/c420ui/src/terminal/modal.ts");
 
   if (!installNative.includes("sudo_install_build_metadata_marker") || !installNative.includes("install_build_metadata_marker")) {
-    failures.push("scripts/install-native.sh: must install effective build metadata for Native hash-visible detection");
+    failures.push("packages/c420ui/scripts/install-native.sh: must install effective build metadata for Native hash-visible detection");
   }
 
   if (!buildAppImage.includes('write_build_metadata_sidecar "${APPIMAGE_PATH}"')) {
-    failures.push("scripts/build-appimage.sh: must write ${APPIMAGE_PATH}.build-metadata.json");
+    failures.push("packages/c420ui/scripts/build-appimage.sh: must write ${APPIMAGE_PATH}.build-metadata.json");
   }
 
   if (!buildFlatpakBundle.includes('write_build_metadata_sidecar "${BUNDLE_PATH}"')) {
-    failures.push("scripts/build-flatpak-bundle.sh: must write ${BUNDLE_PATH}.build-metadata.json");
+    failures.push("packages/c420ui/scripts/build-flatpak-bundle.sh: must write ${BUNDLE_PATH}.build-metadata.json");
   }
 
   if (!buildFlatpakBundle.includes("USE_EXISTING_REPO") ||
@@ -1652,11 +1651,11 @@ function checkMetadataAndModalContracts(failures: string[]): void {
       !buildFlatpakBundle.includes("/files/share/canva-linux/version") ||
       !buildFlatpakBundle.includes("write_build_metadata_sidecar_from_source") ||
       !buildFlatpakBundle.includes("Could not read build metadata from reused repo")) {
-    failures.push("scripts/build-flatpak-bundle.sh: must not use checkout metadata for --use-existing-repo sidecars and must extract it from repo");
+    failures.push("packages/c420ui/scripts/build-flatpak-bundle.sh: must not use checkout metadata for --use-existing-repo sidecars and must extract it from repo");
   }
 
   if (!detectionCommon.includes("find_artifact_build_metadata_marker")) {
-    failures.push("scripts/install-detection-common.sh: must prefer AppImage build-metadata sidecars over artifact filename parsing");
+    failures.push("packages/c420ui/scripts/install-detection-common.sh: must prefer AppImage build-metadata sidecars over artifact filename parsing");
   }
 
   if (!modalTs.includes('input.on("cancel", () => {') || !modalTs.includes("setImmediate(() => {")) {
@@ -1913,14 +1912,11 @@ function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
   if (!bootstrapSource.includes('./c420ui-adapter/build-metadata-loader')) {
     failures.push("scripts/build-c420ui-bootstrap.ts: must import ./c420ui-adapter/build-metadata-loader");
   }
-  if (!bootstrapSource.includes('./c420ui-adapter/bootstrap/build-recipe')) {
-    failures.push("scripts/build-c420ui-bootstrap.ts: must import ./c420ui-adapter/bootstrap/build-recipe");
-  }
-  if (!bootstrapSource.includes('./c420ui-adapter/bootstrap/source-hash')) {
-    failures.push("scripts/build-c420ui-bootstrap.ts: must import ./c420ui-adapter/bootstrap/source-hash");
+  if (!bootstrapSource.includes('../packages/c420ui/checks/bootstrap-check-helpers')) {
+    failures.push("scripts/build-c420ui-bootstrap.ts: must import ../packages/c420ui/checks/bootstrap-check-helpers");
   }
 
-  const sourceHash = readProjectFile(rootDir, "scripts/c420ui-adapter/bootstrap/source-hash.ts");
+  const sourceHash = readProjectFile(rootDir, "packages/c420ui/checks/bootstrap-check-helpers.ts");
   for (const requiredInput of [
     "scripts/canva-linux/actions",
     "scripts/canva-linux/artifacts",
@@ -1929,7 +1925,7 @@ function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
     "scripts/canva-linux/project-root.ts",
   ] as const) {
     if (!sourceHash.includes(requiredInput)) {
-      failures.push(`scripts/c420ui-adapter/bootstrap/source-hash.ts: source hash must include remaining bundled dependency ${requiredInput}`);
+      failures.push(`packages/c420ui/checks/bootstrap-check-helpers.ts: source hash must include remaining bundled dependency ${requiredInput}`);
     }
   }
   for (const forbiddenInput of [
@@ -1938,7 +1934,7 @@ function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
     "scripts/canva-linux/build-metadata-loader.ts",
   ] as const) {
     if (sourceHash.includes(forbiddenInput)) {
-      failures.push(`scripts/c420ui-adapter/bootstrap/source-hash.ts: source hash must not include removed c420ui integration module ${forbiddenInput}`);
+      failures.push(`packages/c420ui/checks/bootstrap-check-helpers.ts: source hash must not include removed c420ui integration module ${forbiddenInput}`);
     }
   }
 
@@ -1982,7 +1978,7 @@ function checkDetectionProviderContract(failures: string[]): void {
   for (const fragment of [
     "createCanvaLinuxDetectionProvider",
     "buildCanvaLinuxOverviewStatus",
-    "scripts/install-detection-common.sh",
+    "packages/c420ui/scripts/install-detection-common.sh",
     "parseC420UIDetectionKeyValueLines",
     "DETECTED_NATIVE_SYSTEM",
     "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
@@ -2031,7 +2027,7 @@ function checkDetectionProviderContract(failures: string[]): void {
     failures.push("package.json build:scripts-core must not compile overview-status.ts");
   }
 
-  const detectionShellPath = "scripts/install-detection-common.sh";
+  const detectionShellPath = "packages/c420ui/scripts/install-detection-common.sh";
   const detectionShell = readProjectFile(rootDir, detectionShellPath);
   if (!detectionShell.includes("DETECTED_FLATPAK_SYSTEM_FULL_VERSION")) {
     failures.push(`${detectionShellPath}: must print DETECTED_FLATPAK_SYSTEM_FULL_VERSION`);
@@ -2176,8 +2172,8 @@ function checkReleaseContract(failures: string[]): void {
     "shell_phase",
     "PROJECT_DISPLAY_VERSION",
     "PROJECT_PHASE",
-    "./scripts/build-appimage.sh",
-    "./scripts/build-flatpak-bundle.sh",
+    "./packages/c420ui/scripts/build-appimage.sh",
+    "./packages/c420ui/scripts/build-flatpak-bundle.sh",
     "appimage_paths=(dist/canva-linux-${RELEASE_VERSION}-*.AppImage)",
     "flatpak_paths=(dist/canva-linux-${RELEASE_VERSION}-*.flatpak)",
     'linux_arch="$(uname -m)"',
@@ -2215,8 +2211,8 @@ function checkReleaseContract(failures: string[]): void {
   const releaseValidationText = [
     workflow,
     releaseDocs,
-    readProjectFile(rootDir, "scripts/build-appimage.sh"),
-    readProjectFile(rootDir, "scripts/build-flatpak-bundle.sh"),
+    readProjectFile(rootDir, "packages/c420ui/scripts/build-appimage.sh"),
+    readProjectFile(rootDir, "packages/c420ui/scripts/build-flatpak-bundle.sh"),
     readProjectFile(rootDir, "scripts/package-guidance-common.sh"),
     readProjectFile(rootDir, "config/canva-linux/artifacts.json"),
   ].join("\n");
@@ -2239,40 +2235,40 @@ function checkReleaseContract(failures: string[]): void {
     validateReleaseShellScript(rootDir, script, failures);
   }
 
-  const buildAppImage = readProjectFile(rootDir, "scripts/build-appimage.sh");
+  const buildAppImage = readProjectFile(rootDir, "packages/c420ui/scripts/build-appimage.sh");
   if (
     buildAppImage.includes("APPIMAGE_ARCH=") ||
     buildAppImage.includes("-x86_64.AppImage") ||
     buildAppImage.includes("-X86_64.AppImage")
   ) {
     failures.push(
-      "scripts/build-appimage.sh: AppImage architecture must be discovered from the generated artifact name",
+      "packages/c420ui/scripts/build-appimage.sh: AppImage architecture must be discovered from the generated artifact name",
     );
   }
-  assertIncludes(failures, "scripts/build-appimage.sh", buildAppImage, "appimage_candidates=(");
-  assertIncludes(failures, "scripts/build-appimage.sh", buildAppImage, 'basename "${APPIMAGE_PATH}"');
+  assertIncludes(failures, "packages/c420ui/scripts/build-appimage.sh", buildAppImage, "appimage_candidates=(");
+  assertIncludes(failures, "packages/c420ui/scripts/build-appimage.sh", buildAppImage, 'basename "${APPIMAGE_PATH}"');
 
-  const buildFlatpakBundle = readProjectFile(rootDir, "scripts/build-flatpak-bundle.sh");
+  const buildFlatpakBundle = readProjectFile(rootDir, "packages/c420ui/scripts/build-flatpak-bundle.sh");
   assertIncludes(
     failures,
-    "scripts/build-flatpak-bundle.sh",
+    "packages/c420ui/scripts/build-flatpak-bundle.sh",
     buildFlatpakBundle,
     'FLATPAK_ARCH="$(flatpak --default-arch)"',
   );
   assertIncludes(
     failures,
-    "scripts/build-flatpak-bundle.sh",
+    "packages/c420ui/scripts/build-flatpak-bundle.sh",
     buildFlatpakBundle,
     "canva-linux-${VERSION}-${FLATPAK_ARCH}.flatpak",
   );
 
   if (buildAppImage.includes("> SHA256SUMS") || buildAppImage.includes("/SHA256SUMS")) {
     failures.push(
-      "scripts/build-appimage.sh: AppImage build must not create or remove the complete release SHA256SUMS manifest",
+      "packages/c420ui/scripts/build-appimage.sh: AppImage build must not create or remove the complete release SHA256SUMS manifest",
     );
   }
-  assertIncludes(failures, "scripts/build-appimage.sh", buildAppImage, ".AppImage.sha256");
-  assertIncludes(failures, "scripts/build-appimage.sh", buildAppImage, "--skip-release-manifest");
+  assertIncludes(failures, "packages/c420ui/scripts/build-appimage.sh", buildAppImage, ".AppImage.sha256");
+  assertIncludes(failures, "packages/c420ui/scripts/build-appimage.sh", buildAppImage, "--skip-release-manifest");
 
   const lock = JSON.parse(readProjectFile(rootDir, "package-lock.json")) as {
     version?: string;
@@ -2540,7 +2536,7 @@ function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string
     validateC420uiRunBundleStructuralIntegrity(rootDir, failures);
   }
 
-  const bootstrapCheck = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-bootstrap.ts");
+  const bootstrapCheck = readProjectFile(rootDir, "packages/c420ui/checks/check-bootstrap.ts");
   for (const required of [
     "C420UI_RUNTIME_SYNTAX_MESSAGE",
     "validateManifestArtifactHashes",
@@ -2552,7 +2548,7 @@ function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string
     "codePointAt polyfill must define var size = string.length before size is used",
   ] as const) {
     if (!bootstrapCheck.includes(required)) {
-      failures.push(`scripts/checks/canva-linux/check-c420ui-bootstrap.ts: missing generated-artifact guard ${required}`);
+      failures.push(`packages/c420ui/checks/check-bootstrap.ts: missing generated-artifact guard ${required}`);
     }
   }
 
@@ -2594,21 +2590,21 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
   const validateProject = readProjectFile(rootDir, "scripts/validate-project.sh");
   const adapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
   const bootstrapBuildSource = readProjectFile(rootDir, "scripts/build-c420ui-bootstrap.ts");
-  const bootstrapCheckSource = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-bootstrap.ts");
-  const artifactGateSource = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-artifact-gate.ts");
+  const bootstrapCheckSource = readProjectFile(rootDir, "packages/c420ui/checks/check-bootstrap.ts");
+  const artifactGateSource = readProjectFile(rootDir, "packages/c420ui/checks/check-artifact-gate.ts");
   const bootstrapManifest = JSON.parse(readProjectFile(rootDir, "bootstrap/c420ui/manifest.json")) as Record<string, unknown>;
 
   if (!nodeCheckScript) {
     failures.push("package.json must contain check:c420ui-node-check");
   }
-  if (!nodeCheckScript.includes("check-c420ui-node-check.js")) {
-    failures.push("check:c420ui-node-check must run check-c420ui-node-check.js");
+  if (!nodeCheckScript.includes("check-node.js")) {
+    failures.push("check:c420ui-node-check must run check-node.js");
   }
   if (!artifactGateScript) {
     failures.push("package.json must contain check:c420ui-bootstrap-artifacts");
   }
-  if (!artifactGateScript.includes("check-c420ui-artifact-gate.js")) {
-    failures.push("check:c420ui-bootstrap-artifacts must run check-c420ui-artifact-gate.js");
+  if (!artifactGateScript.includes("check-artifact-gate.js")) {
+    failures.push("check:c420ui-bootstrap-artifacts must run check-artifact-gate.js");
   }
   if (artifactGateScript.includes("npm run build:metadata")) {
     failures.push("check:c420ui-bootstrap-artifacts must not run build:metadata before validating artifacts");
@@ -2859,7 +2855,7 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   const buildMetadataSource = readProjectFile(rootDir, "electron/main/build-metadata.ts");
   const buildMetadataLoaderSource = readProjectFile(rootDir, "scripts/c420ui-adapter/build-metadata-loader.ts");
   const c420uiAdapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
-  const bootstrapCheckSource = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-bootstrap.ts");
+  const bootstrapCheckSource = readProjectFile(rootDir, "packages/c420ui/checks/check-bootstrap.ts");
   const packageJsonSource = readProjectFile(rootDir, "package.json");
   const bootstrapManifest = JSON.parse(
     readProjectFile(rootDir, "bootstrap/c420ui/manifest.json"),
@@ -3085,6 +3081,85 @@ function checkShellActionIds(failures: string[]): void {
   }
 }
 
+function checkC420uiPackageOwnershipContract(rootDir: string, failures: string[]): void {
+  const c420uiOwnedLegacyPaths = [
+    "scripts/checks/canva-linux/check-c420ui-bootstrap.ts",
+    "scripts/checks/canva-linux/check-c420ui-artifact-gate.ts",
+    "scripts/checks/canva-linux/check-c420ui-node-check.ts",
+    "scripts/checks/canva-linux/c420ui-bootstrap-check-helpers.ts",
+    "scripts/install-native.sh",
+    "scripts/build-appimage.sh",
+    "scripts/build-flatpak-bundle.sh",
+    "scripts/install-detection-common.sh",
+    "scripts/c420ui-adapter/bootstrap",
+  ] as const;
+
+  for (const relativePath of c420uiOwnedLegacyPaths) {
+    if (fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${relativePath}: c420ui-owned tooling must live under packages/c420ui`);
+    }
+  }
+
+  const rootC420uiTests = fs.existsSync(path.join(rootDir, "test"))
+    ? fs.readdirSync(path.join(rootDir, "test")).filter((entry) => /^c420ui-.*\.test\.ts$/.test(entry))
+    : [];
+  if (rootC420uiTests.length) {
+    failures.push(`test/: c420ui-specific tests must live under packages/c420ui/test (${rootC420uiTests.join(", ")})`);
+  }
+
+  for (const relativePath of [
+    "packages/c420ui/checks/check-bootstrap.ts",
+    "packages/c420ui/checks/check-artifact-gate.ts",
+    "packages/c420ui/checks/check-node.ts",
+    "packages/c420ui/checks/bootstrap-check-helpers.ts",
+    "packages/c420ui/scripts/install-native.sh",
+    "packages/c420ui/scripts/build-appimage.sh",
+    "packages/c420ui/scripts/build-flatpak-bundle.sh",
+    "packages/c420ui/scripts/install-detection-common.sh",
+  ] as const) {
+    if (!fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${relativePath}: c420ui-owned tooling must live under packages/c420ui`);
+    }
+  }
+
+  const adapterFiles = collectProjectFiles(rootDir, ["scripts/c420ui-adapter"]);
+  for (const file of adapterFiles) {
+    const contents = readProjectFile(rootDir, file);
+    for (const forbidden of [
+      "validateManifestArtifactHashes",
+      "validateGeneratedArtifactsMatchBuildRecipe",
+      "C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE",
+      "node --check",
+      "C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS",
+    ] as const) {
+      if (contents.includes(forbidden)) {
+        failures.push(`${file}: scripts/c420ui-adapter is integration-only and must not own bootstrap validation or runtime tooling (${forbidden})`);
+      }
+    }
+  }
+
+  const providerSource = readProjectFile(rootDir, "scripts/c420ui-adapter/detection/provider.ts");
+  if (!providerSource.includes("let cachedPackageJson")) {
+    failures.push("scripts/c420ui-adapter/detection/provider.ts: detection providers must reuse shared package.json readers");
+  }
+  if (!/function readPackage\([^)]*rootDir[^)]*\)[\s\S]*cachedPackageJson\?\.rootDir === rootDir[\s\S]*fs\.readFileSync\(path\.join\(rootDir, "package\.json"\)/.test(providerSource)) {
+    failures.push("scripts/c420ui-adapter/detection/provider.ts: readPackage must cache package.json per rootDir");
+  }
+  if (!/function readPackageDependencyVersion[\s\S]*const packageJson = readPackage\(rootDir\)/.test(providerSource)) {
+    failures.push("scripts/c420ui-adapter/detection/provider.ts: readPackageDependencyVersion must reuse readPackage()");
+  }
+  if (!/function readNodeVersion[\s\S]*const packageJson = readPackage\(rootDir\)/.test(providerSource)) {
+    failures.push("scripts/c420ui-adapter/detection/provider.ts: readNodeVersion must reuse readPackage()");
+  }
+  const packageJsonReads = providerSource.match(/package\.json/g)?.length ?? 0;
+  if (packageJsonReads > 2) {
+    failures.push("scripts/c420ui-adapter/detection/provider.ts: must not repeatedly parse package.json during TUI refresh cycles");
+  }
+  if (!/const readNpmVersion = \(\(\) =>[\s\S]*let cached: string \| undefined;[\s\S]*let attempted = false;[\s\S]*if \(attempted\)[\s\S]*execFileSync\([\s\S]*"npm"[\s\S]*\["--version"\]/.test(providerSource)) {
+    failures.push("scripts/c420ui-adapter/detection/provider.ts: npm version detection must cache execFileSync results");
+  }
+}
+
 export function main(): number {
   const failures: string[] = [];
   const rootDir = findProjectRoot();
@@ -3138,6 +3213,7 @@ export function main(): number {
   validateLegacyBuilderPathReferences(rootDir, failures);
   checkShellActionIds(failures);
   checkMetadataAndModalContracts(failures);
+  checkC420uiPackageOwnershipContract(rootDir, failures);
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-contracts] OK");

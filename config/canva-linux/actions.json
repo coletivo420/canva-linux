@@ -7,7 +7,7 @@
     "kind": "command",
     "command": "bash",
     "args": [
-      "scripts/install-native.sh"
+      "packages/c420ui/scripts/install-native.sh"
     ],
     "cli": [
       "--install-native"
@@ -30,7 +30,7 @@
     "kind": "command",
     "command": "bash",
     "args": [
-      "scripts/install-native.sh"
+      "packages/c420ui/scripts/install-native.sh"
     ],
     "longRunning": true,
     "description": "Install Canva Linux natively for the current user.",
@@ -92,7 +92,7 @@
     "kind": "command",
     "command": "bash",
     "args": [
-      "scripts/build-flatpak-bundle.sh"
+      "packages/c420ui/scripts/build-flatpak-bundle.sh"
     ],
     "cli": [
       "--bundle-flatpak"
@@ -108,7 +108,7 @@
     "kind": "command",
     "command": "bash",
     "args": [
-      "scripts/build-appimage.sh"
+      "packages/c420ui/scripts/build-appimage.sh"
     ],
     "cli": [
       "--bundle-appimage"

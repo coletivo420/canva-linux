@@ -1357,6 +1357,7 @@ function buildCanvaLinuxArtifactFragments(rootDir) {
 }
 
 // scripts/c420ui-adapter/detection/provider.ts
+var cachedPackageJson;
 var canvaLinuxDetectionKeys = [
   "DETECTED_NATIVE_SYSTEM",
   "DETECTED_NATIVE_USER",
@@ -1392,10 +1393,50 @@ var emptyInstallations = {
   appImageFullVersion: ""
 };
 function readPackage(rootDir) {
-  return JSON.parse(
+  if (cachedPackageJson?.rootDir === rootDir) {
+    return cachedPackageJson.packageJson;
+  }
+  const packageJson = JSON.parse(
     import_node_fs3.default.readFileSync(import_node_path5.default.join(rootDir, "package.json"), "utf8")
   );
+  cachedPackageJson = {
+    rootDir,
+    packageJson
+  };
+  return packageJson;
 }
+function readPackageDependencyVersion(rootDir, name) {
+  const packageJson = readPackage(rootDir);
+  return packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name];
+}
+function normalizeSemverRange(value) {
+  const normalized = value?.trim().match(/(?:>=|>|<=|<|=|~|\^)?\s*v?([0-9]+(?:\.[0-9]+){0,2})/)?.[1];
+  return normalized && normalized.length > 0 ? normalized : void 0;
+}
+function readNodeVersion(rootDir) {
+  const packageJson = readPackage(rootDir);
+  return normalizeSemverRange(packageJson.engines?.node) ?? process.versions.node;
+}
+var readNpmVersion = /* @__PURE__ */ (() => {
+  let cached;
+  let attempted = false;
+  return () => {
+    if (attempted) {
+      return cached;
+    }
+    attempted = true;
+    try {
+      cached = (0, import_node_child_process3.execFileSync)(
+        "npm",
+        ["--version"],
+        { encoding: "utf8" }
+      ).trim();
+      return cached;
+    } catch {
+      return void 0;
+    }
+  };
+})();
 function readPhase(rootDir) {
   const content = import_node_fs3.default.readFileSync(
     import_node_path5.default.join(rootDir, "scripts/app-identity-common.sh"),
@@ -1403,6 +1444,21 @@ function readPhase(rootDir) {
   );
   const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
   return match?.[1] ?? "unknown";
+}
+function safeRuntimeMetadata(rootDir) {
+  try {
+    return {
+      node: readNodeVersion(rootDir) ?? "unknown",
+      npm: readNpmVersion() ?? "unknown",
+      electron: readPackageDependencyVersion(rootDir, "electron") ?? "unknown"
+    };
+  } catch {
+    return {
+      node: process.versions.node,
+      npm: readNpmVersion() ?? "unknown",
+      electron: "unknown"
+    };
+  }
 }
 function safeProjectMetadata(rootDir) {
   let version = "unknown";
@@ -1422,12 +1478,13 @@ function safeProjectMetadata(rootDir) {
     phase,
     appId: "io.github.coletivo420.canva-linux",
     executable: "canva-linux",
-    repository: "https://github.com/coletivo420/canva-linux"
+    repository: "https://github.com/coletivo420/canva-linux",
+    runtime: safeRuntimeMetadata(rootDir)
   };
 }
 function detectionCommand() {
   return [
-    "source scripts/install-detection-common.sh",
+    "source packages/c420ui/scripts/install-detection-common.sh",
     "detect_installations",
     "print_detection_status_env"
   ].join("\n");

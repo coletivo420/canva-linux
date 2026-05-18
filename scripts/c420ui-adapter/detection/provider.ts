@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
+  execFileSync,
   spawnSync,
   type SpawnSyncOptionsWithStringEncoding,
   type SpawnSyncReturns,
@@ -38,10 +39,23 @@ type CanvaLinuxOverviewStatusProvider = Omit<
   buildOverviewStatus(rootDir: string): c420uiOverviewStatus;
 };
 
-type PackageJson = {
+type ProjectPackageJson = {
   version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  engines?: {
+    node?: string;
+    npm?: string;
+  };
   repository?: { url?: string } | string;
 };
+
+let cachedPackageJson:
+  | {
+      rootDir: string;
+      packageJson: ProjectPackageJson;
+    }
+  | undefined;
 
 const canvaLinuxDetectionKeys = [
   "DETECTED_NATIVE_SYSTEM",
@@ -83,11 +97,75 @@ const emptyInstallations = {
   appImageFullVersion: "",
 };
 
-function readPackage(rootDir: string): PackageJson {
-  return JSON.parse(
+function readPackage(rootDir: string): ProjectPackageJson {
+  if (cachedPackageJson?.rootDir === rootDir) {
+    return cachedPackageJson.packageJson;
+  }
+
+  const packageJson = JSON.parse(
     fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
-  ) as PackageJson;
+  ) as ProjectPackageJson;
+
+  cachedPackageJson = {
+    rootDir,
+    packageJson,
+  };
+
+  return packageJson;
 }
+
+function readPackageDependencyVersion(
+  rootDir: string,
+  name: string,
+): string | undefined {
+  const packageJson = readPackage(rootDir);
+
+  return (
+    packageJson.dependencies?.[name] ??
+    packageJson.devDependencies?.[name]
+  );
+}
+
+function normalizeSemverRange(value: string | undefined): string | undefined {
+  const normalized = value
+    ?.trim()
+    .match(/(?:>=|>|<=|<|=|~|\^)?\s*v?([0-9]+(?:\.[0-9]+){0,2})/)?.[1];
+  return normalized && normalized.length > 0 ? normalized : undefined;
+}
+
+function readNodeVersion(rootDir: string): string | undefined {
+  const packageJson = readPackage(rootDir);
+
+  return (
+    normalizeSemverRange(packageJson.engines?.node) ??
+    process.versions.node
+  );
+}
+
+const readNpmVersion = (() => {
+  let cached: string | undefined;
+  let attempted = false;
+
+  return (): string | undefined => {
+    if (attempted) {
+      return cached;
+    }
+
+    attempted = true;
+
+    try {
+      cached = execFileSync(
+        "npm",
+        ["--version"],
+        { encoding: "utf8" },
+      ).trim();
+
+      return cached;
+    } catch {
+      return undefined;
+    }
+  };
+})();
 
 function readPhase(rootDir: string): string {
   const content = fs.readFileSync(
@@ -96,6 +174,22 @@ function readPhase(rootDir: string): string {
   );
   const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
   return match?.[1] ?? "unknown";
+}
+
+function safeRuntimeMetadata(rootDir: string): NonNullable<c420uiOverviewStatus["project"]["runtime"]> {
+  try {
+    return {
+      node: readNodeVersion(rootDir) ?? "unknown",
+      npm: readNpmVersion() ?? "unknown",
+      electron: readPackageDependencyVersion(rootDir, "electron") ?? "unknown",
+    };
+  } catch {
+    return {
+      node: process.versions.node,
+      npm: readNpmVersion() ?? "unknown",
+      electron: "unknown",
+    };
+  }
 }
 
 function safeProjectMetadata(rootDir: string): c420uiOverviewStatus["project"] {
@@ -120,12 +214,13 @@ function safeProjectMetadata(rootDir: string): c420uiOverviewStatus["project"] {
     appId: "io.github.coletivo420.canva-linux",
     executable: "canva-linux",
     repository: "https://github.com/coletivo420/canva-linux",
+    runtime: safeRuntimeMetadata(rootDir),
   };
 }
 
 function detectionCommand(): string {
   return [
-    "source scripts/install-detection-common.sh",
+    "source packages/c420ui/scripts/install-detection-common.sh",
     "detect_installations",
     "print_detection_status_env",
   ].join("\n");

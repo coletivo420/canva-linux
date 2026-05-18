@@ -26,6 +26,11 @@ export type c420uiOverviewProjectStatus = {
   appId: string;
   executable: string;
   repository: string;
+  runtime?: {
+    node?: string;
+    npm?: string;
+    electron?: string;
+  };
 };
 
 export type c420uiOverviewStatus = {
