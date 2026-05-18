@@ -2,9 +2,9 @@
   "baseVersion": "0.1.4-15.Dev.9",
   "baseDisplayVersion": "0.1.4-15.Dev",
   "basePhase": "0.1.4-15.Dev.9",
-  "buildRevision": "ga4616e6",
-  "version": "0.1.4-15.Dev.9+ga4616e6",
-  "displayVersion": "0.1.4-15.Dev+ga4616e6",
-  "phase": "0.1.4-15.Dev.9+ga4616e6",
-  "fullVersion": "0.1.4-15.Dev.9+ga4616e6"
+  "buildRevision": "gda5045b",
+  "version": "0.1.4-15.Dev.9+gda5045b",
+  "displayVersion": "0.1.4-15.Dev+gda5045b",
+  "phase": "0.1.4-15.Dev.9+gda5045b",
+  "fullVersion": "0.1.4-15.Dev.9+gda5045b"
 }

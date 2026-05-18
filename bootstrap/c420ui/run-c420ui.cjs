@@ -16949,6 +16949,34 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
         `{${c420uiTheme.colors.lightBlue}-fg}[Enter]{/${c420uiTheme.colors.lightBlue}-fg} Submit`,
         `  `,
         `{${c420uiTheme.colors.lightBlue}-fg}[Esc]{/${c420uiTheme.colors.lightBlue}-fg} Cancel`
+      ].join("")
+    });
+    let timer = setTimeout(() => {
+      close({
+        status: "timeout"
+      });
+    }, timeoutMs);
+    const close = (result) => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      label.destroy();
+      input.destroy();
+      footer.destroy();
+      modal.destroy();
+      overlay.destroy();
+      if (previousFocus && typeof previousFocus.focus === "function") {
+        previousFocus.focus();
+      }
+      screen.render();
+      resolve(result);
+    };
+    overlay.key(["escape"], () => {
+      close({
+        status: "canceled"
+      });
+    });
     input.key(["enter"], () => {
       input.submit();
     });
@@ -16975,8 +17003,6 @@ var init_modal = __esm({
   }
 });
 
-      });
-    });
 // packages/c420ui/src/terminal/detected-installations-summary.ts
 function detectedVersion(fullVersion, version) {
   if (typeof fullVersion === "string" && fullVersion.trim()) {
@@ -17010,32 +17036,6 @@ function formatDetectedInstallationsSummary(s, colors2) {
 }
 var init_detected_installations_summary = __esm({
   "packages/c420ui/src/terminal/detected-installations-summary.ts"() {
-  }
-});
-
-    input.key(["enter"], () => {
-      input.submit();
-    });
-    input.on("submit", (value) => {
-      close({
-        status: "submitted",
-        value: String(value ?? "")
-      });
-    });
-    overlay.focus();
-    input.focus();
-    input.readInput();
-    screen.render();
-  });
-}
-var tui;
-var init_modal = __esm({
-  "packages/c420ui/src/terminal/modal.ts"() {
-    init_theme2();
-    tui = {
-      box: require_box(),
-      textbox: require_textbox()
-    };
   }
 });
 
@@ -18347,6 +18347,34 @@ function createApp(options) {
     try {
       return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
     } catch {
+      return "";
+    }
+  }
+  let sessionStreamOpenError = null;
+  let sessionLogUnavailableWarningShown = false;
+  function warnSessionLogUnavailableOnce() {
+    if (sessionLogUnavailableWarningShown) {
+      return;
+    }
+    sessionLogUnavailableWarningShown = true;
+    const reason = sessionStreamOpenError ? ` (${sessionStreamOpenError})` : "";
+    const warning = `[warn] Session log stream is unavailable: ${sessionLogPath}${reason}`;
+    displayLogLine(warning, "system");
+    try {
+      console.warn(warning);
+    } catch {
+    }
+  }
+  function recordSessionStreamError(error) {
+    sessionStreamOpenError = error instanceof Error ? error.message : String(error);
+    warnSessionLogUnavailableOnce();
+  }
+  function openSessionStream(logPath) {
+    try {
+      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
+      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
+      stream.on("error", (error) => {
+        recordSessionStreamError(error);
       });
       return stream;
     } catch (error) {
@@ -18372,37 +18400,9 @@ function createApp(options) {
   process.on("exit", () => {
     writeSession("[session] ended");
   });
-    diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
-      stream.on("error", (error) => {
-        recordSessionStreamError(error);
-    diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
   let overviewStatus = null;
   let overviewDetectionPromise = null;
   let overviewDetectionError = null;
-  const detectedSummary = (s) => {
-    if (!s) {
-      return [
-        `  Native Install: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
-        `  Flatpak Install: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
-        `  AppImage artifacts: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`
-      ];
-    }
-    const i = s.installations;
-    const fmt = (detected, version) => {
-      if (!detected) {
-        return `{${c420uiTheme.colors.statusNotDetected}-fg}not detected{/${c420uiTheme.colors.statusNotDetected}-fg}`;
-      }
-      const v = typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}` : "version unknown";
-      return `{${c420uiTheme.colors.statusDetected}-fg}detected{/${c420uiTheme.colors.statusDetected}-fg}      ${v}`;
-    };
-    return [
-      `  Native System: ${fmt(Boolean(i.nativeSystem), i.nativeSystemVersion)}`,
-      `  Native User: ${fmt(Boolean(i.nativeUser), i.nativeUserVersion)}`,
-      `  Flatpak System: ${fmt(Boolean(i.flatpakSystem), i.flatpakSystemVersion)}`,
-      `  Flatpak User: ${fmt(Boolean(i.flatpakUser), i.flatpakUserVersion)}`,
-      `  AppImage: ${fmt(Boolean(i.appImageArtifacts), i.appImageVersion)}`
-    ];
-  };
   function renderDiagnosticsBox() {
     if (overviewDetectionError) {
       diagnostics.setContent(
@@ -18411,7 +18411,7 @@ function createApp(options) {
       );
       return;
     }
-    diagnostics.setContent(detectedSummary(overviewStatus).join("\n"));
+    diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
   }
   function refreshDetectedInstallations(reason = "unknown") {
     if (overviewDetectionPromise) {
@@ -19183,7 +19183,7 @@ function createApp(options) {
   });
   logs.on("click", () => {
     if (!modalActive) {
-    init_detected_installations_summary();
+      setFocusZone("logs");
     }
   });
   menu.on("keypress", (_, key) => {
@@ -19211,7 +19211,6 @@ function createApp(options) {
       renderSelectionDetails();
       screen.render();
     }
-    init_detected_installations_summary();
   });
   applyLogPanelLabel();
   importLauncherSessionLog();
@@ -19240,6 +19239,7 @@ var init_app = __esm({
   "packages/c420ui/src/terminal/app.ts"() {
     init_modal();
     init_theme2();
+    init_detected_installations_summary();
     init_clipboard();
     init_settings();
     import_node_fs2 = __toESM(require("node:fs"));
@@ -20327,20 +20327,20 @@ function createC420UIDevelopmentWorkflowFromAction(task, action) {
   const phase = kindToWorkflowPhase(task.kind);
   const workflowAction = {
     ...action,
-var import_node_fs5 = __toESM(require("node:fs"));
-var import_node_path6 = __toESM(require("node:path"));
-  "DETECTED_APPIMAGE_VERSION",
-  "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
-  "DETECTED_NATIVE_USER_FULL_VERSION",
-  "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
-  "DETECTED_FLATPAK_USER_FULL_VERSION",
-  "DETECTED_APPIMAGE_FULL_VERSION"
-  appImageVersion: "",
-  nativeSystemFullVersion: "",
-  nativeUserFullVersion: "",
-  flatpakSystemFullVersion: "",
-  flatpakUserFullVersion: "",
-  appImageFullVersion: ""
+    phase
+  };
+  return {
+    id: task.id,
+    label: task.label || action.label,
+    phase,
+    actions: [workflowAction],
+    requiresRoot: action.requiresRoot,
+    supportsDryRun: task.supportsDryRun
+  };
+}
+
+// packages/c420ui/src/terminal/logo.ts
+var c420uiLogoLines = [
   "\u2584\u2584  \u2588 \u2588 \u2584\u2584\u2584 \u2584\u2580\u2584  \u2584 \u2584  \u2584",
   "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
   "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
@@ -20355,18 +20355,8 @@ var import_node_path7 = __toESM(require("node:path"));
 var import_node_child_process5 = require("node:child_process");
 
 // scripts/canva-linux/project-root.ts
-  "DETECTED_APPIMAGE_VERSION",
-  "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
-  "DETECTED_NATIVE_USER_FULL_VERSION",
-  "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
-  "DETECTED_FLATPAK_USER_FULL_VERSION",
-  "DETECTED_APPIMAGE_FULL_VERSION"
-  appImageVersion: "",
-  nativeSystemFullVersion: "",
-  nativeUserFullVersion: "",
-  flatpakSystemFullVersion: "",
-  flatpakUserFullVersion: "",
-  appImageFullVersion: ""
+var import_node_fs5 = __toESM(require("node:fs"));
+var import_node_path6 = __toESM(require("node:path"));
 function defaultRootSearchDir() {
   return import_node_path6.default.resolve(__dirname, "../..");
 }
@@ -20393,7 +20383,12 @@ var canvaLinuxDetectionKeys = [
   "DETECTED_NATIVE_USER_VERSION",
   "DETECTED_FLATPAK_SYSTEM_VERSION",
   "DETECTED_FLATPAK_USER_VERSION",
-  "DETECTED_APPIMAGE_VERSION"
+  "DETECTED_APPIMAGE_VERSION",
+  "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
+  "DETECTED_NATIVE_USER_FULL_VERSION",
+  "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
+  "DETECTED_FLATPAK_USER_FULL_VERSION",
+  "DETECTED_APPIMAGE_FULL_VERSION"
 ];
 var emptyInstallations = {
   nativeSystem: false,
@@ -20405,7 +20400,12 @@ var emptyInstallations = {
   nativeUserVersion: "",
   flatpakSystemVersion: "",
   flatpakUserVersion: "",
-  appImageVersion: ""
+  appImageVersion: "",
+  nativeSystemFullVersion: "",
+  nativeUserFullVersion: "",
+  flatpakSystemFullVersion: "",
+  flatpakUserFullVersion: "",
+  appImageFullVersion: ""
 };
 function readPackage(rootDir2) {
   return JSON.parse(
@@ -20448,15 +20448,15 @@ function detectionCommand() {
     "print_detection_status_env"
   ].join("\n");
 }
-    };
-    appImageVersion: values.DETECTED_APPIMAGE_VERSION || "",
-    // Detected Installations renderers should prefer *FullVersion fields and
-    // fall back to the base *Version fields for older detectors/markers.
-    nativeSystemFullVersion: values.DETECTED_NATIVE_SYSTEM_FULL_VERSION || values.DETECTED_NATIVE_SYSTEM_VERSION || "",
-    nativeUserFullVersion: values.DETECTED_NATIVE_USER_FULL_VERSION || values.DETECTED_NATIVE_USER_VERSION || "",
-    flatpakSystemFullVersion: values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION || values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
-    flatpakUserFullVersion: values.DETECTED_FLATPAK_USER_FULL_VERSION || values.DETECTED_FLATPAK_USER_VERSION || "",
-    appImageFullVersion: values.DETECTED_APPIMAGE_FULL_VERSION || values.DETECTED_APPIMAGE_VERSION || ""
+function runInstallDetection(rootDir2, runCommand) {
+  const warnings = [];
+  let ok = true;
+  try {
+    const result = runCommand("bash", ["-c", detectionCommand()], {
+      cwd: rootDir2,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"]
+    });
     if (result.error) {
       ok = false;
       warnings.push(`Installation detection failed to start: ${result.error.message}`);
@@ -20476,14 +20476,7 @@ function detectionCommand() {
         canvaLinuxDetectionKeys
       ),
       warnings
-    appImageVersion: values.DETECTED_APPIMAGE_VERSION || "",
-    // Detected Installations renderers should prefer *FullVersion fields and
-    // fall back to the base *Version fields for older detectors/markers.
-    nativeSystemFullVersion: values.DETECTED_NATIVE_SYSTEM_FULL_VERSION || values.DETECTED_NATIVE_SYSTEM_VERSION || "",
-    nativeUserFullVersion: values.DETECTED_NATIVE_USER_FULL_VERSION || values.DETECTED_NATIVE_USER_VERSION || "",
-    flatpakSystemFullVersion: values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION || values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
-    flatpakUserFullVersion: values.DETECTED_FLATPAK_USER_FULL_VERSION || values.DETECTED_FLATPAK_USER_VERSION || "",
-    appImageFullVersion: values.DETECTED_APPIMAGE_FULL_VERSION || values.DETECTED_APPIMAGE_VERSION || ""
+    };
   } catch (error) {
     warnings.push(
       `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`
@@ -20511,7 +20504,14 @@ function buildInstallations(values) {
     nativeUserVersion: values.DETECTED_NATIVE_USER_VERSION || "",
     flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
     flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
-    appImageVersion: values.DETECTED_APPIMAGE_VERSION || ""
+    appImageVersion: values.DETECTED_APPIMAGE_VERSION || "",
+    // Detected Installations renderers should prefer *FullVersion fields and
+    // fall back to the base *Version fields for older detectors/markers.
+    nativeSystemFullVersion: values.DETECTED_NATIVE_SYSTEM_FULL_VERSION || values.DETECTED_NATIVE_SYSTEM_VERSION || "",
+    nativeUserFullVersion: values.DETECTED_NATIVE_USER_FULL_VERSION || values.DETECTED_NATIVE_USER_VERSION || "",
+    flatpakSystemFullVersion: values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION || values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
+    flatpakUserFullVersion: values.DETECTED_FLATPAK_USER_FULL_VERSION || values.DETECTED_FLATPAK_USER_VERSION || "",
+    appImageFullVersion: values.DETECTED_APPIMAGE_FULL_VERSION || values.DETECTED_APPIMAGE_VERSION || ""
   };
 }
 function createCanvaLinuxDetectionProvider(options = {}) {
