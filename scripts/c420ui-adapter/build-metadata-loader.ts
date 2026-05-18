@@ -128,5 +128,5 @@ export function loadEffectiveBuildMetadata(rootDir: string): CanvaLinuxBuildMeta
     if (sourceMetadata) return sourceMetadata;
   }
 
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
+  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }
