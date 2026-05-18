@@ -288,7 +288,9 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
+try {
+  main();
+} catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exit(1);
-});
+}
