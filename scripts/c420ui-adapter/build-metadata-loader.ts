@@ -1,65 +1,33 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
-
-export type CanvaLinuxBuildMetadata = {
-  baseVersion: string;
-  baseDisplayVersion: string;
-  basePhase: string;
-  buildRevision: string;
-  version: string;
-  displayVersion: string;
-  phase: string;
-  fullVersion: string;
-};
-
-function normalizeBuildRevision(input: string | null | undefined): string {
-  if (!input) return "unknown";
-  const trimmed = input.trim();
-  if (!trimmed || trimmed === "unknown") return "unknown";
-  return `g${trimmed.replace(/^g/i, "").slice(0, 7)}`;
-}
-
-function appendBuildRevision(base: string, buildRevision: string): string {
-  return buildRevision && buildRevision !== "unknown" ? `${base}+${buildRevision}` : base;
-}
-
-function createBuildMetadata(input: {
-  baseVersion: string;
-  baseDisplayVersion: string;
-  basePhase: string;
-  buildRevision: string;
-}): CanvaLinuxBuildMetadata {
-  const buildRevision = normalizeBuildRevision(input.buildRevision);
-  return {
-    baseVersion: input.baseVersion,
-    baseDisplayVersion: input.baseDisplayVersion,
-    basePhase: input.basePhase,
-    buildRevision,
-    version: appendBuildRevision(input.baseVersion, buildRevision),
-    displayVersion: appendBuildRevision(input.baseDisplayVersion, buildRevision),
-    phase: appendBuildRevision(input.basePhase, buildRevision),
-    fullVersion: appendBuildRevision(input.basePhase, buildRevision),
-  };
-}
-
-function normalizeLoadedBuildMetadata(
-  metadata: Partial<CanvaLinuxBuildMetadata>,
-): CanvaLinuxBuildMetadata | null {
-  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) return null;
-  return createBuildMetadata({
-    baseVersion: metadata.baseVersion,
-    baseDisplayVersion: metadata.baseDisplayVersion,
-    basePhase: metadata.basePhase,
-    buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION,
-  });
-}
 
 type PackageJson = { version?: string };
 type ProjectUiJson = { displayVersion?: string; phase?: string };
+type CanvaLinuxBuildMetadataModule = typeof import("../../electron/main/build-metadata");
+type CanvaLinuxBuildMetadata = ReturnType<CanvaLinuxBuildMetadataModule["createBuildMetadata"]>;
 
 const UNKNOWN_BASE_VERSION = "0.0.0";
 const UNKNOWN_BUILD_REVISION = "unknown";
+
+function loadBuildMetadataModule(rootDir: string): CanvaLinuxBuildMetadataModule {
+  const requireFromRoot = createRequire(path.join(rootDir, "package.json"));
+  const candidates = [
+    path.join(rootDir, ".build/electron/main/build-metadata.js"),
+    path.join(rootDir, "electron/main/build-metadata.ts"),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      return requireFromRoot(candidate) as CanvaLinuxBuildMetadataModule;
+    } catch {
+      continue;
+    }
+  }
+
+  throw new Error("Unable to load electron/main/build-metadata module");
+}
 
 function readJsonFile<T>(filePath: string): T | null {
   try {
@@ -104,6 +72,7 @@ function resolveGitBuildRevision(rootDir: string): string | null {
 function createSourceMetadata(
   rootDir: string,
   buildRevision: string,
+  metadataModule: CanvaLinuxBuildMetadataModule,
 ): CanvaLinuxBuildMetadata | null {
   const packageJson = readJsonFile<PackageJson>(path.join(rootDir, "package.json"));
   const projectUi = readJsonFile<ProjectUiJson>(
@@ -113,7 +82,7 @@ function createSourceMetadata(
     return null;
   }
 
-  return createBuildMetadata({
+  return metadataModule.createBuildMetadata({
     baseVersion: packageJson.version,
     baseDisplayVersion: projectUi.displayVersion,
     basePhase: projectUi.phase,
@@ -121,16 +90,22 @@ function createSourceMetadata(
   });
 }
 
-function loadPackagedMetadata(rootDir: string): CanvaLinuxBuildMetadata | null {
+function loadPackagedMetadata(
+  rootDir: string,
+  metadataModule: CanvaLinuxBuildMetadataModule,
+): CanvaLinuxBuildMetadata | null {
   const metadata = readJsonFile<Partial<CanvaLinuxBuildMetadata>>(
     path.join(rootDir, "config", "canva-linux", "build-metadata.json"),
   );
   if (!metadata) return null;
-  return normalizeLoadedBuildMetadata(metadata);
+  return metadataModule.normalizeLoadedBuildMetadata(metadata);
 }
 
-export function fallbackEffectiveBuildMetadata(): CanvaLinuxBuildMetadata {
-  return createBuildMetadata({
+export function fallbackEffectiveBuildMetadata(
+  rootDir: string = process.cwd(),
+): CanvaLinuxBuildMetadata {
+  const metadataModule = loadBuildMetadataModule(path.resolve(rootDir));
+  return metadataModule.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
@@ -140,17 +115,18 @@ export function fallbackEffectiveBuildMetadata(): CanvaLinuxBuildMetadata {
 
 export function loadEffectiveBuildMetadata(rootDir: string): CanvaLinuxBuildMetadata {
   const resolvedRootDir = path.resolve(rootDir);
+  const metadataModule = loadBuildMetadataModule(resolvedRootDir);
   const envRevision = resolveEnvBuildRevision();
   if (envRevision) {
-    const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision);
+    const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
 
   const gitRevision = resolveGitBuildRevision(resolvedRootDir);
   if (gitRevision) {
-    const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision);
+    const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
 
-  return loadPackagedMetadata(resolvedRootDir) ?? fallbackEffectiveBuildMetadata();
+  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
 }

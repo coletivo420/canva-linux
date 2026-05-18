@@ -44,40 +44,25 @@ var import_node_path2 = __toESM(require("node:path"));
 // scripts/c420ui-adapter/build-metadata-loader.ts
 var import_node_child_process = require("node:child_process");
 var import_node_fs = __toESM(require("node:fs"));
+var import_node_module = require("node:module");
 var import_node_path = __toESM(require("node:path"));
-function normalizeBuildRevision(input) {
-  if (!input) return "unknown";
-  const trimmed = input.trim();
-  if (!trimmed || trimmed === "unknown") return "unknown";
-  return `g${trimmed.replace(/^g/i, "").slice(0, 7)}`;
-}
-function appendBuildRevision(base, buildRevision) {
-  return buildRevision && buildRevision !== "unknown" ? `${base}+${buildRevision}` : base;
-}
-function createBuildMetadata(input) {
-  const buildRevision = normalizeBuildRevision(input.buildRevision);
-  return {
-    baseVersion: input.baseVersion,
-    baseDisplayVersion: input.baseDisplayVersion,
-    basePhase: input.basePhase,
-    buildRevision,
-    version: appendBuildRevision(input.baseVersion, buildRevision),
-    displayVersion: appendBuildRevision(input.baseDisplayVersion, buildRevision),
-    phase: appendBuildRevision(input.basePhase, buildRevision),
-    fullVersion: appendBuildRevision(input.basePhase, buildRevision)
-  };
-}
-function normalizeLoadedBuildMetadata(metadata) {
-  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) return null;
-  return createBuildMetadata({
-    baseVersion: metadata.baseVersion,
-    baseDisplayVersion: metadata.baseDisplayVersion,
-    basePhase: metadata.basePhase,
-    buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION
-  });
-}
 var UNKNOWN_BASE_VERSION = "0.0.0";
 var UNKNOWN_BUILD_REVISION = "unknown";
+function loadBuildMetadataModule(rootDir) {
+  const requireFromRoot = (0, import_node_module.createRequire)(import_node_path.default.join(rootDir, "package.json"));
+  const candidates = [
+    import_node_path.default.join(rootDir, ".build/electron/main/build-metadata.js"),
+    import_node_path.default.join(rootDir, "electron/main/build-metadata.ts")
+  ];
+  for (const candidate of candidates) {
+    try {
+      return requireFromRoot(candidate);
+    } catch {
+      continue;
+    }
+  }
+  throw new Error("Unable to load electron/main/build-metadata module");
+}
 function readJsonFile(filePath) {
   try {
     return JSON.parse(import_node_fs.default.readFileSync(filePath, "utf8"));
@@ -113,7 +98,7 @@ function resolveGitBuildRevision(rootDir) {
     return null;
   }
 }
-function createSourceMetadata(rootDir, buildRevision) {
+function createSourceMetadata(rootDir, buildRevision, metadataModule) {
   const packageJson = readJsonFile(import_node_path.default.join(rootDir, "package.json"));
   const projectUi = readJsonFile(
     import_node_path.default.join(rootDir, "config", "canva-linux", "project-ui.json")
@@ -121,22 +106,23 @@ function createSourceMetadata(rootDir, buildRevision) {
   if (!packageJson?.version || !projectUi?.displayVersion || !projectUi?.phase) {
     return null;
   }
-  return createBuildMetadata({
+  return metadataModule.createBuildMetadata({
     baseVersion: packageJson.version,
     baseDisplayVersion: projectUi.displayVersion,
     basePhase: projectUi.phase,
     buildRevision
   });
 }
-function loadPackagedMetadata(rootDir) {
+function loadPackagedMetadata(rootDir, metadataModule) {
   const metadata = readJsonFile(
     import_node_path.default.join(rootDir, "config", "canva-linux", "build-metadata.json")
   );
   if (!metadata) return null;
-  return normalizeLoadedBuildMetadata(metadata);
+  return metadataModule.normalizeLoadedBuildMetadata(metadata);
 }
-function fallbackEffectiveBuildMetadata() {
-  return createBuildMetadata({
+function fallbackEffectiveBuildMetadata(rootDir = process.cwd()) {
+  const metadataModule = loadBuildMetadataModule(import_node_path.default.resolve(rootDir));
+  return metadataModule.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
@@ -145,17 +131,18 @@ function fallbackEffectiveBuildMetadata() {
 }
 function loadEffectiveBuildMetadata(rootDir) {
   const resolvedRootDir = import_node_path.default.resolve(rootDir);
+  const metadataModule = loadBuildMetadataModule(resolvedRootDir);
   const envRevision = resolveEnvBuildRevision();
   if (envRevision) {
-    const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision);
+    const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
   const gitRevision = resolveGitBuildRevision(resolvedRootDir);
   if (gitRevision) {
-    const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision);
+    const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
-  return loadPackagedMetadata(resolvedRootDir) ?? fallbackEffectiveBuildMetadata();
+  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
 }
 
 // scripts/c420ui-builder.ts

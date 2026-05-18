@@ -1913,6 +1913,28 @@ function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
     failures.push("scripts/build-c420ui-bootstrap.ts: must import ./c420ui-adapter/bootstrap/source-hash");
   }
 
+  const sourceHash = readProjectFile(rootDir, "scripts/c420ui-adapter/bootstrap/source-hash.ts");
+  for (const requiredInput of [
+    "scripts/canva-linux/actions",
+    "scripts/canva-linux/artifacts",
+    "scripts/canva-linux/capabilities",
+    "scripts/canva-linux/development",
+    "scripts/canva-linux/project-root.ts",
+  ] as const) {
+    if (!sourceHash.includes(requiredInput)) {
+      failures.push(`scripts/c420ui-adapter/bootstrap/source-hash.ts: source hash must include remaining bundled dependency ${requiredInput}`);
+    }
+  }
+  for (const forbiddenInput of [
+    "scripts/canva-linux/detection",
+    "scripts/canva-linux/bootstrap",
+    "scripts/canva-linux/build-metadata-loader.ts",
+  ] as const) {
+    if (sourceHash.includes(forbiddenInput)) {
+      failures.push(`scripts/c420ui-adapter/bootstrap/source-hash.ts: source hash must not include removed c420ui integration module ${forbiddenInput}`);
+    }
+  }
+
   const artifactFragments = readProjectFile(rootDir, "scripts/c420ui-adapter/detection/artifact-fragments.ts");
   if (!artifactFragments.includes("Intl.Collator") || !artifactFragments.includes("numeric: true")) {
     failures.push("scripts/c420ui-adapter/detection/artifact-fragments.ts: artifact candidate sorting must be numeric-aware.");
@@ -2410,17 +2432,60 @@ function validateC420uiRunBundleStructuralIntegrity(rootDir: string, failures: s
   const relativePath = "bootstrap/c420ui/run-c420ui.cjs";
   const bundle = readOptionalProjectFile(rootDir, relativePath) ?? "";
   const malformedSigcontClosure = /process\.once\("SIGCONT", function\(\) \{[\s\S]{0,600}?\n\s*};\s*\n\s*process\.kill\(process\.pid, "SIGTSTP"\)/.test(bundle);
+  const programStart = bundle.indexOf("var require_program = __commonJS");
+  const programEnd = bundle.indexOf("var require_tput =", programStart);
+  const programFallbackEnd = bundle.indexOf("var require_tng =", programStart);
+  const programBlock =
+    programStart === -1
+      ? ""
+      : bundle.slice(
+          programStart,
+          programEnd > programStart
+            ? programEnd
+            : programFallbackEnd > programStart
+              ? programFallbackEnd
+              : undefined,
+        );
+  const inputDialogStart = bundle.indexOf("function inputDialog(");
+  const inputDialogEnd = bundle.indexOf("function confirmDialog(", inputDialogStart);
+  const modalModuleEnd = bundle.indexOf("var init_modal", inputDialogStart);
+  const inputDialogBlock =
+    inputDialogStart === -1
+      ? ""
+      : bundle.slice(
+          inputDialogStart,
+          inputDialogEnd > inputDialogStart
+            ? inputDialogEnd
+            : modalModuleEnd > inputDialogStart
+              ? modalModuleEnd
+              : undefined,
+        );
   const runnerStart = bundle.indexOf("function createInteractiveActionRunner(options) {");
   const runnerEnd = bundle.indexOf("var init_interactive_action_runner", runnerStart);
   const runnerBlock = runnerStart === -1 || runnerEnd === -1 ? "" : bundle.slice(runnerStart, runnerEnd);
+  const actionRunnerOptionsStart = bundle.indexOf("const actionRunner = createInteractiveActionRunner({");
+  const actionRunnerOptionsEnd = bundle.indexOf("let progressState", actionRunnerOptionsStart);
+  const actionRunnerOptionsBlock =
+    actionRunnerOptionsStart === -1 || actionRunnerOptionsEnd === -1
+      ? ""
+      : bundle.slice(actionRunnerOptionsStart, actionRunnerOptionsEnd);
   const validatorsInRunner = /function assertOptional(?:Boolean|String|StringArray|PurposeArray)\b/.test(runnerBlock);
   const validatorsNearRunnerState = /(?:createInteractiveActionRunner|runAction|cancel|options\.appendLogText|state\.progressState)[\s\S]{0,2000}function assertOptional(?:Boolean|String|StringArray|PurposeArray)\b/.test(runnerBlock);
 
+  if (programBlock.includes("function artifactVersion") || programBlock.includes("scripts/c420ui-adapter/detection/artifact-fragments")) {
+    failures.push(`${relativePath}: c420ui summary/detection code was interleaved into blessed Program bundle section.`);
+  }
+  if (inputDialogBlock.includes("function artifactVersion") || inputDialogBlock.includes("formatDetectedInstallationsSummary")) {
+    failures.push(`${relativePath}: detected-installations summary code was interleaved into inputDialog.`);
+  }
   if (runnerStart === -1 || runnerEnd === -1) {
     failures.push(`${relativePath}: missing interactive action runner boundaries; regenerate bootstrap from TypeScript sources`);
   }
   if (malformedSigcontClosure || validatorsInRunner || validatorsNearRunnerState) {
     failures.push(`${relativePath} appears structurally corrupted: host-dependency validators were interleaved into the interactive action runner. Regenerate bootstrap from TypeScript sources.`);
+  }
+  if (actionRunnerOptionsBlock.includes("function loadC420UITerminalApp(")) {
+    failures.push(`${relativePath}: terminal app loader was interleaved into createApp appendLogText section.`);
   }
 }
 
@@ -2691,6 +2756,27 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
 
   if (!buildMetadataLoaderSource.includes("loadEffectiveBuildMetadata")) {
     failures.push("scripts/c420ui-adapter/build-metadata-loader.ts: must expose loadEffectiveBuildMetadata");
+  }
+  for (const required of [
+    "createRequire",
+    "electron/main/build-metadata",
+    "createBuildMetadata",
+    "normalizeLoadedBuildMetadata",
+  ] as const) {
+    if (!buildMetadataLoaderSource.includes(required)) {
+      failures.push(`scripts/c420ui-adapter/build-metadata-loader.ts: must use electron/main/build-metadata single source via ${required}`);
+    }
+  }
+  for (const forbidden of [
+    "function normalizeBuildRevision",
+    "function appendBuildRevision",
+    "function createBuildMetadata",
+    "function normalizeLoadedBuildMetadata",
+    "export type CanvaLinuxBuildMetadata =",
+  ] as const) {
+    if (buildMetadataLoaderSource.includes(forbidden)) {
+      failures.push(`scripts/c420ui-adapter/build-metadata-loader.ts: must not duplicate electron/main/build-metadata implementation (${forbidden})`);
+    }
   }
   if (!buildMetadataLoaderSource.includes("CANVA_LINUX_BUILD_REVISION") || !buildMetadataLoaderSource.includes("git") || !buildMetadataLoaderSource.includes("build-metadata.json")) {
     failures.push("build metadata loader must resolve env/git revisions before packaged metadata fallback");

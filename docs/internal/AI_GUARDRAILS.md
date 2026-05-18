@@ -15,6 +15,11 @@
 - Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be
   limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or sidecars,
   and c420ui must prefer that metadata when displaying artifact versions.
+- Dev.9 keeps c420ui integration modules under `scripts/c420ui-adapter` while allowing project registry/config modules
+  under `scripts/canva-linux`. Any `scripts/canva-linux` module that is still bundled into bootstrap must be covered by
+  `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- Build metadata formatting must use `electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
+  must not duplicate `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
 
 ## Dev.8 pinned home tab-strip guardrail
 
@@ -54,6 +59,7 @@ boundary. GPU/display selected runtime CLI options are active diagnostics: RC va
 
 bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
+Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
@@ -182,6 +188,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
   consumed by c420ui for project integration, overview detection, artifact fragments, build metadata resolution, and
   bootstrap recipes must live under `scripts/c420ui-adapter`. Do not add new c420ui integration modules under
   `scripts/canva-linux`.
+- Project registry/config modules may still live under `scripts/canva-linux`; if they are bundled into c420ui bootstrap,
+  they must be covered by `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Generated artifact detection must list all declared registry workflows, including planned workflows without
   `outputPattern` as not detected.
 - Do not put product detection logic in `scripts/core`.
