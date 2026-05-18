@@ -52,6 +52,49 @@ test("run-c420ui.cjs does not contain known corrupted SIGCONT block", () => {
   );
 });
 
+test("run-c420ui.cjs does not contain corrupted requestLocatorPosition block", () => {
+  const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  const start = bundle.indexOf("requestLocatorPosition");
+  const end = bundle.indexOf("Program.prototype.decic", start);
+
+  assert.ok(start >= 0);
+  assert.ok(end > start);
+
+  const block = bundle.slice(start, end);
+
+  assert.doesNotMatch(block, /return out;/);
+  assert.match(block, /\};/);
+});
+
+test("run-c420ui.cjs does not interleave file IO into crc32", () => {
+  const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  const start = bundle.indexOf("function crc32");
+  const end = bundle.indexOf("return crc", start);
+
+  assert.ok(start >= 0);
+  assert.ok(end > start);
+
+  const block = bundle.slice(start, end);
+
+  assert.doesNotMatch(block, /fs\d*\.readFileSync/);
+  assert.doesNotMatch(block, /path\d*\.resolve/);
+});
+
+test("toProgressState is not interleaved with action event handling", () => {
+  const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  const start = bundle.indexOf("function toProgressState");
+  const end = bundle.indexOf("function createInteractiveActionRunner", start);
+
+  assert.ok(start >= 0);
+  assert.ok(end > start);
+
+  const block = bundle.slice(start, end);
+
+  assert.doesNotMatch(block, /event\.type/);
+  assert.doesNotMatch(block, /options\.setProgress/);
+  assert.doesNotMatch(block, /options\.appendLogText/);
+});
+
 test("run-c420ui.cjs does not interleave host validators into interactive runner", () => {
   const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
 

@@ -6,6 +6,8 @@
   Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 - The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
+- Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
+  known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
 - Reject changes that treat `bootstrap/c420ui/*.cjs` as source of truth, must not restore `canva-linux.sh`,
   or bypass the official TypeScript bootstrap build recipe.
 
@@ -517,4 +519,3 @@ while runtime flags belong to the compiled `canva-linux` app.
   rendering remote `https:` favicons.
 - OAuth localized public-landing probes must normalize both DOM attributes and localized keywords with NFKD so composed and
   decomposed labels are equivalent.
-

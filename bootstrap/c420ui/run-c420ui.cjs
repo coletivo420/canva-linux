@@ -6749,6 +6749,34 @@ var require_program = __commonJS({
     Program.prototype.deccara = Program.prototype.setAttrInRectangle = function() {
       return this._write("\x1B[" + slice.call(arguments).join(";") + "$r");
     };
+    Program.prototype.savePrivateValues = function() {
+      return this._write("\x1B[?" + slice.call(arguments).join(";") + "s");
+    };
+    Program.prototype.manipulateWindow = function() {
+      var args = slice.call(arguments);
+      var callback = typeof args[args.length - 1] === "function" ? args.pop() : function() {
+      };
+      return this.response(
+        "window-manipulation",
+        "\x1B[" + args.join(";") + "t",
+        callback
+      );
+    };
+    Program.prototype.getWindowSize = function(callback) {
+      return this.manipulateWindow(18, callback);
+    };
+    Program.prototype.decrara = Program.prototype.reverseAttrInRectangle = function() {
+      return this._write("\x1B[" + slice.call(arguments).join(";") + "$t");
+    };
+    Program.prototype.setTitleModeFeature = function() {
+      return this._twrite("\x1B[>" + slice.call(arguments).join(";") + "t");
+    };
+    Program.prototype.decswbv = Program.prototype.setWarningBellVolume = function(param) {
+      return this._write("\x1B[" + (param || "") + " t");
+    };
+    Program.prototype.decsmbv = Program.prototype.setMarginBellVolume = function(param) {
+      return this._write("\x1B[" + (param || "") + " u");
+    };
     Program.prototype.deccra = Program.prototype.copyRectangle = function() {
       return this._write("\x1B[" + slice.call(arguments).join(";") + "$v");
     };
@@ -6777,29 +6805,37 @@ var require_program = __commonJS({
       return this._write("\x1B[" + slice.call(arguments).join(";") + "${");
     };
     Program.prototype.decrqlp = Program.prototype.req_mouse_pos = Program.prototype.reqmp = Program.prototype.requestLocatorPosition = function(param, callback) {
+      if (this.has("req_mouse_pos")) {
+        var code = this.tput.req_mouse_pos(param);
+        return this.response("locator-position", code, callback);
+      }
+      return this.response(
+        "locator-position",
+        "\x1B[" + (param || "") + "'|",
+        callback
+      );
+    };
+    Program.prototype.decic = Program.prototype.insertColumns = function() {
+      return this._write("\x1B[" + slice.call(arguments).join(";") + " }");
+    };
+    Program.prototype.decdc = Program.prototype.deleteColumns = function() {
+      return this._write("\x1B[" + slice.call(arguments).join(";") + " ~");
+    };
+    Program.prototype.out = function(name) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      this.ret = true;
+      var out = this[name].apply(this, args);
       this.ret = false;
       return out;
+    };
     Program.prototype.sigtstp = function(callback) {
       var resume = this.pause();
       process.once("SIGCONT", function() {
         resume();
         if (callback) callback();
-    };
-      };
-    };
-    Program.prototype.resume = function() {
-      if (this._resume) return this._resume();
-    };
-    var fs13 = require("fs");
-    var path15 = require("path");
-        this.file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(this.file);
-      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
-      this.ret = true;
-      var out = this[name].apply(this, args);
-    };
       });
       process.kill(process.pid, "SIGTSTP");
+    };
     Program.prototype.pause = function(callback) {
       var self = this, isAlt = this.isAlt, mouseEnabled = this.mouseEnabled;
       this.lsaveCursor("pause");
@@ -6807,42 +6843,6 @@ var require_program = __commonJS({
       this.showCursor();
       if (mouseEnabled) this.disableMouse();
       var write = this.output.write;
-      };
-    };
-    Program.prototype.resume = function() {
-      if (this._resume) return this._resume();
-    };
-    var fs13 = require("fs");
-    var path15 = require("path");
-        this.file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(this.file);
-      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
-    Program.prototype.resume = function() {
-      if (this._resume) return this._resume();
-    };
-    var fs13 = require("fs");
-    var path15 = require("path");
-        this.file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(this.file);
-      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
-      this.ret = false;
-      return out;
-    };
-    Program.prototype.sigtstp = function(callback) {
-      var resume = this.pause();
-      process.once("SIGCONT", function() {
-        resume();
-        if (callback) callback();
-      };
-    };
-    Program.prototype.resume = function() {
-      if (this._resume) return this._resume();
-    };
-    var fs13 = require("fs");
-    var path15 = require("path");
-        this.file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(this.file);
-      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
       this.output.write = function() {
       };
       if (this.input.setRawMode) {
@@ -6860,11 +6860,11 @@ var require_program = __commonJS({
         if (mouseEnabled) self.enableMouse();
         self.lrestoreCursor("pause", true);
         if (callback) callback();
-    var fs13 = require("fs");
-    var path15 = require("path");
-        this.file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(this.file);
-      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
+      };
+    };
+    Program.prototype.resume = function() {
+      if (this._resume) return this._resume();
+    };
     function unshiftEvent(obj, event, listener) {
       var listeners = obj.listeners(event);
       obj.removeAllListeners(event);
@@ -6888,9 +6888,9 @@ var require_program = __commonJS({
 // node_modules/blessed/vendor/tng.js
 var require_tng = __commonJS({
   "node_modules/blessed/vendor/tng.js"(exports2, module2) {
-    var fs12 = require("fs");
+    var fs13 = require("fs");
     var util = require("util");
-    var path14 = require("path");
+    var path15 = require("path");
     var zlib = require("zlib");
     var assert = require("assert");
     var cp = require("child_process");
@@ -6910,10 +6910,10 @@ var require_tng = __commonJS({
         buf = file;
       } else {
         this.options.filename = file;
-        this.file = path14.resolve(process.cwd(), file);
-        buf = fs12.readFileSync(this.file);
+        this.file = path15.resolve(process.cwd(), file);
+        buf = fs13.readFileSync(this.file);
       }
-      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path14.extname(this.file).slice(1).toLowerCase() || "png";
+      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path15.extname(this.file).slice(1).toLowerCase() || "png";
       if (this.format !== "png") {
         try {
           return this.toPNG(buf);
@@ -7906,6 +7906,34 @@ var require_tng = __commonJS({
         2466906013,
         167816743,
         2097651377,
+        4027552580,
+        2265490386,
+        503444072,
+        1762050814,
+        4150417245,
+        2154129355,
+        426522225,
+        1852507879,
+        4275313526,
+        2312317920,
+        282753626,
+        1742555852,
+        4189708143,
+        2394877945,
+        397917763,
+        1622183637,
+        3604390888,
+        2714866558,
+        953729732,
+        1340076626,
+        3518719985,
+        2797360999,
+        1068828381,
+        1219638859,
+        3624741850,
+        2936675148,
+        906185462,
+        1090812512,
         3747672003,
         2825379669,
         829329135,
@@ -7922,34 +7950,6 @@ var require_tng = __commonJS({
         2998733608,
         733239954,
         1555261956,
-        2512341634,
-        3803740692,
-        2075208622,
-        213261112,
-        2463272603,
-        3855990285,
-        2094854071,
-        198958881,
-        2808555105,
-        3495958263,
-        1231636301,
-        1047427035,
-      ];
-      return function crc32(buf) {
-        file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(file);
-        2463272603,
-        3855990285,
-        2094854071,
-        198958881,
-        2808555105,
-        3495958263,
-        1231636301,
-        1047427035,
-      ];
-      return function crc32(buf) {
-        file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(file);
         3268935591,
         3050360625,
         752459403,
@@ -7962,14 +7962,14 @@ var require_tng = __commonJS({
         3943577151,
         1913087877,
         83908371,
-        2808555105,
-        3495958263,
-        1231636301,
-        1047427035,
-      ];
-      return function crc32(buf) {
-        file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(file);
+        2512341634,
+        3803740692,
+        2075208622,
+        213261112,
+        2463272603,
+        3855990285,
+        2094854071,
+        198958881,
         2262029012,
         4057260610,
         1759359992,
@@ -7990,10 +7990,10 @@ var require_tng = __commonJS({
         3608007406,
         1308918612,
         956543938,
-      ];
-      return function crc32(buf) {
-        file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(file);
+        2808555105,
+        3495958263,
+        1231636301,
+        1047427035,
         2932959818,
         3654703836,
         1088359270,
@@ -8018,8 +8018,8 @@ var require_tng = __commonJS({
         3272380065,
         1510334235,
         755167117
-        file = path15.resolve(process.cwd(), file);
-        buf = fs13.readFileSync(file);
+      ];
+      return function crc32(buf) {
         var crc = -1;
         for (var i = 0, len = buf.length; i < len; i++) {
           crc = crcTable[(crc ^ buf[i]) & 255] ^ crc >>> 8;
@@ -8046,8 +8046,8 @@ var require_tng = __commonJS({
         buf = file;
         file = null;
       } else {
-        file = path14.resolve(process.cwd(), file);
-        buf = fs12.readFileSync(file);
+        file = path15.resolve(process.cwd(), file);
+        buf = fs13.readFileSync(file);
       }
       sig = buf.slice(0, 6).toString("ascii");
       if (sig !== "GIF87a" && sig !== "GIF89a") {
@@ -8353,6 +8353,34 @@ var require_tng = __commonJS({
         if (b == null) break;
         buf.push(b);
       }
+      return buf;
+    };
+    exports2 = PNG;
+    exports2.png = PNG;
+    exports2.gif = GIF;
+    module2.exports = exports2;
+  }
+});
+
+// node_modules/blessed/lib/widgets/ansiimage.js
+var require_ansiimage = __commonJS({
+  "node_modules/blessed/lib/widgets/ansiimage.js"(exports2, module2) {
+    var cp = require("child_process");
+    var colors2 = require_colors();
+    var Node = require_node();
+    var Box = require_box();
+    var tng = require_tng();
+    function ANSIImage(options) {
+      var self = this;
+      if (!(this instanceof Node)) {
+        return new ANSIImage(options);
+      }
+      options = options || {};
+      options.shrink = true;
+      Box.call(this, options);
+      this.scale = this.options.scale || 1;
+      this.options.animate = this.options.animate !== false;
+      this._noFill = true;
       if (this.options.file) {
         this.setImage(this.options.file);
       }
@@ -8368,34 +8396,6 @@ var require_tng = __commonJS({
     ANSIImage.prototype.__proto__ = Box.prototype;
     ANSIImage.prototype.type = "ansiimage";
     ANSIImage.curl = function(url) {
-          { stdio: ["ignore", "pipe", "ignore"] }
-        );
-      } catch (e) {
-        ;
-      throw new Error("curl or wget failed.");
-    ANSIImage.prototype.setImage = function(file) {
-      this.file = typeof file === "string" ? file : null;
-          speed: this.options.speed,
-          filename: this.file
-        });
-        if (width == null || height == null) {
-      return this.img.pause();
-    };
-    var fs13 = require("fs");
-      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
-      } catch (e) {
-        ;
-      throw new Error("curl or wget failed.");
-    ANSIImage.prototype.setImage = function(file) {
-      this.file = typeof file === "string" ? file : null;
-          speed: this.options.speed,
-          filename: this.file
-        });
-        if (width == null || height == null) {
-      return this.img.pause();
-    };
-    var fs13 = require("fs");
-      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
       try {
         return cp.execFileSync(
           "curl",
@@ -8409,15 +8409,15 @@ var require_tng = __commonJS({
         return cp.execFileSync(
           "wget",
           ["-U", "", "-O", "-", url],
-          speed: this.options.speed,
-          filename: this.file
-        });
-        if (width == null || height == null) {
+          { stdio: ["ignore", "pipe", "ignore"] }
+        );
+      } catch (e) {
+        ;
       }
-      return this.img.pause();
+      throw new Error("curl or wget failed.");
     };
-    var fs13 = require("fs");
-      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
+    ANSIImage.prototype.setImage = function(file) {
+      this.file = typeof file === "string" ? file : null;
       if (/^https?:/.test(file)) {
         file = ANSIImage.curl(file);
       }
@@ -8437,10 +8437,10 @@ var require_tng = __commonJS({
           height,
           scale: this.scale,
           ascii: this.options.ascii,
-      return this.img.pause();
-    };
-    var fs13 = require("fs");
-      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
+          speed: this.options.speed,
+          filename: this.file
+        });
+        if (width == null || height == null) {
           this.width = this.img.cellmap[0].length;
           this.height = this.img.cellmap.length;
         }
@@ -8465,8 +8465,8 @@ var require_tng = __commonJS({
     };
     ANSIImage.prototype.pause = function() {
       if (!this.img) return;
-    var fs13 = require("fs");
-      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
+      return this.img.pause();
+    };
     ANSIImage.prototype.stop = function() {
       if (!this.img) return;
       return this.img.stop();
@@ -8492,7 +8492,7 @@ var require_tng = __commonJS({
 // node_modules/blessed/lib/widgets/bigtext.js
 var require_bigtext = __commonJS({
   "node_modules/blessed/lib/widgets/bigtext.js"(exports2, module2) {
-    var fs12 = require("fs");
+    var fs13 = require("fs");
     var Node = require_node();
     var Box = require_box();
     function BigText(options) {
@@ -8515,7 +8515,7 @@ var require_bigtext = __commonJS({
     BigText.prototype.type = "bigtext";
     BigText.prototype.loadFont = function(filename) {
       var self = this, data, font;
-      data = JSON.parse(fs12.readFileSync(filename, "utf8"));
+      data = JSON.parse(fs13.readFileSync(filename, "utf8"));
       this.ratio.width = data.width;
       this.ratio.height = data.height;
       function convertLetter(ch, lines) {
@@ -8579,6 +8579,34 @@ var require_bigtext = __commonJS({
           if (!mline) continue;
           for (var mx = 0; mx < this.ratio.width; mx++) {
             var mcell = mline[mx];
+            if (mcell == null) break;
+            if (this.fch && this.fch !== " ") {
+              lines[y][x + mx][0] = dattr;
+              lines[y][x + mx][1] = mcell === 1 ? this.fch : this.ch;
+            } else {
+              lines[y][x + mx][0] = mcell === 1 ? attr : dattr;
+              lines[y][x + mx][1] = mcell === 1 ? " " : this.ch;
+            }
+          }
+          lines[y].dirty = true;
+        }
+      }
+      return coords;
+    };
+    module2.exports = BigText;
+  }
+});
+
+// node_modules/blessed/lib/widgets/input.js
+var require_input = __commonJS({
+  "node_modules/blessed/lib/widgets/input.js"(exports2, module2) {
+    var Node = require_node();
+    var Box = require_box();
+    function Input(options) {
+      if (!(this instanceof Node)) {
+        return new Input(options);
+      }
+      options = options || {};
       Box.call(this, options);
     }
     Input.prototype.__proto__ = Box.prototype;
@@ -8606,46 +8634,18 @@ var require_button = __commonJS({
         if (key.name === "enter" || key.name === "space") {
           return self.press();
         }
-      }
-    }
-        return new Checkbox(options);
-      }
-      options = options || {};
-      Input.call(this, options);
-      this.text = options.content || options.text || "";
-      this.checked = this.value = options.checked || false;
-    }
-    Checkbox.prototype.__proto__ = Input.prototype;
-    Checkbox.prototype.type = "checkbox";
-    var fs13 = require("fs");
-          files = fs13.readdirSync(dir);
-            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
-      Input.call(this, options);
-      this.text = options.content || options.text || "";
-      this.checked = this.value = options.checked || false;
-    }
-    Checkbox.prototype.__proto__ = Input.prototype;
-    Checkbox.prototype.type = "checkbox";
-    var fs13 = require("fs");
-          files = fs13.readdirSync(dir);
-            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
-      Input.call(this, options);
-      this.on("keypress", function(ch, key) {
-        if (key.name === "enter" || key.name === "space") {
+      });
+      if (this.options.mouse) {
+        this.on("click", function() {
           return self.press();
-        }
-        return new Checkbox(options);
+        });
       }
-      options = options || {};
-      Input.call(this, options);
-      this.text = options.content || options.text || "";
-      this.checked = this.value = options.checked || false;
     }
-    Checkbox.prototype.__proto__ = Input.prototype;
-    Checkbox.prototype.type = "checkbox";
-    var fs13 = require("fs");
-          files = fs13.readdirSync(dir);
-            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
+    Button.prototype.__proto__ = Input.prototype;
+    Button.prototype.type = "button";
+    Button.prototype.press = function() {
+      this.focus();
+      this.value = true;
       var result = this.emit("press");
       delete this.value;
       return result;
@@ -8662,12 +8662,12 @@ var require_checkbox = __commonJS({
     function Checkbox(options) {
       var self = this;
       if (!(this instanceof Node)) {
-    }
-    Checkbox.prototype.__proto__ = Input.prototype;
-    Checkbox.prototype.type = "checkbox";
-    var fs13 = require("fs");
-          files = fs13.readdirSync(dir);
-            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
+        return new Checkbox(options);
+      }
+      options = options || {};
+      Input.call(this, options);
+      this.text = options.content || options.text || "";
+      this.checked = this.value = options.checked || false;
       this.on("keypress", function(ch, key) {
         if (key.name === "enter" || key.name === "space") {
           self.toggle();
@@ -8690,9 +8690,9 @@ var require_checkbox = __commonJS({
       this.on("blur", function() {
         self.screen.program.lrestoreCursor("checkbox", true);
       });
-    var fs13 = require("fs");
-          files = fs13.readdirSync(dir);
-            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
+    }
+    Checkbox.prototype.__proto__ = Input.prototype;
+    Checkbox.prototype.type = "checkbox";
     Checkbox.prototype.render = function() {
       this.clearPos(true);
       this.setContent("[" + (this.checked ? "x" : " ") + "] " + this.text, true);
@@ -8718,7 +8718,7 @@ var require_checkbox = __commonJS({
 // node_modules/blessed/lib/helpers.js
 var require_helpers = __commonJS({
   "node_modules/blessed/lib/helpers.js"(exports2) {
-    var fs12 = require("fs");
+    var fs13 = require("fs");
     var unicode = require_unicode();
     var helpers = exports2;
     helpers.merge = function(a, b) {
@@ -8753,7 +8753,7 @@ var require_helpers = __commonJS({
           return null;
         }
         try {
-          files = fs12.readdirSync(dir);
+          files = fs13.readdirSync(dir);
         } catch (e) {
           files = [];
         }
@@ -8763,7 +8763,7 @@ var require_helpers = __commonJS({
             return (dir === "/" ? "" : dir) + "/" + file;
           }
           try {
-            stat = fs12.lstatSync((dir === "/" ? "" : dir) + "/" + file);
+            stat = fs13.lstatSync((dir === "/" ? "" : dir) + "/" + file);
           } catch (e) {
             stat = null;
           }
@@ -11270,6 +11270,34 @@ var require_list = __commonJS({
       var i = this.getItemIndex(child);
       if (!~i) return;
       var items = Array.prototype.slice.call(arguments, 2);
+      var removed = [];
+      while (n--) {
+        removed.push(this.removeItem(i));
+      }
+      items.forEach(function(item) {
+        self.insertItem(i++, item);
+      });
+      return removed;
+    };
+    List.prototype.find = List.prototype.fuzzyFind = function(search, back) {
+      var start = this.selected + (back ? -1 : 1), i;
+      if (typeof search === "number") search += "";
+      if (search && search[0] === "/" && search[search.length - 1] === "/") {
+        try {
+          search = new RegExp(search.slice(1, -1));
+        } catch (e) {
+          ;
+        }
+      }
+      var test = typeof search === "string" ? function(item) {
+        return !!~item.indexOf(search);
+      } : search.test ? search.test.bind(search) : search;
+      if (typeof test !== "function") {
+        if (this.screen.options.debug) {
+          throw new Error("fuzzyFind(): `test` is not a function.");
+        }
+        return this.selected;
+      }
       if (!back) {
         for (i = start; i < this.ritems.length; i++) {
           if (test(helpers.cleanTags(this.ritems[i]))) return i;
@@ -11297,6 +11325,34 @@ var require_list = __commonJS({
           if (helpers.cleanTags(this.ritems[i]) === child) {
             return i;
           }
+        }
+        return -1;
+      } else {
+        return this.items.indexOf(child);
+      }
+    };
+    List.prototype.select = function(index) {
+      if (!this.interactive) {
+        return;
+      }
+      if (!this.items.length) {
+        this.selected = 0;
+        this.value = "";
+        this.scrollTo(0);
+        return;
+      }
+      if (typeof index === "object") {
+        index = this.items.indexOf(index);
+      }
+      if (index < 0) {
+        index = 0;
+      } else if (index >= this.items.length) {
+        index = this.items.length - 1;
+      }
+      if (this.selected === index && this._listInitialized) return;
+      this._listInitialized = true;
+      this.selected = index;
+      this.value = helpers.cleanTags(this.ritems[this.selected]);
       if (!this.parent) return;
       this.scrollTo(this.selected);
       this.emit("select item", this.items[this.selected], this.selected);
@@ -11311,62 +11367,6 @@ var require_list = __commonJS({
       this.move(offset || 1);
     };
     List.prototype.pick = function(label, callback) {
-      if (label) this.setLabel(label);
-      this.screen.render();
-      this.once("action", function(el, selected) {
-        if (label) self.removeLabel();
-        self.screen.restoreFocus();
-        self.hide();
-        self.screen.render();
-    var path15 = require("path");
-    var fs13 = require("fs");
-        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
-        return fs13.stat(file, function(err, stat) {
-      return fs13.readdir(cwd, function(err, list) {
-          var f = path15.resolve(cwd, name), stat;
-            stat = fs13.lstatSync(f);
-      this.value = helpers.cleanTags(this.ritems[this.selected]);
-      if (label) this.setLabel(label);
-      this.screen.render();
-      this.once("action", function(el, selected) {
-        if (label) self.removeLabel();
-        self.screen.restoreFocus();
-        self.hide();
-        self.screen.render();
-    var path15 = require("path");
-    var fs13 = require("fs");
-        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
-        return fs13.stat(file, function(err, stat) {
-      return fs13.readdir(cwd, function(err, list) {
-          var f = path15.resolve(cwd, name), stat;
-            stat = fs13.lstatSync(f);
-      this.screen.render();
-      this.once("action", function(el, selected) {
-        if (label) self.removeLabel();
-        self.screen.restoreFocus();
-        self.hide();
-        self.screen.render();
-    var path15 = require("path");
-    var fs13 = require("fs");
-      }
-        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
-        return fs13.stat(file, function(err, stat) {
-      return fs13.readdir(cwd, function(err, list) {
-          var f = path15.resolve(cwd, name), stat;
-            stat = fs13.lstatSync(f);
-      this.screen.render();
-      this.once("action", function(el, selected) {
-        if (label) self.removeLabel();
-        self.screen.restoreFocus();
-        self.hide();
-        self.screen.render();
-    var path15 = require("path");
-    var fs13 = require("fs");
-        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
-        return fs13.stat(file, function(err, stat) {
-      return fs13.readdir(cwd, function(err, list) {
-          var f = path15.resolve(cwd, name), stat;
-            stat = fs13.lstatSync(f);
       if (!callback) {
         callback = label;
         label = null;
@@ -11381,13 +11381,13 @@ var require_list = __commonJS({
       this.focus();
       this.show();
       this.select(0);
-    var path15 = require("path");
-    var fs13 = require("fs");
-        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
-        return fs13.stat(file, function(err, stat) {
-      return fs13.readdir(cwd, function(err, list) {
-          var f = path15.resolve(cwd, name), stat;
-            stat = fs13.lstatSync(f);
+      if (label) this.setLabel(label);
+      this.screen.render();
+      this.once("action", function(el, selected) {
+        if (label) self.removeLabel();
+        self.screen.restoreFocus();
+        self.hide();
+        self.screen.render();
         if (!el) return callback();
         return callback(null, helpers.cleanTags(self.ritems[selected]));
       });
@@ -11409,8 +11409,8 @@ var require_list = __commonJS({
 // node_modules/blessed/lib/widgets/filemanager.js
 var require_filemanager = __commonJS({
   "node_modules/blessed/lib/widgets/filemanager.js"(exports2, module2) {
-    var path14 = require("path");
-    var fs12 = require("fs");
+    var path15 = require("path");
+    var fs13 = require("fs");
     var helpers = require_helpers();
     var Node = require_node();
     var List = require_list();
@@ -11429,8 +11429,8 @@ var require_filemanager = __commonJS({
         this._label.setContent(options.label.replace("%path", this.cwd));
       }
       this.on("select", function(item) {
-        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path14.resolve(self.cwd, value);
-        return fs12.stat(file, function(err, stat) {
+        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path15.resolve(self.cwd, value);
+        return fs13.stat(file, function(err, stat) {
           if (err) {
             return self.emit("error", err, file);
           }
@@ -11459,7 +11459,7 @@ var require_filemanager = __commonJS({
       var self = this;
       if (cwd) this.cwd = cwd;
       else cwd = this.cwd;
-      return fs12.readdir(cwd, function(err, list) {
+      return fs13.readdir(cwd, function(err, list) {
         if (err && err.code === "ENOENT") {
           self.cwd = cwd !== process.env.HOME ? process.env.HOME : "/";
           return self.refresh(callback);
@@ -11471,9 +11471,9 @@ var require_filemanager = __commonJS({
         var dirs = [], files = [];
         list.unshift("..");
         list.forEach(function(name) {
-          var f = path14.resolve(cwd, name), stat;
+          var f = path15.resolve(cwd, name), stat;
           try {
-            stat = fs12.lstatSync(f);
+            stat = fs13.lstatSync(f);
           } catch (e) {
             ;
           }
@@ -11631,49 +11631,49 @@ var require_form = __commonJS({
         if (!this._selected.visible) return this.next();
         return this._selected;
       }
+      this._selected = this._children[i + 1];
+      if (!this._selected.visible) return this.next();
+      return this._selected;
+    };
+    Form.prototype.previous = function() {
+      this._refresh();
+      if (!this._visible()) return;
+      if (!this._selected) {
+        this._selected = this._children[this._children.length - 1];
+        if (!this._selected.visible) return this.previous();
+        if (this.screen.focused !== this._selected) return this._selected;
+      }
+      var i = this._children.indexOf(this._selected);
+      if (!~i || !this._children[i - 1]) {
+        this._selected = this._children[this._children.length - 1];
+        if (!this._selected.visible) return this.previous();
+        return this._selected;
+      }
+      this._selected = this._children[i - 1];
+      if (!this._selected.visible) return this.previous();
+      return this._selected;
+    };
+    Form.prototype.focusNext = function() {
+      var next = this.next();
+      if (next) next.focus();
+    };
     Form.prototype.focusPrevious = function() {
       var previous = this.previous();
       if (previous) previous.focus();
+    };
     Form.prototype.resetSelected = function() {
       this._selected = null;
+    };
     Form.prototype.focusFirst = function() {
       this.resetSelected();
       this.focusNext();
+    };
     Form.prototype.focusLast = function() {
       this.resetSelected();
       this.focusPrevious();
     };
     Form.prototype.submit = function() {
       var out = {};
-        el.children.forEach(fn);
-      });
-      this.emit("submit", out);
-      return this.submission = out;
-    };
-    Form.prototype.cancel = function() {
-      this.emit("cancel");
-    };
-          case "textbox":
-            el.clearInput();
-          case "textarea":
-            el.clearInput();
-          case "message":
-            break;
-    var fs13 = require("fs");
-        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
-    };
-    Form.prototype.cancel = function() {
-      this.emit("cancel");
-    };
-          case "textbox":
-            el.clearInput();
-          case "textarea":
-            el.clearInput();
-          case "message":
-            break;
-    };
-    var fs13 = require("fs");
-        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
       this.children.forEach(function fn(el) {
         if (el.value != null) {
           var name = el.name || el.type;
@@ -11685,14 +11685,14 @@ var require_form = __commonJS({
             out[name] = el.value;
           }
         }
-          case "textbox":
-            el.clearInput();
-          case "textarea":
-            el.clearInput();
-          case "message":
-            break;
-    var fs13 = require("fs");
-        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
+        el.children.forEach(fn);
+      });
+      this.emit("submit", out);
+      return this.submission = out;
+    };
+    Form.prototype.cancel = function() {
+      this.emit("cancel");
+    };
     Form.prototype.reset = function() {
       this.children.forEach(function fn(el) {
         switch (el.type) {
@@ -11713,11 +11713,11 @@ var require_form = __commonJS({
             break;
           case "input":
             break;
-          case "message":
-            break;
+          case "textbox":
+            el.clearInput();
             return;
-    var fs13 = require("fs");
-        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
+          case "textarea":
+            el.clearInput();
             return;
           case "button":
             delete el.value;
@@ -11740,8 +11740,8 @@ var require_form = __commonJS({
             break;
           case "question":
             break;
-    var fs13 = require("fs");
-        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
+          case "message":
+            break;
           case "info":
             break;
           case "loading":
@@ -11768,7 +11768,7 @@ var require_form = __commonJS({
 // node_modules/blessed/lib/widgets/overlayimage.js
 var require_overlayimage = __commonJS({
   "node_modules/blessed/lib/widgets/overlayimage.js"(exports2, module2) {
-    var fs12 = require("fs");
+    var fs13 = require("fs");
     var cp = require("child_process");
     var helpers = require_helpers();
     var Node = require_node();
@@ -11784,7 +11784,7 @@ var require_overlayimage = __commonJS({
         OverlayImage.w3mdisplay = options.w3m;
       }
       if (OverlayImage.hasW3MDisplay == null) {
-        if (fs12.existsSync(OverlayImage.w3mdisplay)) {
+        if (fs13.existsSync(OverlayImage.w3mdisplay)) {
           OverlayImage.hasW3MDisplay = true;
         } else if (options.search !== false) {
           var file = helpers.findFile("/usr", "w3mimgdisplay") || helpers.findFile("/lib", "w3mimgdisplay") || helpers.findFile("/bin", "w3mimgdisplay");
@@ -14770,12 +14770,41 @@ var require_unicode = __commonJS({
       [12330, 12335],
       [12441, 12442],
       [43014, 43014],
+      [43019, 43019],
+      [43045, 43046],
+      [64286, 64286],
+      [65024, 65039],
+      [65056, 65059],
+      [65279, 65279],
+      [65529, 65531],
+      [68097, 68099],
+      [68101, 68102],
+      [68108, 68111],
+      [68152, 68154],
+      [68159, 68159],
+      [119143, 119145],
+      [119155, 119170],
+      [119173, 119179],
+      [119210, 119213],
+      [119362, 119364],
+      [917505, 917505],
+      [917536, 917631],
+      [917760, 917999]
+    ];
+    exports2.combining = exports2.combiningTable.reduce(function(out, row) {
+      for (var i = row[0]; i <= row[1]; i++) {
+        out[i] = true;
+      }
+      return out;
+    }, {});
+    exports2.isCombining = function(str, i) {
       var point = typeof str !== "number" ? exports2.codePointAt(str, i || 0) : str;
       return exports2.combining[point] === true;
     };
     exports2.codePointAt = function(str, position) {
       if (str == null) {
         throw TypeError();
+      }
       var string = String(str);
       if (string.codePointAt) {
         return string.codePointAt(position);
@@ -14784,36 +14813,7 @@ var require_unicode = __commonJS({
       var index = position ? Number(position) : 0;
       if (index !== index) {
         index = 0;
-          return (first - 55296) * 1024 + second - 56320 + 65536;
-        }
       }
-      return first;
-    exports2.fromCodePoint = function() {
-      if (String.fromCodePoint) {
-        return String.fromCodePoint.apply(String, arguments);
-      }
-          codeUnits.push(codePoint);
-        } else {
-          codePoint -= 65536;
-          highSurrogate = (codePoint >> 10) + 55296;
-        high = [
-          hexify(high.charCodeAt(0)),
-    var path15 = require("path");
-    var fs13 = require("fs");
-      }
-      return first;
-    exports2.fromCodePoint = function() {
-      if (String.fromCodePoint) {
-        return String.fromCodePoint.apply(String, arguments);
-      }
-          codeUnits.push(codePoint);
-        } else {
-          codePoint -= 65536;
-          highSurrogate = (codePoint >> 10) + 55296;
-        high = [
-          hexify(high.charCodeAt(0)),
-    var path15 = require("path");
-    var fs13 = require("fs");
       if (index < 0 || index >= size) {
         return void 0;
       }
@@ -14826,15 +14826,15 @@ var require_unicode = __commonJS({
       ) {
         second = string.charCodeAt(index + 1);
         if (second >= 56320 && second <= 57343) {
-          codeUnits.push(codePoint);
-        } else {
-          codePoint -= 65536;
-          highSurrogate = (codePoint >> 10) + 55296;
+          return (first - 55296) * 1024 + second - 56320 + 65536;
+        }
+      }
+      return first;
     };
-        high = [
-          hexify(high.charCodeAt(0)),
-    var path15 = require("path");
-    var fs13 = require("fs");
+    exports2.fromCodePoint = function() {
+      if (String.fromCodePoint) {
+        return String.fromCodePoint.apply(String, arguments);
+      }
       var MAX_SIZE = 16384;
       var codeUnits = [];
       var highSurrogate;
@@ -14854,10 +14854,10 @@ var require_unicode = __commonJS({
           throw RangeError("Invalid code point: " + codePoint);
         }
         if (codePoint <= 65535) {
-        high = [
-          hexify(high.charCodeAt(0)),
-    var path15 = require("path");
-    var fs13 = require("fs");
+          codeUnits.push(codePoint);
+        } else {
+          codePoint -= 65536;
+          highSurrogate = (codePoint >> 10) + 55296;
           lowSurrogate = codePoint % 1024 + 56320;
           codeUnits.push(highSurrogate, lowSurrogate);
         }
@@ -14882,8 +14882,8 @@ var require_unicode = __commonJS({
           hexify(low.charCodeAt(1))
         ];
         high = exports2.fromCodePoint(row[1]);
-    var path15 = require("path");
-    var fs13 = require("fs");
+        high = [
+          hexify(high.charCodeAt(0)),
           hexify(high.charCodeAt(1))
         ];
         range = "[\\u" + low[0] + "-\\u" + high[0] + "][\\u" + low[1] + "-\\u" + high[1] + "]";
@@ -14910,8 +14910,8 @@ var require_unicode = __commonJS({
 // node_modules/blessed/lib/widgets/screen.js
 var require_screen = __commonJS({
   "node_modules/blessed/lib/widgets/screen.js"(exports2, module2) {
-    var path14 = require("path");
-    var fs12 = require("fs");
+    var path15 = require("path");
+    var fs13 = require("fs");
     var cp = require("child_process");
     var colors2 = require_colors();
     var program = require_program();
@@ -16045,6 +16045,34 @@ var require_screen = __commonJS({
         if (!el.detached && el.visible) {
           this.history.push(el);
           this._focus(el, old);
+          return el;
+        }
+      }
+      if (old) {
+        old.emit("blur");
+      }
+    };
+    Screen.prototype._focus = function(self, old) {
+      var el = self;
+      while (el = el.parent) {
+        if (el.scrollable) break;
+      }
+      if (el && !el.detached) {
+        var visible = self.screen.height - el.atop - el.itop - el.abottom - el.ibottom;
+        if (self.rtop < el.childBase) {
+          el.scrollTo(self.rtop);
+          self.screen.render();
+        } else if (self.rtop + self.height - self.ibottom > el.childBase + visible) {
+          el.scrollTo(self.rtop - (el.height - self.height) + el.itop, true);
+          self.screen.render();
+        }
+      }
+      if (old) {
+        old.emit("blur", self);
+      }
+      self.emit("focus", old);
+    };
+    Screen.prototype.__defineGetter__("focused", function() {
       return this.history[this.history.length - 1];
     });
     Screen.prototype.__defineSetter__("focused", function(el) {
@@ -16073,51 +16101,23 @@ var require_screen = __commonJS({
     Screen.prototype.key = function() {
       return this.program.key.apply(this, arguments);
     };
-      options = options || {};
-        resume.done = true;
-        if (program2.input.setRawMode) {
-          program2.input.setRawMode(true);
-        }
-        program2.input.resume();
-        program2.output.write = write;
-        program2.alternateBuffer();
-        if (mouse) {
-      ps.on("exit", function(code) {
-        if (!callback) return;
-        return callback(null, code === 0);
-      return ps;
-        return fs13.writeFile(file, options.value, callback2);
-          return fs13.readFile(file, "utf8", function(err3, data) {
-            return fs13.unlink(file, function() {
-      file = path15.resolve(process.cwd(), file);
-        if (program2.input.setRawMode) {
-          program2.input.setRawMode(true);
-        }
-        program2.input.resume();
-        program2.output.write = write;
-        program2.alternateBuffer();
-        if (mouse) {
+    Screen.prototype.onceKey = function() {
+      return this.program.onceKey.apply(this, arguments);
     };
-      ps.on("exit", function(code) {
-        if (!callback) return;
-        return callback(null, code === 0);
-      return ps;
-        return fs13.writeFile(file, options.value, callback2);
-          return fs13.readFile(file, "utf8", function(err3, data) {
-            return fs13.unlink(file, function() {
-      file = path15.resolve(process.cwd(), file);
-        program2.output.write = write;
-        program2.alternateBuffer();
-        if (mouse) {
-      ps.on("exit", function(code) {
-        if (!callback) return;
-        return callback(null, code === 0);
-      return ps;
+    Screen.prototype.unkey = Screen.prototype.removeKey = function() {
+      return this.program.unkey.apply(this, arguments);
+    };
+    Screen.prototype.spawn = function(file, args, options) {
+      if (!Array.isArray(args)) {
+        options = args;
+        args = [];
+      }
+      var screen = this, program2 = screen.program, spawn2 = require("child_process").spawn, mouse = program2.mouseEnabled, ps;
       options = options || {};
-        return fs13.writeFile(file, options.value, callback2);
-          return fs13.readFile(file, "utf8", function(err3, data) {
-            return fs13.unlink(file, function() {
-      file = path15.resolve(process.cwd(), file);
+      options.stdio = options.stdio || "inherit";
+      program2.lsaveCursor("spawn");
+      program2.normalBuffer();
+      program2.showCursor();
       if (mouse) program2.disableMouse();
       var write = program2.output.write;
       program2.output.write = function() {
@@ -16128,14 +16128,14 @@ var require_screen = __commonJS({
       }
       var resume = function() {
         if (resume.done) return;
-      ps.on("exit", function(code) {
-        if (!callback) return;
-        return callback(null, code === 0);
-      return ps;
-        return fs13.writeFile(file, options.value, callback2);
-          return fs13.readFile(file, "utf8", function(err3, data) {
-            return fs13.unlink(file, function() {
-      file = path15.resolve(process.cwd(), file);
+        resume.done = true;
+        if (program2.input.setRawMode) {
+          program2.input.setRawMode(true);
+        }
+        program2.input.resume();
+        program2.output.write = write;
+        program2.alternateBuffer();
+        if (mouse) {
           program2.enableMouse();
           if (screen.options.sendFocus) {
             screen.program.setMouse({ sendFocus: true }, true);
@@ -16156,11 +16156,11 @@ var require_screen = __commonJS({
         if (!callback) return;
         return callback(err, false);
       });
-        return fs13.writeFile(file, options.value, callback2);
-          return fs13.readFile(file, "utf8", function(err3, data) {
-            return fs13.unlink(file, function() {
+      ps.on("exit", function(code) {
+        if (!callback) return;
+        return callback(null, code === 0);
       });
-      file = path15.resolve(process.cwd(), file);
+      return ps;
     };
     Screen.prototype.readEditor = function(options, callback) {
       if (typeof options === "string") {
@@ -16183,14 +16183,14 @@ var require_screen = __commonJS({
       };
       function writeFile(callback2) {
         if (!options.value) return callback2();
-        return fs12.writeFile(file, options.value, callback2);
+        return fs13.writeFile(file, options.value, callback2);
       }
       return writeFile(function(err) {
         if (err) return callback(err);
         return self.exec(editor, args, opt, function(err2, success) {
           if (err2) return callback(err2);
-          return fs12.readFile(file, "utf8", function(err3, data) {
-            return fs12.unlink(file, function() {
+          return fs13.readFile(file, "utf8", function(err3, data) {
+            return fs13.unlink(file, function() {
               if (!success) return callback(new Error("Unsuccessful."));
               if (err3) return callback(err3);
               return callback(null, data);
@@ -16204,7 +16204,7 @@ var require_screen = __commonJS({
         if (!callback) return;
         return callback(new Error("No image."));
       }
-      file = path14.resolve(process.cwd(), file);
+      file = path15.resolve(process.cwd(), file);
       if (!~file.indexOf("://")) {
         file = "file://" + file;
       }
@@ -17552,6 +17552,34 @@ var init_action_engine = __esm({
 function toProgressState(state) {
   if (state === "idle" || state === "running" || state === "success" || state === "warning" || state === "failed" || state === "canceled") {
     return state;
+  }
+  return "running";
+}
+function interactiveActionRequiresConfirmation(action) {
+  return requiresC420UIActionConfirmation(action);
+}
+function createInteractiveActionRunner(options) {
+  const state = {
+    running: false,
+    progressState: "idle"
+  };
+  let activeAbortController = null;
+  function applyEvent(event) {
+    if (event.type === "log") {
+      options.appendLogText(`${event.line}
+`, event.source);
+      return;
+    }
+    if (event.type === "progress") {
+      const nextState = toProgressState(event.state);
+      state.progressState = nextState;
+      options.setProgress(
+        nextState,
+        event.percent,
+        event.label ?? nextState
+      );
+      return;
+    }
     if (event.type === "action:start") {
       state.running = true;
       state.progressState = "running";
@@ -17577,7 +17605,34 @@ function toProgressState(state) {
       state.running = false;
       state.progressState = canceled ? "canceled" : success ? "success" : "failed";
       options.setRunning(false);
+      options.setProgress(
+        state.progressState,
+        success ? 100 : 0,
+        canceled ? "Canceled" : success ? "Completed" : `exit code ${String(exitCode ?? "unknown")}`
+      );
+    }
   }
+  const makeEngine = options.createActionEngine ?? createC420UIActionEngine;
+  const engine = makeEngine({
+    bridge: options.bridge,
+    rootDir: options.rootDir,
+    env: options.env,
+    rootProvider: options.rootProvider,
+    requestRootAccess: options.requestRootAccess,
+    emit: applyEvent
+  });
+  async function runAction(action, runOptions = {}) {
+    const dryRun = runOptions.dryRun === true;
+    const confirmed = runOptions.confirmed === true;
+    if (!dryRun && interactiveActionRequiresConfirmation(action) && !confirmed) {
+      const result = {
+        code: c420uiExitCodes.generalError,
+        status: "canceled",
+        message: "Action canceled before execution."
+      };
+      state.running = false;
+      state.progressState = "canceled";
+      options.setRunning(false);
       options.setProgress("canceled", 0, "Canceled");
       options.appendLogText("[info] Action canceled before execution.\n", "system");
       state.lastResult = result;
@@ -17604,71 +17659,16 @@ function toProgressState(state) {
       if (activeAbortController === abortController) {
         activeAbortController = null;
       }
+    }
   }
-function assertOptionalBoolean(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a boolean`);
-function assertOptionalString(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string`);
-function assertOptionalStringArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string array`);
-function assertOptionalPurposeArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
-    activeAbortController.abort();
-    options.appendLogText("[info] Cancellation requested.\n", "system");
-    state.progressState = "canceled";
-    options.setProgress("canceled", 0, "Canceled");
-function assertOptionalBoolean(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a boolean`);
-function assertOptionalString(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string`);
-function assertOptionalStringArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string array`);
-function assertOptionalPurposeArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
-    options.appendLogText("[info] Cancellation requested.\n", "system");
-    state.progressState = "canceled";
-    options.setProgress("canceled", 0, "Canceled");
-function assertOptionalBoolean(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a boolean`);
-function assertOptionalString(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string`);
-function assertOptionalStringArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string array`);
-function assertOptionalPurposeArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
+  function cancel() {
+    if (!activeAbortController || activeAbortController.signal.aborted) {
+      return false;
     }
     activeAbortController.abort();
     options.appendLogText("[info] Cancellation requested.\n", "system");
     state.progressState = "canceled";
     options.setProgress("canceled", 0, "Canceled");
-function assertOptionalBoolean(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a boolean`);
-function assertOptionalString(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string`);
-function assertOptionalStringArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string array`);
-function assertOptionalPurposeArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
-`, "system");
-        state.progressState = "failed";
-        options.setRunning(false);
-        options.setProgress("failed", 0, result.message);
-      }
-      return result;
-    } finally {
-      if (activeAbortController === abortController) {
-        activeAbortController = null;
-      }
-    }
-  }
-function assertOptionalBoolean(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a boolean`);
-function assertOptionalString(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string`);
-function assertOptionalStringArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must be a string array`);
-function assertOptionalPurposeArray(value, key, failures, path15) {
-    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
     return true;
   }
   return {
@@ -17689,30 +17689,30 @@ var init_interactive_action_runner = __esm({
 function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function assertOptionalBoolean(value, key, failures, path14) {
+function assertOptionalBoolean(value, key, failures, path15) {
   if (key in value && typeof value[key] !== "boolean") {
-    failures.push(`${path14}.${key} must be a boolean`);
+    failures.push(`${path15}.${key} must be a boolean`);
   }
 }
-function assertOptionalString(value, key, failures, path14) {
+function assertOptionalString(value, key, failures, path15) {
   if (key in value && typeof value[key] !== "string") {
-    failures.push(`${path14}.${key} must be a string`);
+    failures.push(`${path15}.${key} must be a string`);
   }
 }
-function assertOptionalStringArray(value, key, failures, path14) {
+function assertOptionalStringArray(value, key, failures, path15) {
   if (!(key in value)) return;
   const array = value[key];
   if (!Array.isArray(array) || array.some((item) => typeof item !== "string")) {
-    failures.push(`${path14}.${key} must be a string array`);
+    failures.push(`${path15}.${key} must be a string array`);
   }
 }
-function assertOptionalPurposeArray(value, key, failures, path14) {
+function assertOptionalPurposeArray(value, key, failures, path15) {
   if (!(key in value)) return;
   const array = value[key];
   if (!Array.isArray(array) || array.some(
     (item) => typeof item !== "string" || !c420uiKnownHostDependencyPurposes.includes(item)
   )) {
-    failures.push(`${path14}.${key} must contain only known host dependency purposes`);
+    failures.push(`${path15}.${key} must contain only known host dependency purposes`);
   }
 }
 function validateConfigShape(value) {
@@ -19120,6 +19120,32 @@ function createApp(options) {
     content.scroll(5);
     screen.render();
   });
+  screen.key(["pageup"], () => {
+    if (!modalActive) {
+      scrollFocusedPanel(-10);
+    }
+    screen.render();
+  });
+  screen.key(["pagedown"], () => {
+    if (!modalActive) {
+      scrollFocusedPanel(10);
+    }
+    screen.render();
+  });
+  screen.key(["home"], () => {
+    if (!modalActive) {
+      setFocusedPanelScroll(0);
+    }
+    screen.render();
+  });
+  screen.key(["end"], () => {
+    if (!modalActive) {
+      setFocusedPanelScroll(100);
+    }
+    screen.render();
+  });
+  screen.key(["?"], () => {
+    if (!running && !modalActive) {
       setView("help");
     }
   });
@@ -19148,44 +19174,18 @@ function createApp(options) {
       setFocusZone("logs");
     }
   });
+  menu.on("keypress", (_, key) => {
+    if (updatingSettingsMenuItems) {
       return;
     }
-  appendLogText(
-    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
-`,
-    "system"
-  );
-  appendLogText(`[info] Settings loaded from ${settingsPath}.
-    import_node_path2 = __toESM(require("node:path"));
-var import_node_path14 = __toESM(require("node:path"));
-// packages/c420ui/src/terminal/runtime.ts
-function loadC420UITerminalApp() {
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
-    "system"
-  );
-  appendLogText(`[info] Settings loaded from ${settingsPath}.
-    import_node_path2 = __toESM(require("node:path"));
-var import_node_path14 = __toESM(require("node:path"));
-// packages/c420ui/src/terminal/runtime.ts
-function loadC420UITerminalApp() {
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
-      setFocusZone("logs");
+    if ((key.name === "up" || key.name === "down") && ["install", "development", "maintenance"].includes(currentView)) {
+      renderSelectionDetails();
+      screen.render();
     }
-  });
-  appendLogText(
-    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
-`,
-    "system"
-  );
-  appendLogText(`[info] Settings loaded from ${settingsPath}.
-    import_node_path2 = __toESM(require("node:path"));
-var import_node_path14 = __toESM(require("node:path"));
-// packages/c420ui/src/terminal/runtime.ts
-function loadC420UITerminalApp() {
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
+    if ((key.name === "up" || key.name === "down") && currentView === "settings") {
+      renderSelectionDetails();
+      screen.render();
+    }
   });
   menu.on("select item", () => {
     if (updatingSettingsMenuItems) {
@@ -19202,12 +19202,12 @@ var import_node_path12 = __toESM(require("node:path"));
   });
   applyLogPanelLabel();
   importLauncherSessionLog();
-    import_node_path2 = __toESM(require("node:path"));
-var import_node_path14 = __toESM(require("node:path"));
-// packages/c420ui/src/terminal/runtime.ts
-function loadC420UITerminalApp() {
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
+  appendLogText(
+    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
+`,
+    "system"
+  );
+  appendLogText(`[info] Settings loaded from ${settingsPath}.
 `, "system");
   setView("main");
   void refreshDetectedInstallations("startup");
@@ -19230,7 +19230,7 @@ var init_app = __esm({
     init_clipboard();
     init_settings();
     import_node_fs2 = __toESM(require("node:fs"));
-var import_node_path14 = __toESM(require("node:path"));
+    import_node_path2 = __toESM(require("node:path"));
     init_action_engine();
     init_exit_codes();
     init_interactive_action_runner();
@@ -19258,7 +19258,7 @@ __export(run_c420ui_exports, {
   main: () => main
 });
 module.exports = __toCommonJS(run_c420ui_exports);
-var import_node_path13 = __toESM(require("node:path"));
+var import_node_path14 = __toESM(require("node:path"));
 
 // packages/c420ui/src/terminal/index.ts
 init_app();
@@ -19302,8 +19302,8 @@ function enforceC420UIRootLaunchGuard(options) {
   options.exit?.(1);
 }
 
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
+// packages/c420ui/src/terminal/runtime.ts
+function loadC420UITerminalApp() {
   const app = (init_app(), __toCommonJS(app_exports));
   return app.createApp;
 }
@@ -19330,8 +19330,8 @@ function runC420UITerminalApp(options, runtimeOptions = {}) {
 }
 
 // scripts/c420ui-adapter/adapter.ts
-var import_node_fs10 = __toESM(require("node:fs"));
-var import_node_path11 = __toESM(require("node:path"));
+var import_node_fs11 = __toESM(require("node:fs"));
+var import_node_path12 = __toESM(require("node:path"));
 
 // packages/c420ui/src/index.ts
 init_scopes();
@@ -20369,6 +20369,34 @@ var canvaLinuxDetectionKeys = [
   "DETECTED_NATIVE_SYSTEM_VERSION",
   "DETECTED_NATIVE_USER_VERSION",
   "DETECTED_FLATPAK_SYSTEM_VERSION",
+  "DETECTED_FLATPAK_USER_VERSION",
+  "DETECTED_APPIMAGE_VERSION"
+];
+var emptyInstallations = {
+  nativeSystem: false,
+  nativeUser: false,
+  flatpakSystem: false,
+  flatpakUser: false,
+  appImageArtifacts: false,
+  nativeSystemVersion: "",
+  nativeUserVersion: "",
+  flatpakSystemVersion: "",
+  flatpakUserVersion: "",
+  appImageVersion: ""
+};
+function readPackage(rootDir2) {
+  return JSON.parse(
+    import_node_fs6.default.readFileSync(import_node_path7.default.join(rootDir2, "package.json"), "utf8")
+  );
+}
+function readPhase(rootDir2) {
+  const content = import_node_fs6.default.readFileSync(
+    import_node_path7.default.join(rootDir2, "scripts/app-identity-common.sh"),
+    "utf8"
+  );
+  const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
+  return match?.[1] ?? "unknown";
+}
 function safeProjectMetadata(rootDir2) {
   let version = "unknown";
   let phase = "unknown";
@@ -20397,8 +20425,131 @@ function detectionCommand() {
     "print_detection_status_env"
   ].join("\n");
 }
-  return {
+function runInstallDetection(rootDir2, runCommand) {
+  const warnings = [];
+  let ok = true;
+  try {
+    const result = runCommand("bash", ["-c", detectionCommand()], {
+      cwd: rootDir2,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    if (result.error) {
+      ok = false;
+      warnings.push(`Installation detection failed to start: ${result.error.message}`);
     }
+    const stderr = result.stderr?.trim();
+    if (stderr) warnings.push(stderr);
+    if ((result.status ?? 0) !== 0) {
+      ok = false;
+      warnings.push(
+        `Installation detection exited with status ${result.status ?? "unknown"}.`
+      );
+    }
+    return {
+      ok,
+      values: parseC420UIDetectionKeyValueLines(
+        result.stdout || "",
+        canvaLinuxDetectionKeys
+      ),
+      warnings
+    };
+  } catch (error) {
+    warnings.push(
+      `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return { ok: false, values: {}, warnings };
+  }
+}
+function createInstallDetectionProbe(runCommand) {
+  return {
+    id: "canva-linux-install-detection",
+    label: "Canva Linux installation detection",
+    run(rootDir2) {
+      return runInstallDetection(rootDir2, runCommand);
+    }
+  };
+}
+function buildInstallations(values) {
+  return {
+    nativeSystem: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_SYSTEM),
+    nativeUser: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_USER),
+    flatpakSystem: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_SYSTEM),
+    flatpakUser: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_USER),
+    appImageArtifacts: boolFromC420UIDetectionValue(values.DETECTED_APPIMAGE_ARTIFACTS),
+    nativeSystemVersion: values.DETECTED_NATIVE_SYSTEM_VERSION || "",
+    nativeUserVersion: values.DETECTED_NATIVE_USER_VERSION || "",
+    flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
+    flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
+    appImageVersion: values.DETECTED_APPIMAGE_VERSION || ""
+  };
+}
+function createCanvaLinuxDetectionProvider(options = {}) {
+  const runCommand = options.runCommand ?? import_node_child_process5.spawnSync;
+  return {
+    id: "canva-linux-detection-provider",
+    label: "Canva Linux detection provider",
+    buildOverviewStatus(rootDir2) {
+      const project = safeProjectMetadata(rootDir2);
+      const probe = createInstallDetectionProbe(runCommand);
+      const detection = probe.run(rootDir2);
+      return {
+        project,
+        installations: {
+          ...emptyInstallations,
+          ...buildInstallations(detection.values)
+        },
+        warnings: detection.warnings ?? []
+      };
+    }
+  };
+}
+function buildCanvaLinuxOverviewStatus(rootDir2 = findCanvaLinuxProjectRoot()) {
+  return createCanvaLinuxDetectionProvider().buildOverviewStatus(rootDir2);
+}
+
+// scripts/canva-linux/build-metadata-loader.ts
+var import_node_child_process6 = require("node:child_process");
+var import_node_fs7 = __toESM(require("node:fs"));
+var import_node_path8 = __toESM(require("node:path"));
+
+// electron/main/build-metadata.ts
+var UNKNOWN_BUILD_REVISION = "unknown";
+function normalizeBuildRevision(input) {
+  if (!input) return "unknown";
+  const trimmed = input.trim();
+  if (!trimmed || trimmed === "unknown") return "unknown";
+  const withoutPrefix = trimmed.replace(/^g/i, "");
+  const shortHash = withoutPrefix.slice(0, 7);
+  return `g${shortHash}`;
+}
+function appendBuildRevision(base, buildRevision) {
+  return buildRevision && buildRevision !== "unknown" ? `${base}+${buildRevision}` : base;
+}
+function createBuildMetadata(input) {
+  const buildRevision = normalizeBuildRevision(input.buildRevision);
+  return {
+    baseVersion: input.baseVersion,
+    baseDisplayVersion: input.baseDisplayVersion,
+    basePhase: input.basePhase,
+    buildRevision,
+    version: appendBuildRevision(input.baseVersion, buildRevision),
+    displayVersion: appendBuildRevision(input.baseDisplayVersion, buildRevision),
+    phase: appendBuildRevision(input.basePhase, buildRevision),
+    fullVersion: appendBuildRevision(input.basePhase, buildRevision)
+  };
+}
+function normalizeLoadedBuildMetadata(metadata) {
+  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) {
+    return null;
+  }
+  return createBuildMetadata({
+    baseVersion: metadata.baseVersion,
+    baseDisplayVersion: metadata.baseDisplayVersion,
+    basePhase: metadata.basePhase,
+    buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION
+  });
+}
 
 // scripts/canva-linux/build-metadata-loader.ts
 var UNKNOWN_BASE_VERSION = "0.0.0";
@@ -20426,6 +20577,34 @@ function resolveEnvBuildRevision() {
   return null;
 }
 function resolveGitBuildRevision(rootDir2) {
+  if (!hasGitRepository(rootDir2)) return null;
+  try {
+    const value = (0, import_node_child_process6.execFileSync)("git", ["rev-parse", "--short=7", "HEAD"], {
+      cwd: rootDir2,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"]
+    }).trim();
+    return value || null;
+  } catch {
+    return null;
+  }
+}
+function createSourceMetadata(rootDir2, buildRevision) {
+  const packageJson = readJsonFile(import_node_path8.default.join(rootDir2, "package.json"));
+  const projectUi = readJsonFile(
+    import_node_path8.default.join(rootDir2, "config", "canva-linux", "project-ui.json")
+  );
+  if (!packageJson?.version || !projectUi?.displayVersion || !projectUi?.phase) {
+    return null;
+  }
+  return createBuildMetadata({
+    baseVersion: packageJson.version,
+    baseDisplayVersion: projectUi.displayVersion,
+    basePhase: projectUi.phase,
+    buildRevision
+  });
+}
+function loadPackagedMetadata(rootDir2) {
   const metadata = readJsonFile(
     import_node_path8.default.join(rootDir2, "config", "canva-linux", "build-metadata.json")
   );
@@ -20453,10 +20632,15 @@ function loadEffectiveBuildMetadata(rootDir2) {
   }
   return loadPackagedMetadata(resolvedRootDir) ?? fallbackEffectiveBuildMetadata();
 }
+
+// scripts/c420ui-adapter/artifacts.ts
 var import_node_fs9 = __toESM(require("node:fs"));
 var import_node_path10 = __toESM(require("node:path"));
+
+// scripts/canva-linux/actions/registry.ts
 var import_node_fs8 = __toESM(require("node:fs"));
 var import_node_path9 = __toESM(require("node:path"));
+init_actions();
 var ACTION_GROUPS = ["install", "development", "maintenance"];
 var ACTION_SECTIONS = [
   "Install",
@@ -20474,123 +20658,18 @@ function findProjectRoot(startDir) {
   return findCanvaLinuxProjectRoot(startDir);
 }
 function actionsPath(rootDir2 = findProjectRoot()) {
-function validateCanvaLinuxGroupSection(action) {
-  }
-  }
-  }
-  const resolvedRoot = import_node_path9.default.resolve(rootDir2);
-    import_node_fs8.default.readFileSync(actionsPath(resolvedRoot), "utf8")
-function readJsonFile2(filePath) {
-  if (!import_node_fs9.default.existsSync(filePath)) {
-    return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
-}
-  const configPath = import_node_path10.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-  const config = readJsonFile2(configPath);
-}
-var import_node_fs10 = __toESM(require("node:fs"));
-var import_node_path11 = __toESM(require("node:path"));
-function readJsonFile3(filePath) {
-  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
-  const developmentConfigPath = import_node_path11.default.join(
-  const config = readJsonFile3(developmentConfigPath);
-function readJsonFile4(filePath) {
-  return JSON.parse(import_node_fs11.default.readFileSync(filePath, "utf8"));
-    const content = import_node_fs11.default.readFileSync(identityPath, "utf8");
-  return import_node_path12.default.join(process.env.HOME || ".", ".local/state");
-  const resolvedRootDir = import_node_path12.default.resolve(rootDir2);
-  const projectUiPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
-  const packageJsonPath = import_node_path12.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
-  const appIdentityPath = import_node_path12.default.join(
-  const buildMetadataPath = import_node_path12.default.join(
-    resolvedRootDir,
-    "config/canva-linux/build-metadata.json"
-  );
-  const c420uiPackageJsonPath = import_node_path12.default.join(
-    resolvedRootDir,
-    "packages/c420ui/package.json"
-  );
-    return readJsonFile4(projectUiPath);
-    return readJsonFile4(packageJsonPath);
-  function loadBuildMetadata() {
-    return loadEffectiveBuildMetadata(resolvedRootDir);
-  }
-  function loadC420UIPackageJson() {
-    return readJsonFile4(c420uiPackageJsonPath);
-  }
-  function getEffectiveProjectDisplayVersion() {
-    const buildMetadata = loadBuildMetadata();
-    if (buildMetadata.displayVersion) return buildMetadata.displayVersion;
-    const projectUi = loadProjectUi();
-    if (projectUi.displayVersion) return projectUi.displayVersion;
-    return getPackageVersion();
-  }
-  function getEffectiveProjectPhase() {
-    const buildMetadata = loadBuildMetadata();
-    if (buildMetadata.phase) return buildMetadata.phase;
-    return getProjectPhase();
-  }
-  function getEffectiveProjectFullVersion() {
-    const buildMetadata = loadBuildMetadata();
-    if (buildMetadata.fullVersion) return buildMetadata.fullVersion;
-    if (buildMetadata.version) return buildMetadata.version;
-    return getPackageVersion();
-  }
-  function getEffectiveProjectBuildRevision() {
-    return loadBuildMetadata().buildRevision || "unknown";
-  }
-      displayVersion: getEffectiveProjectDisplayVersion(),
-      phase: getEffectiveProjectPhase(),
-      fullVersion: getEffectiveProjectFullVersion(),
-      buildRevision: getEffectiveProjectBuildRevision(),
-      version: loadC420UIPackageJson().version ?? "unknown",
-    return import_node_path12.default.join(
-    if (!import_node_fs11.default.existsSync(actionsJsonPath)) {
-      displayVersion: project.fullVersion ?? getEffectiveProjectFullVersion(),
-      fullVersion: project.fullVersion,
-      buildRevision: project.buildRevision,
-      emitProgress: context.emitProgress
-    });
-  }
-  function toC420UIConfig() {
-    const projectUi = loadProjectUi();
-      appIdentity: appIdentityPath,
-      buildMetadata: buildMetadataPath,
-      c420uiPackageJson: c420uiPackageJsonPath
-    loadBuildMetadata,
-    getEffectiveProjectDisplayVersion,
-    getEffectiveProjectPhase,
-    getEffectiveProjectFullVersion,
-    getEffectiveProjectBuildRevision,
-var import_node_fs12 = __toESM(require("node:fs"));
-var import_node_path13 = __toESM(require("node:path"));
-  const configPath = import_node_path13.default.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs12.default.readFileSync(configPath, "utf8")));
-          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
-            return {
-  const argv = options.argv ?? process.argv.slice(2);
-var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
-    baseVersion: packageJson.version,
-    baseDisplayVersion: projectUi.displayVersion,
-    basePhase: projectUi.phase,
-    buildRevision
-  });
-}
-function loadPackagedMetadata(rootDir2) {
-
-// scripts/c420ui-adapter/artifacts.ts
-
-// scripts/canva-linux/actions/registry.ts
-init_actions();
   return import_node_path9.default.join(rootDir2, "config/canva-linux/actions.json");
 }
+function validateCanvaLinuxGroupSection(action) {
   if (action.group === "install" && action.section !== "Install") {
     throw new Error(`Group/section mismatch: ${action.id}`);
+  }
   if (action.group === "development" && !["Package generation", "Build", "Validation"].includes(action.section)) {
     throw new Error(`Group/section mismatch: ${action.id}`);
+  }
   if (action.group === "maintenance" && !["Maintenance", "Uninstall"].includes(action.section)) {
     throw new Error(`Group/section mismatch: ${action.id}`);
+  }
 }
 function validateCanvaLinuxActions(actions) {
   validateC420UIActionRegistry(actions, {
@@ -20601,131 +20680,13 @@ function validateCanvaLinuxActions(actions) {
   });
   for (const action of actions) {
     validateCanvaLinuxGroupSection(action);
-  const resolvedRoot = import_node_path9.default.resolve(rootDir2);
-    import_node_fs8.default.readFileSync(actionsPath(resolvedRoot), "utf8")
-function readJsonFile2(filePath) {
-  if (!import_node_fs9.default.existsSync(filePath)) {
-    return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
-  const configPath = import_node_path10.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-  const config = readJsonFile2(configPath);
-var import_node_fs10 = __toESM(require("node:fs"));
-var import_node_path11 = __toESM(require("node:path"));
-function readJsonFile3(filePath) {
-  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
-  const developmentConfigPath = import_node_path11.default.join(
-  const config = readJsonFile3(developmentConfigPath);
-function readJsonFile4(filePath) {
-  return JSON.parse(import_node_fs11.default.readFileSync(filePath, "utf8"));
-    const content = import_node_fs11.default.readFileSync(identityPath, "utf8");
-  return import_node_path12.default.join(process.env.HOME || ".", ".local/state");
-  const resolvedRootDir = import_node_path12.default.resolve(rootDir2);
-  const projectUiPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
-  const packageJsonPath = import_node_path12.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
-  const appIdentityPath = import_node_path12.default.join(
-  const buildMetadataPath = import_node_path12.default.join(
-    resolvedRootDir,
-    "config/canva-linux/build-metadata.json"
-  );
-  const c420uiPackageJsonPath = import_node_path12.default.join(
-    resolvedRootDir,
-    "packages/c420ui/package.json"
-  );
-    return readJsonFile4(projectUiPath);
-    return readJsonFile4(packageJsonPath);
-  function loadBuildMetadata() {
-    return loadEffectiveBuildMetadata(resolvedRootDir);
-  }
-  function loadC420UIPackageJson() {
-    return readJsonFile4(c420uiPackageJsonPath);
-  }
-  function getEffectiveProjectDisplayVersion() {
-    const buildMetadata = loadBuildMetadata();
-    if (buildMetadata.displayVersion) return buildMetadata.displayVersion;
-    const projectUi = loadProjectUi();
-    if (projectUi.displayVersion) return projectUi.displayVersion;
-    return getPackageVersion();
-  }
-  function getEffectiveProjectPhase() {
-    const buildMetadata = loadBuildMetadata();
-    if (buildMetadata.phase) return buildMetadata.phase;
-    return getProjectPhase();
-  }
-  function getEffectiveProjectFullVersion() {
-    const buildMetadata = loadBuildMetadata();
-    if (buildMetadata.fullVersion) return buildMetadata.fullVersion;
-    if (buildMetadata.version) return buildMetadata.version;
-    return getPackageVersion();
-  }
-  function getEffectiveProjectBuildRevision() {
-    return loadBuildMetadata().buildRevision || "unknown";
-  }
-      displayVersion: getEffectiveProjectDisplayVersion(),
-      phase: getEffectiveProjectPhase(),
-      fullVersion: getEffectiveProjectFullVersion(),
-      buildRevision: getEffectiveProjectBuildRevision(),
-      version: loadC420UIPackageJson().version ?? "unknown",
-    return import_node_path12.default.join(
-    if (!import_node_fs11.default.existsSync(actionsJsonPath)) {
-      displayVersion: project.fullVersion ?? getEffectiveProjectFullVersion(),
-      fullVersion: project.fullVersion,
-      buildRevision: project.buildRevision,
-      emitProgress: context.emitProgress
-    });
-  }
-  function toC420UIConfig() {
-    const projectUi = loadProjectUi();
-      appIdentity: appIdentityPath,
-      buildMetadata: buildMetadataPath,
-      c420uiPackageJson: c420uiPackageJsonPath
-    loadBuildMetadata,
-    getEffectiveProjectDisplayVersion,
-    getEffectiveProjectPhase,
-    getEffectiveProjectFullVersion,
-    getEffectiveProjectBuildRevision,
-var import_node_fs12 = __toESM(require("node:fs"));
-var import_node_path13 = __toESM(require("node:path"));
-  const configPath = import_node_path13.default.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs12.default.readFileSync(configPath, "utf8")));
-          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
-            return {
-  const argv = options.argv ?? process.argv.slice(2);
-var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
-      version: loadC420UIPackageJson().version ?? "unknown",
-    return import_node_path12.default.join(
-    if (!import_node_fs11.default.existsSync(actionsJsonPath)) {
-      displayVersion: project.fullVersion ?? getEffectiveProjectFullVersion(),
-      fullVersion: project.fullVersion,
-      buildRevision: project.buildRevision,
-      emitProgress: context.emitProgress
-    });
-  }
-  function toC420UIConfig() {
-    const projectUi = loadProjectUi();
-      appIdentity: appIdentityPath,
-      buildMetadata: buildMetadataPath,
-      c420uiPackageJson: c420uiPackageJsonPath
-    loadBuildMetadata,
-    getEffectiveProjectDisplayVersion,
-    getEffectiveProjectPhase,
-    getEffectiveProjectFullVersion,
-    getEffectiveProjectBuildRevision,
-var import_node_fs12 = __toESM(require("node:fs"));
-var import_node_path13 = __toESM(require("node:path"));
-  const configPath = import_node_path13.default.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs12.default.readFileSync(configPath, "utf8")));
-          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
-            return {
-  const argv = options.argv ?? process.argv.slice(2);
-var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
   }
 }
 function loadCanvaLinuxActionRegistry(rootDir2 = findProjectRoot()) {
-  const resolvedRoot = import_node_path8.default.resolve(rootDir2);
+  const resolvedRoot = import_node_path9.default.resolve(rootDir2);
   if (cachedActions && cachedRoot === resolvedRoot) return cachedActions;
   const actions = JSON.parse(
-    import_node_fs7.default.readFileSync(actionsPath(resolvedRoot), "utf8")
+    import_node_fs8.default.readFileSync(actionsPath(resolvedRoot), "utf8")
   );
   validateCanvaLinuxActions(actions);
   cachedRoot = resolvedRoot;
@@ -20759,12 +20720,12 @@ function loadCanvaLinuxC420UIActions(rootDir2) {
 
 // scripts/c420ui-adapter/artifacts.ts
 var ARTIFACTS_CONFIG_PATH = "config/canva-linux/artifacts.json";
-function readJsonFile(filePath) {
-  if (!import_node_fs8.default.existsSync(filePath)) {
+function readJsonFile2(filePath) {
+  if (!import_node_fs9.default.existsSync(filePath)) {
     throw new Error(`Missing Canva Linux configuration file: ${filePath}`);
   }
   try {
-    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
+    return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to parse configuration file ${filePath}: ${message}`);
@@ -20773,11 +20734,11 @@ function readJsonFile(filePath) {
 var cachedArtifactsConfig = null;
 var cachedArtifactsConfigPath = null;
 function loadArtifactsConfig(rootDir2) {
-  const configPath = import_node_path9.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
+  const configPath = import_node_path10.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
   if (cachedArtifactsConfig && cachedArtifactsConfigPath === configPath) {
     return cachedArtifactsConfig;
   }
-  const config = readJsonFile(configPath);
+  const config = readJsonFile2(configPath);
   cachedArtifactsConfig = validateC420UIArtifactRecipeConfig(config, configPath);
   cachedArtifactsConfigPath = configPath;
   return cachedArtifactsConfig;
@@ -20798,17 +20759,17 @@ function loadCanvaLinuxArtifactWorkflows(rootDir2, version) {
 }
 
 // scripts/c420ui-adapter/development.ts
-var import_node_fs9 = __toESM(require("node:fs"));
-var import_node_path10 = __toESM(require("node:path"));
-function readJsonFile2(filePath) {
-  return JSON.parse(import_node_fs9.default.readFileSync(filePath, "utf8"));
+var import_node_fs10 = __toESM(require("node:fs"));
+var import_node_path11 = __toESM(require("node:path"));
+function readJsonFile3(filePath) {
+  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
 }
 function loadCanvaLinuxDevelopmentTasks(rootDir2) {
-  const developmentConfigPath = import_node_path10.default.join(
+  const developmentConfigPath = import_node_path11.default.join(
     rootDir2,
     "config/canva-linux/development.json"
   );
-  const config = readJsonFile2(developmentConfigPath);
+  const config = readJsonFile3(developmentConfigPath);
   validateC420UIDevelopmentConfig(config);
   return config.tasks;
 }
@@ -20836,12 +20797,12 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir2, actions = loadCanvaLinuxC4
 }
 
 // scripts/c420ui-adapter/adapter.ts
-function readJsonFile3(filePath) {
-  return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
+function readJsonFile4(filePath) {
+  return JSON.parse(import_node_fs11.default.readFileSync(filePath, "utf8"));
 }
 function readAppIdentity(identityPath) {
   try {
-    const content = import_node_fs10.default.readFileSync(identityPath, "utf8");
+    const content = import_node_fs11.default.readFileSync(identityPath, "utf8");
     return {
       projectDisplayVersion: content.match(/^PROJECT_DISPLAY_VERSION="([^"]+)"/m)?.[1],
       projectPhase: content.match(/^PROJECT_PHASE="([^"]+)"/m)?.[1]
@@ -20853,26 +20814,40 @@ function readAppIdentity(identityPath) {
 function stateHome() {
   const xdgStateHome = process.env.XDG_STATE_HOME?.trim();
   if (xdgStateHome) return xdgStateHome;
-  return import_node_path11.default.join(process.env.HOME || ".", ".local/state");
+  return import_node_path12.default.join(process.env.HOME || ".", ".local/state");
 }
 function createCanvaLinuxC420UIAdapter(rootDir2) {
-  const resolvedRootDir = import_node_path11.default.resolve(rootDir2);
-  const projectUiPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
-  const packageJsonPath = import_node_path11.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = import_node_path11.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
-  const appIdentityPath = import_node_path11.default.join(
+  const resolvedRootDir = import_node_path12.default.resolve(rootDir2);
+  const projectUiPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
+  const packageJsonPath = import_node_path12.default.join(resolvedRootDir, "package.json");
+  const actionsJsonPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/actions.json");
+  const artifactsJsonPath = import_node_path12.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
+  const appIdentityPath = import_node_path12.default.join(
     resolvedRootDir,
     "scripts/app-identity-common.sh"
   );
+  const buildMetadataPath = import_node_path12.default.join(
+    resolvedRootDir,
+    "config/canva-linux/build-metadata.json"
+  );
+  const c420uiPackageJsonPath = import_node_path12.default.join(
+    resolvedRootDir,
+    "packages/c420ui/package.json"
+  );
   function loadProjectUi() {
-    return readJsonFile3(projectUiPath);
+    return readJsonFile4(projectUiPath);
   }
   function loadPackageJson() {
-    return readJsonFile3(packageJsonPath);
+    return readJsonFile4(packageJsonPath);
   }
   function loadAppIdentity() {
     return readAppIdentity(appIdentityPath);
+  }
+  function loadBuildMetadata() {
+    return loadEffectiveBuildMetadata(resolvedRootDir);
+  }
+  function loadC420UIPackageJson() {
+    return readJsonFile4(c420uiPackageJsonPath);
   }
   function getPackageVersion() {
     return loadPackageJson().version ?? "unknown";
@@ -20884,13 +20859,36 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     if (identity.projectPhase) return identity.projectPhase;
     return loadProjectUi().phase || "unknown";
   }
+  function getEffectiveProjectDisplayVersion() {
+    const buildMetadata = loadBuildMetadata();
+    if (buildMetadata.displayVersion) return buildMetadata.displayVersion;
+    const projectUi = loadProjectUi();
+    if (projectUi.displayVersion) return projectUi.displayVersion;
+    return getPackageVersion();
+  }
+  function getEffectiveProjectPhase() {
+    const buildMetadata = loadBuildMetadata();
+    if (buildMetadata.phase) return buildMetadata.phase;
+    return getProjectPhase();
+  }
+  function getEffectiveProjectFullVersion() {
+    const buildMetadata = loadBuildMetadata();
+    if (buildMetadata.fullVersion) return buildMetadata.fullVersion;
+    if (buildMetadata.version) return buildMetadata.version;
+    return getPackageVersion();
+  }
+  function getEffectiveProjectBuildRevision() {
+    return loadBuildMetadata().buildRevision || "unknown";
+  }
   function loadProjectConfig() {
     const projectUi = loadProjectUi();
     return {
       projectName: projectUi.projectName,
       projectSubtitle: projectUi.projectSubtitle,
-      displayVersion: projectUi.displayVersion ?? getPackageVersion(),
-      phase: getProjectPhase(),
+      displayVersion: getEffectiveProjectDisplayVersion(),
+      phase: getEffectiveProjectPhase(),
+      fullVersion: getEffectiveProjectFullVersion(),
+      buildRevision: getEffectiveProjectBuildRevision(),
       status: projectUi.status,
       logoLines: [...projectUi.logoLines],
       appId: projectUi.appId,
@@ -20903,14 +20901,14 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   function loadBrandConfig() {
     return {
       name: "c420ui",
-      version: "0.1",
+      version: loadC420UIPackageJson().version ?? "unknown",
       logoLines: [...c420uiLogoLines]
     };
   }
   function getSessionLogPath() {
     const fromEnv = process.env.CANVA_TOOL_SESSION_LOG?.trim();
     if (fromEnv) return fromEnv;
-    return import_node_path11.default.join(
+    return import_node_path12.default.join(
       stateHome(),
       loadProjectUi().stateDirectoryName,
       "tool-session.log"
@@ -20923,7 +20921,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return toolSettingsPath(loadProjectUi().stateDirectoryName);
   }
   function loadCanvaLinuxActions2() {
-    if (!import_node_fs10.default.existsSync(actionsJsonPath)) {
+    if (!import_node_fs11.default.existsSync(actionsJsonPath)) {
       throw new Error(`Missing Canva Linux actions registry: ${actionsJsonPath}`);
     }
     return loadCanvaLinuxC420UIActions(resolvedRootDir);
@@ -20942,8 +20940,10 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return {
       projectName: project.projectName,
       projectSubtitle: project.projectSubtitle,
-      displayVersion: project.displayVersion,
+      displayVersion: project.fullVersion ?? getEffectiveProjectFullVersion(),
       phase: project.phase,
+      fullVersion: project.fullVersion,
+      buildRevision: project.buildRevision,
       status: project.status,
       appId: project.appId,
       repositoryUrl: project.repositoryUrl
@@ -20990,18 +20990,11 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
       label: action.label,
       signal: context.signal,
       emitLog: context.emitLog,
-      appIdentity: appIdentityPath,
-      buildMetadata: buildMetadataPath,
-      c420uiPackageJson: c420uiPackageJsonPath
-    loadBuildMetadata,
-    getEffectiveProjectDisplayVersion,
-    getEffectiveProjectPhase,
-    getEffectiveProjectFullVersion,
-    getEffectiveProjectBuildRevision,
-var import_node_fs12 = __toESM(require("node:fs"));
-var import_node_path13 = __toESM(require("node:path"));
-  const configPath = import_node_path13.default.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs12.default.readFileSync(configPath, "utf8")));
+      emitProgress: context.emitProgress
+    });
+  }
+  function toC420UIConfig() {
+    const projectUi = loadProjectUi();
     return {
       rootDir: resolvedRootDir,
       title: projectUi.c420uiTitle,
@@ -21025,13 +21018,16 @@ var import_node_path13 = __toESM(require("node:path"));
       packageJson: packageJsonPath,
       actionsJson: actionsJsonPath,
       artifactsJson: artifactsJsonPath,
-      appIdentity: appIdentityPath
+      appIdentity: appIdentityPath,
+      buildMetadata: buildMetadataPath,
+      c420uiPackageJson: c420uiPackageJsonPath
     },
     loadProjectInfo: loadProjectConfig,
     loadConfig: toC420UIConfig,
     loadProjectUi,
     loadPackageJson,
     loadAppIdentity,
+    loadBuildMetadata,
     loadProjectConfig,
     loadBrandConfig,
     loadActions: loadCanvaLinuxActions2,
@@ -21039,6 +21035,10 @@ var import_node_path13 = __toESM(require("node:path"));
     loadWorkflows,
     loadCapabilities: () => loadCanvaLinuxCapabilities(resolvedRootDir),
     getProjectPhase,
+    getEffectiveProjectDisplayVersion,
+    getEffectiveProjectPhase,
+    getEffectiveProjectFullVersion,
+    getEffectiveProjectBuildRevision,
     getSessionLogPath,
     getSessionId,
     getToolSettingsPath,
@@ -21048,12 +21048,12 @@ var import_node_path13 = __toESM(require("node:path"));
 }
 
 // scripts/c420ui-adapter/dependencies.ts
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path12 = __toESM(require("node:path"));
+var import_node_fs12 = __toESM(require("node:fs"));
+var import_node_path13 = __toESM(require("node:path"));
 function loadCanvaLinuxDependencyConfig(rootDir2) {
   const relativeConfigPath = "config/canva-linux/dependencies.json";
-  const configPath = import_node_path12.default.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs11.default.readFileSync(configPath, "utf8")));
+  const configPath = import_node_path13.default.join(rootDir2, relativeConfigPath);
+  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs12.default.readFileSync(configPath, "utf8")));
 }
 function ensureCanvaLinuxHostDependencies(options) {
   return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
@@ -21102,8 +21102,8 @@ function createCanvaLinuxRootProvider(options = {}) {
       if (conditionalSystemRootActionIds.has(action.id)) {
         try {
           const status = buildCanvaLinuxOverviewStatus(rootDir2);
-  const argv = options.argv ?? process.argv.slice(2);
-var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
+          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
+            return {
               requiresRoot: true,
               reason: `${action.id}: detected system installation`
             };
@@ -21130,7 +21130,7 @@ var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.r
 // scripts/c420ui-adapter/run.ts
 function runCanvaLinuxC420UI(options = {}) {
   const rootDir2 = options.rootDir ?? process.cwd();
-var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
+  const argv = options.argv ?? process.argv.slice(2);
   const adapter = createCanvaLinuxC420UIAdapter(rootDir2);
   const config = adapter.toC420UIConfig();
   if (argv.includes("--help")) {
@@ -21158,7 +21158,7 @@ var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.r
 }
 
 // scripts/run-c420ui.ts
-var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path13.default.resolve(__dirname, "..");
+var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path14.default.resolve(__dirname, "..");
 process.chdir(rootDir);
 async function main() {
   const argv = process.argv.slice(2);
