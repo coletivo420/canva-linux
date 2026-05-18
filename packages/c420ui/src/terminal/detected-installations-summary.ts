@@ -84,7 +84,7 @@ export function formatDetectionPanelSummaries(
         `  Flatpak User: ${loading}`,
       ],
       generatedArtifacts: [`  AppImage: ${loading}`],
-      linuxArtifacts: [`Native system installation loading, Native user installation loading, Linux unpacked loading`],
+      linuxArtifacts: [`Native/Unpacked installations loading...`],
     };
   }
 
