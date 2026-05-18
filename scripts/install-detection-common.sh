@@ -169,7 +169,7 @@ detect_appimage_version(){
     return 0
   }
 
-  metadata="$(find dist -maxdepth 4 -path '*/resources/config/canva-linux/build-metadata.json' -type f 2>/dev/null | sort | tail -n1 || true)"
+  metadata="$(find dist -maxdepth 8 -path '*/resources/config/canva-linux/build-metadata.json' -type f 2>/dev/null | sort | tail -n1 || true)"
   version="$(read_build_metadata_base_version "$metadata")"
   [[ -n "$version" ]] && {
     printf '%s\n' "$version"
