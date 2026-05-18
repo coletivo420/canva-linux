@@ -57,7 +57,7 @@
     "build:c420ui-terminal": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js",
     "build:c420ui-bootstrap": "npm run build:metadata && esbuild scripts/build-c420ui-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/scripts/build-c420ui-bootstrap.cjs && node .build/scripts/build-c420ui-bootstrap.cjs",
     "check:c420ui-bootstrap": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js",
-    "check:c420ui-bootstrap-artifacts": "npm run build:metadata && npm run build:c420ui-bootstrap && npm run check:c420ui-node-check && CANVA_STRICT_C420UI_ARTIFACT_METADATA=1 npm run check:c420ui-bootstrap && CANVA_STRICT_C420UI_ARTIFACT_METADATA=1 npm run test -- test/c420ui-bootstrap-artifacts.test.ts",
+    "check:c420ui-bootstrap-artifacts": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-artifact-gate.js",
     "build:metadata": "npm run run:ts -- scripts/generate-build-metadata.ts",
     "check:c420ui-node-check": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-node-check.js"
   },

@@ -10,8 +10,12 @@ Any behavioral change must be made in TypeScript sources and then propagated thr
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
 Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
-The strict gate rebuilds metadata and c420ui bootstrap before comparing manifest/build-metadata fields,
-avoiding stale self-referential commit-hash failures.
+`check:c420ui-bootstrap-artifacts` is a verification gate, not a regeneration command: it must not run
+`npm run build:metadata` or `npm run build:c420ui-bootstrap` against the worktree before validating artifacts.
+It generates expected c420ui bootstrap artifacts in a temporary directory, compares them byte-for-byte with
+committed artifacts, fails when committed artifacts are stale, and requires `git diff --exit-code` to pass after the gate.
+To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
+`npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
 The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
 malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner. Validate this with:
@@ -223,7 +227,7 @@ counters.
 
 OAuth validation also checks that the first post-OAuth reload targets the current source tab URL and that
 `https://www.canva.com/` appears only as the fallback navigation after localized public logged-out landing detection.
-## Dev.7 hotfix guardrails
+## Dev.8 hotfix guardrails
 
 - c420ui must display Canva Linux effective build metadata when `config/canva-linux/build-metadata.json`, CI revision
   variables, or a source checkout `.git` HEAD can provide it; source `package.json` and `project-ui.json` stay free of

@@ -15,6 +15,13 @@ validate_package_version_semver
 validate_json_file package.json
 validate_json_file package-lock.json
 
+# Pin validation-time metadata regeneration to the committed metadata revision so
+# validation can prove gates do not rewrite the worktree on a clean checkout.
+if [[ -z "${CANVA_LINUX_BUILD_REVISION:-}" && -f config/canva-linux/build-metadata.json ]]; then
+  CANVA_LINUX_BUILD_REVISION="$(node -e 'process.stdout.write(String(require("./config/canva-linux/build-metadata.json").buildRevision || ""))')"
+  export CANVA_LINUX_BUILD_REVISION
+fi
+
 log_info() {
   echo "[info] $*"
 }
@@ -42,6 +49,9 @@ run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "npm test" npm test
 run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check
 run_step "npm run check:c420ui-bootstrap-artifacts" npm run check:c420ui-bootstrap-artifacts
+# git diff --check only detects whitespace errors; git diff --exit-code is the
+# dirty-worktree gate that proves generated artifact checks did not rewrite files.
+run_step "git diff --exit-code" git diff --exit-code
 run_step "npm run docs:check-ai" npm run docs:check-ai
 run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
 run_step "bash scripts/check-shell-ui-api.sh" bash scripts/check-shell-ui-api.sh

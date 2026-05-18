@@ -36,6 +36,13 @@ function readBundle(): string {
 const strictManifestMetadata =
   process.env.CANVA_STRICT_C420UI_ARTIFACT_METADATA === "1";
 
+const C420UI_MANIFEST_METADATA_FIELD_MAPPING = [
+  ["dependentProjectBuildRevision", "buildRevision"],
+  ["dependentProjectFullVersion", "fullVersion"],
+  ["dependentProjectDisplayVersion", "displayVersion"],
+  ["dependentProjectPhase", "phase"],
+] as const;
+
 for (const bundle of bundles) {
   test(`${bundle} passes node --check`, () => {
     const result = spawnSync(process.execPath, ["--check", bundle], {
@@ -119,6 +126,15 @@ test("run-c420ui.cjs does not interleave host validators into interactive runner
   assert.doesNotMatch(runnerBlock, /function assertOptionalPurposeArray/);
 });
 
+test("run-c420ui.cjs codePointAt polyfill exists", () => {
+  const bundle = readBundle();
+  const start = bundle.indexOf("exports2.codePointAt = function");
+  const end = bundle.indexOf("exports2.fromCodePoint", start);
+
+  assert.ok(start >= 0);
+  assert.ok(end > start);
+});
+
 test("run-c420ui.cjs codePointAt polyfill defines size before use", () => {
   const bundle = readBundle();
   const start = bundle.indexOf("exports2.codePointAt = function");
@@ -156,9 +172,8 @@ test("c420ui bootstrap manifest metadata fields are well-formed", () => {
   assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
 
   if (strictManifestMetadata) {
-    assert.equal(manifest.dependentProjectBuildRevision, buildMetadata.buildRevision);
-    assert.equal(manifest.dependentProjectFullVersion, buildMetadata.fullVersion);
-    assert.equal(manifest.dependentProjectDisplayVersion, buildMetadata.displayVersion);
-    assert.equal(manifest.dependentProjectPhase, buildMetadata.phase);
+    for (const [manifestField, metadataField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {
+      assert.equal(manifest[manifestField], buildMetadata[metadataField]);
+    }
   }
 });
