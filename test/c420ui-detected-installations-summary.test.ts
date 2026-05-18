@@ -10,6 +10,7 @@ import type { c420uiOverviewStatus } from "../packages/c420ui/src/detection";
 function status(
   installations: c420uiOverviewStatus["installations"],
   artifactFragments?: c420uiOverviewStatus["artifactFragments"],
+  runtime?: c420uiOverviewStatus["runtime"],
 ): c420uiOverviewStatus {
   return {
     project: {
@@ -21,6 +22,7 @@ function status(
     },
     installations,
     ...(artifactFragments ? { artifactFragments } : {}),
+    ...(runtime ? { runtime } : {}),
     warnings: [],
   };
 }
@@ -115,16 +117,43 @@ test("renders Linux Artifacts in its own panel", () => {
         nativeUser: false,
       },
       [{ id: "linux-unpacked", kind: "linux-unpacked", label: "Linux unpacked", detected: true, fullVersion: "0.1.4-15.Dev.9+gunpacked" }],
+      { electronVersion: "41.5.0", nodeVersion: "22.0.0", npmVersion: "10.0.0" },
     ),
     colors,
   );
   const text = panels.linuxArtifacts.join("\n");
 
   assert.equal(panels.linuxArtifacts.length, 1);
-  assert.match(text, /Native system installation v0\.1\.4-15\.Dev\.9\+gnative/);
-  assert.match(text, /Native user installation not detected/);
+  assert.match(text, /Electron v41\.5\.0/);
+  assert.match(text, /Node v22\.0\.0/);
+  assert.match(text, /npm v10\.0\.0/);
   assert.match(text, /Linux unpacked v0\.1\.4-15\.Dev\.9\+gunpacked/);
   assert.doesNotMatch(text, /Linux Artifacts|Detected Installations|Generated Artifacts/);
+});
+
+test("Linux Artifacts does not duplicate installation rows", () => {
+  const panels = formatDetectionPanelSummaries(
+    status(
+      {
+        nativeSystem: true,
+        nativeSystemFullVersion: "0.1.4-15.Dev.9+gnative",
+        nativeUser: true,
+        nativeUserFullVersion: "0.1.4-15.Dev.9+guser",
+        flatpakSystem: true,
+        flatpakSystemFullVersion: "0.1.4-15.Dev.9+gflatpak-system",
+        flatpakUser: true,
+        flatpakUserFullVersion: "0.1.4-15.Dev.9+gflatpak-user",
+      },
+      [{ id: "linux-unpacked", kind: "linux-unpacked", label: "Linux unpacked", detected: true, fullVersion: "0.1.4-15.Dev.9+gunpacked" }],
+      { electronVersion: "41.5.0", nodeVersion: "22.0.0", npmVersion: "10.0.0" },
+    ),
+    colors,
+  );
+  const text = panels.linuxArtifacts.join("\n");
+
+  assert.doesNotMatch(text, /Native system installation/);
+  assert.doesNotMatch(text, /Native user installation/);
+  assert.doesNotMatch(text, /Flatpak System|Flatpak User/);
 });
 
 test("does not repeat panel titles inside panel content", () => {
@@ -149,14 +178,16 @@ test("renders Linux Artifacts as comma-separated artifact/version summary", () =
         nativeUser: false,
       },
       [{ id: "linux-unpacked", kind: "linux-unpacked", label: "Linux unpacked", detected: true, fullVersion: "0.1.4-15.Dev.9+gunpacked" }],
+      { electronVersion: "41.5.0", nodeVersion: "22.0.0", npmVersion: "10.0.0" },
     ),
     colors,
   );
 
   assert.equal(
     panels.linuxArtifacts[0],
-    "Native system installation v0.1.4-15.Dev.9+gnative, Native user installation not detected, Linux unpacked v0.1.4-15.Dev.9+gunpacked",
+    "Electron v41.5.0, Node v22.0.0, npm v10.0.0, Linux unpacked v0.1.4-15.Dev.9+gunpacked",
   );
+  assert.equal(panels.linuxArtifacts[0].split(", ").length, 4);
 });
 
 test("Linux Artifacts falls back safely to version unknown", () => {
@@ -168,7 +199,10 @@ test("Linux Artifacts falls back safely to version unknown", () => {
     colors,
   );
 
-  assert.match(panels.linuxArtifacts[0], /Linux unpacked version unknown/);
+  assert.equal(
+    panels.linuxArtifacts[0],
+    "Electron unknown, Node unknown, npm unknown, Linux unpacked unknown",
+  );
 });
 
 test("artifact summary falls back to artifact version", () => {
@@ -228,7 +262,7 @@ test("loading state uses Native System/User and Flatpak System/User labels", () 
 test("loading state keeps Linux Artifacts compact", () => {
   const panels = formatDetectionPanelSummaries(null, colors);
 
-  assert.deepEqual(panels.linuxArtifacts, ["Native/Unpacked installations loading..."]);
+  assert.deepEqual(panels.linuxArtifacts, ["Electron/Node/npm loading..."]);
 });
 
 test("planned artifact renders as not detected", () => {

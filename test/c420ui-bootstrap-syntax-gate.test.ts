@@ -4,15 +4,14 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import { C420UI_BOOTSTRAP_ARTIFACTS } from "../scripts/checks/canva-linux/c420ui-bootstrap-check-helpers";
+
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT ||
   process.env.CANVA_TEST_REPO_ROOT ||
   path.resolve(__dirname, "..", "..");
-const artifacts = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
-] as const;
+const artifactPaths = C420UI_BOOTSTRAP_ARTIFACTS;
+const artifacts = artifactPaths.map((artifact) => path.basename(artifact));
 
 function makeTempDir(prefix: string): string {
   const parent = path.join(rootDir, ".build", "test-temp");
@@ -90,3 +89,18 @@ for (const artifact of artifacts) {
     }
   });
 }
+
+test("artifact list comes from shared helper", () => {
+  assert.deepEqual(artifactPaths, [
+    "bootstrap/c420ui/run-c420ui.cjs",
+    "bootstrap/c420ui/run-c420ui-cli.cjs",
+    "bootstrap/c420ui/c420ui-builder.cjs",
+  ]);
+
+  const nodeCheckSource = fs.readFileSync(
+    path.join(rootDir, "scripts/checks/canva-linux/check-c420ui-node-check.ts"),
+    "utf8",
+  );
+  assert.match(nodeCheckSource, /C420UI_BOOTSTRAP_ARTIFACTS/);
+  assert.doesNotMatch(nodeCheckSource, /const bundles = \[/);
+});

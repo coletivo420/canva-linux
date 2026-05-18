@@ -17,6 +17,7 @@ export const C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS = [
   "scripts/c420ui-builder.ts",
   "canva-linux-c420ui-builder",
   "scripts/build-c420ui-bootstrap.ts",
+  "scripts/checks/canva-linux/c420ui-bootstrap-check-helpers.ts",
   "config/canva-linux",
   "packages/c420ui/package.json",
   "package.json",

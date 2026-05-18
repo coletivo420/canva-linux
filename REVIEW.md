@@ -13,11 +13,15 @@
 ## c420ui logs
 
 - The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
+- Linux Artifacts must not duplicate Native/Flatpak installation detection rows. It is a compact runtime/build summary
+  for Electron, Node/npm, and Linux unpacked artifact versions.
 
 ## c420ui bootstrap generated artifact review
 
 - bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
   Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
+- C420UI_BOOTSTRAP_OUT_DIR must be validated before any recursive cleanup. Bootstrap checks use shared artifact/hash
+  helpers to avoid drift between gates.
 - The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,

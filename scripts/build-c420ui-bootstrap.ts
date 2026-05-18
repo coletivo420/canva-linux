@@ -1,7 +1,7 @@
 import * as esbuild from "esbuild";
-import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
+import os from "node:os";
 import path from "node:path";
 
 import {
@@ -20,16 +20,14 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "./c420ui-adapter/bootstrap/source-hash";
 import { loadEffectiveBuildMetadata } from "./c420ui-adapter/build-metadata-loader";
+import {
+  calculateFileHash,
+  C420UI_BOOTSTRAP_ARTIFACTS,
+} from "./checks/canva-linux/c420ui-bootstrap-check-helpers";
 
 type PackageJson = {
   version?: string;
 };
-
-const C420UI_BOOTSTRAP_ARTIFACTS = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
-] as const;
 
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
@@ -58,6 +56,40 @@ function resolveBootstrapDir(rootDir: string): string {
     : path.join(rootDir, "bootstrap", "c420ui");
 }
 
+function assertSafeBootstrapOutputDir(rootDir: string, bootstrapDir: string): void {
+  const resolvedRoot = path.resolve(rootDir);
+  const resolvedOut = path.resolve(bootstrapDir);
+  const tmpRoot = path.resolve(os.tmpdir());
+
+  const forbidden = new Set([
+    resolvedRoot,
+    path.dirname(resolvedRoot),
+    path.parse(resolvedOut).root,
+    process.cwd(),
+    path.resolve(rootDir, "."),
+    path.resolve(rootDir, ".."),
+  ]);
+
+  if (forbidden.has(resolvedOut)) {
+    throw new Error(`Refusing to clean unsafe c420ui bootstrap output directory: ${resolvedOut}`);
+  }
+
+  const relative = path.relative(resolvedRoot, resolvedOut);
+  const insideRepo = relative && !relative.startsWith("..") && !path.isAbsolute(relative);
+  const insideTemp = resolvedOut === tmpRoot || resolvedOut.startsWith(`${tmpRoot}${path.sep}`);
+
+  if (!insideRepo && !insideTemp) {
+    throw new Error(`Refusing to clean c420ui bootstrap output outside repository/temp: ${resolvedOut}`);
+  }
+
+  if (
+    path.basename(resolvedOut) !== "c420ui" &&
+    !path.basename(resolvedOut).startsWith("c420ui-")
+  ) {
+    throw new Error(`c420ui bootstrap output must be a dedicated c420ui directory: ${resolvedOut}`);
+  }
+}
+
 function cleanBootstrapOutput(bootstrapDir: string): void {
   fs.rmSync(bootstrapDir, { recursive: true, force: true });
   fs.mkdirSync(bootstrapDir, { recursive: true });
@@ -65,10 +97,9 @@ function cleanBootstrapOutput(bootstrapDir: string): void {
 
 function calculateArtifactHashes(bootstrapDir: string): Record<string, string> {
   const hashes: Record<string, string> = {};
-  for (const artifact of C420UI_BOOTSTRAP_ARTIFACTS) {
-    hashes[artifact] = `sha256:${createHash("sha256")
-      .update(fs.readFileSync(path.join(bootstrapDir, artifact)))
-      .digest("hex")}`;
+  for (const relativePath of C420UI_BOOTSTRAP_ARTIFACTS) {
+    const artifact = path.basename(relativePath);
+    hashes[artifact] = calculateFileHash(path.join(bootstrapDir, artifact));
   }
   return hashes;
 }
@@ -104,6 +135,7 @@ function copyBlessedRuntimeAssets(rootDir: string, bootstrapDir: string): void {
 async function main(): Promise<void> {
   const rootDir = findProjectRoot();
   const bootstrapDir = resolveBootstrapDir(rootDir);
+  assertSafeBootstrapOutputDir(rootDir, bootstrapDir);
   cleanBootstrapOutput(bootstrapDir);
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");

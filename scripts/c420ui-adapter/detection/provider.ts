@@ -1,10 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
 import {
+  execFileSync,
   spawnSync,
   type SpawnSyncOptionsWithStringEncoding,
   type SpawnSyncReturns,
 } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
 import {
   boolFromC420UIDetectionValue,
   parseC420UIDetectionKeyValueLines,
@@ -40,6 +41,9 @@ type CanvaLinuxOverviewStatusProvider = Omit<
 
 type PackageJson = {
   version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  engines?: { node?: string };
   repository?: { url?: string } | string;
 };
 
@@ -87,6 +91,37 @@ function readPackage(rootDir: string): PackageJson {
   return JSON.parse(
     fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
   ) as PackageJson;
+}
+
+function readPackageDependencyVersion(rootDir: string, name: string): string | undefined {
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
+  ) as {
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+  };
+
+  return packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name];
+}
+
+function normalizeSemverRange(value: string | undefined): string | undefined {
+  return value?.replace(/^[~^>=< ]+/, "").trim() || undefined;
+}
+
+function readNodeVersion(rootDir: string): string | undefined {
+  const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8")) as {
+    engines?: { node?: string };
+  };
+
+  return normalizeSemverRange(packageJson.engines?.node) ?? process.versions.node;
+}
+
+function readNpmVersion(): string | undefined {
+  try {
+    return execFileSync("npm", ["--version"], { encoding: "utf8" }).trim();
+  } catch {
+    return undefined;
+  }
 }
 
 function readPhase(rootDir: string): string {
@@ -260,6 +295,11 @@ export function createCanvaLinuxDetectionProvider(
           ...buildInstallations(detection.values, artifactFragments),
         },
         artifactFragments,
+        runtime: {
+          electronVersion: normalizeSemverRange(readPackageDependencyVersion(rootDir, "electron")),
+          nodeVersion: readNodeVersion(rootDir),
+          npmVersion: readNpmVersion(),
+        },
         warnings: detection.warnings ?? [],
       };
     },

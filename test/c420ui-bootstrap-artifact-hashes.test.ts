@@ -1,21 +1,21 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import fs from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { validateManifestArtifactHashes } from "../scripts/checks/canva-linux/check-c420ui-bootstrap";
+import {
+  C420UI_BOOTSTRAP_ARTIFACTS,
+  calculateFileHash,
+  validateManifestArtifactHashes,
+} from "../scripts/checks/canva-linux/c420ui-bootstrap-check-helpers";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT ||
   process.env.CANVA_TEST_REPO_ROOT ||
   path.resolve(__dirname, "..", "..");
-const artifacts = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
-] as const;
+const artifacts = C420UI_BOOTSTRAP_ARTIFACTS.map((artifact) => path.basename(artifact));
 
 type BootstrapManifest = {
   generatedBy?: string;
@@ -30,12 +30,6 @@ function makeTempDir(prefix: string): string {
   const parent = path.join(rootDir, ".build", "test-temp");
   fs.mkdirSync(parent, { recursive: true });
   return fs.mkdtempSync(path.join(parent, prefix));
-}
-
-function sha256(filePath: string): string {
-  return `sha256:${createHash("sha256")
-    .update(fs.readFileSync(filePath))
-    .digest("hex")}`;
 }
 
 function copyBootstrapToTemp(tempDir: string): string {
@@ -97,7 +91,7 @@ test("manifest artifact hashes match committed bootstrap artifacts", () => {
   for (const artifact of artifacts) {
     assert.equal(
       manifest.artifactHashes?.[artifact],
-      sha256(path.join(rootDir, "bootstrap", "c420ui", artifact)),
+      calculateFileHash(path.join(rootDir, "bootstrap", "c420ui", artifact)),
     );
   }
 });
@@ -116,7 +110,7 @@ test("manifest hash validation fails when an artifact is manually edited", () =>
       path.join(tempRoot, "bootstrap", "c420ui", "manifest.json"),
     );
     const failures: string[] = [];
-    validateManifestArtifactHashes(tempRoot, manifest, failures);
+    validateManifestArtifactHashes({ rootDir: tempRoot, manifest, failures });
 
     assert.equal(failures.length, 1);
     assert.match(failures[0], /run-c420ui\.cjs: artifact hash differs/);
@@ -155,9 +149,73 @@ test("build:c420ui-bootstrap cleans output directory before writing", () => {
     const manifest = readJson<BootstrapManifest>(path.join(outDir, "manifest.json"));
     assert.equal(manifest.generatedBy, "scripts/build-c420ui-bootstrap.ts");
     for (const artifact of artifacts) {
-      assert.equal(manifest.artifactHashes?.[artifact], sha256(path.join(outDir, artifact)));
+      assert.equal(manifest.artifactHashes?.[artifact], calculateFileHash(path.join(outDir, artifact)));
     }
   } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+function runBootstrapBuilder(builder: string, outDir: string): ReturnType<typeof spawnSync> {
+  return spawnSync(process.execPath, [builder], {
+    cwd: rootDir,
+    encoding: "utf8",
+    env: {
+      ...process.env,
+      CANVA_SCRIPT_REPO_ROOT: rootDir,
+      C420UI_BOOTSTRAP_OUT_DIR: outDir,
+    },
+    shell: false,
+  });
+}
+
+for (const outDir of [".", ".."] as const) {
+  test(`build rejects C420UI_BOOTSTRAP_OUT_DIR=${outDir}`, () => {
+    const tempDir = makeTempDir("c420ui-unsafe-build-");
+
+    try {
+      const builder = compileBootstrapBuilder(tempDir);
+      const result = runBootstrapBuilder(builder, outDir);
+
+      assert.notEqual(result.status, 0);
+      assert.match(`${result.stdout}\n${result.stderr}`, /Refusing to clean unsafe c420ui bootstrap output directory/);
+    } finally {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  });
+}
+
+test("build rejects broad output dir", () => {
+  const tempDir = makeTempDir("c420ui-broad-build-");
+
+  try {
+    const builder = compileBootstrapBuilder(tempDir);
+    const result = runBootstrapBuilder(builder, "bootstrap");
+
+    assert.notEqual(result.status, 0);
+    assert.match(`${result.stdout}\n${result.stderr}`, /c420ui bootstrap output must be a dedicated c420ui directory/);
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("build accepts temp c420ui-* staging dir", () => {
+  const buildDir = makeTempDir("c420ui-temp-staging-build-");
+  const tempDir = fs.mkdtempSync(path.join(tmpdir(), "c420ui-staging-test-"));
+
+  try {
+    const outDir = path.join(tempDir, "c420ui-staging");
+    const builder = compileBootstrapBuilder(buildDir);
+    const result = runBootstrapBuilder(builder, outDir);
+
+    assert.equal(
+      result.status,
+      0,
+      `bootstrap builder failed: ${result.stderr || result.stdout}`,
+    );
+    assert.equal(fs.existsSync(path.join(outDir, "manifest.json")), true);
+  } finally {
+    fs.rmSync(buildDir, { recursive: true, force: true });
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
