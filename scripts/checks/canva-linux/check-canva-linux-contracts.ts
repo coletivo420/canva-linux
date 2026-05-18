@@ -2309,6 +2309,7 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
   const scripts = packageJson.scripts ?? {};
   const nodeCheckScript = scripts["check:c420ui-node-check"] ?? "";
   const artifactGateScript = scripts["check:c420ui-bootstrap-artifacts"] ?? "";
+  const validateProjectScript = scripts["validate:project"] ?? "";
   const validateProject = readProjectFile(rootDir, "scripts/validate-project.sh");
   const adapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
 
@@ -2329,6 +2330,12 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
   }
   if (artifactGateScript.includes("npm run build:c420ui-bootstrap")) {
     failures.push("check:c420ui-bootstrap-artifacts must not run build:c420ui-bootstrap before validating artifacts");
+  }
+  if (!validateProjectScript.includes("./scripts/validate-project.sh")) {
+    failures.push("validate:project must delegate to ./scripts/validate-project.sh");
+  }
+  if (validateProjectScript.includes("npm run build:metadata")) {
+    failures.push("validate:project must not run build:metadata before validate-project.sh pins committed metadata");
   }
   if (!validateProject.includes('run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check')) {
     failures.push("validate-project.sh must call check:c420ui-node-check explicitly");
