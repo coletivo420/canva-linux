@@ -52,7 +52,7 @@ find_flatpak_repo_ref() {
   command -v ostree >/dev/null 2>&1 || return 0
 
   ostree --repo=repo refs 2>/dev/null \
-    | grep -E "^app/${APP_ID}/${FLATPAK_ARCH}/" \
+    | grep -E "^app/${FLATPAK_APP_ID}/${FLATPAK_ARCH}/" \
     | sort \
     | tail -n1 || true
 }
