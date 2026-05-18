@@ -21,7 +21,9 @@ function runCheck(failures: string[], check: ContractCheck): void {
   }
 }
 
-
+function hasDuplicateEntries(values: readonly string[]): boolean {
+  return new Set(values).size !== values.length;
+}
 
 type CoreCheckFileKind = "shell" | "typescript";
 
@@ -2698,7 +2700,11 @@ export function main(): number {
   const failures: string[] = [];
   const rootDir = findProjectRoot();
 
-  if (new Set(detectionVersionFields).size !== detectionVersionFields.length) {
+  if (hasDuplicateEntries(detectionBooleanFields)) {
+    failures.push("detectionBooleanFields must not contain duplicate entries");
+  }
+
+  if (hasDuplicateEntries(detectionVersionFields)) {
     failures.push("detectionVersionFields must not contain duplicate entries");
   }
 
