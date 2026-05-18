@@ -41,6 +41,9 @@ Any behavioral change must be made in TypeScript sources and then propagated thr
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
+Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
+The strict gate rebuilds metadata and c420ui bootstrap before comparing manifest/build-metadata fields,
+avoiding stale self-referential commit-hash failures.
 
 The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
 malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
@@ -475,6 +478,11 @@ that requires its own planned change.
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
 `c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
 `package.json`. Do not collapse them into a single ambiguous `version` field.
+
+## c420ui adapter public keys
+
+The c420ui adapter intentionally exposes both loadProjectInfo and loadProjectConfig. They are different public keys and must not be deduplicated
+unless the adapter interface is changed and all callers are updated.
 
 ## c420ui startup dependency ordering
 

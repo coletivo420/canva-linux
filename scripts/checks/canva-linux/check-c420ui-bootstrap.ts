@@ -41,6 +41,8 @@ const C420UI_RUNTIME_SYNTAX_MESSAGE =
   "c420ui bootstrap bundle failed syntax validation. Regenerate bootstrap from TypeScript sources.";
 const C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE =
   "Generated c420ui bootstrap artifacts are stale. Run npm run build:c420ui-bootstrap.";
+const C420UI_METADATA_MISMATCH_MESSAGE =
+  "c420ui manifest/build metadata mismatch. Run npm run build:metadata && npm run build:c420ui-bootstrap before running the strict artifact gate.";
 
 function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: string[]): void {
   const malformedSigcontClosure = /process\.once\("SIGCONT", function\(\) \{[\s\S]{0,600}?\n\s*};\s*\n\s*process\.kill\(process\.pid, "SIGTSTP"\)/.test(content);
@@ -76,6 +78,25 @@ function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: s
     : content.slice(progressStateStart, progressStateEnd);
   if (/event\.type === "action:start"/.test(progressStateBlock)) {
     failures.push("bootstrap/c420ui/run-c420ui.cjs: toProgressState is corrupted with action event handler logic; regenerate bootstrap from TypeScript sources.");
+  }
+
+  const codePointAtStart = content.indexOf("exports2.codePointAt = function");
+  const codePointAtEnd = content.indexOf("exports2.fromCodePoint", codePointAtStart);
+  const codePointAtBlock = codePointAtStart === -1 || codePointAtEnd === -1
+    ? ""
+    : content.slice(codePointAtStart, codePointAtEnd);
+  const codePointAtSizeIndex = codePointAtBlock.indexOf("var size = string.length;");
+  const codePointAtUseIndex = codePointAtBlock.indexOf("index < 0 || index >= size");
+  if (
+    codePointAtStart === -1 ||
+    codePointAtEnd === -1 ||
+    codePointAtSizeIndex === -1 ||
+    codePointAtUseIndex === -1 ||
+    codePointAtSizeIndex > codePointAtUseIndex
+  ) {
+    failures.push(
+      "bootstrap/c420ui/run-c420ui.cjs: codePointAt polyfill must define var size = string.length before size is used.",
+    );
   }
 }
 
@@ -206,13 +227,8 @@ function readJson<T>(rootDir: string, relativePath: string): T | null {
   }
 }
 
-function hasRevisionOverride(): boolean {
-  return [
-    "CANVA_LINUX_BUILD_REVISION",
-    "GITHUB_SHA",
-    "CI_COMMIT_SHA",
-    "SOURCE_COMMIT",
-  ].some((key) => Boolean(process.env[key]?.trim()));
+function isStrictManifestMetadataGate(): boolean {
+  return process.env.CANVA_STRICT_C420UI_ARTIFACT_METADATA === "1";
 }
 
 function validateManifestBuildMetadata(
@@ -227,30 +243,44 @@ function validateManifestBuildMetadata(
     return;
   }
 
-  for (const [manifestField, metadataField] of [
+  for (const [manifestField] of [
     ["dependentProjectBuildRevision", "buildRevision"],
     ["dependentProjectFullVersion", "fullVersion"],
     ["dependentProjectDisplayVersion", "displayVersion"],
     ["dependentProjectPhase", "phase"],
   ] as const) {
-    if (manifest[manifestField] !== packagedMetadata[metadataField]) {
-      failures.push(`bootstrap/c420ui/manifest.json: ${manifestField} must match ${metadataPath} ${metadataField}; run npm run build:c420ui-bootstrap`);
+    if (typeof manifest[manifestField] !== "string" || manifest[manifestField] === "") {
+      failures.push(`bootstrap/c420ui/manifest.json: ${manifestField} must be a non-empty string`);
     }
   }
 
-  // Exact effective metadata checks are deterministic in packaged mode and in
-  // CI/env override mode. A local source checkout without an override can move
-  // HEAD after generated files are committed, so the stale-HEAD case remains
-  // covered by build:c420ui-bootstrap using loadEffectiveBuildMetadata and by
-  // the generated-metadata comparison above.
-  if (!fs.existsSync(path.join(rootDir, ".git")) || hasRevisionOverride()) {
-    const effectiveMetadata = loadEffectiveBuildMetadata(rootDir);
-    if (manifest.dependentProjectBuildRevision !== effectiveMetadata.buildRevision) {
-      failures.push("bootstrap/c420ui/manifest.json: dependentProjectBuildRevision must match loadEffectiveBuildMetadata(rootDir).buildRevision");
+  if (!isStrictManifestMetadataGate()) return;
+
+  const effectiveMetadata = loadEffectiveBuildMetadata(rootDir);
+  const strictComparisons = [
+    ["dependentProjectBuildRevision", "buildRevision", packagedMetadata.buildRevision],
+    ["dependentProjectFullVersion", "fullVersion", packagedMetadata.fullVersion],
+    ["dependentProjectDisplayVersion", "displayVersion", packagedMetadata.displayVersion],
+    ["dependentProjectPhase", "phase", packagedMetadata.phase],
+  ] as const;
+
+  for (const [manifestField, metadataField, metadataValue] of strictComparisons) {
+    if (manifest[manifestField] !== metadataValue) {
+      failures.push(
+        `${C420UI_METADATA_MISMATCH_MESSAGE} ${manifestField} must match ${metadataPath} ${metadataField}.`,
+      );
     }
-    if (manifest.dependentProjectFullVersion !== effectiveMetadata.fullVersion) {
-      failures.push("bootstrap/c420ui/manifest.json: dependentProjectFullVersion must match loadEffectiveBuildMetadata(rootDir).fullVersion");
-    }
+  }
+
+  if (manifest.dependentProjectBuildRevision !== effectiveMetadata.buildRevision) {
+    failures.push(
+      `${C420UI_METADATA_MISMATCH_MESSAGE} dependentProjectBuildRevision must match loadEffectiveBuildMetadata(rootDir).buildRevision.`,
+    );
+  }
+  if (manifest.dependentProjectFullVersion !== effectiveMetadata.fullVersion) {
+    failures.push(
+      `${C420UI_METADATA_MISMATCH_MESSAGE} dependentProjectFullVersion must match loadEffectiveBuildMetadata(rootDir).fullVersion.`,
+    );
   }
 }
 

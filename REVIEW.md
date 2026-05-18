@@ -10,6 +10,9 @@
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
 - Reject changes that treat `bootstrap/c420ui/*.cjs` as source of truth, must not restore `canva-linux.sh`,
   or bypass the official TypeScript bootstrap build recipe.
+- Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
+  The strict gate rebuilds metadata and c420ui bootstrap before comparing manifest/build-metadata fields,
+  avoiding stale self-referential commit-hash failures.
 
 
 ## Dev.8 pinned home tab-strip guardrail
