@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { buildCanvaLinuxArtifactFragments } from "../scripts/canva-linux/detection/artifact-fragments";
+import { buildCanvaLinuxArtifactFragments } from "../scripts/c420ui-adapter/detection/artifact-fragments";
 
 function withProjectRoot(run: (rootDir: string) => void): void {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-linux-artifact-fragments-"));
@@ -121,12 +121,60 @@ test("detects SHA256SUMS", () => {
   });
 });
 
-test("keeps absent registered artifacts not detected and ignores planned future artifacts without outputs", () => {
+test("keeps absent registered artifacts not detected and includes planned artifacts without outputs", () => {
   withProjectRoot((rootDir) => {
     const fragments = buildCanvaLinuxArtifactFragments(rootDir);
 
     assert.equal(fragments.find((item) => item.id === "release-tarball")?.detected, false);
-    assert.equal(fragments.some((item) => item.id === "deb"), false);
+    assert.deepEqual(fragments.find((item) => item.id === "deb"), {
+      id: "deb",
+      kind: "deb",
+      label: "Debian package",
+      detected: false,
+    });
+  });
+});
+
+test("does not limit artifact fragments to AppImage", () => {
+  withProjectRoot((rootDir) => {
+    const ids = buildCanvaLinuxArtifactFragments(rootDir).map((item) => item.id);
+
+    assert.deepEqual(ids, [
+      "flatpak",
+      "appimage",
+      "linux-unpacked",
+      "release-tarball",
+      "release-checksums",
+      "deb",
+    ]);
+  });
+});
+
+test("Dev.10 artifact is selected after Dev.9 with numeric-aware sorting", () => {
+  withProjectRoot((rootDir) => {
+    fs.writeFileSync(
+      path.join(rootDir, "config/canva-linux/artifacts.json"),
+      `${JSON.stringify({
+        workflows: [
+          {
+            id: "appimage",
+            kind: "appimage",
+            label: "AppImage",
+            outputPattern: "dist/canva-linux-*-x86_64.AppImage",
+          },
+        ],
+      }, null, 2)}\n`,
+    );
+    const dev9 = path.join(rootDir, "dist/canva-linux-0.1.4-15.Dev.9-x86_64.AppImage");
+    const dev10 = path.join(rootDir, "dist/canva-linux-0.1.4-15.Dev.10-x86_64.AppImage");
+    fs.writeFileSync(dev9, "appimage");
+    fs.writeFileSync(dev10, "appimage");
+    fs.writeFileSync(`${dev9}.version`, "0.1.4-15.Dev.9\n");
+    fs.writeFileSync(`${dev10}.version`, "0.1.4-15.Dev.10\n");
+
+    const appImage = fragment(rootDir, "appimage");
+    assert.equal(appImage.path, "dist/canva-linux-0.1.4-15.Dev.10-x86_64.AppImage");
+    assert.equal(appImage.version, "0.1.4-15.Dev.10");
   });
 });
 

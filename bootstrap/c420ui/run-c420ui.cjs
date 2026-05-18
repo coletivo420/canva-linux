@@ -6833,16 +6833,16 @@ var require_program = __commonJS({
       process.once("SIGCONT", function() {
         resume();
         if (callback) callback();
-      });
-      process.kill(process.pid, "SIGTSTP");
+      };
     };
-    Program.prototype.pause = function(callback) {
-      var self = this, isAlt = this.isAlt, mouseEnabled = this.mouseEnabled;
-      this.lsaveCursor("pause");
-      if (isAlt) this.normalBuffer();
-      this.showCursor();
-      if (mouseEnabled) this.disableMouse();
-      var write = this.output.write;
+    Program.prototype.resume = function() {
+      if (this._resume) return this._resume();
+    };
+    var fs14 = require("fs");
+    var path16 = require("path");
+        this.file = path16.resolve(process.cwd(), file);
+        buf = fs14.readFileSync(this.file);
+      this.format = buf.readUInt32BE(0) === 2303741511 ? "png" : buf.slice(0, 3).toString("ascii") === "GIF" ? "gif" : buf.readUInt16BE(0) === 65496 ? "jpg" : path16.extname(this.file).slice(1).toLowerCase() || "png";
       this.output.write = function() {
       };
       if (this.input.setRawMode) {
@@ -7990,10 +7990,10 @@ var require_tng = __commonJS({
         3608007406,
         1308918612,
         956543938,
-        2808555105,
-        3495958263,
-        1231636301,
-        1047427035,
+      ];
+      return function crc32(buf) {
+        file = path16.resolve(process.cwd(), file);
+        buf = fs14.readFileSync(file);
         2932959818,
         3654703836,
         1088359270,
@@ -8437,10 +8437,10 @@ var require_ansiimage = __commonJS({
           height,
           scale: this.scale,
           ascii: this.options.ascii,
-          speed: this.options.speed,
-          filename: this.file
-        });
-        if (width == null || height == null) {
+      return this.img.pause();
+    };
+    var fs14 = require("fs");
+      data = JSON.parse(fs14.readFileSync(filename, "utf8"));
           this.width = this.img.cellmap[0].length;
           this.height = this.img.cellmap.length;
         }
@@ -8662,12 +8662,12 @@ var require_checkbox = __commonJS({
     function Checkbox(options) {
       var self = this;
       if (!(this instanceof Node)) {
-        return new Checkbox(options);
-      }
-      options = options || {};
-      Input.call(this, options);
-      this.text = options.content || options.text || "";
-      this.checked = this.value = options.checked || false;
+    }
+    Checkbox.prototype.__proto__ = Input.prototype;
+    Checkbox.prototype.type = "checkbox";
+    var fs14 = require("fs");
+          files = fs14.readdirSync(dir);
+            stat = fs14.lstatSync((dir === "/" ? "" : dir) + "/" + file);
       this.on("keypress", function(ch, key) {
         if (key.name === "enter" || key.name === "space") {
           self.toggle();
@@ -11353,20 +11353,20 @@ var require_list = __commonJS({
       this._listInitialized = true;
       this.selected = index;
       this.value = helpers.cleanTags(this.ritems[this.selected]);
-      if (!this.parent) return;
-      this.scrollTo(this.selected);
-      this.emit("select item", this.items[this.selected], this.selected);
-    };
-    List.prototype.move = function(offset) {
-      this.select(this.selected + offset);
-    };
-    List.prototype.up = function(offset) {
-      this.move(-(offset || 1));
-    };
-    List.prototype.down = function(offset) {
-      this.move(offset || 1);
-    };
-    List.prototype.pick = function(label, callback) {
+      if (label) this.setLabel(label);
+      this.screen.render();
+      this.once("action", function(el, selected) {
+        if (label) self.removeLabel();
+        self.screen.restoreFocus();
+        self.hide();
+        self.screen.render();
+    var path16 = require("path");
+    var fs14 = require("fs");
+        var value = item.content.replace(/\{[^{}]+\}/g, "").replace(/@$/, ""), file = path16.resolve(self.cwd, value);
+        return fs14.stat(file, function(err, stat) {
+      return fs14.readdir(cwd, function(err, list) {
+          var f = path16.resolve(cwd, name), stat;
+            stat = fs14.lstatSync(f);
       if (!callback) {
         callback = label;
         label = null;
@@ -11713,11 +11713,11 @@ var require_form = __commonJS({
             break;
           case "input":
             break;
-          case "textbox":
-            el.clearInput();
+          case "message":
+            break;
             return;
-          case "textarea":
-            el.clearInput();
+    var fs14 = require("fs");
+        if (fs14.existsSync(OverlayImage.w3mdisplay)) {
             return;
           case "button":
             delete el.value;
@@ -14854,10 +14854,10 @@ var require_unicode = __commonJS({
           throw RangeError("Invalid code point: " + codePoint);
         }
         if (codePoint <= 65535) {
-          codeUnits.push(codePoint);
-        } else {
-          codePoint -= 65536;
-          highSurrogate = (codePoint >> 10) + 55296;
+        high = [
+          hexify(high.charCodeAt(0)),
+    var path16 = require("path");
+    var fs14 = require("fs");
           lowSurrogate = codePoint % 1024 + 56320;
           codeUnits.push(highSurrogate, lowSurrogate);
         }
@@ -16128,14 +16128,14 @@ var require_screen = __commonJS({
       }
       var resume = function() {
         if (resume.done) return;
-        resume.done = true;
-        if (program2.input.setRawMode) {
-          program2.input.setRawMode(true);
-        }
-        program2.input.resume();
-        program2.output.write = write;
-        program2.alternateBuffer();
-        if (mouse) {
+      ps.on("exit", function(code) {
+        if (!callback) return;
+        return callback(null, code === 0);
+      return ps;
+        return fs14.writeFile(file, options.value, callback2);
+          return fs14.readFile(file, "utf8", function(err3, data) {
+            return fs14.unlink(file, function() {
+      file = path16.resolve(process.cwd(), file);
           program2.enableMouse();
           if (screen.options.sendFocus) {
             screen.program.setMouse({ sendFocus: true }, true);
@@ -16967,36 +16967,38 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
       footer.destroy();
       modal.destroy();
       overlay.destroy();
-      if (previousFocus && typeof previousFocus.focus === "function") {
-        previousFocus.focus();
-      }
-      screen.render();
-      resolve(result);
-    };
-    timer = setTimeout(() => {
-      close({
-        status: "timeout"
-      });
-    }, timeoutMs);
-    overlay.key(["escape"], () => {
-      close({
-        status: "canceled"
+        status: "submitted",
+        value: String(value ?? "")
       });
     });
-    input.key(["enter"], () => {
-      input.submit();
-    });
-    input.on("cancel", () => {
-      setImmediate(() => {
-        close({
-          status: "canceled"
-        });
-      });
-    });
-    input.on("submit", (value) => {
-      close({
 function artifactVersion(fragment) {
   return fragment.fullVersion || fragment.version;
+}
+function formatArtifactLine(fragment, formatStatus) {
+  return `  ${fragment.label}: ${formatStatus(fragment.detected, artifactVersion(fragment))}`;
+}
+      `Detected Installations`,
+      `  Native System: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
+      `  Native User: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
+      `  Flatpak System: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
+      `  Flatpak User: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
+      `Generated Artifacts`,
+      `  AppImage: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`
+  const lines = [
+    "Detected Installations",
+    `  Flatpak User: ${fmt(Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion))}`
+  if (s.artifactFragments) {
+    lines.push(
+      "Generated Artifacts",
+      ...s.artifactFragments.map((fragment) => formatArtifactLine(fragment, fmt))
+    );
+  } else {
+    lines.push(
+      "Generated Artifacts",
+      `  AppImage: ${fmt(Boolean(i.appImageArtifacts), detectedVersion(i.appImageFullVersion, i.appImageVersion))}`
+    );
+  }
+  return lines;
 }
 function formatArtifactLine(fragment, formatStatus) {
   return `  ${fragment.label}: ${formatStatus(fragment.detected, artifactVersion(fragment))}`;
@@ -17702,22 +17704,22 @@ function createInteractiveActionRunner(options) {
       state.running = false;
       state.progressState = "canceled";
       options.setRunning(false);
-      options.setProgress("canceled", 0, "Canceled");
-      options.appendLogText("[info] Action canceled before execution.\n", "system");
-      state.lastResult = result;
-      return result;
+  function cancel() {
+    if (!activeAbortController || activeAbortController.signal.aborted) {
+      return false;
     }
-    const abortController = new AbortController();
-    activeAbortController = abortController;
-    try {
-      const result = await engine.runAction(action, {
-        dryRun,
-        yes: confirmed,
-        signal: abortController.signal
-      });
-      state.lastResult = result;
-      if (result.status === "failed" && result.message) {
-        options.appendLogText(`${result.message}
+    activeAbortController.abort();
+    options.appendLogText("[info] Cancellation requested.\n", "system");
+    state.progressState = "canceled";
+    options.setProgress("canceled", 0, "Canceled");
+function assertOptionalBoolean(value, key, failures, path16) {
+    failures.push(`${path16}.${key} must be a boolean`);
+function assertOptionalString(value, key, failures, path16) {
+    failures.push(`${path16}.${key} must be a string`);
+function assertOptionalStringArray(value, key, failures, path16) {
+    failures.push(`${path16}.${key} must be a string array`);
+function assertOptionalPurposeArray(value, key, failures, path16) {
+    failures.push(`${path16}.${key} must contain only known host dependency purposes`);
 `, "system");
         state.progressState = "failed";
         options.setRunning(false);
@@ -19248,12 +19250,12 @@ function createApp(options) {
   applyLogPanelLabel();
   importLauncherSessionLog();
   appendLogText(
-    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
-`,
-    "system"
-  );
-  appendLogText(`[info] Settings loaded from ${settingsPath}.
-`, "system");
+    import_node_path2 = __toESM(require("node:path"));
+var import_node_path15 = __toESM(require("node:path"));
+// packages/c420ui/src/terminal/runtime.ts
+function loadC420UITerminalApp() {
+var import_node_fs12 = __toESM(require("node:fs"));
+var import_node_path13 = __toESM(require("node:path"));
   setView("main");
   void refreshDetectedInstallations("startup");
   renderDiagnosticsBox();
@@ -20327,7 +20329,59 @@ function validateC420UIDevelopmentConfig(config) {
 function supportsDryRunAction(action) {
   if (isC420UIPlannedAction(action)) return false;
   if (action.dryRun === "disabled") return false;
-  return action.kind === "command" || action.dryRun === "supported" || action.dryRun === "required";
+function createC420UIDevelopmentWorkflowFromAction(task, action) {
+  assertC420UIDevelopmentTaskMatchesAction(task, action);
+  const phase = kindToWorkflowPhase(task.kind);
+  const workflowAction = {
+    ...action,
+    phase
+  };
+  return {
+    id: task.id,
+    label: task.label || action.label,
+    phase,
+    actions: [workflowAction],
+    requiresRoot: action.requiresRoot,
+    supportsDryRun: task.supportsDryRun
+  };
+}
+
+// packages/c420ui/src/terminal/logo.ts
+var c420uiLogoLines = [
+  "\u2584\u2584  \u2588 \u2588 \u2584\u2584\u2584 \u2584\u2580\u2584  \u2584 \u2584  \u2584",
+  "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
+  "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
+];
+
+// scripts/c420ui-adapter/adapter.ts
+init_settings();
+
+// scripts/c420ui-adapter/detection/provider.ts
+var import_node_child_process5 = require("node:child_process");
+
+// scripts/canva-linux/project-root.ts
+var import_node_fs5 = __toESM(require("node:fs"));
+var import_node_path6 = __toESM(require("node:path"));
+function defaultRootSearchDir() {
+  return import_node_path6.default.resolve(__dirname, "../..");
+}
+function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
+  let current = import_node_path6.default.resolve(startDir);
+  while (true) {
+    if (import_node_fs5.default.existsSync(import_node_path6.default.join(current, "package.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/actions.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/project-ui.json"))) {
+      return current;
+    }
+    const parent = import_node_path6.default.dirname(current);
+    if (parent === current) return defaultRootSearchDir();
+    current = parent;
+  }
+}
+
+// scripts/c420ui-adapter/detection/artifact-fragments.ts
+var ARTIFACT_PATH_COLLATOR = new Intl.Collator(void 0, {
+  numeric: true,
+  sensitivity: "base"
+});
 }
 function assertC420UIDevelopmentTaskMatchesAction(task, action) {
   validateC420UIDevelopmentTasks([task]);
@@ -20393,7 +20447,7 @@ function resolveOutputPattern(outputPattern, version) {
 function escapeRegExp(value) {
   return value.replace(/[|\\{}()[\]^$+?.]/g, "\\$&");
 }
-function patternToRegExp(pattern) {
+  return candidates.sort(ARTIFACT_PATH_COLLATOR.compare);
   const normalized = normalizeConfigPath(pattern);
   const source = normalized.split("*").map(escapeRegExp).join("[^\\/]*");
   return new RegExp(`^${source}$`);
@@ -20452,188 +20506,140 @@ function readArtifactMetadata(artifactPath) {
   for (const sidecar of sidecars) {
     if (!import_node_fs6.default.existsSync(sidecar)) continue;
     if (sidecar.endsWith(".json")) return normalizeMetadata(readMetadataJson(sidecar));
-    return readVersionSidecar(sidecar);
-  }
-  if (import_node_fs6.default.existsSync(artifactPath) && import_node_fs6.default.statSync(artifactPath).isDirectory()) {
-    for (const marker of [
-      import_node_path7.default.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
-      import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json")
-    ]) {
-      if (import_node_fs6.default.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
+    if (typeof workflow.outputPattern !== "string") {
+      fragments.push({
+        id: workflow.id,
+        kind: artifactKind(workflow.id, workflow.kind),
+        label: workflow.label,
+        detected: false
+      });
+      continue;
     }
   }
-  return {};
-}
-function inferVersionFromFilename(artifactPath, packageVersion) {
-  const name = import_node_path7.default.basename(artifactPath);
-  if (name.includes(packageVersion)) return packageVersion;
-  const match = name.match(/^canva-linux-([0-9][^-]*(?:[-+.][A-Za-z0-9.]+)*)-/);
-  return match?.[1];
-}
-function toRelativeArtifactPath(rootDir2, artifactPath) {
-  return normalizeConfigPath(import_node_path7.default.relative(rootDir2, artifactPath));
-}
-function buildCanvaLinuxArtifactFragments(rootDir2) {
-  void SUPPORTED_ARTIFACT_PATTERN_EXAMPLES;
-  const packageVersion = readPackageVersion(rootDir2);
-  const workflows = loadArtifactWorkflows(rootDir2);
-  const fragments = [];
-  for (const workflow of workflows) {
-    if (typeof workflow.id !== "string" || typeof workflow.kind !== "string" || typeof workflow.label !== "string") continue;
-    if (typeof workflow.outputPattern !== "string") continue;
-    const outputPattern = resolveOutputPattern(workflow.outputPattern, packageVersion);
-    const candidates = candidatePathsForPattern(rootDir2, outputPattern);
-    const artifactPath = candidates.at(-1);
-    const detected = Boolean(artifactPath);
-    const metadata = artifactPath ? readArtifactMetadata(artifactPath) : {};
-    const fallbackVersion = artifactPath ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
-    fragments.push({
-      id: workflow.id,
-      kind: artifactKind(workflow.id, workflow.kind),
-      label: workflow.label,
-      detected,
-      ...artifactPath ? { path: toRelativeArtifactPath(rootDir2, artifactPath) } : {},
-      ...metadata.version ? { version: metadata.version } : fallbackVersion ? { version: fallbackVersion } : {},
-      ...metadata.fullVersion ? { fullVersion: metadata.fullVersion } : {}
-    });
-  }
-  return fragments;
-}
-
+// scripts/c420ui-adapter/detection/provider.ts
     import_node_fs7.default.readFileSync(import_node_path8.default.join(rootDir2, "package.json"), "utf8")
   const content = import_node_fs7.default.readFileSync(
     import_node_path8.default.join(rootDir2, "scripts/app-identity-common.sh"),
-    phase
-  };
-  return {
-    id: task.id,
-    label: task.label || action.label,
-    phase,
-    actions: [workflowAction],
-    requiresRoot: action.requiresRoot,
-    supportsDryRun: task.supportsDryRun
-  };
-}
-
-// packages/c420ui/src/terminal/logo.ts
-var c420uiLogoLines = [
-  "\u2584\u2584  \u2588 \u2588 \u2584\u2584\u2584 \u2584\u2580\u2584  \u2584 \u2584  \u2584",
-  "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
-  "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
-];
-
-// scripts/c420ui-adapter/adapter.ts
-init_settings();
-
-// scripts/canva-linux/detection/provider.ts
-var import_node_fs6 = __toESM(require("node:fs"));
-var import_node_path7 = __toESM(require("node:path"));
-var import_node_child_process5 = require("node:child_process");
-
-// scripts/canva-linux/project-root.ts
-var import_node_fs5 = __toESM(require("node:fs"));
-var import_node_path6 = __toESM(require("node:path"));
-function defaultRootSearchDir() {
-  return import_node_path6.default.resolve(__dirname, "../..");
-}
-function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
-  let current = import_node_path6.default.resolve(startDir);
-  while (true) {
-    if (import_node_fs5.default.existsSync(import_node_path6.default.join(current, "package.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/actions.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/project-ui.json"))) {
-      return current;
+      warnings.push(
+        `Installation detection exited with status ${result.status ?? "unknown"}.`
+      );
     }
-    const parent = import_node_path6.default.dirname(current);
-    if (parent === current) return defaultRootSearchDir();
-    current = parent;
+    return {
+      ok,
+      values: parseC420UIDetectionKeyValueLines(
+        result.stdout || "",
+        canvaLinuxDetectionKeys
+      ),
+      warnings
+    };
+  } catch (error) {
+    warnings.push(
+      `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return { ok: false, values: {}, warnings };
   }
 }
-
-// scripts/canva-linux/detection/provider.ts
-var canvaLinuxDetectionKeys = [
-  "DETECTED_NATIVE_SYSTEM",
-  "DETECTED_NATIVE_USER",
-  "DETECTED_FLATPAK_SYSTEM",
-  "DETECTED_FLATPAK_USER",
-  "DETECTED_APPIMAGE_ARTIFACTS",
-  "DETECTED_NATIVE_SYSTEM_VERSION",
-  "DETECTED_NATIVE_USER_VERSION",
-  "DETECTED_FLATPAK_SYSTEM_VERSION",
-  "DETECTED_FLATPAK_USER_VERSION",
-  "DETECTED_APPIMAGE_VERSION",
-  "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
-  "DETECTED_NATIVE_USER_FULL_VERSION",
-  "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
-  "DETECTED_FLATPAK_USER_FULL_VERSION",
-  "DETECTED_APPIMAGE_FULL_VERSION"
-];
-var emptyInstallations = {
-  nativeSystem: false,
-  nativeUser: false,
-  flatpakSystem: false,
-  flatpakUser: false,
-  appImageArtifacts: false,
-  nativeSystemVersion: "",
-  nativeUserVersion: "",
-  flatpakSystemVersion: "",
-  flatpakUserVersion: "",
-  appImageVersion: "",
-  nativeSystemFullVersion: "",
-  nativeUserFullVersion: "",
-  flatpakSystemFullVersion: "",
-  flatpakUserFullVersion: "",
-  appImageFullVersion: ""
-};
-function readPackage(rootDir2) {
-  return JSON.parse(
-    import_node_fs6.default.readFileSync(import_node_path7.default.join(rootDir2, "package.json"), "utf8")
-  );
-}
-function readPhase(rootDir2) {
-  const content = import_node_fs6.default.readFileSync(
-    import_node_path7.default.join(rootDir2, "scripts/app-identity-common.sh"),
-    "utf8"
-  );
-  const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
-  return match?.[1] ?? "unknown";
-}
-function safeProjectMetadata(rootDir2) {
-  let version = "unknown";
-  let phase = "unknown";
-  try {
-    version = readPackage(rootDir2).version || "unknown";
-  } catch {
-    version = "unknown";
-  }
-  try {
-    phase = readPhase(rootDir2);
-  } catch {
-    phase = "unknown";
-  }
+function createInstallDetectionProbe(runCommand) {
   return {
-    version,
-    phase,
-    appId: "io.github.coletivo420.canva-linux",
-    executable: "canva-linux",
-    repository: "https://github.com/coletivo420/canva-linux"
+    id: "canva-linux-install-detection",
+    label: "Canva Linux installation detection",
+    run(rootDir2) {
+      return runInstallDetection(rootDir2, runCommand);
+    }
   };
 }
-function detectionCommand() {
-  return [
-    "source scripts/install-detection-common.sh",
-    "detect_installations",
-    "print_detection_status_env"
-  ].join("\n");
-}
-function runInstallDetection(rootDir2, runCommand) {
-  const warnings = [];
-  let ok = true;
-  try {
-    const result = runCommand("bash", ["-c", detectionCommand()], {
-      cwd: rootDir2,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"]
-    });
-    if (result.error) {
+  return {
+    nativeSystem: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_SYSTEM),
+    nativeUser: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_USER),
+    flatpakSystem: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_SYSTEM),
+    flatpakUser: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_USER),
+    nativeSystemVersion: values.DETECTED_NATIVE_SYSTEM_VERSION || "",
+    nativeUserVersion: values.DETECTED_NATIVE_USER_VERSION || "",
+    flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
+    flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
+    // Detected Installations renderers should prefer *FullVersion fields and
+    // fall back to the base *Version fields for older detectors/markers.
+    nativeSystemFullVersion: values.DETECTED_NATIVE_SYSTEM_FULL_VERSION || values.DETECTED_NATIVE_SYSTEM_VERSION || "",
+    nativeUserFullVersion: values.DETECTED_NATIVE_USER_FULL_VERSION || values.DETECTED_NATIVE_USER_VERSION || "",
+    flatpakSystemFullVersion: values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION || values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
+    flatpakUserFullVersion: values.DETECTED_FLATPAK_USER_FULL_VERSION || values.DETECTED_FLATPAK_USER_VERSION || "",
+  };
+function createCanvaLinuxDetectionProvider(options = {}) {
+  const runCommand = options.runCommand ?? import_node_child_process5.spawnSync;
+      const artifactFragments = buildCanvaLinuxArtifactFragments(rootDir2);
+          ...buildInstallations(detection.values, artifactFragments)
+        artifactFragments,
+// scripts/c420ui-adapter/build-metadata-loader.ts
+var import_node_fs8 = __toESM(require("node:fs"));
+var import_node_path9 = __toESM(require("node:path"));
+  return `g${trimmed.replace(/^g/i, "").slice(0, 7)}`;
+  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) return null;
+var UNKNOWN_BUILD_REVISION = "unknown";
+function readJsonFile2(filePath) {
+    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
+  return import_node_fs8.default.existsSync(import_node_path9.default.join(rootDir2, ".git"));
+  const packageJson = readJsonFile2(import_node_path9.default.join(rootDir2, "package.json"));
+  const projectUi = readJsonFile2(
+    import_node_path9.default.join(rootDir2, "config", "canva-linux", "project-ui.json")
+  const metadata = readJsonFile2(
+    import_node_path9.default.join(rootDir2, "config", "canva-linux", "build-metadata.json")
+  if (!metadata) return null;
+  return normalizeLoadedBuildMetadata(metadata);
+    buildRevision: UNKNOWN_BUILD_REVISION
+  const resolvedRootDir = import_node_path9.default.resolve(rootDir2);
+var import_node_fs10 = __toESM(require("node:fs"));
+var import_node_path11 = __toESM(require("node:path"));
+var import_node_fs9 = __toESM(require("node:fs"));
+var import_node_path10 = __toESM(require("node:path"));
+  return import_node_path10.default.join(rootDir2, "config/canva-linux/actions.json");
+  const resolvedRoot = import_node_path10.default.resolve(rootDir2);
+    import_node_fs9.default.readFileSync(actionsPath(resolvedRoot), "utf8")
+var ARTIFACTS_CONFIG_PATH2 = "config/canva-linux/artifacts.json";
+function readJsonFile3(filePath) {
+  if (!import_node_fs10.default.existsSync(filePath)) {
+    return JSON.parse(import_node_fs10.default.readFileSync(filePath, "utf8"));
+  const configPath = import_node_path11.default.join(rootDir2, ARTIFACTS_CONFIG_PATH2);
+  const config = readJsonFile3(configPath);
+var import_node_fs11 = __toESM(require("node:fs"));
+var import_node_path12 = __toESM(require("node:path"));
+function readJsonFile4(filePath) {
+  return JSON.parse(import_node_fs11.default.readFileSync(filePath, "utf8"));
+  const developmentConfigPath = import_node_path12.default.join(
+  const config = readJsonFile4(developmentConfigPath);
+function readJsonFile5(filePath) {
+  return JSON.parse(import_node_fs12.default.readFileSync(filePath, "utf8"));
+    const content = import_node_fs12.default.readFileSync(identityPath, "utf8");
+  }
+  return import_node_path13.default.join(process.env.HOME || ".", ".local/state");
+  const resolvedRootDir = import_node_path13.default.resolve(rootDir2);
+  const projectUiPath = import_node_path13.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
+  const packageJsonPath = import_node_path13.default.join(resolvedRootDir, "package.json");
+  const actionsJsonPath = import_node_path13.default.join(resolvedRootDir, "config/canva-linux/actions.json");
+  const artifactsJsonPath = import_node_path13.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
+  const appIdentityPath = import_node_path13.default.join(
+  const buildMetadataPath = import_node_path13.default.join(
+  const c420uiPackageJsonPath = import_node_path13.default.join(
+    return readJsonFile5(projectUiPath);
+    return readJsonFile5(packageJsonPath);
+    return readJsonFile5(c420uiPackageJsonPath);
+  function loadProjectConfig() {
+    const projectUi = loadProjectUi();
+    return {
+      projectName: projectUi.projectName,
+    return import_node_path13.default.join(
+    if (!import_node_fs12.default.existsSync(actionsJsonPath)) {
+  function loadArtifactWorkflows2() {
+    return loadArtifactWorkflows2();
+    };
+  }
+  const adapter = {
+    id: "canva-linux",
+    rootDir: resolvedRootDir,
+    loadArtifactWorkflows: loadArtifactWorkflows2,
+var import_node_fs13 = __toESM(require("node:fs"));
+var import_node_path14 = __toESM(require("node:path"));
+  const configPath = import_node_path14.default.join(rootDir2, relativeConfigPath);
+  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs13.default.readFileSync(configPath, "utf8")));
       ok = false;
       warnings.push(`Installation detection failed to start: ${result.error.message}`);
     }
@@ -21313,8 +21319,8 @@ function createCanvaLinuxRootProvider(options = {}) {
       if (conditionalSystemRootActionIds.has(action.id)) {
         try {
           const status = buildCanvaLinuxOverviewStatus(rootDir2);
-          if (status.installations.nativeSystem || status.installations.flatpakSystem) {
-            return {
+  const argv = options.argv ?? process.argv.slice(2);
+var rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || import_node_path15.default.resolve(__dirname, "..");
               requiresRoot: true,
               reason: `${action.id}: detected system installation`
             };

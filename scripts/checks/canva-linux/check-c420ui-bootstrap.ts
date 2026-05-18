@@ -13,13 +13,13 @@ import {
   createC420UIBootstrapEsbuildCliArgs,
   C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
-} from "../../canva-linux/bootstrap/build-recipe";
+} from "../../c420ui-adapter/bootstrap/build-recipe";
 import {
   calculateC420UIBootstrapSourceHash,
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
-} from "../../canva-linux/bootstrap/source-hash";
-import { loadEffectiveBuildMetadata } from "../../canva-linux/build-metadata-loader";
+} from "../../c420ui-adapter/bootstrap/source-hash";
+import { loadEffectiveBuildMetadata } from "../../c420ui-adapter/build-metadata-loader";
 
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();

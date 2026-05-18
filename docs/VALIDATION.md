@@ -2,9 +2,20 @@
 
 ## Dev.9 metadata persistence and c420ui repair
 
-Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display comes from metadata.
+Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place
+config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write
+<artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display
+comes from metadata.
 
-Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or sidecars, and c420ui must prefer that metadata when displaying artifact versions.
+Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be
+limited to AppImage. Generated artifact detection must list all declared registry workflows, including planned workflows
+without `outputPattern` as not detected. Produced package outputs should leave effective build metadata via installed
+markers or sidecars, and c420ui must prefer that metadata when displaying artifact versions.
+
+All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, build metadata
+resolution, and bootstrap recipes must live under `scripts/c420ui-adapter`. Do not add new c420ui integration modules
+under `scripts/canva-linux`. `npm run check:canva-linux` enforces that c420ui integration modules do not return to
+`scripts/canva-linux`.
 
 The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 

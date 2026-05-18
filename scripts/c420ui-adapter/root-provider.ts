@@ -5,7 +5,7 @@ import {
   type c420uiLinuxRootCommandRunner,
   type c420uiRootProvider,
 } from "../../packages/c420ui/src";
-import { buildCanvaLinuxOverviewStatus } from "../canva-linux/detection/provider";
+import { buildCanvaLinuxOverviewStatus } from "./detection/provider";
 
 type CanvaLinuxRootProviderOptions = {
   runCommand?: c420uiLinuxRootCommandRunner;

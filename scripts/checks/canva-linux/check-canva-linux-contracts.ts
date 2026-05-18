@@ -5,7 +5,7 @@ import path from "node:path";
 import { createCanvaLinuxC420UIAdapter } from "../../c420ui-adapter/adapter";
 import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
 import { loadCanvaLinuxActions } from "../../canva-linux/actions/registry";
-import { buildCanvaLinuxOverviewStatus } from "../../canva-linux/detection/provider";
+import { buildCanvaLinuxOverviewStatus } from "../../c420ui-adapter/detection/provider";
 
 type ContractCheck = {
   name: string;
@@ -108,6 +108,27 @@ function readOptionalProjectFile(rootDir: string, relativePath: string): string 
   } catch {
     return undefined;
   }
+}
+
+
+function collectProjectFiles(rootDir: string, relativeInputs: readonly string[]): string[] {
+  const files: string[] = [];
+  const visit = (relativePath: string): void => {
+    const absolutePath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(absolutePath)) return;
+    const stats = fs.statSync(absolutePath);
+    if (stats.isFile()) {
+      if (/\.(?:ts|tsx|js|json|md|sh)$/.test(relativePath)) files.push(relativePath);
+      return;
+    }
+    if (!stats.isDirectory()) return;
+    for (const entry of fs.readdirSync(absolutePath, { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "dist") continue;
+      visit(path.join(relativePath, entry.name).split(path.sep).join(path.posix.sep));
+    }
+  };
+  for (const input of relativeInputs) visit(input);
+  return files.sort((left, right) => left.localeCompare(right));
 }
 
 function stripShellComment(line: string): string {
@@ -437,8 +458,8 @@ function validateLegacyBuilderPathReferences(rootDir: string, failures: string[]
   const criticalFiles = [
     "package.json",
     "scripts/build-c420ui-bootstrap.ts",
-    "scripts/canva-linux/bootstrap/source-hash.ts",
-    "scripts/canva-linux/bootstrap/build-recipe.ts",
+    "scripts/c420ui-adapter/bootstrap/source-hash.ts",
+    "scripts/c420ui-adapter/bootstrap/build-recipe.ts",
     "scripts/checks/canva-linux/check-c420ui-bootstrap.ts",
     "scripts/checks/canva-linux/check-canva-linux-contracts.ts",
     "bootstrap/c420ui/manifest.json",
@@ -1843,9 +1864,77 @@ function checkActionRegistryContract(failures: string[]): void {
 }
 
 
+
+function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
+  const boundaryMessage = "c420ui integration modules must live under scripts/c420ui-adapter, not scripts/canva-linux.";
+  for (const forbiddenPath of [
+    "scripts/canva-linux/detection",
+    "scripts/canva-linux/bootstrap",
+    "scripts/canva-linux/build-metadata-loader.ts",
+  ] as const) {
+    if (fs.existsSync(path.join(rootDir, forbiddenPath))) {
+      failures.push(`${forbiddenPath}: ${boundaryMessage}`);
+    }
+  }
+
+  const sourceFiles = collectProjectFiles(rootDir, ["scripts", "test", "packages/c420ui/src"]);
+  for (const relativePath of sourceFiles) {
+    if (relativePath === "scripts/checks/canva-linux/check-canva-linux-contracts.ts") continue;
+    const contents = readProjectFile(rootDir, relativePath);
+    for (const forbiddenImport of [
+      "../canva-linux/detection/provider",
+      "./canva-linux/detection/provider",
+      "./canva-linux/build-metadata-loader",
+      "./canva-linux/bootstrap/build-recipe",
+      "./canva-linux/bootstrap/source-hash",
+      "../scripts/canva-linux/detection/artifact-fragments",
+      "../scripts/canva-linux/detection/provider",
+      "../scripts/canva-linux/bootstrap/build-recipe",
+      "../scripts/canva-linux/bootstrap/source-hash",
+    ] as const) {
+      if (contents.includes(forbiddenImport)) {
+        failures.push(`${relativePath}: ${boundaryMessage}`);
+      }
+    }
+  }
+
+  const adapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
+  const bootstrapSource = readProjectFile(rootDir, "scripts/build-c420ui-bootstrap.ts");
+  if (!adapterSource.includes('./detection/provider')) {
+    failures.push("scripts/c420ui-adapter/adapter.ts: must import ./detection/provider");
+  }
+  if (!bootstrapSource.includes('./c420ui-adapter/build-metadata-loader')) {
+    failures.push("scripts/build-c420ui-bootstrap.ts: must import ./c420ui-adapter/build-metadata-loader");
+  }
+  if (!bootstrapSource.includes('./c420ui-adapter/bootstrap/build-recipe')) {
+    failures.push("scripts/build-c420ui-bootstrap.ts: must import ./c420ui-adapter/bootstrap/build-recipe");
+  }
+  if (!bootstrapSource.includes('./c420ui-adapter/bootstrap/source-hash')) {
+    failures.push("scripts/build-c420ui-bootstrap.ts: must import ./c420ui-adapter/bootstrap/source-hash");
+  }
+
+  const artifactFragments = readProjectFile(rootDir, "scripts/c420ui-adapter/detection/artifact-fragments.ts");
+  if (!artifactFragments.includes("Intl.Collator") || !artifactFragments.includes("numeric: true")) {
+    failures.push("scripts/c420ui-adapter/detection/artifact-fragments.ts: artifact candidate sorting must be numeric-aware.");
+  }
+  if (artifactFragments.includes("return candidates.sort();")) {
+    failures.push("scripts/c420ui-adapter/detection/artifact-fragments.ts: must not use lexicographic candidates.sort().");
+  }
+  if (!/typeof workflow\.outputPattern !== "string"[\s\S]*detected: false[\s\S]*continue;/.test(artifactFragments)) {
+    failures.push("scripts/c420ui-adapter/detection/artifact-fragments.ts: workflows without outputPattern must be emitted as detected: false.");
+  }
+
+  const terminalSummary = readProjectFile(rootDir, "packages/c420ui/src/terminal/detected-installations-summary.ts");
+  for (const forbiddenLabel of ["Native Install", "Flatpak Install"] as const) {
+    if (terminalSummary.includes(forbiddenLabel)) {
+      failures.push(`packages/c420ui/src/terminal/detected-installations-summary.ts: loading state must not use ${forbiddenLabel}`);
+    }
+  }
+}
+
 function checkDetectionProviderContract(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const providerPath = "scripts/canva-linux/detection/provider.ts";
+  const providerPath = "scripts/c420ui-adapter/detection/provider.ts";
   const rootProviderPath = "scripts/c420ui-adapter/root-provider.ts";
   const packageJsonPath = "package.json";
 
@@ -1857,7 +1946,7 @@ function checkDetectionProviderContract(failures: string[]): void {
   const provider = readProjectFile(rootDir, providerPath);
   const rootProvider = readProjectFile(rootDir, rootProviderPath);
   const packageJson = readProjectFile(rootDir, packageJsonPath);
-  const artifactFragmentsPath = "scripts/canva-linux/detection/artifact-fragments.ts";
+  const artifactFragmentsPath = "scripts/c420ui-adapter/detection/artifact-fragments.ts";
   const artifactFragments = readProjectFile(rootDir, artifactFragmentsPath);
 
 
@@ -1900,7 +1989,7 @@ function checkDetectionProviderContract(failures: string[]): void {
     }
   }
 
-  if (!rootProvider.includes('../canva-linux/detection/provider')) {
+  if (!rootProvider.includes('./detection/provider')) {
     failures.push(`${rootProviderPath}: must import the Canva Linux detection provider`);
   }
   if (rootProvider.includes('../core/overview-status')) {
@@ -2552,7 +2641,7 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   ) as { version?: string };
   const oauthSource = readProjectFile(rootDir, "electron/main/oauth.ts");
   const buildMetadataSource = readProjectFile(rootDir, "electron/main/build-metadata.ts");
-  const buildMetadataLoaderSource = readProjectFile(rootDir, "scripts/canva-linux/build-metadata-loader.ts");
+  const buildMetadataLoaderSource = readProjectFile(rootDir, "scripts/c420ui-adapter/build-metadata-loader.ts");
   const c420uiAdapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
   const bootstrapCheckSource = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-bootstrap.ts");
   const packageJsonSource = readProjectFile(rootDir, "package.json");
@@ -2601,7 +2690,7 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   if (c420uiPackage.version !== "0.1.0") failures.push("packages/c420ui/package.json version must remain independent at 0.1.0");
 
   if (!buildMetadataLoaderSource.includes("loadEffectiveBuildMetadata")) {
-    failures.push("scripts/canva-linux/build-metadata-loader.ts: must expose loadEffectiveBuildMetadata");
+    failures.push("scripts/c420ui-adapter/build-metadata-loader.ts: must expose loadEffectiveBuildMetadata");
   }
   if (!buildMetadataLoaderSource.includes("CANVA_LINUX_BUILD_REVISION") || !buildMetadataLoaderSource.includes("git") || !buildMetadataLoaderSource.includes("build-metadata.json")) {
     failures.push("build metadata loader must resolve env/git revisions before packaged metadata fallback");
@@ -2788,6 +2877,7 @@ export function main(): number {
   checkNoRootLauncherContract(failures);
   checkCanvaLinuxConfigBoundary(failures);
   checkActionRegistryContract(failures);
+  checkC420UIAdapterBoundary(rootDir, failures);
   checkDetectionProviderContract(failures);
   checkInstallationDetectionContract(failures);
   checkVersionConsistency(failures);

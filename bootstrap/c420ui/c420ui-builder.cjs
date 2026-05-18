@@ -41,20 +41,15 @@ var import_node_child_process2 = require("node:child_process");
 var import_node_fs2 = __toESM(require("node:fs"));
 var import_node_path2 = __toESM(require("node:path"));
 
-// scripts/canva-linux/build-metadata-loader.ts
+// scripts/c420ui-adapter/build-metadata-loader.ts
 var import_node_child_process = require("node:child_process");
 var import_node_fs = __toESM(require("node:fs"));
 var import_node_path = __toESM(require("node:path"));
-
-// electron/main/build-metadata.ts
-var UNKNOWN_BUILD_REVISION = "unknown";
 function normalizeBuildRevision(input) {
   if (!input) return "unknown";
   const trimmed = input.trim();
   if (!trimmed || trimmed === "unknown") return "unknown";
-  const withoutPrefix = trimmed.replace(/^g/i, "");
-  const shortHash = withoutPrefix.slice(0, 7);
-  return `g${shortHash}`;
+  return `g${trimmed.replace(/^g/i, "").slice(0, 7)}`;
 }
 function appendBuildRevision(base, buildRevision) {
   return buildRevision && buildRevision !== "unknown" ? `${base}+${buildRevision}` : base;
@@ -73,9 +68,7 @@ function createBuildMetadata(input) {
   };
 }
 function normalizeLoadedBuildMetadata(metadata) {
-  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) {
-    return null;
-  }
+  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) return null;
   return createBuildMetadata({
     baseVersion: metadata.baseVersion,
     baseDisplayVersion: metadata.baseDisplayVersion,
@@ -83,10 +76,8 @@ function normalizeLoadedBuildMetadata(metadata) {
     buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION
   });
 }
-
-// scripts/canva-linux/build-metadata-loader.ts
 var UNKNOWN_BASE_VERSION = "0.0.0";
-var UNKNOWN_BUILD_REVISION2 = "unknown";
+var UNKNOWN_BUILD_REVISION = "unknown";
 function readJsonFile(filePath) {
   try {
     return JSON.parse(import_node_fs.default.readFileSync(filePath, "utf8"));
@@ -141,14 +132,15 @@ function loadPackagedMetadata(rootDir) {
   const metadata = readJsonFile(
     import_node_path.default.join(rootDir, "config", "canva-linux", "build-metadata.json")
   );
-  return metadata ? normalizeLoadedBuildMetadata(metadata) : null;
+  if (!metadata) return null;
+  return normalizeLoadedBuildMetadata(metadata);
 }
 function fallbackEffectiveBuildMetadata() {
   return createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
-    buildRevision: UNKNOWN_BUILD_REVISION2
+    buildRevision: UNKNOWN_BUILD_REVISION
   });
 }
 function loadEffectiveBuildMetadata(rootDir) {

@@ -5,7 +5,14 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
-- Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or sidecars, and c420ui must prefer that metadata when displaying artifact versions.
+- Dev.9 corrected the c420ui adapter boundary: registry-driven artifact fragment detection, overview detection,
+  build metadata resolution, and bootstrap helpers now live under `scripts/c420ui-adapter`. Generated artifact
+  detection lists all declared registry workflows, including planned workflows without `outputPattern` as not detected,
+  and artifact selection uses numeric-aware sorting.
+
+- Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not
+  be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or
+  sidecars, and c420ui must prefer that metadata when displaying artifact versions.
 
 - Restored the c420ui bootstrap as a TypeScript-generated artifact and hardened artifact validation.
   bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
@@ -28,7 +35,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Dev.9 detected installation hash visibility
 
-- Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display comes from metadata.
+- Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place
+  config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write
+  <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible
+  display comes from metadata.
 - The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 - Opened `0.1.4-15.Dev.9` with c420ui Detected Installations hash visibility: detectors now expose
   optional `*FullVersion` fields, the terminal panel prefers those effective/hashed versions, and base
@@ -186,7 +196,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Kept `build:c420ui` as the isolated c420ui terminal UI smoke/build target while moving its generated bundle under `.build/packages/c420ui/terminal/`.
 - Added the c420ui artifact workflow runner and kept Canva Linux artifact recipes as project-specific configuration.
 - Tightened the c420ui detection provider contract and removed the legacy `package` overview status shape.
-- Moved installation overview detection to the generic c420ui detection engine with a Canva Linux provider under `scripts/canva-linux/detection/`.
+- Moved installation overview detection to the generic c420ui detection engine with a Canva Linux provider under `scripts/c420ui-adapter/detection/`.
 - Moved Canva Linux action registry and project UI config under `config/canva-linux/`.
 - Moved Canva Linux action registry loading to `scripts/canva-linux/actions/registry.ts` and kept generic action validation in c420ui core.
 - Updated maintenance documentation to treat the c420ui Action Engine, Root Provider, Command Runner,

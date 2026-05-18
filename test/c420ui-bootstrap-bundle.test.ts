@@ -8,13 +8,13 @@ import test from "node:test";
 import {
   C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   createC420UIBootstrapEsbuildCliArgs,
-} from "../scripts/canva-linux/bootstrap/build-recipe";
+} from "../scripts/c420ui-adapter/bootstrap/build-recipe";
 import {
   calculateC420UIBootstrapSourceHash,
   collectC420UIBootstrapSourceHashFiles,
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
-} from "../scripts/canva-linux/bootstrap/source-hash";
+} from "../scripts/c420ui-adapter/bootstrap/source-hash";
 
 const bootstrapDir = path.join("bootstrap", "c420ui");
 const manifestPath = path.join(bootstrapDir, "manifest.json");
@@ -81,7 +81,7 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
   );
   assert.equal(
     collectC420UIBootstrapSourceHashFiles(process.cwd()).includes(
-      "scripts/canva-linux/bootstrap/source-hash.ts",
+      "scripts/c420ui-adapter/bootstrap/source-hash.ts",
     ),
     true,
   );
