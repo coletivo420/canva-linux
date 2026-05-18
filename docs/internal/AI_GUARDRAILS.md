@@ -7,6 +7,7 @@
 - Artifact filenames may keep the base package version; hash-visible display comes from metadata. Reject changes that remove metadata installation or sidecar generation.
 - AppImage and Flatpak bundle artifacts must generate a `.build-metadata.json` sidecar.
 - Native system/user installs must place `config/canva-linux/build-metadata.json` into the installation prefix.
+- Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or sidecars, and c420ui must prefer that metadata when displaying artifact versions.
 
 ## Dev.8 pinned home tab-strip guardrail
 

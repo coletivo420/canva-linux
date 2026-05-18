@@ -4,6 +4,8 @@
 
 Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display comes from metadata.
 
+Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or sidecars, and c420ui must prefer that metadata when displaying artifact versions.
+
 The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 
 - Native User: detected v0.1.4-15.Dev.9+g...
@@ -20,6 +22,23 @@ ls dist/*.AppImage.build-metadata.json
 
 bash scripts/build-flatpak-bundle.sh
 ls dist/*.flatpak.build-metadata.json
+```
+
+
+Manual generated artifact validation:
+
+```bash
+bash scripts/build-appimage.sh
+bash scripts/build-flatpak-bundle.sh
+./canva-linux-c420ui-builder
+```
+
+Check that c420ui renders generated artifacts from the registry, preferring effective metadata versions:
+
+```text
+Generated Artifacts
+  Flatpak bundle: detected v0.1.4-15.Dev.9+g...
+  AppImage:       detected v0.1.4-15.Dev.9+g...
 ```
 
 ## Dev.8 pinned home tab-strip guardrail

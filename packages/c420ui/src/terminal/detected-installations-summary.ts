@@ -1,4 +1,4 @@
-import type { c420uiOverviewStatus } from "../detection";
+import type { CanvaLinuxArtifactFragment, c420uiOverviewStatus } from "../detection";
 
 type DetectionSummaryColors = {
   appImageLoading: string;
@@ -16,15 +16,28 @@ export function detectedVersion(
   return version;
 }
 
+function artifactVersion(fragment: CanvaLinuxArtifactFragment): string | undefined {
+  return fragment.fullVersion || fragment.version;
+}
+
+function formatArtifactLine(
+  fragment: CanvaLinuxArtifactFragment,
+  formatStatus: (detected: boolean, version: string | boolean | undefined) => string,
+): string {
+  return `  ${fragment.label}: ${formatStatus(fragment.detected, artifactVersion(fragment))}`;
+}
+
 export function formatDetectedInstallationsSummary(
   s: c420uiOverviewStatus | null,
   colors: DetectionSummaryColors,
 ): string[] {
   if (!s) {
     return [
+      `Detected Installations`,
       `  Native Install: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
       `  Flatpak Install: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
-      `  AppImage artifacts: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
+      `Generated Artifacts`,
+      `  AppImage: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
     ];
   }
   const i = s.installations;
@@ -38,11 +51,26 @@ export function formatDetectedInstallationsSummary(
         : "version unknown";
     return `{${colors.statusDetected}-fg}detected{/${colors.statusDetected}-fg}      ${v}`;
   };
-  return [
+
+  const lines = [
+    "Detected Installations",
     `  Native System: ${fmt(Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion))}`,
     `  Native User: ${fmt(Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion))}`,
     `  Flatpak System: ${fmt(Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion))}`,
     `  Flatpak User: ${fmt(Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion))}`,
-    `  AppImage: ${fmt(Boolean(i.appImageArtifacts), detectedVersion(i.appImageFullVersion, i.appImageVersion))}`,
   ];
+
+  if (s.artifactFragments) {
+    lines.push(
+      "Generated Artifacts",
+      ...s.artifactFragments.map((fragment) => formatArtifactLine(fragment, fmt)),
+    );
+  } else {
+    lines.push(
+      "Generated Artifacts",
+      `  AppImage: ${fmt(Boolean(i.appImageArtifacts), detectedVersion(i.appImageFullVersion, i.appImageVersion))}`,
+    );
+  }
+
+  return lines;
 }

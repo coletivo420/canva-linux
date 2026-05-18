@@ -1857,6 +1857,9 @@ function checkDetectionProviderContract(failures: string[]): void {
   const provider = readProjectFile(rootDir, providerPath);
   const rootProvider = readProjectFile(rootDir, rootProviderPath);
   const packageJson = readProjectFile(rootDir, packageJsonPath);
+  const artifactFragmentsPath = "scripts/canva-linux/detection/artifact-fragments.ts";
+  const artifactFragments = readProjectFile(rootDir, artifactFragmentsPath);
+
 
   for (const fragment of [
     "createCanvaLinuxDetectionProvider",
@@ -1865,6 +1868,8 @@ function checkDetectionProviderContract(failures: string[]): void {
     "parseC420UIDetectionKeyValueLines",
     "DETECTED_NATIVE_SYSTEM",
     "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
+    "artifactFragments",
+    "buildCanvaLinuxArtifactFragments(rootDir)",
     "io.github.coletivo420.canva-linux",
     "canva-linux",
     "https://github.com/coletivo420/canva-linux",
@@ -1874,6 +1879,16 @@ function checkDetectionProviderContract(failures: string[]): void {
     }
   }
 
+
+  if (!artifactFragments.includes("config/canva-linux/artifacts.json")) {
+    failures.push("Artifact fragment detection must be registry-driven from config/canva-linux/artifacts.json.");
+  }
+  for (const required of ["*.flatpak", "linux-unpacked", "*.tar.gz", "SHA256SUMS", ".deb", ".rpm", "PKGBUILD", "*.pkg.tar.*"]) {
+    if (!artifactFragments.includes(required)) {
+      failures.push("Artifact fragment detection must not be limited to AppImage.");
+      break;
+    }
+  }
 
 
   for (const fragment of [
@@ -1906,6 +1921,13 @@ function checkDetectionProviderContract(failures: string[]): void {
 
   const terminalSummaryPath = "packages/c420ui/src/terminal/detected-installations-summary.ts";
   const terminalSummary = readProjectFile(rootDir, terminalSummaryPath);
+
+  if (!terminalSummary.includes("artifactFragments") || !terminalSummary.includes("Generated Artifacts")) {
+    failures.push("c420ui summary must render Generated Artifacts from artifactFragments.");
+  }
+  if (!terminalSummary.includes("appImageArtifacts") || !terminalSummary.includes("appImageFullVersion")) {
+    failures.push(`${terminalSummaryPath}: legacy appImageArtifacts fallback must remain supported`);
+  }
   const fullIndex = terminalSummary.indexOf("flatpakSystemFullVersion");
   const baseIndex = terminalSummary.indexOf("flatpakSystemVersion");
   if (fullIndex === -1 || baseIndex === -1 || fullIndex > baseIndex) {
