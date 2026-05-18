@@ -33,5 +33,5 @@ sudo_install_build_metadata_marker() {
   source="$(build_metadata_source)"
 
   [[ -f "$source" ]] || return 0
-  c420ui_sudo_install -Dm644 "$source" "$target"
+  c420ui_sudo install -Dm644 "$source" "$target"
 }
