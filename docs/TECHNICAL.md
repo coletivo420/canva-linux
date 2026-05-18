@@ -72,9 +72,10 @@ menu, diagnostics, content, logs, and the Blessed screen program when supported,
 so the terminal can perform native text selection while keyboard navigation
 remains active. Changes take effect immediately and are saved for the next c420ui
 start. Keyboard scrolling with PageUp, PageDown, Home and End remains available,
-F5 still copies the visible log history, and F6 opens a plain logs view with the
-session log path as a manual-selection fallback. Some terminals may still require
-Shift while selecting text.
+F5 still copies the visible log history. The broken Plain Logs mode was removed
+from c420ui. The normal logs panel remains the supported log view, and F5 Copy
+Logs remains available when supported. Some terminals may still require Shift
+while selecting text.
 
 The c420ui keeps an explicit FocusZone model for menu, diagnostics, action panel
 and logs. Tab and Shift+Tab move between these blocks, the active block uses a
@@ -155,5 +156,5 @@ user-facing actions.
 
 The c420ui `F5` shortcut copies logs to the desktop clipboard. Preferred backends:
 `wl-copy`, KDE Klipper (`qdbus6`/`qdbus`), GPaste, `xclip`, then `xsel`. The
-c420ui `F6` shortcut shows the plain visible log history and session log path in
-the action panel for manual selection.
+broken Plain Logs mode was removed from c420ui. The normal logs panel remains
+the supported log view, and F5 Copy Logs remains available when supported.

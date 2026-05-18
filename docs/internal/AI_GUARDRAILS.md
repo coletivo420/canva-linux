@@ -538,6 +538,10 @@ Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adj
 - Localized OAuth landing detection may use generic auth-signal counts, but must not log DOM text, `aria-label`, `href`,
   `data-testid`, or attribute values.
 - Do not log cookie values, token values, OAuth `code`/`state`, or storage values; log only safe counts.
+## c420ui logs
+
+- The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
+
 ## Dev.8 hotfix guardrails
 
 - c420ui must display Canva Linux effective build metadata when `config/canva-linux/build-metadata.json`, CI revision

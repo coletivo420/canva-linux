@@ -111,8 +111,7 @@ Current builder settings:
 - `Manual text selection mode`: disables c420ui mouse capture globally so the terminal
   can perform native text selection while keyboard navigation remains active.
   Changes take effect immediately and are saved for the next c420ui start.
-  Keyboard log scrolling and F5 copy remain available. F6 opens a plain logs
-  view with the session log path as a fallback for manual selection.
+  Keyboard log scrolling and F5 copy remain available.
 
 ## Compiled Runtime CLI
 

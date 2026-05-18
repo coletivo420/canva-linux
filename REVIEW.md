@@ -10,6 +10,10 @@
 - AppImage and Flatpak bundle artifacts must generate a `.build-metadata.json` sidecar.
 - Native system/user installs must place `config/canva-linux/build-metadata.json` into the installation prefix.
 
+## c420ui logs
+
+- The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
+
 ## c420ui bootstrap generated artifact review
 
 - bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.

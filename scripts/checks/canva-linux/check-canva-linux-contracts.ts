@@ -1506,8 +1506,8 @@ function main(): number {
   if (!app.includes('screen.key(["f5"]')) {
     failures.push("packages/c420ui/src/terminal/app.ts: F5 log copy shortcut must remain available");
   }
-  if (!app.includes('screen.key(["f6"]')) {
-    failures.push("packages/c420ui/src/terminal/app.ts: F6 plain logs fallback must remain available");
+  if (app.includes('screen.key(["f6"]') || app.includes("Plain Logs") || app.includes("plain logs")) {
+    failures.push("packages/c420ui/src/terminal/app.ts: c420ui must not expose Plain Logs or bind F6 to plain logs mode");
   }
   if (!app.includes("terminalTextSelectionMode")) {
     failures.push("packages/c420ui/src/terminal/app.ts: terminal text selection mode is required");
@@ -1569,7 +1569,7 @@ function main(): number {
   if (
     !app.includes("function applyGlobalMouseMode") ||
     !app.includes("function setWidgetMouseEnabled") ||
-    !app.includes("for (const widget of [menu, diagnostics, content, logs])") ||
+    !app.includes("for (const widget of [menu, diagnostics, generatedArtifacts, linuxArtifacts, content, logs])") ||
     !app.includes("footer.setContent(footerContent())")
   ) {
     failures.push(
@@ -1599,8 +1599,8 @@ function main(): number {
     !technicalDocs.includes("Terminal text selection mode") ||
     !normalizedCliDocs.includes("Changes take effect immediately") ||
     !normalizedTechnicalDocs.includes("Changes take effect immediately") ||
-    !normalizedCliDocs.includes("F6") ||
-    !normalizedTechnicalDocs.includes("F6") ||
+    normalizedCliDocs.includes("F6") ||
+    normalizedTechnicalDocs.includes("F6") ||
     !normalizedTechnicalDocs.includes("keyboard navigation remains active") ||
     !normalizedTechnicalDocs
       .toLowerCase()
@@ -2045,7 +2045,7 @@ function checkDetectionProviderContract(failures: string[]): void {
     failures.push(`${terminalSummaryPath}: must prefer flatpakSystemFullVersion before flatpakSystemVersion`);
   }
   const terminalApp = readProjectFile(rootDir, "packages/c420ui/src/terminal/app.ts");
-  if (!terminalApp.includes("formatDetectedInstallationsSummary")) {
+  if (!terminalApp.includes("formatDetectionPanelSummaries")) {
     failures.push("packages/c420ui/src/terminal/app.ts: must render Detected Installations through the shared formatter");
   }
 
@@ -2475,7 +2475,7 @@ function validateC420uiRunBundleStructuralIntegrity(rootDir: string, failures: s
   if (programBlock.includes("function artifactVersion") || programBlock.includes("scripts/c420ui-adapter/detection/artifact-fragments")) {
     failures.push(`${relativePath}: c420ui summary/detection code was interleaved into blessed Program bundle section.`);
   }
-  if (inputDialogBlock.includes("function artifactVersion") || inputDialogBlock.includes("formatDetectedInstallationsSummary")) {
+  if (inputDialogBlock.includes("function artifactVersion") || inputDialogBlock.includes("formatDetectionPanelSummaries")) {
     failures.push(`${relativePath}: detected-installations summary code was interleaved into inputDialog.`);
   }
   if (runnerStart === -1 || runnerEnd === -1) {
@@ -2680,6 +2680,46 @@ function checkRuntimeCliDebugGuardrails(rootDir: string, failures: string[]): vo
     if (contents?.includes(item.pattern)) {
       failures.push(`${item.file}: ${item.message}: ${item.pattern}`);
     }
+  }
+}
+
+function checkC420uiDetectionPanelsAndPlainLogsContract(rootDir: string, failures: string[]): void {
+  const appPath = "packages/c420ui/src/terminal/app.ts";
+  const summaryPath = "packages/c420ui/src/terminal/detected-installations-summary.ts";
+  const artifactFragmentsPath = "scripts/c420ui-adapter/detection/artifact-fragments.ts";
+  const app = readProjectFile(rootDir, appPath);
+  const summary = readProjectFile(rootDir, summaryPath);
+  const artifactFragments = readProjectFile(rootDir, artifactFragmentsPath);
+
+  for (const label of ["Detected Installations", "Generated Artifacts", "Linux Artifacts"] as const) {
+    if (!app.includes(`label: "${label}"`)) {
+      failures.push(`c420ui must render ${label} as a separate panel.`);
+    }
+  }
+  if (!app.includes("formatDetectionPanelSummaries") || !app.includes("generatedArtifacts.setContent") || !app.includes("linuxArtifacts.setContent")) {
+    failures.push("c420ui must render Detected Installations, Generated Artifacts, and Linux Artifacts as separate panels.");
+  }
+  if (!summary.includes("formatDetectionPanelSummaries") || !summary.includes("linuxArtifacts") || !summary.includes('.join(", ")')) {
+    failures.push("Linux Artifacts must render as a comma-separated artifact/version summary.");
+  }
+  if (!summary.includes("isGeneratedArtifactFragment") || !summary.includes('fragment.kind === "linux-unpacked"')) {
+    failures.push("Generated Artifacts panel content must not include Linux Artifacts entries or repeat panel labels.");
+  }
+  const panelFormatterStart = summary.indexOf("export function formatDetectionPanelSummaries");
+  const panelFormatterEnd = summary.indexOf("export function formatDetectedInstallationsSummary", panelFormatterStart);
+  const panelFormatter = summary.slice(panelFormatterStart, panelFormatterEnd === -1 ? undefined : panelFormatterEnd);
+  for (const repeatedLabel of ["Detected Installations", "Generated Artifacts", "Linux Artifacts"] as const) {
+    if (panelFormatter.includes(`"${repeatedLabel}"`) || panelFormatter.includes(`\`${repeatedLabel}\``)) {
+      failures.push("Panel content must not repeat panel labels.");
+    }
+  }
+  if (app.includes("Plain Logs") || app.includes("plain logs") || app.includes('screen.key(["f6"]')) {
+    failures.push("c420ui must not expose Plain Logs or F6 Plain Logs, and must not bind F6 to plain logs mode.");
+  }
+  const fullVersionIndex = artifactFragments.indexOf("metadata.fullVersion");
+  const unknownFallbackIndex = artifactFragments.indexOf('kind !== "linux-unpacked"');
+  if (fullVersionIndex === -1 || unknownFallbackIndex === -1 || fullVersionIndex > unknownFallbackIndex) {
+    failures.push("Linux Artifacts must prefer build metadata fullVersion before showing version unknown.");
   }
 }
 
@@ -2973,6 +3013,7 @@ export function main(): number {
   checkRuntimeCliDebugGuardrails(rootDir, failures);
   checkEffectiveBuildMetadataContract(rootDir, failures);
   checkC420uiGeneratedArtifactsContract(rootDir, failures);
+  checkC420uiDetectionPanelsAndPlainLogsContract(rootDir, failures);
   checkC420uiArtifactGateContract(rootDir, failures);
   checkPinnedHomeTabStripContract(rootDir, failures);
   validateBuilderArtifactsExist(rootDir, failures);

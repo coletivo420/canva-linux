@@ -16998,43 +16998,84 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
         status: "submitted",
         value: String(value ?? "")
       });
-    });
-    overlay.focus();
-    input.focus();
-    input.readInput();
-    screen.render();
-  });
+function formatDetectedStatus(colors2, detected, version) {
+  if (!detected) {
+    return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
+  }
+  const v = typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}` : "version unknown";
+  return `{${colors2.statusDetected}-fg}detected{/${colors2.statusDetected}-fg}      ${v}`;
 }
-var tui;
-var init_modal = __esm({
-  "packages/c420ui/src/terminal/modal.ts"() {
-    init_theme2();
-    tui = {
-      box: require_box(),
-      textbox: require_textbox()
+function formatArtifactLine(fragment, colors2) {
+  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment))}`;
+}
+function isGeneratedArtifactFragment(fragment) {
+  if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
+  if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
+  return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
+function linuxArtifactSummaryItem(label, detected, version) {
+  if (!detected) return `${label} not detected`;
+  if (typeof version === "string" && version.trim()) return `${label} v${version.trim().replace(/^v/, "")}`;
+  return `${label} version unknown`;
+}
+function formatDetectionPanelSummaries(s, colors2) {
+    const loading = `{${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`;
+    return {
+      detectedInstallations: [
+        `  Native System: ${loading}`,
+        `  Native User: ${loading}`,
+        `  Flatpak System: ${loading}`,
+        `  Flatpak User: ${loading}`
+      ],
+      generatedArtifacts: [`  AppImage: ${loading}`],
+      linuxArtifacts: [`Native system installation loading, Native user installation loading, Linux unpacked loading`]
     };
-  }
-});
-
-// packages/c420ui/src/terminal/detected-installations-summary.ts
-function detectedVersion(fullVersion, version) {
-  if (typeof fullVersion === "string" && fullVersion.trim()) {
-    return fullVersion;
-  }
-  return version;
-}
-function artifactVersion(fragment) {
-  return fragment.fullVersion || fragment.version;
-}
-function formatArtifactLine(fragment, formatStatus) {
-  return `  ${fragment.label}: ${formatStatus(fragment.detected, artifactVersion(fragment))}`;
-}
-function formatDetectedInstallationsSummary(s, colors2) {
-  if (!s) {
-    return [
-      `Detected Installations`,
-      `  Native System: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
-      `  Native User: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
+  const linuxUnpacked = s.artifactFragments?.find(
+    (fragment) => fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked"
+  );
+  const generatedArtifacts = s.artifactFragments ? s.artifactFragments.filter(isGeneratedArtifactFragment).map((fragment) => formatArtifactLine(fragment, colors2)) : [
+    `  AppImage: ${formatDetectedStatus(
+      colors2,
+      Boolean(i.appImageArtifacts),
+      detectedVersion(i.appImageFullVersion, i.appImageVersion)
+    )}`
+  return {
+    detectedInstallations: [
+      `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion))}`,
+      `  Native User: ${formatDetectedStatus(colors2, Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion))}`,
+      `  Flatpak System: ${formatDetectedStatus(colors2, Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion))}`,
+      `  Flatpak User: ${formatDetectedStatus(colors2, Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion))}`
+    ],
+    generatedArtifacts,
+    linuxArtifacts: [
+      [
+        linuxArtifactSummaryItem(
+          "Native system installation",
+          Boolean(i.nativeSystem),
+          detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion)
+        ),
+        linuxArtifactSummaryItem(
+          "Native user installation",
+          Boolean(i.nativeUser),
+          detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion)
+        ),
+        linuxArtifactSummaryItem(
+          "Linux unpacked",
+          Boolean(linuxUnpacked?.detected),
+          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0
+        )
+      ].join(", ")
+    ]
+  };
+var GENERATED_ARTIFACT_KINDS;
+    GENERATED_ARTIFACT_KINDS = /* @__PURE__ */ new Set([
+      "appimage",
+      "flatpak",
+      "tarball",
+      "sha256sums",
+      "deb",
+      "rpm",
+      "aur"
+    ]);
       `  Flatpak System: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
       `  Flatpak User: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
       `Generated Artifacts`,
@@ -17957,7 +17998,6 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   return {
     c420uiHeader: {
       top: 0,
-      left: 0,
       width: c420uiHeaderWidth,
       height: c420uiHeaderHeight
     },
@@ -18025,6 +18065,34 @@ function createApp(options) {
       opts.project.projectSubtitle,
       `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""} | Phase: ${opts.project.phase ?? "unknown"}`
     ].join("\n"),
+  const generatedArtifacts = tui2.box({
+    top: headerLayout.workspaceTop,
+    left: 0,
+    width: "32%",
+    height: 1,
+    border: "line",
+    label: "Generated Artifacts",
+    tags: true,
+    scrollable: true,
+    alwaysScroll: true,
+    keys: true,
+    mouse: tuiMouseEnabled,
+    style: c420uiTheme.content
+  });
+  const linuxArtifacts = tui2.box({
+    top: headerLayout.workspaceTop,
+    left: 0,
+    width: "32%",
+    height: 1,
+    border: "line",
+    label: "Linux Artifacts",
+    tags: true,
+    scrollable: true,
+    alwaysScroll: true,
+    keys: true,
+    mouse: tuiMouseEnabled,
+    style: c420uiTheme.content
+  });
     style: c420uiTheme.header
   });
   const menu = tui2.list({
@@ -18087,11 +18155,31 @@ function createApp(options) {
         bg: c420uiTheme.colors.lightBlue
       }
     },
-    scrollback: MAX_LOG_HISTORY_LINES,
-    tags: true,
-    style: c420uiTheme.logs
+  screen.append(generatedArtifacts);
+  screen.append(linuxArtifacts);
+    const detectionPanelsHeight = Math.max(
+      9,
+    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
+    const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
+    const linuxArtifactsHeight = Math.max(
+      3,
+      detectionPanelsHeight - detectedInstallationsHeight - generatedArtifactsHeight
+    );
+    const generatedArtifactsTop = diagnosticsTop + detectedInstallationsHeight;
+    const linuxArtifactsTop = generatedArtifactsTop + generatedArtifactsHeight;
+    diagnostics.height = detectedInstallationsHeight;
+    generatedArtifacts.top = generatedArtifactsTop;
+    generatedArtifacts.left = 0;
+    generatedArtifacts.width = leftColumnWidth;
+    generatedArtifacts.height = generatedArtifactsHeight;
+    linuxArtifacts.top = linuxArtifactsTop;
+    linuxArtifacts.left = 0;
+    linuxArtifacts.width = leftColumnWidth;
+    linuxArtifacts.height = linuxArtifactsHeight;
   });
-  const footer = tui2.box({
+    for (const widget of [menu, diagnostics, generatedArtifacts, linuxArtifacts, content, logs]) {
+  const generatedArtifactsLabelText = "Generated Artifacts";
+  const linuxArtifactsLabelText = "Linux Artifacts";
     bottom: 0,
     height: 1,
     width: "100%",
@@ -18416,7 +18504,12 @@ function createApp(options) {
       recordSessionStreamError(error);
       return null;
     }
-  }
+      generatedArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
+      linuxArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
+    const panels = formatDetectionPanelSummaries(overviewStatus, c420uiTheme.colors);
+    diagnostics.setContent(panels.detectedInstallations.join("\n"));
+    generatedArtifacts.setContent(panels.generatedArtifacts.join("\n"));
+    linuxArtifacts.setContent(panels.linuxArtifacts.join("\n"));
   const launcherSessionLog = readExistingSessionLog(sessionLogPath);
   const sessionStream = openSessionStream(sessionLogPath);
   const writeSession = (line) => {
@@ -18564,26 +18657,16 @@ function createApp(options) {
     widget.setLabel(active ? activeLabel(label) : inactiveLabel(label));
   }
   function setFocusZone(nextZone) {
-    if (modalActive || focusZone === nextZone) {
-      return;
-    }
-    focusZone = nextZone;
-    if (focusZone === "menu") {
-      menu.focus();
-    } else if (focusZone === "diagnostics") {
-      diagnostics.focus();
-    } else if (focusZone === "content") {
-      content.focus();
-    } else {
-      logs.focus();
-    }
-    applyFocusStyles();
-    screen.render();
-  }
-  function moveFocus(delta) {
-    const index = FOCUS_ZONES.indexOf(focusZone);
-    const nextIndex = (index + delta + FOCUS_ZONES.length) % FOCUS_ZONES.length;
-    setFocusZone(FOCUS_ZONES[nextIndex]);
+    setLabeledPanel(
+      generatedArtifacts,
+      generatedArtifactsLabelText,
+      focusZone === "diagnostics"
+    );
+    setLabeledPanel(
+      linuxArtifacts,
+      linuxArtifactsLabelText,
+      focusZone === "diagnostics"
+    );
   }
   function applyFocusStyles() {
     setLabeledPanel(menu, menuLabelText, focusZone === "menu");
@@ -18660,6 +18743,10 @@ function createApp(options) {
       0,
       Math.min(barWidth, Math.round(percent / 100 * barWidth))
     );
+      generatedArtifacts.scroll(delta);
+      linuxArtifacts.scroll(delta);
+      generatedArtifacts.setScrollPerc(percent);
+      linuxArtifacts.setScrollPerc(percent);
     const bar = `${"\u2588".repeat(fill)}${"\u2591".repeat(barWidth - fill)}`;
     const color = isError || progressState === "failed" || progressState === "canceled" ? "red-fg" : progressState === "success" || progressState === "warning" ? "green-fg" : progressState === "running" ? "yellow-fg" : "white-fg";
     progress.setContent(
@@ -18781,8 +18868,7 @@ function createApp(options) {
     }
   }
   function selectedSettingsItem() {
-    return settingsItems[menu.selected] ?? null;
-  }
+          `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`
   function renderSettingsHelp() {
     const selected = selectedSettingsItem();
     const details = [
@@ -18910,7 +18996,6 @@ function createApp(options) {
       );
       applyFocusStyles();
       screen.render();
-      return;
     }
     if (view === "help") {
       currentActions = [];
@@ -19126,11 +19211,6 @@ function createApp(options) {
     }
     const now = Date.now();
     if (running) {
-      if (now - lastCtrlCAt < 1500) {
-        void confirmExit();
-        return;
-      }
-      lastCtrlCAt = now;
       if (actionRunner.cancel()) {
         appendLogText(
           "[warn] Interrupt requested for running action. Press Ctrl+C again to exit application.\n",
@@ -19184,6 +19264,16 @@ function createApp(options) {
       setFocusedPanelScroll(0);
     }
     screen.render();
+  });
+  generatedArtifacts.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("diagnostics");
+    }
+  });
+  linuxArtifacts.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("diagnostics");
+    }
   });
   screen.key(["end"], () => {
     if (!modalActive) {
@@ -20457,18 +20547,31 @@ function artifactKind(id, kind) {
   if (id === "release-checksums") return "sha256sums";
   return kind;
 }
-function candidatePathsForPattern(rootDir2, outputPattern) {
-  const resolvedPattern = normalizeConfigPath(outputPattern);
-  if (!resolvedPattern.includes("*")) {
-    const absolutePath = import_node_path7.default.join(rootDir2, resolvedPattern);
-    return import_node_fs6.default.existsSync(absolutePath) ? [absolutePath] : [];
+function firstMetadataVersion(...values) {
+  return values.find((value) => typeof value === "string" && value.trim())?.trim();
+}
+  const version = firstMetadataVersion(metadata.version, metadata.baseVersion, metadata.basePhase);
+  const fullVersion = firstMetadataVersion(metadata.fullVersion, metadata.version, metadata.baseVersion, metadata.basePhase);
+    ...version ? { version } : {},
+    ...fullVersion ? { fullVersion } : {}
+function readArtifactPackageJsonVersion(artifactPath) {
+  const packageJsonPath = import_node_path7.default.join(artifactPath, "package.json");
+  if (!import_node_fs6.default.existsSync(packageJsonPath)) return {};
+  const version = readJsonFile(packageJsonPath).version?.trim();
+  return version ? { version, fullVersion: version } : {};
+}
+function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
   }
-  const firstWildcard = resolvedPattern.indexOf("*");
-  const scanRootRelative = import_node_path7.default.dirname(resolvedPattern.slice(0, firstWildcard));
-  const scanRoot = import_node_path7.default.join(rootDir2, scanRootRelative || ".");
-  if (!import_node_fs6.default.existsSync(scanRoot)) return [];
-  const matcher = patternToRegExp(resolvedPattern);
-  const candidates = [];
+    const markers = [
+      import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json"),
+      ...artifactKindValue === "linux-unpacked" ? [import_node_path7.default.join(rootDir2, "config/canva-linux/build-metadata.json")] : []
+    ];
+    for (const marker of markers) {
+    return readArtifactPackageJsonVersion(artifactPath);
+    const kind = artifactKind(workflow.id, workflow.kind);
+    const metadata = artifactPath ? readArtifactMetadata(rootDir2, artifactPath, kind) : {};
+    const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
+      kind,
   for (const entry of import_node_fs6.default.readdirSync(scanRoot, { withFileTypes: true })) {
     const absolutePath = import_node_path7.default.join(scanRoot, entry.name);
     const relativePath = normalizeConfigPath(import_node_path7.default.relative(rootDir2, absolutePath));
@@ -20784,10 +20887,10 @@ function resolveGitBuildRevision(rootDir2) {
       cwd: rootDir2,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"]
-    }).trim();
-    return value || null;
-  } catch {
-    return null;
+function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule) {
+  const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path9.default.resolve(rootDir2));
+  return module2.createBuildMetadata({
+  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
   }
 }
 function createSourceMetadata(rootDir2, buildRevision, metadataModule) {

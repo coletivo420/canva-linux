@@ -120,9 +120,9 @@ function loadPackagedMetadata(rootDir, metadataModule) {
   if (!metadata) return null;
   return metadataModule.normalizeLoadedBuildMetadata(metadata);
 }
-function fallbackEffectiveBuildMetadata(rootDir = process.cwd()) {
-  const metadataModule = loadBuildMetadataModule(import_node_path.default.resolve(rootDir));
-  return metadataModule.createBuildMetadata({
+function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule) {
+  const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path.default.resolve(rootDir));
+  return module2.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
@@ -142,7 +142,7 @@ function loadEffectiveBuildMetadata(rootDir) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
+  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }
 
 // scripts/c420ui-builder.ts
