@@ -106,7 +106,7 @@ function candidatePathsForPattern(rootDir: string, outputPattern: string): strin
     if (matcher.test(relativePath)) candidates.push(absolutePath);
   }
 
-  return candidates.sort();
+  return candidates.sort(new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare);
 }
 
 function readMetadataJson(filePath: string): ArtifactMetadata | undefined {
