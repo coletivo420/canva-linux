@@ -7,6 +7,11 @@ export const C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM = "sha256" as const;
 export const C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS = [
   "packages/c420ui/src",
   "scripts/c420ui-adapter",
+  "scripts/canva-linux/actions",
+  "scripts/canva-linux/artifacts",
+  "scripts/canva-linux/capabilities",
+  "scripts/canva-linux/development",
+  "scripts/canva-linux/project-root.ts",
   "scripts/run-c420ui.ts",
   "scripts/run-c420ui-cli.ts",
   "scripts/c420ui-builder.ts",
@@ -38,6 +43,7 @@ function collectFiles(rootDir: string, relativeInput: string): string[] {
   if (shouldIgnore(relativeInput)) return [];
 
   const absoluteInput = path.join(rootDir, relativeInput);
+  if (!fs.existsSync(absoluteInput)) return [];
   const stats = fs.statSync(absoluteInput);
 
   if (stats.isFile()) return [normalizeRelativePath(relativeInput)];

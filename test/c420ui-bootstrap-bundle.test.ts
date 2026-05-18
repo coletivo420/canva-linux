@@ -28,6 +28,31 @@ function readJson<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
 }
 
+function readRunBundle(): string {
+  return fs.readFileSync(uiEntrypoint, "utf8");
+}
+
+function bundleBlock(
+  bundle: string,
+  startMarker: string,
+  endMarker: string,
+  fallbackEndMarker?: string,
+): string {
+  const start = bundle.indexOf(startMarker);
+  assert.ok(start >= 0, `missing bundle start marker ${startMarker}`);
+
+  const end = bundle.indexOf(endMarker, start);
+  if (end > start) return bundle.slice(start, end);
+
+  if (fallbackEndMarker) {
+    const fallbackEnd = bundle.indexOf(fallbackEndMarker, start);
+    assert.ok(fallbackEnd > start, `missing bundle fallback end marker ${fallbackEndMarker}`);
+    return bundle.slice(start, fallbackEnd);
+  }
+
+  assert.fail(`missing bundle end marker ${endMarker}`);
+}
+
 test("c420ui bootstrap manifest exists and matches package metadata", () => {
   const manifest = readJson<{
     kind: string;
@@ -167,6 +192,55 @@ test("c420ui bootstrap entrypoints are syntactically valid JavaScript", () => {
       `${entrypoint} must pass node --check: ${result.stderr || result.stdout}`,
     );
   }
+});
+
+test("run-c420ui.cjs does not interleave summary code into blessed Program", () => {
+  const bundle = readRunBundle();
+  const programBlock = bundleBlock(
+    bundle,
+    "var require_program = __commonJS",
+    "var require_tput =",
+    "var require_tng =",
+  );
+
+  assert.doesNotMatch(programBlock, /function artifactVersion/);
+  assert.doesNotMatch(programBlock, /scripts\/c420ui-adapter\/detection\/artifact-fragments/);
+});
+
+test("run-c420ui.cjs does not interleave detected-installations summary into inputDialog", () => {
+  const bundle = readRunBundle();
+  const inputDialogBlock = bundleBlock(
+    bundle,
+    "function inputDialog(",
+    "function confirmDialog(",
+    "var init_modal",
+  );
+
+  assert.doesNotMatch(inputDialogBlock, /function artifactVersion/);
+  assert.doesNotMatch(inputDialogBlock, /formatDetectedInstallationsSummary/);
+});
+
+test("run-c420ui.cjs does not interleave validators into interactive action runner", () => {
+  const bundle = readRunBundle();
+  const runnerBlock = bundleBlock(
+    bundle,
+    "function createInteractiveActionRunner(options)",
+    "var init_interactive_action_runner",
+  );
+
+  assert.doesNotMatch(runnerBlock, /function assertOptionalBoolean/);
+  assert.doesNotMatch(runnerBlock, /function assertOptionalString/);
+});
+
+test("run-c420ui.cjs does not interleave terminal app loader into createApp appendLogText", () => {
+  const bundle = readRunBundle();
+  const actionRunnerOptionsBlock = bundleBlock(
+    bundle,
+    "const actionRunner = createInteractiveActionRunner({",
+    "let progressState",
+  );
+
+  assert.doesNotMatch(actionRunnerOptionsBlock, /function loadC420UITerminalApp/);
 });
 
 test("c420ui bootstrap entrypoints match the build recipe", () => {

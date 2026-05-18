@@ -9,6 +9,11 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   build metadata resolution, and bootstrap helpers now live under `scripts/c420ui-adapter`. Generated artifact
   detection lists all declared registry workflows, including planned workflows without `outputPattern` as not detected,
   and artifact selection uses numeric-aware sorting.
+- Dev.9 keeps c420ui integration modules under `scripts/c420ui-adapter` while allowing project registry/config modules
+  under `scripts/canva-linux`. Any `scripts/canva-linux` module that is still bundled into bootstrap must be covered by
+  the c420ui bootstrap source-hash input list.
+- Build metadata formatting now uses `electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
+  must not duplicate `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
 
 - Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not
   be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or

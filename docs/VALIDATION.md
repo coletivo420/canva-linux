@@ -16,6 +16,10 @@ All TypeScript modules consumed by c420ui for project integration, overview dete
 resolution, and bootstrap recipes must live under `scripts/c420ui-adapter`. Do not add new c420ui integration modules
 under `scripts/canva-linux`. `npm run check:canva-linux` enforces that c420ui integration modules do not return to
 `scripts/canva-linux`.
+Project registry/config modules may still live under `scripts/canva-linux`; any such module that is bundled into the
+c420ui bootstrap must be covered by the c420ui bootstrap source-hash input list. Build metadata formatting must use
+`electron/main/build-metadata` as the single source of truth; c420ui adapter loaders must not duplicate
+`createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
 
 The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 
@@ -58,6 +62,7 @@ Generated Artifacts
 
 bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
+Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.

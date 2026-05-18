@@ -497,6 +497,16 @@ Request changes if a PR:
 - imports Canva Linux adapters from c420ui terminal code;
 - makes `scripts/c420ui-adapter/` contain generic UI logic.
 
+## Dev.9 c420ui bootstrap integrity review
+
+Request changes if a PR:
+
+- duplicates `createBuildMetadata` or `normalizeLoadedBuildMetadata` in `scripts/c420ui-adapter/build-metadata-loader.ts`;
+- stops loading build metadata formatting from `electron/main/build-metadata`;
+- bundles `scripts/canva-linux` registry/config modules without adding them to `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`;
+- edits `bootstrap/c420ui/*.cjs` manually instead of rebuilding from TypeScript sources;
+- leaves c420ui bootstrap artifacts without passing `node --check` and the c420ui artifact gates.
+
 ## Host dependency ownership review
 
 Request changes if a PR:
