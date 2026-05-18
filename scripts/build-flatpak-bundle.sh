@@ -10,6 +10,7 @@ source "${SCRIPT_DIR}/ui-common.sh"
 source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/flatpak-build-common.sh"
 source "${SCRIPT_DIR}/package-guidance-common.sh"
+source "${SCRIPT_DIR}/build-metadata-marker-common.sh"
 ui_init
 trap 'restore_flatpak_build_artifact_permissions || true' EXIT
 
@@ -78,4 +79,13 @@ fi
 SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH")"
 ui_ok "Bundle generated: $(realpath "$BUNDLE_PATH")"
 ui_ok "Bundle size: ${SIZE_BYTES} bytes"
+
+write_build_metadata_sidecar "${BUNDLE_PATH}"
+
+if [[ -f "${BUNDLE_PATH}.build-metadata.json" ]]; then
+  ui_ok "Flatpak bundle metadata generated: ${BUNDLE_PATH}.build-metadata.json"
+else
+  ui_warn "Build metadata not found; Flatpak bundle full version detection will fall back to artifact name."
+fi
+
 ui_ok ".flatpak package generation completed."

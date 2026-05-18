@@ -1599,6 +1599,39 @@ function main(): number {
   return { main };
 })();
 
+function checkMetadataAndModalContracts(failures: string[]): void {
+  const rootDir = findProjectRoot();
+  const installNative = readProjectFile(rootDir, "scripts/install-native.sh");
+  const buildAppImage = readProjectFile(rootDir, "scripts/build-appimage.sh");
+  const buildFlatpakBundle = readProjectFile(rootDir, "scripts/build-flatpak-bundle.sh");
+  const detectionCommon = readProjectFile(rootDir, "scripts/install-detection-common.sh");
+  const modalTs = readProjectFile(rootDir, "packages/c420ui/src/terminal/modal.ts");
+
+  if (!installNative.includes("sudo_install_build_metadata_marker") || !installNative.includes("install_build_metadata_marker")) {
+    failures.push("scripts/install-native.sh: must install effective build metadata for Native hash-visible detection");
+  }
+
+  if (!buildAppImage.includes('write_build_metadata_sidecar "${APPIMAGE_PATH}"')) {
+    failures.push("scripts/build-appimage.sh: must write ${APPIMAGE_PATH}.build-metadata.json");
+  }
+
+  if (!buildFlatpakBundle.includes('write_build_metadata_sidecar "${BUNDLE_PATH}"')) {
+    failures.push("scripts/build-flatpak-bundle.sh: must write ${BUNDLE_PATH}.build-metadata.json");
+  }
+
+  if (!detectionCommon.includes("find_artifact_build_metadata_marker")) {
+    failures.push("scripts/install-detection-common.sh: must prefer AppImage build-metadata sidecars over artifact filename parsing");
+  }
+
+  if (!modalTs.includes('input.on("cancel", () => {') || !modalTs.includes("setImmediate(() => {")) {
+    failures.push("packages/c420ui/src/terminal/modal.ts: must defer textbox cancel close through setImmediate");
+  }
+
+  if (modalTs.includes('input.key(["escape"]')) {
+    failures.push("packages/c420ui/src/terminal/modal.ts: must not register redundant input.key([\"escape\"]) handler");
+  }
+}
+
 function checkAdapterContract(failures: string[]): void {
   runCheck(failures, { name: "adapter contract", run: checkAdapterContractRunner.main });
 }
@@ -2744,6 +2777,7 @@ export function main(): number {
   validateBuilderAliasDocs(rootDir, failures);
   validateLegacyBuilderPathReferences(rootDir, failures);
   checkShellActionIds(failures);
+  checkMetadataAndModalContracts(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[canva-linux-contracts] OK");

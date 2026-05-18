@@ -31,19 +31,19 @@ read_package_json_version(){
   local package_file="$1"
   [[ -f "$package_file" ]] || return 0
   command -v node >/dev/null 2>&1 || return 0
-  node -e 'try { const pkg = require(process.argv[1]); if (pkg.version) console.log(pkg.version); } catch {}' "$package_file" 2>/dev/null || true
+  node -e 'try { const pkg = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); if (pkg.version) console.log(pkg.version); } catch {}' "$package_file" 2>/dev/null || true
 }
 read_build_metadata_full_version(){
   local metadata_file="$1"
   [[ -f "$metadata_file" ]] || return 0
   command -v node >/dev/null 2>&1 || return 0
-  node -e 'try { const m = require(process.argv[1]); if (m.fullVersion || m.version) console.log(m.fullVersion || m.version); } catch {}' "$metadata_file" 2>/dev/null || true
+  node -e 'try { const m = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); if (m.fullVersion || m.version) console.log(m.fullVersion || m.version); } catch {}' "$metadata_file" 2>/dev/null || true
 }
 read_build_metadata_base_version(){
   local metadata_file="$1"
   [[ -f "$metadata_file" ]] || return 0
   command -v node >/dev/null 2>&1 || return 0
-  node -e 'try { const m = require(process.argv[1]); if (m.baseVersion || m.basePhase || m.version) console.log(m.baseVersion || m.basePhase || m.version); } catch {}' "$metadata_file" 2>/dev/null || true
+  node -e 'try { const m = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); if (m.baseVersion || m.basePhase || m.version) console.log(m.baseVersion || m.basePhase || m.version); } catch {}' "$metadata_file" 2>/dev/null || true
 }
 
 find_flatpak_version_marker(){
@@ -52,6 +52,26 @@ find_flatpak_version_marker(){
   if [[ -f "$marker" ]]; then printf '%s\n' "$marker"; return 0; fi
   marker="$( [[ -d "${scope_root}/app/${APP_ID}" ]] && find "${scope_root}/app/${APP_ID}" -maxdepth 8 -path '*/active/files/share/canva-linux/version' -type f 2>/dev/null | sort | tail -n1 || true)"
   [[ -n "$marker" ]] && printf '%s\n' "$marker"
+}
+find_latest_appimage_artifact() {
+  find dist -maxdepth 1 -type f -name '*.AppImage' 2>/dev/null | sort | tail -n1 || true
+}
+
+find_artifact_build_metadata_marker() {
+  local artifact_path="$1"
+  [[ -n "$artifact_path" ]] || return 0
+
+  local marker
+  for marker in \
+    "${artifact_path}.build-metadata.json" \
+    "${artifact_path}.version.json" \
+    "${artifact_path}.version"; do
+    [[ -f "$marker" ]] && {
+      printf '%s\n' "$marker"
+      return 0
+    }
+  done
+  return 0
 }
 read_flatpak_version_marker_key(){
   local marker_file="$1" key="$2"
@@ -138,21 +158,48 @@ detect_flatpak_user_full_version(){
   detect_flatpak_user_version
 }
 detect_appimage_version(){
-  local metadata version file name
-  metadata="$(find dist -maxdepth 3 -path '*/resources/config/canva-linux/build-metadata.json' -type f 2>/dev/null | sort | tail -n1 || true)"
+  local file metadata version name
+
+  file="$(find_latest_appimage_artifact)"
+  metadata="$(find_artifact_build_metadata_marker "$file")"
+
   version="$(read_build_metadata_base_version "$metadata")"
-  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
-  file="$(find dist -maxdepth 1 -type f -name '*.AppImage' 2>/dev/null | sort | tail -n1 || true)"
+  [[ -n "$version" ]] && {
+    printf '%s\n' "$version"
+    return 0
+  }
+
+  metadata="$(find dist -maxdepth 4 -path '*/resources/config/canva-linux/build-metadata.json' -type f 2>/dev/null | sort | tail -n1 || true)"
+  version="$(read_build_metadata_base_version "$metadata")"
+  [[ -n "$version" ]] && {
+    printf '%s\n' "$version"
+    return 0
+  }
+
   [[ -n "$file" ]] || return 0
   name="$(basename "$file")"
   [[ "$name" =~ ^canva-linux-([0-9]+\.[0-9]+\.[0-9]+[-+.a-zA-Z0-9]*)-[^-]+\.AppImage$ ]] || return 0
   printf '%s\n' "${BASH_REMATCH[1]}"
 }
 detect_appimage_full_version(){
-  local metadata version
-  metadata="$(find dist -maxdepth 3 -path '*/resources/config/canva-linux/build-metadata.json' -type f 2>/dev/null | sort | tail -n1 || true)"
+  local file metadata version
+
+  file="$(find_latest_appimage_artifact)"
+  metadata="$(find_artifact_build_metadata_marker "$file")"
+
   version="$(read_build_metadata_full_version "$metadata")"
-  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
+  [[ -n "$version" ]] && {
+    printf '%s\n' "$version"
+    return 0
+  }
+
+  metadata="$(find dist -maxdepth 4 -path '*/resources/config/canva-linux/build-metadata.json' -type f 2>/dev/null | sort | tail -n1 || true)"
+  version="$(read_build_metadata_full_version "$metadata")"
+  [[ -n "$version" ]] && {
+    printf '%s\n' "$version"
+    return 0
+  }
+
   detect_appimage_version
 }
 

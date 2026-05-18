@@ -1,5 +1,13 @@
 # Review Checklist
 
+## Dev.9 metadata persistence and c420ui repair
+
+- Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display comes from metadata.
+- The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
+- Artifact filenames may keep the base package version; hash-visible display comes from metadata. Reject changes that remove metadata installation or sidecar generation.
+- AppImage and Flatpak bundle artifacts must generate a `.build-metadata.json` sidecar.
+- Native system/user installs must place `config/canva-linux/build-metadata.json` into the installation prefix.
+
 ## c420ui bootstrap generated artifact review
 
 - bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.

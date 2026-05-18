@@ -16958,10 +16958,13 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
         return;
       }
       closed = true;
-      setImmediate(() => {
-        close({
-          status: "canceled"
-        });
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      label.destroy();
+      input.destroy();
+      footer.destroy();
       modal.destroy();
       overlay.destroy();
       if (previousFocus && typeof previousFocus.focus === "function") {
@@ -16983,14 +16986,11 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
     input.key(["enter"], () => {
       input.submit();
     });
-    input.key(["escape"], () => {
-      close({
-        status: "canceled"
-      });
-    });
     input.on("cancel", () => {
-      close({
-        status: "canceled"
+      setImmediate(() => {
+        close({
+          status: "canceled"
+        });
       });
     });
     input.on("submit", (value) => {

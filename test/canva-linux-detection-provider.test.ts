@@ -152,3 +152,48 @@ test("provider maps detected full versions from stdout", () => {
     assert.equal(status.installations.flatpakSystemFullVersion, "0.1.4-15.Dev.9+gabc1234");
   });
 });
+
+test("provider maps native system full version from stdout", () => {
+  withProjectRoot((rootDir) => {
+    const runCommand: FakeRunCommand = () =>
+      fakeResult({
+        stdout: [
+          "DETECTED_NATIVE_SYSTEM=true",
+          "DETECTED_NATIVE_SYSTEM_FULL_VERSION=0.1.4-15.Dev.9+gabc1234",
+        ].join("\n"),
+      });
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal(status.installations.nativeSystemFullVersion, "0.1.4-15.Dev.9+gabc1234");
+  });
+});
+
+test("provider maps native user full version from stdout", () => {
+  withProjectRoot((rootDir) => {
+    const runCommand: FakeRunCommand = () =>
+      fakeResult({
+        stdout: [
+          "DETECTED_NATIVE_USER=true",
+          "DETECTED_NATIVE_USER_FULL_VERSION=0.1.4-15.Dev.9+gabc1234",
+        ].join("\n"),
+      });
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal(status.installations.nativeUserFullVersion, "0.1.4-15.Dev.9+gabc1234");
+  });
+});
+
+test("provider maps appimage full version from stdout", () => {
+  withProjectRoot((rootDir) => {
+    const runCommand: FakeRunCommand = () =>
+      fakeResult({
+        stdout: [
+          "DETECTED_APPIMAGE_ARTIFACTS=true",
+          "DETECTED_APPIMAGE_FULL_VERSION=0.1.4-15.Dev.9+gabc1234",
+        ].join("\n"),
+      });
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal(status.installations.appImageFullVersion, "0.1.4-15.Dev.9+gabc1234");
+  });
+});

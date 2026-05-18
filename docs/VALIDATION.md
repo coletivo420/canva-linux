@@ -1,5 +1,27 @@
 # Validation Checklist (0.1.4-15.Dev.9)
 
+## Dev.9 metadata persistence and c420ui repair
+
+Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display comes from metadata.
+
+The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
+
+- Native User: detected v0.1.4-15.Dev.9+g...
+- AppImage: detected v0.1.4-15.Dev.9+g...
+- Flatpak System/User continuam exibindo +gHASH.
+
+Verify metadata installation:
+```bash
+CANVA_NATIVE_SCOPE=user bash scripts/install-native.sh
+test -f "$HOME/.local/opt/canva-linux/config/canva-linux/build-metadata.json"
+
+bash scripts/build-appimage.sh
+ls dist/*.AppImage.build-metadata.json
+
+bash scripts/build-flatpak-bundle.sh
+ls dist/*.flatpak.build-metadata.json
+```
+
 ## Dev.8 pinned home tab-strip guardrail
 
 ## c420ui bootstrap artifact validation
