@@ -42,11 +42,18 @@ test("inputDialog handles textbox cancel event", () => {
   assert.match(source, /status: "canceled"/);
 });
 
-test("inputDialog handles textbox escape key", () => {
+test("inputDialog defers textbox cancel close until blessed finishes key handling", () => {
   const source = inputDialogSource();
 
-  assert.match(source, /input\.key\(\["escape"\]/);
-  assert.match(source, /status: "canceled"/);
+  assert.match(source, /input\.on\("cancel"/);
+  assert.match(source, /setImmediate\(\(\) => \{/);
+  assert.match(source, /close\(\{\s*status: "canceled"/);
+});
+
+test("inputDialog does not add redundant textbox escape key handler", () => {
+  const source = inputDialogSource();
+
+  assert.doesNotMatch(source, /input\.key\(\["escape"\]/);
 });
 
 test("inputDialog keeps overlay escape fallback", () => {

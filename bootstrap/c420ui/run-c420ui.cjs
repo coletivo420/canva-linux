@@ -16958,13 +16958,10 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
         return;
       }
       closed = true;
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      label.destroy();
-      input.destroy();
-      footer.destroy();
+      setImmediate(() => {
+        close({
+          status: "canceled"
+        });
       modal.destroy();
       overlay.destroy();
       if (previousFocus && typeof previousFocus.focus === "function") {
