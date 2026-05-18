@@ -103,9 +103,10 @@ function loadPackagedMetadata(
 
 export function fallbackEffectiveBuildMetadata(
   rootDir: string = process.cwd(),
+  metadataModule?: CanvaLinuxBuildMetadataModule,
 ): CanvaLinuxBuildMetadata {
-  const metadataModule = loadBuildMetadataModule(path.resolve(rootDir));
-  return metadataModule.createBuildMetadata({
+  const module = metadataModule ?? loadBuildMetadataModule(path.resolve(rootDir));
+  return module.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
