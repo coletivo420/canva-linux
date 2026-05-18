@@ -122,13 +122,17 @@ function readMetadataJson(filePath: string): ArtifactMetadata | undefined {
   }
 }
 
+function firstMetadataVersion(...values: Array<string | undefined>): string | undefined {
+  return values.find((value) => typeof value === "string" && value.trim())?.trim();
+}
+
 function normalizeMetadata(metadata: ArtifactMetadata | undefined): Pick<CanvaLinuxArtifactFragment, "version" | "fullVersion"> {
   if (!metadata) return {};
-  const version = metadata.baseVersion || metadata.basePhase || metadata.version;
-  const fullVersion = metadata.fullVersion || metadata.version;
+  const version = firstMetadataVersion(metadata.version, metadata.baseVersion, metadata.basePhase);
+  const fullVersion = firstMetadataVersion(metadata.fullVersion, metadata.version, metadata.baseVersion, metadata.basePhase);
   return {
-    ...(typeof version === "string" && version.trim() ? { version: version.trim() } : {}),
-    ...(typeof fullVersion === "string" && fullVersion.trim() ? { fullVersion: fullVersion.trim() } : {}),
+    ...(version ? { version } : {}),
+    ...(fullVersion ? { fullVersion } : {}),
   };
 }
 
@@ -137,7 +141,18 @@ function readVersionSidecar(filePath: string): Pick<CanvaLinuxArtifactFragment, 
   return raw ? { version: raw, fullVersion: raw } : {};
 }
 
-function readArtifactMetadata(artifactPath: string): Pick<CanvaLinuxArtifactFragment, "version" | "fullVersion"> {
+function readArtifactPackageJsonVersion(artifactPath: string): Pick<CanvaLinuxArtifactFragment, "version" | "fullVersion"> {
+  const packageJsonPath = path.join(artifactPath, "package.json");
+  if (!fs.existsSync(packageJsonPath)) return {};
+  const version = readJsonFile<PackageJson>(packageJsonPath).version?.trim();
+  return version ? { version, fullVersion: version } : {};
+}
+
+function readArtifactMetadata(
+  rootDir: string,
+  artifactPath: string,
+  artifactKindValue: string,
+): Pick<CanvaLinuxArtifactFragment, "version" | "fullVersion"> {
   const sidecars = [
     `${artifactPath}.build-metadata.json`,
     `${artifactPath}.version.json`,
@@ -151,12 +166,17 @@ function readArtifactMetadata(artifactPath: string): Pick<CanvaLinuxArtifactFrag
   }
 
   if (fs.existsSync(artifactPath) && fs.statSync(artifactPath).isDirectory()) {
-    for (const marker of [
+    const markers = [
       path.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
       path.join(artifactPath, "config/canva-linux/build-metadata.json"),
-    ]) {
+      ...(artifactKindValue === "linux-unpacked"
+        ? [path.join(rootDir, "config/canva-linux/build-metadata.json")]
+        : []),
+    ];
+    for (const marker of markers) {
       if (fs.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
     }
+    return readArtifactPackageJsonVersion(artifactPath);
   }
 
   return {};
@@ -195,12 +215,13 @@ export function buildCanvaLinuxArtifactFragments(rootDir: string): CanvaLinuxArt
     const candidates = candidatePathsForPattern(rootDir, outputPattern);
     const artifactPath = candidates.at(-1);
     const detected = Boolean(artifactPath);
-    const metadata = artifactPath ? readArtifactMetadata(artifactPath) : {};
-    const fallbackVersion = artifactPath ? inferVersionFromFilename(artifactPath, packageVersion) : undefined;
+    const kind = artifactKind(workflow.id, workflow.kind);
+    const metadata = artifactPath ? readArtifactMetadata(rootDir, artifactPath, kind) : {};
+    const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : undefined;
 
     fragments.push({
       id: workflow.id,
-      kind: artifactKind(workflow.id, workflow.kind),
+      kind,
       label: workflow.label,
       detected,
       ...(artifactPath ? { path: toRelativeArtifactPath(rootDir, artifactPath) } : {}),

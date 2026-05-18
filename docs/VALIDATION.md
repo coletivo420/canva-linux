@@ -123,6 +123,10 @@ they are available, then fall back to the base detected version fields for older
 For example, a Flatpak system install with build metadata should render `v0.1.4-15.Dev.9+g<hash>`, while a legacy marker
 that only exposes `version` should continue rendering `v0.1.4-15.Dev.9`.
 
+## c420ui logs
+
+The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
+
 ## Release metadata checks
 
 The validation baseline protects these release facts:

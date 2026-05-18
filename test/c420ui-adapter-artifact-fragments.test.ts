@@ -111,6 +111,34 @@ test("detects linux-unpacked with internal metadata", () => {
   });
 });
 
+
+test("linux-unpacked prefers fullVersion from root build metadata fallback", () => {
+  withProjectRoot((rootDir) => {
+    fs.mkdirSync(path.join(rootDir, "dist/linux-unpacked"), { recursive: true });
+    fs.writeFileSync(
+      path.join(rootDir, "config/canva-linux/build-metadata.json"),
+      JSON.stringify({ version: "0.1.4-15.Dev.9", fullVersion: "0.1.4-15.Dev.9+grootmeta" }),
+    );
+
+    const unpacked = fragment(rootDir, "linux-unpacked");
+    assert.equal(unpacked.detected, true);
+    assert.equal(unpacked.version, "0.1.4-15.Dev.9");
+    assert.equal(unpacked.fullVersion, "0.1.4-15.Dev.9+grootmeta");
+  });
+});
+
+test("linux-unpacked falls back safely to version unknown without metadata", () => {
+  withProjectRoot((rootDir) => {
+    fs.mkdirSync(path.join(rootDir, "dist/linux-unpacked"), { recursive: true });
+    fs.rmSync(path.join(rootDir, "config/canva-linux/build-metadata.json"), { force: true });
+
+    const unpacked = fragment(rootDir, "linux-unpacked");
+    assert.equal(unpacked.detected, true);
+    assert.equal(unpacked.version, undefined);
+    assert.equal(unpacked.fullVersion, undefined);
+  });
+});
+
 test("detects SHA256SUMS", () => {
   withProjectRoot((rootDir) => {
     fs.writeFileSync(path.join(rootDir, "dist/SHA256SUMS"), "abc  artifact\n");

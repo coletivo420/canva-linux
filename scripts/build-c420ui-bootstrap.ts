@@ -45,6 +45,17 @@ function requirePackageVersion(packageJson: PackageJson, relativePath: string): 
   return packageJson.version;
 }
 
+async function ensureBuildMetadataModule(rootDir: string): Promise<void> {
+  await esbuild.build({
+    entryPoints: [path.join(rootDir, "electron", "main", "build-metadata.ts")],
+    bundle: true,
+    platform: "node",
+    target: "node22",
+    format: "cjs",
+    outfile: path.join(rootDir, ".build", "electron", "main", "build-metadata.js"),
+  });
+}
+
 function copyBlessedRuntimeAssets(rootDir: string, bootstrapDir: string): void {
   const requireFromRoot = createRequire(path.join(rootDir, "package.json"));
   const blessedPackageJsonPath = requireFromRoot.resolve("blessed/package.json");
@@ -69,6 +80,7 @@ async function main(): Promise<void> {
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
   const c420uiPackageJson = readJson<PackageJson>(rootDir, "packages/c420ui/package.json");
+  await ensureBuildMetadataModule(rootDir);
   const buildMetadata = loadEffectiveBuildMetadata(rootDir);
   const dependentProjectVersion = requirePackageVersion(rootPackageJson, "package.json");
   const c420uiVersion = requirePackageVersion(c420uiPackageJson, "packages/c420ui/package.json");

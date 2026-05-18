@@ -12,7 +12,7 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Added
 - Added C420UI log selection/session diagnostics guardrail checks for global
-  mouse release, F5/F6 log paths, session stream warnings and sudo auth popups.
+  mouse release, F5 log copy, session stream warnings and sudo auth popups.
 - Added C420UI branding and project-boundary checks for public naming and
   reusable UI metadata separation.
 - Added a C420UI header layout guardrail check for separate fixed brand and
@@ -42,8 +42,6 @@ This file preserves the detailed development changelog entries that were archive
   selection in the logs panel.
 - Added guardrail checks for root launch, C420UI settings, Tool logging and log
   selection contracts.
-- Added F6 plain logs fallback with the session log path for manual log
-  selection.
 - Added release preparation documentation for v0.1.4-12 artifacts and workflow
   expectations.
 

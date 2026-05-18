@@ -11,7 +11,7 @@ import {
   type InputDialogResult,
 } from "./modal";
 import { c420uiTheme } from "./theme";
-import { formatDetectedInstallationsSummary } from "./detected-installations-summary";
+import { formatDetectionPanelSummaries } from "./detected-installations-summary";
 import { copyTextToClipboard } from "./clipboard";
 import {
   loadToolSettings,
@@ -222,7 +222,6 @@ export function createApp(options: C420UIAppOptions) {
       "{bold}Enter{/bold} Select",
       "{bold}Space{/bold} Toggle",
       "{bold}F5{/bold} Copy Logs",
-      "{bold}F6{/bold} Plain Logs",
       "{bold}?{/bold} Help",
       "{bold}q{/bold} Quit",
     ]
@@ -303,6 +302,36 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.content,
   });
 
+  const generatedArtifacts = tui.box({
+    top: headerLayout.workspaceTop,
+    left: 0,
+    width: "32%",
+    height: 1,
+    border: "line",
+    label: "Generated Artifacts",
+    tags: true,
+    scrollable: true,
+    alwaysScroll: true,
+    keys: true,
+    mouse: tuiMouseEnabled,
+    style: c420uiTheme.content,
+  });
+
+  const linuxArtifacts = tui.box({
+    top: headerLayout.workspaceTop,
+    left: 0,
+    width: "32%",
+    height: 1,
+    border: "line",
+    label: "Linux Artifacts",
+    tags: true,
+    scrollable: true,
+    alwaysScroll: true,
+    keys: true,
+    mouse: tuiMouseEnabled,
+    style: c420uiTheme.content,
+  });
+
   const content = tui.box({
     top: headerLayout.workspaceTop,
     left: "32%",
@@ -369,6 +398,8 @@ export function createApp(options: C420UIAppOptions) {
   screen.append(projectHeader);
   screen.append(menu);
   screen.append(diagnostics);
+  screen.append(generatedArtifacts);
+  screen.append(linuxArtifacts);
   screen.append(content);
   screen.append(logs);
   screen.append(progress);
@@ -409,10 +440,18 @@ export function createApp(options: C420UIAppOptions) {
     const rightColumnWidth = Math.max(1, screenWidth - rightColumnLeft);
     const menuHeight = Math.max(3, Math.floor(workspaceHeight * 0.68));
     const diagnosticsTop = workspaceTop + menuHeight;
-    const diagnosticsHeight = Math.max(
-      3,
+    const detectionPanelsHeight = Math.max(
+      9,
       screenHeight - diagnosticsTop - reservedFooterRows,
     );
+    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
+    const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
+    const linuxArtifactsHeight = Math.max(
+      3,
+      detectionPanelsHeight - detectedInstallationsHeight - generatedArtifactsHeight,
+    );
+    const generatedArtifactsTop = diagnosticsTop + detectedInstallationsHeight;
+    const linuxArtifactsTop = generatedArtifactsTop + generatedArtifactsHeight;
     const contentHeight = Math.max(3, Math.floor(workspaceHeight * 0.36));
     const logsTop = workspaceTop + contentHeight;
     const logsHeight = Math.max(3, screenHeight - logsTop - reservedFooterRows);
@@ -425,7 +464,17 @@ export function createApp(options: C420UIAppOptions) {
     diagnostics.top = diagnosticsTop;
     diagnostics.left = 0;
     diagnostics.width = leftColumnWidth;
-    diagnostics.height = diagnosticsHeight;
+    diagnostics.height = detectedInstallationsHeight;
+
+    generatedArtifacts.top = generatedArtifactsTop;
+    generatedArtifacts.left = 0;
+    generatedArtifacts.width = leftColumnWidth;
+    generatedArtifacts.height = generatedArtifactsHeight;
+
+    linuxArtifacts.top = linuxArtifactsTop;
+    linuxArtifacts.left = 0;
+    linuxArtifacts.width = leftColumnWidth;
+    linuxArtifacts.height = linuxArtifactsHeight;
 
     content.top = workspaceTop;
     content.left = rightColumnLeft;
@@ -473,7 +522,7 @@ export function createApp(options: C420UIAppOptions) {
       toolSettings.tool.terminalTextSelectionMode;
     tuiMouseEnabled = !terminalTextSelectionModeActive;
     applyProgramMouseMode();
-    for (const widget of [menu, diagnostics, content, logs]) {
+    for (const widget of [menu, diagnostics, generatedArtifacts, linuxArtifacts, content, logs]) {
       setWidgetMouseEnabled(widget, tuiMouseEnabled);
     }
     footer.setContent(footerContent());
@@ -522,6 +571,8 @@ export function createApp(options: C420UIAppOptions) {
   let focusZone: FocusZone = "menu";
   let menuLabelText = "Main Menu";
   const diagnosticsLabelText = "Detected Installations";
+  const generatedArtifactsLabelText = "Generated Artifacts";
+  const linuxArtifactsLabelText = "Linux Artifacts";
   let contentLabelText = "Overview";
   let logsLabelText = "Logs";
   let currentActions: InteractiveAction[] = [];
@@ -770,11 +821,17 @@ export function createApp(options: C420UIAppOptions) {
   function renderDiagnosticsBox() {
     if (overviewDetectionError) {
       diagnostics.setContent(
-        `  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}\n  ${overviewDetectionError}`,
+        `  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}
+  ${overviewDetectionError}`,
       );
+      generatedArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
+      linuxArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
       return;
     }
-    diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
+    const panels = formatDetectionPanelSummaries(overviewStatus, c420uiTheme.colors);
+    diagnostics.setContent(panels.detectedInstallations.join("\n"));
+    generatedArtifacts.setContent(panels.generatedArtifacts.join("\n"));
+    linuxArtifacts.setContent(panels.linuxArtifacts.join("\n"));
   }
 
   function refreshDetectedInstallations(
@@ -958,6 +1015,16 @@ export function createApp(options: C420UIAppOptions) {
       diagnosticsLabelText,
       focusZone === "diagnostics",
     );
+    setLabeledPanel(
+      generatedArtifacts,
+      generatedArtifactsLabelText,
+      focusZone === "diagnostics",
+    );
+    setLabeledPanel(
+      linuxArtifacts,
+      linuxArtifactsLabelText,
+      focusZone === "diagnostics",
+    );
     setLabeledPanel(content, contentLabelText, focusZone === "content");
     setLabeledPanel(logs, logsLabelText, focusZone === "logs");
 
@@ -980,31 +1047,6 @@ export function createApp(options: C420UIAppOptions) {
       ? "Logs - Text selection mode enabled"
       : "Logs";
     applyFocusStyles();
-  }
-
-  function showPlainLogsView() {
-    appendLogText("[info] Plain logs view opened with F6.\n", "system");
-    contentLabelText = "Plain Logs";
-    content.setContent(
-      [
-        `{${c420uiTheme.colors.helpTitle}-fg}Plain Logs{/${c420uiTheme.colors.helpTitle}-fg}`,
-        "",
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Session log file:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-        `  {${c420uiTheme.colors.descriptionText}-fg}${sessionLogPath}{/${c420uiTheme.colors.descriptionText}-fg}`,
-        "",
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Visible c420ui log history:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-        logHistory.length
-          ? logHistory
-              .map((line) =>
-                line.replace(/[{}]/g, (c) => (c === "{" ? "\\\\{" : "\\\\}")),
-              )
-              .join("\n")
-          : "  No visible logs yet.",
-      ].join("\n"),
-    );
-    setFocusZone("content");
-    applyFocusStyles();
-    screen.render();
   }
 
   // --- Progress Management ---
@@ -1089,6 +1131,8 @@ export function createApp(options: C420UIAppOptions) {
     }
     if (focusZone === "diagnostics") {
       diagnostics.scroll(delta);
+      generatedArtifacts.scroll(delta);
+      linuxArtifacts.scroll(delta);
     } else if (focusZone === "content") {
       content.scroll(delta);
     } else {
@@ -1108,6 +1152,8 @@ export function createApp(options: C420UIAppOptions) {
     }
     if (focusZone === "diagnostics") {
       diagnostics.setScrollPerc(percent);
+      generatedArtifacts.setScrollPerc(percent);
+      linuxArtifacts.setScrollPerc(percent);
     } else if (focusZone === "content") {
       content.setScrollPerc(percent);
     } else {
@@ -1229,7 +1275,6 @@ export function createApp(options: C420UIAppOptions) {
           `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode disables c420ui mouse capture globally and keeps keyboard navigation active.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Changes take effect immediately and are saved for the next c420ui start. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  F6 opens a plain logs view with the session log path for manual selection fallback.{/${c420uiTheme.colors.descriptionText}-fg}`,
         );
       }
     } else if (selected?.kind === "section") {
@@ -1362,7 +1407,6 @@ export function createApp(options: C420UIAppOptions) {
           "",
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Logs{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  F6             View plain logs and session log path{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode can be enabled in Application Settings. It disables c420ui mouse capture globally, keeps keyboard navigation active, and some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
@@ -1609,12 +1653,6 @@ export function createApp(options: C420UIAppOptions) {
     );
   });
 
-  screen.key(["f6"], () => {
-    if (!modalActive) {
-      showPlainLogsView();
-    }
-  });
-
   screen.key(["S-pageup", "M-up"], () => {
     content.scroll(-5);
     screen.render();
@@ -1679,6 +1717,18 @@ export function createApp(options: C420UIAppOptions) {
   });
 
   diagnostics.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("diagnostics");
+    }
+  });
+
+  generatedArtifacts.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("diagnostics");
+    }
+  });
+
+  linuxArtifacts.on("click", () => {
     if (!modalActive) {
       setFocusZone("diagnostics");
     }

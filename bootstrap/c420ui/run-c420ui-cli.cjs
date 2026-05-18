@@ -1256,20 +1256,29 @@ function readMetadataJson(filePath) {
     return void 0;
   }
 }
+function firstMetadataVersion(...values) {
+  return values.find((value) => typeof value === "string" && value.trim())?.trim();
+}
 function normalizeMetadata(metadata) {
   if (!metadata) return {};
-  const version = metadata.baseVersion || metadata.basePhase || metadata.version;
-  const fullVersion = metadata.fullVersion || metadata.version;
+  const version = firstMetadataVersion(metadata.version, metadata.baseVersion, metadata.basePhase);
+  const fullVersion = firstMetadataVersion(metadata.fullVersion, metadata.version, metadata.baseVersion, metadata.basePhase);
   return {
-    ...typeof version === "string" && version.trim() ? { version: version.trim() } : {},
-    ...typeof fullVersion === "string" && fullVersion.trim() ? { fullVersion: fullVersion.trim() } : {}
+    ...version ? { version } : {},
+    ...fullVersion ? { fullVersion } : {}
   };
 }
 function readVersionSidecar(filePath) {
   const raw = import_node_fs2.default.readFileSync(filePath, "utf8").trim();
   return raw ? { version: raw, fullVersion: raw } : {};
 }
-function readArtifactMetadata(artifactPath) {
+function readArtifactPackageJsonVersion(artifactPath) {
+  const packageJsonPath = import_node_path4.default.join(artifactPath, "package.json");
+  if (!import_node_fs2.default.existsSync(packageJsonPath)) return {};
+  const version = readJsonFile(packageJsonPath).version?.trim();
+  return version ? { version, fullVersion: version } : {};
+}
+function readArtifactMetadata(rootDir, artifactPath, artifactKindValue) {
   const sidecars = [
     `${artifactPath}.build-metadata.json`,
     `${artifactPath}.version.json`,
@@ -1281,12 +1290,15 @@ function readArtifactMetadata(artifactPath) {
     return readVersionSidecar(sidecar);
   }
   if (import_node_fs2.default.existsSync(artifactPath) && import_node_fs2.default.statSync(artifactPath).isDirectory()) {
-    for (const marker of [
+    const markers = [
       import_node_path4.default.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
-      import_node_path4.default.join(artifactPath, "config/canva-linux/build-metadata.json")
-    ]) {
+      import_node_path4.default.join(artifactPath, "config/canva-linux/build-metadata.json"),
+      ...artifactKindValue === "linux-unpacked" ? [import_node_path4.default.join(rootDir, "config/canva-linux/build-metadata.json")] : []
+    ];
+    for (const marker of markers) {
       if (import_node_fs2.default.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
     }
+    return readArtifactPackageJsonVersion(artifactPath);
   }
   return {};
 }
@@ -1319,11 +1331,12 @@ function buildCanvaLinuxArtifactFragments(rootDir) {
     const candidates = candidatePathsForPattern(rootDir, outputPattern);
     const artifactPath = candidates.at(-1);
     const detected = Boolean(artifactPath);
-    const metadata = artifactPath ? readArtifactMetadata(artifactPath) : {};
-    const fallbackVersion = artifactPath ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
+    const kind = artifactKind(workflow.id, workflow.kind);
+    const metadata = artifactPath ? readArtifactMetadata(rootDir, artifactPath, kind) : {};
+    const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
     fragments.push({
       id: workflow.id,
-      kind: artifactKind(workflow.id, workflow.kind),
+      kind,
       label: workflow.label,
       detected,
       ...artifactPath ? { path: toRelativeArtifactPath(rootDir, artifactPath) } : {},
@@ -1584,9 +1597,9 @@ function loadPackagedMetadata(rootDir, metadataModule) {
   if (!metadata) return null;
   return metadataModule.normalizeLoadedBuildMetadata(metadata);
 }
-function fallbackEffectiveBuildMetadata(rootDir = process.cwd()) {
-  const metadataModule = loadBuildMetadataModule(import_node_path6.default.resolve(rootDir));
-  return metadataModule.createBuildMetadata({
+function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule) {
+  const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path6.default.resolve(rootDir));
+  return module2.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
@@ -1606,7 +1619,7 @@ function loadEffectiveBuildMetadata(rootDir) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
+  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }
 
 // scripts/c420ui-adapter/artifacts.ts

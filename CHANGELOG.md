@@ -5,6 +5,8 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
+
 - Dev.9 corrected the c420ui adapter boundary: registry-driven artifact fragment detection, overview detection,
   build metadata resolution, and bootstrap helpers now live under `scripts/c420ui-adapter`. Generated artifact
   detection lists all declared registry workflows, including planned workflows without `outputPattern` as not detected,
@@ -265,7 +267,6 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Added c420ui Application Settings for general Tool logs and terminal text selection in the logs panel.
 - Added guardrail checks for root launch, c420ui settings, Tool logging, log selection, header layout, branding,
   project boundaries, release contracts, TypeScript-first source, source integrity, and runtime build artifacts.
-- Added F6 plain logs fallback with the session log path for manual log selection.
 - Added release preparation documentation for `0.1.4-12` artifacts and workflow expectations.
 - Added CL-EyeDropper regression coverage for bundled snapshot canvas picking, cleanup, and typed `EyeDropperOpenOptions` handling.
 
@@ -274,7 +275,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Refactored c420ui into reusable brand and project metadata boundaries, with separate fixed c420ui and project headers.
 - Changed c420ui session logging to append to launcher-created logs instead of truncating them and to surface session stream failures visibly.
 - Separated Tool logs from Action logs in the c420ui logs panel.
-- Hardened c420ui manual text selection so mouse capture is updated globally while keyboard navigation and F5/F6 log copy remain available.
+- Hardened c420ui manual text selection so mouse capture is updated globally while keyboard navigation and F5 log copy remain available.
 - Updated release artifact generation and documentation to preserve real generated architecture strings such as `x86_64` or `X86_64`.
 - Updated project identity so release naming, docs, workflow tags, and `package.json` use the npm-compatible `0.1.4-12` version.
 

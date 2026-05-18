@@ -38,7 +38,6 @@ The GitHub Release workflow must:
 - `./canva-linux-c420ui-builder` opens the c420ui.
 - F5 copies logs to the clipboard.
 - Text selection mode disables c420ui mouse capture globally.
-- F6 opens a plain logs view with the session log path.
 - Correct root password starts privileged actions.
 - Incorrect root password shows an error popup and does not start the action.
 - Native system/user installs complete and show detected versions.

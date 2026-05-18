@@ -205,3 +205,7 @@ source/effective version contract.
 
 After OAuth completes, the source tab preserves its current Canva context on the first reload. Canonical home navigation
 is used only as a post-load fallback when a localized public logged-out landing page is detected.
+
+## c420ui logs
+
+The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
