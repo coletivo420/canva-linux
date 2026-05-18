@@ -44,6 +44,13 @@ const C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE =
 const C420UI_METADATA_MISMATCH_MESSAGE =
   "c420ui manifest/build metadata mismatch. Run npm run build:metadata && npm run build:c420ui-bootstrap before running the strict artifact gate.";
 
+const C420UI_MANIFEST_METADATA_FIELD_MAPPING = [
+  ["dependentProjectBuildRevision", "buildRevision"],
+  ["dependentProjectFullVersion", "fullVersion"],
+  ["dependentProjectDisplayVersion", "displayVersion"],
+  ["dependentProjectPhase", "phase"],
+] as const;
+
 function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: string[]): void {
   const malformedSigcontClosure = /process\.once\("SIGCONT", function\(\) \{[\s\S]{0,600}?\n\s*};\s*\n\s*process\.kill\(process\.pid, "SIGTSTP"\)/.test(content);
   const interactiveRunnerStart = content.indexOf("function createInteractiveActionRunner(options) {");
@@ -85,11 +92,14 @@ function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: s
   const codePointAtBlock = codePointAtStart === -1 || codePointAtEnd === -1
     ? ""
     : content.slice(codePointAtStart, codePointAtEnd);
+  if (codePointAtStart === -1 || codePointAtEnd === -1) {
+    failures.push("bootstrap/c420ui/run-c420ui.cjs: codePointAt polyfill block must exist.");
+    return;
+  }
+
   const codePointAtSizeIndex = codePointAtBlock.indexOf("var size = string.length;");
   const codePointAtUseIndex = codePointAtBlock.indexOf("index < 0 || index >= size");
   if (
-    codePointAtStart === -1 ||
-    codePointAtEnd === -1 ||
     codePointAtSizeIndex === -1 ||
     codePointAtUseIndex === -1 ||
     codePointAtSizeIndex > codePointAtUseIndex
@@ -166,11 +176,36 @@ function validateBlessedRuntimeAssetsMatchPackage(
   }
 }
 
+function compareGeneratedArtifacts(
+  rootDir: string,
+  expectedBootstrapDir: string,
+  relativePaths: readonly string[],
+  failures: string[],
+): void {
+  for (const relativePath of relativePaths) {
+    const generatedPath = path.join(expectedBootstrapDir, path.basename(relativePath));
+    const committedPath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(generatedPath) || !fs.existsSync(committedPath)) continue;
+
+    const generated = fs.readFileSync(generatedPath);
+    const committed = fs.readFileSync(committedPath);
+    if (!generated.equals(committed)) {
+      failures.push(`${relativePath}: ${C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE}`);
+    }
+  }
+}
+
 function validateGeneratedArtifactsMatchBuildRecipe(
   rootDir: string,
   relativePaths: readonly string[],
   failures: string[],
 ): void {
+  const expectedBootstrapDir = process.env.CANVA_C420UI_EXPECTED_BOOTSTRAP_DIR;
+  if (expectedBootstrapDir) {
+    compareGeneratedArtifacts(rootDir, expectedBootstrapDir, relativePaths, failures);
+    return;
+  }
+
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-bootstrap-check-"));
 
   try {
@@ -189,17 +224,7 @@ function validateGeneratedArtifactsMatchBuildRecipe(
       return;
     }
 
-    for (const relativePath of relativePaths) {
-      const generatedPath = path.join(tempDir, path.basename(relativePath));
-      const committedPath = path.join(rootDir, relativePath);
-      if (!fs.existsSync(generatedPath) || !fs.existsSync(committedPath)) continue;
-
-      const generated = fs.readFileSync(generatedPath);
-      const committed = fs.readFileSync(committedPath);
-      if (!generated.equals(committed)) {
-        failures.push(`${relativePath}: ${C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE}`);
-      }
-    }
+    compareGeneratedArtifacts(rootDir, tempDir, relativePaths, failures);
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -243,12 +268,7 @@ function validateManifestBuildMetadata(
     return;
   }
 
-  for (const [manifestField] of [
-    ["dependentProjectBuildRevision", "buildRevision"],
-    ["dependentProjectFullVersion", "fullVersion"],
-    ["dependentProjectDisplayVersion", "displayVersion"],
-    ["dependentProjectPhase", "phase"],
-  ] as const) {
+  for (const [manifestField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {
     if (typeof manifest[manifestField] !== "string" || manifest[manifestField] === "") {
       failures.push(`bootstrap/c420ui/manifest.json: ${manifestField} must be a non-empty string`);
     }
@@ -257,14 +277,8 @@ function validateManifestBuildMetadata(
   if (!isStrictManifestMetadataGate()) return;
 
   const effectiveMetadata = loadEffectiveBuildMetadata(rootDir);
-  const strictComparisons = [
-    ["dependentProjectBuildRevision", "buildRevision", packagedMetadata.buildRevision],
-    ["dependentProjectFullVersion", "fullVersion", packagedMetadata.fullVersion],
-    ["dependentProjectDisplayVersion", "displayVersion", packagedMetadata.displayVersion],
-    ["dependentProjectPhase", "phase", packagedMetadata.phase],
-  ] as const;
-
-  for (const [manifestField, metadataField, metadataValue] of strictComparisons) {
+  for (const [manifestField, metadataField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {
+    const metadataValue = packagedMetadata[metadataField];
     if (manifest[manifestField] !== metadataValue) {
       failures.push(
         `${C420UI_METADATA_MISMATCH_MESSAGE} ${manifestField} must match ${metadataPath} ${metadataField}.`,

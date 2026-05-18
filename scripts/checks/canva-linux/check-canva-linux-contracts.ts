@@ -2318,25 +2318,26 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
   if (!nodeCheckScript.includes("check-c420ui-node-check.js")) {
     failures.push("check:c420ui-node-check must run check-c420ui-node-check.js");
   }
-  if (!artifactGateScript.includes("npm run check:c420ui-node-check")) {
-    failures.push("check:c420ui-bootstrap-artifacts must call check:c420ui-node-check");
+  if (!artifactGateScript) {
+    failures.push("package.json must contain check:c420ui-bootstrap-artifacts");
   }
-  if (!artifactGateScript.includes("npm run build:c420ui-bootstrap")) {
-    failures.push("check:c420ui-bootstrap-artifacts must run build:c420ui-bootstrap before strict metadata comparison");
+  if (!artifactGateScript.includes("check-c420ui-artifact-gate.js")) {
+    failures.push("check:c420ui-bootstrap-artifacts must run check-c420ui-artifact-gate.js");
   }
-  if (!artifactGateScript.includes("CANVA_STRICT_C420UI_ARTIFACT_METADATA=1")) {
-    failures.push("check:c420ui-bootstrap-artifacts must enable CANVA_STRICT_C420UI_ARTIFACT_METADATA=1");
+  if (artifactGateScript.includes("npm run build:metadata")) {
+    failures.push("check:c420ui-bootstrap-artifacts must not run build:metadata before validating artifacts");
   }
-  const buildIndex = artifactGateScript.indexOf("npm run build:c420ui-bootstrap");
-  const strictIndex = artifactGateScript.indexOf("CANVA_STRICT_C420UI_ARTIFACT_METADATA=1");
-  if (buildIndex === -1 || strictIndex === -1 || buildIndex > strictIndex) {
-    failures.push("check:c420ui-bootstrap-artifacts must run build:c420ui-bootstrap before the strict artifact gate");
+  if (artifactGateScript.includes("npm run build:c420ui-bootstrap")) {
+    failures.push("check:c420ui-bootstrap-artifacts must not run build:c420ui-bootstrap before validating artifacts");
   }
   if (!validateProject.includes('run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check')) {
     failures.push("validate-project.sh must call check:c420ui-node-check explicitly");
   }
   if (!validateProject.includes('run_step "npm run check:c420ui-bootstrap-artifacts" npm run check:c420ui-bootstrap-artifacts')) {
     failures.push("validate-project.sh must call check:c420ui-bootstrap-artifacts explicitly");
+  }
+  if (!validateProject.includes('run_step "git diff --exit-code" git diff --exit-code')) {
+    failures.push("validate-project.sh must call git diff --exit-code after artifact gates");
   }
   if (
     !adapterSource.includes("loadProjectInfo: loadProjectConfig") ||
