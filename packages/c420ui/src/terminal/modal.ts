@@ -240,15 +240,11 @@ export function inputDialog(
       input.submit();
     });
 
-    input.key(["escape"], () => {
-      close({
-        status: "canceled",
-      });
-    });
-
     input.on("cancel", () => {
-      close({
-        status: "canceled",
+      setImmediate(() => {
+        close({
+          status: "canceled",
+        });
       });
     });
 
