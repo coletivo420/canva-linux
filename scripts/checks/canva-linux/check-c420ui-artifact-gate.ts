@@ -1,5 +1,4 @@
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
@@ -21,6 +20,12 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../../c420ui-adapter/bootstrap/source-hash";
 import { loadEffectiveBuildMetadata } from "../../c420ui-adapter/build-metadata-loader";
+import {
+  calculateFileHash,
+  C420UI_BOOTSTRAP_ARTIFACTS,
+  runNodeCheck as collectNodeCheck,
+  validateManifestArtifactHashes,
+} from "./c420ui-bootstrap-check-helpers";
 
 type PackageJson = {
   version?: string;
@@ -37,12 +42,6 @@ type BuildMetadataJson = {
   displayVersion?: string;
   phase?: string;
 };
-
-const C420UI_BOOTSTRAP_ARTIFACTS = [
-  "bootstrap/c420ui/run-c420ui.cjs",
-  "bootstrap/c420ui/run-c420ui-cli.cjs",
-  "bootstrap/c420ui/c420ui-builder.cjs",
-] as const;
 
 const C420UI_MANIFEST_METADATA_FIELD_MAPPING = [
   ["dependentProjectBuildRevision", "buildRevision"],
@@ -79,14 +78,10 @@ function summarizeCommandFailure(result: ReturnType<typeof spawnSync>): string {
 }
 
 function runNodeCheck(rootDir: string, relativePath: string): void {
-  const result = spawnSync(process.execPath, ["--check", path.join(rootDir, relativePath)], {
-    cwd: rootDir,
-    encoding: "utf8",
-    shell: false,
-  });
-
-  if (result.error || result.status !== 0) {
-    throw new Error(`${relativePath}: node --check failed (${summarizeCommandFailure(result)})`);
+  const failures: string[] = [];
+  collectNodeCheck({ rootDir, relativePath, failures });
+  if (failures.length > 0) {
+    throw new Error(failures.join("\n"));
   }
 
   console.log(`[ok] node --check ${relativePath}`);
@@ -124,12 +119,6 @@ function copyBlessedRuntimeAssets(rootDir: string, expectedBootstrapDir: string)
   }
 }
 
-function calculateFileHash(filePath: string): string {
-  return `sha256:${createHash("sha256")
-    .update(fs.readFileSync(filePath))
-    .digest("hex")}`;
-}
-
 function calculateBootstrapArtifactHashes(bootstrapDir: string): Record<string, string> {
   const artifactHashes: Record<string, string> = {};
   for (const relativePath of C420UI_BOOTSTRAP_ARTIFACTS) {
@@ -142,34 +131,9 @@ function calculateBootstrapArtifactHashes(bootstrapDir: string): Record<string, 
 function validateCommittedManifestArtifactHashes(rootDir: string): void {
   const manifestPath = "bootstrap/c420ui/manifest.json";
   const manifest = readJson<Record<string, unknown>>(rootDir, manifestPath);
-  const artifactHashes = manifest.artifactHashes;
   const failures: string[] = [];
 
-  if (manifest.generatedBy !== C420UI_BOOTSTRAP_BUILD_RECIPE) {
-    failures.push(`${manifestPath}: generatedBy must be ${C420UI_BOOTSTRAP_BUILD_RECIPE}`);
-  }
-
-  if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
-    failures.push(`${manifestPath}: artifactHashes must record generated bootstrap artifact hashes`);
-  } else {
-    const hashes = artifactHashes as Record<string, unknown>;
-    for (const relativePath of C420UI_BOOTSTRAP_ARTIFACTS) {
-      const artifact = path.basename(relativePath);
-      const expectedHash = hashes[artifact];
-      if (typeof expectedHash !== "string" || !/^sha256:[0-9a-f]{64}$/.test(expectedHash)) {
-        failures.push(`${manifestPath}: artifactHashes.${artifact} must be a sha256 hash`);
-        continue;
-      }
-
-      const committedPath = path.join(rootDir, relativePath);
-      if (!fs.existsSync(committedPath)) continue;
-
-      const actualHash = calculateFileHash(committedPath);
-      if (actualHash !== expectedHash) {
-        failures.push(`${relativePath}: artifact hash differs from ${manifestPath}; regenerate bootstrap from TypeScript sources`);
-      }
-    }
-  }
+  validateManifestArtifactHashes({ rootDir, manifest, manifestPath, failures });
 
   if (failures.length > 0) {
     throw new Error(failures.join("\n"));

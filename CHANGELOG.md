@@ -6,6 +6,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 ## Unreleased
 
 - The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
+- Linux Artifacts must not duplicate Native/Flatpak installation detection rows. It is a compact runtime/build summary
+  for Electron, Node/npm, and Linux unpacked artifact versions.
+- The c420ui bootstrap output directory environment override must be validated before any recursive cleanup. Bootstrap
+  checks use shared artifact/hash helpers to avoid drift between gates.
 
 - Dev.9 corrected the c420ui adapter boundary: registry-driven artifact fragment detection, overview detection,
   build metadata resolution, and bootstrap helpers now live under `scripts/c420ui-adapter`. Generated artifact

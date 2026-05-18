@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
+import type { SpawnSyncOptionsWithStringEncoding, SpawnSyncReturns } from "node:child_process";
 import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
-import type { SpawnSyncOptionsWithStringEncoding, SpawnSyncReturns } from "node:child_process";
 
 import { createCanvaLinuxDetectionProvider } from "../scripts/c420ui-adapter/detection/provider";
 import type { c420uiOverviewStatus } from "../packages/c420ui/src/detection";
@@ -20,7 +20,16 @@ function createProjectRoot(): string {
   mkdirSync(path.join(rootDir, "config/canva-linux"), { recursive: true });
   writeFileSync(
     path.join(rootDir, "package.json"),
-    `${JSON.stringify({ name: "canva-linux", version: "0.1.4-14" }, null, 2)}\n`,
+    `${JSON.stringify({
+      name: "canva-linux",
+      version: "0.1.4-14",
+      devDependencies: {
+        electron: "^41.5.0",
+      },
+      engines: {
+        node: ">=22.0.0",
+      },
+    }, null, 2)}\n`,
   );
   writeFileSync(
     path.join(rootDir, "scripts/app-identity-common.sh"),
@@ -110,6 +119,17 @@ test("provider exposes Canva Linux metadata", () => {
     assert.equal(status.project.appId, "io.github.coletivo420.canva-linux");
     assert.equal(status.project.executable, "canva-linux");
     assert.equal(status.project.version, "0.1.4-14");
+  });
+});
+
+test("provider exposes runtime electron/node/npm versions", () => {
+  withProjectRoot((rootDir) => {
+    const runCommand: FakeRunCommand = () => fakeResult({});
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal(status.runtime?.electronVersion, "41.5.0");
+    assert.equal(status.runtime?.nodeVersion, "22.0.0");
+    assert.match(status.runtime?.npmVersion ?? "", /^\d+\.\d+\.\d+/);
   });
 });
 

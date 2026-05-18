@@ -1,5 +1,4 @@
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
@@ -21,6 +20,13 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../../c420ui-adapter/bootstrap/source-hash";
 import { loadEffectiveBuildMetadata } from "../../c420ui-adapter/build-metadata-loader";
+import {
+  C420UI_BOOTSTRAP_ARTIFACTS,
+  runNodeCheck,
+  validateManifestArtifactHashes,
+} from "./c420ui-bootstrap-check-helpers";
+
+export { validateManifestArtifactHashes } from "./c420ui-bootstrap-check-helpers";
 
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
@@ -44,12 +50,6 @@ const C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE =
   "Generated c420ui bootstrap artifacts are stale. Run npm run build:c420ui-bootstrap.";
 const C420UI_METADATA_MISMATCH_MESSAGE =
   "c420ui manifest/build metadata mismatch. Run npm run build:metadata && npm run build:c420ui-bootstrap before running the strict artifact gate.";
-
-const C420UI_BOOTSTRAP_ARTIFACTS = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
-] as const;
 
 const C420UI_MANIFEST_METADATA_FIELD_MAPPING = [
   ["dependentProjectBuildRevision", "buildRevision"],
@@ -142,57 +142,11 @@ function summarizeCommandFailure(result: ReturnType<typeof spawnSync>): string {
 }
 
 function validateJavaScriptSyntax(rootDir: string, relativePath: string, failures: string[]): void {
-  const absolutePath = path.join(rootDir, relativePath);
-  if (!fs.existsSync(absolutePath)) return;
-
-  const result = spawnSync(process.execPath, ["--check", absolutePath], {
-    cwd: rootDir,
-    encoding: "utf8",
-    shell: false,
-  });
-
-  if (result.error || result.status !== 0) {
-    failures.push(`${relativePath}: ${C420UI_RUNTIME_SYNTAX_MESSAGE} (${summarizeCommandFailure(result)})`);
-  }
-}
-
-function calculateFileHash(rootDir: string, relativePath: string): string {
-  return `sha256:${createHash("sha256")
-    .update(fs.readFileSync(path.join(rootDir, relativePath)))
-    .digest("hex")}`;
-}
-
-export function validateManifestArtifactHashes(
-  rootDir: string,
-  manifest: Record<string, unknown>,
-  failures: string[],
-): void {
-  const manifestPath = "bootstrap/c420ui/manifest.json";
-
-  if (manifest.generatedBy !== C420UI_BOOTSTRAP_BUILD_RECIPE) {
-    failures.push(`${manifestPath}: generatedBy must be ${C420UI_BOOTSTRAP_BUILD_RECIPE}`);
-  }
-
-  const artifactHashes = manifest.artifactHashes;
-  if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
-    failures.push(`${manifestPath}: artifactHashes must record generated bootstrap artifact hashes`);
-    return;
-  }
-
-  const hashes = artifactHashes as Record<string, unknown>;
-  for (const artifact of C420UI_BOOTSTRAP_ARTIFACTS) {
-    const relativePath = `bootstrap/c420ui/${artifact}`;
-    const expectedHash = hashes[artifact];
-    if (typeof expectedHash !== "string" || !/^sha256:[0-9a-f]{64}$/.test(expectedHash)) {
-      failures.push(`${manifestPath}: artifactHashes.${artifact} must be a sha256 hash`);
-      continue;
-    }
-    if (!fs.existsSync(path.join(rootDir, relativePath))) continue;
-
-    const actualHash = calculateFileHash(rootDir, relativePath);
-    if (actualHash !== expectedHash) {
-      failures.push(`${relativePath}: artifact hash differs from ${manifestPath}; regenerate bootstrap from TypeScript sources`);
-    }
+  if (!fs.existsSync(path.join(rootDir, relativePath))) return;
+  const failureCount = failures.length;
+  runNodeCheck({ rootDir, relativePath, failures });
+  if (failures.length > failureCount && !failures[failures.length - 1]?.includes(C420UI_RUNTIME_SYNTAX_MESSAGE)) {
+    failures[failures.length - 1] = `${relativePath}: ${C420UI_RUNTIME_SYNTAX_MESSAGE}`;
   }
 }
 
@@ -349,9 +303,7 @@ function main(): void {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const manifestPath = "bootstrap/c420ui/manifest.json";
-  const uiBundlePath = "bootstrap/c420ui/run-c420ui.cjs";
-  const cliBundlePath = "bootstrap/c420ui/run-c420ui-cli.cjs";
-  const builderBundlePath = "bootstrap/c420ui/c420ui-builder.cjs";
+  const [uiBundlePath, cliBundlePath, builderBundlePath] = C420UI_BOOTSTRAP_ARTIFACTS;
   const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
     (asset) => `bootstrap/usr/${asset}`,
   );
@@ -443,7 +395,7 @@ function main(): void {
     }
 
     validateManifestBuildMetadata(rootDir, manifest, failures);
-    validateManifestArtifactHashes(rootDir, manifest, failures);
+    validateManifestArtifactHashes({ rootDir, manifest, failures });
 
     try {
       const currentSourceHash = calculateC420UIBootstrapSourceHash(rootDir);

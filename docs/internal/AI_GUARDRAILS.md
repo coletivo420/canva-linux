@@ -20,6 +20,8 @@
   `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Build metadata formatting must use `electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
   must not duplicate `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
+- Linux Artifacts must not duplicate Native/Flatpak installation detection rows. It is a compact runtime/build summary
+  for Electron, Node/npm, and Linux unpacked artifact versions.
 
 ## Dev.8 pinned home tab-strip guardrail
 
@@ -60,6 +62,8 @@ boundary. GPU/display selected runtime CLI options are active diagnostics: RC va
 bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
+C420UI_BOOTSTRAP_OUT_DIR must be validated before any recursive cleanup. Bootstrap checks use shared artifact/hash
+helpers to avoid drift between gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.

@@ -1,16 +1,12 @@
 import { spawnSync } from "node:child_process";
 
-const bundles = [
-  "bootstrap/c420ui/run-c420ui.cjs",
-  "bootstrap/c420ui/run-c420ui-cli.cjs",
-  "bootstrap/c420ui/c420ui-builder.cjs",
-] as const;
+import { C420UI_BOOTSTRAP_ARTIFACTS } from "./c420ui-bootstrap-check-helpers";
 
 let failed = false;
 
 console.log("[c420ui-bootstrap] explicit node --check gate");
 
-for (const bundle of bundles) {
+for (const bundle of C420UI_BOOTSTRAP_ARTIFACTS) {
   console.log(`[c420ui-bootstrap] ${process.execPath} --check ${bundle}`);
 
   const result = spawnSync(process.execPath, ["--check", bundle], {

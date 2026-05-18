@@ -35,6 +35,12 @@ export type c420uiOverviewStatus = {
   // and fall back to *Version for older detectors/markers.
   installations: Record<string, boolean | string>;
   artifactFragments?: CanvaLinuxArtifactFragment[];
+  runtime?: {
+    electronVersion?: string;
+    nodeVersion?: string;
+    npmVersion?: string;
+    packageManagerVersion?: string;
+  };
   warnings: string[];
 };
 

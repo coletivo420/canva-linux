@@ -56,6 +56,9 @@ Generated Artifacts
   AppImage:       detected v0.1.4-15.Dev.9+g...
 ```
 
+Linux Artifacts must not duplicate Native/Flatpak installation detection rows. It is a compact runtime/build summary
+for Electron, Node/npm, and Linux unpacked artifact versions.
+
 ## Dev.8 pinned home tab-strip guardrail
 
 ## c420ui bootstrap artifact validation
@@ -63,6 +66,8 @@ Generated Artifacts
 bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
+The c420ui bootstrap output directory environment override must be validated before any recursive cleanup. Bootstrap
+checks use shared artifact/hash helpers to avoid drift between gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.

@@ -17041,10 +17041,8 @@ function isGeneratedArtifactFragment(fragment) {
   if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
   return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
 }
-function linuxArtifactSummaryItem(label, detected, version) {
-  if (!detected) return `${label} not detected`;
-  if (typeof version === "string" && version.trim()) return `${label} v${version.trim().replace(/^v/, "")}`;
-  return `${label} version unknown`;
+function versionSummaryItem(label, version) {
+  return `${label} ${version ? `v${version.replace(/^v/, "")}` : "unknown"}`;
 }
 function formatDetectionPanelSummaries(s, colors2) {
   if (!s) {
@@ -17057,13 +17055,14 @@ function formatDetectionPanelSummaries(s, colors2) {
         `  Flatpak User: ${loading}`
       ],
       generatedArtifacts: [`  AppImage: ${loading}`],
-      linuxArtifacts: [`Native/Unpacked installations loading...`]
+      linuxArtifacts: ["Electron/Node/npm loading..."]
     };
   }
   const i = s.installations;
   const linuxUnpacked = s.artifactFragments?.find(
     (fragment) => fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked"
   );
+  const linuxUnpackedVersion = linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0;
   const generatedArtifacts = s.artifactFragments ? s.artifactFragments.filter(isGeneratedArtifactFragment).map((fragment) => formatArtifactLine(fragment, colors2)) : [
     `  AppImage: ${formatDetectedStatus(
       colors2,
@@ -17081,21 +17080,10 @@ function formatDetectionPanelSummaries(s, colors2) {
     generatedArtifacts,
     linuxArtifacts: [
       [
-        linuxArtifactSummaryItem(
-          "Native system installation",
-          Boolean(i.nativeSystem),
-          detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion)
-        ),
-        linuxArtifactSummaryItem(
-          "Native user installation",
-          Boolean(i.nativeUser),
-          detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion)
-        ),
-        linuxArtifactSummaryItem(
-          "Linux unpacked",
-          Boolean(linuxUnpacked?.detected),
-          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0
-        )
+        versionSummaryItem("Electron", s.runtime?.electronVersion),
+        versionSummaryItem("Node", s.runtime?.nodeVersion),
+        versionSummaryItem("npm", s.runtime?.npmVersion),
+        versionSummaryItem("Linux unpacked", linuxUnpackedVersion)
       ].join(", ")
     ]
   };
@@ -20475,9 +20463,9 @@ var c420uiLogoLines = [
 init_settings();
 
 // scripts/c420ui-adapter/detection/provider.ts
+var import_node_child_process5 = require("node:child_process");
 var import_node_fs7 = __toESM(require("node:fs"));
 var import_node_path8 = __toESM(require("node:path"));
-var import_node_child_process5 = require("node:child_process");
 
 // scripts/canva-linux/project-root.ts
 var import_node_fs5 = __toESM(require("node:fs"));
@@ -20714,6 +20702,26 @@ function readPackage(rootDir2) {
     import_node_fs7.default.readFileSync(import_node_path8.default.join(rootDir2, "package.json"), "utf8")
   );
 }
+function readPackageDependencyVersion(rootDir2, name) {
+  const packageJson = JSON.parse(
+    import_node_fs7.default.readFileSync(import_node_path8.default.join(rootDir2, "package.json"), "utf8")
+  );
+  return packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name];
+}
+function normalizeSemverRange(value) {
+  return value?.replace(/^[~^>=< ]+/, "").trim() || void 0;
+}
+function readNodeVersion(rootDir2) {
+  const packageJson = JSON.parse(import_node_fs7.default.readFileSync(import_node_path8.default.join(rootDir2, "package.json"), "utf8"));
+  return normalizeSemverRange(packageJson.engines?.node) ?? process.versions.node;
+}
+function readNpmVersion() {
+  try {
+    return (0, import_node_child_process5.execFileSync)("npm", ["--version"], { encoding: "utf8" }).trim();
+  } catch {
+    return void 0;
+  }
+}
 function readPhase(rootDir2) {
   const content = import_node_fs7.default.readFileSync(
     import_node_path8.default.join(rootDir2, "scripts/app-identity-common.sh"),
@@ -20836,6 +20844,11 @@ function createCanvaLinuxDetectionProvider(options = {}) {
           ...buildInstallations(detection.values, artifactFragments)
         },
         artifactFragments,
+        runtime: {
+          electronVersion: normalizeSemverRange(readPackageDependencyVersion(rootDir2, "electron")),
+          nodeVersion: readNodeVersion(rootDir2),
+          npmVersion: readNpmVersion()
+        },
         warnings: detection.warnings ?? []
       };
     }

@@ -1157,9 +1157,9 @@ function toolSettingsPath(stateDirectoryName) {
 }
 
 // scripts/c420ui-adapter/detection/provider.ts
+var import_node_child_process3 = require("node:child_process");
 var import_node_fs3 = __toESM(require("node:fs"));
 var import_node_path5 = __toESM(require("node:path"));
-var import_node_child_process3 = require("node:child_process");
 
 // scripts/canva-linux/project-root.ts
 var import_node_fs = __toESM(require("node:fs"));
@@ -1396,6 +1396,26 @@ function readPackage(rootDir) {
     import_node_fs3.default.readFileSync(import_node_path5.default.join(rootDir, "package.json"), "utf8")
   );
 }
+function readPackageDependencyVersion(rootDir, name) {
+  const packageJson = JSON.parse(
+    import_node_fs3.default.readFileSync(import_node_path5.default.join(rootDir, "package.json"), "utf8")
+  );
+  return packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name];
+}
+function normalizeSemverRange(value) {
+  return value?.replace(/^[~^>=< ]+/, "").trim() || void 0;
+}
+function readNodeVersion(rootDir) {
+  const packageJson = JSON.parse(import_node_fs3.default.readFileSync(import_node_path5.default.join(rootDir, "package.json"), "utf8"));
+  return normalizeSemverRange(packageJson.engines?.node) ?? process.versions.node;
+}
+function readNpmVersion() {
+  try {
+    return (0, import_node_child_process3.execFileSync)("npm", ["--version"], { encoding: "utf8" }).trim();
+  } catch {
+    return void 0;
+  }
+}
 function readPhase(rootDir) {
   const content = import_node_fs3.default.readFileSync(
     import_node_path5.default.join(rootDir, "scripts/app-identity-common.sh"),
@@ -1518,6 +1538,11 @@ function createCanvaLinuxDetectionProvider(options = {}) {
           ...buildInstallations(detection.values, artifactFragments)
         },
         artifactFragments,
+        runtime: {
+          electronVersion: normalizeSemverRange(readPackageDependencyVersion(rootDir, "electron")),
+          nodeVersion: readNodeVersion(rootDir),
+          npmVersion: readNpmVersion()
+        },
         warnings: detection.warnings ?? []
       };
     }
