@@ -65,6 +65,8 @@ const detectionVersionFields = [
   "flatpakSystemVersion",
   "flatpakUserVersion",
   "appImageVersion",
+  "nativeSystemVersion",
+  "nativeUserVersion",
   "nativeSystemFullVersion",
   "nativeUserFullVersion",
   "flatpakSystemFullVersion",
