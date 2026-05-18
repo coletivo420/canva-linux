@@ -7,6 +7,9 @@
 bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 
+Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
+known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
+
 The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
 malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner. Validate this with:
 
@@ -14,6 +17,7 @@ malformed SIGCONT blocks, or host-dependency validators interleaved into the int
 - `node --check bootstrap/c420ui/run-c420ui-cli.cjs`
 - `node --check bootstrap/c420ui/c420ui-builder.cjs`
 - `npm run check:c420ui-bootstrap`
+- `npm run check:c420ui-bootstrap-artifacts`
 - `npm run test -- test/c420ui-bootstrap-artifacts.test.ts`
 
 
@@ -221,4 +225,3 @@ OAuth validation also checks that the first post-OAuth reload targets the curren
   rendering remote `https:` favicons.
 - OAuth localized public-landing probes must normalize both DOM attributes and localized keywords with NFKD so composed and
   decomposed labels are equivalent.
-

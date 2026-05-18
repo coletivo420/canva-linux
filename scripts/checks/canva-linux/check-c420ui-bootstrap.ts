@@ -55,6 +55,28 @@ function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: s
   if (malformedSigcontClosure || assertOptionalInjectedInInteractiveRunner || hostValidatorsNearRunnerState) {
     failures.push(C420UI_RUNTIME_CORRUPTION_MESSAGE);
   }
+
+  const requestLocatorStart = content.indexOf("requestLocatorPosition");
+  const requestLocatorEnd = content.indexOf("Program.prototype.decic", requestLocatorStart);
+  const requestLocatorBlock = requestLocatorStart === -1 || requestLocatorEnd === -1
+    ? ""
+    : content.slice(requestLocatorStart, requestLocatorEnd);
+  if (/return out;/.test(requestLocatorBlock)) {
+    failures.push("bootstrap/c420ui/run-c420ui.cjs: requestLocatorPosition is corrupted; regenerate bootstrap from TypeScript sources.");
+  }
+
+  if (/function crc32\(buf\)[\s\S]{0,800}(?:fs\d*\.readFileSync|path\d*\.resolve)/.test(content)) {
+    failures.push("bootstrap/c420ui/run-c420ui.cjs: crc32 is corrupted with injected file IO; regenerate bootstrap from TypeScript sources.");
+  }
+
+  const progressStateStart = content.indexOf("function toProgressState(state)");
+  const progressStateEnd = content.indexOf("function createInteractiveActionRunner", progressStateStart);
+  const progressStateBlock = progressStateStart === -1 || progressStateEnd === -1
+    ? ""
+    : content.slice(progressStateStart, progressStateEnd);
+  if (/event\.type === "action:start"/.test(progressStateBlock)) {
+    failures.push("bootstrap/c420ui/run-c420ui.cjs: toProgressState is corrupted with action event handler logic; regenerate bootstrap from TypeScript sources.");
+  }
 }
 
 function fileExistsAndIsNotEmpty(rootDir: string, relativePath: string, failures: string[]): void {

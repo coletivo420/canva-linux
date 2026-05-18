@@ -57,6 +57,7 @@
     "build:c420ui-terminal": "esbuild packages/c420ui/src/terminal/index.ts --bundle --platform=node --format=cjs --external:blessed --outfile=.build/packages/c420ui/terminal/index.js",
     "build:c420ui-bootstrap": "npm run build:metadata && esbuild scripts/build-c420ui-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/scripts/build-c420ui-bootstrap.cjs && node .build/scripts/build-c420ui-bootstrap.cjs",
     "check:c420ui-bootstrap": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js",
+    "check:c420ui-bootstrap-artifacts": "npm run build:canva-linux-checks && node .build/scripts/checks/canva-linux/check-c420ui-bootstrap.js && npm run test -- test/c420ui-bootstrap-artifacts.test.ts",
     "build:metadata": "npm run run:ts -- scripts/generate-build-metadata.ts"
   },
   "build": {
