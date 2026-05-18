@@ -16949,32 +16949,32 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
         `{${c420uiTheme.colors.lightBlue}-fg}[Enter]{/${c420uiTheme.colors.lightBlue}-fg} Submit`,
         `  `,
         `{${c420uiTheme.colors.lightBlue}-fg}[Esc]{/${c420uiTheme.colors.lightBlue}-fg} Cancel`
-      ].join("")
+    input.key(["enter"], () => {
+      input.submit();
     });
-    let timer = setTimeout(() => {
+    input.on("submit", (value) => {
       close({
-        status: "timeout"
+        status: "submitted",
+        value: String(value ?? "")
       });
-    }, timeoutMs);
-    const close = (result) => {
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      label.destroy();
-      input.destroy();
-      footer.destroy();
-      modal.destroy();
-      overlay.destroy();
-      if (previousFocus && typeof previousFocus.focus === "function") {
-        previousFocus.focus();
-      }
-      screen.render();
-      resolve(result);
+    });
+    overlay.focus();
+    input.focus();
+    input.readInput();
+    screen.render();
+  });
+}
+var tui;
+var init_modal = __esm({
+  "packages/c420ui/src/terminal/modal.ts"() {
+    init_theme2();
+    tui = {
+      box: require_box(),
+      textbox: require_textbox()
     };
-    overlay.key(["escape"], () => {
-      close({
-        status: "canceled"
+  }
+});
+
       });
     });
 // packages/c420ui/src/terminal/detected-installations-summary.ts
@@ -18347,32 +18347,32 @@ function createApp(options) {
     try {
       return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
     } catch {
-      return "";
+      });
+      return stream;
+    } catch (error) {
+      recordSessionStreamError(error);
+      return null;
     }
   }
-  let sessionStreamOpenError = null;
-  let sessionLogUnavailableWarningShown = false;
-  function warnSessionLogUnavailableOnce() {
-    if (sessionLogUnavailableWarningShown) {
+  const launcherSessionLog = readExistingSessionLog(sessionLogPath);
+  const sessionStream = openSessionStream(sessionLogPath);
+  const writeSession = (line) => {
+    if (!sessionStream || sessionStreamOpenError) {
+      warnSessionLogUnavailableOnce();
       return;
     }
-    sessionLogUnavailableWarningShown = true;
-    const reason = sessionStreamOpenError ? ` (${sessionStreamOpenError})` : "";
-    const warning = `[warn] Session log stream is unavailable: ${sessionLogPath}${reason}`;
-    displayLogLine(warning, "system");
     try {
-      console.warn(warning);
-    } catch {
+      sessionStream.write(`${line}
+`);
+    } catch (error) {
+      recordSessionStreamError(error);
     }
-  }
-  function recordSessionStreamError(error) {
-    sessionStreamOpenError = error instanceof Error ? error.message : String(error);
-    warnSessionLogUnavailableOnce();
-  }
-  function openSessionStream(logPath) {
-    try {
-      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
-      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
+  };
+  writeSession("[mode] c420ui");
+  process.on("exit", () => {
+    writeSession("[session] ended");
+  });
+    diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
       stream.on("error", (error) => {
         recordSessionStreamError(error);
     diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
@@ -19183,7 +19183,7 @@ function createApp(options) {
   });
   logs.on("click", () => {
     if (!modalActive) {
-      setFocusZone("logs");
+    init_detected_installations_summary();
     }
   });
   menu.on("keypress", (_, key) => {
@@ -20327,20 +20327,20 @@ function createC420UIDevelopmentWorkflowFromAction(task, action) {
   const phase = kindToWorkflowPhase(task.kind);
   const workflowAction = {
     ...action,
-    phase
-  };
-  return {
-    id: task.id,
-    label: task.label || action.label,
-    phase,
-    actions: [workflowAction],
-    requiresRoot: action.requiresRoot,
-    supportsDryRun: task.supportsDryRun
-  };
-}
-
-// packages/c420ui/src/terminal/logo.ts
-var c420uiLogoLines = [
+var import_node_fs5 = __toESM(require("node:fs"));
+var import_node_path6 = __toESM(require("node:path"));
+  "DETECTED_APPIMAGE_VERSION",
+  "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
+  "DETECTED_NATIVE_USER_FULL_VERSION",
+  "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
+  "DETECTED_FLATPAK_USER_FULL_VERSION",
+  "DETECTED_APPIMAGE_FULL_VERSION"
+  appImageVersion: "",
+  nativeSystemFullVersion: "",
+  nativeUserFullVersion: "",
+  flatpakSystemFullVersion: "",
+  flatpakUserFullVersion: "",
+  appImageFullVersion: ""
   "\u2584\u2584  \u2588 \u2588 \u2584\u2584\u2584 \u2584\u2580\u2584  \u2584 \u2584  \u2584",
   "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
   "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
@@ -20448,15 +20448,15 @@ function detectionCommand() {
     "print_detection_status_env"
   ].join("\n");
 }
-function runInstallDetection(rootDir2, runCommand) {
-  const warnings = [];
-  let ok = true;
-  try {
-    const result = runCommand("bash", ["-c", detectionCommand()], {
-      cwd: rootDir2,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"]
-    });
+    };
+    appImageVersion: values.DETECTED_APPIMAGE_VERSION || "",
+    // Detected Installations renderers should prefer *FullVersion fields and
+    // fall back to the base *Version fields for older detectors/markers.
+    nativeSystemFullVersion: values.DETECTED_NATIVE_SYSTEM_FULL_VERSION || values.DETECTED_NATIVE_SYSTEM_VERSION || "",
+    nativeUserFullVersion: values.DETECTED_NATIVE_USER_FULL_VERSION || values.DETECTED_NATIVE_USER_VERSION || "",
+    flatpakSystemFullVersion: values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION || values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
+    flatpakUserFullVersion: values.DETECTED_FLATPAK_USER_FULL_VERSION || values.DETECTED_FLATPAK_USER_VERSION || "",
+    appImageFullVersion: values.DETECTED_APPIMAGE_FULL_VERSION || values.DETECTED_APPIMAGE_VERSION || ""
     if (result.error) {
       ok = false;
       warnings.push(`Installation detection failed to start: ${result.error.message}`);

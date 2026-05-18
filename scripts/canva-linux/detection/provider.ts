@@ -47,12 +47,13 @@ const canvaLinuxDetectionKeys = [
   "DETECTED_FLATPAK_SYSTEM",
   "DETECTED_FLATPAK_USER",
   "DETECTED_APPIMAGE_ARTIFACTS",
+
   "DETECTED_NATIVE_SYSTEM_VERSION",
   "DETECTED_NATIVE_USER_VERSION",
   "DETECTED_FLATPAK_SYSTEM_VERSION",
   "DETECTED_FLATPAK_USER_VERSION",
   "DETECTED_APPIMAGE_VERSION",
-  "DETECTED_NATIVE_SYSTEM_VERSION",
+
   "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
   "DETECTED_NATIVE_USER_FULL_VERSION",
   "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
@@ -66,12 +67,13 @@ const emptyInstallations = {
   flatpakSystem: false,
   flatpakUser: false,
   appImageArtifacts: false,
+
   nativeSystemVersion: "",
   nativeUserVersion: "",
   flatpakSystemVersion: "",
   flatpakUserVersion: "",
   appImageVersion: "",
-  nativeSystemVersion: "",
+
   nativeSystemFullVersion: "",
   nativeUserFullVersion: "",
   flatpakSystemFullVersion: "",

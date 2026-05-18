@@ -65,8 +65,6 @@ const detectionVersionFields = [
   "flatpakSystemVersion",
   "flatpakUserVersion",
   "appImageVersion",
-  "nativeSystemVersion",
-  "nativeUserVersion",
   "nativeSystemFullVersion",
   "nativeUserFullVersion",
   "flatpakSystemFullVersion",
@@ -2699,6 +2697,10 @@ function checkShellActionIds(failures: string[]): void {
 export function main(): number {
   const failures: string[] = [];
   const rootDir = findProjectRoot();
+
+  if (new Set(detectionVersionFields).size !== detectionVersionFields.length) {
+    failures.push("detectionVersionFields must not contain duplicate entries");
+  }
 
   checkAdapterContract(failures);
   checkRootProviderContract(failures);
