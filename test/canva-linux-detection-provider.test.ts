@@ -199,6 +199,49 @@ test("provider maps appimage full version from stdout", () => {
   });
 });
 
+
+test("provider keeps appImageVersion as base and appImageFullVersion as effective version from artifact fragment", () => {
+  withProjectRoot((rootDir) => {
+    writeFileSync(
+      path.join(rootDir, "config/canva-linux/artifacts.json"),
+      `${JSON.stringify({
+        workflows: [
+          {
+            id: "appimage",
+            kind: "appimage",
+            label: "AppImage",
+            outputPattern: "dist/canva-linux-*.AppImage",
+          },
+        ],
+      }, null, 2)}\n`,
+    );
+    mkdirSync(path.join(rootDir, "dist"), { recursive: true });
+    const appImagePath = path.join(rootDir, "dist/canva-linux-0.1.4-14-x86_64.AppImage");
+    writeFileSync(appImagePath, "appimage");
+    writeFileSync(
+      `${appImagePath}.build-metadata.json`,
+      JSON.stringify({
+        baseVersion: "0.1.4-14",
+        version: "0.1.4-14+gfragment",
+        fullVersion: "0.1.4-14+gfragment",
+      }),
+    );
+    const runCommand: FakeRunCommand = () =>
+      fakeResult({
+        stdout: [
+          "DETECTED_APPIMAGE_ARTIFACTS=false",
+          "DETECTED_APPIMAGE_VERSION=0.1.4-14+glegacy",
+          "DETECTED_APPIMAGE_FULL_VERSION=0.1.4-14+glegacy",
+        ].join("\n"),
+      });
+
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal(status.installations.appImageVersion, "0.1.4-14");
+    assert.equal(status.installations.appImageFullVersion, "0.1.4-14+gfragment");
+  });
+});
+
 test("provider exposes artifactFragments and derives legacy appImageArtifacts from them", () => {
   withProjectRoot((rootDir) => {
     writeFileSync(

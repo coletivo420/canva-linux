@@ -82,6 +82,26 @@ test("detects AppImage with sidecar and prefers fullVersion", () => {
   });
 });
 
+
+test("build metadata sidecar keeps baseVersion in fragment.version and fullVersion in fragment.fullVersion", () => {
+  withProjectRoot((rootDir) => {
+    const appImagePath = path.join(rootDir, "dist/canva-linux-0.1.4-15.Dev.9-x86_64.AppImage");
+    fs.writeFileSync(appImagePath, "appimage");
+    fs.writeFileSync(
+      `${appImagePath}.build-metadata.json`,
+      JSON.stringify({
+        baseVersion: "0.1.4-15.Dev.9",
+        version: "0.1.4-15.Dev.9+gappimage",
+        fullVersion: "0.1.4-15.Dev.9+gappimage",
+      }),
+    );
+
+    const appImage = fragment(rootDir, "appimage");
+    assert.equal(appImage.version, "0.1.4-15.Dev.9");
+    assert.equal(appImage.fullVersion, "0.1.4-15.Dev.9+gappimage");
+  });
+});
+
 test("detects Flatpak bundle with sidecar and falls back to version", () => {
   withProjectRoot((rootDir) => {
     const flatpakPath = path.join(rootDir, "dist/canva-linux-0.1.4-15.Dev.9-x86_64.flatpak");
@@ -124,6 +144,26 @@ test("linux-unpacked prefers fullVersion from root build metadata fallback", () 
     assert.equal(unpacked.detected, true);
     assert.equal(unpacked.version, "0.1.4-15.Dev.9");
     assert.equal(unpacked.fullVersion, "0.1.4-15.Dev.9+grootmeta");
+  });
+});
+
+
+test("linux-unpacked uses baseVersion as version and fullVersion as effective version", () => {
+  withProjectRoot((rootDir) => {
+    const metadataPath = path.join(rootDir, "dist/linux-unpacked/resources/config/canva-linux/build-metadata.json");
+    fs.mkdirSync(path.dirname(metadataPath), { recursive: true });
+    fs.writeFileSync(
+      metadataPath,
+      JSON.stringify({
+        baseVersion: "0.1.4-15.Dev.9",
+        version: "0.1.4-15.Dev.9+gunpacked",
+        fullVersion: "0.1.4-15.Dev.9+gunpacked",
+      }),
+    );
+
+    const unpacked = fragment(rootDir, "linux-unpacked");
+    assert.equal(unpacked.version, "0.1.4-15.Dev.9");
+    assert.equal(unpacked.fullVersion, "0.1.4-15.Dev.9+gunpacked");
   });
 });
 

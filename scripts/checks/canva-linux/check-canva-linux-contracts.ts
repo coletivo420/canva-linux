@@ -227,6 +227,13 @@ function assertIncludes(
   if (!contents.includes(expected)) failures.push(`${file}: missing ${expected}`);
 }
 
+function sliceBetween(contents: string, start: string, end: string): string {
+  const startIndex = contents.indexOf(start);
+  if (startIndex === -1) return "";
+  const endIndex = contents.indexOf(end, startIndex + start.length);
+  return contents.slice(startIndex, endIndex === -1 ? undefined : endIndex);
+}
+
 function validateReleaseShellScript(
   rootDir: string,
   relativePath: string,
@@ -2687,9 +2694,11 @@ function checkC420uiDetectionPanelsAndPlainLogsContract(rootDir: string, failure
   const appPath = "packages/c420ui/src/terminal/app.ts";
   const summaryPath = "packages/c420ui/src/terminal/detected-installations-summary.ts";
   const artifactFragmentsPath = "scripts/c420ui-adapter/detection/artifact-fragments.ts";
+  const bootstrapRunPath = "bootstrap/c420ui/run-c420ui.cjs";
   const app = readProjectFile(rootDir, appPath);
   const summary = readProjectFile(rootDir, summaryPath);
   const artifactFragments = readProjectFile(rootDir, artifactFragmentsPath);
+  const bootstrapRun = readOptionalProjectFile(rootDir, bootstrapRunPath) ?? "";
 
   for (const label of ["Detected Installations", "Generated Artifacts", "Linux Artifacts"] as const) {
     if (!app.includes(`label: "${label}"`)) {
@@ -2715,6 +2724,50 @@ function checkC420uiDetectionPanelsAndPlainLogsContract(rootDir: string, failure
   }
   if (app.includes("Plain Logs") || app.includes("plain logs") || app.includes('screen.key(["f6"]')) {
     failures.push("c420ui must not expose Plain Logs or F6 Plain Logs, and must not bind F6 to plain logs mode.");
+  }
+  if (bootstrapRun) {
+    const inputDialogBlock = sliceBetween(
+      bootstrapRun,
+      "function inputDialog(",
+      "function formatDetectedStatus(",
+    );
+    if (
+      inputDialogBlock.includes("function formatDetectionPanelSummaries") ||
+      inputDialogBlock.includes("function formatDetectedStatus")
+    ) {
+      failures.push("run-c420ui.cjs: detection summary code was interleaved into inputDialog.");
+    }
+    if (inputDialogBlock && (!inputDialogBlock.includes("input.submit") || !inputDialogBlock.includes("input.readInput"))) {
+      failures.push("run-c420ui.cjs: inputDialog was truncated by detection summary code.");
+    }
+
+    const createAppBlock = sliceBetween(
+      bootstrapRun,
+      "function createApp(",
+      "async function runC420UI",
+    );
+    if (!createAppBlock.includes('screen.key(["C-c"]') || !createAppBlock.includes("confirmExit")) {
+      failures.push("run-c420ui.cjs: createApp must keep Ctrl+C exit confirmation logic.");
+    }
+
+    const summaryBlock = sliceBetween(
+      bootstrapRun,
+      "function formatDetectionPanelSummaries(",
+      "function formatDetectedInstallationsSummary(",
+    );
+    if (!summaryBlock.includes("if (!s)")) {
+      failures.push("run-c420ui.cjs: formatDetectionPanelSummaries loading guard is missing.");
+    }
+    const generatedArtifactsIndex = summaryBlock.indexOf("const generatedArtifacts =");
+    const generatedArtifactsCloseIndex = summaryBlock.indexOf("\n  ];", generatedArtifactsIndex);
+    const returnIndex = summaryBlock.indexOf("return {", generatedArtifactsIndex);
+    if (
+      generatedArtifactsIndex !== -1 &&
+      returnIndex !== -1 &&
+      (generatedArtifactsCloseIndex === -1 || returnIndex < generatedArtifactsCloseIndex)
+    ) {
+      failures.push("run-c420ui.cjs: generatedArtifacts array must be closed before return.");
+    }
   }
   const fullVersionIndex = artifactFragments.indexOf("metadata.fullVersion");
   const unknownFallbackIndex = artifactFragments.indexOf('kind !== "linux-unpacked"');

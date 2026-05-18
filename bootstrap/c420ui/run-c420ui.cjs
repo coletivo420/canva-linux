@@ -16970,43 +16970,43 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
       if (previousFocus && typeof previousFocus.focus === "function") {
         previousFocus.focus();
       }
-      screen.render();
-      resolve(result);
-    };
-    timer = setTimeout(() => {
-      close({
-        status: "timeout"
-      });
-    }, timeoutMs);
-    overlay.key(["escape"], () => {
-      close({
-        status: "canceled"
-      });
     });
-    input.key(["enter"], () => {
-      input.submit();
-    });
-    input.on("cancel", () => {
-      setImmediate(() => {
-        close({
-          status: "canceled"
-        });
-      });
-    });
-    input.on("submit", (value) => {
-      close({
-        status: "submitted",
-        value: String(value ?? "")
-      });
-function formatDetectedStatus(colors2, detected, version) {
-  if (!detected) {
-    return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
-  }
-  const v = typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}` : "version unknown";
-  return `{${colors2.statusDetected}-fg}detected{/${colors2.statusDetected}-fg}      ${v}`;
+    overlay.focus();
+    input.focus();
+    input.readInput();
+    screen.render();
+  });
 }
-function formatArtifactLine(fragment, colors2) {
-  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment))}`;
+var tui;
+var init_modal = __esm({
+  "packages/c420ui/src/terminal/modal.ts"() {
+    init_theme2();
+    tui = {
+      box: require_box(),
+      textbox: require_textbox()
+    };
+  }
+});
+
+// packages/c420ui/src/terminal/detected-installations-summary.ts
+function detectedVersion(fullVersion, version) {
+  if (typeof fullVersion === "string" && fullVersion.trim()) {
+    return fullVersion;
+  }
+  return version;
+}
+function artifactVersion(fragment) {
+  return fragment.fullVersion || fragment.version;
+}
+}
+  if (!s) {
+      linuxArtifacts: [`Native/Unpacked installations loading...`]
+  }
+  const i = s.installations;
+  ];
+}
+var init_detected_installations_summary = __esm({
+  "packages/c420ui/src/terminal/detected-installations-summary.ts"() {
 }
 function isGeneratedArtifactFragment(fragment) {
   if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
@@ -17970,53 +17970,53 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     c420uiHeaderMinWidth
   );
   const projectMinWidth = Math.max(
-    projectHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
-    PROJECT_HEADER_MIN_WIDTH
-  );
-  const normalizedScreenWidth = Math.max(1, screenWidth);
-  const canUseSideBySide = normalizedScreenWidth >= c420uiMinWidth + projectMinWidth;
-  if (!canUseSideBySide) {
-    return {
-      c420uiHeader: {
-        top: 0,
-        left: 0,
-        width: normalizedScreenWidth,
-        height: c420uiHeaderHeight
-      },
-      projectHeader: {
-        top: c420uiHeaderHeight,
-        left: 0,
-        width: normalizedScreenWidth,
-        height: projectHeaderHeight
-      },
-      workspaceTop: c420uiHeaderHeight + projectHeaderHeight + HEADER_GAP,
-      layoutMode: "stacked"
-    };
-  }
-  const c420uiHeaderWidth = Math.min(c420uiMinWidth, normalizedScreenWidth);
-  const projectHeaderWidth = normalizedScreenWidth - c420uiHeaderWidth;
-  return {
-    c420uiHeader: {
-      top: 0,
-      width: c420uiHeaderWidth,
-      height: c420uiHeaderHeight
-    },
-    projectHeader: {
-      top: 0,
-      left: c420uiHeaderWidth,
-      width: projectHeaderWidth,
-      height: projectHeaderHeight
-    },
-    workspaceTop: Math.max(c420uiHeaderHeight, projectHeaderHeight) + HEADER_GAP,
-    layoutMode: "side-by-side"
-  };
-}
-function createApp(options) {
-  const opts = options.config;
-  const { bridge, rootProvider } = options;
-  let toolSettings = loadToolSettings(opts.project.stateDirectoryName);
-  const settingsPath = toolSettingsPath(opts.project.stateDirectoryName);
-  let terminalTextSelectionModeActive = toolSettings.tool.terminalTextSelectionMode;
+      left: 0,
+    style: c420uiTheme.header
+  });
+  const menu = tui2.list({
+    border: "line",
+    tags: true,
+    label: "Main Menu",
+    style: c420uiTheme.menu
+  const diagnostics = tui2.box({
+    label: "Detected Installations",
+  const generatedArtifacts = tui2.box({
+    label: "Generated Artifacts",
+    scrollable: true,
+    alwaysScroll: true,
+    keys: true,
+    mouse: tuiMouseEnabled,
+    style: c420uiTheme.content
+  const linuxArtifacts = tui2.box({
+    label: "Linux Artifacts",
+    scrollback: MAX_LOG_HISTORY_LINES,
+    tags: true,
+    style: c420uiTheme.logs
+  const footer = tui2.box({
+  screen.append(generatedArtifacts);
+  screen.append(linuxArtifacts);
+    const detectionPanelsHeight = Math.max(
+      9,
+    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
+    const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
+    const linuxArtifactsHeight = Math.max(
+      3,
+      detectionPanelsHeight - detectedInstallationsHeight - generatedArtifactsHeight
+    );
+    const generatedArtifactsTop = diagnosticsTop + detectedInstallationsHeight;
+    const linuxArtifactsTop = generatedArtifactsTop + generatedArtifactsHeight;
+    diagnostics.height = detectedInstallationsHeight;
+    generatedArtifacts.top = generatedArtifactsTop;
+    generatedArtifacts.left = 0;
+    generatedArtifacts.width = leftColumnWidth;
+    generatedArtifacts.height = generatedArtifactsHeight;
+    linuxArtifacts.top = linuxArtifactsTop;
+    linuxArtifacts.left = 0;
+    linuxArtifacts.width = leftColumnWidth;
+    linuxArtifacts.height = linuxArtifactsHeight;
+    for (const widget of [menu, diagnostics, generatedArtifacts, linuxArtifacts, content, logs]) {
+  const generatedArtifactsLabelText = "Generated Artifacts";
+  const linuxArtifactsLabelText = "Linux Artifacts";
   let tuiMouseEnabled = !terminalTextSelectionModeActive;
   function footerContent() {
     return [
@@ -18476,13 +18476,13 @@ function createApp(options) {
   let sessionStreamOpenError = null;
   let sessionLogUnavailableWarningShown = false;
   function warnSessionLogUnavailableOnce() {
-    if (sessionLogUnavailableWarningShown) {
-      return;
-    }
-    sessionLogUnavailableWarningShown = true;
-    const reason = sessionStreamOpenError ? ` (${sessionStreamOpenError})` : "";
-    const warning = `[warn] Session log stream is unavailable: ${sessionLogPath}${reason}`;
-    displayLogLine(warning, "system");
+  }
+      generatedArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
+      linuxArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
+    const panels = formatDetectionPanelSummaries(overviewStatus, c420uiTheme.colors);
+    diagnostics.setContent(panels.detectedInstallations.join("\n"));
+    generatedArtifacts.setContent(panels.generatedArtifacts.join("\n"));
+    linuxArtifacts.setContent(panels.linuxArtifacts.join("\n"));
     try {
       console.warn(warning);
     } catch {
@@ -18630,38 +18630,38 @@ function createApp(options) {
     }
     screen.render();
   }
-  function importLauncherSessionLog() {
-    if (!toolSettings.tool.generalLogsEnabled || !launcherSessionId || !launcherSessionLog.includes(`[session] started id=${launcherSessionId}`)) {
+    if (modalActive || focusZone === nextZone) {
       return;
     }
-    for (const line of launcherSessionLog.split(/\r?\n/)) {
-      if (line.trim()) {
-        displayLogLine(line, "system");
-      }
+    focusZone = nextZone;
+    if (focusZone === "menu") {
+      menu.focus();
+    } else if (focusZone === "diagnostics") {
+      diagnostics.focus();
+    } else if (focusZone === "content") {
+      content.focus();
+    } else {
+      logs.focus();
     }
+    applyFocusStyles();
+    screen.render();
   }
-  function activeLabel(label) {
-    return `{${c420uiTheme.colors.activeLabel}-fg}${label}{/${c420uiTheme.colors.activeLabel}-fg}`;
+  function moveFocus(delta) {
+    const index = FOCUS_ZONES.indexOf(focusZone);
+    const nextIndex = (index + delta + FOCUS_ZONES.length) % FOCUS_ZONES.length;
+    setFocusZone(FOCUS_ZONES[nextIndex]);
   }
-  function inactiveLabel(label) {
-    return `{${c420uiTheme.colors.inactiveLabel}-fg}${label}{/${c420uiTheme.colors.inactiveLabel}-fg}`;
-  }
-  function setWidgetBorder(widget, active) {
-    widget.style.border = {
-      ...widget.style.border ?? {},
-      fg: active ? c420uiTheme.colors.activeBorder : c420uiTheme.colors.inactiveBorder
-    };
-  }
-  function setLabeledPanel(widget, label, active) {
-    setWidgetBorder(widget, active);
-    widget.setLabel(active ? activeLabel(label) : inactiveLabel(label));
-  }
-  function setFocusZone(nextZone) {
+  function applyFocusStyles() {
+    setLabeledPanel(menu, menuLabelText, focusZone === "menu");
     setLabeledPanel(
-      generatedArtifacts,
-      generatedArtifactsLabelText,
+      diagnostics,
+      diagnosticsLabelText,
       focusZone === "diagnostics"
     );
+      generatedArtifacts.scroll(delta);
+      linuxArtifacts.scroll(delta);
+      generatedArtifacts.setScrollPerc(percent);
+      linuxArtifacts.setScrollPerc(percent);
     setLabeledPanel(
       linuxArtifacts,
       linuxArtifactsLabelText,
@@ -18841,9 +18841,9 @@ function createApp(options) {
     }
     return -1;
   }
-  function settingsItemLabel(item, index) {
-    if (item.kind === "section") {
-      const sectionColor = activeSettingsSectionIndex() === index ? c420uiTheme.colors.activeLabel : c420uiTheme.colors.inactiveLabel;
+    return settingsItems[menu.selected] ?? null;
+  }
+          `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`
       return `{${sectionColor}-fg}{bold}${item.label}{/bold}{/${sectionColor}-fg}`;
     }
     if (item.kind === "note") {
@@ -18968,7 +18968,7 @@ function createApp(options) {
     clearProgressOnNavigation();
     if (view === "main") {
       if (!overviewStatus) {
-        void refreshDetectedInstallations("enter-overview");
+      return;
       }
       renderDiagnosticsBox();
       currentActions = [];
@@ -19183,22 +19183,22 @@ function createApp(options) {
   });
   screen.key(["tab"], () => {
     if (!modalActive) {
-      moveFocus(1);
+      if (now - lastCtrlCAt < 1500) {
+        void confirmExit();
+        return;
+      }
+      lastCtrlCAt = now;
     }
-  });
-  screen.key(["S-tab", "backtab"], () => {
+  generatedArtifacts.on("click", () => {
     if (!modalActive) {
-      moveFocus(-1);
+      setFocusZone("diagnostics");
     }
   });
-  screen.key(["escape"], () => {
-    if (modalActive) {
-      return;
+  linuxArtifacts.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("diagnostics");
     }
-    if (running) {
-      void confirmExit();
-      return;
-    }
+  });
     if (currentView === "main") {
       void confirmExit();
       return;
@@ -20519,42 +20519,51 @@ var SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
 function readJsonFile(filePath) {
   return JSON.parse(import_node_fs6.default.readFileSync(filePath, "utf8"));
 }
-function readPackageVersion(rootDir2) {
-  return readJsonFile(import_node_path7.default.join(rootDir2, "package.json")).version ?? "unknown";
-}
-function loadArtifactWorkflows(rootDir2) {
-  const configPath = import_node_path7.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-  if (!import_node_fs6.default.existsSync(configPath)) return [];
-  const config = readJsonFile(configPath);
-  return Array.isArray(config.workflows) ? config.workflows : [];
-}
-function normalizeConfigPath(configPath) {
-  return configPath.split(/[\\/]+/).filter(Boolean).join(import_node_path7.default.sep);
-}
-function resolveOutputPattern(outputPattern, version) {
-  return normalizeConfigPath(outputPattern.replaceAll("${version}", version));
-}
-function escapeRegExp(value) {
-  return value.replace(/[|\\{}()[\]^$+?.]/g, "\\$&");
-}
-function patternToRegExp(pattern) {
-  const normalized = normalizeConfigPath(pattern);
-  const source = normalized.split("*").map(escapeRegExp).join("[^\\/]*");
-  return new RegExp(`^${source}$`);
-}
-function artifactKind(id, kind) {
-  if (id === "linux-unpacked" || id.includes("linux-unpacked")) return "linux-unpacked";
-  if (id === "release-checksums") return "sha256sums";
-  return kind;
-}
+function candidatePathsForPattern(rootDir2, outputPattern) {
+  const resolvedPattern = normalizeConfigPath(outputPattern);
+  if (!resolvedPattern.includes("*")) {
+    const absolutePath = import_node_path7.default.join(rootDir2, resolvedPattern);
+    return import_node_fs6.default.existsSync(absolutePath) ? [absolutePath] : [];
+  }
+  const firstWildcard = resolvedPattern.indexOf("*");
+  const scanRootRelative = import_node_path7.default.dirname(resolvedPattern.slice(0, firstWildcard));
+  const scanRoot = import_node_path7.default.join(rootDir2, scanRootRelative || ".");
+  if (!import_node_fs6.default.existsSync(scanRoot)) return [];
+  const matcher = patternToRegExp(resolvedPattern);
+  const candidates = [];
 function firstMetadataVersion(...values) {
   return values.find((value) => typeof value === "string" && value.trim())?.trim();
 }
-  const version = firstMetadataVersion(metadata.version, metadata.baseVersion, metadata.basePhase);
-  const fullVersion = firstMetadataVersion(metadata.fullVersion, metadata.version, metadata.baseVersion, metadata.basePhase);
+  const version = firstMetadataVersion(
+    metadata.baseVersion,
+    metadata.basePhase,
+    metadata.version
+  );
+  const fullVersion = firstMetadataVersion(
+    metadata.fullVersion,
+    metadata.version,
+    metadata.baseVersion,
+    metadata.basePhase
+  );
     ...version ? { version } : {},
     ...fullVersion ? { fullVersion } : {}
 function readArtifactPackageJsonVersion(artifactPath) {
+  const packageJsonPath = import_node_path7.default.join(artifactPath, "package.json");
+  if (!import_node_fs6.default.existsSync(packageJsonPath)) return {};
+  const version = readJsonFile(packageJsonPath).version?.trim();
+  return version ? { version, fullVersion: version } : {};
+}
+function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
+    const markers = [
+      import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json"),
+      ...artifactKindValue === "linux-unpacked" ? [import_node_path7.default.join(rootDir2, "config/canva-linux/build-metadata.json")] : []
+    ];
+    for (const marker of markers) {
+    return readArtifactPackageJsonVersion(artifactPath);
+    const kind = artifactKind(workflow.id, workflow.kind);
+    const metadata = artifactPath ? readArtifactMetadata(rootDir2, artifactPath, kind) : {};
+    const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
+      kind,
   const packageJsonPath = import_node_path7.default.join(artifactPath, "package.json");
   if (!import_node_fs6.default.existsSync(packageJsonPath)) return {};
   const version = readJsonFile(packageJsonPath).version?.trim();
@@ -20860,15 +20869,15 @@ function loadBuildMetadataModule(rootDir2) {
 }
 function readJsonFile2(filePath) {
   try {
-    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
+    }).trim();
+    return value || null;
   } catch {
     return null;
-  }
 }
-function hasGitRepository(rootDir2) {
-  return import_node_fs8.default.existsSync(import_node_path9.default.join(rootDir2, ".git"));
-}
-function resolveEnvBuildRevision() {
+function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule) {
+  const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path9.default.resolve(rootDir2));
+  return module2.createBuildMetadata({
+  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
   for (const key of [
     "CANVA_LINUX_BUILD_REVISION",
     "GITHUB_SHA",
