@@ -1619,6 +1619,14 @@ function checkMetadataAndModalContracts(failures: string[]): void {
     failures.push("scripts/build-flatpak-bundle.sh: must write ${BUNDLE_PATH}.build-metadata.json");
   }
 
+  if (!buildFlatpakBundle.includes("USE_EXISTING_REPO") ||
+      !buildFlatpakBundle.includes("extract_flatpak_repo_build_metadata") ||
+      !buildFlatpakBundle.includes("/files/share/canva-linux/version") ||
+      !buildFlatpakBundle.includes("write_build_metadata_sidecar_from_source") ||
+      !buildFlatpakBundle.includes("Could not read build metadata from reused repo")) {
+    failures.push("scripts/build-flatpak-bundle.sh: must not use checkout metadata for --use-existing-repo sidecars and must extract it from repo");
+  }
+
   if (!detectionCommon.includes("find_artifact_build_metadata_marker")) {
     failures.push("scripts/install-detection-common.sh: must prefer AppImage build-metadata sidecars over artifact filename parsing");
   }

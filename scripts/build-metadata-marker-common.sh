@@ -18,6 +18,14 @@ write_build_metadata_sidecar() {
   cp "$source" "${artifact_path}.build-metadata.json"
 }
 
+write_build_metadata_sidecar_from_source() {
+  local artifact_path="$1"
+  local source="$2"
+
+  [[ -f "$source" ]] || return 0
+  cp "$source" "${artifact_path}.build-metadata.json"
+}
+
 install_build_metadata_marker() {
   local target="$1"
   local source

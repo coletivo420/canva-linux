@@ -48,6 +48,28 @@ BUNDLE_PATH="${DIST_DIR}/canva-linux-${VERSION}-${FLATPAK_ARCH}.flatpak"
 
 ui_info "Generating Flatpak bundle for version ${VERSION} (${FLATPAK_ARCH})"
 
+find_flatpak_repo_ref() {
+  command -v ostree >/dev/null 2>&1 || return 0
+
+  ostree --repo=repo refs 2>/dev/null \
+    | grep -E "^app/${APP_ID}/${FLATPAK_ARCH}/" \
+    | sort \
+    | tail -n1 || true
+}
+
+extract_flatpak_repo_build_metadata() {
+  local output_path="$1"
+  local ref
+
+  command -v ostree >/dev/null 2>&1 || return 1
+
+  ref="$(find_flatpak_repo_ref)"
+  [[ -n "$ref" ]] || return 1
+
+  ostree --repo=repo cat "$ref" /files/share/canva-linux/version > "$output_path" 2>/dev/null
+  [[ -s "$output_path" ]]
+}
+
 repo_has_app_ref() {
   [[ -d repo/refs ]] && find repo/refs -type f | grep -q '/io\.github\.coletivo420\.canva-linux/'
 }
@@ -80,12 +102,24 @@ SIZE_BYTES="$(stat -c '%s' "$BUNDLE_PATH")"
 ui_ok "Bundle generated: $(realpath "$BUNDLE_PATH")"
 ui_ok "Bundle size: ${SIZE_BYTES} bytes"
 
-write_build_metadata_sidecar "${BUNDLE_PATH}"
-
-if [[ -f "${BUNDLE_PATH}.build-metadata.json" ]]; then
-  ui_ok "Flatpak bundle metadata generated: ${BUNDLE_PATH}.build-metadata.json"
+if [[ "$USE_EXISTING_REPO" == true ]]; then
+  tmp_metadata="$(mktemp)"
+  if extract_flatpak_repo_build_metadata "$tmp_metadata"; then
+    write_build_metadata_sidecar_from_source "${BUNDLE_PATH}" "$tmp_metadata"
+    ui_ok "Flatpak bundle metadata generated from reused repo: ${BUNDLE_PATH}.build-metadata.json"
+  else
+    rm -f "${BUNDLE_PATH}.build-metadata.json"
+    ui_warn "Could not read build metadata from reused repo; Flatpak bundle sidecar was not generated to avoid stale checkout metadata."
+  fi
+  rm -f "$tmp_metadata"
 else
-  ui_warn "Build metadata not found; Flatpak bundle full version detection will fall back to artifact name."
+  write_build_metadata_sidecar "${BUNDLE_PATH}"
+
+  if [[ -f "${BUNDLE_PATH}.build-metadata.json" ]]; then
+    ui_ok "Flatpak bundle metadata generated: ${BUNDLE_PATH}.build-metadata.json"
+  else
+    ui_warn "Build metadata not found; Flatpak bundle full version detection will fall back to artifact name."
+  fi
 fi
 
 ui_ok ".flatpak package generation completed."
