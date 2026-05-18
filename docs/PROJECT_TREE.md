@@ -16,7 +16,7 @@ docs/
 ```text
 packages/c420ui/           Generic c420ui package source and Linux host helper.
 scripts/c420ui-adapter/    Canva Linux project adapter for c420ui.
-scripts/canva-linux/       Canva Linux project-specific actions, detection, and support tooling.
+scripts/canva-linux/       Canva Linux project-specific actions and support tooling.
 scripts/core/              Repository-wide validation and infrastructure checks.
 config/canva-linux/        Canva Linux project declarations for actions, artifacts, dependencies, development, and UI.
 electron/                  Canva Linux Electron runtime and preload source.

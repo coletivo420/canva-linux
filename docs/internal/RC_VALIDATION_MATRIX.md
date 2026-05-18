@@ -187,6 +187,9 @@ Canva Linux Builder powered by c420ui is the primary builder, installer, validat
 
 ## Dev.7 effective-version and OAuth checks
 
+Historical guardrail fragments for this phase remain `0.1.4-15.Dev.7` and `v0.1.4-15.Dev.7` so AI
+checks can verify the archived Dev.7 validation context while the active RC target advances.
+
 - Confirm source version remains `0.1.4-15.Dev.9`, display version remains `0.1.4-15.Dev`, and phase remains `0.1.4-15.Dev.9`.
 - Confirm runtime startup logs and `--version` expose effective `+g<short-hash>` metadata when the build revision is known.
 - Confirm OAuth post-login reload preserves editor/design/folder URLs and only falls back to `https://www.canva.com/` after localized public landing detection.

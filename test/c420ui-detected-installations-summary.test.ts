@@ -139,3 +139,25 @@ test("does not duplicate AppImage when artifactFragments exist", () => {
   assert.match(lines.join("\n"), /AppImage: .*gfragment/);
   assert.doesNotMatch(lines.join("\n"), /glegacy/);
 });
+
+test("loading state uses Native System/User and Flatpak System/User labels", () => {
+  const lines = formatDetectedInstallationsSummary(null, colors);
+  const text = lines.join("\n");
+
+  assert.match(text, /Native System: .*loading/);
+  assert.match(text, /Native User: .*loading/);
+  assert.match(text, /Flatpak System: .*loading/);
+  assert.match(text, /Flatpak User: .*loading/);
+  assert.match(text, /Generated Artifacts\n  AppImage: .*loading/);
+  assert.doesNotMatch(text, /Native Install/);
+  assert.doesNotMatch(text, /Flatpak Install/);
+});
+
+test("planned artifact renders as not detected", () => {
+  const lines = formatDetectedInstallationsSummary(
+    status({}, [{ id: "deb", kind: "deb", label: "Debian package", detected: false }]),
+    colors,
+  );
+
+  assert.match(lines.join("\n"), /Debian package: .*not detected/);
+});

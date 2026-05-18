@@ -14,7 +14,7 @@ import {
   type c420uiOverviewStatusProvider,
   type CanvaLinuxArtifactFragment,
 } from "../../../packages/c420ui/src/detection";
-import { findCanvaLinuxProjectRoot } from "../project-root";
+import { findCanvaLinuxProjectRoot } from "../../canva-linux/project-root";
 import { buildCanvaLinuxArtifactFragments } from "./artifact-fragments";
 
 type CanvaLinuxDetectionCommandRunner = (

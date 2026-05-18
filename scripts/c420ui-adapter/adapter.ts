@@ -15,8 +15,8 @@ import {
 } from "../../packages/c420ui/src";
 import { c420uiLogoLines } from "../../packages/c420ui/src/terminal/logo";
 import { toolSettingsPath } from "../../packages/c420ui/src/terminal/settings";
-import { buildCanvaLinuxOverviewStatus } from "../canva-linux/detection/provider";
-import { loadEffectiveBuildMetadata } from "../canva-linux/build-metadata-loader";
+import { buildCanvaLinuxOverviewStatus } from "./detection/provider";
+import { loadEffectiveBuildMetadata } from "./build-metadata-loader";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,

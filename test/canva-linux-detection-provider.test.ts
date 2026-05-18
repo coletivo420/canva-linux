@@ -5,7 +5,7 @@ import path from "node:path";
 import test from "node:test";
 import type { SpawnSyncOptionsWithStringEncoding, SpawnSyncReturns } from "node:child_process";
 
-import { createCanvaLinuxDetectionProvider } from "../scripts/canva-linux/detection/provider";
+import { createCanvaLinuxDetectionProvider } from "../scripts/c420ui-adapter/detection/provider";
 import type { c420uiOverviewStatus } from "../packages/c420ui/src/detection";
 
 type FakeRunCommand = (
@@ -17,6 +17,7 @@ type FakeRunCommand = (
 function createProjectRoot(): string {
   const rootDir = mkdtempSync(path.join(tmpdir(), "canva-linux-detection-"));
   mkdirSync(path.join(rootDir, "scripts"), { recursive: true });
+  mkdirSync(path.join(rootDir, "config/canva-linux"), { recursive: true });
   writeFileSync(
     path.join(rootDir, "package.json"),
     `${JSON.stringify({ name: "canva-linux", version: "0.1.4-14" }, null, 2)}\n`,
@@ -195,5 +196,41 @@ test("provider maps appimage full version from stdout", () => {
     const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
 
     assert.equal(status.installations.appImageFullVersion, "0.1.4-15.Dev.9+gabc1234");
+  });
+});
+
+test("provider exposes artifactFragments and derives legacy appImageArtifacts from them", () => {
+  withProjectRoot((rootDir) => {
+    writeFileSync(
+      path.join(rootDir, "config/canva-linux/artifacts.json"),
+      `${JSON.stringify({
+        workflows: [
+          {
+            id: "appimage",
+            kind: "appimage",
+            label: "AppImage",
+            outputPattern: "dist/canva-linux-*.AppImage",
+          },
+          { id: "deb", kind: "deb", label: "Debian package", planned: true },
+        ],
+      }, null, 2)}\n`,
+    );
+    mkdirSync(path.join(rootDir, "dist"), { recursive: true });
+    const appImagePath = path.join(rootDir, "dist/canva-linux-0.1.4-14-x86_64.AppImage");
+    writeFileSync(appImagePath, "appimage");
+    writeFileSync(`${appImagePath}.version`, "0.1.4-14+gfragment\n");
+    const runCommand: FakeRunCommand = () => fakeResult({ stdout: "DETECTED_APPIMAGE_ARTIFACTS=false\n" });
+
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal(status.installations.appImageArtifacts, true);
+    assert.equal(status.installations.appImageVersion, "0.1.4-14+gfragment");
+    assert.equal(status.artifactFragments?.find((item) => item.id === "appimage")?.detected, true);
+    assert.deepEqual(status.artifactFragments?.find((item) => item.id === "deb"), {
+      id: "deb",
+      kind: "deb",
+      label: "Debian package",
+      detected: false,
+    });
   });
 });

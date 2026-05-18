@@ -31,6 +31,10 @@ type ArtifactMetadata = {
 };
 
 const ARTIFACTS_CONFIG_PATH = "config/canva-linux/artifacts.json";
+const ARTIFACT_PATH_COLLATOR = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
 const SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
   "*.AppImage",
   "*.flatpak",
@@ -106,7 +110,7 @@ function candidatePathsForPattern(rootDir: string, outputPattern: string): strin
     if (matcher.test(relativePath)) candidates.push(absolutePath);
   }
 
-  return candidates.sort(new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }).compare);
+  return candidates.sort(ARTIFACT_PATH_COLLATOR.compare);
 }
 
 function readMetadataJson(filePath: string): ArtifactMetadata | undefined {
@@ -177,7 +181,15 @@ export function buildCanvaLinuxArtifactFragments(rootDir: string): CanvaLinuxArt
 
   for (const workflow of workflows) {
     if (typeof workflow.id !== "string" || typeof workflow.kind !== "string" || typeof workflow.label !== "string") continue;
-    if (typeof workflow.outputPattern !== "string") continue;
+    if (typeof workflow.outputPattern !== "string") {
+      fragments.push({
+        id: workflow.id,
+        kind: artifactKind(workflow.id, workflow.kind),
+        label: workflow.label,
+        detected: false,
+      });
+      continue;
+    }
 
     const outputPattern = resolveOutputPattern(workflow.outputPattern, packageVersion);
     const candidates = candidatePathsForPattern(rootDir, outputPattern);

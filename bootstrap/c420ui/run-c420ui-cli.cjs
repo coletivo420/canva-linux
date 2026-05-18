@@ -1156,7 +1156,7 @@ function toolSettingsPath(stateDirectoryName) {
   return import_node_path2.default.join(configHome(), stateDirectoryName, "tool-settings.json");
 }
 
-// scripts/canva-linux/detection/provider.ts
+// scripts/c420ui-adapter/detection/provider.ts
 var import_node_fs3 = __toESM(require("node:fs"));
 var import_node_path5 = __toESM(require("node:path"));
 var import_node_child_process3 = require("node:child_process");
@@ -1179,10 +1179,14 @@ function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
   }
 }
 
-// scripts/canva-linux/detection/artifact-fragments.ts
+// scripts/c420ui-adapter/detection/artifact-fragments.ts
 var import_node_fs2 = __toESM(require("node:fs"));
 var import_node_path4 = __toESM(require("node:path"));
 var ARTIFACTS_CONFIG_PATH = "config/canva-linux/artifacts.json";
+var ARTIFACT_PATH_COLLATOR = new Intl.Collator(void 0, {
+  numeric: true,
+  sensitivity: "base"
+});
 var SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
   "*.AppImage",
   "*.flatpak",
@@ -1242,7 +1246,7 @@ function candidatePathsForPattern(rootDir, outputPattern) {
     const relativePath = normalizeConfigPath(import_node_path4.default.relative(rootDir, absolutePath));
     if (matcher.test(relativePath)) candidates.push(absolutePath);
   }
-  return candidates.sort();
+  return candidates.sort(ARTIFACT_PATH_COLLATOR.compare);
 }
 function readMetadataJson(filePath) {
   try {
@@ -1302,7 +1306,15 @@ function buildCanvaLinuxArtifactFragments(rootDir) {
   const fragments = [];
   for (const workflow of workflows) {
     if (typeof workflow.id !== "string" || typeof workflow.kind !== "string" || typeof workflow.label !== "string") continue;
-    if (typeof workflow.outputPattern !== "string") continue;
+    if (typeof workflow.outputPattern !== "string") {
+      fragments.push({
+        id: workflow.id,
+        kind: artifactKind(workflow.id, workflow.kind),
+        label: workflow.label,
+        detected: false
+      });
+      continue;
+    }
     const outputPattern = resolveOutputPattern(workflow.outputPattern, packageVersion);
     const candidates = candidatePathsForPattern(rootDir, outputPattern);
     const artifactPath = candidates.at(-1);
@@ -1322,7 +1334,7 @@ function buildCanvaLinuxArtifactFragments(rootDir) {
   return fragments;
 }
 
-// scripts/canva-linux/detection/provider.ts
+// scripts/c420ui-adapter/detection/provider.ts
 var canvaLinuxDetectionKeys = [
   "DETECTED_NATIVE_SYSTEM",
   "DETECTED_NATIVE_USER",
@@ -1493,20 +1505,15 @@ function buildCanvaLinuxOverviewStatus(rootDir = findCanvaLinuxProjectRoot()) {
   return createCanvaLinuxDetectionProvider().buildOverviewStatus(rootDir);
 }
 
-// scripts/canva-linux/build-metadata-loader.ts
+// scripts/c420ui-adapter/build-metadata-loader.ts
 var import_node_child_process4 = require("node:child_process");
 var import_node_fs4 = __toESM(require("node:fs"));
 var import_node_path6 = __toESM(require("node:path"));
-
-// electron/main/build-metadata.ts
-var UNKNOWN_BUILD_REVISION = "unknown";
 function normalizeBuildRevision(input) {
   if (!input) return "unknown";
   const trimmed = input.trim();
   if (!trimmed || trimmed === "unknown") return "unknown";
-  const withoutPrefix = trimmed.replace(/^g/i, "");
-  const shortHash = withoutPrefix.slice(0, 7);
-  return `g${shortHash}`;
+  return `g${trimmed.replace(/^g/i, "").slice(0, 7)}`;
 }
 function appendBuildRevision(base, buildRevision) {
   return buildRevision && buildRevision !== "unknown" ? `${base}+${buildRevision}` : base;
@@ -1525,9 +1532,7 @@ function createBuildMetadata(input) {
   };
 }
 function normalizeLoadedBuildMetadata(metadata) {
-  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) {
-    return null;
-  }
+  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) return null;
   return createBuildMetadata({
     baseVersion: metadata.baseVersion,
     baseDisplayVersion: metadata.baseDisplayVersion,
@@ -1535,10 +1540,8 @@ function normalizeLoadedBuildMetadata(metadata) {
     buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION
   });
 }
-
-// scripts/canva-linux/build-metadata-loader.ts
 var UNKNOWN_BASE_VERSION = "0.0.0";
-var UNKNOWN_BUILD_REVISION2 = "unknown";
+var UNKNOWN_BUILD_REVISION = "unknown";
 function readJsonFile2(filePath) {
   try {
     return JSON.parse(import_node_fs4.default.readFileSync(filePath, "utf8"));
@@ -1593,14 +1596,15 @@ function loadPackagedMetadata(rootDir) {
   const metadata = readJsonFile2(
     import_node_path6.default.join(rootDir, "config", "canva-linux", "build-metadata.json")
   );
-  return metadata ? normalizeLoadedBuildMetadata(metadata) : null;
+  if (!metadata) return null;
+  return normalizeLoadedBuildMetadata(metadata);
 }
 function fallbackEffectiveBuildMetadata() {
   return createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
-    buildRevision: UNKNOWN_BUILD_REVISION2
+    buildRevision: UNKNOWN_BUILD_REVISION
   });
 }
 function loadEffectiveBuildMetadata(rootDir) {

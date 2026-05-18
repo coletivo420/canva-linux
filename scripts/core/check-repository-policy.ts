@@ -1076,7 +1076,6 @@ function validateDependentProjectBoundaryLayout(
     "config/canva-linux/project-ui.json",
     "scripts/c420ui-adapter",
     "scripts/canva-linux/actions",
-    "scripts/canva-linux/detection",
   ] as const;
   for (const requiredPath of requiredPaths) {
     if (!fs.existsSync(path.join(rootDir, requiredPath))) {
