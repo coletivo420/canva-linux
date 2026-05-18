@@ -71,6 +71,7 @@ const emptyInstallations = {
   flatpakSystemVersion: "",
   flatpakUserVersion: "",
   appImageVersion: "",
+  nativeSystemVersion: "",
   nativeSystemFullVersion: "",
   nativeUserFullVersion: "",
   flatpakSystemFullVersion: "",
