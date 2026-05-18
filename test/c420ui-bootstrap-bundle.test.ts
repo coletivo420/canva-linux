@@ -20,6 +20,7 @@ const bootstrapDir = path.join("bootstrap", "c420ui");
 const manifestPath = path.join(bootstrapDir, "manifest.json");
 const uiEntrypoint = path.join(bootstrapDir, "run-c420ui.cjs");
 const cliEntrypoint = path.join(bootstrapDir, "run-c420ui-cli.cjs");
+const builderEntrypoint = path.join(bootstrapDir, "c420ui-builder.cjs");
 const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
   (asset) => path.join("bootstrap", "usr", asset),
 );
@@ -56,6 +57,7 @@ function bundleBlock(
 test("c420ui bootstrap manifest exists and matches package metadata", () => {
   const manifest = readJson<{
     kind: string;
+    generatedBy: string;
     c420uiVersion: string;
     dependentProject: string;
     dependentProjectVersion: string;
@@ -71,11 +73,13 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     sourceHashAlgorithm: string;
     sourceHash: string;
     sourceHashInputs: string[];
+    artifactHashes: Record<string, string>;
   }>(manifestPath);
   const rootPackageJson = readJson<{ version: string }>("package.json");
   const c420uiPackageJson = readJson<{ version: string }>("packages/c420ui/package.json");
 
   assert.equal(manifest.kind, "c420ui-bootstrap");
+  assert.equal(manifest.generatedBy, "scripts/build-c420ui-bootstrap.ts");
   assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
   assert.equal(manifest.dependentProject, "canva-linux");
   assert.equal(manifest.dependentProjectVersion, rootPackageJson.version);
@@ -111,10 +115,13 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     true,
   );
   assert.equal(manifest.sourceHash, calculateC420UIBootstrapSourceHash(process.cwd()));
+  for (const artifact of ["run-c420ui.cjs", "run-c420ui-cli.cjs", "c420ui-builder.cjs"] as const) {
+    assert.match(manifest.artifactHashes[artifact], /^sha256:[0-9a-f]{64}$/);
+  }
 });
 
 test("c420ui bootstrap entrypoints exist and are not empty", () => {
-  for (const entrypoint of [uiEntrypoint, cliEntrypoint]) {
+  for (const entrypoint of [uiEntrypoint, cliEntrypoint, builderEntrypoint]) {
     const stats = fs.statSync(entrypoint);
     assert.equal(stats.isFile(), true, `${entrypoint} must be a file`);
     assert.ok(stats.size > 0, `${entrypoint} must not be empty`);
@@ -180,7 +187,7 @@ test("interactive run-c420ui entrypoint starts c420ui before dependent dependenc
 
 
 test("c420ui bootstrap entrypoints are syntactically valid JavaScript", () => {
-  for (const entrypoint of [uiEntrypoint, cliEntrypoint]) {
+  for (const entrypoint of [uiEntrypoint, cliEntrypoint, builderEntrypoint]) {
     const result = spawnSync(process.execPath, ["--check", entrypoint], {
       encoding: "utf8",
       shell: false,
@@ -262,7 +269,7 @@ test("c420ui bootstrap entrypoints match the build recipe", () => {
       `bootstrap recipe rebuild must succeed: ${result.stderr || result.stdout}`,
     );
 
-    for (const entrypoint of [uiEntrypoint, cliEntrypoint]) {
+    for (const entrypoint of [uiEntrypoint, cliEntrypoint, builderEntrypoint]) {
       assert.deepEqual(
         fs.readFileSync(entrypoint),
         fs.readFileSync(path.join(tempDir, path.basename(entrypoint))),

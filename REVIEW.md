@@ -22,6 +22,10 @@
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
+- bootstrap/c420ui/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+  output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
+  on every committed bootstrap entrypoint.
+- Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
 - Reject changes that treat `bootstrap/c420ui/*.cjs` as source of truth, must not restore `canva-linux.sh`,
   or bypass the official TypeScript bootstrap build recipe.
 - Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
