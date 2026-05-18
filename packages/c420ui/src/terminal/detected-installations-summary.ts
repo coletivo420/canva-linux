@@ -34,8 +34,10 @@ export function formatDetectedInstallationsSummary(
   if (!s) {
     return [
       `Detected Installations`,
-      `  Native Install: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
-      `  Flatpak Install: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
+      `  Native System: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
+      `  Native User: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
+      `  Flatpak System: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
+      `  Flatpak User: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
       `Generated Artifacts`,
       `  AppImage: {${colors.appImageLoading}-fg}loading...{/${colors.appImageLoading}-fg}`,
     ];
