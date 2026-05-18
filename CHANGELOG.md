@@ -13,6 +13,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
+- Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
+  The strict gate rebuilds metadata and c420ui bootstrap before comparing manifest/build-metadata fields,
+  avoiding stale self-referential commit-hash failures.
 
 ## Dev.8 tab-strip redesign
 

@@ -29,6 +29,13 @@ function readJson<T>(relativePath: string): T {
   return JSON.parse(fs.readFileSync(relativePath, "utf8")) as T;
 }
 
+function readBundle(): string {
+  return fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+}
+
+const strictManifestMetadata =
+  process.env.CANVA_STRICT_C420UI_ARTIFACT_METADATA === "1";
+
 for (const bundle of bundles) {
   test(`${bundle} passes node --check`, () => {
     const result = spawnSync(process.execPath, ["--check", bundle], {
@@ -44,7 +51,7 @@ for (const bundle of bundles) {
 }
 
 test("run-c420ui.cjs does not contain known corrupted SIGCONT block", () => {
-  const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  const bundle = readBundle();
 
   assert.doesNotMatch(
     bundle,
@@ -53,7 +60,7 @@ test("run-c420ui.cjs does not contain known corrupted SIGCONT block", () => {
 });
 
 test("run-c420ui.cjs does not contain corrupted requestLocatorPosition block", () => {
-  const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  const bundle = readBundle();
   const start = bundle.indexOf("requestLocatorPosition");
   const end = bundle.indexOf("Program.prototype.decic", start);
 
@@ -67,7 +74,7 @@ test("run-c420ui.cjs does not contain corrupted requestLocatorPosition block", (
 });
 
 test("run-c420ui.cjs does not interleave file IO into crc32", () => {
-  const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  const bundle = readBundle();
   const start = bundle.indexOf("function crc32");
   const end = bundle.indexOf("return crc", start);
 
@@ -81,7 +88,7 @@ test("run-c420ui.cjs does not interleave file IO into crc32", () => {
 });
 
 test("toProgressState is not interleaved with action event handling", () => {
-  const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  const bundle = readBundle();
   const start = bundle.indexOf("function toProgressState");
   const end = bundle.indexOf("function createInteractiveActionRunner", start);
 
@@ -96,7 +103,7 @@ test("toProgressState is not interleaved with action event handling", () => {
 });
 
 test("run-c420ui.cjs does not interleave host validators into interactive runner", () => {
-  const bundle = fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  const bundle = readBundle();
 
   const runnerStart = bundle.indexOf("function createInteractiveActionRunner");
   const runnerEnd = bundle.indexOf("var init_interactive_action_runner", runnerStart);
@@ -112,7 +119,23 @@ test("run-c420ui.cjs does not interleave host validators into interactive runner
   assert.doesNotMatch(runnerBlock, /function assertOptionalPurposeArray/);
 });
 
-test("c420ui bootstrap manifest matches generated build metadata", () => {
+test("run-c420ui.cjs codePointAt polyfill defines size before use", () => {
+  const bundle = readBundle();
+  const start = bundle.indexOf("exports2.codePointAt = function");
+  const end = bundle.indexOf("exports2.fromCodePoint", start);
+
+  assert.ok(start >= 0);
+  assert.ok(end > start);
+
+  const block = bundle.slice(start, end);
+  assert.match(block, /var size = string\.length;/);
+  assert.ok(
+    block.indexOf("var size = string.length;") <
+      block.indexOf("index < 0 || index >= size"),
+  );
+});
+
+test("c420ui bootstrap manifest metadata fields are well-formed", () => {
   const manifest = readJson<BootstrapManifest>(
     path.join("bootstrap", "c420ui", "manifest.json"),
   );
@@ -123,9 +146,19 @@ test("c420ui bootstrap manifest matches generated build metadata", () => {
     path.join("packages", "c420ui", "package.json"),
   );
 
-  assert.equal(manifest.dependentProjectBuildRevision, buildMetadata.buildRevision);
-  assert.equal(manifest.dependentProjectFullVersion, buildMetadata.fullVersion);
-  assert.equal(manifest.dependentProjectDisplayVersion, buildMetadata.displayVersion);
-  assert.equal(manifest.dependentProjectPhase, buildMetadata.phase);
+  assert.match(String(manifest.dependentProjectBuildRevision), /^g[0-9a-f]{7}$|^unknown$/);
+  assert.equal(typeof manifest.dependentProjectFullVersion, "string");
+  assert.equal(typeof manifest.dependentProjectDisplayVersion, "string");
+  assert.equal(typeof manifest.dependentProjectPhase, "string");
+  assert.notEqual(manifest.dependentProjectFullVersion, "");
+  assert.notEqual(manifest.dependentProjectDisplayVersion, "");
+  assert.notEqual(manifest.dependentProjectPhase, "");
   assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
+
+  if (strictManifestMetadata) {
+    assert.equal(manifest.dependentProjectBuildRevision, buildMetadata.buildRevision);
+    assert.equal(manifest.dependentProjectFullVersion, buildMetadata.fullVersion);
+    assert.equal(manifest.dependentProjectDisplayVersion, buildMetadata.displayVersion);
+    assert.equal(manifest.dependentProjectPhase, buildMetadata.phase);
+  }
 });

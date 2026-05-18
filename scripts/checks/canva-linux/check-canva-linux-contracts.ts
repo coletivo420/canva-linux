@@ -2270,6 +2270,7 @@ function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string
     "C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE",
     "validateC420UIRuntimeBundleKnownCorruption",
     "assertOptional(?:Boolean|String|StringArray|PurposeArray)",
+    "codePointAt polyfill must define var size = string.length before size is used",
   ] as const) {
     if (!bootstrapCheck.includes(required)) {
       failures.push(`scripts/checks/canva-linux/check-c420ui-bootstrap.ts: missing generated-artifact guard ${required}`);
@@ -2297,6 +2298,51 @@ function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string
     if (!contents.includes(generatedRule) || !contents.includes(sourceRule)) {
       failures.push(`${relativePath}: must document TypeScript-first c420ui bootstrap artifact maintenance`);
     }
+  }
+}
+
+function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): void {
+  const packageJsonSource = readProjectFile(rootDir, "package.json");
+  const packageJson = JSON.parse(packageJsonSource) as {
+    scripts?: Record<string, string>;
+  };
+  const scripts = packageJson.scripts ?? {};
+  const nodeCheckScript = scripts["check:c420ui-node-check"] ?? "";
+  const artifactGateScript = scripts["check:c420ui-bootstrap-artifacts"] ?? "";
+  const validateProject = readProjectFile(rootDir, "scripts/validate-project.sh");
+  const adapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
+
+  if (!nodeCheckScript) {
+    failures.push("package.json must contain check:c420ui-node-check");
+  }
+  if (!nodeCheckScript.includes("check-c420ui-node-check.js")) {
+    failures.push("check:c420ui-node-check must run check-c420ui-node-check.js");
+  }
+  if (!artifactGateScript.includes("npm run check:c420ui-node-check")) {
+    failures.push("check:c420ui-bootstrap-artifacts must call check:c420ui-node-check");
+  }
+  if (!artifactGateScript.includes("npm run build:c420ui-bootstrap")) {
+    failures.push("check:c420ui-bootstrap-artifacts must run build:c420ui-bootstrap before strict metadata comparison");
+  }
+  if (!artifactGateScript.includes("CANVA_STRICT_C420UI_ARTIFACT_METADATA=1")) {
+    failures.push("check:c420ui-bootstrap-artifacts must enable CANVA_STRICT_C420UI_ARTIFACT_METADATA=1");
+  }
+  const buildIndex = artifactGateScript.indexOf("npm run build:c420ui-bootstrap");
+  const strictIndex = artifactGateScript.indexOf("CANVA_STRICT_C420UI_ARTIFACT_METADATA=1");
+  if (buildIndex === -1 || strictIndex === -1 || buildIndex > strictIndex) {
+    failures.push("check:c420ui-bootstrap-artifacts must run build:c420ui-bootstrap before the strict artifact gate");
+  }
+  if (!validateProject.includes('run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check')) {
+    failures.push("validate-project.sh must call check:c420ui-node-check explicitly");
+  }
+  if (!validateProject.includes('run_step "npm run check:c420ui-bootstrap-artifacts" npm run check:c420ui-bootstrap-artifacts')) {
+    failures.push("validate-project.sh must call check:c420ui-bootstrap-artifacts explicitly");
+  }
+  if (
+    !adapterSource.includes("loadProjectInfo: loadProjectConfig") ||
+    !/\n\s*loadProjectConfig,/.test(adapterSource)
+  ) {
+    failures.push("adapter.ts must keep both loadProjectInfo: loadProjectConfig and loadProjectConfig while CanvaLinuxC420UIAdapter requires both public keys");
   }
 }
 
@@ -2641,6 +2687,7 @@ export function main(): number {
   checkRuntimeCliDebugGuardrails(rootDir, failures);
   checkEffectiveBuildMetadataContract(rootDir, failures);
   checkC420uiGeneratedArtifactsContract(rootDir, failures);
+  checkC420uiArtifactGateContract(rootDir, failures);
   checkPinnedHomeTabStripContract(rootDir, failures);
   validateBuilderArtifactsExist(rootDir, failures);
   validateLegacyBuilderArtifactsRemoved(rootDir, failures);

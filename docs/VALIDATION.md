@@ -9,6 +9,9 @@ Any behavioral change must be made in TypeScript sources and then propagated thr
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
+Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
+The strict gate rebuilds metadata and c420ui bootstrap before comparing manifest/build-metadata fields,
+avoiding stale self-referential commit-hash failures.
 
 The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
 malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner. Validate this with:
@@ -16,9 +19,19 @@ malformed SIGCONT blocks, or host-dependency validators interleaved into the int
 - `node --check bootstrap/c420ui/run-c420ui.cjs`
 - `node --check bootstrap/c420ui/run-c420ui-cli.cjs`
 - `node --check bootstrap/c420ui/c420ui-builder.cjs`
+- `npm run check:c420ui-node-check`
 - `npm run check:c420ui-bootstrap`
 - `npm run check:c420ui-bootstrap-artifacts`
 - `npm run test -- test/c420ui-bootstrap-artifacts.test.ts`
+
+Bootstrap PR logs must include these exact success lines after regenerating bootstrap artifacts:
+
+```text
+[ok] node --check bootstrap/c420ui/run-c420ui.cjs
+[ok] node --check bootstrap/c420ui/run-c420ui-cli.cjs
+[ok] node --check bootstrap/c420ui/c420ui-builder.cjs
+[ok] npm run check:c420ui-bootstrap-artifacts
+```
 
 
 - Dev.8 starts the internal tab-strip redesign. The pinned home tab remains part of the tab model, but it must be rendered
