@@ -16970,6 +16970,34 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
       if (previousFocus && typeof previousFocus.focus === "function") {
         previousFocus.focus();
       }
+      screen.render();
+      resolve(result);
+    };
+    timer = setTimeout(() => {
+      close({
+        status: "timeout"
+      });
+    }, timeoutMs);
+    overlay.key(["escape"], () => {
+      close({
+        status: "canceled"
+      });
+    });
+    input.key(["enter"], () => {
+      input.submit();
+    });
+    input.on("cancel", () => {
+      setImmediate(() => {
+        close({
+          status: "canceled"
+        });
+      });
+    });
+    input.on("submit", (value) => {
+      close({
+        status: "submitted",
+        value: String(value ?? "")
+      });
     });
     overlay.focus();
     input.focus();
@@ -16998,26 +17026,28 @@ function detectedVersion(fullVersion, version) {
 function artifactVersion(fragment) {
   return fragment.fullVersion || fragment.version;
 }
-}
-  if (!s) {
-      linuxArtifacts: [`Native/Unpacked installations loading...`]
+function formatDetectedStatus(colors2, detected, version) {
+  if (!detected) {
+    return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
   }
-  const i = s.installations;
-  ];
+  const v = typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}` : "version unknown";
+  return `{${colors2.statusDetected}-fg}detected{/${colors2.statusDetected}-fg}      ${v}`;
 }
-var init_detected_installations_summary = __esm({
-  "packages/c420ui/src/terminal/detected-installations-summary.ts"() {
+function formatArtifactLine(fragment, colors2) {
+  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment))}`;
 }
 function isGeneratedArtifactFragment(fragment) {
   if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
   if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
   return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
+}
 function linuxArtifactSummaryItem(label, detected, version) {
   if (!detected) return `${label} not detected`;
   if (typeof version === "string" && version.trim()) return `${label} v${version.trim().replace(/^v/, "")}`;
   return `${label} version unknown`;
 }
 function formatDetectionPanelSummaries(s, colors2) {
+  if (!s) {
     const loading = `{${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`;
     return {
       detectedInstallations: [
@@ -17027,8 +17057,10 @@ function formatDetectionPanelSummaries(s, colors2) {
         `  Flatpak User: ${loading}`
       ],
       generatedArtifacts: [`  AppImage: ${loading}`],
-      linuxArtifacts: [`Native system installation loading, Native user installation loading, Linux unpacked loading`]
+      linuxArtifacts: [`Native/Unpacked installations loading...`]
     };
+  }
+  const i = s.installations;
   const linuxUnpacked = s.artifactFragments?.find(
     (fragment) => fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked"
   );
@@ -17038,6 +17070,7 @@ function formatDetectionPanelSummaries(s, colors2) {
       Boolean(i.appImageArtifacts),
       detectedVersion(i.appImageFullVersion, i.appImageVersion)
     )}`
+  ];
   return {
     detectedInstallations: [
       `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion))}`,
@@ -17066,7 +17099,10 @@ function formatDetectionPanelSummaries(s, colors2) {
       ].join(", ")
     ]
   };
+}
 var GENERATED_ARTIFACT_KINDS;
+var init_detected_installations_summary = __esm({
+  "packages/c420ui/src/terminal/detected-installations-summary.ts"() {
     GENERATED_ARTIFACT_KINDS = /* @__PURE__ */ new Set([
       "appimage",
       "flatpak",
@@ -17076,42 +17112,6 @@ var GENERATED_ARTIFACT_KINDS;
       "rpm",
       "aur"
     ]);
-      `  Flatpak System: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
-      `  Flatpak User: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
-      `Generated Artifacts`,
-      `  AppImage: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`
-    ];
-  }
-  const i = s.installations;
-  const fmt = (detected, version) => {
-    if (!detected) {
-      return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
-    }
-    const v = typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}` : "version unknown";
-    return `{${colors2.statusDetected}-fg}detected{/${colors2.statusDetected}-fg}      ${v}`;
-  };
-  const lines = [
-    "Detected Installations",
-    `  Native System: ${fmt(Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion))}`,
-    `  Native User: ${fmt(Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion))}`,
-    `  Flatpak System: ${fmt(Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion))}`,
-    `  Flatpak User: ${fmt(Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion))}`
-  ];
-  if (s.artifactFragments) {
-    lines.push(
-      "Generated Artifacts",
-      ...s.artifactFragments.map((fragment) => formatArtifactLine(fragment, fmt))
-    );
-  } else {
-    lines.push(
-      "Generated Artifacts",
-      `  AppImage: ${fmt(Boolean(i.appImageArtifacts), detectedVersion(i.appImageFullVersion, i.appImageVersion))}`
-    );
-  }
-  return lines;
-}
-var init_detected_installations_summary = __esm({
-  "packages/c420ui/src/terminal/detected-installations-summary.ts"() {
   }
 });
 
@@ -17970,53 +17970,54 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     c420uiHeaderMinWidth
   );
   const projectMinWidth = Math.max(
+    projectHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
+    PROJECT_HEADER_MIN_WIDTH
+  );
+  const normalizedScreenWidth = Math.max(1, screenWidth);
+  const canUseSideBySide = normalizedScreenWidth >= c420uiMinWidth + projectMinWidth;
+  if (!canUseSideBySide) {
+    return {
+      c420uiHeader: {
+        top: 0,
+        left: 0,
+        width: normalizedScreenWidth,
+        height: c420uiHeaderHeight
+      },
+      projectHeader: {
+        top: c420uiHeaderHeight,
+        left: 0,
+        width: normalizedScreenWidth,
+        height: projectHeaderHeight
+      },
+      workspaceTop: c420uiHeaderHeight + projectHeaderHeight + HEADER_GAP,
+      layoutMode: "stacked"
+    };
+  }
+  const c420uiHeaderWidth = Math.min(c420uiMinWidth, normalizedScreenWidth);
+  const projectHeaderWidth = normalizedScreenWidth - c420uiHeaderWidth;
+  return {
+    c420uiHeader: {
+      top: 0,
       left: 0,
-    style: c420uiTheme.header
-  });
-  const menu = tui2.list({
-    border: "line",
-    tags: true,
-    label: "Main Menu",
-    style: c420uiTheme.menu
-  const diagnostics = tui2.box({
-    label: "Detected Installations",
-  const generatedArtifacts = tui2.box({
-    label: "Generated Artifacts",
-    scrollable: true,
-    alwaysScroll: true,
-    keys: true,
-    mouse: tuiMouseEnabled,
-    style: c420uiTheme.content
-  const linuxArtifacts = tui2.box({
-    label: "Linux Artifacts",
-    scrollback: MAX_LOG_HISTORY_LINES,
-    tags: true,
-    style: c420uiTheme.logs
-  const footer = tui2.box({
-  screen.append(generatedArtifacts);
-  screen.append(linuxArtifacts);
-    const detectionPanelsHeight = Math.max(
-      9,
-    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
-    const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
-    const linuxArtifactsHeight = Math.max(
-      3,
-      detectionPanelsHeight - detectedInstallationsHeight - generatedArtifactsHeight
-    );
-    const generatedArtifactsTop = diagnosticsTop + detectedInstallationsHeight;
-    const linuxArtifactsTop = generatedArtifactsTop + generatedArtifactsHeight;
-    diagnostics.height = detectedInstallationsHeight;
-    generatedArtifacts.top = generatedArtifactsTop;
-    generatedArtifacts.left = 0;
-    generatedArtifacts.width = leftColumnWidth;
-    generatedArtifacts.height = generatedArtifactsHeight;
-    linuxArtifacts.top = linuxArtifactsTop;
-    linuxArtifacts.left = 0;
-    linuxArtifacts.width = leftColumnWidth;
-    linuxArtifacts.height = linuxArtifactsHeight;
-    for (const widget of [menu, diagnostics, generatedArtifacts, linuxArtifacts, content, logs]) {
-  const generatedArtifactsLabelText = "Generated Artifacts";
-  const linuxArtifactsLabelText = "Linux Artifacts";
+      width: c420uiHeaderWidth,
+      height: c420uiHeaderHeight
+    },
+    projectHeader: {
+      top: 0,
+      left: c420uiHeaderWidth,
+      width: projectHeaderWidth,
+      height: projectHeaderHeight
+    },
+    workspaceTop: Math.max(c420uiHeaderHeight, projectHeaderHeight) + HEADER_GAP,
+    layoutMode: "side-by-side"
+  };
+}
+function createApp(options) {
+  const opts = options.config;
+  const { bridge, rootProvider } = options;
+  let toolSettings = loadToolSettings(opts.project.stateDirectoryName);
+  const settingsPath = toolSettingsPath(opts.project.stateDirectoryName);
+  let terminalTextSelectionModeActive = toolSettings.tool.terminalTextSelectionMode;
   let tuiMouseEnabled = !terminalTextSelectionModeActive;
   function footerContent() {
     return [
@@ -18025,7 +18026,6 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
       "{bold}Enter{/bold} Select",
       "{bold}Space{/bold} Toggle",
       "{bold}F5{/bold} Copy Logs",
-      "{bold}F6{/bold} Plain Logs",
       "{bold}?{/bold} Help",
       "{bold}q{/bold} Quit"
     ].filter(Boolean).join(" | ");
@@ -18065,34 +18065,6 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
       opts.project.projectSubtitle,
       `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""} | Phase: ${opts.project.phase ?? "unknown"}`
     ].join("\n"),
-  const generatedArtifacts = tui2.box({
-    top: headerLayout.workspaceTop,
-    left: 0,
-    width: "32%",
-    height: 1,
-    border: "line",
-    label: "Generated Artifacts",
-    tags: true,
-    scrollable: true,
-    alwaysScroll: true,
-    keys: true,
-    mouse: tuiMouseEnabled,
-    style: c420uiTheme.content
-  });
-  const linuxArtifacts = tui2.box({
-    top: headerLayout.workspaceTop,
-    left: 0,
-    width: "32%",
-    height: 1,
-    border: "line",
-    label: "Linux Artifacts",
-    tags: true,
-    scrollable: true,
-    alwaysScroll: true,
-    keys: true,
-    mouse: tuiMouseEnabled,
-    style: c420uiTheme.content
-  });
     style: c420uiTheme.header
   });
   const menu = tui2.list({
@@ -18114,6 +18086,34 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     height: 1,
     border: "line",
     label: "Detected Installations",
+    tags: true,
+    scrollable: true,
+    alwaysScroll: true,
+    keys: true,
+    mouse: tuiMouseEnabled,
+    style: c420uiTheme.content
+  });
+  const generatedArtifacts = tui2.box({
+    top: headerLayout.workspaceTop,
+    left: 0,
+    width: "32%",
+    height: 1,
+    border: "line",
+    label: "Generated Artifacts",
+    tags: true,
+    scrollable: true,
+    alwaysScroll: true,
+    keys: true,
+    mouse: tuiMouseEnabled,
+    style: c420uiTheme.content
+  });
+  const linuxArtifacts = tui2.box({
+    top: headerLayout.workspaceTop,
+    left: 0,
+    width: "32%",
+    height: 1,
+    border: "line",
+    label: "Linux Artifacts",
     tags: true,
     scrollable: true,
     alwaysScroll: true,
@@ -18155,31 +18155,11 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
         bg: c420uiTheme.colors.lightBlue
       }
     },
-  screen.append(generatedArtifacts);
-  screen.append(linuxArtifacts);
-    const detectionPanelsHeight = Math.max(
-      9,
-    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
-    const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
-    const linuxArtifactsHeight = Math.max(
-      3,
-      detectionPanelsHeight - detectedInstallationsHeight - generatedArtifactsHeight
-    );
-    const generatedArtifactsTop = diagnosticsTop + detectedInstallationsHeight;
-    const linuxArtifactsTop = generatedArtifactsTop + generatedArtifactsHeight;
-    diagnostics.height = detectedInstallationsHeight;
-    generatedArtifacts.top = generatedArtifactsTop;
-    generatedArtifacts.left = 0;
-    generatedArtifacts.width = leftColumnWidth;
-    generatedArtifacts.height = generatedArtifactsHeight;
-    linuxArtifacts.top = linuxArtifactsTop;
-    linuxArtifacts.left = 0;
-    linuxArtifacts.width = leftColumnWidth;
-    linuxArtifacts.height = linuxArtifactsHeight;
+    scrollback: MAX_LOG_HISTORY_LINES,
+    tags: true,
+    style: c420uiTheme.logs
   });
-    for (const widget of [menu, diagnostics, generatedArtifacts, linuxArtifacts, content, logs]) {
-  const generatedArtifactsLabelText = "Generated Artifacts";
-  const linuxArtifactsLabelText = "Linux Artifacts";
+  const footer = tui2.box({
     bottom: 0,
     height: 1,
     width: "100%",
@@ -18203,6 +18183,8 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   screen.append(projectHeader);
   screen.append(menu);
   screen.append(diagnostics);
+  screen.append(generatedArtifacts);
+  screen.append(linuxArtifacts);
   screen.append(content);
   screen.append(logs);
   screen.append(progress);
@@ -18239,10 +18221,18 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     const rightColumnWidth = Math.max(1, screenWidth - rightColumnLeft);
     const menuHeight = Math.max(3, Math.floor(workspaceHeight * 0.68));
     const diagnosticsTop = workspaceTop + menuHeight;
-    const diagnosticsHeight = Math.max(
-      3,
+    const detectionPanelsHeight = Math.max(
+      9,
       screenHeight - diagnosticsTop - reservedFooterRows
     );
+    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
+    const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
+    const linuxArtifactsHeight = Math.max(
+      3,
+      detectionPanelsHeight - detectedInstallationsHeight - generatedArtifactsHeight
+    );
+    const generatedArtifactsTop = diagnosticsTop + detectedInstallationsHeight;
+    const linuxArtifactsTop = generatedArtifactsTop + generatedArtifactsHeight;
     const contentHeight = Math.max(3, Math.floor(workspaceHeight * 0.36));
     const logsTop = workspaceTop + contentHeight;
     const logsHeight = Math.max(3, screenHeight - logsTop - reservedFooterRows);
@@ -18253,7 +18243,15 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     diagnostics.top = diagnosticsTop;
     diagnostics.left = 0;
     diagnostics.width = leftColumnWidth;
-    diagnostics.height = diagnosticsHeight;
+    diagnostics.height = detectedInstallationsHeight;
+    generatedArtifacts.top = generatedArtifactsTop;
+    generatedArtifacts.left = 0;
+    generatedArtifacts.width = leftColumnWidth;
+    generatedArtifacts.height = generatedArtifactsHeight;
+    linuxArtifacts.top = linuxArtifactsTop;
+    linuxArtifacts.left = 0;
+    linuxArtifacts.width = leftColumnWidth;
+    linuxArtifacts.height = linuxArtifactsHeight;
     content.top = workspaceTop;
     content.left = rightColumnLeft;
     content.width = rightColumnWidth;
@@ -18287,7 +18285,7 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     terminalTextSelectionModeActive = toolSettings.tool.terminalTextSelectionMode;
     tuiMouseEnabled = !terminalTextSelectionModeActive;
     applyProgramMouseMode();
-    for (const widget of [menu, diagnostics, content, logs]) {
+    for (const widget of [menu, diagnostics, generatedArtifacts, linuxArtifacts, content, logs]) {
       setWidgetMouseEnabled(widget, tuiMouseEnabled);
     }
     footer.setContent(footerContent());
@@ -18328,6 +18326,8 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   let focusZone = "menu";
   let menuLabelText = "Main Menu";
   const diagnosticsLabelText = "Detected Installations";
+  const generatedArtifactsLabelText = "Generated Artifacts";
+  const linuxArtifactsLabelText = "Linux Artifacts";
   let contentLabelText = "Overview";
   let logsLabelText = "Logs";
   let currentActions = [];
@@ -18476,13 +18476,13 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   let sessionStreamOpenError = null;
   let sessionLogUnavailableWarningShown = false;
   function warnSessionLogUnavailableOnce() {
-  }
-      generatedArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
-      linuxArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
-    const panels = formatDetectionPanelSummaries(overviewStatus, c420uiTheme.colors);
-    diagnostics.setContent(panels.detectedInstallations.join("\n"));
-    generatedArtifacts.setContent(panels.generatedArtifacts.join("\n"));
-    linuxArtifacts.setContent(panels.linuxArtifacts.join("\n"));
+    if (sessionLogUnavailableWarningShown) {
+      return;
+    }
+    sessionLogUnavailableWarningShown = true;
+    const reason = sessionStreamOpenError ? ` (${sessionStreamOpenError})` : "";
+    const warning = `[warn] Session log stream is unavailable: ${sessionLogPath}${reason}`;
+    displayLogLine(warning, "system");
     try {
       console.warn(warning);
     } catch {
@@ -18504,12 +18504,7 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
       recordSessionStreamError(error);
       return null;
     }
-      generatedArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
-      linuxArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
-    const panels = formatDetectionPanelSummaries(overviewStatus, c420uiTheme.colors);
-    diagnostics.setContent(panels.detectedInstallations.join("\n"));
-    generatedArtifacts.setContent(panels.generatedArtifacts.join("\n"));
-    linuxArtifacts.setContent(panels.linuxArtifacts.join("\n"));
+  }
   const launcherSessionLog = readExistingSessionLog(sessionLogPath);
   const sessionStream = openSessionStream(sessionLogPath);
   const writeSession = (line) => {
@@ -18537,9 +18532,14 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
         `  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}
   ${overviewDetectionError}`
       );
+      generatedArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
+      linuxArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
       return;
     }
-    diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
+    const panels = formatDetectionPanelSummaries(overviewStatus, c420uiTheme.colors);
+    diagnostics.setContent(panels.detectedInstallations.join("\n"));
+    generatedArtifacts.setContent(panels.generatedArtifacts.join("\n"));
+    linuxArtifacts.setContent(panels.linuxArtifacts.join("\n"));
   }
   function refreshDetectedInstallations(reason = "unknown") {
     if (overviewDetectionPromise) {
@@ -18630,6 +18630,33 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     }
     screen.render();
   }
+  function importLauncherSessionLog() {
+    if (!toolSettings.tool.generalLogsEnabled || !launcherSessionId || !launcherSessionLog.includes(`[session] started id=${launcherSessionId}`)) {
+      return;
+    }
+    for (const line of launcherSessionLog.split(/\r?\n/)) {
+      if (line.trim()) {
+        displayLogLine(line, "system");
+      }
+    }
+  }
+  function activeLabel(label) {
+    return `{${c420uiTheme.colors.activeLabel}-fg}${label}{/${c420uiTheme.colors.activeLabel}-fg}`;
+  }
+  function inactiveLabel(label) {
+    return `{${c420uiTheme.colors.inactiveLabel}-fg}${label}{/${c420uiTheme.colors.inactiveLabel}-fg}`;
+  }
+  function setWidgetBorder(widget, active) {
+    widget.style.border = {
+      ...widget.style.border ?? {},
+      fg: active ? c420uiTheme.colors.activeBorder : c420uiTheme.colors.inactiveBorder
+    };
+  }
+  function setLabeledPanel(widget, label, active) {
+    setWidgetBorder(widget, active);
+    widget.setLabel(active ? activeLabel(label) : inactiveLabel(label));
+  }
+  function setFocusZone(nextZone) {
     if (modalActive || focusZone === nextZone) {
       return;
     }
@@ -18658,21 +18685,14 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
       diagnosticsLabelText,
       focusZone === "diagnostics"
     );
-      generatedArtifacts.scroll(delta);
-      linuxArtifacts.scroll(delta);
-      generatedArtifacts.setScrollPerc(percent);
-      linuxArtifacts.setScrollPerc(percent);
+    setLabeledPanel(
+      generatedArtifacts,
+      generatedArtifactsLabelText,
+      focusZone === "diagnostics"
+    );
     setLabeledPanel(
       linuxArtifacts,
       linuxArtifactsLabelText,
-      focusZone === "diagnostics"
-    );
-  }
-  function applyFocusStyles() {
-    setLabeledPanel(menu, menuLabelText, focusZone === "menu");
-    setLabeledPanel(
-      diagnostics,
-      diagnosticsLabelText,
       focusZone === "diagnostics"
     );
     setLabeledPanel(content, contentLabelText, focusZone === "content");
@@ -18687,26 +18707,6 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   function applyLogPanelLabel() {
     logsLabelText = terminalTextSelectionModeActive ? "Logs - Text selection mode enabled" : "Logs";
     applyFocusStyles();
-  }
-  function showPlainLogsView() {
-    appendLogText("[info] Plain logs view opened with F6.\n", "system");
-    contentLabelText = "Plain Logs";
-    content.setContent(
-      [
-        `{${c420uiTheme.colors.helpTitle}-fg}Plain Logs{/${c420uiTheme.colors.helpTitle}-fg}`,
-        "",
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Session log file:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-        `  {${c420uiTheme.colors.descriptionText}-fg}${sessionLogPath}{/${c420uiTheme.colors.descriptionText}-fg}`,
-        "",
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Visible c420ui log history:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-        logHistory.length ? logHistory.map(
-          (line) => line.replace(/[{}]/g, (c) => c === "{" ? "\\\\{" : "\\\\}")
-        ).join("\n") : "  No visible logs yet."
-      ].join("\n")
-    );
-    setFocusZone("content");
-    applyFocusStyles();
-    screen.render();
   }
   function clearProgress() {
     progress.setContent("");
@@ -18743,10 +18743,6 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
       0,
       Math.min(barWidth, Math.round(percent / 100 * barWidth))
     );
-      generatedArtifacts.scroll(delta);
-      linuxArtifacts.scroll(delta);
-      generatedArtifacts.setScrollPerc(percent);
-      linuxArtifacts.setScrollPerc(percent);
     const bar = `${"\u2588".repeat(fill)}${"\u2591".repeat(barWidth - fill)}`;
     const color = isError || progressState === "failed" || progressState === "canceled" ? "red-fg" : progressState === "success" || progressState === "warning" ? "green-fg" : progressState === "running" ? "yellow-fg" : "white-fg";
     progress.setContent(
@@ -18774,6 +18770,8 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     }
     if (focusZone === "diagnostics") {
       diagnostics.scroll(delta);
+      generatedArtifacts.scroll(delta);
+      linuxArtifacts.scroll(delta);
     } else if (focusZone === "content") {
       content.scroll(delta);
     } else {
@@ -18792,6 +18790,8 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     }
     if (focusZone === "diagnostics") {
       diagnostics.setScrollPerc(percent);
+      generatedArtifacts.setScrollPerc(percent);
+      linuxArtifacts.setScrollPerc(percent);
     } else if (focusZone === "content") {
       content.setScrollPerc(percent);
     } else {
@@ -18841,9 +18841,9 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     }
     return -1;
   }
-    return settingsItems[menu.selected] ?? null;
-  }
-          `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`
+  function settingsItemLabel(item, index) {
+    if (item.kind === "section") {
+      const sectionColor = activeSettingsSectionIndex() === index ? c420uiTheme.colors.activeLabel : c420uiTheme.colors.inactiveLabel;
       return `{${sectionColor}-fg}{bold}${item.label}{/bold}{/${sectionColor}-fg}`;
     }
     if (item.kind === "note") {
@@ -18868,7 +18868,8 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     }
   }
   function selectedSettingsItem() {
-          `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`
+    return settingsItems[menu.selected] ?? null;
+  }
   function renderSettingsHelp() {
     const selected = selectedSettingsItem();
     const details = [
@@ -18895,8 +18896,7 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Behavior{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode disables c420ui mouse capture globally and keeps keyboard navigation active.{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Changes take effect immediately and are saved for the next c420ui start. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  F6 opens a plain logs view with the session log path for manual selection fallback.{/${c420uiTheme.colors.descriptionText}-fg}`
+          `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`
         );
       }
     } else if (selected?.kind === "section") {
@@ -18968,7 +18968,7 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     clearProgressOnNavigation();
     if (view === "main") {
       if (!overviewStatus) {
-      return;
+        void refreshDetectedInstallations("enter-overview");
       }
       renderDiagnosticsBox();
       currentActions = [];
@@ -18996,6 +18996,7 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
       );
       applyFocusStyles();
       screen.render();
+      return;
     }
     if (view === "help") {
       currentActions = [];
@@ -19023,7 +19024,6 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
           "",
           `{${c420uiTheme.colors.helpSectionTitle}-fg}Logs{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  F6             View plain logs and session log path{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${c420uiTheme.colors.descriptionText}-fg}`,
           `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode can be enabled in Application Settings. It disables c420ui mouse capture globally, keeps keyboard navigation active, and some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
           "",
@@ -19183,22 +19183,22 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   });
   screen.key(["tab"], () => {
     if (!modalActive) {
-      if (now - lastCtrlCAt < 1500) {
-        void confirmExit();
-        return;
-      }
-      lastCtrlCAt = now;
-    }
-  generatedArtifacts.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("diagnostics");
+      moveFocus(1);
     }
   });
-  linuxArtifacts.on("click", () => {
+  screen.key(["S-tab", "backtab"], () => {
     if (!modalActive) {
-      setFocusZone("diagnostics");
+      moveFocus(-1);
     }
   });
+  screen.key(["escape"], () => {
+    if (modalActive) {
+      return;
+    }
+    if (running) {
+      void confirmExit();
+      return;
+    }
     if (currentView === "main") {
       void confirmExit();
       return;
@@ -19211,6 +19211,11 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     }
     const now = Date.now();
     if (running) {
+      if (now - lastCtrlCAt < 1500) {
+        void confirmExit();
+        return;
+      }
+      lastCtrlCAt = now;
       if (actionRunner.cancel()) {
         appendLogText(
           "[warn] Interrupt requested for running action. Press Ctrl+C again to exit application.\n",
@@ -19233,11 +19238,6 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
 `,
       "system"
     );
-  });
-  screen.key(["f6"], () => {
-    if (!modalActive) {
-      showPlainLogsView();
-    }
   });
   screen.key(["S-pageup", "M-up"], () => {
     content.scroll(-5);
@@ -19265,16 +19265,6 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     }
     screen.render();
   });
-  generatedArtifacts.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("diagnostics");
-    }
-  });
-  linuxArtifacts.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("diagnostics");
-    }
-  });
   screen.key(["end"], () => {
     if (!modalActive) {
       setFocusedPanelScroll(100);
@@ -19297,6 +19287,16 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
     }
   });
   diagnostics.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("diagnostics");
+    }
+  });
+  generatedArtifacts.on("click", () => {
+    if (!modalActive) {
+      setFocusZone("diagnostics");
+    }
+  });
+  linuxArtifacts.on("click", () => {
     if (!modalActive) {
       setFocusZone("diagnostics");
     }
@@ -20519,6 +20519,34 @@ var SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
 function readJsonFile(filePath) {
   return JSON.parse(import_node_fs6.default.readFileSync(filePath, "utf8"));
 }
+function readPackageVersion(rootDir2) {
+  return readJsonFile(import_node_path7.default.join(rootDir2, "package.json")).version ?? "unknown";
+}
+function loadArtifactWorkflows(rootDir2) {
+  const configPath = import_node_path7.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
+  if (!import_node_fs6.default.existsSync(configPath)) return [];
+  const config = readJsonFile(configPath);
+  return Array.isArray(config.workflows) ? config.workflows : [];
+}
+function normalizeConfigPath(configPath) {
+  return configPath.split(/[\\/]+/).filter(Boolean).join(import_node_path7.default.sep);
+}
+function resolveOutputPattern(outputPattern, version) {
+  return normalizeConfigPath(outputPattern.replaceAll("${version}", version));
+}
+function escapeRegExp(value) {
+  return value.replace(/[|\\{}()[\]^$+?.]/g, "\\$&");
+}
+function patternToRegExp(pattern) {
+  const normalized = normalizeConfigPath(pattern);
+  const source = normalized.split("*").map(escapeRegExp).join("[^\\/]*");
+  return new RegExp(`^${source}$`);
+}
+function artifactKind(id, kind) {
+  if (id === "linux-unpacked" || id.includes("linux-unpacked")) return "linux-unpacked";
+  if (id === "release-checksums") return "sha256sums";
+  return kind;
+}
 function candidatePathsForPattern(rootDir2, outputPattern) {
   const resolvedPattern = normalizeConfigPath(outputPattern);
   if (!resolvedPattern.includes("*")) {
@@ -20531,56 +20559,6 @@ function candidatePathsForPattern(rootDir2, outputPattern) {
   if (!import_node_fs6.default.existsSync(scanRoot)) return [];
   const matcher = patternToRegExp(resolvedPattern);
   const candidates = [];
-function firstMetadataVersion(...values) {
-  return values.find((value) => typeof value === "string" && value.trim())?.trim();
-}
-  const version = firstMetadataVersion(
-    metadata.baseVersion,
-    metadata.basePhase,
-    metadata.version
-  );
-  const fullVersion = firstMetadataVersion(
-    metadata.fullVersion,
-    metadata.version,
-    metadata.baseVersion,
-    metadata.basePhase
-  );
-    ...version ? { version } : {},
-    ...fullVersion ? { fullVersion } : {}
-function readArtifactPackageJsonVersion(artifactPath) {
-  const packageJsonPath = import_node_path7.default.join(artifactPath, "package.json");
-  if (!import_node_fs6.default.existsSync(packageJsonPath)) return {};
-  const version = readJsonFile(packageJsonPath).version?.trim();
-  return version ? { version, fullVersion: version } : {};
-}
-function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
-    const markers = [
-      import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json"),
-      ...artifactKindValue === "linux-unpacked" ? [import_node_path7.default.join(rootDir2, "config/canva-linux/build-metadata.json")] : []
-    ];
-    for (const marker of markers) {
-    return readArtifactPackageJsonVersion(artifactPath);
-    const kind = artifactKind(workflow.id, workflow.kind);
-    const metadata = artifactPath ? readArtifactMetadata(rootDir2, artifactPath, kind) : {};
-    const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
-      kind,
-  const packageJsonPath = import_node_path7.default.join(artifactPath, "package.json");
-  if (!import_node_fs6.default.existsSync(packageJsonPath)) return {};
-  const version = readJsonFile(packageJsonPath).version?.trim();
-  return version ? { version, fullVersion: version } : {};
-}
-function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
-  }
-    const markers = [
-      import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json"),
-      ...artifactKindValue === "linux-unpacked" ? [import_node_path7.default.join(rootDir2, "config/canva-linux/build-metadata.json")] : []
-    ];
-    for (const marker of markers) {
-    return readArtifactPackageJsonVersion(artifactPath);
-    const kind = artifactKind(workflow.id, workflow.kind);
-    const metadata = artifactPath ? readArtifactMetadata(rootDir2, artifactPath, kind) : {};
-    const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
-      kind,
   for (const entry of import_node_fs6.default.readdirSync(scanRoot, { withFileTypes: true })) {
     const absolutePath = import_node_path7.default.join(scanRoot, entry.name);
     const relativePath = normalizeConfigPath(import_node_path7.default.relative(rootDir2, absolutePath));
@@ -20596,20 +20574,38 @@ function readMetadataJson(filePath) {
     return void 0;
   }
 }
+function firstMetadataVersion(...values) {
+  return values.find((value) => typeof value === "string" && value.trim())?.trim();
+}
 function normalizeMetadata(metadata) {
   if (!metadata) return {};
-  const version = metadata.baseVersion || metadata.basePhase || metadata.version;
-  const fullVersion = metadata.fullVersion || metadata.version;
+  const version = firstMetadataVersion(
+    metadata.baseVersion,
+    metadata.basePhase,
+    metadata.version
+  );
+  const fullVersion = firstMetadataVersion(
+    metadata.fullVersion,
+    metadata.version,
+    metadata.baseVersion,
+    metadata.basePhase
+  );
   return {
-    ...typeof version === "string" && version.trim() ? { version: version.trim() } : {},
-    ...typeof fullVersion === "string" && fullVersion.trim() ? { fullVersion: fullVersion.trim() } : {}
+    ...version ? { version } : {},
+    ...fullVersion ? { fullVersion } : {}
   };
 }
 function readVersionSidecar(filePath) {
   const raw = import_node_fs6.default.readFileSync(filePath, "utf8").trim();
   return raw ? { version: raw, fullVersion: raw } : {};
 }
-function readArtifactMetadata(artifactPath) {
+function readArtifactPackageJsonVersion(artifactPath) {
+  const packageJsonPath = import_node_path7.default.join(artifactPath, "package.json");
+  if (!import_node_fs6.default.existsSync(packageJsonPath)) return {};
+  const version = readJsonFile(packageJsonPath).version?.trim();
+  return version ? { version, fullVersion: version } : {};
+}
+function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
   const sidecars = [
     `${artifactPath}.build-metadata.json`,
     `${artifactPath}.version.json`,
@@ -20621,12 +20617,15 @@ function readArtifactMetadata(artifactPath) {
     return readVersionSidecar(sidecar);
   }
   if (import_node_fs6.default.existsSync(artifactPath) && import_node_fs6.default.statSync(artifactPath).isDirectory()) {
-    for (const marker of [
+    const markers = [
       import_node_path7.default.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
-      import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json")
-    ]) {
+      import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json"),
+      ...artifactKindValue === "linux-unpacked" ? [import_node_path7.default.join(rootDir2, "config/canva-linux/build-metadata.json")] : []
+    ];
+    for (const marker of markers) {
       if (import_node_fs6.default.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
     }
+    return readArtifactPackageJsonVersion(artifactPath);
   }
   return {};
 }
@@ -20659,11 +20658,12 @@ function buildCanvaLinuxArtifactFragments(rootDir2) {
     const candidates = candidatePathsForPattern(rootDir2, outputPattern);
     const artifactPath = candidates.at(-1);
     const detected = Boolean(artifactPath);
-    const metadata = artifactPath ? readArtifactMetadata(artifactPath) : {};
-    const fallbackVersion = artifactPath ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
+    const kind = artifactKind(workflow.id, workflow.kind);
+    const metadata = artifactPath ? readArtifactMetadata(rootDir2, artifactPath, kind) : {};
+    const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
     fragments.push({
       id: workflow.id,
-      kind: artifactKind(workflow.id, workflow.kind),
+      kind,
       label: workflow.label,
       detected,
       ...artifactPath ? { path: toRelativeArtifactPath(rootDir2, artifactPath) } : {},
@@ -20869,15 +20869,15 @@ function loadBuildMetadataModule(rootDir2) {
 }
 function readJsonFile2(filePath) {
   try {
-    }).trim();
-    return value || null;
+    return JSON.parse(import_node_fs8.default.readFileSync(filePath, "utf8"));
   } catch {
     return null;
+  }
 }
-function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule) {
-  const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path9.default.resolve(rootDir2));
-  return module2.createBuildMetadata({
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+function hasGitRepository(rootDir2) {
+  return import_node_fs8.default.existsSync(import_node_path9.default.join(rootDir2, ".git"));
+}
+function resolveEnvBuildRevision() {
   for (const key of [
     "CANVA_LINUX_BUILD_REVISION",
     "GITHUB_SHA",
@@ -20896,10 +20896,10 @@ function resolveGitBuildRevision(rootDir2) {
       cwd: rootDir2,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"]
-function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule) {
-  const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path9.default.resolve(rootDir2));
-  return module2.createBuildMetadata({
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+    }).trim();
+    return value || null;
+  } catch {
+    return null;
   }
 }
 function createSourceMetadata(rootDir2, buildRevision, metadataModule) {
@@ -20924,9 +20924,9 @@ function loadPackagedMetadata(rootDir2, metadataModule) {
   if (!metadata) return null;
   return metadataModule.normalizeLoadedBuildMetadata(metadata);
 }
-function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd()) {
-  const metadataModule = loadBuildMetadataModule(import_node_path9.default.resolve(rootDir2));
-  return metadataModule.createBuildMetadata({
+function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule) {
+  const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path9.default.resolve(rootDir2));
+  return module2.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
@@ -20946,7 +20946,7 @@ function loadEffectiveBuildMetadata(rootDir2) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
+  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }
 
 // scripts/c420ui-adapter/artifacts.ts

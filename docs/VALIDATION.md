@@ -66,6 +66,10 @@ Rebuild from TypeScript sources and validate with `node --check` plus the c420ui
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
+bootstrap/c420ui/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
+on every committed bootstrap entrypoint.
+Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
 Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
 `check:c420ui-bootstrap-artifacts` is a verification gate, not a regeneration command: it must not run
 `npm run build:metadata` or `npm run build:c420ui-bootstrap` against the worktree before validating artifacts.

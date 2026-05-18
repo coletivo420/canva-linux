@@ -2423,16 +2423,36 @@ function summarizeSpawnFailure(result: ReturnType<typeof spawnSync>): string {
   return output.split("\n").find((line) => line.trim().length > 0)?.trim() || `exit status ${result.status}`;
 }
 
-function validateC420uiBundleSyntax(rootDir: string, relativePath: string, failures: string[]): void {
-  const result = spawnSync(process.execPath, ["--check", relativePath], {
-    cwd: rootDir,
-    encoding: "utf8",
-    shell: false,
-  });
+function checkGeneratedC420uiBootstrapSyntax(rootDir: string, failures: string[]): boolean {
+  let syntaxOk = true;
+  const artifacts = [
+    "bootstrap/c420ui/run-c420ui.cjs",
+    "bootstrap/c420ui/run-c420ui-cli.cjs",
+    "bootstrap/c420ui/c420ui-builder.cjs",
+  ] as const;
 
-  if (result.error || result.status !== 0) {
-    failures.push(`${relativePath}: c420ui bootstrap bundle failed syntax validation. Regenerate bootstrap from TypeScript sources. (${summarizeSpawnFailure(result)})`);
+  for (const relativePath of artifacts) {
+    const absolutePath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(absolutePath)) {
+      syntaxOk = false;
+      continue;
+    }
+
+    const result = spawnSync(process.execPath, ["--check", absolutePath], {
+      cwd: rootDir,
+      encoding: "utf8",
+      shell: false,
+    });
+
+    if (result.error || result.status !== 0) {
+      syntaxOk = false;
+      failures.push(
+        `${relativePath}: generated bootstrap artifact is syntactically invalid. ${summarizeSpawnFailure(result)}`.trim(),
+      );
+    }
   }
+
+  return syntaxOk;
 }
 
 function validateC420uiRunBundleStructuralIntegrity(rootDir: string, failures: string[]): void {
@@ -2496,7 +2516,7 @@ function validateC420uiRunBundleStructuralIntegrity(rootDir: string, failures: s
   }
 }
 
-function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string[]): void {
+function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string[]): boolean {
   const artifacts = [
     "bootstrap/c420ui/run-c420ui.cjs",
     "bootstrap/c420ui/run-c420ui-cli.cjs",
@@ -2513,14 +2533,18 @@ function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string
     if (!source.includes("// scripts/") && !source.includes("// packages/c420ui/src")) {
       failures.push(`${artifact}: generated bootstrap bundle must retain esbuild source-section comments`);
     }
-    validateC420uiBundleSyntax(rootDir, artifact, failures);
   }
 
-  validateC420uiRunBundleStructuralIntegrity(rootDir, failures);
+  const syntaxOk = checkGeneratedC420uiBootstrapSyntax(rootDir, failures);
+  if (syntaxOk) {
+    validateC420uiRunBundleStructuralIntegrity(rootDir, failures);
+  }
 
   const bootstrapCheck = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-bootstrap.ts");
   for (const required of [
     "C420UI_RUNTIME_SYNTAX_MESSAGE",
+    "validateManifestArtifactHashes",
+    "artifactHashes",
     "validateGeneratedArtifactsMatchBuildRecipe",
     "C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE",
     "validateC420UIRuntimeBundleKnownCorruption",
@@ -2554,6 +2578,8 @@ function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string
       failures.push(`${relativePath}: must document TypeScript-first c420ui bootstrap artifact maintenance`);
     }
   }
+
+  return syntaxOk;
 }
 
 function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): void {
@@ -2567,6 +2593,10 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
   const validateProjectScript = scripts["validate:project"] ?? "";
   const validateProject = readProjectFile(rootDir, "scripts/validate-project.sh");
   const adapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
+  const bootstrapBuildSource = readProjectFile(rootDir, "scripts/build-c420ui-bootstrap.ts");
+  const bootstrapCheckSource = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-bootstrap.ts");
+  const artifactGateSource = readProjectFile(rootDir, "scripts/checks/canva-linux/check-c420ui-artifact-gate.ts");
+  const bootstrapManifest = JSON.parse(readProjectFile(rootDir, "bootstrap/c420ui/manifest.json")) as Record<string, unknown>;
 
   if (!nodeCheckScript) {
     failures.push("package.json must contain check:c420ui-node-check");
@@ -2600,6 +2630,34 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
   }
   if (!validateProject.includes('run_step "git diff --exit-code" git diff --exit-code')) {
     failures.push("validate-project.sh must call git diff --exit-code after artifact gates");
+  }
+  if (!bootstrapBuildSource.includes("C420UI_BOOTSTRAP_OUT_DIR")) {
+    failures.push("build-c420ui-bootstrap must support C420UI_BOOTSTRAP_OUT_DIR for staged artifact validation");
+  }
+  if (!bootstrapBuildSource.includes("rmSync(bootstrapDir") || !bootstrapBuildSource.includes("recursive: true, force: true")) {
+    failures.push("build-c420ui-bootstrap must clean bootstrap/c420ui before emitting artifacts");
+  }
+  if (!bootstrapBuildSource.includes("artifactHashes") || !bootstrapBuildSource.includes("generatedBy")) {
+    failures.push("build-c420ui-bootstrap must record generatedBy and artifact hashes in manifest.json");
+  }
+  if (!bootstrapCheckSource.includes("validateManifestArtifactHashes") || !bootstrapCheckSource.includes("artifact hash differs")) {
+    failures.push("check:c420ui-bootstrap must compare committed artifacts against manifest hashes");
+  }
+  if (!artifactGateSource.includes("validateCommittedManifestArtifactHashes") || !artifactGateSource.includes("compareArtifacts")) {
+    failures.push("check:c420ui-bootstrap-artifacts must compare artifact content and manifest hashes");
+  }
+  if (bootstrapManifest.generatedBy !== "scripts/build-c420ui-bootstrap.ts") {
+    failures.push("bootstrap/c420ui/manifest.json: generatedBy must identify scripts/build-c420ui-bootstrap.ts");
+  }
+  const artifactHashes = bootstrapManifest.artifactHashes;
+  if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
+    failures.push("bootstrap/c420ui/manifest.json: artifactHashes must be present");
+  } else {
+    for (const artifact of ["run-c420ui.cjs", "run-c420ui-cli.cjs", "c420ui-builder.cjs"] as const) {
+      if (typeof (artifactHashes as Record<string, unknown>)[artifact] !== "string") {
+        failures.push(`bootstrap/c420ui/manifest.json: artifactHashes.${artifact} must be present`);
+      }
+    }
   }
   if (
     !adapterSource.includes("loadProjectInfo: loadProjectConfig") ||
@@ -3065,8 +3123,10 @@ export function main(): number {
   checkLauncherBootstrapDependencyPolicy(failures);
   checkRuntimeCliDebugGuardrails(rootDir, failures);
   checkEffectiveBuildMetadataContract(rootDir, failures);
-  checkC420uiGeneratedArtifactsContract(rootDir, failures);
-  checkC420uiDetectionPanelsAndPlainLogsContract(rootDir, failures);
+  const c420uiBootstrapSyntaxOk = checkC420uiGeneratedArtifactsContract(rootDir, failures);
+  if (c420uiBootstrapSyntaxOk) {
+    checkC420uiDetectionPanelsAndPlainLogsContract(rootDir, failures);
+  }
   checkC420uiArtifactGateContract(rootDir, failures);
   checkPinnedHomeTabStripContract(rootDir, failures);
   validateBuilderArtifactsExist(rootDir, failures);

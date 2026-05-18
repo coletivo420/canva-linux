@@ -1,4 +1,5 @@
 import * as esbuild from "esbuild";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -24,6 +25,12 @@ type PackageJson = {
   version?: string;
 };
 
+const C420UI_BOOTSTRAP_ARTIFACTS = [
+  "run-c420ui.cjs",
+  "run-c420ui-cli.cjs",
+  "c420ui-builder.cjs",
+] as const;
+
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
   while (true) {
@@ -43,6 +50,27 @@ function requirePackageVersion(packageJson: PackageJson, relativePath: string): 
     throw new Error(`${relativePath}: missing required version`);
   }
   return packageJson.version;
+}
+
+function resolveBootstrapDir(rootDir: string): string {
+  return process.env.C420UI_BOOTSTRAP_OUT_DIR
+    ? path.resolve(rootDir, process.env.C420UI_BOOTSTRAP_OUT_DIR)
+    : path.join(rootDir, "bootstrap", "c420ui");
+}
+
+function cleanBootstrapOutput(bootstrapDir: string): void {
+  fs.rmSync(bootstrapDir, { recursive: true, force: true });
+  fs.mkdirSync(bootstrapDir, { recursive: true });
+}
+
+function calculateArtifactHashes(bootstrapDir: string): Record<string, string> {
+  const hashes: Record<string, string> = {};
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACTS) {
+    hashes[artifact] = `sha256:${createHash("sha256")
+      .update(fs.readFileSync(path.join(bootstrapDir, artifact)))
+      .digest("hex")}`;
+  }
+  return hashes;
 }
 
 async function ensureBuildMetadataModule(rootDir: string): Promise<void> {
@@ -75,8 +103,8 @@ function copyBlessedRuntimeAssets(rootDir: string, bootstrapDir: string): void {
 
 async function main(): Promise<void> {
   const rootDir = findProjectRoot();
-  const bootstrapDir = path.join(rootDir, "bootstrap", "c420ui");
-  fs.mkdirSync(bootstrapDir, { recursive: true });
+  const bootstrapDir = resolveBootstrapDir(rootDir);
+  cleanBootstrapOutput(bootstrapDir);
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
   const c420uiPackageJson = readJson<PackageJson>(rootDir, "packages/c420ui/package.json");
@@ -89,9 +117,11 @@ async function main(): Promise<void> {
   copyBlessedRuntimeAssets(rootDir, bootstrapDir);
 
   const sourceHash = calculateC420UIBootstrapSourceHash(rootDir);
+  const artifactHashes = calculateArtifactHashes(bootstrapDir);
 
   const manifest = {
     kind: "c420ui-bootstrap",
+    generatedBy: C420UI_BOOTSTRAP_BUILD_RECIPE,
     c420uiVersion,
     dependentProject: "canva-linux",
     dependentProjectVersion,
@@ -119,6 +149,7 @@ async function main(): Promise<void> {
     sourceHashAlgorithm: C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
     sourceHash,
     sourceHashInputs: [...C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS],
+    artifactHashes,
   };
 
   fs.writeFileSync(

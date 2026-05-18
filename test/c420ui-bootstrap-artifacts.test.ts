@@ -11,6 +11,8 @@ const bundles = [
 ] as const;
 
 type BootstrapManifest = {
+  generatedBy?: string;
+  artifactHashes?: Record<string, string>;
   dependentProjectBuildRevision?: string;
   dependentProjectFullVersion?: string;
   dependentProjectDisplayVersion?: string;
@@ -170,6 +172,10 @@ test("c420ui bootstrap manifest metadata fields are well-formed", () => {
   assert.notEqual(manifest.dependentProjectDisplayVersion, "");
   assert.notEqual(manifest.dependentProjectPhase, "");
   assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
+  assert.equal(manifest.generatedBy, "scripts/build-c420ui-bootstrap.ts");
+  for (const artifact of ["run-c420ui.cjs", "run-c420ui-cli.cjs", "c420ui-builder.cjs"] as const) {
+    assert.match(String(manifest.artifactHashes?.[artifact]), /^sha256:[0-9a-f]{64}$/);
+  }
 
   if (strictManifestMetadata) {
     for (const [manifestField, metadataField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {

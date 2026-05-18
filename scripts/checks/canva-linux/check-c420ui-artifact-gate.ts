@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { createRequire } from "node:module";
 import os from "node:os";
@@ -123,7 +124,60 @@ function copyBlessedRuntimeAssets(rootDir: string, expectedBootstrapDir: string)
   }
 }
 
+function calculateFileHash(filePath: string): string {
+  return `sha256:${createHash("sha256")
+    .update(fs.readFileSync(filePath))
+    .digest("hex")}`;
+}
+
+function calculateBootstrapArtifactHashes(bootstrapDir: string): Record<string, string> {
+  const artifactHashes: Record<string, string> = {};
+  for (const relativePath of C420UI_BOOTSTRAP_ARTIFACTS) {
+    const artifact = path.basename(relativePath);
+    artifactHashes[artifact] = calculateFileHash(path.join(bootstrapDir, artifact));
+  }
+  return artifactHashes;
+}
+
+function validateCommittedManifestArtifactHashes(rootDir: string): void {
+  const manifestPath = "bootstrap/c420ui/manifest.json";
+  const manifest = readJson<Record<string, unknown>>(rootDir, manifestPath);
+  const artifactHashes = manifest.artifactHashes;
+  const failures: string[] = [];
+
+  if (manifest.generatedBy !== C420UI_BOOTSTRAP_BUILD_RECIPE) {
+    failures.push(`${manifestPath}: generatedBy must be ${C420UI_BOOTSTRAP_BUILD_RECIPE}`);
+  }
+
+  if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
+    failures.push(`${manifestPath}: artifactHashes must record generated bootstrap artifact hashes`);
+  } else {
+    const hashes = artifactHashes as Record<string, unknown>;
+    for (const relativePath of C420UI_BOOTSTRAP_ARTIFACTS) {
+      const artifact = path.basename(relativePath);
+      const expectedHash = hashes[artifact];
+      if (typeof expectedHash !== "string" || !/^sha256:[0-9a-f]{64}$/.test(expectedHash)) {
+        failures.push(`${manifestPath}: artifactHashes.${artifact} must be a sha256 hash`);
+        continue;
+      }
+
+      const committedPath = path.join(rootDir, relativePath);
+      if (!fs.existsSync(committedPath)) continue;
+
+      const actualHash = calculateFileHash(committedPath);
+      if (actualHash !== expectedHash) {
+        failures.push(`${relativePath}: artifact hash differs from ${manifestPath}; regenerate bootstrap from TypeScript sources`);
+      }
+    }
+  }
+
+  if (failures.length > 0) {
+    throw new Error(failures.join("\n"));
+  }
+}
+
 function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string): void {
+  fs.rmSync(expectedBootstrapDir, { recursive: true, force: true });
   fs.mkdirSync(expectedBootstrapDir, { recursive: true });
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
@@ -157,9 +211,11 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
   }
 
   copyBlessedRuntimeAssets(rootDir, expectedBootstrapDir);
+  const artifactHashes = calculateBootstrapArtifactHashes(expectedBootstrapDir);
 
   const manifest = {
     kind: "c420ui-bootstrap",
+    generatedBy: C420UI_BOOTSTRAP_BUILD_RECIPE,
     c420uiVersion,
     dependentProject: "canva-linux",
     dependentProjectVersion,
@@ -187,6 +243,7 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     sourceHashAlgorithm: C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
     sourceHash: calculateC420UIBootstrapSourceHash(rootDir),
     sourceHashInputs: [...C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS],
+    artifactHashes,
   };
 
   fs.writeFileSync(
@@ -272,6 +329,7 @@ function main(): void {
       runGitDiffCheck(rootDir, `node --check ${relativePath}`);
     }
 
+    validateCommittedManifestArtifactHashes(rootDir);
     generateExpectedArtifacts(rootDir, expectedBootstrapDir);
     runGitDiffCheck(rootDir, "temporary artifact generation");
 
