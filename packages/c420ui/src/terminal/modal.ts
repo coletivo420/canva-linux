@@ -197,17 +197,21 @@ export function inputDialog(
       ].join(""),
     });
 
-    let timer: NodeJS.Timeout | null = setTimeout(() => {
-      close({
-        status: "timeout",
-      });
-    }, timeoutMs);
+    let timer: NodeJS.Timeout | null = null;
+    let closed = false;
 
     const close = (result: InputDialogResult) => {
+      if (closed) {
+        return;
+      }
+
+      closed = true;
+
       if (timer) {
         clearTimeout(timer);
         timer = null;
       }
+
       label.destroy();
       input.destroy();
       footer.destroy();
@@ -220,6 +224,12 @@ export function inputDialog(
       resolve(result);
     };
 
+    timer = setTimeout(() => {
+      close({
+        status: "timeout",
+      });
+    }, timeoutMs);
+
     overlay.key(["escape"], () => {
       close({
         status: "canceled",
@@ -228,6 +238,18 @@ export function inputDialog(
 
     input.key(["enter"], () => {
       input.submit();
+    });
+
+    input.key(["escape"], () => {
+      close({
+        status: "canceled",
+      });
+    });
+
+    input.on("cancel", () => {
+      close({
+        status: "canceled",
+      });
     });
 
     input.on("submit", (value) => {

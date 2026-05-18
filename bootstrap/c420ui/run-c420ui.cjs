@@ -16951,12 +16951,13 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
         `{${c420uiTheme.colors.lightBlue}-fg}[Esc]{/${c420uiTheme.colors.lightBlue}-fg} Cancel`
       ].join("")
     });
-    let timer = setTimeout(() => {
-      close({
-        status: "timeout"
-      });
-    }, timeoutMs);
+    let timer = null;
+    let closed = false;
     const close = (result) => {
+      if (closed) {
+        return;
+      }
+      closed = true;
       if (timer) {
         clearTimeout(timer);
         timer = null;
@@ -16972,6 +16973,11 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
       screen.render();
       resolve(result);
     };
+    timer = setTimeout(() => {
+      close({
+        status: "timeout"
+      });
+    }, timeoutMs);
     overlay.key(["escape"], () => {
       close({
         status: "canceled"
@@ -16979,6 +16985,16 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
     });
     input.key(["enter"], () => {
       input.submit();
+    });
+    input.key(["escape"], () => {
+      close({
+        status: "canceled"
+      });
+    });
+    input.on("cancel", () => {
+      close({
+        status: "canceled"
+      });
     });
     input.on("submit", (value) => {
       close({
