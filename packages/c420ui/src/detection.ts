@@ -20,6 +20,9 @@ export type c420uiOverviewProjectStatus = {
 
 export type c420uiOverviewStatus = {
   project: c420uiOverviewProjectStatus;
+  // Installations may include both base *Version fields and effective
+  // *FullVersion fields. Renderers should prefer *FullVersion when present
+  // and fall back to *Version for older detectors/markers.
   installations: Record<string, boolean | string>;
   warnings: string[];
 };

@@ -25,9 +25,15 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
   `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
+## Dev.9 detected installation hash visibility
+
+- Opened `0.1.4-15.Dev.9` with c420ui Detected Installations hash visibility: detectors now expose
+  optional `*FullVersion` fields, the terminal panel prefers those effective/hashed versions, and base
+  `*Version` values remain the fallback for legacy native, Flatpak, and AppImage markers.
+
 ## Dev.8 tab-strip redesign
 
-- Opened `0.1.4-15.Dev.8` for the internal tab-strip redesign: the pinned home tab remains part of the tab model,
+- Opened the Dev.8 phase for the internal tab-strip redesign: the pinned home tab remains part of the tab model,
   but it is exposed as `pinnedHomeTab` and rendered by a dedicated pinned-home renderer instead of the regular
   `.tab` renderer.
 - The pinned home tab belongs to the internal tab strip, not the window titlebar; BrowserWindow title logic and the

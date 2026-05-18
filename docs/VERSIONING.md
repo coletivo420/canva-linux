@@ -4,9 +4,9 @@
 
 The source tree keeps clean base identifiers without build metadata:
 
-- `package.json` `version`: `0.1.4-15.Dev.8`
+- `package.json` `version`: `0.1.4-15.Dev.9`
 - `config/canva-linux/project-ui.json` `displayVersion`: `0.1.4-15.Dev`
-- `config/canva-linux/project-ui.json` `phase`: `0.1.4-15.Dev.8`
+- `config/canva-linux/project-ui.json` `phase`: `0.1.4-15.Dev.9`
 
 Dev.8 is open for the internal tab-strip redesign; source versions must remain clean base identifiers without `+g` metadata.
 
@@ -14,10 +14,10 @@ Dev.8 is open for the internal tab-strip redesign; source versions must remain c
 
 Builds generate `config/canva-linux/build-metadata.json` and append the deterministic build revision to runtime and artifact-facing fields:
 
-- `version`: `0.1.4-15.Dev.8+g<short-hash>`
+- `version`: `0.1.4-15.Dev.9+g<short-hash>`
 - `displayVersion`: `0.1.4-15.Dev+g<short-hash>`
-- `phase`: `0.1.4-15.Dev.8+g<short-hash>`
-- `fullVersion`: `0.1.4-15.Dev.8+g<short-hash>`
+- `phase`: `0.1.4-15.Dev.9+g<short-hash>`
+- `fullVersion`: `0.1.4-15.Dev.9+g<short-hash>`
 
 The effective version is used by startup logs, `--version`, generated manifests, and build artifacts. Source versions must not be rewritten to include `+g`.
 

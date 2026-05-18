@@ -40,6 +40,11 @@ if (
           flatpakSystemVersion: "",
           flatpakUserVersion: "",
           appImageVersion: "",
+          nativeSystemFullVersion: "",
+          nativeUserFullVersion: "",
+          flatpakSystemFullVersion: "",
+          flatpakUserFullVersion: "",
+          appImageFullVersion: "",
         },
         warnings: [
           `Failed to build overview status: ${error instanceof Error ? error.message : String(error)}`,

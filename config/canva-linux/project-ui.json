@@ -1,7 +1,7 @@
 {
   "displayVersion": "0.1.4-15.Dev",
   "status": "Alpha",
-  "phase": "0.1.4-15.Dev.8",
+  "phase": "0.1.4-15.Dev.9",
   "projectName": "Canva Linux",
   "projectSubtitle": "Install and Development Workspace",
   "toolTitle": "Canva Linux Builder powered by c420ui",
@@ -26,5 +26,5 @@
     "│ .::==++**########**++==:::.  │",
     "└──────────────────────────────┘"
   ],
-  "versionReleaseNotes": "Dev.8 starts the tab-strip structure redesign by rendering the pinned home tab through a dedicated pinned-home renderer instead of the regular tab renderer."
+  "versionReleaseNotes": "Dev.9 opens with c420ui detected-installation version hash visibility."
 }

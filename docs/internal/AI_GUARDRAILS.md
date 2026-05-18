@@ -79,7 +79,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## Versioning
 
-- Preserve version `0.1.4-15.Dev.8` unless the maintainer explicitly requests a versioning change.
+- Preserve version `0.1.4-15.Dev.9` unless the maintainer explicitly requests a versioning change.
 - Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
 - Preserve the `N.N.N-X` release versioning rule with optional `.Dev.N` development phase suffixes.
 - Release identity must use the npm-compatible package version everywhere; do not publish four-number dotted versions.
@@ -93,7 +93,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## 0.1.4-14 split documentation policy
 
-- Current maintained release target is `0.1.4-15.Dev.8`.
+- Current maintained release target is `0.1.4-15.Dev.9`.
 - OAuth login completion must finalize authorized callbacks by callback type instead of exact URL string equality,
   keep a guarded fallback timer for redirect sequences without a matching `did-finish-load`, defer that fallback while the
   authorized callback WebContents is still loading except after a bounded max-attempt safety limit, flush the shared persistent

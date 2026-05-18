@@ -16977,6 +16977,42 @@ function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
         status: "canceled"
       });
     });
+// packages/c420ui/src/terminal/detected-installations-summary.ts
+function detectedVersion(fullVersion, version) {
+  if (typeof fullVersion === "string" && fullVersion.trim()) {
+    return fullVersion;
+  }
+  return version;
+}
+function formatDetectedInstallationsSummary(s, colors2) {
+  if (!s) {
+    return [
+      `  Native Install: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
+      `  Flatpak Install: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`,
+      `  AppImage artifacts: {${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`
+    ];
+  }
+  const i = s.installations;
+  const fmt = (detected, version) => {
+    if (!detected) {
+      return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
+    }
+    const v = typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}` : "version unknown";
+    return `{${colors2.statusDetected}-fg}detected{/${colors2.statusDetected}-fg}      ${v}`;
+  };
+  return [
+    `  Native System: ${fmt(Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion))}`,
+    `  Native User: ${fmt(Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion))}`,
+    `  Flatpak System: ${fmt(Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion))}`,
+    `  Flatpak User: ${fmt(Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion))}`,
+    `  AppImage: ${fmt(Boolean(i.appImageArtifacts), detectedVersion(i.appImageFullVersion, i.appImageVersion))}`
+  ];
+}
+var init_detected_installations_summary = __esm({
+  "packages/c420ui/src/terminal/detected-installations-summary.ts"() {
+  }
+});
+
     input.key(["enter"], () => {
       input.submit();
     });
@@ -18339,31 +18375,7 @@ function createApp(options) {
       const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
       stream.on("error", (error) => {
         recordSessionStreamError(error);
-      });
-      return stream;
-    } catch (error) {
-      recordSessionStreamError(error);
-      return null;
-    }
-  }
-  const launcherSessionLog = readExistingSessionLog(sessionLogPath);
-  const sessionStream = openSessionStream(sessionLogPath);
-  const writeSession = (line) => {
-    if (!sessionStream || sessionStreamOpenError) {
-      warnSessionLogUnavailableOnce();
-      return;
-    }
-    try {
-      sessionStream.write(`${line}
-`);
-    } catch (error) {
-      recordSessionStreamError(error);
-    }
-  };
-  writeSession("[mode] c420ui");
-  process.on("exit", () => {
-    writeSession("[session] ended");
-  });
+    diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
   let overviewStatus = null;
   let overviewDetectionPromise = null;
   let overviewDetectionError = null;
@@ -19199,6 +19211,7 @@ function createApp(options) {
       renderSelectionDetails();
       screen.render();
     }
+    init_detected_installations_summary();
   });
   applyLogPanelLabel();
   importLauncherSessionLog();
@@ -20342,8 +20355,18 @@ var import_node_path7 = __toESM(require("node:path"));
 var import_node_child_process5 = require("node:child_process");
 
 // scripts/canva-linux/project-root.ts
-var import_node_fs5 = __toESM(require("node:fs"));
-var import_node_path6 = __toESM(require("node:path"));
+  "DETECTED_APPIMAGE_VERSION",
+  "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
+  "DETECTED_NATIVE_USER_FULL_VERSION",
+  "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
+  "DETECTED_FLATPAK_USER_FULL_VERSION",
+  "DETECTED_APPIMAGE_FULL_VERSION"
+  appImageVersion: "",
+  nativeSystemFullVersion: "",
+  nativeUserFullVersion: "",
+  flatpakSystemFullVersion: "",
+  flatpakUserFullVersion: "",
+  appImageFullVersion: ""
 function defaultRootSearchDir() {
   return import_node_path6.default.resolve(__dirname, "../..");
 }
@@ -20453,7 +20476,14 @@ function runInstallDetection(rootDir2, runCommand) {
         canvaLinuxDetectionKeys
       ),
       warnings
-    };
+    appImageVersion: values.DETECTED_APPIMAGE_VERSION || "",
+    // Detected Installations renderers should prefer *FullVersion fields and
+    // fall back to the base *Version fields for older detectors/markers.
+    nativeSystemFullVersion: values.DETECTED_NATIVE_SYSTEM_FULL_VERSION || values.DETECTED_NATIVE_SYSTEM_VERSION || "",
+    nativeUserFullVersion: values.DETECTED_NATIVE_USER_FULL_VERSION || values.DETECTED_NATIVE_USER_VERSION || "",
+    flatpakSystemFullVersion: values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION || values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
+    flatpakUserFullVersion: values.DETECTED_FLATPAK_USER_FULL_VERSION || values.DETECTED_FLATPAK_USER_VERSION || "",
+    appImageFullVersion: values.DETECTED_APPIMAGE_FULL_VERSION || values.DETECTED_APPIMAGE_VERSION || ""
   } catch (error) {
     warnings.push(
       `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`

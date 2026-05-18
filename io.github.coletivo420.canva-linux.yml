@@ -47,7 +47,7 @@ modules:
       - cp -a dist/linux-unpacked/* /app/main/
       - if command -v patch-electron-desktop-filename >/dev/null 2>&1; then patch-electron-desktop-filename /app/main/resources/app.asar; else patch-desktop-filename /app/main/resources/app.asar; fi
       - install -Dm755 run.sh /app/bin/run.sh
-      - install -Dm644 package.json /app/share/canva-linux/version
+      - install -Dm644 config/canva-linux/build-metadata.json /app/share/canva-linux/version
       - install -Dm644 data/io.github.coletivo420.canva-linux.desktop /app/share/applications/io.github.coletivo420.canva-linux.desktop
       - install -Dm644 data/io.github.coletivo420.canva-linux.metainfo.xml /app/share/metainfo/io.github.coletivo420.canva-linux.metainfo.xml
       - |

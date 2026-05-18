@@ -3,15 +3,15 @@
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDER_ALIAS.md).
 
-## Canva Linux 0.1.4-15.Dev.8 Alpha
+## Canva Linux 0.1.4-15.Dev.9 Alpha
 
-Release: `v0.1.4-15.Dev.8`
+Release: `v0.1.4-15.Dev.9`
 
 ### Public artifacts
 
-- `canva-linux-0.1.4-15.Dev.8-x86_64.AppImage`
-- `canva-linux-0.1.4-15.Dev.8-x86_64.flatpak`
-- `canva-linux-0.1.4-15.Dev.8-linux-unpacked-x86_64.tar.gz`
+- `canva-linux-0.1.4-15.Dev.9-x86_64.AppImage`
+- `canva-linux-0.1.4-15.Dev.9-x86_64.flatpak`
+- `canva-linux-0.1.4-15.Dev.9-linux-unpacked-x86_64.tar.gz`
 - `SHA256SUMS`
 
 The `.deb`, `.rpm`, and AUR/PKGBUILD outputs remain planned for a later
@@ -52,7 +52,7 @@ The GitHub Release workflow must:
 
 ### Release notes template
 
-Canva Linux 0.1.4-15.Dev.8 Alpha
+Canva Linux 0.1.4-15.Dev.9 Alpha
 
 Highlights:
 
