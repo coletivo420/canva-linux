@@ -224,6 +224,13 @@ test("loading state uses Native System/User and Flatpak System/User labels", () 
   assert.doesNotMatch(text, /Flatpak Install/);
 });
 
+
+test("loading state keeps Linux Artifacts compact", () => {
+  const panels = formatDetectionPanelSummaries(null, colors);
+
+  assert.deepEqual(panels.linuxArtifacts, ["Native/Unpacked installations loading..."]);
+});
+
 test("planned artifact renders as not detected", () => {
   const panels = formatDetectionPanelSummaries(
     status({}, [{ id: "deb", kind: "deb", label: "Debian package", detected: false }]),

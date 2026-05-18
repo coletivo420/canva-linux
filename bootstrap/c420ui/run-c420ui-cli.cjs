@@ -1261,8 +1261,17 @@ function firstMetadataVersion(...values) {
 }
 function normalizeMetadata(metadata) {
   if (!metadata) return {};
-  const version = firstMetadataVersion(metadata.version, metadata.baseVersion, metadata.basePhase);
-  const fullVersion = firstMetadataVersion(metadata.fullVersion, metadata.version, metadata.baseVersion, metadata.basePhase);
+  const version = firstMetadataVersion(
+    metadata.baseVersion,
+    metadata.basePhase,
+    metadata.version
+  );
+  const fullVersion = firstMetadataVersion(
+    metadata.fullVersion,
+    metadata.version,
+    metadata.baseVersion,
+    metadata.basePhase
+  );
   return {
     ...version ? { version } : {},
     ...fullVersion ? { fullVersion } : {}
