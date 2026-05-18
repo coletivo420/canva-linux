@@ -4,6 +4,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 source "${SCRIPT_DIR}/native-install-common.sh"
 source "${SCRIPT_DIR}/runtime-guidance-common.sh"
+source "${SCRIPT_DIR}/build-metadata-marker-common.sh"
 
 validate_native_scope
 resolve_native_paths
@@ -19,6 +20,15 @@ else
 fi
 bash "${SCRIPT_DIR}/build-electron-dir.sh"
 install_native_from_dist "${REPO_ROOT}/dist/linux-unpacked"
+
+BUILD_METADATA_TARGET="${INSTALL_PREFIX}/config/canva-linux/build-metadata.json"
+
+if [[ "${NATIVE_SCOPE}" == "system" ]]; then
+  sudo_install_build_metadata_marker "${BUILD_METADATA_TARGET}"
+else
+  install_build_metadata_marker "${BUILD_METADATA_TARGET}"
+fi
+
 VERSION_MARKER="${PROJECT_PHASE:-${PROJECT_DISPLAY_VERSION:-unknown}}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then
   printf "%s\n" "${VERSION_MARKER}" | c420ui_sudo tee "${INSTALL_PREFIX}/CANVA_LINUX_VERSION" >/dev/null

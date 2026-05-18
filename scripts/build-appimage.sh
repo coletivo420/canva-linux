@@ -9,6 +9,7 @@ source "${SCRIPT_DIR}/preflight-common.sh"
 source "${SCRIPT_DIR}/runtime-guidance-common.sh"
 source "${SCRIPT_DIR}/package-guidance-common.sh"
 source "${SCRIPT_DIR}/ui-common.sh"
+source "${SCRIPT_DIR}/build-metadata-marker-common.sh"
 ui_init
 
 require_command node
@@ -49,6 +50,14 @@ fi
   sha256sum "$(basename "${APPIMAGE_PATH}")" > "$(basename "${APPIMAGE_SHA256_PATH}")"
 )
 ui_ok "AppImage checksum generated: ${APPIMAGE_SHA256_PATH}"
+
+write_build_metadata_sidecar "${APPIMAGE_PATH}"
+
+if [[ -f "${APPIMAGE_PATH}.build-metadata.json" ]]; then
+  ui_ok "AppImage metadata generated: ${APPIMAGE_PATH}.build-metadata.json"
+else
+  ui_warn "Build metadata not found; AppImage full version detection will fall back to artifact name."
+fi
 
 bash "${SCRIPT_DIR}/validate-appimage.sh" --skip-release-manifest
 
