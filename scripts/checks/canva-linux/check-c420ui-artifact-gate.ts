@@ -254,7 +254,7 @@ function runStructuralBootstrapCheck(rootDir: string, expectedBootstrapDir: stri
   }
 }
 
-async function main(): Promise<void> {
+function main(): void {
   const rootDir = findProjectRoot();
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-artifact-gate-"));
   const expectedBootstrapDir = path.join(tempRoot, "c420ui");
@@ -267,7 +267,7 @@ async function main(): Promise<void> {
       runGitDiffCheck(rootDir, `node --check ${relativePath}`);
     }
 
-    await generateExpectedArtifacts(rootDir, expectedBootstrapDir);
+    generateExpectedArtifacts(rootDir, expectedBootstrapDir);
     runGitDiffCheck(rootDir, "temporary artifact generation");
 
     compareArtifacts(rootDir, expectedBootstrapDir, [
