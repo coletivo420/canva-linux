@@ -39,7 +39,7 @@
     "docs:check-links": "npm run build:scripts-core && node .build/scripts/core/check-doc-links.js",
     "deps:check-policy": "npm run build:scripts-core && node .build/scripts/core/check-dependency-policy.js",
     "typecheck": "tsc --noEmit",
-    "validate:project": "npm run build:metadata && ./scripts/validate-project.sh",
+    "validate:project": "./scripts/validate-project.sh",
     "validate": "npm run check:scripts-core",
     "docs:check-ai": "npm run build:scripts-core && node .build/scripts/core/check-ai-guardrails.js",
     "typecheck:strict": "tsc -p tsconfig.strict.json",

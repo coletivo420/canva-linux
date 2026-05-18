@@ -15,6 +15,10 @@
   `npm run build:metadata` or `npm run build:c420ui-bootstrap` against the worktree before validating artifacts.
   It generates expected c420ui bootstrap artifacts in a temporary directory, compares them byte-for-byte with
   committed artifacts, fails when committed artifacts are stale, and requires `git diff --exit-code` to pass after the gate.
+  Committed c420ui bootstrap artifacts validate against committed build metadata in
+  `config/canva-linux/build-metadata.json`. Source checkout runtime/build metadata may still resolve from Git HEAD when
+  applicable, but the artifact gate must not rewrite tracked metadata to the current HEAD while validating. This avoids
+  dirtying the worktree with a not-yet-materialized commit hash.
   To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
   `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 

@@ -130,6 +130,11 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
   const c420uiPackageJson = readJson<PackageJson>(rootDir, "packages/c420ui/package.json");
   const packagedBuildMetadata = readJson<BuildMetadataJson>(rootDir, "config/canva-linux/build-metadata.json");
   const effectiveBuildMetadata = loadEffectiveBuildMetadata(rootDir);
+  // Artifact validation is intentionally pinned to committed metadata.
+  // Runtime/build metadata in a source checkout may still resolve from Git HEAD,
+  // but committed bootstrap artifacts must compare against the committed
+  // config/canva-linux/build-metadata.json so the gate does not dirty the
+  // worktree with the not-yet-materialized commit hash.
   const buildMetadata = {
     ...effectiveBuildMetadata,
     ...packagedBuildMetadata,
