@@ -5,7 +5,7 @@ cd "${ROOT_DIR}"
 source "${ROOT_DIR}/scripts/app-identity-common.sh"
 source "${ROOT_DIR}/scripts/ui-common.sh"
 source "${ROOT_DIR}/packages/c420ui/host/linux/sudo-helper.sh"
-source "${ROOT_DIR}/scripts/install-detection-common.sh"
+source "${ROOT_DIR}/packages/c420ui/scripts/install-detection-common.sh"
 ui_init
 
 SCOPE="${CANVA_FLATPAK_SCOPE:-all}"

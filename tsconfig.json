@@ -15,6 +15,7 @@
   },
   "include": [
     "electron/**/*.ts",
+    "packages/**/*.ts",
     "scripts/**/*.ts",
     "test/**/*.ts",
     "playwright.config.ts",

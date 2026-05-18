@@ -22,7 +22,7 @@ actions through the generic artifact workflow system.
 
 ## Implementing files
 
-- `scripts/build-appimage.sh`
+- `packages/c420ui/scripts/build-appimage.sh`
 - `scripts/validate-appimage.sh`
 - `config/canva-linux/artifacts.json`
 - `scripts/c420ui-adapter/artifacts.ts`

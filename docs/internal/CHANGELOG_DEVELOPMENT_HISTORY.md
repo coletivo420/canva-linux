@@ -624,7 +624,7 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Fixed
 
-- Fixed AppImage menu execution failing when `scripts/build-appimage.sh` is not executable.
+- Fixed AppImage menu execution failing when `packages/c420ui/scripts/build-appimage.sh` is not executable.
 - Fixed duplicated `Maintenance` section in the interactive installer menu.
 - Fixed AppImage post-build guidance so the generated artifact path is printed correctly.
 

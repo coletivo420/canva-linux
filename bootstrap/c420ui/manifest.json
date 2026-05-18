@@ -4,10 +4,10 @@
   "c420uiVersion": "0.1.0",
   "dependentProject": "canva-linux",
   "dependentProjectVersion": "0.1.4-15.Dev.9",
-  "dependentProjectBuildRevision": "g1b087d9",
-  "dependentProjectFullVersion": "0.1.4-15.Dev.9+g1b087d9",
-  "dependentProjectDisplayVersion": "0.1.4-15.Dev+g1b087d9",
-  "dependentProjectPhase": "0.1.4-15.Dev.9+g1b087d9",
+  "dependentProjectBuildRevision": "g81d9e19",
+  "dependentProjectFullVersion": "0.1.4-15.Dev.9+g81d9e19",
+  "dependentProjectDisplayVersion": "0.1.4-15.Dev+g81d9e19",
+  "dependentProjectPhase": "0.1.4-15.Dev.9+g81d9e19",
   "entrypoint": "run-c420ui.cjs",
   "cliEntrypoint": "run-c420ui-cli.cjs",
   "entrypoints": {
@@ -25,7 +25,7 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "sourceHashAlgorithm": "sha256",
-  "sourceHash": "sha256:e695cbef589775c4a1840132bc2f0826b4ee9cdf04e06cf93202679e163e6e22",
+  "sourceHash": "sha256:4a87ea9cbf6106c3d960cb09e9d3e36dffd89f25b50ef9fd44bbf99d7f24d558",
   "sourceHashInputs": [
     "packages/c420ui/src",
     "scripts/c420ui-adapter",
@@ -39,13 +39,14 @@
     "scripts/c420ui-builder.ts",
     "canva-linux-c420ui-builder",
     "scripts/build-c420ui-bootstrap.ts",
+    "packages/c420ui/checks/bootstrap-check-helpers.ts",
     "config/canva-linux",
     "packages/c420ui/package.json",
     "package.json"
   ],
   "artifactHashes": {
-    "run-c420ui.cjs": "sha256:eef558cc8c2fb4192eba83807c2904a9bd34d18bec0f0cd46a623e1652fad86b",
-    "run-c420ui-cli.cjs": "sha256:18fe00862901942254a9b048631ec9987b213407964f16ef1a797ea89d17d5df",
+    "run-c420ui.cjs": "sha256:9f45513ef1bd050c5c41e0aa13f8e2abf7425b2b38af0203abc49ae18490b007",
+    "run-c420ui-cli.cjs": "sha256:3b6c22f4e0e8692d328e754d0525429d05ae690bf2de781382d0c70c26e5ff93",
     "c420ui-builder.cjs": "sha256:33a8486ad80d2d757879978ac4b1460acf76ccca4d30f0fb5ce74d2c4b8f289c"
   }
 }

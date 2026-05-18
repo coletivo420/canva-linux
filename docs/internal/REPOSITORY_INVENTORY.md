@@ -118,9 +118,9 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/app-identity-common.sh`
 - `scripts/canva-linux/actions/registry.ts`
 - `scripts/canva-linux/project-root.ts`
-- `scripts/build-appimage.sh`
+- `packages/c420ui/scripts/build-appimage.sh`
 - `scripts/build-electron-dir.sh`
-- `scripts/build-flatpak-bundle.sh`
+- `packages/c420ui/scripts/build-flatpak-bundle.sh`
 - `scripts/build-preload-bundle.ts`
 - `scripts/build-runtime.ts`
 - `scripts/build-runtime.sh`
@@ -143,10 +143,10 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/ensure-npm-dependencies.sh`
 - `scripts/fix-build-permissions.sh`
 - `scripts/flatpak-build-common.sh`
-- `scripts/install-detection-common.sh`
+- `packages/c420ui/scripts/install-detection-common.sh`
 - `scripts/install-flatpak-local.sh`
 - `scripts/install-layout-common.sh`
-- `scripts/install-native.sh`
+- `packages/c420ui/scripts/install-native.sh`
 - `scripts/native-install-common.sh`
 - `scripts/package-guidance-common.sh`
 - `scripts/preflight-common.sh`

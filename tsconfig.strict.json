@@ -15,7 +15,7 @@
     "electron/preload/**/*.ts",
     "scripts/core/**/*.ts",
     "scripts/canva-linux/**/*.ts",
-    "test/c420ui-action-engine.test.ts",
+    "packages/c420ui/test/c420ui-action-engine.test.ts",
     "test/logging-normalize.test.ts",
     "test/debug-levels.test.ts",
     "test/gpu-diagnostics.test.ts",

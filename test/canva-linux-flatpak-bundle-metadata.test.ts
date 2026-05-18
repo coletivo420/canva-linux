@@ -7,7 +7,7 @@ const REPO_ROOT = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, 
 
 test("Flatpak bundle reuse path does not write checkout metadata sidecar blindly", () => {
   const source = fs.readFileSync(
-    path.join(REPO_ROOT, "scripts/build-flatpak-bundle.sh"),
+    path.join(REPO_ROOT, "packages/c420ui/scripts/build-flatpak-bundle.sh"),
     "utf8",
   );
 

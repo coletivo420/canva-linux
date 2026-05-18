@@ -12,10 +12,13 @@ limited to AppImage. Generated artifact detection must list all declared registr
 without `outputPattern` as not detected. Produced package outputs should leave effective build metadata via installed
 markers or sidecars, and c420ui must prefer that metadata when displaying artifact versions.
 
-All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, build metadata
-resolution, and bootstrap recipes must live under `scripts/c420ui-adapter`. Do not add new c420ui integration modules
-under `scripts/canva-linux`. `npm run check:canva-linux` enforces that c420ui integration modules do not return to
-`scripts/canva-linux`.
+c420ui runtime/build/check/test ownership now lives under `packages/c420ui`. The adapter layer is reserved for Canva Linux integration glue only.
+Detection providers must avoid repeated `package.json` parsing and repeated npm process spawning during UI refresh cycles.
+
+All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, and build
+metadata resolution must live under `scripts/c420ui-adapter`. Bootstrap helpers, checks, package scripts, and package
+tests must live under `packages/c420ui`. Do not add new c420ui integration modules under `scripts/canva-linux`.
+`npm run check:canva-linux` enforces that c420ui integration modules do not return to `scripts/canva-linux`.
 Project registry/config modules may still live under `scripts/canva-linux`; any such module that is bundled into the
 c420ui bootstrap must be covered by the c420ui bootstrap source-hash input list. Build metadata formatting must use
 `electron/main/build-metadata` as the single source of truth; c420ui adapter loaders must not duplicate
@@ -29,13 +32,13 @@ The c420ui input dialog must close via textbox cancel using setImmediate, keepin
 
 Verify metadata installation:
 ```bash
-CANVA_NATIVE_SCOPE=user bash scripts/install-native.sh
+CANVA_NATIVE_SCOPE=user bash packages/c420ui/scripts/install-native.sh
 test -f "$HOME/.local/opt/canva-linux/config/canva-linux/build-metadata.json"
 
-bash scripts/build-appimage.sh
+bash packages/c420ui/scripts/build-appimage.sh
 ls dist/*.AppImage.build-metadata.json
 
-bash scripts/build-flatpak-bundle.sh
+bash packages/c420ui/scripts/build-flatpak-bundle.sh
 ls dist/*.flatpak.build-metadata.json
 ```
 
@@ -43,8 +46,8 @@ ls dist/*.flatpak.build-metadata.json
 Manual generated artifact validation:
 
 ```bash
-bash scripts/build-appimage.sh
-bash scripts/build-flatpak-bundle.sh
+bash packages/c420ui/scripts/build-appimage.sh
+bash packages/c420ui/scripts/build-flatpak-bundle.sh
 ./canva-linux-c420ui-builder
 ```
 
@@ -91,7 +94,7 @@ malformed SIGCONT blocks, or host-dependency validators interleaved into the int
 - `npm run check:c420ui-node-check`
 - `npm run check:c420ui-bootstrap`
 - `npm run check:c420ui-bootstrap-artifacts`
-- `npm run test -- test/c420ui-bootstrap-artifacts.test.ts`
+- `npm run test -- packages/c420ui/test/c420ui-bootstrap-artifacts.test.ts`
 
 Bootstrap PR logs must include these exact success lines after regenerating bootstrap artifacts:
 

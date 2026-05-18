@@ -23,7 +23,7 @@ c420ui orchestrates the related actions through generic workflow contracts.
 ## Implementing files
 
 - `io.github.coletivo420.canva-linux.yml`
-- `scripts/build-flatpak-bundle.sh`
+- `packages/c420ui/scripts/build-flatpak-bundle.sh`
 - `scripts/install-flatpak-local.sh`
 - `scripts/flatpak-build-common.sh`
 - `scripts/validate-flatpak.sh`

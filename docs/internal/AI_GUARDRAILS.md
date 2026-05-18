@@ -15,6 +15,8 @@
 - Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be
   limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or sidecars,
   and c420ui must prefer that metadata when displaying artifact versions.
+- c420ui runtime/build/check/test ownership now lives under `packages/c420ui`. The adapter layer is reserved for Canva Linux integration glue only.
+- Detection providers must avoid repeated `package.json` parsing and repeated npm process spawning during UI refresh cycles.
 - Dev.9 keeps c420ui integration modules under `scripts/c420ui-adapter` while allowing project registry/config modules
   under `scripts/canva-linux`. Any `scripts/canva-linux` module that is still bundled into bootstrap must be covered by
   `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.

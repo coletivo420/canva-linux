@@ -39,7 +39,7 @@ Notes:
 
 The preload bundle is generated automatically before the Electron build used by `./canva-linux-c420ui-builder --install-flatpak` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux-c420ui-builder --bundle-flatpak` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
 
-The lower-level `scripts/build-flatpak-bundle.sh --use-existing-repo` option exists only for explicit local reuse of an already reviewed `repo/`. It should not be used for release publication after source, preload, metadata, or packaging changes.
+The lower-level `packages/c420ui/scripts/build-flatpak-bundle.sh --use-existing-repo` option exists only for explicit local reuse of an already reviewed `repo/`. It should not be used for release publication after source, preload, metadata, or packaging changes.
 
 ## Validation and lint workflow
 
