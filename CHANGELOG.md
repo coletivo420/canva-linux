@@ -5,6 +5,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or sidecars, and c420ui must prefer that metadata when displaying artifact versions.
 
 - Restored the c420ui bootstrap as a TypeScript-generated artifact and hardened artifact validation.
   bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.

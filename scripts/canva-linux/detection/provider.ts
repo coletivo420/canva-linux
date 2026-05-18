@@ -12,8 +12,10 @@ import {
   type c420uiDetectionProbeResult,
   type c420uiOverviewStatus,
   type c420uiOverviewStatusProvider,
+  type CanvaLinuxArtifactFragment,
 } from "../../../packages/c420ui/src/detection";
 import { findCanvaLinuxProjectRoot } from "../project-root";
+import { buildCanvaLinuxArtifactFragments } from "./artifact-fragments";
 
 type CanvaLinuxDetectionCommandRunner = (
   command: string,
@@ -186,18 +188,30 @@ function createInstallDetectionProbe(
   };
 }
 
-function buildInstallations(values: Record<string, string>): c420uiOverviewStatus["installations"] {
+function buildInstallations(
+  values: Record<string, string>,
+  artifactFragments: CanvaLinuxArtifactFragment[] = [],
+): c420uiOverviewStatus["installations"] {
+  const appImageFragment = artifactFragments.find(
+    (fragment) => fragment.kind === "appimage" || fragment.id.includes("appimage"),
+  );
+
   return {
     nativeSystem: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_SYSTEM),
     nativeUser: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_USER),
     flatpakSystem: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_SYSTEM),
     flatpakUser: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_USER),
-    appImageArtifacts: boolFromC420UIDetectionValue(values.DETECTED_APPIMAGE_ARTIFACTS),
+    appImageArtifacts:
+      appImageFragment?.detected ??
+      boolFromC420UIDetectionValue(values.DETECTED_APPIMAGE_ARTIFACTS),
     nativeSystemVersion: values.DETECTED_NATIVE_SYSTEM_VERSION || "",
     nativeUserVersion: values.DETECTED_NATIVE_USER_VERSION || "",
     flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
     flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
-    appImageVersion: values.DETECTED_APPIMAGE_VERSION || "",
+    appImageVersion:
+      appImageFragment?.version ||
+      values.DETECTED_APPIMAGE_VERSION ||
+      "",
     // Detected Installations renderers should prefer *FullVersion fields and
     // fall back to the base *Version fields for older detectors/markers.
     nativeSystemFullVersion:
@@ -217,6 +231,8 @@ function buildInstallations(values: Record<string, string>): c420uiOverviewStatu
       values.DETECTED_FLATPAK_USER_VERSION ||
       "",
     appImageFullVersion:
+      appImageFragment?.fullVersion ||
+      appImageFragment?.version ||
       values.DETECTED_APPIMAGE_FULL_VERSION ||
       values.DETECTED_APPIMAGE_VERSION ||
       "",
@@ -236,12 +252,14 @@ export function createCanvaLinuxDetectionProvider(
       const project = safeProjectMetadata(rootDir);
       const probe = createInstallDetectionProbe(runCommand);
       const detection = probe.run(rootDir);
+      const artifactFragments = buildCanvaLinuxArtifactFragments(rootDir);
       return {
         project,
         installations: {
           ...emptyInstallations,
-          ...buildInstallations(detection.values),
+          ...buildInstallations(detection.values, artifactFragments),
         },
+        artifactFragments,
         warnings: detection.warnings ?? [],
       };
     },

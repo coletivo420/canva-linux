@@ -10,6 +10,16 @@ export type c420uiDetectionProbeResult = {
   warnings?: string[];
 };
 
+export type CanvaLinuxArtifactFragment = {
+  id: string;
+  kind: string;
+  label: string;
+  detected: boolean;
+  path?: string;
+  version?: string;
+  fullVersion?: string;
+};
+
 export type c420uiOverviewProjectStatus = {
   version: string;
   phase: string;
@@ -24,6 +34,7 @@ export type c420uiOverviewStatus = {
   // *FullVersion fields. Renderers should prefer *FullVersion when present
   // and fall back to *Version for older detectors/markers.
   installations: Record<string, boolean | string>;
+  artifactFragments?: CanvaLinuxArtifactFragment[];
   warnings: string[];
 };
 

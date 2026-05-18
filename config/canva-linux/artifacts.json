@@ -58,9 +58,19 @@
       "purgeActionId": "purge"
     },
     {
+      "id": "linux-unpacked",
+      "kind": "custom",
+      "label": "Linux unpacked",
+      "description": "Electron-builder Linux unpacked directory produced before package-specific bundles.",
+      "scope": "release",
+      "buildActionId": "bundle-appimage",
+      "validateActionId": "validate-project",
+      "outputPattern": "dist/linux-unpacked"
+    },
+    {
       "id": "release-tarball",
       "kind": "tarball",
-      "label": "Linux unpacked tarball",
+      "label": "Release tarball",
       "description": "Release tarball generated from the Linux unpacked directory.",
       "scope": "release",
       "releaseActionId": "release-artifacts",

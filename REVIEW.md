@@ -75,6 +75,15 @@ Request changes if a PR closing `0.1.4-15.Dev.9`:
   and App ID surface without an explicit maintainer request;
 - opens Dev.7 work, including OAuth reload implementation, before Dev.6 is merged.
 
+## Dev.9 generated artifact detection review
+
+Request changes if a PR:
+
+- detects generated artifacts from AppImage-only shell probes instead of reading `config/canva-linux/artifacts.json`;
+- omits Flatpak bundle, AppImage, Linux unpacked, release tarball, or SHA256SUMS from c420ui `Generated Artifacts` output when those registry entries exist;
+- stops preferring artifact sidecar or installed-marker effective build metadata over filename-only versions;
+- removes the legacy `appImageArtifacts` fallback before downstream callers have migrated.
+
 ## Agent policy review
 
 Request changes if a PR:
