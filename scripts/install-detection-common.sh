@@ -14,6 +14,11 @@ DETECTED_NATIVE_USER_VERSION=""
 DETECTED_FLATPAK_SYSTEM_VERSION=""
 DETECTED_FLATPAK_USER_VERSION=""
 DETECTED_APPIMAGE_VERSION=""
+DETECTED_NATIVE_SYSTEM_FULL_VERSION=""
+DETECTED_NATIVE_USER_FULL_VERSION=""
+DETECTED_FLATPAK_SYSTEM_FULL_VERSION=""
+DETECTED_FLATPAK_USER_FULL_VERSION=""
+DETECTED_APPIMAGE_FULL_VERSION=""
 
 detect_native_system_install(){ [[ -d /opt/canva-linux || -L /usr/local/bin/${APP_EXECUTABLE} || -f /usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME} ]]; }
 detect_native_user_install(){ [[ -d "${HOME}/.local/opt/canva-linux" || -L "${HOME}/.local/bin/${APP_EXECUTABLE}" || -f "${HOME}/.local/share/applications/${APP_NATIVE_DESKTOP_NAME}" ]]; }
@@ -28,6 +33,18 @@ read_package_json_version(){
   command -v node >/dev/null 2>&1 || return 0
   node -e 'try { const pkg = require(process.argv[1]); if (pkg.version) console.log(pkg.version); } catch {}' "$package_file" 2>/dev/null || true
 }
+read_build_metadata_full_version(){
+  local metadata_file="$1"
+  [[ -f "$metadata_file" ]] || return 0
+  command -v node >/dev/null 2>&1 || return 0
+  node -e 'try { const m = require(process.argv[1]); if (m.fullVersion || m.version) console.log(m.fullVersion || m.version); } catch {}' "$metadata_file" 2>/dev/null || true
+}
+read_build_metadata_base_version(){
+  local metadata_file="$1"
+  [[ -f "$metadata_file" ]] || return 0
+  command -v node >/dev/null 2>&1 || return 0
+  node -e 'try { const m = require(process.argv[1]); if (m.baseVersion || m.basePhase || m.version) console.log(m.baseVersion || m.basePhase || m.version); } catch {}' "$metadata_file" 2>/dev/null || true
+}
 
 find_flatpak_version_marker(){
   local scope_root="$1" marker
@@ -36,30 +53,59 @@ find_flatpak_version_marker(){
   marker="$( [[ -d "${scope_root}/app/${APP_ID}" ]] && find "${scope_root}/app/${APP_ID}" -maxdepth 8 -path '*/active/files/share/canva-linux/version' -type f 2>/dev/null | sort | tail -n1 || true)"
   [[ -n "$marker" ]] && printf '%s\n' "$marker"
 }
-read_flatpak_version_marker(){
-  local marker_file="$1"
+read_flatpak_version_marker_key(){
+  local marker_file="$1" key="$2"
   [[ -f "$marker_file" ]] || return 0
   local raw version
   raw="$(tr -d '\r' < "$marker_file" || true)"
   [[ -n "$raw" ]] || return 0
-  if [[ "$raw" == *\"version\"* ]]; then
-    version="$(printf '%s\n' "$raw" | sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
+  if [[ "$raw" == *\"${key}\"* ]]; then
+    version="$(printf '%s\n' "$raw" | sed -n 's/.*"'"$key"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)"
     [[ -n "$version" ]] && printf '%s\n' "$version"
     return 0
   fi
-  printf '%s\n' "$raw" | head -n1
+}
+read_flatpak_version_marker(){
+  local marker_file="$1" version
+  [[ -f "$marker_file" ]] || return 0
+  version="$(read_flatpak_version_marker_key "$marker_file" "version")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
+  tr -d '\r' < "$marker_file" | head -n1 || true
+}
+read_flatpak_full_version_marker(){
+  local marker_file="$1" version
+  [[ -f "$marker_file" ]] || return 0
+  version="$(read_flatpak_version_marker_key "$marker_file" "fullVersion")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
+  read_flatpak_version_marker "$marker_file"
 }
 detect_native_system_version(){
   local version
+  version="$(read_build_metadata_base_version "/opt/canva-linux/config/canva-linux/build-metadata.json")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
   version="$(read_version_file "/opt/canva-linux/CANVA_LINUX_VERSION")"
   [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
   read_package_json_version "/opt/canva-linux/package.json"
 }
 detect_native_user_version(){
   local version
+  version="$(read_build_metadata_base_version "${HOME}/.local/opt/canva-linux/config/canva-linux/build-metadata.json")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
   version="$(read_version_file "${HOME}/.local/opt/canva-linux/CANVA_LINUX_VERSION")"
   [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
   read_package_json_version "${HOME}/.local/opt/canva-linux/package.json"
+}
+detect_native_system_full_version(){
+  local version
+  version="$(read_build_metadata_full_version "/opt/canva-linux/config/canva-linux/build-metadata.json")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
+  detect_native_system_version
+}
+detect_native_user_full_version(){
+  local version
+  version="$(read_build_metadata_full_version "${HOME}/.local/opt/canva-linux/config/canva-linux/build-metadata.json")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
+  detect_native_user_version
 }
 detect_flatpak_system_version(){
   local marker version
@@ -77,13 +123,37 @@ detect_flatpak_user_version(){
   command -v flatpak >/dev/null 2>&1 || return 0
   flatpak --user info "${APP_ID}" --show-version 2>/dev/null || true
 }
+detect_flatpak_system_full_version(){
+  local marker version
+  marker="$(find_flatpak_version_marker "/var/lib/flatpak" || true)"
+  version="$(read_flatpak_full_version_marker "$marker")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
+  detect_flatpak_system_version
+}
+detect_flatpak_user_full_version(){
+  local marker version
+  marker="$(find_flatpak_version_marker "${HOME}/.local/share/flatpak" || true)"
+  version="$(read_flatpak_full_version_marker "$marker")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
+  detect_flatpak_user_version
+}
 detect_appimage_version(){
-  local file name
+  local metadata version file name
+  metadata="$(find dist -maxdepth 3 -path '*/resources/config/canva-linux/build-metadata.json' -type f 2>/dev/null | sort | tail -n1 || true)"
+  version="$(read_build_metadata_base_version "$metadata")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
   file="$(find dist -maxdepth 1 -type f -name '*.AppImage' 2>/dev/null | sort | tail -n1 || true)"
   [[ -n "$file" ]] || return 0
   name="$(basename "$file")"
-  [[ "$name" =~ ^canva-linux-([0-9]+\.[0-9]+\.[0-9]+[-.a-zA-Z0-9]*)-[^-]+\.AppImage$ ]] || return 0
+  [[ "$name" =~ ^canva-linux-([0-9]+\.[0-9]+\.[0-9]+[-+.a-zA-Z0-9]*)-[^-]+\.AppImage$ ]] || return 0
   printf '%s\n' "${BASH_REMATCH[1]}"
+}
+detect_appimage_full_version(){
+  local metadata version
+  metadata="$(find dist -maxdepth 3 -path '*/resources/config/canva-linux/build-metadata.json' -type f 2>/dev/null | sort | tail -n1 || true)"
+  version="$(read_build_metadata_full_version "$metadata")"
+  [[ -n "$version" ]] && { printf '%s\n' "$version"; return 0; }
+  detect_appimage_version
 }
 
 detect_installations(){
@@ -97,6 +167,11 @@ detect_installations(){
   DETECTED_FLATPAK_SYSTEM_VERSION="$(detect_flatpak_system_version)"
   DETECTED_FLATPAK_USER_VERSION="$(detect_flatpak_user_version)"
   DETECTED_APPIMAGE_VERSION="$(detect_appimage_version)"
+  DETECTED_NATIVE_SYSTEM_FULL_VERSION="$(detect_native_system_full_version)"
+  DETECTED_NATIVE_USER_FULL_VERSION="$(detect_native_user_full_version)"
+  DETECTED_FLATPAK_SYSTEM_FULL_VERSION="$(detect_flatpak_system_full_version)"
+  DETECTED_FLATPAK_USER_FULL_VERSION="$(detect_flatpak_user_full_version)"
+  DETECTED_APPIMAGE_FULL_VERSION="$(detect_appimage_full_version)"
 
 }
 
@@ -110,25 +185,25 @@ print_detected_installations(){
     if [[ "$DETECTED_NATIVE_SYSTEM" == true ]]; then
       echo "[1] Native Install — system"
       echo "    /opt/canva-linux"
-      echo "    $(format_detected_status true "$DETECTED_NATIVE_SYSTEM_VERSION")"
+      echo "    $(format_detected_status true "${DETECTED_NATIVE_SYSTEM_FULL_VERSION:-$DETECTED_NATIVE_SYSTEM_VERSION}")"
       echo
     fi
     if [[ "$DETECTED_NATIVE_USER" == true ]]; then
       echo "[2] Native Install — user"
       echo "    ~/.local/opt/canva-linux"
-      echo "    $(format_detected_status true "$DETECTED_NATIVE_USER_VERSION")"
+      echo "    $(format_detected_status true "${DETECTED_NATIVE_USER_FULL_VERSION:-$DETECTED_NATIVE_USER_VERSION}")"
       echo
     fi
     if [[ "$DETECTED_FLATPAK_SYSTEM" == true ]]; then
       echo "[3] Flatpak Install — system"
       echo "    ${APP_ID}"
-      echo "    $(format_detected_status true "$DETECTED_FLATPAK_SYSTEM_VERSION")"
+      echo "    $(format_detected_status true "${DETECTED_FLATPAK_SYSTEM_FULL_VERSION:-$DETECTED_FLATPAK_SYSTEM_VERSION}")"
       echo
     fi
     if [[ "$DETECTED_FLATPAK_USER" == true ]]; then
       echo "[4] Flatpak Install — user"
       echo "    ${APP_ID}"
-      echo "    $(format_detected_status true "$DETECTED_FLATPAK_USER_VERSION")"
+      echo "    $(format_detected_status true "${DETECTED_FLATPAK_USER_FULL_VERSION:-$DETECTED_FLATPAK_USER_VERSION}")"
       echo
     fi
   else
@@ -169,6 +244,11 @@ print_detection_status_env(){
   printf 'DETECTED_FLATPAK_SYSTEM_VERSION=%s\n' "$DETECTED_FLATPAK_SYSTEM_VERSION"
   printf 'DETECTED_FLATPAK_USER_VERSION=%s\n' "$DETECTED_FLATPAK_USER_VERSION"
   printf 'DETECTED_APPIMAGE_VERSION=%s\n' "$DETECTED_APPIMAGE_VERSION"
+  printf 'DETECTED_NATIVE_SYSTEM_FULL_VERSION=%s\n' "$DETECTED_NATIVE_SYSTEM_FULL_VERSION"
+  printf 'DETECTED_NATIVE_USER_FULL_VERSION=%s\n' "$DETECTED_NATIVE_USER_FULL_VERSION"
+  printf 'DETECTED_FLATPAK_SYSTEM_FULL_VERSION=%s\n' "$DETECTED_FLATPAK_SYSTEM_FULL_VERSION"
+  printf 'DETECTED_FLATPAK_USER_FULL_VERSION=%s\n' "$DETECTED_FLATPAK_USER_FULL_VERSION"
+  printf 'DETECTED_APPIMAGE_FULL_VERSION=%s\n' "$DETECTED_APPIMAGE_FULL_VERSION"
 }
 
 print_detected_installations_compact(){
@@ -185,9 +265,9 @@ print_detected_installations_compact(){
     fi
   }
   echo "Detected Installations"
-  echo "  Native System:   $(fmt_status "$DETECTED_NATIVE_SYSTEM" "$DETECTED_NATIVE_SYSTEM_VERSION")"
-  echo "  Native User:     $(fmt_status "$DETECTED_NATIVE_USER" "$DETECTED_NATIVE_USER_VERSION")"
-  echo "  Flatpak System:  $(fmt_status "$DETECTED_FLATPAK_SYSTEM" "$DETECTED_FLATPAK_SYSTEM_VERSION")"
-  echo "  Flatpak User:    $(fmt_status "$DETECTED_FLATPAK_USER" "$DETECTED_FLATPAK_USER_VERSION")"
-  echo "  AppImage:        $(fmt_status "$DETECTED_APPIMAGE_ARTIFACTS" "$DETECTED_APPIMAGE_VERSION")"
+  echo "  Native System:   $(fmt_status "$DETECTED_NATIVE_SYSTEM" "${DETECTED_NATIVE_SYSTEM_FULL_VERSION:-$DETECTED_NATIVE_SYSTEM_VERSION}")"
+  echo "  Native User:     $(fmt_status "$DETECTED_NATIVE_USER" "${DETECTED_NATIVE_USER_FULL_VERSION:-$DETECTED_NATIVE_USER_VERSION}")"
+  echo "  Flatpak System:  $(fmt_status "$DETECTED_FLATPAK_SYSTEM" "${DETECTED_FLATPAK_SYSTEM_FULL_VERSION:-$DETECTED_FLATPAK_SYSTEM_VERSION}")"
+  echo "  Flatpak User:    $(fmt_status "$DETECTED_FLATPAK_USER" "${DETECTED_FLATPAK_USER_FULL_VERSION:-$DETECTED_FLATPAK_USER_VERSION}")"
+  echo "  AppImage:        $(fmt_status "$DETECTED_APPIMAGE_ARTIFACTS" "${DETECTED_APPIMAGE_FULL_VERSION:-$DETECTED_APPIMAGE_VERSION}")"
 }

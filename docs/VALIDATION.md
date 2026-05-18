@@ -1,4 +1,4 @@
-# Validation Checklist (0.1.4-15.Dev.8)
+# Validation Checklist (0.1.4-15.Dev.9)
 
 ## Dev.8 pinned home tab-strip guardrail
 
@@ -55,19 +55,26 @@ For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDE
 
 Current target:
 
-- Version: `0.1.4-15.Dev.8 (Alpha)`
-- Release: `v0.1.4-15.Dev.8`
+- Version: `0.1.4-15.Dev.9 (Alpha)`
+- Release: `v0.1.4-15.Dev.9`
 - Versioning rule: `N.N.N-X` with optional `.Dev.N` development phase suffixes
+
+## Detected Installations version visibility
+
+The c420ui `Detected Installations` panel must prefer detected effective/hashed version fields (`*FullVersion`) when
+they are available, then fall back to the base detected version fields for older native, Flatpak, or AppImage markers.
+For example, a Flatpak system install with build metadata should render `v0.1.4-15.Dev.9+g<hash>`, while a legacy marker
+that only exposes `version` should continue rendering `v0.1.4-15.Dev.9`.
 
 ## Release metadata checks
 
 The validation baseline protects these release facts:
 
-- `package.json` version is `0.1.4-15.Dev.8`.
-- `package-lock.json` top-level version is `0.1.4-15.Dev.8`.
-- `package-lock.json` root package version is `0.1.4-15.Dev.8`.
+- `package.json` version is `0.1.4-15.Dev.9`.
+- `package-lock.json` top-level version is `0.1.4-15.Dev.9`.
+- `package-lock.json` root package version is `0.1.4-15.Dev.9`.
 - `data/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
-- Active release docs point to `v0.1.4-15.Dev.8`.
+- Active release docs point to `v0.1.4-15.Dev.9`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 
 ## Validation tiers
@@ -213,7 +220,7 @@ Generated dependency source manifests may retain platform package names that con
 - Confirm `./canva-linux-c420ui-builder --canva-debug=1` is rejected because runtime flags belong to the compiled runtime app.
 - Confirm runtime `electron . --help` and `electron . --canva-debug=1` remain runtime-owned.
 - Confirm `flatpak run io.github.coletivo420.canva-linux --debug=1` fails with the reserved Electron/Node flag message before the runtime starts.
-- Confirm `Release: v0.1.4-15.Dev.8` appears in current release docs.
+- Confirm `Release: v0.1.4-15.Dev.9` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.

@@ -65,9 +65,14 @@ const detectionVersionFields = [
   "flatpakSystemVersion",
   "flatpakUserVersion",
   "appImageVersion",
+  "nativeSystemFullVersion",
+  "nativeUserFullVersion",
+  "flatpakSystemFullVersion",
+  "flatpakUserFullVersion",
+  "appImageFullVersion",
 ];
 
-const currentReleaseVersion = "0.1.4-15.Dev.8";
+const currentReleaseVersion = "0.1.4-15.Dev.9";
 const currentReleaseDate = "2026-05-16";
 const previousReleaseVersion = "0.1.4-12";
 const releaseVersionPattern = /^\d+\.\d+\.\d+-\d+(?:\.Dev\.\d+)?$/;
@@ -1816,6 +1821,7 @@ function checkDetectionProviderContract(failures: string[]): void {
     "scripts/install-detection-common.sh",
     "parseC420UIDetectionKeyValueLines",
     "DETECTED_NATIVE_SYSTEM",
+    "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
     "io.github.coletivo420.canva-linux",
     "canva-linux",
     "https://github.com/coletivo420/canva-linux",
@@ -1847,6 +1853,29 @@ function checkDetectionProviderContract(failures: string[]): void {
   }
   if (packageJson.includes("scripts/core/overview-status.ts")) {
     failures.push("package.json build:scripts-core must not compile overview-status.ts");
+  }
+
+  const detectionShellPath = "scripts/install-detection-common.sh";
+  const detectionShell = readProjectFile(rootDir, detectionShellPath);
+  if (!detectionShell.includes("DETECTED_FLATPAK_SYSTEM_FULL_VERSION")) {
+    failures.push(`${detectionShellPath}: must print DETECTED_FLATPAK_SYSTEM_FULL_VERSION`);
+  }
+
+  const terminalSummaryPath = "packages/c420ui/src/terminal/detected-installations-summary.ts";
+  const terminalSummary = readProjectFile(rootDir, terminalSummaryPath);
+  const fullIndex = terminalSummary.indexOf("flatpakSystemFullVersion");
+  const baseIndex = terminalSummary.indexOf("flatpakSystemVersion");
+  if (fullIndex === -1 || baseIndex === -1 || fullIndex > baseIndex) {
+    failures.push(`${terminalSummaryPath}: must prefer flatpakSystemFullVersion before flatpakSystemVersion`);
+  }
+  const terminalApp = readProjectFile(rootDir, "packages/c420ui/src/terminal/app.ts");
+  if (!terminalApp.includes("formatDetectedInstallationsSummary")) {
+    failures.push("packages/c420ui/src/terminal/app.ts: must render Detected Installations through the shared formatter");
+  }
+
+  const validationDocs = readProjectFile(rootDir, "docs/VALIDATION.md");
+  if (!validationDocs.includes("Detected Installations") || !validationDocs.includes("effective/hashed")) {
+    failures.push("docs/VALIDATION.md: must document Detected Installations effective/hashed version preference");
   }
 }
 

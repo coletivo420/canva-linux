@@ -135,3 +135,20 @@ test("provider ignores unknown detected keys", () => {
     assert.equal("DETECTED_UNKNOWN" in status.installations, false);
   });
 });
+
+test("provider maps detected full versions from stdout", () => {
+  withProjectRoot((rootDir) => {
+    const runCommand: FakeRunCommand = () =>
+      fakeResult({
+        stdout: [
+          "DETECTED_FLATPAK_SYSTEM=true",
+          "DETECTED_FLATPAK_SYSTEM_VERSION=0.1.4-15.Dev.9",
+          "DETECTED_FLATPAK_SYSTEM_FULL_VERSION=0.1.4-15.Dev.9+gabc1234",
+        ].join("\n"),
+      });
+    const status = createCanvaLinuxDetectionProvider({ runCommand }).buildOverviewStatus(rootDir) as c420uiOverviewStatus;
+
+    assert.equal(status.installations.flatpakSystemVersion, "0.1.4-15.Dev.9");
+    assert.equal(status.installations.flatpakSystemFullVersion, "0.1.4-15.Dev.9+gabc1234");
+  });
+});

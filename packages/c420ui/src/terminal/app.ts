@@ -11,6 +11,7 @@ import {
   type InputDialogResult,
 } from "./modal";
 import { c420uiTheme } from "./theme";
+import { formatDetectedInstallationsSummary } from "./detected-installations-summary";
 import { copyTextToClipboard } from "./clipboard";
 import {
   loadToolSettings,
@@ -765,33 +766,6 @@ export function createApp(options: C420UIAppOptions) {
   let overviewDetectionPromise: Promise<c420uiOverviewStatus | null> | null = null;
   let overviewDetectionError: string | null = null;
 
-  const detectedSummary = (s: c420uiOverviewStatus | null) => {
-    if (!s) {
-      return [
-        `  Native Install: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
-        `  Flatpak Install: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
-        `  AppImage artifacts: {${c420uiTheme.colors.appImageLoading}-fg}loading...{/${c420uiTheme.colors.appImageLoading}-fg}`,
-      ];
-    }
-    const i = s.installations;
-    const fmt = (detected: boolean, version: string | boolean | undefined) => {
-      if (!detected) {
-        return `{${c420uiTheme.colors.statusNotDetected}-fg}not detected{/${c420uiTheme.colors.statusNotDetected}-fg}`;
-      }
-      const v =
-        typeof version === "string" && version.trim()
-          ? `v${version.trim().replace(/^v/, "")}`
-          : "version unknown";
-      return `{${c420uiTheme.colors.statusDetected}-fg}detected{/${c420uiTheme.colors.statusDetected}-fg}      ${v}`;
-    };
-    return [
-      `  Native System: ${fmt(Boolean(i.nativeSystem), i.nativeSystemVersion)}`,
-      `  Native User: ${fmt(Boolean(i.nativeUser), i.nativeUserVersion)}`,
-      `  Flatpak System: ${fmt(Boolean(i.flatpakSystem), i.flatpakSystemVersion)}`,
-      `  Flatpak User: ${fmt(Boolean(i.flatpakUser), i.flatpakUserVersion)}`,
-      `  AppImage: ${fmt(Boolean(i.appImageArtifacts), i.appImageVersion)}`,
-    ];
-  };
 
   function renderDiagnosticsBox() {
     if (overviewDetectionError) {
@@ -800,7 +774,7 @@ export function createApp(options: C420UIAppOptions) {
       );
       return;
     }
-    diagnostics.setContent(detectedSummary(overviewStatus).join("\n"));
+    diagnostics.setContent(formatDetectedInstallationsSummary(overviewStatus, c420uiTheme.colors).join("\n"));
   }
 
   function refreshDetectedInstallations(

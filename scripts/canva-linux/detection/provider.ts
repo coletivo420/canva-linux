@@ -52,6 +52,11 @@ const canvaLinuxDetectionKeys = [
   "DETECTED_FLATPAK_SYSTEM_VERSION",
   "DETECTED_FLATPAK_USER_VERSION",
   "DETECTED_APPIMAGE_VERSION",
+  "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
+  "DETECTED_NATIVE_USER_FULL_VERSION",
+  "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
+  "DETECTED_FLATPAK_USER_FULL_VERSION",
+  "DETECTED_APPIMAGE_FULL_VERSION",
 ] as const;
 
 const emptyInstallations = {
@@ -65,6 +70,11 @@ const emptyInstallations = {
   flatpakSystemVersion: "",
   flatpakUserVersion: "",
   appImageVersion: "",
+  nativeSystemFullVersion: "",
+  nativeUserFullVersion: "",
+  flatpakSystemFullVersion: "",
+  flatpakUserFullVersion: "",
+  appImageFullVersion: "",
 };
 
 function readPackage(rootDir: string): PackageJson {
@@ -184,6 +194,28 @@ function buildInstallations(values: Record<string, string>): c420uiOverviewStatu
     flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
     flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
     appImageVersion: values.DETECTED_APPIMAGE_VERSION || "",
+    // Detected Installations renderers should prefer *FullVersion fields and
+    // fall back to the base *Version fields for older detectors/markers.
+    nativeSystemFullVersion:
+      values.DETECTED_NATIVE_SYSTEM_FULL_VERSION ||
+      values.DETECTED_NATIVE_SYSTEM_VERSION ||
+      "",
+    nativeUserFullVersion:
+      values.DETECTED_NATIVE_USER_FULL_VERSION ||
+      values.DETECTED_NATIVE_USER_VERSION ||
+      "",
+    flatpakSystemFullVersion:
+      values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION ||
+      values.DETECTED_FLATPAK_SYSTEM_VERSION ||
+      "",
+    flatpakUserFullVersion:
+      values.DETECTED_FLATPAK_USER_FULL_VERSION ||
+      values.DETECTED_FLATPAK_USER_VERSION ||
+      "",
+    appImageFullVersion:
+      values.DETECTED_APPIMAGE_FULL_VERSION ||
+      values.DETECTED_APPIMAGE_VERSION ||
+      "",
   };
 }
 
