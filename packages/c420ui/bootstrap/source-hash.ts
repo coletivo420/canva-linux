@@ -7,6 +7,9 @@ export const C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM = "sha256" as const;
 export const C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS = [
   "packages/c420ui/src",
   "packages/c420ui/bootstrap",
+  "packages/c420ui/scripts",
+  "packages/c420ui/checks",
+  "packages/c420ui/test",
   "scripts/c420ui-adapter",
   "scripts/canva-linux/actions",
   "scripts/canva-linux/artifacts",

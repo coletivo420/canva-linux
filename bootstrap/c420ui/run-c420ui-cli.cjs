@@ -1378,6 +1378,34 @@ function readPackage(rootDir) {
   };
   return packageJson;
 }
+function readPackageDependencyVersion(rootDir, name) {
+  const packageJson = readPackage(rootDir);
+  return packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name];
+}
+function normalizeSemverRange(range) {
+  if (!range) return void 0;
+  return range.replace(/[\^~><=]/g, "").split(" ")[0];
+}
+function readNodeVersion(rootDir) {
+  const packageJson = readPackage(rootDir);
+  return normalizeSemverRange(packageJson.engines?.node) ?? process.versions.node;
+}
+var readNpmVersion = /* @__PURE__ */ (() => {
+  let cached;
+  let attempted = false;
+  return () => {
+    if (attempted) {
+      return cached;
+    }
+    attempted = true;
+    try {
+      cached = (0, import_node_child_process3.execFileSync)("npm", ["--version"], { encoding: "utf8" }).trim();
+      return cached;
+    } catch {
+      return void 0;
+    }
+  };
+})();
 var canvaLinuxDetectionKeys = [
   "DETECTED_NATIVE_SYSTEM",
   "DETECTED_NATIVE_USER",
@@ -1529,6 +1557,13 @@ function createCanvaLinuxDetectionProvider(options = {}) {
       const artifactFragments = buildCanvaLinuxArtifactFragments(rootDir);
       return {
         project,
+        runtime: {
+          electronVersion: normalizeSemverRange(
+            readPackageDependencyVersion(rootDir, "electron")
+          ) ?? "unknown",
+          nodeVersion: readNodeVersion(rootDir),
+          npmVersion: readNpmVersion() ?? "unknown"
+        },
         installations: {
           ...emptyInstallations,
           ...buildInstallations(detection.values, artifactFragments)
@@ -1552,18 +1587,13 @@ var UNKNOWN_BASE_VERSION = "0.0.0";
 var UNKNOWN_BUILD_REVISION = "unknown";
 function loadBuildMetadataModule(rootDir) {
   const requireFromRoot = (0, import_node_module.createRequire)(import_node_path6.default.join(rootDir, "package.json"));
-  const candidates = [
-    import_node_path6.default.join(rootDir, ".build/electron/main/build-metadata.js"),
-    import_node_path6.default.join(rootDir, "electron/main/build-metadata.ts")
-  ];
-  for (const candidate of candidates) {
-    try {
-      return requireFromRoot(candidate);
-    } catch {
-      continue;
-    }
+  const compiledModule = import_node_path6.default.join(rootDir, ".build/electron/main/build-metadata.js");
+  if (!import_node_fs4.default.existsSync(compiledModule)) return null;
+  try {
+    return requireFromRoot(compiledModule);
+  } catch {
+    return null;
   }
-  throw new Error("Unable to load electron/main/build-metadata module");
 }
 function readJsonFile2(filePath) {
   try {
@@ -1624,6 +1654,18 @@ function loadPackagedMetadata(rootDir, metadataModule) {
 }
 function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule) {
   const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path6.default.resolve(rootDir));
+  if (!module2) {
+    return {
+      baseVersion: UNKNOWN_BASE_VERSION,
+      baseDisplayVersion: UNKNOWN_BASE_VERSION,
+      basePhase: UNKNOWN_BASE_VERSION,
+      buildRevision: UNKNOWN_BUILD_REVISION,
+      version: UNKNOWN_BASE_VERSION,
+      displayVersion: UNKNOWN_BASE_VERSION,
+      phase: UNKNOWN_BASE_VERSION,
+      fullVersion: UNKNOWN_BASE_VERSION
+    };
+  }
   return module2.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
@@ -1634,6 +1676,12 @@ function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule)
 function loadEffectiveBuildMetadata(rootDir) {
   const resolvedRootDir = import_node_path6.default.resolve(rootDir);
   const metadataModule = loadBuildMetadataModule(resolvedRootDir);
+  if (!metadataModule) {
+    const packaged = readJsonFile2(
+      import_node_path6.default.join(resolvedRootDir, "config", "canva-linux", "build-metadata.json")
+    );
+    return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
+  }
   const envRevision = resolveEnvBuildRevision();
   if (envRevision) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision, metadataModule);
