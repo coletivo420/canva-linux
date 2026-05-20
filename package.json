@@ -59,7 +59,11 @@
     "check:c420ui-bootstrap": "npm run build:c420ui-checks && node .build/packages/c420ui/checks/check-bootstrap.js",
     "check:c420ui-bootstrap-artifacts": "npm run build:c420ui-checks && node .build/packages/c420ui/checks/check-artifact-gate.js",
     "build:metadata": "npm run run:ts -- scripts/generate-build-metadata.ts",
-    "check:c420ui-node-check": "npm run build:c420ui-checks && node .build/packages/c420ui/checks/check-node.js"
+    "check:c420ui-node-check": "npm run build:c420ui-checks && node .build/packages/c420ui/checks/check-node.js",
+    "test:c420ui": "npm run test -- packages/c420ui/test",
+    "c420ui:install-native": "bash packages/c420ui/scripts/install-native.sh",
+    "c420ui:build-appimage": "bash packages/c420ui/scripts/build-appimage.sh",
+    "c420ui:build-flatpak-bundle": "bash packages/c420ui/scripts/build-flatpak-bundle.sh"
   },
   "build": {
     "appId": "io.github.coletivo420.canva-linux",

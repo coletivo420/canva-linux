@@ -3,7 +3,7 @@ set -euo pipefail
 # packages/c420ui/scripts/build-flatpak-bundle.sh - Generate a distributable Flatpak bundle on demand.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 cd "$REPO_ROOT"
 
 source "${SCRIPT_DIR}/ui-common.sh"
