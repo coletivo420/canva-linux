@@ -1964,14 +1964,14 @@ function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
   if (!adapterSource.includes('./detection/provider')) {
     failures.push("scripts/c420ui-adapter/adapter.ts: must import ./detection/provider");
   }
-  if (!bootstrapSource.includes('./c420ui-adapter/build-metadata-loader')) {
-    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ./c420ui-adapter/build-metadata-loader");
+  if (!bootstrapSource.includes("../../scripts/c420ui-adapter/build-metadata-loader")) {
+    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ../../scripts/c420ui-adapter/build-metadata-loader");
   }
-  if (!bootstrapSource.includes('../packages/c420ui/bootstrap/build-recipe')) {
-    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ../packages/c420ui/bootstrap/build-recipe");
+  if (!bootstrapSource.includes("../bootstrap/build-recipe")) {
+    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ../bootstrap/build-recipe");
   }
-  if (!bootstrapSource.includes('../packages/c420ui/bootstrap/source-hash')) {
-    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ../packages/c420ui/bootstrap/source-hash");
+  if (!bootstrapSource.includes("../bootstrap/source-hash")) {
+    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ../bootstrap/source-hash");
   }
 
   const sourceHashPath = "packages/c420ui/bootstrap/source-hash.ts";
