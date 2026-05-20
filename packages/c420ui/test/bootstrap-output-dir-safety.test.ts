@@ -41,3 +41,17 @@ test("accepts tmp/c420ui-* staging directory", () => {
   const tmpDir = path.join(os.tmpdir(), "c420ui-staging");
   assert.doesNotThrow(() => assertSafeBootstrapOutputDir(rootDir, tmpDir));
 });
+
+
+test("rejects invalid directory name inside repository", () => {
+  const rootDir = path.resolve("/tmp/c420ui-safety-root");
+
+  assert.throws(
+    () =>
+      assertSafeBootstrapOutputDir(
+        rootDir,
+        path.join(rootDir, "bootstrap", "other"),
+      ),
+    /c420ui bootstrap output must be a dedicated c420ui directory/,
+  );
+});

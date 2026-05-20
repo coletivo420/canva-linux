@@ -326,6 +326,13 @@ export function createCanvaLinuxDetectionProvider(
       const artifactFragments = buildCanvaLinuxArtifactFragments(rootDir);
       return {
         project,
+        runtime: {
+          electronVersion: normalizeSemverRange(
+            readPackageDependencyVersion(rootDir, "electron"),
+          ) ?? "unknown",
+          nodeVersion: readNodeVersion(rootDir),
+          npmVersion: readNpmVersion() ?? "unknown",
+        },
         installations: {
           ...emptyInstallations,
           ...buildInstallations(detection.values, artifactFragments),

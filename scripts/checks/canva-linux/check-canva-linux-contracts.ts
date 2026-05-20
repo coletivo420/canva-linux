@@ -497,6 +497,26 @@ function validateC420UIPackageStructuralContract(rootDir: string, failures: stri
     }
   }
 
+  const legacyScriptPaths = [
+    "scripts/install-native.sh",
+    "scripts/build-appimage.sh",
+    "scripts/build-flatpak-bundle.sh",
+    "scripts/install-detection-common.sh",
+    "scripts/build-metadata-marker-common.sh",
+  ];
+  if (legacyScriptPaths.some((legacyPath) => fs.existsSync(path.join(rootDir, legacyPath)))) {
+    failures.push("c420ui-owned scripts must live under packages/c420ui/scripts.");
+    failures.push("Legacy c420ui paths are not supported.");
+  }
+
+  if (fs.existsSync(path.join(rootDir, "test"))) {
+    const legacyTests = fs.readdirSync(path.join(rootDir, "test")).filter((name) => /^c420ui-.*\.test\.ts$/.test(name));
+    if (legacyTests.length > 0) {
+      failures.push("c420ui-owned tests must live under packages/c420ui/test.");
+      failures.push("Legacy c420ui paths are not supported.");
+    }
+  }
+
   const providerPath = "scripts/c420ui-adapter/detection/provider.ts";
   const provider = readOptionalProjectFile(rootDir, providerPath) ?? "";
   if (!provider.includes("readPackage(rootDir)") || !provider.includes("cachedPackageJson")) {
