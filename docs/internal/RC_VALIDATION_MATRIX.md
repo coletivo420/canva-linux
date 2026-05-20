@@ -120,8 +120,8 @@ Run these only in an environment with the required packaging dependencies. If de
 
 | Command | Status | Expected result | Failure meaning | Owner domain |
 | --- | --- | --- | --- | --- |
-| `./scripts/build-appimage.sh` | Blocked: environment lacks AppImage tooling | Builds the AppImage artifact for `0.1.4-15.Dev.9` with the generated architecture string preserved in the artifact name. | AppImage build prerequisites, packaging scripts, release metadata, or artifact naming may be broken. | release metadata |
-| `./scripts/build-flatpak-bundle.sh` | Blocked: environment lacks `flatpak` | Builds the Flatpak bundle for `0.1.4-15.Dev.9` with AppStream metadata and generated architecture naming intact. | Flatpak build prerequisites, packaging scripts, AppStream metadata, or artifact naming may be broken. | release metadata |
+| `./packages/c420ui/scripts/build-appimage.sh` | Blocked: environment lacks AppImage tooling | Builds the AppImage artifact for `0.1.4-15.Dev.9` with the generated architecture string preserved in the artifact name. | AppImage build prerequisites, packaging scripts, release metadata, or artifact naming may be broken. | release metadata |
+| `./packages/c420ui/scripts/build-flatpak-bundle.sh` | Blocked: environment lacks `flatpak` | Builds the Flatpak bundle for `0.1.4-15.Dev.9` with AppStream metadata and generated architecture naming intact. | Flatpak build prerequisites, packaging scripts, AppStream metadata, or artifact naming may be broken. | release metadata |
 | `./scripts/validate-flatpak.sh` | Blocked: environment lacks `flatpak`, `appstreamcli`, and `desktop-file-validate` | Validates Flatpak metadata and bundle policy for the current release candidate. | Flatpak metadata, AppStream, desktop integration, or bundle validation policy may have regressed. | release metadata |
 
 ## RC validation execution log

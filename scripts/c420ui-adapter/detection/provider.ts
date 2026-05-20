@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   spawnSync,
+  execFileSync,
   type SpawnSyncOptionsWithStringEncoding,
   type SpawnSyncReturns,
 } from "node:child_process";
@@ -38,10 +39,86 @@ type CanvaLinuxOverviewStatusProvider = Omit<
   buildOverviewStatus(rootDir: string): c420uiOverviewStatus;
 };
 
-type PackageJson = {
+export type ProjectPackageJson = {
   version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  engines?: {
+    node?: string;
+    npm?: string;
+  };
   repository?: { url?: string } | string;
 };
+
+let cachedPackageJson:
+  | {
+      rootDir: string;
+      packageJson: ProjectPackageJson;
+    }
+  | undefined;
+
+export function readPackage(rootDir: string): ProjectPackageJson {
+  if (cachedPackageJson?.rootDir === rootDir) {
+    return cachedPackageJson.packageJson;
+  }
+
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
+  ) as ProjectPackageJson;
+
+  cachedPackageJson = {
+    rootDir,
+    packageJson,
+  };
+
+  return packageJson;
+}
+
+export function readPackageDependencyVersion(
+  rootDir: string,
+  name: string,
+): string | undefined {
+  const packageJson = readPackage(rootDir);
+
+  return (
+    packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name]
+  );
+}
+
+function normalizeSemverRange(range: string | undefined): string | undefined {
+  if (!range) return undefined;
+  // Simple normalization: remove ^, ~, >, <, =
+  return range.replace(/[\^~><=]/g, "").split(" ")[0];
+}
+
+export function readNodeVersion(rootDir: string): string | undefined {
+  const packageJson = readPackage(rootDir);
+
+  return (
+    normalizeSemverRange(packageJson.engines?.node) ?? process.versions.node
+  );
+}
+
+export const readNpmVersion = (() => {
+  let cached: string | undefined;
+  let attempted = false;
+
+  return (): string | undefined => {
+    if (attempted) {
+      return cached;
+    }
+
+    attempted = true;
+
+    try {
+      cached = execFileSync("npm", ["--version"], { encoding: "utf8" }).trim();
+
+      return cached;
+    } catch {
+      return undefined;
+    }
+  };
+})();
 
 const canvaLinuxDetectionKeys = [
   "DETECTED_NATIVE_SYSTEM",
@@ -83,12 +160,6 @@ const emptyInstallations = {
   appImageFullVersion: "",
 };
 
-function readPackage(rootDir: string): PackageJson {
-  return JSON.parse(
-    fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
-  ) as PackageJson;
-}
-
 function readPhase(rootDir: string): string {
   const content = fs.readFileSync(
     path.join(rootDir, "scripts/app-identity-common.sh"),
@@ -125,7 +196,7 @@ function safeProjectMetadata(rootDir: string): c420uiOverviewStatus["project"] {
 
 function detectionCommand(): string {
   return [
-    "source scripts/install-detection-common.sh",
+    "source packages/c420ui/scripts/install-detection-common.sh",
     "detect_installations",
     "print_detection_status_env",
   ].join("\n");

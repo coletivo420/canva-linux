@@ -102,7 +102,7 @@ for script in \
   canva-linux-c420ui-builder \
   scripts/flatpak-build-common.sh \
   scripts/install-flatpak-local.sh \
-  scripts/build-flatpak-bundle.sh \
+  packages/c420ui/scripts/build-flatpak-bundle.sh \
   scripts/validate-flatpak.sh; do
   info "Checking ${script} syntax"
   bash -n "$script"

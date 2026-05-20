@@ -13,12 +13,12 @@ import {
   createC420UIBootstrapBuildOptions,
   C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
-} from "./c420ui-adapter/bootstrap/build-recipe";
+} from "../packages/c420ui/bootstrap/build-recipe";
 import {
   calculateC420UIBootstrapSourceHash,
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
-} from "./c420ui-adapter/bootstrap/source-hash";
+} from "../packages/c420ui/bootstrap/source-hash";
 import { loadEffectiveBuildMetadata } from "./c420ui-adapter/build-metadata-loader";
 
 type PackageJson = {

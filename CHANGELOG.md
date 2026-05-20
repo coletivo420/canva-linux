@@ -5,10 +5,16 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- Refactored c420ui tooling: moved c420ui-owned runtime/build/check/test ownership, bootstrap helpers,
+  shell helpers, and tests into `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is now
+  integration-only.
+- Optimized detection provider: consolidated `package.json` reading with caching and implemented closure-based
+  caching for `npm --version` to improve terminal interface refresh performance.
+
 - The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
 
 - Dev.9 corrected the c420ui adapter boundary: registry-driven artifact fragment detection, overview detection,
-  build metadata resolution, and bootstrap helpers now live under `scripts/c420ui-adapter`. Generated artifact
+  and build metadata resolution live under `scripts/c420ui-adapter`, while bootstrap helpers live under `packages/c420ui/bootstrap`. Generated artifact
   detection lists all declared registry workflows, including planned workflows without `outputPattern` as not detected,
   and artifact selection uses numeric-aware sorting.
 - Dev.9 keeps c420ui integration modules under `scripts/c420ui-adapter` while allowing project registry/config modules

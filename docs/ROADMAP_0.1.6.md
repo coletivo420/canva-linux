@@ -138,7 +138,7 @@ npm run package:appimage
 or:
 
 ```bash
-./scripts/build-appimage.sh
+./packages/c420ui/scripts/build-appimage.sh
 ```
 
 The command must run the existing runtime build first and then generate the AppImage artifact.
