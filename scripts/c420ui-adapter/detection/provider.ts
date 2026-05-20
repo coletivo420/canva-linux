@@ -329,9 +329,9 @@ export function createCanvaLinuxDetectionProvider(
         runtime: {
           electronVersion: normalizeSemverRange(
             readPackageDependencyVersion(rootDir, "electron"),
-          ),
+          ) ?? "unknown",
           nodeVersion: readNodeVersion(rootDir),
-          npmVersion: readNpmVersion(),
+          npmVersion: readNpmVersion() ?? "unknown",
         },
         installations: {
           ...emptyInstallations,
