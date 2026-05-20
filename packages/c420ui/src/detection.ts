@@ -30,6 +30,11 @@ export type c420uiOverviewProjectStatus = {
 
 export type c420uiOverviewStatus = {
   project: c420uiOverviewProjectStatus;
+  runtime?: {
+    electronVersion?: string;
+    nodeVersion?: string;
+    npmVersion?: string;
+  };
   // Installations may include both base *Version fields and effective
   // *FullVersion fields. Renderers should prefer *FullVersion when present
   // and fall back to *Version for older detectors/markers.
