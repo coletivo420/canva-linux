@@ -63,7 +63,7 @@ function compileBootstrapBuilder(tempDir: string): string {
     "npx",
     [
       "esbuild",
-      "scripts/build-c420ui-bootstrap.ts",
+      "packages/c420ui/scripts/build-bootstrap.ts",
       "--bundle",
       "--platform=node",
       "--target=node22",
@@ -91,7 +91,7 @@ test("manifest artifact hashes match committed bootstrap artifacts", () => {
     path.join(rootDir, "bootstrap", "c420ui", "manifest.json"),
   );
 
-  assert.equal(manifest.generatedBy, "scripts/build-c420ui-bootstrap.ts");
+  assert.equal(manifest.generatedBy, "packages/c420ui/scripts/build-bootstrap.ts");
   assert.ok(manifest.artifactHashes);
 
   for (const artifact of artifacts) {
@@ -153,7 +153,7 @@ test("build:c420ui-bootstrap cleans output directory before writing", () => {
     assert.equal(fs.existsSync(path.join(outDir, "stale-file.txt")), false);
 
     const manifest = readJson<BootstrapManifest>(path.join(outDir, "manifest.json"));
-    assert.equal(manifest.generatedBy, "scripts/build-c420ui-bootstrap.ts");
+    assert.equal(manifest.generatedBy, "packages/c420ui/scripts/build-bootstrap.ts");
     for (const artifact of artifacts) {
       assert.equal(manifest.artifactHashes?.[artifact], sha256(path.join(outDir, artifact)));
     }

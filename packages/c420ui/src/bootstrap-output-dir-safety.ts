@@ -34,12 +34,19 @@ export function assertSafeBootstrapOutputDir(
     );
   }
 
-  if (
-    path.basename(resolvedOut) !== "c420ui" &&
-    !path.basename(resolvedOut).startsWith("c420ui-")
-  ) {
+  const relativeOut = normalize(path.relative(resolvedRoot, resolvedOut));
+  const isPackageGeneratedOut = relativeOut === "packages/c420ui/bootstrap/generated";
+  const hasDedicatedC420UIName =
+    path.basename(resolvedOut) === "c420ui" ||
+    path.basename(resolvedOut).startsWith("c420ui-");
+
+  if (!isPackageGeneratedOut && !hasDedicatedC420UIName) {
     throw new Error(
       `c420ui bootstrap output must be a dedicated c420ui directory: ${resolvedOut}`,
     );
   }
+}
+
+function normalize(value: string): string {
+  return value.split(path.sep).join(path.posix.sep);
 }

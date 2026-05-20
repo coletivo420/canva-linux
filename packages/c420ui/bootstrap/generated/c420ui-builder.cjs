@@ -27,7 +27,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// scripts/c420ui-builder.ts
+// packages/c420ui/scripts/c420ui-builder.ts
 var c420ui_builder_exports = {};
 __export(c420ui_builder_exports, {
   BUILDER_ALIAS: () => BUILDER_ALIAS,
@@ -158,7 +158,7 @@ function loadEffectiveBuildMetadata(rootDir) {
   return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }
 
-// scripts/c420ui-builder.ts
+// packages/c420ui/scripts/c420ui-builder.ts
 var BUILDER_INTERNAL_NAME = "c420ui-builder";
 var BUILDER_ALIAS = "canva-linux-c420ui-builder";
 var BUILDER_TITLE = "Canva Linux Builder powered by c420ui";
@@ -269,11 +269,11 @@ function createSession(rootDir) {
 }
 function selectEntrypoint(rootDir, kind) {
   const candidates = kind === "ui" ? [
-    import_node_path2.default.join(rootDir, "bootstrap/c420ui/run-c420ui.cjs"),
-    import_node_path2.default.join(rootDir, ".build/scripts/run-c420ui.js")
+    import_node_path2.default.join(rootDir, "packages/c420ui/bootstrap/generated/run-c420ui.cjs"),
+    import_node_path2.default.join(rootDir, ".build/packages/c420ui/scripts/run-c420ui.js")
   ] : [
-    import_node_path2.default.join(rootDir, "bootstrap/c420ui/run-c420ui-cli.cjs"),
-    import_node_path2.default.join(rootDir, ".build/scripts/run-c420ui-cli.js")
+    import_node_path2.default.join(rootDir, "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
+    import_node_path2.default.join(rootDir, ".build/packages/c420ui/scripts/run-c420ui-cli.js")
   ];
   for (const candidate of candidates) {
     if (import_node_fs2.default.existsSync(candidate) && import_node_fs2.default.statSync(candidate).size > 0) return candidate;

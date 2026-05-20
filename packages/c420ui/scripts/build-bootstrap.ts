@@ -13,14 +13,14 @@ import {
   createC420UIBootstrapBuildOptions,
   C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
-} from "../packages/c420ui/bootstrap/build-recipe";
+} from "../bootstrap/build-recipe";
 import {
   calculateC420UIBootstrapSourceHash,
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
-} from "../packages/c420ui/bootstrap/source-hash";
-import { assertSafeBootstrapOutputDir } from "../packages/c420ui/src/bootstrap-output-dir-safety";
-import { loadEffectiveBuildMetadata } from "./c420ui-adapter/build-metadata-loader";
+} from "../bootstrap/source-hash";
+import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety";
+import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
 
 type PackageJson = {
   version?: string;
@@ -56,7 +56,7 @@ function requirePackageVersion(packageJson: PackageJson, relativePath: string): 
 function resolveBootstrapDir(rootDir: string): string {
   return process.env.C420UI_BOOTSTRAP_OUT_DIR
     ? path.resolve(rootDir, process.env.C420UI_BOOTSTRAP_OUT_DIR)
-    : path.join(rootDir, "bootstrap", "c420ui");
+    : path.join(rootDir, "packages", "c420ui", "bootstrap", "generated");
 }
 
 function cleanBootstrapOutput(bootstrapDir: string): void {
@@ -135,9 +135,9 @@ async function main(): Promise<void> {
     entrypoint: "run-c420ui.cjs",
     cliEntrypoint: "run-c420ui-cli.cjs",
     entrypoints: {
-      ui: "bootstrap/c420ui/run-c420ui.cjs",
-      cli: "bootstrap/c420ui/run-c420ui-cli.cjs",
-      builder: "bootstrap/c420ui/c420ui-builder.cjs",
+      ui: "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+      cli: "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+      builder: "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
     },
     requiresNode: ">=22.0.0",
     buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,

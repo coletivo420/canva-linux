@@ -1,9 +1,9 @@
 import { spawnSync } from "node:child_process";
 
 const bundles = [
-  "bootstrap/c420ui/run-c420ui.cjs",
-  "bootstrap/c420ui/run-c420ui-cli.cjs",
-  "bootstrap/c420ui/c420ui-builder.cjs",
+  "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+  "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+  "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
 ] as const;
 
 let failed = false;

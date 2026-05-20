@@ -47,9 +47,9 @@ These commands are manual release-candidate checks. Record their output in the r
 
 | Command | Status | Expected result | Failure meaning | Owner domain |
 | --- | --- | --- | --- | --- |
-| `node -p "require('./bootstrap/c420ui/manifest.json').c420uiVersion" && node -p "require('./bootstrap/c420ui/manifest.json').dependentProjectVersion"` | Required for bootstrap RC validation | Bootstrap identity reports c420ui engine version from `packages/c420ui/package.json` and dependent-project version from the root `package.json`. | The bootstrap manifest may have collapsed engine and dependent-project identity into one ambiguous version. | c420ui bootstrap |
-| `rm -rf node_modules .build && ./canva-linux-c420ui-builder --doctor --dry-run` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts direct c420ui CLI through `bootstrap/c420ui/run-c420ui-cli.cjs` without a missing `esbuild` failure or launcher-side npm install. | Stage 0 bootstrap or Stage 1 dependency ownership may be broken. | c420ui bootstrap |
-| `rm -rf node_modules .build && ./canva-linux-c420ui-builder` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts interactive c420ui through `bootstrap/c420ui/run-c420ui.cjs` before dependent-project dependency repair appears in the UI logs. | The bootstrap may still block on dependency repair before the UI is mounted. | c420ui bootstrap |
+| `node -p "require('./packages/c420ui/bootstrap/generated/manifest.json').c420uiVersion" && node -p "require('./packages/c420ui/bootstrap/generated/manifest.json').dependentProjectVersion"` | Required for bootstrap RC validation | Bootstrap identity reports c420ui engine version from `packages/c420ui/package.json` and dependent-project version from the root `package.json`. | The bootstrap manifest may have collapsed engine and dependent-project identity into one ambiguous version. | c420ui bootstrap |
+| `rm -rf node_modules .build && ./canva-linux-c420ui-builder --doctor --dry-run` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts direct c420ui CLI through `packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs` without a missing `esbuild` failure or launcher-side npm install. | Stage 0 bootstrap or Stage 1 dependency ownership may be broken. | c420ui bootstrap |
+| `rm -rf node_modules .build && ./canva-linux-c420ui-builder` | Required for bootstrap RC validation; root containers may record blocked | A clean checkout starts interactive c420ui through `packages/c420ui/bootstrap/generated/run-c420ui.cjs` before dependent-project dependency repair appears in the UI logs. | The bootstrap may still block on dependency repair before the UI is mounted. | c420ui bootstrap |
 | `npm run c420ui -- --help` | Pass | c420ui help starts through the maintained launcher and documents the current terminal UI and command surface. | The c420ui entrypoint, help text, or launcher path may be broken. | c420ui core |
 | `npm run c420ui:cli -- --doctor --dry-run` | Pass | c420ui CLI doctor resolves the project adapter and reports planned checks without making changes. | The c420ui CLI bridge or dependent-project adapter contract may be broken. | c420ui core |
 | `./canva-linux-c420ui-builder --help` | Blocked: validation container runs as root | Direct Canva Linux CLI help works and remains aligned with the documented command surface. | The direct CLI launcher or help contract may be broken. | Canva Linux project adapter |
@@ -140,13 +140,13 @@ Validation was executed on `2026-05-15` against commit `f12cb1bc4e744fa25eeb4219
 
 | Check | Status | Evidence |
 | --- | --- | --- |
-| Bootstrap bundle exists | Pass | `bootstrap/c420ui/run-c420ui.cjs` and `bootstrap/c420ui/run-c420ui-cli.cjs` are committed bootstrap entrypoints; `node bootstrap/c420ui/run-c420ui-cli.cjs --help` passed after `rm -rf node_modules .build`. |
-| c420ui version is independent | Pass | `bootstrap/c420ui/manifest.json` records `c420uiVersion` as `0.1.0`. |
-| Dependent project version is separate | Pass | `bootstrap/c420ui/manifest.json` records `dependentProjectVersion` as `0.1.4-15.Dev.9`. |
+| Bootstrap bundle exists | Pass | `packages/c420ui/bootstrap/generated/run-c420ui.cjs` and `packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs` are committed bootstrap entrypoints; `node packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs --help` passed after `rm -rf node_modules .build`. |
+| c420ui version is independent | Pass | `packages/c420ui/bootstrap/generated/manifest.json` records `c420uiVersion` as `0.1.0`. |
+| Dependent project version is separate | Pass | `packages/c420ui/bootstrap/generated/manifest.json` records `dependentProjectVersion` as `0.1.4-15.Dev.9`. |
 | Source hash matches current sources | Pass | `npm run build:c420ui-bootstrap` followed by `npm run check:c420ui-bootstrap` passed after reverting the intentional stale-hash edit. |
-| Stale hash detection works | Pass | After `printf '\n' >> scripts/build-c420ui-bootstrap.ts`, `npm run check:c420ui-bootstrap` failed with `bootstrap/c420ui/manifest.json: sourceHash is stale; run npm run build:c420ui-bootstrap`. |
-| Launcher does not install npm deps | Pass | `rg -n "npm (install\|ci)\|npm\\s+install\|npm\\s+ci" canva-linux-c420ui-builder` returned no matches; `canva-linux-c420ui-builder` resolves `bootstrap/c420ui/run-c420ui-cli.cjs` before the `.build` fallback. |
-| Clean checkout starts without esbuild | Blocked: environment limitation | After `rm -rf node_modules .build`, `node -e "require.resolve('esbuild')"` reported `esbuild not resolvable`; `node bootstrap/c420ui/run-c420ui-cli.cjs --help` and `node bootstrap/c420ui/run-c420ui-cli.cjs --doctor --dry-run` passed, but `./canva-linux-c420ui-builder --help`, `./canva-linux-c420ui-builder --doctor --dry-run`, and `./canva-linux-c420ui-builder` exited at the root-user guard before launcher dispatch. |
+| Stale hash detection works | Pass | After `printf '\n' >> packages/c420ui/scripts/build-bootstrap.ts`, `npm run check:c420ui-bootstrap` failed with `packages/c420ui/bootstrap/generated/manifest.json: sourceHash is stale; run npm run build:c420ui-bootstrap`. |
+| Launcher does not install npm deps | Pass | `rg -n "npm (install\|ci)\|npm\\s+install\|npm\\s+ci" canva-linux-c420ui-builder` returned no matches; `canva-linux-c420ui-builder` resolves `packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs` before the `.build` fallback. |
+| Clean checkout starts without esbuild | Blocked: environment limitation | After `rm -rf node_modules .build`, `node -e "require.resolve('esbuild')"` reported `esbuild not resolvable`; `node packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs --help` and `node packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs --doctor --dry-run` passed, but `./canva-linux-c420ui-builder --help`, `./canva-linux-c420ui-builder --doctor --dry-run`, and `./canva-linux-c420ui-builder` exited at the root-user guard before launcher dispatch. |
 | Dependency repair runs after UI startup | Blocked: environment limitation | Source wiring keeps dependency repair in the c420ui startup task list, but the interactive `./canva-linux-c420ui-builder` UI startup could not be validated in this root, non-interactive container. |
 
 ## Release blockers
@@ -180,7 +180,7 @@ from `packages/c420ui/package.json`, while `dependentProjectVersion` is sourced 
 The source-hash check must pass without modifying files after the build step. Any change to c420ui sources, the Canva Linux adapter or config, the bootstrap hash helper, or the bootstrap builder must be followed by `npm run build:c420ui-bootstrap`; a stale `sourceHash` or committed `.cjs` artifact that fails syntax or build-recipe comparison blocks RC sign-off until the command refreshes the bundle and manifest.
 
 Interactive bootstrap validation must confirm the UI starts first and dependent-project dependency repair runs as a c420ui
-startup task, not as pre-UI logic in `scripts/run-c420ui.ts`.
+startup task, not as pre-UI logic in `packages/c420ui/scripts/run-c420ui.ts`.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
