@@ -13,8 +13,8 @@ repository-check boundary. Removed bootstrap fallbacks must not be restored.
 
 These scripts are concrete Canva Linux recipes and may remain project-local:
 
-- `scripts/build-appimage.sh`
-- `scripts/build-flatpak-bundle.sh`
+- `packages/c420ui/scripts/build-appimage.sh`
+- `packages/c420ui/scripts/build-flatpak-bundle.sh`
 - `scripts/package-guidance-common.sh`
 - `scripts/validate-project.sh`
 - `scripts/validate-appimage.sh`

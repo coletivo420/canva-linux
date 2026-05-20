@@ -16,6 +16,7 @@
   "include": [
     "electron/**/*.ts",
     "scripts/**/*.ts",
+    "packages/c420ui/**/*.ts",
     "test/**/*.ts",
     "playwright.config.ts",
     "eslint.config.ts",

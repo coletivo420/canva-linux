@@ -11,15 +11,7 @@ function withTestEnv(run: (envDir: string) => void): void {
   const envDir = mkdtempSync(path.join(tmpdir(), "canva-linux-install-detection-test-"));
   mkdirSync(path.join(envDir, "dist"), { recursive: true });
   mkdirSync(path.join(envDir, "scripts"), { recursive: true });
-  
-  // Copy necessary scripts or mock them
-  const scriptsToCopy = [
-    "scripts/install-detection-common.sh",
-    "scripts/app-identity-common.sh"
-  ];
-  
-  // We can just source them from the real repo in the test script
-  
+
   try {
     run(envDir);
   } finally {
@@ -37,7 +29,7 @@ function runDetectionInShell(envDir: string, shellScript: string): string {
     ui_ok() { :; }
     ui_die() { echo "$1" >&2; exit 1; }
     
-    source "${REPO_ROOT}/scripts/install-detection-common.sh"
+    source "${REPO_ROOT}/packages/c420ui/scripts/install-detection-common.sh"
     ${shellScript}
   `;
   

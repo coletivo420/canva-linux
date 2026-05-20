@@ -1,5 +1,15 @@
 # AI Guardrails
 
+## c420ui structural ownership and efficiency
+
+- c420ui-owned tooling (runtime/build/check/test ownership, bootstrap helpers, artifact hashes, syntax gates,
+  shell helpers) must live under `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is reserved
+  for Canva Linux integration glue only and must not own bootstrap validation or runtime tooling.
+- Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI
+  refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
+- Directory guards for cleanup operations must use a simplified forbidden set:
+  `[resolvedRoot, path.dirname(resolvedRoot), path.parse(resolvedOut).root, process.cwd()]`.
+
 ## Dev.9 metadata persistence and c420ui repair
 
 - Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place
@@ -188,10 +198,10 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not document Action Runner as an available execution path.
 - Do not change versioning as part of c420ui separation.
 - Detection framework belongs to `packages/c420ui/src/detection.ts`.
-- Canva Linux c420ui TypeScript integration modules belong to `scripts/c420ui-adapter/`. All TypeScript modules
-  consumed by c420ui for project integration, overview detection, artifact fragments, build metadata resolution, and
-  bootstrap recipes must live under `scripts/c420ui-adapter`. Do not add new c420ui integration modules under
-  `scripts/canva-linux`.
+- Canva Linux c420ui TypeScript integration modules belong to `scripts/c420ui-adapter/`. TypeScript modules
+  consumed by c420ui for project integration, overview detection, artifact fragments, and build metadata resolution
+  must live under `scripts/c420ui-adapter`; bootstrap recipes and source-hash helpers must live under
+  `packages/c420ui/bootstrap`. Do not add new c420ui integration modules under `scripts/canva-linux`.
 - Project registry/config modules may still live under `scripts/canva-linux`; if they are bundled into c420ui bootstrap,
   they must be covered by `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Generated artifact detection must list all declared registry workflows, including planned workflows without

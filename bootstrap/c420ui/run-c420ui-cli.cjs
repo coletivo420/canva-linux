@@ -640,17 +640,19 @@ function emitDecodedChunk(stream, chunk, source, emitLog) {
   }
 }
 function emitRemainingChunk(stream, source, emitLog) {
+  if (stream.ended) return;
   stream.pending += stream.decoder.end();
   if (stream.pending) {
     emitLog(createC420UIOperationalLogEvent({ source, line: stream.pending }));
   }
   stream.pending = "";
+  stream.ended = true;
 }
 async function runC420UICommand(options) {
   const spawnCommand = options.spawnCommand ?? import_node_child_process2.spawn;
   const args = options.args ?? [];
-  const stdoutStream = { decoder: new import_node_string_decoder.StringDecoder("utf8"), pending: "" };
-  const stderrStream = { decoder: new import_node_string_decoder.StringDecoder("utf8"), pending: "" };
+  const stdoutStream = { decoder: new import_node_string_decoder.StringDecoder("utf8"), pending: "", ended: false };
+  const stderrStream = { decoder: new import_node_string_decoder.StringDecoder("utf8"), pending: "", ended: false };
   const cancelSignal = options.cancelSignal ?? "SIGINT";
   const cancelKillSignal = options.cancelKillSignal ?? "SIGTERM";
   const cancelKillTimeoutMs = options.cancelKillTimeoutMs ?? 5e3;
@@ -760,28 +762,33 @@ async function runC420UICommand(options) {
       if (settled) return;
       closeObserved = true;
       clearCancelKillTimer();
-      if (cancellationRequested || options.signal?.aborted || signal === cancelSignal) {
-        emitCanceledProgress();
-        settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
-        return;
-      }
-      const resultCode = code ?? c420uiExitCodes.generalError;
-      const success = resultCode === c420uiExitCodes.success;
-      if (!success) {
-        emitOperationalLog(options, {
-          source: "action",
-          line: `[error] ${options.label} exited with code ${resultCode}`,
-          level: "error"
+      setImmediate(() => {
+        if (settled) return;
+        emitRemainingChunk(stdoutStream, "stdout", options.emitLog);
+        emitRemainingChunk(stderrStream, "stderr", options.emitLog);
+        if (cancellationRequested || options.signal?.aborted || signal === cancelSignal) {
+          emitCanceledProgress();
+          settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
+          return;
+        }
+        const resultCode = code ?? c420uiExitCodes.generalError;
+        const success = resultCode === c420uiExitCodes.success;
+        if (!success) {
+          emitOperationalLog(options, {
+            source: "action",
+            line: `[error] ${options.label} exited with code ${resultCode}`,
+            level: "error"
+          });
+        }
+        options.emitProgress({
+          state: success ? "success" : "failed",
+          percent: success ? 100 : void 0,
+          label: options.label
         });
-      }
-      options.emitProgress({
-        state: success ? "success" : "failed",
-        percent: success ? 100 : void 0,
-        label: options.label
-      });
-      settle({
-        code: resultCode,
-        status: success ? "success" : "failed"
+        settle({
+          code: resultCode,
+          status: success ? "success" : "failed"
+        });
       });
     });
   });
@@ -1357,6 +1364,20 @@ function buildCanvaLinuxArtifactFragments(rootDir) {
 }
 
 // scripts/c420ui-adapter/detection/provider.ts
+var cachedPackageJson;
+function readPackage(rootDir) {
+  if (cachedPackageJson?.rootDir === rootDir) {
+    return cachedPackageJson.packageJson;
+  }
+  const packageJson = JSON.parse(
+    import_node_fs3.default.readFileSync(import_node_path5.default.join(rootDir, "package.json"), "utf8")
+  );
+  cachedPackageJson = {
+    rootDir,
+    packageJson
+  };
+  return packageJson;
+}
 var canvaLinuxDetectionKeys = [
   "DETECTED_NATIVE_SYSTEM",
   "DETECTED_NATIVE_USER",
@@ -1391,11 +1412,6 @@ var emptyInstallations = {
   flatpakUserFullVersion: "",
   appImageFullVersion: ""
 };
-function readPackage(rootDir) {
-  return JSON.parse(
-    import_node_fs3.default.readFileSync(import_node_path5.default.join(rootDir, "package.json"), "utf8")
-  );
-}
 function readPhase(rootDir) {
   const content = import_node_fs3.default.readFileSync(
     import_node_path5.default.join(rootDir, "scripts/app-identity-common.sh"),
@@ -1427,7 +1443,7 @@ function safeProjectMetadata(rootDir) {
 }
 function detectionCommand() {
   return [
-    "source scripts/install-detection-common.sh",
+    "source packages/c420ui/scripts/install-detection-common.sh",
     "detect_installations",
     "print_detection_status_env"
   ].join("\n");

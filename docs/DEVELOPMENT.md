@@ -168,7 +168,7 @@ c420ui Action Engine, and keep Canva Linux privilege validation in the root prov
 
 - Generic detection parsing and overview status normalization live in `packages/c420ui/src/detection.ts`.
 - Canva Linux c420ui TypeScript integration modules live in `scripts/c420ui-adapter/`; shell glue remains in
-  project scripts such as `scripts/install-detection-common.sh`.
+  project scripts such as `packages/c420ui/scripts/install-detection-common.sh`.
 - Shared repository tooling under `scripts/core/` must not contain Canva Linux product detection logic.
 
 Canva Linux Builder powered by c420ui does not maintain its own action allowlist;

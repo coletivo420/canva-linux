@@ -1,9 +1,15 @@
 # Review Checklist
 
+## c420ui package refactor and structural ownership
+
+- c420ui-owned tooling (runtime/build/check/test ownership, bootstrap helpers, artifact hashes, syntax gates, shell helpers) must live under `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is reserved for Canva Linux integration glue only and must not own bootstrap validation or runtime tooling.
+- Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
+- Directory guards for cleanup operations must use a simplified forbidden set: `[resolvedRoot, path.dirname(resolvedRoot), path.parse(resolvedOut).root, process.cwd()]`.
+
 ## Dev.9 metadata persistence and c420ui repair
 
-- Dev.9 corrected the adapter boundary: registry-driven artifact fragment detection and bootstrap helpers now live under `scripts/c420ui-adapter`. Shell scripts remain project actions, but TypeScript integration modules belong to the c420ui adapter layer.
-- All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, build metadata resolution, and bootstrap recipes must live under `scripts/c420ui-adapter`. Do not add new c420ui integration modules under `scripts/canva-linux`. Generated artifact detection must list all declared registry workflows, including planned workflows without `outputPattern` as not detected.
+- Dev.9 corrected the adapter boundary: registry-driven artifact fragment detection stays in `scripts/c420ui-adapter`, while bootstrap helpers now live under `packages/c420ui/bootstrap`. Shell scripts and checks owned by c420ui live under `packages/c420ui`.
+- TypeScript modules consumed by c420ui for Canva Linux project integration, overview detection, artifact fragments, and build metadata resolution must live under `scripts/c420ui-adapter`. Bootstrap recipes and source-hash helpers must live under `packages/c420ui/bootstrap`. Do not add new c420ui integration modules under `scripts/canva-linux`. Generated artifact detection must list all declared registry workflows, including planned workflows without `outputPattern` as not detected.
 - Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display comes from metadata.
 - The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 - Artifact filenames may keep the base package version; hash-visible display comes from metadata. Reject changes that remove metadata installation or sidecar generation.

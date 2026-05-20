@@ -23,6 +23,7 @@ export type c420uiCommandRunnerOptions = {
 type DecodedStreamState = {
   decoder: StringDecoder;
   pending: string;
+  ended: boolean;
 };
 
 function emitOperationalLog(
@@ -51,11 +52,13 @@ function emitRemainingChunk(
   source: c420uiLogEvent["source"],
   emitLog: (event: c420uiLogEvent) => void,
 ): void {
+  if (stream.ended) return;
   stream.pending += stream.decoder.end();
   if (stream.pending) {
     emitLog(createC420UIOperationalLogEvent({ source, line: stream.pending }));
   }
   stream.pending = "";
+  stream.ended = true;
 }
 
 export async function runC420UICommand(
@@ -63,8 +66,8 @@ export async function runC420UICommand(
 ): Promise<c420uiActionResult> {
   const spawnCommand = options.spawnCommand ?? spawn;
   const args = options.args ?? [];
-  const stdoutStream = { decoder: new StringDecoder("utf8"), pending: "" };
-  const stderrStream = { decoder: new StringDecoder("utf8"), pending: "" };
+  const stdoutStream = { decoder: new StringDecoder("utf8"), pending: "", ended: false };
+  const stderrStream = { decoder: new StringDecoder("utf8"), pending: "", ended: false };
   const cancelSignal = options.cancelSignal ?? "SIGINT";
   const cancelKillSignal = options.cancelKillSignal ?? "SIGTERM";
   const cancelKillTimeoutMs = options.cancelKillTimeoutMs ?? 5000;
@@ -184,28 +187,33 @@ export async function runC420UICommand(
       if (settled) return;
       closeObserved = true;
       clearCancelKillTimer();
-      if (cancellationRequested || options.signal?.aborted || signal === cancelSignal) {
-        emitCanceledProgress();
-        settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
-        return;
-      }
-      const resultCode = code ?? c420uiExitCodes.generalError;
-      const success = resultCode === c420uiExitCodes.success;
-      if (!success) {
-        emitOperationalLog(options, {
-          source: "action",
-          line: `[error] ${options.label} exited with code ${resultCode}`,
-          level: "error",
+      setImmediate(() => {
+        if (settled) return;
+        emitRemainingChunk(stdoutStream, "stdout", options.emitLog);
+        emitRemainingChunk(stderrStream, "stderr", options.emitLog);
+        if (cancellationRequested || options.signal?.aborted || signal === cancelSignal) {
+          emitCanceledProgress();
+          settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
+          return;
+        }
+        const resultCode = code ?? c420uiExitCodes.generalError;
+        const success = resultCode === c420uiExitCodes.success;
+        if (!success) {
+          emitOperationalLog(options, {
+            source: "action",
+            line: `[error] ${options.label} exited with code ${resultCode}`,
+            level: "error",
+          });
+        }
+        options.emitProgress({
+          state: success ? "success" : "failed",
+          percent: success ? 100 : undefined,
+          label: options.label,
         });
-      }
-      options.emitProgress({
-        state: success ? "success" : "failed",
-        percent: success ? 100 : undefined,
-        label: options.label,
-      });
-      settle({
-        code: resultCode,
-        status: success ? "success" : "failed",
+        settle({
+          code: resultCode,
+          status: success ? "success" : "failed",
+        });
       });
     });
   });
