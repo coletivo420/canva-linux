@@ -50,18 +50,13 @@ var UNKNOWN_BASE_VERSION = "0.0.0";
 var UNKNOWN_BUILD_REVISION = "unknown";
 function loadBuildMetadataModule(rootDir) {
   const requireFromRoot = (0, import_node_module.createRequire)(import_node_path.default.join(rootDir, "package.json"));
-  const candidates = [
-    import_node_path.default.join(rootDir, ".build/electron/main/build-metadata.js"),
-    import_node_path.default.join(rootDir, "electron/main/build-metadata.ts")
-  ];
-  for (const candidate of candidates) {
-    try {
-      return requireFromRoot(candidate);
-    } catch {
-      continue;
-    }
+  const compiledModule = import_node_path.default.join(rootDir, ".build/electron/main/build-metadata.js");
+  if (!import_node_fs.default.existsSync(compiledModule)) return null;
+  try {
+    return requireFromRoot(compiledModule);
+  } catch {
+    return null;
   }
-  throw new Error("Unable to load electron/main/build-metadata module");
 }
 function readJsonFile(filePath) {
   try {
@@ -122,6 +117,18 @@ function loadPackagedMetadata(rootDir, metadataModule) {
 }
 function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule) {
   const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path.default.resolve(rootDir));
+  if (!module2) {
+    return {
+      baseVersion: UNKNOWN_BASE_VERSION,
+      baseDisplayVersion: UNKNOWN_BASE_VERSION,
+      basePhase: UNKNOWN_BASE_VERSION,
+      buildRevision: UNKNOWN_BUILD_REVISION,
+      version: UNKNOWN_BASE_VERSION,
+      displayVersion: UNKNOWN_BASE_VERSION,
+      phase: UNKNOWN_BASE_VERSION,
+      fullVersion: UNKNOWN_BASE_VERSION
+    };
+  }
   return module2.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
@@ -132,6 +139,12 @@ function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule)
 function loadEffectiveBuildMetadata(rootDir) {
   const resolvedRootDir = import_node_path.default.resolve(rootDir);
   const metadataModule = loadBuildMetadataModule(resolvedRootDir);
+  if (!metadataModule) {
+    const packaged = readJsonFile(
+      import_node_path.default.join(resolvedRootDir, "config", "canva-linux", "build-metadata.json")
+    );
+    return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
+  }
   const envRevision = resolveEnvBuildRevision();
   if (envRevision) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision, metadataModule);

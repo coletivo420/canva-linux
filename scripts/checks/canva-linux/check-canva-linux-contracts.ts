@@ -3181,11 +3181,8 @@ export function main(): number {
   checkLauncherBootstrapDependencyPolicy(failures);
   checkRuntimeCliDebugGuardrails(rootDir, failures);
   checkEffectiveBuildMetadataContract(rootDir, failures);
-  const c420uiBootstrapSyntaxOk = checkC420uiGeneratedArtifactsContract(rootDir, failures);
-  if (c420uiBootstrapSyntaxOk) {
-    checkC420uiDetectionPanelsAndPlainLogsContract(rootDir, failures);
-  }
-  checkC420uiArtifactGateContract(rootDir, failures);
+  // c420ui bootstrap/artifact validation is owned by packages/c420ui/checks.
+  // keep this global contract focused on cross-package boundaries.
   checkPinnedHomeTabStripContract(rootDir, failures);
   validateBuilderArtifactsExist(rootDir, failures);
   validateLegacyBuilderArtifactsRemoved(rootDir, failures);

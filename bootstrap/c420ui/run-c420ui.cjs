@@ -20658,6 +20658,34 @@ function buildCanvaLinuxArtifactFragments(rootDir2) {
     const kind = artifactKind(workflow.id, workflow.kind);
     const metadata = artifactPath ? readArtifactMetadata(rootDir2, artifactPath, kind) : {};
     const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
+function readPackageDependencyVersion(rootDir2, name) {
+  const packageJson = readPackage(rootDir2);
+  return packageJson.dependencies?.[name] ?? packageJson.devDependencies?.[name];
+}
+function normalizeSemverRange(range) {
+  if (!range) return void 0;
+  return range.replace(/[\^~><=]/g, "").split(" ")[0];
+}
+function readNodeVersion(rootDir2) {
+  const packageJson = readPackage(rootDir2);
+  return normalizeSemverRange(packageJson.engines?.node) ?? process.versions.node;
+}
+var readNpmVersion = /* @__PURE__ */ (() => {
+  let cached;
+  let attempted = false;
+  return () => {
+    if (attempted) {
+      return cached;
+    }
+    attempted = true;
+    try {
+      cached = (0, import_node_child_process5.execFileSync)("npm", ["--version"], { encoding: "utf8" }).trim();
+      return cached;
+    } catch {
+      return void 0;
+    }
+  };
+})();
     fragments.push({
       id: workflow.id,
       kind,
@@ -20809,17 +20837,19 @@ function buildInstallations(values, artifactFragments = []) {
     nativeSystem: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_SYSTEM),
     nativeUser: boolFromC420UIDetectionValue(values.DETECTED_NATIVE_USER),
     flatpakSystem: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_SYSTEM),
-    flatpakUser: boolFromC420UIDetectionValue(values.DETECTED_FLATPAK_USER),
-    appImageArtifacts: appImageFragment?.detected ?? boolFromC420UIDetectionValue(values.DETECTED_APPIMAGE_ARTIFACTS),
-    nativeSystemVersion: values.DETECTED_NATIVE_SYSTEM_VERSION || "",
-    nativeUserVersion: values.DETECTED_NATIVE_USER_VERSION || "",
-    flatpakSystemVersion: values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
-    flatpakUserVersion: values.DETECTED_FLATPAK_USER_VERSION || "",
-    appImageVersion: appImageFragment?.version || values.DETECTED_APPIMAGE_VERSION || "",
-    // Detected Installations renderers should prefer *FullVersion fields and
-    // fall back to the base *Version fields for older detectors/markers.
-    nativeSystemFullVersion: values.DETECTED_NATIVE_SYSTEM_FULL_VERSION || values.DETECTED_NATIVE_SYSTEM_VERSION || "",
-    nativeUserFullVersion: values.DETECTED_NATIVE_USER_FULL_VERSION || values.DETECTED_NATIVE_USER_VERSION || "",
+        runtime: {
+          electronVersion: normalizeSemverRange(
+            readPackageDependencyVersion(rootDir2, "electron")
+          ) ?? "unknown",
+          nodeVersion: readNodeVersion(rootDir2),
+          npmVersion: readNpmVersion() ?? "unknown"
+        },
+  const compiledModule = import_node_path9.default.join(rootDir2, ".build/electron/main/build-metadata.js");
+  if (!import_node_fs8.default.existsSync(compiledModule)) return null;
+  try {
+    return requireFromRoot(compiledModule);
+  } catch {
+    return null;
     flatpakSystemFullVersion: values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION || values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
     flatpakUserFullVersion: values.DETECTED_FLATPAK_USER_FULL_VERSION || values.DETECTED_FLATPAK_USER_VERSION || "",
     appImageFullVersion: appImageFragment?.fullVersion || appImageFragment?.version || values.DETECTED_APPIMAGE_FULL_VERSION || values.DETECTED_APPIMAGE_VERSION || ""
@@ -20904,6 +20934,24 @@ function resolveGitBuildRevision(rootDir2) {
       stdio: ["ignore", "pipe", "ignore"]
     }).trim();
     return value || null;
+  if (!module2) {
+    return {
+      baseVersion: UNKNOWN_BASE_VERSION,
+      baseDisplayVersion: UNKNOWN_BASE_VERSION,
+      basePhase: UNKNOWN_BASE_VERSION,
+      buildRevision: UNKNOWN_BUILD_REVISION,
+      version: UNKNOWN_BASE_VERSION,
+      displayVersion: UNKNOWN_BASE_VERSION,
+      phase: UNKNOWN_BASE_VERSION,
+      fullVersion: UNKNOWN_BASE_VERSION
+    };
+  }
+  if (!metadataModule) {
+    const packaged = readJsonFile2(
+      import_node_path9.default.join(resolvedRootDir, "config", "canva-linux", "build-metadata.json")
+    );
+    return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
+  }
   } catch {
     return null;
   }
