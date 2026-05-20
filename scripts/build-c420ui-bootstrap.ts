@@ -19,6 +19,7 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../packages/c420ui/bootstrap/source-hash";
+import { assertSafeBootstrapOutputDir } from "../packages/c420ui/src/bootstrap-output-dir-safety";
 import { loadEffectiveBuildMetadata } from "./c420ui-adapter/build-metadata-loader";
 
 type PackageJson = {
@@ -104,6 +105,7 @@ function copyBlessedRuntimeAssets(rootDir: string, bootstrapDir: string): void {
 async function main(): Promise<void> {
   const rootDir = findProjectRoot();
   const bootstrapDir = resolveBootstrapDir(rootDir);
+  assertSafeBootstrapOutputDir(rootDir, bootstrapDir);
   cleanBootstrapOutput(bootstrapDir);
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
@@ -158,7 +160,9 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
+}

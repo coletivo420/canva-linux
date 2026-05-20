@@ -64,10 +64,8 @@ function isGeneratedArtifactFragment(fragment: CanvaLinuxArtifactFragment): bool
   return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
 }
 
-function linuxArtifactSummaryItem(label: string, detected: boolean, version: string | boolean | undefined): string {
-  if (!detected) return `${label} not detected`;
-  if (typeof version === "string" && version.trim()) return `${label} v${version.trim().replace(/^v/, "")}`;
-  return `${label} version unknown`;
+function versionSummaryItem(label: string, version: string | undefined): string {
+  return `${label} ${version ? `v${version.trim().replace(/^v/, "")}` : "unknown"}`;
 }
 
 export function formatDetectionPanelSummaries(
@@ -84,7 +82,7 @@ export function formatDetectionPanelSummaries(
         `  Flatpak User: ${loading}`,
       ],
       generatedArtifacts: [`  AppImage: ${loading}`],
-      linuxArtifacts: [`Native/Unpacked installations loading...`],
+      linuxArtifacts: [`Electron/Node/npm loading...`],
     };
   }
 
@@ -113,19 +111,11 @@ export function formatDetectionPanelSummaries(
     generatedArtifacts,
     linuxArtifacts: [
       [
-        linuxArtifactSummaryItem(
-          "Native system installation",
-          Boolean(i.nativeSystem),
-          detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion),
-        ),
-        linuxArtifactSummaryItem(
-          "Native user installation",
-          Boolean(i.nativeUser),
-          detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion),
-        ),
-        linuxArtifactSummaryItem(
+        versionSummaryItem("Electron", s.runtime?.electronVersion),
+        versionSummaryItem("Node", s.runtime?.nodeVersion),
+        versionSummaryItem("npm", s.runtime?.npmVersion),
+        versionSummaryItem(
           "Linux unpacked",
-          Boolean(linuxUnpacked?.detected),
           linuxUnpacked ? artifactVersion(linuxUnpacked) : undefined,
         ),
       ].join(", "),

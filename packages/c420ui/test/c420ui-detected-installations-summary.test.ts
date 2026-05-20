@@ -10,6 +10,7 @@ import type { c420uiOverviewStatus } from "../src/detection";
 function status(
   installations: c420uiOverviewStatus["installations"],
   artifactFragments?: c420uiOverviewStatus["artifactFragments"],
+  runtime?: c420uiOverviewStatus["runtime"],
 ): c420uiOverviewStatus {
   return {
     project: {
@@ -19,6 +20,7 @@ function status(
       executable: "canva-linux",
       repository: "https://github.com/coletivo420/canva-linux",
     },
+    ...(runtime ? { runtime } : {}),
     installations,
     ...(artifactFragments ? { artifactFragments } : {}),
     warnings: [],
@@ -121,9 +123,11 @@ test("renders Linux Artifacts in its own panel", () => {
   const text = panels.linuxArtifacts.join("\n");
 
   assert.equal(panels.linuxArtifacts.length, 1);
-  assert.match(text, /Native system installation v0\.1\.4-15\.Dev\.9\+gnative/);
-  assert.match(text, /Native user installation not detected/);
+  assert.match(text, /Electron unknown/);
+  assert.match(text, /Node unknown/);
+  assert.match(text, /npm unknown/);
   assert.match(text, /Linux unpacked v0\.1\.4-15\.Dev\.9\+gunpacked/);
+  assert.doesNotMatch(text, /Native system installation|Native user installation|Flatpak System|Flatpak User/);
   assert.doesNotMatch(text, /Linux Artifacts|Detected Installations|Generated Artifacts/);
 });
 
@@ -143,19 +147,20 @@ test("does not repeat panel titles inside panel content", () => {
 test("renders Linux Artifacts as comma-separated artifact/version summary", () => {
   const panels = formatDetectionPanelSummaries(
     status(
-      {
-        nativeSystem: true,
-        nativeSystemFullVersion: "0.1.4-15.Dev.9+gnative",
-        nativeUser: false,
-      },
+      {},
       [{ id: "linux-unpacked", kind: "linux-unpacked", label: "Linux unpacked", detected: true, fullVersion: "0.1.4-15.Dev.9+gunpacked" }],
+      {
+        electronVersion: "v41.5.0",
+        nodeVersion: "v22.12.0",
+        npmVersion: "10.9.0",
+      },
     ),
     colors,
   );
 
   assert.equal(
     panels.linuxArtifacts[0],
-    "Native system installation v0.1.4-15.Dev.9+gnative, Native user installation not detected, Linux unpacked v0.1.4-15.Dev.9+gunpacked",
+    "Electron v41.5.0, Node v22.12.0, npm v10.9.0, Linux unpacked v0.1.4-15.Dev.9+gunpacked",
   );
 });
 
@@ -168,7 +173,10 @@ test("Linux Artifacts falls back safely to version unknown", () => {
     colors,
   );
 
-  assert.match(panels.linuxArtifacts[0], /Linux unpacked version unknown/);
+  assert.match(panels.linuxArtifacts[0], /Electron unknown/);
+  assert.match(panels.linuxArtifacts[0], /Node unknown/);
+  assert.match(panels.linuxArtifacts[0], /npm unknown/);
+  assert.match(panels.linuxArtifacts[0], /Linux unpacked unknown/);
 });
 
 test("artifact summary falls back to artifact version", () => {
@@ -228,7 +236,7 @@ test("loading state uses Native System/User and Flatpak System/User labels", () 
 test("loading state keeps Linux Artifacts compact", () => {
   const panels = formatDetectionPanelSummaries(null, colors);
 
-  assert.deepEqual(panels.linuxArtifacts, ["Native/Unpacked installations loading..."]);
+  assert.deepEqual(panels.linuxArtifacts, ["Electron/Node/npm loading..."]);
 });
 
 test("planned artifact renders as not detected", () => {
