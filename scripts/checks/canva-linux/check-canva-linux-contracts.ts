@@ -1979,6 +1979,12 @@ function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
   if (!sourceHash.includes("packages/c420ui/bootstrap")) {
     failures.push(`${sourceHashPath}: source hash must include c420ui bootstrap helpers`);
   }
+  if (sourceHash.includes('"generated"')) {
+    failures.push(`${sourceHashPath}: source hash must not globally ignore every generated directory`);
+  }
+  if (!sourceHash.includes("packages/c420ui/bootstrap/generated")) {
+    failures.push(`${sourceHashPath}: source hash must only ignore packages/c420ui/bootstrap/generated`);
+  }
   for (const requiredInput of [
     "scripts/canva-linux/actions",
     "scripts/canva-linux/artifacts",

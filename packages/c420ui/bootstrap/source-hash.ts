@@ -31,7 +31,10 @@ const IGNORED_PATH_PARTS = new Set([
   ".build",
   "dist",
   "node_modules",
-  "generated",
+]);
+
+const IGNORED_RELATIVE_PATHS = new Set([
+  "packages/c420ui/bootstrap/generated",
 ]);
 
 function normalizeRelativePath(relativePath: string): string {
@@ -39,7 +42,14 @@ function normalizeRelativePath(relativePath: string): string {
 }
 
 function shouldIgnore(relativePath: string): boolean {
-  return normalizeRelativePath(relativePath)
+  const normalized = normalizeRelativePath(relativePath);
+  for (const ignoredPath of IGNORED_RELATIVE_PATHS) {
+    if (normalized === ignoredPath || normalized.startsWith(`${ignoredPath}/`)) {
+      return true;
+    }
+  }
+
+  return normalized
     .split(path.posix.sep)
     .some((part) => IGNORED_PATH_PARTS.has(part));
 }
