@@ -79,7 +79,7 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
   const c420uiPackageJson = readJson<{ version: string }>("packages/c420ui/package.json");
 
   assert.equal(manifest.kind, "c420ui-bootstrap");
-  assert.equal(manifest.generatedBy, "scripts/build-c420ui-bootstrap.ts");
+  assert.equal(manifest.generatedBy, "packages/c420ui/scripts/build-bootstrap.ts");
   assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
   assert.equal(manifest.dependentProject, "canva-linux");
   assert.equal(manifest.dependentProjectVersion, rootPackageJson.version);
@@ -88,7 +88,7 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
   assert.equal(manifest.entrypoint, "run-c420ui.cjs");
   assert.equal(manifest.cliEntrypoint, "run-c420ui-cli.cjs");
   assert.equal(manifest.requiresNode, ">=22.0.0");
-  assert.equal(manifest.buildRecipe, "scripts/build-c420ui-bootstrap.ts");
+  assert.equal(manifest.buildRecipe, "packages/c420ui/scripts/build-bootstrap.ts");
   assert.equal(manifest.buildTool, "esbuild");
   assert.equal(manifest.buildTarget, "node22");
   assert.equal(manifest.bundleFormat, "cjs");
@@ -105,7 +105,7 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     );
   }
   assert.equal(
-    manifest.sourceHashInputs.includes("scripts/build-c420ui-bootstrap.ts"),
+    manifest.sourceHashInputs.includes("packages/c420ui/scripts/build-bootstrap.ts"),
     true,
   );
   assert.equal(

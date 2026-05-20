@@ -110,7 +110,7 @@ const requiredStandaloneEntrypoints = [
   "scripts/copy-runtime-assets.ts",
   "scripts/clean-runtime-build.ts",
   "scripts/run-node-tests.ts",
-  "scripts/run-c420ui.ts",
+  "packages/c420ui/scripts/run-c420ui.ts",
 ] as const;
 
 const requiredBootstrapEntrypoints = {
@@ -129,8 +129,8 @@ const requiredArtifactScripts = {
   "build:preload": ".build/scripts/build-preload-bundle.js",
   "clean:runtime": ".build/scripts/clean-runtime-build.js",
   "build:runtime": ".build/scripts/build-runtime.js",
-  c420ui: ".build/scripts/run-c420ui.js",
-  "check:c420ui": ".build/scripts/run-c420ui.js",
+  c420ui: ".build/packages/c420ui/scripts/run-c420ui.js",
+  "check:c420ui": ".build/packages/c420ui/scripts/run-c420ui.js",
 } as const;
 
 function main(): number {
@@ -1435,7 +1435,7 @@ function validateLauncherScriptShape(
   failures: string[],
 ): void {
   const relativePath = "canva-linux-c420ui-builder";
-  const sourcePath = "scripts/c420ui-builder.ts";
+  const sourcePath = "packages/c420ui/scripts/c420ui-builder.ts";
   const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
   const source = fs.readFileSync(path.join(rootDir, sourcePath), "utf8");
   const legacyPath = path.join(rootDir, "canva-linux.sh");
@@ -1452,8 +1452,8 @@ function validateLauncherScriptShape(
   }
 
   for (const fragment of [
-    "bootstrap/c420ui/c420ui-builder.cjs",
-    ".build/scripts/c420ui-builder.js",
+    "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
+    ".build/packages/c420ui/scripts/c420ui-builder.js",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
     if (!content.includes(fragment)) {
@@ -1466,10 +1466,10 @@ function validateLauncherScriptShape(
     "No direct action was provided.",
     "hasBridgeAction",
     "selectEntrypoint",
-    "bootstrap/c420ui/run-c420ui.cjs",
-    "bootstrap/c420ui/run-c420ui-cli.cjs",
-    ".build/scripts/run-c420ui.js",
-    ".build/scripts/run-c420ui-cli.js",
+    "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+    "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+    ".build/packages/c420ui/scripts/run-c420ui.js",
+    ".build/packages/c420ui/scripts/run-c420ui-cli.js",
   ] as const) {
     if (!source.includes(fragment)) {
       failures.push(`${sourcePath}: builder source is missing required fragment ${JSON.stringify(fragment)}`);
@@ -1683,7 +1683,7 @@ function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const scriptFiles = [
-    "scripts/run-c420ui.ts",
+    "packages/c420ui/scripts/run-c420ui.ts",
     "scripts/c420ui-adapter/run.ts",
   ];
   const adapterDir = path.join(rootDir, "scripts/c420ui-adapter");
@@ -1726,7 +1726,7 @@ function main(): number {
   const ensurePath = "scripts/" + "ensure-npm-dependencies.sh";
   const preflightPath = "scripts/preflight-common.sh";
   const shellClassificationPath = "docs/checks/SHELL_HELPERS.md";
-  const runEntrypointPath = "scripts/run-c420ui.ts";
+  const runEntrypointPath = "packages/c420ui/scripts/run-c420ui.ts";
   const dependenciesPath = "scripts/c420ui-adapter/dependencies.ts";
   const configPath = "config/canva-linux/dependencies.json";
 

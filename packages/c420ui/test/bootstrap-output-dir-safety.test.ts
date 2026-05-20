@@ -29,10 +29,13 @@ test("rejects filesystem root output directory", () => {
   );
 });
 
-test("accepts bootstrap/c420ui under repository root", () => {
+test("accepts packages/c420ui/bootstrap/generated under repository root", () => {
   const rootDir = path.resolve("/tmp/c420ui-safety-root");
   assert.doesNotThrow(() =>
-    assertSafeBootstrapOutputDir(rootDir, path.join(rootDir, "bootstrap", "c420ui")),
+    assertSafeBootstrapOutputDir(
+      rootDir,
+      path.join(rootDir, "packages", "c420ui", "bootstrap", "generated"),
+    ),
   );
 });
 

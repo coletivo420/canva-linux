@@ -39,9 +39,9 @@ type BuildMetadataJson = {
 };
 
 const C420UI_BOOTSTRAP_ARTIFACTS = [
-  "bootstrap/c420ui/run-c420ui.cjs",
-  "bootstrap/c420ui/run-c420ui-cli.cjs",
-  "bootstrap/c420ui/c420ui-builder.cjs",
+  "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+  "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+  "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
 ] as const;
 
 const C420UI_MANIFEST_METADATA_FIELD_MAPPING = [
@@ -140,7 +140,7 @@ function calculateBootstrapArtifactHashes(bootstrapDir: string): Record<string, 
 }
 
 function validateCommittedManifestArtifactHashes(rootDir: string): void {
-  const manifestPath = "bootstrap/c420ui/manifest.json";
+  const manifestPath = "packages/c420ui/bootstrap/generated/manifest.json";
   const manifest = readJson<Record<string, unknown>>(rootDir, manifestPath);
   const artifactHashes = manifest.artifactHashes;
   const failures: string[] = [];
@@ -227,9 +227,9 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     entrypoint: "run-c420ui.cjs",
     cliEntrypoint: "run-c420ui-cli.cjs",
     entrypoints: {
-      ui: "bootstrap/c420ui/run-c420ui.cjs",
-      cli: "bootstrap/c420ui/run-c420ui-cli.cjs",
-      builder: "bootstrap/c420ui/c420ui-builder.cjs",
+      ui: "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+      cli: "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+      builder: "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
     },
     requiresNode: ">=22.0.0",
     buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,
@@ -287,7 +287,7 @@ function validateExpectedManifestMetadata(rootDir: string, expectedBootstrapDir:
 
   for (const [manifestField, metadataField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {
     if (manifest[manifestField] !== packagedMetadata[metadataField]) {
-      failures.push(`bootstrap/c420ui/manifest.json: ${manifestField} must match committed build metadata ${metadataField}`);
+      failures.push(`packages/c420ui/bootstrap/generated/manifest.json: ${manifestField} must match committed build metadata ${metadataField}`);
     }
   }
 
@@ -339,7 +339,7 @@ function main(): void {
         expectedRelativePath: path.basename(committedRelativePath),
       })),
       {
-        committedRelativePath: "bootstrap/c420ui/manifest.json",
+        committedRelativePath: "packages/c420ui/bootstrap/generated/manifest.json",
         expectedRelativePath: "manifest.json",
       },
     ]);

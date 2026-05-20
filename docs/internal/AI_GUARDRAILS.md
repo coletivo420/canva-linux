@@ -96,7 +96,7 @@ malformed SIGCONT blocks, or host-dependency validators interleaved into the int
 Any change to c420ui startup sources, the Canva Linux adapter, dependent-project configs, Canva Linux action or detection scripts,
 c420ui package metadata, the bootstrap hash helper, or the bootstrap builder must regenerate the bootstrap bundle with
 `npm run build:c420ui-bootstrap`. Do not manually edit generated bootstrap `.cjs` files. Do not leave
-`bootstrap/c420ui/manifest.json` with a stale `sourceHash`; run `npm run check:c420ui-bootstrap` before handing off release changes.
+`packages/c420ui/bootstrap/generated/manifest.json` with a stale `sourceHash`; run `npm run check:c420ui-bootstrap` before handing off release changes.
 
 ## Language and future i18n
 
@@ -179,7 +179,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 ### c420ui terminal startup and root guard
 
 - The c420ui terminal runtime owns the root launch guard.
-- Do not add root launch checks to `scripts/run-c420ui.ts`.
+- Do not add root launch checks to `packages/c420ui/scripts/run-c420ui.ts`.
 - Do not add root launch checks to `scripts/c420ui-adapter/run.ts`.
 - Project adapters must not expose `rootLaunchGuardMessage`.
 - The Canva Linux root provider is only for privileged actions, not for launching the terminal UI.
@@ -327,7 +327,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not narrow the c420ui CLI entrypoint freshness check to a small hardcoded list of files.
 - The builder command must rebuild the c420ui CLI bridge when `packages/c420ui/src`, `scripts/c420ui-adapter`,
   `packages/c420ui/src/terminal`, action registry metadata or project UI metadata changes.
-- Builder parser tests must not execute real project actions; use a stubbed `bootstrap/c420ui/run-c420ui-cli.cjs`.
+- Builder parser tests must not execute real project actions; use a stubbed `packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs`.
 - Only one direct action may execute per invocation.
 - Dangerous or confirmation-required direct actions must not execute without `--yes`.
 - Privileged direct actions must run root/sudo preflight before backend scripts start.
@@ -537,7 +537,7 @@ unless the adapter interface is changed and all callers are updated.
 
 ## c420ui startup dependency ordering
 
-Do not add dependent-project dependency repair back to `scripts/run-c420ui.ts`. Interactive startup must start c420ui
+Do not add dependent-project dependency repair back to `packages/c420ui/scripts/run-c420ui.ts`. Interactive startup must start c420ui
 first, then run host dependency validation or repair as a c420ui startup task so failures stay visible in the UI. Keep
 Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adjacent adapter code, not in c420ui core.
 

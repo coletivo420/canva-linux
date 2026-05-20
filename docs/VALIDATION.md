@@ -91,9 +91,9 @@ To regenerate committed artifacts intentionally, run `npm run build:metadata`, `
 The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
 malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner. Validate this with:
 
-- `node --check bootstrap/c420ui/run-c420ui.cjs`
-- `node --check bootstrap/c420ui/run-c420ui-cli.cjs`
-- `node --check bootstrap/c420ui/c420ui-builder.cjs`
+- `node --check packages/c420ui/bootstrap/generated/run-c420ui.cjs`
+- `node --check packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs`
+- `node --check packages/c420ui/bootstrap/generated/c420ui-builder.cjs`
 - `npm run check:c420ui-node-check`
 - `npm run check:c420ui-bootstrap`
 - `npm run check:c420ui-bootstrap-artifacts`
@@ -102,9 +102,9 @@ malformed SIGCONT blocks, or host-dependency validators interleaved into the int
 Bootstrap PR logs must include these exact success lines after regenerating bootstrap artifacts:
 
 ```text
-[ok] node --check bootstrap/c420ui/run-c420ui.cjs
-[ok] node --check bootstrap/c420ui/run-c420ui-cli.cjs
-[ok] node --check bootstrap/c420ui/c420ui-builder.cjs
+[ok] node --check packages/c420ui/bootstrap/generated/run-c420ui.cjs
+[ok] node --check packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs
+[ok] node --check packages/c420ui/bootstrap/generated/c420ui-builder.cjs
 [ok] npm run check:c420ui-bootstrap-artifacts
 ```
 

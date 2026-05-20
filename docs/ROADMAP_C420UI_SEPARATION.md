@@ -33,7 +33,7 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 
 ## Current execution model
 
-Direct launcher actions route through `.build/scripts/run-c420ui-cli.js`, the Canva Linux c420ui CLI bridge, and the reusable c420ui Action Engine.
+Direct launcher actions route through `.build/packages/c420ui/scripts/run-c420ui-cli.js`, the Canva Linux c420ui CLI bridge, and the reusable c420ui Action Engine.
 
 Interactive Canva Linux c420ui actions use the same Action Engine, Root Provider contract, Canva Linux Root Provider, Command Runner, and operational log redaction policy.
 

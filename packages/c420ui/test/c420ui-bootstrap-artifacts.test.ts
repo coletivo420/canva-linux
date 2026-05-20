@@ -5,9 +5,9 @@ import path from "node:path";
 import test from "node:test";
 
 const bundles = [
-  "bootstrap/c420ui/run-c420ui.cjs",
-  "bootstrap/c420ui/run-c420ui-cli.cjs",
-  "bootstrap/c420ui/c420ui-builder.cjs",
+  "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+  "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+  "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
 ] as const;
 
 type BootstrapManifest = {
@@ -32,7 +32,7 @@ function readJson<T>(relativePath: string): T {
 }
 
 function readBundle(): string {
-  return fs.readFileSync("bootstrap/c420ui/run-c420ui.cjs", "utf8");
+  return fs.readFileSync("packages/c420ui/bootstrap/generated/run-c420ui.cjs", "utf8");
 }
 
 const strictManifestMetadata =
@@ -172,7 +172,7 @@ test("c420ui bootstrap manifest metadata fields are well-formed", () => {
   assert.notEqual(manifest.dependentProjectDisplayVersion, "");
   assert.notEqual(manifest.dependentProjectPhase, "");
   assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
-  assert.equal(manifest.generatedBy, "scripts/build-c420ui-bootstrap.ts");
+  assert.equal(manifest.generatedBy, "packages/c420ui/scripts/build-bootstrap.ts");
   for (const artifact of ["run-c420ui.cjs", "run-c420ui-cli.cjs", "c420ui-builder.cjs"] as const) {
     assert.match(String(manifest.artifactHashes?.[artifact]), /^sha256:[0-9a-f]{64}$/);
   }

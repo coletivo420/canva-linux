@@ -79,7 +79,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
   `.build/scripts/core/<entry>.js` artifact.
 - `npm run build:scripts` compiles top-level script entrypoints such as
   `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
-  `scripts/run-c420ui.ts` directly into `.build/scripts/*.js`.
+  `packages/c420ui/scripts/run-c420ui.ts` directly into `.build/scripts/*.js`.
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after
   `build:scripts`; maintained `scripts/**/*.js` wrappers, bootstrap files, and
   validation outputs are forbidden.

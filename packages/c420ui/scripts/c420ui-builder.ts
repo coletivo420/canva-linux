@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadEffectiveBuildMetadata } from "./c420ui-adapter/build-metadata-loader";
+import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
 
 export const BUILDER_INTERNAL_NAME = "c420ui-builder";
 export const BUILDER_ALIAS = "canva-linux-c420ui-builder";
@@ -134,12 +134,12 @@ function createSession(rootDir: string): { sessionLog?: string; sessionId: strin
 function selectEntrypoint(rootDir: string, kind: "ui" | "cli"): string {
   const candidates = kind === "ui"
     ? [
-        path.join(rootDir, "bootstrap/c420ui/run-c420ui.cjs"),
-        path.join(rootDir, ".build/scripts/run-c420ui.js"),
+        path.join(rootDir, "packages/c420ui/bootstrap/generated/run-c420ui.cjs"),
+        path.join(rootDir, ".build/packages/c420ui/scripts/run-c420ui.js"),
       ]
     : [
-        path.join(rootDir, "bootstrap/c420ui/run-c420ui-cli.cjs"),
-        path.join(rootDir, ".build/scripts/run-c420ui-cli.js"),
+        path.join(rootDir, "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
+        path.join(rootDir, ".build/packages/c420ui/scripts/run-c420ui-cli.js"),
       ];
 
   for (const candidate of candidates) {

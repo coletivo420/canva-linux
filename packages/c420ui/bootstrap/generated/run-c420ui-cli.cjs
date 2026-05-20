@@ -2210,7 +2210,7 @@ async function runCanvaLinuxC420UICli(argv) {
   return result.exitCode;
 }
 
-// scripts/run-c420ui-cli.ts
+// packages/c420ui/scripts/run-c420ui-cli.ts
 runCanvaLinuxC420UICli(process.argv.slice(2)).then((code) => {
   process.exit(code);
 }).catch((error) => {

@@ -1,9 +1,9 @@
 import type * as esbuild from "esbuild";
 
 export const C420UI_BOOTSTRAP_ENTRYPOINTS = [
-  "scripts/run-c420ui.ts",
-  "scripts/run-c420ui-cli.ts",
-  "scripts/c420ui-builder.ts",
+  "packages/c420ui/scripts/run-c420ui.ts",
+  "packages/c420ui/scripts/run-c420ui-cli.ts",
+  "packages/c420ui/scripts/c420ui-builder.ts",
 ] as const;
 
 export const C420UI_BOOTSTRAP_EXTERNALS = [
@@ -12,7 +12,7 @@ export const C420UI_BOOTSTRAP_EXTERNALS = [
   "pty.js",
 ] as const;
 
-export const C420UI_BOOTSTRAP_BUILD_RECIPE = "scripts/build-c420ui-bootstrap.ts";
+export const C420UI_BOOTSTRAP_BUILD_RECIPE = "packages/c420ui/scripts/build-bootstrap.ts";
 export const C420UI_BOOTSTRAP_BUILD_TOOL = "esbuild";
 export const C420UI_BOOTSTRAP_BUILD_TARGET = "node22";
 export const C420UI_BOOTSTRAP_BUNDLE_FORMAT = "cjs";

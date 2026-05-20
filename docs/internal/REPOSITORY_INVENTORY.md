@@ -201,4 +201,4 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `tsconfig.strict.json`
 - `types/blessed.d.ts`
 
-- `scripts/c420ui-builder.ts`
+- `packages/c420ui/scripts/c420ui-builder.ts`

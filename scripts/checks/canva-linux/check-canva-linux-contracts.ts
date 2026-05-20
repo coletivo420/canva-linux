@@ -28,7 +28,7 @@ function hasDuplicateEntries(values: readonly string[]): boolean {
 type CoreCheckFileKind = "shell" | "typescript";
 
 const noParallelShellMenuActiveFiles: Array<{ path: string; kind: CoreCheckFileKind }> = [
-  { path: "scripts/c420ui-builder.ts", kind: "typescript" },
+  { path: "packages/c420ui/scripts/c420ui-builder.ts", kind: "typescript" },
   { path: "packages/c420ui/src/terminal/app.ts", kind: "typescript" },
   { path: "packages/c420ui/src/terminal/index.ts", kind: "typescript" },
 ];
@@ -281,9 +281,9 @@ function legacyBuilderPaths(): string[] {
 
 function validateBuilderArtifactsExist(rootDir: string, failures: string[]): void {
   for (const relativePath of [
-    "scripts/c420ui-builder.ts",
+    "packages/c420ui/scripts/c420ui-builder.ts",
     "canva-linux-c420ui-builder",
-    "bootstrap/c420ui/c420ui-builder.cjs",
+    "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
   ] as const) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) failures.push(`${relativePath} must exist`);
   }
@@ -309,8 +309,8 @@ function validatePublicBuilderWrapper(rootDir: string, failures: string[]): void
   for (const required of [
     "command -v node",
     "exit 127",
-    "bootstrap/c420ui/c420ui-builder.cjs",
-    ".build/scripts/c420ui-builder.js",
+    "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
+    ".build/packages/c420ui/scripts/c420ui-builder.js",
   ] as const) {
     if (!wrapper.includes(required)) failures.push(`${relativePath} wrapper must contain ${required}`);
   }
@@ -324,7 +324,7 @@ function validatePublicBuilderWrapper(rootDir: string, failures: string[]): void
 }
 
 function validateInternalBuilderSource(rootDir: string, failures: string[]): void {
-  const relativePath = "scripts/c420ui-builder.ts";
+  const relativePath = "packages/c420ui/scripts/c420ui-builder.ts";
   const source = readOptionalProjectFile(rootDir, relativePath);
   if (!source) {
     failures.push(`${relativePath} must exist`);
@@ -336,7 +336,7 @@ function validateInternalBuilderSource(rootDir: string, failures: string[]): voi
     "canva-linux-c420ui-builder",
     "Canva Linux Builder powered by c420ui",
     "isRuntimeOnlyFlag",
-    "bootstrap/c420ui/run-c420ui-cli.cjs",
+    "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
   ] as const) {
     if (!source.includes(fragment)) failures.push(`${relativePath}: missing ${fragment}`);
   }
@@ -464,12 +464,12 @@ function validateBuilderAliasDocs(rootDir: string, failures: string[]): void {
 function validateLegacyBuilderPathReferences(rootDir: string, failures: string[]): void {
   const criticalFiles = [
     "package.json",
-    "scripts/build-c420ui-bootstrap.ts",
+    "packages/c420ui/scripts/build-bootstrap.ts",
     "packages/c420ui/bootstrap/source-hash.ts",
     "packages/c420ui/bootstrap/build-recipe.ts",
     "packages/c420ui/checks/check-bootstrap.ts",
     "scripts/checks/canva-linux/check-canva-linux-contracts.ts",
-    "bootstrap/c420ui/manifest.json",
+    "packages/c420ui/bootstrap/generated/manifest.json",
     "canva-linux-c420ui-builder",
     "README.md",
     "docs/CLI.md",
@@ -649,7 +649,7 @@ function validateAdapterProjectContract(
 
 function validateC420UIBridgeContract(rootDir: string, failures: string[]): void {
   const cliBridgePath = "scripts/c420ui-adapter/cli.ts";
-  const cliEntrypointPath = "scripts/run-c420ui-cli.ts";
+  const cliEntrypointPath = "packages/c420ui/scripts/run-c420ui-cli.ts";
   if (!fs.existsSync(path.join(rootDir, cliBridgePath))) failures.push("Canva Linux c420ui CLI bridge must exist");
   if (!fs.existsSync(path.join(rootDir, cliEntrypointPath))) failures.push("Canva Linux c420ui CLI entrypoint must exist");
 
@@ -795,7 +795,7 @@ function main(): number {
 
 function checkDependentProjectAdapterBoundary(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const runEntrypointPath = "scripts/run-c420ui.ts";
+  const runEntrypointPath = "packages/c420ui/scripts/run-c420ui.ts";
   const runPath = "scripts/c420ui-adapter/run.ts";
   const bridgePath = "scripts/c420ui-adapter/bridge.ts";
   const adapterPath = "scripts/c420ui-adapter/adapter.ts";
@@ -896,7 +896,7 @@ function checkHostDependencyProviderContract(failures: string[]): void {
   const rootDir = findProjectRoot();
   const dependenciesPath = "scripts/c420ui-adapter/dependencies.ts";
   const configPath = "config/canva-linux/dependencies.json";
-  const runEntrypointPath = "scripts/run-c420ui.ts";
+  const runEntrypointPath = "packages/c420ui/scripts/run-c420ui.ts";
 
   if (!fs.existsSync(path.join(rootDir, dependenciesPath))) {
     failures.push(`${dependenciesPath}: missing Canva Linux dependency loader`);
@@ -1014,7 +1014,7 @@ function main(): number {
   const tuiAppPath = path.join(rootDir, "packages/c420ui/src/terminal/app.ts");
   const checkedFiles = [
     ...findCheckedFiles(scriptsDir),
-    path.join(rootDir, "scripts/c420ui-builder.ts"),
+    path.join(rootDir, "packages/c420ui/scripts/c420ui-builder.ts"),
   ].filter((f) => {
     const relative = path.relative(rootDir, f);
     return (
@@ -1499,10 +1499,10 @@ function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const app = read(rootDir, "packages/c420ui/src/terminal/app.ts");
-  const launcher = read(rootDir, "scripts/c420ui-builder.ts");
+  const launcher = read(rootDir, "packages/c420ui/scripts/c420ui-builder.ts");
 
   if (!launcher.includes("fs.writeFileSync(sessionLog")) {
-    failures.push("scripts/c420ui-builder.ts: builder must create/truncate the session log once");
+    failures.push("packages/c420ui/scripts/c420ui-builder.ts: builder must create/truncate the session log once");
   }
   if (!app.includes('flags: "a"')) {
     failures.push("packages/c420ui/src/terminal/app.ts: c420ui must append to the launcher session log");
@@ -1800,32 +1800,32 @@ function checkNoParallelShellMenu(failures: string[]): void {
 
 function checkNoRootLauncherContract(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const launcher = readProjectFile(rootDir, "scripts/c420ui-builder.ts");
-  const runTui = readProjectFile(rootDir, "scripts/run-c420ui.ts");
+  const launcher = readProjectFile(rootDir, "packages/c420ui/scripts/c420ui-builder.ts");
+  const runTui = readProjectFile(rootDir, "packages/c420ui/scripts/run-c420ui.ts");
   const adapterRun = readProjectFile(rootDir, "scripts/c420ui-adapter/run.ts");
   const rootMessage =
     "Do not run Canva Linux Builder powered by c420ui with sudo or as root.";
 
   if (!launcher.includes("process.getuid") || !launcher.includes("=== 0")) {
-    failures.push("scripts/c420ui-builder.ts: must block uid 0 before launching Tool");
+    failures.push("packages/c420ui/scripts/c420ui-builder.ts: must block uid 0 before launching Tool");
   }
   if (!launcher.includes(rootMessage) && !launcher.includes("Do not run ${BUILDER_TITLE} with sudo or as root.")) {
-    failures.push("scripts/c420ui-builder.ts: must explain that root/sudo launch is blocked");
+    failures.push("packages/c420ui/scripts/c420ui-builder.ts: must explain that root/sudo launch is blocked");
   }
   if (!launcher.includes("administrator privileges")) {
     failures.push(
-      "scripts/c420ui-builder.ts: root guard must explain privileges are requested only when needed",
+      "packages/c420ui/scripts/c420ui-builder.ts: root guard must explain privileges are requested only when needed",
     );
   }
   const adapter = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
   if (!runTui.includes("runCanvaLinuxC420UI")) {
-    failures.push("scripts/run-c420ui.ts must call runCanvaLinuxC420UI");
+    failures.push("packages/c420ui/scripts/run-c420ui.ts must call runCanvaLinuxC420UI");
   }
   if (runTui.includes(".build/packages/c420ui/terminal/index.js")) {
-    failures.push("scripts/run-c420ui.ts must not execute the c420ui terminal barrel bundle");
+    failures.push("packages/c420ui/scripts/run-c420ui.ts must not execute the c420ui terminal barrel bundle");
   }
   if (runTui.includes("process.getuid")) {
-    failures.push("scripts/run-c420ui.ts must not perform root launch checks");
+    failures.push("packages/c420ui/scripts/run-c420ui.ts must not perform root launch checks");
   }
   if (!adapterRun.includes("runC420UITerminalApp")) {
     failures.push("scripts/c420ui-adapter/run.ts must import runC420UITerminalApp");
@@ -1960,24 +1960,30 @@ function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
   }
 
   const adapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
-  const bootstrapSource = readProjectFile(rootDir, "scripts/build-c420ui-bootstrap.ts");
+  const bootstrapSource = readProjectFile(rootDir, "packages/c420ui/scripts/build-bootstrap.ts");
   if (!adapterSource.includes('./detection/provider')) {
     failures.push("scripts/c420ui-adapter/adapter.ts: must import ./detection/provider");
   }
   if (!bootstrapSource.includes('./c420ui-adapter/build-metadata-loader')) {
-    failures.push("scripts/build-c420ui-bootstrap.ts: must import ./c420ui-adapter/build-metadata-loader");
+    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ./c420ui-adapter/build-metadata-loader");
   }
   if (!bootstrapSource.includes('../packages/c420ui/bootstrap/build-recipe')) {
-    failures.push("scripts/build-c420ui-bootstrap.ts: must import ../packages/c420ui/bootstrap/build-recipe");
+    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ../packages/c420ui/bootstrap/build-recipe");
   }
   if (!bootstrapSource.includes('../packages/c420ui/bootstrap/source-hash')) {
-    failures.push("scripts/build-c420ui-bootstrap.ts: must import ../packages/c420ui/bootstrap/source-hash");
+    failures.push("packages/c420ui/scripts/build-bootstrap.ts: must import ../packages/c420ui/bootstrap/source-hash");
   }
 
   const sourceHashPath = "packages/c420ui/bootstrap/source-hash.ts";
   const sourceHash = readProjectFile(rootDir, sourceHashPath);
   if (!sourceHash.includes("packages/c420ui/bootstrap")) {
     failures.push(`${sourceHashPath}: source hash must include c420ui bootstrap helpers`);
+  }
+  if (sourceHash.includes('"generated"')) {
+    failures.push(`${sourceHashPath}: source hash must not globally ignore every generated directory`);
+  }
+  if (!sourceHash.includes("packages/c420ui/bootstrap/generated")) {
+    failures.push(`${sourceHashPath}: source hash must only ignore packages/c420ui/bootstrap/generated`);
   }
   for (const requiredInput of [
     "scripts/canva-linux/actions",
@@ -2484,9 +2490,9 @@ function summarizeSpawnFailure(result: ReturnType<typeof spawnSync>): string {
 function checkGeneratedC420uiBootstrapSyntax(rootDir: string, failures: string[]): boolean {
   let syntaxOk = true;
   const artifacts = [
-    "bootstrap/c420ui/run-c420ui.cjs",
-    "bootstrap/c420ui/run-c420ui-cli.cjs",
-    "bootstrap/c420ui/c420ui-builder.cjs",
+    "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+    "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+    "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
   ] as const;
 
   for (const relativePath of artifacts) {
@@ -2514,7 +2520,7 @@ function checkGeneratedC420uiBootstrapSyntax(rootDir: string, failures: string[]
 }
 
 function validateC420uiRunBundleStructuralIntegrity(rootDir: string, failures: string[]): void {
-  const relativePath = "bootstrap/c420ui/run-c420ui.cjs";
+  const relativePath = "packages/c420ui/bootstrap/generated/run-c420ui.cjs";
   const bundle = readOptionalProjectFile(rootDir, relativePath) ?? "";
   const malformedSigcontClosure = /process\.once\("SIGCONT", function\(\) \{[\s\S]{0,600}?\n\s*};\s*\n\s*process\.kill\(process\.pid, "SIGTSTP"\)/.test(bundle);
   const programStart = bundle.indexOf("var require_program = __commonJS");
@@ -2576,9 +2582,9 @@ function validateC420uiRunBundleStructuralIntegrity(rootDir: string, failures: s
 
 function checkC420uiGeneratedArtifactsContract(rootDir: string, failures: string[]): boolean {
   const artifacts = [
-    "bootstrap/c420ui/run-c420ui.cjs",
-    "bootstrap/c420ui/run-c420ui-cli.cjs",
-    "bootstrap/c420ui/c420ui-builder.cjs",
+    "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+    "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+    "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
   ] as const;
 
   for (const artifact of artifacts) {
@@ -2651,10 +2657,10 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
   const validateProjectScript = scripts["validate:project"] ?? "";
   const validateProject = readProjectFile(rootDir, "scripts/validate-project.sh");
   const adapterSource = readProjectFile(rootDir, "scripts/c420ui-adapter/adapter.ts");
-  const bootstrapBuildSource = readProjectFile(rootDir, "scripts/build-c420ui-bootstrap.ts");
+  const bootstrapBuildSource = readProjectFile(rootDir, "packages/c420ui/scripts/build-bootstrap.ts");
   const bootstrapCheckSource = readProjectFile(rootDir, "packages/c420ui/checks/check-bootstrap.ts");
   const artifactGateSource = readProjectFile(rootDir, "packages/c420ui/checks/check-artifact-gate.ts");
-  const bootstrapManifest = JSON.parse(readProjectFile(rootDir, "bootstrap/c420ui/manifest.json")) as Record<string, unknown>;
+  const bootstrapManifest = JSON.parse(readProjectFile(rootDir, "packages/c420ui/bootstrap/generated/manifest.json")) as Record<string, unknown>;
 
   if (!nodeCheckScript) {
     failures.push("package.json must contain check:c420ui-node-check");
@@ -2704,16 +2710,16 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
   if (!artifactGateSource.includes("validateCommittedManifestArtifactHashes") || !artifactGateSource.includes("compareArtifacts")) {
     failures.push("check:c420ui-bootstrap-artifacts must compare artifact content and manifest hashes");
   }
-  if (bootstrapManifest.generatedBy !== "scripts/build-c420ui-bootstrap.ts") {
-    failures.push("bootstrap/c420ui/manifest.json: generatedBy must identify scripts/build-c420ui-bootstrap.ts");
+  if (bootstrapManifest.generatedBy !== "packages/c420ui/scripts/build-bootstrap.ts") {
+    failures.push("packages/c420ui/bootstrap/generated/manifest.json: generatedBy must identify packages/c420ui/scripts/build-bootstrap.ts");
   }
   const artifactHashes = bootstrapManifest.artifactHashes;
   if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
-    failures.push("bootstrap/c420ui/manifest.json: artifactHashes must be present");
+    failures.push("packages/c420ui/bootstrap/generated/manifest.json: artifactHashes must be present");
   } else {
     for (const artifact of ["run-c420ui.cjs", "run-c420ui-cli.cjs", "c420ui-builder.cjs"] as const) {
       if (typeof (artifactHashes as Record<string, unknown>)[artifact] !== "string") {
-        failures.push(`bootstrap/c420ui/manifest.json: artifactHashes.${artifact} must be present`);
+        failures.push(`packages/c420ui/bootstrap/generated/manifest.json: artifactHashes.${artifact} must be present`);
       }
     }
   }
@@ -2727,28 +2733,28 @@ function checkC420uiArtifactGateContract(rootDir: string, failures: string[]): v
 
 function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
   const rootDir = findProjectRoot();
-  const launcher = readProjectFile(rootDir, "scripts/c420ui-builder.ts");
+  const launcher = readProjectFile(rootDir, "packages/c420ui/scripts/c420ui-builder.ts");
 
   for (const fragment of [
-    "bootstrap/c420ui/run-c420ui.cjs",
-    "bootstrap/c420ui/run-c420ui-cli.cjs",
-    ".build/scripts/run-c420ui.js",
-    ".build/scripts/run-c420ui-cli.js",
+    "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
+    "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+    ".build/packages/c420ui/scripts/run-c420ui.js",
+    ".build/packages/c420ui/scripts/run-c420ui-cli.js",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
-    if (!launcher.includes(fragment)) failures.push(`scripts/c420ui-builder.ts: missing bootstrap launcher fragment ${fragment}`);
+    if (!launcher.includes(fragment)) failures.push(`packages/c420ui/scripts/c420ui-builder.ts: missing bootstrap launcher fragment ${fragment}`);
   }
 
-  const bootstrapUiIndex = launcher.indexOf("bootstrap/c420ui/run-c420ui.cjs");
-  const buildUiIndex = launcher.indexOf(".build/scripts/run-c420ui.js");
-  const bootstrapCliIndex = launcher.indexOf("bootstrap/c420ui/run-c420ui-cli.cjs");
-  const buildCliIndex = launcher.indexOf(".build/scripts/run-c420ui-cli.js");
+  const bootstrapUiIndex = launcher.indexOf("packages/c420ui/bootstrap/generated/run-c420ui.cjs");
+  const buildUiIndex = launcher.indexOf(".build/packages/c420ui/scripts/run-c420ui.js");
+  const bootstrapCliIndex = launcher.indexOf("packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs");
+  const buildCliIndex = launcher.indexOf(".build/packages/c420ui/scripts/run-c420ui-cli.js");
 
   if (bootstrapUiIndex !== -1 && buildUiIndex !== -1 && bootstrapUiIndex > buildUiIndex) {
-    failures.push("scripts/c420ui-builder.ts: interactive c420ui bootstrap bundle must be preferred before .build fallback");
+    failures.push("packages/c420ui/scripts/c420ui-builder.ts: interactive c420ui bootstrap bundle must be preferred before .build fallback");
   }
   if (bootstrapCliIndex !== -1 && buildCliIndex !== -1 && bootstrapCliIndex > buildCliIndex) {
-    failures.push("scripts/c420ui-builder.ts: c420ui CLI bootstrap bundle must be preferred before .build fallback");
+    failures.push("packages/c420ui/scripts/c420ui-builder.ts: c420ui CLI bootstrap bundle must be preferred before .build fallback");
   }
 
   for (const forbidden of [
@@ -2760,14 +2766,14 @@ function checkLauncherBootstrapDependencyPolicy(failures: string[]): void {
     "npm ci",
     "ensure_c420ui_bootstrap_npm_dependencies",
   ] as const) {
-    if (launcher.includes(forbidden)) failures.push(`scripts/c420ui-builder.ts: must not restore launcher dependency policy fragment ${forbidden}`);
+    if (launcher.includes(forbidden)) failures.push(`packages/c420ui/scripts/c420ui-builder.ts: must not restore launcher dependency policy fragment ${forbidden}`);
   }
 }
 
 
 function checkRuntimeCliDebugGuardrails(rootDir: string, failures: string[]): void {
   const runtimeCli = readOptionalProjectFile(rootDir, "electron/main/runtime-cli.ts") || "";
-  const builder = readOptionalProjectFile(rootDir, "scripts/c420ui-builder.ts") || "";
+  const builder = readOptionalProjectFile(rootDir, "packages/c420ui/scripts/c420ui-builder.ts") || "";
   const runSh = readOptionalProjectFile(rootDir, "run.sh") || "";
 
   if (!runtimeCli.includes("--canva-debug=1") || !runtimeCli.includes("--canva-debug=2")) {
@@ -2794,8 +2800,8 @@ function checkRuntimeCliDebugGuardrails(rootDir: string, failures: string[]): vo
     { file: "electron/shared/debug.ts", pattern: "CANVA_DEBUG_LEVEL", message: "must not read legacy runtime debug level env" },
     { file: "electron/main/runtime.ts", pattern: "CANVA_DEBUG", message: "must not read legacy runtime debug env" },
     { file: "run.sh", pattern: "CANVA_DEBUG", message: "must not export or interpret legacy runtime debug env" },
-    { file: "scripts/c420ui-builder.ts", pattern: "--debug=1", message: "must not implement runtime debug flags" },
-    { file: "scripts/c420ui-builder.ts", pattern: "--debug=2", message: "must not implement runtime debug flags" },
+    { file: "packages/c420ui/scripts/c420ui-builder.ts", pattern: "--debug=1", message: "must not implement runtime debug flags" },
+    { file: "packages/c420ui/scripts/c420ui-builder.ts", pattern: "--debug=2", message: "must not implement runtime debug flags" },
   ];
 
   for (const item of forbidden) {
@@ -2810,7 +2816,7 @@ function checkC420uiDetectionPanelsAndPlainLogsContract(rootDir: string, failure
   const appPath = "packages/c420ui/src/terminal/app.ts";
   const summaryPath = "packages/c420ui/src/terminal/detected-installations-summary.ts";
   const artifactFragmentsPath = "scripts/c420ui-adapter/detection/artifact-fragments.ts";
-  const bootstrapRunPath = "bootstrap/c420ui/run-c420ui.cjs";
+  const bootstrapRunPath = "packages/c420ui/bootstrap/generated/run-c420ui.cjs";
   const app = readProjectFile(rootDir, appPath);
   const summary = readProjectFile(rootDir, summaryPath);
   const artifactFragments = readProjectFile(rootDir, artifactFragmentsPath);
@@ -2920,7 +2926,7 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   const bootstrapCheckSource = readProjectFile(rootDir, "packages/c420ui/checks/check-bootstrap.ts");
   const packageJsonSource = readProjectFile(rootDir, "package.json");
   const bootstrapManifest = JSON.parse(
-    readProjectFile(rootDir, "bootstrap/c420ui/manifest.json"),
+    readProjectFile(rootDir, "packages/c420ui/bootstrap/generated/manifest.json"),
   ) as Record<string, unknown>;
   const generatorSource = readProjectFile(rootDir, "scripts/generate-build-metadata.ts");
 
@@ -3002,7 +3008,7 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
   if (!c420uiAdapterSource.includes("packages/c420ui/package.json")) {
     failures.push("c420ui brand version must come from packages/c420ui/package.json");
   }
-  if (!/"build:c420ui-bootstrap"\s*:\s*"[^"]*build:metadata/.test(packageJsonSource) && !readProjectFile(rootDir, "scripts/build-c420ui-bootstrap.ts").includes("loadEffectiveBuildMetadata")) {
+  if (!/"build:c420ui-bootstrap"\s*:\s*"[^"]*build:metadata/.test(packageJsonSource) && !readProjectFile(rootDir, "packages/c420ui/scripts/build-bootstrap.ts").includes("loadEffectiveBuildMetadata")) {
     failures.push("build:c420ui-bootstrap must refresh or resolve effective build metadata before manifest generation");
   }
   for (const field of [
@@ -3012,7 +3018,7 @@ function checkEffectiveBuildMetadataContract(rootDir: string, failures: string[]
     "dependentProjectPhase",
   ] as const) {
     if (typeof bootstrapManifest[field] !== "string" || !bootstrapManifest[field]) {
-      failures.push(`bootstrap/c420ui/manifest.json: missing ${field}`);
+      failures.push(`packages/c420ui/bootstrap/generated/manifest.json: missing ${field}`);
     }
   }
 
@@ -3133,7 +3139,7 @@ function checkShellActionIds(failures: string[]): void {
     );
   }
 
-  const shell = fs.readFileSync(path.join(rootDir, "scripts/c420ui-builder.ts"), "utf8");
+  const shell = fs.readFileSync(path.join(rootDir, "packages/c420ui/scripts/c420ui-builder.ts"), "utf8");
   const ids = [...shell.matchAll(/run_action_by_id\s+["']([^"']+)["']/g)]
     .map((match) => match[1])
     .filter((id): id is string => Boolean(id));

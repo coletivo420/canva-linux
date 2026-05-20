@@ -18,7 +18,7 @@ It provides access to the c420ui terminal interface and direct CLI actions.
 - Direct CLI actions are resolved by the c420ui CLI bridge from the project Action Registry.
 - Direct CLI actions are routed through the c420ui CLI bridge and the c420ui Action Engine.
 - The builder command rebuilds the c420ui CLI bridge when relevant TypeScript sources, project adapter files or
-  action registry metadata are newer than `.build/scripts/run-c420ui-cli.js`.
+  action registry metadata are newer than `.build/packages/c420ui/scripts/run-c420ui-cli.js`.
 - The builder does not decide whether an action is concrete, planned, or invalid; the Action Registry and Action Engine own that policy.
 - Do not run Canva Linux Builder powered by c420ui as root. When an operation needs administrator privileges,
   Canva Linux asks for authentication only for that specific action.
@@ -33,7 +33,7 @@ It provides access to the c420ui terminal interface and direct CLI actions.
 | `--dry-run` | Resolve direct action metadata without executing command scripts. |
 
 `./canva-linux-c420ui-builder --help` is stable builder command help. The compiled bridge help
-(`node .build/scripts/run-c420ui-cli.js --help`) is dynamic and lists the
+(`node .build/packages/c420ui/scripts/run-c420ui-cli.js --help`) is dynamic and lists the
 action flags exposed by the active project bridge.
 
 The current direct CLI accepts flag-only global options. Options that take values

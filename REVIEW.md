@@ -128,7 +128,7 @@ Validated guarantees:
 
 - `c420uiVersion` remains independent from the Canva Linux dependent-project version.
 - `dependentProjectVersion` remains `0.1.4-14`.
-- `bootstrap/c420ui/manifest.json` sourceHash matches current TypeScript sources and project configuration.
+- `packages/c420ui/bootstrap/generated/manifest.json` sourceHash matches current TypeScript sources and project configuration.
 - Stale sourceHash detection fails as expected when bootstrap inputs are edited without rebuilding.
 - The launcher does not run `npm install` or `npm ci`.
 - Full dependency validation and repair remain owned by c420ui after startup.
@@ -418,7 +418,7 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- lets `canva-linux-c420ui-builder` execute a stale `.build/scripts/run-c420ui-cli.js`;
+- lets `canva-linux-c420ui-builder` execute a stale `.build/packages/c420ui/scripts/run-c420ui-cli.js`;
 - removes freshness coverage for `packages/c420ui/src`;
 - removes freshness coverage for `scripts/c420ui-adapter`;
 - tests launcher behavior by executing real destructive actions instead of a stub.

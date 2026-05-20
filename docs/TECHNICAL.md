@@ -47,7 +47,7 @@ validation glue.
 `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection
 flags and environment variables have been removed.
 
-The Tool must run as a regular user. `canva-linux-c420ui-builder`, `scripts/run-c420ui.ts`, and
+The Tool must run as a regular user. `canva-linux-c420ui-builder`, `packages/c420ui/scripts/run-c420ui.ts`, and
 the c420ui entrypoint refuse root execution before build, action, or c420ui startup.
 System-wide operations request administrator authentication only for the action
 that needs it.
