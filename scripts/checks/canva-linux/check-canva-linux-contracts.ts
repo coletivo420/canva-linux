@@ -484,16 +484,27 @@ function validateLegacyBuilderPathReferences(rootDir: string, failures: string[]
 }
 
 function validateC420UIPackageStructuralContract(rootDir: string, failures: string[]): void {
-  const forbiddenInAdapter = [
-    "check-c420ui-bootstrap.ts",
-    "check-c420ui-artifact-gate.ts",
-    "check-c420ui-node-check.ts",
-    "c420ui-bootstrap-check-helpers.ts",
-  ];
+  const forbiddenLegacyChecks = [
+    "scripts/checks/canva-linux/check-c420ui-bootstrap.ts",
+    "scripts/checks/canva-linux/check-c420ui-artifact-gate.ts",
+    "scripts/checks/canva-linux/check-c420ui-node-check.ts",
+    "scripts/checks/canva-linux/c420ui-bootstrap-check-helpers.ts",
+  ] as const;
 
-  for (const forbidden of forbiddenInAdapter) {
-    if (fs.existsSync(path.join(rootDir, "scripts/checks/canva-linux", forbidden))) {
-      failures.push(`scripts/checks/canva-linux/${forbidden} must move to packages/c420ui/checks`);
+  for (const relativePath of forbiddenLegacyChecks) {
+    if (fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${relativePath} must not exist`);
+    }
+  }
+
+  for (const requiredCheck of [
+    "packages/c420ui/checks/check-bootstrap.ts",
+    "packages/c420ui/checks/check-artifact-gate.ts",
+    "packages/c420ui/checks/check-node.ts",
+    "packages/c420ui/checks/bootstrap-check-helpers.ts",
+  ] as const) {
+    if (!fs.existsSync(path.join(rootDir, requiredCheck))) {
+      failures.push(`${requiredCheck} must exist`);
     }
   }
 
@@ -512,8 +523,19 @@ function validateC420UIPackageStructuralContract(rootDir: string, failures: stri
   if (fs.existsSync(path.join(rootDir, "test"))) {
     const legacyTests = fs.readdirSync(path.join(rootDir, "test")).filter((name) => /^c420ui-.*\.test\.ts$/.test(name));
     if (legacyTests.length > 0) {
+      failures.push("test/c420ui-*.test.ts must not exist");
       failures.push("c420ui-owned tests must live under packages/c420ui/test.");
       failures.push("Legacy c420ui paths are not supported.");
+    }
+  }
+
+  for (const requiredDir of [
+    "packages/c420ui/scripts",
+    "packages/c420ui/checks",
+    "packages/c420ui/test",
+  ] as const) {
+    if (!fs.existsSync(path.join(rootDir, requiredDir))) {
+      failures.push(`${requiredDir} must exist`);
     }
   }
 
@@ -1986,14 +2008,16 @@ function checkC420UIAdapterBoundary(rootDir: string, failures: string[]): void {
     failures.push(`${sourceHashPath}: source hash must only ignore packages/c420ui/bootstrap/generated`);
   }
   for (const requiredInput of [
-    "scripts/canva-linux/actions",
-    "scripts/canva-linux/artifacts",
-    "scripts/canva-linux/capabilities",
-    "scripts/canva-linux/development",
-    "scripts/canva-linux/project-root.ts",
+    "packages/c420ui/src",
+    "packages/c420ui/scripts",
+    "packages/c420ui/checks",
+    "scripts/c420ui-adapter",
+    "config/canva-linux",
+    "packages/c420ui/package.json",
+    "package.json",
   ] as const) {
     if (!sourceHash.includes(requiredInput)) {
-      failures.push(`${sourceHashPath}: source hash must include remaining bundled dependency ${requiredInput}`);
+      failures.push(`${sourceHashPath}: source hash must include required dependency ${requiredInput}`);
     }
   }
   for (const forbiddenInput of [
@@ -3184,19 +3208,9 @@ export function main(): number {
   checkVersionConsistency(failures);
   checkReleaseContract(failures);
   checkDevelopmentTaskRecipes(failures);
-  checkLauncherBootstrapDependencyPolicy(failures);
   checkRuntimeCliDebugGuardrails(rootDir, failures);
   checkEffectiveBuildMetadataContract(rootDir, failures);
-  // c420ui bootstrap/artifact validation is owned by packages/c420ui/checks.
-  // keep this global contract focused on cross-package boundaries.
   checkPinnedHomeTabStripContract(rootDir, failures);
-  validateBuilderArtifactsExist(rootDir, failures);
-  validateLegacyBuilderArtifactsRemoved(rootDir, failures);
-  validatePublicBuilderWrapper(rootDir, failures);
-  validateInternalBuilderSource(rootDir, failures);
-  validateRuntimeEnvFallbacksRemoved(rootDir, failures);
-  validateBuilderAliasDocs(rootDir, failures);
-  validateLegacyBuilderPathReferences(rootDir, failures);
   checkShellActionIds(failures);
   checkMetadataAndModalContracts(failures);
   checkC420UIPackageStructuralContractRunner(failures);

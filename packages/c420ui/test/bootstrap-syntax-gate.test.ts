@@ -50,12 +50,25 @@ function compileNodeCheckGate(tempDir: string): string {
 
 function createBootstrapRoot(tempDir: string): string {
   const testRoot = path.join(tempDir, "root");
-  const bootstrapDir = path.join(testRoot, "bootstrap", "c420ui");
+  const bootstrapDir = path.join(
+    testRoot,
+    "packages",
+    "c420ui",
+    "bootstrap",
+    "generated",
+  );
   fs.mkdirSync(bootstrapDir, { recursive: true });
 
   for (const artifact of artifacts) {
     fs.copyFileSync(
-      path.join(rootDir, "bootstrap", "c420ui", artifact),
+      path.join(
+        rootDir,
+        "packages",
+        "c420ui",
+        "bootstrap",
+        "generated",
+        artifact,
+      ),
       path.join(bootstrapDir, artifact),
     );
   }
@@ -71,7 +84,14 @@ for (const artifact of artifacts) {
       const gateScript = compileNodeCheckGate(tempDir);
       const testRoot = createBootstrapRoot(tempDir);
       fs.appendFileSync(
-        path.join(testRoot, "bootstrap", "c420ui", artifact),
+        path.join(
+          testRoot,
+          "packages",
+          "c420ui",
+          "bootstrap",
+          "generated",
+          artifact,
+        ),
         "\nif (\n",
       );
 

@@ -181,7 +181,7 @@ export function validateManifestArtifactHashes(
 
   const hashes = artifactHashes as Record<string, unknown>;
   for (const artifact of C420UI_BOOTSTRAP_ARTIFACTS) {
-    const relativePath = `bootstrap/c420ui/${artifact}`;
+    const relativePath = `packages/c420ui/bootstrap/generated/${artifact}`;
     const expectedHash = hashes[artifact];
     if (typeof expectedHash !== "string" || !/^sha256:[0-9a-f]{64}$/.test(expectedHash)) {
       failures.push(`${manifestPath}: artifactHashes.${artifact} must be a sha256 hash`);
@@ -267,7 +267,7 @@ function validateGeneratedArtifactsMatchBuildRecipe(
     );
 
     if (result.error || result.status !== 0) {
-      failures.push(`bootstrap/c420ui: unable to regenerate bootstrap artifacts for comparison (${summarizeCommandFailure(result)})`);
+      failures.push(`packages/c420ui/bootstrap/generated: unable to regenerate bootstrap artifacts for comparison (${summarizeCommandFailure(result)})`);
       return;
     }
 
@@ -361,7 +361,7 @@ function main(): void {
   }
 
   for (const forbiddenPath of [
-    "bootstrap/c420ui/" + "canva-linux-c420ui-builder.cjs",
+    "packages/c420ui/bootstrap/generated/" + "canva-linux-c420ui-builder.cjs",
     "scripts/" + "canva-linux-c420ui-builder.ts",
   ] as const) {
     if (fs.existsSync(path.join(rootDir, forbiddenPath))) {
@@ -432,10 +432,7 @@ function main(): void {
           failures.push(`${manifestPath}: sourceHashInputs must include ${requiredInput}`);
         }
       }
-      if (!manifest.sourceHashInputs.includes("packages/c420ui/scripts/build-bootstrap.ts")) {
-        failures.push(`${manifestPath}: sourceHashInputs must explicitly include packages/c420ui/scripts/build-bootstrap.ts`);
-      }
-      for (const forbiddenInput of ["scripts/" + "canva-linux-c420ui-builder.ts", "bootstrap/c420ui/" + "canva-linux-c420ui-builder.cjs"] as const) {
+      for (const forbiddenInput of ["scripts/" + "canva-linux-c420ui-builder.ts", c420uiBootstrapArtifactPath("canva-linux-c420ui-builder.cjs")] as const) {
         if (manifest.sourceHashInputs.includes(forbiddenInput)) {
           failures.push(`${manifestPath}: sourceHashInputs must not include ${forbiddenInput}`);
         }

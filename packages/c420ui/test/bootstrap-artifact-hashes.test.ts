@@ -40,17 +40,37 @@ function sha256(filePath: string): string {
 
 function copyBootstrapToTemp(tempDir: string): string {
   const tempRoot = path.join(tempDir, "root");
-  const tempBootstrap = path.join(tempRoot, "bootstrap", "c420ui");
+  const tempBootstrap = path.join(
+    tempRoot,
+    "packages",
+    "c420ui",
+    "bootstrap",
+    "generated",
+  );
   fs.mkdirSync(tempBootstrap, { recursive: true });
 
   for (const artifact of artifacts) {
     fs.copyFileSync(
-      path.join(rootDir, "bootstrap", "c420ui", artifact),
+      path.join(
+        rootDir,
+        "packages",
+        "c420ui",
+        "bootstrap",
+        "generated",
+        artifact,
+      ),
       path.join(tempBootstrap, artifact),
     );
   }
   fs.copyFileSync(
-    path.join(rootDir, "bootstrap", "c420ui", "manifest.json"),
+    path.join(
+      rootDir,
+      "packages",
+      "c420ui",
+      "bootstrap",
+      "generated",
+      "manifest.json",
+    ),
     path.join(tempBootstrap, "manifest.json"),
   );
 
@@ -88,7 +108,14 @@ function compileBootstrapBuilder(tempDir: string): string {
 
 test("manifest artifact hashes match committed bootstrap artifacts", () => {
   const manifest = readJson<BootstrapManifest>(
-    path.join(rootDir, "bootstrap", "c420ui", "manifest.json"),
+    path.join(
+      rootDir,
+      "packages",
+      "c420ui",
+      "bootstrap",
+      "generated",
+      "manifest.json",
+    ),
   );
 
   assert.equal(manifest.generatedBy, "packages/c420ui/scripts/build-bootstrap.ts");
@@ -97,7 +124,16 @@ test("manifest artifact hashes match committed bootstrap artifacts", () => {
   for (const artifact of artifacts) {
     assert.equal(
       manifest.artifactHashes?.[artifact],
-      sha256(path.join(rootDir, "bootstrap", "c420ui", artifact)),
+      sha256(
+        path.join(
+          rootDir,
+          "packages",
+          "c420ui",
+          "bootstrap",
+          "generated",
+          artifact,
+        ),
+      ),
     );
   }
 });
@@ -108,12 +144,26 @@ test("manifest hash validation fails when an artifact is manually edited", () =>
   try {
     const tempRoot = copyBootstrapToTemp(tempDir);
     fs.appendFileSync(
-      path.join(tempRoot, "bootstrap", "c420ui", "run-c420ui.cjs"),
+      path.join(
+        tempRoot,
+        "packages",
+        "c420ui",
+        "bootstrap",
+        "generated",
+        "run-c420ui.cjs",
+      ),
       "\n// manual edit\n",
     );
 
     const manifest = readJson<Record<string, unknown>>(
-      path.join(tempRoot, "bootstrap", "c420ui", "manifest.json"),
+      path.join(
+        tempRoot,
+        "packages",
+        "c420ui",
+        "bootstrap",
+        "generated",
+        "manifest.json",
+      ),
     );
     const failures: string[] = [];
     validateManifestArtifactHashes(tempRoot, manifest, failures);
@@ -129,7 +179,13 @@ test("build:c420ui-bootstrap cleans output directory before writing", () => {
   const tempDir = makeTempDir("c420ui-clean-build-");
 
   try {
-    const outDir = path.join(tempDir, "bootstrap", "c420ui");
+    const outDir = path.join(
+      tempDir,
+      "packages",
+      "c420ui",
+      "bootstrap",
+      "c420ui-generated",
+    );
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, "stale-file.txt"), "stale\n");
 
