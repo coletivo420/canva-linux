@@ -28,8 +28,8 @@ packages/c420ui/           Generic c420ui source and Linux host helper.
 scripts/c420ui-adapter/    Canva Linux adapter bridge into c420ui.
 scripts/canva-linux/       Canva Linux project-specific tooling.
 config/canva-linux/        Canva Linux declarations.
-electron/                  Canva Linux Electron runtime.
-data/                      Desktop and AppStream metadata.
+packages/electron/                  Canva Linux Electron runtime.
+packages/canva-linux-assets/        Desktop, AppStream, and icon assets.
 ```
 
 ## Config ownership

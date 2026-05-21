@@ -3,7 +3,10 @@
 ## c420ui package refactor and structural ownership
 
 - c420ui-owned tooling (runtime/build/check/test ownership, bootstrap helpers, artifact hashes, syntax gates, shell helpers) must live under `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is reserved for Canva Linux integration glue only and must not own bootstrap validation or runtime tooling.
-- c420ui-owned scripts, checks, bootstrap artifacts and tests live under `packages/c420ui`. The root `scripts/` directory may keep only compatibility wrappers when needed, and Canva Linux contracts must delegate to c420ui checks without embedding c420ui bootstrap implementation details.
+- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `packages/c420ui`.
+  Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by
+  `packages/c420ui/checks`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, root scripts/, root test/, or scripts/c420ui-adapter.
 - Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
 - Directory guards for cleanup operations must use a simplified forbidden set: `[resolvedRoot, path.dirname(resolvedRoot), path.parse(resolvedOut).root, process.cwd()]`.
 

@@ -70,7 +70,7 @@
     "productName": "Canva Linux",
     "directories": {
       "output": "dist",
-      "buildResources": "build-resources"
+      "buildResources": "packages/canva-linux-assets"
     },
     "beforeBuild": "./.build/scripts/bootstrap/electron-builder-before-build.js",
     "files": [
@@ -81,7 +81,7 @@
       "target": "dir",
       "category": "Graphics",
       "executableName": "canva-linux",
-      "icon": "build-resources"
+      "icon": "icons/io.github.coletivo420.canva-linux"
     },
     "appImage": {
       "artifactName": "canva-linux-${version}-${arch}.AppImage"

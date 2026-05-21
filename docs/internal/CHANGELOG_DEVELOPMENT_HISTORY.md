@@ -89,7 +89,7 @@ This file preserves the detailed development changelog entries that were archive
   `scripts/*.js` entrypoints consistently delegate to `scripts/core/*.ts`.
 
 ### Fixed
-- Stabilized Native install preflight by using `data/icons/hicolor`, preserving missing-icon tolerance, validating
+- Stabilized Native install preflight by using `packages/canva-linux-assets/icons/hicolor`, preserving missing-icon tolerance, validating
   system sudo before writes, and keeping post-install warnings non-fatal.
 - Stabilized Flatpak system/user install and uninstall scope behavior, including user-scope sudo refusal and system-scope c420ui sudo helper usage.
 - Made C420UI action finalization use synchronous overview-status detection so successful installs with warnings finish green instead of red.
@@ -727,7 +727,7 @@ This file preserves the detailed development changelog entries that were archive
 ### Fixed
 
 - Fixed version metadata drift after the esbuild preload migration.
-- Removed contradictory `@ts-nocheck` / `@ts-check` usage from `electron/preload/custom-eyedropper-flow.ts`.
+- Removed contradictory `@ts-nocheck` / `@ts-check` usage from `packages/electron/preload/custom-eyedropper-flow.ts`.
 
 ### Notes
 
@@ -859,7 +859,7 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Added
 
-- Added initial CL-EyeDropper TypeScript contract modules under `electron/preload/cl-eyedropper/`.
+- Added initial CL-EyeDropper TypeScript contract modules under `packages/electron/preload/cl-eyedropper/`.
 - Added validation and documentation for the preload TypeScript conversion phase.
 
 ### Changed
@@ -879,8 +879,8 @@ This file preserves the detailed development changelog entries that were archive
 
 ### Changed
 
-- Converted the main Electron entrypoint from `electron/main/index.js` to `electron/main/index.ts`.
-- Completed the TypeScript conversion of `electron/main` while preserving CommonJS runtime behavior.
+- Converted the main Electron entrypoint from `packages/electron/main/index.js` to `packages/electron/main/index.ts`.
+- Completed the TypeScript conversion of `packages/electron/main` while preserving CommonJS runtime behavior.
 - Kept preload conversion deferred to DEV19.
 - Kept CL-EyeDropper contracts and implementation deferred to later phases.
 
@@ -906,7 +906,7 @@ This file preserves the detailed development changelog entries that were archive
 - Realigned Canva Linux versioning to the official alpha series.
 - Replaced the previous `1.4.x` development line with the `0.1.x` alpha line.
 - Updated documentation, roadmap, validation notes and metadata references to use alpha versioning.
-- Shifted the TypeScript roadmap so `electron/main/index.js` conversion moves to DEV18.
+- Shifted the TypeScript roadmap so `packages/electron/main/index.js` conversion moves to DEV18.
 
 ### Notes
 
@@ -936,7 +936,7 @@ All notable changes to this project are documented in this file.
 
 ### Notes
 
-- `electron/main/index.js` remains JavaScript until DEV18.
+- `packages/electron/main/index.js` remains JavaScript until DEV18.
 - Preload modules remain JavaScript until DEV19.
 - CL-EyeDropper is planned but not implemented in DEV16.
 - Flatpak system/user scope behavior is unchanged.
@@ -952,7 +952,7 @@ All notable changes to this project are documented in this file.
 - Bumped the development version to `0.1.4-dev.15`.
 - Converted main-process infrastructure modules to TypeScript: logging, logging helpers, GPU diagnostics, runtime setup,
   IPC routing, lifecycle wiring and the EyeDropper snapshot bridge.
-- Updated runtime build checks to require compiled output for `electron/shared/navigation.ts`.
+- Updated runtime build checks to require compiled output for `packages/electron/shared/navigation.ts`.
 - Updated the TypeScript roadmap from DEV15 onward to reflect the stabilized DEV14 and the staged CL-EyeDropper plan.
 
 ### Notes
@@ -972,7 +972,7 @@ All notable changes to this project are documented in this file.
 
 - Bumped the development version to `0.1.4-dev.14`.
 - Stabilized the DOC13 TypeScript leaf conversion test strategy before expanding conversion to larger runtime modules.
-- Converted `electron/shared/navigation.ts` as the next small shared TypeScript boundary after test/build stabilization.
+- Converted `packages/electron/shared/navigation.ts` as the next small shared TypeScript boundary after test/build stabilization.
 - Kept converted runtime `.ts` modules on CommonJS exports during the migration.
 - Clarified that Flatpak artifact ownership restoration after install, bundle and dev-run workflows is protected behavior.
 - Documented Google One Tap / FedCM console warnings as upstream Canva/Google Identity Services warnings.
@@ -1005,7 +1005,7 @@ All notable changes to this project are documented in this file.
 - Removed unconditional preload raw-init console logging outside `CANVA_DEBUG`.
 - Restricted powerful runtime permissions to Canva origins instead of OAuth provider origins.
 - Preserved Flatpak build artifact ownership restoration after install, bundle and dev-run workflows.
-- Fixed source-mode `npm run build:preload` after `electron/shared/debug.ts` conversion by resolving TypeScript source
+- Fixed source-mode `npm run build:preload` after `packages/electron/shared/debug.ts` conversion by resolving TypeScript source
   candidates and transpiling them before bundling.
 - Fixed local system installs failing to fetch `summary.idx` from the generated local Flatpak repo by configuring the local remote with a valid `file://` URI.
 
@@ -1066,7 +1066,7 @@ All notable changes to this project are documented in this file.
 - `npm start` now builds the Electron runtime before launching.
 - `npm run dist` now builds the Electron runtime before packaging.
 - Electron runtime now starts from `.build/electron/main/index.js`.
-- Electron Builder now packages `.build/electron/**/*` instead of raw `electron/**/*`.
+- Electron Builder now packages `.build/electron/**/*` instead of raw `packages/electron/**/*`.
 - Preload bundle generation now supports build-output mode for `.build/electron/preload/canva.bundle.js`.
 - Project validation now keeps source checks first and runs runtime build validation after lint, typecheck, tests, docs and AI guardrails.
 - Flatpak build artifact cleanup now handles root-owned `build-dir`/`repo` created by system-scope Flatpak builds.
@@ -1076,7 +1076,7 @@ All notable changes to this project are documented in this file.
 - Runtime behavior is intentionally unchanged.
 - No source files are converted to `.ts` in this phase.
 - `.build/` is generated and must not be committed.
-- The source of truth remains `electron/`.
+- The source of truth remains `packages/electron/`.
 - This phase prepares DEV13+ for real `.ts` conversion.
 
 ## [0.1.4-dev.11] - 2026-04-30
@@ -1084,7 +1084,7 @@ All notable changes to this project are documented in this file.
 ### Added
 
 - Added strict JSDoc typing for the main Electron orchestration entrypoint.
-- Added `electron/main/index.js` to the strict TypeScript boundary.
+- Added `packages/electron/main/index.js` to the strict TypeScript boundary.
 - Added typed main-process orchestration state documentation.
 - Added configurable Flatpak install scope through `CANVA_FLATPAK_SCOPE=system|user`.
 - Added `./canva-linux-c420ui-builder --run-dev` to build and run from `build-dir` without installing the app.
@@ -1092,7 +1092,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
-- Removed `// @ts-nocheck` from `electron/main/index.js`.
+- Removed `// @ts-nocheck` from `packages/electron/main/index.js`.
 - Changed local Flatpak install policy to use system scope by default.
 - Local install no longer creates a user Flathub remote by default.
 - Local uninstall now removes Canva Linux from both user and system Flatpak scopes when present.
@@ -1128,7 +1128,7 @@ All notable changes to this project are documented in this file.
 
 - Runtime behavior is intentionally unchanged.
 - No `.ts` runtime conversion is performed in this phase.
-- `electron/main/index.js` remains the orchestration entrypoint and is deferred to DEV11 strict typing.
+- `packages/electron/main/index.js` remains the orchestration entrypoint and is deferred to DEV11 strict typing.
 
 ## [0.1.4-dev.9] - 2026-04-30
 
@@ -1147,13 +1147,13 @@ All notable changes to this project are documented in this file.
 - Expanded `tsconfig.strict.json` to include selected preload integration modules.
 - Improved post-install command readability with highlighted sections and commands.
 - Post-install colors are disabled automatically for non-TTY output, `TERM=dumb`, or `NO_COLOR`.
-- Documented `electron/preload/ltcode-eyedropper.js` as a library-like module reserved for DEV11 review.
-- Preserved `electron/preload/canva.js` as the preload orchestration entrypoint without forcing full strict typing in this phase.
+- Documented `packages/electron/preload/ltcode-eyedropper.js` as a library-like module reserved for DEV11 review.
+- Preserved `packages/electron/preload/canva.js` as the preload orchestration entrypoint without forcing full strict typing in this phase.
 
 ### Notes
 
 - Runtime behavior is intentionally unchanged.
-- `electron/preload/canva.bundle.js` remains generated by `npm run build:preload`.
+- `packages/electron/preload/canva.bundle.js` remains generated by `npm run build:preload`.
 - Public debug behavior remains level-based only: `CANVA_DEBUG=1` and `CANVA_DEBUG=2`.
 
 ## [0.1.4-dev.8] - 2026-04-29
@@ -1452,7 +1452,7 @@ All notable changes to this project are documented in this file.
 - Added a dedicated npm script for the wiring-focused test phase.
 
 ### Changed
-- Added a narrow dependency-injection seam in `electron/main/tab-controller.js` so the tab event attachment path can be
+- Added a narrow dependency-injection seam in `packages/electron/main/tab-controller.js` so the tab event attachment path can be
   verified without changing production behavior.
 
 ### Notes
@@ -1472,7 +1472,7 @@ All notable changes to this project are documented in this file.
 ## [1.4.10-dev.11] - 2026-04-25
 
 ### Changed
-- Extracted the main-process window-open policy from `electron/main/index.js` into a dedicated module without changing runtime behavior.
+- Extracted the main-process window-open policy from `packages/electron/main/index.js` into a dedicated module without changing runtime behavior.
 - Kept the shared navigation classifier as the injected source of truth while isolating the local main-process tab/oauth category mapping for future tests.
 
 ### Notes
@@ -1492,7 +1492,7 @@ All notable changes to this project are documented in this file.
 ## [1.4.10-dev.9] - 2026-04-25
 
 ### Changed
-- Renamed the shared `classifyWindowOpenRequest` import alias in `electron/main/index.js` to
+- Renamed the shared `classifyWindowOpenRequest` import alias in `packages/electron/main/index.js` to
   `sharedClassifyWindowOpenRequest` for clearer main-process navigation hardening flow.
 - Kept runtime behavior unchanged while making the shared-versus-local window-open classification boundary more explicit for review and maintenance.
 
@@ -1503,7 +1503,7 @@ All notable changes to this project are documented in this file.
 ## [1.4.10-dev.8] - 2026-04-25
 
 ### Added
-- Added a dependency-free preload bundling step that generates `electron/preload/canva.bundle.js` from the modular
+- Added a dependency-free preload bundling step that generates `packages/electron/preload/canva.bundle.js` from the modular
   preload source files before local start and Electron Builder packaging.
 - Added documentation for the preload bundle architecture and the custom eyedropper regression it fixes.
 
@@ -1520,7 +1520,7 @@ All notable changes to this project are documented in this file.
 - Cleaned up the custom eyedropper overlay when an `AbortSignal` cancels the pick operation.
 
 ### Changed
-- The app now points Canva tabs at `electron/preload/canva.bundle.js` while keeping `electron/preload/*.js` as the human-maintained source of truth.
+- The app now points Canva tabs at `packages/electron/preload/canva.bundle.js` while keeping `packages/electron/preload/*.js` as the human-maintained source of truth.
 - The generated preload bundle is ignored by Git and ESLint; it must be regenerated through `npm run build:preload`, `npm start`, or `npm run dist`.
 - Clarified validation, release, Flathub, and maintenance documentation for the generated preload bundle and the restored custom eyedropper path.
 - Consolidated duplicated Flatpak build steps into shared script helpers used by local install and bundle generation.
@@ -1887,7 +1887,7 @@ All notable changes to this project are documented in this file.
 ## [1.4.8-dev.6] - 2026-04-23
 
 ### Changed
-- Added focused inline comments in `electron/main.js` to clarify `WebContentsView` shell intent, fixed Home-tab
+- Added focused inline comments in `packages/electron/main.js` to clarify `WebContentsView` shell intent, fixed Home-tab
   guardrails, persistent partition usage, and OAuth popup completion lifecycle.
 - Added short comments in preload scripts to document debug-category aliases and why drag/upload ingress tracking is correlated across events.
 - Added launcher/build/manifest comments describing Wayland/X11 runtime flags, category-filtered debug logging, and Flatpak permission intent.

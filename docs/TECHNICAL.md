@@ -8,24 +8,24 @@ Canva Linux is an Electron desktop wrapper around Canva.
 
 Core runtime files:
 
-- `electron/main/index.ts` - Electron shell entrypoint and composition root.
-- `electron/main/runtime.ts` - Linux runtime setup, shared session configuration, and ephemeral session cleanup.
-- `electron/main/credential-storage.ts` - Secret Service credential backend policy for persistent login versus ephemeral fallback.
-- `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring.
-- `electron/main/ipc.ts` - centralized main-process IPC routing.
-- `electron/main/logging.ts` - status output and startup diagnostics.
-- `electron/main/oauth.ts` - OAuth popup lifecycle and callback tracking.
-- `electron/main/shell.ts` - top-level window and toolbar shell helpers.
-- `electron/main/tab-controller.ts` - tab creation and orchestration.
-- `electron/main/tab-events.ts` - per-tab `webContents` policy and event wiring.
-- `electron/main/tabs.ts` - tab ordering, selection, closing and layout helpers.
-- `electron/main/eyedropper-bridge.ts` - scoped tab snapshot bridge for CL-EyeDropper.
-- `electron/preload/canva.ts` - source Canva page preload entrypoint.
-- `electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle.
-- `electron/preload/native-eyedropper-wrapper.ts` - Canva-facing EyeDropper replacement layer.
-- `electron/preload/cl-eyedropper/*.ts` - CL-EyeDropper TypeScript implementation.
-- `electron/shared/debug.ts` - shared debug parsing and log gating.
-- `electron/shared/navigation.ts` - shared Canva/OAuth URL classification.
+- `packages/electron/main/index.ts` - Electron shell entrypoint and composition root.
+- `packages/electron/main/runtime.ts` - Linux runtime setup, shared session configuration, and ephemeral session cleanup.
+- `packages/electron/main/credential-storage.ts` - Secret Service credential backend policy for persistent login versus ephemeral fallback.
+- `packages/electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring.
+- `packages/electron/main/ipc.ts` - centralized main-process IPC routing.
+- `packages/electron/main/logging.ts` - status output and startup diagnostics.
+- `packages/electron/main/oauth.ts` - OAuth popup lifecycle and callback tracking.
+- `packages/electron/main/shell.ts` - top-level window and toolbar shell helpers.
+- `packages/electron/main/tab-controller.ts` - tab creation and orchestration.
+- `packages/electron/main/tab-events.ts` - per-tab `webContents` policy and event wiring.
+- `packages/electron/main/tabs.ts` - tab ordering, selection, closing and layout helpers.
+- `packages/electron/main/eyedropper-bridge.ts` - scoped tab snapshot bridge for CL-EyeDropper.
+- `packages/electron/preload/canva.ts` - source Canva page preload entrypoint.
+- `packages/electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle.
+- `packages/electron/preload/native-eyedropper-wrapper.ts` - Canva-facing EyeDropper replacement layer.
+- `packages/electron/preload/cl-eyedropper/*.ts` - CL-EyeDropper TypeScript implementation.
+- `packages/electron/shared/debug.ts` - shared debug parsing and log gating.
+- `packages/electron/shared/navigation.ts` - shared Canva/OAuth URL classification.
 
 Canva Linux workflow actions are split into four layers:
 

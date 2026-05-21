@@ -35,12 +35,12 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Runti
 
 ## Implementing files
 
-- `electron/`
+- `packages/electron/`
 - `canva-linux-c420ui-builder`
 - `scripts/c420ui-adapter/`
 - `scripts/canva-linux/`
 - `config/canva-linux/`
-- `data/io.github.coletivo420.canva-linux.metainfo.xml`
+- `packages/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml`
 - `io.github.coletivo420.canva-linux.yml`
 
 ## Consumed c420ui modules

@@ -24,7 +24,7 @@ logic, tests, tooling configs and Flathub helper scripts.
 
 ### Allowed maintained source formats
 
-- `electron/**/*.ts`
+- `packages/electron/**/*.ts`
 - `scripts/**/*.ts`
 - `scripts/**/*.sh`
 - `scripts/core/*.ts`
@@ -93,11 +93,11 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
   generated bootstrap and writes per-entry generated JavaScript under
   `.build/scripts/typescript/`.
-- `tsconfig.build.json` emits the Electron runtime from `electron/**/*.ts`
+- `tsconfig.build.json` emits the Electron runtime from `packages/electron/**/*.ts`
   only; it must not set `allowJs`, must not set `checkJs`, and must not include
-  `electron/**/*.js`.
+  `packages/electron/**/*.js`.
 - Electron main TypeScript modules use ESM `export` declarations only; do not
-  add duplicate `module.exports` blocks to `electron/main/**/*.ts`.
+  add duplicate `module.exports` blocks to `packages/electron/main/**/*.ts`.
 - `npm run check:scripts-core` runs the consolidated c420ui core, Canva Linux, and shared tooling validation domains.
 - `check-repository-policy.ts` also rejects malformed or unformatted `package.json`,
   collapsed critical shell/docs files, giant one-line documentation blocks, and

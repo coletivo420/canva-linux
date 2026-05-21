@@ -14,7 +14,7 @@
     ]
   },
   "include": [
-    "electron/**/*.ts",
+    "packages/electron/**/*.ts",
     "scripts/**/*.ts",
     "packages/c420ui/**/*.ts",
     "test/**/*.ts",
@@ -28,6 +28,6 @@
     "repo",
     "build-dir",
     ".flatpak-builder",
-    "electron/preload/canva.bundle.js"
+    "packages/electron/preload/canva.bundle.js"
   ]
 }

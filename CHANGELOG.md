@@ -8,9 +8,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Refactored c420ui tooling: moved c420ui-owned runtime/build/check/test ownership, bootstrap helpers,
   shell helpers, and tests into `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is now
   integration-only.
-- c420ui-owned scripts, checks, bootstrap artifacts and tests live under `packages/c420ui`. Root `scripts/`
-  keeps compatibility wrappers only when needed, and Canva Linux contracts must delegate to c420ui checks
-  without embedding c420ui bootstrap implementation details.
+- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `packages/c420ui`.
+  Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by
+  `packages/c420ui/checks`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, root scripts/, root test/, or scripts/c420ui-adapter.
 - Optimized detection provider: consolidated `package.json` reading with caching and implemented closure-based
   caching for `npm --version` to improve terminal interface refresh performance.
 

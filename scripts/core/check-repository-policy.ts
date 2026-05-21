@@ -224,7 +224,7 @@ type TsConfigJson = {
 
 const allowedJavaScriptPrefixes = [".build/", "node_modules/"] as const;
 
-const sourceJavaScriptAllowlist = new Set(["electron/preload/canva.bundle.js"]);
+const sourceJavaScriptAllowlist = new Set(["packages/electron/preload/canva.bundle.js"]);
 
 const nativeSourceExtensions = new Set([
   ".sh",
@@ -343,7 +343,7 @@ function validateTypeScriptConfig(
   }
 
   const forbiddenIncludes = [
-    "electron/**/*.js",
+    "packages/electron/**/*.js",
     "scripts/**/*.js",
     "test/**/*.js",
   ] as const;
@@ -369,11 +369,11 @@ function validateEslintTypeScriptOnlyConfig(
   const configPath = "eslint.config.ts";
   const config = fs.readFileSync(path.join(rootDir, configPath), "utf8");
   if (
-    config.includes("'electron/**/*.js'") ||
-    config.includes('"electron/**/*.js"')
+    config.includes("'packages/electron/**/*.js'") ||
+    config.includes('"packages/electron/**/*.js"')
   ) {
     failures.push(
-      `${configPath}: must not include a dedicated electron/**/*.js lint block after the TypeScript migration`,
+      `${configPath}: must not include a dedicated packages/electron/**/*.js lint block after the TypeScript migration`,
     );
   }
 }
@@ -384,7 +384,7 @@ function validateNoCommonJsRuntimeExports(
   failures: string[],
 ): void {
   for (const file of files) {
-    if (!file.startsWith("electron/main/") || !file.endsWith(".ts")) continue;
+    if (!file.startsWith("packages/electron/main/") || !file.endsWith(".ts")) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
     if (content.includes("module.exports")) {
       failures.push(
@@ -475,7 +475,7 @@ const generatedOutputJavaScriptPaths = [
 
 const sourceJavaScriptProbePaths = [
   "scripts/source-regression.js",
-  "electron/main/source-regression.js",
+  "packages/electron/main/source-regression.js",
   "test/source-regression.test.js",
   "packaging/flathub/scripts/source-regression.js",
   "eslint.config.js",
@@ -496,9 +496,9 @@ const requiredVersionedPaths = [
   "packaging/flathub/manifest.yml",
   "packaging/flathub/generated-sources.json",
   "packaging/flathub/scripts/generate-npm-sources.ts",
-  "data/io.github.coletivo420.canva-linux.desktop",
-  "data/io.github.coletivo420.canva-linux.metainfo.xml",
-  "data/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png",
+  "packages/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
+  "packages/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
+  "packages/canva-linux-assets/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png",
   "docs/README.md",
   "README.md",
   "CHANGELOG.md",
@@ -665,7 +665,7 @@ function main(): number {
   );
   validateNotIgnored(
     rootDir,
-    gitTrackedFiles(rootDir, "electron/**/*.ts"),
+    gitTrackedFiles(rootDir, "packages/electron/**/*.ts"),
     "runtime TypeScript files",
     failures,
   );
@@ -710,7 +710,7 @@ const allowedJavaScriptRoots = [
 ] as const;
 
 const allowedGeneratedJavaScriptFiles = new Set([
-  "electron/preload/canva.bundle.js",
+  "packages/electron/preload/canva.bundle.js",
 ]);
 
 const explicitlyBlockedJavaScript = [
@@ -819,7 +819,7 @@ const criticalReadableSourceFiles = [
   "packages/c420ui/src/terminal/interactive-action-runner.ts",
   "scripts/c420ui-adapter/root-provider.ts",
   "scripts/c420ui-adapter/dependencies.ts",
-  "electron/ui/toolbar.html",
+  "packages/electron/ui/toolbar.html",
 ] as const;
 
 const maxDocumentationLineLength = 2000;
@@ -965,7 +965,7 @@ function validateToolbarContentSecurityPolicy(
   rootDir: string,
   failures: string[],
 ): void {
-  const relativePath = "electron/ui/toolbar.html";
+  const relativePath = "packages/electron/ui/toolbar.html";
   const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
   const requiredDirectives = [
     "default-src 'none'",
