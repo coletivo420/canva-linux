@@ -183,6 +183,45 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
   }
 }
 
+function validateProjectScript(rootDir: string, failures: string[]): void {
+  const relativePath = "scripts/validate-project.sh";
+  const contents = readText(rootDir, relativePath);
+  if (!contents) {
+    failures.push(`${relativePath}: must exist`);
+    return;
+  }
+
+  for (const requiredFragment of [
+    "npm run lint",
+    "npm test",
+    "npm run docs:check-ai",
+    "npm run docs:check-links",
+    "npm run deps:check-policy",
+    "npm run check:c420ui-node-check",
+    "npm run check:c420ui-bootstrap-artifacts",
+    "npm run check:c420ui-bootstrap",
+    "npm run check:canva-linux",
+    "bash scripts/check-flatpak-scope-policy.sh",
+    "bash scripts/check-shell-ui-api.sh",
+    "npm run typecheck",
+    "npm run typecheck:strict",
+    "git diff --exit-code",
+  ] as const) {
+    if (!contents.includes(requiredFragment)) {
+      failures.push(`${relativePath}: must include ${requiredFragment}`);
+    }
+  }
+
+  for (const forbiddenFragment of [
+    "npm run build:metadata",
+    "npm run build:c420ui-bootstrap",
+  ] as const) {
+    if (contents.includes(forbiddenFragment)) {
+      failures.push(`${relativePath}: must not include ${forbiddenFragment}`);
+    }
+  }
+}
+
 function checkRootTests(rootDir: string, failures: string[]): void {
   for (const relativePath of collectFiles(rootDir, "test")) {
     const fileName = path.basename(relativePath);
@@ -213,19 +252,10 @@ function checkAdapterBoundary(rootDir: string, failures: string[]): void {
 }
 
 function checkDocs(rootDir: string, failures: string[]): void {
-  const requiredFragments = [
-    "c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under packages/c420ui.",
-    "Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by packages/c420ui/checks.",
-    "No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
-    "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, scripts/, test/, or scripts/c420ui-adapter.",
-    "When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.",
-  ] as const;
-
   for (const relativePath of [
     "CHANGELOG.md",
     "REVIEW.md",
     "docs/VALIDATION.md",
-    "docs/internal/AI_GUARDRAILS.md",
   ] as const) {
     const contents = readText(rootDir, relativePath);
     if (!contents) {
@@ -233,11 +263,48 @@ function checkDocs(rootDir: string, failures: string[]): void {
       continue;
     }
 
-    for (const fragment of requiredFragments) {
+    for (const fragment of [
+      "c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under packages/c420ui.",
+      "Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by packages/c420ui/checks.",
+      "No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
+      "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, scripts/, test/, or scripts/c420ui-adapter.",
+      "When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.",
+    ] as const) {
       if (!contents.includes(fragment)) {
         failures.push(`${relativePath}: must include ownership boundary guidance`);
         break;
       }
+    }
+  }
+
+  const aiGuardrailsPath = "docs/internal/AI_GUARDRAILS.md";
+  const aiGuardrails = readText(rootDir, aiGuardrailsPath);
+  if (!aiGuardrails) {
+    failures.push(`${aiGuardrailsPath}: must exist`);
+    return;
+  }
+
+  for (const bullet of [
+    "- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `packages/c420ui`.",
+    "- Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `packages/c420ui/checks`.",
+    "- No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
+    "- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `test/`, or `scripts/c420ui-adapter`.",
+    "- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.",
+  ] as const) {
+    if (!aiGuardrails.includes(bullet)) {
+      failures.push(`${aiGuardrailsPath}: must include ${bullet}`);
+    }
+  }
+
+  for (const forbiddenHeading of [
+    "# c420ui-owned scripts",
+    "# Canva Linux contracts",
+    "# No temporary aliases",
+    "# Do not place c420ui-owned",
+    "# When c420ui bootstrap entrypoints",
+  ] as const) {
+    if (aiGuardrails.includes(forbiddenHeading)) {
+      failures.push(`${aiGuardrailsPath}: must not contain duplicated H1-style guardrail headings`);
     }
   }
 }
@@ -246,6 +313,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkForbiddenPaths(rootDir, failures);
   checkRequiredPaths(rootDir, failures);
   checkPackageScripts(rootDir, failures);
+  validateProjectScript(rootDir, failures);
   checkRootTests(rootDir, failures);
   checkAdapterBoundary(rootDir, failures);
   checkDocs(rootDir, failures);
