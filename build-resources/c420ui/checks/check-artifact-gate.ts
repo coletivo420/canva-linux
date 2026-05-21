@@ -202,7 +202,7 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     },
   );
 
-  if (result.status !== 0) {
+  if (result.error || result.status !== 0) {
     throw new Error(`unable to generate temporary c420ui bootstrap artifacts (${summarizeCommandFailure(result)})`);
   }
 
