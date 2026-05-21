@@ -74,7 +74,7 @@ function calculateArtifactHashes(bootstrapDir: string): Record<string, string> {
 
 async function ensureBuildMetadataModule(rootDir: string): Promise<void> {
   await esbuild.build({
-    entryPoints: [path.join(rootDir, "electron", "main", "build-metadata.ts")],
+    entryPoints: [path.join(rootDir, "packages", "electron", "main", "build-metadata.ts")],
     bundle: true,
     platform: "node",
     target: "node22",

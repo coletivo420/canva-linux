@@ -22,7 +22,7 @@ test("CL-EyeDropper module loads without runtime side effects", () => {
 
 test("CL-EyeDropper implementation does not import LTCode or mutate globalThis", () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, "electron/preload/cl-eyedropper/cl-eyedropper.ts"),
+    path.join(repoRoot, "packages/electron/preload/cl-eyedropper/cl-eyedropper.ts"),
     "utf8",
   );
   const removedModuleName = ["ltcode", "eyedropper"].join("-");

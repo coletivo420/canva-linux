@@ -9,7 +9,7 @@ const vm = require("node:vm");
 
 const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
-const toolbarPath = path.join(repoRoot, "electron", "ui", "toolbar.html");
+const toolbarPath = path.join(repoRoot, "packages", "electron", "ui", "toolbar.html");
 
 class FakeElement {
   constructor(tagName) {

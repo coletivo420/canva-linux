@@ -40,9 +40,9 @@ write_desktop_file "${tmp}" "${INSTALL_PREFIX}/${APP_EXECUTABLE}" "${APP_ID}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then c420ui_sudo_install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; else install -Dm644 "${tmp}" "${INSTALL_DESKTOP}"; fi
 rm -f "${tmp}"
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then
-  install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/data/icons/hicolor" "/usr/local/share/icons/hicolor"
+  install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/packages/canva-linux-assets/icons/hicolor" "/usr/local/share/icons/hicolor"
 else
-  install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/data/icons/hicolor" "${HOME}/.local/share/icons/hicolor"
+  install_icons "${NATIVE_SCOPE}" "${REPO_ROOT}/packages/canva-linux-assets/icons/hicolor" "${HOME}/.local/share/icons/hicolor"
 fi
 update_desktop_caches "${NATIVE_SCOPE}" || true
 print_native_post_install_guidance || true

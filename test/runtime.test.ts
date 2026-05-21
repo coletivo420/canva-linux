@@ -135,7 +135,7 @@ test("runtime rejects --force-wayland without a Wayland session", () => {
 });
 
 test("runtime.ts does not expose CANVA_DISABLE_GPU fallback", () => {
-  const source = fs.readFileSync(path.join(repoRoot, "electron/main/runtime.ts"), "utf8");
+  const source = fs.readFileSync(path.join(repoRoot, "packages/electron/main/runtime.ts"), "utf8");
   assert.doesNotMatch(source, /CANVA_DISABLE_GPU/);
 });
 
@@ -201,7 +201,7 @@ test("sharedWebPreferences keeps secure defaults", () => {
 
 test("main runtime opens Canva, not the project website, as the app home URL", () => {
   const mainSource = fs.readFileSync(
-    path.join(repoRoot, "electron/main/index.ts"),
+    path.join(repoRoot, "packages/electron/main/index.ts"),
     "utf8",
   );
 

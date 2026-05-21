@@ -116,11 +116,11 @@ exports.formatCanvaLinuxVersion = function formatCanvaLinuxVersion(metadata) {
   }
 }
 
-test("build metadata loader uses electron/main/build-metadata via createRequire", () => {
+test("build metadata loader uses packages/electron/main/build-metadata via createRequire", () => {
   const source = fs.readFileSync(loaderPath, "utf8");
 
   assert.match(source, /createRequire/);
-  assert.match(source, /electron\/main\/build-metadata/);
+  assert.match(source, /packages\/electron\/main\/build-metadata/);
   assert.doesNotMatch(source, /function normalizeBuildRevision/);
   assert.doesNotMatch(source, /function appendBuildRevision/);
   assert.doesNotMatch(source, /function createBuildMetadata/);

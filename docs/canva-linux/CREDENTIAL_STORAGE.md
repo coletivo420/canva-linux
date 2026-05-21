@@ -47,9 +47,9 @@ must never be logged.
 
 ## Implementing files
 
-- `electron/main/credential-storage.ts`
-- `electron/main/runtime.ts`
-- `electron/main/lifecycle.ts`
+- `packages/electron/main/credential-storage.ts`
+- `packages/electron/main/runtime.ts`
+- `packages/electron/main/lifecycle.ts`
 - `test/credential-storage*.test.ts`
 
 ## Boundary checks

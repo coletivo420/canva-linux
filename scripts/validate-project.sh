@@ -58,7 +58,7 @@ run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "git diff --exit-code" git diff --exit-code
 
 if command -v desktop-file-validate > /dev/null 2>&1; then
-  run_step "desktop-file-validate" desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
+  run_step "desktop-file-validate" desktop-file-validate packages/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop
 else
   log_info "desktop-file-validate not found, skipping"
 fi
@@ -67,7 +67,7 @@ if command -v appstreamcli > /dev/null 2>&1; then
   run_step "appstreamcli validate --explain --no-net" \
     appstreamcli validate --explain --no-net \
     --override releases-not-in-order=info \
-    data/io.github.coletivo420.canva-linux.metainfo.xml
+    packages/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml
 else
   log_info "appstreamcli not found, skipping"
 fi

@@ -16,9 +16,10 @@ Dev.9 corrects structural ownership: c420ui runtime/build/check/test ownership n
 The adapter layer in `scripts/c420ui-adapter` is reserved for Canva Linux integration glue only and must not own
 bootstrap validation or runtime tooling. Detection providers must avoid repeated `package.json` parsing and repeated
 `npm` process spawning during UI refresh cycles.
-c420ui-owned scripts, checks, bootstrap artifacts and tests live under `packages/c420ui`. The root `scripts/`
-directory may keep only compatibility wrappers when needed. Canva Linux contracts may delegate to c420ui checks
-but must not embed c420ui bootstrap implementation details.
+c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `packages/c420ui`.
+Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by
+`packages/c420ui/checks`.
+Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, root scripts/, root test/, or scripts/c420ui-adapter.
 
 All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, and build metadata
 resolution must live under `scripts/c420ui-adapter`; bootstrap helpers must live under `packages/c420ui/bootstrap`.
@@ -27,7 +28,7 @@ under `scripts/canva-linux`. `npm run check:canva-linux` enforces that c420ui in
 `scripts/canva-linux` and that c420ui-owned tooling stays under `packages/c420ui`.
 Project registry/config modules may still live under `scripts/canva-linux`; any such module that is bundled into the
 c420ui bootstrap must be covered by the c420ui bootstrap source-hash input list. Build metadata formatting must use
-`electron/main/build-metadata` as the single source of truth; c420ui adapter loaders must not duplicate
+`packages/electron/main/build-metadata` as the single source of truth; c420ui adapter loaders must not duplicate
 `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
 
 The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
@@ -147,7 +148,7 @@ The validation baseline protects these release facts:
 - `package.json` version is `0.1.4-15.Dev.9`.
 - `package-lock.json` top-level version is `0.1.4-15.Dev.9`.
 - `package-lock.json` root package version is `0.1.4-15.Dev.9`.
-- `data/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
+- `packages/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
 - Active release docs point to `v0.1.4-15.Dev.9`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 

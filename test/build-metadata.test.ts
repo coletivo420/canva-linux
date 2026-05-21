@@ -120,7 +120,13 @@ test("build metadata source does not hardcode current Dev.7 fallbacks", () => {
   const fs = require("node:fs");
   const path = require("node:path");
   const source = fs.readFileSync(
-    path.join(process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, ".."), "electron", "main", "build-metadata.ts"),
+    path.join(
+      process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, ".."),
+      "packages",
+      "electron",
+      "main",
+      "build-metadata.ts",
+    ),
     "utf8",
   );
 

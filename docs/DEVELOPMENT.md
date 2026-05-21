@@ -55,9 +55,9 @@ whole project can keep moving while legacy surfaces are tightened incrementally.
 `npm run typecheck:strict` is strict by critical surface, not strict global yet.
 Its current surface is grouped in `tsconfig.strict.json` as:
 
-1. `electron/main/**/*.ts`
-2. `electron/shared/**/*.ts`
-3. `electron/preload/**/*.ts`
+1. `packages/electron/main/**/*.ts`
+2. `packages/electron/shared/**/*.ts`
+3. `packages/electron/preload/**/*.ts`
 4. `scripts/core/**/*.ts`
 5. selected Node tests and support helpers already compatible with strict mode
 

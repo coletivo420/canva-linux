@@ -5,9 +5,6 @@
 - c420ui-owned tooling (runtime/build/check/test ownership, bootstrap helpers, artifact hashes, syntax gates,
   shell helpers) must live under `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is reserved
   for Canva Linux integration glue only and must not own bootstrap validation or runtime tooling.
-- c420ui-owned scripts, checks, bootstrap artifacts and tests live under `packages/c420ui`. The root `scripts/`
-  directory may keep only compatibility wrappers when needed. Canva Linux contracts may delegate to c420ui checks
-  but must not embed c420ui bootstrap implementation details.
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `packages/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `packages/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
@@ -36,7 +33,7 @@
 - Dev.9 keeps c420ui integration modules under `scripts/c420ui-adapter` while allowing project registry/config modules
   under `scripts/canva-linux`. Any `scripts/canva-linux` module that is still bundled into bootstrap must be covered by
   `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
-- Build metadata formatting must use `electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
+- Build metadata formatting must use `packages/electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
   must not duplicate `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
 
 ## Dev.8 pinned home tab-strip guardrail

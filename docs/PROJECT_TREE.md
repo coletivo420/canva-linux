@@ -19,11 +19,11 @@ scripts/c420ui-adapter/    Canva Linux project adapter for c420ui.
 scripts/canva-linux/       Canva Linux project-specific actions and support tooling.
 scripts/core/              Repository-wide validation and infrastructure checks.
 config/canva-linux/        Canva Linux project declarations for actions, artifacts, dependencies, development, and UI.
-electron/                  Canva Linux Electron runtime and preload source.
+packages/electron/                  Canva Linux Electron runtime and preload source.
 test/                      TypeScript-first unit, wiring, and smoke tests.
 packaging/                 Packaging submission workspaces (e.g., Flathub).
-data/                      Desktop and AppStream metadata.
-build-resources/           Packaging icons and builder resources.
+packages/canva-linux-assets/        Desktop, AppStream, and icon assets.
+packages/canva-linux-assets/icons/   Packaging icons and builder resources.
 assets/                    Repository documentation assets.
 ```
 

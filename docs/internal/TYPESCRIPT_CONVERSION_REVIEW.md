@@ -24,7 +24,7 @@ The cleanup phase must happen after full TypeScript conversion, not before it.
 Planned sequence:
 
 - DEV10: strict typing for extracted main-process modules.
-- DEV11: strict typing for `electron/main/index.js`.
+- DEV11: strict typing for `packages/electron/main/index.js`.
 - DEV12: TypeScript build pipeline.
 - DEV13: convert the first pure shared/logging helper modules to `.ts` and validate the test strategy for converted source modules.
 - DEV14: convert main infrastructure modules to `.ts`.
@@ -52,7 +52,7 @@ A file may be converted to `.ts` only when:
 Do not convert yet:
 
 - legacy `.js` wrappers that are still referenced directly by npm scripts or electron-builder;
-- `electron/preload/canva.bundle.js`;
+- `packages/electron/preload/canva.bundle.js`;
 - the former third-party picker module;
 - shell scripts;
 - Flatpak manifests.

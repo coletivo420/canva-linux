@@ -4,7 +4,61 @@ import path from "node:path";
 
 type PackageJson = {
   scripts?: Record<string, string>;
+  build?: {
+    appId?: string;
+    directories?: {
+      buildResources?: string;
+    };
+    linux?: {
+      icon?: string;
+    };
+  };
+  desktopName?: string;
 };
+
+const C420UI_OWNERSHIP_GUARDRAILS = [
+  "c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under packages/c420ui.",
+  "Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by packages/c420ui/checks.",
+  "No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
+  "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, root scripts/, root test/, or scripts/c420ui-adapter.",
+  "When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.",
+] as const;
+
+const C420UI_OWNERSHIP_GUARDRAILS_BULLETS = [
+  "- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `packages/c420ui`.",
+  "- Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `packages/c420ui/checks`.",
+  "- No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
+  "- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `test/`, or `scripts/c420ui-adapter`.",
+  "- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.",
+] as const;
+
+function validateProjectHasRunStep(source: string, command: string): boolean {
+  const escaped = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  return new RegExp(
+    String.raw`run_step\s+["'][^"']*["']\s+${escaped}(?:\s|$)`,
+    "m",
+  ).test(source);
+}
+
+function checkFileContainsAll(
+  rootDir: string,
+  relativePath: string,
+  fragments: readonly string[],
+  failures: string[],
+): void {
+  const contents = readText(rootDir, relativePath);
+  if (!contents) {
+    failures.push(`${relativePath}: must exist`);
+    return;
+  }
+
+  for (const fragment of fragments) {
+    if (!contents.includes(fragment)) {
+      failures.push(`${relativePath}: must include ${fragment}`);
+    }
+  }
+}
 
 function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()): string {
   let current = startDir;
@@ -71,6 +125,9 @@ function checkForbiddenPaths(rootDir: string, failures: string[]): void {
     "scripts/run-c420ui.ts",
     "scripts/run-c420ui-cli.ts",
     "scripts/c420ui-builder.ts",
+    "electron",
+    "build-resources",
+    "data",
     "scripts/build-appimage.sh",
     "scripts/build-flatpak-bundle.sh",
     "scripts/install-native.sh",
@@ -79,6 +136,7 @@ function checkForbiddenPaths(rootDir: string, failures: string[]): void {
     "scripts/checks/canva-linux/check-c420ui-node-check.ts",
     "scripts/checks/canva-linux/c420ui-bootstrap-check-helpers.ts",
     "bootstrap/c420ui",
+    "packages/canva-linux-assets/data",
   ] as const) {
     if (fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: must not exist`);
@@ -88,6 +146,15 @@ function checkForbiddenPaths(rootDir: string, failures: string[]): void {
 
 function checkRequiredPaths(rootDir: string, failures: string[]): void {
   for (const relativePath of [
+    "packages/electron/assets/canva-icon.png",
+    "packages/electron/main",
+    "packages/electron/preload",
+    "packages/electron/shared",
+    "packages/electron/ui",
+    "packages/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
+    "packages/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
+    "packages/canva-linux-assets/icons",
+    "packages/canva-linux-assets/icons/io.github.coletivo420.canva-linux.png",
     "packages/c420ui/scripts/build-bootstrap.ts",
     "packages/c420ui/scripts/c420ui-builder.ts",
     "packages/c420ui/scripts/run-c420ui.ts",
@@ -118,6 +185,61 @@ function checkRequiredPaths(rootDir: string, failures: string[]): void {
   ] as const) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: must exist`);
+    }
+  }
+}
+
+function checkProjectLayoutOwnership(rootDir: string, failures: string[]): void {
+  const packageJson = readJson<PackageJson>(rootDir, "package.json");
+  if (!packageJson) {
+    failures.push("package.json: must be readable");
+    return;
+  }
+
+  for (const [label, expected] of [
+    ["package.json build.appId", "io.github.coletivo420.canva-linux"],
+    ["package.json desktopName", "io.github.coletivo420.canva-linux.desktop"],
+    ["package.json build.directories.buildResources", "packages/canva-linux-assets"],
+    ["package.json build.linux.icon", "icons/io.github.coletivo420.canva-linux"],
+  ] as const) {
+    const actual =
+      label === "package.json build.appId"
+        ? packageJson.build?.appId
+        : label === "package.json desktopName"
+          ? packageJson.desktopName
+          : label === "package.json build.directories.buildResources"
+            ? packageJson.build?.directories?.buildResources
+            : packageJson.build?.linux?.icon;
+    if (actual !== expected) {
+      failures.push(`${label}: must be ${expected}`);
+    }
+  }
+
+  const iconBasenames = new Set([
+    "icon.png",
+    "app.png",
+    "logo.png",
+    "canva-linux.png",
+  ]);
+
+  for (const relativePath of collectFiles(rootDir, "packages/canva-linux-assets/icons")) {
+    if (iconBasenames.has(path.basename(relativePath))) {
+      failures.push(`${relativePath}: must use the canonical io.github.coletivo420.canva-linux basename`);
+    }
+  }
+
+  for (const [relativePath, expectedParent] of [
+    ["packages/electron/main", "packages/electron/main"],
+    ["packages/electron/preload", "packages/electron/preload"],
+    ["packages/electron/shared", "packages/electron/shared"],
+    ["packages/electron/ui", "packages/electron/ui"],
+    ["packages/electron/assets", "packages/electron/assets"],
+    ["packages/canva-linux-assets/desktop", "packages/canva-linux-assets/desktop"],
+    ["packages/canva-linux-assets/metainfo", "packages/canva-linux-assets/metainfo"],
+    ["packages/canva-linux-assets/icons", "packages/canva-linux-assets/icons"],
+  ] as const) {
+    if (!fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${expectedParent}: must exist`);
     }
   }
 }
@@ -181,6 +303,18 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
       failures.push(`package.json: build:scripts must not include ${forbiddenPattern}`);
     }
   }
+
+  if (packageJson.build?.directories?.buildResources !== "packages/canva-linux-assets") {
+    failures.push("package.json: build.directories.buildResources must be packages/canva-linux-assets");
+  }
+
+  if (packageJson.build?.linux?.icon !== "icons/io.github.coletivo420.canva-linux") {
+    failures.push("package.json: build.linux.icon must be icons/io.github.coletivo420.canva-linux");
+  }
+
+  if (packageJson.build?.appId !== "io.github.coletivo420.canva-linux") {
+    failures.push("package.json: build.appId must be io.github.coletivo420.canva-linux");
+  }
 }
 
 function validateProjectScript(rootDir: string, failures: string[]): void {
@@ -207,7 +341,7 @@ function validateProjectScript(rootDir: string, failures: string[]): void {
     "npm run typecheck:strict",
     "git diff --exit-code",
   ] as const) {
-    if (!contents.includes(requiredFragment)) {
+    if (!validateProjectHasRunStep(contents, requiredFragment)) {
       failures.push(`${relativePath}: must include ${requiredFragment}`);
     }
   }
@@ -216,7 +350,7 @@ function validateProjectScript(rootDir: string, failures: string[]): void {
     "npm run build:metadata",
     "npm run build:c420ui-bootstrap",
   ] as const) {
-    if (contents.includes(forbiddenFragment)) {
+    if (validateProjectHasRunStep(contents, forbiddenFragment)) {
       failures.push(`${relativePath}: must not include ${forbiddenFragment}`);
     }
   }
@@ -257,24 +391,7 @@ function checkDocs(rootDir: string, failures: string[]): void {
     "REVIEW.md",
     "docs/VALIDATION.md",
   ] as const) {
-    const contents = readText(rootDir, relativePath);
-    if (!contents) {
-      failures.push(`${relativePath}: must exist`);
-      continue;
-    }
-
-    for (const fragment of [
-      "c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under packages/c420ui.",
-      "Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by packages/c420ui/checks.",
-      "No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
-      "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, scripts/, test/, or scripts/c420ui-adapter.",
-      "When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.",
-    ] as const) {
-      if (!contents.includes(fragment)) {
-        failures.push(`${relativePath}: must include ownership boundary guidance`);
-        break;
-      }
-    }
+    checkFileContainsAll(rootDir, relativePath, C420UI_OWNERSHIP_GUARDRAILS, failures);
   }
 
   const aiGuardrailsPath = "docs/internal/AI_GUARDRAILS.md";
@@ -284,13 +401,7 @@ function checkDocs(rootDir: string, failures: string[]): void {
     return;
   }
 
-  for (const bullet of [
-    "- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `packages/c420ui`.",
-    "- Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `packages/c420ui/checks`.",
-    "- No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
-    "- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `test/`, or `scripts/c420ui-adapter`.",
-    "- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.",
-  ] as const) {
+  for (const bullet of C420UI_OWNERSHIP_GUARDRAILS_BULLETS) {
     if (!aiGuardrails.includes(bullet)) {
       failures.push(`${aiGuardrailsPath}: must include ${bullet}`);
     }
@@ -312,6 +423,7 @@ function checkDocs(rootDir: string, failures: string[]): void {
 function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]): void {
   checkForbiddenPaths(rootDir, failures);
   checkRequiredPaths(rootDir, failures);
+  checkProjectLayoutOwnership(rootDir, failures);
   checkPackageScripts(rootDir, failures);
   validateProjectScript(rootDir, failures);
   checkRootTests(rootDir, failures);

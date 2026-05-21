@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { createBuildMetadata } from "../electron/main/build-metadata";
+import { createBuildMetadata } from "../packages/electron/main/build-metadata";
 
 type PackageJson = { version?: string };
 type ProjectUiJson = { displayVersion?: string; phase?: string };
