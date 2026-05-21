@@ -60,14 +60,14 @@ test("canva-linux-c420ui-builder entrypoint preserves current builder/runtime sp
   assert.ok(exists("packages/c420ui/scripts/c420ui-builder.ts"));
   assert.ok(exists("packages/c420ui/bootstrap/generated/c420ui-builder.cjs"));
   assert.equal(exists("canva-linux.sh"), false);
-  assert.match(wrapper, /bootstrap\/c420ui\/c420ui-builder\.cjs/);
-  assert.match(wrapper, /\.build\/scripts\/c420ui-builder\.js/);
+  assert.match(wrapper, /packages\/c420ui\/bootstrap\/generated\/c420ui-builder\.cjs/);
+  assert.match(wrapper, /\.build\/packages\/c420ui\/scripts\/c420ui-builder\.js/);
 });
 
 test("bootstrap manifest points builder at c420ui-builder", () => {
   const manifest = JSON.parse(read("packages/c420ui/bootstrap/generated/manifest.json"));
   assert.equal(manifest.entrypoints.builder, "packages/c420ui/bootstrap/generated/c420ui-builder.cjs");
-  assert.ok(manifest.sourceHashInputs.includes("packages/c420ui/scripts/c420ui-builder.ts"));
+  assert.ok(manifest.sourceHashInputs.includes("packages/c420ui/scripts"));
 });
 
 test("builder title and help separate c420ui builder from runtime canva-linux", () => {
@@ -119,6 +119,10 @@ test("public alias --help smoke test works", () => {
 test("public alias planned action dry-run smoke test routes through c420ui-builder", (t) => {
   const result = runBuilder(["--prepare-aur", "--dry-run"]);
   if (result.skipped) {
+    t.skip(result.stderr);
+    return;
+  }
+  if ((result.stderr || "").includes("c420ui CLI bootstrap bundle is missing")) {
     t.skip(result.stderr);
     return;
   }

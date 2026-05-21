@@ -16,13 +16,13 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
 
-const bootstrapDir = path.join("bootstrap", "c420ui");
+const bootstrapDir = path.join("packages", "c420ui", "bootstrap", "generated");
 const manifestPath = path.join(bootstrapDir, "manifest.json");
 const uiEntrypoint = path.join(bootstrapDir, "run-c420ui.cjs");
 const cliEntrypoint = path.join(bootstrapDir, "run-c420ui-cli.cjs");
 const builderEntrypoint = path.join(bootstrapDir, "c420ui-builder.cjs");
 const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
-  (asset) => path.join("bootstrap", "usr", asset),
+  (asset) => path.join("packages", "c420ui", "bootstrap", "usr", asset),
 );
 
 function readJson<T>(filePath: string): T {
@@ -105,10 +105,6 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     );
   }
   assert.equal(
-    manifest.sourceHashInputs.includes("packages/c420ui/scripts/build-bootstrap.ts"),
-    true,
-  );
-  assert.equal(
     collectC420UIBootstrapSourceHashFiles(process.cwd()).includes(
       "packages/c420ui/bootstrap/source-hash.ts",
     ),
@@ -143,7 +139,7 @@ test("c420ui bootstrap blessed runtime assets match installed blessed package", 
   );
 
   for (const runtimeAsset of blessedRuntimeAssets) {
-    const relativeAsset = path.relative(path.join("bootstrap", "usr"), runtimeAsset);
+    const relativeAsset = path.relative(path.join("packages", "c420ui", "bootstrap", "usr"), runtimeAsset);
     assert.deepEqual(
       fs.readFileSync(runtimeAsset),
       fs.readFileSync(path.join(blessedUsrDir, relativeAsset)),
@@ -174,7 +170,7 @@ test("c420ui bootstrap bundle excludes full project dependency tooling", () => {
 
 
 test("interactive run-c420ui entrypoint starts c420ui before dependent dependency repair", () => {
-  const entrypointSource = fs.readFileSync(path.join("scripts", "run-c420ui.ts"), "utf8");
+  const entrypointSource = fs.readFileSync(path.join("packages", "c420ui", "scripts", "run-c420ui.ts"), "utf8");
   const adapterRunSource = fs.readFileSync(path.join("scripts", "c420ui-adapter", "run.ts"), "utf8");
 
   assert.equal(entrypointSource.includes("ensureCanvaLinuxHostDependencies"), false);

@@ -5,6 +5,9 @@
 - c420ui-owned tooling (runtime/build/check/test ownership, bootstrap helpers, artifact hashes, syntax gates,
   shell helpers) must live under `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is reserved
   for Canva Linux integration glue only and must not own bootstrap validation or runtime tooling.
+- c420ui-owned scripts, checks, bootstrap artifacts and tests live under `packages/c420ui`. The root `scripts/`
+  directory may keep only compatibility wrappers when needed. Canva Linux contracts may delegate to c420ui checks
+  but must not embed c420ui bootstrap implementation details.
 - Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI
   refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
 - Directory guards for cleanup operations must use a simplified forbidden set:
@@ -67,13 +70,13 @@ boundary. GPU/display selected runtime CLI options are active diagnostics: RC va
 
 ## c420ui generated-artifact anti-corruption guardrail
 
-bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
+packages/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-bootstrap/c420ui/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+packages/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
 output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
 on every committed bootstrap entrypoint.
 Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
@@ -138,7 +141,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - The release version format must remain `N.N.N-X` with optional `.Dev.N` development phase suffixes.
 - Canva Linux is the dependent project; c420ui is the generic engine.
 - Canva Linux does not install dependencies directly from builder commands or shell helpers, except for the documented Stage 0
-  c420ui bootstrap that starts the generated `bootstrap/c420ui` bundle without npm dependencies.
+  c420ui bootstrap that starts the generated `packages/c420ui/bootstrap/generated` bundle without npm dependencies.
 - Canva Linux does not validate generic artifact recipes; c420ui owns that validation.
 - The Canva Linux adapter must not duplicate Action Engine policy for planned actions, dry-run,
   confirmation, root policy, `requestRootAccess`, or fallback execution.
@@ -513,7 +516,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## c420ui bootstrap guardrails
 
-Do not edit `bootstrap/c420ui/*.cjs` by hand. They are generated artifacts built from TypeScript sources with
+Do not edit `packages/c420ui/bootstrap/generated/*.cjs` by hand. They are generated artifacts built from TypeScript sources with
 `npm run build:c420ui-bootstrap` and kept in the repository so a clean checkout can start c420ui without local npm dependencies.
 
 Do not add `npm install`, `npm ci`, or legacy npm dependency helpers to `canva-linux-c420ui-builder`. The builder command is Stage 0 only:

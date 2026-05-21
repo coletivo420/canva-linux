@@ -8,6 +8,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Refactored c420ui tooling: moved c420ui-owned runtime/build/check/test ownership, bootstrap helpers,
   shell helpers, and tests into `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is now
   integration-only.
+- c420ui-owned scripts, checks, bootstrap artifacts and tests live under `packages/c420ui`. Root `scripts/`
+  keeps compatibility wrappers only when needed, and Canva Linux contracts must delegate to c420ui checks
+  without embedding c420ui bootstrap implementation details.
 - Optimized detection provider: consolidated `package.json` reading with caching and implemented closure-based
   caching for `npm --version` to improve terminal interface refresh performance.
 
@@ -28,13 +31,13 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   sidecars, and c420ui must prefer that metadata when displaying artifact versions.
 
 - Restored the c420ui bootstrap as a TypeScript-generated artifact and hardened artifact validation.
-  bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
+  packages/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
   Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 - Added anti-corruption coverage so the c420ui bootstrap check must fail on syntax errors, stale generated output,
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-- bootstrap/c420ui/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+- packages/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
   output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
   on every committed bootstrap entrypoint.
 - Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
@@ -153,7 +156,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Bumped package metadata to `0.1.4-14` while preserving the `N.N.N-X` release versioning rule.
 - Added AppStream release metadata for `0.1.4-14`.
 - Validated the standalone c420ui bootstrap bundle for clean source checkouts without local `node_modules` or local `esbuild`.
-- Added sourceHash validation for `bootstrap/c420ui` artifacts and confirmed stale bundle detection.
+- Added sourceHash validation for `packages/c420ui/bootstrap/generated` artifacts and confirmed stale bundle detection.
 - Confirmed c420ui remains the independent dependency resolver for dependent projects, with Canva Linux dependencies repaired after c420ui startup.
 - Split documentation into generic c420ui, Canva Linux dependent-project, and internal maintenance sections.
 - Refreshed public release, validation, review, and AI maintenance docs for the consolidated c420ui separation state.

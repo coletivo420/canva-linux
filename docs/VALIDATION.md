@@ -16,6 +16,9 @@ Dev.9 corrects structural ownership: c420ui runtime/build/check/test ownership n
 The adapter layer in `scripts/c420ui-adapter` is reserved for Canva Linux integration glue only and must not own
 bootstrap validation or runtime tooling. Detection providers must avoid repeated `package.json` parsing and repeated
 `npm` process spawning during UI refresh cycles.
+c420ui-owned scripts, checks, bootstrap artifacts and tests live under `packages/c420ui`. The root `scripts/`
+directory may keep only compatibility wrappers when needed. Canva Linux contracts may delegate to c420ui checks
+but must not embed c420ui bootstrap implementation details.
 
 All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, and build metadata
 resolution must live under `scripts/c420ui-adapter`; bootstrap helpers must live under `packages/c420ui/bootstrap`.
@@ -66,13 +69,13 @@ Generated Artifacts
 
 ## c420ui bootstrap artifact validation
 
-bootstrap/c420ui/*.cjs are generated artifacts. Do not edit them manually.
+packages/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-bootstrap/c420ui/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+packages/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
 output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
 on every committed bootstrap entrypoint.
 Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
@@ -97,7 +100,7 @@ malformed SIGCONT blocks, or host-dependency validators interleaved into the int
 - `npm run check:c420ui-node-check`
 - `npm run check:c420ui-bootstrap`
 - `npm run check:c420ui-bootstrap-artifacts`
-- `npm run test -- packages/c420ui/test/c420ui-bootstrap-artifacts.test.ts`
+- `npm run test -- packages/c420ui/test/bootstrap-artifacts.test.ts`
 
 Bootstrap PR logs must include these exact success lines after regenerating bootstrap artifacts:
 

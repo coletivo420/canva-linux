@@ -155,7 +155,7 @@ test("run-c420ui.cjs codePointAt polyfill defines size before use", () => {
 
 test("c420ui bootstrap manifest metadata fields are well-formed", () => {
   const manifest = readJson<BootstrapManifest>(
-    path.join("bootstrap", "c420ui", "manifest.json"),
+    path.join("packages", "c420ui", "bootstrap", "generated", "manifest.json"),
   );
   const buildMetadata = readJson<BuildMetadata>(
     path.join("config", "canva-linux", "build-metadata.json"),
