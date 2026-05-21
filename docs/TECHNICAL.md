@@ -8,24 +8,24 @@ Canva Linux is an Electron desktop wrapper around Canva.
 
 Core runtime files:
 
-- `electron/main/index.ts` - Electron shell entrypoint and composition root.
-- `electron/main/runtime.ts` - Linux runtime setup, shared session configuration, and ephemeral session cleanup.
-- `electron/main/credential-storage.ts` - Secret Service credential backend policy for persistent login versus ephemeral fallback.
-- `electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring.
-- `electron/main/ipc.ts` - centralized main-process IPC routing.
-- `electron/main/logging.ts` - status output and startup diagnostics.
-- `electron/main/oauth.ts` - OAuth popup lifecycle and callback tracking.
-- `electron/main/shell.ts` - top-level window and toolbar shell helpers.
-- `electron/main/tab-controller.ts` - tab creation and orchestration.
-- `electron/main/tab-events.ts` - per-tab `webContents` policy and event wiring.
-- `electron/main/tabs.ts` - tab ordering, selection, closing and layout helpers.
-- `electron/main/eyedropper-bridge.ts` - scoped tab snapshot bridge for CL-EyeDropper.
-- `electron/preload/canva.ts` - source Canva page preload entrypoint.
-- `electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle.
-- `electron/preload/native-eyedropper-wrapper.ts` - Canva-facing EyeDropper replacement layer.
-- `electron/preload/cl-eyedropper/*.ts` - CL-EyeDropper TypeScript implementation.
-- `electron/shared/debug.ts` - shared debug parsing and log gating.
-- `electron/shared/navigation.ts` - shared Canva/OAuth URL classification.
+- `build-resources/electron/main/index.ts` - Electron shell entrypoint and composition root.
+- `build-resources/electron/main/runtime.ts` - Linux runtime setup, shared session configuration, and ephemeral session cleanup.
+- `build-resources/electron/main/credential-storage.ts` - Secret Service credential backend policy for persistent login versus ephemeral fallback.
+- `build-resources/electron/main/lifecycle.ts` - startup and shutdown lifecycle wiring.
+- `build-resources/electron/main/ipc.ts` - centralized main-process IPC routing.
+- `build-resources/electron/main/logging.ts` - status output and startup diagnostics.
+- `build-resources/electron/main/oauth.ts` - OAuth popup lifecycle and callback tracking.
+- `build-resources/electron/main/shell.ts` - top-level window and toolbar shell helpers.
+- `build-resources/electron/main/tab-controller.ts` - tab creation and orchestration.
+- `build-resources/electron/main/tab-events.ts` - per-tab `webContents` policy and event wiring.
+- `build-resources/electron/main/tabs.ts` - tab ordering, selection, closing and layout helpers.
+- `build-resources/electron/main/eyedropper-bridge.ts` - scoped tab snapshot bridge for CL-EyeDropper.
+- `build-resources/electron/preload/canva.ts` - source Canva page preload entrypoint.
+- `build-resources/electron/preload/custom-eyedropper-flow.ts` - snapshot capture and CL-EyeDropper lifecycle.
+- `build-resources/electron/preload/native-eyedropper-wrapper.ts` - Canva-facing EyeDropper replacement layer.
+- `build-resources/electron/preload/cl-eyedropper/*.ts` - CL-EyeDropper TypeScript implementation.
+- `build-resources/electron/shared/debug.ts` - shared debug parsing and log gating.
+- `build-resources/electron/shared/navigation.ts` - shared Canva/OAuth URL classification.
 
 Canva Linux workflow actions are split into four layers:
 
@@ -47,7 +47,7 @@ validation glue.
 `TERM` is not `dumb`, and Node.js/npm are available. Legacy interface selection
 flags and environment variables have been removed.
 
-The Tool must run as a regular user. `canva-linux-c420ui-builder`, `packages/c420ui/scripts/run-c420ui.ts`, and
+The Tool must run as a regular user. `canva-linux-c420ui-builder`, `build-resources/c420ui/scripts/run-c420ui.ts`, and
 the c420ui entrypoint refuse root execution before build, action, or c420ui startup.
 System-wide operations request administrator authentication only for the action
 that needs it.
@@ -98,15 +98,15 @@ Logs may report the backend name and policy mode, but must not include cookies, 
 
 ## Sudo Contract
 
-Privileged actions follow a shared contract defined in `packages/c420ui/host/linux/sudo-helper.sh`.
+Privileged actions follow a shared contract defined in `build-resources/c420ui/host/linux/sudo-helper.sh`.
 
 1. The c420ui Action Engine interprets Action Registry metadata, including
    `requiresRoot`, `scope`, `env`, confirmation flags and planned state.
 2. Actions with `requiresRoot: true` validate root access through
-   `packages/c420ui/host/linux/sudo-helper.sh --validate` before backend scripts start.
+   `build-resources/c420ui/host/linux/sudo-helper.sh --validate` before backend scripts start.
 3. The c420ui requests the root password via a secure prompt and the c420ui Root
    Provider passes the root-auth environment marker to backend execution.
-4. `packages/c420ui/host/linux/sudo-helper.sh` detects this environment variable and uses
+4. `build-resources/c420ui/host/linux/sudo-helper.sh` detects this environment variable and uses
    `sudo -n` for non-interactive cached-credential validation and execution.
 5. In direct CLI mode, `sudo` prompts for the password as usual in the terminal.
 6. User-scope actions are refused if they also declare `requiresRoot: true`;
@@ -136,7 +136,7 @@ Reference palette:
 - Blue: `#3969E7`
 - Purple: `#7D2AE7`
 
-The c420ui uses `packages/c420ui/src/terminal/theme.ts`.
+The c420ui uses `build-resources/c420ui/src/terminal/theme.ts`.
 Direct CLI output uses ANSI-safe approximations through `scripts/ui-common.sh`.
 
 The theme must remain readable with:

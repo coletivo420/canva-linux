@@ -19,7 +19,7 @@ test("Canva Linux dependency config loads declared dev dependencies", () => {
 });
 
 test("c420ui core does not contain Canva Linux concrete npm dependency names", () => {
-  const sourceDir = path.join(rootDir, "packages", "c420ui", "src");
+  const sourceDir = path.join(rootDir, "build-resources", "c420ui", "src");
   const source = fs
     .readdirSync(sourceDir)
     .filter((file) => file.endsWith(".ts"))

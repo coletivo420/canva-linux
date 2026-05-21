@@ -48,7 +48,7 @@ function registerTypeScriptExtension() {
  * @returns {any}
  */
 function loadRuntimeModule(modulePath) {
-  const sourceTs = path.join(repoRoot, "electron", `${modulePath}.ts`);
+  const sourceTs = path.join(repoRoot, "build-resources", "electron", `${modulePath}.ts`);
 
   registerTypeScriptExtension();
 

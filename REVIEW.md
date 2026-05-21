@@ -2,15 +2,15 @@
 
 ## c420ui package refactor and structural ownership
 
-- c420ui-owned tooling (runtime/build/check/test ownership, bootstrap helpers, artifact hashes, syntax gates, shell helpers) must live under `packages/c420ui`. The adapter layer in `scripts/c420ui-adapter` is reserved for Canva Linux integration glue only and must not own bootstrap validation or runtime tooling.
-- c420ui-owned scripts, checks, bootstrap artifacts and tests live under `packages/c420ui`. The root `scripts/` directory may keep only compatibility wrappers when needed, and Canva Linux contracts must delegate to c420ui checks without embedding c420ui bootstrap implementation details.
+- c420ui-owned tooling (runtime/build/check/test ownership, bootstrap helpers, artifact hashes, syntax gates, shell helpers) must live under `build-resources/c420ui`. The adapter layer in `scripts/c420ui-adapter` is reserved for Canva Linux integration glue only and must not own bootstrap validation or runtime tooling.
+- c420ui-owned scripts, checks, bootstrap artifacts and tests live under `build-resources/c420ui`. The root `scripts/` directory may keep only compatibility wrappers when needed, and Canva Linux contracts must delegate to c420ui checks without embedding c420ui bootstrap implementation details.
 - Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
 - Directory guards for cleanup operations must use a simplified forbidden set: `[resolvedRoot, path.dirname(resolvedRoot), path.parse(resolvedOut).root, process.cwd()]`.
 
 ## Dev.9 metadata persistence and c420ui repair
 
-- Dev.9 corrected the adapter boundary: registry-driven artifact fragment detection stays in `scripts/c420ui-adapter`, while bootstrap helpers now live under `packages/c420ui/bootstrap`. Shell scripts and checks owned by c420ui live under `packages/c420ui`.
-- TypeScript modules consumed by c420ui for Canva Linux project integration, overview detection, artifact fragments, and build metadata resolution must live under `scripts/c420ui-adapter`. Bootstrap recipes and source-hash helpers must live under `packages/c420ui/bootstrap`. Do not add new c420ui integration modules under `scripts/canva-linux`. Generated artifact detection must list all declared registry workflows, including planned workflows without `outputPattern` as not detected.
+- Dev.9 corrected the adapter boundary: registry-driven artifact fragment detection stays in `scripts/c420ui-adapter`, while bootstrap helpers now live under `build-resources/c420ui/bootstrap`. Shell scripts and checks owned by c420ui live under `build-resources/c420ui`.
+- TypeScript modules consumed by c420ui for Canva Linux project integration, overview detection, artifact fragments, and build metadata resolution must live under `scripts/c420ui-adapter`. Bootstrap recipes and source-hash helpers must live under `build-resources/c420ui/bootstrap`. Do not add new c420ui integration modules under `scripts/canva-linux`. Generated artifact detection must list all declared registry workflows, including planned workflows without `outputPattern` as not detected.
 - Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display comes from metadata.
 - The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 - Artifact filenames may keep the base package version; hash-visible display comes from metadata. Reject changes that remove metadata installation or sidecar generation.
@@ -23,17 +23,17 @@
 
 ## c420ui bootstrap generated artifact review
 
-- packages/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
+- build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
   Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 - The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-- packages/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+- build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
   output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
   on every committed bootstrap entrypoint.
 - Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
-- Reject changes that treat `packages/c420ui/bootstrap/generated/*.cjs` as source of truth, must not restore `canva-linux.sh`,
+- Reject changes that treat `build-resources/c420ui/bootstrap/generated/*.cjs` as source of truth, must not restore `canva-linux.sh`,
   or bypass the official TypeScript bootstrap build recipe.
 - Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
   `check:c420ui-bootstrap-artifacts` is a verification gate, not a regeneration command: it must not run
@@ -129,7 +129,7 @@ Validated guarantees:
 
 - `c420uiVersion` remains independent from the Canva Linux dependent-project version.
 - `dependentProjectVersion` remains `0.1.4-14`.
-- `packages/c420ui/bootstrap/generated/manifest.json` sourceHash matches current TypeScript sources and project configuration.
+- `build-resources/c420ui/bootstrap/generated/manifest.json` sourceHash matches current TypeScript sources and project configuration.
 - Stale sourceHash detection fails as expected when bootstrap inputs are edited without rebuilding.
 - The launcher does not run `npm install` or `npm ci`.
 - Full dependency validation and repair remain owned by c420ui after startup.
@@ -169,7 +169,7 @@ Request changes if a PR:
 - reintroduces `scripts/project-ui.json`;
 - reintroduces `scripts/core/action-registry.ts`;
 - reintroduces `scripts/core/validate-actions.ts`;
-- puts project-specific registry loading inside `packages/c420ui/src`;
+- puts project-specific registry loading inside `build-resources/c420ui/src`;
 - hardcodes Canva Linux config paths inside c420ui core;
 - moves `actions.json`, `development.json`, or `artifacts.json` declarations out of `config/canva-linux` without an explicit migration.
 
@@ -187,7 +187,7 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- adds project-specific strings to `packages/c420ui/src`;
+- adds project-specific strings to `build-resources/c420ui/src`;
 - imports project adapters from c420ui;
 - reimplements c420ui engines in `scripts/c420ui-adapter`;
 - turns `scripts/c420ui-adapter` into a planned-action, dry-run, root, sudo, or confirmation policy layer;
@@ -201,8 +201,8 @@ Request changes if a PR:
 
 - imports root/sudo helpers from removed legacy runner surfaces into the Canva Linux adapter;
 - triggers sudo for dry-run, planned actions, or confirmation failures;
-- calls sudo directly from `packages/c420ui/src`;
-- bypasses `packages/c420ui/host/linux/sudo-helper.sh` for Canva Linux privileged actions;
+- calls sudo directly from `build-resources/c420ui/src`;
+- bypasses `build-resources/c420ui/host/linux/sudo-helper.sh` for Canva Linux privileged actions;
 - removes user-scope protection for root actions.
 
 ## c420ui scope/root provider boundary review
@@ -211,7 +211,7 @@ Request changes if a PR:
 
 - reimplements generic scope helpers inside Canva Linux code;
 - hardcodes `CANVA_NATIVE_SCOPE`, `CANVA_FLATPAK_SCOPE` or `C420UI_ROOT_AUTH` in c420ui core;
-- hardcodes `packages/c420ui/host/linux/sudo-helper.sh` in c420ui core;
+- hardcodes `build-resources/c420ui/host/linux/sudo-helper.sh` in c420ui core;
 - reimplements `validateRootAccess` in the Canva Linux root provider;
 - moves conditional Canva Linux detection policy into c420ui core.
 
@@ -221,7 +221,7 @@ Request changes if a PR:
 
 - reintroduces the removed project-specific sudo helper;
 - adds project-specific sudo helper function aliases;
-- adds `CANVA_*` env vars to `packages/c420ui/host`;
+- adds `CANVA_*` env vars to `build-resources/c420ui/host`;
 - bypasses the c420ui Linux root provider base;
 - calls raw sudo outside the c420ui sudo helper.
 
@@ -232,7 +232,7 @@ Request changes if a PR:
 - duplicates planned-action behavior outside the c420ui action engine;
 - duplicates dry-run behavior outside the c420ui action engine;
 - routes direct CLI actions around the c420ui Action Engine;
-- adds Canva Linux-specific metadata to `packages/c420ui/src/action-engine.ts`;
+- adds Canva Linux-specific metadata to `build-resources/c420ui/src/action-engine.ts`;
 - changes runtime app logs while implementing action-engine contracts.
 
 ## Adapter and shell helper review
@@ -272,10 +272,10 @@ Request changes if a PR:
 
 - uses a project-specific c420ui adapter directory name instead of `scripts/c420ui-adapter/`;
 - reintroduces `scripts/c420ui/`;
-- puts generic terminal UI outside `packages/c420ui/src/terminal/`;
+- puts generic terminal UI outside `build-resources/c420ui/src/terminal/`;
 - adds runtime or product entrypoints under `scripts/core`;
 - leaves active docs pointing to removed runtime paths;
-- hardcodes Canva Linux action IDs, config paths, app IDs, shell scripts, or `CANVA_` variables inside `packages/c420ui/src`.
+- hardcodes Canva Linux action IDs, config paths, app IDs, shell scripts, or `CANVA_` variables inside `build-resources/c420ui/src`.
 
 ## c420ui naming and logo review
 
@@ -358,10 +358,10 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- adds `process.getuid()` root-launch checks outside `packages/c420ui/src/terminal`;
+- adds `process.getuid()` root-launch checks outside `build-resources/c420ui/src/terminal`;
 - reintroduces `adapter.rootLaunchGuardMessage()`;
 - formats c420ui terminal help inside the Canva Linux adapter;
-- executes `packages/c420ui/src/terminal/index.ts` as a runtime entrypoint;
+- executes `build-resources/c420ui/src/terminal/index.ts` as a runtime entrypoint;
 - bypasses `runC420UITerminalApp()` for terminal startup.
 
 ## Logging review checklist
@@ -419,8 +419,8 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- lets `canva-linux-c420ui-builder` execute a stale `.build/packages/c420ui/scripts/run-c420ui-cli.js`;
-- removes freshness coverage for `packages/c420ui/src`;
+- lets `canva-linux-c420ui-builder` execute a stale `.build/build-resources/c420ui/scripts/run-c420ui-cli.js`;
+- removes freshness coverage for `build-resources/c420ui/src`;
 - removes freshness coverage for `scripts/c420ui-adapter`;
 - tests launcher behavior by executing real destructive actions instead of a stub.
 
@@ -449,7 +449,7 @@ Request changes if a PR:
 Request changes if a PR:
 
 - makes direct CLI and interactive c420ui use different execution policies;
-- reintroduces direct `spawn()` action execution in `packages/c420ui/src/terminal/app.ts`;
+- reintroduces direct `spawn()` action execution in `build-resources/c420ui/src/terminal/app.ts`;
 - bypasses the c420ui root provider for interactive privileged actions;
 - triggers sudo before confirmation or for dry-run/planned actions;
 - reintroduces `C420UISudoProvider` as a separate root abstraction.
@@ -479,14 +479,14 @@ Request changes if a PR:
 - reintroduces `*-parts` validation directories;
 - keeps historical `Part` naming in consolidated runners;
 - adds a c420ui source module without updating the public API contract;
-- adds a module to `packages/c420ui/src` without exporting or documenting it.
+- adds a module to `build-resources/c420ui/src` without exporting or documenting it.
 
 ## Detection boundary review
 
 Request changes if a PR:
 
 - reintroduces `scripts/core/overview-status.ts`;
-- puts Canva Linux detection keys inside `packages/c420ui/src`;
+- puts Canva Linux detection keys inside `build-resources/c420ui/src`;
 - imports detection from `scripts/core`;
 - bypasses the c420ui detection engine for root policy decisions;
 - hardcodes Canva Linux metadata inside c420ui core.
@@ -496,7 +496,7 @@ Request changes if a PR:
 Request changes if a PR:
 
 - reintroduces `status.package` in detection status;
-- adds Canva Linux keys to `packages/c420ui/src/detection.ts`;
+- adds Canva Linux keys to `build-resources/c420ui/src/detection.ts`;
 - bypasses c420ui detection contracts in root policy;
 - makes detection async without updating root policy callers safely.
 
@@ -507,7 +507,7 @@ Request changes if a PR:
 - uses a project-specific c420ui adapter directory name instead of `scripts/c420ui-adapter/`;
 - reintroduces `scripts/c420ui/`;
 - adds generic terminal UI code under `scripts/`;
-- hardcodes Canva Linux metadata inside `packages/c420ui/src/terminal`;
+- hardcodes Canva Linux metadata inside `build-resources/c420ui/src/terminal`;
 - calls `scripts/run-core-entry.sh overview-status` from terminal UI;
 - imports Canva Linux adapters from c420ui terminal code;
 - makes `scripts/c420ui-adapter/` contain generic UI logic.
@@ -517,16 +517,16 @@ Request changes if a PR:
 Request changes if a PR:
 
 - duplicates `createBuildMetadata` or `normalizeLoadedBuildMetadata` in `scripts/c420ui-adapter/build-metadata-loader.ts`;
-- stops loading build metadata formatting from `electron/main/build-metadata`;
+- stops loading build metadata formatting from `build-resources/electron/main/build-metadata`;
 - bundles `scripts/canva-linux` registry/config modules without adding them to `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`;
-- edits `packages/c420ui/bootstrap/generated/*.cjs` manually instead of rebuilding from TypeScript sources;
+- edits `build-resources/c420ui/bootstrap/generated/*.cjs` manually instead of rebuilding from TypeScript sources;
 - leaves c420ui bootstrap artifacts without passing `node --check` and the c420ui artifact gates.
 
 ## Host dependency ownership review
 
 Request changes if a PR:
 
-- hardcodes Canva Linux dependency names inside `packages/c420ui/src`;
+- hardcodes Canva Linux dependency names inside `build-resources/c420ui/src`;
 - calls `scripts/ensure-npm-dependencies.sh` directly from project launchers or generic c420ui code;
 - runs `npm ci` or `npm install` directly from project launchers;
 - moves project dependency lists into c420ui core instead of project config;
@@ -553,7 +553,7 @@ while runtime flags belong to the compiled `canva-linux` app.
 - Source identity remains `0.1.4-15.Dev.9` / `0.1.4-15.Dev` / `0.1.4-15.Dev.9`.
 - Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
 - The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
-- Runtime metadata fallback must be neutral `0.0.0`/`unknown`; request changes if `electron/main/build-metadata.ts`
+- Runtime metadata fallback must be neutral `0.0.0`/`unknown`; request changes if `build-resources/electron/main/build-metadata.ts`
   hardcodes the current Dev.7 phase as a fallback.
 - Generated build metadata must be normalized before use so partial metadata cannot produce broken effective version strings.
 - Localized OAuth landing probes may log only `loginLinks`, `signupLinks`, and `authButtons` counts; request changes if DOM
@@ -564,7 +564,7 @@ while runtime flags belong to the compiled `canva-linux` app.
 - c420ui must display Canva Linux effective build metadata when `config/canva-linux/build-metadata.json`, CI revision
   variables, or a source checkout `.git` HEAD can provide it; source `package.json` and `project-ui.json` stay free of
   committed `+g<hash>` metadata.
-- The c420ui brand version remains independent and comes from `packages/c420ui/package.json`; c420ui-specific
+- The c420ui brand version remains independent and comes from `build-resources/c420ui/package.json`; c420ui-specific
   `0.1.0+g<hash-do-c420ui>` metadata is future work, not part of this hotfix.
 - `build:c420ui-bootstrap` must refresh or resolve effective build metadata before writing the bootstrap manifest, including
   dependent project full version, build revision, display version, and phase.
@@ -574,8 +574,8 @@ while runtime flags belong to the compiled `canva-linux` app.
   rendering remote `https:` favicons.
 - OAuth localized public-landing probes must normalize both DOM attributes and localized keywords with NFKD so composed and
   decomposed labels are equivalent.
-- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under packages/c420ui.
-- Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by packages/c420ui/checks.
+- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
+- Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, scripts/, test/, or scripts/c420ui-adapter.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `test/`, `scripts/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.

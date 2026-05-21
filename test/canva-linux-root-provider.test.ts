@@ -3,7 +3,7 @@ import fs from "node:fs";
 import test from "node:test";
 import type { SpawnSyncReturns } from "node:child_process";
 
-import { c420uiRootPolicyExitCode, type c420uiAction } from "../packages/c420ui/src";
+import { c420uiRootPolicyExitCode, type c420uiAction } from "../build-resources/c420ui/src";
 import { createCanvaLinuxRootProvider } from "../scripts/c420ui-adapter/root-provider";
 
 const rootAction: c420uiAction = {
@@ -147,7 +147,7 @@ test("validateRootAccess uses c420ui sudo helper through injected runner", () =>
   assert.equal(calls.length, 1);
   assert.deepEqual(calls[0], {
     command: "bash",
-    args: ["packages/c420ui/host/linux/sudo-helper.sh", "--validate"],
+    args: ["build-resources/c420ui/host/linux/sudo-helper.sh", "--validate"],
     options: {
       cwd: "/repo",
       env,

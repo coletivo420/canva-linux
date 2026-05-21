@@ -9,7 +9,7 @@ import {
   type c420uiRunnableArtifactWorkflow,
   validateC420UIArtifactRecipeConfig,
   validateC420UIArtifactWorkflowsAgainstActions,
-} from "../../packages/c420ui/src";
+} from "../../build-resources/c420ui/src";
 import { loadCanvaLinuxC420UIActions } from "./actions";
 
 export type CanvaLinuxArtifactWorkflow = c420uiArtifactWorkflow &

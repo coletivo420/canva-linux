@@ -8,7 +8,7 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 
 ## Completed
 
-- Package boundary under `packages/c420ui`.
+- Package boundary under `build-resources/c420ui`.
 - Canva Linux adapter under `scripts/c420ui-adapter`.
 - Direct CLI bridge.
 - Shared Action Engine.
@@ -33,7 +33,7 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 
 ## Current execution model
 
-Direct launcher actions route through `.build/packages/c420ui/scripts/run-c420ui-cli.js`, the Canva Linux c420ui CLI bridge, and the reusable c420ui Action Engine.
+Direct launcher actions route through `.build/build-resources/c420ui/scripts/run-c420ui-cli.js`, the Canva Linux c420ui CLI bridge, and the reusable c420ui Action Engine.
 
 Interactive Canva Linux c420ui actions use the same Action Engine, Root Provider contract, Canva Linux Root Provider, Command Runner, and operational log redaction policy.
 
@@ -42,7 +42,7 @@ Interactive Canva Linux c420ui actions use the same Action Engine, Root Provider
 
 Validation is consolidated by domain:
 
-- c420ui core checks: `packages/c420ui/checks/check-c420ui-core-contracts.ts`.
+- c420ui core checks: `build-resources/c420ui/checks/check-c420ui-core-contracts.ts`.
 - Canva Linux checks: `scripts/checks/canva-linux/check-canva-linux-contracts.ts`.
 - Shared repository tooling: `scripts/core/check-repository-policy.ts` plus dedicated docs, dependency, runtime, and AI guardrail checks.
 
@@ -58,7 +58,7 @@ New c420ui or Canva Linux behavior checks should extend the relevant consolidate
 
 - Do not migrate to ESM.
 - Do not publish or promise an NPM package.
-- Do not reintroduce `scripts/c420ui/`; generic terminal UI belongs under `packages/c420ui/src/terminal/`.
+- Do not reintroduce `scripts/c420ui/`; generic terminal UI belongs under `build-resources/c420ui/src/terminal/`.
 - Do not change visual behavior as part of docs cleanup or RC readiness work.
 - Do not restore the removed legacy Action Runner or its compatibility validation path.
 - Do not change versioning.

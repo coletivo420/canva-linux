@@ -71,7 +71,7 @@ project.
 - c420ui must display Canva Linux effective build metadata when `config/canva-linux/build-metadata.json`, CI revision
   variables, or a source checkout `.git` HEAD can provide it; source `package.json` and `project-ui.json` stay free of
   committed `+g<hash>` metadata.
-- The c420ui brand version remains independent and comes from `packages/c420ui/package.json`; c420ui-specific
+- The c420ui brand version remains independent and comes from `build-resources/c420ui/package.json`; c420ui-specific
   `0.1.0+g<hash-do-c420ui>` metadata is future work, not part of this hotfix.
 - `build:c420ui-bootstrap` must refresh or resolve effective build metadata before writing the bootstrap manifest, including
   dependent project full version, build revision, display version, and phase.

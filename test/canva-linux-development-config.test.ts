@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { validateC420UIDevelopmentConfig } from "../packages/c420ui/src";
+import { validateC420UIDevelopmentConfig } from "../build-resources/c420ui/src";
 import { loadCanvaLinuxActions } from "../scripts/canva-linux/actions/registry";
 import { loadCanvaLinuxC420UIActions } from "../scripts/c420ui-adapter/actions";
 import {

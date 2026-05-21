@@ -42,6 +42,11 @@ run_step() {
 }
 
 # Validation is check-only. Do not regenerate metadata or bootstrap artifacts here.
+run_step "npm run lint" npm run lint
+run_step "npm test" npm test
+run_step "npm run docs:check-ai" npm run docs:check-ai
+run_step "npm run docs:check-links" npm run docs:check-links
+run_step "npm run deps:check-policy" npm run deps:check-policy
 run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check
 run_step "npm run check:c420ui-bootstrap-artifacts" npm run check:c420ui-bootstrap-artifacts
 run_step "npm run check:c420ui-bootstrap" npm run check:c420ui-bootstrap
@@ -51,7 +56,7 @@ run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "git diff --exit-code" git diff --exit-code
 
 if command -v desktop-file-validate > /dev/null 2>&1; then
-  run_step "desktop-file-validate" desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
+  run_step "desktop-file-validate" desktop-file-validate build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop
 else
   log_info "desktop-file-validate not found, skipping"
 fi
@@ -60,7 +65,7 @@ if command -v appstreamcli > /dev/null 2>&1; then
   run_step "appstreamcli validate --explain --no-net" \
     appstreamcli validate --explain --no-net \
     --override releases-not-in-order=info \
-    data/io.github.coletivo420.canva-linux.metainfo.xml
+    build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml
 else
   log_info "appstreamcli not found, skipping"
 fi

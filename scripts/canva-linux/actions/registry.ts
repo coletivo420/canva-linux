@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   validateC420UIActionRegistry,
   type C420UIActionDescriptor,
-} from "../../../packages/c420ui/src/actions";
+} from "../../../build-resources/c420ui/src/actions";
 import { findCanvaLinuxProjectRoot } from "../project-root";
 
 const ACTION_GROUPS = ["install", "development", "maintenance"] as const;

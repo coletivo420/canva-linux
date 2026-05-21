@@ -49,9 +49,9 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 - If `org.flatpak.Builder` is missing locally, install it with:
   `flatpak install flathub org.flatpak.Builder`
 - Review `docs/notes/FLATHUB_SOURCE.md` before preparing the final Flathub source definition.
-- The generated `electron/preload/canva.bundle.js` should be regenerated from source during the build and should not replace review of the modular preload source files.
+- The generated `build-resources/electron/preload/canva.bundle.js` should be regenerated from source during the build and should not replace review of the modular preload source files.
 - Release bundle publication must use the default rebuild path so the `.flatpak` is not created from stale Electron output.
-- Use `packages/c420ui/scripts/build-flatpak-bundle.sh --use-existing-repo` only for explicit local reuse of an already reviewed `repo/`, not for release publication after source changes.
+- Use `build-resources/c420ui/scripts/build-flatpak-bundle.sh --use-existing-repo` only for explicit local reuse of an already reviewed `repo/`, not for release publication after source changes.
 - If AppStream validation reports only URL reachability warnings, rerun with normal network access before changing metadata.
 - Local repo lint may report only Flathub screenshot mirror findings until screenshots are mirrored by Flathub infrastructure; treat additional repo-lint findings as blockers.
 - Keep OAuth status explicit in submission notes: Google OAuth is maintainer-tested; other OAuth providers remain community-tested.

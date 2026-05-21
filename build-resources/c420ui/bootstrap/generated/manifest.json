@@ -1,0 +1,49 @@
+{
+  "kind": "c420ui-bootstrap",
+  "generatedBy": "build-resources/c420ui/scripts/build-bootstrap.ts",
+  "c420uiVersion": "0.1.0",
+  "dependentProject": "canva-linux",
+  "dependentProjectVersion": "0.1.4-15.Dev.9",
+  "dependentProjectBuildRevision": "g56a733b",
+  "dependentProjectFullVersion": "0.1.4-15.Dev.9+g56a733b",
+  "dependentProjectDisplayVersion": "0.1.4-15.Dev+g56a733b",
+  "dependentProjectPhase": "0.1.4-15.Dev.9+g56a733b",
+  "entrypoint": "run-c420ui.cjs",
+  "cliEntrypoint": "run-c420ui-cli.cjs",
+  "entrypoints": {
+    "ui": "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
+    "cli": "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+    "builder": "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs"
+  },
+  "requiresNode": ">=22.0.0",
+  "buildRecipe": "build-resources/c420ui/scripts/build-bootstrap.ts",
+  "buildTool": "esbuild",
+  "buildTarget": "node22",
+  "bundleFormat": "cjs",
+  "moduleFormat": "commonjs",
+  "futureModuleFormat": "esm",
+  "typescriptFirst": true,
+  "ownsFullDependencyPolicy": true,
+  "sourceHashAlgorithm": "sha256",
+  "sourceHash": "sha256:3fcaef018462cc8770853cdff06f015fa930e92ce355d86f5a157cf04f3c56a2",
+  "sourceHashInputs": [
+    "build-resources/c420ui/src",
+    "build-resources/c420ui/bootstrap",
+    "build-resources/c420ui/scripts",
+    "build-resources/c420ui/checks",
+    "scripts/c420ui-adapter",
+    "scripts/canva-linux/actions",
+    "scripts/canva-linux/artifacts",
+    "scripts/canva-linux/capabilities",
+    "scripts/canva-linux/development",
+    "scripts/canva-linux/project-root.ts",
+    "config/canva-linux",
+    "build-resources/c420ui/package.json",
+    "package.json"
+  ],
+  "artifactHashes": {
+    "run-c420ui.cjs": "sha256:9e1cece9c687bfac92ebe52cb25f65b584de1b3f20347bd83f6dccd28b396f86",
+    "run-c420ui-cli.cjs": "sha256:d666d6022e86aaa6ba39eb368e07a14c0c5ed15e2dd1a6d861f8c58d10130caf",
+    "c420ui-builder.cjs": "sha256:a6eadef1d28ed1fa1f822287fe2ad52929186144f7117c6f3398981179441b35"
+  }
+}

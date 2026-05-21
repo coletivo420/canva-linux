@@ -6,7 +6,7 @@ import test from "node:test";
 import type { SpawnSyncOptionsWithStringEncoding, SpawnSyncReturns } from "node:child_process";
 
 import { createCanvaLinuxDetectionProvider } from "../scripts/c420ui-adapter/detection/provider";
-import type { c420uiOverviewStatus } from "../packages/c420ui/src/detection";
+import type { c420uiOverviewStatus } from "../build-resources/c420ui/src/detection";
 
 type FakeRunCommand = (
   command: string,

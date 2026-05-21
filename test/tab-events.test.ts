@@ -280,7 +280,7 @@ test("external navigation blocking does not require injected shell.openExternal"
 
 test("EyeDropper injected diagnostic log includes the concrete tab id expression", () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, "electron", "main", "tab-events.ts"),
+    path.join(repoRoot, "build-resources", "electron", "main", "tab-events.ts"),
     "utf8",
   );
 

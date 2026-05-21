@@ -36,8 +36,8 @@ recipes, and host scripts.
 
 ## Forbidden crossings
 
-- project names inside `packages/c420ui/src`
-- project-specific env vars inside `packages/c420ui/src`
+- project names inside `build-resources/c420ui/src`
+- project-specific env vars inside `build-resources/c420ui/src`
 - project adapters imported by c420ui
 - generic engines reimplemented in project adapters
 - planned, dry-run, root, or confirmation policy duplicated in dependent-project adapters
@@ -49,13 +49,13 @@ recipes, and host scripts.
 ## Examples that checks must reject
 
 - Adding dependent-project names, app IDs, env vars, or action IDs to
-  `packages/c420ui/src`.
+  `build-resources/c420ui/src`.
 - Importing `scripts/c420ui-adapter`, `scripts/canva-linux`, or
-  `config/canva-linux` from `packages/c420ui/src`.
+  `config/canva-linux` from `build-resources/c420ui/src`.
 - Reimplementing the c420ui Action Engine, Command Runner, Detection Engine,
   Artifact Workflow Runner, or Linux root provider base in a dependent-project
   adapter.
-- Moving root launch checks from `packages/c420ui/src/terminal` into project
+- Moving root launch checks from `build-resources/c420ui/src/terminal` into project
   launchers or adapters.
 - Moving project detection providers, action registries, development task declarations, artifact recipes, or
   package naming into c420ui core.

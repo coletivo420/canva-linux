@@ -102,7 +102,7 @@ for script in \
   canva-linux-c420ui-builder \
   scripts/flatpak-build-common.sh \
   scripts/install-flatpak-local.sh \
-  packages/c420ui/scripts/build-flatpak-bundle.sh \
+  build-resources/c420ui/scripts/build-flatpak-bundle.sh \
   scripts/validate-flatpak.sh; do
   info "Checking ${script} syntax"
   bash -n "$script"
@@ -119,8 +119,8 @@ docs/notes/FLATHUB_CHECKLIST.md|Flathub checklist
 docs/notes/FLATHUB_SOURCE.md|Flathub source strategy documentation
 docs/FLATPAK_PERMISSIONS.md|permission review documentation
 io.github.coletivo420.canva-linux.yml|Flatpak manifest
-data/io.github.coletivo420.canva-linux.metainfo.xml|AppStream metadata
-data/io.github.coletivo420.canva-linux.desktop|desktop entry metadata
+  build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml|AppStream metadata
+  build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop|desktop entry metadata
 REQUIRED_FILES
 
 ## Flatpak permission policy guardrails (dev18)
@@ -205,10 +205,10 @@ const fs = require('node:fs');
 const checks = [
   ['io.github.coletivo420.canva-linux.yml', 'app-id: io.github.coletivo420.canva-linux'],
   ['packaging/flathub/manifest.yml', 'app-id: io.github.coletivo420.canva-linux'],
-  ['data/io.github.coletivo420.canva-linux.desktop', 'Name=Canva Linux'],
-  ['data/io.github.coletivo420.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
-  ['data/io.github.coletivo420.canva-linux.metainfo.xml', '<id>io.github.coletivo420.canva-linux</id>'],
-  ['data/io.github.coletivo420.canva-linux.metainfo.xml', '<summary>A community opensource desktop wrapper for use with Canva</summary>'],
+  ['build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop', 'Name=Canva Linux'],
+  ['build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
+  ['build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml', '<id>io.github.coletivo420.canva-linux</id>'],
+  ['build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml', '<summary>A community opensource desktop wrapper for use with Canva</summary>'],
 ];
 
 for (const [filePath, token] of checks) {
@@ -233,7 +233,7 @@ fi
 ## Optional desktop file validation
 if check_optional_command desktop-file-validate "Desktop file validator"; then
   info "Running desktop-file-validate"
-  desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
+  desktop-file-validate build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop
   ok "Desktop entry validation passed"
 fi
 
@@ -242,7 +242,7 @@ if check_optional_command appstreamcli "AppStream validator"; then
   info "Running appstreamcli validate --explain --no-net"
   appstreamcli validate --explain --no-net \
     --override releases-not-in-order=info \
-    data/io.github.coletivo420.canva-linux.metainfo.xml
+    build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml
   ok "AppStream metadata validation passed"
 fi
 

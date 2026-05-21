@@ -4,8 +4,8 @@ import path from "node:path";
 const repoRoot =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 const copies: ReadonlyArray<readonly [from: string, to: string]> = [
-  ["electron/assets", ".build/electron/assets"],
-  ["electron/ui", ".build/electron/ui"],
+  ["build-resources/electron/assets", ".build/electron/assets"],
+  ["build-resources/electron/ui", ".build/electron/ui"],
   ["config/canva-linux/build-metadata.json", ".build/electron/config/canva-linux/build-metadata.json"],
 ];
 

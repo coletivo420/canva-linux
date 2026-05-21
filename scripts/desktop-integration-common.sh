@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/app-identity-common.sh"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/packages/c420ui/host/linux/sudo-helper.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/build-resources/c420ui/host/linux/sudo-helper.sh"
 write_desktop_file(){ local desktop_path="$1" exec_path="$2" icon_name="$3"; cat > "$desktop_path" <<DESKTOP
 [Desktop Entry]
 Type=Application

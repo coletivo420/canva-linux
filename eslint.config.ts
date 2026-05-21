@@ -23,7 +23,7 @@ const config = [
       ".build/**",
       "node_modules/**",
       "repo/**",
-      "electron/preload/canva.bundle.js",
+      "build-resources/electron/preload/canva.bundle.js",
       ".flatpak-builder/**",
     ],
   },
@@ -50,7 +50,7 @@ const config = [
   },
   {
     files: [
-      "electron/**/*.ts",
+      "build-resources/electron/**/*.ts",
       "scripts/**/*.ts",
       "test/**/*.ts",
       "packaging/flathub/scripts/**/*.ts",

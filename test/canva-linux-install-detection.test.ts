@@ -29,7 +29,7 @@ function runDetectionInShell(envDir: string, shellScript: string): string {
     ui_ok() { :; }
     ui_die() { echo "$1" >&2; exit 1; }
     
-    source "${REPO_ROOT}/packages/c420ui/scripts/install-detection-common.sh"
+    source "${REPO_ROOT}/build-resources/c420ui/scripts/install-detection-common.sh"
     ${shellScript}
   `;
   

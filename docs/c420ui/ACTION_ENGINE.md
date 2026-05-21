@@ -59,11 +59,11 @@ The ordering is intentional:
 
 ## Implementing files
 
-- `packages/c420ui/src/action-engine.ts`
-- `packages/c420ui/src/terminal/interactive-action-runner.ts`
-- `packages/c420ui/src/cli.ts`
-- `packages/c420ui/src/bridge.ts`
-- `packages/c420ui/src/root-provider.ts`
+- `build-resources/c420ui/src/action-engine.ts`
+- `build-resources/c420ui/src/terminal/interactive-action-runner.ts`
+- `build-resources/c420ui/src/cli.ts`
+- `build-resources/c420ui/src/bridge.ts`
+- `build-resources/c420ui/src/root-provider.ts`
 - `scripts/c420ui-adapter/bridge.ts`
 
 ## Consumed configs and adapters

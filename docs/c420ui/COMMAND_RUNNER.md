@@ -22,9 +22,9 @@ commands.
 
 ## Implementing files
 
-- `packages/c420ui/src/command-runner.ts`
-- `packages/c420ui/src/operational-logs.ts`
-- `packages/c420ui/src/events.ts`
+- `build-resources/c420ui/src/command-runner.ts`
+- `build-resources/c420ui/src/operational-logs.ts`
+- `build-resources/c420ui/src/events.ts`
 - `scripts/c420ui-adapter/adapter.ts`
 
 ## Consumed configs and adapters

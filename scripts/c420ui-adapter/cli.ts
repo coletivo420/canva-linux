@@ -1,4 +1,4 @@
-import { runC420UICli, type C420UIEvent } from "../../packages/c420ui/src";
+import { runC420UICli, type C420UIEvent } from "../../build-resources/c420ui/src";
 import { createCanvaLinuxBridge } from "./bridge";
 import { createCanvaLinuxRootProvider } from "./root-provider";
 

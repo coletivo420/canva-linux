@@ -35,12 +35,12 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Runti
 
 ## Implementing files
 
-- `electron/`
+- `build-resources/electron/`
 - `canva-linux-c420ui-builder`
 - `scripts/c420ui-adapter/`
 - `scripts/canva-linux/`
 - `config/canva-linux/`
-- `data/io.github.coletivo420.canva-linux.metainfo.xml`
+- `build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml`
 - `io.github.coletivo420.canva-linux.yml`
 
 ## Consumed c420ui modules
@@ -60,7 +60,7 @@ The `canva-linux-c420ui-builder` launcher contains a Stage 0 bootstrap only to m
 
 ## Forbidden regressions
 
-- Do not put project-specific strings into `packages/c420ui/src`.
+- Do not put project-specific strings into `build-resources/c420ui/src`.
 - Do not duplicate c420ui Action Engine policy in the Canva Linux adapter.
 - Do not alter runtime Electron behavior as part of documentation or release
   metadata work.
@@ -69,7 +69,7 @@ The `canva-linux-c420ui-builder` launcher contains a Stage 0 bootstrap only to m
 
 ## Stage 0 c420ui bootstrap
 
-`canva-linux-c420ui-builder` now treats `packages/c420ui/bootstrap/generated/run-c420ui.cjs` as the primary interactive c420ui entrypoint and `packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs` as the primary direct-action entrypoint. The `.build/scripts` files remain development fallbacks only when the generated bootstrap artifacts are absent.
+`canva-linux-c420ui-builder` now treats `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` as the primary interactive c420ui entrypoint and `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs` as the primary direct-action entrypoint. The `.build/scripts` files remain development fallbacks only when the generated bootstrap artifacts are absent.
 
 A release checkout must start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The bundle may include the c420ui engine and the minimum Canva Linux adapter code that reads `config/canva-linux`, but it must not embed the full dependent-project dependency policy. c420ui takes over dependency validation and repair after startup.
 
@@ -77,12 +77,12 @@ A release checkout must start c420ui from the bootstrap bundle without `node_mod
 ## Bootstrap identity
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
-`c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
+`c420uiVersion` comes from `build-resources/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
 `package.json`. Do not collapse them into a single ambiguous `version` field.
 
 ## Dependency repair inside the UI
 
-The Canva Linux interactive launcher starts `packages/c420ui/bootstrap/generated/run-c420ui.cjs` first. Dependency validation and repair for
+The Canva Linux interactive launcher starts `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` first. Dependency validation and repair for
 Canva Linux are wired through the c420ui startup task in `scripts/c420ui-adapter/run.ts`, so a clean checkout can open the
 UI before any dependent-project npm repair is attempted.
 

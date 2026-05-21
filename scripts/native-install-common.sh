@@ -6,7 +6,7 @@ source "${SCRIPT_DIR}/install-layout-common.sh"
 source "${SCRIPT_DIR}/desktop-integration-common.sh"
 source "${SCRIPT_DIR}/user-data-common.sh"
 source "${SCRIPT_DIR}/ui-common.sh"
-source "${SCRIPT_DIR}/../packages/c420ui/host/linux/sudo-helper.sh"
+source "${SCRIPT_DIR}/../build-resources/c420ui/host/linux/sudo-helper.sh"
 
 NATIVE_SCOPE="${CANVA_NATIVE_SCOPE:-system}"
 validate_native_scope(){ case "${NATIVE_SCOPE}" in system|user) ;; *) ui_error "CANVA_NATIVE_SCOPE must be system or user"; exit 1;; esac; }

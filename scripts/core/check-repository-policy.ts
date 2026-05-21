@@ -110,7 +110,7 @@ const requiredStandaloneEntrypoints = [
   "scripts/copy-runtime-assets.ts",
   "scripts/clean-runtime-build.ts",
   "scripts/run-node-tests.ts",
-  "packages/c420ui/scripts/run-c420ui.ts",
+  "build-resources/c420ui/scripts/run-c420ui.ts",
 ] as const;
 
 const requiredBootstrapEntrypoints = {
@@ -129,8 +129,8 @@ const requiredArtifactScripts = {
   "build:preload": ".build/scripts/build-preload-bundle.js",
   "clean:runtime": ".build/scripts/clean-runtime-build.js",
   "build:runtime": ".build/scripts/build-runtime.js",
-  c420ui: ".build/packages/c420ui/scripts/run-c420ui.js",
-  "check:c420ui": ".build/packages/c420ui/scripts/run-c420ui.js",
+  c420ui: ".build/build-resources/c420ui/scripts/run-c420ui.js",
+  "check:c420ui": ".build/build-resources/c420ui/scripts/run-c420ui.js",
 } as const;
 
 function main(): number {
@@ -224,7 +224,7 @@ type TsConfigJson = {
 
 const allowedJavaScriptPrefixes = [".build/", "node_modules/"] as const;
 
-const sourceJavaScriptAllowlist = new Set(["electron/preload/canva.bundle.js"]);
+const sourceJavaScriptAllowlist = new Set(["build-resources/electron/preload/canva.bundle.js"]);
 
 const nativeSourceExtensions = new Set([
   ".sh",
@@ -343,7 +343,7 @@ function validateTypeScriptConfig(
   }
 
   const forbiddenIncludes = [
-    "electron/**/*.js",
+    "build-resources/electron/**/*.js",
     "scripts/**/*.js",
     "test/**/*.js",
   ] as const;
@@ -369,11 +369,11 @@ function validateEslintTypeScriptOnlyConfig(
   const configPath = "eslint.config.ts";
   const config = fs.readFileSync(path.join(rootDir, configPath), "utf8");
   if (
-    config.includes("'electron/**/*.js'") ||
-    config.includes('"electron/**/*.js"')
+    config.includes("'build-resources/electron/**/*.js'") ||
+    config.includes('"build-resources/electron/**/*.js"')
   ) {
     failures.push(
-      `${configPath}: must not include a dedicated electron/**/*.js lint block after the TypeScript migration`,
+      `${configPath}: must not include a dedicated build-resources/electron/**/*.js lint block after the TypeScript migration`,
     );
   }
 }
@@ -384,7 +384,7 @@ function validateNoCommonJsRuntimeExports(
   failures: string[],
 ): void {
   for (const file of files) {
-    if (!file.startsWith("electron/main/") || !file.endsWith(".ts")) continue;
+    if (!file.startsWith("build-resources/electron/main/") || !file.endsWith(".ts")) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
     if (content.includes("module.exports")) {
       failures.push(
@@ -475,7 +475,7 @@ const generatedOutputJavaScriptPaths = [
 
 const sourceJavaScriptProbePaths = [
   "scripts/source-regression.js",
-  "electron/main/source-regression.js",
+  "build-resources/electron/main/source-regression.js",
   "test/source-regression.test.js",
   "packaging/flathub/scripts/source-regression.js",
   "eslint.config.js",
@@ -496,9 +496,9 @@ const requiredVersionedPaths = [
   "packaging/flathub/manifest.yml",
   "packaging/flathub/generated-sources.json",
   "packaging/flathub/scripts/generate-npm-sources.ts",
-  "data/io.github.coletivo420.canva-linux.desktop",
-  "data/io.github.coletivo420.canva-linux.metainfo.xml",
-  "data/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png",
+  "build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
+  "build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
+  "build-resources/canva-linux-assets/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png",
   "docs/README.md",
   "README.md",
   "CHANGELOG.md",
@@ -665,7 +665,7 @@ function main(): number {
   );
   validateNotIgnored(
     rootDir,
-    gitTrackedFiles(rootDir, "electron/**/*.ts"),
+    gitTrackedFiles(rootDir, "build-resources/electron/**/*.ts"),
     "runtime TypeScript files",
     failures,
   );
@@ -710,7 +710,7 @@ const allowedJavaScriptRoots = [
 ] as const;
 
 const allowedGeneratedJavaScriptFiles = new Set([
-  "electron/preload/canva.bundle.js",
+  "build-resources/electron/preload/canva.bundle.js",
 ]);
 
 const explicitlyBlockedJavaScript = [
@@ -789,7 +789,7 @@ const requiredShellFiles = [
   "scripts/validate-project.sh",
   "scripts/run-core-entry.sh",
   "scripts/preflight-common.sh",
-  "packages/c420ui/host/linux/sudo-helper.sh",
+  "build-resources/c420ui/host/linux/sudo-helper.sh",
 ] as const;
 
 const centralDocumentationFiles = [
@@ -813,13 +813,13 @@ const criticalReadableSourceFiles = [
   "scripts/run-node-tests.ts",
   "scripts/run-typescript-script.ts",
   "scripts/core/check-repository-policy.ts",
-  "packages/c420ui/src/root-provider.ts",
-  "packages/c420ui/src/command-runner.ts",
-  "packages/c420ui/src/operational-logs.ts",
-  "packages/c420ui/src/terminal/interactive-action-runner.ts",
+  "build-resources/c420ui/src/root-provider.ts",
+  "build-resources/c420ui/src/command-runner.ts",
+  "build-resources/c420ui/src/operational-logs.ts",
+  "build-resources/c420ui/src/terminal/interactive-action-runner.ts",
   "scripts/c420ui-adapter/root-provider.ts",
   "scripts/c420ui-adapter/dependencies.ts",
-  "electron/ui/toolbar.html",
+  "build-resources/electron/ui/toolbar.html",
 ] as const;
 
 const maxDocumentationLineLength = 2000;
@@ -965,7 +965,7 @@ function validateToolbarContentSecurityPolicy(
   rootDir: string,
   failures: string[],
 ): void {
-  const relativePath = "electron/ui/toolbar.html";
+  const relativePath = "build-resources/electron/ui/toolbar.html";
   const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
   const requiredDirectives = [
     "default-src 'none'",
@@ -1009,7 +1009,7 @@ function validateRetiredC420UIProcessRunner(
   rootDir: string,
   failures: string[],
 ): void {
-  const retiredPath = "packages/c420ui/src/terminal/process-runner.ts";
+  const retiredPath = "build-resources/c420ui/src/terminal/process-runner.ts";
   if (fs.existsSync(path.join(rootDir, retiredPath))) {
     failures.push(
       `${retiredPath}: must not exist after command runner migration`,
@@ -1023,7 +1023,7 @@ function validateNoLegacyC420UIDirectory(
 ): void {
   const retiredPath = "scripts/c420ui";
   if (fs.existsSync(path.join(rootDir, retiredPath))) {
-    failures.push(`${retiredPath}: must not exist; generic terminal UI belongs under packages/c420ui/src/terminal`);
+    failures.push(`${retiredPath}: must not exist; generic terminal UI belongs under build-resources/c420ui/src/terminal`);
   }
 }
 
@@ -1070,8 +1070,8 @@ function validateDependentProjectBoundaryLayout(
   failures: string[],
 ): void {
   const requiredPaths = [
-    "packages/c420ui/src",
-    "packages/c420ui/src/terminal",
+    "build-resources/c420ui/src",
+    "build-resources/c420ui/src/terminal",
     "config/canva-linux/actions.json",
     "config/canva-linux/project-ui.json",
     "scripts/c420ui-adapter",
@@ -1435,7 +1435,7 @@ function validateLauncherScriptShape(
   failures: string[],
 ): void {
   const relativePath = "canva-linux-c420ui-builder";
-  const sourcePath = "packages/c420ui/scripts/c420ui-builder.ts";
+  const sourcePath = "build-resources/c420ui/scripts/c420ui-builder.ts";
   const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
   const source = fs.readFileSync(path.join(rootDir, sourcePath), "utf8");
   const legacyPath = path.join(rootDir, "canva-linux.sh");
@@ -1452,8 +1452,8 @@ function validateLauncherScriptShape(
   }
 
   for (const fragment of [
-    "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
-    ".build/packages/c420ui/scripts/c420ui-builder.js",
+    "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs",
+    ".build/build-resources/c420ui/scripts/c420ui-builder.js",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
     if (!content.includes(fragment)) {
@@ -1466,10 +1466,10 @@ function validateLauncherScriptShape(
     "No direct action was provided.",
     "hasBridgeAction",
     "selectEntrypoint",
-    "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
-    "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-    ".build/packages/c420ui/scripts/run-c420ui.js",
-    ".build/packages/c420ui/scripts/run-c420ui-cli.js",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+    ".build/build-resources/c420ui/scripts/run-c420ui.js",
+    ".build/build-resources/c420ui/scripts/run-c420ui-cli.js",
   ] as const) {
     if (!source.includes(fragment)) {
       failures.push(`${sourcePath}: builder source is missing required fragment ${JSON.stringify(fragment)}`);
@@ -1506,7 +1506,7 @@ function validateRootProviderContracts(
   rootDir: string,
   failures: string[],
 ): void {
-  const c420uiRootProviderPath = "packages/c420ui/src/root-provider.ts";
+  const c420uiRootProviderPath = "build-resources/c420ui/src/root-provider.ts";
   const canvaLinuxRootProviderPath =
     "scripts/c420ui-adapter/root-provider.ts";
   const c420uiRootProvider = fs.readFileSync(
@@ -1535,7 +1535,7 @@ function validateRootProviderContracts(
 
   for (const fragment of [
     "createCanvaLinuxRootProvider",
-    "packages/c420ui/host/linux/sudo-helper.sh",
+    "build-resources/c420ui/host/linux/sudo-helper.sh",
     "buildCanvaLinuxOverviewStatus",
     "CANVA_NATIVE_SCOPE",
     "CANVA_FLATPAK_SCOPE",
@@ -1683,7 +1683,7 @@ function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const scriptFiles = [
-    "packages/c420ui/scripts/run-c420ui.ts",
+    "build-resources/c420ui/scripts/run-c420ui.ts",
     "scripts/c420ui-adapter/run.ts",
   ];
   const adapterDir = path.join(rootDir, "scripts/c420ui-adapter");
@@ -1691,7 +1691,7 @@ function main(): number {
   for (const relativePath of scriptFiles) {
     const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
     if (content.includes("process.getuid")) {
-      failures.push(`${relativePath}: root launch checks belong to packages/c420ui/src/terminal`);
+      failures.push(`${relativePath}: root launch checks belong to build-resources/c420ui/src/terminal`);
     }
   }
 
@@ -1726,7 +1726,7 @@ function main(): number {
   const ensurePath = "scripts/" + "ensure-npm-dependencies.sh";
   const preflightPath = "scripts/preflight-common.sh";
   const shellClassificationPath = "docs/checks/SHELL_HELPERS.md";
-  const runEntrypointPath = "packages/c420ui/scripts/run-c420ui.ts";
+  const runEntrypointPath = "build-resources/c420ui/scripts/run-c420ui.ts";
   const dependenciesPath = "scripts/c420ui-adapter/dependencies.ts";
   const configPath = "config/canva-linux/dependencies.json";
 
@@ -1778,7 +1778,7 @@ function main(): number {
     "Obsolete",
     "build-runtime.sh",
     "install-flatpak-local.sh",
-    "packages/c420ui/host/linux/sudo-helper.sh",
+    "build-resources/c420ui/host/linux/sudo-helper.sh",
     "scripts/preflight-common.sh",
   ] as const) {
     if (!shellClassification.includes(fragment)) {
