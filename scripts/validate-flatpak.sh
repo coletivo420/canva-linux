@@ -119,8 +119,8 @@ docs/notes/FLATHUB_CHECKLIST.md|Flathub checklist
 docs/notes/FLATHUB_SOURCE.md|Flathub source strategy documentation
 docs/FLATPAK_PERMISSIONS.md|permission review documentation
 io.github.coletivo420.canva-linux.yml|Flatpak manifest
-  build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml|AppStream metadata
-  build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop|desktop entry metadata
+build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml|AppStream metadata
+build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop|desktop entry metadata
 REQUIRED_FILES
 
 ## Flatpak permission policy guardrails (dev18)

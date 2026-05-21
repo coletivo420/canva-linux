@@ -10,21 +10,16 @@ function exists(relativePath: string): boolean {
 }
 
 test("root legacy layout directories do not exist", () => {
-  for (const relativePath of ["electron", "build-resources", "data"] as const) {
+  for (const relativePath of ["packages", "electron", "data"] as const) {
     assert.equal(exists(relativePath), false, `${relativePath} must not exist at the repository root`);
   }
 });
 
-test("electron runtime and packaging assets live in the canonical packages layout", () => {
+test("electron runtime and packaging assets live in the canonical build-resources layout", () => {
   for (const relativePath of [
-    "packages/electron/main",
-    "packages/electron/preload",
-    "packages/electron/shared",
-    "packages/electron/ui",
-    "packages/electron/assets",
-    "packages/canva-linux-assets/desktop",
-    "packages/canva-linux-assets/metainfo",
-    "packages/canva-linux-assets/icons",
+    "build-resources/c420ui",
+    "build-resources/electron",
+    "build-resources/canva-linux-assets",
   ] as const) {
     assert.equal(exists(relativePath), true, `${relativePath} must exist`);
   }
