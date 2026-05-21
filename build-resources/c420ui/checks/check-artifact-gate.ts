@@ -84,7 +84,7 @@ function runNodeCheck(rootDir: string, relativePath: string): void {
     shell: false,
   });
 
-  if (result.status !== 0) {
+  if (result.error || result.status !== 0) {
     throw new Error(`${relativePath}: node --check failed (${summarizeCommandFailure(result)})`);
   }
 
