@@ -15,7 +15,7 @@ import {
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT ||
   process.env.CANVA_TEST_REPO_ROOT ||
-  path.resolve(__dirname, "..", "..", "..", "..");
+  path.resolve(__dirname, "..", "..", "..");
 type BootstrapManifest = {
   generatedBy?: string;
   artifactHashes?: Record<string, string>;
