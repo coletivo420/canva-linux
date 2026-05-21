@@ -21,11 +21,11 @@ CL-EyeDropper provides Canva-compatible color picking inside the Electron/Flatpa
 
 ## Files
 
-- `packages/electron/preload/cl-eyedropper/cl-eyedropper.ts`
-- `packages/electron/preload/cl-eyedropper/index.ts`
-- `packages/electron/preload/custom-eyedropper-flow.ts`
-- `packages/electron/preload/native-eyedropper-wrapper.ts`
-- `packages/electron/main/eyedropper-bridge.ts`
+- `build-resources/electron/preload/cl-eyedropper/cl-eyedropper.ts`
+- `build-resources/electron/preload/cl-eyedropper/index.ts`
+- `build-resources/electron/preload/custom-eyedropper-flow.ts`
+- `build-resources/electron/preload/native-eyedropper-wrapper.ts`
+- `build-resources/electron/main/eyedropper-bridge.ts`
 
 ## Notes
 

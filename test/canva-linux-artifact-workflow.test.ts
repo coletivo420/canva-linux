@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 
-import { c420uiExitCodes } from "../packages/c420ui/src";
+import { c420uiExitCodes } from "../build-resources/c420ui/src";
 import { runCanvaLinuxArtifactWorkflow } from "../scripts/c420ui-adapter/bridge";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");

@@ -6,7 +6,7 @@
     "sourceMap": false,
     "removeComments": false,
     "outDir": ".build",
-    "rootDir": "packages",
+    "rootDir": "build-resources",
     "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
@@ -18,7 +18,7 @@
     "moduleDetection": "force"
   },
   "include": [
-    "packages/electron/**/*.ts"
+    "build-resources/electron/**/*.ts"
   ],
   "exclude": [
     "node_modules",
@@ -27,6 +27,6 @@
     "build-dir",
     ".flatpak-builder",
     ".build",
-    "packages/electron/preload/canva.bundle.js"
+    "build-resources/electron/preload/canva.bundle.js"
   ]
 }

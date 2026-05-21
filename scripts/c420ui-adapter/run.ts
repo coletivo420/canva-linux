@@ -1,7 +1,7 @@
 import {
   printC420UITerminalHelp,
   runC420UITerminalApp,
-} from "../../packages/c420ui/src/terminal";
+} from "../../build-resources/c420ui/src/terminal";
 import { createCanvaLinuxC420UIAdapter } from "./adapter";
 import { ensureCanvaLinuxHostDependencies } from "./dependencies";
 import { createCanvaLinuxRootProvider } from "./root-provider";

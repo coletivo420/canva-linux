@@ -2,7 +2,7 @@
 
 Canva Linux is the dependent project. It declares project data in
 `config/canva-linux/`; c420ui consumes that data through the adapter and keeps the
-generic engine logic in `packages/c420ui/`.
+generic engine logic in `build-resources/c420ui/`.
 
 ## Configuration files
 

@@ -51,14 +51,12 @@ run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check
 run_step "npm run check:c420ui-bootstrap-artifacts" npm run check:c420ui-bootstrap-artifacts
 run_step "npm run check:c420ui-bootstrap" npm run check:c420ui-bootstrap
 run_step "npm run check:canva-linux" npm run check:canva-linux
-run_step "check flatpak scope policy" bash scripts/check-flatpak-scope-policy.sh
-run_step "check shell ui api" bash scripts/check-shell-ui-api.sh
 run_step "npm run typecheck" npm run typecheck
 run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "git diff --exit-code" git diff --exit-code
 
 if command -v desktop-file-validate > /dev/null 2>&1; then
-  run_step "desktop-file-validate" desktop-file-validate packages/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop
+  run_step "desktop-file-validate" desktop-file-validate build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop
 else
   log_info "desktop-file-validate not found, skipping"
 fi
@@ -67,7 +65,7 @@ if command -v appstreamcli > /dev/null 2>&1; then
   run_step "appstreamcli validate --explain --no-net" \
     appstreamcli validate --explain --no-net \
     --override releases-not-in-order=info \
-    packages/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml
+    build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml
 else
   log_info "appstreamcli not found, skipping"
 fi

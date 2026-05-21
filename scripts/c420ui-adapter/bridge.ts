@@ -8,7 +8,7 @@ import {
   type C420UIProjectAdapter,
   type C420UIWorkflowResult,
   type C420UIWorkflowRunOptions,
-} from "../../packages/c420ui/src";
+} from "../../build-resources/c420ui/src";
 import { createCanvaLinuxC420UIAdapter } from "./adapter";
 import { createCanvaLinuxRootProvider } from "./root-provider";
 

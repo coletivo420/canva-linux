@@ -31,18 +31,18 @@ dependent project that supplies metadata, actions, recipes, and runtime scripts.
 
 ## Implementing files
 
-- `packages/c420ui/src/action-engine.ts`
-- `packages/c420ui/src/command-runner.ts`
-- `packages/c420ui/src/root-provider.ts`
-- `packages/c420ui/src/linux-root-provider.ts`
-- `packages/c420ui/src/host-dependency-runner.ts`
-- `packages/c420ui/src/host-dependencies.ts`
-- `packages/c420ui/src/artifacts.ts`
-- `packages/c420ui/src/workflow-runner.ts`
-- `packages/c420ui/src/development-provider.ts`
-- `packages/c420ui/src/detection.ts`
-- `packages/c420ui/src/terminal/`
-- `packages/c420ui/host/linux/sudo-helper.sh`
+- `build-resources/c420ui/src/action-engine.ts`
+- `build-resources/c420ui/src/command-runner.ts`
+- `build-resources/c420ui/src/root-provider.ts`
+- `build-resources/c420ui/src/linux-root-provider.ts`
+- `build-resources/c420ui/src/host-dependency-runner.ts`
+- `build-resources/c420ui/src/host-dependencies.ts`
+- `build-resources/c420ui/src/artifacts.ts`
+- `build-resources/c420ui/src/workflow-runner.ts`
+- `build-resources/c420ui/src/development-provider.ts`
+- `build-resources/c420ui/src/detection.ts`
+- `build-resources/c420ui/src/terminal/`
+- `build-resources/c420ui/host/linux/sudo-helper.sh`
 
 ## Consumed configs and adapters
 
@@ -65,11 +65,11 @@ root-provider boundary, artifact recipe validation, and public API exports.
 
 ## Forbidden regressions
 
-- Do not hardcode Canva Linux metadata inside `packages/c420ui/src`.
+- Do not hardcode Canva Linux metadata inside `build-resources/c420ui/src`.
 - Do not publish or document c420ui as an external npm package in this release.
 - Do not migrate c420ui to ESM in this release line.
 - Do not reintroduce `scripts/c420ui/` or move terminal UI out of
-  `packages/c420ui/src/terminal/`.
+  `build-resources/c420ui/src/terminal/`.
 - Do not bypass the Action Engine for terminal or direct CLI actions.
 
 

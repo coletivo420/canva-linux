@@ -5,7 +5,7 @@ repository-check boundary. Removed bootstrap fallbacks must not be restored.
 
 ## c420ui host tool
 
-- `packages/c420ui/host/linux/sudo-helper.sh` is a reusable c420ui Linux host
+- `build-resources/c420ui/host/linux/sudo-helper.sh` is a reusable c420ui Linux host
   tool. It owns generic sudo stdin validation and privileged command execution
   for the Linux root provider base.
 
@@ -13,8 +13,8 @@ repository-check boundary. Removed bootstrap fallbacks must not be restored.
 
 These scripts are concrete Canva Linux recipes and may remain project-local:
 
-- `packages/c420ui/scripts/build-appimage.sh`
-- `packages/c420ui/scripts/build-flatpak-bundle.sh`
+- `build-resources/c420ui/scripts/build-appimage.sh`
+- `build-resources/c420ui/scripts/build-flatpak-bundle.sh`
 - `scripts/package-guidance-common.sh`
 - `scripts/validate-project.sh`
 - `scripts/validate-appimage.sh`

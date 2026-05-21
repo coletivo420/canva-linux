@@ -12,9 +12,9 @@ import {
   type C420UIProjectAdapter,
   type C420UIProjectConfig,
   type C420UIWorkflow,
-} from "../../packages/c420ui/src";
-import { c420uiLogoLines } from "../../packages/c420ui/src/terminal/logo";
-import { toolSettingsPath } from "../../packages/c420ui/src/terminal/settings";
+} from "../../build-resources/c420ui/src";
+import { c420uiLogoLines } from "../../build-resources/c420ui/src/terminal/logo";
+import { toolSettingsPath } from "../../build-resources/c420ui/src/terminal/settings";
 import { buildCanvaLinuxOverviewStatus } from "./detection/provider";
 import { loadEffectiveBuildMetadata } from "./build-metadata-loader";
 import {
@@ -128,7 +128,7 @@ export function createCanvaLinuxC420UIAdapter(
   );
   const c420uiPackageJsonPath = path.join(
     resolvedRootDir,
-    "packages/c420ui/package.json",
+    "build-resources/c420ui/package.json",
   );
 
   function loadProjectUi(): ProjectUiJson {

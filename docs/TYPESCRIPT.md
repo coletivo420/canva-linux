@@ -24,7 +24,7 @@ logic, tests, tooling configs and Flathub helper scripts.
 
 ### Allowed maintained source formats
 
-- `packages/electron/**/*.ts`
+- `build-resources/electron/**/*.ts`
 - `scripts/**/*.ts`
 - `scripts/**/*.sh`
 - `scripts/core/*.ts`
@@ -79,7 +79,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
   `.build/scripts/core/<entry>.js` artifact.
 - `npm run build:scripts` compiles top-level script entrypoints such as
   `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
-  `packages/c420ui/scripts/run-c420ui.ts` directly into `.build/scripts/*.js`.
+  `build-resources/c420ui/scripts/run-c420ui.ts` directly into `.build/scripts/*.js`.
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after
   `build:scripts`; maintained `scripts/**/*.js` wrappers, bootstrap files, and
   validation outputs are forbidden.
@@ -93,11 +93,11 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
   generated bootstrap and writes per-entry generated JavaScript under
   `.build/scripts/typescript/`.
-- `tsconfig.build.json` emits the Electron runtime from `packages/electron/**/*.ts`
+- `tsconfig.build.json` emits the Electron runtime from `build-resources/electron/**/*.ts`
   only; it must not set `allowJs`, must not set `checkJs`, and must not include
-  `packages/electron/**/*.js`.
+  `build-resources/electron/**/*.js`.
 - Electron main TypeScript modules use ESM `export` declarations only; do not
-  add duplicate `module.exports` blocks to `packages/electron/main/**/*.ts`.
+  add duplicate `module.exports` blocks to `build-resources/electron/main/**/*.ts`.
 - `npm run check:scripts-core` runs the consolidated c420ui core, Canva Linux, and shared tooling validation domains.
 - `check-repository-policy.ts` also rejects malformed or unformatted `package.json`,
   collapsed critical shell/docs files, giant one-line documentation blocks, and

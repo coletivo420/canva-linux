@@ -21,7 +21,7 @@ metadata, and generated distribution artifacts.
   `0.1.4-14`.
 - `config/canva-linux/project-ui.json` and `scripts/app-identity-common.sh` must
   expose the same display version and phase.
-- `packages/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` must contain the
+- `build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` must contain the
   AppStream release entry for `0.1.4-14` dated `2026-05-14`.
 
 ## Release artifacts

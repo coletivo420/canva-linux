@@ -10,9 +10,9 @@
     "moduleDetection": "force"
   },
   "include": [
-    "packages/electron/main/**/*.ts",
-    "packages/electron/shared/**/*.ts",
-    "packages/electron/preload/**/*.ts",
+    "build-resources/electron/main/**/*.ts",
+    "build-resources/electron/shared/**/*.ts",
+    "build-resources/electron/preload/**/*.ts",
     "scripts/core/**/*.ts",
     "scripts/canva-linux/**/*.ts",
     "test/c420ui-action-engine.test.ts",

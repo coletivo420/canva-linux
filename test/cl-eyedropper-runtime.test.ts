@@ -45,9 +45,9 @@ function withFreshCustomFlowElectronMock(invoke, fn) {
     /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ Module;
   const originalLoad = moduleLoader._load;
   const runtimeFiles = [
-    "packages/electron/preload/custom-eyedropper-flow.ts",
-    "packages/electron/preload/cl-eyedropper/index.ts",
-    "packages/electron/preload/cl-eyedropper/cl-eyedropper.ts",
+    "build-resources/electron/preload/custom-eyedropper-flow.ts",
+    "build-resources/electron/preload/cl-eyedropper/index.ts",
+    "build-resources/electron/preload/cl-eyedropper/cl-eyedropper.ts",
   ];
   for (const file of runtimeFiles) {
     delete require.cache[require.resolve(path.join(repoRoot, file))];
@@ -226,7 +226,7 @@ test("CL-EyeDropper runtime exports the only picker surface", () => {
 test("custom EyeDropper flow loads without the removed selector module", () => {
   const selectorModule = ["eye", "dropper-implementation"].join("");
   const source = fs.readFileSync(
-    path.join(repoRoot, "packages/electron/preload/custom-eyedropper-flow.ts"),
+    path.join(repoRoot, "build-resources/electron/preload/custom-eyedropper-flow.ts"),
     "utf8",
   );
 
@@ -241,7 +241,7 @@ test("custom EyeDropper flow loads without the removed selector module", () => {
 
 test("custom EyeDropper flow keeps typed CL-EyeDropper open options", () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, "packages/electron/preload/custom-eyedropper-flow.ts"),
+    path.join(repoRoot, "build-resources/electron/preload/custom-eyedropper-flow.ts"),
     "utf8",
   );
 
@@ -333,9 +333,9 @@ test("custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and 
 
 test("source preload modules do not reference removed picker tokens", () => {
   const sourceFiles = [
-    "packages/electron/preload/custom-eyedropper-flow.ts",
-    "packages/electron/preload/native-eyedropper-wrapper.ts",
-    "packages/electron/preload/canva.ts",
+    "build-resources/electron/preload/custom-eyedropper-flow.ts",
+    "build-resources/electron/preload/native-eyedropper-wrapper.ts",
+    "build-resources/electron/preload/canva.ts",
   ];
 
   const removedTokens = [

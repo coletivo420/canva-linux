@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-source "${ROOT_DIR}/packages/c420ui/host/linux/sudo-helper.sh"
+source "${ROOT_DIR}/build-resources/c420ui/host/linux/sudo-helper.sh"
 REAL_USER="${SUDO_USER:-${USER}}"
 TARGET_UID="$(id -u "${REAL_USER}")"
 TARGET_GID="$(id -g "${REAL_USER}")"

@@ -2,7 +2,7 @@
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-source "${REPO_ROOT}/packages/c420ui/host/linux/sudo-helper.sh"
+source "${REPO_ROOT}/build-resources/c420ui/host/linux/sudo-helper.sh"
 cd "${REPO_ROOT}"
 remove_path_safely(){
   local target="$1"

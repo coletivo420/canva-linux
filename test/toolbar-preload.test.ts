@@ -10,7 +10,7 @@ const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
 const toolbarPreloadPath = path.join(
   repoRoot,
-  "packages",
+  "build-resources",
   "electron",
   "preload",
   "toolbar.ts",

@@ -5,7 +5,7 @@ import path from "node:path";
 
 type PackageJson = { version?: string };
 type ProjectUiJson = { displayVersion?: string; phase?: string };
-type CanvaLinuxBuildMetadataModule = typeof import("../../packages/electron/main/build-metadata");
+type CanvaLinuxBuildMetadataModule = typeof import("../../build-resources/electron/main/build-metadata");
 type CanvaLinuxBuildMetadata = ReturnType<CanvaLinuxBuildMetadataModule["createBuildMetadata"]>;
 
 const UNKNOWN_BASE_VERSION = "0.0.0";

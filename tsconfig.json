@@ -14,9 +14,9 @@
     ]
   },
   "include": [
-    "packages/electron/**/*.ts",
+    "build-resources/electron/**/*.ts",
     "scripts/**/*.ts",
-    "packages/c420ui/**/*.ts",
+    "build-resources/c420ui/**/*.ts",
     "test/**/*.ts",
     "playwright.config.ts",
     "eslint.config.ts",
@@ -28,6 +28,6 @@
     "repo",
     "build-dir",
     ".flatpak-builder",
-    "packages/electron/preload/canva.bundle.js"
+    "build-resources/electron/preload/canva.bundle.js"
   ]
 }

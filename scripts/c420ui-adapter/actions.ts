@@ -1,7 +1,7 @@
 import {
   type C420UIActionDescriptor,
   type C420UIWorkflowPhase,
-} from "../../packages/c420ui/src";
+} from "../../build-resources/c420ui/src";
 import {
   loadCanvaLinuxActions as loadCanvaLinuxActionRegistry,
   type CanvaAction,

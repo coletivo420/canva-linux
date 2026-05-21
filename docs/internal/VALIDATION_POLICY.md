@@ -87,22 +87,22 @@ regressions. Placeholder docs are not acceptable.
 
 ## c420ui bootstrap validation policy
 
-Every release validation must confirm that `packages/c420ui/bootstrap/generated/run-c420ui.cjs`, `packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs`, and `packages/c420ui/bootstrap/generated/manifest.json` exist. The manifest must remain `kind: c420ui-bootstrap`, `moduleFormat: commonjs`, and `futureModuleFormat: esm` until a dedicated ESM migration is implemented.
+Every release validation must confirm that `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs`, `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs`, and `build-resources/c420ui/bootstrap/generated/manifest.json` exist. The manifest must remain `kind: c420ui-bootstrap`, `moduleFormat: commonjs`, and `futureModuleFormat: esm` until a dedicated ESM migration is implemented.
 
-RC validation is blocked when `packages/c420ui/bootstrap/generated/manifest.json` `sourceHash` does not match the current bootstrap source-hash inputs, including the bootstrap hash helper and bootstrap builder. Rebuild with `npm run build:c420ui-bootstrap`, then run `npm run check:c420ui-bootstrap`; the check must pass without requiring additional generated-file changes. The check must also prove that committed bootstrap `.cjs` artifacts are valid JavaScript and match a temporary rebuild from the shared build recipe.
+RC validation is blocked when `build-resources/c420ui/bootstrap/generated/manifest.json` `sourceHash` does not match the current bootstrap source-hash inputs, including the bootstrap hash helper and bootstrap builder. Rebuild with `npm run build:c420ui-bootstrap`, then run `npm run check:c420ui-bootstrap`; the check must pass without requiring additional generated-file changes. The check must also prove that committed bootstrap `.cjs` artifacts are valid JavaScript and match a temporary rebuild from the shared build recipe.
 
 A clean release checkout must be able to start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The launcher must not install npm dependencies; after startup, c420ui owns full host dependency validation, repair, and workflow execution.
 
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate:
 
-- `c420uiVersion` must match `packages/c420ui/package.json`.
+- `c420uiVersion` must match `build-resources/c420ui/package.json`.
 - `dependentProjectVersion` must match the repository root `package.json`.
 - The manifest must not use an ambiguous top-level `version` field.
 - The c420ui engine version must stay distinct from the Canva Linux dependent-project version unless maintainers explicitly request otherwise.
 
 ## Interactive bootstrap dependency ordering
 
-Validation must ensure `packages/c420ui/scripts/run-c420ui.ts` does not import or call the Canva Linux dependency ensure function before
+Validation must ensure `build-resources/c420ui/scripts/run-c420ui.ts` does not import or call the Canva Linux dependency ensure function before
 starting c420ui. The interactive flow must wire dependent-project dependency repair through c420ui startup tasks, while
 launcher scripts remain free of `npm install`, `npm ci`, and legacy dependency helpers.

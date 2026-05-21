@@ -21,14 +21,14 @@ logic.
 
 ## Implementing files
 
-- `packages/c420ui/src/terminal/app.ts`
-- `packages/c420ui/src/terminal/runtime.ts`
-- `packages/c420ui/src/terminal/interactive-action-runner.ts`
-- `packages/c420ui/src/terminal/help.ts`
-- `packages/c420ui/src/terminal/settings.ts`
-- `packages/c420ui/src/terminal/root-guard.ts`
-- `packages/c420ui/src/terminal/modal.ts`
-- `packages/c420ui/src/terminal/clipboard.ts`
+- `build-resources/c420ui/src/terminal/app.ts`
+- `build-resources/c420ui/src/terminal/runtime.ts`
+- `build-resources/c420ui/src/terminal/interactive-action-runner.ts`
+- `build-resources/c420ui/src/terminal/help.ts`
+- `build-resources/c420ui/src/terminal/settings.ts`
+- `build-resources/c420ui/src/terminal/root-guard.ts`
+- `build-resources/c420ui/src/terminal/modal.ts`
+- `build-resources/c420ui/src/terminal/clipboard.ts`
 
 ## Consumed configs and adapters
 

@@ -14,7 +14,7 @@ import {
   type c420uiOverviewStatus,
   type c420uiOverviewStatusProvider,
   type CanvaLinuxArtifactFragment,
-} from "../../../packages/c420ui/src/detection";
+} from "../../../build-resources/c420ui/src/detection";
 import { findCanvaLinuxProjectRoot } from "../../canva-linux/project-root";
 import { buildCanvaLinuxArtifactFragments } from "./artifact-fragments";
 
@@ -196,7 +196,7 @@ function safeProjectMetadata(rootDir: string): c420uiOverviewStatus["project"] {
 
 function detectionCommand(): string {
   return [
-    "source packages/c420ui/scripts/install-detection-common.sh",
+    "source build-resources/c420ui/scripts/install-detection-common.sh",
     "detect_installations",
     "print_detection_status_env",
   ].join("\n");

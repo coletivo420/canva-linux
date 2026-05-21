@@ -36,9 +36,9 @@ Forbidden recipe patterns include:
 
 ## Implementing files
 
-- `packages/c420ui/src/artifacts.ts`
-- `packages/c420ui/src/workflow-runner.ts`
-- `packages/c420ui/src/workflows.ts`
+- `build-resources/c420ui/src/artifacts.ts`
+- `build-resources/c420ui/src/workflow-runner.ts`
+- `build-resources/c420ui/src/workflows.ts`
 - `scripts/c420ui-adapter/artifacts.ts`
 - `config/canva-linux/artifacts.json`
 

@@ -113,7 +113,7 @@ This file preserves the detailed development changelog entries that were archive
 - Removed "F4 Shell Tool" and "Use C420UI Tool" references.
 
 ### Added
-- Centralized sudo usage via `packages/c420ui/host/linux/sudo-helper.sh` across all privileged scripts.
+- Centralized sudo usage via `build-resources/c420ui/host/linux/sudo-helper.sh` across all privileged scripts.
 - Consolidated TypeScript core for scripts and validations.
 - Hardened shell-menu validation and consolidated sudo contract guardrails.
 
@@ -131,7 +131,7 @@ This file preserves the detailed development changelog entries that were archive
 - Removed shell fallback menus from the default launcher flow.
 
 ### Added
-- Added `packages/c420ui/host/linux/sudo-helper.sh` as the shared privileged-command contract.
+- Added `build-resources/c420ui/host/linux/sudo-helper.sh` as the shared privileged-command contract.
 - Added anti-regression checks for removed shell menus, sudo helper usage, and action metadata contracts.
 - Added TypeScript guardrail checks for AI maintenance rules.
 
@@ -377,7 +377,7 @@ This file preserves the detailed development changelog entries that were archive
 - Changed shell CLI actions to resolve through the shared Action Registry.
 
 ### Fixed
-- Fixed duplicate `modalActive` declaration in `packages/c420ui/src/terminal/app.ts`.
+- Fixed duplicate `modalActive` declaration in `build-resources/c420ui/src/terminal/app.ts`.
 
 
 ## [0.1.4.11-dev.40] - 2026-05-04

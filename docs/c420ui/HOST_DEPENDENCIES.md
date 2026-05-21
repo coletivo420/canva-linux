@@ -39,11 +39,11 @@ only to select the generated `bootstrap/c420ui` bundle and start c420ui from a c
 
 ## Implementing files
 
-- `packages/c420ui/src/host-dependencies.ts`
-- `packages/c420ui/src/host-dependency-runner.ts`
-- `packages/c420ui/src/command-dependencies.ts`
-- `packages/c420ui/src/node-dependencies.ts`
-- `packages/c420ui/src/npm-dependencies.ts`
+- `build-resources/c420ui/src/host-dependencies.ts`
+- `build-resources/c420ui/src/host-dependency-runner.ts`
+- `build-resources/c420ui/src/command-dependencies.ts`
+- `build-resources/c420ui/src/node-dependencies.ts`
+- `build-resources/c420ui/src/npm-dependencies.ts`
 - `scripts/c420ui-adapter/dependencies.ts`
 - `config/canva-linux/dependencies.json`
 
@@ -65,7 +65,7 @@ only to select the generated `bootstrap/c420ui` bundle and start c420ui from a c
 
 ## Standalone bootstrap boundary
 
-Release checkouts must be able to start c420ui from the generated bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The Stage 0 launcher only selects `packages/c420ui/bootstrap/generated/run-c420ui.cjs` or `packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs` and starts Node.
+Release checkouts must be able to start c420ui from the generated bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The Stage 0 launcher only selects `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` or `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs` and starts Node.
 
 The bootstrap bundle starts c420ui and contains the generic c420ui engine plus the minimal Canva Linux adapter needed to load project configuration. Full dependency validation, npm declared-versus-installed checks, repair, `C420UI_SKIP_DEPENDENCY_INSTALL`, and `C420UI_DEPENDENCY_REPAIR` remain Stage 1 c420ui Host Dependency Runner responsibilities after startup.
 
@@ -75,12 +75,12 @@ The bootstrap artifact is CommonJS for this release. ESM is documented as future
 ## Bootstrap identity
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate.
-`c420uiVersion` comes from `packages/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
+`c420uiVersion` comes from `build-resources/c420ui/package.json`; `dependentProjectVersion` comes from the repository root
 `package.json`. Do not collapse them into a single ambiguous `version` field.
 
 ## Interactive startup ordering
 
 Interactive c420ui startup must mount the terminal UI before running dependent-project dependency repair. The generated
-bootstrap starts `packages/c420ui/scripts/run-c420ui.ts`, which starts c420ui immediately; dependent-project dependency checks run as a
+bootstrap starts `build-resources/c420ui/scripts/run-c420ui.ts`, which starts c420ui immediately; dependent-project dependency checks run as a
 c420ui startup task so the result stays visible in the UI logs. Direct CLI flows may remain conservative because they do
 not have an interactive UI to guide dependency repair.

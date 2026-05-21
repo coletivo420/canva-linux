@@ -6,7 +6,7 @@ import {
   type c420uiDevelopmentTask,
   type C420UIActionDescriptor,
   type C420UIWorkflow,
-} from "../../packages/c420ui/src";
+} from "../../build-resources/c420ui/src";
 import { loadCanvaLinuxC420UIActions } from "./actions";
 
 type CanvaLinuxDevelopmentConfig = {

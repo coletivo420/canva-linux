@@ -7,11 +7,11 @@ contract and Linux implementation base.
 ## Controls
 
 - The `c420uiRootProvider` contract.
-- The Linux root provider base in `packages/c420ui/src/linux-root-provider.ts`.
+- The Linux root provider base in `build-resources/c420ui/src/linux-root-provider.ts`.
 - Non-interactive `validateRootAccess` checks.
 - Interactive `validateRootAccessWithInput` checks.
 - Root-auth environment propagation through `C420UI_ROOT_AUTH`.
-- Use of `packages/c420ui/host/linux/sudo-helper.sh` for Linux sudo validation.
+- Use of `build-resources/c420ui/host/linux/sudo-helper.sh` for Linux sudo validation.
 
 ## Must not control
 
@@ -40,11 +40,11 @@ cleared.
 
 ## Implementing files
 
-- `packages/c420ui/src/root-provider.ts`
-- `packages/c420ui/src/linux-root-provider.ts`
-- `packages/c420ui/host/linux/sudo-helper.sh`
-- `packages/c420ui/src/action-engine.ts`
-- `packages/c420ui/src/terminal/app.ts`
+- `build-resources/c420ui/src/root-provider.ts`
+- `build-resources/c420ui/src/linux-root-provider.ts`
+- `build-resources/c420ui/host/linux/sudo-helper.sh`
+- `build-resources/c420ui/src/action-engine.ts`
+- `build-resources/c420ui/src/terminal/app.ts`
 - `scripts/c420ui-adapter/root-provider.ts`
 
 ## Consumed configs and adapters
@@ -58,11 +58,11 @@ not import Canva Linux config directly.
 - `npm run check:c420ui-core`
 - `npm run check:canva-linux`
 - `npm test`
-- `bash packages/c420ui/host/linux/sudo-helper.sh --help`
+- `bash build-resources/c420ui/host/linux/sudo-helper.sh --help`
 
 ## Forbidden regressions
 
-- Do not call raw `sudo` outside `packages/c420ui/host/linux/sudo-helper.sh`.
+- Do not call raw `sudo` outside `build-resources/c420ui/host/linux/sudo-helper.sh`.
 - Do not log passwords, sudo stdin, cookies, tokens, or credential material.
 - Do not run sudo for user-scope actions.
 - Do not duplicate the Linux root provider base in Canva Linux code.

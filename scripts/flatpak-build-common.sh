@@ -4,7 +4,7 @@
 FLATPAK_SCOPE="${CANVA_FLATPAK_SCOPE:-system}"
 FLATPAK_APP_ID="io.github.coletivo420.canva-linux"
 LOCAL_FLATPAK_REMOTE="canva-linux-local"
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/packages/c420ui/host/linux/sudo-helper.sh"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/build-resources/c420ui/host/linux/sudo-helper.sh"
 
 validate_flatpak_scope() {
   case "${FLATPAK_SCOPE}" in

@@ -8,7 +8,7 @@ import type { SpawnSyncReturns } from "node:child_process";
 import {
   createC420UIActionEngine,
   c420uiExitCodes,
-} from "../packages/c420ui/src";
+} from "../build-resources/c420ui/src";
 import { createCanvaLinuxC420UIAdapter } from "../scripts/c420ui-adapter/adapter";
 import { createCanvaLinuxRootProvider } from "../scripts/c420ui-adapter/root-provider";
 

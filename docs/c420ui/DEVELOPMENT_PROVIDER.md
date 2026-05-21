@@ -19,9 +19,9 @@ without making c420ui project-specific.
 
 ## Implementing files
 
-- `packages/c420ui/src/development-provider.ts`
-- `packages/c420ui/src/workflows.ts`
-- `packages/c420ui/src/workflow-runner.ts`
+- `build-resources/c420ui/src/development-provider.ts`
+- `build-resources/c420ui/src/workflows.ts`
+- `build-resources/c420ui/src/workflow-runner.ts`
 - `scripts/c420ui-adapter/development.ts`
 - `config/canva-linux/development.json`
 
@@ -39,7 +39,7 @@ is loaded by `scripts/c420ui-adapter/development.ts`.
 
 ## Forbidden regressions
 
-- Do not hardcode Canva Linux development commands in `packages/c420ui/src`.
+- Do not hardcode Canva Linux development commands in `build-resources/c420ui/src`.
 - Do not report planned development tasks as executable success.
 - Do not allow development-task scope or root metadata to contradict its action.
 - Do not bypass the Action Engine when running development workflows.

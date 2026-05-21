@@ -5,7 +5,7 @@ import path from "node:path";
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 const testDir = path.join(rootDir, "test");
-const c420uiTestDir = path.join(rootDir, "packages", "c420ui", "test");
+const c420uiTestDir = path.join(rootDir, "build-resources", "c420ui", "test");
 const compiledTestDir = path.join(rootDir, ".build", "test");
 const nodeTestSuffix = ".test.ts";
 const playwrightSpecSuffix = ".spec.ts";
@@ -28,7 +28,7 @@ function normalizeTestSelector(argument: string): string | null {
   const normalized = normalizePathForNodeTest(argument);
   const normalizedDirectory = normalized.replace(/\/$/, "");
   if (normalizedDirectory === "test") return rootTestDirectorySelector;
-  if (normalizedDirectory === "packages/c420ui/test") {
+  if (normalizedDirectory === "build-resources/c420ui/test") {
     return c420uiTestDirectorySelector;
   }
 
@@ -37,8 +37,8 @@ function normalizeTestSelector(argument: string): string | null {
     : normalized;
   const withoutTestPrefix = withoutBuildPrefix.startsWith("test/")
     ? withoutBuildPrefix.slice("test/".length)
-    : withoutBuildPrefix.startsWith("packages/c420ui/test/")
-      ? withoutBuildPrefix.slice("packages/c420ui/test/".length)
+    : withoutBuildPrefix.startsWith("build-resources/c420ui/test/")
+      ? withoutBuildPrefix.slice("build-resources/c420ui/test/".length)
       : withoutBuildPrefix;
 
   if (
@@ -48,7 +48,7 @@ function normalizeTestSelector(argument: string): string | null {
     return null;
 
   const absolutePath = path.join(
-    normalized.startsWith("packages/c420ui/test/") ? c420uiTestDir : testDir,
+    normalized.startsWith("build-resources/c420ui/test/") ? c420uiTestDir : testDir,
     withoutTestPrefix,
   );
   if (fs.existsSync(absolutePath) && fs.statSync(absolutePath).isDirectory()) {
@@ -151,7 +151,7 @@ export function main(): void {
 
   if (testFiles.length === 0) {
     console.error(
-      "[error] No Node test files were found. Expected at least one *.test.ts file under test/ or packages/c420ui/test/.",
+      "[error] No Node test files were found. Expected at least one *.test.ts file under test/ or build-resources/c420ui/test/.",
     );
     process.exit(1);
   }
@@ -215,7 +215,7 @@ export function main(): void {
 
   const compiledTestFiles = selectedTestInputFiles.map((file) => {
     const rel = file.startsWith(c420uiTestDir)
-      ? path.join("packages/c420ui/test", path.relative(c420uiTestDir, file))
+      ? path.join("build-resources/c420ui/test", path.relative(c420uiTestDir, file))
       : path.join("test", path.relative(testDir, file));
     return path.join(".build", rel.replace(/\.ts$/, ".js"));
   });
@@ -226,7 +226,7 @@ export function main(): void {
 
   fs.rmSync(compiledTestDir, { recursive: true, force: true });
   fs.mkdirSync(compiledTestDir, { recursive: true });
-  fs.mkdirSync(path.join(compiledTestDir, "../packages/c420ui/test"), {
+  fs.mkdirSync(path.join(compiledTestDir, "../build-resources/c420ui/test"), {
     recursive: true,
   });
 
@@ -258,9 +258,9 @@ export function main(): void {
   }
 
   const c420uiSourceDirs = [
-    path.join(rootDir, "packages", "c420ui", "src"),
-    path.join(rootDir, "packages", "c420ui", "bootstrap"),
-    path.join(rootDir, "packages", "c420ui", "checks"),
+    path.join(rootDir, "build-resources", "c420ui", "src"),
+    path.join(rootDir, "build-resources", "c420ui", "bootstrap"),
+    path.join(rootDir, "build-resources", "c420ui", "checks"),
   ];
   const c420uiSourceFiles = c420uiSourceDirs.flatMap((sourceDir) =>
     collectTypeScriptTestFiles(sourceDir, (entryName) => entryName.endsWith(".ts")),
@@ -278,8 +278,8 @@ export function main(): void {
         "--platform=node",
         "--target=node20",
         "--format=cjs",
-        "--outbase=packages",
-        "--outdir=.build/packages",
+        "--outbase=build-resources",
+        "--outdir=.build/build-resources",
         "--sourcemap=inline",
         "--log-level=warning",
       ],
