@@ -6,6 +6,10 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  c420uiBootstrapArtifactPath,
+  C420UI_BOOTSTRAP_MANIFEST_PATH,
+} from "../checks/bootstrap-check-helpers";
+import {
   C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   createC420UIBootstrapEsbuildCliArgs,
 } from "../bootstrap/build-recipe";
@@ -16,11 +20,10 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
 
-const bootstrapDir = path.join("packages", "c420ui", "bootstrap", "generated");
-const manifestPath = path.join(bootstrapDir, "manifest.json");
-const uiEntrypoint = path.join(bootstrapDir, "run-c420ui.cjs");
-const cliEntrypoint = path.join(bootstrapDir, "run-c420ui-cli.cjs");
-const builderEntrypoint = path.join(bootstrapDir, "c420ui-builder.cjs");
+const manifestPath = C420UI_BOOTSTRAP_MANIFEST_PATH;
+const uiEntrypoint = c420uiBootstrapArtifactPath("run-c420ui.cjs");
+const cliEntrypoint = c420uiBootstrapArtifactPath("run-c420ui-cli.cjs");
+const builderEntrypoint = c420uiBootstrapArtifactPath("c420ui-builder.cjs");
 const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
   (asset) => path.join("packages", "c420ui", "bootstrap", "usr", asset),
 );

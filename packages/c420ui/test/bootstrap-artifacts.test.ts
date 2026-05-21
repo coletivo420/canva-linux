@@ -4,10 +4,15 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
+import {
+  c420uiBootstrapArtifactPath,
+  C420UI_BOOTSTRAP_MANIFEST_PATH,
+} from "../checks/bootstrap-check-helpers";
+
 const bundles = [
-  "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
-  "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-  "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
+  c420uiBootstrapArtifactPath("run-c420ui.cjs"),
+  c420uiBootstrapArtifactPath("run-c420ui-cli.cjs"),
+  c420uiBootstrapArtifactPath("c420ui-builder.cjs"),
 ] as const;
 
 type BootstrapManifest = {
@@ -32,7 +37,7 @@ function readJson<T>(relativePath: string): T {
 }
 
 function readBundle(): string {
-  return fs.readFileSync("packages/c420ui/bootstrap/generated/run-c420ui.cjs", "utf8");
+  return fs.readFileSync(c420uiBootstrapArtifactPath("run-c420ui.cjs"), "utf8");
 }
 
 const strictManifestMetadata =
@@ -155,7 +160,7 @@ test("run-c420ui.cjs codePointAt polyfill defines size before use", () => {
 
 test("c420ui bootstrap manifest metadata fields are well-formed", () => {
   const manifest = readJson<BootstrapManifest>(
-    path.join("packages", "c420ui", "bootstrap", "generated", "manifest.json"),
+    C420UI_BOOTSTRAP_MANIFEST_PATH,
   );
   const buildMetadata = readJson<BuildMetadata>(
     path.join("config", "canva-linux", "build-metadata.json"),

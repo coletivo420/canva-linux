@@ -7,7 +7,7 @@ import test from "node:test";
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT ||
   process.env.CANVA_TEST_REPO_ROOT ||
-  path.resolve(__dirname, "..", "..");
+  path.resolve(__dirname, "..", "..", "..");
 const artifacts = [
   "run-c420ui.cjs",
   "run-c420ui-cli.cjs",

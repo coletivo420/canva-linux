@@ -6,17 +6,16 @@ import path from "node:path";
 import test from "node:test";
 
 import { validateManifestArtifactHashes } from "../checks/check-bootstrap";
+import {
+  C420UI_BOOTSTRAP_ARTIFACT_FILES,
+  c420uiBootstrapArtifactPath,
+  C420UI_BOOTSTRAP_MANIFEST_PATH,
+} from "../checks/bootstrap-check-helpers";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT ||
   process.env.CANVA_TEST_REPO_ROOT ||
-  path.resolve(__dirname, "..", "..");
-const artifacts = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
-] as const;
-
+  path.resolve(__dirname, "..", "..", "..");
 type BootstrapManifest = {
   generatedBy?: string;
   artifactHashes?: Record<string, string>;
@@ -49,28 +48,14 @@ function copyBootstrapToTemp(tempDir: string): string {
   );
   fs.mkdirSync(tempBootstrap, { recursive: true });
 
-  for (const artifact of artifacts) {
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
     fs.copyFileSync(
-      path.join(
-        rootDir,
-        "packages",
-        "c420ui",
-        "bootstrap",
-        "generated",
-        artifact,
-      ),
+      path.join(rootDir, c420uiBootstrapArtifactPath(artifact)),
       path.join(tempBootstrap, artifact),
     );
   }
   fs.copyFileSync(
-    path.join(
-      rootDir,
-      "packages",
-      "c420ui",
-      "bootstrap",
-      "generated",
-      "manifest.json",
-    ),
+    path.join(rootDir, C420UI_BOOTSTRAP_MANIFEST_PATH),
     path.join(tempBootstrap, "manifest.json"),
   );
 
@@ -108,32 +93,16 @@ function compileBootstrapBuilder(tempDir: string): string {
 
 test("manifest artifact hashes match committed bootstrap artifacts", () => {
   const manifest = readJson<BootstrapManifest>(
-    path.join(
-      rootDir,
-      "packages",
-      "c420ui",
-      "bootstrap",
-      "generated",
-      "manifest.json",
-    ),
+    C420UI_BOOTSTRAP_MANIFEST_PATH,
   );
 
   assert.equal(manifest.generatedBy, "packages/c420ui/scripts/build-bootstrap.ts");
   assert.ok(manifest.artifactHashes);
 
-  for (const artifact of artifacts) {
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
     assert.equal(
       manifest.artifactHashes?.[artifact],
-      sha256(
-        path.join(
-          rootDir,
-          "packages",
-          "c420ui",
-          "bootstrap",
-          "generated",
-          artifact,
-        ),
-      ),
+      sha256(path.join(rootDir, c420uiBootstrapArtifactPath(artifact))),
     );
   }
 });
@@ -210,7 +179,7 @@ test("build:c420ui-bootstrap cleans output directory before writing", () => {
 
     const manifest = readJson<BootstrapManifest>(path.join(outDir, "manifest.json"));
     assert.equal(manifest.generatedBy, "packages/c420ui/scripts/build-bootstrap.ts");
-    for (const artifact of artifacts) {
+    for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
       assert.equal(manifest.artifactHashes?.[artifact], sha256(path.join(outDir, artifact)));
     }
   } finally {

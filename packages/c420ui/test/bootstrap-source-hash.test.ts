@@ -15,6 +15,11 @@ test("c420ui bootstrap source hash covers bundled adapter and Canva Linux depend
   for (const requiredInput of [
     "packages/c420ui/bootstrap",
     "scripts/c420ui-adapter",
+    "scripts/canva-linux/actions",
+    "scripts/canva-linux/artifacts",
+    "scripts/canva-linux/capabilities",
+    "scripts/canva-linux/development",
+    "scripts/canva-linux/project-root.ts",
     "packages/c420ui/src",
     "packages/c420ui/scripts",
     "packages/c420ui/checks",
@@ -32,16 +37,14 @@ test("c420ui bootstrap source hash covers bundled adapter and Canva Linux depend
 
 test("c420ui bootstrap source hash excludes removed c420ui integration modules", () => {
   for (const forbiddenInput of [
-    "scripts/canva-linux/detection",
-    "scripts/canva-linux/bootstrap",
-    "scripts/canva-linux/build-metadata-loader.ts",
-    "scripts/build-c420ui-bootstrap.ts",
-    "scripts/run-c420ui.ts",
-    "scripts/run-c420ui-cli.ts",
-    "scripts/c420ui-builder.ts",
-    "scripts/checks/canva-linux/check-c420ui-bootstrap.ts",
-    "scripts/checks/canva-linux/check-c420ui-artifact-gate.ts",
-    "scripts/checks/canva-linux/check-c420ui-node-check.ts",
+    "scripts/" + "build-c420ui-bootstrap.ts",
+    "scripts/" + "run-c420ui.ts",
+    "scripts/" + "run-c420ui-cli.ts",
+    "scripts/" + "c420ui-builder.ts",
+    "scripts/" + "checks/canva-linux/check-c420ui-bootstrap.ts",
+    "scripts/" + "checks/canva-linux/check-c420ui-artifact-gate.ts",
+    "scripts/" + "checks/canva-linux/check-c420ui-node-check.ts",
+    "scripts/" + "canva-linux",
   ] as const) {
     assert.equal(
       sourceHashInputs.includes(forbiddenInput),

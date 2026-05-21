@@ -10,6 +10,11 @@ export const C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS = [
   "packages/c420ui/scripts",
   "packages/c420ui/checks",
   "scripts/c420ui-adapter",
+  "scripts/canva-linux/actions",
+  "scripts/canva-linux/artifacts",
+  "scripts/canva-linux/capabilities",
+  "scripts/canva-linux/development",
+  "scripts/canva-linux/project-root.ts",
   "config/canva-linux",
   "packages/c420ui/package.json",
   "package.json",
@@ -22,9 +27,7 @@ const IGNORED_PATH_PARTS = new Set([
   "node_modules",
 ]);
 
-const IGNORED_RELATIVE_PATHS = new Set([
-  "packages/c420ui/bootstrap/generated",
-]);
+const IGNORED_RELATIVE_PATHS = new Set(["packages/c420ui/bootstrap/generated"]);
 
 function normalizeRelativePath(relativePath: string): string {
   return relativePath.split(path.sep).join(path.posix.sep);

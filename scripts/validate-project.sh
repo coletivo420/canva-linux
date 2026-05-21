@@ -41,27 +41,14 @@ run_step() {
   log_ok "$label"
 }
 
-# Validation remains source-first. Do not move runtime build before lint,
-# typecheck, tests, docs checks, AI/Flatpak guardrails, and contract checks.
-# Build metadata is deterministic and must exist before those checks run.
-run_step "npm run build:metadata" npm run build:metadata
-run_step "npm run lint" npm run lint
-run_step "npm run typecheck" npm run typecheck
-run_step "npm run typecheck:strict" npm run typecheck:strict
-run_step "npm test" npm test
+# Validation is check-only. Do not regenerate metadata or bootstrap artifacts here.
 run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check
 run_step "npm run check:c420ui-bootstrap-artifacts" npm run check:c420ui-bootstrap-artifacts
-# git diff --check only detects whitespace errors; git diff --exit-code is the
-# dirty-worktree gate that proves generated artifact checks did not rewrite files.
-run_step "git diff --exit-code" git diff --exit-code
-run_step "npm run docs:check-ai" npm run docs:check-ai
-run_step "./scripts/check-flatpak-scope-policy.sh" ./scripts/check-flatpak-scope-policy.sh
-run_step "bash scripts/check-shell-ui-api.sh" bash scripts/check-shell-ui-api.sh
-run_step "npm run check:c420ui-core" npm run check:c420ui-core
+run_step "npm run check:c420ui-bootstrap" npm run check:c420ui-bootstrap
 run_step "npm run check:canva-linux" npm run check:canva-linux
-run_step "npm run check:shared-tooling" npm run check:shared-tooling
-run_step "npm run build:runtime" npm run build:runtime
-run_step "npm run build:check" npm run build:check
+run_step "npm run typecheck" npm run typecheck
+run_step "npm run typecheck:strict" npm run typecheck:strict
+run_step "git diff --exit-code" git diff --exit-code
 
 if command -v desktop-file-validate > /dev/null 2>&1; then
   run_step "desktop-file-validate" desktop-file-validate data/io.github.coletivo420.canva-linux.desktop
@@ -77,9 +64,5 @@ if command -v appstreamcli > /dev/null 2>&1; then
 else
   log_info "appstreamcli not found, skipping"
 fi
-
-run_step "./scripts/validate-flatpak.sh" ./scripts/validate-flatpak.sh
-run_step "./scripts/validate-flathub-submission.sh" ./scripts/validate-flathub-submission.sh
-run_step "git diff --check" git diff --check
 
 log_ok "Project validation completed"

@@ -20,6 +20,11 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
+import {
+  C420UI_BOOTSTRAP_ARTIFACT_FILES,
+  c420uiBootstrapArtifactPath,
+  C420UI_BOOTSTRAP_MANIFEST_PATH,
+} from "./bootstrap-check-helpers";
 import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
 
 type PackageJson = {
@@ -37,12 +42,6 @@ type BuildMetadataJson = {
   displayVersion?: string;
   phase?: string;
 };
-
-const C420UI_BOOTSTRAP_ARTIFACTS = [
-  "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
-  "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-  "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
-] as const;
 
 const C420UI_MANIFEST_METADATA_FIELD_MAPPING = [
   ["dependentProjectBuildRevision", "buildRevision"],
@@ -132,41 +131,38 @@ function calculateFileHash(filePath: string): string {
 
 function calculateBootstrapArtifactHashes(bootstrapDir: string): Record<string, string> {
   const artifactHashes: Record<string, string> = {};
-  for (const relativePath of C420UI_BOOTSTRAP_ARTIFACTS) {
-    const artifact = path.basename(relativePath);
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
     artifactHashes[artifact] = calculateFileHash(path.join(bootstrapDir, artifact));
   }
   return artifactHashes;
 }
 
 function validateCommittedManifestArtifactHashes(rootDir: string): void {
-  const manifestPath = "packages/c420ui/bootstrap/generated/manifest.json";
-  const manifest = readJson<Record<string, unknown>>(rootDir, manifestPath);
+  const manifest = readJson<Record<string, unknown>>(rootDir, C420UI_BOOTSTRAP_MANIFEST_PATH);
   const artifactHashes = manifest.artifactHashes;
   const failures: string[] = [];
 
   if (manifest.generatedBy !== C420UI_BOOTSTRAP_BUILD_RECIPE) {
-    failures.push(`${manifestPath}: generatedBy must be ${C420UI_BOOTSTRAP_BUILD_RECIPE}`);
+    failures.push(`${C420UI_BOOTSTRAP_MANIFEST_PATH}: generatedBy must be ${C420UI_BOOTSTRAP_BUILD_RECIPE}`);
   }
 
   if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
-    failures.push(`${manifestPath}: artifactHashes must record generated bootstrap artifact hashes`);
+    failures.push(`${C420UI_BOOTSTRAP_MANIFEST_PATH}: artifactHashes must record generated bootstrap artifact hashes`);
   } else {
     const hashes = artifactHashes as Record<string, unknown>;
-    for (const relativePath of C420UI_BOOTSTRAP_ARTIFACTS) {
-      const artifact = path.basename(relativePath);
+    for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
       const expectedHash = hashes[artifact];
       if (typeof expectedHash !== "string" || !/^sha256:[0-9a-f]{64}$/.test(expectedHash)) {
-        failures.push(`${manifestPath}: artifactHashes.${artifact} must be a sha256 hash`);
+        failures.push(`${C420UI_BOOTSTRAP_MANIFEST_PATH}: artifactHashes.${artifact} must be a sha256 hash`);
         continue;
       }
 
-      const committedPath = path.join(rootDir, relativePath);
+      const committedPath = path.join(rootDir, c420uiBootstrapArtifactPath(artifact));
       if (!fs.existsSync(committedPath)) continue;
 
       const actualHash = calculateFileHash(committedPath);
       if (actualHash !== expectedHash) {
-        failures.push(`${relativePath}: artifact hash differs from ${manifestPath}; regenerate bootstrap from TypeScript sources`);
+        failures.push(`${c420uiBootstrapArtifactPath(artifact)}: artifact hash differs from ${C420UI_BOOTSTRAP_MANIFEST_PATH}; regenerate bootstrap from TypeScript sources`);
       }
     }
   }
@@ -227,9 +223,9 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     entrypoint: "run-c420ui.cjs",
     cliEntrypoint: "run-c420ui-cli.cjs",
     entrypoints: {
-      ui: "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
-      cli: "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-      builder: "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
+      ui: c420uiBootstrapArtifactPath("run-c420ui.cjs"),
+      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.cjs"),
+      builder: c420uiBootstrapArtifactPath("c420ui-builder.cjs"),
     },
     requiresNode: ">=22.0.0",
     buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,
@@ -287,7 +283,7 @@ function validateExpectedManifestMetadata(rootDir: string, expectedBootstrapDir:
 
   for (const [manifestField, metadataField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {
     if (manifest[manifestField] !== packagedMetadata[metadataField]) {
-      failures.push(`packages/c420ui/bootstrap/generated/manifest.json: ${manifestField} must match committed build metadata ${metadataField}`);
+      failures.push(`${C420UI_BOOTSTRAP_MANIFEST_PATH}: ${manifestField} must match committed build metadata ${metadataField}`);
     }
   }
 
@@ -319,12 +315,13 @@ function runStructuralBootstrapCheck(rootDir: string, expectedBootstrapDir: stri
 function main(): void {
   const rootDir = findProjectRoot();
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-artifact-gate-"));
-  const expectedBootstrapDir = path.join(tempRoot, "c420ui");
+  const expectedBootstrapDir = path.join(tempRoot, "expected-bootstrap");
 
   try {
     runGitDiffCheck(rootDir, "gate startup");
 
-    for (const relativePath of C420UI_BOOTSTRAP_ARTIFACTS) {
+    for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+      const relativePath = c420uiBootstrapArtifactPath(artifact);
       runNodeCheck(rootDir, relativePath);
       runGitDiffCheck(rootDir, `node --check ${relativePath}`);
     }
@@ -334,12 +331,12 @@ function main(): void {
     runGitDiffCheck(rootDir, "temporary artifact generation");
 
     compareArtifacts(rootDir, expectedBootstrapDir, [
-      ...C420UI_BOOTSTRAP_ARTIFACTS.map((committedRelativePath) => ({
-        committedRelativePath,
-        expectedRelativePath: path.basename(committedRelativePath),
+      ...C420UI_BOOTSTRAP_ARTIFACT_FILES.map((artifact) => ({
+        committedRelativePath: c420uiBootstrapArtifactPath(artifact),
+        expectedRelativePath: artifact,
       })),
       {
-        committedRelativePath: "packages/c420ui/bootstrap/generated/manifest.json",
+        committedRelativePath: C420UI_BOOTSTRAP_MANIFEST_PATH,
         expectedRelativePath: "manifest.json",
       },
     ]);
