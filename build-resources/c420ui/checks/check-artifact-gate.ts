@@ -102,7 +102,7 @@ function runGitDiffCheck(rootDir: string, label: string): void {
       shell: false,
     });
 
-    if (result.status !== 0) {
+    if (result.error || result.status !== 0) {
       throw new Error(`worktree must stay clean after ${label}; ${args.join(" ")} failed (${summarizeCommandFailure(result)})`);
     }
   }
