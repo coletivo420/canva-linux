@@ -150,7 +150,7 @@ function validateJavaScriptSyntax(rootDir: string, relativePath: string, failure
     shell: false,
   });
 
-  if (result.status !== 0) {
+  if (result.error || result.status !== 0) {
     failures.push(`${relativePath}: ${C420UI_RUNTIME_SYNTAX_MESSAGE} (${summarizeCommandFailure(result)})`);
   }
 }
