@@ -432,7 +432,7 @@ function main(): void {
           failures.push(`${manifestPath}: sourceHashInputs must include ${requiredInput}`);
         }
       }
-      for (const forbiddenInput of ["scripts/" + "canva-linux-c420ui-builder.ts", "packages/c420ui/bootstrap/generated/" + "canva-linux-c420ui-builder.cjs"] as const) {
+      for (const forbiddenInput of ["scripts/" + "canva-linux-c420ui-builder.ts", c420uiBootstrapArtifactPath("canva-linux-c420ui-builder.cjs")] as const) {
         if (manifest.sourceHashInputs.includes(forbiddenInput)) {
           failures.push(`${manifestPath}: sourceHashInputs must not include ${forbiddenInput}`);
         }
