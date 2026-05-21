@@ -18,7 +18,7 @@ for (const bundle of bundles) {
     shell: false,
   });
 
-  if (result.status === 0) {
+  if (result.status === 0 && !result.error) {
     console.log(`[ok] node --check ${bundle}`);
     continue;
   }
