@@ -5,6 +5,10 @@ import { createRequire } from "node:module";
 import path from "node:path";
 
 import {
+  C420UI_BOOTSTRAP_ARTIFACT_FILES,
+  c420uiBootstrapArtifactPath,
+} from "../checks/bootstrap-check-helpers";
+import {
   C420UI_BOOTSTRAP_BUILD_RECIPE,
   C420UI_BOOTSTRAP_BUILD_TARGET,
   C420UI_BOOTSTRAP_BUILD_TOOL,
@@ -25,12 +29,6 @@ import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/buil
 type PackageJson = {
   version?: string;
 };
-
-const C420UI_BOOTSTRAP_ARTIFACTS = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
-] as const;
 
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
@@ -66,7 +64,7 @@ function cleanBootstrapOutput(bootstrapDir: string): void {
 
 function calculateArtifactHashes(bootstrapDir: string): Record<string, string> {
   const hashes: Record<string, string> = {};
-  for (const artifact of C420UI_BOOTSTRAP_ARTIFACTS) {
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
     hashes[artifact] = `sha256:${createHash("sha256")
       .update(fs.readFileSync(path.join(bootstrapDir, artifact)))
       .digest("hex")}`;
@@ -135,9 +133,9 @@ async function main(): Promise<void> {
     entrypoint: "run-c420ui.cjs",
     cliEntrypoint: "run-c420ui-cli.cjs",
     entrypoints: {
-      ui: "packages/c420ui/bootstrap/generated/run-c420ui.cjs",
-      cli: "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-      builder: "packages/c420ui/bootstrap/generated/c420ui-builder.cjs",
+      ui: c420uiBootstrapArtifactPath("run-c420ui.cjs"),
+      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.cjs"),
+      builder: c420uiBootstrapArtifactPath("c420ui-builder.cjs"),
     },
     requiresNode: ">=22.0.0",
     buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,

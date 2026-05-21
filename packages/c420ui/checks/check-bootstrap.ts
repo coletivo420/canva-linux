@@ -20,6 +20,11 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
+import {
+  C420UI_BOOTSTRAP_ARTIFACT_FILES,
+  c420uiBootstrapArtifactPath,
+  C420UI_BOOTSTRAP_MANIFEST_PATH,
+} from "./bootstrap-check-helpers";
 import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
 
 function findProjectRoot(): string {
@@ -37,19 +42,13 @@ function read(rootDir: string, relativePath: string): string {
 }
 
 const C420UI_RUNTIME_CORRUPTION_MESSAGE =
-  "packages/c420ui/bootstrap/generated/run-c420ui.cjs appears structurally corrupted: host-dependency validators were interleaved into the interactive action runner. Regenerate bootstrap from TypeScript sources.";
+  `${c420uiBootstrapArtifactPath("run-c420ui.cjs")} appears structurally corrupted: host-dependency validators were interleaved into the interactive action runner. Regenerate bootstrap from TypeScript sources.`;
 const C420UI_RUNTIME_SYNTAX_MESSAGE =
   "c420ui bootstrap bundle failed syntax validation. Regenerate bootstrap from TypeScript sources.";
 const C420UI_GENERATED_ARTIFACTS_STALE_MESSAGE =
   "Generated c420ui bootstrap artifacts are stale. Run npm run build:c420ui-bootstrap.";
 const C420UI_METADATA_MISMATCH_MESSAGE =
   "c420ui manifest/build metadata mismatch. Run npm run build:metadata && npm run build:c420ui-bootstrap before running the strict artifact gate.";
-
-const C420UI_BOOTSTRAP_ARTIFACTS = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
-] as const;
 
 const C420UI_MANIFEST_METADATA_FIELD_MAPPING = [
   ["dependentProjectBuildRevision", "buildRevision"],
@@ -78,11 +77,11 @@ function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: s
     ? ""
     : content.slice(requestLocatorStart, requestLocatorEnd);
   if (/return out;/.test(requestLocatorBlock)) {
-    failures.push("packages/c420ui/bootstrap/generated/run-c420ui.cjs: requestLocatorPosition is corrupted; regenerate bootstrap from TypeScript sources.");
+    failures.push(`${c420uiBootstrapArtifactPath("run-c420ui.cjs")}: requestLocatorPosition is corrupted; regenerate bootstrap from TypeScript sources.`);
   }
 
   if (/function crc32\(buf\)[\s\S]{0,800}(?:fs\d*\.readFileSync|path\d*\.resolve)/.test(content)) {
-    failures.push("packages/c420ui/bootstrap/generated/run-c420ui.cjs: crc32 is corrupted with injected file IO; regenerate bootstrap from TypeScript sources.");
+    failures.push(`${c420uiBootstrapArtifactPath("run-c420ui.cjs")}: crc32 is corrupted with injected file IO; regenerate bootstrap from TypeScript sources.`);
   }
 
   const progressStateStart = content.indexOf("function toProgressState(state)");
@@ -91,7 +90,7 @@ function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: s
     ? ""
     : content.slice(progressStateStart, progressStateEnd);
   if (/event\.type === "action:start"/.test(progressStateBlock)) {
-    failures.push("packages/c420ui/bootstrap/generated/run-c420ui.cjs: toProgressState is corrupted with action event handler logic; regenerate bootstrap from TypeScript sources.");
+    failures.push(`${c420uiBootstrapArtifactPath("run-c420ui.cjs")}: toProgressState is corrupted with action event handler logic; regenerate bootstrap from TypeScript sources.`);
   }
 
   const codePointAtStart = content.indexOf("exports2.codePointAt = function");
@@ -100,7 +99,7 @@ function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: s
     ? ""
     : content.slice(codePointAtStart, codePointAtEnd);
   if (codePointAtStart === -1 || codePointAtEnd === -1) {
-    failures.push("packages/c420ui/bootstrap/generated/run-c420ui.cjs: codePointAt polyfill block must exist.");
+    failures.push(`${c420uiBootstrapArtifactPath("run-c420ui.cjs")}: codePointAt polyfill block must exist.`);
     return;
   }
 
@@ -112,7 +111,7 @@ function validateC420UIRuntimeBundleKnownCorruption(content: string, failures: s
     codePointAtSizeIndex > codePointAtUseIndex
   ) {
     failures.push(
-      "packages/c420ui/bootstrap/generated/run-c420ui.cjs: codePointAt polyfill must define var size = string.length before size is used.",
+      `${c420uiBootstrapArtifactPath("run-c420ui.cjs")}: codePointAt polyfill must define var size = string.length before size is used.`,
     );
   }
 }
@@ -167,31 +166,29 @@ export function validateManifestArtifactHashes(
   manifest: Record<string, unknown>,
   failures: string[],
 ): void {
-  const manifestPath = "packages/c420ui/bootstrap/generated/manifest.json";
-
   if (manifest.generatedBy !== C420UI_BOOTSTRAP_BUILD_RECIPE) {
-    failures.push(`${manifestPath}: generatedBy must be ${C420UI_BOOTSTRAP_BUILD_RECIPE}`);
+    failures.push(`${C420UI_BOOTSTRAP_MANIFEST_PATH}: generatedBy must be ${C420UI_BOOTSTRAP_BUILD_RECIPE}`);
   }
 
   const artifactHashes = manifest.artifactHashes;
   if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
-    failures.push(`${manifestPath}: artifactHashes must record generated bootstrap artifact hashes`);
+    failures.push(`${C420UI_BOOTSTRAP_MANIFEST_PATH}: artifactHashes must record generated bootstrap artifact hashes`);
     return;
   }
 
   const hashes = artifactHashes as Record<string, unknown>;
-  for (const artifact of C420UI_BOOTSTRAP_ARTIFACTS) {
-    const relativePath = `packages/c420ui/bootstrap/generated/${artifact}`;
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+    const relativePath = c420uiBootstrapArtifactPath(artifact);
     const expectedHash = hashes[artifact];
     if (typeof expectedHash !== "string" || !/^sha256:[0-9a-f]{64}$/.test(expectedHash)) {
-      failures.push(`${manifestPath}: artifactHashes.${artifact} must be a sha256 hash`);
+      failures.push(`${C420UI_BOOTSTRAP_MANIFEST_PATH}: artifactHashes.${artifact} must be a sha256 hash`);
       continue;
     }
     if (!fs.existsSync(path.join(rootDir, relativePath))) continue;
 
     const actualHash = calculateFileHash(rootDir, relativePath);
     if (actualHash !== expectedHash) {
-      failures.push(`${relativePath}: artifact hash differs from ${manifestPath}; regenerate bootstrap from TypeScript sources`);
+      failures.push(`${relativePath}: artifact hash differs from ${C420UI_BOOTSTRAP_MANIFEST_PATH}; regenerate bootstrap from TypeScript sources`);
     }
   }
 }
@@ -317,7 +314,7 @@ function validateManifestBuildMetadata(
 
   for (const [manifestField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {
     if (typeof manifest[manifestField] !== "string" || manifest[manifestField] === "") {
-      failures.push(`packages/c420ui/bootstrap/generated/manifest.json: ${manifestField} must be a non-empty string`);
+      failures.push(`${C420UI_BOOTSTRAP_MANIFEST_PATH}: ${manifestField} must be a non-empty string`);
     }
   }
 
@@ -348,10 +345,10 @@ function validateManifestBuildMetadata(
 function main(): void {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
-  const manifestPath = "packages/c420ui/bootstrap/generated/manifest.json";
-  const uiBundlePath = "packages/c420ui/bootstrap/generated/run-c420ui.cjs";
-  const cliBundlePath = "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs";
-  const builderBundlePath = "packages/c420ui/bootstrap/generated/c420ui-builder.cjs";
+  const manifestPath = C420UI_BOOTSTRAP_MANIFEST_PATH;
+  const uiBundlePath = c420uiBootstrapArtifactPath("run-c420ui.cjs");
+  const cliBundlePath = c420uiBootstrapArtifactPath("run-c420ui-cli.cjs");
+  const builderBundlePath = c420uiBootstrapArtifactPath("c420ui-builder.cjs");
   const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
     (asset) => `packages/c420ui/bootstrap/usr/${asset}`,
   );
@@ -361,7 +358,7 @@ function main(): void {
   }
 
   for (const forbiddenPath of [
-    "packages/c420ui/bootstrap/generated/" + "canva-linux-c420ui-builder.cjs",
+    c420uiBootstrapArtifactPath("canva-linux-c420ui-builder.cjs"),
     "scripts/" + "canva-linux-c420ui-builder.ts",
   ] as const) {
     if (fs.existsSync(path.join(rootDir, forbiddenPath))) {
@@ -406,14 +403,14 @@ function main(): void {
     }
 
     const entrypoints = manifest.entrypoints as Record<string, unknown> | undefined;
-    if (entrypoints?.ui !== "packages/c420ui/bootstrap/generated/run-c420ui.cjs") {
-      failures.push(`${manifestPath}: expected entrypoints.ui to be packages/c420ui/bootstrap/generated/run-c420ui.cjs`);
+    if (entrypoints?.ui !== c420uiBootstrapArtifactPath("run-c420ui.cjs")) {
+      failures.push(`${manifestPath}: expected entrypoints.ui to be ${c420uiBootstrapArtifactPath("run-c420ui.cjs")}`);
     }
-    if (entrypoints?.cli !== "packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs") {
-      failures.push(`${manifestPath}: expected entrypoints.cli to be packages/c420ui/bootstrap/generated/run-c420ui-cli.cjs`);
+    if (entrypoints?.cli !== c420uiBootstrapArtifactPath("run-c420ui-cli.cjs")) {
+      failures.push(`${manifestPath}: expected entrypoints.cli to be ${c420uiBootstrapArtifactPath("run-c420ui-cli.cjs")}`);
     }
-    if (entrypoints?.builder !== "packages/c420ui/bootstrap/generated/c420ui-builder.cjs") {
-      failures.push(`${manifestPath}: expected entrypoints.builder to be packages/c420ui/bootstrap/generated/c420ui-builder.cjs`);
+    if (entrypoints?.builder !== c420uiBootstrapArtifactPath("c420ui-builder.cjs")) {
+      failures.push(`${manifestPath}: expected entrypoints.builder to be ${c420uiBootstrapArtifactPath("c420ui-builder.cjs")}`);
     }
 
     if (manifest.sourceHashAlgorithm !== C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM) {
@@ -467,11 +464,11 @@ function main(): void {
   }
 
   const launcher = read(rootDir, "canva-linux-c420ui-builder");
-  const bootstrapBuilderIndex = indexOfRequired(launcher, "packages/c420ui/bootstrap/generated/c420ui-builder.cjs", failures, "canva-linux-c420ui-builder");
+  const bootstrapBuilderIndex = indexOfRequired(launcher, c420uiBootstrapArtifactPath("c420ui-builder.cjs"), failures, "canva-linux-c420ui-builder");
   const buildBuilderIndex = indexOfRequired(launcher, ".build/packages/c420ui/scripts/c420ui-builder.js", failures, "canva-linux-c420ui-builder");
 
   if (bootstrapBuilderIndex !== -1 && buildBuilderIndex !== -1 && bootstrapBuilderIndex > buildBuilderIndex) {
-    failures.push("canva-linux-c420ui-builder: launcher must check packages/c420ui/bootstrap/generated/c420ui-builder.cjs before .build fallback");
+    failures.push(`canva-linux-c420ui-builder: launcher must check ${c420uiBootstrapArtifactPath("c420ui-builder.cjs")} before .build fallback`);
   }
 
   for (const forbidden of [

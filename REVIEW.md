@@ -574,3 +574,8 @@ while runtime flags belong to the compiled `canva-linux` app.
   rendering remote `https:` favicons.
 - OAuth localized public-landing probes must normalize both DOM attributes and localized keywords with NFKD so composed and
   decomposed labels are equivalent.
+# c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under packages/c420ui.
+# Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by packages/c420ui/checks.
+# No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
+# Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under scripts/checks/canva-linux, scripts/, test/, or scripts/c420ui-adapter.
+# When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
