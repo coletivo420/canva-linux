@@ -263,7 +263,7 @@ function validateGeneratedArtifactsMatchBuildRecipe(
       },
     );
 
-    if (result.status !== 0) {
+    if (result.error || result.status !== 0) {
       failures.push(`build-resources/c420ui/bootstrap/generated: unable to regenerate bootstrap artifacts for comparison (${summarizeCommandFailure(result)})`);
       return;
     }
