@@ -18,8 +18,14 @@ test("root legacy layout directories do not exist", () => {
 test("electron runtime and packaging assets live in the canonical build-resources layout", () => {
   for (const relativePath of [
     "build-resources/c420ui",
-    "build-resources/electron",
-    "build-resources/canva-linux-assets",
+    "build-resources/electron/main",
+    "build-resources/electron/preload",
+    "build-resources/electron/shared",
+    "build-resources/electron/ui",
+    "build-resources/electron/assets",
+    "build-resources/canva-linux-assets/desktop",
+    "build-resources/canva-linux-assets/metainfo",
+    "build-resources/canva-linux-assets/icons",
   ] as const) {
     assert.equal(exists(relativePath), true, `${relativePath} must exist`);
   }
