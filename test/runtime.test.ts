@@ -22,6 +22,31 @@ const {
 const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
 
+test("runtime metadata loader prefers effective metadata and falls back to committed metadata", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "build-resources", "electron", "main", "build-metadata.ts"),
+    "utf8",
+  );
+
+  const effectiveIndex = source.indexOf('.build", "canva-linux", "build-metadata.effective.json');
+  const committedIndex = source.indexOf('"config", "canva-linux", "build-metadata.json"');
+  assert.ok(effectiveIndex >= 0);
+  assert.ok(committedIndex > effectiveIndex);
+});
+
+test("runtime metadata flow does not mutate committed metadata in config path", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "scripts", "copy-runtime-assets.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /const metadataSourcePath = fs\.existsSync/);
+  assert.doesNotMatch(
+    source,
+    /to === "\.build\/electron\/config\/canva-linux\/build-metadata\.json" && fs\.existsSync\(target\)/,
+  );
+});
+
 test("debugLevel=1 does not enable Chromium capture verbose logging", () => {
   assert.equal(shouldEnableCaptureVerboseLogging(1), false);
 });

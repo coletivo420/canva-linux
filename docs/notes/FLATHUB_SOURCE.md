@@ -81,6 +81,7 @@ GitHub `.flatpak` bundle releases and Flathub source builds are separate workflo
 - Development smoke tests should prefer `./canva-linux-c420ui-builder --install-flatpak` to verify the full package workflow.
 - GitHub bundle releases are generated from the repository workflow (`repo/` export + `flatpak build-bundle`) for direct distribution.
 - Flathub source builds are reviewed separately, should use stable source URLs appropriate for Flathub submission, and should not require `.flatpak` bundle creation.
+- Release artifact workflows may use effective metadata from `.build/canva-linux/build-metadata.effective.json`; do not write Git-derived revisions into committed `config/canva-linux/build-metadata.json`.
 
 Do not treat the GitHub bundle workflow as a substitute for Flathub source review.
 

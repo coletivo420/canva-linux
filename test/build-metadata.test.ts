@@ -2,6 +2,8 @@
 "use strict";
 
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const test = require("node:test");
 
 const { loadRuntimeModule } = require("./helpers/runtime-module");
@@ -11,6 +13,8 @@ const {
   createBuildMetadata,
   normalizeBuildRevision,
 } = loadRuntimeModule("main/build-metadata");
+const repoRoot =
+  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
 
 test("normalizes build revisions", () => {
   assert.equal(normalizeBuildRevision("abc1234"), "gabc1234");
@@ -117,8 +121,6 @@ test("loaded metadata is normalized with unknown revision fallback", () => {
 });
 
 test("build metadata source does not hardcode current Dev.7 fallbacks", () => {
-  const fs = require("node:fs");
-  const path = require("node:path");
   const source = fs.readFileSync(
     path.join(
       process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, ".."),
@@ -134,4 +136,25 @@ test("build metadata source does not hardcode current Dev.7 fallbacks", () => {
   assert.equal(source.includes('"0.1.4-15.Dev"'), false);
   assert.equal(source.includes('"0.0.0"'), true);
   assert.equal(source.includes('"unknown"'), true);
+});
+
+test("generate-build-metadata supports explicit committed/effective modes", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "scripts", "generate-build-metadata.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /--committed\|--effective/);
+  assert.match(source, /buildRevision: mode === "effective" \? resolveBuildRevision\(rootDir\) : "unknown"/);
+  assert.match(source, /\.build", "canva-linux", "build-metadata\.effective\.json"/);
+});
+
+test("committed mode does not resolve live git revision", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "scripts", "generate-build-metadata.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /mode === "effective" \? resolveBuildRevision\(rootDir\) : "unknown"/);
+  assert.doesNotMatch(source, /mode === "committed"[\s\S]*resolveBuildRevision/);
 });

@@ -283,6 +283,7 @@ type BootstrapManifestBuildMetadata = {
 
 type BuildMetadataJson = {
   buildRevision?: string;
+  version?: string;
   fullVersion?: string;
   displayVersion?: string;
   phase?: string;
@@ -318,17 +319,29 @@ function validateManifestBuildMetadata(
     }
   }
 
-  if (!isStrictManifestMetadataGate()) return;
+  if (packagedMetadata.buildRevision !== "unknown") {
+    failures.push(`${metadataPath}: committed buildRevision must be unknown`);
+  }
 
-  const effectiveMetadata = loadEffectiveBuildMetadata(rootDir);
+  for (const field of ["fullVersion", "displayVersion", "phase", "version"] as const) {
+    const value = packagedMetadata[field];
+    if (typeof value === "string" && /\+g[0-9a-f]{7}$/i.test(value)) {
+      failures.push(`${metadataPath}: committed ${field} must not include +g hash`);
+    }
+  }
+
   for (const [manifestField, metadataField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {
     const metadataValue = packagedMetadata[metadataField];
     if (manifest[manifestField] !== metadataValue) {
       failures.push(
-        `${C420UI_METADATA_MISMATCH_MESSAGE} ${manifestField} must match ${metadataPath} ${metadataField}.`,
+        `${C420UI_BOOTSTRAP_MANIFEST_PATH}: ${manifestField} must match committed metadata ${metadataPath} ${metadataField}.`,
       );
     }
   }
+
+  if (!isStrictManifestMetadataGate()) return;
+
+  const effectiveMetadata = loadEffectiveBuildMetadata(rootDir);
 
   if (manifest.dependentProjectBuildRevision !== effectiveMetadata.buildRevision) {
     failures.push(

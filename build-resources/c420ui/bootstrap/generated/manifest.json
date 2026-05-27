@@ -4,10 +4,10 @@
   "c420uiVersion": "0.1.0",
   "dependentProject": "canva-linux",
   "dependentProjectVersion": "0.1.4-15.Dev.9",
-  "dependentProjectBuildRevision": "g3695916",
-  "dependentProjectFullVersion": "0.1.4-15.Dev.9+g3695916",
-  "dependentProjectDisplayVersion": "0.1.4-15.Dev+g3695916",
-  "dependentProjectPhase": "0.1.4-15.Dev.9+g3695916",
+  "dependentProjectBuildRevision": "unknown",
+  "dependentProjectFullVersion": "0.1.4-15.Dev.9",
+  "dependentProjectDisplayVersion": "0.1.4-15.Dev",
+  "dependentProjectPhase": "0.1.4-15.Dev.9",
   "entrypoint": "run-c420ui.cjs",
   "cliEntrypoint": "run-c420ui-cli.cjs",
   "entrypoints": {
@@ -25,7 +25,7 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "sourceHashAlgorithm": "sha256",
-  "sourceHash": "sha256:1fe9b264d43079cd0a609381ef98c8252529ce43f20e5c181309eeafee4c63be",
+  "sourceHash": "sha256:20df40541367e362007b624ad5a87e8230351fc9ef51ec41e52cfd8689523575",
   "sourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/bootstrap",
@@ -42,8 +42,8 @@
     "package.json"
   ],
   "artifactHashes": {
-    "run-c420ui.cjs": "sha256:9e1cece9c687bfac92ebe52cb25f65b584de1b3f20347bd83f6dccd28b396f86",
-    "run-c420ui-cli.cjs": "sha256:d666d6022e86aaa6ba39eb368e07a14c0c5ed15e2dd1a6d861f8c58d10130caf",
-    "c420ui-builder.cjs": "sha256:a6eadef1d28ed1fa1f822287fe2ad52929186144f7117c6f3398981179441b35"
+    "run-c420ui.cjs": "sha256:2d4c57182416b694b291fe0f054a5502634c8bc7be02061f9545b04e317bd5ad",
+    "run-c420ui-cli.cjs": "sha256:9c1ef6ee89ddc703b435dbf543181aafecfe5ec018b542a0615449d9bd1e6e02",
+    "c420ui-builder.cjs": "sha256:f98e4e1ac7c1b9fa682c67dff93d335ef80ca795c348f23eb795f997c32453f2"
   }
 }

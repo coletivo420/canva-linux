@@ -1,11 +1,21 @@
 # Validation Checklist (0.1.4-15.Dev.9)
 
+## Committed vs Effective Build Metadata
+
+- `config/canva-linux/build-metadata.json` is committed, deterministic metadata and must keep `buildRevision: "unknown"`.
+- `.build/canva-linux/build-metadata.effective.json` is ephemeral metadata used by runtime/release flows and may contain Git-derived revision values.
+- Repository validation checks must validate committed metadata only.
+- Runtime/release/artifact builds must prefer effective metadata and use committed metadata as fallback.
+
 ## Dev.9 metadata persistence and c420ui repair
 
 Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place
 config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write
 <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible display
 comes from metadata.
+Committed metadata in `config/canva-linux/build-metadata.json` must remain stable with `buildRevision: "unknown"`.
+Effective metadata for builds is generated in `.build/canva-linux/build-metadata.effective.json` and may include a Git revision.
+Repository checks validate committed metadata; release/artifact workflows validate and consume effective metadata.
 
 Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be
 limited to AppImage. Generated artifact detection must list all declared registry workflows, including planned workflows

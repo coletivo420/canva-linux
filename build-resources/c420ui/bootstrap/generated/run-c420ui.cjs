@@ -20960,6 +20960,13 @@ function loadPackagedMetadata(rootDir2, metadataModule) {
   if (!metadata) return null;
   return metadataModule.normalizeLoadedBuildMetadata(metadata);
 }
+function loadEffectiveFileMetadata(rootDir2, metadataModule) {
+  const metadata = readJsonFile2(
+    import_node_path9.default.join(rootDir2, ".build", "canva-linux", "build-metadata.effective.json")
+  );
+  if (!metadata) return null;
+  return metadataModule.normalizeLoadedBuildMetadata(metadata);
+}
 function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule) {
   const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path9.default.resolve(rootDir2));
   if (!module2) {
@@ -20985,11 +20992,17 @@ function loadEffectiveBuildMetadata(rootDir2) {
   const resolvedRootDir = import_node_path9.default.resolve(rootDir2);
   const metadataModule = loadBuildMetadataModule(resolvedRootDir);
   if (!metadataModule) {
+    const effective2 = readJsonFile2(
+      import_node_path9.default.join(resolvedRootDir, ".build", "canva-linux", "build-metadata.effective.json")
+    );
+    if (effective2) return effective2;
     const packaged = readJsonFile2(
       import_node_path9.default.join(resolvedRootDir, "config", "canva-linux", "build-metadata.json")
     );
     return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
   }
+  const effective = loadEffectiveFileMetadata(resolvedRootDir, metadataModule);
+  if (effective) return effective;
   const envRevision = resolveEnvBuildRevision();
   if (envRevision) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, envRevision, metadataModule);

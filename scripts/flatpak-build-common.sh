@@ -151,6 +151,7 @@ ensure_system_flatpak_runtime_dependencies() {
 
 build_electron_output() {
   ui_info "Building Electron app (target: dir)"
+  npm run build:metadata:effective
   npm run dist
 }
 

@@ -29,6 +29,7 @@ export function main(): void {
     buildDir,
   ]);
   run("rebuild script artifacts after clean", "npm", ["run", "build:scripts"]);
+  run("generate effective build metadata", "npm", ["run", "build:metadata:effective"]);
   run("build electron-builder beforeBuild hook", "npm", [
     "run",
     "bootstrap:electron-builder",

@@ -188,3 +188,16 @@ test("c420ui bootstrap manifest metadata fields are well-formed", () => {
     }
   }
 });
+
+test("committed bootstrap manifest does not contain git revision suffixes", () => {
+  const manifest = readJson<BootstrapManifest>(C420UI_BOOTSTRAP_MANIFEST_PATH);
+  assert.equal(manifest.dependentProjectBuildRevision, "unknown");
+  assert.equal(/\+g[0-9a-f]{7}$/i.test(String(manifest.dependentProjectFullVersion || "")), false);
+  assert.equal(/\+g[0-9a-f]{7}$/i.test(String(manifest.dependentProjectDisplayVersion || "")), false);
+  assert.equal(/\+g[0-9a-f]{7}$/i.test(String(manifest.dependentProjectPhase || "")), false);
+});
+
+test("committed bootstrap runtime bundle does not embed effective metadata file path", () => {
+  const bundle = readBundle();
+  assert.equal(bundle.includes(".build/canva-linux/build-metadata.effective.json"), false);
+});
