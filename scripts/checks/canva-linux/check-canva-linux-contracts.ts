@@ -292,6 +292,35 @@ function checkBuildMetadataContracts(rootDir: string, failures: string[]): void 
   }
 }
 
+function checkRuntimeAssetsMetadataCopyContract(rootDir: string, failures: string[]): void {
+  const source = readText(rootDir, "scripts/copy-runtime-assets.ts");
+  if (!source) {
+    failures.push("scripts/copy-runtime-assets.ts: must exist");
+    return;
+  }
+
+  const metadataTargetLiteral =
+    ".build/electron/config/canva-linux/build-metadata.json";
+  const targetMatches =
+    source.match(new RegExp(metadataTargetLiteral.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"))
+      ?.length ?? 0;
+  if (targetMatches !== 1) {
+    failures.push("scripts/copy-runtime-assets.ts: metadata copy target must be defined exactly once");
+  }
+
+  if (!source.includes("metadataSourcePath")) {
+    failures.push("scripts/copy-runtime-assets.ts: must resolve metadataSourcePath once");
+  }
+
+  if (
+    source.includes(
+      'to === ".build/electron/config/canva-linux/build-metadata.json" && fs.existsSync(target)',
+    )
+  ) {
+    failures.push("scripts/copy-runtime-assets.ts: must not skip metadata copy when target exists");
+  }
+}
+
 function checkRootTests(rootDir: string, failures: string[]): void {
   for (const relativePath of collectFiles(rootDir, "test")) {
     const fileName = path.basename(relativePath);
@@ -412,6 +441,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkRootTests(rootDir, failures);
   checkAdapterBoundary(rootDir, failures);
   checkBuildMetadataContracts(rootDir, failures);
+  checkRuntimeAssetsMetadataCopyContract(rootDir, failures);
   checkDocs(rootDir, failures);
   checkValidateProjectScript(rootDir, failures);
 }
