@@ -33,6 +33,8 @@ scripts/canva-linux/       Canva Linux project-specific tooling.
 config/canva-linux/        Canva Linux declarations.
 ```
 
+`build-resources/` is the canonical home for project-owned runtime/build resources. Root `packages/`, `electron/`, `data/`, and loose icon assets are legacy paths and must not be restored.
+
 ## Config ownership
 
 - `config/canva-linux/actions.json`: Canva Linux action declarations.

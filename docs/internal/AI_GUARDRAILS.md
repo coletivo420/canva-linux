@@ -37,6 +37,7 @@
 - Repository checks validate committed metadata only; artifact/release checks validate effective metadata.
 - Committed metadata must remain stable and deterministic across incremental builds and test/check runs.
 - Repository validation must not depend on live Git revision resolution for committed metadata contracts.
+- `build-resources/` is the canonical home for c420ui, electron, and Canva Linux assets; do not restore root `packages/`, `electron/`, `data/`, or loose icon assets.
 
 ## Dev.8 pinned home tab-strip guardrail
 

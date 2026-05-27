@@ -5,6 +5,13 @@ For the builder naming contract, see [c420ui Builder Alias Policy](../c420ui/BUI
 
 This generated inventory is kept outside `REVIEW.md` so the review checklist remains a stable process document.
 
+## Structural Contracts
+
+- Committed build metadata lives in `config/canva-linux/build-metadata.json` and must remain deterministic with `buildRevision: "unknown"`.
+- Effective build metadata is generated under `.build/canva-linux/build-metadata.effective.json` for runtime/release artifacts and may include Git-derived revisions.
+- `build-resources/` is the canonical home for project-owned runtime/build resources (`c420ui`, `electron`, `canva-linux-assets`).
+- Root `packages/`, `electron/`, `data/`, and loose icon assets must not be restored.
+
 ## Files
 
 - `.codex`

@@ -15,6 +15,7 @@
 - Committed build metadata in `config/canva-linux/build-metadata.json` must stay stable with `buildRevision: "unknown"` and without `+g<hash>` suffixes.
 - Effective build metadata must be generated under `.build/canva-linux/build-metadata.effective.json` and may carry Git-derived revisions for artifact/release outputs.
 - Review intent: incremental builds and validation flows must not dirty the worktree by rewriting committed metadata from live Git HEAD values.
+- `build-resources/` is the canonical runtime/build resource tree; review must reject reintroduction of root `packages/`, `electron/`, `data/`, or loose legacy asset paths.
 - The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 - Artifact filenames may keep the base package version; hash-visible display comes from metadata. Reject changes that remove metadata installation or sidecar generation.
 - AppImage and Flatpak bundle artifacts must generate a `.build-metadata.json` sidecar.

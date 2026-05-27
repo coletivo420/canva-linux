@@ -31,6 +31,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Effective build metadata is generated in `.build/canva-linux/build-metadata.effective.json` and may include Git revision.
 - Repository checks validate committed metadata, while artifact/release builds consume effective metadata.
 - Hardened contracts/tests/docs now enforce the committed-vs-effective split to prevent incremental builds and validation flows from dirtying the worktree with Git-derived rewrites.
+- `build-resources/` layout guards are now granular: c420ui, electron, and canva-linux-assets subtrees are required and legacy root `packages/`, `electron/`, and `data/` paths remain forbidden.
 
 - Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not
   be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or
