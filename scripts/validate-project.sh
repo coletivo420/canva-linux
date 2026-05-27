@@ -51,6 +51,8 @@ run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check
 run_step "npm run check:c420ui-bootstrap-artifacts" npm run check:c420ui-bootstrap-artifacts
 run_step "npm run check:c420ui-bootstrap" npm run check:c420ui-bootstrap
 run_step "npm run check:canva-linux" npm run check:canva-linux
+run_step "check flatpak scope policy" bash scripts/check-flatpak-scope-policy.sh
+run_step "check shell ui api" bash scripts/check-shell-ui-api.sh
 run_step "npm run typecheck" npm run typecheck
 run_step "npm run typecheck:strict" npm run typecheck:strict
 run_step "git diff --exit-code" git diff --exit-code

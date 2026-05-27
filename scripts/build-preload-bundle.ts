@@ -24,7 +24,7 @@ export async function main(): Promise<void> {
   const entryPoint = resolveEntryPoint();
   const outputFile = path.join(
     runtimeRoot,
-    "electron",
+    ...(useBuildOutput ? ["electron"] : ["build-resources", "electron"]),
     "preload",
     "canva.bundle.js",
   );

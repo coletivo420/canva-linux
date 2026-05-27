@@ -307,7 +307,7 @@ function runStructuralBootstrapCheck(rootDir: string, expectedBootstrapDir: stri
     },
   );
 
-  if (result.status !== 0) {
+  if (result.error || result.status !== 0) {
     throw new Error(`check-c420ui-bootstrap.js failed (${summarizeCommandFailure(result)})`);
   }
 }
