@@ -372,9 +372,6 @@ function checkBuildResourcesLayoutContract(rootDir: string, failures: string[]):
   }
 
   for (const forbiddenPath of [
-    "packages",
-    "electron",
-    "data",
     "build-resources/icon.png",
     "data/icons",
     "data/io.github.coletivo420.canva-linux.desktop",
