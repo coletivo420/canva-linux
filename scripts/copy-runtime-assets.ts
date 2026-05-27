@@ -3,10 +3,13 @@ import path from "node:path";
 
 const repoRoot =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
+const effectiveMetadataPath = ".build/canva-linux/build-metadata.effective.json";
+const committedMetadataPath = "config/canva-linux/build-metadata.json";
 const copies: ReadonlyArray<readonly [from: string, to: string]> = [
   ["build-resources/electron/assets", ".build/electron/assets"],
   ["build-resources/electron/ui", ".build/electron/ui"],
-  ["config/canva-linux/build-metadata.json", ".build/electron/config/canva-linux/build-metadata.json"],
+  [effectiveMetadataPath, ".build/electron/config/canva-linux/build-metadata.json"],
+  [committedMetadataPath, ".build/electron/config/canva-linux/build-metadata.json"],
 ];
 
 export function main(): void {
@@ -16,6 +19,9 @@ export function main(): void {
 
     if (!fs.existsSync(source)) {
       console.log(`[runtime-build] skip missing ${from}`);
+      continue;
+    }
+    if (to === ".build/electron/config/canva-linux/build-metadata.json" && fs.existsSync(target)) {
       continue;
     }
 

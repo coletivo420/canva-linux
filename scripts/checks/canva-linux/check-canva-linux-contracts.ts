@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -184,6 +185,8 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
 
   const scripts = packageJson.scripts || {};
   const requiredScripts: Record<string, string> = {
+    "build:metadata": "npm run run:ts -- scripts/generate-build-metadata.ts --committed",
+    "build:metadata:effective": "npm run run:ts -- scripts/generate-build-metadata.ts --effective",
     "build:c420ui-bootstrap": "npm run build:metadata && esbuild build-resources/c420ui/scripts/build-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/build-resources/c420ui/scripts/build-bootstrap.cjs && node .build/build-resources/c420ui/scripts/build-bootstrap.cjs",
     "check:c420ui-node-check": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-node.js",
     "check:c420ui-bootstrap": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-bootstrap.js",
@@ -248,6 +251,44 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
     if (forbiddenPattern.test(buildScripts)) {
       failures.push(`package.json: build:scripts must not include ${forbiddenPattern}`);
     }
+  }
+}
+
+function checkBuildMetadataContracts(rootDir: string, failures: string[]): void {
+  const committed = readJson<{
+    buildRevision?: string;
+    version?: string;
+    displayVersion?: string;
+    phase?: string;
+    fullVersion?: string;
+  }>(rootDir, "config/canva-linux/build-metadata.json");
+  if (!committed) {
+    failures.push("config/canva-linux/build-metadata.json: must be readable");
+    return;
+  }
+
+  if (committed.buildRevision !== "unknown") {
+    failures.push("config/canva-linux/build-metadata.json: buildRevision must be unknown");
+  }
+
+  for (const field of ["version", "displayVersion", "phase", "fullVersion"] as const) {
+    if (typeof committed[field] === "string" && /\+g[0-9a-f]{7}$/i.test(committed[field] || "")) {
+      failures.push(`config/canva-linux/build-metadata.json: ${field} must not include +g hash`);
+    }
+  }
+
+  let trackedEffective = "";
+  try {
+    trackedEffective = execFileSync(
+      "git",
+      ["ls-files", "--", ".build/canva-linux/build-metadata.effective.json"],
+      { cwd: rootDir, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    ).trim();
+  } catch {
+    trackedEffective = "";
+  }
+  if (trackedEffective) {
+    failures.push(".build/canva-linux/build-metadata.effective.json: must not be committed");
   }
 }
 
@@ -354,6 +395,7 @@ function checkValidateProjectScript(rootDir: string, failures: string[]): void {
 
   for (const forbiddenCommand of [
     "npm run build:metadata",
+    "npm run build:metadata:effective",
     "npm run build:c420ui-bootstrap",
   ] as const) {
     if (contents.includes(forbiddenCommand)) {
@@ -369,6 +411,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkPackageScripts(rootDir, failures);
   checkRootTests(rootDir, failures);
   checkAdapterBoundary(rootDir, failures);
+  checkBuildMetadataContracts(rootDir, failures);
   checkDocs(rootDir, failures);
   checkValidateProjectScript(rootDir, failures);
 }

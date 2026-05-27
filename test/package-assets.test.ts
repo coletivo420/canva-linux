@@ -86,6 +86,11 @@ test("flatpak and native packaging consume canonical asset paths", () => {
   }
 });
 
+test("validate-project remains check-only and does not generate effective metadata", () => {
+  const validateProject = readText("scripts/validate-project.sh");
+  assert.equal(validateProject.includes("build:metadata:effective"), false);
+});
+
 test("asset basenames follow the Flatpak app id and avoid generic icon names", () => {
   assert.equal(
     fs.existsSync(path.join(rootDir, "build-resources/canva-linux-assets/icons", canonicalIconBasename)),

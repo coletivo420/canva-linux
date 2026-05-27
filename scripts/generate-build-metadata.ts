@@ -44,7 +44,19 @@ function resolveBuildRevision(rootDir: string): string {
   }
 }
 
+type MetadataMode = "committed" | "effective";
+
+function parseMode(argv: string[]): MetadataMode {
+  const committed = argv.includes("--committed");
+  const effective = argv.includes("--effective");
+  if (committed === effective) {
+    throw new Error("Usage: generate-build-metadata.ts --committed|--effective");
+  }
+  return committed ? "committed" : "effective";
+}
+
 export function main(): void {
+  const mode = parseMode(process.argv.slice(2));
   const rootDir = findProjectRoot();
   const packageJson = readJson<PackageJson>(rootDir, "package.json");
   const projectUi = readJson<ProjectUiJson>(rootDir, "config/canva-linux/project-ui.json");
@@ -57,9 +69,12 @@ export function main(): void {
     baseVersion: packageJson.version,
     baseDisplayVersion: projectUi.displayVersion,
     basePhase: projectUi.phase,
-    buildRevision: resolveBuildRevision(rootDir),
+    buildRevision: mode === "effective" ? resolveBuildRevision(rootDir) : "unknown",
   });
-  const outputPath = path.join(rootDir, "config", "canva-linux", "build-metadata.json");
+  const outputPath =
+    mode === "effective"
+      ? path.join(rootDir, ".build", "canva-linux", "build-metadata.effective.json")
+      : path.join(rootDir, "config", "canva-linux", "build-metadata.json");
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, `${JSON.stringify(metadata, null, 2)}\n`, "utf8");

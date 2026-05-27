@@ -32,6 +32,9 @@
   `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Build metadata formatting must use `build-resources/electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
   must not duplicate `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
+- Do not write Git HEAD-derived revisions into `config/canva-linux/build-metadata.json`; committed metadata must keep `buildRevision: "unknown"`.
+- Effective metadata belongs under `.build/canva-linux/build-metadata.effective.json` and may include Git revision for runtime/artifact builds.
+- Repository checks validate committed metadata only; artifact/release checks validate effective metadata.
 
 ## Dev.8 pinned home tab-strip guardrail
 

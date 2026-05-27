@@ -47,6 +47,7 @@ FLATPAK_ARCH="$(flatpak --default-arch)"
 BUNDLE_PATH="${DIST_DIR}/canva-linux-${VERSION}-${FLATPAK_ARCH}.flatpak"
 
 ui_info "Generating Flatpak bundle for version ${VERSION} (${FLATPAK_ARCH})"
+npm run build:metadata:effective
 
 find_flatpak_repo_ref() {
   command -v ostree >/dev/null 2>&1 || return 0

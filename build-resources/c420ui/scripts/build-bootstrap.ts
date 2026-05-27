@@ -24,7 +24,7 @@ import {
   C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
 import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety";
-import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
+import { loadCommittedBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
 
 type PackageJson = {
   version?: string;
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
   const c420uiPackageJson = readJson<PackageJson>(rootDir, "build-resources/c420ui/package.json");
   await ensureBuildMetadataModule(rootDir);
-  const buildMetadata = loadEffectiveBuildMetadata(rootDir);
+  const buildMetadata = loadCommittedBuildMetadata(rootDir);
   const dependentProjectVersion = requirePackageVersion(rootPackageJson, "package.json");
   const c420uiVersion = requirePackageVersion(c420uiPackageJson, "build-resources/c420ui/package.json");
 

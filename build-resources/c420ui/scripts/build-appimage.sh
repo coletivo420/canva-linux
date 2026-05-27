@@ -28,6 +28,7 @@ rm -f "${DIST_DIR}"/*.AppImage
 rm -f "${DIST_DIR}"/*.AppImage.sha256
 
 ui_info "Building AppImage with electron-builder"
+npm run build:metadata:effective
 npm run dist:appimage
 
 shopt -s nullglob

@@ -69,8 +69,11 @@ function readJsonFile<T>(filePath: string): T | null {
 function candidateMetadataPaths(): string[] {
   const cwd = process.cwd();
   return [
+    path.join(cwd, ".build", "canva-linux", "build-metadata.effective.json"),
     path.join(cwd, "config", "canva-linux", "build-metadata.json"),
+    path.join(__dirname, "..", "..", ".build", "canva-linux", "build-metadata.effective.json"),
     path.join(__dirname, "..", "..", "config", "canva-linux", "build-metadata.json"),
+    path.join(__dirname, "..", ".build", "canva-linux", "build-metadata.effective.json"),
     path.join(__dirname, "..", "config", "canva-linux", "build-metadata.json"),
   ];
 }

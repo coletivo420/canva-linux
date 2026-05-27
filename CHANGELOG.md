@@ -27,6 +27,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   the c420ui bootstrap source-hash input list.
 - Build metadata formatting now uses `build-resources/electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
   must not duplicate `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
+- Committed build metadata is now stable and always uses `buildRevision: "unknown"` in `config/canva-linux/build-metadata.json`.
+- Effective build metadata is generated in `.build/canva-linux/build-metadata.effective.json` and may include Git revision.
+- Repository checks validate committed metadata, while artifact/release builds consume effective metadata.
 
 - Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not
   be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or

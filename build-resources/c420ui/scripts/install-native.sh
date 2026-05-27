@@ -6,6 +6,8 @@ source "${SCRIPT_DIR}/native-install-common.sh"
 source "${SCRIPT_DIR}/runtime-guidance-common.sh"
 source "${SCRIPT_DIR}/build-metadata-marker-common.sh"
 
+npm run build:metadata:effective
+
 validate_native_scope
 resolve_native_paths
 if [[ "${NATIVE_SCOPE}" == "system" ]]; then

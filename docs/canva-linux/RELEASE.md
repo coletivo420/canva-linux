@@ -7,6 +7,9 @@ Canva Linux is the dependent release project. c420ui provides terminal and actio
 orchestration, but Canva Linux owns release metadata, package identity, AppStream
 metadata, and generated distribution artifacts.
 
+Committed build metadata is stable in `config/canva-linux/build-metadata.json` and must keep `buildRevision: "unknown"`.
+Effective build metadata is generated in `.build/canva-linux/build-metadata.effective.json` and may include Git revision for release artifacts.
+
 ## Release target
 
 - Version: `0.1.4-14`
