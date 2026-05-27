@@ -5,7 +5,7 @@ This file tracks the real Canva Linux screenshot set prepared for AppStream meta
 ## Current status
 
 - Flathub requires real screenshots.
-- Screenshots are real local captures staged in `assets/screenshots/`.
+- Screenshots are real local captures staged in `build-resources/canva-linux/screenshots/`.
 - AppStream metadata now references the active screenshot set with stable direct URLs pinned to a commit SHA.
 - Branch URLs must not be used for screenshot metadata.
 - The current screenshot set should still be reviewed before Flathub submission.

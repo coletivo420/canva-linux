@@ -5,7 +5,7 @@
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `test/`, `scripts/c420ui-adapter`, or `packages/`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
 - When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI
   refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
@@ -15,7 +15,7 @@
 ## Dev.9 metadata persistence and c420ui repair
 
 - Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place
-  config/canva-linux/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write
+  build-resources/canva-linux/config/build-metadata.json in the install prefix, while AppImage and Flatpak bundle artifacts write
   <artifact>.build-metadata.json sidecars. Artifact filenames may keep the base package version; hash-visible
   display comes from metadata.
 - The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and
@@ -23,8 +23,8 @@
 - Artifact filenames may keep the base package version; hash-visible display comes from metadata. Reject changes that
   remove metadata installation or sidecar generation.
 - AppImage and Flatpak bundle artifacts must generate a `.build-metadata.json` sidecar.
-- Native system/user installs must place `config/canva-linux/build-metadata.json` into the installation prefix.
-- Dev.9 generated artifact detection is now registry-driven from `config/canva-linux/artifacts.json` and must not be
+- Native system/user installs must place `build-resources/canva-linux/config/build-metadata.json` into the installation prefix.
+- Dev.9 generated artifact detection is now registry-driven from `build-resources/canva-linux/config/artifacts.json` and must not be
   limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or sidecars,
   and c420ui must prefer that metadata when displaying artifact versions.
 - Dev.9 keeps c420ui integration modules under `scripts/c420ui-adapter` while allowing project registry/config modules
@@ -32,10 +32,10 @@
   `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Build metadata formatting must use `build-resources/electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
   must not duplicate `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
-- Do not write Git HEAD-derived revisions into `config/canva-linux/build-metadata.json`; committed metadata must keep `buildRevision: "unknown"`.
+- Do not write Git HEAD-derived revisions into `build-resources/canva-linux/config/build-metadata.json`; committed metadata must keep `buildRevision: "unknown"`.
 - Effective metadata belongs under `.build/canva-linux/build-metadata.effective.json` and may include Git revision for runtime/artifact builds.
 - Repository checks validate committed metadata only; artifact/release checks validate effective metadata.
-- Committed metadata must remain stable and deterministic across incremental builds and test/check runs.
+- Committed metadata must remain stable and deterministic across incremental builds and build-resources/tests/check runs.
 - Repository validation must not depend on live Git revision resolution for committed metadata contracts.
 - `build-resources/` is the canonical home for c420ui, electron, and Canva Linux assets; do not restore root `packages/`, `electron/`, `data/`, or loose icon assets.
 
@@ -91,7 +91,7 @@ Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
 It generates expected c420ui bootstrap artifacts in a temporary directory, compares them byte-for-byte with
 committed artifacts, fails when committed artifacts are stale, and requires `git diff --exit-code` to pass after the gate.
 Committed c420ui bootstrap artifacts validate against committed build metadata in
-`config/canva-linux/build-metadata.json`. Source checkout runtime/build metadata may still resolve from Git HEAD when
+`build-resources/canva-linux/config/build-metadata.json`. Source checkout runtime/build metadata may still resolve from Git HEAD when
 applicable, but the artifact gate must not rewrite tracked metadata to the current HEAD while validating. This avoids
 dirtying the worktree with a not-yet-materialized commit hash.
 To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
@@ -157,7 +157,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 ## Host dependency policy
 
 - c420ui owns host dependency management for command checks, Node minimum checks, npm checks, install strategy, repair/skip modes, messages and exit codes.
-- Dependent projects declare dependency config only; for Canva Linux this is `config/canva-linux/dependencies.json`.
+- Dependent projects declare dependency config only; for Canva Linux this is `build-resources/canva-linux/config/dependencies.json`.
 - Project builder commands must not run `npm ci`, `npm install`, or dependency repair directly. Stage 0 only starts the generated c420ui bootstrap bundle.
 - Project shell helpers must not own npm dependency policy or hardcoded npm dependency lists.
 - Builder command bootstrap may only select the generated c420ui bootstrap bundle or the `.build` development fallback.
@@ -286,17 +286,17 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## Action Registry
 
-- c420ui/CLI actions must be sourced from `config/canva-linux/actions.json`.
-- Action metadata must come from `config/canva-linux/actions.json`.
-- Canva Linux project configuration belongs under `config/canva-linux/`.
-- `config/canva-linux/actions.json`, `config/canva-linux/development.json`, and `config/canva-linux/artifacts.json` are project-owned declarations.
+- c420ui/CLI actions must be sourced from `build-resources/canva-linux/config/actions.json`.
+- Action metadata must come from `build-resources/canva-linux/config/actions.json`.
+- Canva Linux project configuration belongs under `build-resources/canva-linux/config/`.
+- `build-resources/canva-linux/config/actions.json`, `build-resources/canva-linux/config/development.json`, and `build-resources/canva-linux/config/artifacts.json` are project-owned declarations.
 - Do not put project configuration under `scripts/`.
 - Canva Linux action registry loading belongs under `scripts/canva-linux/actions/`.
 - Do not reintroduce `scripts/core/action-registry.ts`.
 - Do not reintroduce `scripts/core/validate-actions.ts`.
 - Generic c420ui action validation belongs in `build-resources/c420ui/src/actions.ts`.
 - Do not duplicate action logic in c420ui or builder command code.
-- Do not ignore `action.env` from `config/canva-linux/actions.json`.
+- Do not ignore `action.env` from `build-resources/canva-linux/config/actions.json`.
 - Any `system`/`user` scope action must behave the same in c420ui and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
@@ -426,7 +426,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - New configs should be TypeScript when tool-supported.
 - Do not create new JavaScript source files.
 - Do not add `scripts/*.js` as maintained source.
-- Do not add `test/*.js`.
+- Do not add `build-resources/tests/*.js`.
 - Do not add JavaScript config files when TypeScript config is supported.
 - JavaScript may exist only as project-generated output under `.build`, package-managed dependencies under `node_modules`,
   generated coverage output under `coverage`, or distributable output under `dist`.
@@ -442,7 +442,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not duplicate TypeScript core logic in JavaScript fallbacks.
 - `scripts/run-core-entry.sh` must only build or run compiled TypeScript core entries; it must not contain fallback
   implementations of status, registry, runner, validation, or detection contracts.
-- Flathub/npm source generation logic lives in TypeScript; `packaging/flathub/scripts/generate-npm-sources.sh`
+- Flathub/npm source generation logic lives in TypeScript; `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`
   invokes `generate-npm-sources.ts` through the TypeScript entry runner.
 
 ## CL-EyeDropper
@@ -566,7 +566,7 @@ Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adj
 
 ## Dev.8 hotfix guardrails
 
-- c420ui must display Canva Linux effective build metadata when `config/canva-linux/build-metadata.json`, CI revision
+- c420ui must display Canva Linux effective build metadata when `build-resources/canva-linux/config/build-metadata.json`, CI revision
   variables, or a source checkout `.git` HEAD can provide it; source `package.json` and `project-ui.json` stay free of
   committed `+g<hash>` metadata.
 - The c420ui brand version remains independent and comes from `build-resources/c420ui/package.json`; c420ui-specific

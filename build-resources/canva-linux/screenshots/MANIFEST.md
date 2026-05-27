@@ -1,6 +1,6 @@
 # Screenshot manifest
 
-This manifest documents the real screenshot files currently staged in `assets/screenshots/` for AppStream metadata and future Flathub submission review.
+This manifest documents the real screenshot files currently staged in `build-resources/canva-linux/screenshots/` for AppStream metadata and future Flathub submission review.
 
 ## Current files
 

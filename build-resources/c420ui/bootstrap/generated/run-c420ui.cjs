@@ -20485,7 +20485,7 @@ function defaultRootSearchDir() {
 function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
   let current = import_node_path6.default.resolve(startDir);
   while (true) {
-    if (import_node_fs5.default.existsSync(import_node_path6.default.join(current, "package.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/actions.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "config/canva-linux/project-ui.json"))) {
+    if (import_node_fs5.default.existsSync(import_node_path6.default.join(current, "package.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "build-resources/canva-linux/config/actions.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "build-resources/canva-linux/config/project-ui.json"))) {
       return current;
     }
     const parent = import_node_path6.default.dirname(current);
@@ -20497,7 +20497,7 @@ function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
 // scripts/c420ui-adapter/detection/artifact-fragments.ts
 var import_node_fs6 = __toESM(require("node:fs"));
 var import_node_path7 = __toESM(require("node:path"));
-var ARTIFACTS_CONFIG_PATH = "config/canva-linux/artifacts.json";
+var ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
 var ARTIFACT_PATH_COLLATOR = new Intl.Collator(void 0, {
   numeric: true,
   sensitivity: "base"
@@ -20617,7 +20617,7 @@ function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
     const markers = [
       import_node_path7.default.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
       import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json"),
-      ...artifactKindValue === "linux-unpacked" ? [import_node_path7.default.join(rootDir2, "config/canva-linux/build-metadata.json")] : []
+      ...artifactKindValue === "linux-unpacked" ? [import_node_path7.default.join(rootDir2, "build-resources/canva-linux/config/build-metadata.json")] : []
     ];
     for (const marker of markers) {
       if (import_node_fs6.default.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
@@ -20941,7 +20941,7 @@ function resolveGitBuildRevision(rootDir2) {
 function createSourceMetadata(rootDir2, buildRevision, metadataModule) {
   const packageJson = readJsonFile2(import_node_path9.default.join(rootDir2, "package.json"));
   const projectUi = readJsonFile2(
-    import_node_path9.default.join(rootDir2, "config", "canva-linux", "project-ui.json")
+    import_node_path9.default.join(rootDir2, "build-resources", "canva-linux", "config", "project-ui.json")
   );
   if (!packageJson?.version || !projectUi?.displayVersion || !projectUi?.phase) {
     return null;
@@ -20955,7 +20955,7 @@ function createSourceMetadata(rootDir2, buildRevision, metadataModule) {
 }
 function loadPackagedMetadata(rootDir2, metadataModule) {
   const metadata = readJsonFile2(
-    import_node_path9.default.join(rootDir2, "config", "canva-linux", "build-metadata.json")
+    import_node_path9.default.join(rootDir2, "build-resources", "canva-linux", "config", "build-metadata.json")
   );
   if (!metadata) return null;
   return metadataModule.normalizeLoadedBuildMetadata(metadata);
@@ -20997,7 +20997,7 @@ function loadEffectiveBuildMetadata(rootDir2) {
     );
     if (effective2) return effective2;
     const packaged = readJsonFile2(
-      import_node_path9.default.join(resolvedRootDir, "config", "canva-linux", "build-metadata.json")
+      import_node_path9.default.join(resolvedRootDir, "build-resources", "canva-linux", "config", "build-metadata.json")
     );
     return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
   }
@@ -21041,7 +21041,7 @@ function findProjectRoot(startDir) {
   return findCanvaLinuxProjectRoot(startDir);
 }
 function actionsPath(rootDir2 = findProjectRoot()) {
-  return import_node_path10.default.join(rootDir2, "config/canva-linux/actions.json");
+  return import_node_path10.default.join(rootDir2, "build-resources/canva-linux/config/actions.json");
 }
 function validateCanvaLinuxGroupSection(action) {
   if (action.group === "install" && action.section !== "Install") {
@@ -21102,7 +21102,7 @@ function loadCanvaLinuxC420UIActions(rootDir2) {
 }
 
 // scripts/c420ui-adapter/artifacts.ts
-var ARTIFACTS_CONFIG_PATH2 = "config/canva-linux/artifacts.json";
+var ARTIFACTS_CONFIG_PATH2 = "build-resources/canva-linux/config/artifacts.json";
 function readJsonFile3(filePath) {
   if (!import_node_fs10.default.existsSync(filePath)) {
     throw new Error(`Missing Canva Linux configuration file: ${filePath}`);
@@ -21150,7 +21150,7 @@ function readJsonFile4(filePath) {
 function loadCanvaLinuxDevelopmentTasks(rootDir2) {
   const developmentConfigPath = import_node_path12.default.join(
     rootDir2,
-    "config/canva-linux/development.json"
+    "build-resources/canva-linux/config/development.json"
   );
   const config = readJsonFile4(developmentConfigPath);
   validateC420UIDevelopmentConfig(config);
@@ -21201,17 +21201,17 @@ function stateHome() {
 }
 function createCanvaLinuxC420UIAdapter(rootDir2) {
   const resolvedRootDir = import_node_path13.default.resolve(rootDir2);
-  const projectUiPath = import_node_path13.default.join(resolvedRootDir, "config/canva-linux/project-ui.json");
+  const projectUiPath = import_node_path13.default.join(resolvedRootDir, "build-resources/canva-linux/config/project-ui.json");
   const packageJsonPath = import_node_path13.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path13.default.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = import_node_path13.default.join(resolvedRootDir, "config/canva-linux/artifacts.json");
+  const actionsJsonPath = import_node_path13.default.join(resolvedRootDir, "build-resources/canva-linux/config/actions.json");
+  const artifactsJsonPath = import_node_path13.default.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
   const appIdentityPath = import_node_path13.default.join(
     resolvedRootDir,
     "scripts/app-identity-common.sh"
   );
   const buildMetadataPath = import_node_path13.default.join(
     resolvedRootDir,
-    "config/canva-linux/build-metadata.json"
+    "build-resources/canva-linux/config/build-metadata.json"
   );
   const c420uiPackageJsonPath = import_node_path13.default.join(
     resolvedRootDir,
@@ -21434,7 +21434,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
 var import_node_fs13 = __toESM(require("node:fs"));
 var import_node_path14 = __toESM(require("node:path"));
 function loadCanvaLinuxDependencyConfig(rootDir2) {
-  const relativeConfigPath = "config/canva-linux/dependencies.json";
+  const relativeConfigPath = "build-resources/canva-linux/config/dependencies.json";
   const configPath = import_node_path14.default.join(rootDir2, relativeConfigPath);
   return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs13.default.readFileSync(configPath, "utf8")));
 }

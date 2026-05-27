@@ -88,7 +88,7 @@ const C420UI_OWNERSHIP_GUARDRAILS = [
   "c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.",
   "Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.",
   "No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
-  "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `test/`, `scripts/c420ui-adapter`, or `packages/`.",
+  "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.",
   "When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.",
 ] as const;
 
@@ -261,19 +261,19 @@ function checkBuildMetadataContracts(rootDir: string, failures: string[]): void 
     displayVersion?: string;
     phase?: string;
     fullVersion?: string;
-  }>(rootDir, "config/canva-linux/build-metadata.json");
+  }>(rootDir, "build-resources/canva-linux/config/build-metadata.json");
   if (!committed) {
-    failures.push("config/canva-linux/build-metadata.json: must be readable");
+    failures.push("build-resources/canva-linux/config/build-metadata.json: must be readable");
     return;
   }
 
   if (committed.buildRevision !== "unknown") {
-    failures.push("config/canva-linux/build-metadata.json: buildRevision must be unknown");
+    failures.push("build-resources/canva-linux/config/build-metadata.json: buildRevision must be unknown");
   }
 
   for (const field of ["version", "displayVersion", "phase", "fullVersion"] as const) {
     if (typeof committed[field] === "string" && /\+g[0-9a-f]{7}$/i.test(committed[field] || "")) {
-      failures.push(`config/canva-linux/build-metadata.json: ${field} must not include +g hash`);
+      failures.push(`build-resources/canva-linux/config/build-metadata.json: ${field} must not include +g hash`);
     }
   }
 
@@ -343,7 +343,7 @@ function checkRuntimeAssetsMetadataCopyContract(rootDir: string, failures: strin
     'path.join(cwd, ".build", "canva-linux", "build-metadata.effective.json")',
   );
   const committedIndex = buildMetadataSource.indexOf(
-    'path.join(cwd, "config", "canva-linux", "build-metadata.json")',
+    'path.join(cwd, "build-resources", "canva-linux", "config", "build-metadata.json")',
   );
   if (effectiveIndex === -1 || committedIndex === -1 || effectiveIndex > committedIndex) {
     failures.push("build-resources/electron/main/build-metadata.ts: runtime must prefer effective metadata before committed fallback");
@@ -383,8 +383,57 @@ function checkBuildResourcesLayoutContract(rootDir: string, failures: string[]):
   }
 }
 
+function checkRootLayoutConsolidationContract(rootDir: string, failures: string[]): void {
+  for (const relativePath of [
+    "build-resources/canva-linux/screenshots",
+    "build-resources/canva-linux/config",
+    "build-resources/canva-linux/packaging/flathub",
+    "build-resources/tests",
+    "build-resources/c420ui/types",
+    "build-resources/config/typescript/tsconfig.json",
+    "build-resources/config/typescript/tsconfig.build.json",
+    "build-resources/config/typescript/tsconfig.strict.json",
+    "build-resources/config/eslint/eslint.config.ts",
+  ] as const) {
+    if (!fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${relativePath}: consolidated layout path must exist`);
+    }
+  }
+
+  for (const relativePath of [
+    "assets/screenshots",
+    "config/canva-linux",
+    "packaging/flathub",
+    "test",
+    "types",
+    "tsconfig.build.json",
+    "tsconfig.strict.json",
+    "eslint.config.ts",
+  ] as const) {
+    if (fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${relativePath}: legacy root layout path must not be restored`);
+    }
+  }
+
+  for (const entry of fs.readdirSync(rootDir, { withFileTypes: true })) {
+    if (!entry.isFile()) continue;
+
+    if (entry.name.endsWith(".json")) {
+      if (!["package.json", "package-lock.json"].includes(entry.name)) {
+        failures.push(`${entry.name}: root JSON files are forbidden by consolidation policy`);
+      }
+    }
+
+    if (entry.name.endsWith(".ts")) {
+      if (!["playwright.config.ts"].includes(entry.name)) {
+        failures.push(`${entry.name}: root TypeScript files are forbidden by consolidation policy`);
+      }
+    }
+  }
+}
+
 function checkRootTests(rootDir: string, failures: string[]): void {
-  for (const relativePath of collectFiles(rootDir, "test")) {
+  for (const relativePath of collectFiles(rootDir, "build-resources/tests")) {
     const fileName = path.basename(relativePath);
     if (/^c420ui-.*\.test\.(?:ts|js|tsx|jsx)$/.test(fileName)) {
       failures.push(`${relativePath}: root c420ui tests must not exist`);
@@ -506,6 +555,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkBuildMetadataContracts(rootDir, failures);
   checkRuntimeAssetsMetadataCopyContract(rootDir, failures);
   checkBuildResourcesLayoutContract(rootDir, failures);
+  checkRootLayoutConsolidationContract(rootDir, failures);
   checkDocs(rootDir, failures);
   checkValidateProjectScript(rootDir, failures);
 }

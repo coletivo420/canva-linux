@@ -34,7 +34,7 @@ The launcher opens c420ui without arguments. With a direct action flag, the laun
 - `build-resources/c420ui/scripts/run-c420ui-cli.ts`
 - `scripts/c420ui-adapter/cli.ts`
 - `build-resources/c420ui/src/cli.ts`
-- `config/canva-linux/actions.json`
+- `build-resources/canva-linux/config/actions.json`
 
 ## Boundary checks
 

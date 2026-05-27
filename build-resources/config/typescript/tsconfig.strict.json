@@ -1,0 +1,37 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "noEmit": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "moduleDetection": "force"
+  },
+  "include": [
+    "../../electron/main/**/*.ts",
+    "../../electron/shared/**/*.ts",
+    "../../electron/preload/**/*.ts",
+    "../../../scripts/core/**/*.ts",
+    "../../../scripts/canva-linux/**/*.ts",
+    "../../tests/c420ui-action-engine.test.ts",
+    "../../tests/logging-normalize.test.ts",
+    "../../tests/debug-levels.test.ts",
+    "../../tests/gpu-diagnostics.test.ts",
+    "../../tests/runtime.test.ts",
+    "../../tests/lifecycle.test.ts",
+    "../../tests/logging-helpers.test.ts",
+    "../../tests/tabs-state.test.ts",
+    "../../tests/eyedropper-bridge.test.ts",
+    "../../tests/window-open-policy.test.ts",
+    "../../tests/navigation.test.ts",
+    "../../tests/tab-events.test.ts",
+    "../../tests/toolbar-preload.test.ts",
+    "../../tests/oauth-helpers.test.ts",
+    "../../tests/preload-debug.test.ts",
+    "../../tests/upload-diagnostics.test.ts",
+    "../../tests/eyedropper-preload.test.ts",
+    "../../tests/helpers/runtime-module.ts"
+  ]
+}

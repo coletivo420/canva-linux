@@ -3,8 +3,8 @@ import fs from "node:fs";
 import test from "node:test";
 import type { SpawnSyncReturns } from "node:child_process";
 
-import { c420uiRootPolicyExitCode, type c420uiAction } from "../build-resources/c420ui/src";
-import { createCanvaLinuxRootProvider } from "../scripts/c420ui-adapter/root-provider";
+import { c420uiRootPolicyExitCode, type c420uiAction } from "../c420ui/src";
+import { createCanvaLinuxRootProvider } from "../../scripts/c420ui-adapter/root-provider";
 
 const rootAction: c420uiAction = {
   id: "install-native",

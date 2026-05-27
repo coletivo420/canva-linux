@@ -69,7 +69,7 @@ The ordering is intentional:
 ## Consumed configs and adapters
 
 The engine consumes actions exposed by the bridge. Canva Linux loads those from
-`config/canva-linux/actions.json` through `scripts/c420ui-adapter/actions.ts`
+`build-resources/canva-linux/config/actions.json` through `scripts/c420ui-adapter/actions.ts`
 and `scripts/canva-linux/actions/registry.ts`.
 
 ## Boundary checks

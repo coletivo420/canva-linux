@@ -10,15 +10,15 @@ logic, tests, tooling configs and Flathub helper scripts.
 - Shell remains shell for host operations.
 - Electron main and preload source modules are TypeScript.
 - Node.js maintenance scripts use TypeScript source files and shell bootstraps where Node cannot execute TypeScript directly.
-- Tests live under `test/**/*.ts`; `npm test` compiles selected tests plus
-  support helpers into `.build/test/` with inline source maps before running
+- Tests live under `build-resources/tests/**/*.ts`; `npm test` compiles selected tests plus
+  support helpers into `.build/build-resources/tests/` with inline source maps before running
   `node --test` on generated JavaScript.
 - New tests must be TypeScript.
-- ESLint and Playwright use `eslint.config.ts` and `playwright.config.ts`; new
+- ESLint and Playwright use `build-resources/config/eslint/eslint.config.ts` and `playwright.config.ts`; new
   configs should be TypeScript when the tool supports TypeScript configs.
 - Runtime output remains CommonJS-compatible generated JavaScript under `.build/`.
-- JavaScript is not maintained as source code in `scripts/`, `test/`, configs,
-  or `packaging/flathub/scripts/`.
+- JavaScript is not maintained as source code in `scripts/`, `build-resources/tests/`, configs,
+  or `build-resources/canva-linux/packaging/flathub/scripts/`.
 
 ## TypeScript-first source policy
 
@@ -28,10 +28,10 @@ logic, tests, tooling configs and Flathub helper scripts.
 - `scripts/**/*.ts`
 - `scripts/**/*.sh`
 - `scripts/core/*.ts`
-- `test/**/*.ts`
-- `eslint.config.ts`
+- `build-resources/tests/**/*.ts`
+- `build-resources/config/eslint/eslint.config.ts`
 - `playwright.config.ts`
-- `packaging/flathub/scripts/*.ts`
+- `build-resources/canva-linux/packaging/flathub/scripts/*.ts`
 - JSON, YAML, XML, desktop entries, HTML, and shell files in their native formats
 
 ### Allowed JavaScript that is not maintained source
@@ -47,13 +47,13 @@ and `node_modules/` directories are never maintained source locations.
 ### Forbidden maintained JavaScript source
 
 - `scripts/**/*.js`
-- `test/**/*.js`
-- `packaging/flathub/scripts/**/*.js`
+- `build-resources/tests/**/*.js`
+- `build-resources/canva-linux/packaging/flathub/scripts/**/*.js`
 - `eslint.config.js`
 - `playwright.config.js`
 
 Repository-root `eslint.config.js` and `playwright.config.js` must not exist; the
-maintained configs are `eslint.config.ts` and `playwright.config.ts`.
+maintained configs are `build-resources/config/eslint/eslint.config.ts` and `playwright.config.ts`.
 
 The historical `scripts/run-typescript-script.js` bootstrap must also not exist as
 maintained source. No JavaScript wrapper or bootstrap belongs under `scripts/`;
@@ -93,7 +93,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
   generated bootstrap and writes per-entry generated JavaScript under
   `.build/scripts/typescript/`.
-- `tsconfig.build.json` emits the Electron runtime from `build-resources/electron/**/*.ts`
+- `build-resources/config/typescript/tsconfig.build.json` emits the Electron runtime from `build-resources/electron/**/*.ts`
   only; it must not set `allowJs`, must not set `checkJs`, and must not include
   `build-resources/electron/**/*.js`.
 - Electron main TypeScript modules use ESM `export` declarations only; do not
@@ -127,29 +127,29 @@ Project validations, contracts, and registries are implemented in TypeScript und
 
 ### Test execution
 
-- `scripts/run-node-tests.ts` collects Node tests from `test/**/*.test.ts`,
+- `scripts/run-node-tests.ts` collects Node tests from `build-resources/tests/**/*.test.ts`,
   compiles all Node tests for full-suite runs, or only selected `*.test.ts`
   files plus shared support files when test paths are passed on the CLI, to
-  `.build/test/**/*.js` with inline source maps.
-- Playwright specs stay separate as `test/**/*.spec.ts` and run through
+  `.build/build-resources/tests/**/*.js` with inline source maps.
+- Playwright specs stay separate as `build-resources/tests/**/*.spec.ts` and run through
   `npm run test:smoke`; the Node test runner rejects spec-file selectors so
   Playwright tests are not compiled as Node support files by accident.
 - `npm test` runs `node --test` against the generated
-  `.build/test/**/*.test.js` outputs; Node does not execute TypeScript test
+  `.build/build-resources/tests/**/*.test.js` outputs; Node does not execute TypeScript test
   files directly.
-- `test/helpers/runtime-module.ts` loads Electron runtime TypeScript sources for
+- `build-resources/tests/helpers/runtime-module.ts` loads Electron runtime TypeScript sources for
   module-level tests and no longer falls back to JavaScript source files.
 
 ### Flathub source generation
 
-- `packaging/flathub/scripts/generate-npm-sources.ts` owns package-lock parsing,
+- `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts` owns package-lock parsing,
   npm source list generation, integrity hash conversion, deterministic ordering,
   and `generated-sources.json` writing.
 - The generator rejects local/workspace/link resolved dependencies, `node_modules`
   path sources, non-HTTPS tarballs, invalid integrity fragments, duplicate
-  URL/hash conflicts, and missing `packaging/flathub/manifest.yml` wiring for
+  URL/hash conflicts, and missing `build-resources/canva-linux/packaging/flathub/manifest.yml` wiring for
   `generated-sources.json`.
-- `packaging/flathub/scripts/generate-npm-sources.sh` invokes the TypeScript
+- `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh` invokes the TypeScript
   generator through `npm run run:ts`, which uses the generated runner bootstrap.
 
 ## Commands

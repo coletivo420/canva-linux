@@ -59,7 +59,7 @@ export function main(): void {
   const mode = parseMode(process.argv.slice(2));
   const rootDir = findProjectRoot();
   const packageJson = readJson<PackageJson>(rootDir, "package.json");
-  const projectUi = readJson<ProjectUiJson>(rootDir, "config/canva-linux/project-ui.json");
+  const projectUi = readJson<ProjectUiJson>(rootDir, "build-resources/canva-linux/config/project-ui.json");
 
   if (!packageJson.version) throw new Error("package.json: missing version");
   if (!projectUi.displayVersion) throw new Error("project-ui.json: missing displayVersion");
@@ -74,7 +74,13 @@ export function main(): void {
   const outputPath =
     mode === "effective"
       ? path.join(rootDir, ".build", "canva-linux", "build-metadata.effective.json")
-      : path.join(rootDir, "config", "canva-linux", "build-metadata.json");
+      : path.join(
+          rootDir,
+          "build-resources",
+          "canva-linux",
+          "config",
+          "build-metadata.json",
+        );
 
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
   fs.writeFileSync(outputPath, `${JSON.stringify(metadata, null, 2)}\n`, "utf8");

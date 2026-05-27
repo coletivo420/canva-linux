@@ -17,7 +17,7 @@ Canva Linux remains **portal-first** for user-selected file access and desktop m
 
 ## Runtime permission baseline (must match in both manifests)
 
-Current policy for both `io.github.coletivo420.canva-linux.yml` and `packaging/flathub/manifest.yml`:
+Current policy for both `io.github.coletivo420.canva-linux.yml` and `build-resources/canva-linux/packaging/flathub/manifest.yml`:
 
 ```yaml
 finish-args:

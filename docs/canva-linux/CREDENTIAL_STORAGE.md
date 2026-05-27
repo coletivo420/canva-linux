@@ -50,7 +50,7 @@ must never be logged.
 - `build-resources/electron/main/credential-storage.ts`
 - `build-resources/electron/main/runtime.ts`
 - `build-resources/electron/main/lifecycle.ts`
-- `test/credential-storage*.test.ts`
+- `build-resources/tests/credential-storage*.test.ts`
 
 ## Boundary checks
 

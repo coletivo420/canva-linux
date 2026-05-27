@@ -54,8 +54,8 @@ Then run submission-path preparation/validation and lint checks when Flatpak Bui
 ```bash
 ./scripts/prepare-flathub-submission.sh
 ./scripts/validate-flathub-submission.sh
-flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
+flatpak run --command=flathub-build org.flatpak.Builder --repo=repo build-resources/canva-linux/packaging/flathub/manifest.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest build-resources/canva-linux/packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.coletivo420.canva-linux.yml
 ./canva-linux-c420ui-builder --install-flatpak --bundle-flatpak
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
@@ -82,7 +82,7 @@ The manifest intentionally avoids broad home-directory access and keeps narrower
 - **Local install** (`--install-flatpak`) is for development/testing.
 - **Bundle generation** (`--bundle-flatpak`) creates `dist/canva-linux-$VERSION.flatpak` for GitHub releases.
 - **Flathub submission** is a separate workflow reviewed in `flathub/flathub`.
-- Submission assets live under `packaging/flathub/` (submission manifest, `generated-sources.json`, and helpers).
+- Submission assets live under `build-resources/canva-linux/packaging/flathub/` (submission manifest, `generated-sources.json`, and helpers).
 - `io.github.coletivo420.canva-linux*` identifiers are now the active canonical identity in this cycle (app-id, filenames, icons, and WMClass fields).
 
 Do not treat local GitHub release bundles as a direct Flathub submission mechanism, and do not replace the repository-root local manifest (`io.github.coletivo420.canva-linux.yml`) when preparing submission files.
@@ -96,12 +96,12 @@ Submission-path workflow lives in `docs/notes/FLATHUB_SUBMISSION_PATH.md`, and r
 
 ### npm source generation
 
-`packaging/flathub/scripts/generate-npm-sources.ts` is the maintained source for `generated-sources.json`; the adjacent `.sh` file is only a shell bootstrap. The TypeScript generator reads `package-lock.json`, emits deterministic `npm-cache` tarball sources, converts npm integrity values to Flatpak hash fields, rejects local/workspace/link and `node_modules` path sources, requires HTTPS `.tgz` URLs, checks duplicate URL/hash consistency, and verifies the submission manifest includes `generated-sources.json`.
+`build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts` is the maintained source for `generated-sources.json`; the adjacent `.sh` file is only a shell bootstrap. The TypeScript generator reads `package-lock.json`, emits deterministic `npm-cache` tarball sources, converts npm integrity values to Flatpak hash fields, rejects local/workspace/link and `node_modules` path sources, requires HTTPS `.tgz` URLs, checks duplicate URL/hash consistency, and verifies the submission manifest includes `generated-sources.json`.
 
 Run it after every lockfile change:
 
 ```bash
-./packaging/flathub/scripts/generate-npm-sources.sh
+./build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh
 ```
 
 

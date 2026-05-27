@@ -25,7 +25,7 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "sourceHashAlgorithm": "sha256",
-  "sourceHash": "sha256:20df40541367e362007b624ad5a87e8230351fc9ef51ec41e52cfd8689523575",
+  "sourceHash": "sha256:4f5da25e5033963b1e4fb0c33550baf2ad94325a46f103c1aad66de9f4046648",
   "sourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/bootstrap",
@@ -37,13 +37,13 @@
     "scripts/canva-linux/capabilities",
     "scripts/canva-linux/development",
     "scripts/canva-linux/project-root.ts",
-    "config/canva-linux",
+    "build-resources/canva-linux/config",
     "build-resources/c420ui/package.json",
     "package.json"
   ],
   "artifactHashes": {
-    "run-c420ui.cjs": "sha256:2d4c57182416b694b291fe0f054a5502634c8bc7be02061f9545b04e317bd5ad",
-    "run-c420ui-cli.cjs": "sha256:9c1ef6ee89ddc703b435dbf543181aafecfe5ec018b542a0615449d9bd1e6e02",
-    "c420ui-builder.cjs": "sha256:f98e4e1ac7c1b9fa682c67dff93d335ef80ca795c348f23eb795f997c32453f2"
+    "run-c420ui.cjs": "sha256:cbd2fb1ba25f05bbb0fedd2e02ba5ce30dfe6d2469c5a8e0f71c7085c21209ea",
+    "run-c420ui-cli.cjs": "sha256:2358b3fb4a0968adb0bb1053528fe84dfe7b3207cd3b9bc877207bcfa9fc05b9",
+    "c420ui-builder.cjs": "sha256:ed5b78c824e179c3bf63e9cee39a47b2427819e885d40dac8a7f5c6b94bbfed4"
   }
 }

@@ -20,7 +20,7 @@ export type CanvaLinuxArtifactWorkflow = c420uiArtifactWorkflow &
 
 type CanvaLinuxArtifactsConfig = c420uiArtifactRecipeConfig;
 
-const ARTIFACTS_CONFIG_PATH = "config/canva-linux/artifacts.json";
+const ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
 
 function readJsonFile<T>(filePath: string): T {
   if (!fs.existsSync(filePath)) {

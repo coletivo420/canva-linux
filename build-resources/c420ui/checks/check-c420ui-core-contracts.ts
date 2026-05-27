@@ -65,7 +65,7 @@ const forbidden = [
   "io.github.coletivo420.canva-linux",
   "https://github.com/coletivo420/canva-linux",
   "CL-EyeDropper",
-  "config/canva-linux",
+  "build-resources/canva-linux/config",
   "scripts/c420ui-adapter",
   "CANVA" + "_",
   "electron-builder",
@@ -112,7 +112,7 @@ const forbiddenFragments = [
   "Canva Linux",
   "canva-linux",
   "io.github.coletivo420.canva-linux",
-  "config/canva-linux",
+  "build-resources/canva-linux/config",
   "scripts/c420ui-adapter",
   "CANVA" + "_",
   "electron-builder",
@@ -407,7 +407,7 @@ function main(): number {
     "canva-linux",
     "io.github.coletivo420.canva-linux",
     "project-ui.json",
-    "config/canva-linux/actions.json",
+    "build-resources/canva-linux/config/actions.json",
   ];
   const failures = [
     ...required
@@ -783,7 +783,7 @@ function main(): number {
 
   for (const fragment of [
     "Canva Linux",
-    "config/canva-linux",
+    "build-resources/canva-linux/config",
     "canva-linux-${version}",
   ]) {
     if (artifacts.includes(fragment)) {
@@ -1259,7 +1259,7 @@ function checkHostDependencyContract(failures: string[]): void {
       "Canva Linux",
       "canva-linux",
       "CANVA" + "_",
-      "config/canva-linux",
+      "build-resources/canva-linux/config",
       "scripts/" + "ensure-npm-dependencies.sh",
       "scripts/preflight-common.sh",
       "scripts/c420ui-adapter",
@@ -1308,7 +1308,7 @@ function checkDevelopmentProviderContract(failures: string[]): void {
   for (const forbidden of [
     "Canva Linux",
     "CANVA" + "_",
-    "config/canva-linux",
+    "build-resources/canva-linux/config",
     "scripts/c420ui-adapter",
   ] as const) {
     if (provider.includes(forbidden)) {

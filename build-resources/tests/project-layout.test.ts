@@ -10,7 +10,16 @@ function exists(relativePath: string): boolean {
 }
 
 test("root legacy layout directories do not exist", () => {
-  for (const relativePath of ["packages", "electron", "data"] as const) {
+  for (const relativePath of [
+    "packages",
+    "electron",
+    "data",
+    "assets/screenshots",
+    "config/canva-linux",
+    "packaging/flathub",
+    "test",
+    "types",
+  ] as const) {
     assert.equal(exists(relativePath), false, `${relativePath} must not exist at the repository root`);
   }
 });
@@ -33,6 +42,15 @@ test("electron runtime and packaging assets live in the canonical build-resource
     "build-resources/canva-linux-assets/metainfo",
     "build-resources/canva-linux-assets/icons",
     "build-resources/canva-linux-assets/icons/hicolor",
+    "build-resources/canva-linux/screenshots",
+    "build-resources/canva-linux/config",
+    "build-resources/canva-linux/packaging/flathub",
+    "build-resources/tests",
+    "build-resources/c420ui/types",
+    "build-resources/config/typescript/tsconfig.json",
+    "build-resources/config/typescript/tsconfig.build.json",
+    "build-resources/config/typescript/tsconfig.strict.json",
+    "build-resources/config/eslint/eslint.config.ts",
   ] as const) {
     assert.equal(exists(relativePath), true, `${relativePath} must exist`);
   }

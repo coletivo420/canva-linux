@@ -129,7 +129,7 @@ const fs = require('node:fs');
 
 const manifests = [
   'io.github.coletivo420.canva-linux.yml',
-  'packaging/flathub/manifest.yml',
+  'build-resources/canva-linux/packaging/flathub/manifest.yml',
 ];
 
 const forbidden = [
@@ -204,7 +204,7 @@ const fs = require('node:fs');
 
 const checks = [
   ['io.github.coletivo420.canva-linux.yml', 'app-id: io.github.coletivo420.canva-linux'],
-  ['packaging/flathub/manifest.yml', 'app-id: io.github.coletivo420.canva-linux'],
+  ['build-resources/canva-linux/packaging/flathub/manifest.yml', 'app-id: io.github.coletivo420.canva-linux'],
   ['build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop', 'Name=Canva Linux'],
   ['build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
   ['build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml', '<id>io.github.coletivo420.canva-linux</id>'],

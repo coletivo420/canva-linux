@@ -28,7 +28,7 @@ const config = [
     ],
   },
   {
-    files: ["eslint.config.ts"],
+    files: ["build-resources/config/eslint/eslint.config.ts"],
     languageOptions: {
       ecmaVersion: "latest",
       parser: tsParser,
@@ -52,8 +52,8 @@ const config = [
     files: [
       "build-resources/electron/**/*.ts",
       "scripts/**/*.ts",
-      "test/**/*.ts",
-      "packaging/flathub/scripts/**/*.ts",
+      "build-resources/tests/**/*.ts",
+      "build-resources/canva-linux/packaging/flathub/scripts/**/*.ts",
       "playwright.config.ts",
     ],
     languageOptions: {

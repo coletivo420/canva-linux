@@ -21,8 +21,8 @@ build-resources/canva-linux-assets/ Canonical Canva Linux desktop, metainfo, and
 scripts/c420ui-adapter/    Canva Linux project adapter for c420ui.
 scripts/canva-linux/       Canva Linux project-specific actions and support tooling.
 scripts/core/              Repository-wide validation and infrastructure checks.
-config/canva-linux/        Canva Linux project declarations for actions, artifacts, dependencies, development, and UI.
-test/                      TypeScript-first unit, wiring, and smoke tests.
+build-resources/canva-linux/config/        Canva Linux project declarations for actions, artifacts, dependencies, development, and UI.
+build-resources/tests/                      TypeScript-first unit, wiring, and smoke tests.
 packaging/                 Packaging submission workspaces (e.g., Flathub).
 assets/                    Repository documentation assets.
 ```

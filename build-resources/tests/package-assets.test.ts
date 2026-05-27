@@ -62,11 +62,11 @@ test("flatpak and native packaging consume canonical asset paths", () => {
       "build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
     ],
     [
-      "packaging/flathub/manifest.yml",
+      "build-resources/canva-linux/packaging/flathub/manifest.yml",
       "build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
     ],
     [
-      "packaging/flathub/manifest.yml",
+      "build-resources/canva-linux/packaging/flathub/manifest.yml",
       "build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
     ],
     [

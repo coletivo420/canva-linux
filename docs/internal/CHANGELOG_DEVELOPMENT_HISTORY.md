@@ -972,7 +972,7 @@ All notable changes to this project are documented in this file.
 
 - Bumped the development version to `0.1.4-dev.14`.
 - Stabilized the DOC13 TypeScript leaf conversion test strategy before expanding conversion to larger runtime modules.
-- Converted `packages/electron/shared/navigation.ts` as the next small shared TypeScript boundary after test/build stabilization.
+- Converted `packages/electron/shared/navigation.ts` as the next small shared TypeScript boundary after build-resources/tests/build stabilization.
 - Kept converted runtime `.ts` modules on CommonJS exports during the migration.
 - Clarified that Flatpak artifact ownership restoration after install, bundle and dev-run workflows is protected behavior.
 - Documented Google One Tap / FedCM console warnings as upstream Canva/Google Identity Services warnings.
@@ -1051,7 +1051,7 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- Added `tsconfig.build.json` for emitted Electron runtime builds.
+- Added `build-resources/config/typescript/tsconfig.build.json` for emitted Electron runtime builds.
 - Added `.build/electron/` as the compiled runtime output directory.
 - Added `scripts/build-runtime.js`.
 - Added `scripts/clean-runtime-build.js`.
@@ -1119,7 +1119,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
-- Expanded `tsconfig.strict.json` beyond logging, GPU, shell, OAuth, navigation and preload modules to cover the remaining extracted main-process modules.
+- Expanded `build-resources/config/typescript/tsconfig.strict.json` beyond logging, GPU, shell, OAuth, navigation and preload modules to cover the remaining extracted main-process modules.
 - Expanded AI guardrails to treat `CHANGELOG.md` as protected project history.
 - Updated TypeScript migration documentation with DEV10 through DEV22 progression.
 - Clarified that cleanup must happen after full TypeScript conversion, not before it.
@@ -1144,7 +1144,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
-- Expanded `tsconfig.strict.json` to include selected preload integration modules.
+- Expanded `build-resources/config/typescript/tsconfig.strict.json` to include selected preload integration modules.
 - Improved post-install command readability with highlighted sections and commands.
 - Post-install colors are disabled automatically for non-TTY output, `TERM=dumb`, or `NO_COLOR`.
 - Documented `packages/electron/preload/ltcode-eyedropper.js` as a library-like module reserved for DEV11 review.
@@ -1169,7 +1169,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
-- Expanded `tsconfig.strict.json` to include shell, navigation, window-open policy and OAuth boundary modules.
+- Expanded `build-resources/config/typescript/tsconfig.strict.json` to include shell, navigation, window-open policy and OAuth boundary modules.
 - OAuth diagnostics now pass popup options and bounds objects through the central safe logger instead of manually stringifying them.
 - Updated TypeScript migration docs for the DEV8 boundary and DEV11 cleanup phase.
 
@@ -1202,7 +1202,7 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- Added `tsconfig.strict.json` for the first strict TypeScript boundary.
+- Added `build-resources/config/typescript/tsconfig.strict.json` for the first strict TypeScript boundary.
 - Added `npm run typecheck:strict`.
 - Added strict JSDoc typing for logging normalization and debug-level helpers.
 - Added debug-level tests covering `CANVA_DEBUG=1`, `CANVA_DEBUG=2`, and unsupported module-specific debug values.
@@ -1316,7 +1316,7 @@ All notable changes to this project are documented in this file.
 ## [0.1.4-dev.1] - 2026-04-26
 
 ### Added
-- Added TypeScript foundation tooling for the `0.1.4-dev.X` cycle with `typescript`, `@types/node`, and `tsconfig.json`
+- Added TypeScript foundation tooling for the `0.1.4-dev.X` cycle with `typescript`, `@types/node`, and `build-resources/config/typescript/tsconfig.json`
   configured to type-check existing JavaScript (`allowJs` + `checkJs`) without emitting build artifacts.
 - Added npm script `typecheck` (`tsc --noEmit`) for local and CI-safe static type validation.
 - Added `docs/TYPESCRIPT.md` to define migration scope, sequencing, and guardrails for future `dev2+` phases.
@@ -1417,13 +1417,13 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 - Disabled Chromium/Electron `Floss` runtime feature in `configureLinuxRuntime()` to reduce non-fatal Bluetooth/Floss startup noise inside Flatpak sandbox logs.
-- Added a dedicated `packaging/flathub/` submission workspace with a separate Flathub-oriented manifest,
+- Added a dedicated `build-resources/canva-linux/packaging/flathub/` submission workspace with a separate Flathub-oriented manifest,
   `generated-sources.json` npm dependency manifest, and helper scripts to regenerate it from `package-lock.json`.
 - Switched the submission manifest source strategy to a pinned public archive (`type: archive` + `sha256`) and clarified
   sandbox-only generation of `dist/linux-unpacked`, plus offline npm installation (`npm install --offline`) using
   generated dependency sources.
 - Added submission automation scripts (`scripts/prepare-flathub-submission.sh`,
-  `scripts/validate-flathub-submission.sh`) and moved submission manifest path to `packaging/flathub/manifest.yml`.
+  `scripts/validate-flathub-submission.sh`) and moved submission manifest path to `build-resources/canva-linux/packaging/flathub/manifest.yml`.
 - Added dedicated submission-path documentation and rationale notes (`docs/FLATHUB_SUBMISSION_PATH.md`,
   `docs/FLATHUB_SUBMISSION_NOTES.md`), including a material non-triviality rationale against simple-web-wrapper
   rejection risk.
@@ -1431,7 +1431,7 @@ All notable changes to this project are documented in this file.
 
 ### Notes
 - The repository-root `com.canva.Linux.yml` remains the canonical local install/bundle manifest.
-- Flathub submission assets now live under `packaging/flathub/` and should be reviewed independently before submission PRs.
+- Flathub submission assets now live under `build-resources/canva-linux/packaging/flathub/` and should be reviewed independently before submission PRs.
 - System Bluetooth availability and Flatpak DBus/portal permission model are unchanged.
 
 ## [1.4.10-dev.15] - 2026-04-25
@@ -1702,7 +1702,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 - Bumped project version metadata to `1.4.9-dev.12`.
-- Aligned the screenshot staging documentation with the real local Flathub/AppStream screenshot set in `assets/screenshots/`.
+- Aligned the screenshot staging documentation with the real local Flathub/AppStream screenshot set in `build-resources/canva-linux/screenshots/`.
 - Updated AppStream release metadata to reflect the current screenshot-preparation pass while intentionally keeping
   screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.
 - Added the AppStream developer display name required by `appstreamcli` metadata validation.

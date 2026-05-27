@@ -4,7 +4,7 @@ import path from "node:path";
 const repoRoot =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
 const effectiveMetadataPath = ".build/canva-linux/build-metadata.effective.json";
-const committedMetadataPath = "config/canva-linux/build-metadata.json";
+const committedMetadataPath = "build-resources/canva-linux/config/build-metadata.json";
 const metadataSourcePath = fs.existsSync(path.join(repoRoot, effectiveMetadataPath))
   ? effectiveMetadataPath
   : committedMetadataPath;

@@ -1,7 +1,7 @@
 # Flathub submission workspace
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
-For the builder naming contract, see [c420ui Builder Alias Policy](../../docs/c420ui/BUILDER_ALIAS.md).
+For the builder naming contract, see [c420ui Builder Alias Policy](../../../../docs/c420ui/BUILDER_ALIAS.md).
 
 This directory contains assets specific to the **Flathub submission path**.
 
@@ -17,7 +17,7 @@ manifest for the local workflow (`./canva-linux-c420ui-builder --install-native|
 ## Maintainer notes
 
 - Regenerate dependency sources whenever `package-lock.json` changes:
-  - `./packaging/flathub/scripts/generate-npm-sources.sh`
+  - `./build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`
 - Validate submission assets with:
   - `./scripts/validate-flathub-submission.sh`
   - This runs `flathub-build`, `flatpak-builder-lint manifest`, and `flatpak-builder-lint repo` when `org.flatpak.Builder` is available.

@@ -5,14 +5,14 @@
 The source tree keeps clean base identifiers without build metadata:
 
 - `package.json` `version`: `0.1.4-15.Dev.9`
-- `config/canva-linux/project-ui.json` `displayVersion`: `0.1.4-15.Dev`
-- `config/canva-linux/project-ui.json` `phase`: `0.1.4-15.Dev.9`
+- `build-resources/canva-linux/config/project-ui.json` `displayVersion`: `0.1.4-15.Dev`
+- `build-resources/canva-linux/config/project-ui.json` `phase`: `0.1.4-15.Dev.9`
 
 Dev.8 is open for the internal tab-strip redesign; source versions must remain clean base identifiers without `+g` metadata.
 
 ## Effective version
 
-Builds generate `config/canva-linux/build-metadata.json` and append the deterministic build revision to runtime and artifact-facing fields:
+Builds generate `build-resources/canva-linux/config/build-metadata.json` and append the deterministic build revision to runtime and artifact-facing fields:
 
 - `version`: `0.1.4-15.Dev.9+g<short-hash>`
 - `displayVersion`: `0.1.4-15.Dev+g<short-hash>`
@@ -68,7 +68,7 @@ effective build metadata, and c420ui will receive the same build metadata policy
 project.
 ## Dev.7 hotfix guardrails
 
-- c420ui must display Canva Linux effective build metadata when `config/canva-linux/build-metadata.json`, CI revision
+- c420ui must display Canva Linux effective build metadata when `build-resources/canva-linux/config/build-metadata.json`, CI revision
   variables, or a source checkout `.git` HEAD can provide it; source `package.json` and `project-ui.json` stay free of
   committed `+g<hash>` metadata.
 - The c420ui brand version remains independent and comes from `build-resources/c420ui/package.json`; c420ui-specific

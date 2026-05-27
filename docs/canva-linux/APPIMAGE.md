@@ -24,13 +24,13 @@ actions through the generic artifact workflow system.
 
 - `build-resources/c420ui/scripts/build-appimage.sh`
 - `scripts/validate-appimage.sh`
-- `config/canva-linux/artifacts.json`
+- `build-resources/canva-linux/config/artifacts.json`
 - `scripts/c420ui-adapter/artifacts.ts`
 - `docs/APPIMAGE_FUSE.md`
 
 ## c420ui interaction
 
-The AppImage workflow is declared in `config/canva-linux/artifacts.json` and
+The AppImage workflow is declared in `build-resources/canva-linux/config/artifacts.json` and
 loaded through the Canva Linux adapter. c420ui validates the recipe and routes
 execution through the Action Engine and Command Runner.
 

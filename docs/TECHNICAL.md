@@ -29,7 +29,7 @@ Core runtime files:
 
 Canva Linux workflow actions are split into four layers:
 
-1. `config/canva-linux/actions.json` (canonical registry)
+1. `build-resources/canva-linux/config/actions.json` (canonical registry)
 2. c420ui Action Engine, Root Provider, Command Runner, and CLI bridge
 3. Interfaces (c420ui workspace and direct CLI flags)
 4. Backend scripts under `scripts/`
@@ -58,8 +58,8 @@ progress bar.
 
 Application Settings are persistent c420ui state stored at
 `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, with
-`~/.config/canva-linux/tool-settings.json` as fallback. They are not entries in
-`config/canva-linux/actions.json`.
+`~/.build-resources/canva-linux/config/tool-settings.json` as fallback. They are not entries in
+`build-resources/canva-linux/config/actions.json`.
 
 Tool logs and Action logs are semantically distinct in the c420ui logs panel. Tool
 logs cover startup, settings, detection, authentication and internal Tool errors.

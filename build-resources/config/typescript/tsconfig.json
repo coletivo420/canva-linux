@@ -1,24 +1,26 @@
 {
-  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "noEmit": false,
-    "declaration": false,
-    "sourceMap": false,
-    "removeComments": false,
-    "outDir": ".build",
-    "rootDir": "build-resources",
+    "noEmit": true,
     "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
+    "moduleDetection": "force",
+    "ignoreDeprecations": "6.0",
+    "strict": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "types": [
       "node"
-    ],
-    "moduleDetection": "force"
+    ]
   },
   "include": [
-    "build-resources/electron/**/*.ts"
+    "../../electron/**/*.ts",
+    "../../../scripts/**/*.ts",
+    "../../c420ui/**/*.ts",
+    "../../tests/**/*.ts",
+    "../../../playwright.config.ts",
+    "../eslint/eslint.config.ts",
+    "../../canva-linux/packaging/flathub/scripts/**/*.ts"
   ],
   "exclude": [
     "node_modules",
@@ -26,7 +28,6 @@
     "repo",
     "build-dir",
     ".flatpak-builder",
-    ".build",
     "build-resources/electron/preload/canva.bundle.js"
   ]
 }

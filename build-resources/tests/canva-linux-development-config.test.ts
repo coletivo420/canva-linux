@@ -3,17 +3,17 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { validateC420UIDevelopmentConfig } from "../build-resources/c420ui/src";
-import { loadCanvaLinuxActions } from "../scripts/canva-linux/actions/registry";
-import { loadCanvaLinuxC420UIActions } from "../scripts/c420ui-adapter/actions";
+import { validateC420UIDevelopmentConfig } from "../c420ui/src";
+import { loadCanvaLinuxActions } from "../../scripts/canva-linux/actions/registry";
+import { loadCanvaLinuxC420UIActions } from "../../scripts/c420ui-adapter/actions";
 import {
   loadCanvaLinuxDevelopmentTasks,
   loadCanvaLinuxDevelopmentWorkflows,
   validateCanvaLinuxDevelopmentTasksAgainstActions,
-} from "../scripts/c420ui-adapter/development";
+} from "../../scripts/c420ui-adapter/development";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
-const developmentConfigPath = path.join(rootDir, "config/canva-linux/development.json");
+const developmentConfigPath = path.join(rootDir, "build-resources/canva-linux/config/development.json");
 const adapterPath = path.join(rootDir, "scripts/c420ui-adapter/adapter.ts");
 const developmentAdapterPath = path.join(rootDir, "scripts/c420ui-adapter/development.ts");
 
@@ -24,7 +24,7 @@ function tasksAndActions() {
   return { tasks, actions, actionsById };
 }
 
-test("config/canva-linux/development.json loads", () => {
+test("build-resources/canva-linux/config/development.json loads", () => {
   const config = JSON.parse(fs.readFileSync(developmentConfigPath, "utf8"));
 
   assert.doesNotThrow(() => validateC420UIDevelopmentConfig(config));

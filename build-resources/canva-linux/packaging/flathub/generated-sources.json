@@ -365,7 +365,7 @@
     },
     {
       "type": "file",
-      "url": "https://registry.npmjs.org/@playwright/test/-/test-1.59.1.tgz",
+      "url": "https://registry.npmjs.org/@playwright/build-resources/tests/-/test-1.59.1.tgz",
       "dest-filename": "@playwright-test-test-1.59.1.tgz",
       "dest": "npm-cache",
       "sha512": "3c6eaaeb79d083973dac88b8fd9e6547921517bc94e4caa629a3ce7b41d27343b6717d5f3e2f7ab1442ee63edea3880a0a4076027346a16b7bcb8fd7c7729caa"

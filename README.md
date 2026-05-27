@@ -137,7 +137,7 @@ Canva Linux owns:
 - project configuration
 
 c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` connects Canva Linux configuration to c420ui, and
-`config/canva-linux/` contains project declarations for actions, artifacts, dependencies, development tasks, and UI metadata.
+`build-resources/canva-linux/config/` contains project declarations for actions, artifacts, dependencies, development tasks, and UI metadata.
 
 ## Release and Packaging
 

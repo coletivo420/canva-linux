@@ -9,14 +9,14 @@ import { buildCanvaLinuxArtifactFragments } from "../../../scripts/c420ui-adapte
 function withProjectRoot(run: (rootDir: string) => void): void {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-linux-artifact-fragments-"));
   try {
-    fs.mkdirSync(path.join(rootDir, "config/canva-linux"), { recursive: true });
+    fs.mkdirSync(path.join(rootDir, "build-resources/canva-linux/config"), { recursive: true });
     fs.mkdirSync(path.join(rootDir, "dist"), { recursive: true });
     fs.writeFileSync(
       path.join(rootDir, "package.json"),
       `${JSON.stringify({ name: "canva-linux", version: "0.1.4-15.Dev.9" }, null, 2)}\n`,
     );
     fs.writeFileSync(
-      path.join(rootDir, "config/canva-linux/artifacts.json"),
+      path.join(rootDir, "build-resources/canva-linux/config/artifacts.json"),
       `${JSON.stringify({
         capabilities: {},
         workflows: [
@@ -136,7 +136,7 @@ test("linux-unpacked prefers fullVersion from root build metadata fallback", () 
   withProjectRoot((rootDir) => {
     fs.mkdirSync(path.join(rootDir, "dist/linux-unpacked"), { recursive: true });
     fs.writeFileSync(
-      path.join(rootDir, "config/canva-linux/build-metadata.json"),
+      path.join(rootDir, "build-resources/canva-linux/config/build-metadata.json"),
       JSON.stringify({ version: "0.1.4-15.Dev.9", fullVersion: "0.1.4-15.Dev.9+grootmeta" }),
     );
 
@@ -170,7 +170,7 @@ test("linux-unpacked uses baseVersion as version and fullVersion as effective ve
 test("linux-unpacked falls back safely to version unknown without metadata", () => {
   withProjectRoot((rootDir) => {
     fs.mkdirSync(path.join(rootDir, "dist/linux-unpacked"), { recursive: true });
-    fs.rmSync(path.join(rootDir, "config/canva-linux/build-metadata.json"), { force: true });
+    fs.rmSync(path.join(rootDir, "build-resources/canva-linux/config/build-metadata.json"), { force: true });
 
     const unpacked = fragment(rootDir, "linux-unpacked");
     assert.equal(unpacked.detected, true);
@@ -221,7 +221,7 @@ test("does not limit artifact fragments to AppImage", () => {
 test("Dev.10 artifact is selected after Dev.9 with numeric-aware sorting", () => {
   withProjectRoot((rootDir) => {
     fs.writeFileSync(
-      path.join(rootDir, "config/canva-linux/artifacts.json"),
+      path.join(rootDir, "build-resources/canva-linux/config/artifacts.json"),
       `${JSON.stringify({
         workflows: [
           {

@@ -23,7 +23,7 @@ runner contracts.
 ## Dependency config model
 
 Projects declare dependency requirements in configuration. Canva Linux declares
-its requirements in `config/canva-linux/dependencies.json`; c420ui validates the
+its requirements in `build-resources/canva-linux/config/dependencies.json`; c420ui validates the
 shape and executes the generic check/ensure flow.
 
 The Node policy checks the configured minimum major version. Command lookup
@@ -45,7 +45,7 @@ only to select the generated `bootstrap/c420ui` bundle and start c420ui from a c
 - `build-resources/c420ui/src/node-dependencies.ts`
 - `build-resources/c420ui/src/npm-dependencies.ts`
 - `scripts/c420ui-adapter/dependencies.ts`
-- `config/canva-linux/dependencies.json`
+- `build-resources/canva-linux/config/dependencies.json`
 
 ## Boundary checks
 

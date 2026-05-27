@@ -114,17 +114,17 @@ export function createCanvaLinuxC420UIAdapter(
   rootDir: string,
 ): CanvaLinuxC420UIAdapter {
   const resolvedRootDir = path.resolve(rootDir);
-  const projectUiPath = path.join(resolvedRootDir, "config/canva-linux/project-ui.json");
+  const projectUiPath = path.join(resolvedRootDir, "build-resources/canva-linux/config/project-ui.json");
   const packageJsonPath = path.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = path.join(resolvedRootDir, "config/canva-linux/actions.json");
-  const artifactsJsonPath = path.join(resolvedRootDir, "config/canva-linux/artifacts.json");
+  const actionsJsonPath = path.join(resolvedRootDir, "build-resources/canva-linux/config/actions.json");
+  const artifactsJsonPath = path.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
   const appIdentityPath = path.join(
     resolvedRootDir,
     "scripts/app-identity-common.sh",
   );
   const buildMetadataPath = path.join(
     resolvedRootDir,
-    "config/canva-linux/build-metadata.json",
+    "build-resources/canva-linux/config/build-metadata.json",
   );
   const c420uiPackageJsonPath = path.join(
     resolvedRootDir,

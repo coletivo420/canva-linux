@@ -366,7 +366,7 @@ test("root Flatpak manifest includes narrow credential D-Bus talk names", () => 
 });
 
 test("Flathub manifest includes narrow credential D-Bus talk names", () => {
-  const manifest = readRepositoryFile("packaging/flathub/manifest.yml");
+  const manifest = readRepositoryFile("build-resources/canva-linux/packaging/flathub/manifest.yml");
 
   assert.match(manifest, /--talk-name=org\.freedesktop\.secrets/);
   assert.match(manifest, /--talk-name=org\.kde\.kwalletd6/);
