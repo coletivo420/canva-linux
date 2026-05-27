@@ -54,6 +54,14 @@ test("package.json points Electron Builder at the canonical asset tree", () => {
 test("flatpak and native packaging consume canonical asset paths", () => {
   for (const [relativePath, fragment] of [
     [
+      "io.github.coletivo420.canva-linux.yml",
+      "build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
+    ],
+    [
+      "io.github.coletivo420.canva-linux.yml",
+      "build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
+    ],
+    [
       "packaging/flathub/manifest.yml",
       "build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
     ],
@@ -84,6 +92,27 @@ test("flatpak and native packaging consume canonical asset paths", () => {
   ] as const) {
     assert.match(readText(relativePath), new RegExp(fragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
+});
+
+test("canonical desktop and metainfo files exist under build-resources", () => {
+  assert.equal(
+    fs.existsSync(
+      path.join(
+        rootDir,
+        "build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
+      ),
+    ),
+    true,
+  );
+  assert.equal(
+    fs.existsSync(
+      path.join(
+        rootDir,
+        "build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
+      ),
+    ),
+    true,
+  );
 });
 
 test("validate-project remains check-only and does not generate effective metadata", () => {

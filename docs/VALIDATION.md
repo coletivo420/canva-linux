@@ -6,6 +6,7 @@
 - `.build/canva-linux/build-metadata.effective.json` is ephemeral metadata used by runtime/release flows and may contain Git-derived revision values.
 - Repository validation checks must validate committed metadata only.
 - Runtime/release/artifact builds must prefer effective metadata and use committed metadata as fallback.
+- `build-resources/` remains the canonical layout for c420ui, electron, and Canva Linux assets; legacy root `packages/`, `electron/`, and `data/` paths must remain absent.
 
 ## Dev.9 metadata persistence and c420ui repair
 

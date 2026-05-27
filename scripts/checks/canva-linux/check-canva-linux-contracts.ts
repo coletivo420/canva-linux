@@ -350,6 +350,42 @@ function checkRuntimeAssetsMetadataCopyContract(rootDir: string, failures: strin
   }
 }
 
+function checkBuildResourcesLayoutContract(rootDir: string, failures: string[]): void {
+  for (const relativePath of [
+    "build-resources/c420ui/src",
+    "build-resources/c420ui/scripts",
+    "build-resources/c420ui/checks",
+    "build-resources/c420ui/test",
+    "build-resources/c420ui/bootstrap/generated",
+    "build-resources/electron/main",
+    "build-resources/electron/preload",
+    "build-resources/electron/shared",
+    "build-resources/electron/ui",
+    "build-resources/electron/assets",
+    "build-resources/canva-linux-assets/desktop",
+    "build-resources/canva-linux-assets/metainfo",
+    "build-resources/canva-linux-assets/icons",
+  ] as const) {
+    if (!fs.existsSync(path.join(rootDir, relativePath))) {
+      failures.push(`${relativePath}: required build-resources layout path must exist`);
+    }
+  }
+
+  for (const forbiddenPath of [
+    "packages",
+    "electron",
+    "data",
+    "build-resources/icon.png",
+    "data/icons",
+    "data/io.github.coletivo420.canva-linux.desktop",
+    "data/io.github.coletivo420.canva-linux.metainfo.xml",
+  ] as const) {
+    if (fs.existsSync(path.join(rootDir, forbiddenPath))) {
+      failures.push(`${forbiddenPath}: legacy path must not be restored`);
+    }
+  }
+}
+
 function checkRootTests(rootDir: string, failures: string[]): void {
   for (const relativePath of collectFiles(rootDir, "test")) {
     const fileName = path.basename(relativePath);
@@ -472,6 +508,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkAdapterBoundary(rootDir, failures);
   checkBuildMetadataContracts(rootDir, failures);
   checkRuntimeAssetsMetadataCopyContract(rootDir, failures);
+  checkBuildResourcesLayoutContract(rootDir, failures);
   checkDocs(rootDir, failures);
   checkValidateProjectScript(rootDir, failures);
 }

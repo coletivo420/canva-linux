@@ -28,3 +28,5 @@ assets/                    Repository documentation assets.
 ```
 
 Generic c420ui code must not hardcode Canva Linux metadata. Canva Linux code must not reimplement c420ui Action Engine, Command Runner, Root Provider, host dependency, or artifact workflow policy.
+
+`build-resources/` is the canonical home for project-owned runtime/build resources. Root `packages/`, `electron/`, `data/`, and loose icon assets must not be restored.
