@@ -1,5 +1,12 @@
 # Validation Checklist (0.1.4-15.Dev.9)
 
+## Committed vs Effective Build Metadata
+
+- `config/canva-linux/build-metadata.json` is committed, deterministic metadata and must keep `buildRevision: "unknown"`.
+- `.build/canva-linux/build-metadata.effective.json` is ephemeral metadata used by runtime/release flows and may contain Git-derived revision values.
+- Repository validation checks must validate committed metadata only.
+- Runtime/release/artifact builds must prefer effective metadata and use committed metadata as fallback.
+
 ## Dev.9 metadata persistence and c420ui repair
 
 Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place

@@ -77,3 +77,57 @@ test("copy-runtime-assets falls back to committed metadata when effective metada
     fs.rmSync(tmpRoot, { recursive: true, force: true });
   }
 });
+
+test("copy-runtime-assets prefers effective metadata over committed metadata", () => {
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "canva-runtime-assets-prefer-effective-"));
+  try {
+    writeJson(
+      path.join(tmpRoot, "config", "canva-linux", "build-metadata.json"),
+      { buildRevision: "unknown", fullVersion: "0.1.4-15.Dev.9" },
+    );
+    writeJson(
+      path.join(tmpRoot, ".build", "canva-linux", "build-metadata.effective.json"),
+      { buildRevision: "gnew1234", fullVersion: "0.1.4-15.Dev.9+gnew1234" },
+    );
+
+    runCopyRuntimeAssets(tmpRoot);
+
+    const runtimeMetadata = JSON.parse(
+      fs.readFileSync(
+        path.join(tmpRoot, ".build", "electron", "config", "canva-linux", "build-metadata.json"),
+        "utf8",
+      ),
+    ) as { buildRevision?: string; fullVersion?: string };
+    assert.equal(runtimeMetadata.buildRevision, "gnew1234");
+  } finally {
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});
+
+test("copy-runtime-assets never skips metadata overwrite when target already exists", () => {
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "canva-runtime-assets-overwrite-"));
+  try {
+    writeJson(
+      path.join(tmpRoot, ".build", "electron", "config", "canva-linux", "build-metadata.json"),
+      { buildRevision: "stale", fullVersion: "stale" },
+    );
+    writeJson(
+      path.join(tmpRoot, ".build", "canva-linux", "build-metadata.effective.json"),
+      { buildRevision: "gnew1234", fullVersion: "0.1.4-15.Dev.9+gnew1234" },
+    );
+
+    runCopyRuntimeAssets(tmpRoot);
+    runCopyRuntimeAssets(tmpRoot);
+
+    const runtimeMetadata = JSON.parse(
+      fs.readFileSync(
+        path.join(tmpRoot, ".build", "electron", "config", "canva-linux", "build-metadata.json"),
+        "utf8",
+      ),
+    ) as { buildRevision?: string; fullVersion?: string };
+    assert.equal(runtimeMetadata.buildRevision, "gnew1234");
+    assert.equal(runtimeMetadata.fullVersion, "0.1.4-15.Dev.9+gnew1234");
+  } finally {
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});

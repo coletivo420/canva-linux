@@ -10,6 +10,14 @@ metadata, and generated distribution artifacts.
 Committed build metadata is stable in `config/canva-linux/build-metadata.json` and must keep `buildRevision: "unknown"`.
 Effective build metadata is generated in `.build/canva-linux/build-metadata.effective.json` and may include Git revision for release artifacts.
 
+Release flow must generate effective metadata before packaging artifacts:
+
+- `npm run build:metadata:effective`
+- `npm run build:runtime`
+- `npm run dist`
+
+Repository checks and committed bootstrap artifacts must continue validating against committed metadata.
+
 ## Release target
 
 - Version: `0.1.4-14`

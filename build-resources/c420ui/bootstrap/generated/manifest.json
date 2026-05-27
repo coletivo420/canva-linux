@@ -25,7 +25,7 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "sourceHashAlgorithm": "sha256",
-  "sourceHash": "sha256:4e27ca146dc82d7d3115c297db90fe5c4780cc9c98782e82ac352bd52f8ea134",
+  "sourceHash": "sha256:20df40541367e362007b624ad5a87e8230351fc9ef51ec41e52cfd8689523575",
   "sourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/bootstrap",

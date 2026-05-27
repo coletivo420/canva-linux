@@ -290,6 +290,19 @@ function checkBuildMetadataContracts(rootDir: string, failures: string[]): void 
   if (trackedEffective) {
     failures.push(".build/canva-linux/build-metadata.effective.json: must not be committed");
   }
+
+  try {
+    const ignored = execFileSync(
+      "git",
+      ["check-ignore", ".build/canva-linux/build-metadata.effective.json"],
+      { cwd: rootDir, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    ).trim();
+    if (ignored !== ".build/canva-linux/build-metadata.effective.json") {
+      failures.push(".build/canva-linux/build-metadata.effective.json: must be gitignored");
+    }
+  } catch {
+    failures.push(".build/canva-linux/build-metadata.effective.json: must be gitignored");
+  }
 }
 
 function checkRuntimeAssetsMetadataCopyContract(rootDir: string, failures: string[]): void {
@@ -318,6 +331,22 @@ function checkRuntimeAssetsMetadataCopyContract(rootDir: string, failures: strin
     )
   ) {
     failures.push("scripts/copy-runtime-assets.ts: must not skip metadata copy when target exists");
+  }
+
+  const buildMetadataSource = readText(rootDir, "build-resources/electron/main/build-metadata.ts");
+  if (!buildMetadataSource) {
+    failures.push("build-resources/electron/main/build-metadata.ts: must exist");
+    return;
+  }
+
+  const effectiveIndex = buildMetadataSource.indexOf(
+    'path.join(cwd, ".build", "canva-linux", "build-metadata.effective.json")',
+  );
+  const committedIndex = buildMetadataSource.indexOf(
+    'path.join(cwd, "config", "canva-linux", "build-metadata.json")',
+  );
+  if (effectiveIndex === -1 || committedIndex === -1 || effectiveIndex > committedIndex) {
+    failures.push("build-resources/electron/main/build-metadata.ts: runtime must prefer effective metadata before committed fallback");
   }
 }
 
@@ -426,6 +455,7 @@ function checkValidateProjectScript(rootDir: string, failures: string[]): void {
     "npm run build:metadata",
     "npm run build:metadata:effective",
     "npm run build:c420ui-bootstrap",
+    "git rev-parse",
   ] as const) {
     if (contents.includes(forbiddenCommand)) {
       failures.push(`scripts/validate-project.sh: must not run ${forbiddenCommand}`);

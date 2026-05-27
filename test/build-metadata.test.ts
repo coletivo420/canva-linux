@@ -148,3 +148,13 @@ test("generate-build-metadata supports explicit committed/effective modes", () =
   assert.match(source, /buildRevision: mode === "effective" \? resolveBuildRevision\(rootDir\) : "unknown"/);
   assert.match(source, /\.build", "canva-linux", "build-metadata\.effective\.json"/);
 });
+
+test("committed mode does not resolve live git revision", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "scripts", "generate-build-metadata.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /mode === "effective" \? resolveBuildRevision\(rootDir\) : "unknown"/);
+  assert.doesNotMatch(source, /mode === "committed"[\s\S]*resolveBuildRevision/);
+});

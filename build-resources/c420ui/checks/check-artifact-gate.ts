@@ -38,6 +38,7 @@ type ArtifactComparison = {
 
 type BuildMetadataJson = {
   buildRevision?: string;
+  version?: string;
   fullVersion?: string;
   displayVersion?: string;
   phase?: string;
@@ -280,6 +281,16 @@ function validateExpectedManifestMetadata(rootDir: string, expectedBootstrapDir:
   const manifest = readJson<Record<string, unknown>>(expectedBootstrapDir, "manifest.json");
   const packagedMetadata = readJson<BuildMetadataJson>(rootDir, "config/canva-linux/build-metadata.json");
   const failures: string[] = [];
+
+  if (packagedMetadata.buildRevision !== "unknown") {
+    failures.push("config/canva-linux/build-metadata.json: committed buildRevision must be unknown");
+  }
+  for (const field of ["version", "displayVersion", "phase", "fullVersion"] as const) {
+    const value = packagedMetadata[field];
+    if (typeof value === "string" && /\+g[0-9a-f]{7}$/i.test(value)) {
+      failures.push(`config/canva-linux/build-metadata.json: committed ${field} must not include +g hash`);
+    }
+  }
 
   for (const [manifestField, metadataField] of C420UI_MANIFEST_METADATA_FIELD_MAPPING) {
     if (manifest[manifestField] !== packagedMetadata[metadataField]) {

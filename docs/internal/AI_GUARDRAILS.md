@@ -35,6 +35,8 @@
 - Do not write Git HEAD-derived revisions into `config/canva-linux/build-metadata.json`; committed metadata must keep `buildRevision: "unknown"`.
 - Effective metadata belongs under `.build/canva-linux/build-metadata.effective.json` and may include Git revision for runtime/artifact builds.
 - Repository checks validate committed metadata only; artifact/release checks validate effective metadata.
+- Committed metadata must remain stable and deterministic across incremental builds and test/check runs.
+- Repository validation must not depend on live Git revision resolution for committed metadata contracts.
 
 ## Dev.8 pinned home tab-strip guardrail
 
