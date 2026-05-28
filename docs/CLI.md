@@ -100,7 +100,7 @@ The c420ui and scripts honor the following environment variables:
 
 Application Settings are persistent c420ui state, not shell actions. They are stored
 in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, or
-`~/.build-resources/canva-linux/config/tool-settings.json` when `XDG_CONFIG_HOME` is unset.
+`~/.config/canva-linux/tool-settings.json` when `XDG_CONFIG_HOME` is unset.
 
 Current builder settings:
 
