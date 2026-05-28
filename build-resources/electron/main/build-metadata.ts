@@ -70,11 +70,11 @@ function candidateMetadataPaths(): string[] {
   const cwd = process.cwd();
   return [
     path.join(cwd, ".build", "canva-linux", "build-metadata.effective.json"),
-    path.join(cwd, "config", "canva-linux", "build-metadata.json"),
+    path.join(cwd, "build-resources", "canva-linux", "config", "build-metadata.json"),
     path.join(__dirname, "..", "..", ".build", "canva-linux", "build-metadata.effective.json"),
-    path.join(__dirname, "..", "..", "config", "canva-linux", "build-metadata.json"),
+    path.join(__dirname, "..", "..", "build-resources", "canva-linux", "config", "build-metadata.json"),
     path.join(__dirname, "..", ".build", "canva-linux", "build-metadata.effective.json"),
-    path.join(__dirname, "..", "config", "canva-linux", "build-metadata.json"),
+    path.join(__dirname, "..", "build-resources", "canva-linux", "config", "build-metadata.json"),
   ];
 }
 
@@ -83,7 +83,13 @@ export function fallbackBaseMetadata(): CanvaLinuxBuildMetadata {
     readJsonFile<PackageJson>(path.join(process.cwd(), "package.json")) ?? {};
   const projectUi =
     readJsonFile<ProjectUiJson>(
-      path.join(process.cwd(), "config", "canva-linux", "project-ui.json"),
+      path.join(
+        process.cwd(),
+        "build-resources",
+        "canva-linux",
+        "config",
+        "project-ui.json",
+      ),
     ) ?? {};
   const baseVersion = packageJson.version || UNKNOWN_BASE_VERSION;
   const baseDisplayVersion = projectUi.displayVersion || UNKNOWN_DISPLAY_VERSION;

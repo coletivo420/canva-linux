@@ -70,7 +70,7 @@ function createSourceMetadata(
 ): CanvaLinuxBuildMetadata | null {
   const packageJson = readJsonFile<PackageJson>(path.join(rootDir, "package.json"));
   const projectUi = readJsonFile<ProjectUiJson>(
-    path.join(rootDir, "config", "canva-linux", "project-ui.json"),
+    path.join(rootDir, "build-resources", "canva-linux", "config", "project-ui.json"),
   );
   if (!packageJson?.version || !projectUi?.displayVersion || !projectUi?.phase) {
     return null;
@@ -89,7 +89,8 @@ function loadPackagedMetadata(
   metadataModule: CanvaLinuxBuildMetadataModule,
 ): CanvaLinuxBuildMetadata | null {
   const metadata = readJsonFile<Partial<CanvaLinuxBuildMetadata>>(
-    path.join(rootDir, "config", "canva-linux", "build-metadata.json"),
+    path.join(rootDir, "build-resources", "canva-linux", "config", "build-metadata.json"),
+    
   );
   if (!metadata) return null;
   return metadataModule.normalizeLoadedBuildMetadata(metadata);
@@ -141,7 +142,8 @@ export function loadEffectiveBuildMetadata(rootDir: string): CanvaLinuxBuildMeta
     );
     if (effective) return effective;
     const packaged = readJsonFile<CanvaLinuxBuildMetadata>(
-      path.join(resolvedRootDir, "config", "canva-linux", "build-metadata.json"),
+      path.join(resolvedRootDir, "build-resources", "canva-linux", "config", "build-metadata.json"),
+      
     );
     return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
   }
@@ -169,7 +171,8 @@ export function loadCommittedBuildMetadata(rootDir: string): CanvaLinuxBuildMeta
   const metadataModule = loadBuildMetadataModule(resolvedRootDir);
   if (!metadataModule) {
     const packaged = readJsonFile<CanvaLinuxBuildMetadata>(
-      path.join(resolvedRootDir, "config", "canva-linux", "build-metadata.json"),
+      path.join(resolvedRootDir, "build-resources", "canva-linux", "config", "build-metadata.json"),
+      
     );
     return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
   }

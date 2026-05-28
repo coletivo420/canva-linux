@@ -7,10 +7,10 @@ import test from "node:test";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
-} from "../scripts/c420ui-adapter/artifacts";
+} from "../../scripts/c420ui-adapter/artifacts";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
-const artifactsConfigPath = path.join(rootDir, "config/canva-linux/artifacts.json");
+const artifactsConfigPath = path.join(rootDir, "build-resources/canva-linux/config/artifacts.json");
 const packageJsonPath = path.join(rootDir, "package.json");
 const expectedCapabilityFields = [
   "supportsArtifacts",
@@ -37,7 +37,7 @@ function loadWorkflows() {
 
 function createTempRootWithArtifactsConfig(configText: string): string {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "canva-linux-artifacts-"));
-  const configDir = path.join(tempRoot, "config/canva-linux");
+  const configDir = path.join(tempRoot, "build-resources/canva-linux/config");
   fs.mkdirSync(configDir, { recursive: true });
   fs.writeFileSync(path.join(configDir, "artifacts.json"), configText);
   return tempRoot;
@@ -50,7 +50,7 @@ function minimalArtifactsConfigText(): string {
   });
 }
 
-test("config/canva-linux/artifacts.json loads", () => {
+test("build-resources/canva-linux/config/artifacts.json loads", () => {
   assert.equal(fs.existsSync(artifactsConfigPath), true);
   const config = loadArtifactsConfig();
 
@@ -142,6 +142,6 @@ test("artifact config loader caches validated config per config path", () => {
   const tempRoot = createTempRootWithArtifactsConfig(minimalArtifactsConfigText());
   assert.equal(loadCanvaLinuxCapabilities(tempRoot).supportsArtifacts, true);
 
-  fs.writeFileSync(path.join(tempRoot, "config/canva-linux/artifacts.json"), "{");
+  fs.writeFileSync(path.join(tempRoot, "build-resources/canva-linux/config/artifacts.json"), "{");
   assert.equal(loadCanvaLinuxCapabilities(tempRoot).supportsArtifacts, true);
 });

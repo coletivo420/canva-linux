@@ -54,7 +54,7 @@ The maintainer should verify that screenshot URLs point to the final reviewed re
 
 To keep local maintainer workflows and Flathub review workflows separate, this repository now has a dedicated submission workspace at:
 
-- `packaging/flathub/`
+- `build-resources/canva-linux/packaging/flathub/`
 
 That folder contains:
 
@@ -65,13 +65,13 @@ That folder contains:
 
 The repository-root `io.github.coletivo420.canva-linux.yml` is the canonical **local** workflow manifest used by `./canva-linux-c420ui-builder`.
 
-The submission manifest in `packaging/flathub/manifest.yml` uses a pinned public archive (`type: archive` + `sha256`) and generates `dist/linux-unpacked` inside the Flatpak build sandbox.
+The submission manifest in `build-resources/canva-linux/packaging/flathub/manifest.yml` uses a pinned public archive (`type: archive` + `sha256`) and generates `dist/linux-unpacked` inside the Flatpak build sandbox.
 
 Using `dist/linux-unpacked` as an **internal build artifact** is acceptable. The important requirement is to avoid consuming a prebuilt `dist/` from the host checkout state.
 
-For Flathub-reviewable Node/Electron builds, keep npm dependencies in `packaging/flathub/generated-sources.json` and run `npm install --offline` inside the sandbox build.
+For Flathub-reviewable Node/Electron builds, keep npm dependencies in `build-resources/canva-linux/packaging/flathub/generated-sources.json` and run `npm install --offline` inside the sandbox build.
 
-Regenerate `generated-sources.json` with `packaging/flathub/scripts/generate-npm-sources.sh`. The maintained generator is `generate-npm-sources.ts`; it validates package-lock tarball URLs and integrity hashes, blocks local or `node_modules` path sources, keeps output sorted, and verifies the Flathub submission manifest consumes `generated-sources.json`.
+Regenerate `generated-sources.json` with `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`. The maintained generator is `generate-npm-sources.ts`; it validates package-lock tarball URLs and integrity hashes, blocks local or `node_modules` path sources, keeps output sorted, and verifies the Flathub submission manifest consumes `generated-sources.json`.
 
 ## Release workflow separation
 
@@ -81,7 +81,7 @@ GitHub `.flatpak` bundle releases and Flathub source builds are separate workflo
 - Development smoke tests should prefer `./canva-linux-c420ui-builder --install-flatpak` to verify the full package workflow.
 - GitHub bundle releases are generated from the repository workflow (`repo/` export + `flatpak build-bundle`) for direct distribution.
 - Flathub source builds are reviewed separately, should use stable source URLs appropriate for Flathub submission, and should not require `.flatpak` bundle creation.
-- Release artifact workflows may use effective metadata from `.build/canva-linux/build-metadata.effective.json`; do not write Git-derived revisions into committed `config/canva-linux/build-metadata.json`.
+- Release artifact workflows may use effective metadata from `.build/canva-linux/build-metadata.effective.json`; do not write Git-derived revisions into committed `build-resources/canva-linux/config/build-metadata.json`.
 
 Do not treat the GitHub bundle workflow as a substitute for Flathub source review.
 

@@ -38,7 +38,7 @@ export function findProjectRoot(startDir?: string): string {
 }
 
 function actionsPath(rootDir = findProjectRoot()): string {
-  return path.join(rootDir, "config/canva-linux/actions.json");
+  return path.join(rootDir, "build-resources/canva-linux/config/actions.json");
 }
 
 function validateCanvaLinuxGroupSection(action: CanvaAction): void {

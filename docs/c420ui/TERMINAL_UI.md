@@ -33,7 +33,7 @@ logic.
 ## Consumed configs and adapters
 
 The terminal UI consumes the c420ui bridge and project UI metadata. Canva Linux
-metadata comes from `config/canva-linux/project-ui.json` through the adapter.
+metadata comes from `build-resources/canva-linux/config/project-ui.json` through the adapter.
 
 ## Boundary checks
 

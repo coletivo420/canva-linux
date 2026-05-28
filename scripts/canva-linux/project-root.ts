@@ -12,8 +12,8 @@ export function findCanvaLinuxProjectRoot(
   while (true) {
     if (
       fs.existsSync(path.join(current, "package.json")) &&
-      fs.existsSync(path.join(current, "config/canva-linux/actions.json")) &&
-      fs.existsSync(path.join(current, "config/canva-linux/project-ui.json"))
+      fs.existsSync(path.join(current, "build-resources/canva-linux/config/actions.json")) &&
+      fs.existsSync(path.join(current, "build-resources/canva-linux/config/project-ui.json"))
     ) {
       return current;
     }

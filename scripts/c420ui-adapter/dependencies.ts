@@ -9,7 +9,7 @@ import {
 } from "../../build-resources/c420ui/src";
 
 export function loadCanvaLinuxDependencyConfig(rootDir: string): c420uiHostDependencyConfig {
-  const relativeConfigPath = "config/canva-linux/dependencies.json";
+  const relativeConfigPath = "build-resources/canva-linux/config/dependencies.json";
   const configPath = path.join(rootDir, relativeConfigPath);
   return validateC420UIHostDependencyConfig(JSON.parse(fs.readFileSync(configPath, "utf8")));
 }

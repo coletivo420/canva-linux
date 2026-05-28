@@ -22,7 +22,7 @@ export function loadCanvaLinuxDevelopmentTasks(
 ): c420uiDevelopmentTask[] {
   const developmentConfigPath = path.join(
     rootDir,
-    "config/canva-linux/development.json",
+    "build-resources/canva-linux/config/development.json",
   );
   const config = readJsonFile<CanvaLinuxDevelopmentConfig>(developmentConfigPath);
   validateC420UIDevelopmentConfig(config);

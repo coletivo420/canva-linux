@@ -23,7 +23,7 @@ test("c420ui bootstrap source hash covers bundled adapter and Canva Linux depend
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",
     "build-resources/c420ui/checks",
-    "config/canva-linux",
+    "build-resources/canva-linux/config",
     "package.json",
     "build-resources/c420ui/package.json",
   ] as const) {

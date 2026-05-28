@@ -30,7 +30,7 @@ commands.
 ## Consumed configs and adapters
 
 The runner consumes command descriptors prepared by the dependent-project
-adapter. Canva Linux commands originate in `config/canva-linux/actions.json` and
+adapter. Canva Linux commands originate in `build-resources/canva-linux/config/actions.json` and
 are converted through `scripts/c420ui-adapter/actions.ts`.
 
 ## Boundary checks

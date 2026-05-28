@@ -3,7 +3,7 @@ set -euo pipefail
 
 build_metadata_source() {
   local effective="${REPO_ROOT}/.build/canva-linux/build-metadata.effective.json"
-  local committed="${REPO_ROOT}/config/canva-linux/build-metadata.json"
+  local committed="${REPO_ROOT}/build-resources/canva-linux/config/build-metadata.json"
 
   if [[ -f "${effective}" ]]; then
     printf '%s\n' "${effective}"

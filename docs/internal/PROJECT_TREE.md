@@ -30,18 +30,18 @@ build-resources/electron/         Canva Linux Electron runtime and preload sourc
 build-resources/canva-linux-assets/ Canonical Canva Linux desktop, metainfo, and icon assets.
 scripts/c420ui-adapter/    Canva Linux adapter bridge into c420ui.
 scripts/canva-linux/       Canva Linux project-specific tooling.
-config/canva-linux/        Canva Linux declarations.
+build-resources/canva-linux/config/        Canva Linux declarations.
 ```
 
 `build-resources/` is the canonical home for project-owned runtime/build resources. Root `packages/`, `electron/`, `data/`, and loose icon assets are legacy paths and must not be restored.
 
 ## Config ownership
 
-- `config/canva-linux/actions.json`: Canva Linux action declarations.
-- `config/canva-linux/project-ui.json`: project header and identity metadata.
-- `config/canva-linux/development.json`: development task declarations.
-- `config/canva-linux/dependencies.json`: dependency declarations only.
-- `config/canva-linux/artifacts.json`: artifact recipe declarations only.
+- `build-resources/canva-linux/config/actions.json`: Canva Linux action declarations.
+- `build-resources/canva-linux/config/project-ui.json`: project header and identity metadata.
+- `build-resources/canva-linux/config/development.json`: development task declarations.
+- `build-resources/canva-linux/config/dependencies.json`: dependency declarations only.
+- `build-resources/canva-linux/config/artifacts.json`: artifact recipe declarations only.
 
 ## Boundary rules
 

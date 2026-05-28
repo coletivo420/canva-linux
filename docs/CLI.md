@@ -41,7 +41,7 @@ must be added deliberately to the generic parser before use.
 
 ## Actions
 
-Direct actions are resolved through the shared Action Registry (`config/canva-linux/actions.json`)
+Direct actions are resolved through the shared Action Registry (`build-resources/canva-linux/config/actions.json`)
 by the c420ui CLI bridge; the builder command does not maintain a separate executable
 action flag list.
 Planned actions are shown in c420ui so users can see future packaging targets,
@@ -100,7 +100,7 @@ The c420ui and scripts honor the following environment variables:
 
 Application Settings are persistent c420ui state, not shell actions. They are stored
 in `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, or
-`~/.config/canva-linux/tool-settings.json` when `XDG_CONFIG_HOME` is unset.
+`~/.build-resources/canva-linux/config/tool-settings.json` when `XDG_CONFIG_HOME` is unset.
 
 Current builder settings:
 

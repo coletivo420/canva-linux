@@ -51,7 +51,7 @@ recipes, and host scripts.
 - Adding dependent-project names, app IDs, env vars, or action IDs to
   `build-resources/c420ui/src`.
 - Importing `scripts/c420ui-adapter`, `scripts/canva-linux`, or
-  `config/canva-linux` from `build-resources/c420ui/src`.
+  `build-resources/canva-linux/config` from `build-resources/c420ui/src`.
 - Reimplementing the c420ui Action Engine, Command Runner, Detection Engine,
   Artifact Workflow Runner, or Linux root provider base in a dependent-project
   adapter.
@@ -88,12 +88,12 @@ recipes, and host scripts.
   Node minimum validation, npm dependency resolution, install strategy selection, repair mode, skip mode,
   messages and exit codes.
 - Dependent projects own concrete dependency declarations only.
-- `config/canva-linux/dependencies.json` is the Canva Linux declaration; c420ui owns host dependency management.
+- `build-resources/canva-linux/config/dependencies.json` is the Canva Linux declaration; c420ui owns host dependency management.
 - `scripts/preflight-common.sh` remains in `scripts/` for now and must not be moved into c420ui core in this phase.
 
 ## Project config ownership
 
-- `config/canva-linux/actions.json`, `config/canva-linux/development.json`, and `config/canva-linux/artifacts.json` are Canva Linux project declarations.
+- `build-resources/canva-linux/config/actions.json`, `build-resources/canva-linux/config/development.json`, and `build-resources/canva-linux/config/artifacts.json` are Canva Linux project declarations.
 - c420ui core owns generic validation and runtime semantics; it must not receive Canva Linux policy or paths.
 - The Canva Linux adapter loads these declarations and maps them to c420ui contracts without becoming a policy engine.
 
@@ -122,9 +122,9 @@ install or dependency repair policy.
   hardcoded translations now.
 - Canva Linux launchers and shell helpers must not run npm dependency
   installation directly.
-- Canva Linux must declare dependencies in `config/canva-linux/dependencies.json`
+- Canva Linux must declare dependencies in `build-resources/canva-linux/config/dependencies.json`
   and let c420ui own dependency policy.
-- Canva Linux must declare artifact recipes in `config/canva-linux/artifacts.json`
+- Canva Linux must declare artifact recipes in `build-resources/canva-linux/config/artifacts.json`
   and let c420ui validate generic artifact recipe contracts.
 - The Canva Linux adapter must not duplicate Action Engine policy for planned
   actions, dry-run, confirmation, root policy, or fallback execution.

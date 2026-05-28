@@ -7,7 +7,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 
 ## Structural Contracts
 
-- Committed build metadata lives in `config/canva-linux/build-metadata.json` and must remain deterministic with `buildRevision: "unknown"`.
+- Committed build metadata lives in `build-resources/canva-linux/config/build-metadata.json` and must remain deterministic with `buildRevision: "unknown"`.
 - Effective build metadata is generated under `.build/canva-linux/build-metadata.effective.json` for runtime/release artifacts and may include Git-derived revisions.
 - `build-resources/` is the canonical home for project-owned runtime/build resources (`c420ui`, `electron`, `canva-linux-assets`).
 - Root `packages/`, `electron/`, `data/`, and loose icon assets must not be restored.
@@ -23,14 +23,14 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `LICENSE`
 - `README.md`
 - `REVIEW.md`
-- `assets/screenshots/.gitkeep`
-- `assets/screenshots/MANIFEST.md`
-- `assets/screenshots/README.md`
-- `assets/screenshots/eyedropper.png`
-- `assets/screenshots/home.png`
-- `assets/screenshots/tabs.png`
-- `assets/screenshots/upload.png`
-- `assets/screenshots/windowpopup.png`
+- `build-resources/canva-linux/screenshots/.gitkeep`
+- `build-resources/canva-linux/screenshots/MANIFEST.md`
+- `build-resources/canva-linux/screenshots/README.md`
+- `build-resources/canva-linux/screenshots/eyedropper.png`
+- `build-resources/canva-linux/screenshots/home.png`
+- `build-resources/canva-linux/screenshots/tabs.png`
+- `build-resources/canva-linux/screenshots/upload.png`
+- `build-resources/canva-linux/screenshots/windowpopup.png`
 - `canva-linux-c420ui-builder`
 - `build-resources/canva-linux-assets/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png`
 - `build-resources/canva-linux-assets/icons/hicolor/16x16/apps/io.github.coletivo420.canva-linux.png`
@@ -108,17 +108,17 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `build-resources/electron/shared/debug.ts`
 - `build-resources/electron/shared/navigation.ts`
 - `build-resources/electron/ui/toolbar.html`
-- `eslint.config.ts`
+- `build-resources/config/eslint/eslint.config.ts`
 - `io.github.coletivo420.canva-linux.yml`
 - `package-lock.json`
 - `package.json`
-- `config/canva-linux/actions.json`
-- `config/canva-linux/project-ui.json`
-- `packaging/flathub/README.md`
-- `packaging/flathub/generated-sources.json`
-- `packaging/flathub/manifest.yml`
-- `packaging/flathub/scripts/generate-npm-sources.ts`
-- `packaging/flathub/scripts/generate-npm-sources.sh`
+- `build-resources/canva-linux/config/actions.json`
+- `build-resources/canva-linux/config/project-ui.json`
+- `build-resources/canva-linux/packaging/flathub/README.md`
+- `build-resources/canva-linux/packaging/flathub/generated-sources.json`
+- `build-resources/canva-linux/packaging/flathub/manifest.yml`
+- `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts`
+- `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`
 - `playwright.config.ts`
 - `run.sh`
 - `scripts/app-identity-common.sh`
@@ -183,28 +183,28 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `scripts/validate-flatpak.sh`
 - `scripts/validate-project.sh`
 - `scripts/xdg-common.sh`
-- `test/cl-eyedropper-canvas.test.ts`
-- `test/cl-eyedropper-contracts.test.ts`
-- `test/cl-eyedropper-runtime.test.ts`
-- `test/debug-levels.test.ts`
-- `test/electron-smoke.spec.ts`
-- `test/eyedropper-bridge.test.ts`
-- `test/eyedropper-preload.test.ts`
-- `test/gpu-diagnostics.test.ts`
-- `test/helpers/runtime-module.ts`
-- `test/logging-helpers.test.ts`
-- `test/logging-normalize.test.ts`
-- `test/navigation.test.ts`
-- `test/oauth-helpers.test.ts`
-- `test/preload-debug.test.ts`
-- `test/runtime.test.ts`
-- `test/tab-controller-wiring.test.ts`
-- `test/tabs-state.test.ts`
-- `test/upload-diagnostics.test.ts`
-- `test/window-open-policy.test.ts`
-- `tsconfig.build.json`
-- `tsconfig.json`
-- `tsconfig.strict.json`
-- `types/blessed.d.ts`
+- `build-resources/tests/cl-eyedropper-canvas.test.ts`
+- `build-resources/tests/cl-eyedropper-contracts.test.ts`
+- `build-resources/tests/cl-eyedropper-runtime.test.ts`
+- `build-resources/tests/debug-levels.test.ts`
+- `build-resources/tests/electron-smoke.spec.ts`
+- `build-resources/tests/eyedropper-bridge.test.ts`
+- `build-resources/tests/eyedropper-preload.test.ts`
+- `build-resources/tests/gpu-diagnostics.test.ts`
+- `build-resources/tests/helpers/runtime-module.ts`
+- `build-resources/tests/logging-helpers.test.ts`
+- `build-resources/tests/logging-normalize.test.ts`
+- `build-resources/tests/navigation.test.ts`
+- `build-resources/tests/oauth-helpers.test.ts`
+- `build-resources/tests/preload-debug.test.ts`
+- `build-resources/tests/runtime.test.ts`
+- `build-resources/tests/tab-controller-wiring.test.ts`
+- `build-resources/tests/tabs-state.test.ts`
+- `build-resources/tests/upload-diagnostics.test.ts`
+- `build-resources/tests/window-open-policy.test.ts`
+- `build-resources/config/typescript/tsconfig.build.json`
+- `build-resources/config/typescript/tsconfig.json`
+- `build-resources/config/typescript/tsconfig.strict.json`
+- `build-resources/c420ui/types/blessed.d.ts`
 
 - `build-resources/c420ui/scripts/c420ui-builder.ts`

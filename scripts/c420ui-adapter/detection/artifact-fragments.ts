@@ -30,7 +30,7 @@ type ArtifactMetadata = {
   fullVersion?: string;
 };
 
-const ARTIFACTS_CONFIG_PATH = "config/canva-linux/artifacts.json";
+const ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
 const ARTIFACT_PATH_COLLATOR = new Intl.Collator(undefined, {
   numeric: true,
   sensitivity: "base",
@@ -179,7 +179,7 @@ function readArtifactMetadata(
       path.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
       path.join(artifactPath, "config/canva-linux/build-metadata.json"),
       ...(artifactKindValue === "linux-unpacked"
-        ? [path.join(rootDir, "config/canva-linux/build-metadata.json")]
+        ? [path.join(rootDir, "build-resources/canva-linux/config/build-metadata.json")]
         : []),
     ];
     for (const marker of markers) {

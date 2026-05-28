@@ -23,12 +23,12 @@ without making c420ui project-specific.
 - `build-resources/c420ui/src/workflows.ts`
 - `build-resources/c420ui/src/workflow-runner.ts`
 - `scripts/c420ui-adapter/development.ts`
-- `config/canva-linux/development.json`
+- `build-resources/canva-linux/config/development.json`
 
 ## Consumed configs and adapters
 
-Canva Linux declares development tasks in `config/canva-linux/development.json`.
-Each task points to an action declared in `config/canva-linux/actions.json` and
+Canva Linux declares development tasks in `build-resources/canva-linux/config/development.json`.
+Each task points to an action declared in `build-resources/canva-linux/config/actions.json` and
 is loaded by `scripts/c420ui-adapter/development.ts`.
 
 ## Boundary checks

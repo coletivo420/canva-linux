@@ -9,9 +9,9 @@ Use this checklist before opening or updating a Flathub submission PR.
 - [ ] Manifest lint
 - [ ] Repo lint
 - [ ] Source strategy reviewed
-- [ ] Submission workspace assets updated (`packaging/flathub/`)
+- [ ] Submission workspace assets updated (`build-resources/canva-linux/packaging/flathub/`)
 - [ ] `scripts/validate-flathub-submission.sh` passes
-- [ ] `packaging/flathub/generated-sources.json` regenerated after lockfile changes
+- [ ] `build-resources/canva-linux/packaging/flathub/generated-sources.json` regenerated after lockfile changes
 - [ ] Stable release tag/source archive selected
 - [ ] Manifest source URLs and hashes reviewed
 - [ ] Submission manifest source archive URL and sha256 pinned to the exact release input
@@ -34,12 +34,12 @@ Use this checklist before opening or updating a Flathub submission PR.
 ```bash
 ./canva-linux-c420ui-builder --validate
 npm run build:preload
-./packaging/flathub/scripts/generate-npm-sources.sh
+./build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh
 ./scripts/validate-flathub-submission.sh
-flatpak run --command=flathub-build org.flatpak.Builder --repo=repo packaging/flathub/manifest.yml
+flatpak run --command=flathub-build org.flatpak.Builder --repo=repo build-resources/canva-linux/packaging/flathub/manifest.yml
 ./canva-linux-c420ui-builder --install-flatpak --bundle-flatpak
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest io.github.coletivo420.canva-linux.yml
-flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest packaging/flathub/manifest.yml
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest build-resources/canva-linux/packaging/flathub/manifest.yml
 flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 ```
 

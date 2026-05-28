@@ -7,7 +7,7 @@ Canva Linux is the dependent release project. c420ui provides terminal and actio
 orchestration, but Canva Linux owns release metadata, package identity, AppStream
 metadata, and generated distribution artifacts.
 
-Committed build metadata is stable in `config/canva-linux/build-metadata.json` and must keep `buildRevision: "unknown"`.
+Committed build metadata is stable in `build-resources/canva-linux/config/build-metadata.json` and must keep `buildRevision: "unknown"`.
 Effective build metadata is generated in `.build/canva-linux/build-metadata.effective.json` and may include Git revision for release artifacts.
 
 Release flow must generate effective metadata before packaging artifacts:
@@ -31,7 +31,7 @@ Canva Linux assets must use the Flatpak app-id canonical basename `io.github.col
 - `package.json` must contain `0.1.4-14`.
 - `package-lock.json` top-level and root package versions must contain
   `0.1.4-14`.
-- `config/canva-linux/project-ui.json` and `scripts/app-identity-common.sh` must
+- `build-resources/canva-linux/config/project-ui.json` and `scripts/app-identity-common.sh` must
   expose the same display version and phase.
 - `build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` must contain the
   AppStream release entry for `0.1.4-14` dated `2026-05-14`.

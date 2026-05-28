@@ -23,7 +23,7 @@ Non-regression rules:
 - Preserve the N.N.N-X release versioning rule.
 - c420ui is the user-facing terminal interface name.
 - Do not use Terminal Assistant or TUI as product names.
-- Actions must come from config/canva-linux/actions.json.
+- Actions must come from build-resources/canva-linux/config/actions.json.
 - Do not duplicate action logic in c420ui or launcher code.
 - Preserve the legacy Action Runner only as a compatibility path until an explicit legacy audit changes it.
 - Preserve CL-EyeDropper.

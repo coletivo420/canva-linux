@@ -13,8 +13,8 @@ err()   { echo -e "${RED}[error]${NC} $*" >&2; exit 1; }
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-MANIFEST_PATH="packaging/flathub/manifest.yml"
-GENERATED_SOURCES_PATH="packaging/flathub/generated-sources.json"
+MANIFEST_PATH="build-resources/canva-linux/packaging/flathub/manifest.yml"
+GENERATED_SOURCES_PATH="build-resources/canva-linux/packaging/flathub/generated-sources.json"
 SUBMISSION_REPO_DIR="repo"
 
 cd "${REPO_ROOT}"
@@ -27,10 +27,10 @@ require_command node
 
 ARCHIVE_URL="$(node - <<'NODE'
 const fs = require('node:fs');
-const manifest = fs.readFileSync('packaging/flathub/manifest.yml', 'utf8');
+const manifest = fs.readFileSync('build-resources/canva-linux/packaging/flathub/manifest.yml', 'utf8');
 const match = manifest.match(/url:\s*(\S+)/);
 if (!match) {
-  console.error('Unable to find archive url in packaging/flathub/manifest.yml');
+  console.error('Unable to find archive url in build-resources/canva-linux/packaging/flathub/manifest.yml');
   process.exit(1);
 }
 console.log(match[1]);
@@ -38,10 +38,10 @@ NODE
 )"
 ARCHIVE_SHA256="$(node - <<'NODE'
 const fs = require('node:fs');
-const manifest = fs.readFileSync('packaging/flathub/manifest.yml', 'utf8');
+const manifest = fs.readFileSync('build-resources/canva-linux/packaging/flathub/manifest.yml', 'utf8');
 const match = manifest.match(/sha256:\s*([a-fA-F0-9]{64})/);
 if (!match) {
-  console.error('Unable to find sha256 in packaging/flathub/manifest.yml');
+  console.error('Unable to find sha256 in build-resources/canva-linux/packaging/flathub/manifest.yml');
   process.exit(1);
 }
 console.log(match[1].toLowerCase());
@@ -52,7 +52,7 @@ NODE
 for script in \
   scripts/validate-flathub-submission.sh \
   scripts/prepare-flathub-submission.sh \
-  packaging/flathub/scripts/generate-npm-sources.sh; do
+  build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh; do
   info "Checking ${script} syntax"
   bash -n "${script}"
   ok "${script} syntax OK"
@@ -68,7 +68,7 @@ const fs = require('node:fs');
 
 const manifests = [
   'io.github.coletivo420.canva-linux.yml',
-  'packaging/flathub/manifest.yml',
+  'build-resources/canva-linux/packaging/flathub/manifest.yml',
 ];
 
 const forbidden = [
@@ -143,7 +143,7 @@ const fs = require('node:fs');
 
 const checks = [
   ['io.github.coletivo420.canva-linux.yml', 'app-id: io.github.coletivo420.canva-linux'],
-  ['packaging/flathub/manifest.yml', 'app-id: io.github.coletivo420.canva-linux'],
+  ['build-resources/canva-linux/packaging/flathub/manifest.yml', 'app-id: io.github.coletivo420.canva-linux'],
   ['build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop', 'Name=Canva Linux'],
   ['build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop', 'Comment=A community opensource desktop wrapper for use with Canva'],
   ['build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml', '<id>io.github.coletivo420.canva-linux</id>'],
@@ -165,7 +165,7 @@ ok "Branding/app-id checks passed"
 node - <<'NODE'
 const fs = require('node:fs');
 
-const manifest = fs.readFileSync('packaging/flathub/manifest.yml', 'utf8');
+const manifest = fs.readFileSync('build-resources/canva-linux/packaging/flathub/manifest.yml', 'utf8');
 const required = [
   'runtime: org.freedesktop.Platform',
   'sdk: org.freedesktop.Sdk',
@@ -189,7 +189,7 @@ if (manifest.includes('type: dir')) {
   process.exit(1);
 }
 
-const generated = JSON.parse(fs.readFileSync('packaging/flathub/generated-sources.json', 'utf8'));
+const generated = JSON.parse(fs.readFileSync('build-resources/canva-linux/packaging/flathub/generated-sources.json', 'utf8'));
 if (!generated || typeof generated !== 'object') {
   console.error('generated-sources.json is not a valid module object');
   process.exit(1);

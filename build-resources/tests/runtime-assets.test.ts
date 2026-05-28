@@ -58,7 +58,7 @@ test("copy-runtime-assets falls back to committed metadata when effective metada
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "canva-runtime-assets-committed-"));
   try {
     writeJson(
-      path.join(tmpRoot, "config", "canva-linux", "build-metadata.json"),
+      path.join(tmpRoot, "build-resources", "canva-linux", "config", "build-metadata.json"),
       { buildRevision: "unknown", fullVersion: "0.1.4-15.Dev.9" },
     );
 
@@ -82,7 +82,7 @@ test("copy-runtime-assets prefers effective metadata over committed metadata", (
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "canva-runtime-assets-prefer-effective-"));
   try {
     writeJson(
-      path.join(tmpRoot, "config", "canva-linux", "build-metadata.json"),
+      path.join(tmpRoot, "build-resources", "canva-linux", "config", "build-metadata.json"),
       { buildRevision: "unknown", fullVersion: "0.1.4-15.Dev.9" },
     );
     writeJson(

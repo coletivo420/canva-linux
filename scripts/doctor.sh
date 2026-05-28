@@ -22,7 +22,7 @@ else
   node <<'NODE'
 const fs = require('node:fs');
 const { createRequire } = require('node:module');
-const config = JSON.parse(fs.readFileSync('config/canva-linux/dependencies.json', 'utf8'));
+const config = JSON.parse(fs.readFileSync('build-resources/canva-linux/config/dependencies.json', 'utf8'));
 const req = createRequire(process.cwd() + '/package.json');
 for (const dep of config.npm.requiredDevDependencies || []) {
   try {

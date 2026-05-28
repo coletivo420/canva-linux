@@ -36,7 +36,7 @@ npm ci --include=dev
 ## TypeScript source rules
 
 - All maintained Node.js source code is TypeScript.
-- JavaScript is generated output only; do not add maintained `.js` files under `scripts/`, `test/`, configs, or Flathub helper script paths.
+- JavaScript is generated output only; do not add maintained `.js` files under `scripts/`, `build-resources/tests/`, configs, or Flathub helper script paths.
 - Shell remains shell for host operations such as builder command glue, native/Flatpak install, sudo, purge, XDG
   integration, and validation that must run before Node.
 - New scripts must be TypeScript unless they are shell scripts for those host operations.
@@ -49,11 +49,11 @@ npm ci --include=dev
 
 ## Type checking and linting
 
-The default `npm run typecheck` uses `tsconfig.json` with `strict: false` so the
+The default `npm run typecheck` uses `build-resources/config/typescript/tsconfig.json` with `strict: false` so the
 whole project can keep moving while legacy surfaces are tightened incrementally.
 
 `npm run typecheck:strict` is strict by critical surface, not strict global yet.
-Its current surface is grouped in `tsconfig.strict.json` as:
+Its current surface is grouped in `build-resources/config/typescript/tsconfig.strict.json` as:
 
 1. `build-resources/electron/main/**/*.ts`
 2. `build-resources/electron/shared/**/*.ts`
@@ -87,7 +87,7 @@ when they leave the public index.
 All workflow actions must be registered in:
 
 ```text
-config/canva-linux/actions.json
+build-resources/canva-linux/config/actions.json
 ```
 
 Do not add hardcoded action lists directly in c420ui or builder command code.
@@ -102,7 +102,7 @@ routing for build, validate, install, uninstall, purge, and release belongs to c
 Recommended flow:
 
 1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.
-2. Add entry in `config/canva-linux/actions.json`.
+2. Add entry in `build-resources/canva-linux/config/actions.json`.
 3. Run `npm run check:canva-linux`.
 4. Test direct CLI through the public builder alias: `./canva-linux-c420ui-builder <action-flag> --dry-run`.
 5. Test the compiled c420ui CLI bridge when needed: `npm run c420ui:cli -- <action-flag> --dry-run`.
@@ -111,7 +111,7 @@ Recommended flow:
 ## Sudo and Privileged Actions
 
 If your action requires root privileges, set `requiresRoot: true` in
-`config/canva-linux/actions.json` and use `build-resources/c420ui/host/linux/sudo-helper.sh` helpers in your backend
+`build-resources/canva-linux/config/actions.json` and use `build-resources/c420ui/host/linux/sudo-helper.sh` helpers in your backend
 script. The generic root policy contract lives in
 `build-resources/c420ui/src/root-provider.ts`; the concrete Canva Linux provider lives in
 `scripts/c420ui-adapter/root-provider.ts`.
@@ -139,7 +139,7 @@ These commands automatically compile their TypeScript check scripts if necessary
 ## Next packaging target
 
 Next line: AUR/PKGBUILD experimental packaging.
-AUR actions must be added through `config/canva-linux/actions.json`.
+AUR actions must be added through `build-resources/canva-linux/config/actions.json`.
 
 ## Current execution architecture
 

@@ -75,10 +75,10 @@ function readLockfile(): PackageLock {
 
 function validateSubmissionWorkspace(): void {
   if (!fs.existsSync(flathubDir) || !fs.statSync(flathubDir).isDirectory()) {
-    fail("missing packaging/flathub submission workspace");
+    fail("missing build-resources/canva-linux/packaging/flathub submission workspace");
   }
   if (!fs.existsSync(manifestPath)) {
-    fail("missing packaging/flathub/manifest.yml submission manifest");
+    fail("missing build-resources/canva-linux/packaging/flathub/manifest.yml submission manifest");
   }
 
   const manifest = readText(manifestPath);
@@ -87,11 +87,11 @@ function validateSubmissionWorkspace(): void {
     !manifest.includes("- generated-sources.json")
   ) {
     fail(
-      "packaging/flathub/manifest.yml must include generated-sources.json as a module",
+      "build-resources/canva-linux/packaging/flathub/manifest.yml must include generated-sources.json as a module",
     );
   }
   if (path.dirname(outputPath) !== flathubDir) {
-    fail("generated npm sources output must stay under packaging/flathub");
+    fail("generated npm sources output must stay under build-resources/canva-linux/packaging/flathub");
   }
 }
 

@@ -5,8 +5,8 @@ import path from "node:path";
 import test from "node:test";
 import type { SpawnSyncOptionsWithStringEncoding, SpawnSyncReturns } from "node:child_process";
 
-import { createCanvaLinuxDetectionProvider } from "../scripts/c420ui-adapter/detection/provider";
-import type { c420uiOverviewStatus } from "../build-resources/c420ui/src/detection";
+import { createCanvaLinuxDetectionProvider } from "../../scripts/c420ui-adapter/detection/provider";
+import type { c420uiOverviewStatus } from "../c420ui/src/detection";
 
 type FakeRunCommand = (
   command: string,
@@ -17,7 +17,7 @@ type FakeRunCommand = (
 function createProjectRoot(): string {
   const rootDir = mkdtempSync(path.join(tmpdir(), "canva-linux-detection-"));
   mkdirSync(path.join(rootDir, "scripts"), { recursive: true });
-  mkdirSync(path.join(rootDir, "config/canva-linux"), { recursive: true });
+  mkdirSync(path.join(rootDir, "build-resources/canva-linux/config"), { recursive: true });
   writeFileSync(
     path.join(rootDir, "package.json"),
     `${JSON.stringify({ name: "canva-linux", version: "0.1.4-14" }, null, 2)}\n`,
@@ -203,7 +203,7 @@ test("provider maps appimage full version from stdout", () => {
 test("provider keeps appImageVersion as base and appImageFullVersion as effective version from artifact fragment", () => {
   withProjectRoot((rootDir) => {
     writeFileSync(
-      path.join(rootDir, "config/canva-linux/artifacts.json"),
+      path.join(rootDir, "build-resources/canva-linux/config/artifacts.json"),
       `${JSON.stringify({
         workflows: [
           {
@@ -245,7 +245,7 @@ test("provider keeps appImageVersion as base and appImageFullVersion as effectiv
 test("provider exposes artifactFragments and derives legacy appImageArtifacts from them", () => {
   withProjectRoot((rootDir) => {
     writeFileSync(
-      path.join(rootDir, "config/canva-linux/artifacts.json"),
+      path.join(rootDir, "build-resources/canva-linux/config/artifacts.json"),
       `${JSON.stringify({
         workflows: [
           {

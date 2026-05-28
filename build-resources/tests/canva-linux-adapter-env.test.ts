@@ -8,19 +8,27 @@ import type { SpawnSyncReturns } from "node:child_process";
 import {
   createC420UIActionEngine,
   c420uiExitCodes,
-} from "../build-resources/c420ui/src";
-import { createCanvaLinuxC420UIAdapter } from "../scripts/c420ui-adapter/adapter";
-import { createCanvaLinuxRootProvider } from "../scripts/c420ui-adapter/root-provider";
+} from "../c420ui/src";
+import { createCanvaLinuxC420UIAdapter } from "../../scripts/c420ui-adapter/adapter";
+import { createCanvaLinuxRootProvider } from "../../scripts/c420ui-adapter/root-provider";
 
 function createTempProject(): string {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-adapter-env-"));
-  fs.mkdirSync(path.join(rootDir, "config", "canva-linux"), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, "build-resources", "canva-linux", "config"), {
+    recursive: true,
+  });
   fs.writeFileSync(
     path.join(rootDir, "package.json"),
     `${JSON.stringify({ name: "adapter-env-test", version: "0.0.0" }, null, 2)}\n`,
   );
   fs.writeFileSync(
-    path.join(rootDir, "config", "canva-linux", "actions.json"),
+    path.join(
+      rootDir,
+      "build-resources",
+      "canva-linux",
+      "config",
+      "actions.json",
+    ),
     `${JSON.stringify(
       [
         {

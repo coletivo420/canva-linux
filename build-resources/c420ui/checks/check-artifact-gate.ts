@@ -179,12 +179,12 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
   const c420uiPackageJson = readJson<PackageJson>(rootDir, "build-resources/c420ui/package.json");
-  const packagedBuildMetadata = readJson<BuildMetadataJson>(rootDir, "config/canva-linux/build-metadata.json");
+  const packagedBuildMetadata = readJson<BuildMetadataJson>(rootDir, "build-resources/canva-linux/config/build-metadata.json");
   const effectiveBuildMetadata = loadEffectiveBuildMetadata(rootDir);
   // Artifact validation is intentionally pinned to committed metadata.
   // Runtime/build metadata in a source checkout may still resolve from Git HEAD,
   // but committed bootstrap artifacts must compare against the committed
-  // config/canva-linux/build-metadata.json so the gate does not dirty the
+  // build-resources/canva-linux/config/build-metadata.json so the gate does not dirty the
   // worktree with the not-yet-materialized commit hash.
   const buildMetadata = {
     ...effectiveBuildMetadata,
@@ -279,16 +279,16 @@ function compareArtifacts(rootDir: string, expectedBootstrapDir: string, compari
 
 function validateExpectedManifestMetadata(rootDir: string, expectedBootstrapDir: string): void {
   const manifest = readJson<Record<string, unknown>>(expectedBootstrapDir, "manifest.json");
-  const packagedMetadata = readJson<BuildMetadataJson>(rootDir, "config/canva-linux/build-metadata.json");
+  const packagedMetadata = readJson<BuildMetadataJson>(rootDir, "build-resources/canva-linux/config/build-metadata.json");
   const failures: string[] = [];
 
   if (packagedMetadata.buildRevision !== "unknown") {
-    failures.push("config/canva-linux/build-metadata.json: committed buildRevision must be unknown");
+    failures.push("build-resources/canva-linux/config/build-metadata.json: committed buildRevision must be unknown");
   }
   for (const field of ["version", "displayVersion", "phase", "fullVersion"] as const) {
     const value = packagedMetadata[field];
     if (typeof value === "string" && /\+g[0-9a-f]{7}$/i.test(value)) {
-      failures.push(`config/canva-linux/build-metadata.json: committed ${field} must not include +g hash`);
+      failures.push(`build-resources/canva-linux/config/build-metadata.json: committed ${field} must not include +g hash`);
     }
   }
 

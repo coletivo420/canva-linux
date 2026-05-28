@@ -16,11 +16,11 @@ validate_json_file package.json
 validate_json_file package-lock.json
 
 # During committed artifact validation, pin CANVA_LINUX_BUILD_REVISION from
-# config/canva-linux/build-metadata.json before any build:metadata run. This
+# build-resources/canva-linux/config/build-metadata.json before any build:metadata run. This
 # prevents gates from trying to write the current, not-yet-materialized commit
 # hash while validating already-committed artifacts.
-if [[ -z "${CANVA_LINUX_BUILD_REVISION:-}" && -f config/canva-linux/build-metadata.json ]]; then
-  CANVA_LINUX_BUILD_REVISION="$(node -e 'process.stdout.write(String(require("./config/canva-linux/build-metadata.json").buildRevision || ""))')"
+if [[ -z "${CANVA_LINUX_BUILD_REVISION:-}" && -f build-resources/canva-linux/config/build-metadata.json ]]; then
+  CANVA_LINUX_BUILD_REVISION="$(node -e 'process.stdout.write(String(require("./build-resources/canva-linux/config/build-metadata.json").buildRevision || ""))')"
   export CANVA_LINUX_BUILD_REVISION
 fi
 

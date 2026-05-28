@@ -4,9 +4,9 @@ import path from "node:path";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
-const testDir = path.join(rootDir, "test");
+const testDir = path.join(rootDir, "build-resources", "tests");
 const c420uiTestDir = path.join(rootDir, "build-resources", "c420ui", "test");
-const compiledTestDir = path.join(rootDir, ".build", "test");
+const compiledTestDir = path.join(rootDir, ".build", "build-resources", "tests");
 const nodeTestSuffix = ".test.ts";
 const playwrightSpecSuffix = ".spec.ts";
 const rootTestDirectorySelector = "__root_test_directory__";
@@ -27,16 +27,16 @@ function normalizeTestSelector(argument: string): string | null {
 
   const normalized = normalizePathForNodeTest(argument);
   const normalizedDirectory = normalized.replace(/\/$/, "");
-  if (normalizedDirectory === "test") return rootTestDirectorySelector;
+  if (normalizedDirectory === "build-resources/tests") return rootTestDirectorySelector;
   if (normalizedDirectory === "build-resources/c420ui/test") {
     return c420uiTestDirectorySelector;
   }
 
-  const withoutBuildPrefix = normalized.startsWith(".build/test/")
-    ? normalized.slice(".build/test/".length)
+  const withoutBuildPrefix = normalized.startsWith(".build/build-resources/tests/")
+    ? normalized.slice(".build/build-resources/tests/".length)
     : normalized;
-  const withoutTestPrefix = withoutBuildPrefix.startsWith("test/")
-    ? withoutBuildPrefix.slice("test/".length)
+  const withoutTestPrefix = withoutBuildPrefix.startsWith("build-resources/tests/")
+    ? withoutBuildPrefix.slice("build-resources/tests/".length)
     : withoutBuildPrefix.startsWith("build-resources/c420ui/test/")
       ? withoutBuildPrefix.slice("build-resources/c420ui/test/".length)
       : withoutBuildPrefix;
@@ -151,7 +151,7 @@ export function main(): void {
 
   if (testFiles.length === 0) {
     console.error(
-      "[error] No Node test files were found. Expected at least one *.test.ts file under test/ or build-resources/c420ui/test/.",
+      "[error] No Node test files were found. Expected at least one *.test.ts file under build-resources/tests/ or build-resources/c420ui/test/.",
     );
     process.exit(1);
   }
@@ -216,17 +216,17 @@ export function main(): void {
   const compiledTestFiles = selectedTestInputFiles.map((file) => {
     const rel = file.startsWith(c420uiTestDir)
       ? path.join("build-resources/c420ui/test", path.relative(c420uiTestDir, file))
-      : path.join("test", path.relative(testDir, file));
+      : path.join("build-resources/tests", path.relative(testDir, file));
     return path.join(".build", rel.replace(/\.ts$/, ".js"));
   });
 
   console.error(
-    `[info] Compiling ${relativeCompileInputs.length} TypeScript test file(s) into .build/test.`,
+    `[info] Compiling ${relativeCompileInputs.length} TypeScript test file(s) into .build/build-resources/tests.`,
   );
 
   fs.rmSync(compiledTestDir, { recursive: true, force: true });
   fs.mkdirSync(compiledTestDir, { recursive: true });
-  fs.mkdirSync(path.join(compiledTestDir, "../build-resources/c420ui/test"), {
+  fs.mkdirSync(path.join(rootDir, ".build", "build-resources", "c420ui", "test"), {
     recursive: true,
   });
 
@@ -238,6 +238,7 @@ export function main(): void {
       "--platform=node",
       "--target=node20",
       "--format=cjs",
+      "--outbase=.",
       "--outdir=.build",
       "--sourcemap=inline",
       "--log-level=warning",

@@ -48,10 +48,10 @@ dependent project that supplies metadata, actions, recipes, and runtime scripts.
 
 c420ui consumes project data through the bridge and provider interfaces. For
 Canva Linux, those interfaces are implemented by `scripts/c420ui-adapter/` and
-load configuration from `config/canva-linux/`.
+load configuration from `build-resources/canva-linux/config/`.
 
 The c420ui package must not import `scripts/c420ui-adapter/`,
-`scripts/canva-linux/`, or `config/canva-linux/`.
+`scripts/canva-linux/`, or `build-resources/canva-linux/config/`.
 
 ## Boundary checks
 

@@ -306,7 +306,7 @@ function validateManifestBuildMetadata(
   manifest: BootstrapManifestBuildMetadata,
   failures: string[],
 ): void {
-  const metadataPath = "config/canva-linux/build-metadata.json";
+  const metadataPath = "build-resources/canva-linux/config/build-metadata.json";
   const packagedMetadata = readJson<BuildMetadataJson>(rootDir, metadataPath);
   if (!packagedMetadata) {
     failures.push(`${metadataPath}: missing generated build metadata for c420ui bootstrap consistency checks`);

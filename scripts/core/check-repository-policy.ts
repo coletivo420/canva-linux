@@ -238,8 +238,8 @@ const nativeSourceExtensions = new Set([
 
 const forbiddenSourceRoots = [
   "scripts/",
-  "test/",
-  "packaging/flathub/scripts/",
+  "build-resources/tests/",
+  "build-resources/canva-linux/packaging/flathub/scripts/",
 ] as const;
 
 const forbiddenConfigFiles = new Set([
@@ -272,13 +272,13 @@ function validateRequiredTypeScriptEntrypoints(
   failures: string[],
 ): void {
   const required = [
-    "eslint.config.ts",
+    "build-resources/config/eslint/eslint.config.ts",
     "playwright.config.ts",
     "scripts/run-node-tests.ts",
     "scripts/run-typescript-script.ts",
     "scripts/run-core-entry.sh",
-    "packaging/flathub/scripts/generate-npm-sources.ts",
-    "packaging/flathub/scripts/generate-npm-sources.sh",
+    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
+    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh",
   ] as const;
 
   for (const file of required) {
@@ -345,7 +345,7 @@ function validateTypeScriptConfig(
   const forbiddenIncludes = [
     "build-resources/electron/**/*.js",
     "scripts/**/*.js",
-    "test/**/*.js",
+    "build-resources/tests/**/*.js",
   ] as const;
   for (const forbiddenInclude of forbiddenIncludes) {
     if (config.include?.includes(forbiddenInclude)) {
@@ -357,7 +357,7 @@ function validateTypeScriptConfig(
 }
 
 function validateTypeScriptConfigs(rootDir: string, failures: string[]): void {
-  for (const configPath of ["tsconfig.json", "tsconfig.build.json"] as const) {
+  for (const configPath of ["build-resources/config/typescript/tsconfig.json", "build-resources/config/typescript/tsconfig.build.json"] as const) {
     validateTypeScriptConfig(rootDir, configPath, failures);
   }
 }
@@ -366,7 +366,7 @@ function validateEslintTypeScriptOnlyConfig(
   rootDir: string,
   failures: string[],
 ): void {
-  const configPath = "eslint.config.ts";
+  const configPath = "build-resources/config/eslint/eslint.config.ts";
   const config = fs.readFileSync(path.join(rootDir, configPath), "utf8");
   if (
     config.includes("'build-resources/electron/**/*.js'") ||
@@ -395,7 +395,7 @@ function validateNoCommonJsRuntimeExports(
 }
 
 function validateFlathubShell(rootDir: string, failures: string[]): void {
-  const shellPath = "packaging/flathub/scripts/generate-npm-sources.sh";
+  const shellPath = "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh";
   const shellContent = fs.readFileSync(path.join(rootDir, shellPath), "utf8");
   if (!shellContent.includes("generate-npm-sources.ts")) {
     failures.push(
@@ -476,26 +476,26 @@ const generatedOutputJavaScriptPaths = [
 const sourceJavaScriptProbePaths = [
   "scripts/source-regression.js",
   "build-resources/electron/main/source-regression.js",
-  "test/source-regression.test.js",
-  "packaging/flathub/scripts/source-regression.js",
+  "build-resources/tests/source-regression.test.js",
+  "build-resources/canva-linux/packaging/flathub/scripts/source-regression.js",
   "eslint.config.js",
   "playwright.config.js",
 ] as const;
 
 const requiredVersionedPaths = [
-  "eslint.config.ts",
+  "build-resources/config/eslint/eslint.config.ts",
   "playwright.config.ts",
-  "tsconfig.json",
-  "tsconfig.build.json",
-  "tsconfig.strict.json",
+  "build-resources/config/typescript/tsconfig.json",
+  "build-resources/config/typescript/tsconfig.build.json",
+  "build-resources/config/typescript/tsconfig.strict.json",
   "package-lock.json",
-  "config/canva-linux/actions.json",
-  "config/canva-linux/project-ui.json",
+  "build-resources/canva-linux/config/actions.json",
+  "build-resources/canva-linux/config/project-ui.json",
   "scripts/theme.json",
   "io.github.coletivo420.canva-linux.yml",
-  "packaging/flathub/manifest.yml",
-  "packaging/flathub/generated-sources.json",
-  "packaging/flathub/scripts/generate-npm-sources.ts",
+  "build-resources/canva-linux/packaging/flathub/manifest.yml",
+  "build-resources/canva-linux/packaging/flathub/generated-sources.json",
+  "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
   "build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
   "build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
   "build-resources/canva-linux-assets/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png",
@@ -671,7 +671,7 @@ function main(): number {
   );
   validateNotIgnored(
     rootDir,
-    gitTrackedFiles(rootDir, "test/**/*.ts"),
+    gitTrackedFiles(rootDir, "build-resources/tests/**/*.ts"),
     "TypeScript tests",
     failures,
   );
@@ -808,7 +808,7 @@ const criticalMultilineFiles = [
 ] as const;
 
 const criticalReadableSourceFiles = [
-  "eslint.config.ts",
+  "build-resources/config/eslint/eslint.config.ts",
   "playwright.config.ts",
   "scripts/run-node-tests.ts",
   "scripts/run-typescript-script.ts",
@@ -1072,8 +1072,8 @@ function validateDependentProjectBoundaryLayout(
   const requiredPaths = [
     "build-resources/c420ui/src",
     "build-resources/c420ui/src/terminal",
-    "config/canva-linux/actions.json",
-    "config/canva-linux/project-ui.json",
+    "build-resources/canva-linux/config/actions.json",
+    "build-resources/canva-linux/config/project-ui.json",
     "scripts/c420ui-adapter",
     "scripts/canva-linux/actions",
   ] as const;
@@ -1165,7 +1165,7 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
   const removedFiles = [
     `scripts/core/${legacyActionRunnerStem}.ts`,
     `scripts/core/${legacyCompatibilityStem}.ts`,
-    `test/${legacyActionRunnerStem}.test.ts`,
+    `build-resources/tests/${legacyActionRunnerStem}.test.ts`,
     "scripts/actions.json",
     "scripts/project-ui.json",
     "scripts/core/action-registry.ts",
@@ -1554,7 +1554,7 @@ function validateRemovedCompatibilityAliases(
 ): void {
   const actions = readJsonFile<Array<{ id?: string; cli?: string[] }>>(
     rootDir,
-    "config/canva-linux/actions.json",
+    "build-resources/canva-linux/config/actions.json",
     failures,
   );
   if (!actions) return;
@@ -1565,7 +1565,7 @@ function validateRemovedCompatibilityAliases(
         (forbiddenCompatibilityCliAliases as readonly string[]).includes(alias)
       ) {
         failures.push(
-          `config/canva-linux/actions.json ${action.id ?? "<unknown>"}: removed compatibility alias ${alias} must not be registered`,
+          `build-resources/canva-linux/config/actions.json ${action.id ?? "<unknown>"}: removed compatibility alias ${alias} must not be registered`,
         );
       }
     }
@@ -1728,7 +1728,7 @@ function main(): number {
   const shellClassificationPath = "docs/checks/SHELL_HELPERS.md";
   const runEntrypointPath = "build-resources/c420ui/scripts/run-c420ui.ts";
   const dependenciesPath = "scripts/c420ui-adapter/dependencies.ts";
-  const configPath = "config/canva-linux/dependencies.json";
+  const configPath = "build-resources/canva-linux/config/dependencies.json";
 
   const legacyAdapterDir = path.join(rootDir, "scripts", "c420ui-" + "canva-linux");
   if (fs.existsSync(legacyAdapterDir)) {

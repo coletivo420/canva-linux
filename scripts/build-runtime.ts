@@ -34,7 +34,7 @@ export function main(): void {
     "run",
     "bootstrap:electron-builder",
   ]);
-  run("compile electron runtime", "npx", ["tsc", "-p", "tsconfig.build.json"]);
+  run("compile electron runtime", "npx", ["tsc", "-p", "build-resources/config/typescript/tsconfig.build.json"]);
   run("copy runtime assets", process.execPath, [
     ".build/scripts/copy-runtime-assets.js",
   ]);

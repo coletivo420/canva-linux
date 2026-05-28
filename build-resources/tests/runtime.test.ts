@@ -29,7 +29,7 @@ test("runtime metadata loader prefers effective metadata and falls back to commi
   );
 
   const effectiveIndex = source.indexOf('.build", "canva-linux", "build-metadata.effective.json');
-  const committedIndex = source.indexOf('"config", "canva-linux", "build-metadata.json"');
+  const committedIndex = source.indexOf('"build-resources", "canva-linux", "config", "build-metadata.json"');
   assert.ok(effectiveIndex >= 0);
   assert.ok(committedIndex > effectiveIndex);
 });

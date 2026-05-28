@@ -163,7 +163,7 @@ test("c420ui bootstrap manifest metadata fields are well-formed", () => {
     C420UI_BOOTSTRAP_MANIFEST_PATH,
   );
   const buildMetadata = readJson<BuildMetadata>(
-    path.join("config", "canva-linux", "build-metadata.json"),
+    path.join("build-resources", "canva-linux", "config", "build-metadata.json"),
   );
   const c420uiPackageJson = readJson<{ version?: string }>(
     path.join("build-resources", "c420ui", "package.json"),
