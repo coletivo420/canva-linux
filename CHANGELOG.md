@@ -5,6 +5,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- The c420ui builder now auto-generates missing, empty, invalid, or stale bootstrap bundles before launch.
+- Normal users only need npm installed; they no longer need to run `npm run build:c420ui-bootstrap` manually.
+- Validation gates remain check-only and fail when committed bootstrap artifacts are stale.
+- Runtime/builder auto-fixes missing or stale bundles, while CI checks keep drift detection strict.
 - Refactored c420ui tooling: moved c420ui-owned runtime/build/check/test ownership, bootstrap helpers,
   shell helpers, and tests into `build-resources/c420ui`. The adapter layer in `scripts/c420ui-adapter` is now
   integration-only.

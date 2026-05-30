@@ -88,6 +88,10 @@ Generated Artifacts
 
 ## c420ui bootstrap artifact validation
 
+The c420ui builder now auto-generates missing or stale bootstrap bundles before launch. Normal users only need npm installed and do not need to run `npm run build:c420ui-bootstrap` manually.
+Validation gates remain check-only and still fail when committed bootstrap artifacts are stale.
+Runtime/builder auto-fixes missing or stale bundles automatically; CI checks detect drift.
+
 build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
