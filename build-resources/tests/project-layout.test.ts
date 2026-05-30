@@ -51,7 +51,25 @@ test("electron runtime and packaging assets live in the canonical build-resource
     "build-resources/config/typescript/tsconfig.build.json",
     "build-resources/config/typescript/tsconfig.strict.json",
     "build-resources/config/eslint/eslint.config.ts",
+    "build-resources/config/playwright/playwright.config.ts",
   ] as const) {
     assert.equal(exists(relativePath), true, `${relativePath} must exist`);
+  }
+});
+
+test("root does not contain loose .ts files and only keeps package json files", () => {
+  const rootEntries = fs.readdirSync(rootDir, { withFileTypes: true });
+  for (const entry of rootEntries) {
+    if (!entry.isFile()) continue;
+    if (entry.name.endsWith(".ts")) {
+      assert.fail(`${entry.name} must not exist at repository root`);
+    }
+    if (entry.name.endsWith(".json")) {
+      assert.equal(
+        ["package.json", "package-lock.json"].includes(entry.name),
+        true,
+        `${entry.name} is not an allowed root JSON file`,
+      );
+    }
   }
 });

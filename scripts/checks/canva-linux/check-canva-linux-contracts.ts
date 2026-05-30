@@ -383,7 +383,7 @@ function checkBuildResourcesLayoutContract(rootDir: string, failures: string[]):
   }
 }
 
-function checkRootLayoutConsolidationContract(rootDir: string, failures: string[]): void {
+function checkRootLayoutMinimizationContract(rootDir: string, failures: string[]): void {
   for (const relativePath of [
     "build-resources/canva-linux/screenshots",
     "build-resources/canva-linux/config",
@@ -394,6 +394,7 @@ function checkRootLayoutConsolidationContract(rootDir: string, failures: string[
     "build-resources/config/typescript/tsconfig.build.json",
     "build-resources/config/typescript/tsconfig.strict.json",
     "build-resources/config/eslint/eslint.config.ts",
+    "build-resources/config/playwright/playwright.config.ts",
   ] as const) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: consolidated layout path must exist`);
@@ -425,9 +426,7 @@ function checkRootLayoutConsolidationContract(rootDir: string, failures: string[
     }
 
     if (entry.name.endsWith(".ts")) {
-      if (!["playwright.config.ts"].includes(entry.name)) {
-        failures.push(`${entry.name}: root TypeScript files are forbidden by consolidation policy`);
-      }
+      failures.push(`${entry.name}: root TypeScript files are forbidden by consolidation policy`);
     }
   }
 }
@@ -555,7 +554,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkBuildMetadataContracts(rootDir, failures);
   checkRuntimeAssetsMetadataCopyContract(rootDir, failures);
   checkBuildResourcesLayoutContract(rootDir, failures);
-  checkRootLayoutConsolidationContract(rootDir, failures);
+  checkRootLayoutMinimizationContract(rootDir, failures);
   checkDocs(rootDir, failures);
   checkValidateProjectScript(rootDir, failures);
 }

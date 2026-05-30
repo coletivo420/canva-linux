@@ -273,7 +273,7 @@ function validateRequiredTypeScriptEntrypoints(
 ): void {
   const required = [
     "build-resources/config/eslint/eslint.config.ts",
-    "playwright.config.ts",
+    "build-resources/config/playwright/playwright.config.ts",
     "scripts/run-node-tests.ts",
     "scripts/run-typescript-script.ts",
     "scripts/run-core-entry.sh",
@@ -484,7 +484,7 @@ const sourceJavaScriptProbePaths = [
 
 const requiredVersionedPaths = [
   "build-resources/config/eslint/eslint.config.ts",
-  "playwright.config.ts",
+  "build-resources/config/playwright/playwright.config.ts",
   "build-resources/config/typescript/tsconfig.json",
   "build-resources/config/typescript/tsconfig.build.json",
   "build-resources/config/typescript/tsconfig.strict.json",
@@ -809,7 +809,7 @@ const criticalMultilineFiles = [
 
 const criticalReadableSourceFiles = [
   "build-resources/config/eslint/eslint.config.ts",
-  "playwright.config.ts",
+  "build-resources/config/playwright/playwright.config.ts",
   "scripts/run-node-tests.ts",
   "scripts/run-typescript-script.ts",
   "scripts/core/check-repository-policy.ts",

@@ -119,7 +119,7 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `build-resources/canva-linux/packaging/flathub/manifest.yml`
 - `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts`
 - `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`
-- `playwright.config.ts`
+- `build-resources/config/playwright/playwright.config.ts`
 - `run.sh`
 - `scripts/app-identity-common.sh`
 - `scripts/canva-linux/actions/registry.ts`

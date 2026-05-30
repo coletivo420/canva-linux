@@ -58,7 +58,7 @@ progress bar.
 
 Application Settings are persistent c420ui state stored at
 `$XDG_CONFIG_HOME/canva-linux/tool-settings.json`, with
-`~/.build-resources/canva-linux/config/tool-settings.json` as fallback. They are not entries in
+`~/.config/canva-linux/tool-settings.json` as fallback. They are not entries in
 `build-resources/canva-linux/config/actions.json`.
 
 Tool logs and Action logs are semantically distinct in the c420ui logs panel. Tool

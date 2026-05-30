@@ -18,7 +18,7 @@
     "../../../scripts/**/*.ts",
     "../../c420ui/**/*.ts",
     "../../tests/**/*.ts",
-    "../../../playwright.config.ts",
+    "../playwright/playwright.config.ts",
     "../eslint/eslint.config.ts",
     "../../canva-linux/packaging/flathub/scripts/**/*.ts"
   ],

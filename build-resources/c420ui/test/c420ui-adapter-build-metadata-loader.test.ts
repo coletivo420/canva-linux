@@ -51,17 +51,17 @@ function withTestProject(options: TestProjectOptions, run: (rootDir: string) => 
 
   try {
     fs.mkdirSync(path.join(rootDir, ".build", "electron", "main"), { recursive: true });
-    fs.mkdirSync(path.join(rootDir, "config", "canva-linux"), { recursive: true });
+    fs.mkdirSync(path.join(rootDir, "build-resources", "canva-linux", "config"), { recursive: true });
     fs.writeFileSync(
       path.join(rootDir, "package.json"),
       `${JSON.stringify({ name: "canva-linux-test", version: "1.2.3" }, null, 2)}\n`,
     );
     fs.writeFileSync(
-      path.join(rootDir, "config", "canva-linux", "project-ui.json"),
+      path.join(rootDir, "build-resources", "canva-linux", "config", "project-ui.json"),
       `${JSON.stringify({ displayVersion: "1.2.3 Display", phase: "1.2.3 Phase" }, null, 2)}\n`,
     );
     fs.writeFileSync(
-      path.join(rootDir, "config", "canva-linux", "build-metadata.json"),
+      path.join(rootDir, "build-resources", "canva-linux", "config", "build-metadata.json"),
       `${JSON.stringify({
         baseVersion: "9.9.9",
         baseDisplayVersion: "9.9.9 Display",

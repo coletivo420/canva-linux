@@ -14,7 +14,7 @@ logic, tests, tooling configs and Flathub helper scripts.
   support helpers into `.build/build-resources/tests/` with inline source maps before running
   `node --test` on generated JavaScript.
 - New tests must be TypeScript.
-- ESLint and Playwright use `build-resources/config/eslint/eslint.config.ts` and `playwright.config.ts`; new
+- ESLint and Playwright use `build-resources/config/eslint/eslint.config.ts` and `build-resources/config/playwright/playwright.config.ts`; new
   configs should be TypeScript when the tool supports TypeScript configs.
 - Runtime output remains CommonJS-compatible generated JavaScript under `.build/`.
 - JavaScript is not maintained as source code in `scripts/`, `build-resources/tests/`, configs,
@@ -30,7 +30,7 @@ logic, tests, tooling configs and Flathub helper scripts.
 - `scripts/core/*.ts`
 - `build-resources/tests/**/*.ts`
 - `build-resources/config/eslint/eslint.config.ts`
-- `playwright.config.ts`
+- `build-resources/config/playwright/playwright.config.ts`
 - `build-resources/canva-linux/packaging/flathub/scripts/*.ts`
 - JSON, YAML, XML, desktop entries, HTML, and shell files in their native formats
 
@@ -53,7 +53,7 @@ and `node_modules/` directories are never maintained source locations.
 - `playwright.config.js`
 
 Repository-root `eslint.config.js` and `playwright.config.js` must not exist; the
-maintained configs are `build-resources/config/eslint/eslint.config.ts` and `playwright.config.ts`.
+maintained configs are `build-resources/config/eslint/eslint.config.ts` and `build-resources/config/playwright/playwright.config.ts`.
 
 The historical `scripts/run-typescript-script.js` bootstrap must also not exist as
 maintained source. No JavaScript wrapper or bootstrap belongs under `scripts/`;

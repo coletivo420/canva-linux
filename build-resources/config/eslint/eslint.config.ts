@@ -54,7 +54,7 @@ const config = [
       "scripts/**/*.ts",
       "build-resources/tests/**/*.ts",
       "build-resources/canva-linux/packaging/flathub/scripts/**/*.ts",
-      "playwright.config.ts",
+      "build-resources/config/playwright/playwright.config.ts",
     ],
     languageOptions: {
       ecmaVersion: "latest",
