@@ -501,8 +501,13 @@ function checkRootLayoutMinimizationContract(rootDir: string, failures: string[]
 }
 
 function checkRootTests(rootDir: string, failures: string[]): void {
+  const allowedRootC420UITests = new Set([
+    "build-resources/tests/c420ui-auto-bootstrap.test.ts",
+  ]);
+
   for (const relativePath of collectFiles(rootDir, "build-resources/tests")) {
     const fileName = path.basename(relativePath);
+    if (allowedRootC420UITests.has(relativePath)) continue;
     if (/^c420ui-.*\.test\.(?:ts|js|tsx|jsx)$/.test(fileName)) {
       failures.push(`${relativePath}: root c420ui tests must not exist`);
     }
@@ -613,6 +618,60 @@ function checkValidateProjectScript(rootDir: string, failures: string[]): void {
   }
 }
 
+function checkC420UIAutoBootstrapContract(rootDir: string, failures: string[]): void {
+  const ensureBootstrapSource = readText(rootDir, "build-resources/c420ui/bootstrap/ensure-bootstrap.ts");
+  if (!ensureBootstrapSource) {
+    failures.push("build-resources/c420ui/bootstrap/ensure-bootstrap.ts: must exist");
+    return;
+  }
+
+  for (const requiredFragment of [
+    "calculateC420UISourceHash",
+    "C420UI_BOOTSTRAP_ARTIFACT_FILES",
+    "spawn(\"npm\", [\"run\", \"build:c420ui-bootstrap\"]",
+    "\"--check\"",
+  ] as const) {
+    if (!ensureBootstrapSource.includes(requiredFragment)) {
+      failures.push(`build-resources/c420ui/bootstrap/ensure-bootstrap.ts: missing required fragment ${requiredFragment}`);
+    }
+  }
+
+  const builderSource = readText(rootDir, "build-resources/c420ui/scripts/c420ui-builder.ts");
+  if (!builderSource) {
+    failures.push("build-resources/c420ui/scripts/c420ui-builder.ts: must exist");
+    return;
+  }
+
+  if (!builderSource.includes("import { ensureC420UIBootstrap } from \"../bootstrap/ensure-bootstrap\";")) {
+    failures.push("build-resources/c420ui/scripts/c420ui-builder.ts: must import ensureC420UIBootstrap");
+  }
+
+  const ensureIndex = builderSource.indexOf("ensureC420UIBootstrap(rootDir);");
+  const entrypointIndex = builderSource.indexOf("selectEntrypoint(rootDir, kind)");
+  if (ensureIndex === -1 || entrypointIndex === -1 || ensureIndex > entrypointIndex) {
+    failures.push("build-resources/c420ui/scripts/c420ui-builder.ts: ensureC420UIBootstrap(rootDir) must execute before selectEntrypoint(rootDir, kind)");
+  }
+
+  for (const forbiddenFragment of [
+    "Run npm run build:c420ui-bootstrap",
+    "c420ui bootstrap bundle is missing",
+  ] as const) {
+    if (builderSource.includes(forbiddenFragment)) {
+      failures.push(`build-resources/c420ui/scripts/c420ui-builder.ts: must not include ${forbiddenFragment}`);
+    }
+  }
+
+  const buildBootstrapSource = readText(rootDir, "build-resources/c420ui/scripts/build-bootstrap.ts");
+  if (!buildBootstrapSource) {
+    failures.push("build-resources/c420ui/scripts/build-bootstrap.ts: must exist");
+    return;
+  }
+
+  if (buildBootstrapSource.includes("ensure-bootstrap")) {
+    failures.push("build-resources/c420ui/scripts/build-bootstrap.ts: must not import ensure-bootstrap");
+  }
+}
+
 function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]): void {
   checkProjectLayoutOwnership(rootDir, failures);
   checkForbiddenPaths(rootDir, failures);
@@ -627,6 +686,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkRootLayoutMinimizationContract(rootDir, failures);
   checkDocs(rootDir, failures);
   checkValidateProjectScript(rootDir, failures);
+  checkC420UIAutoBootstrapContract(rootDir, failures);
 }
 
 function main(): void {

@@ -2,6 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+GENERATED_BUILDER="${ROOT_DIR}/build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs"
+DEV_BUILDER="${ROOT_DIR}/.build/scripts/c420ui-builder.js"
 
 if ! command -v node >/dev/null 2>&1; then
   printf '%s\n' "Node.js is required to run Canva Linux Builder powered by c420ui." >&2
@@ -9,14 +11,28 @@ if ! command -v node >/dev/null 2>&1; then
   exit 127
 fi
 
-if [[ -s "${ROOT_DIR}/build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs" ]]; then
-  exec node "${ROOT_DIR}/build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs" "$@"
+can_run_builder() {
+  local entrypoint="$1"
+  [[ -s "${entrypoint}" ]] || return 1
+  node --check "${entrypoint}" >/dev/null 2>&1
+}
+
+if can_run_builder "${GENERATED_BUILDER}"; then
+  exec node "${GENERATED_BUILDER}" "$@"
 fi
 
-if [[ -s "${ROOT_DIR}/.build/scripts/c420ui-builder.js" ]]; then
-  exec node "${ROOT_DIR}/.build/scripts/c420ui-builder.js" "$@"
+printf '%s\n' "[c420ui] bootstrap missing: build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs is missing or invalid" >&2
+printf '%s\n' "[c420ui] generating bootstrap bundle automatically..." >&2
+
+if npm --prefix "${ROOT_DIR}" run build:c420ui-bootstrap; then
+  if can_run_builder "${GENERATED_BUILDER}"; then
+    exec node "${GENERATED_BUILDER}" "$@"
+  fi
 fi
 
-printf '%s\n' "c420ui-builder bootstrap bundle is missing." >&2
-printf '%s\n' "Run npm run build:c420ui-bootstrap, then retry." >&2
+if can_run_builder "${DEV_BUILDER}"; then
+  exec node "${DEV_BUILDER}" "$@"
+fi
+
+printf '%s\n' "c420ui builder entrypoint is unavailable after automatic bootstrap generation." >&2
 exit 1

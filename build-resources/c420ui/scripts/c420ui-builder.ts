@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
+import { ensureC420UIBootstrap } from "../bootstrap/ensure-bootstrap";
 
 export const BUILDER_INTERNAL_NAME = "c420ui-builder";
 export const BUILDER_ALIAS = "canva-linux-c420ui-builder";
@@ -40,7 +41,14 @@ Running the whole builder as root may break file ownership, user sessions, build
 function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()): string {
   let current = startDir;
   while (true) {
-    if (fs.existsSync(path.join(current, "package.json"))) return current;
+    if (fs.existsSync(path.join(current, "package.json"))) {
+      const scripts = readJsonFile<{ scripts?: Record<string, string> }>(
+        path.join(current, "package.json"),
+      )?.scripts;
+      // The repository root owns build:c420ui-bootstrap. The nested c420ui package
+      // also has package.json but does not define this script.
+      if (scripts?.["build:c420ui-bootstrap"]) return current;
+    }
     const parent = path.dirname(current);
     if (parent === current) throw new Error("Unable to locate Canva Linux project root.");
     current = parent;
@@ -57,7 +65,7 @@ function readJsonFile<T>(filePath: string): T | null {
 
 function c420uiVersion(rootDir: string): string {
   return readJsonFile<PackageJson>(
-    path.join(rootDir, "packages", "c420ui", "package.json"),
+    path.join(rootDir, "build-resources", "c420ui", "package.json"),
   )?.version ?? "unknown";
 }
 
@@ -148,8 +156,8 @@ function selectEntrypoint(rootDir: string, kind: "ui" | "cli"): string {
 
   throw new Error(
     kind === "ui"
-      ? "c420ui bootstrap bundle is missing. Run npm run build:c420ui-bootstrap, then retry."
-      : "c420ui CLI bootstrap bundle is missing. Run npm run build:c420ui-bootstrap, then retry.",
+      ? "c420ui UI bootstrap entrypoint is unavailable after automatic bootstrap generation."
+      : "c420ui CLI bootstrap entrypoint is unavailable after automatic bootstrap generation.",
   );
 }
 
@@ -226,6 +234,7 @@ export function runC420UIBuilder(argv = process.argv.slice(2)): number {
 
   assertNonRoot();
   const rootDir = findProjectRoot(path.resolve(__dirname, ".."));
+  ensureC420UIBootstrap(rootDir);
   const session = createSession(rootDir);
   const kind = parsed.hasBridgeAction ? "cli" : "ui";
   const entrypoint = selectEntrypoint(rootDir, kind);
@@ -249,4 +258,3 @@ if (require.main === module) {
     process.exit(1);
   }
 }
-

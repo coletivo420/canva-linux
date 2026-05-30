@@ -79,6 +79,10 @@ boundary. GPU/display selected runtime CLI options are active diagnostics: RC va
 
 ## c420ui generated-artifact anti-corruption guardrail
 
+The c420ui builder/runtime must auto-generate missing or stale bootstrap bundles before launch.
+Normal users only need npm installed and must not be instructed to run `npm run build:c420ui-bootstrap` manually for normal builder startup.
+Validation gates remain check-only and must still fail when committed bootstrap artifacts are stale.
+
 build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
