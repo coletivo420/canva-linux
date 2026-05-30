@@ -3,6 +3,12 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import {
+  calculateCanvaLinuxSourceHash,
+  combineSourceHashes,
+} from "../../canva-linux/source-hash";
+import { calculateC420UISourceHash } from "../../../build-resources/c420ui/bootstrap/source-hash";
+
 type PackageJson = {
   scripts?: Record<string, string>;
   build?: {
@@ -277,6 +283,24 @@ function checkBuildMetadataContracts(rootDir: string, failures: string[]): void 
   for (const field of ["canvaLinuxSourceHash", "c420uiSourceHash", "combinedSourceHash"] as const) {
     if (typeof committed[field] !== "string" || !committed[field]?.startsWith("sha256:")) {
       failures.push(`build-resources/canva-linux/config/build-metadata.json: must include ${field} as sha256 hash`);
+    }
+  }
+  if (typeof committed.canvaLinuxSourceHash === "string" && typeof committed.c420uiSourceHash === "string") {
+    const expectedCanvaLinuxSourceHash = calculateCanvaLinuxSourceHash(rootDir);
+    const expectedC420UISourceHash = calculateC420UISourceHash(rootDir);
+    const expectedCombinedSourceHash = combineSourceHashes(
+      expectedCanvaLinuxSourceHash,
+      expectedC420UISourceHash,
+    );
+
+    if (committed.canvaLinuxSourceHash !== expectedCanvaLinuxSourceHash) {
+      failures.push("build-resources/canva-linux/config/build-metadata.json: canvaLinuxSourceHash is stale; run npm run build:metadata");
+    }
+    if (committed.c420uiSourceHash !== expectedC420UISourceHash) {
+      failures.push("build-resources/canva-linux/config/build-metadata.json: c420uiSourceHash is stale; run npm run build:metadata");
+    }
+    if (committed.combinedSourceHash !== expectedCombinedSourceHash) {
+      failures.push("build-resources/canva-linux/config/build-metadata.json: combinedSourceHash is stale; run npm run build:metadata");
     }
   }
 

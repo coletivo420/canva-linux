@@ -15,9 +15,8 @@ function normalizeRelativePath(relativePath: string): string {
   return relativePath.split(path.sep).join(path.posix.sep);
 }
 
-function shouldIgnore(relativePath: string, ignores: readonly string[]): boolean {
+function shouldIgnore(relativePath: string, ignoredRelativePaths: ReadonlySet<string>): boolean {
   const normalized = normalizeRelativePath(relativePath);
-  const ignoredRelativePaths = new Set(ignores.map((value) => normalizeRelativePath(value)));
 
   for (const ignoredPath of ignoredRelativePaths) {
     if (normalized === ignoredPath || normalized.startsWith(`${ignoredPath}/`)) {
@@ -30,8 +29,12 @@ function shouldIgnore(relativePath: string, ignores: readonly string[]): boolean
     .some((part) => DEFAULT_IGNORED_PATH_PARTS.has(part));
 }
 
-function collectFiles(rootDir: string, relativeInput: string, ignores: readonly string[]): string[] {
-  if (shouldIgnore(relativeInput, ignores)) return [];
+function collectFiles(
+  rootDir: string,
+  relativeInput: string,
+  ignoredRelativePaths: ReadonlySet<string>,
+): string[] {
+  if (shouldIgnore(relativeInput, ignoredRelativePaths)) return [];
 
   const absoluteInput = path.join(rootDir, relativeInput);
   if (!fs.existsSync(absoluteInput)) return [];
@@ -48,7 +51,7 @@ function collectFiles(rootDir: string, relativeInput: string, ignores: readonly 
 
     for (const entry of entries) {
       const relativePath = normalizeRelativePath(path.join(relativeDirectory, entry.name));
-      if (shouldIgnore(relativePath, ignores)) continue;
+      if (shouldIgnore(relativePath, ignoredRelativePaths)) continue;
 
       if (entry.isDirectory()) {
         walk(relativePath);
@@ -67,7 +70,8 @@ export function collectSourceHashFiles(
   inputs: readonly string[],
   ignores: readonly string[] = [],
 ): string[] {
-  return [...new Set(inputs.flatMap((input) => collectFiles(rootDir, input, ignores)))]
+  const ignoredRelativePaths = new Set(ignores.map((value) => normalizeRelativePath(value)));
+  return [...new Set(inputs.flatMap((input) => collectFiles(rootDir, input, ignoredRelativePaths)))]
     .sort((left, right) => left.localeCompare(right));
 }
 
