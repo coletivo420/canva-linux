@@ -80,7 +80,7 @@ export function createBuildMetadata(input: {
     c420uiSourceHash,
     combinedSourceHash:
       input.combinedSourceHash ||
-      combineSourceHashes(input.canvaLinuxSourceHash, input.c420uiSourceHash),
+      combineSourceHashes(canvaLinuxSourceHash, c420uiSourceHash),
 
     version: appendBuildRevision(input.baseVersion, buildRevision),
     displayVersion: appendBuildRevision(input.baseDisplayVersion, buildRevision),
