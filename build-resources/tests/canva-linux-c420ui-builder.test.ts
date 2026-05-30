@@ -62,6 +62,8 @@ test("canva-linux-c420ui-builder entrypoint preserves current builder/runtime sp
   assert.equal(exists("canva-linux.sh"), false);
   assert.match(wrapper, /build-resources\/c420ui\/bootstrap\/generated\/c420ui-builder\.cjs/);
   assert.match(wrapper, /\.build\/scripts\/c420ui-builder\.js/);
+  assert.match(wrapper, /npm --prefix "\$\{ROOT_DIR\}" run build:c420ui-bootstrap/);
+  assert.doesNotMatch(wrapper, /Run npm run build:c420ui-bootstrap, then retry\./);
 });
 
 test("bootstrap manifest points builder at c420ui-builder", () => {

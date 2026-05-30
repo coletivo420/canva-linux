@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -78,6 +79,10 @@ function validateNodeCheck(
   return null;
 }
 
+function calculateFileHash(filePath: string): string {
+  return `sha256:${createHash("sha256").update(fs.readFileSync(filePath)).digest("hex")}`;
+}
+
 export function getC420UIBootstrapStatusWithDeps(
   rootDir: string,
   deps: C420UIBootstrapDeps,
@@ -90,7 +95,15 @@ export function getC420UIBootstrapStatusWithDeps(
       return { state: "missing", reason: `${relativePath} is missing` };
     }
 
-    const stats = fs.statSync(absolutePath);
+    let stats: fs.Stats;
+    try {
+      stats = fs.statSync(absolutePath);
+    } catch (error) {
+      return {
+        state: "invalid",
+        reason: `Failed to stat ${relativePath}: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
     if (!stats.isFile() || stats.size <= 0) {
       return { state: "missing", reason: `${relativePath} is empty` };
     }
@@ -98,7 +111,7 @@ export function getC420UIBootstrapStatusWithDeps(
 
   const manifestPath = path.join(rootDir, C420UI_BOOTSTRAP_MANIFEST_PATH);
   const manifest = readJson<Record<string, unknown>>(manifestPath);
-  if (!manifest) {
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
     return {
       state: "missing",
       reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} is missing or invalid`,
@@ -111,6 +124,34 @@ export function getC420UIBootstrapStatusWithDeps(
       state: "stale",
       reason: "c420uiSourceHash differs from current source tree",
     };
+  }
+
+  const artifactHashes = manifest.artifactHashes;
+  if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
+    return {
+      state: "invalid",
+      reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} is missing artifactHashes`,
+    };
+  }
+
+  const manifestArtifactHashes = artifactHashes as Record<string, unknown>;
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+    const expectedHash = manifestArtifactHashes[artifact];
+    if (typeof expectedHash !== "string") {
+      return {
+        state: "invalid",
+        reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} has invalid artifactHashes.${artifact}`,
+      };
+    }
+
+    const relativePath = c420uiBootstrapArtifactPath(artifact);
+    const actualHash = calculateFileHash(path.join(rootDir, relativePath));
+    if (actualHash !== expectedHash) {
+      return {
+        state: "stale",
+        reason: `${relativePath} hash differs from ${C420UI_BOOTSTRAP_MANIFEST_PATH}`,
+      };
+    }
   }
 
   for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {

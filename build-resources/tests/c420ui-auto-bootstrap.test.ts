@@ -1,5 +1,5 @@
-// @ts-nocheck
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -16,8 +16,13 @@ import {
   type C420UIBootstrapDeps,
 } from "../c420ui/bootstrap/ensure-bootstrap";
 
-function makeTempRoot(): string {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-auto-bootstrap-"));
+function runWithTempRoot(fn: (rootDir: string) => void): void {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-auto-bootstrap-"));
+  try {
+    fn(rootDir);
+  } finally {
+    fs.rmSync(rootDir, { recursive: true, force: true });
+  }
 }
 
 function writeArtifact(rootDir: string, artifact: string, content = "module.exports = 1;\n"): void {
@@ -28,9 +33,19 @@ function writeArtifact(rootDir: string, artifact: string, content = "module.expo
 }
 
 function writeManifest(rootDir: string, hash: string): void {
+  const artifactHashes: Record<string, string> = {};
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+    const absolutePath = path.join(rootDir, c420uiBootstrapArtifactPath(artifact));
+    artifactHashes[artifact] = `sha256:${createHash("sha256").update(fs.readFileSync(absolutePath)).digest("hex")}`;
+  }
+
   const abs = path.join(rootDir, C420UI_BOOTSTRAP_MANIFEST_PATH);
   fs.mkdirSync(path.dirname(abs), { recursive: true });
-  fs.writeFileSync(abs, `${JSON.stringify({ c420uiSourceHash: hash })}\n`, "utf8");
+  fs.writeFileSync(
+    abs,
+    `${JSON.stringify({ c420uiSourceHash: hash, artifactHashes })}\n`,
+    "utf8",
+  );
 }
 
 function createValidBootstrapTree(rootDir: string, hash = "expected-hash"): void {
@@ -81,46 +96,43 @@ test("builder does not instruct users to run build:c420ui-bootstrap manually", (
   assert.doesNotMatch(source, /c420ui bootstrap bundle is missing/);
 });
 
-test("ensure-bootstrap regenerates when manifest is missing", () => {
-  const rootDir = makeTempRoot();
-  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) writeArtifact(rootDir, artifact);
+test("ensure-bootstrap regenerates when manifest is missing", () => runWithTempRoot((rootDir) => {
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+    writeArtifact(rootDir, artifact);
+  }
 
   const { deps, buildCalls } = createDeps(rootDir);
   ensureC420UIBootstrapWithDeps(rootDir, deps);
   assert.equal(buildCalls(), 1);
-});
+}));
 
-test("ensure-bootstrap regenerates when artifact is missing", () => {
-  const rootDir = makeTempRoot();
+test("ensure-bootstrap regenerates when artifact is missing", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir);
   fs.rmSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui.cjs")), { force: true });
 
   const { deps, buildCalls } = createDeps(rootDir);
   ensureC420UIBootstrapWithDeps(rootDir, deps);
   assert.equal(buildCalls(), 1);
-});
+}));
 
-test("ensure-bootstrap regenerates when artifact is empty", () => {
-  const rootDir = makeTempRoot();
+test("ensure-bootstrap regenerates when artifact is empty", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir);
   fs.writeFileSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui-cli.cjs")), "", "utf8");
 
   const { deps, buildCalls } = createDeps(rootDir);
   ensureC420UIBootstrapWithDeps(rootDir, deps);
   assert.equal(buildCalls(), 1);
-});
+}));
 
-test("ensure-bootstrap regenerates when c420uiSourceHash is stale", () => {
-  const rootDir = makeTempRoot();
+test("ensure-bootstrap regenerates when c420uiSourceHash is stale", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir, "stale-hash");
 
   const { deps, buildCalls } = createDeps(rootDir);
   ensureC420UIBootstrapWithDeps(rootDir, deps);
   assert.equal(buildCalls(), 1);
-});
+}));
 
-test("ensure-bootstrap validates generated .cjs files with node --check", () => {
-  const rootDir = makeTempRoot();
+test("ensure-bootstrap validates generated .cjs files with node --check", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir);
 
   const deps: C420UIBootstrapDeps = {
@@ -139,16 +151,24 @@ test("ensure-bootstrap validates generated .cjs files with node --check", () => 
   if (status.state === "invalid") {
     assert.match(status.reason, /node --check/);
   }
-});
+}));
 
-test("ensure-bootstrap does not regenerate when manifest/artifacts are valid", () => {
-  const rootDir = makeTempRoot();
+test("ensure-bootstrap regenerates when artifact hash differs from manifest", () => runWithTempRoot((rootDir) => {
+  createValidBootstrapTree(rootDir);
+  fs.appendFileSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui.cjs")), "\n// drift\n");
+
+  const { deps, buildCalls } = createDeps(rootDir);
+  ensureC420UIBootstrapWithDeps(rootDir, deps);
+  assert.equal(buildCalls(), 1);
+}));
+
+test("ensure-bootstrap does not regenerate when manifest/artifacts are valid", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir);
 
   const { deps, buildCalls } = createDeps(rootDir);
   ensureC420UIBootstrapWithDeps(rootDir, deps);
   assert.equal(buildCalls(), 0);
-});
+}));
 
 test("build-bootstrap.ts does not import ensure-bootstrap.ts", () => {
   const source = fs.readFileSync("build-resources/c420ui/scripts/build-bootstrap.ts", "utf8");

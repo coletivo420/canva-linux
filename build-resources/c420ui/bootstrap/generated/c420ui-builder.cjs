@@ -176,6 +176,7 @@ function loadEffectiveBuildMetadata(rootDir) {
 
 // build-resources/c420ui/bootstrap/ensure-bootstrap.ts
 var import_node_child_process2 = require("node:child_process");
+var import_node_crypto2 = require("node:crypto");
 var import_node_fs3 = __toESM(require("node:fs"));
 var import_node_path3 = __toESM(require("node:path"));
 
@@ -311,6 +312,9 @@ function validateNodeCheck(rootDir, relativePath, deps) {
   }
   return null;
 }
+function calculateFileHash(filePath) {
+  return `sha256:${(0, import_node_crypto2.createHash)("sha256").update(import_node_fs3.default.readFileSync(filePath)).digest("hex")}`;
+}
 function getC420UIBootstrapStatusWithDeps(rootDir, deps) {
   for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
     const relativePath = c420uiBootstrapArtifactPath(artifact);
@@ -318,14 +322,22 @@ function getC420UIBootstrapStatusWithDeps(rootDir, deps) {
     if (!import_node_fs3.default.existsSync(absolutePath)) {
       return { state: "missing", reason: `${relativePath} is missing` };
     }
-    const stats = import_node_fs3.default.statSync(absolutePath);
+    let stats;
+    try {
+      stats = import_node_fs3.default.statSync(absolutePath);
+    } catch (error) {
+      return {
+        state: "invalid",
+        reason: `Failed to stat ${relativePath}: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
     if (!stats.isFile() || stats.size <= 0) {
       return { state: "missing", reason: `${relativePath} is empty` };
     }
   }
   const manifestPath = import_node_path3.default.join(rootDir, C420UI_BOOTSTRAP_MANIFEST_PATH);
   const manifest = readJson(manifestPath);
-  if (!manifest) {
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
     return {
       state: "missing",
       reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} is missing or invalid`
@@ -337,6 +349,31 @@ function getC420UIBootstrapStatusWithDeps(rootDir, deps) {
       state: "stale",
       reason: "c420uiSourceHash differs from current source tree"
     };
+  }
+  const artifactHashes = manifest.artifactHashes;
+  if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
+    return {
+      state: "invalid",
+      reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} is missing artifactHashes`
+    };
+  }
+  const manifestArtifactHashes = artifactHashes;
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+    const expectedHash = manifestArtifactHashes[artifact];
+    if (typeof expectedHash !== "string") {
+      return {
+        state: "invalid",
+        reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} has invalid artifactHashes.${artifact}`
+      };
+    }
+    const relativePath = c420uiBootstrapArtifactPath(artifact);
+    const actualHash = calculateFileHash(import_node_path3.default.join(rootDir, relativePath));
+    if (actualHash !== expectedHash) {
+      return {
+        state: "stale",
+        reason: `${relativePath} hash differs from ${C420UI_BOOTSTRAP_MANIFEST_PATH}`
+      };
+    }
   }
   for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
     const relativePath = c420uiBootstrapArtifactPath(artifact);
