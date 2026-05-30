@@ -116,6 +116,7 @@ export const CANVA_LINUX_SOURCE_HASH_INPUTS = [
 ] as const;
 
 export const CANVA_LINUX_SOURCE_HASH_IGNORES = [
+  "build-resources/canva-linux/config/build-metadata.json",
   "build-resources/tests",
   "docs",
   "build-resources/c420ui",
