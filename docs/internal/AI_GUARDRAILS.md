@@ -5,8 +5,10 @@
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`,
+  root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
+  the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI
   refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
 - Directory guards for cleanup operations must use a simplified forbidden set:
@@ -32,12 +34,14 @@
   `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Build metadata formatting must use `build-resources/electron/main/build-metadata` as the single source of truth; c420ui adapter loaders
   must not duplicate `createBuildMetadata` or `normalizeLoadedBuildMetadata` logic.
-- Do not write Git HEAD-derived revisions into `build-resources/canva-linux/config/build-metadata.json`; committed metadata must keep `buildRevision: "unknown"`.
+- Do not write Git HEAD-derived revisions into `build-resources/canva-linux/config/build-metadata.json`; committed metadata must
+  keep `buildRevision: "unknown"`.
 - Effective metadata belongs under `.build/canva-linux/build-metadata.effective.json` and may include Git revision for runtime/artifact builds.
 - Repository checks validate committed metadata only; artifact/release checks validate effective metadata.
 - Committed metadata must remain stable and deterministic across incremental builds and build-resources/tests/check runs.
 - Repository validation must not depend on live Git revision resolution for committed metadata contracts.
-- `build-resources/` is the canonical home for c420ui, electron, and Canva Linux assets; do not restore root `packages/`, `electron/`, `data/`, or loose icon assets.
+- `build-resources/` is the canonical home for c420ui, electron, and Canva Linux assets; do not restore root `packages/`, `electron/`,
+  `data/`, or loose icon assets.
 
 ## Dev.8 pinned home tab-strip guardrail
 
@@ -289,7 +293,9 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - c420ui/CLI actions must be sourced from `build-resources/canva-linux/config/actions.json`.
 - Action metadata must come from `build-resources/canva-linux/config/actions.json`.
 - Canva Linux project configuration belongs under `build-resources/canva-linux/config/`.
-- `build-resources/canva-linux/config/actions.json`, `build-resources/canva-linux/config/development.json`, and `build-resources/canva-linux/config/artifacts.json` are project-owned declarations.
+- `build-resources/canva-linux/config/actions.json`, `build-resources/canva-linux/config/development.json`,
+  and `build-resources/canva-linux/config/artifacts.json`
+  are project-owned declarations.
 - Do not put project configuration under `scripts/`.
 - Canva Linux action registry loading belongs under `scripts/canva-linux/actions/`.
 - Do not reintroduce `scripts/core/action-registry.ts`.

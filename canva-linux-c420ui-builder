@@ -13,8 +13,8 @@ if [[ -s "${ROOT_DIR}/build-resources/c420ui/bootstrap/generated/c420ui-builder.
   exec node "${ROOT_DIR}/build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs" "$@"
 fi
 
-if [[ -s "${ROOT_DIR}/.build/build-resources/c420ui/scripts/c420ui-builder.js" ]]; then
-  exec node "${ROOT_DIR}/.build/build-resources/c420ui/scripts/c420ui-builder.js" "$@"
+if [[ -s "${ROOT_DIR}/.build/scripts/c420ui-builder.js" ]]; then
+  exec node "${ROOT_DIR}/.build/scripts/c420ui-builder.js" "$@"
 fi
 
 printf '%s\n' "c420ui-builder bootstrap bundle is missing." >&2

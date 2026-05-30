@@ -135,11 +135,11 @@ function selectEntrypoint(rootDir: string, kind: "ui" | "cli"): string {
   const candidates = kind === "ui"
     ? [
         path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"),
-        path.join(rootDir, ".build/build-resources/c420ui/scripts/run-c420ui.js"),
+        path.join(rootDir, ".build/scripts/run-c420ui.js"),
       ]
     : [
         path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
-        path.join(rootDir, ".build/build-resources/c420ui/scripts/run-c420ui-cli.js"),
+        path.join(rootDir, ".build/scripts/run-c420ui-cli.js"),
       ];
 
   for (const candidate of candidates) {

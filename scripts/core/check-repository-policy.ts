@@ -129,8 +129,8 @@ const requiredArtifactScripts = {
   "build:preload": ".build/scripts/build-preload-bundle.js",
   "clean:runtime": ".build/scripts/clean-runtime-build.js",
   "build:runtime": ".build/scripts/build-runtime.js",
-  c420ui: ".build/build-resources/c420ui/scripts/run-c420ui.js",
-  "check:c420ui": ".build/build-resources/c420ui/scripts/run-c420ui.js",
+  c420ui: ".build/scripts/run-c420ui.js",
+  "check:c420ui": ".build/scripts/run-c420ui.js",
 } as const;
 
 function main(): number {
@@ -1453,7 +1453,7 @@ function validateLauncherScriptShape(
 
   for (const fragment of [
     "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs",
-    ".build/build-resources/c420ui/scripts/c420ui-builder.js",
+    ".build/scripts/c420ui-builder.js",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
     if (!content.includes(fragment)) {
@@ -1468,8 +1468,8 @@ function validateLauncherScriptShape(
     "selectEntrypoint",
     "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
     "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-    ".build/build-resources/c420ui/scripts/run-c420ui.js",
-    ".build/build-resources/c420ui/scripts/run-c420ui-cli.js",
+    ".build/scripts/run-c420ui.js",
+    ".build/scripts/run-c420ui-cli.js",
   ] as const) {
     if (!source.includes(fragment)) {
       failures.push(`${sourcePath}: builder source is missing required fragment ${JSON.stringify(fragment)}`);

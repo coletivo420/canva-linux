@@ -50,7 +50,11 @@ run_step "npm run deps:check-policy" npm run deps:check-policy
 run_step "npm run check:c420ui-node-check" npm run check:c420ui-node-check
 run_step "npm run check:c420ui-bootstrap-artifacts" npm run check:c420ui-bootstrap-artifacts
 run_step "npm run check:c420ui-bootstrap" npm run check:c420ui-bootstrap
+# Do not move runtime build before lint, docs or contract checks.
+run_step "npm run check:c420ui-core" npm run check:c420ui-core
 run_step "npm run check:canva-linux" npm run check:canva-linux
+run_step "npm run check:shared-tooling" npm run check:shared-tooling
+run_step "npm run build:runtime" npm run build:runtime
 run_step "check flatpak scope policy" bash scripts/check-flatpak-scope-policy.sh
 run_step "check shell ui api" bash scripts/check-shell-ui-api.sh
 run_step "npm run typecheck" npm run typecheck

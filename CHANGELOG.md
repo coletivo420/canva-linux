@@ -11,8 +11,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`,
+  root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
+  the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Optimized detection provider: consolidated `package.json` reading with caching and implemented closure-based
   caching for `npm --version` to improve terminal interface refresh performance.
 
@@ -30,8 +32,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Committed build metadata is now stable and always uses `buildRevision: "unknown"` in `build-resources/canva-linux/config/build-metadata.json`.
 - Effective build metadata is generated in `.build/canva-linux/build-metadata.effective.json` and may include Git revision.
 - Repository checks validate committed metadata, while artifact/release builds consume effective metadata.
-- Hardened contracts/tests/docs now enforce the committed-vs-effective split to prevent incremental builds and validation flows from dirtying the worktree with Git-derived rewrites.
-- `build-resources/` layout guards are now granular: c420ui, electron, and canva-linux-assets subtrees are required and legacy root `packages/`, `electron/`, and `data/` paths remain forbidden.
+- Hardened contracts/tests/docs now enforce the committed-vs-effective split to prevent incremental builds and
+  validation flows from dirtying the worktree with Git-derived rewrites.
+- `build-resources/` layout guards are now granular: c420ui, electron, and canva-linux-assets subtrees are required
+  and legacy root `packages/`, `electron/`, and `data/` paths remain forbidden.
 
 - Dev.9 generated artifact detection is now registry-driven from `build-resources/canva-linux/config/artifacts.json` and must not
   be limited to AppImage. Produced package outputs should leave effective build metadata via installed markers or
@@ -236,7 +240,8 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Added c420ui operational log redaction and command cancellation policy.
 - Moved reusable operational command execution into the c420ui command runner.
 - Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.
-- Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed by `build-resources/c420ui/host/linux/sudo-helper.sh`.
+- Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed
+  by `build-resources/c420ui/host/linux/sudo-helper.sh`.
 - Moved generic c420ui TypeScript config contracts from `build-resources/c420ui/src/terminal/app.ts` into the private `build-resources/c420ui` skeleton.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
   or when safe storage encryption is unavailable.
@@ -341,5 +346,7 @@ and project diagnostics entrypoint. The compiled `canva-linux` Electron app rema
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under build-resources/c420ui.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by build-resources/c420ui/checks.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`,
+  root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries,
+  the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.

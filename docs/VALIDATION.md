@@ -6,7 +6,8 @@
 - `.build/canva-linux/build-metadata.effective.json` is ephemeral metadata used by runtime/release flows and may contain Git-derived revision values.
 - Repository validation checks must validate committed metadata only.
 - Runtime/release/artifact builds must prefer effective metadata and use committed metadata as fallback.
-- `build-resources/` remains the canonical layout for c420ui, electron, and Canva Linux assets; legacy root `packages/`, `electron/`, and `data/` paths must remain absent.
+- `build-resources/` remains the canonical layout for c420ui, electron, and Canva Linux assets; legacy root `packages/`,
+  `electron/`, and `data/` paths must remain absent.
 
 ## Dev.9 metadata persistence and c420ui repair
 
@@ -33,8 +34,10 @@ but must not embed c420ui bootstrap implementation details.
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`,
+  root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
+  the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 
 All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, and build metadata
 resolution must live under `scripts/c420ui-adapter`; bootstrap helpers must live under `build-resources/c420ui/bootstrap`.
@@ -346,5 +349,7 @@ OAuth validation also checks that the first post-OAuth reload targets the curren
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under build-resources/c420ui.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by build-resources/c420ui/checks.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`,
+  root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries,
+  the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.

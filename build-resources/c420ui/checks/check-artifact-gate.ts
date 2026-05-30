@@ -306,7 +306,7 @@ function validateExpectedManifestMetadata(rootDir: string, expectedBootstrapDir:
 function runStructuralBootstrapCheck(rootDir: string, expectedBootstrapDir: string): void {
   const result = spawnSync(
     process.execPath,
-    [".build/build-resources/c420ui/checks/check-bootstrap.js"],
+    [".build/scripts/check-bootstrap.js"],
     {
       cwd: rootDir,
       encoding: "utf8",

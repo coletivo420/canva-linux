@@ -478,7 +478,7 @@ function main(): void {
 
   const launcher = read(rootDir, "canva-linux-c420ui-builder");
   const bootstrapBuilderIndex = indexOfRequired(launcher, c420uiBootstrapArtifactPath("c420ui-builder.cjs"), failures, "canva-linux-c420ui-builder");
-  const buildBuilderIndex = indexOfRequired(launcher, ".build/build-resources/c420ui/scripts/c420ui-builder.js", failures, "canva-linux-c420ui-builder");
+  const buildBuilderIndex = indexOfRequired(launcher, ".build/scripts/c420ui-builder.js", failures, "canva-linux-c420ui-builder");
 
   if (bootstrapBuilderIndex !== -1 && buildBuilderIndex !== -1 && bootstrapBuilderIndex > buildBuilderIndex) {
     failures.push(`canva-linux-c420ui-builder: launcher must check ${c420uiBootstrapArtifactPath("c420ui-builder.cjs")} before .build fallback`);
