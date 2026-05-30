@@ -355,3 +355,23 @@ OAuth validation also checks that the first post-OAuth reload targets the curren
   the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
 
 Canva Linux and c420ui now use separate deterministic content hashes. Canva Linux changes update canvaLinuxSourceHash, c420ui changes update c420uiSourceHash, and combinedSourceHash changes when either side changes. Git buildRevision remains separate and is only used by effective metadata/release builds.
+
+## Split source hash validation
+
+Canva Linux and c420ui now use separate deterministic content hashes.
+- `canvaLinuxSourceHash` changes only when Canva Linux inputs change.
+- `c420uiSourceHash` changes only when c420ui-owned inputs change.
+- `combinedSourceHash` changes when either component hash changes.
+- `buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
+- Docs, tests and generated artifacts must not affect either source hash.
+
+Validation commands:
+- `npm run build:metadata`
+- `npm run build:metadata:effective`
+- `npm test`
+- `npm run check:canva-linux`
+- `npm run check:c420ui-bootstrap`
+
+Expected results:
+- `build-resources/canva-linux/config/build-metadata.json` must contain stable deterministic source hashes.
+- `.build/canva-linux/build-metadata.effective.json` may change `buildRevision` and derived version strings, but must preserve the same source hashes.

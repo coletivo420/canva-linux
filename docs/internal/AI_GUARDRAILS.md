@@ -587,3 +587,11 @@ Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adj
   decomposed labels are equivalent.
 
 Canva Linux and c420ui now use separate deterministic content hashes. Canva Linux changes update canvaLinuxSourceHash, c420ui changes update c420uiSourceHash, and combinedSourceHash changes when either side changes. Git buildRevision remains separate and is only used by effective metadata/release builds.
+
+## Split source hash guardrails
+
+- Do not collapse `canvaLinuxSourceHash` and `c420uiSourceHash` back into a single global source hash.
+- Do not add `build-resources/c420ui/*` to Canva Linux source hash inputs.
+- Do not add `build-resources/electron/*` or `scripts/canva-linux/*` to c420ui source hash inputs.
+- Do not include `docs/`, `build-resources/tests/`, `.build/`, `dist/`, `node_modules/`, or generated bootstrap artifacts in source hash inputs.
+- `buildRevision` is Git/CI/release metadata; deterministic source hashes are content metadata.

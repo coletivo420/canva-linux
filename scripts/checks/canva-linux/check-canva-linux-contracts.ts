@@ -387,8 +387,17 @@ function checkSourceHashContracts(rootDir: string, failures: string[]): void {
   const c420uiSourceHashSource = readText(rootDir, "build-resources/c420ui/bootstrap/source-hash.ts");
   if (!c420uiSourceHashSource) {
     failures.push("build-resources/c420ui/bootstrap/source-hash.ts: must exist");
-  } else if (c420uiSourceHashSource.includes("\"scripts/canva-linux\"")) {
-    failures.push("build-resources/c420ui/bootstrap/source-hash.ts: c420ui source hash inputs must not include scripts/canva-linux");
+  } else {
+    for (const forbiddenInput of [
+      "\"scripts/canva-linux\"",
+      "\"build-resources/electron\"",
+      "\"docs\"",
+      "\"build-resources/tests\"",
+    ] as const) {
+      if (c420uiSourceHashSource.includes(forbiddenInput)) {
+        failures.push(`build-resources/c420ui/bootstrap/source-hash.ts: c420ui source hash inputs must not include ${forbiddenInput}`);
+      }
+    }
   }
 
   const canvaLinuxSourceHashSource = readText(rootDir, "scripts/canva-linux/source-hash.ts");
@@ -397,8 +406,10 @@ function checkSourceHashContracts(rootDir: string, failures: string[]): void {
     return;
   }
 
+  if (!canvaLinuxSourceHashSource.includes("\"build-resources/c420ui\"")) {
+    failures.push("scripts/canva-linux/source-hash.ts: must exclude build-resources/c420ui from Canva Linux hash inputs");
+  }
   for (const forbiddenInput of [
-    "\"build-resources/c420ui\"",
     "\"docs\"",
     "\"build-resources/tests\"",
   ] as const) {
