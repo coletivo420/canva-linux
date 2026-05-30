@@ -5,7 +5,11 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  C420UI_SOURCE_HASH_IGNORES,
   C420UI_SOURCE_HASH_INPUTS,
+  calculateC420UIBootstrapSourceHash,
+  calculateC420UISourceHash,
+  collectC420UIBootstrapSourceHashFiles,
   collectC420UISourceHashFiles,
 } from "../bootstrap/source-hash";
 
@@ -32,6 +36,7 @@ test("c420ui source hash excludes Canva Linux sources", () => {
   for (const forbiddenInput of [
     "scripts/c420ui-adapter",
     "scripts/canva-linux",
+    "build-resources/electron",
     "build-resources/canva-linux/config",
     "package.json",
     "package-lock.json",
@@ -42,6 +47,13 @@ test("c420ui source hash excludes Canva Linux sources", () => {
       `source hash inputs must not include ${forbiddenInput}`,
     );
   }
+});
+
+test("c420ui source hash ignores include generated bootstrap outputs", () => {
+  assert.equal(
+    C420UI_SOURCE_HASH_IGNORES.includes("build-resources/c420ui/bootstrap/generated"),
+    true,
+  );
 });
 
 test("ignores build-resources/c420ui/bootstrap/generated", () => {
@@ -62,4 +74,19 @@ test("does not ignore unrelated generated directories", () => {
 
   const files = collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/src"]);
   assert.equal(files.includes("build-resources/c420ui/src/generated/example.ts"), true);
+});
+
+test("legacy bootstrap hash aliases map to c420ui source hash behavior", () => {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-source-hash-"));
+  fs.mkdirSync(path.join(rootDir, "build-resources", "c420ui", "src"), { recursive: true });
+  fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "src", "index.ts"), "export const v = 1;\n");
+
+  assert.deepEqual(
+    collectC420UIBootstrapSourceHashFiles(rootDir, ["build-resources/c420ui/src"]),
+    collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/src"]),
+  );
+  assert.equal(
+    calculateC420UIBootstrapSourceHash(rootDir, ["build-resources/c420ui/src"]),
+    calculateC420UISourceHash(rootDir, ["build-resources/c420ui/src"]),
+  );
 });

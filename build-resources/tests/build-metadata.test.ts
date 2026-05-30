@@ -60,6 +60,43 @@ test("unknown build revision keeps base effective versions", () => {
   assert.equal(metadata.fullVersion, "0.1.4-15.Dev.7");
 });
 
+test("committed/effective metadata preserve source hashes while build revision fields vary", () => {
+  const sourceHashes = {
+    canvaLinuxSourceHash: "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    c420uiSourceHash: "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    combinedSourceHash: "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  };
+
+  const committed = createBuildMetadata({
+    baseVersion: "0.1.4-15.Dev.7",
+    baseDisplayVersion: "0.1.4-15.Dev",
+    basePhase: "0.1.4-15.Dev.7",
+    buildRevision: "unknown",
+    ...sourceHashes,
+  });
+  const effective = createBuildMetadata({
+    baseVersion: "0.1.4-15.Dev.7",
+    baseDisplayVersion: "0.1.4-15.Dev",
+    basePhase: "0.1.4-15.Dev.7",
+    buildRevision: "abc1234def",
+    ...sourceHashes,
+  });
+
+  assert.equal(committed.canvaLinuxSourceHash, sourceHashes.canvaLinuxSourceHash);
+  assert.equal(committed.c420uiSourceHash, sourceHashes.c420uiSourceHash);
+  assert.equal(committed.combinedSourceHash, sourceHashes.combinedSourceHash);
+
+  assert.equal(effective.canvaLinuxSourceHash, committed.canvaLinuxSourceHash);
+  assert.equal(effective.c420uiSourceHash, committed.c420uiSourceHash);
+  assert.equal(effective.combinedSourceHash, committed.combinedSourceHash);
+
+  assert.notEqual(effective.buildRevision, committed.buildRevision);
+  assert.notEqual(effective.version, committed.version);
+  assert.notEqual(effective.displayVersion, committed.displayVersion);
+  assert.notEqual(effective.phase, committed.phase);
+  assert.notEqual(effective.fullVersion, committed.fullVersion);
+});
+
 test("fallback metadata uses neutral values without source files", () => {
   const fs = require("node:fs");
   const os = require("node:os");

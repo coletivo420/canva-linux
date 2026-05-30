@@ -352,3 +352,10 @@ and project diagnostics entrypoint. The compiled `canva-linux` Electron app rema
   the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
 
 Canva Linux and c420ui now use separate deterministic content hashes. Canva Linux changes update canvaLinuxSourceHash, c420ui changes update c420uiSourceHash, and combinedSourceHash changes when either side changes. Git buildRevision remains separate and is only used by effective metadata/release builds.
+
+Canva Linux and c420ui now use separate deterministic content hashes.
+`canvaLinuxSourceHash` changes only when Canva Linux inputs change.
+`c420uiSourceHash` changes only when c420ui-owned inputs change.
+`combinedSourceHash` changes when either component hash changes.
+`buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
+Docs, tests and generated artifacts must not affect either source hash.
