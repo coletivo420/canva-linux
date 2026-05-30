@@ -3,6 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { createBuildMetadata } from "../build-resources/electron/main/build-metadata";
+import {
+  calculateCanvaLinuxSourceHash,
+  combineSourceHashes,
+} from "./canva-linux/source-hash";
+import { calculateC420UISourceHash } from "../build-resources/c420ui/bootstrap/source-hash";
 
 type PackageJson = { version?: string };
 type ProjectUiJson = { displayVersion?: string; phase?: string };
@@ -65,11 +70,18 @@ export function main(): void {
   if (!projectUi.displayVersion) throw new Error("project-ui.json: missing displayVersion");
   if (!projectUi.phase) throw new Error("project-ui.json: missing phase");
 
+  const canvaLinuxSourceHash = calculateCanvaLinuxSourceHash(rootDir);
+  const c420uiSourceHash = calculateC420UISourceHash(rootDir);
+  const combinedSourceHash = combineSourceHashes(canvaLinuxSourceHash, c420uiSourceHash);
+
   const metadata = createBuildMetadata({
     baseVersion: packageJson.version,
     baseDisplayVersion: projectUi.displayVersion,
     basePhase: projectUi.phase,
     buildRevision: mode === "effective" ? resolveBuildRevision(rootDir) : "unknown",
+    canvaLinuxSourceHash,
+    c420uiSourceHash,
+    combinedSourceHash,
   });
   const outputPath =
     mode === "effective"

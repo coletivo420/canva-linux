@@ -213,3 +213,5 @@ return new Promise((resolve, reject) => {
 - Remove stale `@ts-nocheck` directives where possible.
 - Improve type coverage in preload modules and migrated tests.
 - Consider ESM only as a separate future architecture decision.
+
+Canva Linux and c420ui now use separate deterministic content hashes. Canva Linux changes update canvaLinuxSourceHash, c420ui changes update c420uiSourceHash, and combinedSourceHash changes when either side changes. Git buildRevision remains separate and is only used by effective metadata/release builds.

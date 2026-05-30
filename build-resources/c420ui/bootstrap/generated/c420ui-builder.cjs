@@ -130,6 +130,9 @@ function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule)
       baseDisplayVersion: UNKNOWN_BASE_VERSION,
       basePhase: UNKNOWN_BASE_VERSION,
       buildRevision: UNKNOWN_BUILD_REVISION,
+      canvaLinuxSourceHash: "unknown",
+      c420uiSourceHash: "unknown",
+      combinedSourceHash: "unknown",
       version: UNKNOWN_BASE_VERSION,
       displayVersion: UNKNOWN_BASE_VERSION,
       phase: UNKNOWN_BASE_VERSION,
@@ -283,10 +286,10 @@ function createSession(rootDir) {
 function selectEntrypoint(rootDir, kind) {
   const candidates = kind === "ui" ? [
     import_node_path2.default.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"),
-    import_node_path2.default.join(rootDir, ".build/build-resources/c420ui/scripts/run-c420ui.js")
+    import_node_path2.default.join(rootDir, ".build/scripts/run-c420ui.js")
   ] : [
     import_node_path2.default.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
-    import_node_path2.default.join(rootDir, ".build/build-resources/c420ui/scripts/run-c420ui-cli.js")
+    import_node_path2.default.join(rootDir, ".build/scripts/run-c420ui-cli.js")
   ];
   for (const candidate of candidates) {
     if (import_node_fs2.default.existsSync(candidate) && import_node_fs2.default.statSync(candidate).size > 0) return candidate;
