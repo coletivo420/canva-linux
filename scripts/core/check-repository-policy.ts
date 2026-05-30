@@ -223,6 +223,13 @@ type TsConfigJson = {
 };
 
 const allowedJavaScriptPrefixes = [".build/", "node_modules/"] as const;
+const allowedCommonJsPrefixes = [
+  ".build/",
+  "dist/",
+  "coverage/",
+  "node_modules/",
+  "build-resources/c420ui/bootstrap/generated/",
+] as const;
 
 const sourceJavaScriptAllowlist = new Set(["build-resources/electron/preload/canva.bundle.js"]);
 
@@ -241,6 +248,21 @@ const forbiddenSourceRoots = [
   "build-resources/tests/",
   "build-resources/canva-linux/packaging/flathub/scripts/",
 ] as const;
+
+const legacyShellNodeEvalAllowlist = new Set([
+  "build-resources/c420ui/scripts/install-detection-common.sh",
+  "scripts/flatpak-build-common.sh",
+  "scripts/preflight-common.sh",
+  "scripts/show-version-info.sh",
+  "scripts/validate-flatpak.sh",
+  "scripts/validate-flathub-submission.sh",
+  "scripts/validate-project.sh",
+  "scripts/doctor.sh",
+]);
+
+const legacyShellNodeHeredocAllowlist = new Set([
+  "scripts/doctor.sh",
+]);
 
 const forbiddenConfigFiles = new Set([
   "eslint.config.js",
@@ -263,6 +285,27 @@ function validateNoMaintainedJavaScript(
     if (isAllowedGeneratedJavaScript(file)) continue;
     failures.push(
       `${file}: maintained JavaScript source is not allowed; migrate it to TypeScript or generated .build output`,
+    );
+  }
+}
+
+function validateNoMaintainedModuleJavaScript(
+  files: string[],
+  failures: string[],
+): void {
+  for (const file of files) {
+    if (file.endsWith(".mjs")) {
+      failures.push(
+        `${file}: maintained .mjs source is forbidden by the Dev.10 TypeScript hardening policy`,
+      );
+      continue;
+    }
+
+    if (!file.endsWith(".cjs")) continue;
+    if (allowedCommonJsPrefixes.some((prefix) => file.startsWith(prefix))) continue;
+
+    failures.push(
+      `${file}: maintained .cjs source is forbidden outside generated bootstrap/output paths`,
     );
   }
 }
@@ -418,13 +461,60 @@ function validateSourceRootExtensions(
   }
 }
 
+function validateShellInlineJavaScriptPolicy(
+  rootDir: string,
+  files: string[],
+  failures: string[],
+): void {
+  const warnings: string[] = [];
+
+  for (const file of files) {
+    if (!file.endsWith(".sh")) continue;
+    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    const lines = content.split(/\r?\n/);
+
+    lines.forEach((line, index) => {
+      const hasNodeHeredoc = /\bnode\s+<<-?\s*['"]?NODE['"]?/.test(line);
+      if (hasNodeHeredoc) {
+        if (legacyShellNodeHeredocAllowlist.has(file)) {
+          warnings.push(
+            `${file}:${index + 1}: legacy node heredoc remains as migration debt (Dev.10 allowlist)`,
+          );
+          return;
+        }
+        failures.push(
+          `${file}:${index + 1}: node heredoc is forbidden; move maintained JavaScript logic to TypeScript`,
+        );
+      }
+
+      const hasNodeEval = /\bnode\s+-[ep]\b/.test(line);
+      if (!hasNodeEval) return;
+
+      if (legacyShellNodeEvalAllowlist.has(file)) {
+        warnings.push(
+          `${file}:${index + 1}: legacy node -e/-p usage remains as migration debt (Dev.10 allowlist)`,
+        );
+        return;
+      }
+
+      failures.push(
+        `${file}:${index + 1}: new node -e/-p usage is forbidden in maintained shell policy/build/validation flows`,
+      );
+    });
+  }
+
+  for (const warning of warnings) console.warn(`[repository-policy][warn] ${warning}`);
+}
+
 function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const files = allRepositoryFiles(rootDir);
 
   validateNoMaintainedJavaScript(files, failures);
+  validateNoMaintainedModuleJavaScript(files, failures);
   validateSourceRootExtensions(files, failures);
+  validateShellInlineJavaScriptPolicy(rootDir, files, failures);
   validateForbiddenConfigs(rootDir, failures);
   validateRequiredTypeScriptEntrypoints(rootDir, failures);
   validatePackageScripts(rootDir, failures);

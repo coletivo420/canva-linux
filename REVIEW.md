@@ -25,6 +25,26 @@
 
 - The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
 
+## Dev.10 TypeScript hardening review
+
+Request changes if a PR:
+
+- adds maintained JavaScript source;
+- adds `.cjs` outside generated bootstrap outputs;
+- embeds project logic through `node <<'NODE'` in shell;
+- moves validation, install, packaging, release, or artifact policy from TypeScript back into shell;
+- removes bootstrap artifact gates;
+- makes normal users run bootstrap generation manually again;
+- normalizes AppImage/Flatpak/NPM architecture names instead of preserving upstream/generated names;
+- changes runtime app behavior while claiming a TypeScript-only refactor.
+
+Do not request changes merely because these remain shell:
+
+- `canva-linux-c420ui-builder`;
+- Flatpak `run.sh`;
+- temporary thin wrappers that only dispatch to compiled TypeScript;
+- host command bridges with no project policy.
+
 ## c420ui bootstrap generated artifact review
 
 - The c420ui builder/runtime must auto-generate missing or stale bootstrap bundles before selecting entrypoints.
@@ -70,7 +90,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Dev.7 OAuth completion review
 
-Request changes if a PR preparing `0.1.4-15.Dev.9` OAuth completion:
+Request changes if a PR preparing `0.1.4-15.Dev.10` OAuth completion:
 
 - reloads a generic active tab instead of resolving the tab that opened the OAuth popup by `sourceWebContentsId`;
 - closes the popup or reloads the source tab before an authorized Canva callback is finalized by callback type, the
@@ -88,7 +108,7 @@ Request changes if a PR preparing `0.1.4-15.Dev.9` OAuth completion:
 
 ## Dev.6 cleanup handoff review
 
-Request changes if a PR closing `0.1.4-15.Dev.9`:
+Request changes if a PR closing `0.1.4-15.Dev.10`:
 
 - describes Dev.6 as feature expansion instead of post-migration cleanup;
 - omits the dead-code audit, obsolete validation-contract cleanup, streamlined smoke tests, runtime CLI diagnostics cleanup,
@@ -120,12 +140,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.9` for cleanup handoff validation:
+Request changes if a PR preparing `0.1.4-15.Dev.10` for cleanup handoff validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-15.Dev.9` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.10` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -163,7 +183,7 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The c
 
 Request changes if a PR:
 
-- changes version `0.1.4-15.Dev.9` without an explicit maintainer request;
+- changes version `0.1.4-15.Dev.10` without an explicit maintainer request;
 - introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
@@ -557,7 +577,7 @@ while runtime flags belong to the compiled `canva-linux` app.
 
 ## Dev.7 review note: effective versions and OAuth fallback
 
-- Source identity remains `0.1.4-15.Dev.9` / `0.1.4-15.Dev` / `0.1.4-15.Dev.9`.
+- Source identity remains `0.1.4-15.Dev.10` / `0.1.4-15.Dev` / `0.1.4-15.Dev.10`.
 - Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
 - The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
 - Runtime metadata fallback must be neutral `0.0.0`/`unknown`; request changes if `build-resources/electron/main/build-metadata.ts`

@@ -20,6 +20,42 @@ logic, tests, tooling configs and Flathub helper scripts.
 - JavaScript is not maintained as source code in `scripts/`, `build-resources/tests/`, configs,
   or `build-resources/canva-linux/packaging/flathub/scripts/`.
 
+## Dev.10 TypeScript hardening policy
+
+Canva Linux Dev.10 treats TypeScript as the maintained source of truth for project logic.
+
+Maintained JavaScript is forbidden.
+
+JavaScript embedded inside shell scripts is also considered maintained JavaScript and must migrate to TypeScript.
+
+Shell remains allowed only for:
+
+- Stage-0 launchers
+- Flatpak or POSIX runtime entrypoints
+- thin compatibility wrappers
+- unavoidable host-operation bridges
+
+Shell must not own project policy, JSON/YAML/XML parsing, validation rules, install scope decisions, artifact metadata decisions, release policy, or complex dry-run logic.
+
+### Forbidden JavaScript forms
+
+- `scripts/**/*.js`
+- `build-resources/tests/**/*.js`
+- maintained `.mjs`
+- maintained `.cjs` outside generated bootstrap directories
+- `node <<'NODE'` heredocs inside shell scripts
+- `node -e` or `node -p` when used as official validation, release, packaging, install, or policy logic
+
+### Allowed generated JavaScript/CommonJS
+
+- `.build/**/*.js`
+- `dist/**/*.js`
+- `coverage/**/*.js`
+- `node_modules/**/*.js`
+- generated c420ui bootstrap `.cjs` files under the committed bootstrap output directory
+
+Generated bootstrap `.cjs` files are allowed only when they are produced from TypeScript sources, recorded in the bootstrap manifest, and validated by syntax, source-hash, artifact-hash, and stale-artifact gates.
+
 ## TypeScript-first source policy
 
 ### Allowed maintained source formats

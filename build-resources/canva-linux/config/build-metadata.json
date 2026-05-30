@@ -1,12 +1,12 @@
 {
-  "baseVersion": "0.1.4-15.Dev.9",
+  "baseVersion": "0.1.4-15.Dev.10",
   "baseDisplayVersion": "0.1.4-15.Dev",
   "basePhase": "0.1.4-15.Dev.9",
   "buildRevision": "unknown",
-  "canvaLinuxSourceHash": "sha256:0d5a40f8e58212be5c765ee56f9176b308298676f52eda58a5dbed9be9b5df5e",
+  "canvaLinuxSourceHash": "sha256:9f9b8ce2b1a581b71d0882ff904e3cdfe1c2aafe8c3f2cfe29d4b31a44fabb2b",
   "c420uiSourceHash": "sha256:f41eb2d63fcfe1927902c9dfbff060e5c2502e9b7f778bbb25a2b3c91b13e70d",
-  "combinedSourceHash": "sha256:ff7a16f0e1b85dfadf72f0f3dbdd33960f392d034bd13ec948db619e15c7e071",
-  "version": "0.1.4-15.Dev.9",
+  "combinedSourceHash": "sha256:a803ef29db4143c1241fbebb571eab14509b467b72a0311e6855334dbc71b572",
+  "version": "0.1.4-15.Dev.10",
   "displayVersion": "0.1.4-15.Dev",
   "phase": "0.1.4-15.Dev.9",
   "fullVersion": "0.1.4-15.Dev.9"
