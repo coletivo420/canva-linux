@@ -3,6 +3,12 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
+import {
+  calculateCanvaLinuxSourceHash,
+  combineSourceHashes,
+} from "../../canva-linux/source-hash";
+import { calculateC420UISourceHash } from "../../../build-resources/c420ui/bootstrap/source-hash";
+
 type PackageJson = {
   scripts?: Record<string, string>;
   build?: {
@@ -88,8 +94,8 @@ const C420UI_OWNERSHIP_GUARDRAILS = [
   "c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.",
   "Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.",
   "No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
-  "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.",
-  "When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.",
+  "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`",
+  "`scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.",
 ] as const;
 
 function reportMissingFragments(
@@ -192,8 +198,8 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
     "check:c420ui-bootstrap": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-bootstrap.js",
     "check:c420ui-bootstrap-artifacts": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-artifact-gate.js",
     "test:c420ui": "npm run test -- build-resources/c420ui/test",
-    "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/build-resources/c420ui/scripts/run-c420ui.js",
-    "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/build-resources/c420ui/scripts/run-c420ui-cli.js",
+    "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.js",
+    "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
     "c420ui:install-native": "bash build-resources/c420ui/scripts/install-native.sh",
     "c420ui:build-appimage": "bash build-resources/c420ui/scripts/build-appimage.sh",
     "c420ui:build-flatpak-bundle": "bash build-resources/c420ui/scripts/build-flatpak-bundle.sh",
@@ -261,6 +267,9 @@ function checkBuildMetadataContracts(rootDir: string, failures: string[]): void 
     displayVersion?: string;
     phase?: string;
     fullVersion?: string;
+    canvaLinuxSourceHash?: string;
+    c420uiSourceHash?: string;
+    combinedSourceHash?: string;
   }>(rootDir, "build-resources/canva-linux/config/build-metadata.json");
   if (!committed) {
     failures.push("build-resources/canva-linux/config/build-metadata.json: must be readable");
@@ -269,6 +278,30 @@ function checkBuildMetadataContracts(rootDir: string, failures: string[]): void 
 
   if (committed.buildRevision !== "unknown") {
     failures.push("build-resources/canva-linux/config/build-metadata.json: buildRevision must be unknown");
+  }
+
+  for (const field of ["canvaLinuxSourceHash", "c420uiSourceHash", "combinedSourceHash"] as const) {
+    if (typeof committed[field] !== "string" || !committed[field]?.startsWith("sha256:")) {
+      failures.push(`build-resources/canva-linux/config/build-metadata.json: must include ${field} as sha256 hash`);
+    }
+  }
+  if (typeof committed.canvaLinuxSourceHash === "string" && typeof committed.c420uiSourceHash === "string") {
+    const expectedCanvaLinuxSourceHash = calculateCanvaLinuxSourceHash(rootDir);
+    const expectedC420UISourceHash = calculateC420UISourceHash(rootDir);
+    const expectedCombinedSourceHash = combineSourceHashes(
+      expectedCanvaLinuxSourceHash,
+      expectedC420UISourceHash,
+    );
+
+    if (committed.canvaLinuxSourceHash !== expectedCanvaLinuxSourceHash) {
+      failures.push("build-resources/canva-linux/config/build-metadata.json: canvaLinuxSourceHash is stale; run npm run build:metadata");
+    }
+    if (committed.c420uiSourceHash !== expectedC420UISourceHash) {
+      failures.push("build-resources/canva-linux/config/build-metadata.json: c420uiSourceHash is stale; run npm run build:metadata");
+    }
+    if (committed.combinedSourceHash !== expectedCombinedSourceHash) {
+      failures.push("build-resources/canva-linux/config/build-metadata.json: combinedSourceHash is stale; run npm run build:metadata");
+    }
   }
 
   for (const field of ["version", "displayVersion", "phase", "fullVersion"] as const) {
@@ -347,6 +380,31 @@ function checkRuntimeAssetsMetadataCopyContract(rootDir: string, failures: strin
   );
   if (effectiveIndex === -1 || committedIndex === -1 || effectiveIndex > committedIndex) {
     failures.push("build-resources/electron/main/build-metadata.ts: runtime must prefer effective metadata before committed fallback");
+  }
+}
+
+function checkSourceHashContracts(rootDir: string, failures: string[]): void {
+  const c420uiSourceHashSource = readText(rootDir, "build-resources/c420ui/bootstrap/source-hash.ts");
+  if (!c420uiSourceHashSource) {
+    failures.push("build-resources/c420ui/bootstrap/source-hash.ts: must exist");
+  } else if (c420uiSourceHashSource.includes("\"scripts/canva-linux\"")) {
+    failures.push("build-resources/c420ui/bootstrap/source-hash.ts: c420ui source hash inputs must not include scripts/canva-linux");
+  }
+
+  const canvaLinuxSourceHashSource = readText(rootDir, "scripts/canva-linux/source-hash.ts");
+  if (!canvaLinuxSourceHashSource) {
+    failures.push("scripts/canva-linux/source-hash.ts: must exist");
+    return;
+  }
+
+  for (const forbiddenInput of [
+    "\"build-resources/c420ui\"",
+    "\"docs\"",
+    "\"build-resources/tests\"",
+  ] as const) {
+    if (!canvaLinuxSourceHashSource.includes(forbiddenInput)) {
+      failures.push(`scripts/canva-linux/source-hash.ts: must explicitly handle ${forbiddenInput} in source hash boundary rules`);
+    }
   }
 }
 
@@ -552,6 +610,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkRootTests(rootDir, failures);
   checkAdapterBoundary(rootDir, failures);
   checkBuildMetadataContracts(rootDir, failures);
+  checkSourceHashContracts(rootDir, failures);
   checkRuntimeAssetsMetadataCopyContract(rootDir, failures);
   checkBuildResourcesLayoutContract(rootDir, failures);
   checkRootLayoutMinimizationContract(rootDir, failures);

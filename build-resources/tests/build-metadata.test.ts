@@ -41,6 +41,9 @@ test("build metadata appends deterministic revisions only to effective versions"
   assert.equal(metadata.baseVersion, "0.1.4-15.Dev.7");
   assert.equal(metadata.baseDisplayVersion, "0.1.4-15.Dev");
   assert.equal(metadata.basePhase, "0.1.4-15.Dev.7");
+  assert.equal(metadata.canvaLinuxSourceHash, "unknown");
+  assert.equal(metadata.c420uiSourceHash, "unknown");
+  assert.equal(metadata.combinedSourceHash.startsWith("sha256:"), true);
 });
 
 test("unknown build revision keeps base effective versions", () => {
@@ -77,6 +80,9 @@ test("fallback metadata uses neutral values without source files", () => {
     assert.equal(metadata.displayVersion, "0.0.0");
     assert.equal(metadata.phase, "0.0.0");
     assert.equal(metadata.fullVersion, "0.0.0");
+    assert.equal(metadata.canvaLinuxSourceHash, "unknown");
+    assert.equal(metadata.c420uiSourceHash, "unknown");
+    assert.equal(metadata.combinedSourceHash, "unknown");
     assert.notEqual(metadata.baseVersion, "0.1.4-15.Dev.7");
     assert.notEqual(metadata.baseDisplayVersion, "0.1.4-15.Dev");
   } finally {
@@ -118,6 +124,9 @@ test("loaded metadata is normalized with unknown revision fallback", () => {
   assert.equal(metadata.version, "0.1.4-15.Dev.7");
   assert.equal(metadata.displayVersion, "0.1.4-15.Dev");
   assert.equal(metadata.phase, "0.1.4-15.Dev.7");
+  assert.equal(metadata.canvaLinuxSourceHash, "unknown");
+  assert.equal(metadata.c420uiSourceHash, "unknown");
+  assert.equal(metadata.combinedSourceHash, "unknown");
 });
 
 test("build metadata source does not hardcode current Dev.7 fallbacks", () => {

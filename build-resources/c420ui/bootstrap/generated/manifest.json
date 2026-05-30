@@ -24,26 +24,21 @@
   "futureModuleFormat": "esm",
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
-  "sourceHashAlgorithm": "sha256",
-  "sourceHash": "sha256:ffb4679e0cc6c1de3730b140662a8b5780adaa238255728f101094df5e364a4a",
-  "sourceHashInputs": [
+  "c420uiSourceHashAlgorithm": "sha256",
+  "c420uiSourceHash": "sha256:439037ad3099a1d117790a039798f309606163d73b84f1f255a3a3c959a3fcbd",
+  "canvaLinuxSourceHash": "sha256:4d4cf74f3674baaad90240900a6a5faf05fc81098809672ce73c05094cc3a19e",
+  "combinedSourceHash": "sha256:e5701080de18455b5843048cd978744e01d3cee8c56ccd1fad95392e53c1ccd1",
+  "c420uiSourceHashInputs": [
     "build-resources/c420ui/src",
-    "build-resources/c420ui/bootstrap",
     "build-resources/c420ui/scripts",
     "build-resources/c420ui/checks",
-    "scripts/c420ui-adapter",
-    "scripts/canva-linux/actions",
-    "scripts/canva-linux/artifacts",
-    "scripts/canva-linux/capabilities",
-    "scripts/canva-linux/development",
-    "scripts/canva-linux/project-root.ts",
-    "build-resources/canva-linux/config",
-    "build-resources/c420ui/package.json",
-    "package.json"
+    "build-resources/c420ui/bootstrap",
+    "build-resources/c420ui/types",
+    "build-resources/c420ui/package.json"
   ],
   "artifactHashes": {
-    "run-c420ui.cjs": "sha256:cbd2fb1ba25f05bbb0fedd2e02ba5ce30dfe6d2469c5a8e0f71c7085c21209ea",
-    "run-c420ui-cli.cjs": "sha256:2358b3fb4a0968adb0bb1053528fe84dfe7b3207cd3b9bc877207bcfa9fc05b9",
-    "c420ui-builder.cjs": "sha256:ed5b78c824e179c3bf63e9cee39a47b2427819e885d40dac8a7f5c6b94bbfed4"
+    "run-c420ui.cjs": "sha256:327b9b1b6e0d81745b2165523ff5286e086a0f3b413909eb8869a61317577ce7",
+    "run-c420ui-cli.cjs": "sha256:dcc22eefdf959bf11f039833105497fc96a71f18e0044bd6d8fce2f9cdff6887",
+    "c420ui-builder.cjs": "sha256:779c2c5ea3e4d16808fcfd05fc1756714596ef2a309a83b485c4a97b8b99307b"
   }
 }

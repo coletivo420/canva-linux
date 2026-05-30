@@ -14,10 +14,10 @@ import {
   createC420UIBootstrapEsbuildCliArgs,
 } from "../bootstrap/build-recipe";
 import {
-  calculateC420UIBootstrapSourceHash,
-  collectC420UIBootstrapSourceHashFiles,
-  C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
-  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
+  calculateC420UISourceHash,
+  collectC420UISourceHashFiles,
+  C420UI_SOURCE_HASH_ALGORITHM,
+  C420UI_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
 
 const manifestPath = C420UI_BOOTSTRAP_MANIFEST_PATH;
@@ -73,9 +73,9 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     bundleFormat: string;
     moduleFormat: string;
     futureModuleFormat: string;
-    sourceHashAlgorithm: string;
-    sourceHash: string;
-    sourceHashInputs: string[];
+    c420uiSourceHashAlgorithm: string;
+    c420uiSourceHash: string;
+    c420uiSourceHashInputs: string[];
     artifactHashes: Record<string, string>;
   }>(manifestPath);
   const rootPackageJson = readJson<{ version: string }>("package.json");
@@ -97,23 +97,23 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
   assert.equal(manifest.bundleFormat, "cjs");
   assert.equal(manifest.moduleFormat, "commonjs");
   assert.equal(manifest.futureModuleFormat, "esm");
-  assert.equal(manifest.sourceHashAlgorithm, C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM);
-  assert.match(manifest.sourceHash, /^sha256:[0-9a-f]{64}$/);
-  assert.equal(Array.isArray(manifest.sourceHashInputs), true);
-  for (const requiredInput of C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS) {
+  assert.equal(manifest.c420uiSourceHashAlgorithm, C420UI_SOURCE_HASH_ALGORITHM);
+  assert.match(manifest.c420uiSourceHash, /^sha256:[0-9a-f]{64}$/);
+  assert.equal(Array.isArray(manifest.c420uiSourceHashInputs), true);
+  for (const requiredInput of C420UI_SOURCE_HASH_INPUTS) {
     assert.equal(
-      manifest.sourceHashInputs.includes(requiredInput),
+      manifest.c420uiSourceHashInputs.includes(requiredInput),
       true,
-      `manifest sourceHashInputs must include ${requiredInput}`,
+      `manifest c420uiSourceHashInputs must include ${requiredInput}`,
     );
   }
   assert.equal(
-    collectC420UIBootstrapSourceHashFiles(process.cwd()).includes(
+    collectC420UISourceHashFiles(process.cwd()).includes(
       "build-resources/c420ui/bootstrap/source-hash.ts",
     ),
     true,
   );
-  assert.equal(manifest.sourceHash, calculateC420UIBootstrapSourceHash(process.cwd()));
+  assert.equal(manifest.c420uiSourceHash, calculateC420UISourceHash(process.cwd()));
   for (const artifact of ["run-c420ui.cjs", "run-c420ui-cli.cjs", "c420ui-builder.cjs"] as const) {
     assert.match(manifest.artifactHashes[artifact], /^sha256:[0-9a-f]{64}$/);
   }

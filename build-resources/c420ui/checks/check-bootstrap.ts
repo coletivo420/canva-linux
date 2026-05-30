@@ -16,9 +16,9 @@ import {
   C420UI_BOOTSTRAP_MODULE_FORMAT,
 } from "../bootstrap/build-recipe";
 import {
-  calculateC420UIBootstrapSourceHash,
-  C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
-  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
+  calculateC420UISourceHash,
+  C420UI_SOURCE_HASH_ALGORITHM,
+  C420UI_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
 import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
@@ -426,25 +426,31 @@ function main(): void {
       failures.push(`${manifestPath}: expected entrypoints.builder to be ${c420uiBootstrapArtifactPath("c420ui-builder.cjs")}`);
     }
 
-    if (manifest.sourceHashAlgorithm !== C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM) {
-      failures.push(`${manifestPath}: expected sourceHashAlgorithm to be ${C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM}`);
+    if (manifest.c420uiSourceHashAlgorithm !== C420UI_SOURCE_HASH_ALGORITHM) {
+      failures.push(`${manifestPath}: expected c420uiSourceHashAlgorithm to be ${C420UI_SOURCE_HASH_ALGORITHM}`);
     }
 
-    if (typeof manifest.sourceHash !== "string" || !manifest.sourceHash.startsWith("sha256:")) {
-      failures.push(`${manifestPath}: expected sourceHash to start with sha256:`);
+    if (typeof manifest.c420uiSourceHash !== "string" || !manifest.c420uiSourceHash.startsWith("sha256:")) {
+      failures.push(`${manifestPath}: expected c420uiSourceHash to start with sha256:`);
+    }
+    if (typeof manifest.canvaLinuxSourceHash !== "string" || !manifest.canvaLinuxSourceHash.startsWith("sha256:")) {
+      failures.push(`${manifestPath}: expected canvaLinuxSourceHash to start with sha256:`);
+    }
+    if (typeof manifest.combinedSourceHash !== "string" || !manifest.combinedSourceHash.startsWith("sha256:")) {
+      failures.push(`${manifestPath}: expected combinedSourceHash to start with sha256:`);
     }
 
-    if (!Array.isArray(manifest.sourceHashInputs)) {
-      failures.push(`${manifestPath}: expected sourceHashInputs to be an array`);
+    if (!Array.isArray(manifest.c420uiSourceHashInputs)) {
+      failures.push(`${manifestPath}: expected c420uiSourceHashInputs to be an array`);
     } else {
-      for (const requiredInput of C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS) {
-        if (!manifest.sourceHashInputs.includes(requiredInput)) {
-          failures.push(`${manifestPath}: sourceHashInputs must include ${requiredInput}`);
+      for (const requiredInput of C420UI_SOURCE_HASH_INPUTS) {
+        if (!manifest.c420uiSourceHashInputs.includes(requiredInput)) {
+          failures.push(`${manifestPath}: c420uiSourceHashInputs must include ${requiredInput}`);
         }
       }
       for (const forbiddenInput of ["scripts/" + "canva-linux-c420ui-builder.ts", c420uiBootstrapArtifactPath("canva-linux-c420ui-builder.cjs")] as const) {
-        if (manifest.sourceHashInputs.includes(forbiddenInput)) {
-          failures.push(`${manifestPath}: sourceHashInputs must not include ${forbiddenInput}`);
+        if (manifest.c420uiSourceHashInputs.includes(forbiddenInput)) {
+          failures.push(`${manifestPath}: c420uiSourceHashInputs must not include ${forbiddenInput}`);
         }
       }
     }
@@ -453,12 +459,12 @@ function main(): void {
     validateManifestArtifactHashes(rootDir, manifest, failures);
 
     try {
-      const currentSourceHash = calculateC420UIBootstrapSourceHash(rootDir);
-      if (manifest.sourceHash !== currentSourceHash) {
-        failures.push(`${manifestPath}: sourceHash is stale; run npm run build:c420ui-bootstrap`);
+      const currentSourceHash = calculateC420UISourceHash(rootDir);
+      if (manifest.c420uiSourceHash !== currentSourceHash) {
+        failures.push(`${manifestPath}: c420uiSourceHash is stale; run npm run build:c420ui-bootstrap`);
       }
     } catch (error) {
-      failures.push(`${manifestPath}: unable to calculate sourceHash: ${error instanceof Error ? error.message : String(error)}`);
+      failures.push(`${manifestPath}: unable to calculate c420uiSourceHash: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 

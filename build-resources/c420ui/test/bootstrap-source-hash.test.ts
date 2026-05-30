@@ -5,26 +5,19 @@ import path from "node:path";
 import test from "node:test";
 
 import {
-  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
-  collectC420UIBootstrapSourceHashFiles,
+  C420UI_SOURCE_HASH_INPUTS,
+  collectC420UISourceHashFiles,
 } from "../bootstrap/source-hash";
 
-const sourceHashInputs: readonly string[] = C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS;
+const sourceHashInputs: readonly string[] = C420UI_SOURCE_HASH_INPUTS;
 
-test("c420ui bootstrap source hash covers bundled adapter and Canva Linux dependencies", () => {
+test("c420ui source hash covers only c420ui-owned sources", () => {
   for (const requiredInput of [
     "build-resources/c420ui/bootstrap",
-    "scripts/c420ui-adapter",
-    "scripts/canva-linux/actions",
-    "scripts/canva-linux/artifacts",
-    "scripts/canva-linux/capabilities",
-    "scripts/canva-linux/development",
-    "scripts/canva-linux/project-root.ts",
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",
     "build-resources/c420ui/checks",
-    "build-resources/canva-linux/config",
-    "package.json",
+    "build-resources/c420ui/types",
     "build-resources/c420ui/package.json",
   ] as const) {
     assert.equal(
@@ -35,16 +28,13 @@ test("c420ui bootstrap source hash covers bundled adapter and Canva Linux depend
   }
 });
 
-test("c420ui bootstrap source hash excludes removed c420ui integration modules", () => {
+test("c420ui source hash excludes Canva Linux sources", () => {
   for (const forbiddenInput of [
-    "scripts/" + "build-c420ui-bootstrap.ts",
-    "scripts/" + "run-c420ui.ts",
-    "scripts/" + "run-c420ui-cli.ts",
-    "scripts/" + "c420ui-builder.ts",
-    "scripts/" + "checks/canva-linux/check-c420ui-bootstrap.ts",
-    "scripts/" + "checks/canva-linux/check-c420ui-artifact-gate.ts",
-    "scripts/" + "checks/canva-linux/check-c420ui-node-check.ts",
-    "scripts/" + "canva-linux",
+    "scripts/c420ui-adapter",
+    "scripts/canva-linux",
+    "build-resources/canva-linux/config",
+    "package.json",
+    "package-lock.json",
   ] as const) {
     assert.equal(
       sourceHashInputs.includes(forbiddenInput),
@@ -60,7 +50,7 @@ test("ignores build-resources/c420ui/bootstrap/generated", () => {
   fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.cjs"), "module.exports = 1;\n");
   fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "build-recipe.ts"), "export const marker = 1;\n");
 
-  const files = collectC420UIBootstrapSourceHashFiles(rootDir, ["build-resources/c420ui/bootstrap"]);
+  const files = collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/bootstrap"]);
   assert.equal(files.includes("build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"), false);
   assert.equal(files.includes("build-resources/c420ui/bootstrap/build-recipe.ts"), true);
 });
@@ -70,6 +60,6 @@ test("does not ignore unrelated generated directories", () => {
   fs.mkdirSync(path.join(rootDir, "build-resources", "c420ui", "src", "generated"), { recursive: true });
   fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "src", "generated", "example.ts"), "export const keep = true;\n");
 
-  const files = collectC420UIBootstrapSourceHashFiles(rootDir, ["build-resources/c420ui/src"]);
+  const files = collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/src"]);
   assert.equal(files.includes("build-resources/c420ui/src/generated/example.ts"), true);
 });
