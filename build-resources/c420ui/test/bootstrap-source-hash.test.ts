@@ -78,15 +78,19 @@ test("does not ignore unrelated generated directories", () => {
 
 test("legacy bootstrap hash aliases map to c420ui source hash behavior", () => {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-source-hash-"));
-  fs.mkdirSync(path.join(rootDir, "build-resources", "c420ui", "src"), { recursive: true });
-  fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "src", "index.ts"), "export const v = 1;\n");
+  try {
+    fs.mkdirSync(path.join(rootDir, "build-resources", "c420ui", "src"), { recursive: true });
+    fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "src", "index.ts"), "export const v = 1;\n");
 
-  assert.deepEqual(
-    collectC420UIBootstrapSourceHashFiles(rootDir, ["build-resources/c420ui/src"]),
-    collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/src"]),
-  );
-  assert.equal(
-    calculateC420UIBootstrapSourceHash(rootDir, ["build-resources/c420ui/src"]),
-    calculateC420UISourceHash(rootDir, ["build-resources/c420ui/src"]),
-  );
+    assert.deepEqual(
+      collectC420UIBootstrapSourceHashFiles(rootDir, ["build-resources/c420ui/src"]),
+      collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/src"]),
+    );
+    assert.equal(
+      calculateC420UIBootstrapSourceHash(rootDir, ["build-resources/c420ui/src"]),
+      calculateC420UISourceHash(rootDir, ["build-resources/c420ui/src"]),
+    );
+  } finally {
+    fs.rmSync(rootDir, { recursive: true, force: true });
+  }
 });
