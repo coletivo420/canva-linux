@@ -284,13 +284,29 @@ function summarizeCommandFailure(result) {
   if (result.error) return result.error.message;
   return output.split("\n").find((line) => line.trim().length > 0)?.trim() || `exit status ${result.status}`;
 }
+function resolveBootstrapBuildRoot(startDir) {
+  let current = startDir;
+  while (true) {
+    const pkgPath = import_node_path3.default.join(current, "package.json");
+    if (import_node_fs3.default.existsSync(pkgPath)) {
+      const scripts = readJson(pkgPath)?.scripts;
+      if (scripts?.["build:c420ui-bootstrap"]) return current;
+    }
+    const parent = import_node_path3.default.dirname(current);
+    if (parent === current) return startDir;
+    current = parent;
+  }
+}
 function validateNodeCheck(rootDir, relativePath, deps) {
   const result = deps.spawn(process.execPath, ["--check", import_node_path3.default.join(rootDir, relativePath)], {
     cwd: rootDir,
     encoding: "utf8",
     shell: false
   });
-  if (result.error || result.status !== 0) {
+  if (result.error && result.error.code === "EPERM" && result.status === 0) {
+    return null;
+  }
+  if (result.status !== 0) {
     return `${relativePath} failed node --check (${summarizeCommandFailure(result)})`;
   }
   return null;
@@ -334,14 +350,15 @@ function getC420UIBootstrapStatusWithDeps(rootDir, deps) {
 function ensureC420UIBootstrapWithDeps(rootDir, deps) {
   const status = getC420UIBootstrapStatusWithDeps(rootDir, deps);
   if (status.state === "valid") return;
+  const bootstrapBuildRoot = resolveBootstrapBuildRoot(rootDir);
   console.error(`[c420ui] bootstrap ${status.state}: ${status.reason}`);
   console.error("[c420ui] generating bootstrap bundle automatically...");
   const result = deps.spawn("npm", ["run", "build:c420ui-bootstrap"], {
-    cwd: rootDir,
+    cwd: bootstrapBuildRoot,
     stdio: "inherit",
     shell: false
   });
-  if (result.error || result.status !== 0) {
+  if (result.status !== 0) {
     const details = result.error?.message || `exit status ${result.status ?? "unknown"}`;
     throw new Error(
       `Unable to generate c420ui bootstrap bundle automatically. ${details}`
@@ -381,7 +398,12 @@ Running the whole builder as root may break file ownership, user sessions, build
 function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()) {
   let current = startDir;
   while (true) {
-    if (import_node_fs4.default.existsSync(import_node_path4.default.join(current, "package.json"))) return current;
+    if (import_node_fs4.default.existsSync(import_node_path4.default.join(current, "package.json"))) {
+      const scripts = readJsonFile2(
+        import_node_path4.default.join(current, "package.json")
+      )?.scripts;
+      if (scripts?.["build:c420ui-bootstrap"]) return current;
+    }
     const parent = import_node_path4.default.dirname(current);
     if (parent === current) throw new Error("Unable to locate Canva Linux project root.");
     current = parent;

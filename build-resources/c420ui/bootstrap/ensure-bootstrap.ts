@@ -39,6 +39,21 @@ function summarizeCommandFailure(result: ReturnType<typeof spawnSync>): string {
   return output.split("\n").find((line) => line.trim().length > 0)?.trim() || `exit status ${result.status}`;
 }
 
+function resolveBootstrapBuildRoot(startDir: string): string {
+  let current = startDir;
+  while (true) {
+    const pkgPath = path.join(current, "package.json");
+    if (fs.existsSync(pkgPath)) {
+      const scripts = readJson<{ scripts?: Record<string, string> }>(pkgPath)?.scripts;
+      if (scripts?.["build:c420ui-bootstrap"]) return current;
+    }
+
+    const parent = path.dirname(current);
+    if (parent === current) return startDir;
+    current = parent;
+  }
+}
+
 function validateNodeCheck(
   rootDir: string,
   relativePath: string,
@@ -50,7 +65,13 @@ function validateNodeCheck(
     shell: false,
   });
 
-  if (result.error || result.status !== 0) {
+  // Some constrained environments can report EPERM from spawnSync even when the
+  // check command itself succeeds; keep CI as the strict syntax gate.
+  if (result.error && result.error.code === "EPERM" && result.status === 0) {
+    return null;
+  }
+
+  if (result.status !== 0) {
     return `${relativePath} failed node --check (${summarizeCommandFailure(result)})`;
   }
 
@@ -113,17 +134,18 @@ export function ensureC420UIBootstrapWithDeps(
 ): void {
   const status = getC420UIBootstrapStatusWithDeps(rootDir, deps);
   if (status.state === "valid") return;
+  const bootstrapBuildRoot = resolveBootstrapBuildRoot(rootDir);
 
   console.error(`[c420ui] bootstrap ${status.state}: ${status.reason}`);
   console.error("[c420ui] generating bootstrap bundle automatically...");
 
   const result = deps.spawn("npm", ["run", "build:c420ui-bootstrap"], {
-    cwd: rootDir,
+    cwd: bootstrapBuildRoot,
     stdio: "inherit",
     shell: false,
   });
 
-  if (result.error || result.status !== 0) {
+  if (result.status !== 0) {
     const details = result.error?.message || `exit status ${result.status ?? "unknown"}`;
     throw new Error(
       `Unable to generate c420ui bootstrap bundle automatically. ${details}`,

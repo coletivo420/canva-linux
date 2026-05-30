@@ -41,7 +41,14 @@ Running the whole builder as root may break file ownership, user sessions, build
 function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()): string {
   let current = startDir;
   while (true) {
-    if (fs.existsSync(path.join(current, "package.json"))) return current;
+    if (fs.existsSync(path.join(current, "package.json"))) {
+      const scripts = readJsonFile<{ scripts?: Record<string, string> }>(
+        path.join(current, "package.json"),
+      )?.scripts;
+      // The repository root owns build:c420ui-bootstrap. The nested c420ui package
+      // also has package.json but does not define this script.
+      if (scripts?.["build:c420ui-bootstrap"]) return current;
+    }
     const parent = path.dirname(current);
     if (parent === current) throw new Error("Unable to locate Canva Linux project root.");
     current = parent;
