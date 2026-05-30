@@ -1451,72 +1451,52 @@ function validateProjectValidationScriptShape(
     );
   }
 
-  if (lines.length < 60) {
-    failures.push(
-      `${relativePath}: validation script appears collapsed; expected readable multiline shell content`,
-    );
-  }
-
-  const sourceFirstCommentIndex = lines.findIndex((line) =>
-    line.includes("Do not move runtime build before lint,"),
-  );
-  if (sourceFirstCommentIndex === -1) {
-    failures.push(
-      `${relativePath}: missing source-first ordering comment for runtime build placement`,
-    );
-  } else if (!lines[sourceFirstCommentIndex]!.trim().startsWith("#")) {
-    failures.push(
-      `${relativePath}:${sourceFirstCommentIndex + 1}: source-first ordering prose must remain a shell comment`,
-    );
-  }
-
-  const buildRuntimeIndex = lines.findIndex(
-    (line) => line === 'run_step "npm run build:runtime" npm run build:runtime',
-  );
-  const validationBlockSteps = [
-    'run_step "npm run check:c420ui-core" npm run check:c420ui-core',
-    'run_step "npm run check:canva-linux" npm run check:canva-linux',
-    'run_step "npm run check:shared-tooling" npm run check:shared-tooling',
-  ] as const;
-  const validationBlockIndexes = validationBlockSteps.map((step) =>
-    lines.findIndex((line) => line === step),
-  );
-
-  if (buildRuntimeIndex === -1) {
-    failures.push(
-      `${relativePath}: missing npm run build:runtime validation step`,
-    );
-  }
-
-  validationBlockSteps.forEach((step, index) => {
-    if (validationBlockIndexes[index] === -1) {
-      failures.push(`${relativePath}: missing ${step} validation step`);
-    }
-  });
-
-  for (let index = 1; index < validationBlockIndexes.length; index += 1) {
-    const previousIndex = validationBlockIndexes[index - 1]!;
-    const currentIndex = validationBlockIndexes[index]!;
-    if (
-      previousIndex !== -1 &&
-      currentIndex !== -1 &&
-      currentIndex < previousIndex
-    ) {
-      failures.push(
-        `${relativePath}: split validation steps must stay in c420ui, Canva Linux, and shared order`,
-      );
+  for (const requiredFragment of [
+    "npm run build:scripts --silent",
+    "node \".build/scripts/validate-project.js\"",
+  ] as const) {
+    if (!content.includes(requiredFragment)) {
+      failures.push(`${relativePath}: missing wrapper fragment ${JSON.stringify(requiredFragment)}`);
     }
   }
 
-  const lastValidationIndex = Math.max(...validationBlockIndexes);
-  if (
-    buildRuntimeIndex !== -1 &&
-    lastValidationIndex !== -1 &&
-    buildRuntimeIndex < lastValidationIndex
-  ) {
-    failures.push(
-      `${relativePath}: npm run build:runtime must stay after split validation steps`,
-    );
+  for (const forbiddenFragment of [
+    "run_step \"",
+    "node <<'NODE'",
+    "node -e",
+    "node -p",
+  ] as const) {
+    if (content.includes(forbiddenFragment)) {
+      failures.push(`${relativePath}: must remain a thin wrapper; found ${forbiddenFragment}`);
+    }
+  }
+
+  const sourcePath = "scripts/canva-linux/validation/project.ts";
+  if (!fs.existsSync(path.join(rootDir, sourcePath))) {
+    failures.push(`${sourcePath}: missing TypeScript validation source`);
+    return;
+  }
+
+  const source = fs.readFileSync(path.join(rootDir, sourcePath), "utf8");
+  for (const requiredStep of [
+    "npm run build:metadata",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run typecheck:strict",
+    "npm test",
+    "npm run check:c420ui-node-check",
+    "npm run check:c420ui-bootstrap-artifacts",
+    "git diff --exit-code",
+    "npm run docs:check-ai",
+    "npm run check:c420ui-core",
+    "npm run check:canva-linux",
+    "npm run check:shared-tooling",
+    "npm run build:runtime",
+    "npm run build:check",
+  ] as const) {
+    if (!source.includes(requiredStep)) {
+      failures.push(`${sourcePath}: missing required step ${requiredStep}`);
+    }
   }
 }
 

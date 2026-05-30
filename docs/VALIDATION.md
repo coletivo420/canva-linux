@@ -400,3 +400,9 @@ Validation commands:
 Expected results:
 - `build-resources/canva-linux/config/build-metadata.json` must contain stable deterministic source hashes.
 - `.build/canva-linux/build-metadata.effective.json` may change `buildRevision` and derived version strings, but must preserve the same source hashes.
+
+## Dev.10 validation ownership
+
+- Project validation runs from `scripts/canva-linux/validation/project.ts` via `validate:project`.
+- Doctor runs from `scripts/canva-linux/validation/doctor.ts` via `validate:doctor`.
+- Flatpak and Flathub policy checks run from TypeScript entrypoints; shell scripts are dispatch wrappers only.

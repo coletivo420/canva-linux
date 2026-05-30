@@ -258,3 +258,7 @@ Canva Linux and c420ui now use separate deterministic content hashes.
 `combinedSourceHash` changes when either component hash changes.
 `buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
 Docs, tests and generated artifacts must not affect either source hash.
+
+## Dev.10 validation migration status
+
+Validation and doctor workflows are TypeScript-owned in `scripts/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers and must not own project policy logic.
