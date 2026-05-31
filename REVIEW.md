@@ -622,3 +622,10 @@ Request changes if a PR:
 - adds validation policy logic back into `scripts/*.sh` validation scripts;
 - reintroduces JavaScript heredocs (`node <<'NODE'`) inside validation wrappers;
 - bypasses TypeScript validation entrypoints for doctor/project/flatpak/flathub checks.
+
+## Dev.10 operational TypeScript review
+
+Request changes if a PR:
+- moves operational install/uninstall/purge/packaging orchestration from TypeScript back into shell scripts;
+- removes dry-run support from operational TypeScript entrypoints;
+- rewrites artifact architecture naming instead of preserving generated upstream names.

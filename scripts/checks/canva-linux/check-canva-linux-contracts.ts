@@ -191,9 +191,9 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
     "test:c420ui": "npm run test -- build-resources/c420ui/test",
     "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.js",
     "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
-    "c420ui:install-native": "bash build-resources/c420ui/scripts/install-native.sh",
-    "c420ui:build-appimage": "bash build-resources/c420ui/scripts/build-appimage.sh",
-    "c420ui:build-flatpak-bundle": "bash build-resources/c420ui/scripts/build-flatpak-bundle.sh",
+    "c420ui:install-native": "npm run build:scripts && node .build/scripts/install-native.js",
+    "c420ui:build-appimage": "npm run build:scripts && node .build/scripts/build-appimage.js",
+    "c420ui:build-flatpak-bundle": "npm run build:scripts && node .build/scripts/build-flatpak-bundle.js",
   };
 
   for (const [name, expected] of Object.entries(requiredScripts)) {

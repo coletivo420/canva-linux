@@ -262,3 +262,7 @@ Docs, tests and generated artifacts must not affect either source hash.
 ## Dev.10 validation migration status
 
 Validation and doctor workflows are TypeScript-owned in `scripts/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers and must not own project policy logic.
+
+## Dev.10 operational migration status
+
+Install, uninstall, maintenance, and packaging workflows now expose TypeScript entrypoints under `scripts/canva-linux/*` and compiled Node routes under `.build/scripts/*`.

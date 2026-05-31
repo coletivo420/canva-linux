@@ -406,3 +406,8 @@ Expected results:
 - Project validation runs from `scripts/canva-linux/validation/project.ts` via `validate:project`.
 - Doctor runs from `scripts/canva-linux/validation/doctor.ts` via `validate:doctor`.
 - Flatpak and Flathub policy checks run from TypeScript entrypoints; shell scripts are dispatch wrappers only.
+
+## Dev.10 operational ownership
+
+- Native/Flatpak install, uninstall, maintenance, and packaging actions are routed through TypeScript entrypoints.
+- Action Registry operational commands now target compiled Node scripts.
