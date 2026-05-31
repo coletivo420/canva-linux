@@ -41,7 +41,7 @@ var import_node_child_process3 = require("node:child_process");
 var import_node_fs4 = __toESM(require("node:fs"));
 var import_node_path4 = __toESM(require("node:path"));
 
-// scripts/c420ui-adapter/build-metadata-loader.ts
+// build-resources/canva-linux/c420ui-adapter/build-metadata-loader.ts
 var import_node_child_process = require("node:child_process");
 var import_node_fs = __toESM(require("node:fs"));
 var import_node_module = require("node:module");
@@ -180,7 +180,7 @@ var import_node_crypto2 = require("node:crypto");
 var import_node_fs3 = __toESM(require("node:fs"));
 var import_node_path3 = __toESM(require("node:path"));
 
-// scripts/canva-linux/source-hash.ts
+// build-resources/canva-linux/source-hash.ts
 var import_node_crypto = __toESM(require("node:crypto"));
 var import_node_fs2 = __toESM(require("node:fs"));
 var import_node_path2 = __toESM(require("node:path"));

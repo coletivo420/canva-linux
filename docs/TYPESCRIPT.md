@@ -67,7 +67,7 @@ syntax, source-hash, artifact-hash, and stale-artifact gates.
 - `build-resources/electron/**/*.ts`
 - `scripts/**/*.ts`
 - `scripts/**/*.sh`
-- `scripts/core/*.ts`
+- `build-resources/canva-linux/checks/core/*.ts`
 - `build-resources/tests/**/*.ts`
 - `build-resources/config/eslint/eslint.config.ts`
 - `build-resources/config/playwright/playwright.config.ts`
@@ -97,7 +97,7 @@ maintained configs are `build-resources/config/eslint/eslint.config.ts` and `bui
 
 The historical `scripts/run-typescript-script.js` bootstrap must also not exist as
 maintained source. No JavaScript wrapper or bootstrap belongs under `scripts/`;
-`scripts/run-typescript-script.ts` is compiled to
+`build-resources/c420ui/build-resources/c420ui/scripts/run-typescript-script.ts` is compiled to
 `.build/scripts/bootstrap/run-typescript-script.js` when needed.
 
 `check-repository-policy.ts` enforces the wider TypeScript migration, gitignore,
@@ -108,26 +108,26 @@ under `.build/` only.
 
 ## Script Core
 
-Project validations, contracts, and registries are implemented in TypeScript under `scripts/core/`.
+Project validations, contracts, and registries are implemented in TypeScript under `build-resources/canva-linux/checks/core/`.
 
-- `npm run build:scripts-core` removes `.build/scripts/core/`, then compiles core
-  entries with esbuild into a fresh `.build/scripts/core/` output directory so stale
+- `npm run build:scripts-core` removes `.build/build-resources/canva-linux/checks/core/`, then compiles core
+  entries with esbuild into a fresh `.build/build-resources/canva-linux/checks/core/` output directory so stale
   artifacts from removed entries cannot survive rebuilds.
 - `scripts/run-core-entry.sh` only dispatches supported core entries, removes stale
   generated files for removed legacy entries when they are requested, builds the
   core on demand when compiled artifacts are missing, then runs the generated
-  `.build/scripts/core/<entry>.js` artifact.
+  `.build/build-resources/canva-linux/checks/core/<entry>.js` artifact.
 - `npm run build:scripts` compiles top-level script entrypoints such as
   `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
   `build-resources/c420ui/scripts/run-c420ui.ts` directly into `.build/scripts/*.js`.
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after
   `build:scripts`; maintained `scripts/**/*.js` wrappers, bootstrap files, and
   validation outputs are forbidden.
-- `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts`
+- `npm run bootstrap:typescript` compiles `build-resources/c420ui/build-resources/c420ui/scripts/run-typescript-script.ts`
   into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript
   entrypoints such as Flathub source generation.
 - `npm run bootstrap:electron-builder` compiles
-  `scripts/electron-builder-before-build.ts` into
+  `build-resources/c420ui/build-resources/c420ui/scripts/electron-builder-before-build.ts` into
   `.build/scripts/bootstrap/electron-builder-before-build.js` for the
   electron-builder `beforeBuild` hook.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
@@ -270,7 +270,7 @@ Docs, tests and generated artifacts must not affect either source hash.
 ## Dev.10 validation migration status
 
 Validation and doctor workflows are TypeScript-owned in
-`scripts/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers
+`build-resources/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers
 and must not own project policy logic.
 
 ## Dev.10 operational migration status

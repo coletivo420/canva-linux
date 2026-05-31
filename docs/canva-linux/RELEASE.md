@@ -17,7 +17,7 @@ Release flow must generate effective metadata before packaging artifacts:
 - `npm run dist`
 
 Repository checks and committed bootstrap artifacts must continue validating against committed metadata.
-Canva Linux assets must use the Flatpak app-id canonical basename `io.github.coletivo420.canva-linux` and all packaging flows must consume `build-resources/canva-linux-assets`.
+Canva Linux assets must use the Flatpak app-id canonical basename `io.github.coletivo420.canva-linux` and all packaging flows must consume `build-resources/canva-linux/assets`.
 
 ## Release target
 
@@ -33,7 +33,7 @@ Canva Linux assets must use the Flatpak app-id canonical basename `io.github.col
   `0.1.4-14`.
 - `build-resources/canva-linux/config/project-ui.json` and `scripts/app-identity-common.sh` must
   expose the same display version and phase.
-- `build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` must contain the
+- `build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` must contain the
   AppStream release entry for `0.1.4-14` dated `2026-05-14`.
 
 ## Release artifacts

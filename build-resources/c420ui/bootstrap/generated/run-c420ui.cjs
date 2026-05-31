@@ -19457,7 +19457,7 @@ function runC420UITerminalApp(options, runtimeOptions = {}) {
   });
 }
 
-// scripts/c420ui-adapter/adapter.ts
+// build-resources/canva-linux/c420ui-adapter/adapter.ts
 var import_node_fs12 = __toESM(require("node:fs"));
 var import_node_path13 = __toESM(require("node:path"));
 
@@ -20468,15 +20468,15 @@ var c420uiLogoLines = [
   "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
 ];
 
-// scripts/c420ui-adapter/adapter.ts
+// build-resources/canva-linux/c420ui-adapter/adapter.ts
 init_settings();
 
-// scripts/c420ui-adapter/detection/provider.ts
+// build-resources/canva-linux/c420ui-adapter/detection/provider.ts
 var import_node_fs7 = __toESM(require("node:fs"));
 var import_node_path8 = __toESM(require("node:path"));
 var import_node_child_process5 = require("node:child_process");
 
-// scripts/canva-linux/project-root.ts
+// build-resources/canva-linux/project-root.ts
 var import_node_fs5 = __toESM(require("node:fs"));
 var import_node_path6 = __toESM(require("node:path"));
 function defaultRootSearchDir() {
@@ -20494,7 +20494,7 @@ function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
   }
 }
 
-// scripts/c420ui-adapter/detection/artifact-fragments.ts
+// build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments.ts
 var import_node_fs6 = __toESM(require("node:fs"));
 var import_node_path7 = __toESM(require("node:path"));
 var ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
@@ -20671,7 +20671,7 @@ function buildCanvaLinuxArtifactFragments(rootDir2) {
   return fragments;
 }
 
-// scripts/c420ui-adapter/detection/provider.ts
+// build-resources/canva-linux/c420ui-adapter/detection/provider.ts
 var cachedPackageJson;
 function readPackage(rootDir2) {
   if (cachedPackageJson?.rootDir === rootDir2) {
@@ -20886,7 +20886,7 @@ function buildCanvaLinuxOverviewStatus(rootDir2 = findCanvaLinuxProjectRoot()) {
   return createCanvaLinuxDetectionProvider().buildOverviewStatus(rootDir2);
 }
 
-// scripts/c420ui-adapter/build-metadata-loader.ts
+// build-resources/canva-linux/c420ui-adapter/build-metadata-loader.ts
 var import_node_child_process6 = require("node:child_process");
 var import_node_fs8 = __toESM(require("node:fs"));
 var import_node_module2 = require("node:module");
@@ -21019,11 +21019,11 @@ function loadEffectiveBuildMetadata(rootDir2) {
   return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }
 
-// scripts/c420ui-adapter/artifacts.ts
+// build-resources/canva-linux/c420ui-adapter/artifacts.ts
 var import_node_fs10 = __toESM(require("node:fs"));
 var import_node_path11 = __toESM(require("node:path"));
 
-// scripts/canva-linux/actions/registry.ts
+// build-resources/canva-linux/actions/registry.ts
 var import_node_fs9 = __toESM(require("node:fs"));
 var import_node_path10 = __toESM(require("node:path"));
 init_actions();
@@ -21083,7 +21083,7 @@ function loadCanvaLinuxActions(rootDir2 = findProjectRoot()) {
   return loadCanvaLinuxActionRegistry(rootDir2);
 }
 
-// scripts/c420ui-adapter/actions.ts
+// build-resources/canva-linux/c420ui-adapter/actions.ts
 function actionPhase(action) {
   if (action.phase) return action.phase;
   if (action.group === "install") return "install";
@@ -21104,7 +21104,7 @@ function loadCanvaLinuxC420UIActions(rootDir2) {
   return loadCanvaLinuxActions(rootDir2).map(toC420UIActionDescriptor);
 }
 
-// scripts/c420ui-adapter/artifacts.ts
+// build-resources/canva-linux/c420ui-adapter/artifacts.ts
 var ARTIFACTS_CONFIG_PATH2 = "build-resources/canva-linux/config/artifacts.json";
 function readJsonFile3(filePath) {
   if (!import_node_fs10.default.existsSync(filePath)) {
@@ -21144,7 +21144,7 @@ function loadCanvaLinuxArtifactWorkflows(rootDir2, version) {
   }));
 }
 
-// scripts/c420ui-adapter/development.ts
+// build-resources/canva-linux/c420ui-adapter/development.ts
 var import_node_fs11 = __toESM(require("node:fs"));
 var import_node_path12 = __toESM(require("node:path"));
 function readJsonFile4(filePath) {
@@ -21182,7 +21182,7 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir2, actions = loadCanvaLinuxC4
   });
 }
 
-// scripts/c420ui-adapter/adapter.ts
+// build-resources/canva-linux/c420ui-adapter/adapter.ts
 function readJsonFile5(filePath) {
   return JSON.parse(import_node_fs12.default.readFileSync(filePath, "utf8"));
 }
@@ -21433,7 +21433,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   return createC420UIBridge(adapter);
 }
 
-// scripts/c420ui-adapter/dependencies.ts
+// build-resources/canva-linux/c420ui-adapter/dependencies.ts
 var import_node_fs13 = __toESM(require("node:fs"));
 var import_node_path14 = __toESM(require("node:path"));
 function loadCanvaLinuxDependencyConfig(rootDir2) {
@@ -21445,7 +21445,7 @@ function ensureCanvaLinuxHostDependencies(options) {
   return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
 }
 
-// scripts/c420ui-adapter/root-provider.ts
+// build-resources/canva-linux/c420ui-adapter/root-provider.ts
 var conditionalSystemRootActionIds = /* @__PURE__ */ new Set([
   "purge",
   "uninstall-detected"
@@ -21513,7 +21513,7 @@ function createCanvaLinuxRootProvider(options = {}) {
   };
 }
 
-// scripts/c420ui-adapter/run.ts
+// build-resources/canva-linux/c420ui-adapter/run.ts
 function runCanvaLinuxC420UI(options = {}) {
   const rootDir2 = options.rootDir ?? process.cwd();
   const argv = options.argv ?? process.argv.slice(2);

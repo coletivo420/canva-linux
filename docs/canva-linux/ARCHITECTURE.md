@@ -37,16 +37,16 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. Runti
 
 - `build-resources/electron/`
 - `canva-linux-c420ui-builder`
-- `scripts/c420ui-adapter/`
+- `build-resources/canva-linux/c420ui-adapter/`
 - `scripts/canva-linux/`
 - `build-resources/canva-linux/config/`
-- `build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml`
+- `build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml`
 - `io.github.coletivo420.canva-linux.yml`
 
 ## Consumed c420ui modules
 
-Canva Linux consumes c420ui through `scripts/c420ui-adapter/bridge.ts`,
-`scripts/c420ui-adapter/run.ts`, and the direct CLI bridge. The adapter loads
+Canva Linux consumes c420ui through `build-resources/canva-linux/c420ui-adapter/bridge.ts`,
+`build-resources/canva-linux/c420ui-adapter/run.ts`, and the direct CLI bridge. The adapter loads
 project data from `build-resources/canva-linux/config/` and passes it to c420ui contracts.
 
 The `canva-linux-c420ui-builder` launcher contains a Stage 0 bootstrap only to make c420ui executable from a clean source checkout. That bootstrap selects the generated `bootstrap/c420ui` bundle, does not run npm installation or local builds, and hands full dependency validation and repair to c420ui after startup.
@@ -83,7 +83,7 @@ The c420ui bootstrap manifest must keep engine identity and dependent-project id
 ## Dependency repair inside the UI
 
 The Canva Linux interactive launcher starts `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` first. Dependency validation and repair for
-Canva Linux are wired through the c420ui startup task in `scripts/c420ui-adapter/run.ts`, so a clean checkout can open the
+Canva Linux are wired through the c420ui startup task in `build-resources/canva-linux/c420ui-adapter/run.ts`, so a clean checkout can open the
 UI before any dependent-project npm repair is attempted.
 
 

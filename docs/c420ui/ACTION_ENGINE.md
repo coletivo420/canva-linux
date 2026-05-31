@@ -64,13 +64,13 @@ The ordering is intentional:
 - `build-resources/c420ui/src/cli.ts`
 - `build-resources/c420ui/src/bridge.ts`
 - `build-resources/c420ui/src/root-provider.ts`
-- `scripts/c420ui-adapter/bridge.ts`
+- `build-resources/canva-linux/c420ui-adapter/bridge.ts`
 
 ## Consumed configs and adapters
 
 The engine consumes actions exposed by the bridge. Canva Linux loads those from
-`build-resources/canva-linux/config/actions.json` through `scripts/c420ui-adapter/actions.ts`
-and `scripts/canva-linux/actions/registry.ts`.
+`build-resources/canva-linux/config/actions.json` through `build-resources/canva-linux/c420ui-adapter/actions.ts`
+and `build-resources/canva-linux/actions/registry.ts`.
 
 ## Boundary checks
 

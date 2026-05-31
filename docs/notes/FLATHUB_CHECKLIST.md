@@ -59,5 +59,5 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 
 ## Dev.10 validation ownership
 
-- Flathub submission policy checks are TypeScript-owned under `scripts/canva-linux/validation` and `scripts/canva-linux/flathub`.
+- Flathub submission policy checks are TypeScript-owned under `build-resources/canva-linux/validation` and `build-resources/canva-linux/packaging/flathub/policy`.
 - `scripts/validate-flathub-submission.sh` remains only a thin wrapper for compatibility.

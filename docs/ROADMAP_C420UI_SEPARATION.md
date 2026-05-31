@@ -9,7 +9,7 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 ## Completed
 
 - Package boundary under `build-resources/c420ui`.
-- Canva Linux adapter under `scripts/c420ui-adapter`.
+- Canva Linux adapter under `build-resources/canva-linux/c420ui-adapter`.
 - Direct CLI bridge.
 - Shared Action Engine.
 - Shared Root Provider contract.
@@ -21,7 +21,7 @@ This roadmap is compatibility-first maintenance documentation. It does not start
 - Legacy Action Runner removed after direct CLI and interactive c420ui execution migrated to the shared Action Engine.
 - Canva Linux project config moved under `build-resources/canva-linux/config/`.
 - c420ui detection engine with Canva Linux detection provider.
-- Removed `scripts/core/overview-status.ts`.
+- Removed `build-resources/canva-linux/checks/core/overview-status.ts`.
 - Hardened c420ui detection provider contract around `project` overview status shape.
 - Artifact workflow runner: c420ui owns the artifact workflow runner and routes concrete Canva Linux actions through the Action Engine and Root Provider. Canva Linux provides concrete workflow recipes.
 
@@ -43,8 +43,8 @@ Interactive Canva Linux c420ui actions use the same Action Engine, Root Provider
 Validation is consolidated by domain:
 
 - c420ui core checks: `build-resources/c420ui/checks/check-c420ui-core-contracts.ts`.
-- Canva Linux checks: `scripts/checks/canva-linux/check-canva-linux-contracts.ts`.
-- Shared repository tooling: `scripts/core/check-repository-policy.ts` plus dedicated docs, dependency, runtime, and AI guardrail checks.
+- Canva Linux checks: `build-resources/canva-linux/checks/check-canva-linux-contracts.ts`.
+- Shared repository tooling: `build-resources/canva-linux/checks/core/check-repository-policy.ts` plus dedicated docs, dependency, runtime, and AI guardrail checks.
 
 New c420ui or Canva Linux behavior checks should extend the relevant consolidated domain runner unless a shared repository helper is required.
 

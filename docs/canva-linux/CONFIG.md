@@ -43,12 +43,12 @@ recipe policy.
 
 ## Implementing files
 
-- `scripts/canva-linux/actions/registry.ts`
-- `scripts/c420ui-adapter/actions.ts`
-- `scripts/c420ui-adapter/development.ts`
-- `scripts/c420ui-adapter/dependencies.ts`
-- `scripts/c420ui-adapter/artifacts.ts`
-- `scripts/c420ui-adapter/adapter.ts`
+- `build-resources/canva-linux/actions/registry.ts`
+- `build-resources/canva-linux/c420ui-adapter/actions.ts`
+- `build-resources/canva-linux/c420ui-adapter/development.ts`
+- `build-resources/canva-linux/c420ui-adapter/dependencies.ts`
+- `build-resources/canva-linux/c420ui-adapter/artifacts.ts`
+- `build-resources/canva-linux/c420ui-adapter/adapter.ts`
 
 ## Boundary checks
 

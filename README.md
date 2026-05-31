@@ -136,7 +136,7 @@ Canva Linux owns:
 - desktop/AppStream metadata
 - project configuration
 
-c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` connects Canva Linux configuration to c420ui, and
+c420ui owns generic terminal/action orchestration. `canva-linux/c420ui-adapter/` connects Canva Linux configuration to c420ui, and
 `build-resources/canva-linux/config/` contains project declarations for actions, artifacts, dependencies, development tasks, and UI metadata.
 
 ## Release and Packaging
@@ -178,7 +178,7 @@ architecture.
 
 c420ui is the generic terminal UI and action orchestration engine used by Canva Linux. It owns the Action Engine, Command Runner,
 Root Provider, host dependency checks, artifact workflow runner, and terminal interface. Canva Linux consumes it through project
-configuration and `scripts/c420ui-adapter/`.
+configuration and `canva-linux/c420ui-adapter/`.
 
 - [c420ui architecture](docs/c420ui/ARCHITECTURE.md)
 - [Action Engine](docs/c420ui/ACTION_ENGINE.md)

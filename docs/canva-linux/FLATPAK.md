@@ -51,5 +51,5 @@ root policy before the Flatpak scripts run.
 
 ## Dev.10 validation ownership
 
-- Flatpak policy parsing and decisions are TypeScript-owned under `scripts/canva-linux/validation` and `scripts/canva-linux/flatpak`.
+- Flatpak policy parsing and decisions are TypeScript-owned under `build-resources/canva-linux/validation` and `build-resources/canva-linux/packaging/flatpak`.
 - `scripts/validate-flatpak.sh` is a compatibility wrapper only and must not contain policy logic or JavaScript heredocs.

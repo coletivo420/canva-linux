@@ -44,7 +44,7 @@ only to select the generated `bootstrap/c420ui` bundle and start c420ui from a c
 - `build-resources/c420ui/src/command-dependencies.ts`
 - `build-resources/c420ui/src/node-dependencies.ts`
 - `build-resources/c420ui/src/npm-dependencies.ts`
-- `scripts/c420ui-adapter/dependencies.ts`
+- `build-resources/canva-linux/c420ui-adapter/dependencies.ts`
 - `build-resources/canva-linux/config/dependencies.json`
 
 ## Boundary checks

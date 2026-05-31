@@ -24,7 +24,7 @@ import {
   C420UI_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
 import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety";
-import { loadCommittedBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
+import { loadCommittedBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
 
 type PackageJson = {
   version?: string;

@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   calculateCanvaLinuxSourceHash,
   combineSourceHashes,
-} from "../../scripts/canva-linux/source-hash";
+} from "../../build-resources/canva-linux/source-hash";
 import { calculateC420UISourceHash } from "../c420ui/bootstrap/source-hash";
 
 function write(filePath: string, content: string): void {

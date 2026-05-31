@@ -15,7 +15,7 @@
   },
   "include": [
     "../../electron/**/*.ts",
-    "../../../scripts/**/*.ts",
+    "../../canva-linux/**/*.ts",
     "../../c420ui/**/*.ts",
     "../../tests/**/*.ts",
     "../playwright/playwright.config.ts",

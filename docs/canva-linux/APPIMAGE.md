@@ -25,7 +25,7 @@ actions through the generic artifact workflow system.
 - `build-resources/c420ui/scripts/build-appimage.sh`
 - `scripts/validate-appimage.sh`
 - `build-resources/canva-linux/config/artifacts.json`
-- `scripts/c420ui-adapter/artifacts.ts`
+- `build-resources/canva-linux/c420ui-adapter/artifacts.ts`
 - `docs/APPIMAGE_FUSE.md`
 
 ## c420ui interaction

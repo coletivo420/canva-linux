@@ -34,7 +34,7 @@ test("c420ui source hash covers only c420ui-owned sources", () => {
 
 test("c420ui source hash excludes Canva Linux sources", () => {
   for (const forbiddenInput of [
-    "scripts/c420ui-adapter",
+    "build-resources/canva-linux/c420ui-adapter",
     "scripts/canva-linux",
     "build-resources/electron",
     "build-resources/canva-linux/config",
