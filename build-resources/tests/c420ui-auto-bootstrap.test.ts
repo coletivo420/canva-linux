@@ -60,7 +60,7 @@ function createDeps(rootDir: string): { deps: C420UIBootstrapDeps; buildCalls: (
 
   const deps: C420UIBootstrapDeps = {
     calculateSourceHash: () => "expected-hash",
-    spawn: (command: string, args: string[] | readonly string[]) => {
+    spawn: (command: string, args: readonly string[]) => {
       const argv = [...args];
 
       if (command === process.execPath && argv[0] === "--check") {
@@ -137,7 +137,7 @@ test("ensure-bootstrap validates generated .cjs files with node --check", () => 
 
   const deps: C420UIBootstrapDeps = {
     calculateSourceHash: () => "expected-hash",
-    spawn: (command: string, args: string[] | readonly string[]) => {
+    spawn: (command: string, args: readonly string[]) => {
       const argv = [...args];
       if (command === process.execPath && argv[0] === "--check" && String(argv[1]).includes("run-c420ui-cli.cjs")) {
         return { status: 1, stdout: "", stderr: "syntax error" } as ReturnType<typeof import("node:child_process").spawnSync>;
