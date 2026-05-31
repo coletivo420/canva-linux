@@ -58,7 +58,7 @@ Its current surface is grouped in `build-resources/config/typescript/tsconfig.st
 1. `build-resources/electron/main/**/*.ts`
 2. `build-resources/electron/shared/**/*.ts`
 3. `build-resources/electron/preload/**/*.ts`
-4. `scripts/core/**/*.ts`
+4. `build-resources/canva-linux/checks/core/**/*.ts`
 5. selected Node tests and support helpers already compatible with strict mode
 
 The next strict-mode expansion targets are `build-resources/c420ui/src/terminal/**/*.ts`, then the
@@ -96,12 +96,12 @@ New direct action execution logic must be modeled in the c420ui action engine fi
 action execution; they must not duplicate generic planned-action, dry-run or exit-code behavior.
 
 Artifact workflow phase execution must be modeled in `build-resources/c420ui/src/workflow-runner.ts`. Canva Linux may define
-concrete artifact recipes, action IDs, scopes, and output patterns in `scripts/c420ui-adapter/artifacts.ts`, but phase
+concrete artifact recipes, action IDs, scopes, and output patterns in `build-resources/canva-linux/c420ui-adapter/artifacts.ts`, but phase
 routing for build, validate, install, uninstall, purge, and release belongs to c420ui.
 
 Recommended flow:
 
-1. Create backend logic as TypeScript (`scripts/*.ts` or `scripts/core/*.ts`) unless the task requires shell host-operation glue.
+1. Create backend logic as TypeScript (`scripts/*.ts` or `build-resources/canva-linux/checks/core/*.ts`) unless the task requires shell host-operation glue.
 2. Add entry in `build-resources/canva-linux/config/actions.json`.
 3. Run `npm run check:canva-linux`.
 4. Test direct CLI through the public builder alias: `./canva-linux-c420ui-builder <action-flag> --dry-run`.
@@ -114,7 +114,7 @@ If your action requires root privileges, set `requiresRoot: true` in
 `build-resources/canva-linux/config/actions.json` and use `build-resources/c420ui/host/linux/sudo-helper.sh` helpers in your backend
 script. The generic root policy contract lives in
 `build-resources/c420ui/src/root-provider.ts`; the concrete Canva Linux provider lives in
-`scripts/c420ui-adapter/root-provider.ts`.
+`build-resources/canva-linux/c420ui-adapter/root-provider.ts`.
 
 ## Core Validation
 
@@ -158,7 +158,7 @@ Action execution is no longer validated through the legacy Action Runner.
 Direct builder actions are built with `npm run build:scripts` and executed through
 `.build/build-resources/c420ui/scripts/run-c420ui-cli.js`. Validate direct actions with `./canva-linux-c420ui-builder <action-flag> --dry-run`
 or `npm run c420ui:cli -- <action-flag> --dry-run`. The concrete Canva Linux wiring lives in
-`scripts/c420ui-adapter/cli.ts`; reusable parsing and action execution live in
+`build-resources/canva-linux/c420ui-adapter/cli.ts`; reusable parsing and action execution live in
 `build-resources/c420ui/src/cli.ts`.
 
 Keep direct action resolution and generic root preflight ordering inside the
@@ -167,9 +167,9 @@ c420ui Action Engine, and keep Canva Linux privilege validation in the root prov
 ## Detection boundaries
 
 - Generic detection parsing and overview status normalization live in `build-resources/c420ui/src/detection.ts`.
-- Canva Linux c420ui TypeScript integration modules live in `scripts/c420ui-adapter/`; shell glue remains in
+- Canva Linux c420ui TypeScript integration modules live in `build-resources/canva-linux/c420ui-adapter/`; shell glue remains in
   project scripts such as `build-resources/c420ui/scripts/install-detection-common.sh`.
-- Shared repository tooling under `scripts/core/` must not contain Canva Linux product detection logic.
+- Shared repository tooling under `build-resources/canva-linux/checks/core/` must not contain Canva Linux product detection logic.
 
 Canva Linux Builder powered by c420ui does not maintain its own action allowlist;
 direct action flags are delegated to the c420ui CLI bridge and resolved by the Action Registry,

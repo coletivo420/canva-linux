@@ -115,7 +115,7 @@ Privileged actions follow a shared contract defined in `build-resources/c420ui/h
 ## TypeScript Script Core
 
 The project validations and contracts are implemented in TypeScript under
-`scripts/core/`. These are compiled into `.build/scripts/core/` and executed
+`build-resources/canva-linux/checks/core/`. These are compiled into `.build/build-resources/canva-linux/checks/core/` and executed
 through `scripts/run-core-entry.sh`. All project validations are integrated into
 the `npm run check:scripts-core` quality gate. The gate includes
 `check-repository-policy`, so maintained `.js` files under script, test,

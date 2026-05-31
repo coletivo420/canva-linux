@@ -27,8 +27,8 @@ validation policy. Internal docs still use English.
 build-resources/           Project-owned build resources root.
 build-resources/c420ui/           Generic c420ui source and Linux host helper.
 build-resources/electron/         Canva Linux Electron runtime and preload source.
-build-resources/canva-linux-assets/ Canonical Canva Linux desktop, metainfo, and icon assets.
-scripts/c420ui-adapter/    Canva Linux adapter bridge into c420ui.
+build-resources/canva-linux/assets/ Canonical Canva Linux desktop, metainfo, and icon assets.
+build-resources/canva-linux/c420ui-adapter/    Canva Linux adapter bridge into c420ui.
 scripts/canva-linux/       Canva Linux project-specific tooling.
 build-resources/canva-linux/config/        Canva Linux declarations.
 ```

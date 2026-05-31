@@ -66,7 +66,7 @@ const forbidden = [
   "https://github.com/coletivo420/canva-linux",
   "CL-EyeDropper",
   "build-resources/canva-linux/config",
-  "scripts/c420ui-adapter",
+  "build-resources/canva-linux/c420ui-adapter",
   "CANVA" + "_",
   "electron-builder",
   "@typescript-eslint/parser",
@@ -113,7 +113,7 @@ const forbiddenFragments = [
   "canva-linux",
   "io.github.coletivo420.canva-linux",
   "build-resources/canva-linux/config",
-  "scripts/c420ui-adapter",
+  "build-resources/canva-linux/c420ui-adapter",
   "CANVA" + "_",
   "electron-builder",
   "@typescript-eslint/parser",
@@ -986,7 +986,7 @@ function checkTerminalUiContract(failures: string[]): void {
     "overview-status",
     "install-detection-common.sh",
     "DETECTED_NATIVE_SYSTEM",
-    "scripts/c420ui-adapter",
+    "build-resources/canva-linux/c420ui-adapter",
     "scripts/" + "sudo-common.sh",
   ]) {
     if (terminalSource.includes(fragment)) {
@@ -1262,7 +1262,7 @@ function checkHostDependencyContract(failures: string[]): void {
       "build-resources/canva-linux/config",
       "scripts/" + "ensure-npm-dependencies.sh",
       "scripts/preflight-common.sh",
-      "scripts/c420ui-adapter",
+      "build-resources/canva-linux/c420ui-adapter",
       "scripts/" + "c420ui-" + "canva-linux",
       "electron-builder",
       "@typescript-eslint/parser",
@@ -1309,7 +1309,7 @@ function checkDevelopmentProviderContract(failures: string[]): void {
     "Canva Linux",
     "CANVA" + "_",
     "build-resources/canva-linux/config",
-    "scripts/c420ui-adapter",
+    "build-resources/canva-linux/c420ui-adapter",
   ] as const) {
     if (provider.includes(forbidden)) {
       failures.push(`${providerPath}: must not contain project-specific fragment ${forbidden}`);

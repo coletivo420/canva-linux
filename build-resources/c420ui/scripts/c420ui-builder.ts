@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
+import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
 import { ensureC420UIBootstrap } from "../bootstrap/ensure-bootstrap";
 
 export const BUILDER_INTERNAL_NAME = "c420ui-builder";

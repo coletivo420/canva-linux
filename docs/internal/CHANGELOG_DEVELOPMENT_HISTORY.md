@@ -86,7 +86,7 @@ This file preserves the detailed development changelog entries that were archive
 - Added a TypeScript wrapper contract check covering build-runtime, preload bundling, runtime asset copying, runtime
   cleanup, electron-builder beforeBuild, and C420UI startup wrappers.
 - Added thin compatibility wrappers for AI-guardrails, doc-link, dependency-policy, and runtime-build checks so
-  `scripts/*.js` entrypoints consistently delegate to `scripts/core/*.ts`.
+  `scripts/*.js` entrypoints consistently delegate to `build-resources/canva-linux/checks/core/*.ts`.
 
 ### Fixed
 - Stabilized Native install preflight by using `packages/canva-linux-assets/icons/hicolor`, preserving missing-icon tolerance, validating
@@ -1702,7 +1702,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 - Bumped project version metadata to `1.4.9-dev.12`.
-- Aligned the screenshot staging documentation with the real local Flathub/AppStream screenshot set in `build-resources/canva-linux/screenshots/`.
+- Aligned the screenshot staging documentation with the real local Flathub/AppStream screenshot set in `build-resources/canva-linux/assets/screenshots/`.
 - Updated AppStream release metadata to reflect the current screenshot-preparation pass while intentionally keeping
   screenshot URLs out of MetaInfo until stable tag, commit, or release URLs exist.
 - Added the AppStream developer display name required by `appstreamcli` metadata validation.

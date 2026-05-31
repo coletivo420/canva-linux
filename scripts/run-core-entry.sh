@@ -18,7 +18,7 @@ main() {
     check-ai-guardrails|check-doc-links|check-dependency-policy|check-runtime-build|check-repository-policy)
       ;;
     action-registry|action-runner|overview-status|validate-actions|check-legacy-action-runner-compatibility)
-      rm -f "${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
+      rm -f "${ROOT_DIR}/.build/build-resources/canva-linux/checks/core/${ENTRY}.js"
       printf '%s\n' "scripts/run-core-entry.sh: ${ENTRY} was removed; use a supported core entry." >&2
       exit 66
       ;;
@@ -29,7 +29,7 @@ main() {
   esac
 
   local TARGET
-  TARGET="${ROOT_DIR}/.build/scripts/core/${ENTRY}.js"
+  TARGET="${ROOT_DIR}/.build/build-resources/canva-linux/checks/core/${ENTRY}.js"
   if [[ ! -f "${TARGET}" ]]; then
     npm --prefix "${ROOT_DIR}" run build:scripts-core --silent
   fi

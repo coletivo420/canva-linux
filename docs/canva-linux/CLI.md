@@ -32,7 +32,7 @@ The launcher opens c420ui without arguments. With a direct action flag, the laun
 
 - `canva-linux-c420ui-builder`
 - `build-resources/c420ui/scripts/run-c420ui-cli.ts`
-- `scripts/c420ui-adapter/cli.ts`
+- `build-resources/canva-linux/c420ui-adapter/cli.ts`
 - `build-resources/c420ui/src/cli.ts`
 - `build-resources/canva-linux/config/actions.json`
 

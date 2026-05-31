@@ -25,7 +25,7 @@ import {
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
 } from "./bootstrap-check-helpers";
-import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
+import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
 
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
@@ -475,10 +475,10 @@ function main(): void {
     }
   }
 
-  const adapterRun = read(rootDir, "scripts/c420ui-adapter/run.ts");
+  const adapterRun = read(rootDir, "build-resources/canva-linux/c420ui-adapter/run.ts");
   for (const fragment of ["startupTasks", "Checking dependent project dependencies", "ensureCanvaLinuxHostDependencies"]) {
     if (!adapterRun.includes(fragment)) {
-      failures.push(`scripts/c420ui-adapter/run.ts: missing startup dependency task fragment ${fragment}`);
+      failures.push(`build-resources/canva-linux/c420ui-adapter/run.ts: missing startup dependency task fragment ${fragment}`);
     }
   }
 

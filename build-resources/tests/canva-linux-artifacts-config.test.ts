@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
-} from "../../scripts/c420ui-adapter/artifacts";
+} from "../../build-resources/canva-linux/c420ui-adapter/artifacts";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
 const artifactsConfigPath = path.join(rootDir, "build-resources/canva-linux/config/artifacts.json");

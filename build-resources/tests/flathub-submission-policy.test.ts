@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { validateGeneratedSources } from "../../scripts/canva-linux/flathub/generated-sources-policy";
+import { validateGeneratedSources } from "../../build-resources/canva-linux/packaging/flathub/policy/generated-sources-policy";
 
 test("fails when generated-sources has no sources", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "flathub-sources-"));

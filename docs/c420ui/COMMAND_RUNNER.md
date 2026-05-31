@@ -25,13 +25,13 @@ commands.
 - `build-resources/c420ui/src/command-runner.ts`
 - `build-resources/c420ui/src/operational-logs.ts`
 - `build-resources/c420ui/src/events.ts`
-- `scripts/c420ui-adapter/adapter.ts`
+- `build-resources/canva-linux/c420ui-adapter/adapter.ts`
 
 ## Consumed configs and adapters
 
 The runner consumes command descriptors prepared by the dependent-project
 adapter. Canva Linux commands originate in `build-resources/canva-linux/config/actions.json` and
-are converted through `scripts/c420ui-adapter/actions.ts`.
+are converted through `build-resources/canva-linux/c420ui-adapter/actions.ts`.
 
 ## Boundary checks
 
