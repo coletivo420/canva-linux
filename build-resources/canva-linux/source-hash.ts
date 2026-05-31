@@ -111,7 +111,7 @@ export function combineSourceHashes(canvaLinuxHash?: string, c420uiHash?: string
 export const CANVA_LINUX_SOURCE_HASH_INPUTS = [
   "build-resources/electron",
   "build-resources/canva-linux",
-  "build-resources/build-resources/canva-linux/c420ui-adapter",
+  "build-resources/canva-linux/c420ui-adapter",
   "build-resources/canva-linux/config",
   "build-resources/canva-linux/assets",
   "io.github.coletivo420.canva-linux.yml",
