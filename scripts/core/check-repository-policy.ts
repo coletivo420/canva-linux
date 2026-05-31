@@ -249,20 +249,32 @@ const forbiddenSourceRoots = [
   "build-resources/canva-linux/packaging/flathub/scripts/",
 ] as const;
 
-const legacyShellNodeEvalAllowlist = new Set([
-  "build-resources/c420ui/scripts/install-detection-common.sh",
-  "scripts/flatpak-build-common.sh",
-  "scripts/preflight-common.sh",
-  "scripts/show-version-info.sh",
-  "scripts/validate-flatpak.sh",
-  "scripts/validate-flathub-submission.sh",
-  "scripts/validate-project.sh",
-  "scripts/doctor.sh",
+const legacyShellNodeEvalAllowlist = new Map<string, RegExp[]>([
+  [
+    `build-resources/c420ui/scripts/${"install-detection-common" + ".sh"}`,
+    [
+      /\bnode\s+-e\b.*package_file/,
+      /\bnode\s+-e\b.*metadata_file/,
+    ],
+  ],
+  [
+    "scripts/flatpak-build-common.sh",
+    [/\bnode\s+-e\b.*pathToFileURL/],
+  ],
+  [
+    "scripts/preflight-common.sh",
+    [
+      /\bnode\s+-e\b.*JSON\.parse/,
+      /\bnode\s+-p\b.*package\.json/,
+    ],
+  ],
+  [
+    "scripts/show-version-info.sh",
+    [/\bnode\s+-p\b.*package\.json/],
+  ],
 ]);
 
-const legacyShellNodeHeredocAllowlist = new Set([
-  "scripts/doctor.sh",
-]);
+const legacyShellNodeHeredocAllowlist = new Map<string, RegExp[]>([]);
 
 const forbiddenConfigFiles = new Set([
   "eslint.config.js",
@@ -474,9 +486,18 @@ function validateShellInlineJavaScriptPolicy(
     const lines = content.split(/\r?\n/);
 
     lines.forEach((line, index) => {
-      const hasNodeHeredoc = /\bnode\s+<<-?\s*['"]?NODE['"]?/.test(line);
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith("#")) return;
+
+      const hasNodeHeredoc =
+        /\bnode\s*<<-?\s*['"]?[A-Za-z_][\w-]*['"]?/.test(line);
       if (hasNodeHeredoc) {
-        if (legacyShellNodeHeredocAllowlist.has(file)) {
+        const allowlistedHeredocPatterns =
+          legacyShellNodeHeredocAllowlist.get(file) ?? [];
+        const isAllowlistedHeredoc = allowlistedHeredocPatterns.some((pattern) =>
+          pattern.test(line),
+        );
+        if (isAllowlistedHeredoc) {
           warnings.push(
             `${file}:${index + 1}: legacy node heredoc remains as migration debt (Dev.10 allowlist)`,
           );
@@ -487,10 +508,16 @@ function validateShellInlineJavaScriptPolicy(
         );
       }
 
-      const hasNodeEval = /\bnode\s+-[ep]\b/.test(line);
+      const hasNodeEval =
+        /\bnode\b/.test(line) &&
+        /(^|\s)(--eval(?:=|\s)|--print(?:=|\s)|-[A-Za-z]*[ep][A-Za-z]*)\b/.test(line);
       if (!hasNodeEval) return;
 
-      if (legacyShellNodeEvalAllowlist.has(file)) {
+      const allowlistedEvalPatterns = legacyShellNodeEvalAllowlist.get(file) ?? [];
+      const isAllowlistedEval = allowlistedEvalPatterns.some((pattern) =>
+        pattern.test(line),
+      );
+      if (isAllowlistedEval) {
         warnings.push(
           `${file}:${index + 1}: legacy node -e/-p usage remains as migration debt (Dev.10 allowlist)`,
         );
