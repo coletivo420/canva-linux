@@ -21,11 +21,11 @@ export function createCanvaLinuxOperationsAdapter(
     appId: packageJson.build?.appId ?? "io.github.coletivo420.canva-linux",
     productName: packageJson.productName ?? "Canva Linux",
     packageVersion: packageJson.version ?? "0.0.0",
-    desktopFilePath: "build-resources/canva-linux-assets/linux/io.github.coletivo420.canva-linux.desktop",
-    metainfoPath: "build-resources/canva-linux-assets/linux/io.github.coletivo420.canva-linux.metainfo.xml",
-    iconSourceDir: "build-resources/canva-linux-assets/linux/icons",
-    flatpakManifestPath: "build-resources/canva-linux/packaging/flatpak/io.github.coletivo420.canva-linux.yml",
-    flathubManifestPath: "build-resources/canva-linux/packaging/flathub/io.github.coletivo420.canva-linux.yml",
+    desktopFilePath: "build-resources/canva-linux-assets/desktop/io.github.coletivo420.canva-linux.desktop",
+    metainfoPath: "build-resources/canva-linux-assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
+    iconSourceDir: "build-resources/canva-linux-assets/icons",
+    flatpakManifestPath: "io.github.coletivo420.canva-linux.yml",
+    flathubManifestPath: "build-resources/canva-linux/packaging/flathub/manifest.yml",
     buildMetadataPath: "build-resources/canva-linux/config/build-metadata.json",
   };
 }
