@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { parseDryRun } from "../host/dry-run";
 import { ensurePathIsSafe, projectRoot } from "../host/paths";
 import { info, ok } from "../host/ui";
+import { runWithOptionalSudo } from "../host/sudo";
 
 export function runCleanArtifacts(argv: string[]): void {
   const { dryRun } = parseDryRun(argv);
@@ -13,7 +14,23 @@ export function runCleanArtifacts(argv: string[]): void {
       info(`[dry-run] rm -rf ${rel}`);
       continue;
     }
-    fs.rmSync(`${rootDir}/${rel}`, { recursive: true, force: true });
-    ok(`Removed ${rel}`);
+    const absolutePath = `${rootDir}/${rel}`;
+    try {
+      fs.rmSync(absolutePath, { recursive: true, force: true });
+      ok(`Removed ${rel}`);
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error
+        ? String((error as NodeJS.ErrnoException).code)
+        : "";
+      if (code !== "EACCES" && code !== "EPERM") throw error;
+
+      info(`Permission denied removing ${rel}; retrying with sudo.`);
+      runWithOptionalSudo(true, "rm", ["-rf", absolutePath], {
+        cwd: rootDir,
+        dryRun,
+        env: process.env,
+      });
+      ok(`Removed ${rel}`);
+    }
   }
 }
