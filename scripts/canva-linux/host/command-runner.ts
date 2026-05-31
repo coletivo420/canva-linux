@@ -22,6 +22,13 @@ export function runCommand(command: string, args: string[], options: RunOptions)
     env: options.env ?? process.env,
   });
 
+  if (result.error) {
+    if (!options.allowFailure) {
+      throw new Error(`Command failed to start: ${result.error.message} (${rendered})`);
+    }
+    return 1;
+  }
+
   const status = result.status ?? 1;
   if (status !== 0 && !options.allowFailure) {
     throw new Error(`Command failed (${status}): ${rendered}`);

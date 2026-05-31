@@ -3,11 +3,12 @@ import { projectRoot } from "../host/paths";
 import { requireCommands } from "../host/preflight";
 import { runCommand } from "../host/command-runner";
 import { info, ok } from "../host/ui";
+import { resolveFlatpakScope } from "../flatpak/scope";
 
 export function runFlatpakInstall(argv: string[]): void {
   const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
-  const scope = process.env.CANVA_FLATPAK_SCOPE === "user" ? "user" : "system";
+  const scope = resolveFlatpakScope(process.env);
 
   requireCommands(["flatpak", "flatpak-builder", "bash"]);
   info(`Flatpak install scope: ${scope}`);

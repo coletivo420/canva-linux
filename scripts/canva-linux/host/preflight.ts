@@ -1,7 +1,13 @@
 import { spawnSync } from "node:child_process";
 
 export function hasCommand(command: string): boolean {
-  return (spawnSync("bash", ["-lc", `command -v ${command} >/dev/null 2>&1`], { stdio: "ignore" }).status ?? 1) === 0;
+  return (
+    spawnSync(
+      "bash",
+      ["-lc", "command -v \"$1\" >/dev/null 2>&1", "--", command],
+      { stdio: "ignore" },
+    ).status ?? 1
+  ) === 0;
 }
 
 export function requireCommands(commands: string[]): void {
