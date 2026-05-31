@@ -629,3 +629,5 @@ Request changes if a PR:
 - moves operational install/uninstall/purge/packaging orchestration from TypeScript back into shell scripts;
 - removes dry-run support from operational TypeScript entrypoints;
 - rewrites artifact architecture naming instead of preserving generated upstream names.
+- adds build, operation, packaging, install, uninstall, purge, clean, artifact,
+  sudo, dry-run, or versioning mechanics under `scripts/canva-linux`.

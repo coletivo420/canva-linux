@@ -275,6 +275,7 @@ and must not own project policy logic.
 
 ## Dev.10 operational migration status
 
-Install, uninstall, maintenance, and packaging workflows now expose TypeScript
-entrypoints under `scripts/canva-linux/*` and compiled Node routes under
-`.build/scripts/*`.
+Install, uninstall, maintenance, packaging, build, artifact and versioning
+mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
+Canva Linux provides declarative identity, assets, manifests, validation
+policies, and adapter values.
