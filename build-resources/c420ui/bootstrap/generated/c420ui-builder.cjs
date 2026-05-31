@@ -245,6 +245,8 @@ function calculateSourceHash(rootDir, inputs, ignores = []) {
 var C420UI_SOURCE_HASH_INPUTS = [
   "build-resources/c420ui/src",
   "build-resources/c420ui/scripts",
+  "build-resources/c420ui/host",
+  "build-resources/c420ui/operations",
   "build-resources/c420ui/checks",
   "build-resources/c420ui/bootstrap",
   "build-resources/c420ui/types",

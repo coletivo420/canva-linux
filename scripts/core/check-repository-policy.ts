@@ -1219,6 +1219,33 @@ function validateDependentProjectBoundaryLayout(
   }
 }
 
+function validateC420UIOperationalOwnership(
+  rootDir: string,
+  failures: string[],
+): void {
+  const forbiddenCanvaLinuxOperationalPaths = [
+    "scripts/canva-linux/host",
+    "scripts/canva-linux/install",
+    "scripts/canva-linux/uninstall",
+    "scripts/canva-linux/maintenance",
+    "scripts/canva-linux/packaging",
+    "scripts/canva-linux/flatpak/build.ts",
+    "scripts/canva-linux/flatpak/runtime.ts",
+    "scripts/canva-linux/flatpak/scope.ts",
+  ] as const;
+
+  for (const forbiddenPath of forbiddenCanvaLinuxOperationalPaths) {
+    const absolutePath = path.join(rootDir, forbiddenPath);
+    if (!fs.existsSync(absolutePath)) continue;
+    const stat = fs.statSync(absolutePath);
+    if (stat.isDirectory() && fs.readdirSync(absolutePath).length === 0) continue;
+    if (stat.isDirectory() && fs.readdirSync(absolutePath).every((entry) => entry === ".gitkeep")) continue;
+      failures.push(
+        `${forbiddenPath}: c420ui-owned operational code must live under build-resources/c420ui, not scripts/canva-linux`,
+      );
+  }
+}
+
 function validatePackageLockConsistency(
   rootDir: string,
   failures: string[],
@@ -1713,6 +1740,7 @@ function main(): number {
   validateNoLegacyC420UIDirectory(rootDir, failures);
   validateNoCoreProductDetectionLogic(rootDir, failures);
   validateDependentProjectBoundaryLayout(rootDir, failures);
+  validateC420UIOperationalOwnership(rootDir, failures);
   validateProjectValidationScriptShape(rootDir, failures);
   validateLauncherScriptShape(rootDir, failures);
   validateRemovedCompatibilityAliases(rootDir, failures);

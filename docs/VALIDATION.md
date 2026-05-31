@@ -415,5 +415,9 @@ Expected results:
 
 ## Dev.10 operational ownership
 
-- Native/Flatpak install, uninstall, maintenance, and packaging actions are routed through TypeScript entrypoints.
-- Action Registry operational commands now target compiled Node scripts.
+- Install/uninstall/maintenance/packaging/build/versioning mechanics are routed
+  through c420ui-owned TypeScript sources under `build-resources/c420ui/*`.
+- Action Registry operational commands continue targeting compiled
+  `.build/scripts/*.js` routes.
+- `scripts/canva-linux/*` remains project-specific for validation and product
+  policy only.
