@@ -18,7 +18,11 @@ export type C420UIBootstrapStatus =
 
 export type C420UIBootstrapDeps = {
   calculateSourceHash: (rootDir: string) => string;
-  spawn: typeof spawnSync;
+  spawn: (
+    command: string,
+    args: readonly string[],
+    options?: Parameters<typeof spawnSync>[2],
+  ) => ReturnType<typeof spawnSync>;
 };
 
 const DEFAULT_DEPS: C420UIBootstrapDeps = {
@@ -68,7 +72,13 @@ function validateNodeCheck(
 
   // Some constrained environments can report EPERM from spawnSync even when the
   // check command itself succeeds; keep CI as the strict syntax gate.
-  if (result.error && result.error.code === "EPERM" && result.status === 0) {
+  if (
+    result.error &&
+    typeof result.error === "object" &&
+    "code" in result.error &&
+    result.error.code === "EPERM" &&
+    result.status === 0
+  ) {
     return null;
   }
 

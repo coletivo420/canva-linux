@@ -68,6 +68,14 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
   `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
+## 0.1.4-15.Dev.10 — TypeScript hardening
+
+- Opened the Dev.10 line focused on TypeScript-first workflow hardening.
+- Documented that maintained JavaScript remains forbidden.
+- Documented that JavaScript embedded inside shell scripts counts as maintained JavaScript.
+- Documented that shell must remain limited to bootstrap, POSIX boundaries, sandbox entrypoints, or host-command bridges.
+- Preserved generated c420ui bootstrap artifacts as generated CommonJS outputs validated by strict gates.
+
 ## Dev.9 detected installation hash visibility
 
 - Dev.9 now requires compiled/package outputs to leave effective build metadata behind. Native installs place

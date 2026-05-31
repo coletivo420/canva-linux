@@ -81,15 +81,6 @@ function collectFiles(rootDir: string, relativeDir: string): string[] {
   return files;
 }
 
-function validateProjectHasRunStep(source: string, command: string): boolean {
-  const escaped = command.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-  return new RegExp(
-    String.raw`run_step\s+["'][^"']*["']\s+${escaped}(?:\s|$)`,
-    "m",
-  ).test(source);
-}
-
 const C420UI_OWNERSHIP_GUARDRAILS = [
   "c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.",
   "Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.",
@@ -587,33 +578,55 @@ function checkValidateProjectScript(rootDir: string, failures: string[]): void {
     return;
   }
 
-  for (const command of [
-    "npm run lint",
-    "npm test",
-    "npm run docs:check-ai",
-    "npm run docs:check-links",
-    "npm run deps:check-policy",
-    "npm run check:c420ui-node-check",
-    "npm run check:c420ui-bootstrap-artifacts",
-    "npm run check:c420ui-bootstrap",
-    "npm run check:canva-linux",
-    "npm run typecheck",
-    "npm run typecheck:strict",
-    "git diff --exit-code",
+  for (const requiredFragment of [
+    "npm run build:scripts --silent",
+    "node \".build/scripts/validate-project.js\"",
   ] as const) {
-    if (!validateProjectHasRunStep(contents, command)) {
-      failures.push(`scripts/validate-project.sh: missing run_step for ${command}`);
+    if (!contents.includes(requiredFragment)) {
+      failures.push(`scripts/validate-project.sh: missing required fragment ${requiredFragment}`);
     }
   }
 
-  for (const forbiddenCommand of [
-    "npm run build:metadata",
-    "npm run build:metadata:effective",
-    "npm run build:c420ui-bootstrap",
-    "git rev-parse",
+  for (const forbiddenFragment of [
+    "run_step \"",
+    "node <<'NODE'",
+    "node -e",
+    "node -p",
   ] as const) {
-    if (contents.includes(forbiddenCommand)) {
-      failures.push(`scripts/validate-project.sh: must not run ${forbiddenCommand}`);
+    if (contents.includes(forbiddenFragment)) {
+      failures.push(`scripts/validate-project.sh: wrapper must not contain maintained validation logic (${forbiddenFragment})`);
+    }
+  }
+
+  const projectEntrypointSource = readText(rootDir, "scripts/validate-project.ts");
+  if (!projectEntrypointSource || !projectEntrypointSource.includes("runProjectValidation")) {
+    failures.push("scripts/validate-project.ts: must dispatch to runProjectValidation");
+  }
+
+  const projectValidationSource = readText(rootDir, "scripts/canva-linux/validation/project.ts");
+  if (!projectValidationSource) {
+    failures.push("scripts/canva-linux/validation/project.ts: must exist");
+    return;
+  }
+
+  for (const requiredStep of [
+    "npm run build:metadata",
+    "npm run lint",
+    "npm run typecheck",
+    "npm run typecheck:strict",
+    "npm test",
+    "npm run check:c420ui-node-check",
+    "npm run check:c420ui-bootstrap-artifacts",
+    "git diff --exit-code",
+    "npm run docs:check-ai",
+    "npm run check:c420ui-core",
+    "npm run check:canva-linux",
+    "npm run check:shared-tooling",
+    "npm run build:runtime",
+    "npm run build:check",
+  ] as const) {
+    if (!projectValidationSource.includes(requiredStep)) {
+      failures.push(`scripts/canva-linux/validation/project.ts: missing required step ${requiredStep}`);
     }
   }
 }
