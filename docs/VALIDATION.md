@@ -109,7 +109,9 @@ Generated Artifacts
 
 ## c420ui bootstrap artifact validation
 
-The c420ui builder now auto-generates missing or stale bootstrap bundles before launch. Normal users only need npm installed and do not need to run `npm run build:c420ui-bootstrap` manually.
+The c420ui builder now auto-generates missing or stale bootstrap bundles before
+launch. Normal users only need npm installed and do not need to run
+`npm run build:c420ui-bootstrap` manually.
 Validation gates remain check-only and still fail when committed bootstrap artifacts are stale.
 Runtime/builder auto-fixes missing or stale bundles automatically; CI checks detect drift.
 
@@ -379,7 +381,11 @@ OAuth validation also checks that the first post-OAuth reload targets the curren
 - When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries,
   the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
 
-Canva Linux and c420ui now use separate deterministic content hashes. Canva Linux changes update canvaLinuxSourceHash, c420ui changes update c420uiSourceHash, and combinedSourceHash changes when either side changes. Git buildRevision remains separate and is only used by effective metadata/release builds.
+Canva Linux and c420ui now use separate deterministic content hashes.
+Canva Linux changes update canvaLinuxSourceHash, c420ui changes update
+c420uiSourceHash, and combinedSourceHash changes when either side changes.
+Git buildRevision remains separate and is only used by effective
+metadata/release builds.
 
 ## Split source hash validation
 
@@ -406,3 +412,8 @@ Expected results:
 - Project validation runs from `scripts/canva-linux/validation/project.ts` via `validate:project`.
 - Doctor runs from `scripts/canva-linux/validation/doctor.ts` via `validate:doctor`.
 - Flatpak and Flathub policy checks run from TypeScript entrypoints; shell scripts are dispatch wrappers only.
+
+## Dev.10 operational ownership
+
+- Native/Flatpak install, uninstall, maintenance, and packaging actions are routed through TypeScript entrypoints.
+- Action Registry operational commands now target compiled Node scripts.

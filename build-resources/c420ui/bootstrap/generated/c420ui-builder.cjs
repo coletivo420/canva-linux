@@ -304,7 +304,7 @@ function validateNodeCheck(rootDir, relativePath, deps) {
     encoding: "utf8",
     shell: false
   });
-  if (result.error && result.error.code === "EPERM" && result.status === 0) {
+  if (result.error && typeof result.error === "object" && "code" in result.error && result.error.code === "EPERM" && result.status === 0) {
     return null;
   }
   if (result.status !== 0) {

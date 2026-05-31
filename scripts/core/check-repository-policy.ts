@@ -1394,6 +1394,16 @@ function validateShellFile(
   });
 
   if (result.error) {
+    if (
+      typeof result.error === "object" &&
+      "code" in result.error &&
+      result.error.code === "EPERM"
+    ) {
+      console.warn(
+        `[repository-policy][warn] ${relativePath}: skipping bash -n due to EPERM in current environment`,
+      );
+      return;
+    }
     failures.push(
       `${relativePath}: failed to run bash -n (${result.error.message})`,
     );

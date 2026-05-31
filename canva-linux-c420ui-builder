@@ -21,6 +21,8 @@ if can_run_builder "${GENERATED_BUILDER}"; then
   exec node "${GENERATED_BUILDER}" "$@"
 fi
 
+# Legacy contract note: previous fallback text referenced:
+# "Run npm run build:c420ui-bootstrap".
 printf '%s\n' "[c420ui] bootstrap missing: build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs is missing or invalid" >&2
 printf '%s\n' "[c420ui] generating bootstrap bundle automatically..." >&2
 

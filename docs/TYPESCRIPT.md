@@ -35,7 +35,9 @@ Shell remains allowed only for:
 - thin compatibility wrappers
 - unavoidable host-operation bridges
 
-Shell must not own project policy, JSON/YAML/XML parsing, validation rules, install scope decisions, artifact metadata decisions, release policy, or complex dry-run logic.
+Shell must not own project policy, JSON/YAML/XML parsing, validation rules,
+install scope decisions, artifact metadata decisions, release policy, or
+complex dry-run logic.
 
 ### Forbidden JavaScript forms
 
@@ -54,7 +56,9 @@ Shell must not own project policy, JSON/YAML/XML parsing, validation rules, inst
 - `node_modules/**/*.js`
 - generated c420ui bootstrap `.cjs` files under the committed bootstrap output directory
 
-Generated bootstrap `.cjs` files are allowed only when they are produced from TypeScript sources, recorded in the bootstrap manifest, and validated by syntax, source-hash, artifact-hash, and stale-artifact gates.
+Generated bootstrap `.cjs` files are allowed only when they are produced from
+TypeScript sources, recorded in the bootstrap manifest, and validated by
+syntax, source-hash, artifact-hash, and stale-artifact gates.
 
 ## TypeScript-first source policy
 
@@ -250,7 +254,11 @@ return new Promise((resolve, reject) => {
 - Improve type coverage in preload modules and migrated tests.
 - Consider ESM only as a separate future architecture decision.
 
-Canva Linux and c420ui now use separate deterministic content hashes. Canva Linux changes update canvaLinuxSourceHash, c420ui changes update c420uiSourceHash, and combinedSourceHash changes when either side changes. Git buildRevision remains separate and is only used by effective metadata/release builds.
+Canva Linux and c420ui now use separate deterministic content hashes.
+Canva Linux changes update canvaLinuxSourceHash, c420ui changes update
+c420uiSourceHash, and combinedSourceHash changes when either side changes.
+Git buildRevision remains separate and is only used by effective
+metadata/release builds.
 
 Canva Linux and c420ui now use separate deterministic content hashes.
 `canvaLinuxSourceHash` changes only when Canva Linux inputs change.
@@ -261,4 +269,12 @@ Docs, tests and generated artifacts must not affect either source hash.
 
 ## Dev.10 validation migration status
 
-Validation and doctor workflows are TypeScript-owned in `scripts/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers and must not own project policy logic.
+Validation and doctor workflows are TypeScript-owned in
+`scripts/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers
+and must not own project policy logic.
+
+## Dev.10 operational migration status
+
+Install, uninstall, maintenance, and packaging workflows now expose TypeScript
+entrypoints under `scripts/canva-linux/*` and compiled Node routes under
+`.build/scripts/*`.
