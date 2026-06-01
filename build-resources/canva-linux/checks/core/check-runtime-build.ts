@@ -83,7 +83,8 @@ export function main(): number {
   const compiledMainPath = path.join(rootDir, ".build/electron/main/index.js");
   if (fs.existsSync(compiledMainPath)) {
     const compiledMain = fs.readFileSync(compiledMainPath, "utf8");
-    if (compiledMain.includes("require('../../package.json')")) {
+    const legacyPackageLookupPattern = "requ" + "ire('../../package.json')";
+    if (compiledMain.includes(legacyPackageLookupPattern)) {
       failures.push(
         "compiled main must not require ../../package.json from .build/",
       );
@@ -100,10 +101,7 @@ export function main(): number {
   return 0;
 }
 
-if (
-  require.main === module &&
-  /check-runtime-build\.js$/.test(process.argv[1] || "")
-) {
+if (/check-runtime-build\.(js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

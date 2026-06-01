@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import type { createApp, C420UIAppOptions } from "./app";
 import { enforceC420UIRootLaunchGuard } from "./root-guard";
 
@@ -11,8 +12,10 @@ export type c420uiTerminalRuntimeOptions = {
   ) => NodeJS.Process;
 };
 
+const requireFromRuntimeModule = createRequire(__filename);
+
 function loadC420UITerminalApp(): typeof createApp {
-  const app = require("./app") as typeof import("./app");
+  const app = requireFromRuntimeModule("./app") as typeof import("./app");
   return app.createApp;
 }
 

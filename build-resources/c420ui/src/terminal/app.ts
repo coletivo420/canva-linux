@@ -1,15 +1,10 @@
-const tui = {
-  screen: require("blessed/lib/widgets/screen"),
-  box: require("blessed/lib/widgets/box"),
-  list: require("blessed/lib/widgets/list"),
-  log: require("blessed/lib/widgets/log"),
-};
 import {
   confirmDialog,
   inputDialog,
   messageDialog,
   type InputDialogResult,
 } from "./modal";
+import { tui } from "./blessed-widgets";
 import { c420uiTheme } from "./theme";
 import { formatDetectionPanelSummaries } from "./detected-installations-summary";
 import { copyTextToClipboard } from "./clipboard";
