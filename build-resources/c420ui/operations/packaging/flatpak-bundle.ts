@@ -23,20 +23,16 @@ export function runBuildFlatpakBundle(argv: string[]): void {
 
   requireCommands(["flatpak", "flatpak-builder", "npm", "node", "realpath", "stat"]);
 
-  const packageJson = JSON.parse(
-    fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
-  );
+  const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8"));
   const version = packageJson.version;
   const distDir = path.join(rootDir, "dist");
 
-  const flatpakArchResult = spawnSync("flatpak", ["--default-arch"], {
-    encoding: "utf8",
-  });
-  const flatpakArch = flatpakArchResult.stdout.trim();
-  const bundlePath = path.join(
-    distDir,
-    `canva-linux-${version}-${flatpakArch}.flatpak`,
-  );
+  const flatpakArchResult = spawnSync("flatpak", ["--default-arch"], { encoding: "utf8" });
+  const flatpakArch = flatpakArchResult.stdout?.trim();
+  if (flatpakArchResult.status !== 0 || !flatpakArch) {
+    throw new Error("Failed to detect Flatpak architecture using 'flatpak --default-arch'");
+  }
+  const bundlePath = path.join(distDir, `canva-linux-${version}-${flatpakArch}.flatpak`);
 
   info(`Generating Flatpak bundle for version ${version} (${flatpakArch})`);
   runCommand("npm", ["run", "build:metadata:effective"], { cwd: rootDir, dryRun });
@@ -57,7 +53,7 @@ export function runBuildFlatpakBundle(argv: string[]): void {
 
   if (!dryRun) {
     if (!fs.existsSync(distDir)) fs.mkdirSync(distDir, { recursive: true });
-    if (fs.existsSync(bundlePath)) fs.unlinkSync(bundlePath);
+    if (fs.existsSync(bundlePath)) fs.rmSync(bundlePath, { recursive: true, force: true });
 
     const result = spawnSync(
       "flatpak",
@@ -88,14 +84,16 @@ export function runBuildFlatpakBundle(argv: string[]): void {
   }
 
   if (useExistingRepo) {
+    const sidecarPath = `${bundlePath}.build-metadata.json`;
     const tmpMetadata = path.join(os.tmpdir(), `flatpak-metadata-${Date.now()}.json`);
     if (extractFlatpakRepoBuildMetadata(rootDir, tmpMetadata)) {
-      fs.copyFileSync(tmpMetadata, `${bundlePath}.build-metadata.json`);
-      ok(`Flatpak bundle metadata generated from reused repo: ${bundlePath}.build-metadata.json`);
+      fs.copyFileSync(tmpMetadata, sidecarPath);
+      ok(`Flatpak bundle metadata generated from reused repo: ${sidecarPath}`);
     } else {
+      if (fs.existsSync(sidecarPath)) fs.rmSync(sidecarPath, { force: true });
       warn("Could not read build metadata from reused repo; Flatpak bundle sidecar was not generated.");
     }
-    if (fs.existsSync(tmpMetadata)) fs.unlinkSync(tmpMetadata);
+    if (fs.existsSync(tmpMetadata)) fs.rmSync(tmpMetadata, { force: true });
   } else {
     writeBuildMetadataSidecar(bundlePath, { rootDir });
     if (fs.existsSync(`${bundlePath}.build-metadata.json`)) {
@@ -120,7 +118,7 @@ function ensureLinuxUnpacked(rootDir: string, options: { dryRun?: boolean }) {
   if (unpackedDir !== "linux-unpacked") {
     info(`Creating symlink dist/linux-unpacked -> ${unpackedDir}`);
     const linkPath = path.join(distDir, "linux-unpacked");
-    if (fs.existsSync(linkPath)) fs.unlinkSync(linkPath);
+    if (fs.existsSync(linkPath)) fs.rmSync(linkPath, { recursive: true, force: true });
     fs.symlinkSync(unpackedDir, linkPath);
   }
 
@@ -129,13 +127,13 @@ function ensureLinuxUnpacked(rootDir: string, options: { dryRun?: boolean }) {
 
 function extractFlatpakRepoBuildMetadata(rootDir: string, outputPath: string): boolean {
   try {
-    const refs = spawnSync("ostree", ["--repo=repo", "refs"], {
-      cwd: rootDir,
-      encoding: "utf8",
-    });
-    const flatpakArch = spawnSync("flatpak", ["--default-arch"], {
-      encoding: "utf8",
-    }).stdout.trim();
+    const refs = spawnSync("ostree", ["--repo=repo", "refs"], { cwd: rootDir, encoding: "utf8" });
+    if (refs.status !== 0) return false;
+
+    const archResult = spawnSync("flatpak", ["--default-arch"], { encoding: "utf8" });
+    const flatpakArch = archResult.stdout?.trim();
+    if (archResult.status !== 0 || !flatpakArch) return false;
+
     const ref = refs.stdout
       .split("\n")
       .filter((line) => line.startsWith(`app/${APP_ID}/${flatpakArch}/`))
@@ -144,11 +142,9 @@ function extractFlatpakRepoBuildMetadata(rootDir: string, outputPath: string): b
 
     if (!ref) return false;
 
-    const content = spawnSync(
-      "ostree",
-      ["--repo=repo", "cat", ref, "/files/share/canva-linux/version"],
-      { cwd: rootDir },
-    );
+    const content = spawnSync("ostree", ["--repo=repo", "cat", ref, "/files/share/canva-linux/version"], {
+      cwd: rootDir,
+    });
     if (content.status === 0 && content.stdout.length > 0) {
       fs.writeFileSync(outputPath, content.stdout);
       return true;

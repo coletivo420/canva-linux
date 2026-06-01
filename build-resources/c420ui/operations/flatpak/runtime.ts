@@ -28,7 +28,7 @@ export function ensureFlathubRuntime(
 
     if (!hasFlathub) {
       warn("System Flathub remote is not configured.");
-      c420uiSudoRun(
+      const status = c420uiSudoRun(
         "flatpak",
         [
           "remote-add",
@@ -39,39 +39,40 @@ export function ensureFlathubRuntime(
         ],
         { dryRun },
       );
+      if (status !== 0) throw new Error("Failed to configure system Flathub remote");
     } else {
       info("System Flathub remote is already configured");
     }
 
     info("Ensuring required Flatpak runtimes are installed in system scope");
-    c420uiSudoRun(
+    const status = c420uiSudoRun(
       "flatpak",
       ["install", "-y", "--system", "flathub", ...REQUIRED_RUNTIMES],
       { dryRun },
     );
+    if (status !== 0) throw new Error("Failed to install required Flatpak runtimes");
 
     ok("Flatpak runtimes are ready in system scope");
-  } else {
-    warn("Using user Flatpak scope because CANVA_FLATPAK_SCOPE=user was set.");
-
-    spawnSync(
-      "flatpak",
-      [
-        "remote-add",
-        "--if-not-exists",
-        scopeArg,
-        "flathub",
-        "https://dl.flathub.org/repo/flathub.flatpakrepo",
-      ],
-      { stdio: "inherit" },
-    );
-
-    spawnSync(
-      "flatpak",
-      ["install", "-y", scopeArg, "flathub", ...REQUIRED_RUNTIMES],
-      { stdio: "inherit" },
-    );
-
-    ok("Flatpak runtimes are ready in user scope");
+    return;
   }
+
+  warn("Using user Flatpak scope because CANVA_FLATPAK_SCOPE=user was set.");
+  if (dryRun) {
+    info(`[dry-run] flatpak remote-add --if-not-exists ${scopeArg} flathub https://dl.flathub.org/repo/flathub.flatpakrepo`);
+    info(`[dry-run] flatpak install -y ${scopeArg} flathub ${REQUIRED_RUNTIMES.join(" ")}`);
+    ok("Flatpak runtimes are ready in user scope");
+    return;
+  }
+
+  let result = spawnSync(
+    "flatpak",
+    ["remote-add", "--if-not-exists", scopeArg, "flathub", "https://dl.flathub.org/repo/flathub.flatpakrepo"],
+    { stdio: "inherit" },
+  );
+  if (result.status !== 0) throw new Error(`flatpak remote-add failed with status ${result.status}`);
+
+  result = spawnSync("flatpak", ["install", "-y", scopeArg, "flathub", ...REQUIRED_RUNTIMES], { stdio: "inherit" });
+  if (result.status !== 0) throw new Error(`flatpak install failed with status ${result.status}`);
+
+  ok("Flatpak runtimes are ready in user scope");
 }

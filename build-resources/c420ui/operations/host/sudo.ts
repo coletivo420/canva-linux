@@ -1,5 +1,4 @@
 import { spawnSync, type SpawnSyncOptions } from "node:child_process";
-import path from "node:path";
 import { projectRoot } from "../../host/paths";
 
 const SUDO_HELPER_PATH = "build-resources/c420ui/host/linux/sudo-helper.sh";
@@ -25,10 +24,19 @@ export function c420uiSudoRun(
     return 0;
   }
 
-  const result = spawnSync("bash", [SUDO_HELPER_PATH, command, ...args], {
-    ...options,
-    cwd: rootDir,
-  });
+  const commandLine = [command, ...args]
+    .map((value) => `'${value.replaceAll("'", "'\"'\"'")}'`)
+    .join(" ");
+
+  const result = spawnSync(
+    "bash",
+    ["-lc", `source '${SUDO_HELPER_PATH}' && c420ui_sudo ${commandLine}`],
+    {
+      ...options,
+      cwd: rootDir,
+      stdio: options.stdio ?? "inherit",
+    },
+  );
 
   return result.status ?? 1;
 }
@@ -63,11 +71,12 @@ export function c420uiSudoCp(
 }
 
 export function c420uiSudoChmod(
-  mode: string,
-  path: string,
+  modeOrArgs: string | string[],
+  path?: string,
   options: SpawnSyncOptions & { dryRun?: boolean } = {},
 ): number {
-  return c420uiSudoRun("chmod", [mode, path], options);
+  const args = Array.isArray(modeOrArgs) ? modeOrArgs : [modeOrArgs, path ?? ""];
+  return c420uiSudoRun("chmod", args, options);
 }
 
 export function c420uiSudoLn(

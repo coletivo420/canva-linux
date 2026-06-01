@@ -10,22 +10,30 @@ import { ensureFlathubRuntime } from "../flatpak/runtime";
 import { installFlatpakDirect } from "../flatpak/repo";
 import { printFlatpakPostInstallGuidance } from "../host/guidance";
 
-export function runFlatpakInstall(argv: string[]): void {
-  const rootDir = projectRoot();
+function parseFlatpakInstallArgs(argv: string[]): { dryRun: boolean; skipElectronBuild: boolean } {
   const { dryRun } = parseDryRun(argv);
   const skipElectronBuild = argv.includes("--skip-electron-build");
+  for (const arg of argv) {
+    if (arg === "--dry-run" || arg === "--skip-electron-build") continue;
+    if (arg === "--help" || arg === "-h") {
+      console.log("Usage: install-flatpak [--dry-run] [--skip-electron-build]");
+      process.exit(0);
+    }
+    throw new Error(`Unknown argument: ${arg}`);
+  }
+  return { dryRun, skipElectronBuild };
+}
+
+export function runFlatpakInstall(argv: string[]): void {
+  const rootDir = projectRoot();
+  const { dryRun, skipElectronBuild } = parseFlatpakInstallArgs(argv);
   const scope = resolveFlatpakScope(process.env);
 
   requireCommands(["flatpak", "flatpak-builder"]);
   if (!skipElectronBuild) requireCommands(["npm"]);
 
   info(`Flatpak install scope: ${scope}`);
-
-  if (scope === "system") {
-    section("System-wide Flatpak installation");
-  } else {
-    section("User Flatpak installation");
-  }
+  section(scope === "system" ? "System-wide Flatpak installation" : "User Flatpak installation");
 
   ensureFlathubRuntime(scope, { dryRun, rootDir });
 
@@ -59,7 +67,7 @@ function ensureLinuxUnpacked(rootDir: string, options: { dryRun?: boolean }) {
   if (unpackedDir !== "linux-unpacked") {
     info(`Creating symlink dist/linux-unpacked -> ${unpackedDir}`);
     const linkPath = path.join(distDir, "linux-unpacked");
-    if (fs.existsSync(linkPath)) fs.unlinkSync(linkPath);
+    if (fs.existsSync(linkPath)) fs.rmSync(linkPath, { recursive: true, force: true });
     fs.symlinkSync(unpackedDir, linkPath);
   }
 
