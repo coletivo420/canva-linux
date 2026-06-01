@@ -3,6 +3,21 @@
 Canva Linux is TypeScript-first for Electron runtime code, Node.js maintenance
 logic, tests, tooling configs and Flathub helper scripts.
 
+## Dev11 ESM-only policy
+
+Dev11 is ESM-only by target.
+
+Maintained TypeScript source must use ESM imports/exports.
+CommonJS patterns are forbidden in maintained source:
+- `require()`
+- `module.exports`
+- `exports.*`
+- `__dirname` without an ESM helper
+- `__filename` without an ESM helper
+
+CommonJS may exist only as temporary migration output during Dev11.
+No generated `.cjs` bootstrap should remain required at the end of Dev11.
+
 ## Current state
 
 - All maintained Node.js source code is TypeScript.
@@ -108,11 +123,15 @@ under `.build/` only.
 
 ## Script Core
 
-Dev.10 closed the maintained `/scripts` root. All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
+Dev.10 closed the maintained `/scripts` root. All maintained build,
+runtime-build, packaging, install, detection, versioning and operation tooling
+now lives under `build-resources/c420ui`.
 
 All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
 
-Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.
+Shell is allowed only for unavoidable POSIX/runtime boundaries or external
+tool contracts. Shell must not own JSON parsing, version detection, packaging
+orchestration, installation logic, artifact metadata, or validation policy.
 
 Project validations, contracts, and registries are implemented in TypeScript under `build-resources/canva-linux/checks/core/`.
 

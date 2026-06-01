@@ -1,4 +1,18 @@
-# Validation Checklist (0.1.4-15.Dev.10)
+# Validation Checklist (0.1.4-15.Dev.11)
+
+## Dev11 ESM-only validation policy
+
+Dev11 is ESM-only by target.
+Maintained TypeScript source must use ESM imports/exports.
+CommonJS patterns are forbidden in maintained source:
+- `require()`
+- `module.exports`
+- `exports.*`
+- `__dirname` without an ESM helper
+- `__filename` without an ESM helper
+
+CommonJS may exist only as temporary migration output during Dev11.
+No generated `.cjs` bootstrap should remain required at the end of Dev11.
 
 ## Source language policy validation
 
@@ -72,8 +86,8 @@ c420ui bootstrap must be covered by the c420ui bootstrap source-hash input list.
 
 The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 
-- Native User: detected v0.1.4-15.Dev.10+g...
-- AppImage: detected v0.1.4-15.Dev.10+g...
+- Native User: detected v0.1.4-15.Dev.11+g...
+- AppImage: detected v0.1.4-15.Dev.11+g...
 - Flatpak System/User continuam exibindo +gHASH.
 
 Verify metadata installation:
@@ -103,8 +117,8 @@ Check that c420ui renders generated artifacts from the registry, preferring effe
 
 ```text
 Generated Artifacts
-  Flatpak bundle: detected v0.1.4-15.Dev.10+g...
-  AppImage:       detected v0.1.4-15.Dev.10+g...
+  Flatpak bundle: detected v0.1.4-15.Dev.11+g...
+  AppImage:       detected v0.1.4-15.Dev.11+g...
 ```
 
 ## Dev.8 pinned home tab-strip guardrail
@@ -173,16 +187,16 @@ For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDE
 
 Current target:
 
-- Version: `0.1.4-15.Dev.10 (Alpha)`
-- Release: `v0.1.4-15.Dev.10`
+- Version: `0.1.4-15.Dev.11 (Alpha)`
+- Release: `v0.1.4-15.Dev.11`
 - Versioning rule: `N.N.N-X` with optional `.Dev.N` development phase suffixes
 
 ## Detected Installations version visibility
 
 The c420ui `Detected Installations` panel must prefer detected effective/hashed version fields (`*FullVersion`) when
 they are available, then fall back to the base detected version fields for older native, Flatpak, or AppImage markers.
-For example, a Flatpak system install with build metadata should render `v0.1.4-15.Dev.10+g<hash>`, while a legacy marker
-that only exposes `version` should continue rendering `v0.1.4-15.Dev.10`.
+For example, a Flatpak system install with build metadata should render `v0.1.4-15.Dev.11+g<hash>`, while a legacy marker
+that only exposes `version` should continue rendering `v0.1.4-15.Dev.11`.
 
 ## c420ui logs
 
@@ -192,11 +206,11 @@ The broken Plain Logs mode was removed from c420ui. The normal logs panel remain
 
 The validation baseline protects these release facts:
 
-- `package.json` version is `0.1.4-15.Dev.10`.
-- `package-lock.json` top-level version is `0.1.4-15.Dev.10`.
-- `package-lock.json` root package version is `0.1.4-15.Dev.10`.
+- `package.json` version is `0.1.4-15.Dev.11`.
+- `package-lock.json` top-level version is `0.1.4-15.Dev.11`.
+- `package-lock.json` root package version is `0.1.4-15.Dev.11`.
 - `build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
-- Active release docs point to `v0.1.4-15.Dev.10`.
+- Active release docs point to `v0.1.4-15.Dev.11`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 
 ## Validation tiers
@@ -342,7 +356,7 @@ Generated dependency source manifests may retain platform package names that con
 - Confirm `./canva-linux-c420ui-builder --canva-debug=1` is rejected because runtime flags belong to the compiled runtime app.
 - Confirm runtime `electron . --help` and `electron . --canva-debug=1` remain runtime-owned.
 - Confirm `flatpak run io.github.coletivo420.canva-linux --debug=1` fails with the reserved Electron/Node flag message before the runtime starts.
-- Confirm `Release: v0.1.4-15.Dev.10` appears in current release docs.
+- Confirm `Release: v0.1.4-15.Dev.11` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.
@@ -378,8 +392,13 @@ OAuth validation also checks that the first post-OAuth reload targets the curren
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under build-resources/c420ui.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by build-resources/c420ui/checks.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or
+  generated artifacts under `scripts/checks/canva-linux`, root `scripts/`,
+  root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that
+  transitively import scripts/canva-linux registries, the specific imported
+  scripts/canva-linux submodules must remain in
+  `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 
 ## Dev.10 preload typing
 

@@ -1140,7 +1140,7 @@ function validateNoCoreProductDetectionLogic(
     for (const fragment of [
       "DETECTED_NATIVE_" + "SYSTEM",
       "install-detection-common" + ".sh",
-      "operations/detection/install-detection",
+      "operations/detection/" + "install-detection",
     ] as const) {
       if (content.includes(fragment)) {
         failures.push(`${relativePath}: build-resources/canva-linux/checks/core must not contain product detection logic`);
@@ -1773,8 +1773,85 @@ function checkReviewChecklist(failures: string[]): void {
   runCheck(failures, { name: "review checklist", run: checkReviewChecklistContract.main });
 }
 
+const checkDev11EsmPolicyContract = (() => {
+const dev11CommonJsMigrationDebt = [
+  "package.json: esbuild --format=cjs",
+  "build-resources/config/typescript/tsconfig.json: module commonjs",
+  "build-resources/config/typescript/tsconfig.build.json: module commonjs",
+  "build-resources/c420ui/bootstrap/generated/*.cjs",
+] as const;
+
+const temporaryAllowlistPrefixes = [
+  "build-resources/tests/",
+  "build-resources/c420ui/test/",
+] as const;
+
+const temporaryAllowlistFiles = new Set<string>([
+  "build-resources/c420ui/src/terminal/app.ts",
+  "build-resources/c420ui/src/terminal/modal.ts",
+  "build-resources/c420ui/src/terminal/runtime.ts",
+  "build-resources/electron/shared/debug.ts",
+  "build-resources/electron/shared/navigation.ts",
+  "build-resources/canva-linux/checks/core/check-repository-policy.ts",
+]);
+
+function isTemporarilyAllowed(file: string): boolean {
+  return (
+    temporaryAllowlistFiles.has(file) ||
+    temporaryAllowlistPrefixes.some((prefix) => file.startsWith(prefix))
+  );
+}
+
+function hasForbiddenPattern(source: string): string | null {
+  const contentWithoutComments = source
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+  if (contentWithoutComments.includes("require(")) return "require(";
+  if (contentWithoutComments.includes("module.exports")) return "module.exports";
+  if (contentWithoutComments.includes("exports.")) return "exports.";
+  if (source.includes("@ts-nocheck")) return "@ts-nocheck";
+  return null;
+}
+
+function main(): number {
+  const rootDir = findProjectRoot();
+  const failures: string[] = [];
+  const files = allRepositoryFiles(rootDir).filter(
+    (file) => file.startsWith("build-resources/") && file.endsWith(".ts"),
+  );
+
+  for (const file of files) {
+    if (isTemporarilyAllowed(file)) continue;
+    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    const forbidden = hasForbiddenPattern(content);
+    if (!forbidden) continue;
+    failures.push(
+      `${file}: Dev11 ESM-only regression (${forbidden}) is forbidden in maintained TypeScript source`,
+    );
+  }
+
+  if (failures.length) {
+    console.error("[dev11-esm-policy] FAILED:");
+    for (const failure of failures) console.error(`- ${failure}`);
+    return 1;
+  }
+
+  console.log("[repository-policy] Dev11 ESM regression guard OK");
+  for (const debt of dev11CommonJsMigrationDebt) {
+    console.warn(`[repository-policy][dev11-debt] ${debt}`);
+  }
+  return 0;
+}
+
+  return { main };
+})();
+
 function checkC420UIRootGuardOwnership(failures: string[]): void {
   runCheck(failures, { name: "c420ui root guard ownership", run: checkC420UIRootGuardOwnershipContract.main });
+}
+
+function checkDev11EsmPolicy(failures: string[]): void {
+  runCheck(failures, { name: "Dev11 ESM policy", run: checkDev11EsmPolicyContract.main });
 }
 
 
@@ -1878,6 +1955,7 @@ export function main(): number {
   checkNoSourceJavaScript(failures);
   checkSourceIntegrity(failures);
   checkReviewChecklist(failures);
+  checkDev11EsmPolicy(failures);
   checkSharedHostDependencyTooling(failures);
   checkC420UIRootGuardOwnership(failures);
 

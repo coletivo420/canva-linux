@@ -10,6 +10,13 @@ Canva Linux is the dependent desktop-wrapper project that consumes c420ui as its
 generic terminal and action engine. Canva Linux owns product behavior and
 project data; c420ui owns reusable orchestration.
 
+## Dev11 ESM-only migration policy
+
+Dev11 is ESM-only by target.
+Maintained TypeScript source must use ESM imports/exports.
+CommonJS source patterns are migration regressions; `.cjs` is temporary migration output only during Dev11.
+At Dev11 close, `futureModuleFormat` must become `moduleFormat` in bootstrap policy.
+
 ## Runtime CLI ownership
 
 The compiled `canva-linux` Electron runtime owns app flags such as `--help`, `--version`, `--canva-debug=1`, `--canva-debug=2`, `--credential-store=...`, and display/GPU runtime controls. `canva-linux-c420ui-builder` remains the c420ui installer/development launcher and must not implement app runtime debug flags.

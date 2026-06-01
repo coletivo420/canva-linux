@@ -1,5 +1,15 @@
 # AI Guardrails
 
+## Dev11 ESM-only guardrails
+
+- Dev11 is ESM-only by target.
+- Maintained TypeScript source must use ESM imports/exports.
+- CommonJS patterns are forbidden in maintained source: `require()`,
+  `module.exports`, `exports.*`, `__dirname` without ESM helper, and
+  `__filename` without ESM helper.
+- CommonJS may exist only as temporary migration output during Dev11.
+- No generated `.cjs` bootstrap should remain required at the end of Dev11.
+
 ## c420ui structural ownership and efficiency
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
