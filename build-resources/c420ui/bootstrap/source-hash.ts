@@ -2,7 +2,7 @@ import {
   calculateSourceHash,
   collectSourceHashFiles,
   SOURCE_HASH_ALGORITHM,
-} from "../../../build-resources/canva-linux/source-hash";
+} from "../../canva-linux/source-hash";
 
 export const C420UI_SOURCE_HASH_ALGORITHM = SOURCE_HASH_ALGORITHM;
 

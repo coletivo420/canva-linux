@@ -148,6 +148,19 @@ export function main(): void {
     ...collectTypeScriptTestFiles(testDir, isTypeScriptSupportFile),
     ...collectTypeScriptTestFiles(c420uiTestDir, isTypeScriptSupportFile),
   ];
+  const sourceSupportFiles = [
+    ...collectTypeScriptTestFiles(
+      path.join(rootDir, "build-resources", "canva-linux"),
+      (entryName) => entryName.endsWith(".ts"),
+    ),
+    ...collectTypeScriptTestFiles(
+      path.join(rootDir, "build-resources", "c420ui"),
+      (entryName) =>
+        entryName.endsWith(".ts") &&
+        !isNodeTest(entryName) &&
+        !isPlaywrightSpec(entryName),
+    ),
+  ];
 
   if (testFiles.length === 0) {
     console.error(
@@ -206,8 +219,8 @@ export function main(): void {
 
   const compileInputSet = new Set(
     selectedRelativeTests
-      ? [...selectedTestInputFiles, ...supportFiles]
-      : [...testFiles, ...supportFiles],
+      ? [...selectedTestInputFiles, ...supportFiles, ...sourceSupportFiles]
+      : [...testFiles, ...supportFiles, ...sourceSupportFiles],
   );
   const relativeCompileInputs = [...compileInputSet]
     .sort((left, right) => left.localeCompare(right))

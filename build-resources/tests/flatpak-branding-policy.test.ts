@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { validateFlatpakBrandingTokens } from "../../build-resources/canva-linux/packaging/flatpak/branding-policy";
+import { validateFlatpakBrandingTokens } from "../canva-linux/packaging/flatpak/branding-policy";
 
 test("fails when required branding token is missing", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "flatpak-branding-"));

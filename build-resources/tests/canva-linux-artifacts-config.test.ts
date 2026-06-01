@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
-} from "../../build-resources/canva-linux/c420ui-adapter/artifacts";
+} from "../canva-linux/c420ui-adapter/artifacts";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
 const artifactsConfigPath = path.join(rootDir, "build-resources/canva-linux/config/artifacts.json");
@@ -101,7 +101,7 @@ test("appimage, flatpak, native, release, and planned workflows exist", () => {
 
 test("artifact outputPattern expands package.json version without x64 normalization", () => {
   const version = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")).version as string;
-  assert.equal(version, "0.1.4-15.Dev.9");
+  assert.match(version, /^0\.1\.4-15\.Dev\.\d+$/);
   const workflowsById = new Map(loadWorkflows().map((workflow) => [workflow.id, workflow]));
 
   assert.equal(

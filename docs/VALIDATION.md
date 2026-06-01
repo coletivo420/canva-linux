@@ -78,23 +78,25 @@ The c420ui input dialog must close via textbox cancel using setImmediate, keepin
 
 Verify metadata installation:
 ```bash
-CANVA_NATIVE_SCOPE=user bash build-resources/c420ui/scripts/install-native.sh
-test -f "$HOME/.local/opt/canva-linux/config/canva-linux/build-metadata.json"
-
-bash build-resources/c420ui/scripts/build-appimage.sh
-ls dist/*.AppImage.build-metadata.json
-
-bash build-resources/c420ui/scripts/build-flatpak-bundle.sh
-ls dist/*.flatpak.build-metadata.json
+# Native Install
+./canva-linux-c420ui-builder --install-native --dry-run
+# AppImage
+./canva-linux-c420ui-builder --bundle-appimage --dry-run
+# Flatpak Bundle
+./canva-linux-c420ui-builder --bundle-flatpak --dry-run
 ```
 
+Check metadata files:
+- `$HOME/.local/opt/canva-linux/config/canva-linux/build-metadata.json` (Native User)
+- `dist/*.AppImage.build-metadata.json` (AppImage)
+- `dist/*.flatpak.build-metadata.json` (Flatpak Bundle)
 
 Manual generated artifact validation:
 
 ```bash
-bash build-resources/c420ui/scripts/build-appimage.sh
-bash build-resources/c420ui/scripts/build-flatpak-bundle.sh
-./canva-linux-c420ui-builder
+# Using the builder
+./canva-linux-c420ui-builder --bundle-appimage
+./canva-linux-c420ui-builder --bundle-flatpak
 ```
 
 Check that c420ui renders generated artifacts from the registry, preferring effective metadata versions:
@@ -324,7 +326,7 @@ gpu:runtime runtime-options source=runtime-cli gpuBackend=software displayOverri
 - `npm run typecheck`
 - `npm run typecheck:strict`
 - `npm test`
-- `./scripts/validate-project.sh`
+- `npm run validate:project`
 
 ## Release grep review
 

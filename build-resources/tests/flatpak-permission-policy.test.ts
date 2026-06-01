@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { validateFlatpakPermissions } from "../../build-resources/canva-linux/packaging/flatpak/permission-policy";
+import { validateFlatpakPermissions } from "../canva-linux/packaging/flatpak/permission-policy";
 
 function withTempFile(content: string, fn: (filePath: string) => void): void {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "flatpak-permission-"));

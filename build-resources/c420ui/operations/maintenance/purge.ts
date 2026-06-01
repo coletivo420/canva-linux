@@ -1,9 +1,11 @@
 import { parseDryRun } from "../../host/dry-run";
-import { projectRoot } from "../../host/paths";
-import { runCommand } from "../../host/command-runner";
+import { runDetectedUninstall } from "../uninstall/detected";
+import { runResetUserData } from "./reset-user-data";
+import { ok } from "../../host/ui";
 
 export function runPurge(argv: string[]): void {
-  const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
-  runCommand("bash", ["scripts/purge-installations.sh"], { cwd: rootDir, dryRun, env: process.env });
+  runDetectedUninstall(dryRun ? ["--dry-run"] : []);
+  runResetUserData(dryRun ? ["--dry-run"] : []);
+  ok("User data removed for Flatpak and Native paths");
 }

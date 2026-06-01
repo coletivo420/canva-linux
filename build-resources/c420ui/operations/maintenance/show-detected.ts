@@ -1,9 +1,13 @@
 import { parseDryRun } from "../../host/dry-run";
 import { projectRoot } from "../../host/paths";
-import { runCommand } from "../../host/command-runner";
+import { detectInstallations, printDetectionStatusEnv } from "../detection/install-detection";
 
 export function runShowDetected(argv: string[]): void {
   const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
-  runCommand("bash", ["scripts/show-detected-installations.sh"], { cwd: rootDir, dryRun, env: process.env });
+  if (dryRun) {
+    console.log("[dry-run] detect installations and print summary");
+    return;
+  }
+  printDetectionStatusEnv(detectInstallations(rootDir));
 }

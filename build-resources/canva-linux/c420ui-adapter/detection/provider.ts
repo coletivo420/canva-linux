@@ -1,36 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  spawnSync,
   execFileSync,
-  type SpawnSyncOptionsWithStringEncoding,
-  type SpawnSyncReturns,
 } from "node:child_process";
 import {
   boolFromC420UIDetectionValue,
-  parseC420UIDetectionKeyValueLines,
-  type c420uiDetectionProbe,
-  type c420uiDetectionProbeResult,
   type c420uiOverviewStatus,
   type c420uiOverviewStatusProvider,
   type CanvaLinuxArtifactFragment,
 } from "../../../c420ui/src/detection";
 import { findCanvaLinuxProjectRoot } from "../../project-root";
 import { buildCanvaLinuxArtifactFragments } from "./artifact-fragments";
-
-type CanvaLinuxDetectionCommandRunner = (
-  command: string,
-  args: string[],
-  options: SpawnSyncOptionsWithStringEncoding,
-) => SpawnSyncReturns<string>;
-
-export type CanvaLinuxDetectionProviderOptions = {
-  runCommand?: CanvaLinuxDetectionCommandRunner;
-};
-
-type CanvaLinuxDetectionProbe = Omit<c420uiDetectionProbe, "run"> & {
-  run(rootDir: string): c420uiDetectionProbeResult;
-};
+import { detectInstallations, type InstallationDetectionResult } from "../../../c420ui/operations/detection/install-detection";
 
 type CanvaLinuxOverviewStatusProvider = Omit<
   c420uiOverviewStatusProvider,
@@ -120,26 +101,6 @@ export const readNpmVersion = (() => {
   };
 })();
 
-const canvaLinuxDetectionKeys = [
-  "DETECTED_NATIVE_SYSTEM",
-  "DETECTED_NATIVE_USER",
-  "DETECTED_FLATPAK_SYSTEM",
-  "DETECTED_FLATPAK_USER",
-  "DETECTED_APPIMAGE_ARTIFACTS",
-
-  "DETECTED_NATIVE_SYSTEM_VERSION",
-  "DETECTED_NATIVE_USER_VERSION",
-  "DETECTED_FLATPAK_SYSTEM_VERSION",
-  "DETECTED_FLATPAK_USER_VERSION",
-  "DETECTED_APPIMAGE_VERSION",
-
-  "DETECTED_NATIVE_SYSTEM_FULL_VERSION",
-  "DETECTED_NATIVE_USER_FULL_VERSION",
-  "DETECTED_FLATPAK_SYSTEM_FULL_VERSION",
-  "DETECTED_FLATPAK_USER_FULL_VERSION",
-  "DETECTED_APPIMAGE_FULL_VERSION",
-] as const;
-
 const emptyInstallations = {
   nativeSystem: false,
   nativeUser: false,
@@ -161,10 +122,9 @@ const emptyInstallations = {
 };
 
 function readPhase(rootDir: string): string {
-  const content = fs.readFileSync(
-    path.join(rootDir, "scripts/app-identity-common.sh"),
-    "utf8",
-  );
+  const phaseFile = path.join(rootDir, "scripts/app-identity-common.sh");
+  if (!fs.existsSync(phaseFile)) return "unknown";
+  const content = fs.readFileSync(phaseFile, "utf8");
   const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
   return match?.[1] ?? "unknown";
 }
@@ -191,71 +151,6 @@ function safeProjectMetadata(rootDir: string): c420uiOverviewStatus["project"] {
     appId: "io.github.coletivo420.canva-linux",
     executable: "canva-linux",
     repository: "https://github.com/coletivo420/canva-linux",
-  };
-}
-
-function detectionCommand(): string {
-  return [
-    "source build-resources/c420ui/scripts/install-detection-common.sh",
-    "detect_installations",
-    "print_detection_status_env",
-  ].join("\n");
-}
-
-function runInstallDetection(
-  rootDir: string,
-  runCommand: CanvaLinuxDetectionCommandRunner,
-): c420uiDetectionProbeResult {
-  const warnings: string[] = [];
-  let ok = true;
-
-  try {
-    const result = runCommand("bash", ["-c", detectionCommand()], {
-      cwd: rootDir,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-
-    if (result.error) {
-      ok = false;
-      warnings.push(`Installation detection failed to start: ${result.error.message}`);
-    }
-
-    const stderr = result.stderr?.trim();
-    if (stderr) warnings.push(stderr);
-
-    if ((result.status ?? 0) !== 0) {
-      ok = false;
-      warnings.push(
-        `Installation detection exited with status ${result.status ?? "unknown"}.`,
-      );
-    }
-
-    return {
-      ok,
-      values: parseC420UIDetectionKeyValueLines(
-        result.stdout || "",
-        canvaLinuxDetectionKeys,
-      ),
-      warnings,
-    };
-  } catch (error) {
-    warnings.push(
-      `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return { ok: false, values: {}, warnings };
-  }
-}
-
-function createInstallDetectionProbe(
-  runCommand: CanvaLinuxDetectionCommandRunner,
-): CanvaLinuxDetectionProbe {
-  return {
-    id: "canva-linux-install-detection",
-    label: "Canva Linux installation detection",
-    run(rootDir: string): c420uiDetectionProbeResult {
-      return runInstallDetection(rootDir, runCommand);
-    },
   };
 }
 
@@ -310,19 +205,34 @@ function buildInstallations(
   };
 }
 
+export type CanvaLinuxDetectionProviderOptions = {
+  detectInstallations?: (rootDir: string) => InstallationDetectionResult;
+};
+
 export function createCanvaLinuxDetectionProvider(
   options: CanvaLinuxDetectionProviderOptions = {},
 ): CanvaLinuxOverviewStatusProvider {
-  const runCommand: CanvaLinuxDetectionCommandRunner =
-    options.runCommand ?? spawnSync;
+  const detect = options.detectInstallations ?? detectInstallations;
 
   return {
     id: "canva-linux-detection-provider",
     label: "Canva Linux detection provider",
     buildOverviewStatus(rootDir: string): c420uiOverviewStatus {
       const project = safeProjectMetadata(rootDir);
-      const probe = createInstallDetectionProbe(runCommand);
-      const detection = probe.run(rootDir);
+      const warnings: string[] = [];
+      let values: Record<string, string> = {};
+
+      try {
+        const result = detect(rootDir);
+        for (const [key, value] of Object.entries(result)) {
+          values[key] = String(value);
+        }
+      } catch (error) {
+        warnings.push(
+          `Installation detection failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
       const artifactFragments = buildCanvaLinuxArtifactFragments(rootDir);
       return {
         project,
@@ -335,10 +245,10 @@ export function createCanvaLinuxDetectionProvider(
         },
         installations: {
           ...emptyInstallations,
-          ...buildInstallations(detection.values, artifactFragments),
+          ...buildInstallations(values, artifactFragments),
         },
         artifactFragments,
-        warnings: detection.warnings ?? [],
+        warnings,
       };
     },
   };

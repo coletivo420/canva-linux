@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { projectValidationSteps } from "../../build-resources/canva-linux/validation/project";
+import { projectValidationSteps } from "../canva-linux/validation/project";
 
 test("validate-project preserves source-first step order", () => {
   const labels = projectValidationSteps().map((step) => step.label);

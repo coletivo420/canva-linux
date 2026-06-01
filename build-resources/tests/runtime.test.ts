@@ -36,7 +36,7 @@ test("runtime metadata loader prefers effective metadata and falls back to commi
 
 test("runtime metadata flow does not mutate committed metadata in config path", () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, "scripts", "copy-runtime-assets.ts"),
+    path.join(repoRoot, "build-resources", "c420ui", "scripts", "copy-runtime-assets.ts"),
     "utf8",
   );
 

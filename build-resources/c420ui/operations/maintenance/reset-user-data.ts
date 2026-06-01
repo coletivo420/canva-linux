@@ -1,9 +1,7 @@
 import { parseDryRun } from "../../host/dry-run";
-import { projectRoot } from "../../host/paths";
-import { runCommand } from "../../host/command-runner";
+import { runNativeUninstall } from "../uninstall/native";
 
 export function runResetUserData(argv: string[]): void {
-  const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
-  runCommand("bash", ["scripts/reset-user-data.sh"], { cwd: rootDir, dryRun, env: process.env });
+  runNativeUninstall(["--all", "--purge-data", ...(dryRun ? ["--dry-run"] : [])]);
 }

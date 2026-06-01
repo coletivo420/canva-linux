@@ -19,9 +19,9 @@ build-resources/c420ui/           Generic c420ui package source and Linux host h
 build-resources/electron/         Canva Linux Electron runtime and preload source.
 build-resources/canva-linux/assets/ Canonical Canva Linux desktop, metainfo, and icon assets.
 build-resources/canva-linux/c420ui-adapter/    Canva Linux project adapter for c420ui.
-scripts/canva-linux/       Canva Linux project-specific actions and support tooling.
 build-resources/canva-linux/checks/core/              Repository-wide validation and infrastructure checks.
 build-resources/canva-linux/config/        Canva Linux project declarations for actions, artifacts, dependencies, development, and UI.
+build-resources/canva-linux/validation/    Canva Linux project-specific validation policies.
 build-resources/tests/                      TypeScript-first unit, wiring, and smoke tests.
 packaging/                 Packaging submission workspaces (e.g., Flathub).
 assets/                    Repository documentation assets.

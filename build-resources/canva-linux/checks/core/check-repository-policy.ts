@@ -231,8 +231,6 @@ const allowedCommonJsPrefixes = [
   "build-resources/c420ui/bootstrap/generated/",
 ] as const;
 
-const sourceJavaScriptAllowlist = new Set(["build-resources/electron/preload/canva.bundle.js"]);
-
 const nativeSourceExtensions = new Set([
   ".sh",
   ".json",
@@ -248,33 +246,6 @@ const forbiddenSourceRoots = [
   "build-resources/tests/",
   "build-resources/canva-linux/packaging/flathub/scripts/",
 ] as const;
-
-const legacyShellNodeEvalAllowlist = new Map<string, RegExp[]>([
-  [
-    `build-resources/c420ui/scripts/${"install-detection-common" + ".sh"}`,
-    [
-      /\bnode\s+-e\b.*package_file/,
-      /\bnode\s+-e\b.*metadata_file/,
-    ],
-  ],
-  [
-    "scripts/flatpak-build-common.sh",
-    [/\bnode\s+-e\b.*pathToFileURL/],
-  ],
-  [
-    "scripts/preflight-common.sh",
-    [
-      /\bnode\s+-e\b.*JSON\.parse/,
-      /\bnode\s+-p\b.*package\.json/,
-    ],
-  ],
-  [
-    "scripts/show-version-info.sh",
-    [/\bnode\s+-p\b.*package\.json/],
-  ],
-]);
-
-const legacyShellNodeHeredocAllowlist = new Map<string, RegExp[]>([]);
 
 const forbiddenConfigFiles = new Set([
   "eslint.config.js",
@@ -293,7 +264,6 @@ function validateNoMaintainedJavaScript(
 ): void {
   for (const file of files) {
     if (!file.endsWith(".js")) continue;
-    if (sourceJavaScriptAllowlist.has(file)) continue;
     if (isAllowedGeneratedJavaScript(file)) continue;
     failures.push(
       `${file}: maintained JavaScript source is not allowed; migrate it to TypeScript or generated .build output`,
@@ -331,7 +301,6 @@ function validateRequiredTypeScriptEntrypoints(
     "build-resources/config/playwright/playwright.config.ts",
     "build-resources/c420ui/scripts/run-node-tests.ts",
     "build-resources/c420ui/scripts/run-typescript-script.ts",
-    "scripts/run-core-entry.sh",
     "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
     "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh",
   ] as const;
@@ -478,8 +447,6 @@ function validateShellInlineJavaScriptPolicy(
   files: string[],
   failures: string[],
 ): void {
-  const warnings: string[] = [];
-
   for (const file of files) {
     if (!file.endsWith(".sh")) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
@@ -492,17 +459,6 @@ function validateShellInlineJavaScriptPolicy(
       const hasNodeHeredoc =
         /\bnode\s*<<-?\s*['"]?[A-Za-z_][\w-]*['"]?/.test(line);
       if (hasNodeHeredoc) {
-        const allowlistedHeredocPatterns =
-          legacyShellNodeHeredocAllowlist.get(file) ?? [];
-        const isAllowlistedHeredoc = allowlistedHeredocPatterns.some((pattern) =>
-          pattern.test(line),
-        );
-        if (isAllowlistedHeredoc) {
-          warnings.push(
-            `${file}:${index + 1}: legacy node heredoc remains as migration debt (Dev.10 allowlist)`,
-          );
-          return;
-        }
         failures.push(
           `${file}:${index + 1}: node heredoc is forbidden; move maintained JavaScript logic to TypeScript`,
         );
@@ -513,24 +469,12 @@ function validateShellInlineJavaScriptPolicy(
         /(^|\s)(--eval(?:=|\s)|--print(?:=|\s)|-[A-Za-z]*[ep][A-Za-z]*)\b/.test(line);
       if (!hasNodeEval) return;
 
-      const allowlistedEvalPatterns = legacyShellNodeEvalAllowlist.get(file) ?? [];
-      const isAllowlistedEval = allowlistedEvalPatterns.some((pattern) =>
-        pattern.test(line),
-      );
-      if (isAllowlistedEval) {
-        warnings.push(
-          `${file}:${index + 1}: legacy node -e/-p usage remains as migration debt (Dev.10 allowlist)`,
-        );
-        return;
-      }
-
       failures.push(
         `${file}:${index + 1}: new node -e/-p usage is forbidden in maintained shell policy/build/validation flows`,
       );
     });
   }
 
-  for (const warning of warnings) console.warn(`[repository-policy][warn] ${warning}`);
 }
 
 function main(): number {
@@ -608,7 +552,6 @@ const requiredVersionedPaths = [
   "package-lock.json",
   "build-resources/canva-linux/config/actions.json",
   "build-resources/canva-linux/config/project-ui.json",
-  "scripts/theme.json",
   "io.github.coletivo420.canva-linux.yml",
   "build-resources/canva-linux/packaging/flathub/manifest.yml",
   "build-resources/canva-linux/packaging/flathub/generated-sources.json",
@@ -776,7 +719,7 @@ function main(): number {
   validateIgnored(rootDir, failures);
   validateNotIgnored(
     rootDir,
-    gitTrackedFiles(rootDir, "scripts/**/*.ts"),
+    gitTrackedFiles(rootDir, "build-resources/**/*.ts"),
     "source TypeScript files",
     failures,
   );
@@ -826,9 +769,7 @@ const allowedJavaScriptRoots = [
   "dist/",
 ] as const;
 
-const allowedGeneratedJavaScriptFiles = new Set([
-  "build-resources/electron/preload/canva.bundle.js",
-]);
+const allowedGeneratedJavaScriptFiles = new Set<string>();
 
 const explicitlyBlockedJavaScript = [
   /^scripts\/.+\.js$/,
@@ -903,9 +844,6 @@ const requiredJsonFiles = ["package.json", "package-lock.json"] as const;
 
 const requiredShellFiles = [
   "canva-linux-c420ui-builder",
-  "scripts/validate-project.sh",
-  "scripts/run-core-entry.sh",
-  "scripts/preflight-common.sh",
   "build-resources/c420ui/host/linux/sudo-helper.sh",
 ] as const;
 
@@ -1173,6 +1111,7 @@ function validateNoCoreProductDetectionLogic(
     for (const fragment of [
       "DETECTED_NATIVE_" + "SYSTEM",
       "install-detection-common" + ".sh",
+      "operations/detection/install-detection",
     ] as const) {
       if (content.includes(fragment)) {
         failures.push(`${relativePath}: build-resources/canva-linux/checks/core must not contain product detection logic`);
@@ -1448,91 +1387,23 @@ function validateShellFile(
   }
 }
 
-function validateRunCoreEntryScriptShape(
-  rootDir: string,
-  failures: string[],
-): void {
-  const relativePath = "scripts/run-core-entry.sh";
-  const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
-  const lines = content.split(/\r?\n/);
-
-  if (lines[0] !== "#!/usr/bin/env bash") {
-    failures.push(`${relativePath}: shebang must be the first line by itself`);
-  }
-
-  if (lines[1] !== "set -euo pipefail") {
-    failures.push(
-      `${relativePath}: strict shell mode must be the second line by itself`,
-    );
-  }
-
-  if (lines.length < 15) {
-    failures.push(
-      `${relativePath}: core entry wrapper appears collapsed; expected readable multiline shell content`,
-    );
-  }
-
-  const requiredStandaloneLines = [
-    '# Keep this wrapper formatted as real multiline shell; the shebang must stay alone.',
-    "main() {",
-    "  if [[ $# -lt 1 ]]; then",
-    "  fi",
-    '  ENTRY="$1"',
-    "  shift",
-    '      rm -f "${ROOT_DIR}/.build/build-resources/canva-linux/checks/core/${ENTRY}.js"',
-    "      printf '%s\\n' \"scripts/run-core-entry.sh: ${ENTRY} was removed; use a supported core entry.\" >&2",
-    '  node "${TARGET}" "$@"',
-  ] as const;
-
-  if (content.includes('overview-status|check-ai-guardrails') || content.includes('if [[ "${ENTRY}" == "overview-status" ]]')) {
-    failures.push(`${relativePath}: overview-status must not be a run-core-entry.sh dispatch target`);
-  }
-
-  for (const requiredLine of requiredStandaloneLines) {
-    if (!lines.includes(requiredLine)) {
-      failures.push(
-        `${relativePath}: expected standalone line ${JSON.stringify(requiredLine)}`,
-      );
-    }
-  }
-}
-
 function validateProjectValidationScriptShape(
   rootDir: string,
   failures: string[],
 ): void {
-  const relativePath = "scripts/validate-project.sh";
-  const content = fs.readFileSync(path.join(rootDir, relativePath), "utf8");
-  const lines = content.split(/\r?\n/);
-
-  if (lines[0] !== "#!/usr/bin/env bash") {
-    failures.push(`${relativePath}: shebang must be the first line by itself`);
-  }
-
-  if (lines[1] !== "set -euo pipefail") {
+  const packageJson = readJsonFile<{ scripts?: Record<string, string> }>(
+    rootDir,
+    "package.json",
+    failures,
+  );
+  const validateProjectCommand = packageJson?.scripts?.["validate:project"] ?? "";
+  if (
+    !validateProjectCommand.includes("npm run build:scripts") ||
+    !validateProjectCommand.includes("node .build/scripts/validate-project.js")
+  ) {
     failures.push(
-      `${relativePath}: strict shell mode must be the second line by itself`,
+      "package.json scripts.validate:project: must run generated TypeScript validation entrypoint",
     );
-  }
-
-  for (const requiredFragment of [
-    "npm run build:scripts --silent",
-    "node \".build/scripts/validate-project.js\"",
-  ] as const) {
-    if (!content.includes(requiredFragment)) {
-      failures.push(`${relativePath}: missing wrapper fragment ${JSON.stringify(requiredFragment)}`);
-    }
-  }
-
-  for (const forbiddenFragment of [
-    "run_step \"",
-    "node <<'NODE'",
-    "node -e",
-    "node -p",
-  ] as const) {
-    if (content.includes(forbiddenFragment)) {
-      failures.push(`${relativePath}: must remain a thin wrapper; found ${forbiddenFragment}`);
-    }
   }
 
   const sourcePath = "build-resources/canva-linux/validation/project.ts";
@@ -1560,6 +1431,30 @@ function validateProjectValidationScriptShape(
   ] as const) {
     if (!source.includes(requiredStep)) {
       failures.push(`${sourcePath}: missing required step ${requiredStep}`);
+    }
+  }
+}
+
+function validateScriptsRootDecommissioned(
+  rootDir: string,
+  failures: string[],
+): void {
+  const scriptsDir = path.join(rootDir, "scripts");
+  if (!fs.existsSync(scriptsDir)) return;
+  const allowed = new Set([
+    "README.md",
+    "app-identity-common.sh",
+    "preflight-common.sh",
+    "theme.json",
+    "ui-common.sh",
+    "user-data-common.sh",
+    "xdg-common.sh",
+  ]);
+  for (const entry of fs.readdirSync(scriptsDir)) {
+    if (!allowed.has(entry)) {
+      failures.push(
+        `scripts/${entry}: scripts/ is no longer a maintained source root; move maintained tooling under build-resources`,
+      );
     }
   }
 }
@@ -1733,7 +1628,6 @@ function main(): number {
     validateReadableSourceShape(rootDir, file, failures);
   }
 
-  validateRunCoreEntryScriptShape(rootDir, failures);
   validateToolbarContentSecurityPolicy(rootDir, failures);
   validateNoMaintainedJavaScriptFiles(rootDir, failures);
   validateRetiredC420UIProcessRunner(rootDir, failures);
@@ -1746,6 +1640,7 @@ function main(): number {
   validateRemovedCompatibilityAliases(rootDir, failures);
   validateRemovedFlatpakLocalInstallAlias(rootDir, failures);
   validateRootProviderContracts(rootDir, failures);
+  validateScriptsRootDecommissioned(rootDir, failures);
   validatePackageLockConsistency(rootDir, failures);
   validatePackageScripts(rootDir, failures);
   checkNoLegacyActionRunner(rootDir, failures);

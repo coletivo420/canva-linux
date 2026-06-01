@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { loadCanvaLinuxDependencyConfig } from "../../build-resources/canva-linux/c420ui-adapter/dependencies";
+import { loadCanvaLinuxDependencyConfig } from "../canva-linux/c420ui-adapter/dependencies";
 
 const rootDir = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
 

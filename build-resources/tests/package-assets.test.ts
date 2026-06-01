@@ -70,23 +70,23 @@ test("flatpak and native packaging consume canonical asset paths", () => {
       "build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
     ],
     [
-      "scripts/validate-flatpak.sh",
+      "build-resources/canva-linux/validation/flatpak.ts",
       "build-resources/canva-linux/assets/desktop/io.github.coletivo420.canva-linux.desktop",
     ],
     [
-      "scripts/validate-flatpak.sh",
+      "build-resources/canva-linux/validation/flatpak.ts",
       "build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
     ],
     [
-      "scripts/validate-flathub-submission.sh",
-      "build-resources/canva-linux/assets/desktop/io.github.coletivo420.canva-linux.desktop",
+      "build-resources/canva-linux/validation/flathub-submission.ts",
+      "app-id: io.github.coletivo420.canva-linux",
     ],
     [
-      "scripts/validate-flathub-submission.sh",
-      "build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
+      "build-resources/canva-linux/validation/flathub-submission.ts",
+      "build-resources/canva-linux/packaging/flathub/manifest.yml",
     ],
     [
-      "build-resources/c420ui/scripts/install-native.sh",
+      "build-resources/c420ui/operations/install/native.ts",
       "build-resources/canva-linux/assets/icons/hicolor",
     ],
   ] as const) {
@@ -116,8 +116,13 @@ test("canonical desktop and metainfo files exist under build-resources", () => {
 });
 
 test("validate-project remains check-only and does not generate effective metadata", () => {
-  const validateProject = readText("scripts/validate-project.sh");
-  assert.equal(validateProject.includes("build:metadata:effective"), false);
+  const packageJson = JSON.parse(readText("package.json")) as {
+    scripts?: Record<string, string>;
+  };
+  assert.equal(
+    (packageJson.scripts?.["validate:project"] ?? "").includes("build:metadata:effective"),
+    false,
+  );
 });
 
 test("asset basenames follow the Flatpak app id and avoid generic icon names", () => {

@@ -180,7 +180,10 @@ test("interactive run-c420ui entrypoint starts c420ui before dependent dependenc
     path.join("build-resources", "c420ui", "scripts", "run-c420ui.ts"),
     "utf8",
   );
-  const adapterRunSource = fs.readFileSync(path.join("scripts", "c420ui-adapter", "run.ts"), "utf8");
+  const adapterRunSource = fs.readFileSync(
+    path.join("build-resources", "canva-linux", "c420ui-adapter", "run.ts"),
+    "utf8",
+  );
 
   assert.equal(entrypointSource.includes("ensureCanvaLinuxHostDependencies"), false);
   assert.equal(entrypointSource.includes("isC420UIHostDependencyFailure"), false);

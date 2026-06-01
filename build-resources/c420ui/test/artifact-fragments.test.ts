@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { buildCanvaLinuxArtifactFragments } from "../../../build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments";
+import { buildCanvaLinuxArtifactFragments } from "../../canva-linux/c420ui-adapter/detection/artifact-fragments";
 
 function withProjectRoot(run: (rootDir: string) => void): void {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-linux-artifact-fragments-"));
