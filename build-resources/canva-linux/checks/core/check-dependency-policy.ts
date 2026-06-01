@@ -69,7 +69,7 @@ export function main(): number {
 
   if (
     pkg.build?.beforeBuild !==
-    "./.build/scripts/bootstrap/electron-builder-before-build.js"
+    "./.build/scripts/bootstrap/electron-builder-before-build.mjs"
   ) {
     console.error(
       "[dependency-policy] electron-builder beforeBuild hook must point at generated TypeScript output",

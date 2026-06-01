@@ -2,7 +2,6 @@
 
 ## Current CommonJS debt
 
-- package.json `build:c420ui-bootstrap` still using `--format=cjs`
 - tsconfig module/commonjs settings
 - generated c420ui bootstrap `.cjs`
 - `.build/electron/**/*.js` runtime output still generated from CommonJS TypeScript config
@@ -19,6 +18,7 @@
 - c420ui terminal generated output moved to ESM `.mjs`
 - TypeScript runner bootstrap moved to ESM `.mjs`
 - electron-builder `beforeBuild` hook output migrated from CommonJS `.js` to ESM `.mjs`
+- c420ui bootstrap generator migrated from CommonJS `.cjs` to ESM `.mjs`
 
 ## Dev11 maintained-source hard rules
 
@@ -42,5 +42,4 @@ Dev11 forbids indirect CommonJS compatibility in maintained TypeScript:
 
 - tsconfig `NodeNext`/module migration
 - Electron runtime output migration
-- electron-builder hook migration
 - c420ui generated bootstrap `.cjs` migration

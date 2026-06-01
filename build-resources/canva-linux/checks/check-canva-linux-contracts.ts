@@ -187,7 +187,7 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
   const requiredScripts: Record<string, string> = {
     "build:metadata": "npm run run:ts -- build-resources/c420ui/scripts/generate-build-metadata.ts --committed",
     "build:metadata:effective": "npm run run:ts -- build-resources/c420ui/scripts/generate-build-metadata.ts --effective",
-    "build:c420ui-bootstrap": "npm run build:metadata && esbuild build-resources/c420ui/scripts/build-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/build-resources/c420ui/scripts/build-bootstrap.cjs && node .build/build-resources/c420ui/scripts/build-bootstrap.cjs",
+    "build:c420ui-bootstrap": "npm run build:metadata && esbuild build-resources/c420ui/scripts/build-bootstrap.ts --bundle --platform=node --target=node22 --format=esm --external:esbuild --outfile=.build/build-resources/c420ui/scripts/build-bootstrap.mjs && node .build/build-resources/c420ui/scripts/build-bootstrap.mjs",
     "check:c420ui-node-check": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-node.mjs",
     "check:c420ui-bootstrap": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-bootstrap.mjs",
     "check:c420ui-bootstrap-artifacts": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-artifact-gate.mjs",

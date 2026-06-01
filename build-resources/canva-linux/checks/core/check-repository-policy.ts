@@ -1779,7 +1779,6 @@ function checkReviewChecklist(failures: string[]): void {
 
 const checkDev11EsmPolicyContract = (() => {
 const dev11CommonJsMigrationDebt = [
-  "package.json: build:c420ui-bootstrap still uses --format=cjs",
   "build-resources/config/typescript/tsconfig.json: module commonjs",
   "build-resources/config/typescript/tsconfig.build.json: module commonjs",
   "build-resources/c420ui/bootstrap/generated/*.cjs",
@@ -1865,6 +1864,7 @@ function main(): number {
     "build:c420ui-checks",
     "build:canva-linux-checks",
     "build:c420ui-terminal",
+    "build:c420ui-bootstrap",
     "bootstrap:typescript",
     "bootstrap:electron-builder",
   ] as const;
@@ -1884,6 +1884,14 @@ function main(): number {
     ) {
       failures.push(
         `package.json scripts.${scriptName}: Dev11 ESM policy requires --out-extension:.js=.mjs`,
+      );
+    }
+    if (
+      scriptName === "build:c420ui-bootstrap" &&
+      !command.includes("build-bootstrap.mjs")
+    ) {
+      failures.push(
+        "package.json scripts.build:c420ui-bootstrap: Dev11 ESM policy requires build-bootstrap.mjs output",
       );
     }
   }

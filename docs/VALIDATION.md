@@ -19,6 +19,7 @@ No generated `.cjs` bootstrap should remain required at the end of Dev11.
 Node tooling, core checks, c420ui checks, and c420ui terminal generated outputs
 must use ESM `.mjs` artifacts.
 The electron-builder `beforeBuild` hook output must use ESM `.mjs`.
+The c420ui bootstrap generator must emit and run `build-bootstrap.mjs`.
 
 ## Source language policy validation
 
