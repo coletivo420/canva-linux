@@ -441,13 +441,16 @@ function validatePreloadTypeScriptStyle(
   for (const file of files) {
     if (!file.startsWith("build-resources/electron/preload/") || !file.endsWith(".ts")) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    const contentWithoutComments = content
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
     if (content.includes("@ts-nocheck")) {
       failures.push(`${file}: preload modules must not use @ts-nocheck`);
     }
-    if (content.includes("module.exports")) {
+    if (contentWithoutComments.includes("module.exports")) {
       failures.push(`${file}: preload modules must use ESM exports`);
     }
-    if (content.includes("require(")) {
+    if (contentWithoutComments.includes("require(")) {
       failures.push(`${file}: preload modules must not use require(); use ESM imports`);
     }
   }

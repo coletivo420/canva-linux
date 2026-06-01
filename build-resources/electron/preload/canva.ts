@@ -22,31 +22,6 @@ type WrapOpenCall = (options?: EyeDropperOpenOptions) => Promise<EyeDropperResul
 try {
   debugLog("startup", "modules-loaded");
 
-  const uploadInstaller = (() => {
-    try {
-      return installUploadDiagnostics;
-    } catch {
-      return null;
-    }
-  })();
-
-  const installRoutingDiagnostics = (() => {
-    try {
-      return installPrimaryEyeDropperRoutingDiagnostics;
-    } catch (primaryError) {
-      try {
-        return installFallbackEyeDropperRoutingDiagnostics;
-      } catch (fallbackError) {
-        logEyeDropper(
-          "eyedropper:routing",
-          "module-load-failed",
-          (fallbackError as Error)?.message || (primaryError as Error)?.message,
-        );
-        return () => {};
-      }
-    }
-  })();
-
   const wrapOpenCall: WrapOpenCall = (() => {
     try {
       return createCustomEyeDropperFlow({ debugLog, logEyeDropper }).wrapOpenCall;
@@ -65,16 +40,35 @@ try {
     }
   })();
 
-  if (typeof uploadInstaller === "function") {
-    uploadInstaller({ debugEnabled, debugLog });
+  try {
+    installUploadDiagnostics({ debugEnabled, debugLog });
+  } catch (error) {
+    debugLog("startup", "upload-diagnostics-failed", (error as Error)?.message);
   }
 
-  installRoutingDiagnostics({
-    debugEnabled,
-    debugLog,
-    logEyeDropper,
-    wrapOpenCall,
-  });
+  try {
+    installPrimaryEyeDropperRoutingDiagnostics({
+      debugEnabled,
+      debugLog,
+      logEyeDropper,
+      wrapOpenCall,
+    });
+  } catch (primaryError) {
+    try {
+      installFallbackEyeDropperRoutingDiagnostics({
+        debugEnabled,
+        debugLog,
+        logEyeDropper,
+        wrapOpenCall,
+      });
+    } catch (fallbackError) {
+      logEyeDropper(
+        "eyedropper:routing",
+        "module-load-failed",
+        (fallbackError as Error)?.message || (primaryError as Error)?.message,
+      );
+    }
+  }
 
   function isWrappedEyeDropperInstalled(): boolean {
     try {
