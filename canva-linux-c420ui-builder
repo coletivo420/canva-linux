@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-GENERATED_BUILDER="${ROOT_DIR}/build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs"
+GENERATED_BUILDER="${ROOT_DIR}/build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs"
 DEV_BUILDER="${ROOT_DIR}/.build/scripts/c420ui-builder.mjs"
 
 if ! command -v node >/dev/null 2>&1; then
@@ -23,7 +23,7 @@ fi
 
 # Legacy contract note: previous fallback text referenced:
 # "Run npm run build:c420ui-bootstrap".
-printf '%s\n' "[c420ui] bootstrap missing: build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs is missing or invalid" >&2
+printf '%s\n' "[c420ui] bootstrap missing: build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs is missing or invalid" >&2
 printf '%s\n' "[c420ui] generating bootstrap bundle automatically..." >&2
 
 if npm --prefix "${ROOT_DIR}" run build:c420ui-bootstrap; then

@@ -26,7 +26,7 @@ terminal and direct CLI actions.
 npm run c420ui:cli -- --help
 ```
 
-The launcher opens c420ui without arguments. With a direct action flag, the launcher invokes `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs` when the generated bundle is present, with `.build/build-resources/c420ui/scripts/run-c420ui-cli.js` kept only as a development fallback. Direct actions resolve through c420ui and the Canva Linux action registry.
+The launcher opens c420ui without arguments. With a direct action flag, the launcher invokes `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs` when the generated bundle is present, with `.build/build-resources/c420ui/scripts/run-c420ui-cli.js` kept only as a development fallback. Direct actions resolve through c420ui and the Canva Linux action registry.
 
 ## Implementing files
 
@@ -53,8 +53,8 @@ The launcher opens c420ui without arguments. With a direct action flag, the laun
 
 The launcher prefers the generated c420ui bootstrap bundle before any development build output:
 
-- `./canva-linux-c420ui-builder` starts `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` when present.
-- Direct actions such as `./canva-linux-c420ui-builder --doctor --dry-run` start `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs` when present.
+- `./canva-linux-c420ui-builder` starts `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs` when present.
+- Direct actions such as `./canva-linux-c420ui-builder --doctor --dry-run` start `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs` when present.
 - `.build/scripts/run-c420ui*.js` remains a development fallback only.
 
 The launcher must not run `npm install`, `npm ci`, or `npm run build:scripts` before trying the bootstrap bundle. The bundle only starts c420ui; full dependency checks and repair remain c420ui Host Dependency Runner responsibilities.

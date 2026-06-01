@@ -15,7 +15,7 @@ CommonJS patterns are forbidden in maintained source:
 - `node:module` `createRequire` bridges
 
 CommonJS may exist only as temporary migration output during Dev11.
-No generated `.cjs` bootstrap should remain required at the end of Dev11.
+Generated bootstrap artifacts are now ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
 Node tooling, core checks, c420ui checks, and c420ui terminal generated outputs
 must use ESM `.mjs` artifacts.
 The electron-builder `beforeBuild` hook output must use ESM `.mjs`.
@@ -27,7 +27,7 @@ Dev.10 validation must prove:
 
 - no maintained JavaScript source was added;
 - generated JavaScript remains under generated-output paths;
-- generated c420ui `.cjs` artifacts remain validated;
+- generated c420ui `.mjs` artifacts remain validated;
 - shell scripts do not contain new JavaScript heredoc policy blocks;
 - shell wrappers stay thin unless explicitly documented as host-operation boundaries.
 
@@ -138,13 +138,13 @@ launch. Normal users only need npm installed and do not need to run
 Validation gates remain check-only and still fail when committed bootstrap artifacts are stale.
 Runtime/builder auto-fixes missing or stale bundles automatically; CI checks detect drift.
 
-build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
+build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
 output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
 on every committed bootstrap entrypoint.
 Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
@@ -160,12 +160,12 @@ dirtying the worktree with a not-yet-materialized commit hash.
 To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
 `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
-The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
+The c420ui bootstrap check must fail if run-c420ui.mjs has syntax errors, stale generated output,
 malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner. Validate this with:
 
-- `node --check build-resources/c420ui/bootstrap/generated/run-c420ui.cjs`
-- `node --check build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs`
-- `node --check build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs`
+- `node --check build-resources/c420ui/bootstrap/generated/run-c420ui.mjs`
+- `node --check build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs`
+- `node --check build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs`
 - `npm run check:c420ui-node-check`
 - `npm run check:c420ui-bootstrap`
 - `npm run check:c420ui-bootstrap-artifacts`
@@ -174,9 +174,9 @@ malformed SIGCONT blocks, or host-dependency validators interleaved into the int
 Bootstrap PR logs must include these exact success lines after regenerating bootstrap artifacts:
 
 ```text
-[ok] node --check build-resources/c420ui/bootstrap/generated/run-c420ui.cjs
-[ok] node --check build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs
-[ok] node --check build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs
+[ok] node --check build-resources/c420ui/bootstrap/generated/run-c420ui.mjs
+[ok] node --check build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs
+[ok] node --check build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs
 [ok] npm run check:c420ui-bootstrap-artifacts
 ```
 

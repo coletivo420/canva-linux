@@ -108,7 +108,7 @@ test("ensure-bootstrap regenerates when manifest is missing", () => runWithTempR
 
 test("ensure-bootstrap regenerates when artifact is missing", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir);
-  fs.rmSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui.cjs")), { force: true });
+  fs.rmSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui.mjs")), { force: true });
 
   const { deps, buildCalls } = createDeps(rootDir);
   ensureC420UIBootstrapWithDeps(rootDir, deps);
@@ -117,7 +117,7 @@ test("ensure-bootstrap regenerates when artifact is missing", () => runWithTempR
 
 test("ensure-bootstrap regenerates when artifact is empty", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir);
-  fs.writeFileSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui-cli.cjs")), "", "utf8");
+  fs.writeFileSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui-cli.mjs")), "", "utf8");
 
   const { deps, buildCalls } = createDeps(rootDir);
   ensureC420UIBootstrapWithDeps(rootDir, deps);
@@ -139,7 +139,7 @@ test("ensure-bootstrap validates generated .cjs files with node --check", () => 
     calculateSourceHash: () => "expected-hash",
     spawn: (command: string, args: readonly string[]) => {
       const argv = [...args];
-      if (command === process.execPath && argv[0] === "--check" && String(argv[1]).includes("run-c420ui-cli.cjs")) {
+      if (command === process.execPath && argv[0] === "--check" && String(argv[1]).includes("run-c420ui-cli.mjs")) {
         return { status: 1, stdout: "", stderr: "syntax error" } as ReturnType<typeof import("node:child_process").spawnSync>;
       }
       return { status: 0, stdout: "", stderr: "" } as ReturnType<typeof import("node:child_process").spawnSync>;
@@ -155,7 +155,7 @@ test("ensure-bootstrap validates generated .cjs files with node --check", () => 
 
 test("ensure-bootstrap regenerates when artifact hash differs from manifest", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir);
-  fs.appendFileSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui.cjs")), "\n// drift\n");
+  fs.appendFileSync(path.join(rootDir, c420uiBootstrapArtifactPath("run-c420ui.mjs")), "\n// drift\n");
 
   const { deps, buildCalls } = createDeps(rootDir);
   ensureC420UIBootstrapWithDeps(rootDir, deps);

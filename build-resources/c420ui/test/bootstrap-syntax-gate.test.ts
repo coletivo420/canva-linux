@@ -9,9 +9,9 @@ const rootDir =
   process.env.CANVA_TEST_REPO_ROOT ||
   path.resolve(__dirname, "..", "..", "..");
 const artifacts = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
+  "run-c420ui.mjs",
+  "run-c420ui-cli.mjs",
+  "c420ui-builder.mjs",
 ] as const;
 
 function makeTempDir(prefix: string): string {

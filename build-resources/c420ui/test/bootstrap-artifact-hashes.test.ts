@@ -113,7 +113,7 @@ test("manifest hash validation fails when an artifact is manually edited", () =>
   try {
     const tempRoot = copyBootstrapToTemp(tempDir);
     fs.appendFileSync(
-      path.join(tempRoot, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.cjs"),
+      path.join(tempRoot, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.mjs"),
       "\n// manual edit\n",
     );
 

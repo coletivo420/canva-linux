@@ -58,7 +58,7 @@ function runBuilder(args) {
 test("canva-linux-c420ui-builder entrypoint preserves current builder/runtime split", () => {
   const wrapper = read("canva-linux-c420ui-builder");
   assert.ok(exists("build-resources/c420ui/scripts/c420ui-builder.ts"));
-  assert.ok(exists("build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs"));
+  assert.ok(exists("build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs"));
   assert.equal(exists("canva-linux.sh"), false);
   assert.match(wrapper, /build-resources\/c420ui\/bootstrap\/generated\/c420ui-builder\.cjs/);
   assert.match(wrapper, /\.build\/scripts\/c420ui-builder\.js/);
@@ -68,7 +68,7 @@ test("canva-linux-c420ui-builder entrypoint preserves current builder/runtime sp
 
 test("bootstrap manifest points builder at c420ui-builder", () => {
   const manifest = JSON.parse(read("build-resources/c420ui/bootstrap/generated/manifest.json"));
-  assert.equal(manifest.entrypoints.builder, "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs");
+  assert.equal(manifest.entrypoints.builder, "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs");
   assert.ok(manifest.c420uiSourceHashInputs.includes("build-resources/c420ui/scripts"));
 });
 

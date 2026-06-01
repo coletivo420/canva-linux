@@ -9,16 +9,16 @@ import {
 
 test("bootstrap helper exports the exact artifact file list", () => {
   assert.deepEqual(C420UI_BOOTSTRAP_ARTIFACT_FILES, [
-    "run-c420ui.cjs",
-    "run-c420ui-cli.cjs",
-    "c420ui-builder.cjs",
+    "run-c420ui.mjs",
+    "run-c420ui-cli.mjs",
+    "c420ui-builder.mjs",
   ]);
 });
 
 test("bootstrap helper resolves the run entrypoint path", () => {
   assert.equal(
-    c420uiBootstrapArtifactPath("run-c420ui.cjs"),
-    "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
+    c420uiBootstrapArtifactPath("run-c420ui.mjs"),
+    "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
   );
 });
 

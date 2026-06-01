@@ -7,9 +7,9 @@ Runtime/builder fixes missing or stale bundles automatically; CI checks detect d
 
 ## Artifacts
 
-- `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs`
-- `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs`
-- `build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs`
+- `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs`
+- `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs`
+- `build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs`
 - `build-resources/c420ui/bootstrap/generated/manifest.json`
 
 ## Contract

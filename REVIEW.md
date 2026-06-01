@@ -9,7 +9,7 @@ Request changes if a PR:
 - adds `__filename` or `__dirname` compatibility bridges in maintained TypeScript;
 - adds `node:module` `createRequire` bridges in maintained TypeScript;
 - adds `module.exports` or `exports.*`;
-- adds new `.cjs` files outside explicitly generated temporary bootstrap debt;
+- adds new `.cjs` files in the repository;
 - adds new esbuild `--format=cjs`;
 - restores `.build/scripts/*.js` generated tooling outputs instead of `.mjs` for migrated Dev11 tooling;
 - restores electron-builder `beforeBuild` hook output to `.js` or `--format=cjs`;
@@ -73,17 +73,17 @@ Do not request changes merely because these remain shell:
 - The c420ui builder/runtime must auto-generate missing or stale bootstrap bundles before selecting entrypoints.
 - Normal users only need npm installed; review must reject manual-only guidance to run `npm run build:c420ui-bootstrap`.
 - Validation gates remain check-only and must fail on stale bootstrap artifacts without auto-regeneration.
-- build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
+- build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts. Do not edit them manually.
   Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
-- The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
+- The c420ui bootstrap check must fail if run-c420ui.mjs has syntax errors, stale generated output,
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-- build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+- build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
   output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
   on every committed bootstrap entrypoint.
 - Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
-- Reject changes that treat `build-resources/c420ui/bootstrap/generated/*.cjs` as source of truth, must not restore `canva-linux.sh`,
+- Reject changes that treat `build-resources/c420ui/bootstrap/generated/*.mjs` as source of truth, must not restore `canva-linux.sh`,
   or bypass the official TypeScript bootstrap build recipe.
 - Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
   `check:c420ui-bootstrap-artifacts` is a verification gate, not a regeneration command: it must not run
@@ -569,7 +569,7 @@ Request changes if a PR:
 - duplicates `createBuildMetadata` or `normalizeLoadedBuildMetadata` in `canva-linux/c420ui-adapter/build-metadata-loader.ts`;
 - stops loading build metadata formatting from `build-resources/electron/main/build-metadata`;
 - bundles `scripts/canva-linux` registry/config modules without adding them to `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`;
-- edits `build-resources/c420ui/bootstrap/generated/*.cjs` manually instead of rebuilding from TypeScript sources;
+- edits `build-resources/c420ui/bootstrap/generated/*.mjs` manually instead of rebuilding from TypeScript sources;
 - leaves c420ui bootstrap artifacts without passing `node --check` and the c420ui artifact gates.
 
 ## Host dependency ownership review
@@ -596,7 +596,7 @@ while runtime flags belong to the compiled `canva-linux` app.
 - [x] Public alias remains `canva-linux-c420ui-builder`.
 - [x] Legacy `canva-linux.sh` is removed.
 - [x] Runtime remains `canva-linux`.
-- [x] No `canva-linux-c420ui-builder.cjs` bootstrap artifact remains.
+- [x] No `canva-linux-c420ui-builder.mjs` bootstrap artifact remains.
 
 ## Dev.7 review note: effective versions and OAuth fallback
 

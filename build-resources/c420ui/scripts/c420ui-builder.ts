@@ -149,11 +149,11 @@ function createSession(rootDir: string): { sessionLog?: string; sessionId: strin
 function selectEntrypoint(rootDir: string, kind: "ui" | "cli"): string {
   const candidates = kind === "ui"
     ? [
-        path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"),
+        path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs"),
         path.join(rootDir, ".build/scripts/run-c420ui.mjs"),
       ]
     : [
-        path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
+        path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs"),
         path.join(rootDir, ".build/scripts/run-c420ui-cli.mjs"),
       ];
 

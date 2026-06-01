@@ -15,9 +15,8 @@ export const C420UI_BOOTSTRAP_EXTERNALS = [
 export const C420UI_BOOTSTRAP_BUILD_RECIPE = "build-resources/c420ui/scripts/build-bootstrap.ts";
 export const C420UI_BOOTSTRAP_BUILD_TOOL = "esbuild";
 export const C420UI_BOOTSTRAP_BUILD_TARGET = "node22";
-export const C420UI_BOOTSTRAP_BUNDLE_FORMAT = "cjs";
-export const C420UI_BOOTSTRAP_MODULE_FORMAT = "commonjs";
-export const C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT = "esm";
+export const C420UI_BOOTSTRAP_BUNDLE_FORMAT = "esm";
+export const C420UI_BOOTSTRAP_MODULE_FORMAT = "esm";
 export const C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS = [
   "linux",
   "windows-ansi",
@@ -35,7 +34,7 @@ export function createC420UIBootstrapBuildOptions(rootDir: string, outdir: strin
     entryPoints: [...C420UI_BOOTSTRAP_ENTRYPOINTS],
     external: [...C420UI_BOOTSTRAP_EXTERNALS],
     format: C420UI_BOOTSTRAP_BUNDLE_FORMAT,
-    outExtension: { ".js": ".cjs" },
+    outExtension: { ".js": ".mjs" },
     outdir,
     platform: "node",
     target: C420UI_BOOTSTRAP_BUILD_TARGET,
@@ -51,7 +50,7 @@ export function createC420UIBootstrapEsbuildCliArgs(outdir: string): string[] {
     `--format=${C420UI_BOOTSTRAP_BUNDLE_FORMAT}`,
     `--outdir=${outdir}`,
     "--entry-names=[name]",
-    "--out-extension:.js=.cjs",
+    "--out-extension:.js=.mjs",
     ...C420UI_BOOTSTRAP_EXTERNALS.map((external) => `--external:${external}`),
   ];
 }

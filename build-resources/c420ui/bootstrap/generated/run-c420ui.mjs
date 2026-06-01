@@ -4,6 +4,12 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
+  throw Error('Dynamic require of "' + x + '" is not supported');
+});
 var __glob = (map) => (path18) => {
   var fn = map[path18];
   if (fn) return fn();
@@ -12,12 +18,8 @@ var __glob = (map) => (path18) => {
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
-var __commonJS = (cb, mod) => function __require() {
+var __commonJS = (cb, mod) => function __require2() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-};
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -35,12 +37,11 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // node_modules/blessed/lib/alias.js
 var require_alias = __commonJS({
-  "node_modules/blessed/lib/alias.js"(exports2) {
-    var alias = exports2;
+  "node_modules/blessed/lib/alias.js"(exports) {
+    var alias = exports;
     alias.bools = {
       //         Variable                                      Cap-                               TCap                                  Description
       //         Booleans                                      name                               Code
@@ -998,11 +999,11 @@ var require_alias = __commonJS({
 
 // node_modules/blessed/lib/tput.js
 var require_tput = __commonJS({
-  "node_modules/blessed/lib/tput.js"(exports2, module2) {
-    var assert = require("assert");
-    var path18 = require("path");
-    var fs18 = require("fs");
-    var cp = require("child_process");
+  "node_modules/blessed/lib/tput.js"(exports, module) {
+    var assert = __require("assert");
+    var path18 = __require("path");
+    var fs18 = __require("fs");
+    var cp = __require("child_process");
     function Tput(options) {
       if (!(this instanceof Tput)) {
         return new Tput(options);
@@ -3220,34 +3221,34 @@ var require_tput = __commonJS({
       "\xB7": "*"
       // '·'
     };
-    exports2 = Tput;
-    exports2.sprintf = sprintf;
-    exports2.tryRead = tryRead;
-    module2.exports = exports2;
+    exports = Tput;
+    exports.sprintf = sprintf;
+    exports.tryRead = tryRead;
+    module.exports = exports;
   }
 });
 
 // node_modules/blessed/lib/colors.js
 var require_colors = __commonJS({
-  "node_modules/blessed/lib/colors.js"(exports2) {
-    exports2.match = function(r1, g1, b1) {
+  "node_modules/blessed/lib/colors.js"(exports) {
+    exports.match = function(r1, g1, b1) {
       if (typeof r1 === "string") {
         var hex = r1;
         if (hex[0] !== "#") {
           return -1;
         }
-        hex = exports2.hexToRGB(hex);
+        hex = exports.hexToRGB(hex);
         r1 = hex[0], g1 = hex[1], b1 = hex[2];
       } else if (Array.isArray(r1)) {
         b1 = r1[2], g1 = r1[1], r1 = r1[0];
       }
       var hash = r1 << 16 | g1 << 8 | b1;
-      if (exports2._cache[hash] != null) {
-        return exports2._cache[hash];
+      if (exports._cache[hash] != null) {
+        return exports._cache[hash];
       }
       var ldiff = Infinity, li = -1, i = 0, c, r2, g2, b2, diff;
-      for (; i < exports2.vcolors.length; i++) {
-        c = exports2.vcolors[i];
+      for (; i < exports.vcolors.length; i++) {
+        c = exports.vcolors[i];
         r2 = c[0];
         g2 = c[1];
         b2 = c[2];
@@ -3261,9 +3262,9 @@ var require_colors = __commonJS({
           li = i;
         }
       }
-      return exports2._cache[hash] = li;
+      return exports._cache[hash] = li;
     };
-    exports2.RGBToHex = function(r, g, b) {
+    exports.RGBToHex = function(r, g, b) {
       if (Array.isArray(r)) {
         b = r[2], g = r[1], r = r[0];
       }
@@ -3274,7 +3275,7 @@ var require_colors = __commonJS({
       }
       return "#" + hex(r) + hex(g) + hex(b);
     };
-    exports2.hexToRGB = function(hex) {
+    exports.hexToRGB = function(hex) {
       if (hex.length === 4) {
         hex = hex[0] + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
       }
@@ -3284,43 +3285,43 @@ var require_colors = __commonJS({
     function colorDistance(r1, g1, b1, r2, g2, b2) {
       return Math.pow(30 * (r1 - r2), 2) + Math.pow(59 * (g1 - g2), 2) + Math.pow(11 * (b1 - b2), 2);
     }
-    exports2.mixColors = function(c1, c2, alpha) {
+    exports.mixColors = function(c1, c2, alpha) {
       if (c1 === 511) c1 = 0;
       if (c2 === 511) c2 = 0;
       if (alpha == null) alpha = 0.5;
-      c1 = exports2.vcolors[c1];
+      c1 = exports.vcolors[c1];
       var r1 = c1[0];
       var g1 = c1[1];
       var b1 = c1[2];
-      c2 = exports2.vcolors[c2];
+      c2 = exports.vcolors[c2];
       var r2 = c2[0];
       var g2 = c2[1];
       var b2 = c2[2];
       r1 += (r2 - r1) * alpha | 0;
       g1 += (g2 - g1) * alpha | 0;
       b1 += (b2 - b1) * alpha | 0;
-      return exports2.match([r1, g1, b1]);
+      return exports.match([r1, g1, b1]);
     };
-    exports2.blend = function blend(attr, attr2, alpha) {
+    exports.blend = function blend(attr, attr2, alpha) {
       var name, i, c, nc;
       var bg = attr & 511;
       if (attr2 != null) {
         var bg2 = attr2 & 511;
         if (bg === 511) bg = 0;
         if (bg2 === 511) bg2 = 0;
-        bg = exports2.mixColors(bg, bg2, alpha);
+        bg = exports.mixColors(bg, bg2, alpha);
       } else {
         if (blend._cache[bg] != null) {
           bg = blend._cache[bg];
         } else if (bg >= 8 && bg <= 15) {
           bg -= 8;
         } else {
-          name = exports2.ncolors[bg];
+          name = exports.ncolors[bg];
           if (name) {
-            for (i = 0; i < exports2.ncolors.length; i++) {
-              if (name === exports2.ncolors[i] && i !== bg) {
-                c = exports2.vcolors[bg];
-                nc = exports2.vcolors[i];
+            for (i = 0; i < exports.ncolors.length; i++) {
+              if (name === exports.ncolors[i] && i !== bg) {
+                c = exports.vcolors[bg];
+                nc = exports.vcolors[i];
                 if (nc[0] + nc[1] + nc[2] < c[0] + c[1] + c[2]) {
                   blend._cache[bg] = i;
                   bg = i;
@@ -3341,7 +3342,7 @@ var require_colors = __commonJS({
         } else {
           if (fg === 511) fg = 7;
           if (fg2 === 511) fg2 = 7;
-          fg = exports2.mixColors(fg, fg2, alpha);
+          fg = exports.mixColors(fg, fg2, alpha);
         }
       } else {
         if (blend._cache[fg] != null) {
@@ -3349,12 +3350,12 @@ var require_colors = __commonJS({
         } else if (fg >= 8 && fg <= 15) {
           fg -= 8;
         } else {
-          name = exports2.ncolors[fg];
+          name = exports.ncolors[fg];
           if (name) {
-            for (i = 0; i < exports2.ncolors.length; i++) {
-              if (name === exports2.ncolors[i] && i !== fg) {
-                c = exports2.vcolors[fg];
-                nc = exports2.vcolors[i];
+            for (i = 0; i < exports.ncolors.length; i++) {
+              if (name === exports.ncolors[i] && i !== fg) {
+                c = exports.vcolors[fg];
+                nc = exports.vcolors[i];
                 if (nc[0] + nc[1] + nc[2] < c[0] + c[1] + c[2]) {
                   blend._cache[fg] = i;
                   fg = i;
@@ -3369,11 +3370,11 @@ var require_colors = __commonJS({
       attr |= fg << 9;
       return attr;
     };
-    exports2.blend._cache = {};
-    exports2._cache = {};
-    exports2.reduce = function(color, total) {
+    exports.blend._cache = {};
+    exports._cache = {};
+    exports.reduce = function(color, total) {
       if (color >= 16 && total <= 16) {
-        color = exports2.ccolors[color];
+        color = exports.ccolors[color];
       } else if (color >= 8 && total <= 8) {
         color -= 8;
       } else if (color >= 2 && total <= 2) {
@@ -3381,7 +3382,7 @@ var require_colors = __commonJS({
       }
       return color;
     };
-    exports2.xterm = [
+    exports.xterm = [
       "#000000",
       // black
       "#cd0000",
@@ -3415,8 +3416,8 @@ var require_colors = __commonJS({
       "#ffffff"
       // white
     ];
-    exports2.colors = (function() {
-      var cols = exports2.colors = [], _cols = exports2.vcolors = [], r, g, b, i, l;
+    exports.colors = (function() {
+      var cols = exports.colors = [], _cols = exports.vcolors = [], r, g, b, i, l;
       function hex(n) {
         n = n.toString(16);
         if (n.length < 2) n = "0" + n;
@@ -3426,7 +3427,7 @@ var require_colors = __commonJS({
         cols[i2] = "#" + hex(r2) + hex(g2) + hex(b2);
         _cols[i2] = [r2, g2, b2];
       }
-      exports2.xterm.forEach(function(c, i2) {
+      exports.xterm.forEach(function(c, i2) {
         c = parseInt(c.substring(1), 16);
         push(i2, c >> 16 & 255, c >> 8 & 255, c & 255);
       });
@@ -3450,17 +3451,17 @@ var require_colors = __commonJS({
       }
       return cols;
     })();
-    exports2.ccolors = (function() {
-      var _cols = exports2.vcolors.slice(), cols = exports2.colors.slice(), out;
-      exports2.vcolors = exports2.vcolors.slice(0, 8);
-      exports2.colors = exports2.colors.slice(0, 8);
-      out = cols.map(exports2.match);
-      exports2.colors = cols;
-      exports2.vcolors = _cols;
-      exports2.ccolors = out;
+    exports.ccolors = (function() {
+      var _cols = exports.vcolors.slice(), cols = exports.colors.slice(), out;
+      exports.vcolors = exports.vcolors.slice(0, 8);
+      exports.colors = exports.colors.slice(0, 8);
+      out = cols.map(exports.match);
+      exports.colors = cols;
+      exports.vcolors = _cols;
+      exports.ccolors = out;
       return out;
     })();
-    var colorNames = exports2.colorNames = {
+    var colorNames = exports.colorNames = {
       // special
       default: -1,
       normal: -1,
@@ -3501,7 +3502,7 @@ var require_colors = __commonJS({
       brightgrey: 7,
       brightgray: 7
     };
-    exports2.convert = function(color) {
+    exports.convert = function(color) {
       if (typeof color === "number") {
         ;
       } else if (typeof color === "string") {
@@ -3509,16 +3510,16 @@ var require_colors = __commonJS({
         if (colorNames[color] != null) {
           color = colorNames[color];
         } else {
-          color = exports2.match(color);
+          color = exports.match(color);
         }
       } else if (Array.isArray(color)) {
-        color = exports2.match(color);
+        color = exports.match(color);
       } else {
         color = -1;
       }
       return color !== -1 ? color : 511;
     };
-    exports2.ccolors = {
+    exports.ccolors = {
       blue: [
         4,
         12,
@@ -3650,34 +3651,34 @@ var require_colors = __commonJS({
         [244, 255]
       ]
     };
-    exports2.ncolors = [];
-    Object.keys(exports2.ccolors).forEach(function(name) {
-      exports2.ccolors[name].forEach(function(offset) {
+    exports.ncolors = [];
+    Object.keys(exports.ccolors).forEach(function(name) {
+      exports.ccolors[name].forEach(function(offset) {
         if (typeof offset === "number") {
-          exports2.ncolors[offset] = name;
-          exports2.ccolors[offset] = exports2.colorNames[name];
+          exports.ncolors[offset] = name;
+          exports.ccolors[offset] = exports.colorNames[name];
           return;
         }
         for (var i = offset[0], l = offset[1]; i <= l; i++) {
-          exports2.ncolors[i] = name;
-          exports2.ccolors[i] = exports2.colorNames[name];
+          exports.ncolors[i] = name;
+          exports.ccolors[i] = exports.colorNames[name];
         }
       });
-      delete exports2.ccolors[name];
+      delete exports.ccolors[name];
     });
   }
 });
 
 // node_modules/blessed/lib/keys.js
 var require_keys = __commonJS({
-  "node_modules/blessed/lib/keys.js"(exports2) {
-    var EventEmitter = require("events").EventEmitter;
+  "node_modules/blessed/lib/keys.js"(exports) {
+    var EventEmitter = __require("events").EventEmitter;
     function listenerCount(stream, event) {
       return EventEmitter.listenerCount ? EventEmitter.listenerCount(stream, event) : stream.listeners(event).length;
     }
     function emitKeypressEvents(stream) {
       if (stream._keypressDecoder) return;
-      var StringDecoder2 = require("string_decoder").StringDecoder;
+      var StringDecoder2 = __require("string_decoder").StringDecoder;
       stream._keypressDecoder = new StringDecoder2("utf8");
       function onData(b) {
         if (listenerCount(stream, "keypress") > 0) {
@@ -3700,7 +3701,7 @@ var require_keys = __commonJS({
         stream.on("newListener", onNewListener);
       }
     }
-    exports2.emitKeypressEvents = emitKeypressEvents;
+    exports.emitKeypressEvents = emitKeypressEvents;
     var metaKeyCodeReAnywhere = /(?:\x1b)([a-zA-Z0-9])/;
     var metaKeyCodeRe = new RegExp("^" + metaKeyCodeReAnywhere.source + "$");
     var functionKeyCodeReAnywhere = new RegExp("(?:\x1B+)(O|N|\\[|\\[\\[)(?:" + [
@@ -4037,10 +4038,10 @@ var require_keys = __commonJS({
 
 // node_modules/blessed/lib/gpmclient.js
 var require_gpmclient = __commonJS({
-  "node_modules/blessed/lib/gpmclient.js"(exports2, module2) {
-    var net = require("net");
-    var fs18 = require("fs");
-    var EventEmitter = require("events").EventEmitter;
+  "node_modules/blessed/lib/gpmclient.js"(exports, module) {
+    var net = __require("net");
+    var fs18 = __require("fs");
+    var EventEmitter = __require("events").EventEmitter;
     var GPM_USE_MAGIC = false;
     var GPM_MOVE = 1;
     var GPM_DRAG = 2;
@@ -4211,18 +4212,18 @@ var require_gpmclient = __commonJS({
     GpmClient.prototype.hasMetaKey = function(mod) {
       return mod & 8 ? true : false;
     };
-    module2.exports = GpmClient;
+    module.exports = GpmClient;
   }
 });
 
 // node_modules/blessed/lib/program.js
 var require_program = __commonJS({
-  "node_modules/blessed/lib/program.js"(exports2, module2) {
-    var EventEmitter = require("events").EventEmitter;
-    var StringDecoder2 = require("string_decoder").StringDecoder;
-    var cp = require("child_process");
-    var util = require("util");
-    var fs18 = require("fs");
+  "node_modules/blessed/lib/program.js"(exports, module) {
+    var EventEmitter = __require("events").EventEmitter;
+    var StringDecoder2 = __require("string_decoder").StringDecoder;
+    var cp = __require("child_process");
+    var util = __require("util");
+    var fs18 = __require("fs");
     var Tput = require_tput();
     var colors2 = require_colors();
     var slice = Array.prototype.slice;
@@ -6648,13 +6649,13 @@ var require_program = __commonJS({
       });
       return out;
     }
-    module2.exports = Program;
+    module.exports = Program;
   }
 });
 
 // node_modules/blessed/lib/events.js
 var require_events = __commonJS({
-  "node_modules/blessed/lib/events.js"(exports2, module2) {
+  "node_modules/blessed/lib/events.js"(exports, module) {
     var slice = Array.prototype.slice;
     function EventEmitter() {
       if (!this._events) this._events = {};
@@ -6745,30 +6746,30 @@ var require_events = __commonJS({
       } while (el = el.parent);
       return true;
     };
-    exports2 = EventEmitter;
-    exports2.EventEmitter = EventEmitter;
-    module2.exports = exports2;
+    exports = EventEmitter;
+    exports.EventEmitter = EventEmitter;
+    module.exports = exports;
   }
 });
 
 // node_modules/blessed/lib/unicode.js
 var require_unicode = __commonJS({
-  "node_modules/blessed/lib/unicode.js"(exports2) {
+  "node_modules/blessed/lib/unicode.js"(exports) {
     var stringFromCharCode = String.fromCharCode;
     var floor = Math.floor;
-    exports2.charWidth = function(str, i) {
-      var point = typeof str !== "number" ? exports2.codePointAt(str, i || 0) : str;
+    exports.charWidth = function(str, i) {
+      var point = typeof str !== "number" ? exports.codePointAt(str, i || 0) : str;
       if (point === 0) return 0;
       if (point === 9) {
-        if (!exports2.blessed) {
-          exports2.blessed = require_blessed();
+        if (!exports.blessed) {
+          exports.blessed = require_blessed();
         }
-        return exports2.blessed.screen.global ? exports2.blessed.screen.global.tabc.length : 8;
+        return exports.blessed.screen.global ? exports.blessed.screen.global.tabc.length : 8;
       }
       if (point < 32 || point >= 127 && point < 160) {
         return 0;
       }
-      if (exports2.combining[point]) {
+      if (exports.combining[point]) {
         return 0;
       }
       if (12288 === point || 65281 <= point && point <= 65376 || 65504 <= point && point <= 65510) {
@@ -6784,19 +6785,19 @@ var require_unicode = __commonJS({
       }
       return 1;
     };
-    exports2.strWidth = function(str) {
+    exports.strWidth = function(str) {
       var width = 0;
       for (var i = 0; i < str.length; i++) {
-        width += exports2.charWidth(str, i);
-        if (exports2.isSurrogate(str, i)) i++;
+        width += exports.charWidth(str, i);
+        if (exports.isSurrogate(str, i)) i++;
       }
       return width;
     };
-    exports2.isSurrogate = function(str, i) {
-      var point = typeof str !== "number" ? exports2.codePointAt(str, i || 0) : str;
+    exports.isSurrogate = function(str, i) {
+      var point = typeof str !== "number" ? exports.codePointAt(str, i || 0) : str;
       return point > 65535;
     };
-    exports2.combiningTable = [
+    exports.combiningTable = [
       [768, 879],
       [1155, 1158],
       [1160, 1161],
@@ -6940,17 +6941,17 @@ var require_unicode = __commonJS({
       [917536, 917631],
       [917760, 917999]
     ];
-    exports2.combining = exports2.combiningTable.reduce(function(out, row) {
+    exports.combining = exports.combiningTable.reduce(function(out, row) {
       for (var i = row[0]; i <= row[1]; i++) {
         out[i] = true;
       }
       return out;
     }, {});
-    exports2.isCombining = function(str, i) {
-      var point = typeof str !== "number" ? exports2.codePointAt(str, i || 0) : str;
-      return exports2.combining[point] === true;
+    exports.isCombining = function(str, i) {
+      var point = typeof str !== "number" ? exports.codePointAt(str, i || 0) : str;
+      return exports.combining[point] === true;
     };
-    exports2.codePointAt = function(str, position) {
+    exports.codePointAt = function(str, position) {
       if (str == null) {
         throw TypeError();
       }
@@ -6980,7 +6981,7 @@ var require_unicode = __commonJS({
       }
       return first;
     };
-    exports2.fromCodePoint = function() {
+    exports.fromCodePoint = function() {
       if (String.fromCodePoint) {
         return String.fromCodePoint.apply(String, arguments);
       }
@@ -7017,20 +7018,20 @@ var require_unicode = __commonJS({
       }
       return result;
     };
-    exports2.chars = {};
-    exports2.chars.wide = new RegExp("([\\u1100-\\u115f\\u2329\\u232a\\u2e80-\\u303e\\u3040-\\ua4cf\\uac00-\\ud7a3\\uf900-\\ufaff\\ufe10-\\ufe19\\ufe30-\\ufe6f\\uff00-\\uff60\\uffe0-\\uffe6])", "g");
-    exports2.chars.swide = new RegExp("([\\ud840-\\ud87f][\\udc00-\\udffd]|[\\ud880-\\ud8bf][\\udc00-\\udffd])", "g");
-    exports2.chars.all = new RegExp("(" + exports2.chars.swide.source.slice(1, -1) + "|" + exports2.chars.wide.source.slice(1, -1) + ")", "g");
-    exports2.chars.surrogate = /[\ud800-\udbff][\udc00-\udfff]/g;
-    exports2.chars.combining = exports2.combiningTable.reduce(function(out, row) {
+    exports.chars = {};
+    exports.chars.wide = new RegExp("([\\u1100-\\u115f\\u2329\\u232a\\u2e80-\\u303e\\u3040-\\ua4cf\\uac00-\\ud7a3\\uf900-\\ufaff\\ufe10-\\ufe19\\ufe30-\\ufe6f\\uff00-\\uff60\\uffe0-\\uffe6])", "g");
+    exports.chars.swide = new RegExp("([\\ud840-\\ud87f][\\udc00-\\udffd]|[\\ud880-\\ud8bf][\\udc00-\\udffd])", "g");
+    exports.chars.all = new RegExp("(" + exports.chars.swide.source.slice(1, -1) + "|" + exports.chars.wide.source.slice(1, -1) + ")", "g");
+    exports.chars.surrogate = /[\ud800-\udbff][\udc00-\udfff]/g;
+    exports.chars.combining = exports.combiningTable.reduce(function(out, row) {
       var low, high, range;
       if (row[0] > 65535) {
-        low = exports2.fromCodePoint(row[0]);
+        low = exports.fromCodePoint(row[0]);
         low = [
           hexify(low.charCodeAt(0)),
           hexify(low.charCodeAt(1))
         ];
-        high = exports2.fromCodePoint(row[1]);
+        high = exports.fromCodePoint(row[1]);
         high = [
           hexify(high.charCodeAt(0)),
           hexify(high.charCodeAt(1))
@@ -7047,7 +7048,7 @@ var require_unicode = __commonJS({
       }
       return out;
     }, "[");
-    exports2.chars.combining = new RegExp(exports2.chars.combining, "g");
+    exports.chars.combining = new RegExp(exports.chars.combining, "g");
     function hexify(n) {
       n = n.toString(16);
       while (n.length < 4) n = "0" + n;
@@ -7058,7 +7059,7 @@ var require_unicode = __commonJS({
 
 // node_modules/blessed/lib/widgets/box.js
 var require_box = __commonJS({
-  "node_modules/blessed/lib/widgets/box.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/box.js"(exports, module) {
     var Node = require_node();
     var Element = require_element();
     function Box(options) {
@@ -7070,13 +7071,13 @@ var require_box = __commonJS({
     }
     Box.prototype.__proto__ = Element.prototype;
     Box.prototype.type = "box";
-    module2.exports = Box;
+    module.exports = Box;
   }
 });
 
 // node_modules/blessed/lib/widgets/scrollablebox.js
 var require_scrollablebox = __commonJS({
-  "node_modules/blessed/lib/widgets/scrollablebox.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/scrollablebox.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     function ScrollableBox(options) {
@@ -7341,14 +7342,14 @@ var require_scrollablebox = __commonJS({
       var m = Math.max(this._clines.length, this._scrollBottom());
       return this.scrollTo(i / 100 * m | 0);
     };
-    module2.exports = ScrollableBox;
+    module.exports = ScrollableBox;
   }
 });
 
 // node_modules/blessed/lib/widgets/element.js
 var require_element = __commonJS({
-  "node_modules/blessed/lib/widgets/element.js"(exports2, module2) {
-    var assert = require("assert");
+  "node_modules/blessed/lib/widgets/element.js"(exports, module) {
+    var assert = __require("assert");
     var colors2 = require_colors();
     var unicode = require_unicode();
     var nextTick = global.setImmediate || process.nextTick.bind(process);
@@ -9150,16 +9151,16 @@ var require_element = __commonJS({
       }
       return this.screen.screenshot(xi, xl, yi, yl);
     };
-    module2.exports = Element;
+    module.exports = Element;
   }
 });
 
 // node_modules/blessed/lib/helpers.js
 var require_helpers = __commonJS({
-  "node_modules/blessed/lib/helpers.js"(exports2) {
-    var fs18 = require("fs");
+  "node_modules/blessed/lib/helpers.js"(exports) {
+    var fs18 = __require("fs");
     var unicode = require_unicode();
-    var helpers = exports2;
+    var helpers = exports;
     helpers.merge = function(a, b) {
       Object.keys(b).forEach(function(key) {
         a[key] = b[key];
@@ -9280,7 +9281,7 @@ var require_helpers = __commonJS({
 
 // node_modules/blessed/lib/widgets/scrollabletext.js
 var require_scrollabletext = __commonJS({
-  "node_modules/blessed/lib/widgets/scrollabletext.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/scrollabletext.js"(exports, module) {
     var Node = require_node();
     var ScrollableBox = require_scrollablebox();
     function ScrollableText(options) {
@@ -9293,14 +9294,14 @@ var require_scrollabletext = __commonJS({
     }
     ScrollableText.prototype.__proto__ = ScrollableBox.prototype;
     ScrollableText.prototype.type = "scrollable-text";
-    module2.exports = ScrollableText;
+    module.exports = ScrollableText;
   }
 });
 
 // node_modules/blessed/lib/widgets/log.js
 var require_log = __commonJS({
-  "node_modules/blessed/lib/widgets/log.js"(exports2, module2) {
-    var util = require("util");
+  "node_modules/blessed/lib/widgets/log.js"(exports, module) {
+    var util = __require("util");
     var nextTick = global.setImmediate || process.nextTick.bind(process);
     var Node = require_node();
     var ScrollableText = require_scrollabletext();
@@ -9348,16 +9349,16 @@ var require_log = __commonJS({
       }
       return ret;
     };
-    module2.exports = Log;
+    module.exports = Log;
   }
 });
 
 // node_modules/blessed/lib/widgets/screen.js
 var require_screen = __commonJS({
-  "node_modules/blessed/lib/widgets/screen.js"(exports2, module2) {
-    var path18 = require("path");
-    var fs18 = require("fs");
-    var cp = require("child_process");
+  "node_modules/blessed/lib/widgets/screen.js"(exports, module) {
+    var path18 = __require("path");
+    var fs18 = __require("fs");
+    var cp = __require("child_process");
     var colors2 = require_colors();
     var program = require_program();
     var unicode = require_unicode();
@@ -10557,7 +10558,7 @@ var require_screen = __commonJS({
         options = args;
         args = [];
       }
-      var screen = this, program2 = screen.program, spawn2 = require("child_process").spawn, mouse = program2.mouseEnabled, ps;
+      var screen = this, program2 = screen.program, spawn2 = __require("child_process").spawn, mouse = program2.mouseEnabled, ps;
       options = options || {};
       options.stdio = options.stdio || "inherit";
       program2.lsaveCursor("spawn");
@@ -11032,13 +11033,13 @@ var require_screen = __commonJS({
       angleTable[parseInt(key, 2)] = angleTable[key];
       delete angleTable[key];
     });
-    module2.exports = Screen;
+    module.exports = Screen;
   }
 });
 
 // node_modules/blessed/lib/widgets/node.js
 var require_node = __commonJS({
-  "node_modules/blessed/lib/widgets/node.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/node.js"(exports, module) {
     var EventEmitter = require_events().EventEmitter;
     function Node(options) {
       var self = this;
@@ -11242,19 +11243,19 @@ var require_node = __commonJS({
     Node.prototype.set = function(name, value) {
       return this.data[name] = value;
     };
-    module2.exports = Node;
+    module.exports = Node;
   }
 });
 
 // node_modules/blessed/vendor/tng.js
 var require_tng = __commonJS({
-  "node_modules/blessed/vendor/tng.js"(exports2, module2) {
-    var fs18 = require("fs");
-    var util = require("util");
-    var path18 = require("path");
-    var zlib = require("zlib");
-    var assert = require("assert");
-    var cp = require("child_process");
+  "node_modules/blessed/vendor/tng.js"(exports, module) {
+    var fs18 = __require("fs");
+    var util = __require("util");
+    var path18 = __require("path");
+    var zlib = __require("zlib");
+    var assert = __require("assert");
+    var cp = __require("child_process");
     var exec = cp.execFileSync;
     function PNG(file, options) {
       var buf, chunks, idat, pixels;
@@ -12716,17 +12717,17 @@ var require_tng = __commonJS({
       }
       return buf;
     };
-    exports2 = PNG;
-    exports2.png = PNG;
-    exports2.gif = GIF;
-    module2.exports = exports2;
+    exports = PNG;
+    exports.png = PNG;
+    exports.gif = GIF;
+    module.exports = exports;
   }
 });
 
 // node_modules/blessed/lib/widgets/ansiimage.js
 var require_ansiimage = __commonJS({
-  "node_modules/blessed/lib/widgets/ansiimage.js"(exports2, module2) {
-    var cp = require("child_process");
+  "node_modules/blessed/lib/widgets/ansiimage.js"(exports, module) {
+    var cp = __require("child_process");
     var colors2 = require_colors();
     var Node = require_node();
     var Box = require_box();
@@ -12846,14 +12847,14 @@ var require_ansiimage = __commonJS({
       }
       return coords;
     };
-    module2.exports = ANSIImage;
+    module.exports = ANSIImage;
   }
 });
 
 // node_modules/blessed/lib/widgets/bigtext.js
 var require_bigtext = __commonJS({
-  "node_modules/blessed/lib/widgets/bigtext.js"(exports2, module2) {
-    var fs18 = require("fs");
+  "node_modules/blessed/lib/widgets/bigtext.js"(exports, module) {
+    var fs18 = __require("fs");
     var Node = require_node();
     var Box = require_box();
     function BigText(options) {
@@ -12954,13 +12955,13 @@ var require_bigtext = __commonJS({
       }
       return coords;
     };
-    module2.exports = BigText;
+    module.exports = BigText;
   }
 });
 
 // node_modules/blessed/lib/widgets/input.js
 var require_input = __commonJS({
-  "node_modules/blessed/lib/widgets/input.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/input.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     function Input(options) {
@@ -12972,13 +12973,13 @@ var require_input = __commonJS({
     }
     Input.prototype.__proto__ = Box.prototype;
     Input.prototype.type = "input";
-    module2.exports = Input;
+    module.exports = Input;
   }
 });
 
 // node_modules/blessed/lib/widgets/button.js
 var require_button = __commonJS({
-  "node_modules/blessed/lib/widgets/button.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/button.js"(exports, module) {
     var Node = require_node();
     var Input = require_input();
     function Button(options) {
@@ -13011,13 +13012,13 @@ var require_button = __commonJS({
       delete this.value;
       return result;
     };
-    module2.exports = Button;
+    module.exports = Button;
   }
 });
 
 // node_modules/blessed/lib/widgets/checkbox.js
 var require_checkbox = __commonJS({
-  "node_modules/blessed/lib/widgets/checkbox.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/checkbox.js"(exports, module) {
     var Node = require_node();
     var Input = require_input();
     function Checkbox(options) {
@@ -13072,13 +13073,13 @@ var require_checkbox = __commonJS({
     Checkbox.prototype.toggle = function() {
       return this.checked ? this.uncheck() : this.check();
     };
-    module2.exports = Checkbox;
+    module.exports = Checkbox;
   }
 });
 
 // node_modules/blessed/lib/widgets/list.js
 var require_list = __commonJS({
-  "node_modules/blessed/lib/widgets/list.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/list.js"(exports, module) {
     var helpers = require_helpers();
     var Node = require_node();
     var Box = require_box();
@@ -13559,15 +13560,15 @@ var require_list = __commonJS({
       this.emit("action");
       this.emit("cancel");
     };
-    module2.exports = List;
+    module.exports = List;
   }
 });
 
 // node_modules/blessed/lib/widgets/filemanager.js
 var require_filemanager = __commonJS({
-  "node_modules/blessed/lib/widgets/filemanager.js"(exports2, module2) {
-    var path18 = require("path");
-    var fs18 = require("fs");
+  "node_modules/blessed/lib/widgets/filemanager.js"(exports, module) {
+    var path18 = __require("path");
+    var fs18 = __require("fs");
     var helpers = require_helpers();
     var Node = require_node();
     var List = require_list();
@@ -13711,13 +13712,13 @@ var require_filemanager = __commonJS({
       this.cwd = cwd || this.options.cwd;
       this.refresh(callback);
     };
-    module2.exports = FileManager;
+    module.exports = FileManager;
   }
 });
 
 // node_modules/blessed/lib/widgets/form.js
 var require_form = __commonJS({
-  "node_modules/blessed/lib/widgets/form.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/form.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     function Form(options) {
@@ -13918,15 +13919,15 @@ var require_form = __commonJS({
       });
       this.emit("reset");
     };
-    module2.exports = Form;
+    module.exports = Form;
   }
 });
 
 // node_modules/blessed/lib/widgets/overlayimage.js
 var require_overlayimage = __commonJS({
-  "node_modules/blessed/lib/widgets/overlayimage.js"(exports2, module2) {
-    var fs18 = require("fs");
-    var cp = require("child_process");
+  "node_modules/blessed/lib/widgets/overlayimage.js"(exports, module) {
+    var fs18 = __require("fs");
+    var cp = __require("child_process");
     var helpers = require_helpers();
     var Node = require_node();
     var Box = require_box();
@@ -13986,7 +13987,7 @@ var require_overlayimage = __commonJS({
     OverlayImage.prototype.type = "overlayimage";
     OverlayImage.w3mdisplay = "/usr/lib/w3m/w3mimgdisplay";
     OverlayImage.prototype.spawn = function(file, args, opt, callback) {
-      var spawn2 = require("child_process").spawn, ps;
+      var spawn2 = __require("child_process").spawn, ps;
       opt = opt || {};
       ps = spawn2(file, args, opt);
       ps.on("error", function(err) {
@@ -14416,13 +14417,13 @@ var require_overlayimage = __commonJS({
     OverlayImage.prototype.displayImage = function(callback) {
       return this.screen.displayImage(this.file, callback);
     };
-    module2.exports = OverlayImage;
+    module.exports = OverlayImage;
   }
 });
 
 // node_modules/blessed/lib/widgets/image.js
 var require_image = __commonJS({
-  "node_modules/blessed/lib/widgets/image.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/image.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     function Image(options) {
@@ -14462,13 +14463,13 @@ var require_image = __commonJS({
     }
     Image.prototype.__proto__ = Box.prototype;
     Image.prototype.type = "image";
-    module2.exports = Image;
+    module.exports = Image;
   }
 });
 
 // node_modules/blessed/lib/widgets/layout.js
 var require_layout = __commonJS({
-  "node_modules/blessed/lib/widgets/layout.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/layout.js"(exports, module) {
     var Node = require_node();
     var Element = require_element();
     function Layout(options) {
@@ -14607,13 +14608,13 @@ var require_layout = __commonJS({
       this._emit("render", [coords]);
       return coords;
     };
-    module2.exports = Layout;
+    module.exports = Layout;
   }
 });
 
 // node_modules/blessed/lib/widgets/line.js
 var require_line = __commonJS({
-  "node_modules/blessed/lib/widgets/line.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/line.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     function Line(options) {
@@ -14638,13 +14639,13 @@ var require_line = __commonJS({
     }
     Line.prototype.__proto__ = Box.prototype;
     Line.prototype.type = "line";
-    module2.exports = Line;
+    module.exports = Line;
   }
 });
 
 // node_modules/blessed/lib/widgets/listbar.js
 var require_listbar = __commonJS({
-  "node_modules/blessed/lib/widgets/listbar.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/listbar.js"(exports, module) {
     var helpers = require_helpers();
     var Node = require_node();
     var Box = require_box();
@@ -14946,13 +14947,13 @@ var require_listbar = __commonJS({
       }
       this.emit("select tab", item, index);
     };
-    module2.exports = Listbar;
+    module.exports = Listbar;
   }
 });
 
 // node_modules/blessed/lib/widgets/table.js
 var require_table = __commonJS({
-  "node_modules/blessed/lib/widgets/table.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/table.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     function Table(options) {
@@ -15202,13 +15203,13 @@ var require_table = __commonJS({
       }
       return coords;
     };
-    module2.exports = Table;
+    module.exports = Table;
   }
 });
 
 // node_modules/blessed/lib/widgets/listtable.js
 var require_listtable = __commonJS({
-  "node_modules/blessed/lib/widgets/listtable.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/listtable.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     var List = require_list();
@@ -15384,13 +15385,13 @@ var require_listtable = __commonJS({
       }
       return coords;
     };
-    module2.exports = ListTable;
+    module.exports = ListTable;
   }
 });
 
 // node_modules/blessed/lib/widgets/text.js
 var require_text = __commonJS({
-  "node_modules/blessed/lib/widgets/text.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/text.js"(exports, module) {
     var Node = require_node();
     var Element = require_element();
     function Text(options) {
@@ -15403,13 +15404,13 @@ var require_text = __commonJS({
     }
     Text.prototype.__proto__ = Element.prototype;
     Text.prototype.type = "text";
-    module2.exports = Text;
+    module.exports = Text;
   }
 });
 
 // node_modules/blessed/lib/widgets/loading.js
 var require_loading = __commonJS({
-  "node_modules/blessed/lib/widgets/loading.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/loading.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     var Text = require_text();
@@ -15461,13 +15462,13 @@ var require_loading = __commonJS({
       }
       this.screen.render();
     };
-    module2.exports = Loading;
+    module.exports = Loading;
   }
 });
 
 // node_modules/blessed/lib/widgets/message.js
 var require_message = __commonJS({
-  "node_modules/blessed/lib/widgets/message.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/message.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     function Message(options) {
@@ -15542,13 +15543,13 @@ var require_message = __commonJS({
     Message.prototype.error = function(text, time, callback) {
       return this.display("{red-fg}Error: " + text + "{/red-fg}", time, callback);
     };
-    module2.exports = Message;
+    module.exports = Message;
   }
 });
 
 // node_modules/blessed/lib/widgets/progressbar.js
 var require_progressbar = __commonJS({
-  "node_modules/blessed/lib/widgets/progressbar.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/progressbar.js"(exports, module) {
     var Node = require_node();
     var Input = require_input();
     function ProgressBar(options) {
@@ -15657,13 +15658,13 @@ var require_progressbar = __commonJS({
       this.filled = 0;
       this.value = this.filled;
     };
-    module2.exports = ProgressBar;
+    module.exports = ProgressBar;
   }
 });
 
 // node_modules/blessed/lib/widgets/textarea.js
 var require_textarea = __commonJS({
-  "node_modules/blessed/lib/widgets/textarea.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/textarea.js"(exports, module) {
     var unicode = require_unicode();
     var nextTick = global.setImmediate || process.nextTick.bind(process);
     var Node = require_node();
@@ -15891,13 +15892,13 @@ var require_textarea = __commonJS({
         return self.readInput(callback);
       });
     };
-    module2.exports = Textarea;
+    module.exports = Textarea;
   }
 });
 
 // node_modules/blessed/lib/widgets/textbox.js
 var require_textbox = __commonJS({
-  "node_modules/blessed/lib/widgets/textbox.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/textbox.js"(exports, module) {
     var Node = require_node();
     var Textarea = require_textarea();
     function Textbox(options) {
@@ -15945,13 +15946,13 @@ var require_textbox = __commonJS({
       if (!this.__listener) return;
       return this.__listener("\r", { name: "enter" });
     };
-    module2.exports = Textbox;
+    module.exports = Textbox;
   }
 });
 
 // node_modules/blessed/lib/widgets/prompt.js
 var require_prompt = __commonJS({
-  "node_modules/blessed/lib/widgets/prompt.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/prompt.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     var Button = require_button();
@@ -16027,13 +16028,13 @@ var require_prompt = __commonJS({
       });
       this.screen.render();
     };
-    module2.exports = Prompt;
+    module.exports = Prompt;
   }
 });
 
 // node_modules/blessed/lib/widgets/question.js
 var require_question = __commonJS({
-  "node_modules/blessed/lib/widgets/question.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/question.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     var Button = require_button();
@@ -16106,13 +16107,13 @@ var require_question = __commonJS({
       }
       this.screen.render();
     };
-    module2.exports = Question;
+    module.exports = Question;
   }
 });
 
 // node_modules/blessed/lib/widgets/radiobutton.js
 var require_radiobutton = __commonJS({
-  "node_modules/blessed/lib/widgets/radiobutton.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/radiobutton.js"(exports, module) {
     var Node = require_node();
     var Checkbox = require_checkbox();
     function RadioButton(options) {
@@ -16144,13 +16145,13 @@ var require_radiobutton = __commonJS({
       return this._render();
     };
     RadioButton.prototype.toggle = RadioButton.prototype.check;
-    module2.exports = RadioButton;
+    module.exports = RadioButton;
   }
 });
 
 // node_modules/blessed/lib/widgets/radioset.js
 var require_radioset = __commonJS({
-  "node_modules/blessed/lib/widgets/radioset.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/radioset.js"(exports, module) {
     var Node = require_node();
     var Box = require_box();
     function RadioSet(options) {
@@ -16162,13 +16163,13 @@ var require_radioset = __commonJS({
     }
     RadioSet.prototype.__proto__ = Box.prototype;
     RadioSet.prototype.type = "radio-set";
-    module2.exports = RadioSet;
+    module.exports = RadioSet;
   }
 });
 
 // node_modules/blessed/lib/widgets/terminal.js
 var require_terminal = __commonJS({
-  "node_modules/blessed/lib/widgets/terminal.js"(exports2, module2) {
+  "node_modules/blessed/lib/widgets/terminal.js"(exports, module) {
     var nextTick = global.setImmediate || process.nextTick.bind(process);
     var Node = require_node();
     var Box = require_box();
@@ -16247,7 +16248,7 @@ var require_terminal = __commonJS({
       };
       element.parentNode = element;
       element.offsetParent = element;
-      this.term = require("term.js")({
+      this.term = __require("term.js")({
         termName: this.termName,
         cols: this.width - this.iwidth,
         rows: this.height - this.iheight,
@@ -16330,7 +16331,7 @@ var require_terminal = __commonJS({
       if (this.handler) {
         return;
       }
-      this.pty = require("pty.js").fork(this.shell, this.args, {
+      this.pty = __require("pty.js").fork(this.shell, this.args, {
         name: this.termName,
         cols: this.width - this.iwidth,
         rows: this.height - this.iheight,
@@ -16472,14 +16473,14 @@ var require_terminal = __commonJS({
       }
       this.term.destroy();
     };
-    module2.exports = Terminal;
+    module.exports = Terminal;
   }
 });
 
 // node_modules/blessed/lib/widgets/video.js
 var require_video = __commonJS({
-  "node_modules/blessed/lib/widgets/video.js"(exports2, module2) {
-    var cp = require("child_process");
+  "node_modules/blessed/lib/widgets/video.js"(exports, module) {
+    var cp = __require("child_process");
     var Node = require_node();
     var Box = require_box();
     var Terminal = require_terminal();
@@ -16561,7 +16562,7 @@ var require_video = __commonJS({
         return false;
       }
     };
-    module2.exports = Video;
+    module.exports = Video;
   }
 });
 
@@ -16610,9 +16611,9 @@ var init_ = __esm({
 
 // node_modules/blessed/lib/widget.js
 var require_widget = __commonJS({
-  "node_modules/blessed/lib/widget.js"(exports2) {
+  "node_modules/blessed/lib/widget.js"(exports) {
     init_();
-    var widget = exports2;
+    var widget = exports;
     widget.classes = [
       "Node",
       "Screen",
@@ -16667,7 +16668,7 @@ var require_widget = __commonJS({
 
 // node_modules/blessed/lib/blessed.js
 var require_blessed = __commonJS({
-  "node_modules/blessed/lib/blessed.js"(exports2, module2) {
+  "node_modules/blessed/lib/blessed.js"(exports, module) {
     function blessed2() {
       return blessed2.program.apply(null, arguments);
     }
@@ -16681,16 +16682,9 @@ var require_blessed = __commonJS({
     blessed2.helpers.tryRead = blessed2.tput.tryRead;
     blessed2.helpers.merge(blessed2, blessed2.helpers);
     blessed2.helpers.merge(blessed2, blessed2.widget);
-    module2.exports = blessed2;
+    module.exports = blessed2;
   }
 });
-
-// build-resources/c420ui/scripts/run-c420ui.ts
-var run_c420ui_exports = {};
-__export(run_c420ui_exports, {
-  main: () => main
-});
-module.exports = __toCommonJS(run_c420ui_exports);
 
 // build-resources/c420ui/src/theme.json
 var theme_default = {
@@ -17097,12 +17091,12 @@ function formatDetectionPanelSummaries(s, colors2) {
 }
 
 // build-resources/c420ui/src/terminal/clipboard.ts
-var import_node_child_process = require("node:child_process");
+import { spawnSync } from "node:child_process";
 function has(command) {
-  return (0, import_node_child_process.spawnSync)("bash", ["-c", `command -v ${command}`]).status === 0;
+  return spawnSync("bash", ["-c", `command -v ${command}`]).status === 0;
 }
 function runWithInput(command, args, input) {
-  const result = (0, import_node_child_process.spawnSync)(command, args, {
+  const result = spawnSync(command, args, {
     input,
     encoding: "utf8"
   });
@@ -17182,8 +17176,8 @@ function copyTextToClipboard(text) {
 }
 
 // build-resources/c420ui/src/terminal/settings.ts
-var import_node_fs = __toESM(require("node:fs"));
-var import_node_path = __toESM(require("node:path"));
+import fs from "node:fs";
+import path from "node:path";
 var DEFAULT_TOOL_SETTINGS = {
   tool: {
     generalLogsEnabled: true,
@@ -17196,10 +17190,10 @@ function configHome() {
   if (xdgConfigHome) {
     return xdgConfigHome;
   }
-  return import_node_path.default.join(process.env.HOME || ".", ".config");
+  return path.join(process.env.HOME || ".", ".config");
 }
 function toolSettingsPath(stateDirectoryName) {
-  return import_node_path.default.join(configHome(), stateDirectoryName, "tool-settings.json");
+  return path.join(configHome(), stateDirectoryName, "tool-settings.json");
 }
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -17218,7 +17212,7 @@ function normalizeSettings(raw) {
 }
 function loadToolSettings(stateDirectoryName) {
   const settingsPath = toolSettingsPath(stateDirectoryName);
-  if (!import_node_fs.default.existsSync(settingsPath)) {
+  if (!fs.existsSync(settingsPath)) {
     try {
       saveToolSettings(DEFAULT_TOOL_SETTINGS, stateDirectoryName);
     } catch {
@@ -17226,7 +17220,7 @@ function loadToolSettings(stateDirectoryName) {
     return structuredClone(DEFAULT_TOOL_SETTINGS);
   }
   try {
-    const rawContent = import_node_fs.default.readFileSync(settingsPath, "utf8");
+    const rawContent = fs.readFileSync(settingsPath, "utf8");
     return normalizeSettings(JSON.parse(rawContent));
   } catch {
     return structuredClone(DEFAULT_TOOL_SETTINGS);
@@ -17234,8 +17228,8 @@ function loadToolSettings(stateDirectoryName) {
 }
 function saveToolSettings(settings, stateDirectoryName) {
   const settingsPath = toolSettingsPath(stateDirectoryName);
-  import_node_fs.default.mkdirSync(import_node_path.default.dirname(settingsPath), { recursive: true });
-  import_node_fs.default.writeFileSync(
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+  fs.writeFileSync(
     settingsPath,
     `${JSON.stringify(normalizeSettings(settings), null, 2)}
 `,
@@ -17244,8 +17238,8 @@ function saveToolSettings(settings, stateDirectoryName) {
 }
 
 // build-resources/c420ui/src/terminal/app.ts
-var import_node_fs2 = __toESM(require("node:fs"));
-var import_node_path2 = __toESM(require("node:path"));
+import fs2 from "node:fs";
+import path2 from "node:path";
 
 // build-resources/c420ui/src/scopes.ts
 var c420uiKnownActionScopes = ["user", "system", "auto"];
@@ -18394,15 +18388,15 @@ function createApp(options) {
     system: ""
   };
   const logHistory = [];
-  const sessionLogPath = opts.sessionLogPath || import_node_path2.default.join(
-    process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || ".", ".local/state"),
+  const sessionLogPath = opts.sessionLogPath || path2.join(
+    process.env.XDG_STATE_HOME || path2.join(process.env.HOME || ".", ".local/state"),
     opts.project.stateDirectoryName,
     "tool-session.log"
   );
   const launcherSessionId = opts.sessionId?.trim() || "";
   function readExistingSessionLog(logPath) {
     try {
-      return import_node_fs2.default.existsSync(logPath) ? import_node_fs2.default.readFileSync(logPath, "utf8") : "";
+      return fs2.existsSync(logPath) ? fs2.readFileSync(logPath, "utf8") : "";
     } catch {
       return "";
     }
@@ -18428,8 +18422,8 @@ function createApp(options) {
   }
   function openSessionStream(logPath) {
     try {
-      import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(logPath), { recursive: true });
-      const stream = import_node_fs2.default.createWriteStream(logPath, { flags: "a" });
+      fs2.mkdirSync(path2.dirname(logPath), { recursive: true });
+      const stream = fs2.createWriteStream(logPath, { flags: "a" });
       stream.on("error", (error) => {
         recordSessionStreamError(error);
       });
@@ -19354,11 +19348,13 @@ function runC420UITerminalApp(options, runtimeOptions = {}) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/adapter.ts
-var import_node_fs16 = __toESM(require("node:fs"));
-var import_node_path16 = __toESM(require("node:path"));
+import fs16 from "node:fs";
+import path16 from "node:path";
 
 // build-resources/c420ui/src/linux-root-provider.ts
-var import_node_child_process2 = require("node:child_process");
+import {
+  spawnSync as spawnSync2
+} from "node:child_process";
 
 // build-resources/c420ui/src/root-provider.ts
 var c420uiRootPolicyExitCode = 64;
@@ -19388,7 +19384,7 @@ function validateC420UILinuxActionScope(action, actionEnv, actionHasUserScope = 
   return { ok: true };
 }
 function createC420UILinuxRootProviderBase(options) {
-  const runCommand = options.runCommand ?? import_node_child_process2.spawnSync;
+  const runCommand = options.runCommand ?? spawnSync2;
   const buildActionEnvironment = options.buildActionEnvironment ?? defaultC420UILinuxBuildActionEnvironment;
   const actionHasUserScope = options.actionHasUserScope ?? defaultC420UILinuxActionHasUserScope;
   const buildRootValidationCommand = options.buildRootValidationCommand ?? defaultC420UILinuxRootValidationCommand;
@@ -19473,12 +19469,12 @@ function createC420UILinuxRootProviderBase(options) {
 }
 
 // build-resources/c420ui/src/command-dependencies.ts
-var import_node_fs3 = __toESM(require("node:fs"));
-var import_node_path3 = __toESM(require("node:path"));
+import fs3 from "node:fs";
+import path3 from "node:path";
 function candidateNames(command, env) {
   if (process.platform !== "win32") return [command];
   const extensions = (env?.PATHEXT || ".COM;.EXE;.BAT;.CMD").split(";").filter(Boolean);
-  return import_node_path3.default.extname(command) ? [command] : [command, ...extensions.map((extension) => `${command}${extension}`)];
+  return path3.extname(command) ? [command] : [command, ...extensions.map((extension) => `${command}${extension}`)];
 }
 var lookupC420UICommandInPath = (command, options) => {
   if (!command) return false;
@@ -19489,12 +19485,12 @@ var lookupC420UICommandInPath = (command, options) => {
   const directories = commandHasDirectory ? [""] : pathValue.split(pathSeparator);
   for (const directory of directories) {
     for (const candidate of candidateNames(command, env)) {
-      const fullPath = commandHasDirectory ? candidate : import_node_path3.default.join(directory, candidate);
+      const fullPath = commandHasDirectory ? candidate : path3.join(directory, candidate);
       try {
-        const stat = import_node_fs3.default.statSync(fullPath);
+        const stat = fs3.statSync(fullPath);
         if (!stat.isFile()) continue;
         if (process.platform !== "win32") {
-          import_node_fs3.default.accessSync(fullPath, import_node_fs3.default.constants.X_OK);
+          fs3.accessSync(fullPath, fs3.constants.X_OK);
         }
         return true;
       } catch {
@@ -19560,16 +19556,16 @@ function checkC420UINodeDependency(config, options = {}) {
 }
 
 // build-resources/c420ui/src/npm-dependencies.ts
-var import_node_child_process3 = require("node:child_process");
-var import_node_fs4 = __toESM(require("node:fs"));
-var import_node_path4 = __toESM(require("node:path"));
+import { spawnSync as spawnSync3 } from "node:child_process";
+import fs4 from "node:fs";
+import path4 from "node:path";
 function readPackageJson(rootDir2) {
-  const packagePath = import_node_path4.default.join(rootDir2, "package.json");
-  if (!import_node_fs4.default.existsSync(packagePath)) {
+  const packagePath = path4.join(rootDir2, "package.json");
+  if (!fs4.existsSync(packagePath)) {
     return { result: { status: "failed", exitCode: 1, message: "package.json was not found." } };
   }
   try {
-    const packageJson = JSON.parse(import_node_fs4.default.readFileSync(packagePath, "utf8"));
+    const packageJson = JSON.parse(fs4.readFileSync(packagePath, "utf8"));
     return { packageJson };
   } catch (error) {
     return {
@@ -19611,7 +19607,14 @@ function declaredDependencyNames(packageJson, config) {
   ]);
 }
 function resolveC420UINpmDependency(dependency, rootDir2) {
-  return import_node_fs4.default.existsSync(import_node_path4.default.join(rootDir2, "node_modules", dependency, "package.json"));
+  let currentDir = path4.resolve(rootDir2);
+  while (true) {
+    const candidate = path4.join(currentDir, "node_modules", dependency, "package.json");
+    if (fs4.existsSync(candidate)) return true;
+    const parent = path4.dirname(currentDir);
+    if (parent === currentDir) return false;
+    currentDir = parent;
+  }
 }
 function requiredNpmDependencies(config) {
   return [
@@ -19622,7 +19625,7 @@ function requiredNpmDependencies(config) {
 function installArgs(config, rootDir2) {
   const strategy = config.installStrategy ?? "auto";
   const lockfile = config.lockfile ?? "package-lock.json";
-  const hasLockfile = import_node_fs4.default.existsSync(import_node_path4.default.join(rootDir2, lockfile));
+  const hasLockfile = fs4.existsSync(path4.join(rootDir2, lockfile));
   const command = strategy === "ci" || strategy === "auto" && hasLockfile ? "ci" : "install";
   return config.includeDev === false ? [command] : [command, "--include=dev"];
 }
@@ -19690,7 +19693,7 @@ function checkC420UINpmDependencies(config, options) {
     resolveDependency: options.resolveDependency
   });
 }
-var defaultNpmCommandRunner = (command, args, options) => (0, import_node_child_process3.spawnSync)(command, args, {
+var defaultNpmCommandRunner = (command, args, options) => spawnSync3(command, args, {
   cwd: options.cwd,
   env: options.env,
   stdio: options.stdio ?? "inherit",
@@ -19771,8 +19774,8 @@ function runC420UIHostDependencyEnsure(config, options) {
 }
 
 // build-resources/c420ui/src/command-runner.ts
-var import_node_child_process4 = require("node:child_process");
-var import_node_string_decoder = require("node:string_decoder");
+import { spawn } from "node:child_process";
+import { StringDecoder } from "node:string_decoder";
 
 // build-resources/c420ui/src/operational-logs.ts
 var c420uiDefaultRedactionPatterns = [
@@ -19824,10 +19827,10 @@ function emitRemainingChunk(stream, source, emitLog) {
   stream.ended = true;
 }
 async function runC420UICommand(options) {
-  const spawnCommand = options.spawnCommand ?? import_node_child_process4.spawn;
+  const spawnCommand = options.spawnCommand ?? spawn;
   const args = options.args ?? [];
-  const stdoutStream = { decoder: new import_node_string_decoder.StringDecoder("utf8"), pending: "", ended: false };
-  const stderrStream = { decoder: new import_node_string_decoder.StringDecoder("utf8"), pending: "", ended: false };
+  const stdoutStream = { decoder: new StringDecoder("utf8"), pending: "", ended: false };
+  const stderrStream = { decoder: new StringDecoder("utf8"), pending: "", ended: false };
   const cancelSignal = options.cancelSignal ?? "SIGINT";
   const cancelKillSignal = options.cancelKillSignal ?? "SIGTERM";
   const cancelKillTimeoutMs = options.cancelKillTimeoutMs ?? 5e3;
@@ -19970,7 +19973,7 @@ async function runC420UICommand(options) {
 }
 
 // build-resources/c420ui/src/artifacts.ts
-var import_node_path5 = __toESM(require("node:path"));
+import path5 from "node:path";
 var artifactCapabilityFields = [
   "supportsArtifacts",
   "supportsInstall",
@@ -20061,7 +20064,7 @@ function isRootManagedArtifactActionField(field) {
   return field === "installActionId" || field === "uninstallActionId" || field === "purgeActionId";
 }
 function toConfigPath(configPath) {
-  return import_node_path5.default.normalize(configPath.replace(/^[\\/]+/, ""));
+  return path5.normalize(configPath.replace(/^[\\/]+/, ""));
 }
 function assertC420UIArtifactRecipeConfig(config, context = "artifact recipe config") {
   if (!isRecord3(config)) throw new Error(`${context}: artifacts config must be an object`);
@@ -20308,31 +20311,51 @@ var c420uiLogoLines = [
 ];
 
 // build-resources/canva-linux/c420ui-adapter/detection/provider.ts
-var import_node_fs11 = __toESM(require("node:fs"));
-var import_node_path11 = __toESM(require("node:path"));
-var import_node_child_process6 = require("node:child_process");
+import fs11 from "node:fs";
+import path11 from "node:path";
+import {
+  execFileSync
+} from "node:child_process";
 
 // build-resources/canva-linux/project-root.ts
-var import_node_fs5 = __toESM(require("node:fs"));
-var import_node_path6 = __toESM(require("node:path"));
-function defaultRootSearchDir() {
-  return import_node_path6.default.resolve(__dirname, "../..");
+import fs5 from "node:fs";
+import path6 from "node:path";
+function isProjectRoot(dir) {
+  return fs5.existsSync(path6.join(dir, "package.json")) && fs5.existsSync(path6.join(dir, "build-resources/canva-linux/config/actions.json")) && fs5.existsSync(path6.join(dir, "build-resources/canva-linux/config/project-ui.json"));
 }
-function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
-  let current = import_node_path6.default.resolve(startDir);
+function scriptDirFromArgv() {
+  const scriptPath = process.argv[1];
+  if (!scriptPath) return null;
+  return path6.dirname(path6.resolve(scriptPath));
+}
+function searchUpwards(startDir) {
+  let current = path6.resolve(startDir);
   while (true) {
-    if (import_node_fs5.default.existsSync(import_node_path6.default.join(current, "package.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "build-resources/canva-linux/config/actions.json")) && import_node_fs5.default.existsSync(import_node_path6.default.join(current, "build-resources/canva-linux/config/project-ui.json"))) {
-      return current;
-    }
-    const parent = import_node_path6.default.dirname(current);
-    if (parent === current) return defaultRootSearchDir();
+    if (isProjectRoot(current)) return current;
+    const parent = path6.dirname(current);
+    if (parent === current) return null;
     current = parent;
   }
 }
+function defaultRootSearchDir() {
+  const fromEnv = process.env.CANVA_SCRIPT_REPO_ROOT;
+  if (fromEnv) return path6.resolve(fromEnv);
+  const fromScript = scriptDirFromArgv();
+  if (fromScript) {
+    const match = searchUpwards(fromScript);
+    if (match) return match;
+  }
+  return path6.resolve(process.cwd());
+}
+function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
+  const fromStart = searchUpwards(startDir);
+  if (fromStart) return fromStart;
+  return defaultRootSearchDir();
+}
 
 // build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments.ts
-var import_node_fs6 = __toESM(require("node:fs"));
-var import_node_path7 = __toESM(require("node:path"));
+import fs6 from "node:fs";
+import path7 from "node:path";
 var ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
 var ARTIFACT_PATH_COLLATOR = new Intl.Collator(void 0, {
   numeric: true,
@@ -20350,19 +20373,19 @@ var SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
   "*.pkg.tar.*"
 ];
 function readJsonFile(filePath) {
-  return JSON.parse(import_node_fs6.default.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs6.readFileSync(filePath, "utf8"));
 }
 function readPackageVersion(rootDir2) {
-  return readJsonFile(import_node_path7.default.join(rootDir2, "package.json")).version ?? "unknown";
+  return readJsonFile(path7.join(rootDir2, "package.json")).version ?? "unknown";
 }
 function loadArtifactWorkflows(rootDir2) {
-  const configPath = import_node_path7.default.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-  if (!import_node_fs6.default.existsSync(configPath)) return [];
+  const configPath = path7.join(rootDir2, ARTIFACTS_CONFIG_PATH);
+  if (!fs6.existsSync(configPath)) return [];
   const config = readJsonFile(configPath);
   return Array.isArray(config.workflows) ? config.workflows : [];
 }
 function normalizeConfigPath(configPath) {
-  return configPath.split(/[\\/]+/).filter(Boolean).join(import_node_path7.default.sep);
+  return configPath.split(/[\\/]+/).filter(Boolean).join(path7.sep);
 }
 function resolveOutputPattern(outputPattern, version) {
   return normalizeConfigPath(outputPattern.replaceAll("${version}", version));
@@ -20383,18 +20406,18 @@ function artifactKind(id, kind) {
 function candidatePathsForPattern(rootDir2, outputPattern) {
   const resolvedPattern = normalizeConfigPath(outputPattern);
   if (!resolvedPattern.includes("*")) {
-    const absolutePath = import_node_path7.default.join(rootDir2, resolvedPattern);
-    return import_node_fs6.default.existsSync(absolutePath) ? [absolutePath] : [];
+    const absolutePath = path7.join(rootDir2, resolvedPattern);
+    return fs6.existsSync(absolutePath) ? [absolutePath] : [];
   }
   const firstWildcard = resolvedPattern.indexOf("*");
-  const scanRootRelative = import_node_path7.default.dirname(resolvedPattern.slice(0, firstWildcard));
-  const scanRoot = import_node_path7.default.join(rootDir2, scanRootRelative || ".");
-  if (!import_node_fs6.default.existsSync(scanRoot)) return [];
+  const scanRootRelative = path7.dirname(resolvedPattern.slice(0, firstWildcard));
+  const scanRoot = path7.join(rootDir2, scanRootRelative || ".");
+  if (!fs6.existsSync(scanRoot)) return [];
   const matcher = patternToRegExp(resolvedPattern);
   const candidates = [];
-  for (const entry of import_node_fs6.default.readdirSync(scanRoot, { withFileTypes: true })) {
-    const absolutePath = import_node_path7.default.join(scanRoot, entry.name);
-    const relativePath = normalizeConfigPath(import_node_path7.default.relative(rootDir2, absolutePath));
+  for (const entry of fs6.readdirSync(scanRoot, { withFileTypes: true })) {
+    const absolutePath = path7.join(scanRoot, entry.name);
+    const relativePath = normalizeConfigPath(path7.relative(rootDir2, absolutePath));
     if (matcher.test(relativePath)) candidates.push(absolutePath);
   }
   return candidates.sort(ARTIFACT_PATH_COLLATOR.compare);
@@ -20429,12 +20452,12 @@ function normalizeMetadata(metadata) {
   };
 }
 function readVersionSidecar(filePath) {
-  const raw = import_node_fs6.default.readFileSync(filePath, "utf8").trim();
+  const raw = fs6.readFileSync(filePath, "utf8").trim();
   return raw ? { version: raw, fullVersion: raw } : {};
 }
 function readArtifactPackageJsonVersion(artifactPath) {
-  const packageJsonPath = import_node_path7.default.join(artifactPath, "package.json");
-  if (!import_node_fs6.default.existsSync(packageJsonPath)) return {};
+  const packageJsonPath = path7.join(artifactPath, "package.json");
+  if (!fs6.existsSync(packageJsonPath)) return {};
   const version = readJsonFile(packageJsonPath).version?.trim();
   return version ? { version, fullVersion: version } : {};
 }
@@ -20445,31 +20468,31 @@ function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
     `${artifactPath}.version`
   ];
   for (const sidecar of sidecars) {
-    if (!import_node_fs6.default.existsSync(sidecar)) continue;
+    if (!fs6.existsSync(sidecar)) continue;
     if (sidecar.endsWith(".json")) return normalizeMetadata(readMetadataJson(sidecar));
     return readVersionSidecar(sidecar);
   }
-  if (import_node_fs6.default.existsSync(artifactPath) && import_node_fs6.default.statSync(artifactPath).isDirectory()) {
+  if (fs6.existsSync(artifactPath) && fs6.statSync(artifactPath).isDirectory()) {
     const markers = [
-      import_node_path7.default.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
-      import_node_path7.default.join(artifactPath, "config/canva-linux/build-metadata.json"),
-      ...artifactKindValue === "linux-unpacked" ? [import_node_path7.default.join(rootDir2, "build-resources/canva-linux/config/build-metadata.json")] : []
+      path7.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
+      path7.join(artifactPath, "config/canva-linux/build-metadata.json"),
+      ...artifactKindValue === "linux-unpacked" ? [path7.join(rootDir2, "build-resources/canva-linux/config/build-metadata.json")] : []
     ];
     for (const marker of markers) {
-      if (import_node_fs6.default.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
+      if (fs6.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
     }
     return readArtifactPackageJsonVersion(artifactPath);
   }
   return {};
 }
 function inferVersionFromFilename(artifactPath, packageVersion) {
-  const name = import_node_path7.default.basename(artifactPath);
+  const name = path7.basename(artifactPath);
   if (name.includes(packageVersion)) return packageVersion;
   const match = name.match(/^canva-linux-([0-9][^-]*(?:[-+.][A-Za-z0-9.]+)*)-/);
   return match?.[1];
 }
 function toRelativeArtifactPath(rootDir2, artifactPath) {
-  return normalizeConfigPath(import_node_path7.default.relative(rootDir2, artifactPath));
+  return normalizeConfigPath(path7.relative(rootDir2, artifactPath));
 }
 function buildCanvaLinuxArtifactFragments(rootDir2) {
   void SUPPORTED_ARTIFACT_PATTERN_EXAMPLES;
@@ -20508,39 +20531,39 @@ function buildCanvaLinuxArtifactFragments(rootDir2) {
 }
 
 // build-resources/c420ui/operations/detection/appimage-detection.ts
-var import_node_fs8 = __toESM(require("node:fs"));
-var import_node_path8 = __toESM(require("node:path"));
+import fs8 from "node:fs";
+import path8 from "node:path";
 
 // build-resources/c420ui/operations/detection/version-marker.ts
-var import_node_fs7 = __toESM(require("node:fs"));
+import fs7 from "node:fs";
 function readVersionFile(versionFile) {
-  if (import_node_fs7.default.existsSync(versionFile)) {
-    return import_node_fs7.default.readFileSync(versionFile, "utf8").trim();
+  if (fs7.existsSync(versionFile)) {
+    return fs7.readFileSync(versionFile, "utf8").trim();
   }
   return "";
 }
 function readPackageJsonVersion(packageFile) {
-  if (!import_node_fs7.default.existsSync(packageFile)) return "";
+  if (!fs7.existsSync(packageFile)) return "";
   try {
-    const pkg = JSON.parse(import_node_fs7.default.readFileSync(packageFile, "utf8"));
+    const pkg = JSON.parse(fs7.readFileSync(packageFile, "utf8"));
     return pkg.version || "";
   } catch {
     return "";
   }
 }
 function readBuildMetadataFullVersion(metadataFile) {
-  if (!import_node_fs7.default.existsSync(metadataFile)) return "";
+  if (!fs7.existsSync(metadataFile)) return "";
   try {
-    const m = JSON.parse(import_node_fs7.default.readFileSync(metadataFile, "utf8"));
+    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
     return m.fullVersion || m.version || "";
   } catch {
     return "";
   }
 }
 function readBuildMetadataBaseVersion(metadataFile) {
-  if (!import_node_fs7.default.existsSync(metadataFile)) return "";
+  if (!fs7.existsSync(metadataFile)) return "";
   try {
-    const m = JSON.parse(import_node_fs7.default.readFileSync(metadataFile, "utf8"));
+    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
     return m.baseVersion || m.basePhase || m.version || "";
   } catch {
     return "";
@@ -20549,36 +20572,36 @@ function readBuildMetadataBaseVersion(metadataFile) {
 
 // build-resources/c420ui/operations/detection/appimage-detection.ts
 function detectAppImageArtifacts(rootDir2) {
-  const distDir = import_node_path8.default.join(rootDir2, "dist");
-  if (!import_node_fs8.default.existsSync(distDir)) return false;
+  const distDir = path8.join(rootDir2, "dist");
+  if (!fs8.existsSync(distDir)) return false;
   try {
-    const files = import_node_fs8.default.readdirSync(distDir);
+    const files = fs8.readdirSync(distDir);
     return files.some((file) => file.endsWith(".AppImage"));
   } catch {
     return false;
   }
 }
 function findLatestAppImageArtifact(rootDir2) {
-  const distDir = import_node_path8.default.join(rootDir2, "dist");
-  if (!import_node_fs8.default.existsSync(distDir)) return "";
+  const distDir = path8.join(rootDir2, "dist");
+  if (!fs8.existsSync(distDir)) return "";
   try {
-    const files = import_node_fs8.default.readdirSync(distDir).filter((file) => file.endsWith(".AppImage")).sort();
+    const files = fs8.readdirSync(distDir).filter((file) => file.endsWith(".AppImage")).sort();
     const latest = files[files.length - 1];
-    return latest ? import_node_path8.default.join("dist", latest) : "";
+    return latest ? path8.join("dist", latest) : "";
   } catch {
     return "";
   }
 }
 function findArtifactBuildMetadataMarker(artifactPath, rootDir2) {
   if (!artifactPath) return "";
-  const absoluteArtifactPath = import_node_path8.default.isAbsolute(artifactPath) ? artifactPath : import_node_path8.default.join(rootDir2, artifactPath);
+  const absoluteArtifactPath = path8.isAbsolute(artifactPath) ? artifactPath : path8.join(rootDir2, artifactPath);
   const markers = [
     `${absoluteArtifactPath}.build-metadata.json`,
     `${absoluteArtifactPath}.version.json`,
     `${absoluteArtifactPath}.version`
   ];
   for (const marker of markers) {
-    if (import_node_fs8.default.existsSync(marker)) return marker;
+    if (fs8.existsSync(marker)) return marker;
   }
   return "";
 }
@@ -20590,9 +20613,9 @@ function detectAppImageVersion(rootDir2) {
   const findMetadataInDist = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = import_node_fs8.default.readdirSync(dir, { withFileTypes: true });
+      const entries = fs8.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
-        const fullPath = import_node_path8.default.join(dir, entry.name);
+        const fullPath = path8.join(dir, entry.name);
         if (entry.isDirectory()) {
           const found = findMetadataInDist(fullPath, depth + 1);
           if (found) return found;
@@ -20604,14 +20627,14 @@ function detectAppImageVersion(rootDir2) {
     }
     return "";
   };
-  const distDir = import_node_path8.default.join(rootDir2, "dist");
-  if (import_node_fs8.default.existsSync(distDir)) {
+  const distDir = path8.join(rootDir2, "dist");
+  if (fs8.existsSync(distDir)) {
     const distMetadata = findMetadataInDist(distDir, 0);
     version = readBuildMetadataBaseVersion(distMetadata);
     if (version) return version;
   }
   if (!file) return "";
-  const name = import_node_path8.default.basename(file);
+  const name = path8.basename(file);
   const match = name.match(
     /^canva-linux-([0-9]+\.[0-9]+\.[0-9]+[-+.a-zA-Z0-9]*)-[^-]+\.AppImage$/
   );
@@ -20625,9 +20648,9 @@ function detectAppImageFullVersion(rootDir2) {
   const findMetadataInDist = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = import_node_fs8.default.readdirSync(dir, { withFileTypes: true });
+      const entries = fs8.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
-        const fullPath = import_node_path8.default.join(dir, entry.name);
+        const fullPath = path8.join(dir, entry.name);
         if (entry.isDirectory()) {
           const found = findMetadataInDist(fullPath, depth + 1);
           if (found) return found;
@@ -20639,8 +20662,8 @@ function detectAppImageFullVersion(rootDir2) {
     }
     return "";
   };
-  const distDir = import_node_path8.default.join(rootDir2, "dist");
-  if (import_node_fs8.default.existsSync(distDir)) {
+  const distDir = path8.join(rootDir2, "dist");
+  if (fs8.existsSync(distDir)) {
     const distMetadata = findMetadataInDist(distDir, 0);
     version = readBuildMetadataFullVersion(distMetadata);
     if (version) return version;
@@ -20649,14 +20672,14 @@ function detectAppImageFullVersion(rootDir2) {
 }
 
 // build-resources/c420ui/operations/detection/flatpak-detection.ts
-var import_node_fs9 = __toESM(require("node:fs"));
-var import_node_path9 = __toESM(require("node:path"));
-var import_node_os = __toESM(require("node:os"));
-var import_node_child_process5 = require("node:child_process");
+import fs9 from "node:fs";
+import path9 from "node:path";
+import os from "node:os";
+import { spawnSync as spawnSync4 } from "node:child_process";
 var APP_ID = "io.github.coletivo420.canva-linux";
 function detectFlatpakSystemInstall() {
   try {
-    const result = (0, import_node_child_process5.spawnSync)("flatpak", ["--system", "info", APP_ID], {
+    const result = spawnSync4("flatpak", ["--system", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -20666,7 +20689,7 @@ function detectFlatpakSystemInstall() {
 }
 function detectFlatpakUserInstall() {
   try {
-    const result = (0, import_node_child_process5.spawnSync)("flatpak", ["--user", "info", APP_ID], {
+    const result = spawnSync4("flatpak", ["--user", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -20676,16 +20699,16 @@ function detectFlatpakUserInstall() {
 }
 function findFlatpakVersionMarker(scopeRoot) {
   const markerBase = `app/${APP_ID}/current/active/files/share/canva-linux/version`;
-  const directPath = import_node_path9.default.join(scopeRoot, markerBase);
-  if (import_node_fs9.default.existsSync(directPath)) return directPath;
-  const appDir = import_node_path9.default.join(scopeRoot, `app/${APP_ID}`);
-  if (!import_node_fs9.default.existsSync(appDir)) return "";
+  const directPath = path9.join(scopeRoot, markerBase);
+  if (fs9.existsSync(directPath)) return directPath;
+  const appDir = path9.join(scopeRoot, `app/${APP_ID}`);
+  if (!fs9.existsSync(appDir)) return "";
   const findVersionMarker = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = import_node_fs9.default.readdirSync(dir, { withFileTypes: true });
+      const entries = fs9.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
-        const fullPath = import_node_path9.default.join(dir, entry.name);
+        const fullPath = path9.join(dir, entry.name);
         if (entry.isDirectory()) {
           const found = findVersionMarker(fullPath, depth + 1);
           if (found) return found;
@@ -20700,9 +20723,9 @@ function findFlatpakVersionMarker(scopeRoot) {
   return findVersionMarker(appDir, 0);
 }
 function readFlatpakVersionMarkerKey(markerFile, key) {
-  if (!import_node_fs9.default.existsSync(markerFile)) return "";
+  if (!fs9.existsSync(markerFile)) return "";
   try {
-    const raw = import_node_fs9.default.readFileSync(markerFile, "utf8").trim();
+    const raw = fs9.readFileSync(markerFile, "utf8").trim();
     if (!raw) return "";
     if (raw.includes(`"${key}"`)) {
       const match = raw.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
@@ -20713,17 +20736,17 @@ function readFlatpakVersionMarkerKey(markerFile, key) {
   return "";
 }
 function readFlatpakVersionMarker(markerFile) {
-  if (!import_node_fs9.default.existsSync(markerFile)) return "";
+  if (!fs9.existsSync(markerFile)) return "";
   const version = readFlatpakVersionMarkerKey(markerFile, "version");
   if (version) return version;
   try {
-    return import_node_fs9.default.readFileSync(markerFile, "utf8").split("\n")[0]?.trim() ?? "";
+    return fs9.readFileSync(markerFile, "utf8").split("\n")[0]?.trim() ?? "";
   } catch {
     return "";
   }
 }
 function readFlatpakFullVersionMarker(markerFile) {
-  if (!import_node_fs9.default.existsSync(markerFile)) return "";
+  if (!fs9.existsSync(markerFile)) return "";
   const version = readFlatpakVersionMarkerKey(markerFile, "fullVersion");
   if (version) return version;
   return readFlatpakVersionMarker(markerFile);
@@ -20733,7 +20756,7 @@ function detectFlatpakSystemVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = (0, import_node_child_process5.spawnSync)(
+    const result = spawnSync4(
       "flatpak",
       ["--system", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }
@@ -20744,14 +20767,14 @@ function detectFlatpakSystemVersion() {
   }
 }
 function detectFlatpakUserVersion() {
-  const home = import_node_os.default.homedir();
+  const home = os.homedir();
   const marker = findFlatpakVersionMarker(
-    import_node_path9.default.join(home, ".local/share/flatpak")
+    path9.join(home, ".local/share/flatpak")
   );
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = (0, import_node_child_process5.spawnSync)(
+    const result = spawnSync4(
       "flatpak",
       ["--user", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }
@@ -20768,9 +20791,9 @@ function detectFlatpakSystemFullVersion() {
   return detectFlatpakSystemVersion();
 }
 function detectFlatpakUserFullVersion() {
-  const home = import_node_os.default.homedir();
+  const home = os.homedir();
   const marker = findFlatpakVersionMarker(
-    import_node_path9.default.join(home, ".local/share/flatpak")
+    path9.join(home, ".local/share/flatpak")
   );
   const version = readFlatpakFullVersionMarker(marker);
   if (version) return version;
@@ -20778,18 +20801,18 @@ function detectFlatpakUserFullVersion() {
 }
 
 // build-resources/c420ui/operations/detection/native-detection.ts
-var import_node_fs10 = __toESM(require("node:fs"));
-var import_node_path10 = __toESM(require("node:path"));
-var import_node_os2 = __toESM(require("node:os"));
+import fs10 from "node:fs";
+import path10 from "node:path";
+import os2 from "node:os";
 var APP_EXECUTABLE = "canva-linux";
 var APP_NATIVE_DESKTOP_NAME = "io.github.coletivo420.canva-linux.native.desktop";
 function detectNativeSystemInstall() {
-  return import_node_fs10.default.existsSync("/opt/canva-linux") || import_node_fs10.default.existsSync(`/usr/local/bin/${APP_EXECUTABLE}`) || import_node_fs10.default.existsSync(`/usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME}`);
+  return fs10.existsSync("/opt/canva-linux") || fs10.existsSync(`/usr/local/bin/${APP_EXECUTABLE}`) || fs10.existsSync(`/usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME}`);
 }
 function detectNativeUserInstall() {
-  const home = import_node_os2.default.homedir();
-  return import_node_fs10.default.existsSync(import_node_path10.default.join(home, ".local/opt/canva-linux")) || import_node_fs10.default.existsSync(import_node_path10.default.join(home, `.local/bin/${APP_EXECUTABLE}`)) || import_node_fs10.default.existsSync(
-    import_node_path10.default.join(home, `.local/share/applications/${APP_NATIVE_DESKTOP_NAME}`)
+  const home = os2.homedir();
+  return fs10.existsSync(path10.join(home, ".local/opt/canva-linux")) || fs10.existsSync(path10.join(home, `.local/bin/${APP_EXECUTABLE}`)) || fs10.existsSync(
+    path10.join(home, `.local/share/applications/${APP_NATIVE_DESKTOP_NAME}`)
   );
 }
 function detectNativeSystemVersion() {
@@ -20802,17 +20825,17 @@ function detectNativeSystemVersion() {
   return readPackageJsonVersion("/opt/canva-linux/package.json");
 }
 function detectNativeUserVersion() {
-  const home = import_node_os2.default.homedir();
+  const home = os2.homedir();
   let version = readBuildMetadataBaseVersion(
-    import_node_path10.default.join(home, ".local/opt/canva-linux/config/canva-linux/build-metadata.json")
+    path10.join(home, ".local/opt/canva-linux/config/canva-linux/build-metadata.json")
   );
   if (version) return version;
   version = readVersionFile(
-    import_node_path10.default.join(home, ".local/opt/canva-linux/CANVA_LINUX_VERSION")
+    path10.join(home, ".local/opt/canva-linux/CANVA_LINUX_VERSION")
   );
   if (version) return version;
   return readPackageJsonVersion(
-    import_node_path10.default.join(home, ".local/opt/canva-linux/package.json")
+    path10.join(home, ".local/opt/canva-linux/package.json")
   );
 }
 function detectNativeSystemFullVersion() {
@@ -20823,9 +20846,9 @@ function detectNativeSystemFullVersion() {
   return detectNativeSystemVersion();
 }
 function detectNativeUserFullVersion() {
-  const home = import_node_os2.default.homedir();
+  const home = os2.homedir();
   const version = readBuildMetadataFullVersion(
-    import_node_path10.default.join(home, ".local/opt/canva-linux/config/canva-linux/build-metadata.json")
+    path10.join(home, ".local/opt/canva-linux/config/canva-linux/build-metadata.json")
   );
   if (version) return version;
   return detectNativeUserVersion();
@@ -20859,7 +20882,7 @@ function readPackage(rootDir2) {
     return cachedPackageJson.packageJson;
   }
   const packageJson = JSON.parse(
-    import_node_fs11.default.readFileSync(import_node_path11.default.join(rootDir2, "package.json"), "utf8")
+    fs11.readFileSync(path11.join(rootDir2, "package.json"), "utf8")
   );
   cachedPackageJson = {
     rootDir: rootDir2,
@@ -20888,7 +20911,7 @@ var readNpmVersion = /* @__PURE__ */ (() => {
     }
     attempted = true;
     try {
-      cached = (0, import_node_child_process6.execFileSync)("npm", ["--version"], { encoding: "utf8" }).trim();
+      cached = execFileSync("npm", ["--version"], { encoding: "utf8" }).trim();
       return cached;
     } catch {
       return void 0;
@@ -20913,9 +20936,9 @@ var emptyInstallations = {
   appImageFullVersion: ""
 };
 function readPhase(rootDir2) {
-  const phaseFile = import_node_path11.default.join(rootDir2, "scripts/app-identity-common.sh");
-  if (!import_node_fs11.default.existsSync(phaseFile)) return "unknown";
-  const content = import_node_fs11.default.readFileSync(phaseFile, "utf8");
+  const phaseFile = path11.join(rootDir2, "scripts/app-identity-common.sh");
+  if (!fs11.existsSync(phaseFile)) return "unknown";
+  const content = fs11.readFileSync(phaseFile, "utf8");
   const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
   return match?.[1] ?? "unknown";
 }
@@ -21008,16 +21031,16 @@ function buildCanvaLinuxOverviewStatus(rootDir2 = findCanvaLinuxProjectRoot()) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/build-metadata-loader.ts
-var import_node_child_process7 = require("node:child_process");
-var import_node_fs12 = __toESM(require("node:fs"));
-var import_node_module = require("node:module");
-var import_node_path12 = __toESM(require("node:path"));
+import { execFileSync as execFileSync2 } from "node:child_process";
+import fs12 from "node:fs";
+import { createRequire } from "node:module";
+import path12 from "node:path";
 var UNKNOWN_BASE_VERSION = "0.0.0";
 var UNKNOWN_BUILD_REVISION = "unknown";
 function loadBuildMetadataModule(rootDir2) {
-  const requireFromRoot = (0, import_node_module.createRequire)(import_node_path12.default.join(rootDir2, "package.json"));
-  const compiledModule = import_node_path12.default.join(rootDir2, ".build/electron/main/build-metadata.js");
-  if (!import_node_fs12.default.existsSync(compiledModule)) return null;
+  const requireFromRoot = createRequire(path12.join(rootDir2, "package.json"));
+  const compiledModule = path12.join(rootDir2, ".build/electron/main/build-metadata.js");
+  if (!fs12.existsSync(compiledModule)) return null;
   try {
     return requireFromRoot(compiledModule);
   } catch {
@@ -21026,13 +21049,13 @@ function loadBuildMetadataModule(rootDir2) {
 }
 function readJsonFile2(filePath) {
   try {
-    return JSON.parse(import_node_fs12.default.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs12.readFileSync(filePath, "utf8"));
   } catch {
     return null;
   }
 }
 function hasGitRepository(rootDir2) {
-  return import_node_fs12.default.existsSync(import_node_path12.default.join(rootDir2, ".git"));
+  return fs12.existsSync(path12.join(rootDir2, ".git"));
 }
 function resolveEnvBuildRevision() {
   for (const key of [
@@ -21049,7 +21072,7 @@ function resolveEnvBuildRevision() {
 function resolveGitBuildRevision(rootDir2) {
   if (!hasGitRepository(rootDir2)) return null;
   try {
-    const value = (0, import_node_child_process7.execFileSync)("git", ["rev-parse", "--short=7", "HEAD"], {
+    const value = execFileSync2("git", ["rev-parse", "--short=7", "HEAD"], {
       cwd: rootDir2,
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"]
@@ -21060,9 +21083,9 @@ function resolveGitBuildRevision(rootDir2) {
   }
 }
 function createSourceMetadata(rootDir2, buildRevision, metadataModule) {
-  const packageJson = readJsonFile2(import_node_path12.default.join(rootDir2, "package.json"));
+  const packageJson = readJsonFile2(path12.join(rootDir2, "package.json"));
   const projectUi = readJsonFile2(
-    import_node_path12.default.join(rootDir2, "build-resources", "canva-linux", "config", "project-ui.json")
+    path12.join(rootDir2, "build-resources", "canva-linux", "config", "project-ui.json")
   );
   if (!packageJson?.version || !projectUi?.displayVersion || !projectUi?.phase) {
     return null;
@@ -21076,21 +21099,21 @@ function createSourceMetadata(rootDir2, buildRevision, metadataModule) {
 }
 function loadPackagedMetadata(rootDir2, metadataModule) {
   const metadata = readJsonFile2(
-    import_node_path12.default.join(rootDir2, "build-resources", "canva-linux", "config", "build-metadata.json")
+    path12.join(rootDir2, "build-resources", "canva-linux", "config", "build-metadata.json")
   );
   if (!metadata) return null;
   return metadataModule.normalizeLoadedBuildMetadata(metadata);
 }
 function loadEffectiveFileMetadata(rootDir2, metadataModule) {
   const metadata = readJsonFile2(
-    import_node_path12.default.join(rootDir2, ".build", "canva-linux", "build-metadata.effective.json")
+    path12.join(rootDir2, ".build", "canva-linux", "build-metadata.effective.json")
   );
   if (!metadata) return null;
   return metadataModule.normalizeLoadedBuildMetadata(metadata);
 }
 function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule) {
-  const module2 = metadataModule ?? loadBuildMetadataModule(import_node_path12.default.resolve(rootDir2));
-  if (!module2) {
+  const module = metadataModule ?? loadBuildMetadataModule(path12.resolve(rootDir2));
+  if (!module) {
     return {
       baseVersion: UNKNOWN_BASE_VERSION,
       baseDisplayVersion: UNKNOWN_BASE_VERSION,
@@ -21105,7 +21128,7 @@ function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule
       fullVersion: UNKNOWN_BASE_VERSION
     };
   }
-  return module2.createBuildMetadata({
+  return module.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
     baseDisplayVersion: UNKNOWN_BASE_VERSION,
     basePhase: UNKNOWN_BASE_VERSION,
@@ -21113,15 +21136,15 @@ function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule
   });
 }
 function loadEffectiveBuildMetadata(rootDir2) {
-  const resolvedRootDir = import_node_path12.default.resolve(rootDir2);
+  const resolvedRootDir = path12.resolve(rootDir2);
   const metadataModule = loadBuildMetadataModule(resolvedRootDir);
   if (!metadataModule) {
     const effective2 = readJsonFile2(
-      import_node_path12.default.join(resolvedRootDir, ".build", "canva-linux", "build-metadata.effective.json")
+      path12.join(resolvedRootDir, ".build", "canva-linux", "build-metadata.effective.json")
     );
     if (effective2) return effective2;
     const packaged = readJsonFile2(
-      import_node_path12.default.join(resolvedRootDir, "build-resources", "canva-linux", "config", "build-metadata.json")
+      path12.join(resolvedRootDir, "build-resources", "canva-linux", "config", "build-metadata.json")
     );
     return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
   }
@@ -21141,12 +21164,12 @@ function loadEffectiveBuildMetadata(rootDir2) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
-var import_node_fs14 = __toESM(require("node:fs"));
-var import_node_path14 = __toESM(require("node:path"));
+import fs14 from "node:fs";
+import path14 from "node:path";
 
 // build-resources/canva-linux/actions/registry.ts
-var import_node_fs13 = __toESM(require("node:fs"));
-var import_node_path13 = __toESM(require("node:path"));
+import fs13 from "node:fs";
+import path13 from "node:path";
 var ACTION_GROUPS = ["install", "development", "maintenance"];
 var ACTION_SECTIONS = [
   "Install",
@@ -21164,7 +21187,7 @@ function findProjectRoot(startDir) {
   return findCanvaLinuxProjectRoot(startDir);
 }
 function actionsPath(rootDir2 = findProjectRoot()) {
-  return import_node_path13.default.join(rootDir2, "build-resources/canva-linux/config/actions.json");
+  return path13.join(rootDir2, "build-resources/canva-linux/config/actions.json");
 }
 function validateCanvaLinuxGroupSection(action) {
   if (action.group === "install" && action.section !== "Install") {
@@ -21189,10 +21212,10 @@ function validateCanvaLinuxActions(actions) {
   }
 }
 function loadCanvaLinuxActionRegistry(rootDir2 = findProjectRoot()) {
-  const resolvedRoot = import_node_path13.default.resolve(rootDir2);
+  const resolvedRoot = path13.resolve(rootDir2);
   if (cachedActions && cachedRoot === resolvedRoot) return cachedActions;
   const actions = JSON.parse(
-    import_node_fs13.default.readFileSync(actionsPath(resolvedRoot), "utf8")
+    fs13.readFileSync(actionsPath(resolvedRoot), "utf8")
   );
   validateCanvaLinuxActions(actions);
   cachedRoot = resolvedRoot;
@@ -21227,11 +21250,11 @@ function loadCanvaLinuxC420UIActions(rootDir2) {
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
 var ARTIFACTS_CONFIG_PATH2 = "build-resources/canva-linux/config/artifacts.json";
 function readJsonFile3(filePath) {
-  if (!import_node_fs14.default.existsSync(filePath)) {
+  if (!fs14.existsSync(filePath)) {
     throw new Error(`Missing Canva Linux configuration file: ${filePath}`);
   }
   try {
-    return JSON.parse(import_node_fs14.default.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs14.readFileSync(filePath, "utf8"));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to parse configuration file ${filePath}: ${message}`);
@@ -21240,7 +21263,7 @@ function readJsonFile3(filePath) {
 var cachedArtifactsConfig = null;
 var cachedArtifactsConfigPath = null;
 function loadArtifactsConfig(rootDir2) {
-  const configPath = import_node_path14.default.join(rootDir2, ARTIFACTS_CONFIG_PATH2);
+  const configPath = path14.join(rootDir2, ARTIFACTS_CONFIG_PATH2);
   if (cachedArtifactsConfig && cachedArtifactsConfigPath === configPath) {
     return cachedArtifactsConfig;
   }
@@ -21265,13 +21288,13 @@ function loadCanvaLinuxArtifactWorkflows(rootDir2, version) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/development.ts
-var import_node_fs15 = __toESM(require("node:fs"));
-var import_node_path15 = __toESM(require("node:path"));
+import fs15 from "node:fs";
+import path15 from "node:path";
 function readJsonFile4(filePath) {
-  return JSON.parse(import_node_fs15.default.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs15.readFileSync(filePath, "utf8"));
 }
 function loadCanvaLinuxDevelopmentTasks(rootDir2) {
-  const developmentConfigPath = import_node_path15.default.join(
+  const developmentConfigPath = path15.join(
     rootDir2,
     "build-resources/canva-linux/config/development.json"
   );
@@ -21304,11 +21327,11 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir2, actions = loadCanvaLinuxC4
 
 // build-resources/canva-linux/c420ui-adapter/adapter.ts
 function readJsonFile5(filePath) {
-  return JSON.parse(import_node_fs16.default.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs16.readFileSync(filePath, "utf8"));
 }
 function readAppIdentity(identityPath) {
   try {
-    const content = import_node_fs16.default.readFileSync(identityPath, "utf8");
+    const content = fs16.readFileSync(identityPath, "utf8");
     return {
       projectDisplayVersion: content.match(/^PROJECT_DISPLAY_VERSION="([^"]+)"/m)?.[1],
       projectPhase: content.match(/^PROJECT_PHASE="([^"]+)"/m)?.[1]
@@ -21320,23 +21343,23 @@ function readAppIdentity(identityPath) {
 function stateHome() {
   const xdgStateHome = process.env.XDG_STATE_HOME?.trim();
   if (xdgStateHome) return xdgStateHome;
-  return import_node_path16.default.join(process.env.HOME || ".", ".local/state");
+  return path16.join(process.env.HOME || ".", ".local/state");
 }
 function createCanvaLinuxC420UIAdapter(rootDir2) {
-  const resolvedRootDir = import_node_path16.default.resolve(rootDir2);
-  const projectUiPath = import_node_path16.default.join(resolvedRootDir, "build-resources/canva-linux/config/project-ui.json");
-  const packageJsonPath = import_node_path16.default.join(resolvedRootDir, "package.json");
-  const actionsJsonPath = import_node_path16.default.join(resolvedRootDir, "build-resources/canva-linux/config/actions.json");
-  const artifactsJsonPath = import_node_path16.default.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
-  const appIdentityPath = import_node_path16.default.join(
+  const resolvedRootDir = path16.resolve(rootDir2);
+  const projectUiPath = path16.join(resolvedRootDir, "build-resources/canva-linux/config/project-ui.json");
+  const packageJsonPath = path16.join(resolvedRootDir, "package.json");
+  const actionsJsonPath = path16.join(resolvedRootDir, "build-resources/canva-linux/config/actions.json");
+  const artifactsJsonPath = path16.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
+  const appIdentityPath = path16.join(
     resolvedRootDir,
     "scripts/app-identity-common.sh"
   );
-  const buildMetadataPath = import_node_path16.default.join(
+  const buildMetadataPath = path16.join(
     resolvedRootDir,
     "build-resources/canva-linux/config/build-metadata.json"
   );
-  const c420uiPackageJsonPath = import_node_path16.default.join(
+  const c420uiPackageJsonPath = path16.join(
     resolvedRootDir,
     "build-resources/c420ui/package.json"
   );
@@ -21414,7 +21437,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   function getSessionLogPath() {
     const fromEnv = process.env.CANVA_TOOL_SESSION_LOG?.trim();
     if (fromEnv) return fromEnv;
-    return import_node_path16.default.join(
+    return path16.join(
       stateHome(),
       loadProjectUi().stateDirectoryName,
       "tool-session.log"
@@ -21427,7 +21450,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return toolSettingsPath(loadProjectUi().stateDirectoryName);
   }
   function loadCanvaLinuxActions2() {
-    if (!import_node_fs16.default.existsSync(actionsJsonPath)) {
+    if (!fs16.existsSync(actionsJsonPath)) {
       throw new Error(`Missing Canva Linux actions registry: ${actionsJsonPath}`);
     }
     return loadCanvaLinuxC420UIActions(resolvedRootDir);
@@ -21554,12 +21577,12 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/dependencies.ts
-var import_node_fs17 = __toESM(require("node:fs"));
-var import_node_path17 = __toESM(require("node:path"));
+import fs17 from "node:fs";
+import path17 from "node:path";
 function loadCanvaLinuxDependencyConfig(rootDir2) {
   const relativeConfigPath = "build-resources/canva-linux/config/dependencies.json";
-  const configPath = import_node_path17.default.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(import_node_fs17.default.readFileSync(configPath, "utf8")));
+  const configPath = path17.join(rootDir2, relativeConfigPath);
+  return validateC420UIHostDependencyConfig(JSON.parse(fs17.readFileSync(configPath, "utf8")));
 }
 function ensureCanvaLinuxHostDependencies(options) {
   return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
@@ -21680,7 +21703,6 @@ if (/run-c420ui\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
     process.exit(1);
   });
 }
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
+export {
   main
-});
+};

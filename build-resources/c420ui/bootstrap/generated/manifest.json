@@ -8,26 +8,25 @@
   "dependentProjectFullVersion": "0.1.4-15.Dev.11",
   "dependentProjectDisplayVersion": "0.1.4-15.Dev",
   "dependentProjectPhase": "0.1.4-15.Dev.11",
-  "entrypoint": "run-c420ui.cjs",
-  "cliEntrypoint": "run-c420ui-cli.cjs",
+  "entrypoint": "run-c420ui.mjs",
+  "cliEntrypoint": "run-c420ui-cli.mjs",
   "entrypoints": {
-    "ui": "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
-    "cli": "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-    "builder": "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs"
+    "ui": "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
+    "cli": "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs",
+    "builder": "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs"
   },
   "requiresNode": ">=22.0.0",
   "buildRecipe": "build-resources/c420ui/scripts/build-bootstrap.ts",
   "buildTool": "esbuild",
   "buildTarget": "node22",
-  "bundleFormat": "cjs",
-  "moduleFormat": "commonjs",
-  "futureModuleFormat": "esm",
+  "bundleFormat": "esm",
+  "moduleFormat": "esm",
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "c420uiSourceHashAlgorithm": "sha256",
-  "c420uiSourceHash": "sha256:5f677d3174a846caf25a5ec68bc30f3d26b406e66d3d52744a473c05290077be",
-  "canvaLinuxSourceHash": "sha256:ce4877334779072633299ae1407f2b6224e827a2602daae88802c9c6975ffbae",
-  "combinedSourceHash": "sha256:1400dd87cf26bf349c2262b1b6c7a6d25e7d24f481a5f6020a53b00b2bb7f087",
+  "c420uiSourceHash": "sha256:f5d717ea69c47f4ef0a769e1dbbdaa2fc1cfeea8eef7585597fa29266a5ee46a",
+  "canvaLinuxSourceHash": "sha256:09c5c80e6f18893e51c5982bed8a7c0f2082bbc3ffd080a902c21b781719ad15",
+  "combinedSourceHash": "sha256:c92c869afa889643b2d960b3937b03be7affb6b55cf5448e546164d257cabcfa",
   "c420uiSourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",
@@ -39,8 +38,8 @@
     "build-resources/c420ui/package.json"
   ],
   "artifactHashes": {
-    "run-c420ui.cjs": "sha256:1d13c648c0fb881c05ad4d01d5b7de970c21cda9462a64ac7cc4db9d2324f5de",
-    "run-c420ui-cli.cjs": "sha256:d575f11470c8193dbdba355f551b6c7c7452605fa34f31b9a662ed2194582870",
-    "c420ui-builder.cjs": "sha256:84e7d48712aa52d9415d2d889a4ef86994f2d3443f09cbfc8bae2ad5bb8ba5b6"
+    "run-c420ui.mjs": "sha256:4100464c5435d6f086b26940e23ca555aad6a22f2362a681dfaa8a50c6bfe495",
+    "run-c420ui-cli.mjs": "sha256:987dd1deaaece8154e0d1b999d9da7068cd7d9d7e889427ca2b54c0cf5817876",
+    "c420ui-builder.mjs": "sha256:a57a9df41f5d827ad402cc9dd5a13778e3f4e189eaeb5a28058ea5ff3688569f"
   }
 }

@@ -15,7 +15,7 @@ project data; c420ui owns reusable orchestration.
 Dev11 is ESM-only by target.
 Maintained TypeScript source must use ESM imports/exports.
 CommonJS source patterns are migration regressions; `.cjs` is temporary migration output only during Dev11.
-At Dev11 close, `futureModuleFormat` must become `moduleFormat` in bootstrap policy.
+Dev11 bootstrap policy now requires `moduleFormat: esm` and ESM `.mjs` entrypoints.
 
 ## Runtime CLI ownership
 
@@ -76,7 +76,7 @@ The `canva-linux-c420ui-builder` launcher contains a Stage 0 bootstrap only to m
 
 ## Stage 0 c420ui bootstrap
 
-`canva-linux-c420ui-builder` now treats `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` as the primary interactive c420ui entrypoint and `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs` as the primary direct-action entrypoint. The `.build/scripts` files remain development fallbacks only when the generated bootstrap artifacts are absent.
+`canva-linux-c420ui-builder` now treats `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs` as the primary interactive c420ui entrypoint and `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs` as the primary direct-action entrypoint. The `.build/scripts` files remain development fallbacks only when the generated bootstrap artifacts are absent.
 
 A release checkout must start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The bundle may include the c420ui engine and the minimum Canva Linux adapter code that reads `build-resources/canva-linux/config`, but it must not embed the full dependent-project dependency policy. c420ui takes over dependency validation and repair after startup.
 
@@ -89,7 +89,7 @@ The c420ui bootstrap manifest must keep engine identity and dependent-project id
 
 ## Dependency repair inside the UI
 
-The Canva Linux interactive launcher starts `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` first. Dependency validation and repair for
+The Canva Linux interactive launcher starts `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs` first. Dependency validation and repair for
 Canva Linux are wired through the c420ui startup task in `build-resources/canva-linux/c420ui-adapter/run.ts`, so a clean checkout can open the
 UI before any dependent-project npm repair is attempted.
 

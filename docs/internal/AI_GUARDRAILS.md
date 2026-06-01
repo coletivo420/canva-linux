@@ -11,7 +11,7 @@
   `createRequire()`, `require.resolve()`, and `node:module` createRequire
   adapters.
 - CommonJS may exist only as temporary migration output during Dev11.
-- No generated `.cjs` bootstrap should remain required at the end of Dev11.
+- Generated bootstrap artifacts are now ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
 - Node tooling generated outputs moved to ESM `.mjs` under `.build/scripts/`.
 - Core and c420ui checks generated outputs moved to ESM `.mjs`.
 - c420ui terminal generated output moved to ESM `.mjs`.
@@ -114,13 +114,13 @@ The c420ui builder/runtime must auto-generate missing or stale bootstrap bundles
 Normal users only need npm installed and must not be instructed to run `npm run build:c420ui-bootstrap` manually for normal builder startup.
 Validation gates remain check-only and must still fail when committed bootstrap artifacts are stale.
 
-build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
+build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
 output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
 on every committed bootstrap entrypoint.
 Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
@@ -136,13 +136,13 @@ dirtying the worktree with a not-yet-materialized commit hash.
 To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
 `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
-The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
+The c420ui bootstrap check must fail if run-c420ui.mjs has syntax errors, stale generated output,
 malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 
 
 Any change to c420ui startup sources, the Canva Linux adapter, dependent-project configs, Canva Linux action or detection scripts,
 c420ui package metadata, the bootstrap hash helper, or the bootstrap builder must regenerate the bootstrap bundle with
-`npm run build:c420ui-bootstrap`. Do not manually edit generated bootstrap `.cjs` files. Do not leave
+`npm run build:c420ui-bootstrap`. Do not manually edit generated bootstrap `.mjs` files. Do not leave
 `build-resources/c420ui/bootstrap/generated/manifest.json` with a stale `sourceHash`; run `npm run check:c420ui-bootstrap` before handing off release changes.
 
 ## Language and future i18n
@@ -376,7 +376,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not narrow the c420ui CLI entrypoint freshness check to a small hardcoded list of files.
 - The builder command must rebuild the c420ui CLI bridge when `build-resources/c420ui/src`, `build-resources/canva-linux/c420ui-adapter`,
   `build-resources/c420ui/src/terminal`, action registry metadata or project UI metadata changes.
-- Builder parser tests must not execute real project actions; use a stubbed `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs`.
+- Builder parser tests must not execute real project actions; use a stubbed `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs`.
 - Only one direct action may execute per invocation.
 - Dangerous or confirmation-required direct actions must not execute without `--yes`.
 - Privileged direct actions must run root/sudo preflight before backend scripts start.
@@ -566,7 +566,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 ## c420ui bootstrap guardrails
 
-Do not edit `build-resources/c420ui/bootstrap/generated/*.cjs` by hand. They are generated artifacts built from TypeScript sources with
+Do not edit `build-resources/c420ui/bootstrap/generated/*.mjs` by hand. They are generated artifacts built from TypeScript sources with
 `npm run build:c420ui-bootstrap` and kept in the repository so a clean checkout can start c420ui without local npm dependencies.
 
 Do not add `npm install`, `npm ci`, or legacy npm dependency helpers to `canva-linux-c420ui-builder`. The builder command is Stage 0 only:

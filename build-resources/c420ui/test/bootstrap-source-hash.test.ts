@@ -59,11 +59,11 @@ test("c420ui source hash ignores include generated bootstrap outputs", () => {
 test("ignores build-resources/c420ui/bootstrap/generated", () => {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-source-hash-"));
   fs.mkdirSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "generated"), { recursive: true });
-  fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.cjs"), "module.exports = 1;\n");
+  fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.mjs"), "module.exports = 1;\n");
   fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "build-recipe.ts"), "export const marker = 1;\n");
 
   const files = collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/bootstrap"]);
-  assert.equal(files.includes("build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"), false);
+  assert.equal(files.includes("build-resources/c420ui/bootstrap/generated/run-c420ui.mjs"), false);
   assert.equal(files.includes("build-resources/c420ui/bootstrap/build-recipe.ts"), true);
 });
 

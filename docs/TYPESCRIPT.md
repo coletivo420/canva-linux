@@ -19,7 +19,7 @@ CommonJS patterns are forbidden in maintained source:
 - `node:module` `createRequire` bridges
 
 CommonJS may exist only as temporary migration output during Dev11.
-No generated `.cjs` bootstrap should remain required at the end of Dev11.
+Generated bootstrap artifacts are now ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
 Node tooling artifacts under `.build/scripts/` and checks under
 `.build/build-resources/**/checks/` now emit ESM `.mjs` outputs.
 The c420ui bootstrap generator now emits and executes
@@ -66,7 +66,7 @@ complex dry-run logic.
 - `scripts/**/*.js`
 - `build-resources/tests/**/*.js`
 - maintained `.mjs`
-- maintained `.cjs` outside generated bootstrap directories
+- maintained `.cjs` files
 - `node <<'NODE'` heredocs inside shell scripts
 - `node -e` or `node -p` when used as official validation, release, packaging, install, or policy logic
 
@@ -76,9 +76,9 @@ complex dry-run logic.
 - `dist/**/*.js`
 - `coverage/**/*.js`
 - `node_modules/**/*.js`
-- generated c420ui bootstrap `.cjs` files under the committed bootstrap output directory
+- generated c420ui bootstrap `.mjs` files under the committed bootstrap output directory
 
-Generated bootstrap `.cjs` files are allowed only when they are produced from
+Generated bootstrap `.mjs` files are allowed only when they are produced from
 TypeScript sources, recorded in the bootstrap manifest, and validated by
 syntax, source-hash, artifact-hash, and stale-artifact gates.
 

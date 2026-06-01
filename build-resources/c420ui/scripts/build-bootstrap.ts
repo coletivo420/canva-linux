@@ -1,7 +1,6 @@
 import * as esbuild from "esbuild";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
 
 import {
@@ -15,7 +14,6 @@ import {
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
   C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   createC420UIBootstrapBuildOptions,
-  C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
 } from "../bootstrap/build-recipe";
 import {
@@ -84,8 +82,15 @@ async function ensureBuildMetadataModule(rootDir: string): Promise<void> {
 }
 
 function copyBlessedRuntimeAssets(rootDir: string, bootstrapDir: string): void {
-  const requireFromRoot = createRequire(path.join(rootDir, "package.json"));
-  const blessedPackageJsonPath = requireFromRoot.resolve("blessed/package.json");
+  const blessedPackageJsonPath = path.join(
+    rootDir,
+    "node_modules",
+    "blessed",
+    "package.json",
+  );
+  if (!fs.existsSync(blessedPackageJsonPath)) {
+    throw new Error("node_modules/blessed/package.json not found; run npm install");
+  }
   const blessedUsrDir = path.join(path.dirname(blessedPackageJsonPath), "usr");
   const bootstrapUsrDir = path.join(path.dirname(bootstrapDir), "usr");
 
@@ -130,12 +135,12 @@ async function main(): Promise<void> {
     dependentProjectDisplayVersion:
       buildMetadata.displayVersion ?? dependentProjectVersion,
     dependentProjectPhase: buildMetadata.phase ?? dependentProjectVersion,
-    entrypoint: "run-c420ui.cjs",
-    cliEntrypoint: "run-c420ui-cli.cjs",
+    entrypoint: "run-c420ui.mjs",
+    cliEntrypoint: "run-c420ui-cli.mjs",
     entrypoints: {
-      ui: c420uiBootstrapArtifactPath("run-c420ui.cjs"),
-      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.cjs"),
-      builder: c420uiBootstrapArtifactPath("c420ui-builder.cjs"),
+      ui: c420uiBootstrapArtifactPath("run-c420ui.mjs"),
+      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.mjs"),
+      builder: c420uiBootstrapArtifactPath("c420ui-builder.mjs"),
     },
     requiresNode: ">=22.0.0",
     buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,
@@ -143,7 +148,6 @@ async function main(): Promise<void> {
     buildTarget: C420UI_BOOTSTRAP_BUILD_TARGET,
     bundleFormat: C420UI_BOOTSTRAP_BUNDLE_FORMAT,
     moduleFormat: C420UI_BOOTSTRAP_MODULE_FORMAT,
-    futureModuleFormat: C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
     typescriptFirst: true,
     ownsFullDependencyPolicy: true,
     c420uiSourceHashAlgorithm: C420UI_SOURCE_HASH_ALGORITHM,
@@ -160,7 +164,7 @@ async function main(): Promise<void> {
   );
 }
 
-if (require.main === module) {
+if (/build-bootstrap\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);

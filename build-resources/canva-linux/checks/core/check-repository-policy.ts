@@ -230,6 +230,11 @@ const allowedCommonJsPrefixes = [
   "node_modules/",
   "build-resources/c420ui/bootstrap/generated/",
 ] as const;
+const allowedModuleJsPrefixes = [
+  ".build/",
+  "node_modules/",
+  "build-resources/c420ui/bootstrap/generated/",
+] as const;
 
 const nativeSourceExtensions = new Set([
   ".sh",
@@ -277,6 +282,8 @@ function validateNoMaintainedModuleJavaScript(
 ): void {
   for (const file of files) {
     if (file.endsWith(".mjs")) {
+      if (allowedModuleJsPrefixes.some((prefix) => file.startsWith(prefix)))
+        continue;
       failures.push(
         `${file}: maintained .mjs source is forbidden by the Dev.10 TypeScript hardening policy`,
       );
@@ -1514,7 +1521,7 @@ function validateLauncherScriptShape(
   }
 
   for (const fragment of [
-    "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs",
+    "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs",
     ".build/scripts/c420ui-builder.mjs",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
@@ -1528,8 +1535,8 @@ function validateLauncherScriptShape(
     "No direct action was provided.",
     "hasBridgeAction",
     "selectEntrypoint",
-    "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
-    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs",
     ".build/scripts/run-c420ui.mjs",
     ".build/scripts/run-c420ui-cli.mjs",
   ] as const) {
@@ -1781,7 +1788,6 @@ const checkDev11EsmPolicyContract = (() => {
 const dev11CommonJsMigrationDebt = [
   "build-resources/config/typescript/tsconfig.json: module commonjs",
   "build-resources/config/typescript/tsconfig.build.json: module commonjs",
-  "build-resources/c420ui/bootstrap/generated/*.cjs",
 ] as const;
 
 const temporaryAllowlistPrefixes = [
@@ -1911,6 +1917,70 @@ function main(): number {
       failures.push(
         `package.json scripts.${scriptName}: Dev11 ESM policy forbids new --format=cjs usage outside declared debt`,
       );
+    }
+  }
+
+  const generatedBootstrapDir = path.join(
+    rootDir,
+    "build-resources/c420ui/bootstrap/generated",
+  );
+  if (fs.existsSync(generatedBootstrapDir)) {
+    for (const name of fs.readdirSync(generatedBootstrapDir)) {
+      if (name.endsWith(".cjs")) {
+        failures.push(
+          `build-resources/c420ui/bootstrap/generated/${name}: Dev11 ESM policy forbids generated bootstrap .cjs artifacts`,
+        );
+      }
+    }
+  }
+
+  const manifestPath = path.join(
+    rootDir,
+    "build-resources/c420ui/bootstrap/generated/manifest.json",
+  );
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as {
+        bundleFormat?: string;
+        moduleFormat?: string;
+        entrypoint?: string;
+        cliEntrypoint?: string;
+        entrypoints?: { ui?: string; cli?: string; builder?: string };
+        artifactHashes?: Record<string, string>;
+      };
+      if (manifest.bundleFormat !== "esm") {
+        failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires bundleFormat \"esm\"`);
+      }
+      if (manifest.moduleFormat !== "esm") {
+        failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires moduleFormat \"esm\"`);
+      }
+      if (manifest.entrypoint !== "run-c420ui.mjs") {
+        failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires entrypoint run-c420ui.mjs`);
+      }
+      if (manifest.cliEntrypoint !== "run-c420ui-cli.mjs") {
+        failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires cliEntrypoint run-c420ui-cli.mjs`);
+      }
+      const expectedEntrypoints = {
+        ui: "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
+        cli: "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs",
+        builder: "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs",
+      };
+      for (const [key, value] of Object.entries(expectedEntrypoints)) {
+        if (manifest.entrypoints?.[key as "ui" | "cli" | "builder"] !== value) {
+          failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires entrypoints.${key} ${value}`);
+        }
+      }
+      for (const key of [
+        "run-c420ui.mjs",
+        "run-c420ui-cli.mjs",
+        "c420ui-builder.mjs",
+      ] as const) {
+        if (!manifest.artifactHashes?.[key]) {
+          failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires artifactHashes.${key}`);
+        }
+      }
+    } catch (error) {
+      failures.push(`${path.relative(rootDir, manifestPath)}: invalid JSON (${error instanceof Error ? error.message : String(error)})`);
     }
   }
 

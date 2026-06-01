@@ -35,7 +35,7 @@ function createFixtureRoot(): string {
   write(path.join(root, "build-resources", "c420ui", "scripts", "run-c420ui.ts"), "export const run = true;\n");
   write(path.join(root, "build-resources", "c420ui", "checks", "check-bootstrap.ts"), "export const check = true;\n");
   write(path.join(root, "build-resources", "c420ui", "bootstrap", "source.ts"), "export const bootstrap = true;\n");
-  write(path.join(root, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.cjs"), "module.exports = true;\n");
+  write(path.join(root, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.mjs"), "module.exports = true;\n");
   write(path.join(root, "build-resources", "c420ui", "types", "index.d.ts"), "export type T = string;\n");
   write(path.join(root, "build-resources", "c420ui", "package.json"), "{}\n");
 

@@ -21,9 +21,9 @@ import {
 } from "../bootstrap/source-hash";
 
 const manifestPath = C420UI_BOOTSTRAP_MANIFEST_PATH;
-const uiEntrypoint = c420uiBootstrapArtifactPath("run-c420ui.cjs");
-const cliEntrypoint = c420uiBootstrapArtifactPath("run-c420ui-cli.cjs");
-const builderEntrypoint = c420uiBootstrapArtifactPath("c420ui-builder.cjs");
+const uiEntrypoint = c420uiBootstrapArtifactPath("run-c420ui.mjs");
+const cliEntrypoint = c420uiBootstrapArtifactPath("run-c420ui-cli.mjs");
+const builderEntrypoint = c420uiBootstrapArtifactPath("c420ui-builder.mjs");
 const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
   (asset) => path.join("build-resources", "c420ui", "bootstrap", "usr", asset),
 );
@@ -72,7 +72,6 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     buildTarget: string;
     bundleFormat: string;
     moduleFormat: string;
-    futureModuleFormat: string;
     c420uiSourceHashAlgorithm: string;
     c420uiSourceHash: string;
     c420uiSourceHashInputs: string[];
@@ -88,15 +87,14 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
   assert.equal(manifest.dependentProjectVersion, rootPackageJson.version);
   assert.notEqual(manifest.c420uiVersion, manifest.dependentProjectVersion);
   assert.equal("version" in manifest, false);
-  assert.equal(manifest.entrypoint, "run-c420ui.cjs");
-  assert.equal(manifest.cliEntrypoint, "run-c420ui-cli.cjs");
+  assert.equal(manifest.entrypoint, "run-c420ui.mjs");
+  assert.equal(manifest.cliEntrypoint, "run-c420ui-cli.mjs");
   assert.equal(manifest.requiresNode, ">=22.0.0");
   assert.equal(manifest.buildRecipe, "build-resources/c420ui/scripts/build-bootstrap.ts");
   assert.equal(manifest.buildTool, "esbuild");
   assert.equal(manifest.buildTarget, "node22");
-  assert.equal(manifest.bundleFormat, "cjs");
-  assert.equal(manifest.moduleFormat, "commonjs");
-  assert.equal(manifest.futureModuleFormat, "esm");
+  assert.equal(manifest.bundleFormat, "esm");
+  assert.equal(manifest.moduleFormat, "esm");
   assert.equal(manifest.c420uiSourceHashAlgorithm, C420UI_SOURCE_HASH_ALGORITHM);
   assert.match(manifest.c420uiSourceHash, /^sha256:[0-9a-f]{64}$/);
   assert.equal(Array.isArray(manifest.c420uiSourceHashInputs), true);
@@ -114,7 +112,7 @@ test("c420ui bootstrap manifest exists and matches package metadata", () => {
     true,
   );
   assert.equal(manifest.c420uiSourceHash, calculateC420UISourceHash(process.cwd()));
-  for (const artifact of ["run-c420ui.cjs", "run-c420ui-cli.cjs", "c420ui-builder.cjs"] as const) {
+  for (const artifact of ["run-c420ui.mjs", "run-c420ui-cli.mjs", "c420ui-builder.mjs"] as const) {
     assert.match(manifest.artifactHashes[artifact], /^sha256:[0-9a-f]{64}$/);
   }
 });
@@ -209,7 +207,7 @@ test("c420ui bootstrap entrypoints are syntactically valid JavaScript", () => {
   }
 });
 
-test("run-c420ui.cjs does not interleave summary code into blessed Program", () => {
+test("run-c420ui.mjs does not interleave summary code into blessed Program", () => {
   const bundle = readRunBundle();
   const programBlock = bundleBlock(
     bundle,
@@ -222,7 +220,7 @@ test("run-c420ui.cjs does not interleave summary code into blessed Program", () 
   assert.doesNotMatch(programBlock, /scripts\/c420ui-adapter\/detection\/artifact-fragments/);
 });
 
-test("run-c420ui.cjs does not interleave detected-installations summary into inputDialog", () => {
+test("run-c420ui.mjs does not interleave detected-installations summary into inputDialog", () => {
   const bundle = readRunBundle();
   const inputDialogBlock = bundleBlock(
     bundle,
@@ -235,7 +233,7 @@ test("run-c420ui.cjs does not interleave detected-installations summary into inp
   assert.doesNotMatch(inputDialogBlock, /formatDetectedInstallationsSummary/);
 });
 
-test("run-c420ui.cjs does not interleave validators into interactive action runner", () => {
+test("run-c420ui.mjs does not interleave validators into interactive action runner", () => {
   const bundle = readRunBundle();
   const runnerBlock = bundleBlock(
     bundle,
@@ -247,7 +245,7 @@ test("run-c420ui.cjs does not interleave validators into interactive action runn
   assert.doesNotMatch(runnerBlock, /function assertOptionalString/);
 });
 
-test("run-c420ui.cjs does not interleave terminal app loader into createApp appendLogText", () => {
+test("run-c420ui.mjs does not interleave terminal app loader into createApp appendLogText", () => {
   const bundle = readRunBundle();
   const actionRunnerOptionsBlock = bundleBlock(
     bundle,

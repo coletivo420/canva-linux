@@ -12,7 +12,6 @@ import {
   C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
   createC420UIBootstrapEsbuildCliArgs,
-  C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
 } from "../bootstrap/build-recipe";
 import {
@@ -221,12 +220,12 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     dependentProjectDisplayVersion:
       buildMetadata.displayVersion ?? dependentProjectVersion,
     dependentProjectPhase: buildMetadata.phase ?? dependentProjectVersion,
-    entrypoint: "run-c420ui.cjs",
-    cliEntrypoint: "run-c420ui-cli.cjs",
+    entrypoint: "run-c420ui.mjs",
+    cliEntrypoint: "run-c420ui-cli.mjs",
     entrypoints: {
-      ui: c420uiBootstrapArtifactPath("run-c420ui.cjs"),
-      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.cjs"),
-      builder: c420uiBootstrapArtifactPath("c420ui-builder.cjs"),
+      ui: c420uiBootstrapArtifactPath("run-c420ui.mjs"),
+      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.mjs"),
+      builder: c420uiBootstrapArtifactPath("c420ui-builder.mjs"),
     },
     requiresNode: ">=22.0.0",
     buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,
@@ -234,7 +233,6 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     buildTarget: C420UI_BOOTSTRAP_BUILD_TARGET,
     bundleFormat: C420UI_BOOTSTRAP_BUNDLE_FORMAT,
     moduleFormat: C420UI_BOOTSTRAP_MODULE_FORMAT,
-    futureModuleFormat: C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
     typescriptFirst: true,
     ownsFullDependencyPolicy: true,
     c420uiSourceHashAlgorithm: C420UI_SOURCE_HASH_ALGORITHM,

@@ -166,9 +166,9 @@ function checkRequiredPaths(rootDir: string, failures: string[]): void {
     "build-resources/canva-linux/assets/icons",
     "build-resources/canva-linux/assets/icons/io.github.coletivo420.canva-linux.png",
     "build-resources/c420ui/bootstrap/generated/manifest.json",
-    "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
-    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-    "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs",
+    "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs",
   ] as const) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: must exist`);

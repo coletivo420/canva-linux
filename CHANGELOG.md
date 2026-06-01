@@ -48,13 +48,13 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   sidecars, and c420ui must prefer that metadata when displaying artifact versions.
 
 - Restored the c420ui bootstrap as a TypeScript-generated artifact and hardened artifact validation.
-  build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
+  build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts. Do not edit them manually.
   Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 - Added anti-corruption coverage so the c420ui bootstrap check must fail on syntax errors, stale generated output,
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-- build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+- build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
   output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
   on every committed bootstrap entrypoint.
 - Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
