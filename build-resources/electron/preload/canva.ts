@@ -20,7 +20,7 @@ void (async () => {
 
     const wrapOpenCall: WrapOpenCall = await (async () => {
       try {
-        const { createCustomEyeDropperFlow } = await import("./custom-eyedropper-flow");
+        const { createCustomEyeDropperFlow } = await import("./custom-eyedropper-flow.js");
         return createCustomEyeDropperFlow({ debugLog, logEyeDropper }).wrapOpenCall;
       } catch (error) {
         logEyeDropper("eyedropper:flow", "module-load-failed", (error as Error)?.message);
@@ -30,7 +30,7 @@ void (async () => {
 
     const ensureWrappedEyeDropperInstalled = await (async () => {
       try {
-        const { installNativeEyeDropperWrapper } = await import("./native-eyedropper-wrapper");
+        const { installNativeEyeDropperWrapper } = await import("./native-eyedropper-wrapper.js");
         return installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }).ensureWrappedEyeDropperInstalled;
       } catch (error) {
         logEyeDropper("eyedropper:wrapper", "module-load-failed", (error as Error)?.message);
@@ -39,7 +39,7 @@ void (async () => {
     })();
 
     try {
-      const { installUploadDiagnostics } = await import("./upload-diagnostics");
+      const { installUploadDiagnostics } = await import("./upload-diagnostics.js");
       installUploadDiagnostics({ debugEnabled, debugLog });
     } catch (error) {
       debugLog("startup", "upload-diagnostics-failed", (error as Error)?.message);
@@ -47,7 +47,7 @@ void (async () => {
 
     try {
       const { installEyeDropperRoutingDiagnostics: installPrimaryEyeDropperRoutingDiagnostics } =
-        await import("./eyedropper-routing-diagnostics");
+        await import("./eyedropper-routing-diagnostics.js");
       installPrimaryEyeDropperRoutingDiagnostics({
         debugEnabled,
         debugLog,
@@ -57,7 +57,7 @@ void (async () => {
     } catch (primaryError) {
       try {
         const { installEyeDropperRoutingDiagnostics: installFallbackEyeDropperRoutingDiagnostics } =
-          await import("./browser-capture-diagnostics");
+          await import("./browser-capture-diagnostics.js");
         installFallbackEyeDropperRoutingDiagnostics({
           debugEnabled,
           debugLog,

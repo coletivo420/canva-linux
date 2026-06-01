@@ -8,8 +8,8 @@
     "outDir": "../../../.build",
     "rootDir": "../..",
     "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "types": [

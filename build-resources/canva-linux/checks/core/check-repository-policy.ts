@@ -1785,11 +1785,6 @@ function checkReviewChecklist(failures: string[]): void {
 }
 
 const checkDev11EsmPolicyContract = (() => {
-const dev11CommonJsMigrationDebt = [
-  "build-resources/config/typescript/tsconfig.json: module commonjs",
-  "build-resources/config/typescript/tsconfig.build.json: module commonjs",
-] as const;
-
 const temporaryAllowlistPrefixes = [
   "build-resources/tests/",
   "build-resources/c420ui/test/",
@@ -1920,6 +1915,31 @@ function main(): number {
     }
   }
 
+  const tsconfigPaths = [
+    "build-resources/config/typescript/tsconfig.json",
+    "build-resources/config/typescript/tsconfig.build.json",
+    "build-resources/config/typescript/tsconfig.strict.json",
+  ] as const;
+  for (const relativePath of tsconfigPaths) {
+    const absolutePath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(absolutePath)) {
+      failures.push(`${relativePath}: Dev11 requires module/moduleResolution NodeNext`);
+      continue;
+    }
+    try {
+      const config = JSON.parse(fs.readFileSync(absolutePath, "utf8")) as {
+        compilerOptions?: { module?: string; moduleResolution?: string };
+      };
+      const moduleValue = config.compilerOptions?.module;
+      const moduleResolutionValue = config.compilerOptions?.moduleResolution;
+      if (moduleValue !== "NodeNext" || moduleResolutionValue !== "NodeNext") {
+        failures.push(`${relativePath}: Dev11 requires module/moduleResolution NodeNext`);
+      }
+    } catch {
+      failures.push(`${relativePath}: Dev11 requires module/moduleResolution NodeNext`);
+    }
+  }
+
   const generatedBootstrapDir = path.join(
     rootDir,
     "build-resources/c420ui/bootstrap/generated",
@@ -1991,9 +2011,6 @@ function main(): number {
   }
 
   console.log("[repository-policy] Dev11 ESM regression guard OK");
-  for (const debt of dev11CommonJsMigrationDebt) {
-    console.warn(`[repository-policy][dev11-debt] ${debt}`);
-  }
   return 0;
 }
 

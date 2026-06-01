@@ -2,7 +2,6 @@
 
 ## Current CommonJS debt
 
-- tsconfig module/commonjs settings
 - `.build/electron/**/*.js` runtime output still generated from CommonJS TypeScript config
 - CommonJS assumptions around `__dirname` and `__filename`
 
@@ -19,6 +18,7 @@
 - electron-builder `beforeBuild` hook output migrated from CommonJS `.js` to ESM `.mjs`
 - c420ui bootstrap generator migrated from CommonJS `.cjs` to ESM `.mjs`
 - generated c420ui bootstrap artifacts migrated from CommonJS `.cjs` to ESM `.mjs`
+- TypeScript configs migrated from CommonJS/node resolution to `NodeNext`
 
 ## Dev11 maintained-source hard rules
 
@@ -40,5 +40,6 @@ Dev11 forbids indirect CommonJS compatibility in maintained TypeScript:
 
 ## Remaining migration blocks
 
-- tsconfig `NodeNext`/module migration
 - Electron runtime output migration
+- `package.json` `main` still points to `.build/electron/main/index.js`
+- package-level ESM boundary (`"type": "module"`) still pending

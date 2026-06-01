@@ -2,8 +2,8 @@
   "compilerOptions": {
     "noEmit": true,
     "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "moduleDetection": "force",
     "ignoreDeprecations": "6.0",
     "strict": false,

@@ -15,6 +15,7 @@ Request changes if a PR:
 - restores electron-builder `beforeBuild` hook output to `.js` or `--format=cjs`;
 - restores c420ui bootstrap generator output to `.cjs` or `--format=cjs`;
 - adds new tsconfig `module: commonjs`;
+- adds new tsconfig `moduleResolution: node`;
 - restores `@ts-nocheck`;
 - changes package output to CommonJS while claiming ESM migration;
 - keeps `.cjs` bootstrap as permanent architecture instead of migration debt;
