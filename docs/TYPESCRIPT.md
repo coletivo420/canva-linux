@@ -20,6 +20,46 @@ logic, tests, tooling configs and Flathub helper scripts.
 - JavaScript is not maintained as source code in `scripts/`, `build-resources/tests/`, configs,
   or `build-resources/canva-linux/packaging/flathub/scripts/`.
 
+## Dev.10 TypeScript hardening policy
+
+Canva Linux Dev.10 treats TypeScript as the maintained source of truth for project logic.
+
+Maintained JavaScript is forbidden.
+
+JavaScript embedded inside shell scripts is also considered maintained JavaScript and must migrate to TypeScript.
+
+Shell remains allowed only for:
+
+- Stage-0 launchers
+- Flatpak or POSIX runtime entrypoints
+- thin compatibility wrappers
+- unavoidable host-operation bridges
+
+Shell must not own project policy, JSON/YAML/XML parsing, validation rules,
+install scope decisions, artifact metadata decisions, release policy, or
+complex dry-run logic.
+
+### Forbidden JavaScript forms
+
+- `scripts/**/*.js`
+- `build-resources/tests/**/*.js`
+- maintained `.mjs`
+- maintained `.cjs` outside generated bootstrap directories
+- `node <<'NODE'` heredocs inside shell scripts
+- `node -e` or `node -p` when used as official validation, release, packaging, install, or policy logic
+
+### Allowed generated JavaScript/CommonJS
+
+- `.build/**/*.js`
+- `dist/**/*.js`
+- `coverage/**/*.js`
+- `node_modules/**/*.js`
+- generated c420ui bootstrap `.cjs` files under the committed bootstrap output directory
+
+Generated bootstrap `.cjs` files are allowed only when they are produced from
+TypeScript sources, recorded in the bootstrap manifest, and validated by
+syntax, source-hash, artifact-hash, and stale-artifact gates.
+
 ## TypeScript-first source policy
 
 ### Allowed maintained source formats
@@ -27,7 +67,7 @@ logic, tests, tooling configs and Flathub helper scripts.
 - `build-resources/electron/**/*.ts`
 - `scripts/**/*.ts`
 - `scripts/**/*.sh`
-- `scripts/core/*.ts`
+- `build-resources/canva-linux/checks/core/*.ts`
 - `build-resources/tests/**/*.ts`
 - `build-resources/config/eslint/eslint.config.ts`
 - `build-resources/config/playwright/playwright.config.ts`
@@ -57,7 +97,7 @@ maintained configs are `build-resources/config/eslint/eslint.config.ts` and `bui
 
 The historical `scripts/run-typescript-script.js` bootstrap must also not exist as
 maintained source. No JavaScript wrapper or bootstrap belongs under `scripts/`;
-`scripts/run-typescript-script.ts` is compiled to
+`build-resources/c420ui/build-resources/c420ui/scripts/run-typescript-script.ts` is compiled to
 `.build/scripts/bootstrap/run-typescript-script.js` when needed.
 
 `check-repository-policy.ts` enforces the wider TypeScript migration, gitignore,
@@ -68,26 +108,28 @@ under `.build/` only.
 
 ## Script Core
 
-Project validations, contracts, and registries are implemented in TypeScript under `scripts/core/`.
+Dev.10 closed the maintained `/scripts` root. All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
 
-- `npm run build:scripts-core` removes `.build/scripts/core/`, then compiles core
-  entries with esbuild into a fresh `.build/scripts/core/` output directory so stale
+All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
+
+Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.
+
+Project validations, contracts, and registries are implemented in TypeScript under `build-resources/canva-linux/checks/core/`.
+
+- `npm run build:scripts-core` removes `.build/build-resources/canva-linux/checks/core/`, then compiles core
+  entries with esbuild into a fresh `.build/build-resources/canva-linux/checks/core/` output directory so stale
   artifacts from removed entries cannot survive rebuilds.
-- `scripts/run-core-entry.sh` only dispatches supported core entries, removes stale
-  generated files for removed legacy entries when they are requested, builds the
-  core on demand when compiled artifacts are missing, then runs the generated
-  `.build/scripts/core/<entry>.js` artifact.
 - `npm run build:scripts` compiles top-level script entrypoints such as
-  `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
+  `build-resources/c420ui/scripts/build-runtime.ts`, `build-resources/c420ui/scripts/run-node-tests.ts`, and
   `build-resources/c420ui/scripts/run-c420ui.ts` directly into `.build/scripts/*.js`.
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after
   `build:scripts`; maintained `scripts/**/*.js` wrappers, bootstrap files, and
   validation outputs are forbidden.
-- `npm run bootstrap:typescript` compiles `scripts/run-typescript-script.ts`
+- `npm run bootstrap:typescript` compiles `build-resources/c420ui/build-resources/c420ui/scripts/run-typescript-script.ts`
   into `.build/scripts/bootstrap/run-typescript-script.js` for ad hoc TypeScript
   entrypoints such as Flathub source generation.
 - `npm run bootstrap:electron-builder` compiles
-  `scripts/electron-builder-before-build.ts` into
+  `build-resources/c420ui/build-resources/c420ui/scripts/electron-builder-before-build.ts` into
   `.build/scripts/bootstrap/electron-builder-before-build.js` for the
   electron-builder `beforeBuild` hook.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
@@ -218,3 +260,28 @@ return new Promise((resolve, reject) => {
 
 Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
+Canva Linux and c420ui now use separate deterministic content hashes.
+Canva Linux changes update canvaLinuxSourceHash, c420ui changes update
+c420uiSourceHash, and combinedSourceHash changes when either side changes.
+Git buildRevision remains separate and is only used by effective
+metadata/release builds.
+
+Canva Linux and c420ui now use separate deterministic content hashes.
+`canvaLinuxSourceHash` changes only when Canva Linux inputs change.
+`c420uiSourceHash` changes only when c420ui-owned inputs change.
+`combinedSourceHash` changes when either component hash changes.
+`buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
+Docs, tests and generated artifacts must not affect either source hash.
+
+## Dev.10 validation migration status
+
+Validation and doctor workflows are TypeScript-owned in
+`build-resources/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers
+and must not own project policy logic.
+
+## Dev.10 operational migration status
+
+Install, uninstall, maintenance, packaging, build, artifact and versioning
+mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
+Canva Linux provides declarative identity, assets, manifests, validation
+policies, and adapter values.

@@ -48,3 +48,8 @@ root policy before the Flatpak scripts run.
 - Do not alter Flatpak behavior as part of documentation-only release work.
 - Do not normalize Flatpak architecture names to `x64`.
 - Do not move Flatpak recipes into c420ui core.
+
+## Dev.10 validation ownership
+
+- Flatpak policy parsing and decisions are TypeScript-owned under `build-resources/canva-linux/validation` and `build-resources/canva-linux/packaging/flatpak`.
+- `scripts/validate-flatpak.sh` is a compatibility wrapper only and must not contain policy logic or JavaScript heredocs.

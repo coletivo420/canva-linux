@@ -42,16 +42,17 @@ dependent project that supplies metadata, actions, recipes, and runtime scripts.
 - `build-resources/c420ui/src/development-provider.ts`
 - `build-resources/c420ui/src/detection.ts`
 - `build-resources/c420ui/src/terminal/`
+- `build-resources/c420ui/operations/`
 - `build-resources/c420ui/host/linux/sudo-helper.sh`
 
 ## Consumed configs and adapters
 
 c420ui consumes project data through the bridge and provider interfaces. For
-Canva Linux, those interfaces are implemented by `scripts/c420ui-adapter/` and
+Canva Linux, those interfaces are implemented by `build-resources/canva-linux/c420ui-adapter/` and
 load configuration from `build-resources/canva-linux/config/`.
 
-The c420ui package must not import `scripts/c420ui-adapter/`,
-`scripts/canva-linux/`, or `build-resources/canva-linux/config/`.
+The c420ui package must not import `build-resources/canva-linux/c420ui-adapter/`,
+or `build-resources/canva-linux/config/`.
 
 ## Boundary checks
 

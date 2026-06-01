@@ -16,16 +16,16 @@ import {
   C420UI_BOOTSTRAP_MODULE_FORMAT,
 } from "../bootstrap/build-recipe";
 import {
-  calculateC420UIBootstrapSourceHash,
-  C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
-  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
+  calculateC420UISourceHash,
+  C420UI_SOURCE_HASH_ALGORITHM,
+  C420UI_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
 import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
 } from "./bootstrap-check-helpers";
-import { loadEffectiveBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
+import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
 
 type PackageJson = {
   version?: string;
@@ -237,9 +237,11 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     futureModuleFormat: C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
     typescriptFirst: true,
     ownsFullDependencyPolicy: true,
-    sourceHashAlgorithm: C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
-    sourceHash: calculateC420UIBootstrapSourceHash(rootDir),
-    sourceHashInputs: [...C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS],
+    c420uiSourceHashAlgorithm: C420UI_SOURCE_HASH_ALGORITHM,
+    c420uiSourceHash: calculateC420UISourceHash(rootDir),
+    canvaLinuxSourceHash: buildMetadata.canvaLinuxSourceHash ?? "unknown",
+    combinedSourceHash: buildMetadata.combinedSourceHash ?? "unknown",
+    c420uiSourceHashInputs: [...C420UI_SOURCE_HASH_INPUTS],
     artifactHashes,
   };
 
@@ -306,7 +308,7 @@ function validateExpectedManifestMetadata(rootDir: string, expectedBootstrapDir:
 function runStructuralBootstrapCheck(rootDir: string, expectedBootstrapDir: string): void {
   const result = spawnSync(
     process.execPath,
-    [".build/build-resources/c420ui/checks/check-bootstrap.js"],
+    [".build/scripts/check-bootstrap.js"],
     {
       cwd: rootDir,
       encoding: "utf8",

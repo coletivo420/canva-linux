@@ -37,11 +37,11 @@ __export(c420ui_builder_exports, {
   runC420UIBuilder: () => runC420UIBuilder
 });
 module.exports = __toCommonJS(c420ui_builder_exports);
-var import_node_child_process2 = require("node:child_process");
-var import_node_fs2 = __toESM(require("node:fs"));
-var import_node_path2 = __toESM(require("node:path"));
+var import_node_child_process3 = require("node:child_process");
+var import_node_fs4 = __toESM(require("node:fs"));
+var import_node_path4 = __toESM(require("node:path"));
 
-// scripts/c420ui-adapter/build-metadata-loader.ts
+// build-resources/canva-linux/c420ui-adapter/build-metadata-loader.ts
 var import_node_child_process = require("node:child_process");
 var import_node_fs = __toESM(require("node:fs"));
 var import_node_module = require("node:module");
@@ -130,6 +130,9 @@ function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule)
       baseDisplayVersion: UNKNOWN_BASE_VERSION,
       basePhase: UNKNOWN_BASE_VERSION,
       buildRevision: UNKNOWN_BUILD_REVISION,
+      canvaLinuxSourceHash: "unknown",
+      c420uiSourceHash: "unknown",
+      combinedSourceHash: "unknown",
       version: UNKNOWN_BASE_VERSION,
       displayVersion: UNKNOWN_BASE_VERSION,
       phase: UNKNOWN_BASE_VERSION,
@@ -171,6 +174,246 @@ function loadEffectiveBuildMetadata(rootDir) {
   return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }
 
+// build-resources/c420ui/bootstrap/ensure-bootstrap.ts
+var import_node_child_process2 = require("node:child_process");
+var import_node_crypto2 = require("node:crypto");
+var import_node_fs3 = __toESM(require("node:fs"));
+var import_node_path3 = __toESM(require("node:path"));
+
+// build-resources/canva-linux/source-hash.ts
+var import_node_crypto = __toESM(require("node:crypto"));
+var import_node_fs2 = __toESM(require("node:fs"));
+var import_node_path2 = __toESM(require("node:path"));
+var SOURCE_HASH_ALGORITHM = "sha256";
+var DEFAULT_IGNORED_PATH_PARTS = /* @__PURE__ */ new Set([
+  ".git",
+  ".build",
+  "dist",
+  "node_modules"
+]);
+function normalizeRelativePath(relativePath) {
+  return relativePath.split(import_node_path2.default.sep).join(import_node_path2.default.posix.sep);
+}
+function shouldIgnore(relativePath, ignoredRelativePaths) {
+  const normalized = normalizeRelativePath(relativePath);
+  for (const ignoredPath of ignoredRelativePaths) {
+    if (normalized === ignoredPath || normalized.startsWith(`${ignoredPath}/`)) {
+      return true;
+    }
+  }
+  return normalized.split(import_node_path2.default.posix.sep).some((part) => DEFAULT_IGNORED_PATH_PARTS.has(part));
+}
+function collectFiles(rootDir, relativeInput, ignoredRelativePaths) {
+  if (shouldIgnore(relativeInput, ignoredRelativePaths)) return [];
+  const absoluteInput = import_node_path2.default.join(rootDir, relativeInput);
+  if (!import_node_fs2.default.existsSync(absoluteInput)) return [];
+  const stats = import_node_fs2.default.statSync(absoluteInput);
+  if (stats.isFile()) return [normalizeRelativePath(relativeInput)];
+  if (!stats.isDirectory()) return [];
+  const files = [];
+  const walk = (relativeDirectory) => {
+    const entries = import_node_fs2.default.readdirSync(import_node_path2.default.join(rootDir, relativeDirectory), { withFileTypes: true }).sort((left, right) => left.name.localeCompare(right.name));
+    for (const entry of entries) {
+      const relativePath = normalizeRelativePath(import_node_path2.default.join(relativeDirectory, entry.name));
+      if (shouldIgnore(relativePath, ignoredRelativePaths)) continue;
+      if (entry.isDirectory()) {
+        walk(relativePath);
+      } else if (entry.isFile()) {
+        files.push(relativePath);
+      }
+    }
+  };
+  walk(relativeInput);
+  return files;
+}
+function collectSourceHashFiles(rootDir, inputs, ignores = []) {
+  const ignoredRelativePaths = new Set(ignores.map((value) => normalizeRelativePath(value)));
+  return [...new Set(inputs.flatMap((input) => collectFiles(rootDir, input, ignoredRelativePaths)))].sort((left, right) => left.localeCompare(right));
+}
+function calculateSourceHash(rootDir, inputs, ignores = []) {
+  const hash = import_node_crypto.default.createHash(SOURCE_HASH_ALGORITHM);
+  for (const relativePath of collectSourceHashFiles(rootDir, inputs, ignores)) {
+    hash.update(relativePath);
+    hash.update("\0");
+    hash.update(import_node_fs2.default.readFileSync(import_node_path2.default.join(rootDir, relativePath)));
+    hash.update("\0");
+  }
+  return `${SOURCE_HASH_ALGORITHM}:${hash.digest("hex")}`;
+}
+
+// build-resources/c420ui/bootstrap/source-hash.ts
+var C420UI_SOURCE_HASH_INPUTS = [
+  "build-resources/c420ui/src",
+  "build-resources/c420ui/scripts",
+  "build-resources/c420ui/host",
+  "build-resources/c420ui/operations",
+  "build-resources/c420ui/checks",
+  "build-resources/c420ui/bootstrap",
+  "build-resources/c420ui/types",
+  "build-resources/c420ui/package.json"
+];
+var C420UI_SOURCE_HASH_IGNORES = [
+  "build-resources/c420ui/bootstrap/generated"
+];
+function calculateC420UISourceHash(rootDir, inputs = C420UI_SOURCE_HASH_INPUTS) {
+  return calculateSourceHash(rootDir, inputs, C420UI_SOURCE_HASH_IGNORES);
+}
+
+// build-resources/c420ui/checks/bootstrap-check-helpers.ts
+var C420UI_BOOTSTRAP_ARTIFACT_FILES = [
+  "run-c420ui.cjs",
+  "run-c420ui-cli.cjs",
+  "c420ui-builder.cjs"
+];
+function c420uiBootstrapArtifactPath(artifact) {
+  return `build-resources/c420ui/bootstrap/generated/${artifact}`;
+}
+var C420UI_BOOTSTRAP_MANIFEST_PATH = "build-resources/c420ui/bootstrap/generated/manifest.json";
+
+// build-resources/c420ui/bootstrap/ensure-bootstrap.ts
+var DEFAULT_DEPS = {
+  calculateSourceHash: calculateC420UISourceHash,
+  spawn: import_node_child_process2.spawnSync
+};
+function readJson(absolutePath) {
+  try {
+    return JSON.parse(import_node_fs3.default.readFileSync(absolutePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+function summarizeCommandFailure(result) {
+  const output = `${result.stdout?.toString() || ""}${result.stderr?.toString() || ""}`.trim();
+  if (result.error) return result.error.message;
+  return output.split("\n").find((line) => line.trim().length > 0)?.trim() || `exit status ${result.status}`;
+}
+function resolveBootstrapBuildRoot(startDir) {
+  let current = startDir;
+  while (true) {
+    const pkgPath = import_node_path3.default.join(current, "package.json");
+    if (import_node_fs3.default.existsSync(pkgPath)) {
+      const scripts = readJson(pkgPath)?.scripts;
+      if (scripts?.["build:c420ui-bootstrap"]) return current;
+    }
+    const parent = import_node_path3.default.dirname(current);
+    if (parent === current) return startDir;
+    current = parent;
+  }
+}
+function validateNodeCheck(rootDir, relativePath, deps) {
+  const result = deps.spawn(process.execPath, ["--check", import_node_path3.default.join(rootDir, relativePath)], {
+    cwd: rootDir,
+    encoding: "utf8",
+    shell: false
+  });
+  if (result.error && typeof result.error === "object" && "code" in result.error && result.error.code === "EPERM" && result.status === 0) {
+    return null;
+  }
+  if (result.status !== 0) {
+    return `${relativePath} failed node --check (${summarizeCommandFailure(result)})`;
+  }
+  return null;
+}
+function calculateFileHash(filePath) {
+  return `sha256:${(0, import_node_crypto2.createHash)("sha256").update(import_node_fs3.default.readFileSync(filePath)).digest("hex")}`;
+}
+function getC420UIBootstrapStatusWithDeps(rootDir, deps) {
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+    const relativePath = c420uiBootstrapArtifactPath(artifact);
+    const absolutePath = import_node_path3.default.join(rootDir, relativePath);
+    if (!import_node_fs3.default.existsSync(absolutePath)) {
+      return { state: "missing", reason: `${relativePath} is missing` };
+    }
+    let stats;
+    try {
+      stats = import_node_fs3.default.statSync(absolutePath);
+    } catch (error) {
+      return {
+        state: "invalid",
+        reason: `Failed to stat ${relativePath}: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
+    if (!stats.isFile() || stats.size <= 0) {
+      return { state: "missing", reason: `${relativePath} is empty` };
+    }
+  }
+  const manifestPath = import_node_path3.default.join(rootDir, C420UI_BOOTSTRAP_MANIFEST_PATH);
+  const manifest = readJson(manifestPath);
+  if (!manifest || typeof manifest !== "object" || Array.isArray(manifest)) {
+    return {
+      state: "missing",
+      reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} is missing or invalid`
+    };
+  }
+  const expectedSourceHash = deps.calculateSourceHash(rootDir);
+  if (manifest.c420uiSourceHash !== expectedSourceHash) {
+    return {
+      state: "stale",
+      reason: "c420uiSourceHash differs from current source tree"
+    };
+  }
+  const artifactHashes = manifest.artifactHashes;
+  if (!artifactHashes || typeof artifactHashes !== "object" || Array.isArray(artifactHashes)) {
+    return {
+      state: "invalid",
+      reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} is missing artifactHashes`
+    };
+  }
+  const manifestArtifactHashes = artifactHashes;
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+    const expectedHash = manifestArtifactHashes[artifact];
+    if (typeof expectedHash !== "string") {
+      return {
+        state: "invalid",
+        reason: `${C420UI_BOOTSTRAP_MANIFEST_PATH} has invalid artifactHashes.${artifact}`
+      };
+    }
+    const relativePath = c420uiBootstrapArtifactPath(artifact);
+    const actualHash = calculateFileHash(import_node_path3.default.join(rootDir, relativePath));
+    if (actualHash !== expectedHash) {
+      return {
+        state: "stale",
+        reason: `${relativePath} hash differs from ${C420UI_BOOTSTRAP_MANIFEST_PATH}`
+      };
+    }
+  }
+  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
+    const relativePath = c420uiBootstrapArtifactPath(artifact);
+    const nodeCheckFailure = validateNodeCheck(rootDir, relativePath, deps);
+    if (nodeCheckFailure) {
+      return { state: "invalid", reason: nodeCheckFailure };
+    }
+  }
+  return { state: "valid" };
+}
+function ensureC420UIBootstrapWithDeps(rootDir, deps) {
+  const status = getC420UIBootstrapStatusWithDeps(rootDir, deps);
+  if (status.state === "valid") return;
+  const bootstrapBuildRoot = resolveBootstrapBuildRoot(rootDir);
+  console.error(`[c420ui] bootstrap ${status.state}: ${status.reason}`);
+  console.error("[c420ui] generating bootstrap bundle automatically...");
+  const result = deps.spawn("npm", ["run", "build:c420ui-bootstrap"], {
+    cwd: bootstrapBuildRoot,
+    stdio: "inherit",
+    shell: false
+  });
+  if (result.status !== 0) {
+    const details = result.error?.message || `exit status ${result.status ?? "unknown"}`;
+    throw new Error(
+      `Unable to generate c420ui bootstrap bundle automatically. ${details}`
+    );
+  }
+  const nextStatus = getC420UIBootstrapStatusWithDeps(rootDir, deps);
+  if (nextStatus.state !== "valid") {
+    throw new Error(
+      `Generated c420ui bootstrap bundle is still invalid: ${nextStatus.reason}`
+    );
+  }
+}
+function ensureC420UIBootstrap(rootDir) {
+  ensureC420UIBootstrapWithDeps(rootDir, DEFAULT_DEPS);
+}
+
 // build-resources/c420ui/scripts/c420ui-builder.ts
 var BUILDER_INTERNAL_NAME = "c420ui-builder";
 var BUILDER_ALIAS = "canva-linux-c420ui-builder";
@@ -194,22 +437,27 @@ Running the whole builder as root may break file ownership, user sessions, build
 function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()) {
   let current = startDir;
   while (true) {
-    if (import_node_fs2.default.existsSync(import_node_path2.default.join(current, "package.json"))) return current;
-    const parent = import_node_path2.default.dirname(current);
+    if (import_node_fs4.default.existsSync(import_node_path4.default.join(current, "package.json"))) {
+      const scripts = readJsonFile2(
+        import_node_path4.default.join(current, "package.json")
+      )?.scripts;
+      if (scripts?.["build:c420ui-bootstrap"]) return current;
+    }
+    const parent = import_node_path4.default.dirname(current);
     if (parent === current) throw new Error("Unable to locate Canva Linux project root.");
     current = parent;
   }
 }
 function readJsonFile2(filePath) {
   try {
-    return JSON.parse(import_node_fs2.default.readFileSync(filePath, "utf8"));
+    return JSON.parse(import_node_fs4.default.readFileSync(filePath, "utf8"));
   } catch {
     return null;
   }
 }
 function c420uiVersion(rootDir) {
   return readJsonFile2(
-    import_node_path2.default.join(rootDir, "packages", "c420ui", "package.json")
+    import_node_path4.default.join(rootDir, "build-resources", "c420ui", "package.json")
   )?.version ?? "unknown";
 }
 function builderVersionBlock(rootDir) {
@@ -251,20 +499,20 @@ Runtime options belong to the compiled Canva Linux app:
 }
 function sessionLogPath() {
   if (process.env.CANVA_TOOL_SESSION_LOG) return process.env.CANVA_TOOL_SESSION_LOG;
-  const stateHome = process.env.XDG_STATE_HOME || import_node_path2.default.join(process.env.HOME || "/tmp", ".local", "state");
-  return import_node_path2.default.join(stateHome, "canva-linux", "tool-session.log");
+  const stateHome = process.env.XDG_STATE_HOME || import_node_path4.default.join(process.env.HOME || "/tmp", ".local", "state");
+  return import_node_path4.default.join(stateHome, "canva-linux", "tool-session.log");
 }
 function createSession(rootDir) {
   const sessionId = process.env.CANVA_TOOL_SESSION_ID || `builder-${process.pid}-${Date.now()}`;
   let sessionLog = sessionLogPath();
   try {
-    import_node_fs2.default.mkdirSync(import_node_path2.default.dirname(sessionLog), { recursive: true });
-    import_node_fs2.default.writeFileSync(sessionLog, "");
-    import_node_fs2.default.appendFileSync(sessionLog, `[session] started id=${sessionId}
+    import_node_fs4.default.mkdirSync(import_node_path4.default.dirname(sessionLog), { recursive: true });
+    import_node_fs4.default.writeFileSync(sessionLog, "");
+    import_node_fs4.default.appendFileSync(sessionLog, `[session] started id=${sessionId}
 `);
-    import_node_fs2.default.appendFileSync(sessionLog, `[builder] ${BUILDER_TITLE}
+    import_node_fs4.default.appendFileSync(sessionLog, `[builder] ${BUILDER_TITLE}
 `);
-    import_node_fs2.default.appendFileSync(sessionLog, `${builderVersionBlock(rootDir)}
+    import_node_fs4.default.appendFileSync(sessionLog, `${builderVersionBlock(rootDir)}
 `);
   } catch {
     sessionLog = void 0;
@@ -282,17 +530,17 @@ function createSession(rootDir) {
 }
 function selectEntrypoint(rootDir, kind) {
   const candidates = kind === "ui" ? [
-    import_node_path2.default.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"),
-    import_node_path2.default.join(rootDir, ".build/build-resources/c420ui/scripts/run-c420ui.js")
+    import_node_path4.default.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"),
+    import_node_path4.default.join(rootDir, ".build/scripts/run-c420ui.js")
   ] : [
-    import_node_path2.default.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
-    import_node_path2.default.join(rootDir, ".build/build-resources/c420ui/scripts/run-c420ui-cli.js")
+    import_node_path4.default.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
+    import_node_path4.default.join(rootDir, ".build/scripts/run-c420ui-cli.js")
   ];
   for (const candidate of candidates) {
-    if (import_node_fs2.default.existsSync(candidate) && import_node_fs2.default.statSync(candidate).size > 0) return candidate;
+    if (import_node_fs4.default.existsSync(candidate) && import_node_fs4.default.statSync(candidate).size > 0) return candidate;
   }
   throw new Error(
-    kind === "ui" ? "c420ui bootstrap bundle is missing. Run npm run build:c420ui-bootstrap, then retry." : "c420ui CLI bootstrap bundle is missing. Run npm run build:c420ui-bootstrap, then retry."
+    kind === "ui" ? "c420ui UI bootstrap entrypoint is unavailable after automatic bootstrap generation." : "c420ui CLI bootstrap entrypoint is unavailable after automatic bootstrap generation."
   );
 }
 function isReservedDebugFlag(arg) {
@@ -343,24 +591,25 @@ function assertNonRoot() {
 function runC420UIBuilder(argv = process.argv.slice(2)) {
   const parsed = normalizeBuilderArgs(argv);
   if (parsed.help) {
-    console.log(builderHelp(findProjectRoot(import_node_path2.default.resolve(__dirname, ".."))));
+    console.log(builderHelp(findProjectRoot(import_node_path4.default.resolve(__dirname, ".."))));
     return 0;
   }
   if (!parsed.hasBridgeAction && parsed.bridgeArgs.length > 0) {
     throw new Error("No direct action was provided.");
   }
   assertNonRoot();
-  const rootDir = findProjectRoot(import_node_path2.default.resolve(__dirname, ".."));
+  const rootDir = findProjectRoot(import_node_path4.default.resolve(__dirname, ".."));
+  ensureC420UIBootstrap(rootDir);
   const session = createSession(rootDir);
   const kind = parsed.hasBridgeAction ? "cli" : "ui";
   const entrypoint = selectEntrypoint(rootDir, kind);
-  const result = (0, import_node_child_process2.spawnSync)(process.execPath, [entrypoint, ...parsed.bridgeArgs], {
+  const result = (0, import_node_child_process3.spawnSync)(process.execPath, [entrypoint, ...parsed.bridgeArgs], {
     cwd: rootDir,
     env: session.env,
     stdio: "inherit",
     shell: false
   });
-  if (session.sessionLog) import_node_fs2.default.appendFileSync(session.sessionLog, "[session] ended\n");
+  if (session.sessionLog) import_node_fs4.default.appendFileSync(session.sessionLog, "[session] ended\n");
   if (result.error) throw result.error;
   return result.status ?? 1;
 }

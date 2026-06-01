@@ -56,3 +56,8 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 - Local repo lint may report only Flathub screenshot mirror findings until screenshots are mirrored by Flathub infrastructure; treat additional repo-lint findings as blockers.
 - Keep OAuth status explicit in submission notes: Google OAuth is maintainer-tested; other OAuth providers remain community-tested.
 - Final Flathub submission should happen only after maintainer review of lint output, permissions, screenshots, and release source.
+
+## Dev.10 validation ownership
+
+- Flathub submission policy checks are TypeScript-owned under `build-resources/canva-linux/validation` and `build-resources/canva-linux/packaging/flathub/policy`.
+- `scripts/validate-flathub-submission.sh` remains only a thin wrapper for compatibility.

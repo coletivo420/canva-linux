@@ -19,12 +19,12 @@ import {
   C420UI_BOOTSTRAP_MODULE_FORMAT,
 } from "../bootstrap/build-recipe";
 import {
-  calculateC420UIBootstrapSourceHash,
-  C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
-  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
+  calculateC420UISourceHash,
+  C420UI_SOURCE_HASH_ALGORITHM,
+  C420UI_SOURCE_HASH_INPUTS,
 } from "../bootstrap/source-hash";
 import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety";
-import { loadCommittedBuildMetadata } from "../../../scripts/c420ui-adapter/build-metadata-loader";
+import { loadCommittedBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
 
 type PackageJson = {
   version?: string;
@@ -116,7 +116,7 @@ async function main(): Promise<void> {
   await esbuild.build(createC420UIBootstrapBuildOptions(rootDir, bootstrapDir));
   copyBlessedRuntimeAssets(rootDir, bootstrapDir);
 
-  const sourceHash = calculateC420UIBootstrapSourceHash(rootDir);
+  const c420uiSourceHash = calculateC420UISourceHash(rootDir);
   const artifactHashes = calculateArtifactHashes(bootstrapDir);
 
   const manifest = {
@@ -146,9 +146,11 @@ async function main(): Promise<void> {
     futureModuleFormat: C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
     typescriptFirst: true,
     ownsFullDependencyPolicy: true,
-    sourceHashAlgorithm: C420UI_BOOTSTRAP_SOURCE_HASH_ALGORITHM,
-    sourceHash,
-    sourceHashInputs: [...C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS],
+    c420uiSourceHashAlgorithm: C420UI_SOURCE_HASH_ALGORITHM,
+    c420uiSourceHash,
+    canvaLinuxSourceHash: buildMetadata.canvaLinuxSourceHash ?? "unknown",
+    combinedSourceHash: buildMetadata.combinedSourceHash ?? "unknown",
+    c420uiSourceHashInputs: [...C420UI_SOURCE_HASH_INPUTS],
     artifactHashes,
   };
 

@@ -39,13 +39,13 @@ Forbidden recipe patterns include:
 - `build-resources/c420ui/src/artifacts.ts`
 - `build-resources/c420ui/src/workflow-runner.ts`
 - `build-resources/c420ui/src/workflows.ts`
-- `scripts/c420ui-adapter/artifacts.ts`
+- `build-resources/canva-linux/c420ui-adapter/artifacts.ts`
 - `build-resources/canva-linux/config/artifacts.json`
 
 ## Consumed configs and adapters
 
 Canva Linux declares recipes in `build-resources/canva-linux/config/artifacts.json`. The adapter
-loads them through `scripts/c420ui-adapter/artifacts.ts` and c420ui validates the
+loads them through `build-resources/canva-linux/c420ui-adapter/artifacts.ts` and c420ui validates the
 generic recipe shape before workflows are exposed.
 
 ## Boundary checks

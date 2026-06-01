@@ -41,6 +41,9 @@ test("build metadata appends deterministic revisions only to effective versions"
   assert.equal(metadata.baseVersion, "0.1.4-15.Dev.7");
   assert.equal(metadata.baseDisplayVersion, "0.1.4-15.Dev");
   assert.equal(metadata.basePhase, "0.1.4-15.Dev.7");
+  assert.equal(metadata.canvaLinuxSourceHash, "unknown");
+  assert.equal(metadata.c420uiSourceHash, "unknown");
+  assert.equal(metadata.combinedSourceHash.startsWith("sha256:"), true);
 });
 
 test("unknown build revision keeps base effective versions", () => {
@@ -55,6 +58,43 @@ test("unknown build revision keeps base effective versions", () => {
   assert.equal(metadata.displayVersion, "0.1.4-15.Dev");
   assert.equal(metadata.phase, "0.1.4-15.Dev.7");
   assert.equal(metadata.fullVersion, "0.1.4-15.Dev.7");
+});
+
+test("committed/effective metadata preserve source hashes while build revision fields vary", () => {
+  const sourceHashes = {
+    canvaLinuxSourceHash: "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    c420uiSourceHash: "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    combinedSourceHash: "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  };
+
+  const committed = createBuildMetadata({
+    baseVersion: "0.1.4-15.Dev.7",
+    baseDisplayVersion: "0.1.4-15.Dev",
+    basePhase: "0.1.4-15.Dev.7",
+    buildRevision: "unknown",
+    ...sourceHashes,
+  });
+  const effective = createBuildMetadata({
+    baseVersion: "0.1.4-15.Dev.7",
+    baseDisplayVersion: "0.1.4-15.Dev",
+    basePhase: "0.1.4-15.Dev.7",
+    buildRevision: "abc1234def",
+    ...sourceHashes,
+  });
+
+  assert.equal(committed.canvaLinuxSourceHash, sourceHashes.canvaLinuxSourceHash);
+  assert.equal(committed.c420uiSourceHash, sourceHashes.c420uiSourceHash);
+  assert.equal(committed.combinedSourceHash, sourceHashes.combinedSourceHash);
+
+  assert.equal(effective.canvaLinuxSourceHash, committed.canvaLinuxSourceHash);
+  assert.equal(effective.c420uiSourceHash, committed.c420uiSourceHash);
+  assert.equal(effective.combinedSourceHash, committed.combinedSourceHash);
+
+  assert.notEqual(effective.buildRevision, committed.buildRevision);
+  assert.notEqual(effective.version, committed.version);
+  assert.notEqual(effective.displayVersion, committed.displayVersion);
+  assert.notEqual(effective.phase, committed.phase);
+  assert.notEqual(effective.fullVersion, committed.fullVersion);
 });
 
 test("fallback metadata uses neutral values without source files", () => {
@@ -77,6 +117,9 @@ test("fallback metadata uses neutral values without source files", () => {
     assert.equal(metadata.displayVersion, "0.0.0");
     assert.equal(metadata.phase, "0.0.0");
     assert.equal(metadata.fullVersion, "0.0.0");
+    assert.equal(metadata.canvaLinuxSourceHash, "unknown");
+    assert.equal(metadata.c420uiSourceHash, "unknown");
+    assert.equal(metadata.combinedSourceHash, "unknown");
     assert.notEqual(metadata.baseVersion, "0.1.4-15.Dev.7");
     assert.notEqual(metadata.baseDisplayVersion, "0.1.4-15.Dev");
   } finally {
@@ -118,6 +161,9 @@ test("loaded metadata is normalized with unknown revision fallback", () => {
   assert.equal(metadata.version, "0.1.4-15.Dev.7");
   assert.equal(metadata.displayVersion, "0.1.4-15.Dev");
   assert.equal(metadata.phase, "0.1.4-15.Dev.7");
+  assert.equal(metadata.canvaLinuxSourceHash, "unknown");
+  assert.equal(metadata.c420uiSourceHash, "unknown");
+  assert.equal(metadata.combinedSourceHash, "unknown");
 });
 
 test("build metadata source does not hardcode current Dev.7 fallbacks", () => {
@@ -140,7 +186,7 @@ test("build metadata source does not hardcode current Dev.7 fallbacks", () => {
 
 test("generate-build-metadata supports explicit committed/effective modes", () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, "scripts", "generate-build-metadata.ts"),
+    path.join(repoRoot, "build-resources", "c420ui", "scripts", "generate-build-metadata.ts"),
     "utf8",
   );
 
@@ -151,7 +197,7 @@ test("generate-build-metadata supports explicit committed/effective modes", () =
 
 test("committed mode does not resolve live git revision", () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, "scripts", "generate-build-metadata.ts"),
+    path.join(repoRoot, "build-resources", "c420ui", "scripts", "generate-build-metadata.ts"),
     "utf8",
   );
 

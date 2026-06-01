@@ -50,7 +50,7 @@ recipes, and host scripts.
 
 - Adding dependent-project names, app IDs, env vars, or action IDs to
   `build-resources/c420ui/src`.
-- Importing `scripts/c420ui-adapter`, `scripts/canva-linux`, or
+- Importing `build-resources/canva-linux/c420ui-adapter`, `scripts/canva-linux`, or
   `build-resources/canva-linux/config` from `build-resources/c420ui/src`.
 - Reimplementing the c420ui Action Engine, Command Runner, Detection Engine,
   Artifact Workflow Runner, or Linux root provider base in a dependent-project
@@ -78,7 +78,7 @@ recipes, and host scripts.
 
 ## Adapter directory naming
 
-- Dependent project adapters live under `scripts/c420ui-adapter/`.
+- Dependent project adapters live under `build-resources/canva-linux/c420ui-adapter/`.
 - Do not create c420ui adapter directories named after the dependent project.
 - The adapter directory is project-local, but its role is generic: connecting the dependent project to c420ui.
 

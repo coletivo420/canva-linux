@@ -9,8 +9,8 @@ import {
   createC420UIActionEngine,
   c420uiExitCodes,
 } from "../c420ui/src";
-import { createCanvaLinuxC420UIAdapter } from "../../scripts/c420ui-adapter/adapter";
-import { createCanvaLinuxRootProvider } from "../../scripts/c420ui-adapter/root-provider";
+import { createCanvaLinuxC420UIAdapter } from "../canva-linux/c420ui-adapter/adapter";
+import { createCanvaLinuxRootProvider } from "../canva-linux/c420ui-adapter/root-provider";
 
 function createTempProject(): string {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-adapter-env-"));

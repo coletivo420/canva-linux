@@ -7,8 +7,8 @@ For the builder naming contract, see [c420ui Builder Alias Policy](docs/c420ui/B
 `./canva-linux-c420ui-builder`. The compiled runtime app remains `canva-linux`.
 
 Status: **Alpha**
-Version: **0.1.4-15.Dev.9**
-Release target: **v0.1.4-15.Dev.9**
+Version: **0.1.4-15.Dev.10**
+Release target: **v0.1.4-15.Dev.10**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -136,12 +136,12 @@ Canva Linux owns:
 - desktop/AppStream metadata
 - project configuration
 
-c420ui owns generic terminal/action orchestration. `scripts/c420ui-adapter/` connects Canva Linux configuration to c420ui, and
+c420ui owns generic terminal/action orchestration. `canva-linux/c420ui-adapter/` connects Canva Linux configuration to c420ui, and
 `build-resources/canva-linux/config/` contains project declarations for actions, artifacts, dependencies, development tasks, and UI metadata.
 
 ## Release and Packaging
 
-Current release target: `0.1.4-15.Dev.9`.
+Current release target: `0.1.4-15.Dev.10`.
 
 Dev.6 is the post-migration cleanup handoff for dead-code auditing, obsolete validation-contract cleanup, streamlined smoke tests,
 runtime CLI diagnostics cleanup, and GPU/display `runtime-options` logging. It preserves active behavior boundaries, including
@@ -178,7 +178,7 @@ architecture.
 
 c420ui is the generic terminal UI and action orchestration engine used by Canva Linux. It owns the Action Engine, Command Runner,
 Root Provider, host dependency checks, artifact workflow runner, and terminal interface. Canva Linux consumes it through project
-configuration and `scripts/c420ui-adapter/`.
+configuration and `canva-linux/c420ui-adapter/`.
 
 - [c420ui architecture](docs/c420ui/ARCHITECTURE.md)
 - [Action Engine](docs/c420ui/ACTION_ENGINE.md)
@@ -199,7 +199,7 @@ while runtime flags belong to the compiled `canva-linux` app.
 
 ## Build metadata and OAuth context
 
-Canva Linux keeps the source base version at `0.1.4-15.Dev.9` and generates an effective build version with
+Canva Linux keeps the source base version at `0.1.4-15.Dev.10` and generates an effective build version with
 `+g<short-hash>` for runtime logs, `--version`, manifests, and artifacts. See `docs/VERSIONING.md` for the
 source/effective version contract.
 

@@ -1,11 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 
 export type CanvaLinuxBuildMetadata = {
   baseVersion: string;
   baseDisplayVersion: string;
   basePhase: string;
   buildRevision: string;
+  canvaLinuxSourceHash: string;
+  c420uiSourceHash: string;
+  combinedSourceHash: string;
   version: string;
   displayVersion: string;
   phase: string;
@@ -18,6 +22,23 @@ type ProjectUiJson = { displayVersion?: string; phase?: string };
 const UNKNOWN_BASE_VERSION = "0.0.0";
 const UNKNOWN_DISPLAY_VERSION = "0.0.0";
 const UNKNOWN_BUILD_REVISION = "unknown";
+const UNKNOWN_SOURCE_HASH = "unknown";
+
+function combineSourceHashes(canvaLinuxHash?: string, c420uiHash?: string): string {
+  const left = canvaLinuxHash || UNKNOWN_SOURCE_HASH;
+  const right = c420uiHash || UNKNOWN_SOURCE_HASH;
+  const hash = crypto.createHash("sha256");
+
+  hash.update("canva-linux");
+  hash.update("\0");
+  hash.update(left);
+  hash.update("\0");
+  hash.update("c420ui");
+  hash.update("\0");
+  hash.update(right);
+
+  return `sha256:${hash.digest("hex")}`;
+}
 
 export function normalizeBuildRevision(input: string | null | undefined): string {
   if (!input) return "unknown";
@@ -42,14 +63,24 @@ export function createBuildMetadata(input: {
   baseDisplayVersion: string;
   basePhase: string;
   buildRevision: string;
+  canvaLinuxSourceHash?: string;
+  c420uiSourceHash?: string;
+  combinedSourceHash?: string;
 }): CanvaLinuxBuildMetadata {
   const buildRevision = normalizeBuildRevision(input.buildRevision);
+  const canvaLinuxSourceHash = input.canvaLinuxSourceHash || UNKNOWN_SOURCE_HASH;
+  const c420uiSourceHash = input.c420uiSourceHash || UNKNOWN_SOURCE_HASH;
 
   return {
     baseVersion: input.baseVersion,
     baseDisplayVersion: input.baseDisplayVersion,
     basePhase: input.basePhase,
     buildRevision,
+    canvaLinuxSourceHash,
+    c420uiSourceHash,
+    combinedSourceHash:
+      input.combinedSourceHash ||
+      combineSourceHashes(canvaLinuxSourceHash, c420uiSourceHash),
 
     version: appendBuildRevision(input.baseVersion, buildRevision),
     displayVersion: appendBuildRevision(input.baseDisplayVersion, buildRevision),
@@ -100,6 +131,9 @@ export function fallbackBaseMetadata(): CanvaLinuxBuildMetadata {
     baseDisplayVersion,
     basePhase,
     buildRevision: UNKNOWN_BUILD_REVISION,
+    canvaLinuxSourceHash: UNKNOWN_SOURCE_HASH,
+    c420uiSourceHash: UNKNOWN_SOURCE_HASH,
+    combinedSourceHash: UNKNOWN_SOURCE_HASH,
   });
 }
 
@@ -119,6 +153,9 @@ export function normalizeLoadedBuildMetadata(
     baseDisplayVersion: metadata.baseDisplayVersion,
     basePhase: metadata.basePhase,
     buildRevision: metadata.buildRevision || UNKNOWN_BUILD_REVISION,
+    canvaLinuxSourceHash: metadata.canvaLinuxSourceHash || UNKNOWN_SOURCE_HASH,
+    c420uiSourceHash: metadata.c420uiSourceHash || UNKNOWN_SOURCE_HASH,
+    combinedSourceHash: metadata.combinedSourceHash || UNKNOWN_SOURCE_HASH,
   });
 }
 

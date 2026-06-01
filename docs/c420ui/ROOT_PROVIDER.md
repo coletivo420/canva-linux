@@ -45,11 +45,11 @@ cleared.
 - `build-resources/c420ui/host/linux/sudo-helper.sh`
 - `build-resources/c420ui/src/action-engine.ts`
 - `build-resources/c420ui/src/terminal/app.ts`
-- `scripts/c420ui-adapter/root-provider.ts`
+- `build-resources/canva-linux/c420ui-adapter/root-provider.ts`
 
 ## Consumed configs and adapters
 
-Canva Linux root decisions are exposed by `scripts/c420ui-adapter/root-provider.ts`.
+Canva Linux root decisions are exposed by `build-resources/canva-linux/c420ui-adapter/root-provider.ts`.
 The adapter may read Canva Linux action metadata, but generic c420ui code must
 not import Canva Linux config directly.
 

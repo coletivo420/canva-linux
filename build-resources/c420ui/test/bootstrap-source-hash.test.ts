@@ -5,26 +5,23 @@ import path from "node:path";
 import test from "node:test";
 
 import {
-  C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS,
+  C420UI_SOURCE_HASH_IGNORES,
+  C420UI_SOURCE_HASH_INPUTS,
+  calculateC420UIBootstrapSourceHash,
+  calculateC420UISourceHash,
   collectC420UIBootstrapSourceHashFiles,
+  collectC420UISourceHashFiles,
 } from "../bootstrap/source-hash";
 
-const sourceHashInputs: readonly string[] = C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS;
+const sourceHashInputs: readonly string[] = C420UI_SOURCE_HASH_INPUTS;
 
-test("c420ui bootstrap source hash covers bundled adapter and Canva Linux dependencies", () => {
+test("c420ui source hash covers only c420ui-owned sources", () => {
   for (const requiredInput of [
     "build-resources/c420ui/bootstrap",
-    "scripts/c420ui-adapter",
-    "scripts/canva-linux/actions",
-    "scripts/canva-linux/artifacts",
-    "scripts/canva-linux/capabilities",
-    "scripts/canva-linux/development",
-    "scripts/canva-linux/project-root.ts",
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",
     "build-resources/c420ui/checks",
-    "build-resources/canva-linux/config",
-    "package.json",
+    "build-resources/c420ui/types",
     "build-resources/c420ui/package.json",
   ] as const) {
     assert.equal(
@@ -35,16 +32,14 @@ test("c420ui bootstrap source hash covers bundled adapter and Canva Linux depend
   }
 });
 
-test("c420ui bootstrap source hash excludes removed c420ui integration modules", () => {
+test("c420ui source hash excludes Canva Linux sources", () => {
   for (const forbiddenInput of [
-    "scripts/" + "build-c420ui-bootstrap.ts",
-    "scripts/" + "run-c420ui.ts",
-    "scripts/" + "run-c420ui-cli.ts",
-    "scripts/" + "c420ui-builder.ts",
-    "scripts/" + "checks/canva-linux/check-c420ui-bootstrap.ts",
-    "scripts/" + "checks/canva-linux/check-c420ui-artifact-gate.ts",
-    "scripts/" + "checks/canva-linux/check-c420ui-node-check.ts",
-    "scripts/" + "canva-linux",
+    "build-resources/canva-linux/c420ui-adapter",
+    "scripts/canva-linux",
+    "build-resources/electron",
+    "build-resources/canva-linux/config",
+    "package.json",
+    "package-lock.json",
   ] as const) {
     assert.equal(
       sourceHashInputs.includes(forbiddenInput),
@@ -54,13 +49,20 @@ test("c420ui bootstrap source hash excludes removed c420ui integration modules",
   }
 });
 
+test("c420ui source hash ignores include generated bootstrap outputs", () => {
+  assert.equal(
+    C420UI_SOURCE_HASH_IGNORES.includes("build-resources/c420ui/bootstrap/generated"),
+    true,
+  );
+});
+
 test("ignores build-resources/c420ui/bootstrap/generated", () => {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-source-hash-"));
   fs.mkdirSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "generated"), { recursive: true });
   fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.cjs"), "module.exports = 1;\n");
   fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "bootstrap", "build-recipe.ts"), "export const marker = 1;\n");
 
-  const files = collectC420UIBootstrapSourceHashFiles(rootDir, ["build-resources/c420ui/bootstrap"]);
+  const files = collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/bootstrap"]);
   assert.equal(files.includes("build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"), false);
   assert.equal(files.includes("build-resources/c420ui/bootstrap/build-recipe.ts"), true);
 });
@@ -70,6 +72,25 @@ test("does not ignore unrelated generated directories", () => {
   fs.mkdirSync(path.join(rootDir, "build-resources", "c420ui", "src", "generated"), { recursive: true });
   fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "src", "generated", "example.ts"), "export const keep = true;\n");
 
-  const files = collectC420UIBootstrapSourceHashFiles(rootDir, ["build-resources/c420ui/src"]);
+  const files = collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/src"]);
   assert.equal(files.includes("build-resources/c420ui/src/generated/example.ts"), true);
+});
+
+test("legacy bootstrap hash aliases map to c420ui source hash behavior", () => {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-source-hash-"));
+  try {
+    fs.mkdirSync(path.join(rootDir, "build-resources", "c420ui", "src"), { recursive: true });
+    fs.writeFileSync(path.join(rootDir, "build-resources", "c420ui", "src", "index.ts"), "export const v = 1;\n");
+
+    assert.deepEqual(
+      collectC420UIBootstrapSourceHashFiles(rootDir, ["build-resources/c420ui/src"]),
+      collectC420UISourceHashFiles(rootDir, ["build-resources/c420ui/src"]),
+    );
+    assert.equal(
+      calculateC420UIBootstrapSourceHash(rootDir, ["build-resources/c420ui/src"]),
+      calculateC420UISourceHash(rootDir, ["build-resources/c420ui/src"]),
+    );
+  } finally {
+    fs.rmSync(rootDir, { recursive: true, force: true });
+  }
 });
