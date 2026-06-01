@@ -1,5 +1,3 @@
-// @ts-nocheck -- These preload modules intentionally use CommonJS/Electron globals until their runtime contracts are fully typed.
-
 // Keep eyedropper routing diagnostics isolated here. These hooks exist only to
 // trace and redirect Canva-facing browser/native picker entrypoints back into
 // CL-EyeDropper; they must not become an alternative colorpicker implementation.
@@ -15,6 +13,8 @@
  * @typedef {HTMLInputElement & { __canvaCustomColorInputPending?: boolean }} PendingColorInput
  * @typedef {{ __canvaEyeDropperRoutingDiagnosticsInstalled?: boolean, __canvaLastCaptureActivation?: { event?: string, timestamp?: number, target?: string, active?: string, trusted?: string }, MediaDevices?: { prototype?: Record<string, unknown> }, HTMLInputElement?: { prototype?: Record<string, unknown> }, navigator?: Navigator }} EyeDropperRoutingScope
  */
+type DebugLog = (category: string, ...args: unknown[]) => boolean;
+type EyeDropperLog = (...args: unknown[]) => void;
 
 /**
  * @param {EyeDropperRoutingOptions} options
@@ -260,22 +260,29 @@ function wrapMethod({
   logEyeDropper,
   debugActive,
   label,
+}: {
+  target: Record<string, unknown> | null | undefined;
+  receiverFallback?: Record<string, unknown> | null | undefined;
+  methodName: string;
+  debugLog: DebugLog;
+  logEyeDropper: EyeDropperLog;
+  debugActive: boolean;
+  label: string;
 }) {
   if (!target || typeof target[methodName] !== "function") {
     return false;
   }
-  const original =
-    /** @type {((...args: unknown[]) => unknown) & { __canvaDebugWrapped?: boolean }} */ target[
-      methodName
-    ];
+  const original = target[methodName] as ((...args: unknown[]) => unknown) & {
+    __canvaDebugWrapped?: boolean;
+  };
   if (original.__canvaDebugWrapped) {
     return true;
   }
 
-  const wrapped =
-    /** @type {((this: unknown, ...args: unknown[]) => unknown) & { __canvaDebugWrapped?: boolean }} */ function wrappedMediaMethod(
-      ...args
-    ) {
+  const wrapped = function wrappedMediaMethod(
+    this: unknown,
+    ...args: unknown[]
+  ) {
       const activation = lastActivationSummary();
       const serializedArgs =
         args.length > 0 ? serializeValue(args[0]) : "args=none";
@@ -384,6 +391,8 @@ function wrapMethod({
           }
           throw error;
         });
+    } as ((this: unknown, ...args: unknown[]) => unknown) & {
+      __canvaDebugWrapped?: boolean;
     };
 
   wrapped.__canvaDebugWrapped = true;
@@ -853,7 +862,7 @@ function lastActivationSummary() {
   ].join(" ");
 }
 
-module.exports = {
+export {
   describeTarget,
   normalizeHex,
   serializeValue,

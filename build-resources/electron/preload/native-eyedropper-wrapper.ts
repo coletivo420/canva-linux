@@ -1,68 +1,54 @@
-// @ts-nocheck -- These preload modules intentionally use CommonJS/Electron globals until their runtime contracts are fully typed.
+import type { EyeDropperCtor, EyeDropperLog, EyeDropperOpenOptions, EyeDropperResult } from "./types";
 
-/**
- * @typedef {(...args: unknown[]) => void} EyeDropperLog
- * @typedef {(options?: EyeDropperOpenOptions) => Promise<{ sRGBHex: string }>} WrapOpenCall
- * @typedef {{ signal?: AbortSignal }} EyeDropperOpenOptions
- * @typedef {{ logEyeDropper: EyeDropperLog, wrapOpenCall: WrapOpenCall }} NativeEyeDropperWrapperOptions
- * @typedef {{ __canvaWrappedEyeDropperInstalled?: boolean, __canvaWrappedEyeDropper?: Function, __canvaNativeEyeDropper?: Function, __canvaEyeDropperState?: { readCount: number, setCount: number }, EyeDropper?: Function }} CanvaEyeDropperScope
- */
+type WrapOpenCall = (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult>;
 
-/**
- * @param {CanvaEyeDropperScope} scope
- * @returns {boolean}
- */
-function isWrappedEyeDropperInstalledInScope(scope) {
+type CanvaEyeDropperScope = typeof globalThis & {
+  __canvaWrappedEyeDropperInstalled?: boolean;
+  __canvaWrappedEyeDropper?: EyeDropperCtor;
+  __canvaNativeEyeDropper?: EyeDropperCtor;
+  __canvaEyeDropperState?: {
+    readCount: number;
+    setCount: number;
+  };
+  EyeDropper?: EyeDropperCtor;
+};
+
+function getCanvaEyeDropperScope(): CanvaEyeDropperScope {
+  return globalThis as CanvaEyeDropperScope;
+}
+
+function errorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return String(error);
+}
+
+export function isWrappedEyeDropperInstalledInScope(scope: CanvaEyeDropperScope): boolean {
   return Boolean(
     scope.__canvaWrappedEyeDropperInstalled ||
       (typeof scope.__canvaWrappedEyeDropper === "function" &&
         scope.EyeDropper === scope.__canvaWrappedEyeDropper) ||
-      (typeof scope.EyeDropper === "function" &&
-        scope.EyeDropper.name === "WrappedEyeDropper"),
+      (typeof scope.EyeDropper === "function" && scope.EyeDropper.name === "WrappedEyeDropper"),
   );
 }
 
-/**
- * @returns {CanvaEyeDropperScope}
- */
-function getCanvaEyeDropperScope() {
-  return /** @type {CanvaEyeDropperScope} */ globalThis;
-}
-
-/**
- * @param {unknown} error
- * @returns {string}
- */
-function errorMessage(error) {
-  return error &&
-    typeof error === "object" &&
-    "message" in error &&
-    typeof error.message === "string"
-    ? error.message
-    : String(error);
-}
-
-// Own the replacement of Canva's native EyeDropper API separately from the
-// CL-EyeDropper flow so the preload entrypoint stays thin while preserving the
-// project policy that Canva color picking must flow through the custom picker.
-/**
- * @param {NativeEyeDropperWrapperOptions} options
- * @returns {{ ensureWrappedEyeDropperInstalled: () => boolean }}
- */
-function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
-  /**
-   * @param {CanvaEyeDropperScope | null | undefined} scope
-   * @returns {boolean}
-   */
-  function patchNativeEyeDropperPrototype(scope) {
+export function installNativeEyeDropperWrapper({
+  logEyeDropper,
+  wrapOpenCall,
+}: {
+  logEyeDropper: EyeDropperLog;
+  wrapOpenCall: WrapOpenCall;
+}): { ensureWrappedEyeDropperInstalled: () => boolean } {
+  function patchNativeEyeDropperPrototype(scope: CanvaEyeDropperScope | null | undefined): boolean {
     if (!scope) return false;
     const nativeCtor = scope.__canvaNativeEyeDropper || scope.EyeDropper;
     if (typeof nativeCtor !== "function") return false;
-    const proto = /** @type {Record<string, unknown>} */ nativeCtor.prototype;
+    const proto = nativeCtor.prototype as Record<string, unknown> | undefined;
     if (!proto || typeof proto.open !== "function") return false;
     if (proto.__canvaNativeOpenPatched) return true;
 
-    const originalOpen = /** @type {Function} */ proto.open;
+    const originalOpen = proto.open as Function;
     Object.defineProperty(proto, "__canvaOriginalOpen", {
       configurable: true,
       enumerable: false,
@@ -74,10 +60,7 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
       configurable: true,
       enumerable: false,
       writable: true,
-      /**
-       * @param {EyeDropperOpenOptions} [options]
-       */
-      value: function patchedNativeOpen(options = {}) {
+      value: function patchedNativeOpen(options: EyeDropperOpenOptions = {}) {
         logEyeDropper(
           "eyedropper:wrapper",
           "native open intercepted",
@@ -105,15 +88,9 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
     return true;
   }
 
-  /**
-   * @returns {Function}
-   */
-  function installWrappedEyeDropper() {
+  function installWrappedEyeDropper(): EyeDropperCtor {
     const scope = getCanvaEyeDropperScope();
-    if (
-      scope.__canvaWrappedEyeDropperInstalled &&
-      scope.__canvaWrappedEyeDropper
-    ) {
+    if (scope.__canvaWrappedEyeDropperInstalled && scope.__canvaWrappedEyeDropper) {
       patchNativeEyeDropperPrototype(scope);
       return scope.__canvaWrappedEyeDropper;
     }
@@ -125,14 +102,12 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
         return undefined;
       }
     })();
+
     if (!scope.__canvaNativeEyeDropper && typeof existingCtor === "function") {
       scope.__canvaNativeEyeDropper = existingCtor;
     }
 
-    const state = scope.__canvaEyeDropperState || {
-      readCount: 0,
-      setCount: 0,
-    };
+    const state = scope.__canvaEyeDropperState || { readCount: 0, setCount: 0 };
     scope.__canvaEyeDropperState = state;
 
     class WrappedEyeDropper {
@@ -145,7 +120,7 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
         );
       }
 
-      async open(options = {}) {
+      async open(options: EyeDropperOpenOptions = {}): Promise<EyeDropperResult> {
         logEyeDropper(
           "eyedropper:wrapper",
           "wrapper open-request",
@@ -156,18 +131,14 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
       }
     }
 
-    /** @type {Array<[CanvaEyeDropperScope, string]>} */
-    const targets = [];
-    const seen = new Set();
-    /**
-     * @param {unknown} target
-     * @param {string} label
-     */
-    const addTarget = (target, label) => {
-      if (!target || seen.has(target)) return;
+    const targets: Array<[CanvaEyeDropperScope, string]> = [];
+    const seen = new Set<object>();
+    const addTarget = (target: unknown, label: string): void => {
+      if (!target || typeof target !== "object" || seen.has(target)) return;
       seen.add(target);
-      targets.push([/** @type {CanvaEyeDropperScope} */ target, label]);
+      targets.push([target as CanvaEyeDropperScope, label]);
     };
+
     addTarget(window, "window");
     try {
       addTarget(globalThis, "globalThis");
@@ -176,7 +147,7 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
       if (typeof self !== "undefined") addTarget(self, "self");
     } catch {}
 
-    const descriptor = {
+    const descriptor: PropertyDescriptor = {
       configurable: true,
       enumerable: false,
       get() {
@@ -190,16 +161,12 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
             `count=${state.readCount}`,
           );
         }
-        return WrappedEyeDropper;
+        return WrappedEyeDropper as unknown as EyeDropperCtor;
       },
-      /** @param {unknown} value */
-      set(value) {
+      set(value: unknown) {
         state.setCount += 1;
         if (state.setCount <= 8) {
-          const valueName =
-            value && typeof value === "function" && value.name
-              ? value.name
-              : typeof value;
+          const valueName = value && typeof value === "function" && value.name ? value.name : typeof value;
           logEyeDropper(
             "eyedropper:wrapper",
             "set EyeDropper",
@@ -232,7 +199,7 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
 
     patchNativeEyeDropperPrototype(scope);
 
-    scope.__canvaWrappedEyeDropper = WrappedEyeDropper;
+    scope.__canvaWrappedEyeDropper = WrappedEyeDropper as unknown as EyeDropperCtor;
     scope.__canvaWrappedEyeDropperInstalled = installedAny;
     if (installedAny) {
       logEyeDropper(
@@ -242,13 +209,11 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
         location.href,
       );
     }
-    return WrappedEyeDropper;
+
+    return WrappedEyeDropper as unknown as EyeDropperCtor;
   }
 
-  /**
-   * @returns {boolean}
-   */
-  function ensureWrappedEyeDropperInstalled() {
+  function ensureWrappedEyeDropperInstalled(): boolean {
     const scope = getCanvaEyeDropperScope();
     const wrapped = installWrappedEyeDropper();
     try {
@@ -276,12 +241,5 @@ function installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }) {
     return isWrappedEyeDropperInstalledInScope(scope);
   }
 
-  return {
-    ensureWrappedEyeDropperInstalled,
-  };
+  return { ensureWrappedEyeDropperInstalled };
 }
-
-module.exports = {
-  installNativeEyeDropperWrapper,
-  isWrappedEyeDropperInstalledInScope,
-};

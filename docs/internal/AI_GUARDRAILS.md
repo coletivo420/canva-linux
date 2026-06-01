@@ -590,6 +590,10 @@ Canva Linux-specific dependency wiring in `build-resources/canva-linux/c420ui-ad
 - OAuth localized public-landing probes must normalize both DOM attributes and localized keywords with NFKD so composed and
   decomposed labels are equivalent.
 
+## Dev.10 preload typing
+
+Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
 Canva Linux and c420ui now use separate deterministic content hashes.
 Canva Linux changes update canvaLinuxSourceHash, c420ui changes update
 c420uiSourceHash, and combinedSourceHash changes when either side changes.

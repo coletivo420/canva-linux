@@ -302,7 +302,6 @@ function validateRequiredTypeScriptEntrypoints(
     "build-resources/c420ui/scripts/run-node-tests.ts",
     "build-resources/c420ui/scripts/run-typescript-script.ts",
     "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
-    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh",
   ] as const;
 
   for (const file of required) {
@@ -418,13 +417,42 @@ function validateNoCommonJsRuntimeExports(
   }
 }
 
-function validateFlathubShell(rootDir: string, failures: string[]): void {
-  const shellPath = "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh";
-  const shellContent = fs.readFileSync(path.join(rootDir, shellPath), "utf8");
-  if (!shellContent.includes("generate-npm-sources.ts")) {
-    failures.push(
-      `${shellPath}: must invoke the TypeScript npm source generator`,
-    );
+function validateFlathubShellWrappers(
+  files: string[],
+  failures: string[],
+): void {
+  for (const file of files) {
+    if (
+      file.startsWith("build-resources/canva-linux/packaging/flathub/scripts/") &&
+      file.endsWith(".sh")
+    ) {
+      failures.push(
+        `${file}: unnecessary Flathub shell wrapper is forbidden; call TypeScript entrypoints directly`,
+      );
+    }
+  }
+}
+
+function validatePreloadTypeScriptStyle(
+  rootDir: string,
+  files: string[],
+  failures: string[],
+): void {
+  for (const file of files) {
+    if (!file.startsWith("build-resources/electron/preload/") || !file.endsWith(".ts")) continue;
+    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    const contentWithoutComments = content
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    if (content.includes("@ts-nocheck")) {
+      failures.push(`${file}: preload modules must not use @ts-nocheck`);
+    }
+    if (contentWithoutComments.includes("module.exports")) {
+      failures.push(`${file}: preload modules must use ESM exports`);
+    }
+    if (contentWithoutComments.includes("require(")) {
+      failures.push(`${file}: preload modules must not use require(); use ESM imports`);
+    }
   }
 }
 
@@ -492,7 +520,8 @@ function main(): number {
   validateTypeScriptConfigs(rootDir, failures);
   validateEslintTypeScriptOnlyConfig(rootDir, failures);
   validateNoCommonJsRuntimeExports(rootDir, files, failures);
-  validateFlathubShell(rootDir, failures);
+  validateFlathubShellWrappers(files, failures);
+  validatePreloadTypeScriptStyle(rootDir, files, failures);
 
   if (failures.length) {
     console.error("[typescript-first] FAILED:");

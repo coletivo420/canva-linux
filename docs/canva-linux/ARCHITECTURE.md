@@ -88,3 +88,8 @@ UI before any dependent-project npm repair is attempted.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
+
+## Dev.10 preload typing
+
+Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.

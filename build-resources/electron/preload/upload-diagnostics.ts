@@ -1,25 +1,46 @@
-// @ts-nocheck -- These preload modules intentionally use CommonJS/Electron globals until their runtime contracts are fully typed.
+import type { DebugLog, UploadIngress } from "./types";
 
-/**
- * @typedef {(category: string, ...args: unknown[]) => boolean} DebugLog
- * @typedef {{ id: number, source: string, timestamp: number, files?: number, types?: string, target?: string, fileSummary?: string, kinds?: string }} UploadIngress
- * @typedef {{ files: number, fileSummary: string, items: string, kinds: string, types: string, dropEffect: string, effectAllowed: string, target: string }} DataTransferSummary
- * @typedef {{ name?: string, type?: string, size?: number }} FileLike
- * @typedef {{ files?: ArrayLike<FileLike>, items?: ArrayLike<{ kind?: string, type?: string }>, types?: ArrayLike<string>, dropEffect?: string, effectAllowed?: string }} DataTransferLike
- * @typedef {Window & typeof globalThis & { __canvaUploadIngressCounter?: number, __canvaLastUploadIngress?: UploadIngress, __canvaDragDiagnosticsInstalled?: boolean, showOpenFilePicker?: ((...args: unknown[]) => Promise<unknown>) & { __canvaDebugWrapped?: boolean } }} UploadDiagnosticsScope
- */
+type FileLike = {
+  name?: string;
+  type?: string;
+  size?: number;
+};
 
-/**
- * @param {EventTarget | null | undefined | { tagName?: unknown, id?: unknown, className?: unknown }} target
- * @returns {string}
- */
-function describeDragTarget(target) {
+type DataTransferLike = {
+  files?: ArrayLike<FileLike>;
+  items?: ArrayLike<{ kind?: string; type?: string }>;
+  types?: ArrayLike<string>;
+  dropEffect?: string;
+  effectAllowed?: string;
+};
+
+type UploadDiagnosticsScope = Window &
+  typeof globalThis & {
+    __canvaUploadIngressCounter?: number;
+    __canvaLastUploadIngress?: UploadIngress;
+    __canvaDragDiagnosticsInstalled?: boolean;
+    showOpenFilePicker?: ((...args: unknown[]) => Promise<unknown>) & {
+      __canvaDebugWrapped?: boolean;
+    };
+  };
+
+type DataTransferSummary = {
+  files: number;
+  fileSummary: string;
+  items: string;
+  kinds: string;
+  types: string;
+  dropEffect: string;
+  effectAllowed: string;
+  target: string;
+};
+
+export function describeDragTarget(
+  target: EventTarget | null | undefined | { tagName?: unknown; id?: unknown; className?: unknown },
+): string {
   if (!target || typeof target !== "object") return "unknown";
-  const element =
-    /** @type {{ tagName?: unknown, id?: unknown, className?: unknown }} */ target;
-  const tagName = element.tagName
-    ? String(element.tagName).toLowerCase()
-    : "node";
+  const element = target as { tagName?: unknown; id?: unknown; className?: unknown };
+  const tagName = element.tagName ? String(element.tagName).toLowerCase() : "node";
   const id = element.id ? `#${element.id}` : "";
   const className =
     typeof element.className === "string" && element.className.trim()
@@ -28,14 +49,10 @@ function describeDragTarget(target) {
   return `${tagName}${id}${className}`;
 }
 
-/**
- * @param {EventTarget | null | undefined} target
- * @returns {{ accept: string, multiple: string, webkitdirectory: string, target: string } | null}
- */
-function describeFileInput(target) {
-  if (!(target instanceof HTMLInputElement) || target.type !== "file") {
-    return null;
-  }
+export function describeFileInput(
+  target: EventTarget | null | undefined,
+): { accept: string; multiple: string; webkitdirectory: string; target: string } | null {
+  if (!(target instanceof HTMLInputElement) || target.type !== "file") return null;
   return {
     accept: target.accept || "any",
     multiple: target.multiple ? "true" : "false",
@@ -44,65 +61,41 @@ function describeFileInput(target) {
   };
 }
 
-/**
- * @returns {UploadDiagnosticsScope}
- */
-function getUploadDiagnosticsScope() {
-  return /** @type {UploadDiagnosticsScope} */ globalThis;
+function getUploadDiagnosticsScope(): UploadDiagnosticsScope {
+  return globalThis as UploadDiagnosticsScope;
 }
 
-/**
- * @returns {number}
- */
-function nextUploadIngressId() {
+function nextUploadIngressId(): number {
   const scope = getUploadDiagnosticsScope();
-  scope.__canvaUploadIngressCounter =
-    (scope.__canvaUploadIngressCounter || 0) + 1;
+  scope.__canvaUploadIngressCounter = (scope.__canvaUploadIngressCounter || 0) + 1;
   return scope.__canvaUploadIngressCounter;
 }
 
-/**
- * @param {FileLike | null | undefined} file
- * @returns {string}
- */
-function formatFileDescriptor(file) {
+export function formatFileDescriptor(file: FileLike | null | undefined): string {
   if (!file) return "unknown";
   const name = typeof file.name === "string" && file.name ? file.name : "blob";
-  const type =
-    typeof file.type === "string" && file.type ? file.type : "unknown";
-  const size = Number.isFinite(file.size) ? file.size : 0;
+  const type = typeof file.type === "string" && file.type ? file.type : "unknown";
+  const size = Number.isFinite(file.size) ? Number(file.size) : 0;
   return `${name}:${type}:${size}`;
 }
 
-/**
- * @param {ArrayLike<FileLike> | null | undefined} files
- * @param {number} [limit]
- * @returns {string}
- */
-function summarizeFiles(files, limit = 3) {
-  if (!files || typeof files.length !== "number" || files.length < 1)
-    return "none";
+export function summarizeFiles(files: ArrayLike<FileLike> | null | undefined, limit = 3): string {
+  if (!files || typeof files.length !== "number" || files.length < 1) return "none";
   return Array.from(files)
     .slice(0, limit)
     .map((file) => formatFileDescriptor(file))
     .join(",");
 }
 
-/**
- * @param {DataTransferLike | null | undefined} dataTransfer
- * @returns {string}
- */
-function summarizeClipboardKinds(dataTransfer) {
-  const kinds = new Set();
+export function summarizeClipboardKinds(dataTransfer: DataTransferLike | null | undefined): string {
+  const kinds = new Set<string>();
   const types = dataTransfer?.types ? Array.from(dataTransfer.types) : [];
   const items = dataTransfer?.items ? Array.from(dataTransfer.items) : [];
   if (dataTransfer?.files?.length) kinds.add("files");
   for (const item of items) {
     if (item.kind === "file") {
       kinds.add("files");
-      if ((item.type || "").startsWith("image/")) {
-        kinds.add("image");
-      }
+      if ((item.type || "").startsWith("image/")) kinds.add("image");
     }
     if (item.kind === "string") {
       if (item.type === "text/html") kinds.add("html");
@@ -119,15 +112,9 @@ function summarizeClipboardKinds(dataTransfer) {
   return kinds.size ? Array.from(kinds).join(",") : "none";
 }
 
-/**
- * @param {string} source
- * @param {Partial<UploadIngress>} [info]
- * @returns {UploadIngress}
- */
-function rememberUploadIngress(source, info = {}) {
+export function rememberUploadIngress(source: string, info: Partial<UploadIngress> = {}): UploadIngress {
   const scope = getUploadDiagnosticsScope();
-  // Persist the last ingress source so network logs can be correlated later.
-  const ingress = {
+  const ingress: UploadIngress = {
     id: nextUploadIngressId(),
     source,
     timestamp: Date.now(),
@@ -137,10 +124,7 @@ function rememberUploadIngress(source, info = {}) {
   return ingress;
 }
 
-/**
- * @returns {string}
- */
-function recentUploadIngressSummary() {
+export function recentUploadIngressSummary(): string {
   const scope = getUploadDiagnosticsScope();
   const ingress = scope.__canvaLastUploadIngress;
   if (!ingress || !ingress.timestamp) return "id=none source=none";
@@ -155,58 +139,42 @@ function recentUploadIngressSummary() {
   ].join(" ");
 }
 
-/**
- * @param {unknown} error
- * @returns {string}
- */
-function errorName(error) {
-  return error &&
-    typeof error === "object" &&
-    "name" in error &&
-    typeof error.name === "string"
-    ? error.name
-    : "Error";
+function errorName(error: unknown): string {
+  if (error && typeof error === "object" && "name" in error && typeof error.name === "string") {
+    return error.name;
+  }
+  return "Error";
 }
 
-/**
- * @param {unknown} error
- * @returns {string}
- */
-function errorMessage(error) {
-  return error &&
-    typeof error === "object" &&
-    "message" in error &&
-    typeof error.message === "string"
-    ? error.message
-    : String(error || "");
+function errorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return String(error || "");
 }
 
-// Keep upload diagnostics in a dedicated module so Canva preload logic can stay
-// focused on product behavior while this observability layer evolves separately.
-/**
- * @param {{ debugEnabled: (category?: string) => boolean, debugLog: DebugLog }} options
- * @returns {void}
- */
-function installUploadDiagnostics({ debugEnabled, debugLog }) {
+export function installUploadDiagnostics({
+  debugEnabled,
+  debugLog,
+}: {
+  debugEnabled: (category?: string) => boolean;
+  debugLog: DebugLog;
+}): void {
   const scope = getUploadDiagnosticsScope();
   if (scope.__canvaDragDiagnosticsInstalled) return;
   scope.__canvaDragDiagnosticsInstalled = true;
 
-  /**
-   * @param {DataTransferLike | null | undefined} dataTransfer
-   * @param {EventTarget | null | undefined} target
-   * @returns {DataTransferSummary}
-   */
-  const summarizeDataTransfer = (dataTransfer, target) => {
+  const summarizeDataTransfer = (
+    dataTransfer: DataTransferLike | null | undefined,
+    target: EventTarget | null | undefined,
+  ): DataTransferSummary => {
     const files = dataTransfer?.files ? Array.from(dataTransfer.files) : [];
     const items = dataTransfer?.items ? Array.from(dataTransfer.items) : [];
     const types = dataTransfer?.types ? Array.from(dataTransfer.types) : [];
     return {
       files: files.length,
       fileSummary: summarizeFiles(files),
-      items: items
-        .map((item) => `${item.kind}:${item.type || "unknown"}`)
-        .join(","),
+      items: items.map((item) => `${item.kind}:${item.type || "unknown"}`).join(","),
       kinds: summarizeClipboardKinds(dataTransfer),
       types: types.join(","),
       dropEffect: dataTransfer?.dropEffect || "none",
@@ -215,19 +183,13 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
     };
   };
 
-  /**
-   * @param {string} source
-   * @param {DataTransferSummary} info
-   * @returns {UploadIngress | null}
-   */
-  const recordIngressFromDataTransfer = (source, info) => {
-    if (
-      !info ||
-      (info.files < 1 &&
-        (!info.items || info.items === "none") &&
-        (!info.types || info.types === "none"))
-    )
+  const recordIngressFromDataTransfer = (
+    source: string,
+    info: DataTransferSummary,
+  ): UploadIngress | null => {
+    if (!info || (info.files < 1 && (!info.items || info.items === "none") && (!info.types || info.types === "none"))) {
       return null;
+    }
     return rememberUploadIngress(source, {
       files: info.files,
       types: info.types,
@@ -237,17 +199,10 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
     });
   };
 
-  /**
-   * @param {string} label
-   * @param {DragEvent} event
-   */
-  const logDrag = (label, event) => {
+  const logDrag = (label: string, event: DragEvent): void => {
     if (!debugEnabled("dnd")) return;
     const info = summarizeDataTransfer(event.dataTransfer, event.target);
-    let ingress = null;
-    if (label === "drop") {
-      ingress = recordIngressFromDataTransfer("drop", info);
-    }
+    const ingress = label === "drop" ? recordIngressFromDataTransfer("drop", info) : null;
     debugLog(
       "dnd",
       label,
@@ -263,22 +218,16 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
     );
   };
 
-  /**
-   * @param {string} label
-   * @param {EventTarget | null | undefined} target
-   * @param {{ remember?: boolean }} [options]
-   */
-  const logUploadInput = (label, target, { remember = true } = {}) => {
+  const logUploadInput = (
+    label: string,
+    target: EventTarget | null | undefined,
+    { remember = true }: { remember?: boolean } = {},
+  ): void => {
     const info = describeFileInput(target);
     if (!info) return;
-    let ingress = null;
-    if (remember) {
-      ingress = rememberUploadIngress(label, {
-        files: 0,
-        types: "file-input",
-        target: info.target,
-      });
-    }
+    const ingress = remember
+      ? rememberUploadIngress(label, { files: 0, types: "file-input", target: info.target })
+      : null;
     debugLog(
       "upload",
       label,
@@ -290,42 +239,18 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
     );
   };
 
-  window.addEventListener(
-    "dragenter",
-    (event) => logDrag("enter", event),
-    true,
-  );
+  window.addEventListener("dragenter", (event) => logDrag("enter", event), true);
   window.addEventListener("dragover", (event) => logDrag("over", event), true);
-  window.addEventListener(
-    "dragleave",
-    (event) => logDrag("leave", event),
-    true,
-  );
-  window.addEventListener(
-    "dragstart",
-    (event) => logDrag("start", event),
-    true,
-  );
+  window.addEventListener("dragleave", (event) => logDrag("leave", event), true);
+  window.addEventListener("dragstart", (event) => logDrag("start", event), true);
   window.addEventListener(
     "dragend",
     (event) => {
       logDrag("end", event);
       queueMicrotask(() => {
         try {
-          window.dispatchEvent(
-            new MouseEvent("mouseup", {
-              bubbles: true,
-              cancelable: true,
-              buttons: 0,
-            }),
-          );
-          document.dispatchEvent(
-            new MouseEvent("mouseup", {
-              bubbles: true,
-              cancelable: true,
-              buttons: 0,
-            }),
-          );
+          window.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, buttons: 0 }));
+          document.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, buttons: 0 }));
         } catch {}
       });
     },
@@ -338,20 +263,8 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
       debugLog("upload", "drop-ingress", recentUploadIngressSummary());
       queueMicrotask(() => {
         try {
-          window.dispatchEvent(
-            new MouseEvent("mouseup", {
-              bubbles: true,
-              cancelable: true,
-              buttons: 0,
-            }),
-          );
-          document.dispatchEvent(
-            new MouseEvent("mouseup", {
-              bubbles: true,
-              cancelable: true,
-              buttons: 0,
-            }),
-          );
+          window.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, buttons: 0 }));
+          document.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, cancelable: true, buttons: 0 }));
         } catch {}
       });
     },
@@ -375,71 +288,35 @@ function installUploadDiagnostics({ debugEnabled, debugLog }) {
     true,
   );
 
-  document.addEventListener(
-    "click",
-    (event) => {
-      logUploadInput("input-click", event.target);
-    },
-    true,
-  );
+  document.addEventListener("click", (event) => logUploadInput("input-click", event.target), true);
 
   document.addEventListener(
     "change",
     (event) => {
       debugLog("upload", "document-change", describeDragTarget(event.target));
       const target = event.target;
-      if (!(target instanceof HTMLInputElement) || target.type !== "file")
-        return;
+      if (!(target instanceof HTMLInputElement) || target.type !== "file") return;
       logUploadInput("input-change-meta", target);
-      debugLog(
-        "upload",
-        "input-change",
-        `files=${target.files ? target.files.length : 0}`,
-        describeDragTarget(target),
-      );
+      debugLog("upload", "input-change", `files=${target.files ? target.files.length : 0}`, describeDragTarget(target));
     },
     true,
   );
 
-  if (
-    typeof scope.showOpenFilePicker === "function" &&
-    !scope.showOpenFilePicker.__canvaDebugWrapped
-  ) {
+  if (typeof scope.showOpenFilePicker === "function" && !scope.showOpenFilePicker.__canvaDebugWrapped) {
     const original = scope.showOpenFilePicker.bind(scope);
-    /** @type {typeof scope.showOpenFilePicker} */
-    const wrapped = async (...args) => {
+    const wrapped = (async (...args: unknown[]) => {
       debugLog("upload", "show-open-file-picker", `args=${args.length}`);
       try {
         const handles = await original(...args);
-        debugLog(
-          "upload",
-          "show-open-file-picker-result",
-          `handles=${Array.isArray(handles) ? handles.length : 0}`,
-        );
+        debugLog("upload", "show-open-file-picker-result", `handles=${Array.isArray(handles) ? handles.length : 0}`);
         return handles;
       } catch (error) {
-        debugLog(
-          "upload",
-          "show-open-file-picker-error",
-          errorName(error),
-          errorMessage(error),
-        );
+        debugLog("upload", "show-open-file-picker-error", errorName(error), errorMessage(error));
         throw error;
       }
-    };
+    }) as typeof scope.showOpenFilePicker;
 
     wrapped.__canvaDebugWrapped = true;
     scope.showOpenFilePicker = wrapped;
   }
 }
-
-module.exports = {
-  describeDragTarget,
-  describeFileInput,
-  formatFileDescriptor,
-  summarizeFiles,
-  summarizeClipboardKinds,
-  rememberUploadIngress,
-  recentUploadIngressSummary,
-  installUploadDiagnostics,
-};

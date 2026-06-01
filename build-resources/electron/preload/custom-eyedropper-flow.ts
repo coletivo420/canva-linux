@@ -1,10 +1,10 @@
-const { ipcRenderer } = require("electron");
+import { ipcRenderer } from "electron";
 
-const {
+import {
   CLEyeDropper,
   installClEyeDropperScalingPatch,
   removeClEyeDropperUi,
-} = require("./cl-eyedropper/index");
+} from "./cl-eyedropper";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type EyeDropperLog = (...args: unknown[]) => void;
@@ -25,7 +25,7 @@ type EyeDropperOpenOptions = { signal?: AbortSignal };
 /**
  * @returns {DOMException}
  */
-function createAbortError() {
+export function createAbortError() {
   return new DOMException("The operation was aborted.", "AbortError");
 }
 
@@ -33,7 +33,7 @@ function createAbortError() {
  * @param {string} [message]
  * @returns {DOMException}
  */
-function createOperationError(message?: string) {
+export function createOperationError(message?: string) {
   return new DOMException(message || "The operation failed.", "OperationError");
 }
 
@@ -41,7 +41,7 @@ function createOperationError(message?: string) {
  * @param {unknown} value
  * @returns {string | null}
  */
-function normalizeHex(value: unknown) {
+export function normalizeHex(value: unknown) {
   if (typeof value !== "string") return null;
   const match = value.trim().match(/^#?([0-9a-fA-F]{6})$/);
   return match && match[1] ? `#${match[1].toLowerCase()}` : null;
@@ -163,7 +163,7 @@ function isAbortLikeError(error: unknown) {
  * @param {{ debugLog: DebugLog, logEyeDropper: EyeDropperLog }} options
  * @returns {{ wrapOpenCall: (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult> }}
  */
-function createCustomEyeDropperFlow({
+export function createCustomEyeDropperFlow({
   debugLog,
   logEyeDropper,
 }: {
@@ -288,7 +288,8 @@ function createCustomEyeDropperFlow({
         openPromise
           .then((result) => {
             debugLog("eyedropper:flow", "open-resolved");
-            const hex = normalizeHex(result?.hex || result?.sRGBHex);
+            const normalizedResult = result as { hex?: unknown; sRGBHex?: unknown };
+            const hex = normalizeHex(normalizedResult.hex || normalizedResult.sRGBHex);
             if (!hex) {
               finishReject(
                 createOperationError(
@@ -332,12 +333,14 @@ function createCustomEyeDropperFlow({
     let abortHandler: undefined | (() => void);
     const pickPromise = openCLEyeDropper()
       .then((result) => {
-        if (!result || typeof result.sRGBHex !== "string") {
+        const maybeResult = result as { sRGBHex?: unknown; hex?: unknown } | null | undefined;
+        const normalizedHex = normalizeHex(maybeResult?.sRGBHex || maybeResult?.hex);
+        if (!normalizedHex) {
           throw createOperationError(
             "The wrapper eye dropper did not return a valid color.",
           );
         }
-        return { sRGBHex: result.sRGBHex };
+        return { sRGBHex: normalizedHex };
       })
       .catch((error: unknown) => {
         if (isAbortLikeError(error)) {
@@ -372,10 +375,3 @@ function createCustomEyeDropperFlow({
     wrapOpenCall,
   };
 }
-
-module.exports = {
-  createAbortError,
-  createOperationError,
-  normalizeHex,
-  createCustomEyeDropperFlow,
-};
