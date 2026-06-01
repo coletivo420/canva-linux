@@ -6,7 +6,7 @@ import test from "node:test";
 
 import { createCanvaLinuxDetectionProvider } from "../canva-linux/c420ui-adapter/detection/provider";
 import type { c420uiOverviewStatus } from "../c420ui/src/detection";
-import type { InstallationDetectionResult } from "../../build-resources/c420ui/operations/detection/install-detection";
+import type { InstallationDetectionResult } from "../c420ui/operations/detection/install-detection";
 
 const emptyDetectionResult: InstallationDetectionResult = {
   DETECTED_NATIVE_SYSTEM: false,

@@ -10,7 +10,12 @@ type TestProjectOptions = {
   packagedRevision?: string;
 };
 
-const loaderPath = path.join("scripts", "c420ui-adapter", "build-metadata-loader.ts");
+const loaderPath = path.join(
+  "build-resources",
+  "canva-linux",
+  "c420ui-adapter",
+  "build-metadata-loader.ts",
+);
 
 function withEnvRevision<T>(revision: string | undefined, run: () => T): T {
   const previous = process.env.CANVA_LINUX_BUILD_REVISION;
@@ -120,7 +125,7 @@ test("build metadata loader uses build-resources/electron/main/build-metadata vi
   const source = fs.readFileSync(loaderPath, "utf8");
 
   assert.match(source, /createRequire/);
-  assert.match(source, /build-resources\/electron\/main\/build-metadata/);
+  assert.match(source, /electron\/main\/build-metadata/);
   assert.doesNotMatch(source, /function normalizeBuildRevision/);
   assert.doesNotMatch(source, /function appendBuildRevision/);
   assert.doesNotMatch(source, /function createBuildMetadata/);

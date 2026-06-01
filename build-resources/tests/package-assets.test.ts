@@ -70,20 +70,20 @@ test("flatpak and native packaging consume canonical asset paths", () => {
       "build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
     ],
     [
-      "build-resources/canva-linux/scripts/validate-flatpak.ts",
+      "build-resources/canva-linux/validation/flatpak.ts",
       "build-resources/canva-linux/assets/desktop/io.github.coletivo420.canva-linux.desktop",
     ],
     [
-      "build-resources/canva-linux/scripts/validate-flatpak.ts",
+      "build-resources/canva-linux/validation/flatpak.ts",
       "build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
     ],
     [
-      "build-resources/canva-linux/scripts/validate-flathub-submission.ts",
-      "build-resources/canva-linux/assets/desktop/io.github.coletivo420.canva-linux.desktop",
+      "build-resources/canva-linux/validation/flathub-submission.ts",
+      "app-id: io.github.coletivo420.canva-linux",
     ],
     [
-      "build-resources/canva-linux/scripts/validate-flathub-submission.ts",
-      "build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
+      "build-resources/canva-linux/validation/flathub-submission.ts",
+      "build-resources/canva-linux/packaging/flathub/manifest.yml",
     ],
     [
       "build-resources/c420ui/operations/install/native.ts",

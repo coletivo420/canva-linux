@@ -29,7 +29,7 @@ function createFixtureRoot(): string {
   write(path.join(root, "build-resources", "electron", "main", "index.ts"), "export const electronMain = true;\n");
   write(path.join(root, "build-resources", "canva-linux", "config", "project-ui.json"), "{}\n");
   write(path.join(root, "build-resources", "canva-linux", "config", "build-metadata.json"), "{}\n");
-  write(path.join(root, "build-resources", "canva-linux-assets", "icons", "io.github.coletivo420.canva-linux.png"), "PNG\n");
+  write(path.join(root, "build-resources", "canva-linux", "assets", "icons", "io.github.coletivo420.canva-linux.png"), "PNG\n");
 
   write(path.join(root, "build-resources", "c420ui", "src", "index.ts"), "export const ui = true;\n");
   write(path.join(root, "build-resources", "c420ui", "scripts", "run-c420ui.ts"), "export const run = true;\n");
@@ -40,8 +40,7 @@ function createFixtureRoot(): string {
   write(path.join(root, "build-resources", "c420ui", "package.json"), "{}\n");
 
   write(path.join(root, "build-resources", "tests", "example.test.ts"), "export const example = true;\n");
-  write(path.join(root, "scripts", "canva-linux", "source.ts"), "export const canva = true;\n");
-  write(path.join(root, "scripts", "c420ui-adapter", "provider.ts"), "export const provider = true;\n");
+  write(path.join(root, "build-resources", "canva-linux", "c420ui-adapter", "provider.ts"), "export const provider = true;\n");
   write(path.join(root, "docs", "example.md"), "docs\n");
 
   return root;
@@ -67,22 +66,17 @@ test("split source hashes isolate canva-linux and c420ui domains", () => {
     assert.notEqual(afterElectron.canvaLinuxSourceHash, baseline.canvaLinuxSourceHash);
     assert.equal(afterElectron.c420uiSourceHash, baseline.c420uiSourceHash);
 
-    append(path.join(root, "scripts", "canva-linux", "source.ts"), "scripts-canva-linux");
-    const afterCanvaScripts = hashes(root);
-    assert.notEqual(afterCanvaScripts.canvaLinuxSourceHash, afterElectron.canvaLinuxSourceHash);
-    assert.equal(afterCanvaScripts.c420uiSourceHash, afterElectron.c420uiSourceHash);
-
-    append(path.join(root, "scripts", "c420ui-adapter", "provider.ts"), "scripts-c420ui-adapter");
+    append(path.join(root, "build-resources", "canva-linux", "c420ui-adapter", "provider.ts"), "scripts-c420ui-adapter");
     const afterAdapter = hashes(root);
-    assert.notEqual(afterAdapter.canvaLinuxSourceHash, afterCanvaScripts.canvaLinuxSourceHash);
-    assert.equal(afterAdapter.c420uiSourceHash, afterCanvaScripts.c420uiSourceHash);
+    assert.notEqual(afterAdapter.canvaLinuxSourceHash, afterElectron.canvaLinuxSourceHash);
+    assert.equal(afterAdapter.c420uiSourceHash, afterElectron.c420uiSourceHash);
 
     append(path.join(root, "build-resources", "canva-linux", "config", "project-ui.json"), "config");
     const afterConfig = hashes(root);
     assert.notEqual(afterConfig.canvaLinuxSourceHash, afterAdapter.canvaLinuxSourceHash);
     assert.equal(afterConfig.c420uiSourceHash, afterAdapter.c420uiSourceHash);
 
-    append(path.join(root, "build-resources", "canva-linux-assets", "icons", "io.github.coletivo420.canva-linux.png"), "assets");
+    append(path.join(root, "build-resources", "canva-linux", "assets", "icons", "io.github.coletivo420.canva-linux.png"), "assets");
     const afterAssets = hashes(root);
     assert.notEqual(afterAssets.canvaLinuxSourceHash, afterConfig.canvaLinuxSourceHash);
     assert.equal(afterAssets.c420uiSourceHash, afterConfig.c420uiSourceHash);
@@ -123,7 +117,10 @@ test("split source hashes isolate canva-linux and c420ui domains", () => {
     assert.notEqual(afterElectronAgain.canvaLinuxSourceHash, afterC420UITypes.canvaLinuxSourceHash);
     assert.equal(afterElectronAgain.c420uiSourceHash, afterC420UITypes.c420uiSourceHash);
 
-    append(path.join(root, "scripts", "canva-linux", "source.ts"), "scripts-canva-linux-again");
+    append(
+      path.join(root, "build-resources", "canva-linux", "c420ui-adapter", "provider.ts"),
+      "scripts-canva-linux-again",
+    );
     const afterCanvaScriptsAgain = hashes(root);
     assert.notEqual(afterCanvaScriptsAgain.canvaLinuxSourceHash, afterElectronAgain.canvaLinuxSourceHash);
     assert.equal(afterCanvaScriptsAgain.c420uiSourceHash, afterElectronAgain.c420uiSourceHash);
