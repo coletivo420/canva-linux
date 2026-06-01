@@ -154,7 +154,7 @@ Project validations, contracts, and registries are implemented in TypeScript und
   entrypoints such as Flathub source generation.
 - `npm run bootstrap:electron-builder` compiles
   `build-resources/c420ui/build-resources/c420ui/scripts/electron-builder-before-build.ts` into
-  `.build/scripts/bootstrap/electron-builder-before-build.js` for the
+  `.build/scripts/bootstrap/electron-builder-before-build.mjs` for the
   electron-builder `beforeBuild` hook.
 - `npm run run:ts -- <entry.ts>` runs a TypeScript entrypoint through that
   generated bootstrap and writes per-entry generated JavaScript under

@@ -120,7 +120,7 @@ const requiredBootstrapEntrypoints = {
   },
   "bootstrap:electron-builder": {
     source: "build-resources/c420ui/scripts/electron-builder-before-build.ts",
-    artifact: ".build/scripts/bootstrap/electron-builder-before-build.js",
+    artifact: ".build/scripts/bootstrap/electron-builder-before-build.mjs",
   },
 } as const;
 
@@ -338,7 +338,7 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
 
   if (
     pkg.build?.beforeBuild !==
-    "./.build/scripts/bootstrap/electron-builder-before-build.js"
+    "./.build/scripts/bootstrap/electron-builder-before-build.mjs"
   ) {
     failures.push(
       "package.json build.beforeBuild: must point at generated .build TypeScript output",
@@ -1779,7 +1779,6 @@ function checkReviewChecklist(failures: string[]): void {
 
 const checkDev11EsmPolicyContract = (() => {
 const dev11CommonJsMigrationDebt = [
-  "package.json: bootstrap:electron-builder still uses --format=cjs",
   "package.json: build:c420ui-bootstrap still uses --format=cjs",
   "build-resources/config/typescript/tsconfig.json: module commonjs",
   "build-resources/config/typescript/tsconfig.build.json: module commonjs",
@@ -1867,6 +1866,7 @@ function main(): number {
     "build:canva-linux-checks",
     "build:c420ui-terminal",
     "bootstrap:typescript",
+    "bootstrap:electron-builder",
   ] as const;
   for (const scriptName of requiredEsmBuildScripts) {
     const command = scripts[scriptName] ?? "";

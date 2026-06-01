@@ -2,7 +2,6 @@
 
 ## Current CommonJS debt
 
-- package.json `bootstrap:electron-builder` still using `--format=cjs`
 - package.json `build:c420ui-bootstrap` still using `--format=cjs`
 - tsconfig module/commonjs settings
 - generated c420ui bootstrap `.cjs`
@@ -19,6 +18,7 @@
 - c420ui checks generated outputs moved to ESM `.mjs`
 - c420ui terminal generated output moved to ESM `.mjs`
 - TypeScript runner bootstrap moved to ESM `.mjs`
+- electron-builder `beforeBuild` hook output migrated from CommonJS `.js` to ESM `.mjs`
 
 ## Dev11 maintained-source hard rules
 

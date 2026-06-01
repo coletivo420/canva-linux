@@ -20,7 +20,7 @@
     "dist:appimage": "npm run build:runtime && NODE_OPTIONS=--no-deprecation electron-builder --linux AppImage --publish=never",
     "lint": "eslint --config build-resources/config/eslint/eslint.config.ts .",
     "bootstrap:typescript": "esbuild build-resources/c420ui/scripts/run-typescript-script.ts --bundle --platform=node --target=node20 --format=esm --external:esbuild --outfile=.build/scripts/bootstrap/run-typescript-script.mjs",
-    "bootstrap:electron-builder": "esbuild build-resources/c420ui/scripts/electron-builder-before-build.ts --bundle --platform=node --target=node22 --format=cjs --external:electron --external:esbuild --outfile=.build/scripts/bootstrap/electron-builder-before-build.js",
+    "bootstrap:electron-builder": "esbuild build-resources/c420ui/scripts/electron-builder-before-build.ts --bundle --platform=node --target=node22 --format=esm --external:electron --external:esbuild --outfile=.build/scripts/bootstrap/electron-builder-before-build.mjs",
     "run:ts": "npm run bootstrap:typescript --silent && node .build/scripts/bootstrap/run-typescript-script.mjs",
     "flathub:generate-npm-sources": "npm run run:ts -- build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
     "build:scripts": "npm run build:metadata && esbuild build-resources/c420ui/scripts/build-runtime.ts build-resources/c420ui/scripts/build-preload-bundle.ts build-resources/c420ui/scripts/copy-runtime-assets.ts build-resources/c420ui/scripts/clean-runtime-build.ts build-resources/c420ui/scripts/run-node-tests.ts build-resources/canva-linux/scripts/doctor.ts build-resources/canva-linux/scripts/validate-project.ts build-resources/canva-linux/scripts/validate-flatpak.ts build-resources/canva-linux/scripts/validate-flathub-submission.ts build-resources/canva-linux/scripts/validate-appimage.ts build-resources/c420ui/scripts/install-native.ts build-resources/c420ui/scripts/install-flatpak.ts build-resources/c420ui/scripts/uninstall-native.ts build-resources/c420ui/scripts/uninstall-flatpak.ts build-resources/c420ui/scripts/uninstall-detected.ts build-resources/c420ui/scripts/reset-user-data.ts build-resources/c420ui/scripts/purge-installations.ts build-resources/c420ui/scripts/clean-artifacts.ts build-resources/c420ui/scripts/fix-build-permissions.ts build-resources/c420ui/scripts/show-detected-installations.ts build-resources/c420ui/scripts/show-version-info.ts build-resources/c420ui/scripts/build-appimage.ts build-resources/c420ui/scripts/build-flatpak-bundle.ts build-resources/c420ui/scripts/build-runtime-entry.ts build-resources/c420ui/scripts/build-electron-dir-entry.ts build-resources/c420ui/scripts/run-c420ui.ts build-resources/c420ui/scripts/run-c420ui-cli.ts build-resources/c420ui/scripts/c420ui-builder.ts build-resources/c420ui/bootstrap/build-recipe.ts build-resources/c420ui/bootstrap/source-hash.ts build-resources/c420ui/checks/check-bootstrap.ts --bundle --platform=node --target=node20 --format=esm --external:electron --external:blessed --external:esbuild --external:typescript --outdir=.build/scripts --entry-names=[name] --out-extension:.js=.mjs",
@@ -88,7 +88,7 @@
       "output": "dist",
       "buildResources": "build-resources/canva-linux/assets"
     },
-    "beforeBuild": "./.build/scripts/bootstrap/electron-builder-before-build.js",
+    "beforeBuild": "./.build/scripts/bootstrap/electron-builder-before-build.mjs",
     "files": [
       ".build/electron/**/*",
       "package.json"
