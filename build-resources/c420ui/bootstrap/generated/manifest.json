@@ -3,11 +3,11 @@
   "generatedBy": "build-resources/c420ui/scripts/build-bootstrap.ts",
   "c420uiVersion": "0.1.0",
   "dependentProject": "canva-linux",
-  "dependentProjectVersion": "0.1.4-15.Dev.10",
+  "dependentProjectVersion": "0.1.4-15.Dev.11",
   "dependentProjectBuildRevision": "unknown",
-  "dependentProjectFullVersion": "0.1.4-15.Dev.10",
+  "dependentProjectFullVersion": "0.1.4-15.Dev.11",
   "dependentProjectDisplayVersion": "0.1.4-15.Dev",
-  "dependentProjectPhase": "0.1.4-15.Dev.10",
+  "dependentProjectPhase": "0.1.4-15.Dev.11",
   "entrypoint": "run-c420ui.cjs",
   "cliEntrypoint": "run-c420ui-cli.cjs",
   "entrypoints": {
@@ -25,9 +25,9 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "c420uiSourceHashAlgorithm": "sha256",
-  "c420uiSourceHash": "sha256:9005c655e7cfefdf8596bb2e89acb9d345e8f7edb28d1e9ba8cf06377e23253d",
-  "canvaLinuxSourceHash": "sha256:fec7e10d5e75a43479b1fa319fc97daae4963ae712e676672ade9375f3a5abc1",
-  "combinedSourceHash": "sha256:ca968ddfd212afa34ca24b814d5e5299116780e0b65194f56b23c737a500b781",
+  "c420uiSourceHash": "sha256:5f677d3174a846caf25a5ec68bc30f3d26b406e66d3d52744a473c05290077be",
+  "canvaLinuxSourceHash": "sha256:ce4877334779072633299ae1407f2b6224e827a2602daae88802c9c6975ffbae",
+  "combinedSourceHash": "sha256:1400dd87cf26bf349c2262b1b6c7a6d25e7d24f481a5f6020a53b00b2bb7f087",
   "c420uiSourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",
@@ -39,8 +39,8 @@
     "build-resources/c420ui/package.json"
   ],
   "artifactHashes": {
-    "run-c420ui.cjs": "sha256:43800426654ba94ee5413ba6a1fc1419f37059546c795bdc2a9be52d11bc1d82",
+    "run-c420ui.cjs": "sha256:1d13c648c0fb881c05ad4d01d5b7de970c21cda9462a64ac7cc4db9d2324f5de",
     "run-c420ui-cli.cjs": "sha256:d575f11470c8193dbdba355f551b6c7c7452605fa34f31b9a662ed2194582870",
-    "c420ui-builder.cjs": "sha256:0cac1c15a47897375735020c9a18a68cb15f2f0147e206162f58e43cd98ce222"
+    "c420ui-builder.cjs": "sha256:84e7d48712aa52d9415d2d889a4ef86994f2d3443f09cbfc8bae2ad5bb8ba5b6"
   }
 }

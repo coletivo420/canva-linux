@@ -101,7 +101,7 @@ export function main(): number {
   return 0;
 }
 
-if (/check-runtime-build\.(js|ts)$/.test(process.argv[1] || "")) {
+if (/check-runtime-build\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

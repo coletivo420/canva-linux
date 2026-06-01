@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 GENERATED_BUILDER="${ROOT_DIR}/build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs"
-DEV_BUILDER="${ROOT_DIR}/.build/scripts/c420ui-builder.js"
+DEV_BUILDER="${ROOT_DIR}/.build/scripts/c420ui-builder.mjs"
 
 if ! command -v node >/dev/null 2>&1; then
   printf '%s\n' "Node.js is required to run Canva Linux Builder powered by c420ui." >&2

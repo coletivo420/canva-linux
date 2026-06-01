@@ -81,7 +81,7 @@ export function runFlathubSubmissionValidation(context: ValidationContext): Vali
   return okResult(warnings);
 }
 
-if (require.main === module) {
+if (/flathub-submission\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const result = runFlathubSubmissionValidation({ rootDir: process.cwd() });
   process.exit(result.ok ? 0 : 1);
 }

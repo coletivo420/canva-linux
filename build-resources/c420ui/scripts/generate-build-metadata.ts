@@ -99,4 +99,4 @@ export function main(): void {
   console.log(`[build-metadata] wrote ${path.relative(rootDir, outputPath)}`);
 }
 
-if (require.main === module) main();
+if (/generate-build-metadata\.(mjs|js|ts)$/.test(process.argv[1] || "")) main();

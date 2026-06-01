@@ -188,15 +188,15 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
     "build:metadata": "npm run run:ts -- build-resources/c420ui/scripts/generate-build-metadata.ts --committed",
     "build:metadata:effective": "npm run run:ts -- build-resources/c420ui/scripts/generate-build-metadata.ts --effective",
     "build:c420ui-bootstrap": "npm run build:metadata && esbuild build-resources/c420ui/scripts/build-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/build-resources/c420ui/scripts/build-bootstrap.cjs && node .build/build-resources/c420ui/scripts/build-bootstrap.cjs",
-    "check:c420ui-node-check": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-node.js",
-    "check:c420ui-bootstrap": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-bootstrap.js",
-    "check:c420ui-bootstrap-artifacts": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-artifact-gate.js",
+    "check:c420ui-node-check": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-node.mjs",
+    "check:c420ui-bootstrap": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-bootstrap.mjs",
+    "check:c420ui-bootstrap-artifacts": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-artifact-gate.mjs",
     "test:c420ui": "npm run test -- build-resources/c420ui/test",
-    "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.js",
-    "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
-    "c420ui:install-native": "npm run build:scripts && node .build/scripts/install-native.js",
-    "c420ui:build-appimage": "npm run build:scripts && node .build/scripts/build-appimage.js",
-    "c420ui:build-flatpak-bundle": "npm run build:scripts && node .build/scripts/build-flatpak-bundle.js",
+    "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.mjs",
+    "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.mjs",
+    "c420ui:install-native": "npm run build:scripts && node .build/scripts/install-native.mjs",
+    "c420ui:build-appimage": "npm run build:scripts && node .build/scripts/build-appimage.mjs",
+    "c420ui:build-flatpak-bundle": "npm run build:scripts && node .build/scripts/build-flatpak-bundle.mjs",
   };
 
   for (const [name, expected] of Object.entries(requiredScripts)) {
@@ -579,7 +579,7 @@ function checkValidateProjectScript(rootDir: string, failures: string[]): void {
   const command = packageJson?.scripts?.["validate:project"] ?? "";
   if (
     !command.includes("npm run build:scripts") ||
-    !command.includes("node .build/scripts/validate-project.js")
+    !command.includes("node .build/scripts/validate-project.mjs")
   ) {
     failures.push("package.json scripts.validate:project: must execute the generated TypeScript entrypoint");
   }

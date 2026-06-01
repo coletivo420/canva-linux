@@ -116,7 +116,7 @@ const requiredStandaloneEntrypoints = [
 const requiredBootstrapEntrypoints = {
   "bootstrap:typescript": {
     source: "build-resources/c420ui/scripts/run-typescript-script.ts",
-    artifact: ".build/scripts/bootstrap/run-typescript-script.js",
+    artifact: ".build/scripts/bootstrap/run-typescript-script.mjs",
   },
   "bootstrap:electron-builder": {
     source: "build-resources/c420ui/scripts/electron-builder-before-build.ts",
@@ -125,12 +125,12 @@ const requiredBootstrapEntrypoints = {
 } as const;
 
 const requiredArtifactScripts = {
-  test: ".build/scripts/run-node-tests.js",
-  "build:preload": ".build/scripts/build-preload-bundle.js",
-  "clean:runtime": ".build/scripts/clean-runtime-build.js",
-  "build:runtime": ".build/scripts/build-runtime.js",
-  c420ui: ".build/scripts/run-c420ui.js",
-  "check:c420ui": ".build/scripts/run-c420ui.js",
+  test: ".build/scripts/run-node-tests.mjs",
+  "build:preload": ".build/scripts/build-preload-bundle.mjs",
+  "clean:runtime": ".build/scripts/clean-runtime-build.mjs",
+  "build:runtime": ".build/scripts/build-runtime.mjs",
+  c420ui: ".build/scripts/run-c420ui.mjs",
+  "check:c420ui": ".build/scripts/run-c420ui.mjs",
 } as const;
 
 function main(): number {
@@ -1432,7 +1432,7 @@ function validateProjectValidationScriptShape(
   const validateProjectCommand = packageJson?.scripts?.["validate:project"] ?? "";
   if (
     !validateProjectCommand.includes("npm run build:scripts") ||
-    !validateProjectCommand.includes("node .build/scripts/validate-project.js")
+    !validateProjectCommand.includes("node .build/scripts/validate-project.mjs")
   ) {
     failures.push(
       "package.json scripts.validate:project: must run generated TypeScript validation entrypoint",
@@ -1515,7 +1515,7 @@ function validateLauncherScriptShape(
 
   for (const fragment of [
     "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs",
-    ".build/scripts/c420ui-builder.js",
+    ".build/scripts/c420ui-builder.mjs",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
     if (!content.includes(fragment)) {
@@ -1530,8 +1530,8 @@ function validateLauncherScriptShape(
     "selectEntrypoint",
     "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
     "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-    ".build/scripts/run-c420ui.js",
-    ".build/scripts/run-c420ui-cli.js",
+    ".build/scripts/run-c420ui.mjs",
+    ".build/scripts/run-c420ui-cli.mjs",
   ] as const) {
     if (!source.includes(fragment)) {
       failures.push(`${sourcePath}: builder source is missing required fragment ${JSON.stringify(fragment)}`);
@@ -1779,7 +1779,8 @@ function checkReviewChecklist(failures: string[]): void {
 
 const checkDev11EsmPolicyContract = (() => {
 const dev11CommonJsMigrationDebt = [
-  "package.json: esbuild --format=cjs",
+  "package.json: bootstrap:electron-builder still uses --format=cjs",
+  "package.json: build:c420ui-bootstrap still uses --format=cjs",
   "build-resources/config/typescript/tsconfig.json: module commonjs",
   "build-resources/config/typescript/tsconfig.build.json: module commonjs",
   "build-resources/c420ui/bootstrap/generated/*.cjs",
@@ -1853,6 +1854,38 @@ function main(): number {
     failures.push(
       `${file}: Dev11 ESM-only regression (${forbidden}) is forbidden in maintained TypeScript source`,
     );
+  }
+
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
+  ) as { scripts?: Record<string, string> };
+  const scripts = packageJson.scripts ?? {};
+  const requiredEsmBuildScripts = [
+    "build:scripts",
+    "build:scripts-core",
+    "build:c420ui-checks",
+    "build:canva-linux-checks",
+    "build:c420ui-terminal",
+    "bootstrap:typescript",
+  ] as const;
+  for (const scriptName of requiredEsmBuildScripts) {
+    const command = scripts[scriptName] ?? "";
+    if (!command.includes("--format=esm")) {
+      failures.push(
+        `package.json scripts.${scriptName}: Dev11 ESM policy requires --format=esm`,
+      );
+    }
+    if (
+      (scriptName === "build:scripts" ||
+        scriptName === "build:scripts-core" ||
+        scriptName === "build:c420ui-checks" ||
+        scriptName === "build:canva-linux-checks") &&
+      !command.includes("--out-extension:.js=.mjs")
+    ) {
+      failures.push(
+        `package.json scripts.${scriptName}: Dev11 ESM policy requires --out-extension:.js=.mjs`,
+      );
+    }
   }
 
   if (failures.length) {
@@ -1989,7 +2022,7 @@ export function main(): number {
   return 0;
 }
 
-if (require.main === module) {
+if (/check-repository-policy\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

@@ -71,8 +71,8 @@ export function runProjectValidation(context: ValidationContext): ValidationResu
   }
 
   for (const [label, script] of [
-    ["validate flatpak", ".build/scripts/validate-flatpak.js"],
-    ["validate flathub submission", ".build/scripts/validate-flathub-submission.js"],
+    ["validate flatpak", ".build/scripts/validate-flatpak.mjs"],
+    ["validate flathub submission", ".build/scripts/validate-flathub-submission.mjs"],
   ] as const) {
     const result = runStep(label, "node", [script], context.rootDir);
     if (!result.ok) failures.push(`${label} failed`);
@@ -86,7 +86,7 @@ export function runProjectValidation(context: ValidationContext): ValidationResu
   return okResult(warnings);
 }
 
-if (require.main === module) {
+if (/project\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const result = runProjectValidation({ rootDir: process.cwd() });
   process.exit(result.ok ? 0 : 1);
 }

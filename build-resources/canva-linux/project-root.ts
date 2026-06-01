@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 function defaultRootSearchDir(): string {
-  return path.resolve(__dirname, "../..");
+  return path.resolve(process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd());
 }
 
 export function findCanvaLinuxProjectRoot(

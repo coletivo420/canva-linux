@@ -143,11 +143,11 @@ function selectEntrypoint(rootDir: string, kind: "ui" | "cli"): string {
   const candidates = kind === "ui"
     ? [
         path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"),
-        path.join(rootDir, ".build/scripts/run-c420ui.js"),
+        path.join(rootDir, ".build/scripts/run-c420ui.mjs"),
       ]
     : [
         path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
-        path.join(rootDir, ".build/scripts/run-c420ui-cli.js"),
+        path.join(rootDir, ".build/scripts/run-c420ui-cli.mjs"),
       ];
 
   for (const candidate of candidates) {
@@ -224,7 +224,11 @@ function assertNonRoot(): void {
 export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   const parsed = normalizeBuilderArgs(argv);
   if (parsed.help) {
-    console.log(builderHelp(findProjectRoot(path.resolve(__dirname, ".."))));
+    console.log(
+      builderHelp(
+        findProjectRoot(process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()),
+      ),
+    );
     return 0;
   }
 
@@ -233,7 +237,9 @@ export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   }
 
   assertNonRoot();
-  const rootDir = findProjectRoot(path.resolve(__dirname, ".."));
+  const rootDir = findProjectRoot(
+    process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd(),
+  );
   ensureC420UIBootstrap(rootDir);
   const session = createSession(rootDir);
   const kind = parsed.hasBridgeAction ? "cli" : "ui";
@@ -250,7 +256,7 @@ export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   return result.status ?? 1;
 }
 
-if (require.main === module) {
+if (/c420ui-builder\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(runC420UIBuilder());
   } catch (error) {

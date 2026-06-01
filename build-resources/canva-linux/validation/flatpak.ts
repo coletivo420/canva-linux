@@ -99,7 +99,7 @@ export function runFlatpakValidation(context: ValidationContext): ValidationResu
   return okResult(warnings);
 }
 
-if (require.main === module) {
+if (/flatpak\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const args = parseArgs(process.argv.slice(2));
   const result = runFlatpakValidation({ rootDir: process.cwd(), releaseArtifacts: args.releaseArtifacts });
   process.exit(result.ok ? 0 : 1);

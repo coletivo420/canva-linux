@@ -2,19 +2,23 @@
 
 ## Current CommonJS debt
 
-- package.json esbuild commands using `--format=cjs`
+- package.json `bootstrap:electron-builder` still using `--format=cjs`
+- package.json `build:c420ui-bootstrap` still using `--format=cjs`
 - tsconfig module/commonjs settings
 - generated c420ui bootstrap `.cjs`
-- `.build/scripts/*.js` generated as CommonJS
-- `.build/electron/**/*.js` generated from CommonJS TypeScript config
+- `.build/electron/**/*.js` runtime output still generated from CommonJS TypeScript config
 - CommonJS assumptions around `__dirname` and `__filename`
-- Node execution paths expecting `.js` CommonJS outputs
 
 ## Source debt resolved in Dev11
 
 - c420ui terminal `app.ts`/`modal.ts`/`runtime.ts` maintained source CommonJS debt
 - Electron shared `debug.ts`/`navigation.ts` duplicate `module.exports`
 - `check-runtime-build.ts` CommonJS entry guard in maintained TypeScript source
+- Node tooling generated outputs moved from CommonJS `.js` to ESM `.mjs`
+- Core checks generated outputs moved to ESM `.mjs`
+- c420ui checks generated outputs moved to ESM `.mjs`
+- c420ui terminal generated output moved to ESM `.mjs`
+- TypeScript runner bootstrap moved to ESM `.mjs`
 
 ## Dev11 maintained-source hard rules
 
@@ -33,3 +37,10 @@ Dev11 forbids indirect CommonJS compatibility in maintained TypeScript:
 - c420ui bootstrap emits `.mjs`
 - old `.cjs` bootstrap artifacts are removed, not preserved as permanent fallback
 - repository checks reject new CommonJS source patterns
+
+## Remaining migration blocks
+
+- tsconfig `NodeNext`/module migration
+- Electron runtime output migration
+- electron-builder hook migration
+- c420ui generated bootstrap `.cjs` migration

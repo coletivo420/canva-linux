@@ -93,10 +93,7 @@ export function main(): number {
   return 0;
 }
 
-if (
-  require.main === module &&
-  /check-dependency-policy\.js$/.test(process.argv[1] || "")
-) {
+if (/check-dependency-policy\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

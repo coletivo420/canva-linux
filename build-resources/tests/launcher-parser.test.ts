@@ -14,7 +14,7 @@ test("primary builder wrapper prefers c420ui-builder bootstrap bundle before bui
   assert.doesNotMatch(wrapper, /canva-linux-c420ui-builder\.js/);
   assert.ok(
     wrapper.indexOf("build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs") <
-      wrapper.indexOf(".build/scripts/c420ui-builder.js"),
+      wrapper.indexOf(".build/scripts/c420ui-builder.mjs"),
   );
 });
 

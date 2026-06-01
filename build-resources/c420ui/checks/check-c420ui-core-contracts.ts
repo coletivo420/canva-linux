@@ -1385,7 +1385,7 @@ export function main(): number {
   return 0;
 }
 
-if (require.main === module) {
+if (/check-c420ui-core-contracts\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

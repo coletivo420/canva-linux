@@ -87,7 +87,7 @@ export function runDoctorValidation(context: ValidationContext): ValidationResul
   return okResult(warnings);
 }
 
-if (require.main === module) {
+if (/doctor\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const result = runDoctorValidation({ rootDir: process.cwd() });
   process.exit(result.ok ? 0 : 1);
 }

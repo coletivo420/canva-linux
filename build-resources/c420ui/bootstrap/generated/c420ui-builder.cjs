@@ -531,10 +531,10 @@ function createSession(rootDir) {
 function selectEntrypoint(rootDir, kind) {
   const candidates = kind === "ui" ? [
     import_node_path4.default.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"),
-    import_node_path4.default.join(rootDir, ".build/scripts/run-c420ui.js")
+    import_node_path4.default.join(rootDir, ".build/scripts/run-c420ui.mjs")
   ] : [
     import_node_path4.default.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
-    import_node_path4.default.join(rootDir, ".build/scripts/run-c420ui-cli.js")
+    import_node_path4.default.join(rootDir, ".build/scripts/run-c420ui-cli.mjs")
   ];
   for (const candidate of candidates) {
     if (import_node_fs4.default.existsSync(candidate) && import_node_fs4.default.statSync(candidate).size > 0) return candidate;
@@ -591,14 +591,20 @@ function assertNonRoot() {
 function runC420UIBuilder(argv = process.argv.slice(2)) {
   const parsed = normalizeBuilderArgs(argv);
   if (parsed.help) {
-    console.log(builderHelp(findProjectRoot(import_node_path4.default.resolve(__dirname, ".."))));
+    console.log(
+      builderHelp(
+        findProjectRoot(process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd())
+      )
+    );
     return 0;
   }
   if (!parsed.hasBridgeAction && parsed.bridgeArgs.length > 0) {
     throw new Error("No direct action was provided.");
   }
   assertNonRoot();
-  const rootDir = findProjectRoot(import_node_path4.default.resolve(__dirname, ".."));
+  const rootDir = findProjectRoot(
+    process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()
+  );
   ensureC420UIBootstrap(rootDir);
   const session = createSession(rootDir);
   const kind = parsed.hasBridgeAction ? "cli" : "ui";
@@ -613,7 +619,7 @@ function runC420UIBuilder(argv = process.argv.slice(2)) {
   if (result.error) throw result.error;
   return result.status ?? 1;
 }
-if (require.main === module) {
+if (/c420ui-builder\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(runC420UIBuilder());
   } catch (error) {

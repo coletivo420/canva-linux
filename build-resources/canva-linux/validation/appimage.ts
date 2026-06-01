@@ -122,7 +122,7 @@ export function runAppImageValidation(context: ValidationContext, args: string[]
   return failures.length > 0 ? failResult(failures) : okResult();
 }
 
-if (require.main === module) {
+if (/appimage\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const result = runAppImageValidation({ rootDir: process.cwd() }, process.argv.slice(2));
   process.exit(result.ok ? 0 : 1);
 }

@@ -11,6 +11,7 @@ Request changes if a PR:
 - adds `module.exports` or `exports.*`;
 - adds new `.cjs` files outside explicitly generated temporary bootstrap debt;
 - adds new esbuild `--format=cjs`;
+- restores `.build/scripts/*.js` generated tooling outputs instead of `.mjs` for migrated Dev11 tooling;
 - adds new tsconfig `module: commonjs`;
 - restores `@ts-nocheck`;
 - changes package output to CommonJS while claiming ESM migration;

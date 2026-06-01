@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const repoRoot =
-  process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
 const useBuildOutput = process.argv.includes("--build-output");
 const runtimeRoot = useBuildOutput ? path.join(repoRoot, ".build") : repoRoot;
 
@@ -59,7 +59,7 @@ export async function main(): Promise<void> {
   console.log(`[preload-bundle] wrote ${path.relative(repoRoot, outputFile)}`);
 }
 
-if (require.main === module) {
+if (/build-preload-bundle\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   main().catch((error: unknown) => {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);

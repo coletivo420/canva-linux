@@ -450,10 +450,7 @@ export function main(): number {
   return 0;
 }
 
-if (
-  require.main === module &&
-  /check-ai-guardrails\.js$/.test(process.argv[1] || "")
-) {
+if (/check-ai-guardrails\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

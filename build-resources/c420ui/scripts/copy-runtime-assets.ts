@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const repoRoot =
-  process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
 const effectiveMetadataPath = ".build/canva-linux/build-metadata.effective.json";
 const committedMetadataPath = "build-resources/canva-linux/config/build-metadata.json";
 const metadataSourcePath = fs.existsSync(path.join(repoRoot, effectiveMetadataPath))
@@ -32,4 +32,4 @@ export function main(): void {
   }
 }
 
-if (require.main === module) main();
+if (/copy-runtime-assets\.(mjs|js|ts)$/.test(process.argv[1] || "")) main();

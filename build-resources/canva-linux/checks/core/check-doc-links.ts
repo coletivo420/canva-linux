@@ -219,10 +219,7 @@ export function main(): number {
   return 1;
 }
 
-if (
-  require.main === module &&
-  /check-doc-links\.js$/.test(process.argv[1] || "")
-) {
+if (/check-doc-links\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

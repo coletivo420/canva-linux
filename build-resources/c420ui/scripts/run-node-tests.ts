@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const rootDir =
-  process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
 const testDir = path.join(rootDir, "build-resources", "tests");
 const c420uiTestDir = path.join(rootDir, "build-resources", "c420ui", "test");
 const compiledTestDir = path.join(rootDir, ".build", "build-resources", "tests");
@@ -391,4 +391,4 @@ export function main(): void {
   process.exit(1);
 }
 
-if (require.main === module) main();
+if (/run-node-tests\.(mjs|js|ts)$/.test(process.argv[1] || "")) main();

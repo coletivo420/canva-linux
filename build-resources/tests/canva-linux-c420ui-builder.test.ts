@@ -81,7 +81,7 @@ test("builder title and help separate c420ui builder from runtime canva-linux", 
 });
 
 test("builder normalizeBuilderArgs delegates a registry-backed planned action", () => {
-  const { normalizeBuilderArgs } = require(path.join(repoRoot, ".build/scripts/c420ui-builder.js"));
+  const { normalizeBuilderArgs } = require(path.join(repoRoot, ".build/scripts/c420ui-builder.mjs"));
 
   assert.deepEqual(normalizeBuilderArgs(["--prepare-aur", "--dry-run"]), {
     help: false,
@@ -96,7 +96,7 @@ test("builder normalizeBuilderArgs delegates a registry-backed planned action", 
 });
 
 test("builder normalizeBuilderArgs rejects runtime debug flags", () => {
-  const { normalizeBuilderArgs } = require(path.join(repoRoot, ".build/scripts/c420ui-builder.js"));
+  const { normalizeBuilderArgs } = require(path.join(repoRoot, ".build/scripts/c420ui-builder.mjs"));
   assert.throws(
     () => normalizeBuilderArgs(["--canva-debug=1"]),
     /--canva-debug=1 is a Canva Linux runtime option/,

@@ -16,6 +16,8 @@ CommonJS patterns are forbidden in maintained source:
 
 CommonJS may exist only as temporary migration output during Dev11.
 No generated `.cjs` bootstrap should remain required at the end of Dev11.
+Node tooling, core checks, c420ui checks, and c420ui terminal generated outputs
+must use ESM `.mjs` artifacts.
 
 ## Source language policy validation
 

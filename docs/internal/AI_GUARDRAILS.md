@@ -12,6 +12,10 @@
   adapters.
 - CommonJS may exist only as temporary migration output during Dev11.
 - No generated `.cjs` bootstrap should remain required at the end of Dev11.
+- Node tooling generated outputs moved to ESM `.mjs` under `.build/scripts/`.
+- Core and c420ui checks generated outputs moved to ESM `.mjs`.
+- c420ui terminal generated output moved to ESM `.mjs`.
+- TypeScript runner bootstrap moved to ESM `.mjs`.
 
 ## c420ui structural ownership and efficiency
 
@@ -29,6 +33,7 @@
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or
   generated artifacts under `build-resources/canva-linux/checks`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`.
 - Do not place c420ui-owned generated artifacts under root `scripts/`,
   root `build-resources/tests/`,
   `build-resources/canva-linux/c420ui-adapter`, or `packages/`.
@@ -36,6 +41,7 @@
   transitively import `scripts/canva-linux` registries, the specific imported
   `scripts/canva-linux` submodules must remain in
   `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 
 ## Dev.9 metadata persistence and c420ui repair
 

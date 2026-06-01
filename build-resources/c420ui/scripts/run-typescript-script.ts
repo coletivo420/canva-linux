@@ -1,15 +1,11 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
-
-const requireFromHere = createRequire(__filename);
-const esbuild = requireFromHere("esbuild") as typeof import("esbuild");
+import * as esbuild from "esbuild";
 
 function findProjectRoot(): string {
   const candidates = [
     process.env.CANVA_SCRIPT_REPO_ROOT,
-    path.resolve(__dirname, "..", "..", ".."),
     process.cwd(),
   ].filter(Boolean) as string[];
 
@@ -35,7 +31,7 @@ function findProjectRoot(): string {
 
 function usage(): never {
   console.error(
-    "usage: node .build/scripts/bootstrap/run-typescript-script.js <entry.ts> [args...]",
+    "usage: node .build/scripts/bootstrap/run-typescript-script.mjs <entry.ts> [args...]",
   );
   process.exit(64);
 }
@@ -62,7 +58,7 @@ function outputPathForEntry(rootDir: string, entryPoint: string): string {
   const relative = path.relative(rootDir, entryPoint).replace(/\\/g, "/");
   const flatName = relative
     .replace(/[^a-zA-Z0-9._-]/g, "-")
-    .replace(/\.ts$/, ".js");
+    .replace(/\.ts$/, ".mjs");
   return path.join(rootDir, ".build", "scripts", "typescript", flatName);
 }
 
@@ -76,7 +72,7 @@ function buildEntry(rootDir: string, entryPoint: string): string {
     bundle: true,
     platform: "node",
     target: "node20",
-    format: "cjs",
+    format: "esm",
     external: ["electron", "blessed", "esbuild", "typescript"],
     sourcemap: false,
     minify: false,
@@ -131,7 +127,7 @@ export function main(): number {
   return runBuiltEntry(rootDir, entryPoint, outfile, args);
 }
 
-if (require.main === module) {
+if (/run-typescript-script\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

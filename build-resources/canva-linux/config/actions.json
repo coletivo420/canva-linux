@@ -8,7 +8,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/install-native.js"
+      ".build/scripts/install-native.mjs"
     ],
     "cli": [
       "--install-native"
@@ -32,7 +32,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/install-native.js"
+      ".build/scripts/install-native.mjs"
     ],
     "longRunning": true,
     "description": "Install Canva Linux natively for the current user.",
@@ -52,7 +52,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/install-flatpak.js"
+      ".build/scripts/install-flatpak.mjs"
     ],
     "cli": [
       "--install-flatpak"
@@ -76,7 +76,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/install-flatpak.js"
+      ".build/scripts/install-flatpak.mjs"
     ],
     "longRunning": true,
     "description": "Build and install Canva Linux locally as a Flatpak for the current user.",
@@ -97,7 +97,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/build-flatpak-bundle.js"
+      ".build/scripts/build-flatpak-bundle.mjs"
     ],
     "cli": [
       "--bundle-flatpak"
@@ -114,7 +114,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/build-appimage.js"
+      ".build/scripts/build-appimage.mjs"
     ],
     "cli": [
       "--bundle-appimage"
@@ -167,7 +167,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/build-runtime-entry.js"
+      ".build/scripts/build-runtime-entry.mjs"
     ],
     "cli": [
       "--build-runtime"
@@ -184,7 +184,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/build-electron-dir-entry.js"
+      ".build/scripts/build-electron-dir-entry.mjs"
     ],
     "cli": [
       "--build-dir"
@@ -264,7 +264,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/clean-artifacts.js"
+      ".build/scripts/clean-artifacts.mjs"
     ],
     "cli": [
       "--clean"
@@ -292,7 +292,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/show-detected-installations.js"
+      ".build/scripts/show-detected-installations.mjs"
     ],
     "cli": [],
     "hidden": true,
@@ -307,7 +307,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/show-version-info.js"
+      ".build/scripts/show-version-info.mjs"
     ],
     "cli": [],
     "hidden": true,
@@ -322,7 +322,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/reset-user-data.js"
+      ".build/scripts/reset-user-data.mjs"
     ],
     "cli": [
       "--reset-user-data"
@@ -340,7 +340,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/uninstall-native.js"
+      ".build/scripts/uninstall-native.mjs"
     ],
     "cli": [
       "--uninstall-native"
@@ -365,7 +365,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/uninstall-native.js"
+      ".build/scripts/uninstall-native.mjs"
     ],
     "cli": [],
     "dangerous": true,
@@ -388,7 +388,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/uninstall-flatpak.js"
+      ".build/scripts/uninstall-flatpak.mjs"
     ],
     "cli": [
       "--uninstall-flatpak"
@@ -413,7 +413,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/uninstall-flatpak.js"
+      ".build/scripts/uninstall-flatpak.mjs"
     ],
     "cli": [],
     "dangerous": true,
@@ -438,7 +438,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/uninstall-detected.js"
+      ".build/scripts/uninstall-detected.mjs"
     ],
     "cli": [
       "--uninstall"
@@ -461,7 +461,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/purge-installations.js"
+      ".build/scripts/purge-installations.mjs"
     ],
     "cli": [
       "--purge"
@@ -483,7 +483,7 @@
     "command": "bash",
     "args": [
       "scripts/run-built-script.sh",
-      ".build/scripts/fix-build-permissions.js"
+      ".build/scripts/fix-build-permissions.mjs"
     ],
     "requiresRoot": true,
     "description": "Restore ownership of generated build directories to the current user."
