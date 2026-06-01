@@ -139,10 +139,13 @@ function checkRequiredPaths(rootDir: string, failures: string[]): void {
     "build-resources/c420ui/scripts/c420ui-builder.ts",
     "build-resources/c420ui/scripts/run-c420ui.ts",
     "build-resources/c420ui/scripts/run-c420ui-cli.ts",
-    "build-resources/c420ui/scripts/install-native.sh",
-    "build-resources/c420ui/scripts/build-appimage.sh",
-    "build-resources/c420ui/scripts/build-flatpak-bundle.sh",
-    "build-resources/c420ui/scripts/install-detection-common.sh",
+    "build-resources/c420ui/scripts/install-native.ts",
+    "build-resources/c420ui/scripts/build-appimage.ts",
+    "build-resources/c420ui/scripts/build-flatpak-bundle.ts",
+    "build-resources/c420ui/operations/detection/install-detection.ts",
+    "build-resources/c420ui/operations/packaging/appimage.ts",
+    "build-resources/c420ui/operations/packaging/flatpak-bundle.ts",
+    "build-resources/c420ui/operations/install/native.ts",
     "build-resources/c420ui/checks/check-bootstrap.ts",
     "build-resources/c420ui/checks/check-artifact-gate.ts",
     "build-resources/c420ui/checks/check-node.ts",
@@ -572,30 +575,13 @@ function checkDocs(rootDir: string, failures: string[]): void {
 }
 
 function checkValidateProjectScript(rootDir: string, failures: string[]): void {
-  const contents = readText(rootDir, "scripts/validate-project.sh");
-  if (!contents) {
-    failures.push("scripts/validate-project.sh: must exist");
-    return;
-  }
-
-  for (const requiredFragment of [
-    "npm run build:scripts --silent",
-    "node \".build/scripts/validate-project.js\"",
-  ] as const) {
-    if (!contents.includes(requiredFragment)) {
-      failures.push(`scripts/validate-project.sh: missing required fragment ${requiredFragment}`);
-    }
-  }
-
-  for (const forbiddenFragment of [
-    "run_step \"",
-    "node <<'NODE'",
-    "node -e",
-    "node -p",
-  ] as const) {
-    if (contents.includes(forbiddenFragment)) {
-      failures.push(`scripts/validate-project.sh: wrapper must not contain maintained validation logic (${forbiddenFragment})`);
-    }
+  const packageJson = readJson<{ scripts?: Record<string, string> }>(rootDir, "package.json");
+  const command = packageJson?.scripts?.["validate:project"] ?? "";
+  if (
+    !command.includes("npm run build:scripts") ||
+    !command.includes("node .build/scripts/validate-project.js")
+  ) {
+    failures.push("package.json scripts.validate:project: must execute the generated TypeScript entrypoint");
   }
 
   const projectEntrypointSource = readText(rootDir, "build-resources/canva-linux/scripts/validate-project.ts");

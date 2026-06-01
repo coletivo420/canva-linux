@@ -186,7 +186,7 @@ test("build metadata source does not hardcode current Dev.7 fallbacks", () => {
 
 test("generate-build-metadata supports explicit committed/effective modes", () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, "scripts", "generate-build-metadata.ts"),
+    path.join(repoRoot, "build-resources", "c420ui", "scripts", "generate-build-metadata.ts"),
     "utf8",
   );
 
@@ -197,7 +197,7 @@ test("generate-build-metadata supports explicit committed/effective modes", () =
 
 test("committed mode does not resolve live git revision", () => {
   const source = fs.readFileSync(
-    path.join(repoRoot, "scripts", "generate-build-metadata.ts"),
+    path.join(repoRoot, "build-resources", "c420ui", "scripts", "generate-build-metadata.ts"),
     "utf8",
   );
 

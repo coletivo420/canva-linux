@@ -2,17 +2,13 @@
 
 ## c420ui structural ownership and efficiency
 
-- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
-- Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
-- No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
-  root `build-resources/tests/`, `build-resources/canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
-  the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
-- Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI
-  refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
-- Directory guards for cleanup operations must use a simplified forbidden set:
-  `[resolvedRoot, path.dirname(resolvedRoot), path.parse(resolvedOut).root, process.cwd()]`.
+- All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
+- All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
+- Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.
+- Project validation runs from `build-resources/canva-linux/validation/project.ts` via `validate:project`.
+- Doctor runs from `build-resources/canva-linux/validation/doctor.ts` via `validate:doctor`.
+- Flatpak and Flathub policy checks run from TypeScript entrypoints.
+- Install, uninstall, maintenance, packaging, build, artifact and versioning mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
 
 ## Dev.9 metadata persistence and c420ui repair
 

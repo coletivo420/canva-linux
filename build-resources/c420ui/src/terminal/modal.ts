@@ -248,7 +248,7 @@ export function inputDialog(
       });
     });
 
-    input.on("submit", (value) => {
+    input.on("submit", (value: unknown) => {
       close({
         status: "submitted",
         value: String(value ?? ""),

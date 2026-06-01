@@ -25,6 +25,7 @@ commands.
 - `build-resources/c420ui/src/command-runner.ts`
 - `build-resources/c420ui/src/operational-logs.ts`
 - `build-resources/c420ui/src/events.ts`
+- `build-resources/c420ui/operations/`
 - `build-resources/canva-linux/c420ui-adapter/adapter.ts`
 
 ## Consumed configs and adapters

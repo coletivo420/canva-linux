@@ -143,7 +143,7 @@ function convertIntegrity(
     const match = /^(sha\d+)-([A-Za-z0-9+/=]+)$/.exec(part);
     if (!match)
       fail(`${packagePath}: invalid npm integrity fragment (${part})`);
-    parsed.set(match[1].toLowerCase(), match[2]);
+    parsed.set((match[1] ?? "").toLowerCase(), match[2] ?? "");
   }
 
   for (const algorithm of supportedIntegrityAlgorithms) {

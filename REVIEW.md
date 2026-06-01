@@ -2,10 +2,13 @@
 
 ## c420ui package refactor and structural ownership
 
-- c420ui-owned tooling (runtime/build/check/test ownership, bootstrap helpers, artifact hashes, syntax gates, shell helpers) must live under `build-resources/c420ui`. The adapter layer in `canva-linux/c420ui-adapter` is reserved for Canva Linux integration glue only and must not own bootstrap validation or runtime tooling.
-- c420ui-owned scripts, checks, bootstrap artifacts and tests live under `build-resources/c420ui`. The root `scripts/` directory may keep only compatibility wrappers when needed, and Canva Linux contracts must delegate to c420ui checks without embedding c420ui bootstrap implementation details.
-- Detection providers must avoid repeated `package.json` parsing and repeated `npm` process spawning during TUI refresh cycles. Reuse shared `readPackage()` with caching and closure-based `npm --version` cache.
-- Directory guards for cleanup operations must use a simplified forbidden set: `[resolvedRoot, path.dirname(resolvedRoot), path.parse(resolvedOut).root, process.cwd()]`.
+- All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
+- All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
+- Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.
+- Project validation runs from `build-resources/canva-linux/validation/project.ts` via `validate:project`.
+- Doctor runs from `build-resources/canva-linux/validation/doctor.ts` via `validate:doctor`.
+- Flatpak and Flathub policy checks run from TypeScript entrypoints.
+- Install, uninstall, maintenance, packaging, build, artifact and versioning mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
 
 ## Dev.9 metadata persistence and c420ui repair
 

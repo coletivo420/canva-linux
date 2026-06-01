@@ -4,13 +4,13 @@ import path from "node:path";
 import test from "node:test";
 
 import { validateC420UIDevelopmentConfig } from "../c420ui/src";
-import { loadCanvaLinuxActions } from "../../build-resources/canva-linux/actions/registry";
-import { loadCanvaLinuxC420UIActions } from "../../build-resources/canva-linux/c420ui-adapter/actions";
+import { loadCanvaLinuxActions } from "../canva-linux/actions/registry";
+import { loadCanvaLinuxC420UIActions } from "../canva-linux/c420ui-adapter/actions";
 import {
   loadCanvaLinuxDevelopmentTasks,
   loadCanvaLinuxDevelopmentWorkflows,
   validateCanvaLinuxDevelopmentTasksAgainstActions,
-} from "../../build-resources/canva-linux/c420ui-adapter/development";
+} from "../canva-linux/c420ui-adapter/development";
 
 const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
 const developmentConfigPath = path.join(rootDir, "build-resources/canva-linux/config/development.json");

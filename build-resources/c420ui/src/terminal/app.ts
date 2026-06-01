@@ -1005,7 +1005,7 @@ export function createApp(options: C420UIAppOptions) {
   function moveFocus(delta: number) {
     const index = FOCUS_ZONES.indexOf(focusZone);
     const nextIndex = (index + delta + FOCUS_ZONES.length) % FOCUS_ZONES.length;
-    setFocusZone(FOCUS_ZONES[nextIndex]);
+    setFocusZone(FOCUS_ZONES[nextIndex] ?? "menu");
   }
 
   function applyFocusStyles() {
@@ -1167,7 +1167,7 @@ export function createApp(options: C420UIAppOptions) {
     }
     const selected = currentActions[selectedIndex] ?? null;
     const base = [
-      `{${c420uiTheme.colors.helpTitle}-fg}${view[0].toUpperCase() + view.slice(1)} Actions{/${c420uiTheme.colors.helpTitle}-fg}`,
+      `{${c420uiTheme.colors.helpTitle}-fg}${view.charAt(0).toUpperCase() + view.slice(1)} Actions{/${c420uiTheme.colors.helpTitle}-fg}`,
     ];
     if (!selected) {
       return content.setContent(base.join("\n"));
@@ -1459,8 +1459,8 @@ export function createApp(options: C420UIAppOptions) {
       .actions()
       .filter((action) => action.group === group) as InteractiveAction[];
     menu.setItems(currentActions.map((a) => a.label));
-    menuLabelText = `${view[0].toUpperCase() + view.slice(1)} Actions`;
-    contentLabelText = view[0].toUpperCase() + view.slice(1);
+    menuLabelText = `${view.charAt(0).toUpperCase() + view.slice(1)} Actions`;
+    contentLabelText = view.charAt(0).toUpperCase() + view.slice(1);
     renderActionHelp(view, menu.selected);
     applyFocusStyles();
     screen.render();
@@ -1468,7 +1468,7 @@ export function createApp(options: C420UIAppOptions) {
 
   // --- Actions & Execution ---
 
-  menu.on("select", async (_, index) => {
+  menu.on("select", async (_: unknown, index: number) => {
     if (running || modalActive || focusZone !== "menu") {
       return;
     }
@@ -1748,7 +1748,7 @@ export function createApp(options: C420UIAppOptions) {
 
   // --- Menu Event Listeners ---
 
-  menu.on("keypress", (_, key) => {
+  menu.on("keypress", (_: unknown, key: { name?: string }) => {
     if (updatingSettingsMenuItems) {
       return;
     }

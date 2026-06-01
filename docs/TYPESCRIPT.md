@@ -108,17 +108,19 @@ under `.build/` only.
 
 ## Script Core
 
+Dev.10 closed the maintained `/scripts` root. All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
+
+All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
+
+Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.
+
 Project validations, contracts, and registries are implemented in TypeScript under `build-resources/canva-linux/checks/core/`.
 
 - `npm run build:scripts-core` removes `.build/build-resources/canva-linux/checks/core/`, then compiles core
   entries with esbuild into a fresh `.build/build-resources/canva-linux/checks/core/` output directory so stale
   artifacts from removed entries cannot survive rebuilds.
-- `scripts/run-core-entry.sh` only dispatches supported core entries, removes stale
-  generated files for removed legacy entries when they are requested, builds the
-  core on demand when compiled artifacts are missing, then runs the generated
-  `.build/build-resources/canva-linux/checks/core/<entry>.js` artifact.
 - `npm run build:scripts` compiles top-level script entrypoints such as
-  `scripts/build-runtime.ts`, `scripts/run-node-tests.ts`, and
+  `build-resources/c420ui/scripts/build-runtime.ts`, `build-resources/c420ui/scripts/run-node-tests.ts`, and
   `build-resources/c420ui/scripts/run-c420ui.ts` directly into `.build/scripts/*.js`.
 - Package entrypoints run those generated `.build/scripts/*.js` artifacts after
   `build:scripts`; maintained `scripts/**/*.js` wrappers, bootstrap files, and
