@@ -1796,24 +1796,26 @@ function isTemporarilyAllowed(file: string): boolean {
 function hasForbiddenPattern(source: string): string | null {
   const contentWithoutComments = source
     .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "");
+    .replace(/(?:^|\s)\/\/.*$/gm, "");
   const contentWithoutCommentsOrStrings = contentWithoutComments.replace(
     /(["'`])(?:\\.|(?!\1)[^\\])*\1/g,
     '""',
   );
 
-  const runtimePatterns = [
-    "requ" + "ire(",
-    "module" + ".exports",
-    "exports" + ".",
-    "create" + "Require(",
-    "__file" + "name",
-    "__dir" + "name",
-    "requ" + "ire.resolve(",
-  ] as const;
-  for (const pattern of runtimePatterns) {
-    if (contentWithoutCommentsOrStrings.includes(pattern)) return pattern;
-  }
+  if (/(?<!\.)\brequire\s*\(/.test(contentWithoutCommentsOrStrings))
+    return "require(";
+  if (/\bmodule\s*\.\s*exports\b/.test(contentWithoutCommentsOrStrings))
+    return "module.exports";
+  if (/(?<!\.)\bexports\s*\./.test(contentWithoutCommentsOrStrings))
+    return "exports.";
+  if (/(?<!\.)\bcreate\s*Require\s*\(/.test(contentWithoutCommentsOrStrings))
+    return "createRequire(";
+  if (/\b__filename\b/.test(contentWithoutCommentsOrStrings))
+    return "__filename";
+  if (/\b__dirname\b/.test(contentWithoutCommentsOrStrings))
+    return "__dirname";
+  if (/(?<!\.)\brequire\s*\.\s*resolve\s*\(/.test(contentWithoutCommentsOrStrings))
+    return "require.resolve(";
 
   const nodeModuleSpec = "node" + ":" + "module";
   const importFromNodeModulePatterns = [
@@ -1839,9 +1841,13 @@ function main(): number {
     "build-resources/canva-linux/checks/core/",
   ] as const;
   const files = allRepositoryFiles(rootDir).filter(
-    (file) =>
-      file.endsWith(".ts") &&
-      enforcedSourcePrefixes.some((prefix) => file.startsWith(prefix)),
+    (file) => {
+      const normalized = file.replace(/\\/g, "/");
+      return (
+        normalized.endsWith(".ts") &&
+        enforcedSourcePrefixes.some((prefix) => normalized.startsWith(prefix))
+      );
+    },
   );
 
   for (const file of files) {
@@ -1868,6 +1874,10 @@ function main(): number {
     "bootstrap:typescript",
     "bootstrap:electron-builder",
   ] as const;
+  const allowedCjsBuildScripts = new Set([
+    "build:preload",
+    "build:c420ui-bootstrap-artifact",
+  ]);
   for (const scriptName of requiredEsmBuildScripts) {
     const command = scripts[scriptName] ?? "";
     if (!command.includes("--format=esm")) {
@@ -1892,6 +1902,14 @@ function main(): number {
     ) {
       failures.push(
         "package.json scripts.build:c420ui-bootstrap: Dev11 ESM policy requires build-bootstrap.mjs output",
+      );
+    }
+  }
+  for (const [scriptName, command] of Object.entries(scripts)) {
+    if (allowedCjsBuildScripts.has(scriptName)) continue;
+    if (command.includes("--format=cjs")) {
+      failures.push(
+        `package.json scripts.${scriptName}: Dev11 ESM policy forbids new --format=cjs usage outside declared debt`,
       );
     }
   }

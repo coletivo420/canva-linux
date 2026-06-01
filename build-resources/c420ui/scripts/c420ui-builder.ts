@@ -38,8 +38,15 @@ Run this builder as your regular user. When an operation needs administrator pri
 
 Running the whole builder as root may break file ownership, user sessions, build artifacts and desktop integration.`;
 
-function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()): string {
-  let current = startDir;
+function defaultRootSearchDir(): string {
+  if (process.env.CANVA_SCRIPT_REPO_ROOT) return process.env.CANVA_SCRIPT_REPO_ROOT;
+  const scriptPath = process.argv[1];
+  if (scriptPath) return path.dirname(path.resolve(scriptPath));
+  return process.cwd();
+}
+
+function findProjectRoot(startDir = defaultRootSearchDir()): string {
+  let current = path.resolve(startDir);
   while (true) {
     if (fs.existsSync(path.join(current, "package.json"))) {
       const scripts = readJsonFile<{ scripts?: Record<string, string> }>(
@@ -223,12 +230,9 @@ function assertNonRoot(): void {
 
 export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   const parsed = normalizeBuilderArgs(argv);
+  const rootDir = findProjectRoot();
   if (parsed.help) {
-    console.log(
-      builderHelp(
-        findProjectRoot(process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()),
-      ),
-    );
+    console.log(builderHelp(rootDir));
     return 0;
   }
 
@@ -237,9 +241,6 @@ export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   }
 
   assertNonRoot();
-  const rootDir = findProjectRoot(
-    process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd(),
-  );
   ensureC420UIBootstrap(rootDir);
   const session = createSession(rootDir);
   const kind = parsed.hasBridgeAction ? "cli" : "ui";

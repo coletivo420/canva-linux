@@ -1,8 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
 
 const repoRoot =
-  process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
+  findProjectRoot(
+    process.env.CANVA_SCRIPT_REPO_ROOT ||
+      (process.argv[1] ? path.dirname(path.resolve(process.argv[1])) : process.cwd()),
+  );
 const buildDir = path.join(repoRoot, ".build");
 
 export function main(): void {

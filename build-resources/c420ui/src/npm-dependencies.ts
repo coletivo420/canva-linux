@@ -83,7 +83,14 @@ function declaredDependencyNames(
 }
 
 export function resolveC420UINpmDependency(dependency: string, rootDir: string): boolean {
-  return fs.existsSync(path.join(rootDir, "node_modules", dependency, "package.json"));
+  let currentDir = path.resolve(rootDir);
+  while (true) {
+    const candidate = path.join(currentDir, "node_modules", dependency, "package.json");
+    if (fs.existsSync(candidate)) return true;
+    const parent = path.dirname(currentDir);
+    if (parent === currentDir) return false;
+    currentDir = parent;
+  }
 }
 
 function requiredNpmDependencies(config: c420uiNpmDependencyConfig): string[] {
