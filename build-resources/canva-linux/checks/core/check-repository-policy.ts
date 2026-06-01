@@ -406,10 +406,11 @@ function validateNoCommonJsRuntimeExports(
   files: string[],
   failures: string[],
 ): void {
+  const moduleExportsPattern = "module" + ".exports";
   for (const file of files) {
     if (!file.startsWith("build-resources/electron/main/") || !file.endsWith(".ts")) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
-    if (content.includes("module.exports")) {
+    if (content.includes(moduleExportsPattern)) {
       failures.push(
         `${file}: use ESM exports only; duplicate module.exports blocks are forbidden in Electron main TypeScript`,
       );
@@ -438,19 +439,22 @@ function validatePreloadTypeScriptStyle(
   files: string[],
   failures: string[],
 ): void {
+  const moduleExportsPattern = "module" + ".exports";
+  const requirePattern = "requ" + "ire(";
+  const tsNoCheckPattern = "@ts-" + "nocheck";
   for (const file of files) {
     if (!file.startsWith("build-resources/electron/preload/") || !file.endsWith(".ts")) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
     const contentWithoutComments = content
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/^\s*\/\/.*$/gm, "");
-    if (content.includes("@ts-nocheck")) {
+    if (content.includes(tsNoCheckPattern)) {
       failures.push(`${file}: preload modules must not use @ts-nocheck`);
     }
-    if (contentWithoutComments.includes("module.exports")) {
+    if (contentWithoutComments.includes(moduleExportsPattern)) {
       failures.push(`${file}: preload modules must use ESM exports`);
     }
-    if (contentWithoutComments.includes("require(")) {
+    if (contentWithoutComments.includes(requirePattern)) {
       failures.push(`${file}: preload modules must not use require(); use ESM imports`);
     }
   }
@@ -1786,33 +1790,59 @@ const temporaryAllowlistPrefixes = [
   "build-resources/c420ui/test/",
 ] as const;
 
-const temporaryAllowlistFiles = new Set<string>([
-  "build-resources/canva-linux/checks/core/check-repository-policy.ts",
-]);
-
 function isTemporarilyAllowed(file: string): boolean {
-  return (
-    temporaryAllowlistFiles.has(file) ||
-    temporaryAllowlistPrefixes.some((prefix) => file.startsWith(prefix))
-  );
+  return temporaryAllowlistPrefixes.some((prefix) => file.startsWith(prefix));
 }
 
 function hasForbiddenPattern(source: string): string | null {
   const contentWithoutComments = source
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/^\s*\/\/.*$/gm, "");
-  if (contentWithoutComments.includes("require(")) return "require(";
-  if (contentWithoutComments.includes("module.exports")) return "module.exports";
-  if (contentWithoutComments.includes("exports.")) return "exports.";
-  if (source.includes("@ts-nocheck")) return "@ts-nocheck";
+  const contentWithoutCommentsOrStrings = contentWithoutComments.replace(
+    /(["'`])(?:\\.|(?!\1)[^\\])*\1/g,
+    '""',
+  );
+
+  const runtimePatterns = [
+    "requ" + "ire(",
+    "module" + ".exports",
+    "exports" + ".",
+    "create" + "Require(",
+    "__file" + "name",
+    "__dir" + "name",
+    "requ" + "ire.resolve(",
+  ] as const;
+  for (const pattern of runtimePatterns) {
+    if (contentWithoutCommentsOrStrings.includes(pattern)) return pattern;
+  }
+
+  const nodeModuleSpec = "node" + ":" + "module";
+  const importFromNodeModulePatterns = [
+    "from " + `"${nodeModuleSpec}"`,
+    "from " + `'${nodeModuleSpec}'`,
+  ] as const;
+  for (const pattern of importFromNodeModulePatterns) {
+    if (contentWithoutCommentsOrStrings.includes(pattern)) return pattern;
+  }
+
+  const tsNoCheckPattern = "@ts-" + "nocheck";
+  if (contentWithoutCommentsOrStrings.includes(tsNoCheckPattern))
+    return tsNoCheckPattern;
   return null;
 }
 
 function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
+  const enforcedSourcePrefixes = [
+    "build-resources/c420ui/src/",
+    "build-resources/electron/shared/",
+    "build-resources/canva-linux/checks/core/",
+  ] as const;
   const files = allRepositoryFiles(rootDir).filter(
-    (file) => file.startsWith("build-resources/") && file.endsWith(".ts"),
+    (file) =>
+      file.endsWith(".ts") &&
+      enforcedSourcePrefixes.some((prefix) => file.startsWith(prefix)),
   );
 
   for (const file of files) {

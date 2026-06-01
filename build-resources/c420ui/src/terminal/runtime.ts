@@ -1,9 +1,8 @@
-import { createRequire } from "node:module";
-import type { createApp, C420UIAppOptions } from "./app";
+import { createApp as defaultCreateApp, type C420UIAppOptions } from "./app";
 import { enforceC420UIRootLaunchGuard } from "./root-guard";
 
 export type c420uiTerminalRuntimeOptions = {
-  create?: typeof createApp;
+  create?: typeof defaultCreateApp;
   getuid?: () => number;
   writeError?: (message: string) => void;
   exit?: (code: number) => never;
@@ -11,13 +10,6 @@ export type c420uiTerminalRuntimeOptions = {
     listener: (error: Error) => void,
   ) => NodeJS.Process;
 };
-
-const requireFromRuntimeModule = createRequire(__filename);
-
-function loadC420UITerminalApp(): typeof createApp {
-  const app = requireFromRuntimeModule("./app") as typeof import("./app");
-  return app.createApp;
-}
 
 export function runC420UITerminalApp(
   options: C420UIAppOptions,
@@ -33,7 +25,7 @@ export function runC420UITerminalApp(
     exit,
   });
 
-  const create = runtimeOptions.create ?? loadC420UITerminalApp();
+  const create = runtimeOptions.create ?? defaultCreateApp;
   const screen = create(options);
   const onUncaughtException =
     runtimeOptions.onUncaughtException ??

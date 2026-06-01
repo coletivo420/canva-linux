@@ -5,6 +5,9 @@
 Request changes if a PR:
 
 - adds `require()` to maintained TypeScript;
+- adds `createRequire()` or `require.resolve()` to maintained TypeScript;
+- adds `__filename` or `__dirname` compatibility bridges in maintained TypeScript;
+- adds `node:module` `createRequire` bridges in maintained TypeScript;
 - adds `module.exports` or `exports.*`;
 - adds new `.cjs` files outside explicitly generated temporary bootstrap debt;
 - adds new esbuild `--format=cjs`;

@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
 import type {
   c420uiHostDependency,
   c420uiHostDependencyCheckResult,
@@ -84,13 +83,7 @@ function declaredDependencyNames(
 }
 
 export function resolveC420UINpmDependency(dependency: string, rootDir: string): boolean {
-  try {
-    const projectRequire = createRequire(path.join(rootDir, "package.json"));
-    projectRequire.resolve(dependency, { paths: [rootDir] });
-    return true;
-  } catch {
-    return false;
-  }
+  return fs.existsSync(path.join(rootDir, "node_modules", dependency, "package.json"));
 }
 
 function requiredNpmDependencies(config: c420uiNpmDependencyConfig): string[] {

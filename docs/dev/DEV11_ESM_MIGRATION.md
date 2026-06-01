@@ -10,6 +10,21 @@
 - CommonJS assumptions around `__dirname` and `__filename`
 - Node execution paths expecting `.js` CommonJS outputs
 
+## Source debt resolved in Dev11
+
+- c420ui terminal `app.ts`/`modal.ts`/`runtime.ts` maintained source CommonJS debt
+- Electron shared `debug.ts`/`navigation.ts` duplicate `module.exports`
+- `check-runtime-build.ts` CommonJS entry guard in maintained TypeScript source
+
+## Dev11 maintained-source hard rules
+
+Dev11 forbids indirect CommonJS compatibility in maintained TypeScript:
+- `createRequire()`
+- `__filename`
+- `__dirname`
+- `require.resolve()`
+- `node:module` `createRequire` bridges
+
 ## Target
 
 - package.json uses `"type": "module"` or isolated ESM package boundaries

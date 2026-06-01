@@ -7,6 +7,9 @@
 - CommonJS patterns are forbidden in maintained source: `require()`,
   `module.exports`, `exports.*`, `__dirname` without ESM helper, and
   `__filename` without ESM helper.
+- Dev11 also forbids indirect CommonJS bridges in maintained TypeScript:
+  `createRequire()`, `require.resolve()`, and `node:module` createRequire
+  adapters.
 - CommonJS may exist only as temporary migration output during Dev11.
 - No generated `.cjs` bootstrap should remain required at the end of Dev11.
 
