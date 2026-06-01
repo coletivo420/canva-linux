@@ -14,7 +14,9 @@
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
 - All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
-- Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.
+- Shell is allowed only for unavoidable POSIX/runtime boundaries or external
+  tool contracts. Shell must not own JSON parsing, version detection, packaging
+  orchestration, installation logic, artifact metadata, or validation policy.
 - Project validation runs from `build-resources/canva-linux/validation/project.ts` via `validate:project`.
 - Doctor runs from `build-resources/canva-linux/validation/doctor.ts` via `validate:doctor`.
 - Flatpak and Flathub policy checks run from TypeScript entrypoints.

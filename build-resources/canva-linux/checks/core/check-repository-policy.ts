@@ -1792,6 +1792,7 @@ const temporaryAllowlistFiles = new Set<string>([
   "build-resources/c420ui/src/terminal/runtime.ts",
   "build-resources/electron/shared/debug.ts",
   "build-resources/electron/shared/navigation.ts",
+  "build-resources/canva-linux/checks/core/check-runtime-build.ts",
   "build-resources/canva-linux/checks/core/check-repository-policy.ts",
 ]);
 
