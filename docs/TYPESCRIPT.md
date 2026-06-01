@@ -213,3 +213,8 @@ return new Promise((resolve, reject) => {
 - Remove stale `@ts-nocheck` directives where possible.
 - Improve type coverage in preload modules and migrated tests.
 - Consider ESM only as a separate future architecture decision.
+
+## Dev.10 preload typing
+
+Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.

@@ -853,7 +853,7 @@ function lastActivationSummary() {
   ].join(" ");
 }
 
-module.exports = {
+export {
   describeTarget,
   normalizeHex,
   serializeValue,

@@ -1,31 +1,24 @@
-// @ts-nocheck -- These preload modules intentionally use CommonJS/Electron globals until their runtime contracts are fully typed.
+import { ipcRenderer } from "electron";
+import { createDebugTools } from "../shared/debug";
 
-const { ipcRenderer } = require("electron");
+type PreloadDebugOptions = {
+  source?: string;
+};
 
-const { createDebugTools } = require("../shared/debug");
+type PreloadDebugTools = {
+  debugEnabled: (category?: string) => boolean;
+  debugLog: (category: string, ...args: unknown[]) => boolean;
+  logEyeDropper: (...args: unknown[]) => void;
+};
 
-/**
- * @param {unknown} value
- * @returns {string | null}
- */
-function normalizeEyeDropperCategoryHint(value) {
+export function normalizeEyeDropperCategoryHint(value: unknown): string | null {
   const raw = String(value || "")
     .trim()
     .toLowerCase();
   if (!raw) return null;
   if (raw.startsWith("eyedropper:")) return raw;
 
-  if (
-    [
-      "bridge",
-      "flow",
-      "wrapper",
-      "routing",
-      "capture",
-      "library",
-      "lib",
-    ].includes(raw)
-  ) {
+  if (["bridge", "flow", "wrapper", "routing", "capture", "library", "lib"].includes(raw)) {
     if (raw === "capture") return "eyedropper:routing";
     return `eyedropper:${raw === "lib" ? "library" : raw}`;
   }
@@ -33,17 +26,8 @@ function normalizeEyeDropperCategoryHint(value) {
   return null;
 }
 
-// Centralize preload-side debug routing so Canva-specific modules can emit
-// diagnostics without owning the IPC transport details.
-/**
- * @param {{ source?: string }} options
- */
-function createPreloadDebug({ source = "preload" }) {
-  /**
-   * @param {string} category
-   * @param {...unknown} args
-   */
-  function routeDebug(category, ...args) {
+export function createPreloadDebug({ source = "preload" }: PreloadDebugOptions): PreloadDebugTools {
+  function routeDebug(category: string, ...args: unknown[]): void {
     try {
       ipcRenderer.send("wrapper:debug-log", { category, args, source });
     } catch {
@@ -61,16 +45,10 @@ function createPreloadDebug({ source = "preload" }) {
     },
   });
 
-  /**
-   * @param {...unknown} args
-   */
-  function logEyeDropper(...args) {
+  function logEyeDropper(...args: unknown[]): void {
     let category = "eyedropper";
     let payload = args;
-    const candidate =
-      typeof args[0] === "string"
-        ? normalizeEyeDropperCategoryHint(args[0])
-        : null;
+    const candidate = typeof args[0] === "string" ? normalizeEyeDropperCategoryHint(args[0]) : null;
     if (candidate) {
       category = candidate;
       payload = args.slice(1);
@@ -85,8 +63,3 @@ function createPreloadDebug({ source = "preload" }) {
     logEyeDropper,
   };
 }
-
-module.exports = {
-  createPreloadDebug,
-  normalizeEyeDropperCategoryHint,
-};

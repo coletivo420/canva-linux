@@ -579,3 +579,8 @@ Canva Linux-specific dependency wiring in `scripts/c420ui-adapter/run.ts` or adj
   rendering remote `https:` favicons.
 - OAuth localized public-landing probes must normalize both DOM attributes and localized keywords with NFKD so composed and
   decomposed labels are equivalent.
+
+## Dev.10 preload typing
+
+Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.

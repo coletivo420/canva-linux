@@ -1,12 +1,15 @@
-// @ts-nocheck -- These preload modules intentionally use CommonJS/Electron globals until their runtime contracts are fully typed.
-
-const { createPreloadDebug } = require("./debug");
+import { createPreloadDebug } from "./debug";
+import { installUploadDiagnostics } from "./upload-diagnostics";
+import { createCustomEyeDropperFlow } from "./custom-eyedropper-flow";
+import { installNativeEyeDropperWrapper } from "./native-eyedropper-wrapper";
+import { installEyeDropperRoutingDiagnostics as installPrimaryEyeDropperRoutingDiagnostics } from "./eyedropper-routing-diagnostics";
+import { installEyeDropperRoutingDiagnostics as installFallbackEyeDropperRoutingDiagnostics } from "./browser-capture-diagnostics";
+import type { EyeDropperCtor, EyeDropperOpenOptions, EyeDropperResult } from "./types";
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
   source: "canva-preload",
 });
 
-// CRITICAL: We need this log to know the preload started at all!
 debugLog(
   "startup",
   "preload-init",
@@ -14,131 +17,72 @@ debugLog(
   location.href,
 );
 
+type WrapOpenCall = (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult>;
+
 try {
-  function installUploadDiagnostics() {
+  debugLog("startup", "modules-loaded");
+
+  const uploadInstaller = (() => {
     try {
-      return require("./upload-diagnostics").installUploadDiagnostics;
+      return installUploadDiagnostics;
     } catch {
       return null;
     }
-  }
+  })();
 
-  function loadEyeDropperRoutingDiagnostics() {
+  const installRoutingDiagnostics = (() => {
     try {
-      return require("./eyedropper-routing-diagnostics");
+      return installPrimaryEyeDropperRoutingDiagnostics;
     } catch (primaryError) {
       try {
-        return require("./browser-capture-diagnostics");
+        return installFallbackEyeDropperRoutingDiagnostics;
       } catch (fallbackError) {
-        return {
-          installEyeDropperRoutingDiagnostics() {},
-          loadError: fallbackError || primaryError,
-        };
+        logEyeDropper(
+          "eyedropper:routing",
+          "module-load-failed",
+          (fallbackError as Error)?.message || (primaryError as Error)?.message,
+        );
+        return () => {};
       }
     }
-  }
+  })();
 
-  function loadCustomEyeDropperFlow() {
+  const wrapOpenCall: WrapOpenCall = (() => {
     try {
-      return {
-        ...require("./custom-eyedropper-flow"),
-        loadError: null,
-      };
+      return createCustomEyeDropperFlow({ debugLog, logEyeDropper }).wrapOpenCall;
     } catch (error) {
-      return {
-        createCustomEyeDropperFlow() {
-          return {
-            wrapOpenCall() {
-              return Promise.reject(
-                new Error("custom-eyedropper-flow unavailable"),
-              );
-            },
-          };
-        },
-        loadError: error,
-      };
+      logEyeDropper("eyedropper:flow", "module-load-failed", (error as Error)?.message);
+      return () => Promise.reject(new Error("custom-eyedropper-flow unavailable"));
     }
-  }
+  })();
 
-  function loadNativeEyeDropperWrapper() {
+  const ensureWrappedEyeDropperInstalled = (() => {
     try {
-      return {
-        ...require("./native-eyedropper-wrapper"),
-        loadError: null,
-      };
+      return installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }).ensureWrappedEyeDropperInstalled;
     } catch (error) {
-      return {
-        installNativeEyeDropperWrapper() {
-          return {
-            ensureWrappedEyeDropperInstalled() {},
-          };
-        },
-        loadError: error,
-      };
+      logEyeDropper("eyedropper:wrapper", "module-load-failed", (error as Error)?.message);
+      return () => false;
     }
+  })();
+
+  if (typeof uploadInstaller === "function") {
+    uploadInstaller({ debugEnabled, debugLog });
   }
 
-  const {
-    installEyeDropperRoutingDiagnostics,
-    loadError: eyeDropperRoutingLoadError,
-  } = loadEyeDropperRoutingDiagnostics();
-  const {
-    createCustomEyeDropperFlow,
-    loadError: customEyeDropperFlowLoadError,
-  } = loadCustomEyeDropperFlow();
-  const {
-    installNativeEyeDropperWrapper,
-    loadError: nativeEyeDropperWrapperLoadError,
-  } = loadNativeEyeDropperWrapper();
-
-  debugLog("startup", "modules-loaded");
-
-  if (eyeDropperRoutingLoadError) {
-    logEyeDropper(
-      "eyedropper:routing",
-      "module-load-failed",
-      eyeDropperRoutingLoadError.message,
-    );
-  }
-  if (customEyeDropperFlowLoadError) {
-    logEyeDropper(
-      "eyedropper:flow",
-      "module-load-failed",
-      customEyeDropperFlowLoadError.message,
-    );
-  }
-  if (nativeEyeDropperWrapperLoadError) {
-    logEyeDropper(
-      "eyedropper:wrapper",
-      "module-load-failed",
-      nativeEyeDropperWrapperLoadError.message,
-    );
-  }
-
-  const installer = installUploadDiagnostics();
-  if (typeof installer === "function") {
-    installer({ debugEnabled, debugLog });
-  }
-
-  const { wrapOpenCall } = createCustomEyeDropperFlow({
-    debugLog,
-    logEyeDropper,
-  });
-  installEyeDropperRoutingDiagnostics({
+  installRoutingDiagnostics({
     debugEnabled,
     debugLog,
     logEyeDropper,
     wrapOpenCall,
   });
 
-  const { ensureWrappedEyeDropperInstalled } = installNativeEyeDropperWrapper({
-    logEyeDropper,
-    wrapOpenCall,
-  });
-
-  function isWrappedEyeDropperInstalled() {
+  function isWrappedEyeDropperInstalled(): boolean {
     try {
-      const scope = globalThis || window;
+      const scope = globalThis as typeof globalThis & {
+        EyeDropper?: EyeDropperCtor;
+        __canvaWrappedEyeDropper?: EyeDropperCtor;
+        __canvaWrappedEyeDropperInstalled?: boolean;
+      };
       const ctor = scope.EyeDropper;
       const wrapped = scope.__canvaWrappedEyeDropper;
       const installedFlag = scope.__canvaWrappedEyeDropperInstalled === true;
@@ -153,10 +97,6 @@ try {
     }
   }
 
-  // tab-events.js runs diagnostics through executeJavaScript() after complex
-  // Canva editor navigations. Expose only idempotent helpers so the main
-  // process can verify/reinstall the wrapper without depending on preload
-  // module scope.
   try {
     Object.defineProperty(globalThis, "ensureWrappedEyeDropperInstalled", {
       configurable: true,
@@ -170,7 +110,6 @@ try {
     });
   } catch {}
 
-  // Install as early as possible.
   ensureWrappedEyeDropperInstalled();
   debugLog("startup", "eyedropper-installed");
 
@@ -203,6 +142,6 @@ try {
 } catch (fatalError) {
   console.error("[canva:canva-preload:fatal]", fatalError);
   if (typeof debugLog === "function") {
-    debugLog("startup", "fatal-error", fatalError.message);
+    debugLog("startup", "fatal-error", (fatalError as Error)?.message);
   }
 }

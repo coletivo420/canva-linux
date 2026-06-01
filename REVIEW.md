@@ -583,3 +583,8 @@ while runtime flags belong to the compiled `canva-linux` app.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
 - When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+
+## Dev.10 preload typing
+
+Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
