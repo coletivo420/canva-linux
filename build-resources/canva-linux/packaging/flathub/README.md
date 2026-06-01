@@ -12,12 +12,12 @@ manifest for the local workflow (`./canva-linux-c420ui-builder --install-native|
 
 - `manifest.yml` — submission-oriented manifest using a pinned public archive source (`type: archive` + `sha256`) and offline npm install flow.
 - `generated-sources.json` — npm dependency manifest consumed by the submission manifest for offline installation.
-- `scripts/generate-npm-sources.ts` and `scripts/generate-npm-sources.sh` — helper scripts to regenerate `generated-sources.json` from `package-lock.json`.
+- `scripts/generate-npm-sources.ts` — helper script to regenerate `generated-sources.json` from `package-lock.json`.
 
 ## Maintainer notes
 
 - Regenerate dependency sources whenever `package-lock.json` changes:
-  - `./build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`
+  - `npm run flathub:generate-npm-sources`
 - Validate submission assets with:
   - `./scripts/validate-flathub-submission.sh`
   - This runs `flathub-build`, `flatpak-builder-lint manifest`, and `flatpak-builder-lint repo` when `org.flatpak.Builder` is available.
