@@ -1,4 +1,5 @@
-import path from "path";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import {
   app,
@@ -63,7 +64,8 @@ const APP_URL = "https://www.canva.com/";
 const APP_NAME = "Canva Linux";
 const TOOLBAR_HEIGHT = 46;
 const WM_CLASS = APP_ID;
-const APP_ICON_PATH = path.join(__dirname, "..", "assets", "canva-icon.png");
+const RUNTIME_DIR = path.dirname(fileURLToPath(import.meta.url));
+const APP_ICON_PATH = path.join(RUNTIME_DIR, "..", "assets", "canva-icon.png");
 const BUILD_METADATA = loadCanvaLinuxBuildMetadata();
 const APP_VERSION = BUILD_METADATA.version || app.getVersion();
 type RuntimeCli = ReturnType<typeof applyCanvaLinuxRuntimeCliEarly>;
@@ -208,7 +210,7 @@ const { classifyWindowOpenRequest } = createWindowOpenPolicy({
 });
 
 function makeToolbarUrl(): string {
-  return `file://${path.join(__dirname, "..", "ui", "toolbar.html")}`;
+  return new URL("../ui/toolbar.html", import.meta.url).toString();
 }
 
 function currentTheme(): "dark" | "light" {

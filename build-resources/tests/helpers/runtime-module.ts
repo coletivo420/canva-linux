@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +20,9 @@ let typeScriptExtensionRegistered = false;
  * @returns {void}
  */
 function compileTypeScriptModule(file, mod) {
-  const source = fs.readFileSync(file, "utf8");
+  const source = fs
+    .readFileSync(file, "utf8")
+    .replace(/\bimport\.meta\.url\b/g, JSON.stringify(pathToFileURL(file).href));
   const output = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,

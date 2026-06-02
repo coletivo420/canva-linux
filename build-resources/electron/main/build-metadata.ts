@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import { fileURLToPath } from "node:url";
 
 export type CanvaLinuxBuildMetadata = {
   baseVersion: string;
@@ -23,6 +24,7 @@ const UNKNOWN_BASE_VERSION = "0.0.0";
 const UNKNOWN_DISPLAY_VERSION = "0.0.0";
 const UNKNOWN_BUILD_REVISION = "unknown";
 const UNKNOWN_SOURCE_HASH = "unknown";
+const RUNTIME_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 function combineSourceHashes(canvaLinuxHash?: string, c420uiHash?: string): string {
   const left = canvaLinuxHash || UNKNOWN_SOURCE_HASH;
@@ -102,10 +104,10 @@ function candidateMetadataPaths(): string[] {
   return [
     path.join(cwd, ".build", "canva-linux", "build-metadata.effective.json"),
     path.join(cwd, "build-resources", "canva-linux", "config", "build-metadata.json"),
-    path.join(__dirname, "..", "..", ".build", "canva-linux", "build-metadata.effective.json"),
-    path.join(__dirname, "..", "..", "build-resources", "canva-linux", "config", "build-metadata.json"),
-    path.join(__dirname, "..", ".build", "canva-linux", "build-metadata.effective.json"),
-    path.join(__dirname, "..", "build-resources", "canva-linux", "config", "build-metadata.json"),
+    path.join(RUNTIME_DIR, "..", "..", ".build", "canva-linux", "build-metadata.effective.json"),
+    path.join(RUNTIME_DIR, "..", "..", "build-resources", "canva-linux", "config", "build-metadata.json"),
+    path.join(RUNTIME_DIR, "..", ".build", "canva-linux", "build-metadata.effective.json"),
+    path.join(RUNTIME_DIR, "..", "build-resources", "canva-linux", "config", "build-metadata.json"),
   ];
 }
 

@@ -1,4 +1,5 @@
-import path from "path";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types.js";
 import { attachTabEventHandlers } from "./tab-events.js";
@@ -58,6 +59,8 @@ export type AttachTabEventHandlersLike = (
   tab: TabEntry,
   helpers: Record<string, unknown>,
 ) => void;
+
+const RUNTIME_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 type CreateTabControllerOptions = {
   appName: string;
@@ -157,7 +160,7 @@ export function createTabController({
     );
     const id = state.nextTabIdRef();
     const preloadPath = path.resolve(
-      __dirname,
+      RUNTIME_DIR,
       "..",
       "preload",
       "canva.bundle.js",
