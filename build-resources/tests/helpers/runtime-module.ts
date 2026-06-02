@@ -85,7 +85,13 @@ export async function loadRuntimeModule<TModule extends RuntimeModule = RuntimeM
     target: "node22",
   });
 
-  return import(pathToFileURL(outputFile).href) as Promise<TModule>;
+  const moduleInstance = await import(pathToFileURL(outputFile).href);
+  try {
+    fs.rmSync(outputDir, { recursive: true, force: true });
+  } catch {
+    // Ignore temporary test bundle cleanup errors.
+  }
+  return moduleInstance as TModule;
 }
 
 export async function withElectronMock<T>(

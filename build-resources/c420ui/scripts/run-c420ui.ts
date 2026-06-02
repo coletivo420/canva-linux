@@ -15,7 +15,8 @@ export async function main(): Promise<void> {
   });
 }
 
-if (import.meta.url.endsWith(process.argv[1]) || /run-c420ui\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
+const argv1 = (process.argv[1] || "").replace(/\\/g, "/");
+if ((argv1 && import.meta.url.endsWith(argv1)) || /run-c420ui\.(mjs|js|ts)$/.test(argv1)) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.stack || error.message : String(error));
     process.exit(1);

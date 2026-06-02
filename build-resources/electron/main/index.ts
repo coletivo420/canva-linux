@@ -1,7 +1,9 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
+import electron from "electron";
+
+const {
   app,
   safeStorage,
   dialog,
@@ -11,7 +13,7 @@ import {
   session,
   ipcMain,
   nativeTheme,
-} from "electron";
+} = electron;
 
 import { createDebugTools } from "../shared/debug.js";
 import {
@@ -70,6 +72,11 @@ const BUILD_METADATA = loadCanvaLinuxBuildMetadata();
 const APP_VERSION = BUILD_METADATA.version || app.getVersion();
 type RuntimeCli = ReturnType<typeof applyCanvaLinuxRuntimeCliEarly>;
 
+function exitRuntime(code: number): never {
+  if (app?.exit) app.exit(code);
+  process.exit(code);
+}
+
 function parseRuntimeCliOrExit(): RuntimeCli | null {
   try {
     return applyCanvaLinuxRuntimeCliEarly(
@@ -84,13 +91,13 @@ function parseRuntimeCliOrExit(): RuntimeCli | null {
 const runtimeCli = parseRuntimeCliOrExit();
 
 if (!runtimeCli) {
-  app.exit(1);
+  exitRuntime(1);
 } else if (runtimeCli.help) {
   console.log(printCanvaLinuxRuntimeHelp());
-  app.exit(0);
+  exitRuntime(0);
 } else if (runtimeCli.version) {
   console.log(formatCanvaLinuxVersion(BUILD_METADATA));
-  app.exit(0);
+  exitRuntime(0);
 } else {
   startRuntime(runtimeCli);
 }

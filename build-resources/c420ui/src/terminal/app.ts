@@ -77,6 +77,11 @@ export type C420UIAppOptions = {
 
 type FocusZone = "menu" | "diagnostics" | "content" | "logs";
 
+type SelectableMenu = ReturnType<typeof tui.list> & {
+  selected: number;
+  items?: unknown[];
+};
+
 type HeaderBoxLayout = {
   top: number;
   left: number;
@@ -269,7 +274,7 @@ export function createApp(options: C420UIAppOptions) {
     style: c420uiTheme.header,
   });
 
-  const menu: any = tui.list({
+  const menu = tui.list({
     top: headerLayout.workspaceTop,
     left: 0,
     width: "32%",
@@ -280,7 +285,7 @@ export function createApp(options: C420UIAppOptions) {
     tags: true,
     label: "Main Menu",
     style: c420uiTheme.menu,
-  });
+  }) as SelectableMenu;
 
   const diagnostics = tui.box({
     top: headerLayout.workspaceTop,

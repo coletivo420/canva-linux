@@ -141,12 +141,15 @@ function rewriteCompiledRelativeImportsToMjs(outputRoot: string): void {
     /(\bfrom\s*["'])(\.{1,2}\/[^"']+)\.js(["'])/g;
   const dynamicRelativeImportPattern =
     /(\bimport\s*\(\s*["'])(\.{1,2}\/[^"']+)\.js(["'])/g;
+  const sideEffectImportPattern =
+    /(\bimport\s*["'])(\.{1,2}\/[^"']+)\.js(["'])/g;
 
   for (const compiledModule of compiledModules) {
     const source = fs.readFileSync(compiledModule, "utf8");
     const rewritten = source
       .replace(staticRelativeImportPattern, "$1$2.mjs$3")
-      .replace(dynamicRelativeImportPattern, "$1$2.mjs$3");
+      .replace(dynamicRelativeImportPattern, "$1$2.mjs$3")
+      .replace(sideEffectImportPattern, "$1$2.mjs$3");
 
     if (rewritten !== source) {
       fs.writeFileSync(compiledModule, rewritten);

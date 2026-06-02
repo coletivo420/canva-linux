@@ -37,6 +37,15 @@ function reportSudoError(status: number | null): void {
   console.error("[error] sudo authorization failed or was canceled.");
 }
 
+function reportSudoSpawnError(error: Error): void {
+  const errorCode = "code" in error ? error.code : undefined;
+  if (errorCode === "ETIMEDOUT") {
+    console.error(`[error] sudo authorization timed out after ${sudoTimeoutSeconds}s.`);
+    return;
+  }
+  console.error(`[error] sudo validation failed: ${error.message}`);
+}
+
 export function c420uiSudoValidate(rootDir: string = projectRoot()): boolean {
   if (!assertNotUserScope()) return false;
   const result = spawnSync("sudo", isNonInteractiveRootMode() ? ["-n", "-v"] : ["-v"], {
@@ -44,6 +53,10 @@ export function c420uiSudoValidate(rootDir: string = projectRoot()): boolean {
     stdio: "inherit",
     timeout: sudoTimeoutMilliseconds(),
   });
+  if (result.error) {
+    reportSudoSpawnError(result.error);
+    return false;
+  }
   if (result.status === 0) return true;
   reportSudoError(result.status);
   return false;
@@ -70,6 +83,10 @@ export function c420uiSudoRun(
     timeout: options.timeout ?? sudoTimeoutMilliseconds(),
   });
 
+  if (result.error) {
+    reportSudoSpawnError(result.error);
+    return 1;
+  }
   return result.status ?? 1;
 }
 

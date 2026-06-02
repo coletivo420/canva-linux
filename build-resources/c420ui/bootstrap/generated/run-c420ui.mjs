@@ -20941,9 +20941,13 @@ var emptyInstallations = {
 };
 function readPhase(rootDir2) {
   const projectUiPath = path11.join(rootDir2, "build-resources/canva-linux/config/project-ui.json");
-  if (!fs11.existsSync(projectUiPath)) return "unknown";
-  const projectUi = JSON.parse(fs11.readFileSync(projectUiPath, "utf8"));
-  return projectUi.phase ?? "unknown";
+  try {
+    if (!fs11.existsSync(projectUiPath)) return "unknown";
+    const projectUi = JSON.parse(fs11.readFileSync(projectUiPath, "utf8"));
+    return projectUi.phase ?? "unknown";
+  } catch {
+    return "unknown";
+  }
 }
 function safeProjectMetadata(rootDir2) {
   let version = "unknown";
@@ -21796,7 +21800,8 @@ async function main() {
     env: process.env
   });
 }
-if (import.meta.url.endsWith(process.argv[1]) || /run-c420ui\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
+var argv1 = (process.argv[1] || "").replace(/\\/g, "/");
+if (argv1 && import.meta.url.endsWith(argv1) || /run-c420ui\.(mjs|js|ts)$/.test(argv1)) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.stack || error.message : String(error));
     process.exit(1);

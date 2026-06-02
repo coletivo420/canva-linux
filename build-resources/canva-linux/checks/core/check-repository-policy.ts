@@ -302,26 +302,27 @@ function validateNoCommonJsPatternsInTypeScript(
   files: string[],
   failures: string[],
 ): void {
-  const forbiddenPatterns = [
-    ["@ts-" + "nocheck", "remove @ts-" + "nocheck and type the module"],
-    ["requ" + "ire(", "use ESM import or dynamic import()"],
-    ["module" + ".exports", "use ESM exports"],
-    ["exports" + ".", "use ESM exports"],
-    ["requ" + "ire.extensions", "do not patch CommonJS loaders"],
-    ["ModuleKind." + "CommonJS", "do not emit CommonJS in Dev11 ESM-only mode"],
-    ["create" + "Require", "avoid CommonJS bridges in ESM-only mode"],
+  const forbiddenPatterns: Array<[RegExp, string]> = [
+    [new RegExp("@ts-" + "nocheck"), "remove @ts-" + "nocheck and type the module"],
+    [/(?<!\.)\brequire\s*\(/, "use ESM import or dynamic import()"],
+    [/\bmodule\s*\.\s*exports\b/, "use ESM exports"],
+    [/(?<!\.)\bexports\s*\./, "use ESM exports"],
+    [/(?<!\.)\brequire\s*\.\s*extensions\b/, "do not patch CommonJS loaders"],
+    [/\bModuleKind\s*\.\s*CommonJS\b/, "do not emit CommonJS in Dev11 ESM-only mode"],
+    [/(?<!\.)\bcreate\s*Require\b/, "avoid CommonJS bridges in ESM-only mode"],
   ] as const;
 
   for (const file of files) {
     if (!file.startsWith("build-resources/") || !file.endsWith(".ts")) continue;
 
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
-    const contentWithoutComments = content
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/^\s*\/\/.*$/gm, "");
+    const contentWithoutCommentsOrStrings = content.replace(
+      /\/\*[\s\S]*?\*\/|\/\/.*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/g,
+      (match) => (match.startsWith("/") ? "" : '""'),
+    );
 
     for (const [pattern, message] of forbiddenPatterns) {
-      if (contentWithoutComments.includes(pattern)) {
+      if (pattern.test(contentWithoutCommentsOrStrings)) {
         failures.push(`${file}: ${message}`);
       }
     }
@@ -1838,12 +1839,12 @@ function hasForbiddenPattern(source: string): string | null {
     return "exports" + ".";
   if (/(?<!\.)\bcreate\s*Require\s*\(/.test(contentWithoutCommentsOrStrings))
     return "create" + "Require(";
-  if (/\b__filename\b/.test(contentWithoutCommentsOrStrings))
-    return "__filename";
-  if (/\b__dirname\b/.test(contentWithoutCommentsOrStrings))
-    return "__dirname";
+  if (new RegExp("\\b__" + "filename\\b").test(contentWithoutCommentsOrStrings))
+    return "__" + "filename";
+  if (new RegExp("\\b__" + "dirname\\b").test(contentWithoutCommentsOrStrings))
+    return "__" + "dirname";
   if (/(?<!\.)\brequire\s*\.\s*resolve\s*\(/.test(contentWithoutCommentsOrStrings))
-    return "require.resolve(";
+    return "require" + ".resolve(";
 
   const nodeModuleSpec = "node" + ":" + "module";
   const importFromNodeModulePatterns = [
@@ -1947,7 +1948,12 @@ function main(): number {
       continue;
     }
     try {
-      const config = JSON.parse(fs.readFileSync(absolutePath, "utf8")) as {
+      const content = fs.readFileSync(absolutePath, "utf8");
+      const cleanContent = content.replace(
+        /\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm,
+        "$1",
+      );
+      const config = JSON.parse(cleanContent) as {
         compilerOptions?: { module?: string; moduleResolution?: string };
       };
       const moduleValue = config.compilerOptions?.module;

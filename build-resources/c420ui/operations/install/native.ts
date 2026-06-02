@@ -65,13 +65,16 @@ export function runNativeInstall(argv: string[]): void {
   const versionTarget = path.join(installPaths.prefix, "CANVA_LINUX_VERSION");
   if (scope === "system") {
     const tmpVersionMarker = path.join(os.tmpdir(), `canva-linux-version-${Date.now()}`);
-    if (!dryRun) {
-      fs.writeFileSync(tmpVersionMarker, `${versionMarker}\n`, "utf8");
+    try {
+      if (!dryRun) {
+        fs.writeFileSync(tmpVersionMarker, `${versionMarker}\n`, "utf8");
+      }
+      if (c420uiSudoInstall(["-Dm644", tmpVersionMarker, versionTarget], { dryRun }) !== 0) {
+        throw new Error(`Failed to write version marker to ${versionTarget}`);
+      }
+    } finally {
+      if (!dryRun) fs.rmSync(tmpVersionMarker, { force: true });
     }
-    if (c420uiSudoInstall(["-Dm644", tmpVersionMarker, versionTarget], { dryRun }) !== 0) {
-      throw new Error(`Failed to write version marker to ${versionTarget}`);
-    }
-    if (!dryRun) fs.rmSync(tmpVersionMarker, { force: true });
   } else if (dryRun) {
     console.log(`[dry-run] printf "%s\\n" "${versionMarker}" > ${versionTarget}`);
   } else {

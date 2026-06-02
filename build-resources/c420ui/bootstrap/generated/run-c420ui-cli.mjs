@@ -1761,9 +1761,13 @@ var emptyInstallations = {
 };
 function readPhase(rootDir) {
   const projectUiPath = path8.join(rootDir, "build-resources/canva-linux/config/project-ui.json");
-  if (!fs7.existsSync(projectUiPath)) return "unknown";
-  const projectUi = JSON.parse(fs7.readFileSync(projectUiPath, "utf8"));
-  return projectUi.phase ?? "unknown";
+  try {
+    if (!fs7.existsSync(projectUiPath)) return "unknown";
+    const projectUi = JSON.parse(fs7.readFileSync(projectUiPath, "utf8"));
+    return projectUi.phase ?? "unknown";
+  } catch {
+    return "unknown";
+  }
 }
 function safeProjectMetadata(rootDir) {
   let version = "unknown";
