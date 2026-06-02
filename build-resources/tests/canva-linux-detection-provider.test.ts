@@ -30,15 +30,14 @@ const emptyDetectionResult: InstallationDetectionResult = {
 
 function createProjectRoot(): string {
   const rootDir = mkdtempSync(path.join(tmpdir(), "canva-linux-detection-"));
-  mkdirSync(path.join(rootDir, "scripts"), { recursive: true });
   mkdirSync(path.join(rootDir, "build-resources/canva-linux/config"), { recursive: true });
   writeFileSync(
     path.join(rootDir, "package.json"),
     `${JSON.stringify({ name: "canva-linux", version: "0.1.4-14" }, null, 2)}\n`,
   );
   writeFileSync(
-    path.join(rootDir, "scripts/app-identity-common.sh"),
-    'PROJECT_PHASE="0.1.4-14"\n',
+    path.join(rootDir, "build-resources/canva-linux/config/project-ui.json"),
+    `${JSON.stringify({ phase: "0.1.4-14" }, null, 2)}\n`,
   );
   return rootDir;
 }

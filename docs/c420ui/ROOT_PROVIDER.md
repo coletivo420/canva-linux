@@ -11,7 +11,7 @@ contract and Linux implementation base.
 - Non-interactive `validateRootAccess` checks.
 - Interactive `validateRootAccessWithInput` checks.
 - Root-auth environment propagation through `C420UI_ROOT_AUTH`.
-- Use of `build-resources/c420ui/host/linux/sudo-helper.sh` for Linux sudo validation.
+- Use of `build-resources/c420ui/operations/host/sudo.ts` sudo operation helpers for Linux sudo validation.
 
 ## Must not control
 
@@ -28,21 +28,22 @@ can use `requestRootAccess`, which calls `validateRootAccessWithInput` with the
 submitted password and clears the submitted input afterward.
 
 When validation succeeds, the root provider can add `C420UI_ROOT_AUTH=1` to the
-execution environment. The sudo helper recognizes that value and avoids asking
-for authentication again for the already-approved action path.
+execution environment. The TypeScript sudo operation helpers recognize that
+value and avoid asking for authentication again for the already-approved action
+path.
 
 ## Password and log safety
 
 Passwords and sudo stdin must never be written to logs, diagnostic output, event
 data, thrown errors, or command arguments shown to the user. The submitted input
-must be passed through stdin to `sudo-helper.sh --validate-stdin` and then
+must be passed through stdin to `sudo validation with password input` and then
 cleared.
 
 ## Implementing files
 
 - `build-resources/c420ui/src/root-provider.ts`
 - `build-resources/c420ui/src/linux-root-provider.ts`
-- `build-resources/c420ui/host/linux/sudo-helper.sh`
+- `build-resources/c420ui/operations/host/sudo.ts`
 - `build-resources/c420ui/src/action-engine.ts`
 - `build-resources/c420ui/src/terminal/app.ts`
 - `build-resources/canva-linux/c420ui-adapter/root-provider.ts`
@@ -58,11 +59,11 @@ not import Canva Linux config directly.
 - `npm run check:c420ui-core`
 - `npm run check:canva-linux`
 - `npm test`
-- `bash build-resources/c420ui/host/linux/sudo-helper.sh --help`
+- `npm run check:c420ui-core`
 
 ## Forbidden regressions
 
-- Do not call raw `sudo` outside `build-resources/c420ui/host/linux/sudo-helper.sh`.
+- Do not call raw `sudo` outside `build-resources/c420ui/operations/host/sudo.ts`.
 - Do not log passwords, sudo stdin, cookies, tokens, or credential material.
 - Do not run sudo for user-scope actions.
 - Do not duplicate the Linux root provider base in Canva Linux code.

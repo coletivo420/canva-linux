@@ -122,11 +122,12 @@ const emptyInstallations = {
 };
 
 function readPhase(rootDir: string): string {
-  const phaseFile = path.join(rootDir, "scripts/app-identity-common.sh");
-  if (!fs.existsSync(phaseFile)) return "unknown";
-  const content = fs.readFileSync(phaseFile, "utf8");
-  const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
-  return match?.[1] ?? "unknown";
+  const projectUiPath = path.join(rootDir, "build-resources/canva-linux/config/project-ui.json");
+  if (!fs.existsSync(projectUiPath)) return "unknown";
+  const projectUi = JSON.parse(fs.readFileSync(projectUiPath, "utf8")) as {
+    phase?: string;
+  };
+  return projectUi.phase ?? "unknown";
 }
 
 function safeProjectMetadata(rootDir: string): c420uiOverviewStatus["project"] {

@@ -253,7 +253,7 @@ Request changes if a PR:
 - imports root/sudo helpers from removed legacy runner surfaces into the Canva Linux adapter;
 - triggers sudo for dry-run, planned actions, or confirmation failures;
 - calls sudo directly from `build-resources/c420ui/src`;
-- bypasses `build-resources/c420ui/host/linux/sudo-helper.sh` for Canva Linux privileged actions;
+- bypasses `build-resources/c420ui/operations/host/sudo.ts` for Canva Linux privileged actions;
 - removes user-scope protection for root actions.
 
 ## c420ui scope/root provider boundary review
@@ -262,7 +262,7 @@ Request changes if a PR:
 
 - reimplements generic scope helpers inside Canva Linux code;
 - hardcodes `CANVA_NATIVE_SCOPE`, `CANVA_FLATPAK_SCOPE` or `C420UI_ROOT_AUTH` in c420ui core;
-- hardcodes `build-resources/c420ui/host/linux/sudo-helper.sh` in c420ui core;
+- hardcodes `build-resources/c420ui/operations/host/sudo.ts` in c420ui core;
 - reimplements `validateRootAccess` in the Canva Linux root provider;
 - moves conditional Canva Linux detection policy into c420ui core.
 
@@ -294,7 +294,7 @@ Request changes if a PR:
 - calls `adapter.runAction()` directly instead of routing through the c420ui Action Engine;
 - duplicates root or confirmation policy outside the c420ui Action Engine and root provider;
 - restores the obsolete npm dependency bootstrap script;
-- adds npm install, repair, or skip policy to `scripts/preflight-common.sh`;
+- adds npm install, repair, or skip policy to `root scripts/ ownership`;
 - leaves shell helper classifications in `docs/checks/SHELL_HELPERS.md` stale.
 
 ## Artifact workflow runner review
@@ -647,15 +647,35 @@ Docs, tests and generated artifacts must not affect either source hash.
 ## Dev11 validation ownership review
 
 Request changes if a PR:
-- adds validation policy logic back into `scripts/*.sh` validation scripts;
-- reintroduces JavaScript heredocs (`node <<'NODE'`) inside validation wrappers;
+- adds validation policy logic back into shell validation scripts;
+- reintroduces JavaScript heredocs inside validation wrappers;
 - bypasses TypeScript validation entrypoints for doctor/project/flatpak/flathub checks.
 
 ## Dev11 operational TypeScript review
 
 Request changes if a PR:
-- moves operational install/uninstall/purge/packaging orchestration from TypeScript back into shell scripts;
+- moves operational install/uninstall/purge/packaging orchestration from TypeScript back into shell scripts outside documented POSIX/bootstrap boundaries;
 - removes dry-run support from operational TypeScript entrypoints;
 - rewrites artifact architecture naming instead of preserving generated upstream names.
 - adds build, operation, packaging, install, uninstall, purge, clean, artifact,
   sudo, dry-run, or versioning mechanics under `scripts/canva-linux`.
+
+## Dev11 final ESM boundaries
+
+Dev11 closes the radical ESM migration.
+
+- All maintained runtime/tooling/check/build source is TypeScript.
+- All generated Node/tooling outputs are ESM `.mjs`.
+- Electron runtime starts from `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.mjs`.
+- c420ui bootstrap generated artifacts are `.mjs`.
+- Versioned `.cjs` files are forbidden.
+- CommonJS bridges are forbidden in maintained TypeScript.
+- Shell remains only as POSIX/bootstrap boundary.
+
+The only remaining shell files are documented runtime/bootstrap boundaries:
+
+- `canva-linux-c420ui-builder`: stage-0 c420ui bootstrap launcher.
+- `run.sh`: Flatpak/POSIX runtime launcher.
+
+They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.

@@ -194,3 +194,10 @@ checks can verify the archived Dev.7 validation context while the active RC targ
 - Confirm runtime startup logs and `--version` expose effective `+g<short-hash>` metadata when the build revision is known.
 - Confirm OAuth post-login reload preserves editor/design/folder URLs and only falls back to `https://www.canva.com/` after localized public landing detection.
 - Confirm c420ui remains independently versioned at `0.1.0`; future c420ui build metadata belongs to a later independent c420ui phase.
+
+## Dev11 validation commands
+
+- `npm run validate:project`
+- `npm run package:appimage`
+- `npm run package:flatpak-bundle`
+- `npm run validate:flatpak`

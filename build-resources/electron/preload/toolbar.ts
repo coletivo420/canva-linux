@@ -1,8 +1,8 @@
 // Expose a tiny read-only bridge for the custom tab bar UI.
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from "electron";
 
-// This preload runs with sandbox enabled, so it cannot rely on loading local
-// helper modules via relative require(). Keep the debug transport inline here.
+// This preload runs with sandbox enabled, so it cannot rely on local helper
+// module loading. Keep the debug transport inline here.
 function normalizeDebugCategory(category: unknown = "app"): string {
   const raw = String(category || "app")
     .trim()

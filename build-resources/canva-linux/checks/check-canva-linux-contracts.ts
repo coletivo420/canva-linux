@@ -104,7 +104,7 @@ function reportMissingFragments(
 }
 
 function checkForbiddenPaths(rootDir: string, failures: string[]): void {
-  for (const relativePath of [
+  const legacyForbiddenPaths = [
     "packages",
     "packages/c420ui",
     "packages/electron",
@@ -118,12 +118,16 @@ function checkForbiddenPaths(rootDir: string, failures: string[]): void {
     "scripts/build-appimage.sh",
     "scripts/build-flatpak-bundle.sh",
     "scripts/install-native.sh",
+    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
+    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh",
     "build-resources/canva-linux/checks/check-c420ui-bootstrap.ts",
     "build-resources/canva-linux/checks/check-c420ui-artifact-gate.ts",
     "build-resources/canva-linux/checks/check-c420ui-node-check.ts",
     "build-resources/canva-linux/checks/c420ui-bootstrap-check-helpers.ts",
     "bootstrap/c420ui",
-  ] as const) {
+  ] as const;
+
+  for (const relativePath of legacyForbiddenPaths) {
     if (fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: must not exist`);
     }
@@ -428,6 +432,7 @@ function checkBuildResourcesLayoutContract(rootDir: string, failures: string[]):
     "build-resources/canva-linux/assets/desktop",
     "build-resources/canva-linux/assets/metainfo",
     "build-resources/canva-linux/assets/icons",
+    "build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts",
   ] as const) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: required build-resources layout path must exist`);

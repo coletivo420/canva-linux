@@ -34,7 +34,7 @@ Use this checklist before opening or updating a Flathub submission PR.
 ```bash
 ./canva-linux-c420ui-builder --validate
 npm run build:preload
-./build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh
+./npm run flathub:generate-npm-sources
 ./scripts/validate-flathub-submission.sh
 flatpak run --command=flathub-build org.flatpak.Builder --repo=repo build-resources/canva-linux/packaging/flathub/manifest.yml
 ./canva-linux-c420ui-builder --install-flatpak --bundle-flatpak

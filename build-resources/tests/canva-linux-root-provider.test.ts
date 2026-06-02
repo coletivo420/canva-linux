@@ -119,7 +119,7 @@ test("Canva Linux root provider delegates generic Linux root behavior to c420ui"
   assert.equal(source.includes("buildRootActionEnvironment"), false);
 });
 
-test("validateRootAccess uses c420ui sudo helper through injected runner", () => {
+test("validateRootAccess uses c420ui sudo command through injected runner", () => {
   const calls: Array<{
     command: string;
     args: string[];
@@ -146,8 +146,8 @@ test("validateRootAccess uses c420ui sudo helper through injected runner", () =>
   assert.deepEqual(result, { ok: true });
   assert.equal(calls.length, 1);
   assert.deepEqual(calls[0], {
-    command: "bash",
-    args: ["build-resources/c420ui/host/linux/sudo-helper.sh", "--validate"],
+    command: "sudo",
+    args: ["-v"],
     options: {
       cwd: "/repo",
       env,

@@ -74,7 +74,7 @@ with code `78`; `--dry-run` only resolves metadata and still exits `0`.
 
 The c420ui Action Engine enforces Action Registry metadata before starting a
 backend script. Actions with `requiresRoot: true` validate administrator access
-through `build-resources/c420ui/host/linux/sudo-helper.sh --validate`; direct CLI mode uses the c420ui CLI
+through `build-resources/c420ui/operations/host/sudo.ts --validate`; direct CLI mode uses the c420ui CLI
 bridge, while c420ui uses previously cached credentials in non-interactive mode.
 
 `scope: "user"` actions must not require root, and the Action Engine refuses an

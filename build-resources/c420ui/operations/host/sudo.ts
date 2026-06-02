@@ -1,14 +1,52 @@
 import { spawnSync, type SpawnSyncOptions } from "node:child_process";
 import { projectRoot } from "../../host/paths.js";
 
-const SUDO_HELPER_PATH = "build-resources/c420ui/host/linux/sudo-helper.sh";
+const sudoTimeoutSeconds = Number.parseInt(
+  process.env.C420UI_SUDO_TIMEOUT_SECONDS ?? "30",
+  10,
+);
+
+function sudoTimeoutMilliseconds(): number {
+  if (!Number.isFinite(sudoTimeoutSeconds) || sudoTimeoutSeconds <= 0) {
+    return 30_000;
+  }
+  return sudoTimeoutSeconds * 1000;
+}
+
+function isNonInteractiveRootMode(): boolean {
+  return process.env.C420UI_ROOT_AUTH === "1";
+}
+
+function assertNotUserScope(): boolean {
+  if (process.env.C420UI_ACTION_SCOPE !== "user") return true;
+  console.error("[error] Refusing to run sudo while a user-scope action is active.");
+  console.error("[error] Check C420UI_ACTION_SCOPE and use non-privileged helpers for user scope.");
+  return false;
+}
+
+function reportSudoError(status: number | null): void {
+  if (status === null) {
+    console.error("[error] sudo authorization failed or was canceled.");
+    return;
+  }
+  if (isNonInteractiveRootMode()) {
+    console.error("[error] sudo credentials are not cached for non-interactive root mode.");
+    console.error("[error] Re-run the action and complete administrator authentication before privileged writes.");
+    return;
+  }
+  console.error("[error] sudo authorization failed or was canceled.");
+}
 
 export function c420uiSudoValidate(rootDir: string = projectRoot()): boolean {
-  const result = spawnSync("bash", [SUDO_HELPER_PATH, "--validate"], {
+  if (!assertNotUserScope()) return false;
+  const result = spawnSync("sudo", isNonInteractiveRootMode() ? ["-n", "-v"] : ["-v"], {
     cwd: rootDir,
     stdio: "inherit",
+    timeout: sudoTimeoutMilliseconds(),
   });
-  return result.status === 0;
+  if (result.status === 0) return true;
+  reportSudoError(result.status);
+  return false;
 }
 
 export function c420uiSudoRun(
@@ -23,20 +61,14 @@ export function c420uiSudoRun(
     console.log(`[dry-run] sudo ${command} ${args.join(" ")}`);
     return 0;
   }
+  if (!c420uiSudoValidate(rootDir)) return 1;
 
-  const commandLine = [command, ...args]
-    .map((value) => `'${value.replaceAll("'", "'\"'\"'")}'`)
-    .join(" ");
-
-  const result = spawnSync(
-    "bash",
-    ["-lc", `source '${SUDO_HELPER_PATH}' && c420ui_sudo ${commandLine}`],
-    {
-      ...options,
-      cwd: rootDir,
-      stdio: options.stdio ?? "inherit",
-    },
-  );
+  const result = spawnSync("sudo", [command, ...args], {
+    ...options,
+    cwd: rootDir,
+    stdio: options.stdio ?? "inherit",
+    timeout: options.timeout ?? sudoTimeoutMilliseconds(),
+  });
 
   return result.status ?? 1;
 }

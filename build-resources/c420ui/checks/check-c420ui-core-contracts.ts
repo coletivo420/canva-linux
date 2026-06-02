@@ -572,11 +572,10 @@ function main(): number {
     "defaultC420UILinuxActionHasUserScope",
     "defaultC420UILinuxRootValidationCommand",
     "defaultC420UILinuxRootValidationStdinCommand",
-    "--validate-stdin",
     "buildRootValidationCommand",
     "buildRootValidationStdinCommand",
     `stdio: ["pipe", "pipe", "pipe"]`,
-    "sudoHelperPath",
+    "sudoCommand",
     "rootAuthEnvKey",
     "rootAuthEnvValue",
   ]) {
@@ -1317,30 +1316,33 @@ function checkDevelopmentProviderContract(failures: string[]): void {
   }
 }
 
-function checkLinuxHostSudoHelperContract(failures: string[]): void {
+function checkLinuxHostSudoContract(failures: string[]): void {
   const rootDir = process.cwd();
-  const helperPath = "build-resources/c420ui/host/linux/sudo-helper.sh";
-  const fullPath = path.join(rootDir, helperPath);
-  if (!fs.existsSync(fullPath)) {
-    failures.push(`${helperPath}: missing reusable Linux sudo host helper`);
-    return;
+  const providerPath = "build-resources/c420ui/src/linux-root-provider.ts";
+  const operationsPath = "build-resources/c420ui/operations/host/sudo.ts";
+  const providerSource = fs.readFileSync(path.join(rootDir, providerPath), "utf8");
+  const operationsSource = fs.readFileSync(path.join(rootDir, operationsPath), "utf8");
+
+  for (const fragment of [
+    "sudoCommand",
+    'args: ["-v"]',
+    'args: ["-S", "-v", "-p", ""]',
+  ] as const) {
+    if (!providerSource.includes(fragment)) {
+      failures.push(`${providerPath}: missing sudo provider fragment ${fragment}`);
+    }
   }
 
-  const source = fs.readFileSync(fullPath, "utf8");
   for (const fragment of [
-    "#!/usr/bin/env bash",
-    "set -euo pipefail",
-    "c420ui_sudo_validate",
-    "c420ui_sudo_validate_stdin",
-    "c420ui_sudo()",
-    "--validate)",
-    "--validate-stdin)",
+    "c420uiSudoValidate",
+    "c420uiSudoRun",
     "C420UI_ROOT_AUTH",
-    "sudo -n",
-    'sudo -S -v -p ""',
+    "C420UI_ACTION_SCOPE",
+    "C420UI_SUDO_TIMEOUT_SECONDS",
+    "spawnSync(\"sudo\"",
   ] as const) {
-    if (!source.includes(fragment)) {
-      failures.push(`${helperPath}: missing helper fragment ${fragment}`);
+    if (!operationsSource.includes(fragment)) {
+      failures.push(`${operationsPath}: missing sudo operation fragment ${fragment}`);
     }
   }
 
@@ -1349,9 +1351,10 @@ function checkLinuxHostSudoHelperContract(failures: string[]): void {
     "canva_",
     "scripts/" + "sudo-common.sh",
     "Canva Linux",
+    "sudo-helper.sh",
   ] as const) {
-    if (source.includes(forbidden)) {
-      failures.push(`${helperPath}: must not contain project-specific fragment ${forbidden}`);
+    if (providerSource.includes(forbidden) || operationsSource.includes(forbidden)) {
+      failures.push(`c420ui sudo TypeScript must not contain fragment ${forbidden}`);
     }
   }
 }
@@ -1375,7 +1378,7 @@ export function main(): number {
   runInteractiveActionEngineContract(failures);
   checkSettingsContract(failures);
   checkDevelopmentProviderContract(failures);
-  checkLinuxHostSudoHelperContract(failures);
+  checkLinuxHostSudoContract(failures);
   checkHostDependencyContract(failures);
   checkTerminalUiContract(failures);
   checkHeaderLayoutContract(failures);

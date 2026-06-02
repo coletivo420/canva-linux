@@ -111,7 +111,7 @@ Recommended flow:
 ## Sudo and Privileged Actions
 
 If your action requires root privileges, set `requiresRoot: true` in
-`build-resources/canva-linux/config/actions.json` and use `build-resources/c420ui/host/linux/sudo-helper.sh` helpers in your backend
+`build-resources/canva-linux/config/actions.json` and use `build-resources/c420ui/operations/host/sudo.ts` helpers in your backend
 script. The generic root policy contract lives in
 `build-resources/c420ui/src/root-provider.ts`; the concrete Canva Linux provider lives in
 `build-resources/canva-linux/c420ui-adapter/root-provider.ts`.

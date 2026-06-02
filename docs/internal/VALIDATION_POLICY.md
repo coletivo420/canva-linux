@@ -31,7 +31,7 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
   that starts the generated `bootstrap/c420ui` bundle without npm dependencies.
 - Canva Linux does not validate generic artifact recipes; c420ui does.
 - The Canva Linux adapter must not duplicate Action Engine policy.
-- `scripts/preflight-common.sh` is repository-check-only and must not own npm
+- `root scripts/ ownership` is scripts/ must not return and must not own npm
   install, dependency repair, or skip policy.
 - Artifact names must preserve generated architecture strings such as `x86_64`
   or `X86_64`.
@@ -106,3 +106,7 @@ The c420ui bootstrap manifest must keep engine identity and dependent-project id
 Validation must ensure `build-resources/c420ui/scripts/run-c420ui.ts` does not import or call the Canva Linux dependency ensure function before
 starting c420ui. The interactive flow must wire dependent-project dependency repair through c420ui startup tasks, while
 launcher scripts remain free of `npm install`, `npm ci`, and legacy dependency helpers.
+
+## Dev11 shell boundary
+
+POSIX/bootstrap boundaries are limited to `canva-linux-c420ui-builder` and `run.sh`; scripts/ must not return as an active ownership path.

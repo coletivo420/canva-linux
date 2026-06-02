@@ -192,7 +192,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Canva Linux does not validate generic artifact recipes; c420ui owns that validation.
 - The Canva Linux adapter must not duplicate Action Engine policy for planned actions, dry-run,
   confirmation, root policy, `requestRootAccess`, or fallback execution.
-- `scripts/preflight-common.sh` is repository-check-only.
+- `root scripts/ ownership` is scripts/ must not return.
 - Split docs must explain controls, non-controls, implementing files, consumed configs/adapters,
   boundary checks, and forbidden regressions.
 
@@ -402,14 +402,14 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - c420ui owns generic action scope semantics.
 - c420ui owns the generic root provider contract.
 - c420ui owns the generic Linux root/sudo provider base.
-- c420ui owns `build-resources/c420ui/host/linux/sudo-helper.sh` for reusable privileged host operations.
+- c420ui owns `build-resources/c420ui/operations/host/sudo.ts` for reusable privileged host operations.
 - c420ui must never import dependent project adapters.
 - Dependent project adapters must not reimplement c420ui engines.
 - Project-specific strings, env vars and action IDs are forbidden inside `build-resources/c420ui/src`.
 - Root launch guard belongs only to c420ui terminal runtime.
 - Privileged action policy uses c420ui root provider contracts.
 - Canva Linux root provider must remain thin and project-specific.
-- Canva Linux owns the concrete root provider configuration backed by `build-resources/c420ui/host/linux/sudo-helper.sh`.
+- Canva Linux owns the concrete root provider configuration backed by `build-resources/c420ui/operations/host/sudo.ts`.
 - Do not hardcode Canva Linux env names or helper paths inside c420ui core.
 - Do not reimplement generic `validateRootAccess` in project adapters.
 - Do not import root/sudo policy from removed legacy runner surfaces inside the Canva Linux adapter.
@@ -417,8 +417,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Dry-run, planned actions and confirmation failures must not trigger sudo/root validation.
 - Sudo/root authentication failures must be shown in a centered c420ui popup.
 - Prefer shared sudo helpers over direct sudo calls.
-- System-wide actions must use build-resources/c420ui/host/linux/sudo-helper.sh.
-- Raw sudo calls are forbidden outside build-resources/c420ui/host/linux/sudo-helper.sh.
+- System-wide actions must use the TypeScript c420ui sudo operation helpers.
+- Raw sudo calls are forbidden outside build-resources/c420ui/operations/host/sudo.ts.
 - Do not reintroduce the removed project-specific sudo helper.
 - The c420ui sudo helper must not contain `CANVA_*` environment variables or project-specific names.
 - Project adapters may translate project environment variables into `C420UI_*` variables.
@@ -464,8 +464,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 - TypeScript is mandatory for all maintained Node.js source code.
 - JavaScript is generated output only.
-- Shell remains shell for host operations.
-- New scripts must be TypeScript unless they are shell scripts for host operations.
+- Shell remains only for documented POSIX/bootstrap boundaries.
+- New scripts must be TypeScript unless they are canva-linux-c420ui-builder or run.sh POSIX/bootstrap boundaries.
 - New tests must be TypeScript.
 - New configs should be TypeScript when tool-supported.
 - Do not create new JavaScript source files.
@@ -488,7 +488,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Do not duplicate TypeScript core logic in JavaScript fallbacks.
 - `scripts/run-core-entry.sh` must only build or run compiled TypeScript core entries; it must not contain fallback
   implementations of status, registry, runner, validation, or detection contracts.
-- Flathub/npm source generation logic lives in TypeScript; `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`
+- Flathub/npm source generation logic lives in TypeScript; `npm run flathub:generate-npm-sources`
   invokes `generate-npm-sources.ts` through the TypeScript entry runner.
 
 ## CL-EyeDropper
@@ -564,7 +564,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 
 - Dependent project adapters execute concrete commands only after the c420ui Action Engine has applied planned-action, dry-run, root, and confirmation policy.
 - Project adapters must not duplicate Action Engine policy or restore adapter-owned planned/dry-run fallbacks.
-- `scripts/preflight-common.sh` is repository-check-only; keep npm install, repair, and skip policy in c420ui host dependency management.
+- `root scripts/ ownership` is scripts/ must not return; keep npm install, repair, and skip policy in c420ui host dependency management.
 - Keep shell helper classifications in `docs/checks/SHELL_HELPERS.md` up to date when adding, removing, or repurposing shell scripts.
 
 ## c420ui bootstrap guardrails
@@ -645,3 +645,25 @@ metadata/release builds.
 - Do not add `build-resources/electron/*` or `scripts/canva-linux/*` to c420ui source hash inputs.
 - Do not include `docs/`, `build-resources/tests/`, `.build/`, `dist/`, `node_modules/`, or generated bootstrap artifacts in source hash inputs.
 - `buildRevision` is Git/CI/release metadata; deterministic source hashes are content metadata.
+
+## Dev11 final ESM boundaries
+
+Dev11 closes the radical ESM migration.
+
+- All maintained runtime/tooling/check/build source is TypeScript.
+- All generated Node/tooling outputs are ESM `.mjs`.
+- Electron runtime starts from `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.mjs`.
+- c420ui bootstrap generated artifacts are `.mjs`.
+- Versioned `.cjs` files are forbidden.
+- CommonJS bridges are forbidden in maintained TypeScript.
+- Shell remains only as POSIX/bootstrap boundary.
+
+The only remaining shell files are documented runtime/bootstrap boundaries:
+
+- `canva-linux-c420ui-builder`: stage-0 c420ui bootstrap launcher.
+- `run.sh`: Flatpak/POSIX runtime launcher.
+
+They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.
+
+Shell scripts are allowed only for documented POSIX/bootstrap boundaries: canva-linux-c420ui-builder and run.sh.

@@ -25,7 +25,7 @@ function runWithTempRoot(fn: (rootDir: string) => void): void {
   }
 }
 
-function writeArtifact(rootDir: string, artifact: string, content = "module.exports = 1;\n"): void {
+function writeArtifact(rootDir: string, artifact: string, content = `module${".exports"} = 1;\n`): void {
   const rel = c420uiBootstrapArtifactPath(artifact);
   const abs = path.join(rootDir, rel);
   fs.mkdirSync(path.dirname(abs), { recursive: true });

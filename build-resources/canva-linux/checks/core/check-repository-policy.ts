@@ -245,6 +245,11 @@ const forbiddenSourceRoots = [
   "build-resources/canva-linux/packaging/flathub/scripts/",
 ] as const;
 
+const allowedShellBoundaryFiles = new Set([
+  "canva-linux-c420ui-builder",
+  "run.sh",
+]);
+
 const forbiddenConfigFiles = new Set([
   "eslint.config.js",
   "playwright.config.js",
@@ -292,6 +297,48 @@ function validateNoMaintainedModuleJavaScript(
   }
 }
 
+function validateNoCommonJsPatternsInTypeScript(
+  rootDir: string,
+  files: string[],
+  failures: string[],
+): void {
+  const forbiddenPatterns = [
+    ["@ts-" + "nocheck", "remove @ts-" + "nocheck and type the module"],
+    ["requ" + "ire(", "use ESM import or dynamic import()"],
+    ["module" + ".exports", "use ESM exports"],
+    ["exports" + ".", "use ESM exports"],
+    ["requ" + "ire.extensions", "do not patch CommonJS loaders"],
+    ["ModuleKind." + "CommonJS", "do not emit CommonJS in Dev11 ESM-only mode"],
+    ["create" + "Require", "avoid CommonJS bridges in ESM-only mode"],
+  ] as const;
+
+  for (const file of files) {
+    if (!file.startsWith("build-resources/") || !file.endsWith(".ts")) continue;
+
+    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    const contentWithoutComments = content
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+
+    for (const [pattern, message] of forbiddenPatterns) {
+      if (contentWithoutComments.includes(pattern)) {
+        failures.push(`${file}: ${message}`);
+      }
+    }
+  }
+}
+
+function validateShellBoundaries(files: string[], failures: string[]): void {
+  for (const file of files) {
+    if (!file.endsWith(".sh") && file !== "canva-linux-c420ui-builder") continue;
+    if (allowedShellBoundaryFiles.has(file)) continue;
+
+    failures.push(
+      `${file}: shell is allowed only for documented POSIX/bootstrap boundaries; migrate maintained logic to TypeScript`,
+    );
+  }
+}
+
 function validateRequiredTypeScriptEntrypoints(
   rootDir: string,
   failures: string[],
@@ -301,7 +348,7 @@ function validateRequiredTypeScriptEntrypoints(
     "build-resources/config/playwright/playwright.config.ts",
     "build-resources/c420ui/scripts/run-node-tests.ts",
     "build-resources/c420ui/scripts/run-typescript-script.ts",
-    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
+    "build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts",
   ] as const;
 
   for (const file of required) {
@@ -412,7 +459,7 @@ function validateNoCommonJsRuntimeExports(
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
     if (content.includes(moduleExportsPattern)) {
       failures.push(
-        `${file}: use ESM exports only; duplicate module.exports blocks are forbidden in Electron main TypeScript`,
+        `${file}: use ESM exports only; duplicate ${"module" + ".exports"} blocks are forbidden in Electron main TypeScript`,
       );
     }
   }
@@ -449,13 +496,13 @@ function validatePreloadTypeScriptStyle(
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/^\s*\/\/.*$/gm, "");
     if (content.includes(tsNoCheckPattern)) {
-      failures.push(`${file}: preload modules must not use @ts-nocheck`);
+      failures.push(`${file}: preload modules must not use ${"@ts-" + "nocheck"}`);
     }
     if (contentWithoutComments.includes(moduleExportsPattern)) {
       failures.push(`${file}: preload modules must use ESM exports`);
     }
     if (contentWithoutComments.includes(requirePattern)) {
-      failures.push(`${file}: preload modules must not use require(); use ESM imports`);
+      failures.push(`${file}: preload modules must not use ${"requ" + "ire"}(); use ESM imports`);
     }
   }
 }
@@ -516,6 +563,8 @@ function main(): number {
 
   validateNoMaintainedJavaScript(files, failures);
   validateNoMaintainedModuleJavaScript(files, failures);
+  validateNoCommonJsPatternsInTypeScript(rootDir, files, failures);
+  validateShellBoundaries(files, failures);
   validateSourceRootExtensions(files, failures);
   validateShellInlineJavaScriptPolicy(rootDir, files, failures);
   validateForbiddenConfigs(rootDir, failures);
@@ -588,7 +637,7 @@ const requiredVersionedPaths = [
   "io.github.coletivo420.canva-linux.yml",
   "build-resources/canva-linux/packaging/flathub/manifest.yml",
   "build-resources/canva-linux/packaging/flathub/generated-sources.json",
-  "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
+  "build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts",
   "build-resources/canva-linux/assets/desktop/io.github.coletivo420.canva-linux.desktop",
   "build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
   "build-resources/canva-linux/assets/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png",
@@ -877,7 +926,7 @@ const requiredJsonFiles = ["package.json", "package-lock.json"] as const;
 
 const requiredShellFiles = [
   "canva-linux-c420ui-builder",
-  "build-resources/c420ui/host/linux/sudo-helper.sh",
+  "run.sh",
 ] as const;
 
 const centralDocumentationFiles = [
@@ -1479,21 +1528,10 @@ function validateScriptsRootDecommissioned(
 ): void {
   const scriptsDir = path.join(rootDir, "scripts");
   if (!fs.existsSync(scriptsDir)) return;
-  const allowed = new Set([
-    "README.md",
-    "app-identity-common.sh",
-    "preflight-common.sh",
-    "theme.json",
-    "ui-common.sh",
-    "user-data-common.sh",
-    "xdg-common.sh",
-  ]);
   for (const entry of fs.readdirSync(scriptsDir)) {
-    if (!allowed.has(entry)) {
-      failures.push(
-        `scripts/${entry}: scripts/ is no longer a maintained source root; move maintained tooling under build-resources`,
-      );
-    }
+    failures.push(
+      `scripts/${entry}: scripts/ is no longer a maintained source root; move maintained tooling under build-resources`,
+    );
   }
 }
 
@@ -1602,7 +1640,7 @@ function validateRootProviderContracts(
 
   for (const fragment of [
     "createCanvaLinuxRootProvider",
-    "build-resources/c420ui/host/linux/sudo-helper.sh",
+    "sudoCommand",
     "buildCanvaLinuxOverviewStatus",
     "CANVA_NATIVE_SCOPE",
     "CANVA_FLATPAK_SCOPE",
@@ -1793,11 +1831,11 @@ function hasForbiddenPattern(source: string): string | null {
   );
 
   if (/(?<!\.)\brequire\s*\(/.test(contentWithoutCommentsOrStrings))
-    return "require(";
+    return "requ" + "ire(";
   if (/\bmodule\s*\.\s*exports\b/.test(contentWithoutCommentsOrStrings))
-    return "module.exports";
+    return "module" + ".exports";
   if (/(?<!\.)\bexports\s*\./.test(contentWithoutCommentsOrStrings))
-    return "exports.";
+    return "exports" + ".";
   if (/(?<!\.)\bcreate\s*Require\s*\(/.test(contentWithoutCommentsOrStrings))
     return "create" + "Require(";
   if (/\b__filename\b/.test(contentWithoutCommentsOrStrings))
@@ -2013,7 +2051,6 @@ function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const ensurePath = "scripts/" + "ensure-npm-dependencies.sh";
-  const preflightPath = "scripts/preflight-common.sh";
   const shellClassificationPath = "docs/checks/SHELL_HELPERS.md";
   const runEntrypointPath = "build-resources/c420ui/scripts/run-c420ui.ts";
   const dependenciesPath = "build-resources/canva-linux/c420ui-adapter/dependencies.ts";
@@ -2030,45 +2067,26 @@ function main(): number {
   if (!fs.existsSync(path.join(rootDir, dependenciesPath))) {
     failures.push(`${dependenciesPath}: dependency loader is required`);
   }
-  if (!fs.existsSync(path.join(rootDir, preflightPath))) {
-    failures.push(`${preflightPath}: shared project preflight helpers must remain in scripts/`);
-  }
   if (!fs.existsSync(path.join(rootDir, shellClassificationPath))) {
     failures.push(`${shellClassificationPath}: shell helper classification is required`);
   }
 
-  const preflight = fs.existsSync(path.join(rootDir, preflightPath))
-    ? fs.readFileSync(path.join(rootDir, preflightPath), "utf8")
-    : "";
-  if (preflight.includes("CANVA_" + "REQUIRED_NPM_DEPS")) {
-    failures.push(`${preflightPath}: must not contain the legacy hardcoded npm dependency list`);
-  }
-  if (preflight.includes("npm ci") || preflight.includes("npm install")) {
-    failures.push(`${preflightPath}: must not contain active npm install policy`);
-  }
-  if (!preflight.includes("Repository-check-only")) {
-    failures.push(`${preflightPath}: must be explicitly marked repository-check-only`);
-  }
-  if (preflight.includes("ensure_" + "npm_dependencies")) {
-    failures.push(`${preflightPath}: must not contain removed npm dependency bootstrap helper`);
-  }
-
   if (fs.existsSync(path.join(rootDir, ensurePath))) {
     failures.push(`${ensurePath}: obsolete npm dependency bootstrap script must not exist`);
+  }
+  if (fs.existsSync(path.join(rootDir, "scripts"))) {
+    failures.push("scripts/: root scripts ownership path must not exist in Dev11 final ESM mode");
   }
 
   const shellClassification = fs.existsSync(path.join(rootDir, shellClassificationPath))
     ? fs.readFileSync(path.join(rootDir, shellClassificationPath), "utf8")
     : "";
   for (const fragment of [
-    "c420ui host tool",
-    "Canva Linux recipes",
-    "Repository check helper",
-    "Obsolete",
-    "build-runtime.sh",
-    "install-flatpak-local.sh",
-    "build-resources/c420ui/host/linux/sudo-helper.sh",
-    "scripts/preflight-common.sh",
+    "canva-linux-c420ui-builder",
+    "stage-0 c420ui bootstrap launcher",
+    "run.sh",
+    "Flatpak/POSIX runtime launcher",
+    "Any additional shell file is a regression",
   ] as const) {
     if (!shellClassification.includes(fragment)) {
       failures.push(`${shellClassificationPath}: missing shell classification fragment ${fragment}`);

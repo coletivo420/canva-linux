@@ -93,10 +93,13 @@ function readJsonFile<T>(filePath: string): T {
 
 function readAppIdentity(identityPath: string): AppIdentity {
   try {
-    const content = fs.readFileSync(identityPath, "utf8");
+    const identity = readJsonFile<{
+      displayVersion?: string;
+      phase?: string;
+    }>(identityPath);
     return {
-      projectDisplayVersion: content.match(/^PROJECT_DISPLAY_VERSION="([^"]+)"/m)?.[1],
-      projectPhase: content.match(/^PROJECT_PHASE="([^"]+)"/m)?.[1],
+      projectDisplayVersion: identity.displayVersion,
+      projectPhase: identity.phase,
     };
   } catch {
     return {};
@@ -120,7 +123,7 @@ export function createCanvaLinuxC420UIAdapter(
   const artifactsJsonPath = path.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
   const appIdentityPath = path.join(
     resolvedRootDir,
-    "scripts/app-identity-common.sh",
+    "build-resources/canva-linux/config/project-ui.json",
   );
   const buildMetadataPath = path.join(
     resolvedRootDir,

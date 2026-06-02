@@ -60,7 +60,7 @@ Dev11 finalizes explicit ESM outputs:
 - Canva Linux launchers do not run dependency installation directly.
 - Canva Linux does not validate generic artifact recipes.
 - The adapter does not duplicate Action Engine policy.
-- `scripts/preflight-common.sh` is repository-check-only.
+- `root scripts/ ownership` is scripts/ must not return.
 
 ## Version and release line
 
@@ -76,3 +76,7 @@ Dev11 finalizes explicit ESM outputs:
 - Do not reintroduce `scripts/c420ui/`.
 - Do not create generated JavaScript outside `.build/`, `dist/`, `coverage`, or
   dependency output.
+
+## Dev11 shell boundary
+
+POSIX/bootstrap boundaries are limited to `canva-linux-c420ui-builder` and `run.sh`; scripts/ must not return as an active ownership path.

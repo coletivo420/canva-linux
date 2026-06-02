@@ -232,7 +232,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Slimmed the Canva Linux c420ui adapter so `runAction()` only executes concrete commands after the c420ui
   Action Engine applies planned-action, dry-run, root, and confirmation policy.
 - Classified remaining shell helpers as c420ui host tools, Canva Linux recipes, repository checks, or obsolete
-  helpers, and documented `scripts/preflight-common.sh` as repository-check-only.
+  helpers, and documented `root scripts/ ownership` as scripts/ must not return.
 - Hardened c420ui host dependency management with config validation, dry-run planned commands, npm declaration checks, and executable command lookup.
 - Renamed the project-local c420ui adapter directory to `canva-linux/c420ui-adapter/` so future dependent projects can reuse the same path pattern.
 - Moved host dependency policy into c420ui so the generic runner owns command, Node and npm checks, npm install strategy, repair mode and skip mode.
@@ -263,7 +263,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Moved reusable operational command execution into the c420ui command runner.
 - Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.
 - Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed
-  by `build-resources/c420ui/host/linux/sudo-helper.sh`.
+  by `build-resources/c420ui/operations/host/sudo.ts`.
 - Moved generic c420ui TypeScript config contracts from `build-resources/c420ui/src/terminal/app.ts` into the private `build-resources/c420ui` skeleton.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
   or when safe storage encryption is unavailable.
@@ -385,3 +385,23 @@ Canva Linux and c420ui now use separate deterministic content hashes.
 `combinedSourceHash` changes when either component hash changes.
 `buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
 Docs, tests and generated artifacts must not affect either source hash.
+
+## Dev11 final ESM boundaries
+
+Dev11 closes the radical ESM migration.
+
+- All maintained runtime/tooling/check/build source is TypeScript.
+- All generated Node/tooling outputs are ESM `.mjs`.
+- Electron runtime starts from `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.mjs`.
+- c420ui bootstrap generated artifacts are `.mjs`.
+- Versioned `.cjs` files are forbidden.
+- CommonJS bridges are forbidden in maintained TypeScript.
+- Shell remains only as POSIX/bootstrap boundary.
+
+The only remaining shell files are documented runtime/bootstrap boundaries:
+
+- `canva-linux-c420ui-builder`: stage-0 c420ui bootstrap launcher.
+- `run.sh`: Flatpak/POSIX runtime launcher.
+
+They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.

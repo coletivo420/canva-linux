@@ -50,7 +50,7 @@ Dev11 bootstrap policy now requires `moduleFormat: esm` and ESM `.mjs` entrypoin
 - `build-resources/c420ui/src/detection.ts`
 - `build-resources/c420ui/src/terminal/`
 - `build-resources/c420ui/operations/`
-- `build-resources/c420ui/host/linux/sudo-helper.sh`
+- `build-resources/c420ui/operations/host/sudo.ts`
 
 ## Consumed configs and adapters
 

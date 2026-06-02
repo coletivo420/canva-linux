@@ -213,14 +213,14 @@ Project validations, contracts, and registries are implemented in TypeScript und
 
 ### Flathub source generation
 
-- `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts` owns package-lock parsing,
+- `build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts` owns package-lock parsing,
   npm source list generation, integrity hash conversion, deterministic ordering,
   and `generated-sources.json` writing.
 - The generator rejects local/workspace/link resolved dependencies, `node_modules`
   path sources, non-HTTPS tarballs, invalid integrity fragments, duplicate
   URL/hash conflicts, and missing `build-resources/canva-linux/packaging/flathub/manifest.yml` wiring for
   `generated-sources.json`.
-- `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh` invokes the TypeScript
+- `npm run flathub:generate-npm-sources` invokes the TypeScript
   generator through `npm run run:ts`, which uses the generated runner bootstrap.
 
 ## Commands
@@ -314,3 +314,23 @@ Install, uninstall, maintenance, packaging, build, artifact and versioning
 mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
 Canva Linux provides declarative identity, assets, manifests, validation
 policies, and adapter values.
+
+## Dev11 final ESM boundaries
+
+Dev11 closes the radical ESM migration.
+
+- All maintained runtime/tooling/check/build source is TypeScript.
+- All generated Node/tooling outputs are ESM `.mjs`.
+- Electron runtime starts from `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.mjs`.
+- c420ui bootstrap generated artifacts are `.mjs`.
+- Versioned `.cjs` files are forbidden.
+- CommonJS bridges are forbidden in maintained TypeScript.
+- Shell remains only as POSIX/bootstrap boundary.
+
+The only remaining shell files are documented runtime/bootstrap boundaries:
+
+- `canva-linux-c420ui-builder`: stage-0 c420ui bootstrap launcher.
+- `run.sh`: Flatpak/POSIX runtime launcher.
+
+They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.

@@ -24,11 +24,11 @@ import {
 var c420uiRootPolicyExitCode = 64;
 
 // build-resources/c420ui/src/linux-root-provider.ts
-function defaultC420UILinuxRootValidationCommand(sudoHelperPath) {
-  return { command: "bash", args: [sudoHelperPath, "--validate"] };
+function defaultC420UILinuxRootValidationCommand(sudoCommand) {
+  return { command: sudoCommand, args: ["-v"] };
 }
-function defaultC420UILinuxRootValidationStdinCommand(sudoHelperPath) {
-  return { command: "bash", args: [sudoHelperPath, "--validate-stdin"] };
+function defaultC420UILinuxRootValidationStdinCommand(sudoCommand) {
+  return { command: sudoCommand, args: ["-S", "-v", "-p", ""] };
 }
 function defaultC420UILinuxBuildActionEnvironment(action, baseEnv) {
   return { ...baseEnv, ...action.env || {} };
@@ -68,7 +68,7 @@ function createC420UILinuxRootProviderBase(options) {
     },
     validateRootAccess(rootDir, actionEnv) {
       const validationCommand = buildRootValidationCommand(
-        options.sudoHelperPath
+        options.sudoCommand
       );
       const result = runCommand(validationCommand.command, validationCommand.args, {
         cwd: rootDir,
@@ -95,7 +95,7 @@ function createC420UILinuxRootProviderBase(options) {
     },
     validateRootAccessWithInput(rootDir, actionEnv, input) {
       const validationCommand = buildRootValidationStdinCommand(
-        options.sudoHelperPath
+        options.sudoCommand
       );
       const result = runCommand(validationCommand.command, validationCommand.args, {
         cwd: rootDir,
@@ -1760,11 +1760,10 @@ var emptyInstallations = {
   appImageFullVersion: ""
 };
 function readPhase(rootDir) {
-  const phaseFile = path8.join(rootDir, "scripts/app-identity-common.sh");
-  if (!fs7.existsSync(phaseFile)) return "unknown";
-  const content = fs7.readFileSync(phaseFile, "utf8");
-  const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
-  return match?.[1] ?? "unknown";
+  const projectUiPath = path8.join(rootDir, "build-resources/canva-linux/config/project-ui.json");
+  if (!fs7.existsSync(projectUiPath)) return "unknown";
+  const projectUi = JSON.parse(fs7.readFileSync(projectUiPath, "utf8"));
+  return projectUi.phase ?? "unknown";
 }
 function safeProjectMetadata(rootDir) {
   let version = "unknown";
@@ -2251,10 +2250,10 @@ function readJsonFile6(filePath) {
 }
 function readAppIdentity(identityPath) {
   try {
-    const content = fs13.readFileSync(identityPath, "utf8");
+    const identity = readJsonFile6(identityPath);
     return {
-      projectDisplayVersion: content.match(/^PROJECT_DISPLAY_VERSION="([^"]+)"/m)?.[1],
-      projectPhase: content.match(/^PROJECT_PHASE="([^"]+)"/m)?.[1]
+      projectDisplayVersion: identity.displayVersion,
+      projectPhase: identity.phase
     };
   } catch {
     return {};
@@ -2273,7 +2272,7 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
   const artifactsJsonPath = path14.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
   const appIdentityPath = path14.join(
     resolvedRootDir,
-    "scripts/app-identity-common.sh"
+    "build-resources/canva-linux/config/project-ui.json"
   );
   const buildMetadataPath = path14.join(
     resolvedRootDir,
@@ -2522,7 +2521,7 @@ function createCanvaLinuxRootProvider(options = {}) {
   const base = createC420UILinuxRootProviderBase({
     id: "canva-linux-root-provider",
     label: "Canva Linux root provider",
-    sudoHelperPath: "build-resources/c420ui/host/linux/sudo-helper.sh",
+    sudoCommand: "sudo",
     rootAuthEnvKey: "C420UI_ROOT_AUTH",
     rootAuthEnvValue: "1",
     runCommand: options.runCommand,

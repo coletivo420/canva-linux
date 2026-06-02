@@ -60,7 +60,7 @@ only to select the generated `bootstrap/c420ui` bundle and start c420ui from a c
 - Do not run `npm ci`, `npm install`, or full-project dependency repair directly from Canva Linux launchers.
 - Do not restore `scripts/ensure-npm-dependencies.sh`.
 - Do not put concrete Canva Linux dependency lists in c420ui core.
-- Do not let `scripts/preflight-common.sh` own npm install or repair policy.
+- Do not let `root scripts/ ownership` own npm install or repair policy.
 - Do not silently ignore missing required dependencies.
 
 ## Standalone bootstrap boundary

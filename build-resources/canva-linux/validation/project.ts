@@ -15,8 +15,6 @@ export function projectValidationSteps(): ValidationStep[] {
     { label: "npm run check:c420ui-bootstrap-artifacts", command: "npm", args: ["run", "check:c420ui-bootstrap-artifacts"] },
     { label: "git diff --exit-code", command: "git", args: ["diff", "--exit-code"] },
     { label: "npm run docs:check-ai", command: "npm", args: ["run", "docs:check-ai"] },
-    { label: "check flatpak scope policy", command: "bash", args: ["scripts/check-flatpak-scope-policy.sh"] },
-    { label: "check shell ui api", command: "bash", args: ["scripts/check-shell-ui-api.sh"] },
     { label: "npm run check:c420ui-core", command: "npm", args: ["run", "check:c420ui-core"] },
     { label: "npm run check:canva-linux", command: "npm", args: ["run", "check:canva-linux"] },
     { label: "npm run check:shared-tooling", command: "npm", args: ["run", "check:shared-tooling"] },

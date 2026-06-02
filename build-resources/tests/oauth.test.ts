@@ -1,4 +1,3 @@
-// @ts-nocheck
 import assert from "node:assert/strict";
 import vm from "node:vm";
 import test from "node:test";
