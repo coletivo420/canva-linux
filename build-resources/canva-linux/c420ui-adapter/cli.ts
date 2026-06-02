@@ -1,6 +1,6 @@
-import { runC420UICli, type C420UIEvent } from "../../c420ui/src";
-import { createCanvaLinuxBridge } from "./bridge";
-import { createCanvaLinuxRootProvider } from "./root-provider";
+import { runC420UICli, type C420UIEvent } from "../../c420ui/src/index.js";
+import { createCanvaLinuxBridge } from "./bridge.js";
+import { createCanvaLinuxRootProvider } from "./root-provider.js";
 
 function emitDirectCliEvent(event: C420UIEvent): void {
   if (event.type !== "log") return;

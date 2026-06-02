@@ -6,8 +6,8 @@ import path from "node:path";
 import {
   calculateCanvaLinuxSourceHash,
   combineSourceHashes,
-} from "../source-hash";
-import { calculateC420UISourceHash } from "../../c420ui/bootstrap/source-hash";
+} from "../source-hash.js";
+import { calculateC420UISourceHash } from "../../c420ui/bootstrap/source-hash.js";
 
 type PackageJson = {
   scripts?: Record<string, string>;

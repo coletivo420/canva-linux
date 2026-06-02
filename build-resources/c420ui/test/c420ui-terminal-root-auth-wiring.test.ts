@@ -13,7 +13,7 @@ test("app.ts imports inputDialog", () => {
   const app = read("build-resources/c420ui/src/terminal/app.ts");
 
   assert.equal(app.includes("inputDialog"), true);
-  assert.equal(app.includes('from "./modal"'), true);
+  assert.equal(app.includes('from "./modal.js"'), true);
 });
 
 test("app.ts passes requestRootAccess to createInteractiveActionRunner", () => {

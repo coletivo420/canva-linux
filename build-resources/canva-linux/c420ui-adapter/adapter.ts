@@ -12,17 +12,17 @@ import {
   type C420UIProjectAdapter,
   type C420UIProjectConfig,
   type C420UIWorkflow,
-} from "../../c420ui/src";
-import { c420uiLogoLines } from "../../c420ui/src/terminal/logo";
-import { toolSettingsPath } from "../../c420ui/src/terminal/settings";
-import { buildCanvaLinuxOverviewStatus } from "./detection/provider";
-import { loadEffectiveBuildMetadata } from "./build-metadata-loader";
+} from "../../c420ui/src/index.js";
+import { c420uiLogoLines } from "../../c420ui/src/terminal/logo.js";
+import { toolSettingsPath } from "../../c420ui/src/terminal/settings.js";
+import { buildCanvaLinuxOverviewStatus } from "./detection/provider.js";
+import { loadEffectiveBuildMetadata } from "./build-metadata-loader.js";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
-} from "./artifacts";
-import { loadCanvaLinuxC420UIActions } from "./actions";
-import { loadCanvaLinuxDevelopmentWorkflows } from "./development";
+} from "./artifacts.js";
+import { loadCanvaLinuxC420UIActions } from "./actions.js";
+import { loadCanvaLinuxDevelopmentWorkflows } from "./development.js";
 
 type ProjectUiJson = {
   displayVersion?: string;

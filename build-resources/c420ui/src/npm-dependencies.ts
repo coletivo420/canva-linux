@@ -6,7 +6,7 @@ import type {
   c420uiHostDependencyCheckResult,
   c420uiNpmDependencyConfig,
   c420uiPlannedHostDependencyCommand,
-} from "./host-dependencies";
+} from "./host-dependencies.js";
 
 export type c420uiNpmCommandRunner = (
   command: string,

@@ -3,13 +3,13 @@ import {
   type SpawnSyncOptions,
   type SpawnSyncReturns,
 } from "node:child_process";
-import type { c420uiAction } from "./actions";
+import type { c420uiAction } from "./actions.js";
 import {
   c420uiRootPolicyExitCode,
   type c420uiRootProvider,
   type c420uiRootValidationResult,
-} from "./root-provider";
-import { isC420UIUserScope } from "./scopes";
+} from "./root-provider.js";
+import { isC420UIUserScope } from "./scopes.js";
 
 export type c420uiLinuxRootCommandRunner = (
   command: string,

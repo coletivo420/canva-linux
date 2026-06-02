@@ -1,6 +1,6 @@
-import { parseDryRun } from "../../host/dry-run";
-import { projectRoot } from "../../host/paths";
-import { detectInstallations, printDetectionStatusEnv } from "../detection/install-detection";
+import { parseDryRun } from "../../host/dry-run.js";
+import { projectRoot } from "../../host/paths.js";
+import { detectInstallations, printDetectionStatusEnv } from "../detection/install-detection.js";
 
 export function runShowDetected(argv: string[]): void {
   const rootDir = projectRoot();

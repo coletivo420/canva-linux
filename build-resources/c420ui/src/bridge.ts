@@ -1,10 +1,10 @@
-import type { c420uiAction, C420UIActionDescriptor } from "./actions";
-import type { c420uiArtifactWorkflow } from "./artifacts";
-import type { c420uiOverviewStatus } from "./detection";
-import type { c420uiLogEvent, c420uiProgressEvent } from "./events";
-import type { c420uiProjectCapabilities } from "./capabilities";
-import type { C420UIConfig, C420UIProjectConfig } from "./types";
-import type { C420UIWorkflow, C420UIWorkflowRunOptions, C420UIWorkflowResult } from "./workflows";
+import type { c420uiAction, C420UIActionDescriptor } from "./actions.js";
+import type { c420uiArtifactWorkflow } from "./artifacts.js";
+import type { c420uiOverviewStatus } from "./detection.js";
+import type { c420uiLogEvent, c420uiProgressEvent } from "./events.js";
+import type { c420uiProjectCapabilities } from "./capabilities.js";
+import type { C420UIConfig, C420UIProjectConfig } from "./types.js";
+import type { C420UIWorkflow, C420UIWorkflowRunOptions, C420UIWorkflowResult } from "./workflows.js";
 
 export type c420uiProjectInfo = {
   projectName: string;

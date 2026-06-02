@@ -1,6 +1,6 @@
-import type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types";
+import type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types.js";
 
-export type { TabEntry, WebContentsViewLike } from "../shared/types";
+export type { TabEntry, WebContentsViewLike } from "../shared/types.js";
 export type TabStateLike = {
   tabs: Map<number, TabEntry>;
   activeTabId: number | null;

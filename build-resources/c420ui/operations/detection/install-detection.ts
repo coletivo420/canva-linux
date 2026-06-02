@@ -2,7 +2,7 @@ import {
   detectAppImageArtifacts,
   detectAppImageFullVersion,
   detectAppImageVersion,
-} from "./appimage-detection";
+} from "./appimage-detection.js";
 import {
   detectFlatpakSystemFullVersion,
   detectFlatpakSystemInstall,
@@ -10,7 +10,7 @@ import {
   detectFlatpakUserFullVersion,
   detectFlatpakUserInstall,
   detectFlatpakUserVersion,
-} from "./flatpak-detection";
+} from "./flatpak-detection.js";
 import {
   detectNativeSystemFullVersion,
   detectNativeSystemInstall,
@@ -18,7 +18,7 @@ import {
   detectNativeUserFullVersion,
   detectNativeUserInstall,
   detectNativeUserVersion,
-} from "./native-detection";
+} from "./native-detection.js";
 
 export type InstallationDetectionResult = {
   DETECTED_NATIVE_SYSTEM: boolean;

@@ -1,5 +1,5 @@
 import { ipcRenderer } from "electron";
-import { createDebugTools } from "../shared/debug";
+import { createDebugTools } from "../shared/debug.js";
 
 type PreloadDebugOptions = {
   source?: string;

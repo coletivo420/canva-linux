@@ -1,4 +1,4 @@
-import type { DebugLog, UploadIngress } from "./types";
+import type { DebugLog, UploadIngress } from "./types.js";
 
 type FileLike = {
   name?: string;

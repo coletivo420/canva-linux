@@ -1,5 +1,5 @@
 import { spawnSync, type SpawnSyncOptions } from "node:child_process";
-import { projectRoot } from "../../host/paths";
+import { projectRoot } from "../../host/paths.js";
 
 const SUDO_HELPER_PATH = "build-resources/c420ui/host/linux/sudo-helper.sh";
 

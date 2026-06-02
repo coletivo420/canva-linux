@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { runC420UIStartupTasks, type c420uiStartupTask } from "../src";
+import { runC420UIStartupTasks, type c420uiStartupTask } from "../src/index.js";
 
 test("startup tasks report successful dependent project dependency preparation", async () => {
   const logs: string[] = [];

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { runStep } from "../canva-linux/validation/run-step";
+import { runStep } from "../canva-linux/validation/run-step.js";
 
 test("run-step preserves exit status", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "run-step-"));

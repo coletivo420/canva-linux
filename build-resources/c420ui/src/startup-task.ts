@@ -1,7 +1,7 @@
 import {
   isC420UIHostDependencyFailure,
   type c420uiHostDependencyCheckResult,
-} from "./host-dependencies";
+} from "./host-dependencies.js";
 
 export type c420uiStartupTask = {
   id: string;

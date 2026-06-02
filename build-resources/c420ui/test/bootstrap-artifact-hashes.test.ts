@@ -5,12 +5,12 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { validateManifestArtifactHashes } from "../checks/check-bootstrap";
+import { validateManifestArtifactHashes } from "../checks/check-bootstrap.js";
 import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
-} from "../checks/bootstrap-check-helpers";
+} from "../checks/bootstrap-check-helpers.js";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT ||

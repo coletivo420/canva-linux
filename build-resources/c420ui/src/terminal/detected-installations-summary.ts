@@ -1,4 +1,4 @@
-import type { CanvaLinuxArtifactFragment, c420uiOverviewStatus } from "../detection";
+import type { CanvaLinuxArtifactFragment, c420uiOverviewStatus } from "../detection.js";
 
 type DetectionSummaryColors = {
   appImageLoading: string;

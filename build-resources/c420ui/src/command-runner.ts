@@ -1,9 +1,9 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { StringDecoder } from "node:string_decoder";
-import type { c420uiActionResult } from "./bridge";
-import type { c420uiLogEvent, c420uiProgressEvent } from "./events";
-import { c420uiExitCodes } from "./exit-codes";
-import { createC420UIOperationalLogEvent } from "./operational-logs";
+import type { c420uiActionResult } from "./bridge.js";
+import type { c420uiLogEvent, c420uiProgressEvent } from "./events.js";
+import { c420uiExitCodes } from "./exit-codes.js";
+import { createC420UIOperationalLogEvent } from "./operational-logs.js";
 
 export type c420uiCommandRunnerOptions = {
   command: string;

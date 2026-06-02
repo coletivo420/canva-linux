@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root.js";
 
 const requiredFiles = [
   "docs/internal/AI_GUARDRAILS.md",

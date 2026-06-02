@@ -1,4 +1,4 @@
-import type { c420uiAction } from "./actions";
+import type { c420uiAction } from "./actions.js";
 
 export type c420uiRootPolicyResult =
   | { requiresRoot: false; warning?: string }

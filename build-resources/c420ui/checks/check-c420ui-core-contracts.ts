@@ -290,7 +290,7 @@ function main(): number {
     }
   }
 
-  if (!index.includes('from "./detection"')) {
+  if (!index.includes('from "./detection.js"')) {
     failures.push("index.ts: missing public export for ./detection");
   }
 
@@ -418,10 +418,10 @@ function main(): number {
       .map((fragment) => `action engine must not contain project-specific fragment: ${fragment}`),
   ];
 
-  if (!index.includes('export { createC420UIActionEngine } from "./action-engine"')) {
+  if (!index.includes('export { createC420UIActionEngine } from "./action-engine.js"')) {
     failures.push("index must export createC420UIActionEngine");
   }
-  if (!index.includes('} from "./action-engine"')) {
+  if (!index.includes('} from "./action-engine.js"')) {
     failures.push("index must export action engine types");
   }
 
@@ -466,10 +466,10 @@ function main(): number {
       .map((fragment) => `generic c420ui CLI must not contain project-specific fragment: ${fragment}`),
   ];
 
-  if (!index.includes('export { runC420UICli } from "./cli"')) {
+  if (!index.includes('export { runC420UICli } from "./cli.js"')) {
     failures.push("index must export runC420UICli");
   }
-  if (!index.includes('export type { c420uiCliOptions, c420uiCliResult } from "./cli"')) {
+  if (!index.includes('export type { c420uiCliOptions, c420uiCliResult } from "./cli.js"')) {
     failures.push("index must export c420ui CLI types");
   }
 
@@ -539,12 +539,12 @@ function main(): number {
     failures.push("root provider preflight must run before bridge.runAction");
   }
 
-  if (!index.includes('export type * from "./root-provider"')) {
+  if (!index.includes('export type * from "./root-provider.js"')) {
     failures.push("index must export root provider types");
   }
   for (const fragment of [
-    'export * from "./scopes"',
-    'export * from "./linux-root-provider"',
+    'export * from "./scopes.js"',
+    'export * from "./linux-root-provider.js"',
   ]) {
     if (!index.includes(fragment)) {
       failures.push(`index must export ${fragment}`);
@@ -667,13 +667,13 @@ function main(): number {
     }
   }
 
-  if (!index.includes('export { runC420UICommand } from "./command-runner"')) {
+  if (!index.includes('export { runC420UICommand } from "./command-runner.js"')) {
     failures.push("index must export runC420UICommand");
   }
-  if (!index.includes('export type { c420uiCommandRunnerOptions } from "./command-runner"')) {
+  if (!index.includes('export type { c420uiCommandRunnerOptions } from "./command-runner.js"')) {
     failures.push("index must export c420uiCommandRunnerOptions");
   }
-  if (app.includes('from "./process-runner"') || app.includes("from './process-runner'")) {
+  if (app.includes('from "./process-runner.js"') || app.includes("from './process-runner.js'")) {
     failures.push("interactive app must not import ./process-runner");
   }
   if (fs.existsSync(path.join(rootDir, "build-resources/c420ui/src/terminal/process-runner.ts"))) {
@@ -713,7 +713,7 @@ function main(): number {
     }
   }
 
-  if (!index.includes('from "./operational-logs"')) {
+  if (!index.includes('from "./operational-logs.js"')) {
     failures.push("index must export operational log helpers");
   }
 
@@ -852,7 +852,7 @@ function main(): number {
     }
   }
 
-  if (app.includes('from "./process-runner"') || app.includes("from './process-runner'")) {
+  if (app.includes('from "./process-runner.js"') || app.includes("from './process-runner.js'")) {
     failures.push("interactive app must not import ./process-runner");
   }
   if (app.includes("scripts/run-core-entry.sh ${runnerArgs")) {
@@ -1302,7 +1302,7 @@ function checkDevelopmentProviderContract(failures: string[]): void {
       failures.push(`${providerPath}: missing development provider fragment ${fragment}`);
     }
   }
-  if (!index.includes('from "./development-provider"')) {
+  if (!index.includes('from "./development-provider.js"')) {
     failures.push(`${indexPath}: must export ./development-provider`);
   }
   for (const forbidden of [

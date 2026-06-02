@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { parseDryRun } from "../../host/dry-run";
-import { projectRoot } from "../../host/paths";
-import { requireCommands } from "../../host/preflight";
-import { runCommand } from "../../host/command-runner";
-import { info, ok, section, warn } from "../../host/ui";
-import { resolveNativeScope, type NativeScope } from "./native-paths";
+import { parseDryRun } from "../../host/dry-run.js";
+import { projectRoot } from "../../host/paths.js";
+import { requireCommands } from "../../host/preflight.js";
+import { runCommand } from "../../host/command-runner.js";
+import { info, ok, section, warn } from "../../host/ui.js";
+import { resolveNativeScope, type NativeScope } from "./native-paths.js";
 import {
   c420uiSudoChmod,
   c420uiSudoCp,
@@ -16,12 +16,12 @@ import {
   c420uiSudoRm,
   c420uiSudoRun,
   c420uiSudoValidate,
-} from "../host/sudo";
-import { installBuildMetadataMarker } from "./build-metadata-marker";
-import { writeDesktopFile } from "./desktop-entry";
-import { installIcons } from "./icons";
-import { updateDesktopCaches } from "./desktop-cache";
-import { printNativePostInstallGuidance } from "../host/guidance";
+} from "../host/sudo.js";
+import { installBuildMetadataMarker } from "./build-metadata-marker.js";
+import { writeDesktopFile } from "./desktop-entry.js";
+import { installIcons } from "./icons.js";
+import { updateDesktopCaches } from "./desktop-cache.js";
+import { printNativePostInstallGuidance } from "../host/guidance.js";
 
 const APP_ID = "io.github.coletivo420.canva-linux";
 const APP_EXECUTABLE = "canva-linux";

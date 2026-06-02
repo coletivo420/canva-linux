@@ -6,7 +6,7 @@ import path from "node:path";
 import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   c420uiBootstrapArtifactPath,
-} from "../checks/bootstrap-check-helpers";
+} from "../checks/bootstrap-check-helpers.js";
 import {
   C420UI_BOOTSTRAP_BUILD_RECIPE,
   C420UI_BOOTSTRAP_BUILD_TARGET,
@@ -15,14 +15,14 @@ import {
   C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   createC420UIBootstrapBuildOptions,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
-} from "../bootstrap/build-recipe";
+} from "../bootstrap/build-recipe.js";
 import {
   calculateC420UISourceHash,
   C420UI_SOURCE_HASH_ALGORITHM,
   C420UI_SOURCE_HASH_INPUTS,
-} from "../bootstrap/source-hash";
-import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety";
-import { loadCommittedBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
+} from "../bootstrap/source-hash.js";
+import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety.js";
+import { loadCommittedBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader.js";
 
 type PackageJson = {
   version?: string;

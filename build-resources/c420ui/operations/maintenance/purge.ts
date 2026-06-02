@@ -1,7 +1,7 @@
-import { parseDryRun } from "../../host/dry-run";
-import { runDetectedUninstall } from "../uninstall/detected";
-import { runResetUserData } from "./reset-user-data";
-import { ok } from "../../host/ui";
+import { parseDryRun } from "../../host/dry-run.js";
+import { runDetectedUninstall } from "../uninstall/detected.js";
+import { runResetUserData } from "./reset-user-data.js";
+import { ok } from "../../host/ui.js";
 
 export function runPurge(argv: string[]): void {
   const { dryRun } = parseDryRun(argv);

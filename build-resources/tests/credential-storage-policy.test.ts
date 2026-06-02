@@ -1,12 +1,12 @@
 // @ts-nocheck
 "use strict";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const test = require("node:test");
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   createCredentialStoragePolicy,

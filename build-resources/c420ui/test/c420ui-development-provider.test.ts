@@ -9,7 +9,7 @@ import {
   type c420uiDevelopmentConfig,
   type c420uiDevelopmentTask,
   type C420UIActionDescriptor,
-} from "../src";
+} from "../src/index.js";
 
 const validTask: c420uiDevelopmentTask = {
   id: "doctor",

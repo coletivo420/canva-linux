@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { info } from "./ui";
+import { info } from "./ui.js";
 
 export type RunOptions = {
   cwd: string;

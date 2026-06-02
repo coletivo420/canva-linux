@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root.js";
 
 const rootDir =
   findProjectRoot(
@@ -254,7 +254,7 @@ export function main(): void {
       ...relativeCompileInputs,
       "--platform=node",
       "--target=node20",
-      "--format=cjs",
+      "--format=esm",
       "--outbase=.",
       "--outdir=.build",
       "--sourcemap=inline",
@@ -295,7 +295,7 @@ export function main(): void {
         ...relativeC420uiSources,
         "--platform=node",
         "--target=node20",
-        "--format=cjs",
+        "--format=esm",
         "--outbase=build-resources",
         "--outdir=.build/build-resources",
         "--sourcemap=inline",
@@ -339,7 +339,7 @@ export function main(): void {
         ...relativeRuntimeSources,
         "--platform=node",
         "--target=node20",
-        "--format=cjs",
+        "--format=esm",
         "--outbase=scripts",
         "--outdir=.build/scripts",
         "--sourcemap=inline",

@@ -11,7 +11,7 @@ import {
   calculateC420UISourceHash,
   collectC420UIBootstrapSourceHashFiles,
   collectC420UISourceHashFiles,
-} from "../bootstrap/source-hash";
+} from "../bootstrap/source-hash.js";
 
 const sourceHashInputs: readonly string[] = C420UI_SOURCE_HASH_INPUTS;
 

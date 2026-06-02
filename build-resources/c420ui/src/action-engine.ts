@@ -4,15 +4,15 @@ import {
   isC420UIPlannedAction,
   requiresC420UIActionConfirmation,
   type c420uiAction,
-} from "./actions";
+} from "./actions.js";
 import type {
   c420uiActionResult,
   c420uiExecutionContext,
   c420uiProjectBridge,
-} from "./bridge";
-import { createC420UIEvent, type C420UIEventSink } from "./events";
-import { c420uiExitCodes } from "./exit-codes";
-import type { c420uiRootProvider } from "./root-provider";
+} from "./bridge.js";
+import { createC420UIEvent, type C420UIEventSink } from "./events.js";
+import { c420uiExitCodes } from "./exit-codes.js";
+import type { c420uiRootProvider } from "./root-provider.js";
 
 export type c420uiRootAccessRequest = {
   action: c420uiAction;

@@ -2,7 +2,7 @@ import type {
   C420UIEventLevel,
   c420uiLogEvent,
   c420uiLogSource,
-} from "./events";
+} from "./events.js";
 
 export type c420uiOperationalLogOptions = {
   source: c420uiLogSource;

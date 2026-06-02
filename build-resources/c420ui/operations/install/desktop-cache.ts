@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
-import { c420uiSudoRun } from "../host/sudo";
+import { c420uiSudoRun } from "../host/sudo.js";
 
 export function updateDesktopCaches(
   scope: "system" | "user",

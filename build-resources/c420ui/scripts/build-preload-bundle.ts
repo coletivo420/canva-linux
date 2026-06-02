@@ -1,7 +1,7 @@
 import esbuild from "esbuild";
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root.js";
 
 const repoRoot =
   findProjectRoot(

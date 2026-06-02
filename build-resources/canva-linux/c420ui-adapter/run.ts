@@ -1,10 +1,10 @@
 import {
   printC420UITerminalHelp,
   runC420UITerminalApp,
-} from "../../c420ui/src/terminal";
-import { createCanvaLinuxC420UIAdapter } from "./adapter";
-import { ensureCanvaLinuxHostDependencies } from "./dependencies";
-import { createCanvaLinuxRootProvider } from "./root-provider";
+} from "../../c420ui/src/terminal/index.js";
+import { createCanvaLinuxC420UIAdapter } from "./adapter.js";
+import { ensureCanvaLinuxHostDependencies } from "./dependencies.js";
+import { createCanvaLinuxRootProvider } from "./root-provider.js";
 
 export type RunCanvaLinuxC420UIOptions = {
   rootDir?: string;

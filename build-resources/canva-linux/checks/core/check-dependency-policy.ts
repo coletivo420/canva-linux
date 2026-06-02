@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root.js";
 
 const minimumDirectVersions: Record<string, string> = {
   electron: "41.5.0",

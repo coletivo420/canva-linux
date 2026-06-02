@@ -4,9 +4,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { createCanvaLinuxDetectionProvider } from "../canva-linux/c420ui-adapter/detection/provider";
-import type { c420uiOverviewStatus } from "../c420ui/src/detection";
-import type { InstallationDetectionResult } from "../c420ui/operations/detection/install-detection";
+import { createCanvaLinuxDetectionProvider } from "../canva-linux/c420ui-adapter/detection/provider.js";
+import type { c420uiOverviewStatus } from "../c420ui/src/detection.js";
+import type { InstallationDetectionResult } from "../c420ui/operations/detection/install-detection.js";
 
 const emptyDetectionResult: InstallationDetectionResult = {
   DETECTED_NATIVE_SYSTEM: false,

@@ -8,7 +8,7 @@ import {
   type c420uiRunnableArtifactWorkflow,
   type C420UIActionDescriptor,
   type C420UIEvent,
-} from "../src";
+} from "../src/index.js";
 
 type WorkflowEvent = C420UIEvent & {
   data?: Record<string, unknown>;

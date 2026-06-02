@@ -8,17 +8,17 @@ import test from "node:test";
 import {
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
-} from "../checks/bootstrap-check-helpers";
+} from "../checks/bootstrap-check-helpers.js";
 import {
   C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   createC420UIBootstrapEsbuildCliArgs,
-} from "../bootstrap/build-recipe";
+} from "../bootstrap/build-recipe.js";
 import {
   calculateC420UISourceHash,
   collectC420UISourceHashFiles,
   C420UI_SOURCE_HASH_ALGORITHM,
   C420UI_SOURCE_HASH_INPUTS,
-} from "../bootstrap/source-hash";
+} from "../bootstrap/source-hash.js";
 
 const manifestPath = C420UI_BOOTSTRAP_MANIFEST_PATH;
 const uiEntrypoint = c420uiBootstrapArtifactPath("run-c420ui.mjs");

@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 
-import { hasCommand } from "./optional-command";
-import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result";
+import { hasCommand } from "./optional-command.js";
+import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result.js";
 
 function major(version: string): number {
   return Number(version.replace(/^v/, "").split(".")[0] || "0");

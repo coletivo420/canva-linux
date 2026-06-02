@@ -13,18 +13,18 @@ import {
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
   createC420UIBootstrapEsbuildCliArgs,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
-} from "../bootstrap/build-recipe";
+} from "../bootstrap/build-recipe.js";
 import {
   calculateC420UISourceHash,
   C420UI_SOURCE_HASH_ALGORITHM,
   C420UI_SOURCE_HASH_INPUTS,
-} from "../bootstrap/source-hash";
+} from "../bootstrap/source-hash.js";
 import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
-} from "./bootstrap-check-helpers";
-import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
+} from "./bootstrap-check-helpers.js";
+import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader.js";
 
 type PackageJson = {
   version?: string;

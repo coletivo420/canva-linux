@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root.js";
 
 const repoRoot = findProjectRoot(
   process.env.CANVA_SCRIPT_REPO_ROOT ||

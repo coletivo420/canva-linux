@@ -4,8 +4,8 @@ import test from "node:test";
 import {
   formatDetectedInstallationsSummary,
   formatDetectionPanelSummaries,
-} from "../src/terminal/detected-installations-summary";
-import type { c420uiOverviewStatus } from "../src/detection";
+} from "../src/terminal/detected-installations-summary.js";
+import type { c420uiOverviewStatus } from "../src/detection.js";
 
 function status(
   installations: c420uiOverviewStatus["installations"],

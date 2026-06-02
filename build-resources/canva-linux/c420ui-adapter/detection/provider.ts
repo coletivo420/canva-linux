@@ -8,10 +8,10 @@ import {
   type c420uiOverviewStatus,
   type c420uiOverviewStatusProvider,
   type CanvaLinuxArtifactFragment,
-} from "../../../c420ui/src/detection";
-import { findCanvaLinuxProjectRoot } from "../../project-root";
-import { buildCanvaLinuxArtifactFragments } from "./artifact-fragments";
-import { detectInstallations, type InstallationDetectionResult } from "../../../c420ui/operations/detection/install-detection";
+} from "../../../c420ui/src/detection.js";
+import { findCanvaLinuxProjectRoot } from "../../project-root.js";
+import { buildCanvaLinuxArtifactFragments } from "./artifact-fragments.js";
+import { detectInstallations, type InstallationDetectionResult } from "../../../c420ui/operations/detection/install-detection.js";
 
 type CanvaLinuxOverviewStatusProvider = Omit<
   c420uiOverviewStatusProvider,

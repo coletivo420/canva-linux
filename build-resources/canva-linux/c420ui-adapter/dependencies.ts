@@ -6,7 +6,7 @@ import {
   type c420uiHostDependencyCheckResult,
   type c420uiHostDependencyConfig,
   type c420uiNpmCommandRunner,
-} from "../../c420ui/src";
+} from "../../c420ui/src/index.js";
 
 export function loadCanvaLinuxDependencyConfig(rootDir: string): c420uiHostDependencyConfig {
   const relativeConfigPath = "build-resources/canva-linux/config/dependencies.json";

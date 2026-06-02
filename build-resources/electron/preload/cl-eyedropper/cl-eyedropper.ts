@@ -4,7 +4,7 @@ import type {
   EyeDropperLog,
   LTCodeCompatibleResult,
   RgbTuple,
-} from "./types";
+} from "./types.js";
 
 type LastPixel = {
   x: number;

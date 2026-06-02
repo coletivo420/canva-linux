@@ -7,8 +7,8 @@ import test from "node:test";
 import {
   calculateCanvaLinuxSourceHash,
   combineSourceHashes,
-} from "../canva-linux/source-hash";
-import { calculateC420UISourceHash } from "../c420ui/bootstrap/source-hash";
+} from "../canva-linux/source-hash.js";
+import { calculateC420UISourceHash } from "../c420ui/bootstrap/source-hash.js";
 
 function write(filePath: string, content: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });

@@ -1,4 +1,4 @@
-import { runCommand, type RunOptions } from "./command-runner";
+import { runCommand, type RunOptions } from "./command-runner.js";
 
 export function runWithOptionalSudo(requireRoot: boolean, command: string, args: string[], options: RunOptions): number {
   if (!requireRoot) return runCommand(command, args, options);

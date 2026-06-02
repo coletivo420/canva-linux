@@ -1,5 +1,5 @@
-import { c420uiTheme } from "./theme";
-import { tui } from "./blessed-widgets";
+import { c420uiTheme } from "./theme.js";
+import { tui } from "./blessed-widgets.js";
 
 export type ConfirmOptions = {
   title: string;

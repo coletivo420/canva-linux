@@ -1,4 +1,4 @@
-import { runProjectValidation } from "../validation/project";
+import { runProjectValidation } from "../validation/project.js";
 
 function main(): void {
   const result = runProjectValidation({ rootDir: process.cwd() });

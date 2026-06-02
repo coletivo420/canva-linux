@@ -6,6 +6,7 @@
   "author": "Community",
   "license": "GPL-3.0-or-later",
   "productName": "Canva Linux",
+  "type": "module",
   "homepage": "https://coletivo420.github.io/canva-linux/",
   "repository": {
     "type": "git",
@@ -109,15 +110,16 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
+    "@types/blessed": "^0.1.27",
     "@types/node": "^25.6.0",
     "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.1",
+    "blessed": "^0.1.81",
     "electron": "^41.5.0",
     "electron-builder": "^26.8.1",
     "esbuild": "^0.28.0",
     "eslint": "^10.3.0",
-    "typescript": "^6.0.3",
-    "blessed": "^0.1.81"
+    "typescript": "^6.0.3"
   },
   "desktopName": "io.github.coletivo420.canva-linux.desktop",
   "engines": {

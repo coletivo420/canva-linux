@@ -9,12 +9,12 @@ import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
   c420uiBootstrapArtifactPath,
-} from "../c420ui/checks/bootstrap-check-helpers";
+} from "../c420ui/checks/bootstrap-check-helpers.js";
 import {
   ensureC420UIBootstrapWithDeps,
   getC420UIBootstrapStatusWithDeps,
   type C420UIBootstrapDeps,
-} from "../c420ui/bootstrap/ensure-bootstrap";
+} from "../c420ui/bootstrap/ensure-bootstrap.js";
 
 function runWithTempRoot(fn: (rootDir: string) => void): void {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-auto-bootstrap-"));

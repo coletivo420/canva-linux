@@ -1,4 +1,4 @@
-import themeConfig from "../theme.json";
+import themeConfig from "../theme.json" with { type: "json" };
 
 type BlessedColor = string;
 

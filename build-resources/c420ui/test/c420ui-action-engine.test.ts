@@ -9,7 +9,7 @@ import {
   type c420uiExecutionContext,
   type c420uiProjectBridge,
   type C420UIEvent,
-} from "../src";
+} from "../src/index.js";
 
 function createFakeBridge(options: {
   actions: c420uiAction[];

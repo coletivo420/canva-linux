@@ -1,5 +1,5 @@
-import { createPreloadDebug } from "./debug";
-import type { EyeDropperCtor, EyeDropperOpenOptions, EyeDropperResult } from "./types";
+import { createPreloadDebug } from "./debug.js";
+import type { EyeDropperCtor, EyeDropperOpenOptions, EyeDropperResult } from "./types.js";
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
   source: "canva-preload",

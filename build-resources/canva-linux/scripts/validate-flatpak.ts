@@ -1,4 +1,4 @@
-import { runFlatpakValidation } from "../validation/flatpak";
+import { runFlatpakValidation } from "../validation/flatpak.js";
 
 function main(): void {
   const args = process.argv.slice(2);

@@ -1,4 +1,4 @@
-import type { CanvaLinuxRuntimeCliOptions } from "./runtime-cli";
+import type { CanvaLinuxRuntimeCliOptions } from "./runtime-cli.js";
 
 type LogLevel = "ok" | "warn" | "critical";
 type GpuAccelerationState =

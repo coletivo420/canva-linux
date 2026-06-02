@@ -1,10 +1,13 @@
 // @ts-nocheck
-"use strict";
+import fs from "node:fs";
+import path from "node:path";
+import ts from "typescript";
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 
-const fs = require("node:fs");
-const path = require("node:path");
-
-const ts = require("typescript");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 
 const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..", "..");
@@ -47,7 +50,7 @@ function registerTypeScriptExtension() {
  * @param {string} modulePath
  * @returns {any}
  */
-function loadRuntimeModule(modulePath) {
+export function loadRuntimeModule(modulePath) {
   const sourceTs = path.join(repoRoot, "build-resources", "electron", `${modulePath}.ts`);
 
   registerTypeScriptExtension();
@@ -58,7 +61,3 @@ function loadRuntimeModule(modulePath) {
 
   throw new Error(`Runtime module not found: ${modulePath}`);
 }
-
-module.exports = {
-  loadRuntimeModule,
-};

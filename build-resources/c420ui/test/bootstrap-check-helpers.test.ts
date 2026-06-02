@@ -5,7 +5,7 @@ import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
-} from "../checks/bootstrap-check-helpers";
+} from "../checks/bootstrap-check-helpers.js";
 
 test("bootstrap helper exports the exact artifact file list", () => {
   assert.deepEqual(C420UI_BOOTSTRAP_ARTIFACT_FILES, [

@@ -7,7 +7,7 @@ import {
   createC420UILinuxRootProviderBase,
   validateC420UILinuxActionScope,
   type c420uiAction,
-} from "../src";
+} from "../src/index.js";
 
 const rootAction: c420uiAction = {
   id: "install-system",

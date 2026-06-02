@@ -7,7 +7,7 @@ import test from "node:test";
 import {
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
-} from "../checks/bootstrap-check-helpers";
+} from "../checks/bootstrap-check-helpers.js";
 
 const bundles = [
   c420uiBootstrapArtifactPath("run-c420ui.mjs"),

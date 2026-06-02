@@ -1,4 +1,4 @@
-import { runDoctorValidation } from "../validation/doctor";
+import { runDoctorValidation } from "../validation/doctor.js";
 
 function main(): void {
   const result = runDoctorValidation({ rootDir: process.cwd() });

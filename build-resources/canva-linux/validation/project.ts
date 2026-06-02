@@ -1,6 +1,6 @@
-import { hasCommand } from "./optional-command";
-import { runStep } from "./run-step";
-import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result";
+import { hasCommand } from "./optional-command.js";
+import { runStep } from "./run-step.js";
+import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result.js";
 
 export type ValidationStep = { label: string; command: string; args: string[] };
 

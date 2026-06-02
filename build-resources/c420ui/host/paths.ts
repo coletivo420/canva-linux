@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { findProjectRoot } from "./project-root";
+import { findProjectRoot } from "./project-root.js";
 
 const CANVA_LINUX_PROJECT_MARKERS = [
   "package.json",

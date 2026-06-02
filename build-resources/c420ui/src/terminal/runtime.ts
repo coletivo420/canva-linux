@@ -1,5 +1,5 @@
-import { createApp as defaultCreateApp, type C420UIAppOptions } from "./app";
-import { enforceC420UIRootLaunchGuard } from "./root-guard";
+import { createApp as defaultCreateApp, type C420UIAppOptions } from "./app.js";
+import { enforceC420UIRootLaunchGuard } from "./root-guard.js";
 
 export type c420uiTerminalRuntimeOptions = {
   create?: typeof defaultCreateApp;

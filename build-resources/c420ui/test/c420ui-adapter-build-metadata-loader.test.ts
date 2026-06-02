@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
+import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader.js";
 
 type TestProjectOptions = {
   packagedRevision?: string;

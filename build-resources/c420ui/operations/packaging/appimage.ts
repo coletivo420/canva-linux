@@ -1,16 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { projectRoot } from "../../host/paths";
-import { requireCommands } from "../../host/preflight";
-import { runCommand } from "../../host/command-runner";
-import { info, ok, warn } from "../../host/ui";
-import { parseDryRun } from "../../host/dry-run";
-import { writeBuildMetadataSidecar } from "../install/build-metadata-marker";
+import { projectRoot } from "../../host/paths.js";
+import { requireCommands } from "../../host/preflight.js";
+import { runCommand } from "../../host/command-runner.js";
+import { info, ok, warn } from "../../host/ui.js";
+import { parseDryRun } from "../../host/dry-run.js";
+import { writeBuildMetadataSidecar } from "../install/build-metadata-marker.js";
 import {
   printAppImageBundleNotice,
   printAppImageGuidance,
-} from "../host/guidance";
+} from "../host/guidance.js";
 
 export function runBuildAppImage(argv: string[]): void {
   const rootDir = projectRoot();
