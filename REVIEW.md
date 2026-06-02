@@ -679,3 +679,12 @@ The only remaining shell files are documented runtime/bootstrap boundaries:
 - `run.sh`: Flatpak/POSIX runtime launcher.
 
 They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.
+
+## Dev11 obsolete migration leftover review
+
+Request changes if a PR:
+- compiles tests or Node tooling back to generated `.js` instead of `.mjs`;
+- treats root `scripts/` as a fallback test/runtime/source compilation area;
+- accepts maintained `.js` preload source instead of TypeScript preload source;
+- removes `toolbar.bundle.mjs` from runtime build or validation requirements;
+- reintroduces CommonJS bridges in any maintained `build-resources/**/*.ts`.

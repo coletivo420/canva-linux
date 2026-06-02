@@ -5,6 +5,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- Closed obsolete Dev11 ESM migration leftovers: Node tests now compile to `.mjs`, root `scripts/` is no longer a
+  fallback compilation area, preload bundling rejects maintained `.js` source, runtime builds require
+  `toolbar.bundle.mjs`, and repository policy blocks CommonJS bridges across maintained TypeScript.
 - The c420ui builder now auto-generates missing, empty, invalid, or stale bootstrap bundles before launch.
 - Normal users only need npm installed; they no longer need to run `npm run build:c420ui-bootstrap` manually.
 - Validation gates remain check-only and fail when committed bootstrap artifacts are stale.

@@ -477,3 +477,11 @@ The only remaining shell files are documented runtime/bootstrap boundaries:
 - `run.sh`: Flatpak/POSIX runtime launcher.
 
 They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.
+
+## Dev11 obsolete migration leftovers
+
+- `npm test` emits and runs compiled test files as `.mjs` under `.build/build-resources/tests/` and `.build/build-resources/c420ui/test/`.
+- The root `scripts/` path is not a fallback source, test, or runtime compilation area.
+- Preload bundling accepts only TypeScript source under `build-resources/electron/preload/*.ts`; maintained `.js` preload source is invalid.
+- `build:runtime` must require both `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- Repository policy rejects CommonJS bridges in all maintained `build-resources/**/*.ts`.

@@ -131,6 +131,29 @@ function collectTypeScriptTestFiles(
   return discovered.sort((left, right) => left.localeCompare(right));
 }
 
+function collectFiles(directory: string, predicate: (entryName: string) => boolean): string[] {
+  return collectTypeScriptTestFiles(directory, predicate);
+}
+
+function rewriteCompiledRelativeImportsToMjs(outputRoot: string): void {
+  const compiledModules = collectFiles(outputRoot, (entryName) => entryName.endsWith(".mjs"));
+  const staticRelativeImportPattern =
+    /(\bfrom\s*["'])(\.{1,2}\/[^"']+)\.js(["'])/g;
+  const dynamicRelativeImportPattern =
+    /(\bimport\s*\(\s*["'])(\.{1,2}\/[^"']+)\.js(["'])/g;
+
+  for (const compiledModule of compiledModules) {
+    const source = fs.readFileSync(compiledModule, "utf8");
+    const rewritten = source
+      .replace(staticRelativeImportPattern, "$1$2.mjs$3")
+      .replace(dynamicRelativeImportPattern, "$1$2.mjs$3");
+
+    if (rewritten !== source) {
+      fs.writeFileSync(compiledModule, rewritten);
+    }
+  }
+}
+
 export function main(): void {
   const isNodeTest = (entryName: string): boolean =>
     entryName.endsWith(nodeTestSuffix);
@@ -238,11 +261,11 @@ export function main(): void {
     const rel = file.startsWith(c420uiTestDir)
       ? path.join("build-resources/c420ui/test", path.relative(c420uiTestDir, file))
       : path.join("build-resources/tests", path.relative(testDir, file));
-    return path.join(".build", rel.replace(/\.ts$/, ".js"));
+    return path.join(".build", rel.replace(/\.ts$/, ".mjs"));
   });
 
   console.error(
-    `[info] Compiling ${relativeCompileInputs.length} TypeScript test file(s) into .build/build-resources/tests.`,
+    `[info] Compiling ${relativeCompileInputs.length} TypeScript test file(s) into .build/build-resources/**/*.mjs.`,
   );
 
   fs.rmSync(compiledTestDir, { recursive: true, force: true });
@@ -261,6 +284,7 @@ export function main(): void {
       "--format=esm",
       "--outbase=.",
       "--outdir=.build",
+      "--out-extension:.js=.mjs",
       "--sourcemap=inline",
       "--log-level=warning",
     ],
@@ -302,6 +326,7 @@ export function main(): void {
         "--format=esm",
         "--outbase=build-resources",
         "--outdir=.build/build-resources",
+        "--out-extension:.js=.mjs",
         "--sourcemap=inline",
         "--log-level=warning",
       ],
@@ -335,49 +360,7 @@ export function main(): void {
     }
   }
 
-  const runtimeSourceDirs = [
-    path.join(rootDir, "scripts", "core"),
-    path.join(rootDir, "scripts", "checks", "canva-linux"),
-    path.join(rootDir, "scripts", "canva-linux"),
-    path.join(rootDir, "scripts", "c420ui"),
-    path.join(rootDir, "scripts", "c420ui-adapter"),
-  ];
-  const runtimeSourceFiles = runtimeSourceDirs.flatMap((sourceDir) =>
-    collectTypeScriptTestFiles(sourceDir, (entryName) => entryName.endsWith(".ts")),
-  );
-
-  if (runtimeSourceFiles.length) {
-    const relativeRuntimeSources = runtimeSourceFiles.map((file) =>
-      normalizePathForNodeTest(path.relative(rootDir, file)),
-    );
-    const runtimeCompileResult = spawnSync(
-      "npx",
-      [
-        "esbuild",
-        ...relativeRuntimeSources,
-        "--platform=node",
-        "--target=node22",
-        "--format=esm",
-        "--outbase=scripts",
-        "--outdir=.build/scripts",
-        "--sourcemap=inline",
-        "--log-level=warning",
-      ],
-      {
-        cwd: rootDir,
-        stdio: "inherit",
-        shell: false,
-        env: { ...process.env, CANVA_TEST_REPO_ROOT: rootDir },
-      },
-    );
-
-    if (runtimeCompileResult.error || runtimeCompileResult.status !== 0) {
-      console.error(
-        `[error] Failed to compile runtime test dependencies${runtimeCompileResult.error ? `: ${runtimeCompileResult.error.message}` : ""}`,
-      );
-      process.exit(runtimeCompileResult.status || 1);
-    }
-  }
+  rewriteCompiledRelativeImportsToMjs(path.join(rootDir, ".build", "build-resources"));
 
   console.error(
     `[info] Running ${compiledTestFiles.length} compiled Node test file(s).`,

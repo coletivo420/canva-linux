@@ -57,6 +57,7 @@ export function main(): void {
   const requiredFiles = [
     ".build/electron/main/index.mjs",
     ".build/electron/preload/canva.bundle.mjs",
+    ".build/electron/preload/toolbar.bundle.mjs",
     ".build/electron/ui/toolbar.html",
     ".build/electron/assets",
   ];

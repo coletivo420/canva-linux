@@ -289,7 +289,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - The project exposes only c420ui and direct CLI actions.
 - Legacy explicit c420ui routing flags are removed. The builder command opens c420ui when called without args; any argument is resolved as direct CLI.
 - Legacy interface-routing environment variables are removed and must not be read for interface routing.
-- Backend shell scripts may remain shell scripts, but shell UI menus are forbidden.
+- Shell files are limited to `canva-linux-c420ui-builder` and `run.sh`; shell UI menus are forbidden.
 - Application Settings are c420ui state, not shell actions.
 - c420ui must keep an explicit FocusZone model.
 - Tab and Shift+Tab must move between focusable c420ui blocks.
@@ -475,8 +475,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - JavaScript may exist only as project-generated output under `.build`, package-managed dependencies under `node_modules`,
   generated coverage output under `coverage`, or distributable output under `dist`.
 - Project-generated JavaScript belongs in `.build` only; do not place maintained or project-generated script artifacts elsewhere.
-- Shell scripts are allowed only for Linux host operations, builder command glue, Flatpak/native install, sudo, purge, XDG,
-  and validation that must run before Node.
+- Shell scripts are allowed only for the documented POSIX/bootstrap boundaries:
+  `canva-linux-c420ui-builder` and `run.sh`.
 - JSON/YAML/XML/Desktop files remain native data formats and must be validated by TypeScript checks where appropriate.
 - Flathub source generation must be TypeScript-backed.
 - If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.
@@ -486,8 +486,7 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
   infrastructure checks.
 - Do not add maintained JavaScript implementation, test, config, bootstrap, or compatibility-wrapper files.
 - Do not duplicate TypeScript core logic in JavaScript fallbacks.
-- `scripts/run-core-entry.sh` must only build or run compiled TypeScript core entries; it must not contain fallback
-  implementations of status, registry, runner, validation, or detection contracts.
+- Do not reintroduce `scripts/run-core-entry.sh`; root `scripts/` is not a fallback build, test, or validation area.
 - Flathub/npm source generation logic lives in TypeScript; `npm run flathub:generate-npm-sources`
   invokes `generate-npm-sources.ts` through the TypeScript entry runner.
 
@@ -576,8 +575,7 @@ Do not add `npm install`, `npm ci`, or legacy npm dependency helpers to `canva-l
 choose the generated c420ui bootstrap bundle first, keep `.build/scripts` as a development fallback, and let c420ui own the
 full dependency policy after startup.
 
-Do not migrate the bootstrap to ESM in incidental changes. The current bundle is explicit CommonJS; ESM remains future work
-that requires its own planned change.
+The c420ui bootstrap is explicit ESM. Do not reintroduce CommonJS bootstrap artifacts or `.cjs` fallbacks.
 
 
 ## Bootstrap identity

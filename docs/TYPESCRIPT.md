@@ -32,18 +32,20 @@ The c420ui bootstrap generator emits and executes
 
 - All maintained Node.js source code is TypeScript.
 - JavaScript is generated output only.
-- Shell remains shell for host operations.
+- Shell remains only for documented POSIX/bootstrap boundaries.
 - Electron main and preload source modules are TypeScript.
-- Node.js maintenance scripts use TypeScript source files and shell bootstraps where Node cannot execute TypeScript directly.
+- Node.js maintenance scripts use TypeScript source files and generated ESM `.mjs` outputs.
 - Tests live under `build-resources/tests/**/*.ts`; `npm test` compiles selected tests plus
-  support helpers into `.build/build-resources/tests/` with inline source maps before running
-  `node --test` on generated JavaScript.
+  support helpers into `.build/build-resources/tests/**/*.mjs` and `.build/build-resources/c420ui/test/**/*.mjs`
+  with inline source maps before running `node --test`.
 - New tests must be TypeScript.
 - ESLint and Playwright use `build-resources/config/eslint/eslint.config.ts` and `build-resources/config/playwright/playwright.config.ts`; new
   configs should be TypeScript when the tool supports TypeScript configs.
-- Runtime output remains CommonJS-compatible generated JavaScript under `.build/`.
+- Runtime output is explicit ESM `.mjs` under `.build/`.
 - JavaScript is not maintained as source code in `scripts/`, `build-resources/tests/`, configs,
   or `build-resources/canva-linux/packaging/flathub/scripts/`.
+- The root `scripts/` path is not compiled as a fallback test/runtime area.
+- Preload bundles accept only `build-resources/electron/preload/*.ts` source modules; `.js` preload source fallbacks are forbidden.
 
 ## Dev11 ESM-only TypeScript policy
 
@@ -279,11 +281,11 @@ return new Promise((resolve, reject) => {
 });
 ```
 
-## Future cleanup
+## Closed Dev11 cleanup
 
-- Remove stale `@ts-nocheck` directives where possible.
-- Improve type coverage in preload modules and migrated tests.
-- Consider ESM only as a separate future architecture decision.
+- `@ts-nocheck` is forbidden in maintained `build-resources/**/*.ts`.
+- CommonJS bridges are forbidden in maintained `build-resources/**/*.ts`.
+- ESM-only `.mjs` output is the current architecture, not a future migration target.
 
 ## Dev11 preload typing
 

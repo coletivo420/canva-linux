@@ -80,3 +80,9 @@ Dev11 finalizes explicit ESM outputs:
 ## Dev11 shell boundary
 
 POSIX/bootstrap boundaries are limited to `canva-linux-c420ui-builder` and `run.sh`; scripts/ must not return as an active ownership path.
+
+## Dev11 cleanup boundary
+
+- Test compilation emits `.mjs` files under `.build/build-resources/tests/` and `.build/build-resources/c420ui/test/`.
+- Root `scripts/` is not a fallback source, test, or runtime compilation area.
+- Electron preload source lives in TypeScript under `build-resources/electron/preload/`; generated preload output lives under `.build/electron/preload/*.mjs`.

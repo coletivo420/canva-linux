@@ -61,3 +61,11 @@ The only remaining shell files are documented runtime/bootstrap boundaries:
 - `run.sh`: Flatpak/POSIX runtime launcher.
 
 They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.
+
+## Dev11 cleanup closure
+
+- Node test outputs are explicit `.mjs` files under `.build/build-resources/tests/` and `.build/build-resources/c420ui/test/`.
+- Root `scripts/` is retired as a source/test/runtime fallback path.
+- Preload bundling resolves only TypeScript preload entrypoints and rejects maintained JavaScript preload fallbacks.
+- Runtime builds require both Canva and toolbar preload `.mjs` bundles.
+- Repository policy blocks CommonJS patterns across maintained `build-resources/**/*.ts`.
