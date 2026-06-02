@@ -7,7 +7,7 @@ import { loadRuntimeModule } from "./helpers/runtime-module.js";
 const {
   createCredentialStoragePolicy,
   resolveCredentialStoragePolicy,
-} = loadRuntimeModule("main/credential-storage");
+} = await loadRuntimeModule("main/credential-storage");
 
 test("basic_text Linux credential backend uses an ephemeral non-persist partition", () => {
   const policy = createCredentialStoragePolicy({

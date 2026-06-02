@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
 
 import { hasCommand } from "./optional-command.js";
 import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result.js";
@@ -40,12 +39,11 @@ export function runDoctorValidation(context: ValidationContext): ValidationResul
   } else {
     const depsPath = path.join(context.rootDir, "build-resources/canva-linux/config/dependencies.json");
     const config = JSON.parse(fs.readFileSync(depsPath, "utf8")) as { npm?: { requiredDevDependencies?: string[] } };
-    const req = createRequire(path.join(context.rootDir, "package.json"));
     for (const dep of config.npm?.requiredDevDependencies ?? []) {
-      try {
-        req.resolve(dep, { paths: [context.rootDir] });
+      const depPackagePath = path.join(context.rootDir, "node_modules", dep, "package.json");
+      if (fs.existsSync(depPackagePath)) {
         console.log(`[ok] npm dependency: ${dep}`);
-      } catch {
+      } else {
         warnings.push(`npm dependency missing: ${dep} — let c420ui ensure npm dependencies`);
         console.warn(`[warn] npm dependency missing: ${dep} — let c420ui ensure npm dependencies`);
       }

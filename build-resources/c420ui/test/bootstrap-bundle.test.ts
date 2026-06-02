@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -22,7 +21,6 @@ import {
 } from "../bootstrap/source-hash.js";
 
 const manifestPath = C420UI_BOOTSTRAP_MANIFEST_PATH;
-const requireFromTest = createRequire(import.meta.url);
 const uiEntrypoint = c420uiBootstrapArtifactPath("run-c420ui.mjs");
 const cliEntrypoint = c420uiBootstrapArtifactPath("run-c420ui-cli.mjs");
 const builderEntrypoint = c420uiBootstrapArtifactPath("c420ui-builder.mjs");
@@ -136,10 +134,7 @@ test("c420ui bootstrap includes blessed runtime terminfo assets", () => {
 });
 
 test("c420ui bootstrap blessed runtime assets match installed blessed package", () => {
-  const blessedUsrDir = path.join(
-    path.dirname(requireFromTest.resolve("blessed/package.json")),
-    "usr",
-  );
+  const blessedUsrDir = path.join("node_modules", "blessed", "usr");
 
   for (const runtimeAsset of blessedRuntimeAssets) {
     const relativeAsset = path.relative(

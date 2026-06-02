@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root.js";
 
-const expectedMain = ".build/electron/main/index.js";
+const expectedMain = ".build/electron/main/index.mjs";
 
 function requireFile(rootDir: string, file: string, failures: string[]) {
   if (!fs.existsSync(path.join(rootDir, file))) {
@@ -36,33 +36,9 @@ export function main(): number {
   }
 
   const filesToRequire = [
-    ".build/electron/main/index.js",
-    ".build/electron/main/logging-normalize.js",
-    ".build/electron/main/logging.js",
-    ".build/electron/main/logging-helpers.js",
-    ".build/electron/main/gpu-diagnostics.js",
-    ".build/electron/main/runtime.js",
-    ".build/electron/main/ipc.js",
-    ".build/electron/main/lifecycle.js",
-    ".build/electron/main/eyedropper-bridge.js",
-    ".build/electron/main/shell.js",
-    ".build/electron/main/oauth.js",
-    ".build/electron/main/tabs.js",
-    ".build/electron/main/tab-controller.js",
-    ".build/electron/main/tab-events.js",
-    ".build/electron/main/window-open-policy.js",
-    ".build/electron/shared/debug.js",
-    ".build/electron/shared/navigation.js",
-    ".build/electron/preload/debug.js",
-    ".build/electron/preload/upload-diagnostics.js",
-    ".build/electron/preload/browser-capture-diagnostics.js",
-    ".build/electron/preload/eyedropper-routing-diagnostics.js",
-    ".build/electron/preload/custom-eyedropper-flow.js",
-    ".build/electron/preload/native-eyedropper-wrapper.js",
-    ".build/electron/preload/canva.js",
-    ".build/electron/preload/cl-eyedropper/index.js",
-    ".build/electron/preload/cl-eyedropper/cl-eyedropper.js",
-    ".build/electron/preload/canva.bundle.js",
+    ".build/electron/main/index.mjs",
+    ".build/electron/preload/canva.bundle.mjs",
+    ".build/electron/preload/toolbar.bundle.mjs",
     ".build/electron/ui/toolbar.html",
   ];
 
@@ -71,7 +47,7 @@ export function main(): number {
 
   const preloadBundlePath = path.join(
     rootDir,
-    ".build/electron/preload/canva.bundle.js",
+    ".build/electron/preload/canva.bundle.mjs",
   );
   if (
     fs.existsSync(preloadBundlePath) &&
@@ -80,7 +56,17 @@ export function main(): number {
     failures.push("preload bundle is empty");
   }
 
-  const compiledMainPath = path.join(rootDir, ".build/electron/main/index.js");
+  for (const staleOutput of [
+    ".build/electron/main/index.js",
+    ".build/electron/preload/canva.bundle.js",
+    ".build/electron/preload/toolbar.js",
+  ] as const) {
+    if (fs.existsSync(path.join(rootDir, staleOutput))) {
+      failures.push(`${staleOutput}: stale CommonJS-era runtime output must not exist`);
+    }
+  }
+
+  const compiledMainPath = path.join(rootDir, ".build/electron/main/index.mjs");
   if (fs.existsSync(compiledMainPath)) {
     const compiledMain = fs.readFileSync(compiledMainPath, "utf8");
     const legacyPackageLookupPattern = "requ" + "ire('../../package.json')";

@@ -11,7 +11,7 @@ dependent project that supplies metadata, actions, recipes, and runtime scripts.
 
 Dev11 is ESM-only by target.
 Maintained TypeScript source must use ESM imports/exports.
-CommonJS source patterns are migration regressions; `.cjs` is temporary migration output only during Dev11.
+CommonJS source patterns are migration regressions; versioned `.cjs` artifacts are forbidden outside external dependencies.
 Dev11 bootstrap policy now requires `moduleFormat: esm` and ESM `.mjs` entrypoints.
 
 ## Controls

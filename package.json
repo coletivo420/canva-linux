@@ -2,7 +2,7 @@
   "name": "canva-linux",
   "version": "0.1.4-15.Dev.11",
   "description": "A community open-source desktop wrapper for use with Canva",
-  "main": ".build/electron/main/index.js",
+  "main": ".build/electron/main/index.mjs",
   "author": "Community",
   "license": "GPL-3.0-or-later",
   "productName": "Canva Linux",
@@ -48,7 +48,7 @@
     "validate": "npm run check:scripts-core",
     "docs:check-ai": "npm run build:scripts-core && node .build/build-resources/canva-linux/checks/core/check-ai-guardrails.mjs",
     "typecheck:strict": "tsc -p build-resources/config/typescript/tsconfig.strict.json",
-    "build:scripts-core": "rm -rf .build/scripts/core && rm -rf .build/build-resources/canva-linux/checks/core && esbuild build-resources/canva-linux/checks/core/check-ai-guardrails.ts build-resources/canva-linux/checks/core/check-doc-links.ts build-resources/canva-linux/checks/core/check-dependency-policy.ts build-resources/canva-linux/checks/core/check-runtime-build.ts build-resources/canva-linux/checks/core/check-repository-policy.ts --bundle --platform=node --format=esm --outdir=.build/build-resources/canva-linux/checks/core --out-extension:.js=.mjs",
+    "build:scripts-core": "esbuild build-resources/c420ui/scripts/build-scripts-core.ts --bundle --platform=node --format=esm --external:esbuild --outfile=.build/scripts/build-scripts-core.mjs && node .build/scripts/build-scripts-core.mjs",
     "check:scripts-core": "npm run check:c420ui-core && npm run check:canva-linux && npm run check:shared-tooling",
     "build:c420ui": "npm run build:c420ui-terminal",
     "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.mjs",
@@ -105,7 +105,7 @@
       "artifactName": "canva-linux-${version}-${arch}.AppImage"
     },
     "extraMetadata": {
-      "main": ".build/electron/main/index.js"
+      "main": ".build/electron/main/index.mjs"
     }
   },
   "devDependencies": {

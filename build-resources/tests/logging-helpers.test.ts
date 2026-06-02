@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { createLoggingHelpers } = loadRuntimeModule("main/logging-helpers");
+const { createLoggingHelpers } = await loadRuntimeModule("main/logging-helpers");
 
 test("labels main window, OAuth popup window and generic windows", () => {
   const mainWindow = { id: 1 };

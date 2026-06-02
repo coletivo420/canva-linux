@@ -316,7 +316,7 @@ function createToolbarView(): WebContentsViewInstance {
     ) => void,
     layoutViews,
     makeToolbarUrl,
-    preloadPath: path.join(__dirname, "..", "preload", "toolbar.js"),
+    preloadPath: path.join(RUNTIME_DIR, "..", "preload", "toolbar.bundle.mjs"),
     setToolbarView(value: import("./shell.js").WebContentsViewLike) {
       toolbarView = value as unknown as WebContentsViewInstance;
     },

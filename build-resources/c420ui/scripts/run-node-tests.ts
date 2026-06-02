@@ -164,6 +164,10 @@ export function main(): void {
         !isNodeTest(entryName) &&
         !isPlaywrightSpec(entryName),
     ),
+    ...collectTypeScriptTestFiles(
+      path.join(rootDir, "build-resources", "electron"),
+      (entryName) => entryName.endsWith(".ts"),
+    ),
   ];
 
   if (testFiles.length === 0) {

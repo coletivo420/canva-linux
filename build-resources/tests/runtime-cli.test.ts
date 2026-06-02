@@ -4,9 +4,9 @@ import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { formatCanvaLinuxVersion } = loadRuntimeModule("main/build-metadata");
+const { formatCanvaLinuxVersion } = await loadRuntimeModule("main/build-metadata");
 const { parseCanvaLinuxRuntimeCli, printCanvaLinuxRuntimeHelp } =
-  loadRuntimeModule("main/runtime-cli");
+  await loadRuntimeModule("main/runtime-cli");
 
 function parse(...args) {
   return parseCanvaLinuxRuntimeCli(["/usr/bin/electron", "/app/main", ...args]);

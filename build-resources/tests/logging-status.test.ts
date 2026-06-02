@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { createStatusLogger } = loadRuntimeModule("main/logging");
+const { createStatusLogger } = await loadRuntimeModule("main/logging");
 
 test("release status logs runtime metadata without inline changelog entries", () => {
   const calls = [];

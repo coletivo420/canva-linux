@@ -13,7 +13,7 @@ const {
   summarizeClipboardKinds,
   rememberUploadIngress,
   recentUploadIngressSummary,
-} = loadRuntimeModule("preload/upload-diagnostics");
+} = await loadRuntimeModule("preload/upload-diagnostics");
 
 class TestHTMLInputElement {
   constructor() {

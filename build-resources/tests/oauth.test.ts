@@ -9,7 +9,7 @@ const {
   PUBLIC_AUTH_TITLE_PATTERN,
   createOAuthHelpers,
   publicLandingSignalsProbeScript,
-} = loadRuntimeModule("main/oauth");
+} = await loadRuntimeModule("main/oauth");
 
 function createFakeWindow(initialUrl = "https://www.canva.com/login") {
   const windowListeners = new Map();

@@ -10,6 +10,8 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - Committed build metadata lives in `build-resources/canva-linux/config/build-metadata.json` and must remain deterministic with `buildRevision: "unknown"`.
 - Effective build metadata is generated under `.build/canva-linux/build-metadata.effective.json` for runtime/release artifacts and may include Git-derived revisions.
 - `build-resources/` is the canonical home for project-owned runtime/build resources (`c420ui`, `electron`, `canva-linux-assets`).
+- Dev11 ESM-only output uses `.build/electron/main/index.mjs`, `.build/electron/preload/canva.bundle.mjs`, `.build/electron/preload/toolbar.bundle.mjs`, and `.mjs` Node tooling/check/bootstrap artifacts.
+- Versioned `.cjs` files are forbidden outside external dependencies.
 - Root `packages/`, `electron/`, `data/`, and loose icon assets must not be restored.
 
 ## Files

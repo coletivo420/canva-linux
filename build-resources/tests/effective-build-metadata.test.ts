@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
-const { loadCanvaLinuxBuildMetadata } = loadRuntimeModule("main/build-metadata");
+const { loadCanvaLinuxBuildMetadata } = await loadRuntimeModule("main/build-metadata");
 
 function writeMetadata(filePath, revision) {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });

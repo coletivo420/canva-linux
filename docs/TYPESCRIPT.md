@@ -18,11 +18,14 @@ CommonJS patterns are forbidden in maintained source:
 - `require.resolve()`
 - `node:module` `createRequire` bridges
 
-CommonJS may exist only as temporary migration output during Dev11.
-Generated bootstrap artifacts are now ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
+CommonJS may exist only inside external dependencies under `node_modules/`.
+Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
+Electron runtime starts from `.build/electron/main/index.mjs`.
+Electron preload bundles are `.build/electron/preload/canva.bundle.mjs` and
+`.build/electron/preload/toolbar.bundle.mjs`.
 Node tooling artifacts under `.build/scripts/` and checks under
-`.build/build-resources/**/checks/` now emit ESM `.mjs` outputs.
-The c420ui bootstrap generator now emits and executes
+`.build/build-resources/**/checks/` emit ESM `.mjs` outputs.
+The c420ui bootstrap generator emits and executes
 `.build/build-resources/c420ui/scripts/build-bootstrap.mjs`.
 
 ## Current state
@@ -42,9 +45,9 @@ The c420ui bootstrap generator now emits and executes
 - JavaScript is not maintained as source code in `scripts/`, `build-resources/tests/`, configs,
   or `build-resources/canva-linux/packaging/flathub/scripts/`.
 
-## Dev.10 TypeScript hardening policy
+## Dev11 ESM-only TypeScript policy
 
-Canva Linux Dev.10 treats TypeScript as the maintained source of truth for project logic.
+Canva Linux Dev11 treats TypeScript plus explicit ESM `.mjs` generated outputs as the maintained architecture.
 
 Maintained JavaScript is forbidden.
 
@@ -130,7 +133,7 @@ under `.build/` only.
 
 ## Script Core
 
-Dev.10 closed the maintained `/scripts` root. All maintained build,
+Dev11 keeps the maintained `/scripts` root closed. All maintained build,
 runtime-build, packaging, install, detection, versioning and operation tooling
 now lives under `build-resources/c420ui`.
 
@@ -282,9 +285,9 @@ return new Promise((resolve, reject) => {
 - Improve type coverage in preload modules and migrated tests.
 - Consider ESM only as a separate future architecture decision.
 
-## Dev.10 preload typing
+## Dev11 preload typing
 
-Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Dev11 keeps preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
 Canva Linux and c420ui now use separate deterministic content hashes.
 Canva Linux changes update canvaLinuxSourceHash, c420ui changes update
@@ -299,13 +302,13 @@ Canva Linux and c420ui now use separate deterministic content hashes.
 `buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
 Docs, tests and generated artifacts must not affect either source hash.
 
-## Dev.10 validation migration status
+## Dev11 validation migration status
 
 Validation and doctor workflows are TypeScript-owned in
 `build-resources/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers
 and must not own project policy logic.
 
-## Dev.10 operational migration status
+## Dev11 operational migration status
 
 Install, uninstall, maintenance, packaging, build, artifact and versioning
 mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.

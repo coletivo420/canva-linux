@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { createDebugTools, normalizeDebugLevel } = loadRuntimeModule("shared/debug");
+const { createDebugTools, normalizeDebugLevel } = await loadRuntimeModule("shared/debug");
 
 test("normalizes unsupported debug levels to disabled", () => {
   assert.equal(normalizeDebugLevel(0), 0);

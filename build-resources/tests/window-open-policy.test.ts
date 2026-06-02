@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { createWindowOpenPolicy } = loadRuntimeModule("main/window-open-policy");
+const { createWindowOpenPolicy } = await loadRuntimeModule("main/window-open-policy");
 
 /**
  * @param {'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external'} kindToReturn

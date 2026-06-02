@@ -9,7 +9,7 @@ import { loadRuntimeModule } from "./helpers/runtime-module.js";
 const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
-const { attachTabEventHandlers } = loadRuntimeModule("main/tab-events");
+const { attachTabEventHandlers } = await loadRuntimeModule("main/tab-events");
 
 function createHarness(classifyWindowOpenRequest, { shell } = {}) {
   const listeners = new Map();

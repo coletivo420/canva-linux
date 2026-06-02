@@ -14,7 +14,7 @@ const {
   sanitizeDownloadFilename,
   sharedWebPreferences,
   shouldEnableCaptureVerboseLogging,
-} = loadRuntimeModule("main/runtime");
+} = await loadRuntimeModule("main/runtime");
 
 const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || process.cwd();
@@ -300,7 +300,7 @@ test("download filename sanitizer falls back for empty or directory-only names",
 const {
   configureLinuxNativeCredentialStore,
   selectLinuxPasswordStore,
-} = loadRuntimeModule("main/linux-credential-runtime");
+} = await loadRuntimeModule("main/linux-credential-runtime");
 
 function credentialProbeRunner(statusByService) {
   return (command, args) => {

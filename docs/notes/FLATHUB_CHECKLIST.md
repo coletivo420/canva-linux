@@ -49,7 +49,7 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 - If `org.flatpak.Builder` is missing locally, install it with:
   `flatpak install flathub org.flatpak.Builder`
 - Review `docs/notes/FLATHUB_SOURCE.md` before preparing the final Flathub source definition.
-- The generated `build-resources/electron/preload/canva.bundle.js` should be regenerated from source during the build and should not replace review of the modular preload source files.
+- The generated `build-resources/electron/preload/canva.bundle.mjs` should be regenerated from source during the build and should not replace review of the modular preload source files.
 - Release bundle publication must use the default rebuild path so the `.flatpak` is not created from stale Electron output.
 - Use `build-resources/c420ui/scripts/build-flatpak-bundle.sh --use-existing-repo` only for explicit local reuse of an already reviewed `repo/`, not for release publication after source changes.
 - If AppStream validation reports only URL reachability warnings, rerun with normal network access before changing metadata.
@@ -57,7 +57,7 @@ flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 - Keep OAuth status explicit in submission notes: Google OAuth is maintainer-tested; other OAuth providers remain community-tested.
 - Final Flathub submission should happen only after maintainer review of lint output, permissions, screenshots, and release source.
 
-## Dev.10 validation ownership
+## Dev11 validation ownership
 
 - Flathub submission policy checks are TypeScript-owned under `build-resources/canva-linux/validation` and `build-resources/canva-linux/packaging/flathub/policy`.
 - `scripts/validate-flathub-submission.sh` remains only a thin wrapper for compatibility.

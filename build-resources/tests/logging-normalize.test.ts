@@ -5,7 +5,7 @@ import test from "node:test";
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const { safeStringify, normalizeLogArg, normalizeArgs, createLogSignature } =
-  loadRuntimeModule("main/logging-normalize");
+  await loadRuntimeModule("main/logging-normalize");
 
 test("normalizes primitive values", () => {
   assert.deepEqual(normalizeArgs(["text", 123, true, null, undefined]), [

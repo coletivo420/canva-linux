@@ -15,7 +15,7 @@ const {
   isOAuthProviderUrl,
   isSafeExternalUrl,
   shouldGrantRemotePermission,
-} = loadRuntimeModule("shared/navigation");
+} = await loadRuntimeModule("shared/navigation");
 
 test("detects Canva URLs", () => {
   assert.equal(isCanvaUrl("https://www.canva.com/design"), true);

@@ -10,8 +10,11 @@
 - Dev11 also forbids indirect CommonJS bridges in maintained TypeScript:
   `createRequire()`, `require.resolve()`, and `node:module` createRequire
   adapters.
-- CommonJS may exist only as temporary migration output during Dev11.
-- Generated bootstrap artifacts are now ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
+- CommonJS may exist only inside external dependencies under `node_modules/`.
+- Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
+- Electron runtime starts from `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.build/electron/preload/canva.bundle.mjs` and
+  `.build/electron/preload/toolbar.bundle.mjs`.
 - Node tooling generated outputs moved to ESM `.mjs` under `.build/scripts/`.
 - Core and c420ui checks generated outputs moved to ESM `.mjs`.
 - c420ui terminal generated output moved to ESM `.mjs`.
@@ -625,9 +628,9 @@ Canva Linux-specific dependency wiring in `build-resources/canva-linux/c420ui-ad
 - OAuth localized public-landing probes must normalize both DOM attributes and localized keywords with NFKD so composed and
   decomposed labels are equivalent.
 
-## Dev.10 preload typing
+## Dev11 preload typing
 
-Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Dev11 keeps preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
 Canva Linux and c420ui now use separate deterministic content hashes.
 Canva Linux changes update canvaLinuxSourceHash, c420ui changes update

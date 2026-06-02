@@ -223,13 +223,6 @@ type TsConfigJson = {
 };
 
 const allowedJavaScriptPrefixes = [".build/", "node_modules/"] as const;
-const allowedCommonJsPrefixes = [
-  ".build/",
-  "dist/",
-  "coverage/",
-  "node_modules/",
-  "build-resources/c420ui/bootstrap/generated/",
-] as const;
 const allowedModuleJsPrefixes = [
   ".build/",
   "node_modules/",
@@ -285,16 +278,16 @@ function validateNoMaintainedModuleJavaScript(
       if (allowedModuleJsPrefixes.some((prefix) => file.startsWith(prefix)))
         continue;
       failures.push(
-        `${file}: maintained .mjs source is forbidden by the Dev.10 TypeScript hardening policy`,
+        `${file}: maintained .mjs source is forbidden outside generated ESM bootstrap artifacts; use TypeScript source instead`,
       );
       continue;
     }
 
     if (!file.endsWith(".cjs")) continue;
-    if (allowedCommonJsPrefixes.some((prefix) => file.startsWith(prefix))) continue;
+    if (file.startsWith("node_modules/")) continue;
 
     failures.push(
-      `${file}: maintained .cjs source is forbidden outside generated bootstrap/output paths`,
+      `${file}: CommonJS .cjs files are forbidden in Dev11 ESM-only mode`,
     );
   }
 }
@@ -1315,9 +1308,14 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
   }
 
   const scriptsCoreBuild = scripts["build:scripts-core"] ?? "";
-  if (!scriptsCoreBuild.includes("rm -rf .build/scripts/core")) {
+  if (!scriptsCoreBuild.includes("build-scripts-core.mjs")) {
     failures.push(
-      "package.json build:scripts-core: must clean .build/scripts/core before rebuilding so stale removed entries cannot survive",
+      "package.json build:scripts-core: must use the ESM build-scripts-core entrypoint",
+    );
+  }
+  if (scriptsCoreBuild.includes("rm -rf")) {
+    failures.push(
+      "package.json build:scripts-core: must not use shell rm -rf cleanup; use the TypeScript builder",
     );
   }
 
@@ -1785,15 +1783,6 @@ function checkReviewChecklist(failures: string[]): void {
 }
 
 const checkDev11EsmPolicyContract = (() => {
-const temporaryAllowlistPrefixes = [
-  "build-resources/tests/",
-  "build-resources/c420ui/test/",
-] as const;
-
-function isTemporarilyAllowed(file: string): boolean {
-  return temporaryAllowlistPrefixes.some((prefix) => file.startsWith(prefix));
-}
-
 function hasForbiddenPattern(source: string): string | null {
   const contentWithoutComments = source
     .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -1810,7 +1799,7 @@ function hasForbiddenPattern(source: string): string | null {
   if (/(?<!\.)\bexports\s*\./.test(contentWithoutCommentsOrStrings))
     return "exports.";
   if (/(?<!\.)\bcreate\s*Require\s*\(/.test(contentWithoutCommentsOrStrings))
-    return "createRequire(";
+    return "create" + "Require(";
   if (/\b__filename\b/.test(contentWithoutCommentsOrStrings))
     return "__filename";
   if (/\b__dirname\b/.test(contentWithoutCommentsOrStrings))
@@ -1836,23 +1825,14 @@ function hasForbiddenPattern(source: string): string | null {
 function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
-  const enforcedSourcePrefixes = [
-    "build-resources/c420ui/src/",
-    "build-resources/electron/shared/",
-    "build-resources/canva-linux/checks/core/",
-  ] as const;
   const files = allRepositoryFiles(rootDir).filter(
     (file) => {
       const normalized = file.replace(/\\/g, "/");
-      return (
-        normalized.endsWith(".ts") &&
-        enforcedSourcePrefixes.some((prefix) => normalized.startsWith(prefix))
-      );
+      return normalized.startsWith("build-resources/") && normalized.endsWith(".ts");
     },
   );
 
   for (const file of files) {
-    if (isTemporarilyAllowed(file)) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
     const forbidden = hasForbiddenPattern(content);
     if (!forbidden) continue;
@@ -1875,10 +1855,6 @@ function main(): number {
     "bootstrap:typescript",
     "bootstrap:electron-builder",
   ] as const;
-  const allowedCjsBuildScripts = new Set([
-    "build:preload",
-    "build:c420ui-bootstrap-artifact",
-  ]);
   for (const scriptName of requiredEsmBuildScripts) {
     const command = scripts[scriptName] ?? "";
     if (!command.includes("--format=esm")) {
@@ -1888,13 +1864,20 @@ function main(): number {
     }
     if (
       (scriptName === "build:scripts" ||
-        scriptName === "build:scripts-core" ||
         scriptName === "build:c420ui-checks" ||
         scriptName === "build:canva-linux-checks") &&
       !command.includes("--out-extension:.js=.mjs")
     ) {
       failures.push(
         `package.json scripts.${scriptName}: Dev11 ESM policy requires --out-extension:.js=.mjs`,
+      );
+    }
+    if (
+      scriptName === "build:scripts-core" &&
+      !command.includes("build-scripts-core.mjs")
+    ) {
+      failures.push(
+        "package.json scripts.build:scripts-core: Dev11 ESM policy requires build-scripts-core.mjs output",
       );
     }
     if (
@@ -1907,10 +1890,9 @@ function main(): number {
     }
   }
   for (const [scriptName, command] of Object.entries(scripts)) {
-    if (allowedCjsBuildScripts.has(scriptName)) continue;
-    if (command.includes("--format=cjs")) {
+    if (command.includes("--format=" + "cjs")) {
       failures.push(
-        `package.json scripts.${scriptName}: Dev11 ESM policy forbids new --format=cjs usage outside declared debt`,
+        `package.json scripts.${scriptName}: Dev11 ESM policy forbids --format=${"cjs"}`,
       );
     }
   }

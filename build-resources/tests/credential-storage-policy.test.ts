@@ -10,7 +10,7 @@ const {
   createCredentialStoragePolicy,
   createCredentialStorageWarningCopy,
   resolveCredentialStoragePolicy,
-} = loadRuntimeModule("main/credential-storage");
+} = await loadRuntimeModule("main/credential-storage");
 
 const SECURE_BACKENDS = [
   "kwallet",
@@ -291,8 +291,8 @@ test("credential storage warning copy falls back when policy warning is unavaila
   );
 });
 
-test("detects Flatpak runtime from FLATPAK_ID and /.flatpak-info", () => {
-  const { detectFlatpakRuntimeInfo } = loadRuntimeModule("main/credential-storage");
+test("detects Flatpak runtime from FLATPAK_ID and /.flatpak-info", async () => {
+  const { detectFlatpakRuntimeInfo } = await loadRuntimeModule("main/credential-storage");
   const fromEnv = detectFlatpakRuntimeInfo({
     env: { FLATPAK_ID: "io.github.coletivo420.canva-linux" },
     fileExists() {

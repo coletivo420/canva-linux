@@ -27,6 +27,6 @@
     "repo",
     "build-dir",
     ".flatpak-builder",
-    "build-resources/electron/preload/canva.bundle.js"
+    "build-resources/electron/preload/canva.bundle.mjs"
   ]
 }

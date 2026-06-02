@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const repoRoot =
   process.env.CANVA_SCRIPT_REPO_ROOT ||
-  path.resolve(__dirname, "..", "..", "..");
+  path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 const lockfilePath = path.join(repoRoot, "package-lock.json");
 const flathubDir = path.join(repoRoot, "packaging", "flathub");
 const manifestPath = path.join(flathubDir, "manifest.yml");

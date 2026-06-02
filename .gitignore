@@ -41,7 +41,8 @@ repo/
 *.tar.xz
 
 # Generated runtime/preload leftovers
-/electron/preload/canva.bundle.js
+/build-resources/electron/preload/canva.bundle.mjs
+/build-resources/electron/preload/toolbar.bundle.mjs
 
 # Logs
 *.log

@@ -1,9 +1,13 @@
 # Dev11 ESM Migration Plan
 
-## Current CommonJS debt
+## Final Dev11 ESM-only contract
 
-- `.build/electron/**/*.js` runtime output still generated from CommonJS TypeScript config
-- CommonJS assumptions around `__dirname` and `__filename`
+- Electron runtime is explicit ESM at `.build/electron/main/index.mjs`.
+- Electron preload bundles are explicit ESM at `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- Tooling and checks emit `.mjs` outputs.
+- c420ui bootstrap generated artifacts are `.mjs`.
+- Maintained TypeScript source uses ESM imports/exports only.
+- Versioned `.cjs` artifacts are forbidden outside external dependencies.
 
 ## Source debt resolved in Dev11
 
@@ -31,15 +35,9 @@ Dev11 forbids indirect CommonJS compatibility in maintained TypeScript:
 
 ## Target
 
-- package.json uses `"type": "module"` or isolated ESM package boundaries
+- package.json uses `"type": "module"` and points `main` at `.build/electron/main/index.mjs`
 - TypeScript uses `NodeNext` or equivalent ESM-compatible config
-- build outputs use `.mjs` or ESM `.js` under a module package boundary
+- build outputs use `.mjs`
 - c420ui bootstrap emits `.mjs`
 - old `.cjs` bootstrap artifacts are removed, not preserved as permanent fallback
 - repository checks reject new CommonJS source patterns
-
-## Remaining migration blocks
-
-- Electron runtime output migration
-- `package.json` `main` still points to `.build/electron/main/index.js`
-- package-level ESM boundary (`"type": "module"`) still pending

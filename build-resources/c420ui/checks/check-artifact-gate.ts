@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 
@@ -109,9 +108,7 @@ function runGitDiffCheck(rootDir: string, label: string): void {
 }
 
 function copyBlessedRuntimeAssets(rootDir: string, expectedBootstrapDir: string): void {
-  const requireFromRoot = createRequire(path.join(rootDir, "package.json"));
-  const blessedPackageJsonPath = requireFromRoot.resolve("blessed/package.json");
-  const blessedUsrDir = path.join(path.dirname(blessedPackageJsonPath), "usr");
+  const blessedUsrDir = path.join(rootDir, "node_modules", "blessed", "usr");
   const expectedUsrDir = path.join(path.dirname(expectedBootstrapDir), "usr");
 
   fs.mkdirSync(expectedUsrDir, { recursive: true });

@@ -9,9 +9,9 @@ import { loadRuntimeModule } from "./helpers/runtime-module.js";
 const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
-test("CL-EyeDropper module loads without runtime side effects", () => {
+test("CL-EyeDropper module loads without runtime side effects", async () => {
   const before = Object.keys(globalThis);
-  const contracts = loadRuntimeModule("preload/cl-eyedropper/index");
+  const contracts = await loadRuntimeModule("preload/cl-eyedropper/index");
   const after = Object.keys(globalThis);
 
   assert.equal(typeof contracts.CLEyeDropper, "function");

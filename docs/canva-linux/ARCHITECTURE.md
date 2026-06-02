@@ -14,7 +14,7 @@ project data; c420ui owns reusable orchestration.
 
 Dev11 is ESM-only by target.
 Maintained TypeScript source must use ESM imports/exports.
-CommonJS source patterns are migration regressions; `.cjs` is temporary migration output only during Dev11.
+CommonJS source patterns are migration regressions; versioned `.cjs` artifacts are forbidden outside external dependencies.
 Dev11 bootstrap policy now requires `moduleFormat: esm` and ESM `.mjs` entrypoints.
 
 ## Runtime CLI ownership
@@ -96,7 +96,7 @@ UI before any dependent-project npm repair is attempted.
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
 
-## Dev.10 preload typing
+## Dev11 preload typing
 
-Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Dev11 keeps preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.

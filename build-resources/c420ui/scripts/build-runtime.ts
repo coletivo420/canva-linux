@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import esbuild from "esbuild";
 import fs from "node:fs";
 import path from "node:path";
 import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../canva-linux/project-root.js";
@@ -34,7 +35,17 @@ export function main(): void {
     "run",
     "bootstrap:electron-builder",
   ]);
-  run("compile electron runtime", "npx", ["tsc", "-p", "build-resources/config/typescript/tsconfig.build.json"]);
+  console.log("[runtime-build] compile electron runtime");
+  esbuild.buildSync({
+    absWorkingDir: repoRoot,
+    bundle: true,
+    entryPoints: ["build-resources/electron/main/index.ts"],
+    external: ["electron"],
+    format: "esm",
+    outfile: ".build/electron/main/index.mjs",
+    platform: "node",
+    target: "node22",
+  });
   run("copy runtime assets", process.execPath, [
     ".build/scripts/copy-runtime-assets.mjs",
   ]);
@@ -44,8 +55,8 @@ export function main(): void {
   ]);
 
   const requiredFiles = [
-    ".build/electron/main/index.js",
-    ".build/electron/preload/canva.bundle.js",
+    ".build/electron/main/index.mjs",
+    ".build/electron/preload/canva.bundle.mjs",
     ".build/electron/ui/toolbar.html",
     ".build/electron/assets",
   ];

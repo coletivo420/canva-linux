@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { createTabController } = loadRuntimeModule("main/tab-controller");
+const { createTabController } = await loadRuntimeModule("main/tab-controller");
 
 class FakeWebContentsView {
   constructor(options = {}) {

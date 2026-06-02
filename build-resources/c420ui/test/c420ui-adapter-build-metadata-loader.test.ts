@@ -55,7 +55,6 @@ function withTestProject(options: TestProjectOptions, run: (rootDir: string) => 
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-build-metadata-"));
 
   try {
-    fs.mkdirSync(path.join(rootDir, ".build", "electron", "main"), { recursive: true });
     fs.mkdirSync(path.join(rootDir, "build-resources", "canva-linux", "config"), { recursive: true });
     fs.writeFileSync(
       path.join(rootDir, "package.json"),
@@ -74,57 +73,16 @@ function withTestProject(options: TestProjectOptions, run: (rootDir: string) => 
         buildRevision: options.packagedRevision ?? "packagedrev",
       }, null, 2)}\n`,
     );
-    fs.writeFileSync(
-      path.join(rootDir, ".build", "electron", "main", "build-metadata.js"),
-      `
-exports.createBuildMetadata = function createBuildMetadata(input) {
-  const revision = String(input.buildRevision || "unknown").trim() || "unknown";
-  const buildRevision = "module-" + revision.replace(/^g/i, "").slice(0, 7);
-  return {
-    baseVersion: input.baseVersion,
-    baseDisplayVersion: input.baseDisplayVersion,
-    basePhase: input.basePhase,
-    buildRevision,
-    version: input.baseVersion + "+" + buildRevision,
-    displayVersion: input.baseDisplayVersion + "+" + buildRevision,
-    phase: input.basePhase + "+" + buildRevision,
-    fullVersion: input.basePhase + "+" + buildRevision,
-    sourceMarker: "electron-main-build-metadata"
-  };
-};
-exports.normalizeLoadedBuildMetadata = function normalizeLoadedBuildMetadata(metadata) {
-  if (!metadata.baseVersion || !metadata.baseDisplayVersion || !metadata.basePhase) return null;
-  return exports.createBuildMetadata({
-    baseVersion: metadata.baseVersion,
-    baseDisplayVersion: metadata.baseDisplayVersion,
-    basePhase: metadata.basePhase,
-    buildRevision: metadata.buildRevision || "unknown"
-  });
-};
-exports.loadCanvaLinuxBuildMetadata = function loadCanvaLinuxBuildMetadata() {
-  return exports.createBuildMetadata({
-    baseVersion: "loaded",
-    baseDisplayVersion: "loaded",
-    basePhase: "loaded",
-    buildRevision: "loaded"
-  });
-};
-exports.formatCanvaLinuxVersion = function formatCanvaLinuxVersion(metadata) {
-  return "Canva Linux " + metadata.version;
-};
-`,
-    );
-
     run(rootDir);
   } finally {
     fs.rmSync(rootDir, { recursive: true, force: true });
   }
 }
 
-test("build metadata loader uses build-resources/electron/main/build-metadata via createRequire", () => {
+test("build metadata loader imports build-resources/electron/main/build-metadata as ESM", () => {
   const source = fs.readFileSync(loaderPath, "utf8");
 
-  assert.match(source, /createRequire/);
+  assert.equal(source.includes("create" + "Require"), false);
   assert.match(source, /electron\/main\/build-metadata/);
   assert.doesNotMatch(source, /function normalizeBuildRevision/);
   assert.doesNotMatch(source, /function appendBuildRevision/);
@@ -135,13 +93,10 @@ test("build metadata loader uses build-resources/electron/main/build-metadata vi
 test("loadEffectiveBuildMetadata uses electron main build metadata single source", () => {
   withTestProject({}, (rootDir) => {
     withEnvRevision("abcdef123456", () => {
-      const metadata = loadEffectiveBuildMetadata(rootDir) as ReturnType<typeof loadEffectiveBuildMetadata> & {
-        sourceMarker?: string;
-      };
+      const metadata = loadEffectiveBuildMetadata(rootDir);
 
-      assert.equal(metadata.sourceMarker, "electron-main-build-metadata");
-      assert.equal(metadata.buildRevision, "module-abcdef1");
-      assert.equal(metadata.fullVersion, "1.2.3 Phase+module-abcdef1");
+      assert.equal(metadata.buildRevision, "gabcdef1");
+      assert.equal(metadata.fullVersion, "1.2.3 Phase+gabcdef1");
     });
   });
 });
@@ -151,7 +106,7 @@ test("CANVA_LINUX_BUILD_REVISION overrides packaged metadata", () => {
     withEnvRevision("env999999", () => {
       const metadata = loadEffectiveBuildMetadata(rootDir);
 
-      assert.equal(metadata.buildRevision, "module-env9999");
+      assert.equal(metadata.buildRevision, "genv9999");
       assert.equal(metadata.baseVersion, "1.2.3");
     });
   });
@@ -173,7 +128,7 @@ test("git revision is used in source checkout when env revision is missing", () 
       withEnvRevision(undefined, () => {
         const metadata = loadEffectiveBuildMetadata(rootDir);
 
-        assert.equal(metadata.buildRevision, `module-${gitRevision}`);
+        assert.equal(metadata.buildRevision, `g${gitRevision}`);
         assert.equal(metadata.baseVersion, "1.2.3");
       });
     });
@@ -185,9 +140,9 @@ test("packaged build-metadata.json fallback still works", () => {
     withEnvRevision(undefined, () => {
       const metadata = loadEffectiveBuildMetadata(rootDir);
 
-      assert.equal(metadata.buildRevision, "module-package");
+      assert.equal(metadata.buildRevision, "gpackage");
       assert.equal(metadata.baseVersion, "9.9.9");
-      assert.equal(metadata.fullVersion, "9.9.9 Phase+module-package");
+      assert.equal(metadata.fullVersion, "9.9.9 Phase+gpackage");
     });
   });
 });

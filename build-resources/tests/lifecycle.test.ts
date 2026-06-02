@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { registerAppLifecycle } = loadRuntimeModule("main/lifecycle");
+const { registerAppLifecycle } = await loadRuntimeModule("main/lifecycle");
 
 function createLifecycleOptions({
   canvaSession = null,

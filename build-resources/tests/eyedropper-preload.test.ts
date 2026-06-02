@@ -1,10 +1,9 @@
 // @ts-nocheck
 
 import assert from "node:assert/strict";
-import Module from "node:module";
 import test from "node:test";
 
-import { loadRuntimeModule } from "./helpers/runtime-module.js";
+import { loadRuntimeModule, withElectronMock } from "./helpers/runtime-module.js";
 
 const {
   describeTarget,
@@ -12,7 +11,7 @@ const {
   normalizeHex: normalizeRoutingHex,
   serializeValue,
   summarizeStream,
-} = loadRuntimeModule("preload/eyedropper-routing-diagnostics");
+} = await loadRuntimeModule("preload/eyedropper-routing-diagnostics");
 
 
 
@@ -77,41 +76,16 @@ async function withMediaDeviceScope(mediaDevices, fn) {
 }
 
 const { installNativeEyeDropperWrapper, isWrappedEyeDropperInstalledInScope } =
-  loadRuntimeModule("preload/native-eyedropper-wrapper");
-
-/**
- * @template T
- * @param {() => T} fn
- * @returns {T}
- */
-function withElectronMock(fn) {
-  const moduleLoader =
-    /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ Module;
-  const originalLoad = moduleLoader._load;
-  moduleLoader._load = function mockElectron(request, parent, isMain) {
-    if (request === "electron") {
-      return {
-        ipcRenderer: {
-          invoke() {
-            return Promise.resolve(null);
-          },
-        },
-      };
-    }
-    return originalLoad.call(this, request, parent, isMain);
-  };
-  try {
-    return fn();
-  } finally {
-    moduleLoader._load = originalLoad;
-  }
-}
+  await loadRuntimeModule("preload/native-eyedropper-wrapper");
 
 const {
   createAbortError,
   createOperationError,
   normalizeHex: normalizeCustomHex,
-} = withElectronMock(() => loadRuntimeModule("preload/custom-eyedropper-flow"));
+} = await withElectronMock(
+  { ipcRenderer: { invoke: () => Promise.resolve(null) } },
+  () => loadRuntimeModule("preload/custom-eyedropper-flow"),
+);
 
 test("normalizes EyeDropper hex values", () => {
   assert.equal(normalizeRoutingHex("#AABBCC"), "#aabbcc");

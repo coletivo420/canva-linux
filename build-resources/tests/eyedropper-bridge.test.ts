@@ -9,7 +9,7 @@ const {
   registerEyeDropperBridge,
   resolveRequestingTab,
   validateSnapshotRequester,
-} = loadRuntimeModule("main/eyedropper-bridge");
+} = await loadRuntimeModule("main/eyedropper-bridge");
 
 test("resolveRequestingTab scopes lookup to the requesting webContents", () => {
   const sender = { id: 22 };

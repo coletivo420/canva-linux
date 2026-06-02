@@ -8,7 +8,7 @@ const {
   normalizeHex,
   createAbortError,
   createOperationError,
-} = loadRuntimeModule(
+} = await loadRuntimeModule(
   "preload/custom-eyedropper-flow",
 );
 

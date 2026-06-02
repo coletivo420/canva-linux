@@ -9,7 +9,7 @@ const {
   createOAuthHelpers,
   createOAuthPopupInitialState,
   createOAuthPopupOptionsSummary,
-} = loadRuntimeModule("main/oauth");
+} = await loadRuntimeModule("main/oauth");
 
 function fakeWindow() {
   return {

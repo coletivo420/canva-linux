@@ -70,17 +70,6 @@ function calculateArtifactHashes(bootstrapDir: string): Record<string, string> {
   return hashes;
 }
 
-async function ensureBuildMetadataModule(rootDir: string): Promise<void> {
-  await esbuild.build({
-    entryPoints: [path.join(rootDir, "build-resources", "electron", "main", "build-metadata.ts")],
-    bundle: true,
-    platform: "node",
-    target: "node22",
-    format: "cjs",
-    outfile: path.join(rootDir, ".build", "electron", "main", "build-metadata.js"),
-  });
-}
-
 function copyBlessedRuntimeAssets(rootDir: string, bootstrapDir: string): void {
   const blessedPackageJsonPath = path.join(
     rootDir,
@@ -113,7 +102,6 @@ async function main(): Promise<void> {
 
   const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
   const c420uiPackageJson = readJson<PackageJson>(rootDir, "build-resources/c420ui/package.json");
-  await ensureBuildMetadataModule(rootDir);
   const buildMetadata = loadCommittedBuildMetadata(rootDir);
   const dependentProjectVersion = requirePackageVersion(rootPackageJson, "package.json");
   const c420uiVersion = requirePackageVersion(c420uiPackageJson, "build-resources/c420ui/package.json");

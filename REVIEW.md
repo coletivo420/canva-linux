@@ -18,8 +18,8 @@ Request changes if a PR:
 - adds new tsconfig `moduleResolution: node`;
 - restores `@ts-nocheck`;
 - changes package output to CommonJS while claiming ESM migration;
-- keeps `.cjs` bootstrap as permanent architecture instead of migration debt;
-- breaks Dev10 build-resources ownership boundaries.
+- keeps `.cjs` bootstrap or other versioned `.cjs` artifacts as permanent architecture;
+- breaks Dev11 build-resources ownership boundaries.
 
 ## c420ui package refactor and structural ownership
 
@@ -49,7 +49,7 @@ Request changes if a PR:
 
 - The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
 
-## Dev.10 TypeScript hardening review
+## Dev11 ESM-only TypeScript review
 
 Request changes if a PR:
 
@@ -631,9 +631,9 @@ while runtime flags belong to the compiled `canva-linux` app.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`, root `build-resources/tests/`, `canva-linux/c420ui-adapter`, or `packages/`.
 - When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 
-## Dev.10 preload typing
+## Dev11 preload typing
 
-Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Dev11 keeps preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
 Canva Linux and c420ui now use separate deterministic content hashes. Canva Linux changes update canvaLinuxSourceHash, c420ui changes update c420uiSourceHash, and combinedSourceHash changes when either side changes. Git buildRevision remains separate and is only used by effective metadata/release builds.
 
@@ -644,14 +644,14 @@ Canva Linux and c420ui now use separate deterministic content hashes.
 `buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
 Docs, tests and generated artifacts must not affect either source hash.
 
-## Dev.10 validation ownership review
+## Dev11 validation ownership review
 
 Request changes if a PR:
 - adds validation policy logic back into `scripts/*.sh` validation scripts;
 - reintroduces JavaScript heredocs (`node <<'NODE'`) inside validation wrappers;
 - bypasses TypeScript validation entrypoints for doctor/project/flatpak/flathub checks.
 
-## Dev.10 operational TypeScript review
+## Dev11 operational TypeScript review
 
 Request changes if a PR:
 - moves operational install/uninstall/purge/packaging orchestration from TypeScript back into shell scripts;

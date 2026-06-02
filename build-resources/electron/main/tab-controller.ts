@@ -163,7 +163,7 @@ export function createTabController({
       RUNTIME_DIR,
       "..",
       "preload",
-      "canva.bundle.js",
+      "canva.bundle.mjs",
     );
     debugLog("tabs:navigation", "preload-path", preloadPath);
 

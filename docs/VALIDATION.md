@@ -14,8 +14,11 @@ CommonJS patterns are forbidden in maintained source:
 - `require.resolve()`
 - `node:module` `createRequire` bridges
 
-CommonJS may exist only as temporary migration output during Dev11.
-Generated bootstrap artifacts are now ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
+CommonJS may exist only inside external dependencies under `node_modules/`.
+Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
+Electron runtime must start from `.build/electron/main/index.mjs`.
+Electron preload bundles must be `.build/electron/preload/canva.bundle.mjs` and
+`.build/electron/preload/toolbar.bundle.mjs`.
 Node tooling, core checks, c420ui checks, and c420ui terminal generated outputs
 must use ESM `.mjs` artifacts.
 The electron-builder `beforeBuild` hook output must use ESM `.mjs`.
@@ -23,7 +26,7 @@ The c420ui bootstrap generator must emit and run `build-bootstrap.mjs`.
 
 ## Source language policy validation
 
-Dev.10 validation must prove:
+Dev11 validation must prove:
 
 - no maintained JavaScript source was added;
 - generated JavaScript remains under generated-output paths;
@@ -407,9 +410,9 @@ OAuth validation also checks that the first post-OAuth reload targets the curren
   scripts/canva-linux submodules must remain in
   `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 
-## Dev.10 preload typing
+## Dev11 preload typing
 
-Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Dev11 keeps preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
   root `build-resources/tests/`, `build-resources/canva-linux/c420ui-adapter`, or `packages/`.
@@ -442,13 +445,13 @@ Expected results:
 - `build-resources/canva-linux/config/build-metadata.json` must contain stable deterministic source hashes.
 - `.build/canva-linux/build-metadata.effective.json` may change `buildRevision` and derived version strings, but must preserve the same source hashes.
 
-## Dev.10 validation ownership
+## Dev11 validation ownership
 
 - Project validation runs from `build-resources/canva-linux/validation/project.ts` via `validate:project`.
 - Doctor runs from `build-resources/canva-linux/validation/doctor.ts` via `validate:doctor`.
 - Flatpak and Flathub policy checks run from TypeScript entrypoints; shell scripts are dispatch wrappers only.
 
-## Dev.10 operational ownership
+## Dev11 operational ownership
 
 - Install/uninstall/maintenance/packaging/build/versioning mechanics are routed
   through c420ui-owned TypeScript sources under `build-resources/c420ui/*`.

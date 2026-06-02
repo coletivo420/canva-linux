@@ -10,7 +10,7 @@ const {
   serializeGpuFeatureStatus,
   serializeGpuRuntimeEnvironment,
   registerGpuDiagnostics,
-} = loadRuntimeModule("main/gpu-diagnostics");
+} = await loadRuntimeModule("main/gpu-diagnostics");
 
 test("classifies Vulkan accelerated GPU status", () => {
   assert.equal(

@@ -4,7 +4,7 @@ import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { isWrappedEyeDropperInstalledInScope } = loadRuntimeModule(
+const { isWrappedEyeDropperInstalledInScope } = await loadRuntimeModule(
   "preload/native-eyedropper-wrapper",
 );
 

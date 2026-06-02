@@ -5,7 +5,7 @@ import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { createTabHelpers, safeToolbarFaviconUrl } = loadRuntimeModule("main/tabs");
+const { createTabHelpers, safeToolbarFaviconUrl } = await loadRuntimeModule("main/tabs");
 
 /**
  * @param {number} id
