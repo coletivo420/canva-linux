@@ -9,7 +9,7 @@ import {
   loadCanvaLinuxCapabilities,
 } from "../canva-linux/c420ui-adapter/artifacts.js";
 
-const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? process.cwd();
 const artifactsConfigPath = path.join(rootDir, "build-resources/canva-linux/config/artifacts.json");
 const packageJsonPath = path.join(rootDir, "package.json");
 const expectedCapabilityFields = [

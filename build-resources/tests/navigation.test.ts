@@ -1,7 +1,4 @@
 // @ts-nocheck
-"use strict";
-
-// @ts-check
 
 import assert from "node:assert/strict";
 import test from "node:test";

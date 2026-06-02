@@ -1,13 +1,11 @@
 // @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const os = require("node:os");
-const path = require("node:path");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 const { loadCanvaLinuxBuildMetadata } = loadRuntimeModule("main/build-metadata");
 
 function writeMetadata(filePath, revision) {

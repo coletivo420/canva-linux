@@ -1,13 +1,7 @@
 #!/usr/bin/env node
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __esm = (fn, res) => function __init() {
-  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
-};
-var __commonJS = (cb, mod) => function __require() {
-  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
-};
 
 // build-resources/c420ui/src/scopes.ts
+var c420uiKnownActionScopes = ["user", "system", "auto"];
 function normalizeC420UIActionScope(scope) {
   const normalized = scope?.trim();
   return normalized || void 0;
@@ -15,25 +9,16 @@ function normalizeC420UIActionScope(scope) {
 function isC420UIUserScope(scope) {
   return normalizeC420UIActionScope(scope) === "user";
 }
-var c420uiKnownActionScopes;
-var init_scopes = __esm({
-  "build-resources/c420ui/src/scopes.ts"() {
-    c420uiKnownActionScopes = ["user", "system", "auto"];
-  }
-});
-
-// build-resources/c420ui/src/root-provider.ts
-var c420uiRootPolicyExitCode;
-var init_root_provider = __esm({
-  "build-resources/c420ui/src/root-provider.ts"() {
-    c420uiRootPolicyExitCode = 64;
-  }
-});
 
 // build-resources/c420ui/src/linux-root-provider.ts
 import {
   spawnSync
 } from "node:child_process";
+
+// build-resources/c420ui/src/root-provider.ts
+var c420uiRootPolicyExitCode = 64;
+
+// build-resources/c420ui/src/linux-root-provider.ts
 function defaultC420UILinuxRootValidationCommand(sudoHelperPath) {
   return { command: "bash", args: [sudoHelperPath, "--validate"] };
 }
@@ -141,54 +126,9 @@ function createC420UILinuxRootProviderBase(options) {
     }
   };
 }
-var init_linux_root_provider = __esm({
-  "build-resources/c420ui/src/linux-root-provider.ts"() {
-    init_root_provider();
-    init_scopes();
-  }
-});
-
-// build-resources/c420ui/src/host-dependencies.ts
-var init_host_dependencies = __esm({
-  "build-resources/c420ui/src/host-dependencies.ts"() {
-  }
-});
-
-// build-resources/c420ui/src/command-dependencies.ts
-var init_command_dependencies = __esm({
-  "build-resources/c420ui/src/command-dependencies.ts"() {
-  }
-});
-
-// build-resources/c420ui/src/node-dependencies.ts
-var init_node_dependencies = __esm({
-  "build-resources/c420ui/src/node-dependencies.ts"() {
-  }
-});
-
-// build-resources/c420ui/src/npm-dependencies.ts
-var init_npm_dependencies = __esm({
-  "build-resources/c420ui/src/npm-dependencies.ts"() {
-  }
-});
-
-// build-resources/c420ui/src/host-dependency-runner.ts
-var init_host_dependency_runner = __esm({
-  "build-resources/c420ui/src/host-dependency-runner.ts"() {
-    init_command_dependencies();
-    init_node_dependencies();
-    init_npm_dependencies();
-  }
-});
-
-// build-resources/c420ui/src/startup-task.ts
-var init_startup_task = __esm({
-  "build-resources/c420ui/src/startup-task.ts"() {
-    init_host_dependencies();
-  }
-});
 
 // build-resources/c420ui/src/actions.ts
+var c420uiActionKinds = ["command", "planned", "internal"];
 function getC420UIActionCliFlags(action) {
   const legacyCli = action.cli ?? [];
   return [...action.cliFlags ?? [], ...legacyCli];
@@ -347,13 +287,6 @@ function validateC420UIActions(actions, options = {}) {
 function validateC420UIActionRegistry(actions, options) {
   validateC420UIActions(actions, options);
 }
-var c420uiActionKinds;
-var init_actions = __esm({
-  "build-resources/c420ui/src/actions.ts"() {
-    init_scopes();
-    c420uiActionKinds = ["command", "planned", "internal"];
-  }
-});
 
 // build-resources/c420ui/src/events.ts
 function createC420UIEvent(event) {
@@ -362,25 +295,16 @@ function createC420UIEvent(event) {
     ...event
   };
 }
-var init_events = __esm({
-  "build-resources/c420ui/src/events.ts"() {
-  }
-});
 
 // build-resources/c420ui/src/exit-codes.ts
-var c420uiExitCodes;
-var init_exit_codes = __esm({
-  "build-resources/c420ui/src/exit-codes.ts"() {
-    c420uiExitCodes = {
-      success: 0,
-      generalError: 1,
-      invalidUsage: 64,
-      rootPolicyError: 64,
-      plannedAction: 78,
-      canceled: 130
-    };
-  }
-});
+var c420uiExitCodes = {
+  success: 0,
+  generalError: 1,
+  invalidUsage: 64,
+  rootPolicyError: 64,
+  plannedAction: 78,
+  canceled: 130
+};
 
 // build-resources/c420ui/src/action-engine.ts
 function createC420UIActionEngine(options) {
@@ -553,13 +477,6 @@ function createC420UIActionEngine(options) {
     runAction
   };
 }
-var init_action_engine = __esm({
-  "build-resources/c420ui/src/action-engine.ts"() {
-    init_actions();
-    init_events();
-    init_exit_codes();
-  }
-});
 
 // build-resources/c420ui/src/cli.ts
 function writeLine(writer, line) {
@@ -657,15 +574,24 @@ async function runC420UICli(options) {
   }
   return { exitCode: result.code, handled: true };
 }
-var init_cli = __esm({
-  "build-resources/c420ui/src/cli.ts"() {
-    init_action_engine();
-    init_actions();
-    init_exit_codes();
-  }
-});
+
+// build-resources/c420ui/src/command-runner.ts
+import { spawn } from "node:child_process";
+import { StringDecoder } from "node:string_decoder";
 
 // build-resources/c420ui/src/operational-logs.ts
+var c420uiDefaultRedactionPatterns = [
+  {
+    id: "token-assignment",
+    pattern: /\b(token|secret|password|passwd|api[_-]?key)=([^\s]+)/gi,
+    replacement: "$1=[redacted]"
+  },
+  {
+    id: "bearer-token",
+    pattern: /\bBearer\s+[A-Za-z0-9._~+/=-]+/g,
+    replacement: "Bearer [redacted]"
+  }
+];
 function redactC420UILogLine(line) {
   return c420uiDefaultRedactionPatterns.reduce(
     (redactedLine, redaction) => redactedLine.replace(redaction.pattern, redaction.replacement),
@@ -680,27 +606,8 @@ function createC420UIOperationalLogEvent(options) {
     timestamp: (/* @__PURE__ */ new Date()).toISOString()
   };
 }
-var c420uiDefaultRedactionPatterns;
-var init_operational_logs = __esm({
-  "build-resources/c420ui/src/operational-logs.ts"() {
-    c420uiDefaultRedactionPatterns = [
-      {
-        id: "token-assignment",
-        pattern: /\b(token|secret|password|passwd|api[_-]?key)=([^\s]+)/gi,
-        replacement: "$1=[redacted]"
-      },
-      {
-        id: "bearer-token",
-        pattern: /\bBearer\s+[A-Za-z0-9._~+/=-]+/g,
-        replacement: "Bearer [redacted]"
-      }
-    ];
-  }
-});
 
 // build-resources/c420ui/src/command-runner.ts
-import { spawn } from "node:child_process";
-import { StringDecoder } from "node:string_decoder";
 function emitOperationalLog(options, event) {
   options.emitLog(createC420UIOperationalLogEvent(event));
 }
@@ -866,15 +773,51 @@ async function runC420UICommand(options) {
     });
   });
 }
-var init_command_runner = __esm({
-  "build-resources/c420ui/src/command-runner.ts"() {
-    init_exit_codes();
-    init_operational_logs();
-  }
-});
 
 // build-resources/c420ui/src/artifacts.ts
 import path from "node:path";
+var artifactCapabilityFields = [
+  "supportsArtifacts",
+  "supportsInstall",
+  "supportsUninstall",
+  "supportsPurge",
+  "supportsRelease",
+  "supportsRootActions",
+  "supportsDryRun",
+  "supportsPlannedActions"
+];
+var artifactWorkflowKinds = [
+  "appimage",
+  "flatpak",
+  "tarball",
+  "deb",
+  "rpm",
+  "aur",
+  "native",
+  "custom"
+];
+var artifactWorkflowScopes = [
+  "user",
+  "system",
+  "portable",
+  "release",
+  "none"
+];
+var artifactActionIdFields = [
+  "buildActionId",
+  "validateActionId",
+  "installActionId",
+  "uninstallActionId",
+  "purgeActionId",
+  "releaseActionId"
+];
+var executableArtifactActionIdFields = [
+  "buildActionId",
+  "validateActionId",
+  "installActionId",
+  "uninstallActionId",
+  "purgeActionId"
+];
 function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -1002,97 +945,37 @@ function resolveC420UIArtifactOutputPattern(outputPattern, values) {
   validateOutputPattern(outputPattern, "artifact outputPattern");
   return toConfigPath(outputPattern.replaceAll("${version}", values.version));
 }
-var artifactCapabilityFields, artifactWorkflowKinds, artifactWorkflowScopes, artifactActionIdFields, executableArtifactActionIdFields;
-var init_artifacts = __esm({
-  "build-resources/c420ui/src/artifacts.ts"() {
-    init_actions();
-    artifactCapabilityFields = [
-      "supportsArtifacts",
-      "supportsInstall",
-      "supportsUninstall",
-      "supportsPurge",
-      "supportsRelease",
-      "supportsRootActions",
-      "supportsDryRun",
-      "supportsPlannedActions"
-    ];
-    artifactWorkflowKinds = [
-      "appimage",
-      "flatpak",
-      "tarball",
-      "deb",
-      "rpm",
-      "aur",
-      "native",
-      "custom"
-    ];
-    artifactWorkflowScopes = [
-      "user",
-      "system",
-      "portable",
-      "release",
-      "none"
-    ];
-    artifactActionIdFields = [
-      "buildActionId",
-      "validateActionId",
-      "installActionId",
-      "uninstallActionId",
-      "purgeActionId",
-      "releaseActionId"
-    ];
-    executableArtifactActionIdFields = [
-      "buildActionId",
-      "validateActionId",
-      "installActionId",
-      "uninstallActionId",
-      "purgeActionId"
-    ];
-  }
-});
 
 // build-resources/c420ui/src/bridge.ts
 function createC420UIBridge(bridge) {
   return bridge;
 }
-var init_bridge = __esm({
-  "build-resources/c420ui/src/bridge.ts"() {
-  }
-});
 
 // build-resources/c420ui/src/detection.ts
 function boolFromC420UIDetectionValue(value) {
   return value === "true";
 }
-var init_detection = __esm({
-  "build-resources/c420ui/src/detection.ts"() {
-  }
-});
-
-// build-resources/c420ui/src/capabilities.ts
-var init_capabilities = __esm({
-  "build-resources/c420ui/src/capabilities.ts"() {
-  }
-});
-
-// build-resources/c420ui/src/workflows.ts
-var init_workflows = __esm({
-  "build-resources/c420ui/src/workflows.ts"() {
-    init_actions();
-    init_events();
-    init_exit_codes();
-  }
-});
-
-// build-resources/c420ui/src/workflow-runner.ts
-var init_workflow_runner = __esm({
-  "build-resources/c420ui/src/workflow-runner.ts"() {
-    init_events();
-    init_exit_codes();
-  }
-});
 
 // build-resources/c420ui/src/development-provider.ts
+var c420uiDevelopmentTaskKinds = [
+  "doctor",
+  "validate",
+  "build",
+  "package",
+  "install",
+  "uninstall",
+  "purge",
+  "clean",
+  "release",
+  "custom"
+];
+var c420uiDevelopmentTaskRequiredForValues = [
+  "development",
+  "build",
+  "package",
+  "release",
+  "validation"
+];
 function isRecord3(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -1221,73 +1104,17 @@ function createC420UIDevelopmentWorkflowFromAction(task, action) {
     supportsDryRun: task.supportsDryRun
   };
 }
-var c420uiDevelopmentTaskKinds, c420uiDevelopmentTaskRequiredForValues;
-var init_development_provider = __esm({
-  "build-resources/c420ui/src/development-provider.ts"() {
-    init_scopes();
-    init_actions();
-    c420uiDevelopmentTaskKinds = [
-      "doctor",
-      "validate",
-      "build",
-      "package",
-      "install",
-      "uninstall",
-      "purge",
-      "clean",
-      "release",
-      "custom"
-    ];
-    c420uiDevelopmentTaskRequiredForValues = [
-      "development",
-      "build",
-      "package",
-      "release",
-      "validation"
-    ];
-  }
-});
 
-// build-resources/c420ui/src/index.ts
-var init_src = __esm({
-  "build-resources/c420ui/src/index.ts"() {
-    init_scopes();
-    init_linux_root_provider();
-    init_host_dependencies();
-    init_command_dependencies();
-    init_node_dependencies();
-    init_npm_dependencies();
-    init_host_dependency_runner();
-    init_startup_task();
-    init_action_engine();
-    init_cli();
-    init_command_runner();
-    init_operational_logs();
-    init_exit_codes();
-    init_root_provider();
-    init_actions();
-    init_artifacts();
-    init_bridge();
-    init_detection();
-    init_capabilities();
-    init_events();
-    init_workflows();
-    init_workflow_runner();
-    init_development_provider();
-  }
-});
+// build-resources/canva-linux/c420ui-adapter/adapter.ts
+import fs12 from "node:fs";
+import path13 from "node:path";
 
 // build-resources/c420ui/src/terminal/logo.ts
-var c420uiLogoLines;
-var init_logo = __esm({
-  "build-resources/c420ui/src/terminal/logo.ts"() {
-    c420uiLogoLines = [
-      "\u2584\u2584  \u2588 \u2588 \u2584\u2584\u2584 \u2584\u2580\u2584  \u2584 \u2584  \u2584",
-      "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
-      "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
-    ];
-  }
-});
+var c420uiLogoLines = [
+  "\u2584\u2584  \u2588 \u2588 \u2584\u2584\u2584 \u2584\u2580\u2584  \u2584 \u2584  \u2584",
+  "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
+  "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
+];
 
 // build-resources/c420ui/src/terminal/settings.ts
 import path2 from "node:path";
@@ -1301,10 +1128,13 @@ function configHome() {
 function toolSettingsPath(stateDirectoryName) {
   return path2.join(configHome(), stateDirectoryName, "tool-settings.json");
 }
-var init_settings = __esm({
-  "build-resources/c420ui/src/terminal/settings.ts"() {
-  }
-});
+
+// build-resources/canva-linux/c420ui-adapter/detection/provider.ts
+import fs7 from "node:fs";
+import path8 from "node:path";
+import {
+  execFileSync
+} from "node:child_process";
 
 // build-resources/canva-linux/project-root.ts
 import fs from "node:fs";
@@ -1341,14 +1171,26 @@ function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
   if (fromStart) return fromStart;
   return defaultRootSearchDir();
 }
-var init_project_root = __esm({
-  "build-resources/canva-linux/project-root.ts"() {
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments.ts
 import fs2 from "node:fs";
 import path4 from "node:path";
+var ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
+var ARTIFACT_PATH_COLLATOR = new Intl.Collator(void 0, {
+  numeric: true,
+  sensitivity: "base"
+});
+var SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
+  "*.AppImage",
+  "*.flatpak",
+  "linux-unpacked",
+  "*.tar.gz",
+  "SHA256SUMS",
+  ".deb",
+  ".rpm",
+  "PKGBUILD",
+  "*.pkg.tar.*"
+];
 function readJsonFile(filePath) {
   return JSON.parse(fs2.readFileSync(filePath, "utf8"));
 }
@@ -1506,27 +1348,10 @@ function buildCanvaLinuxArtifactFragments(rootDir) {
   }
   return fragments;
 }
-var ARTIFACTS_CONFIG_PATH, ARTIFACT_PATH_COLLATOR, SUPPORTED_ARTIFACT_PATTERN_EXAMPLES;
-var init_artifact_fragments = __esm({
-  "build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments.ts"() {
-    ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
-    ARTIFACT_PATH_COLLATOR = new Intl.Collator(void 0, {
-      numeric: true,
-      sensitivity: "base"
-    });
-    SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
-      "*.AppImage",
-      "*.flatpak",
-      "linux-unpacked",
-      "*.tar.gz",
-      "SHA256SUMS",
-      ".deb",
-      ".rpm",
-      "PKGBUILD",
-      "*.pkg.tar.*"
-    ];
-  }
-});
+
+// build-resources/c420ui/operations/detection/appimage-detection.ts
+import fs4 from "node:fs";
+import path5 from "node:path";
 
 // build-resources/c420ui/operations/detection/version-marker.ts
 import fs3 from "node:fs";
@@ -1563,14 +1388,8 @@ function readBuildMetadataBaseVersion(metadataFile) {
     return "";
   }
 }
-var init_version_marker = __esm({
-  "build-resources/c420ui/operations/detection/version-marker.ts"() {
-  }
-});
 
 // build-resources/c420ui/operations/detection/appimage-detection.ts
-import fs4 from "node:fs";
-import path5 from "node:path";
 function detectAppImageArtifacts(rootDir) {
   const distDir = path5.join(rootDir, "dist");
   if (!fs4.existsSync(distDir)) return false;
@@ -1670,17 +1489,13 @@ function detectAppImageFullVersion(rootDir) {
   }
   return detectAppImageVersion(rootDir);
 }
-var init_appimage_detection = __esm({
-  "build-resources/c420ui/operations/detection/appimage-detection.ts"() {
-    init_version_marker();
-  }
-});
 
 // build-resources/c420ui/operations/detection/flatpak-detection.ts
 import fs5 from "node:fs";
 import path6 from "node:path";
 import os from "node:os";
 import { spawnSync as spawnSync2 } from "node:child_process";
+var APP_ID = "io.github.coletivo420.canva-linux";
 function detectFlatpakSystemInstall() {
   try {
     const result = spawnSync2("flatpak", ["--system", "info", APP_ID], {
@@ -1803,17 +1618,13 @@ function detectFlatpakUserFullVersion() {
   if (version) return version;
   return detectFlatpakUserVersion();
 }
-var APP_ID;
-var init_flatpak_detection = __esm({
-  "build-resources/c420ui/operations/detection/flatpak-detection.ts"() {
-    APP_ID = "io.github.coletivo420.canva-linux";
-  }
-});
 
 // build-resources/c420ui/operations/detection/native-detection.ts
 import fs6 from "node:fs";
 import path7 from "node:path";
 import os2 from "node:os";
+var APP_EXECUTABLE = "canva-linux";
+var APP_NATIVE_DESKTOP_NAME = "io.github.coletivo420.canva-linux.native.desktop";
 function detectNativeSystemInstall() {
   return fs6.existsSync("/opt/canva-linux") || fs6.existsSync(`/usr/local/bin/${APP_EXECUTABLE}`) || fs6.existsSync(`/usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME}`);
 }
@@ -1861,14 +1672,6 @@ function detectNativeUserFullVersion() {
   if (version) return version;
   return detectNativeUserVersion();
 }
-var APP_EXECUTABLE, APP_NATIVE_DESKTOP_NAME;
-var init_native_detection = __esm({
-  "build-resources/c420ui/operations/detection/native-detection.ts"() {
-    init_version_marker();
-    APP_EXECUTABLE = "canva-linux";
-    APP_NATIVE_DESKTOP_NAME = "io.github.coletivo420.canva-linux.native.desktop";
-  }
-});
 
 // build-resources/c420ui/operations/detection/install-detection.ts
 function detectInstallations(rootDir) {
@@ -1890,20 +1693,9 @@ function detectInstallations(rootDir) {
     DETECTED_APPIMAGE_FULL_VERSION: detectAppImageFullVersion(rootDir)
   };
 }
-var init_install_detection = __esm({
-  "build-resources/c420ui/operations/detection/install-detection.ts"() {
-    init_appimage_detection();
-    init_flatpak_detection();
-    init_native_detection();
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/detection/provider.ts
-import fs7 from "node:fs";
-import path8 from "node:path";
-import {
-  execFileSync
-} from "node:child_process";
+var cachedPackageJson;
 function readPackage(rootDir) {
   if (cachedPackageJson?.rootDir === rootDir) {
     return cachedPackageJson.packageJson;
@@ -1929,6 +1721,39 @@ function readNodeVersion(rootDir) {
   const packageJson = readPackage(rootDir);
   return normalizeSemverRange(packageJson.engines?.node) ?? process.versions.node;
 }
+var readNpmVersion = /* @__PURE__ */ (() => {
+  let cached;
+  let attempted = false;
+  return () => {
+    if (attempted) {
+      return cached;
+    }
+    attempted = true;
+    try {
+      cached = execFileSync("npm", ["--version"], { encoding: "utf8" }).trim();
+      return cached;
+    } catch {
+      return void 0;
+    }
+  };
+})();
+var emptyInstallations = {
+  nativeSystem: false,
+  nativeUser: false,
+  flatpakSystem: false,
+  flatpakUser: false,
+  appImageArtifacts: false,
+  nativeSystemVersion: "",
+  nativeUserVersion: "",
+  flatpakSystemVersion: "",
+  flatpakUserVersion: "",
+  appImageVersion: "",
+  nativeSystemFullVersion: "",
+  nativeUserFullVersion: "",
+  flatpakSystemFullVersion: "",
+  flatpakUserFullVersion: "",
+  appImageFullVersion: ""
+};
 function readPhase(rootDir) {
   const phaseFile = path8.join(rootDir, "scripts/app-identity-common.sh");
   if (!fs7.existsSync(phaseFile)) return "unknown";
@@ -2023,54 +1848,14 @@ function createCanvaLinuxDetectionProvider(options = {}) {
 function buildCanvaLinuxOverviewStatus(rootDir = findCanvaLinuxProjectRoot()) {
   return createCanvaLinuxDetectionProvider().buildOverviewStatus(rootDir);
 }
-var cachedPackageJson, readNpmVersion, emptyInstallations;
-var init_provider = __esm({
-  "build-resources/canva-linux/c420ui-adapter/detection/provider.ts"() {
-    init_detection();
-    init_project_root();
-    init_artifact_fragments();
-    init_install_detection();
-    readNpmVersion = /* @__PURE__ */ (() => {
-      let cached;
-      let attempted = false;
-      return () => {
-        if (attempted) {
-          return cached;
-        }
-        attempted = true;
-        try {
-          cached = execFileSync("npm", ["--version"], { encoding: "utf8" }).trim();
-          return cached;
-        } catch {
-          return void 0;
-        }
-      };
-    })();
-    emptyInstallations = {
-      nativeSystem: false,
-      nativeUser: false,
-      flatpakSystem: false,
-      flatpakUser: false,
-      appImageArtifacts: false,
-      nativeSystemVersion: "",
-      nativeUserVersion: "",
-      flatpakSystemVersion: "",
-      flatpakUserVersion: "",
-      appImageVersion: "",
-      nativeSystemFullVersion: "",
-      nativeUserFullVersion: "",
-      flatpakSystemFullVersion: "",
-      flatpakUserFullVersion: "",
-      appImageFullVersion: ""
-    };
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/build-metadata-loader.ts
 import { execFileSync as execFileSync2 } from "node:child_process";
 import fs8 from "node:fs";
 import { createRequire } from "node:module";
 import path9 from "node:path";
+var UNKNOWN_BASE_VERSION = "0.0.0";
+var UNKNOWN_BUILD_REVISION = "unknown";
 function loadBuildMetadataModule(rootDir) {
   const requireFromRoot = createRequire(path9.join(rootDir, "package.json"));
   const compiledModule = path9.join(rootDir, ".build/electron/main/build-metadata.js");
@@ -2196,17 +1981,27 @@ function loadEffectiveBuildMetadata(rootDir) {
   }
   return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }
-var UNKNOWN_BASE_VERSION, UNKNOWN_BUILD_REVISION;
-var init_build_metadata_loader = __esm({
-  "build-resources/canva-linux/c420ui-adapter/build-metadata-loader.ts"() {
-    UNKNOWN_BASE_VERSION = "0.0.0";
-    UNKNOWN_BUILD_REVISION = "unknown";
-  }
-});
+
+// build-resources/canva-linux/c420ui-adapter/artifacts.ts
+import fs10 from "node:fs";
+import path11 from "node:path";
 
 // build-resources/canva-linux/actions/registry.ts
 import fs9 from "node:fs";
 import path10 from "node:path";
+var ACTION_GROUPS = ["install", "development", "maintenance"];
+var ACTION_SECTIONS = [
+  "Install",
+  "Package generation",
+  "Build",
+  "Validation",
+  "Maintenance",
+  "Uninstall"
+];
+var ACTION_KINDS = ["command", "planned"];
+var INSTALL_SCOPES = ["system", "user"];
+var cachedRoot = null;
+var cachedActions = null;
 function findProjectRoot(startDir) {
   return findCanvaLinuxProjectRoot(startDir);
 }
@@ -2249,26 +2044,6 @@ function loadCanvaLinuxActionRegistry(rootDir = findProjectRoot()) {
 function loadCanvaLinuxActions(rootDir = findProjectRoot()) {
   return loadCanvaLinuxActionRegistry(rootDir);
 }
-var ACTION_GROUPS, ACTION_SECTIONS, ACTION_KINDS, INSTALL_SCOPES, cachedRoot, cachedActions;
-var init_registry = __esm({
-  "build-resources/canva-linux/actions/registry.ts"() {
-    init_actions();
-    init_project_root();
-    ACTION_GROUPS = ["install", "development", "maintenance"];
-    ACTION_SECTIONS = [
-      "Install",
-      "Package generation",
-      "Build",
-      "Validation",
-      "Maintenance",
-      "Uninstall"
-    ];
-    ACTION_KINDS = ["command", "planned"];
-    INSTALL_SCOPES = ["system", "user"];
-    cachedRoot = null;
-    cachedActions = null;
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/actions.ts
 function actionPhase(action) {
@@ -2290,15 +2065,9 @@ function toC420UIActionDescriptor(action) {
 function loadCanvaLinuxC420UIActions(rootDir) {
   return loadCanvaLinuxActions(rootDir).map(toC420UIActionDescriptor);
 }
-var init_actions2 = __esm({
-  "build-resources/canva-linux/c420ui-adapter/actions.ts"() {
-    init_registry();
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
-import fs10 from "node:fs";
-import path11 from "node:path";
+var ARTIFACTS_CONFIG_PATH2 = "build-resources/canva-linux/config/artifacts.json";
 function readJsonFile3(filePath) {
   if (!fs10.existsSync(filePath)) {
     throw new Error(`Missing Canva Linux configuration file: ${filePath}`);
@@ -2310,6 +2079,8 @@ function readJsonFile3(filePath) {
     throw new Error(`Failed to parse configuration file ${filePath}: ${message}`);
   }
 }
+var cachedArtifactsConfig = null;
+var cachedArtifactsConfigPath = null;
 function loadArtifactsConfig(rootDir) {
   const configPath = path11.join(rootDir, ARTIFACTS_CONFIG_PATH2);
   if (cachedArtifactsConfig && cachedArtifactsConfigPath === configPath) {
@@ -2334,16 +2105,6 @@ function loadCanvaLinuxArtifactWorkflows(rootDir, version) {
     outputPattern: workflow.outputPattern ? resolveC420UIArtifactOutputPattern(workflow.outputPattern, { version }) : void 0
   }));
 }
-var ARTIFACTS_CONFIG_PATH2, cachedArtifactsConfig, cachedArtifactsConfigPath;
-var init_artifacts2 = __esm({
-  "build-resources/canva-linux/c420ui-adapter/artifacts.ts"() {
-    init_src();
-    init_actions2();
-    ARTIFACTS_CONFIG_PATH2 = "build-resources/canva-linux/config/artifacts.json";
-    cachedArtifactsConfig = null;
-    cachedArtifactsConfigPath = null;
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/development.ts
 import fs11 from "node:fs";
@@ -2382,16 +2143,8 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir, actions = loadCanvaLinuxC42
     return createC420UIDevelopmentWorkflowFromAction(task, action);
   });
 }
-var init_development = __esm({
-  "build-resources/canva-linux/c420ui-adapter/development.ts"() {
-    init_src();
-    init_actions2();
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/adapter.ts
-import fs12 from "node:fs";
-import path13 from "node:path";
 function readJsonFile5(filePath) {
   return JSON.parse(fs12.readFileSync(filePath, "utf8"));
 }
@@ -2641,20 +2394,12 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
   };
   return createC420UIBridge(adapter);
 }
-var init_adapter = __esm({
-  "build-resources/canva-linux/c420ui-adapter/adapter.ts"() {
-    init_src();
-    init_logo();
-    init_settings();
-    init_provider();
-    init_build_metadata_loader();
-    init_artifacts2();
-    init_actions2();
-    init_development();
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/root-provider.ts
+var conditionalSystemRootActionIds = /* @__PURE__ */ new Set([
+  "purge",
+  "uninstall-detected"
+]);
 function buildCanvaLinuxRootActionEnvironment(action, baseEnv) {
   const env = {
     ...baseEnv,
@@ -2717,29 +2462,11 @@ function createCanvaLinuxRootProvider(options = {}) {
     }
   };
 }
-var conditionalSystemRootActionIds;
-var init_root_provider2 = __esm({
-  "build-resources/canva-linux/c420ui-adapter/root-provider.ts"() {
-    init_src();
-    init_provider();
-    conditionalSystemRootActionIds = /* @__PURE__ */ new Set([
-      "purge",
-      "uninstall-detected"
-    ]);
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/bridge.ts
 function createCanvaLinuxBridge(rootDir = process.cwd()) {
   return createCanvaLinuxC420UIAdapter(rootDir);
 }
-var init_bridge2 = __esm({
-  "build-resources/canva-linux/c420ui-adapter/bridge.ts"() {
-    init_src();
-    init_adapter();
-    init_root_provider2();
-  }
-});
 
 // build-resources/canva-linux/c420ui-adapter/cli.ts
 function emitDirectCliEvent(event) {
@@ -2769,24 +2496,11 @@ async function runCanvaLinuxC420UICli(argv) {
   });
   return result.exitCode;
 }
-var init_cli2 = __esm({
-  "build-resources/canva-linux/c420ui-adapter/cli.ts"() {
-    init_src();
-    init_bridge2();
-    init_root_provider2();
-  }
-});
 
 // build-resources/c420ui/scripts/run-c420ui-cli.ts
-var require_run_c420ui_cli = __commonJS({
-  "build-resources/c420ui/scripts/run-c420ui-cli.ts"() {
-    init_cli2();
-    runCanvaLinuxC420UICli(process.argv.slice(2)).then((code) => {
-      process.exit(code);
-    }).catch((error) => {
-      console.error(error instanceof Error ? error.message : String(error));
-      process.exit(1);
-    });
-  }
+runCanvaLinuxC420UICli(process.argv.slice(2)).then((code) => {
+  process.exit(code);
+}).catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
 });
-export default require_run_c420ui_cli();

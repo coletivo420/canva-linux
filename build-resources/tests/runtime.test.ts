@@ -1,14 +1,11 @@
 // @ts-nocheck
-"use strict";
 
-// @ts-check
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   clearEphemeralSessionData,
@@ -20,7 +17,7 @@ const {
 } = loadRuntimeModule("main/runtime");
 
 const repoRoot =
-  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 test("runtime metadata loader prefers effective metadata and falls back to committed metadata", () => {
   const source = fs.readFileSync(

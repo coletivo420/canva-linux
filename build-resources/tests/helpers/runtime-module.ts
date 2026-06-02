@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
+export const runtimeRequire = require;
 
 const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..", "..");
@@ -28,7 +29,15 @@ function compileTypeScriptModule(file, mod) {
       sourceMap: false,
     },
     fileName: file,
-  }).outputText;
+  }).outputText.replace(
+    /require\("((?:\.{1,2}\/)[^"]+)\.js"\)/g,
+    (_match, importPath: string) => {
+      const candidate = path.resolve(path.dirname(file), `${importPath}.ts`);
+      return fs.existsSync(candidate)
+        ? `require("${importPath}.ts")`
+        : `require("${importPath}.js")`;
+    },
+  );
 
   /** @type {any} */ mod._compile(output, file);
 }

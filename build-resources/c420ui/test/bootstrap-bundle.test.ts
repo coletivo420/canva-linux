@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -21,6 +22,7 @@ import {
 } from "../bootstrap/source-hash.js";
 
 const manifestPath = C420UI_BOOTSTRAP_MANIFEST_PATH;
+const requireFromTest = createRequire(import.meta.url);
 const uiEntrypoint = c420uiBootstrapArtifactPath("run-c420ui.mjs");
 const cliEntrypoint = c420uiBootstrapArtifactPath("run-c420ui-cli.mjs");
 const builderEntrypoint = c420uiBootstrapArtifactPath("c420ui-builder.mjs");
@@ -135,7 +137,7 @@ test("c420ui bootstrap includes blessed runtime terminfo assets", () => {
 
 test("c420ui bootstrap blessed runtime assets match installed blessed package", () => {
   const blessedUsrDir = path.join(
-    path.dirname(require.resolve("blessed/package.json")),
+    path.dirname(requireFromTest.resolve("blessed/package.json")),
     "usr",
   );
 
@@ -225,8 +227,7 @@ test("run-c420ui.mjs does not interleave detected-installations summary into inp
   const inputDialogBlock = bundleBlock(
     bundle,
     "function inputDialog(",
-    "function confirmDialog(",
-    "var init_modal",
+    "// build-resources/c420ui/src/terminal/detected-installations-summary.ts",
   );
 
   assert.doesNotMatch(inputDialogBlock, /function artifactVersion/);
@@ -238,7 +239,7 @@ test("run-c420ui.mjs does not interleave validators into interactive action runn
   const runnerBlock = bundleBlock(
     bundle,
     "function createInteractiveActionRunner(options)",
-    "var init_interactive_action_runner",
+    "// build-resources/c420ui/src/host-dependencies.ts",
   );
 
   assert.doesNotMatch(runnerBlock, /function assertOptionalBoolean/);

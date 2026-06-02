@@ -1,14 +1,13 @@
 // @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+import test from "node:test";
+import { pathToFileURL } from "node:url";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const os = require("node:os");
-const path = require("node:path");
-const { spawnSync } = require("node:child_process");
-const test = require("node:test");
-
-const repoRoot = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
+const repoRoot = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
 
 function read(relativePath) {
   return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
@@ -60,8 +59,8 @@ test("canva-linux-c420ui-builder entrypoint preserves current builder/runtime sp
   assert.ok(exists("build-resources/c420ui/scripts/c420ui-builder.ts"));
   assert.ok(exists("build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs"));
   assert.equal(exists("canva-linux.sh"), false);
-  assert.match(wrapper, /build-resources\/c420ui\/bootstrap\/generated\/c420ui-builder\.cjs/);
-  assert.match(wrapper, /\.build\/scripts\/c420ui-builder\.js/);
+  assert.match(wrapper, /build-resources\/c420ui\/bootstrap\/generated\/c420ui-builder\.mjs/);
+  assert.match(wrapper, /\.build\/scripts\/c420ui-builder\.mjs/);
   assert.match(wrapper, /npm --prefix "\$\{ROOT_DIR\}" run build:c420ui-bootstrap/);
   assert.doesNotMatch(wrapper, /Run npm run build:c420ui-bootstrap, then retry\./);
 });
@@ -80,8 +79,10 @@ test("builder title and help separate c420ui builder from runtime canva-linux", 
   assert.match(source, /canva-linux --help/);
 });
 
-test("builder normalizeBuilderArgs delegates a registry-backed planned action", () => {
-  const { normalizeBuilderArgs } = require(path.join(repoRoot, ".build/scripts/c420ui-builder.mjs"));
+test("builder normalizeBuilderArgs delegates a registry-backed planned action", async () => {
+  const { normalizeBuilderArgs } = await import(
+    pathToFileURL(path.join(repoRoot, ".build/scripts/c420ui-builder.mjs")).href
+  );
 
   assert.deepEqual(normalizeBuilderArgs(["--prepare-aur", "--dry-run"]), {
     help: false,
@@ -95,8 +96,10 @@ test("builder normalizeBuilderArgs delegates a registry-backed planned action", 
   ]);
 });
 
-test("builder normalizeBuilderArgs rejects runtime debug flags", () => {
-  const { normalizeBuilderArgs } = require(path.join(repoRoot, ".build/scripts/c420ui-builder.mjs"));
+test("builder normalizeBuilderArgs rejects runtime debug flags", async () => {
+  const { normalizeBuilderArgs } = await import(
+    pathToFileURL(path.join(repoRoot, ".build/scripts/c420ui-builder.mjs")).href
+  );
   assert.throws(
     () => normalizeBuilderArgs(["--canva-debug=1"]),
     /--canva-debug=1 is a Canva Linux runtime option/,

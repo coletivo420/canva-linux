@@ -17,7 +17,6 @@
     "../../electron/**/*.ts",
     "../../canva-linux/**/*.ts",
     "../../c420ui/**/*.ts",
-    "../../tests/**/*.ts",
     "../playwright/playwright.config.ts",
     "../eslint/eslint.config.ts",
     "../../canva-linux/packaging/flathub/scripts/**/*.ts"

@@ -1,10 +1,9 @@
 // @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import vm from "node:vm";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   PUBLIC_AUTH_TITLE_PATTERN,
@@ -966,7 +965,6 @@ test("post-OAuth storage diagnostics continue to log safe counts", async () => {
 });
 
 function runPublicLandingProbe(elements) {
-  const vm = require("node:vm");
   const document = {
     querySelectorAll(selector) {
       if (selector === "button, [role='button'], a") {

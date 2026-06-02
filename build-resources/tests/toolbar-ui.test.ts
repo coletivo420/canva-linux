@@ -1,6 +1,4 @@
 // @ts-nocheck
-"use strict";
-
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -12,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const repoRoot =
-  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 const toolbarPath = path.join(
   repoRoot,
   "build-resources",

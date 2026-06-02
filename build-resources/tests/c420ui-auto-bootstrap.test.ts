@@ -132,7 +132,7 @@ test("ensure-bootstrap regenerates when c420uiSourceHash is stale", () => runWit
   assert.equal(buildCalls(), 1);
 }));
 
-test("ensure-bootstrap validates generated .cjs files with node --check", () => runWithTempRoot((rootDir) => {
+test("ensure-bootstrap validates generated .mjs files with node --check", () => runWithTempRoot((rootDir) => {
   createValidBootstrapTree(rootDir);
 
   const deps: C420UIBootstrapDeps = {

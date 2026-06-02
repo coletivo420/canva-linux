@@ -180,7 +180,7 @@ function main(): number {
   const failures: string[] = [];
   if (pkg.name !== "@coletivo420/c420ui") failures.push("package name must remain scoped");
   if (pkg.private !== true) failures.push("package must remain private");
-  if (pkg.type !== "commonjs") failures.push("package must remain CommonJS-compatible");
+  if (pkg.type !== "module") failures.push("package must remain ESM-only");
   if (pkg.main !== "dist/index.js") failures.push("package main must point to dist/index.js");
   if (pkg.types !== "dist/index.d.ts") failures.push("package types must point to dist/index.d.ts");
 
@@ -229,7 +229,7 @@ function main(): number {
   for (const file of expected) {
     if (!fs.existsSync(path.join(srcDir, file))) failures.push(`missing ${file}`);
   }
-  for (const moduleName of expected.map((file) => `./${file.replace(/\.ts$/, "")}`)) {
+  for (const moduleName of expected.map((file) => `./${file.replace(/\.ts$/, ".js")}`)) {
     if (!index.includes(`from "${moduleName}"`)) {
       failures.push(`index.ts: missing public export for ${moduleName}`);
     }
@@ -331,7 +331,7 @@ function main(): number {
     "overviewStatus?()",
     "c420uiOverviewStatus",
     "createC420UIBridge",
-    "export type * from \"./bridge\"",
+    "export type * from \"./bridge.js\"",
   ];
   const failures = required
     .filter((fragment) => !bridge.includes(fragment) && !index.includes(fragment))
@@ -1218,11 +1218,11 @@ function checkHostDependencyContract(failures: string[]): void {
     }
   }
   for (const exportPath of [
-    "./host-dependencies",
-    "./command-dependencies",
-    "./node-dependencies",
-    "./npm-dependencies",
-    "./host-dependency-runner",
+    "./host-dependencies.js",
+    "./command-dependencies.js",
+    "./node-dependencies.js",
+    "./npm-dependencies.js",
+    "./host-dependency-runner.js",
   ] as const) {
     if (!index.includes(`export * from "${exportPath}"`)) {
       failures.push(`${indexPath}: missing public export for ${exportPath}`);

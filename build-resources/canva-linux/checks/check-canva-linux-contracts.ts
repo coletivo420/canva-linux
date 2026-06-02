@@ -641,7 +641,7 @@ function checkC420UIAutoBootstrapContract(rootDir: string, failures: string[]): 
     return;
   }
 
-  if (!builderSource.includes("import { ensureC420UIBootstrap } from \"../bootstrap/ensure-bootstrap\";")) {
+  if (!builderSource.includes("import { ensureC420UIBootstrap } from \"../bootstrap/ensure-bootstrap.js\";")) {
     failures.push("build-resources/c420ui/scripts/c420ui-builder.ts: must import ensureC420UIBootstrap");
   }
 

@@ -1,13 +1,10 @@
 // @ts-nocheck
-"use strict";
 
-// @ts-check
+import assert from "node:assert/strict";
+import Module from "node:module";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const Module = require("node:module");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   describeTarget,

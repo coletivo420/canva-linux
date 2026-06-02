@@ -1,12 +1,11 @@
 // @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   appendBuildRevision,
@@ -14,7 +13,7 @@ const {
   normalizeBuildRevision,
 } = loadRuntimeModule("main/build-metadata");
 const repoRoot =
-  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 test("normalizes build revisions", () => {
   assert.equal(normalizeBuildRevision("abc1234"), "gabc1234");
@@ -98,9 +97,6 @@ test("committed/effective metadata preserve source hashes while build revision f
 });
 
 test("fallback metadata uses neutral values without source files", () => {
-  const fs = require("node:fs");
-  const os = require("node:os");
-  const path = require("node:path");
   const { fallbackBaseMetadata } = loadRuntimeModule("main/build-metadata");
   const previousCwd = process.cwd();
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "canva-metadata-fallback-"));
@@ -169,7 +165,7 @@ test("loaded metadata is normalized with unknown revision fallback", () => {
 test("build metadata source does not hardcode current Dev.7 fallbacks", () => {
   const source = fs.readFileSync(
     path.join(
-      process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, ".."),
+      process.env.CANVA_TEST_REPO_ROOT || process.cwd(),
       "build-resources",
       "electron",
       "main",

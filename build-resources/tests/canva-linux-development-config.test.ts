@@ -12,7 +12,7 @@ import {
   validateCanvaLinuxDevelopmentTasksAgainstActions,
 } from "../canva-linux/c420ui-adapter/development.js";
 
-const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? process.cwd();
 const developmentConfigPath = path.join(rootDir, "build-resources/canva-linux/config/development.json");
 const adapterPath = path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/adapter.ts");
 const developmentAdapterPath = path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/development.ts");

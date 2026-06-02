@@ -16810,7 +16810,7 @@ var c420uiTheme = {
 };
 
 // build-resources/c420ui/src/terminal/blessed-widgets.ts
-var import_blessed = __toESM(require_blessed());
+var import_blessed = __toESM(require_blessed(), 1);
 var tui = {
   screen: import_blessed.default.screen,
   box: import_blessed.default.box,
@@ -21697,9 +21697,9 @@ async function main() {
     env: process.env
   });
 }
-if (/run-c420ui\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
+if (import.meta.url.endsWith(process.argv[1]) || /run-c420ui\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   main().catch((error) => {
-    console.error(error instanceof Error ? error.message : String(error));
+    console.error(error instanceof Error ? error.stack || error.message : String(error));
     process.exit(1);
   });
 }

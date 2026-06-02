@@ -5,7 +5,7 @@ import test from "node:test";
 import { c420uiExitCodes } from "../c420ui/src/index.js";
 import { runCanvaLinuxArtifactWorkflow } from "../canva-linux/c420ui-adapter/bridge.js";
 
-const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? process.cwd();
 test("Canva Linux artifact workflow dry-run does not execute the concrete adapter action", async () => {
   const result = await runCanvaLinuxArtifactWorkflow(
     "appimage",

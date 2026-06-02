@@ -1,10 +1,8 @@
 // @ts-nocheck
-"use strict";
+import test from "node:test";
+import assert from "node:assert/strict";
 
-const test = require("node:test");
-const assert = require("node:assert/strict");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const { createTabController } = loadRuntimeModule("main/tab-controller");
 

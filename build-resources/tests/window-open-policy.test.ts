@@ -1,12 +1,9 @@
 // @ts-nocheck
-"use strict";
 
-// @ts-check
+import test from "node:test";
+import assert from "node:assert/strict";
 
-const test = require("node:test");
-const assert = require("node:assert/strict");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const { createWindowOpenPolicy } = loadRuntimeModule("main/window-open-policy");
 

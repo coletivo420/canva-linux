@@ -1,16 +1,14 @@
 // @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import Module from "node:module";
+import path from "node:path";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const Module = require("node:module");
-const path = require("node:path");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule, runtimeRequire } from "./helpers/runtime-module.js";
 
 const repoRoot =
-  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 /**
  * @template T
@@ -50,7 +48,7 @@ function withFreshCustomFlowElectronMock(invoke, fn) {
     "build-resources/electron/preload/cl-eyedropper/cl-eyedropper.ts",
   ];
   for (const file of runtimeFiles) {
-    delete require.cache[require.resolve(path.join(repoRoot, file))];
+    delete runtimeRequire.cache[runtimeRequire.resolve(path.join(repoRoot, file))];
   }
   moduleLoader._load = function mockElectron(request, parent, isMain) {
     if (request === "electron") {

@@ -1,6 +1,4 @@
 // @ts-nocheck
-"use strict";
-
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
@@ -349,7 +347,7 @@ test("Flatpak ephemeral warning explains host Secret Service and KWallet access"
 function readRepositoryFile(relativePath) {
   return fs.readFileSync(
     path.join(
-      process.env.CANVA_SCRIPT_REPO_ROOT || path.join(__dirname, "..", ".."),
+      process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd(),
       relativePath,
     ),
     "utf8",

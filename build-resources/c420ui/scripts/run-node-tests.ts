@@ -253,7 +253,7 @@ export function main(): void {
       "esbuild",
       ...relativeCompileInputs,
       "--platform=node",
-      "--target=node20",
+      "--target=node22",
       "--format=esm",
       "--outbase=.",
       "--outdir=.build",
@@ -294,7 +294,7 @@ export function main(): void {
         "esbuild",
         ...relativeC420uiSources,
         "--platform=node",
-        "--target=node20",
+        "--target=node22",
         "--format=esm",
         "--outbase=build-resources",
         "--outdir=.build/build-resources",
@@ -314,6 +314,20 @@ export function main(): void {
         `[error] Failed to compile c420ui package sources${c420uiCompileResult.error ? `: ${c420uiCompileResult.error.message}` : ""}`,
       );
       process.exit(c420uiCompileResult.status || 1);
+    }
+
+    const themeConfig = path.join(rootDir, "build-resources", "c420ui", "src", "theme.json");
+    if (fs.existsSync(themeConfig)) {
+      const compiledThemeConfig = path.join(
+        rootDir,
+        ".build",
+        "build-resources",
+        "c420ui",
+        "src",
+        "theme.json",
+      );
+      fs.mkdirSync(path.dirname(compiledThemeConfig), { recursive: true });
+      fs.copyFileSync(themeConfig, compiledThemeConfig);
     }
   }
 
@@ -338,7 +352,7 @@ export function main(): void {
         "esbuild",
         ...relativeRuntimeSources,
         "--platform=node",
-        "--target=node20",
+        "--target=node22",
         "--format=esm",
         "--outbase=scripts",
         "--outdir=.build/scripts",

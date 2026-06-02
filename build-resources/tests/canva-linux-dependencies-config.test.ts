@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { loadCanvaLinuxDependencyConfig } from "../canva-linux/c420ui-adapter/dependencies.js";
 
-const rootDir = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 test("Canva Linux dependency config loads declared dev dependencies", () => {
   const config = loadCanvaLinuxDependencyConfig(rootDir);

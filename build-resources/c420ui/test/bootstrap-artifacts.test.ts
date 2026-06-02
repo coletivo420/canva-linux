@@ -120,7 +120,10 @@ test("run-c420ui.mjs does not interleave host validators into interactive runner
   const bundle = readBundle();
 
   const runnerStart = bundle.indexOf("function createInteractiveActionRunner");
-  const runnerEnd = bundle.indexOf("var init_interactive_action_runner", runnerStart);
+  const runnerEnd = bundle.indexOf(
+    "// build-resources/c420ui/src/host-dependencies.ts",
+    runnerStart,
+  );
 
   assert.ok(runnerStart >= 0);
   assert.ok(runnerEnd > runnerStart);
