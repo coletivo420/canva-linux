@@ -80,7 +80,7 @@ export function c420uiSudoRun(
     ...options,
     cwd: rootDir,
     stdio: options.stdio ?? "inherit",
-    timeout: options.timeout ?? sudoTimeoutMilliseconds(),
+    timeout: options.timeout,
   });
 
   if (result.error) {
