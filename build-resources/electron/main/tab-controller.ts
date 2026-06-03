@@ -173,7 +173,7 @@ export function createTabController({
       webPreferences: {
         preload: preloadPath,
         contextIsolation: false,
-        sandbox: false,
+        sandbox: true,
         nodeIntegration: false,
         nodeIntegrationInSubFrames: true,
         session: getCanvaSession(),

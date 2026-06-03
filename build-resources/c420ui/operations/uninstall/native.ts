@@ -4,7 +4,7 @@ import os from "node:os";
 import { parseDryRun } from "../../host/dry-run.js";
 import { info, ok } from "../../host/ui.js";
 import { resolveNativeScope } from "../install/native-paths.js";
-import { c420uiSudoRm } from "../host/sudo.js";
+import { c420uiSudoRm } from "../../host/sudo.js";
 
 const APP_EXECUTABLE = "canva-linux";
 const APP_NATIVE_DESKTOP_NAME = "io.github.coletivo420.canva-linux.native.desktop";

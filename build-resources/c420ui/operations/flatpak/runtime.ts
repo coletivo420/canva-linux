@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { info, ok, warn } from "../../host/ui.js";
-import { c420uiSudoRun, c420uiSudoValidate } from "../host/sudo.js";
+import { c420uiSudoRun, c420uiSudoValidate } from "../../host/sudo.js";
 import { type FlatpakScope, flatpakScopeArg } from "./scope.js";
 
 const REQUIRED_RUNTIMES = [

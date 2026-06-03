@@ -8,6 +8,7 @@ export const C420UI_BOOTSTRAP_ENTRYPOINTS = [
 
 export const C420UI_BOOTSTRAP_EXTERNALS = [
   "electron",
+  "blessed",
   "term.js",
   "pty.js",
 ] as const;
@@ -38,6 +39,9 @@ export function createC420UIBootstrapBuildOptions(rootDir: string, outdir: strin
     outdir,
     platform: "node",
     target: C420UI_BOOTSTRAP_BUILD_TARGET,
+    banner: {
+      js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
+    },
   };
 }
 

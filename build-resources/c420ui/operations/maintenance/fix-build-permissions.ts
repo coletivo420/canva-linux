@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { parseDryRun } from "../../host/dry-run.js";
-import { c420uiSudoRun } from "../host/sudo.js";
+import { c420uiSudoRun } from "../../host/sudo.js";
 import { ok, warn } from "../../host/ui.js";
 import { projectRoot } from "../../host/paths.js";
 

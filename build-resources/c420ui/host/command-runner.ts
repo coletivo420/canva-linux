@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawnSync, type SpawnSyncOptions } from "node:child_process";
 import { info } from "./ui.js";
 
 export type RunOptions = {
@@ -6,6 +6,8 @@ export type RunOptions = {
   dryRun?: boolean;
   env?: NodeJS.ProcessEnv;
   allowFailure?: boolean;
+  timeout?: number;
+  stdio?: SpawnSyncOptions["stdio"];
 };
 
 export function runCommand(command: string, args: string[], options: RunOptions): number {
@@ -17,9 +19,10 @@ export function runCommand(command: string, args: string[], options: RunOptions)
 
   const result = spawnSync(command, args, {
     cwd: options.cwd,
-    stdio: "inherit",
+    stdio: options.stdio ?? "inherit",
     shell: false,
     env: options.env ?? process.env,
+    timeout: options.timeout,
   });
 
   if (result.error) {

@@ -36,7 +36,7 @@ export function runDoctorValidation(context: ValidationContext): ValidationResul
   const config = JSON.parse(fs.readFileSync(depsPath, "utf8")) as { npm?: { requiredDevDependencies?: string[] } };
   for (const dep of config.npm?.requiredDevDependencies ?? []) {
     try {
-      import.meta.resolve(`${dep}/package.json`);
+      import.meta.resolve(dep);
       console.log(`[ok] npm dependency: ${dep}`);
     } catch {
       warnings.push(`npm dependency missing: ${dep} — let c420ui ensure npm dependencies`);

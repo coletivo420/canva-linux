@@ -3,7 +3,7 @@ import { parseDryRun } from "../../host/dry-run.js";
 import { info, ok, warn } from "../../host/ui.js";
 import { detectInstallations } from "../detection/install-detection.js";
 import { projectRoot } from "../../host/paths.js";
-import { c420uiSudoRun } from "../host/sudo.js";
+import { c420uiSudoRun } from "../../host/sudo.js";
 
 const APP_ID = "io.github.coletivo420.canva-linux";
 

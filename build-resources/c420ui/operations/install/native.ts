@@ -16,7 +16,7 @@ import {
   c420uiSudoRm,
   c420uiSudoRun,
   c420uiSudoValidate,
-} from "../host/sudo.js";
+} from "../../host/sudo.js";
 import { installBuildMetadataMarker } from "./build-metadata-marker.js";
 import { writeDesktopFile } from "./desktop-entry.js";
 import { installIcons } from "./icons.js";

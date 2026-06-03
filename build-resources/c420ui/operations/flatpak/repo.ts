@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { info, ok, warn } from "../../host/ui.js";
-import { c420uiSudoRm, c420uiSudoRun } from "../host/sudo.js";
+import { c420uiSudoRm, c420uiSudoRun } from "../../host/sudo.js";
 import { type FlatpakScope, flatpakScopeArg } from "./scope.js";
 
 const FLATPAK_APP_ID = "io.github.coletivo420.canva-linux";

@@ -402,13 +402,23 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
   }
 }
 
+function stripJsonCommentsAndTrailingCommas(content: string): string {
+  // 1. Remove block comments: /* ... */
+  // 2. Remove line comments: // ...
+  // 3. Remove trailing commas: , followed by whitespace and then } or ]
+  return content
+    .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1")
+    .replace(/,(\s*([}\]]))/g, "$2");
+}
+
 function validateTypeScriptConfig(
   rootDir: string,
   configPath: string,
   failures: string[],
 ): void {
+  const content = fs.readFileSync(path.join(rootDir, configPath), "utf8");
   const config = JSON.parse(
-    fs.readFileSync(path.join(rootDir, configPath), "utf8"),
+    stripJsonCommentsAndTrailingCommas(content),
   ) as TsConfigJson;
   if (Object.hasOwn(config.compilerOptions ?? {}, "allowJs")) {
     failures.push(
@@ -1956,11 +1966,7 @@ function main(): number {
     }
     try {
       const content = fs.readFileSync(absolutePath, "utf8");
-      const cleanContent = content.replace(
-        /\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$/gm,
-        "$1",
-      );
-      const config = JSON.parse(cleanContent) as {
+      const config = JSON.parse(stripJsonCommentsAndTrailingCommas(content)) as {
         compilerOptions?: { module?: string; moduleResolution?: string };
       };
       const moduleValue = config.compilerOptions?.module;

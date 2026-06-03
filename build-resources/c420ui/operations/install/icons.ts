@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { c420uiSudoInstall } from "../host/sudo.js";
+import { c420uiSudoInstall } from "../../host/sudo.js";
 import { info, warn } from "../../host/ui.js";
 
 const APP_ID = "io.github.coletivo420.canva-linux";
