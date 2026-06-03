@@ -139,6 +139,34 @@ test("supportsDryRun=true does not point to planned actions", () => {
   );
 });
 
+test("command actions do not reference removed shell wrappers", () => {
+  const actions = loadCanvaLinuxActions(rootDir);
+
+  for (const action of actions.filter((item) => item.kind === "command")) {
+    assert.notEqual(action.command, "scripts/run-built-script.sh", action.id);
+    assert.equal(
+      action.args?.includes("scripts/run-built-script.sh"),
+      false,
+      action.id,
+    );
+
+    const commandPath =
+      action.command && !path.isAbsolute(action.command)
+        ? path.join(rootDir, action.command)
+        : null;
+    if (commandPath && action.command.includes("/")) {
+      assert.equal(fs.existsSync(commandPath), true, action.id);
+    }
+
+    for (const arg of action.args ?? []) {
+      if (!arg.startsWith("scripts/") && !arg.startsWith(".build/scripts/")) {
+        continue;
+      }
+      assert.equal(fs.existsSync(path.join(rootDir, arg)), true, action.id);
+    }
+  }
+});
+
 test("workflows preserve metadata from the real action", () => {
   const workflows = loadCanvaLinuxDevelopmentWorkflows(rootDir);
   const buildRuntime = workflows.find((workflow) => workflow.id === "build-runtime");
