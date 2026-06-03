@@ -166,6 +166,10 @@ Bootstrap PR logs must include these exact success lines after regenerating boot
   native title handling, OAuth, credential storage, GPU diagnostics, or c420ui metadata/bootstrap logic for this feature.
 - Do not render the home tab twice: regular tab state must exclude home, the pinned home control is the only visible
   home-return control, and it must send `go-home`.
+- Pinned home uses Canva's localized `tab.title` as the source of truth; toolbar rendering may remove Canva branding
+  suffix/prefix noise, but the fallback label `Home` is allowed only while the title is empty.
+- The duplicate Canva brand slot before pinned home must not be restored. Contract checks cover this in
+  `build-resources/electron/ui/toolbar.html`.
 
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.

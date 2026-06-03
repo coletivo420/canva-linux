@@ -125,8 +125,10 @@ function createToolbarHarness() {
   const body = new FakeElement("body");
   const pinnedHomeSlot = new FakeElement("div");
   pinnedHomeSlot.id = "pinned-home-slot";
+  pinnedHomeSlot.className = "pinned-home-slot";
   const tabs = new FakeElement("div");
   tabs.id = "tabs";
+  tabs.className = "tabs";
   const actions = new FakeElement("div");
   actions.className = "actions";
 
@@ -183,6 +185,10 @@ function createToolbarHarness() {
   return { actions, document, pinnedHomeSlot, render: renderState, sent, tabs };
 }
 
+function toolbarHtml() {
+  return fs.readFileSync(toolbarPath, "utf8");
+}
+
 const homeTab = {
   id: 1,
   title: "Home",
@@ -236,12 +242,88 @@ test("render with home and regular tabs keeps home out of regular renderer", () 
   assert.match(document.querySelector(".tab.active").textContent, /Design/);
 });
 
-test("pinned home renders tab.title as label", () => {
-  const { document, render } = createToolbarHarness();
+test("toolbar does not render duplicate brand slot before pinned home", () => {
+  const html = toolbarHtml();
+
+  assert.equal(html.includes('class="brand"'), false);
+  assert.equal(html.includes("<span>Canva</span>"), false);
+  assert.match(
+    html,
+    /<div class="tab-strip">\s*<div class="pinned-home-slot" id="pinned-home-slot"><\/div>/,
+  );
+});
+
+test("pinned home remains inside pinned-home-slot", () => {
+  const { pinnedHomeSlot, render } = createToolbarHarness();
 
   render({ activeTabId: 1, pinnedHomeTab: homeTab, tabs: [], theme: "light" });
 
+  assert.equal(pinnedHomeSlot.querySelectorAll(".pinned-home").length, 1);
+});
+
+test("home is excluded from regular tabs", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+
+  assert.equal(document.querySelectorAll(".pinned-home").length, 1);
+  assert.equal(document.querySelectorAll(".tabs .pinned-home").length, 0);
+  assert.equal(document.querySelectorAll(".tab").length, 1);
+});
+
+test("pinned home renders localized title without Canva suffix", () => {
+  for (const [rawTitle, expected] of [
+    ["Início - Canva", "Início"],
+    ["Inicio - Canva", "Inicio"],
+    ["Home - Canva", "Home"],
+    ["Accueil - Canva", "Accueil"],
+    ["Inicio – Canva", "Inicio"],
+    ["Inicio — Canva", "Inicio"],
+  ]) {
+    const { document, render } = createToolbarHarness();
+
+    render({
+      activeTabId: 1,
+      pinnedHomeTab: { ...homeTab, title: rawTitle },
+      tabs: [],
+      theme: "light",
+    });
+
+    const pinnedHome = document.querySelector(".pinned-home");
+    assert.equal(pinnedHome.textContent, expected, rawTitle);
+    assert.equal(pinnedHome.title, expected, rawTitle);
+  }
+});
+
+test("missing pinned home title falls back to Home", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: { ...homeTab, title: "" },
+    tabs: [],
+    theme: "light",
+  });
+
   assert.equal(document.querySelector(".pinned-home").textContent, "Home");
+});
+
+test("pinned home label does not include Canva when title has Canva suffix", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: { ...homeTab, title: "Canva - Início - Canva Linux" },
+    tabs: [],
+    theme: "light",
+  });
+
+  assert.equal(document.querySelector(".pinned-home").textContent, "Início");
 });
 
 test("pinned home favicon fallback clears onerror before setting iconPath", () => {

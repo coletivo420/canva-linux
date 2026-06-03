@@ -671,6 +671,33 @@ function checkC420UIAutoBootstrapContract(rootDir: string, failures: string[]): 
   }
 }
 
+function checkToolbarPinnedHomeContract(rootDir: string, failures: string[]): void {
+  const toolbarSource = readText(rootDir, "build-resources/electron/ui/toolbar.html");
+  if (!toolbarSource) {
+    failures.push("build-resources/electron/ui/toolbar.html: must exist");
+    return;
+  }
+
+  for (const requiredFragment of [
+    "function getPinnedHomeLabel(tab)",
+    "const homeLabel = getPinnedHomeLabel(tab);",
+  ] as const) {
+    if (!toolbarSource.includes(requiredFragment)) {
+      failures.push(`build-resources/electron/ui/toolbar.html: missing pinned home contract fragment ${requiredFragment}`);
+    }
+  }
+
+  for (const forbiddenFragment of [
+    "class=\"brand\"",
+    "title.textContent = tab.title || 'Canva'",
+    "return 'Início'",
+  ] as const) {
+    if (toolbarSource.includes(forbiddenFragment)) {
+      failures.push(`build-resources/electron/ui/toolbar.html: must not include ${forbiddenFragment}`);
+    }
+  }
+}
+
 function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]): void {
   checkProjectLayoutOwnership(rootDir, failures);
   checkForbiddenPaths(rootDir, failures);
@@ -686,6 +713,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkDocs(rootDir, failures);
   checkValidateProjectScript(rootDir, failures);
   checkC420UIAutoBootstrapContract(rootDir, failures);
+  checkToolbarPinnedHomeContract(rootDir, failures);
 }
 
 function main(): void {

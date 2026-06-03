@@ -98,6 +98,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   top/window titlebar remain out of scope for this phase.
 - The home tab must never be rendered twice: regular tabs exclude home, the pinned home control sends `go-home`, and no
   duplicate visible `#home` action competes with it.
+- Polished the pinned home label so Canva's localized `tab.title` remains the source of truth while Canva branding
+  suffix/prefix noise is stripped from the toolbar label; `Home` is used only while the title is empty.
+- Removed the duplicate Canva brand slot before pinned home so the toolbar starts with the single pinned home control.
 
 
 ## Dev.8 hotfix guardrails

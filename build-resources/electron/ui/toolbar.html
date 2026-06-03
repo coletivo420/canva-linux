@@ -60,24 +60,6 @@
       border-bottom: 1px solid var(--line);
       background: linear-gradient(180deg, var(--bar-start), var(--bar-end));
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 116px;
-      padding: 0 8px 0 4px;
-    }
-    .brand img {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      flex: 0 0 auto;
-    }
-    .brand span {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-    }
     .tab-strip {
       display: flex;
       align-items: stretch;
@@ -212,10 +194,6 @@
 </head>
 <body>
   <div class="bar">
-    <div class="brand">
-      <img src="../assets/canva-icon.png" alt="Canva" />
-      <span>Canva</span>
-    </div>
     <div class="tab-strip">
       <div class="pinned-home-slot" id="pinned-home-slot"></div>
       <div class="tabs" id="tabs"></div>
@@ -249,6 +227,21 @@
       };
     }
 
+    function getPinnedHomeLabel(tab) {
+      const rawTitle = String(tab?.title || '').trim();
+
+      if (!rawTitle) {
+        return 'Home';
+      }
+
+      const withoutCanvaSuffix = rawTitle
+        .replace(/\s+[-–—]\s+Canva(?:\s+Linux)?$/iu, '')
+        .replace(/^Canva\s*[-–—:]\s*/iu, '')
+        .trim();
+
+      return withoutCanvaSuffix || rawTitle;
+    }
+
     // Render the tab strip from the shell state sent by the main process.
     function render(state) {
       console.log('[toolbar-ui] render', JSON.stringify({
@@ -270,7 +263,8 @@
       const button = document.createElement('button');
       button.className = 'pinned-home' + (tab.id === activeTabId ? ' active' : '');
       button.type = 'button';
-      button.title = tab.title || 'Canva';
+      const homeLabel = getPinnedHomeLabel(tab);
+      button.title = homeLabel;
       button.setAttribute('role', 'tab');
       button.setAttribute('aria-selected', tab.id === activeTabId ? 'true' : 'false');
 
@@ -280,7 +274,7 @@
       installIconFallback(favicon);
 
       const title = document.createElement('span');
-      title.textContent = tab.title || 'Canva';
+      title.textContent = homeLabel;
 
       button.appendChild(favicon);
       button.appendChild(title);
@@ -318,7 +312,8 @@
 
         const title = document.createElement('span');
         title.className = 'tab-title';
-        title.textContent = tab.title || 'Canva';
+        const regularLabel = tab.title || 'Canva';
+        title.textContent = regularLabel;
 
         activate.appendChild(favicon);
         activate.appendChild(title);

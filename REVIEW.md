@@ -86,6 +86,10 @@ Do not request changes merely because these remain shell:
   native title handling, OAuth, credential storage, GPU diagnostics, or c420ui metadata/bootstrap logic for this feature.
 - Do not render the home tab twice: regular tab state must exclude home, the pinned home control is the only visible
   home-return control, and it must send `go-home`.
+- Pinned home uses Canva's localized `tab.title` as the source of truth; reviewers should reject hardcoded localized
+  labels and accept `Home` only as the empty-title fallback.
+- The duplicate Canva brand slot before pinned home must not be restored. The toolbar should start with the pinned home
+  control, followed by regular tabs.
 
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.

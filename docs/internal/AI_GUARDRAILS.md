@@ -3,7 +3,12 @@
 ## c420ui structural ownership and efficiency
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
+- c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
+- Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
+- No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`
+- `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 - Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.
 - Project validation runs from `build-resources/canva-linux/validation/project.ts` via `validate:project`.
 - Doctor runs from `build-resources/canva-linux/validation/doctor.ts` via `validate:doctor`.
@@ -47,6 +52,10 @@
   native title handling, OAuth, credential storage, GPU diagnostics, or c420ui metadata/bootstrap logic for this feature.
 - Do not render the home tab twice: regular tab state must exclude home, the pinned home control is the only visible
   home-return control, and it must send `go-home`.
+- Pinned home uses Canva's localized `tab.title` as the source of truth; strip only Canva branding suffix/prefix noise
+  from the toolbar label. The fallback label `Home` is allowed only while the title is empty.
+- The duplicate Canva brand slot before pinned home must not be restored. The pinned home control is the first visible
+  tab-strip item.
 
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
