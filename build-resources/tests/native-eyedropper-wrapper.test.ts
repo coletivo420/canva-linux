@@ -1,9 +1,10 @@
-// @ts-check
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const { isWrappedEyeDropperInstalledInScope } = require("./helpers/runtime-module").loadRuntimeModule(
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
+
+const { isWrappedEyeDropperInstalledInScope } = await loadRuntimeModule(
   "preload/native-eyedropper-wrapper",
 );
 

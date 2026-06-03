@@ -3,31 +3,30 @@
   "generatedBy": "build-resources/c420ui/scripts/build-bootstrap.ts",
   "c420uiVersion": "0.1.0",
   "dependentProject": "canva-linux",
-  "dependentProjectVersion": "0.1.4-15.Dev.10",
+  "dependentProjectVersion": "0.1.4-15.Dev.11",
   "dependentProjectBuildRevision": "unknown",
-  "dependentProjectFullVersion": "0.1.4-15.Dev.10",
+  "dependentProjectFullVersion": "0.1.4-15.Dev.11",
   "dependentProjectDisplayVersion": "0.1.4-15.Dev",
-  "dependentProjectPhase": "0.1.4-15.Dev.10",
-  "entrypoint": "run-c420ui.cjs",
-  "cliEntrypoint": "run-c420ui-cli.cjs",
+  "dependentProjectPhase": "0.1.4-15.Dev.11",
+  "entrypoint": "run-c420ui.mjs",
+  "cliEntrypoint": "run-c420ui-cli.mjs",
   "entrypoints": {
-    "ui": "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
-    "cli": "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-    "builder": "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs"
+    "ui": "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
+    "cli": "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs",
+    "builder": "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs"
   },
   "requiresNode": ">=22.0.0",
   "buildRecipe": "build-resources/c420ui/scripts/build-bootstrap.ts",
   "buildTool": "esbuild",
   "buildTarget": "node22",
-  "bundleFormat": "cjs",
-  "moduleFormat": "commonjs",
-  "futureModuleFormat": "esm",
+  "bundleFormat": "esm",
+  "moduleFormat": "esm",
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "c420uiSourceHashAlgorithm": "sha256",
-  "c420uiSourceHash": "sha256:9005c655e7cfefdf8596bb2e89acb9d345e8f7edb28d1e9ba8cf06377e23253d",
-  "canvaLinuxSourceHash": "sha256:fec7e10d5e75a43479b1fa319fc97daae4963ae712e676672ade9375f3a5abc1",
-  "combinedSourceHash": "sha256:ca968ddfd212afa34ca24b814d5e5299116780e0b65194f56b23c737a500b781",
+  "c420uiSourceHash": "sha256:93275409c080b9a3ff456475133a45326ef17e03190ce6d69cd7cd1c2325dedb",
+  "canvaLinuxSourceHash": "sha256:b8627979926fb52ba53edb043a87a4a60803379868667c31212f94f9ad7f27d1",
+  "combinedSourceHash": "sha256:958ed519b3751787cccea211e54b86698faf596f0d25913efee3f05c46f3505a",
   "c420uiSourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",
@@ -39,8 +38,8 @@
     "build-resources/c420ui/package.json"
   ],
   "artifactHashes": {
-    "run-c420ui.cjs": "sha256:43800426654ba94ee5413ba6a1fc1419f37059546c795bdc2a9be52d11bc1d82",
-    "run-c420ui-cli.cjs": "sha256:d575f11470c8193dbdba355f551b6c7c7452605fa34f31b9a662ed2194582870",
-    "c420ui-builder.cjs": "sha256:0cac1c15a47897375735020c9a18a68cb15f2f0147e206162f58e43cd98ce222"
+    "run-c420ui.mjs": "sha256:2a52945d4c57c89e99a92dab53ba22bbfaa7d38a7c2abe449c91f29db22b735f",
+    "run-c420ui-cli.mjs": "sha256:4923eef91da776b70171db268ccb0464137a8a9ce28aee353dbea4230a336c5e",
+    "c420ui-builder.mjs": "sha256:cdbe641dd1d8f4b4e547a429c0d2b647e14f239c07673a8b1d60140d9c1169d5"
   }
 }

@@ -1,5 +1,5 @@
-import type { DebugLog, WebContentsViewLike } from "../shared/types";
-export type { WebContentsLike, WebContentsViewLike } from "../shared/types";
+import type { DebugLog, WebContentsViewLike } from "../shared/types.js";
+export type { WebContentsLike, WebContentsViewLike } from "../shared/types.js";
 
 export type NativeThemeLike = {
   shouldUseDarkColors: boolean;

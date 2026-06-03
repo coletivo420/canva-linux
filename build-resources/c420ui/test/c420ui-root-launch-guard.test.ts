@@ -5,7 +5,7 @@ import {
   createC420UIRootLaunchGuardMessage,
   enforceC420UIRootLaunchGuard,
   isC420UIRootLaunch,
-} from "../src/terminal/root-guard";
+} from "../src/terminal/root-guard.js";
 
 test("isC420UIRootLaunch returns true for uid 0", () => {
   assert.equal(isC420UIRootLaunch(() => 0), true);

@@ -3,12 +3,12 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import { calculateC420UISourceHash } from "./source-hash";
+import { calculateC420UISourceHash } from "./source-hash.js";
 import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
   c420uiBootstrapArtifactPath,
-} from "../checks/bootstrap-check-helpers";
+} from "../checks/bootstrap-check-helpers.js";
 
 export type C420UIBootstrapStatus =
   | { state: "valid" }

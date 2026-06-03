@@ -1,27 +1,15 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import path from "node:path";
+import * as buildMetadataModule from "../../electron/main/build-metadata.js";
 
 type PackageJson = { version?: string };
 type ProjectUiJson = { displayVersion?: string; phase?: string };
-type CanvaLinuxBuildMetadataModule = typeof import("../../electron/main/build-metadata");
+type CanvaLinuxBuildMetadataModule = typeof import("../../electron/main/build-metadata.js");
 type CanvaLinuxBuildMetadata = ReturnType<CanvaLinuxBuildMetadataModule["createBuildMetadata"]>;
 
 const UNKNOWN_BASE_VERSION = "0.0.0";
 const UNKNOWN_BUILD_REVISION = "unknown";
-
-function loadBuildMetadataModule(rootDir: string): CanvaLinuxBuildMetadataModule | null {
-  const requireFromRoot = createRequire(path.join(rootDir, "package.json"));
-  const compiledModule = path.join(rootDir, ".build/electron/main/build-metadata.js");
-  if (!fs.existsSync(compiledModule)) return null;
-
-  try {
-    return requireFromRoot(compiledModule) as CanvaLinuxBuildMetadataModule;
-  } catch {
-    return null;
-  }
-}
 
 function readJsonFile<T>(filePath: string): T | null {
   try {
@@ -111,22 +99,7 @@ export function fallbackEffectiveBuildMetadata(
   rootDir: string = process.cwd(),
   metadataModule?: CanvaLinuxBuildMetadataModule,
 ): CanvaLinuxBuildMetadata {
-  const module = metadataModule ?? loadBuildMetadataModule(path.resolve(rootDir));
-  if (!module) {
-    return {
-      baseVersion: UNKNOWN_BASE_VERSION,
-      baseDisplayVersion: UNKNOWN_BASE_VERSION,
-      basePhase: UNKNOWN_BASE_VERSION,
-      buildRevision: UNKNOWN_BUILD_REVISION,
-      canvaLinuxSourceHash: "unknown",
-      c420uiSourceHash: "unknown",
-      combinedSourceHash: "unknown",
-      version: UNKNOWN_BASE_VERSION,
-      displayVersion: UNKNOWN_BASE_VERSION,
-      phase: UNKNOWN_BASE_VERSION,
-      fullVersion: UNKNOWN_BASE_VERSION,
-    };
-  }
+  const module = metadataModule ?? buildMetadataModule;
 
   return module.createBuildMetadata({
     baseVersion: UNKNOWN_BASE_VERSION,
@@ -138,18 +111,7 @@ export function fallbackEffectiveBuildMetadata(
 
 export function loadEffectiveBuildMetadata(rootDir: string): CanvaLinuxBuildMetadata {
   const resolvedRootDir = path.resolve(rootDir);
-  const metadataModule = loadBuildMetadataModule(resolvedRootDir);
-  if (!metadataModule) {
-    const effective = readJsonFile<CanvaLinuxBuildMetadata>(
-      path.join(resolvedRootDir, ".build", "canva-linux", "build-metadata.effective.json"),
-    );
-    if (effective) return effective;
-    const packaged = readJsonFile<CanvaLinuxBuildMetadata>(
-      path.join(resolvedRootDir, "build-resources", "canva-linux", "config", "build-metadata.json"),
-      
-    );
-    return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
-  }
+  const metadataModule = buildMetadataModule;
 
   const effective = loadEffectiveFileMetadata(resolvedRootDir, metadataModule);
   if (effective) return effective;
@@ -171,14 +133,7 @@ export function loadEffectiveBuildMetadata(rootDir: string): CanvaLinuxBuildMeta
 
 export function loadCommittedBuildMetadata(rootDir: string): CanvaLinuxBuildMetadata {
   const resolvedRootDir = path.resolve(rootDir);
-  const metadataModule = loadBuildMetadataModule(resolvedRootDir);
-  if (!metadataModule) {
-    const packaged = readJsonFile<CanvaLinuxBuildMetadata>(
-      path.join(resolvedRootDir, "build-resources", "canva-linux", "config", "build-metadata.json"),
-      
-    );
-    return packaged ?? fallbackEffectiveBuildMetadata(resolvedRootDir);
-  }
+  const metadataModule = buildMetadataModule;
 
   return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
 }

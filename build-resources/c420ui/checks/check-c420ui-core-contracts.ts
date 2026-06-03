@@ -180,7 +180,7 @@ function main(): number {
   const failures: string[] = [];
   if (pkg.name !== "@coletivo420/c420ui") failures.push("package name must remain scoped");
   if (pkg.private !== true) failures.push("package must remain private");
-  if (pkg.type !== "commonjs") failures.push("package must remain CommonJS-compatible");
+  if (pkg.type !== "module") failures.push("package must remain ESM-only");
   if (pkg.main !== "dist/index.js") failures.push("package main must point to dist/index.js");
   if (pkg.types !== "dist/index.d.ts") failures.push("package types must point to dist/index.d.ts");
 
@@ -229,7 +229,7 @@ function main(): number {
   for (const file of expected) {
     if (!fs.existsSync(path.join(srcDir, file))) failures.push(`missing ${file}`);
   }
-  for (const moduleName of expected.map((file) => `./${file.replace(/\.ts$/, "")}`)) {
+  for (const moduleName of expected.map((file) => `./${file.replace(/\.ts$/, ".js")}`)) {
     if (!index.includes(`from "${moduleName}"`)) {
       failures.push(`index.ts: missing public export for ${moduleName}`);
     }
@@ -290,7 +290,7 @@ function main(): number {
     }
   }
 
-  if (!index.includes('from "./detection"')) {
+  if (!index.includes('from "./detection.js"')) {
     failures.push("index.ts: missing public export for ./detection");
   }
 
@@ -331,7 +331,7 @@ function main(): number {
     "overviewStatus?()",
     "c420uiOverviewStatus",
     "createC420UIBridge",
-    "export type * from \"./bridge\"",
+    "export type * from \"./bridge.js\"",
   ];
   const failures = required
     .filter((fragment) => !bridge.includes(fragment) && !index.includes(fragment))
@@ -418,10 +418,10 @@ function main(): number {
       .map((fragment) => `action engine must not contain project-specific fragment: ${fragment}`),
   ];
 
-  if (!index.includes('export { createC420UIActionEngine } from "./action-engine"')) {
+  if (!index.includes('export { createC420UIActionEngine } from "./action-engine.js"')) {
     failures.push("index must export createC420UIActionEngine");
   }
-  if (!index.includes('} from "./action-engine"')) {
+  if (!index.includes('} from "./action-engine.js"')) {
     failures.push("index must export action engine types");
   }
 
@@ -466,10 +466,10 @@ function main(): number {
       .map((fragment) => `generic c420ui CLI must not contain project-specific fragment: ${fragment}`),
   ];
 
-  if (!index.includes('export { runC420UICli } from "./cli"')) {
+  if (!index.includes('export { runC420UICli } from "./cli.js"')) {
     failures.push("index must export runC420UICli");
   }
-  if (!index.includes('export type { c420uiCliOptions, c420uiCliResult } from "./cli"')) {
+  if (!index.includes('export type { c420uiCliOptions, c420uiCliResult } from "./cli.js"')) {
     failures.push("index must export c420ui CLI types");
   }
 
@@ -539,12 +539,12 @@ function main(): number {
     failures.push("root provider preflight must run before bridge.runAction");
   }
 
-  if (!index.includes('export type * from "./root-provider"')) {
+  if (!index.includes('export type * from "./root-provider.js"')) {
     failures.push("index must export root provider types");
   }
   for (const fragment of [
-    'export * from "./scopes"',
-    'export * from "./linux-root-provider"',
+    'export * from "./scopes.js"',
+    'export * from "./linux-root-provider.js"',
   ]) {
     if (!index.includes(fragment)) {
       failures.push(`index must export ${fragment}`);
@@ -572,11 +572,10 @@ function main(): number {
     "defaultC420UILinuxActionHasUserScope",
     "defaultC420UILinuxRootValidationCommand",
     "defaultC420UILinuxRootValidationStdinCommand",
-    "--validate-stdin",
     "buildRootValidationCommand",
     "buildRootValidationStdinCommand",
     `stdio: ["pipe", "pipe", "pipe"]`,
-    "sudoHelperPath",
+    "sudoCommand",
     "rootAuthEnvKey",
     "rootAuthEnvValue",
   ]) {
@@ -667,13 +666,13 @@ function main(): number {
     }
   }
 
-  if (!index.includes('export { runC420UICommand } from "./command-runner"')) {
+  if (!index.includes('export { runC420UICommand } from "./command-runner.js"')) {
     failures.push("index must export runC420UICommand");
   }
-  if (!index.includes('export type { c420uiCommandRunnerOptions } from "./command-runner"')) {
+  if (!index.includes('export type { c420uiCommandRunnerOptions } from "./command-runner.js"')) {
     failures.push("index must export c420uiCommandRunnerOptions");
   }
-  if (app.includes('from "./process-runner"') || app.includes("from './process-runner'")) {
+  if (app.includes('from "./process-runner.js"') || app.includes("from './process-runner.js'")) {
     failures.push("interactive app must not import ./process-runner");
   }
   if (fs.existsSync(path.join(rootDir, "build-resources/c420ui/src/terminal/process-runner.ts"))) {
@@ -713,7 +712,7 @@ function main(): number {
     }
   }
 
-  if (!index.includes('from "./operational-logs"')) {
+  if (!index.includes('from "./operational-logs.js"')) {
     failures.push("index must export operational log helpers");
   }
 
@@ -852,7 +851,7 @@ function main(): number {
     }
   }
 
-  if (app.includes('from "./process-runner"') || app.includes("from './process-runner'")) {
+  if (app.includes('from "./process-runner.js"') || app.includes("from './process-runner.js'")) {
     failures.push("interactive app must not import ./process-runner");
   }
   if (app.includes("scripts/run-core-entry.sh ${runnerArgs")) {
@@ -1218,11 +1217,11 @@ function checkHostDependencyContract(failures: string[]): void {
     }
   }
   for (const exportPath of [
-    "./host-dependencies",
-    "./command-dependencies",
-    "./node-dependencies",
-    "./npm-dependencies",
-    "./host-dependency-runner",
+    "./host-dependencies.js",
+    "./command-dependencies.js",
+    "./node-dependencies.js",
+    "./npm-dependencies.js",
+    "./host-dependency-runner.js",
   ] as const) {
     if (!index.includes(`export * from "${exportPath}"`)) {
       failures.push(`${indexPath}: missing public export for ${exportPath}`);
@@ -1302,7 +1301,7 @@ function checkDevelopmentProviderContract(failures: string[]): void {
       failures.push(`${providerPath}: missing development provider fragment ${fragment}`);
     }
   }
-  if (!index.includes('from "./development-provider"')) {
+  if (!index.includes('from "./development-provider.js"')) {
     failures.push(`${indexPath}: must export ./development-provider`);
   }
   for (const forbidden of [
@@ -1317,30 +1316,33 @@ function checkDevelopmentProviderContract(failures: string[]): void {
   }
 }
 
-function checkLinuxHostSudoHelperContract(failures: string[]): void {
+function checkLinuxHostSudoContract(failures: string[]): void {
   const rootDir = process.cwd();
-  const helperPath = "build-resources/c420ui/host/linux/sudo-helper.sh";
-  const fullPath = path.join(rootDir, helperPath);
-  if (!fs.existsSync(fullPath)) {
-    failures.push(`${helperPath}: missing reusable Linux sudo host helper`);
-    return;
+  const providerPath = "build-resources/c420ui/src/linux-root-provider.ts";
+  const operationsPath = "build-resources/c420ui/operations/host/sudo.ts";
+  const providerSource = fs.readFileSync(path.join(rootDir, providerPath), "utf8");
+  const operationsSource = fs.readFileSync(path.join(rootDir, operationsPath), "utf8");
+
+  for (const fragment of [
+    "sudoCommand",
+    'args: ["-v"]',
+    'args: ["-S", "-v", "-p", ""]',
+  ] as const) {
+    if (!providerSource.includes(fragment)) {
+      failures.push(`${providerPath}: missing sudo provider fragment ${fragment}`);
+    }
   }
 
-  const source = fs.readFileSync(fullPath, "utf8");
   for (const fragment of [
-    "#!/usr/bin/env bash",
-    "set -euo pipefail",
-    "c420ui_sudo_validate",
-    "c420ui_sudo_validate_stdin",
-    "c420ui_sudo()",
-    "--validate)",
-    "--validate-stdin)",
+    "c420uiSudoValidate",
+    "c420uiSudoRun",
     "C420UI_ROOT_AUTH",
-    "sudo -n",
-    'sudo -S -v -p ""',
+    "C420UI_ACTION_SCOPE",
+    "C420UI_SUDO_TIMEOUT_SECONDS",
+    "spawnSync(\"sudo\"",
   ] as const) {
-    if (!source.includes(fragment)) {
-      failures.push(`${helperPath}: missing helper fragment ${fragment}`);
+    if (!operationsSource.includes(fragment)) {
+      failures.push(`${operationsPath}: missing sudo operation fragment ${fragment}`);
     }
   }
 
@@ -1349,9 +1351,10 @@ function checkLinuxHostSudoHelperContract(failures: string[]): void {
     "canva_",
     "scripts/" + "sudo-common.sh",
     "Canva Linux",
+    "sudo-helper.sh",
   ] as const) {
-    if (source.includes(forbidden)) {
-      failures.push(`${helperPath}: must not contain project-specific fragment ${forbidden}`);
+    if (providerSource.includes(forbidden) || operationsSource.includes(forbidden)) {
+      failures.push(`c420ui sudo TypeScript must not contain fragment ${forbidden}`);
     }
   }
 }
@@ -1375,7 +1378,7 @@ export function main(): number {
   runInteractiveActionEngineContract(failures);
   checkSettingsContract(failures);
   checkDevelopmentProviderContract(failures);
-  checkLinuxHostSudoHelperContract(failures);
+  checkLinuxHostSudoContract(failures);
   checkHostDependencyContract(failures);
   checkTerminalUiContract(failures);
   checkHeaderLayoutContract(failures);
@@ -1385,7 +1388,7 @@ export function main(): number {
   return 0;
 }
 
-if (require.main === module) {
+if (/check-c420ui-core-contracts\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

@@ -3,13 +3,13 @@ import {
   type SpawnSyncOptions,
   type SpawnSyncReturns,
 } from "node:child_process";
-import type { c420uiAction } from "./actions";
+import type { c420uiAction } from "./actions.js";
 import {
   c420uiRootPolicyExitCode,
   type c420uiRootProvider,
   type c420uiRootValidationResult,
-} from "./root-provider";
-import { isC420UIUserScope } from "./scopes";
+} from "./root-provider.js";
+import { isC420UIUserScope } from "./scopes.js";
 
 export type c420uiLinuxRootCommandRunner = (
   command: string,
@@ -28,25 +28,25 @@ export type c420uiLinuxRootValidationCommand = {
 };
 
 export type c420uiLinuxRootValidationCommandBuilder = (
-  sudoHelperPath: string,
+  sudoCommand: string,
 ) => c420uiLinuxRootValidationCommand;
 
 export function defaultC420UILinuxRootValidationCommand(
-  sudoHelperPath: string,
+  sudoCommand: string,
 ): c420uiLinuxRootValidationCommand {
-  return { command: "bash", args: [sudoHelperPath, "--validate"] };
+  return { command: sudoCommand, args: ["-v"] };
 }
 
 export function defaultC420UILinuxRootValidationStdinCommand(
-  sudoHelperPath: string,
+  sudoCommand: string,
 ): c420uiLinuxRootValidationCommand {
-  return { command: "bash", args: [sudoHelperPath, "--validate-stdin"] };
+  return { command: sudoCommand, args: ["-S", "-v", "-p", ""] };
 }
 
 export type c420uiLinuxRootProviderBaseOptions = {
   id?: string;
   label?: string;
-  sudoHelperPath: string;
+  sudoCommand: string;
   rootAuthEnvKey?: string;
   rootAuthEnvValue?: string;
   runCommand?: c420uiLinuxRootCommandRunner;
@@ -133,7 +133,7 @@ export function createC420UILinuxRootProviderBase(
 
     validateRootAccess(rootDir, actionEnv) {
       const validationCommand = buildRootValidationCommand(
-        options.sudoHelperPath,
+        options.sudoCommand,
       );
       const result = runCommand(validationCommand.command, validationCommand.args, {
         cwd: rootDir,
@@ -164,7 +164,7 @@ export function createC420UILinuxRootProviderBase(
 
     validateRootAccessWithInput(rootDir, actionEnv, input) {
       const validationCommand = buildRootValidationStdinCommand(
-        options.sudoHelperPath,
+        options.sudoCommand,
       );
       const result = runCommand(validationCommand.command, validationCommand.args, {
         cwd: rootDir,

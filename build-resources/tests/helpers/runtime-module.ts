@@ -1,64 +1,108 @@
-// @ts-nocheck
-"use strict";
+import esbuild from "esbuild";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 
-const fs = require("node:fs");
-const path = require("node:path");
+type RuntimeModule = Record<string, unknown>;
+type ElectronTestMock = Record<string, unknown>;
 
-const ts = require("typescript");
-
-const repoRoot =
-  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..", "..");
-let typeScriptExtensionRegistered = false;
-
-/**
- * @param {string} file
- * @param {NodeJS.Module} mod
- * @returns {void}
- */
-function compileTypeScriptModule(file, mod) {
-  const source = fs.readFileSync(file, "utf8");
-  const output = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-      esModuleInterop: true,
-      sourceMap: false,
-    },
-    fileName: file,
-  }).outputText;
-
-  /** @type {any} */ mod._compile(output, file);
+declare global {
+  var __CANVA_TEST_ELECTRON_MOCK__: ElectronTestMock | undefined;
 }
 
-function registerTypeScriptExtension() {
-  if (typeScriptExtensionRegistered) {
-    return;
-  }
+const repoRoot =
+  process.env.CANVA_TEST_REPO_ROOT || path.resolve(import.meta.dirname, "..", "..");
+let moduleCounter = 0;
 
-  typeScriptExtensionRegistered = true;
-  /** @type {Record<string, (mod: NodeJS.Module, filename: string) => void>} */ require.extensions[
-    ".ts"
-  ] = (mod, file) => {
-    compileTypeScriptModule(file, mod);
+function sanitizeModulePath(modulePath: string): string {
+  return modulePath.replace(/[\\/]/g, "-").replace(/[^a-zA-Z0-9_.-]/g, "-");
+}
+
+function electronMockPlugin(): esbuild.Plugin {
+  return {
+    name: "canva-electron-test-mock",
+    setup(build) {
+      build.onResolve({ filter: /^electron$/ }, () => ({
+        namespace: "canva-electron-test-mock",
+        path: "electron",
+      }));
+      build.onLoad(
+        { filter: /^electron$/, namespace: "canva-electron-test-mock" },
+        () => ({
+          contents: `
+const electronMock = globalThis.__CANVA_TEST_ELECTRON_MOCK__ ?? {};
+export const app = electronMock.app;
+export const BrowserWindow = electronMock.BrowserWindow;
+export const BrowserWindowConstructorOptions = electronMock.BrowserWindowConstructorOptions;
+export const BrowserWindowType = electronMock.BrowserWindowType;
+export const dialog = electronMock.dialog;
+export const ipcMain = electronMock.ipcMain;
+export const ipcRenderer = electronMock.ipcRenderer;
+export const nativeTheme = electronMock.nativeTheme;
+export const safeStorage = electronMock.safeStorage;
+export const session = electronMock.session;
+export const shell = electronMock.shell;
+export const WebContents = electronMock.WebContents;
+export const WebContentsView = electronMock.WebContentsView;
+export default electronMock;
+`,
+          loader: "js",
+        }),
+      );
+    },
   };
 }
 
-/**
- * @param {string} modulePath
- * @returns {any}
- */
-function loadRuntimeModule(modulePath) {
-  const sourceTs = path.join(repoRoot, "build-resources", "electron", `${modulePath}.ts`);
+export async function loadRuntimeModule<TModule extends RuntimeModule = RuntimeModule>(
+  modulePath: string,
+): Promise<TModule> {
+  const sourceTs = path.join(
+    repoRoot,
+    "build-resources",
+    "electron",
+    `${modulePath}.ts`,
+  );
 
-  registerTypeScriptExtension();
-
-  if (fs.existsSync(sourceTs)) {
-    return require(sourceTs);
+  if (!fs.existsSync(sourceTs)) {
+    throw new Error(`Runtime module not found: ${modulePath}`);
   }
 
-  throw new Error(`Runtime module not found: ${modulePath}`);
+  const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "canva-runtime-esm-"));
+  const outputFile = path.join(
+    outputDir,
+    `${sanitizeModulePath(modulePath)}-${moduleCounter++}.mjs`,
+  );
+
+  await esbuild.build({
+    absWorkingDir: repoRoot,
+    bundle: true,
+    entryPoints: [sourceTs],
+    format: "esm",
+    outfile: outputFile,
+    platform: "node",
+    plugins: [electronMockPlugin()],
+    target: "node22",
+  });
+
+  const moduleInstance = await import(pathToFileURL(outputFile).href);
+  try {
+    fs.rmSync(outputDir, { recursive: true, force: true });
+  } catch {
+    // Ignore temporary test bundle cleanup errors.
+  }
+  return moduleInstance as TModule;
 }
 
-module.exports = {
-  loadRuntimeModule,
-};
+export async function withElectronMock<T>(
+  mock: ElectronTestMock,
+  callback: () => Promise<T>,
+): Promise<T> {
+  const previousMock = globalThis.__CANVA_TEST_ELECTRON_MOCK__;
+  globalThis.__CANVA_TEST_ELECTRON_MOCK__ = mock;
+  try {
+    return await callback();
+  } finally {
+    globalThis.__CANVA_TEST_ELECTRON_MOCK__ = previousMock;
+  }
+}

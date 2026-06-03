@@ -1,11 +1,11 @@
 import {
   type C420UIActionDescriptor,
   type C420UIWorkflowPhase,
-} from "../../c420ui/src";
+} from "../../c420ui/src/index.js";
 import {
   loadCanvaLinuxActions as loadCanvaLinuxActionRegistry,
   type CanvaAction,
-} from "../actions/registry";
+} from "../actions/registry.js";
 
 function actionPhase(action: CanvaAction): C420UIWorkflowPhase | undefined {
   if (action.phase) return action.phase;

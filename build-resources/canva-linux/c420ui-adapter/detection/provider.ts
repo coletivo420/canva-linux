@@ -8,10 +8,10 @@ import {
   type c420uiOverviewStatus,
   type c420uiOverviewStatusProvider,
   type CanvaLinuxArtifactFragment,
-} from "../../../c420ui/src/detection";
-import { findCanvaLinuxProjectRoot } from "../../project-root";
-import { buildCanvaLinuxArtifactFragments } from "./artifact-fragments";
-import { detectInstallations, type InstallationDetectionResult } from "../../../c420ui/operations/detection/install-detection";
+} from "../../../c420ui/src/detection.js";
+import { findCanvaLinuxProjectRoot } from "../../project-root.js";
+import { buildCanvaLinuxArtifactFragments } from "./artifact-fragments.js";
+import { detectInstallations, type InstallationDetectionResult } from "../../../c420ui/operations/detection/install-detection.js";
 
 type CanvaLinuxOverviewStatusProvider = Omit<
   c420uiOverviewStatusProvider,
@@ -122,11 +122,16 @@ const emptyInstallations = {
 };
 
 function readPhase(rootDir: string): string {
-  const phaseFile = path.join(rootDir, "scripts/app-identity-common.sh");
-  if (!fs.existsSync(phaseFile)) return "unknown";
-  const content = fs.readFileSync(phaseFile, "utf8");
-  const match = content.match(/^PROJECT_PHASE="([^"]+)"/m);
-  return match?.[1] ?? "unknown";
+  const projectUiPath = path.join(rootDir, "build-resources/canva-linux/config/project-ui.json");
+  try {
+    if (!fs.existsSync(projectUiPath)) return "unknown";
+    const projectUi = JSON.parse(fs.readFileSync(projectUiPath, "utf8")) as {
+      phase?: string;
+    };
+    return projectUi.phase ?? "unknown";
+  } catch {
+    return "unknown";
+  }
 }
 
 function safeProjectMetadata(rootDir: string): c420uiOverviewStatus["project"] {

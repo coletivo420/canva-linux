@@ -1,4 +1,4 @@
-import type { C420UIConfig } from "../types";
+import type { C420UIConfig } from "../types.js";
 
 export type c420uiTerminalHelpOptions = {
   config: C420UIConfig;

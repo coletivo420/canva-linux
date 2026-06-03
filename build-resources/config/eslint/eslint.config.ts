@@ -1,9 +1,6 @@
-import { createRequire } from "node:module";
 import type { Linter } from "eslint";
-
-const requireFromConfig = createRequire(__filename);
-const tsPlugin = requireFromConfig("@typescript-eslint/eslint-plugin");
-const tsParser = requireFromConfig("@typescript-eslint/parser");
+import tsPlugin from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
 
 const commonRules = {
   eqeqeq: ["error", "always"],
@@ -23,7 +20,7 @@ const config = [
       ".build/**",
       "node_modules/**",
       "repo/**",
-      "build-resources/electron/preload/canva.bundle.js",
+      "build-resources/electron/preload/canva.bundle.mjs",
       ".flatpak-builder/**",
     ],
   },
@@ -37,7 +34,7 @@ const config = [
       },
     },
     plugins: {
-      "@typescript-eslint": tsPlugin,
+      "@typescript-eslint": tsPlugin as never,
     },
     rules: {
       ...commonRules,
@@ -64,7 +61,7 @@ const config = [
       },
     },
     plugins: {
-      "@typescript-eslint": tsPlugin,
+      "@typescript-eslint": tsPlugin as never,
     },
     rules: {
       ...commonRules,

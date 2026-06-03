@@ -1,14 +1,10 @@
-// @ts-nocheck
-"use strict";
 
-// @ts-check
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
-
-const { createTabHelpers, safeToolbarFaviconUrl } = loadRuntimeModule("main/tabs");
+const { createTabHelpers, safeToolbarFaviconUrl } = await loadRuntimeModule("main/tabs");
 
 /**
  * @param {number} id

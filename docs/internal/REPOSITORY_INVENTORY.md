@@ -10,6 +10,8 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - Committed build metadata lives in `build-resources/canva-linux/config/build-metadata.json` and must remain deterministic with `buildRevision: "unknown"`.
 - Effective build metadata is generated under `.build/canva-linux/build-metadata.effective.json` for runtime/release artifacts and may include Git-derived revisions.
 - `build-resources/` is the canonical home for project-owned runtime/build resources (`c420ui`, `electron`, `canva-linux-assets`).
+- Dev11 ESM-only output uses `.build/electron/main/index.mjs`, `.build/electron/preload/canva.bundle.mjs`, `.build/electron/preload/toolbar.bundle.mjs`, and `.mjs` Node tooling/check/bootstrap artifacts.
+- Versioned `.cjs` files are forbidden outside external dependencies.
 - Root `packages/`, `electron/`, `data/`, and loose icon assets must not be restored.
 
 ## Files
@@ -117,8 +119,8 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `build-resources/canva-linux/packaging/flathub/README.md`
 - `build-resources/canva-linux/packaging/flathub/generated-sources.json`
 - `build-resources/canva-linux/packaging/flathub/manifest.yml`
-- `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts`
-- `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`
+- `build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts`
+- `npm run flathub:generate-npm-sources`
 - `build-resources/config/playwright/playwright.config.ts`
 - `run.sh`
 - `build-resources/c420ui/operations/detection/appimage-detection.ts`
@@ -143,12 +145,6 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - `build-resources/c420ui/scripts/build-appimage.ts`
 - `build-resources/c420ui/scripts/build-flatpak-bundle.ts`
 - `build-resources/canva-linux/validation/appimage.ts`
-- `scripts/app-identity-common.sh`
-- `scripts/preflight-common.sh`
-- `scripts/theme.json`
-- `scripts/ui-common.sh`
-- `scripts/user-data-common.sh`
-- `scripts/xdg-common.sh`
 - `build-resources/tests/cl-eyedropper-canvas.test.ts`
 - `build-resources/tests/cl-eyedropper-contracts.test.ts`
 - `build-resources/tests/cl-eyedropper-runtime.test.ts`

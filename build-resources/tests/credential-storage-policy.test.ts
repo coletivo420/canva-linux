@@ -1,18 +1,15 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   createCredentialStoragePolicy,
   createCredentialStorageWarningCopy,
   resolveCredentialStoragePolicy,
-} = loadRuntimeModule("main/credential-storage");
+} = await loadRuntimeModule("main/credential-storage");
 
 const SECURE_BACKENDS = [
   "kwallet",
@@ -293,8 +290,8 @@ test("credential storage warning copy falls back when policy warning is unavaila
   );
 });
 
-test("detects Flatpak runtime from FLATPAK_ID and /.flatpak-info", () => {
-  const { detectFlatpakRuntimeInfo } = loadRuntimeModule("main/credential-storage");
+test("detects Flatpak runtime from FLATPAK_ID and /.flatpak-info", async () => {
+  const { detectFlatpakRuntimeInfo } = await loadRuntimeModule("main/credential-storage");
   const fromEnv = detectFlatpakRuntimeInfo({
     env: { FLATPAK_ID: "io.github.coletivo420.canva-linux" },
     fileExists() {
@@ -349,7 +346,7 @@ test("Flatpak ephemeral warning explains host Secret Service and KWallet access"
 function readRepositoryFile(relativePath) {
   return fs.readFileSync(
     path.join(
-      process.env.CANVA_SCRIPT_REPO_ROOT || path.join(__dirname, "..", ".."),
+      process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd(),
       relativePath,
     ),
     "utf8",

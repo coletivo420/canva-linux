@@ -6,7 +6,7 @@ import {
   readBuildMetadataFullVersion,
   readPackageJsonVersion,
   readVersionFile,
-} from "./version-marker";
+} from "./version-marker.js";
 
 const APP_EXECUTABLE = "canva-linux";
 const APP_NATIVE_DESKTOP_NAME = "io.github.coletivo420.canva-linux.native.desktop";

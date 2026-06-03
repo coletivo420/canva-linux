@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root.js";
 
 const requiredFiles = [
   "docs/internal/AI_GUARDRAILS.md",
@@ -64,7 +64,7 @@ const requiredSplitDocFragments: Record<string, string[]> = {
     "validateRootAccess",
     "validateRootAccessWithInput",
     "C420UI_ROOT_AUTH",
-    "sudo-helper.sh",
+    "sudo operation helpers",
     "passwords",
     "Implementing files",
     "Boundary checks",
@@ -146,9 +146,9 @@ const requiredSplitDocFragments: Record<string, string[]> = {
   "docs/canva-linux/PACKAGING.md": [
     "dependent project",
     "c420ui",
-    "build-resources/c420ui/scripts/build-appimage.sh",
-    "build-resources/c420ui/scripts/build-flatpak-bundle.sh",
-    "scripts/package-guidance-common.sh",
+    "package:appimage",
+    "package:flatpak-bundle",
+    "package guidance",
     "artifact names",
     "x64",
     "DEB",
@@ -158,7 +158,7 @@ const requiredSplitDocFragments: Record<string, string[]> = {
   "docs/canva-linux/APPIMAGE.md": [
     "dependent project",
     "c420ui",
-    "build-resources/c420ui/scripts/build-appimage.sh",
+    "package:appimage",
     "outputPattern",
     "artifact names",
     "Boundary checks",
@@ -167,7 +167,7 @@ const requiredSplitDocFragments: Record<string, string[]> = {
   "docs/canva-linux/FLATPAK.md": [
     "dependent project",
     "c420ui",
-    "build-resources/c420ui/scripts/build-flatpak-bundle.sh",
+    "package:flatpak-bundle",
     "AppStream",
     "artifact names",
     "Boundary checks",
@@ -205,8 +205,8 @@ const requiredSplitDocFragments: Record<string, string[]> = {
   "docs/internal/C420UI_DEPENDENT_PROJECT_BOUNDARIES.md": [
     "0.1.4-14",
     "N.N.N-X",
-    "preflight-common.sh",
-    "repository-check-only",
+    "POSIX/bootstrap boundaries",
+    "scripts/ must not return",
     "planned, dry-run, root, or confirmation policy duplicated",
     "Canva Linux",
     "c420ui",
@@ -216,8 +216,8 @@ const requiredSplitDocFragments: Record<string, string[]> = {
     "N.N.N-X",
     "English",
     "i18n",
-    "preflight-common.sh",
-    "repository-check-only",
+    "POSIX/bootstrap boundaries",
+    "scripts/ must not return",
     "Canva Linux does not install dependencies directly",
     "Canva Linux does not validate generic artifact recipes",
   ],
@@ -228,7 +228,7 @@ const requiredSplitDocFragments: Record<string, string[]> = {
     "build-resources/c420ui/",
     "build-resources/canva-linux/c420ui-adapter/",
     "build-resources/canva-linux/config/",
-    "preflight-common.sh",
+    "POSIX/bootstrap boundaries",
     "0.1.4-14",
   ],
 };
@@ -255,7 +255,7 @@ const requiredRcValidationFragments = [
   "npm run typecheck",
   "npm run typecheck:strict",
   "npm test",
-  "./scripts/validate-project.sh",
+  "npm run validate:project",
   "npm run c420ui -- --help",
   "npm run c420ui:cli -- --doctor --dry-run",
   "./canva-linux-c420ui-builder --help",
@@ -263,9 +263,9 @@ const requiredRcValidationFragments = [
   "./canva-linux-c420ui-builder --canva-debug=1",
   "gpu:runtime runtime-options",
   "displayOverride",
-  "./build-resources/c420ui/scripts/build-appimage.sh",
-  "./build-resources/c420ui/scripts/build-flatpak-bundle.sh",
-  "./scripts/validate-flatpak.sh",
+  "npm run package:appimage",
+  "npm run package:flatpak-bundle",
+  "npm run validate:flatpak",
   "Release blockers",
   "package.json",
   "package-lock.json",
@@ -329,8 +329,8 @@ const requiredGuardrails = [
   "Do not normalize `x86_64` or `X86_64` to `x64`.",
   "AppImage, Flatpak, tarball and checksum entries must use the actual generated architecture string.",
   "Release docs and workflows must not hardcode `x64` unless the tool actually emits `x64`.",
-  "System-wide actions must use build-resources/c420ui/host/linux/sudo-helper.sh.",
-  "Raw sudo calls are forbidden outside build-resources/c420ui/host/linux/sudo-helper.sh.",
+  "System-wide actions must use the TypeScript c420ui sudo operation helpers.",
+  "Raw sudo calls are forbidden outside build-resources/c420ui/operations/host/sudo.ts.",
   "User-scope actions must never call sudo.",
   "Overview status must use the c420ui detection engine and Canva Linux detection provider.",
   "c420ui and CLI must share the same TypeScript action contract.",
@@ -347,8 +347,8 @@ const requiredGuardrails = [
   "Do not manually move only the Overview panel; always use shared workspaceTop.",
   "TypeScript is mandatory for all maintained Node.js source code.",
   "JavaScript is generated output only.",
-  "Shell remains shell for host operations.",
-  "New scripts must be TypeScript unless they are shell scripts for host operations.",
+  "Shell remains only for documented POSIX/bootstrap boundaries.",
+  "New scripts must be TypeScript unless they are canva-linux-c420ui-builder or run.sh POSIX/bootstrap boundaries.",
   "New tests must be TypeScript.",
   "New configs should be TypeScript when tool-supported.",
   "Do not create new JavaScript source files.",
@@ -357,7 +357,7 @@ const requiredGuardrails = [
   "Do not add JavaScript config files when TypeScript config is supported.",
   "JavaScript may exist only as project-generated output under `.build`, package-managed dependencies under `node_modules`, generated coverage output under `coverage`, or distributable output under `dist`.",
   "Project-generated JavaScript belongs in `.build` only; do not place maintained or project-generated script artifacts elsewhere.",
-  "Shell scripts are allowed only for Linux host operations, builder command glue, Flatpak/native install, sudo, purge, XDG, and validation that must run before Node.",
+  "Shell scripts are allowed only for documented POSIX/bootstrap boundaries: canva-linux-c420ui-builder and run.sh.",
   "JSON/YAML/XML/Desktop files remain native data formats and must be validated by TypeScript checks where appropriate.",
   "Flathub source generation must be TypeScript-backed.",
   "If a tool requires JavaScript, generate it from TypeScript or document the exception explicitly.",
@@ -450,10 +450,7 @@ export function main(): number {
   return 0;
 }
 
-if (
-  require.main === module &&
-  /check-ai-guardrails\.js$/.test(process.argv[1] || "")
-) {
+if (/check-ai-guardrails\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

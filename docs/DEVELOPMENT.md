@@ -111,7 +111,7 @@ Recommended flow:
 ## Sudo and Privileged Actions
 
 If your action requires root privileges, set `requiresRoot: true` in
-`build-resources/canva-linux/config/actions.json` and use `build-resources/c420ui/host/linux/sudo-helper.sh` helpers in your backend
+`build-resources/canva-linux/config/actions.json` and use `build-resources/c420ui/operations/host/sudo.ts` helpers in your backend
 script. The generic root policy contract lives in
 `build-resources/c420ui/src/root-provider.ts`; the concrete Canva Linux provider lives in
 `build-resources/canva-linux/c420ui-adapter/root-provider.ts`.
@@ -156,7 +156,7 @@ Action execution is no longer validated through the legacy Action Runner.
 ## Direct CLI bridge development
 
 Direct builder actions are built with `npm run build:scripts` and executed through
-`.build/build-resources/c420ui/scripts/run-c420ui-cli.js`. Validate direct actions with `./canva-linux-c420ui-builder <action-flag> --dry-run`
+`.build/scripts/run-c420ui-cli.mjs` or the generated bootstrap CLI bundle. Validate direct actions with `./canva-linux-c420ui-builder <action-flag> --dry-run`
 or `npm run c420ui:cli -- <action-flag> --dry-run`. The concrete Canva Linux wiring lives in
 `build-resources/canva-linux/c420ui-adapter/cli.ts`; reusable parsing and action execution live in
 `build-resources/c420ui/src/cli.ts`.

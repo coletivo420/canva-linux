@@ -3,13 +3,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { validateFlatpakBrandingTokens } from "../packaging/flatpak/branding-policy";
-import { validateFlatpakPermissions } from "../packaging/flatpak/permission-policy";
-import { repoLintHasOnlyLocalScreenshotMirrorFindings } from "../packaging/flatpak/repo-lint-policy";
-import { hasCommand } from "./optional-command";
-import { validateRequiredFiles } from "./required-files";
-import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result";
-import { runStep } from "./run-step";
+import { validateFlatpakBrandingTokens } from "../packaging/flatpak/branding-policy.js";
+import { validateFlatpakPermissions } from "../packaging/flatpak/permission-policy.js";
+import { repoLintHasOnlyLocalScreenshotMirrorFindings } from "../packaging/flatpak/repo-lint-policy.js";
+import { hasCommand } from "./optional-command.js";
+import { validateRequiredFiles } from "./required-files.js";
+import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result.js";
+import { runStep } from "./run-step.js";
 
 function detectPackageVersion(rootDir: string): string {
   const pkg = JSON.parse(fs.readFileSync(path.join(rootDir, "package.json"), "utf8")) as { version: string };
@@ -99,7 +99,7 @@ export function runFlatpakValidation(context: ValidationContext): ValidationResu
   return okResult(warnings);
 }
 
-if (require.main === module) {
+if (/flatpak\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const args = parseArgs(process.argv.slice(2));
   const result = runFlatpakValidation({ rootDir: process.cwd(), releaseArtifacts: args.releaseArtifacts });
   process.exit(result.ok ? 0 : 1);

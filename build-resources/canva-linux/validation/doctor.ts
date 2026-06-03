@@ -1,9 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
 
-import { hasCommand } from "./optional-command";
-import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result";
+import { hasCommand } from "./optional-command.js";
+import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result.js";
 
 function major(version: string): number {
   return Number(version.replace(/^v/, "").split(".")[0] || "0");
@@ -33,22 +32,15 @@ export function runDoctorValidation(context: ValidationContext): ValidationResul
     }
   }
 
-  const nodeModulesDir = path.join(context.rootDir, "node_modules");
-  if (!fs.existsSync(nodeModulesDir)) {
-    warnings.push("node_modules missing — let c420ui ensure npm dependencies");
-    console.warn("[warn] node_modules missing — let c420ui ensure npm dependencies");
-  } else {
-    const depsPath = path.join(context.rootDir, "build-resources/canva-linux/config/dependencies.json");
-    const config = JSON.parse(fs.readFileSync(depsPath, "utf8")) as { npm?: { requiredDevDependencies?: string[] } };
-    const req = createRequire(path.join(context.rootDir, "package.json"));
-    for (const dep of config.npm?.requiredDevDependencies ?? []) {
-      try {
-        req.resolve(dep, { paths: [context.rootDir] });
-        console.log(`[ok] npm dependency: ${dep}`);
-      } catch {
-        warnings.push(`npm dependency missing: ${dep} — let c420ui ensure npm dependencies`);
-        console.warn(`[warn] npm dependency missing: ${dep} — let c420ui ensure npm dependencies`);
-      }
+  const depsPath = path.join(context.rootDir, "build-resources/canva-linux/config/dependencies.json");
+  const config = JSON.parse(fs.readFileSync(depsPath, "utf8")) as { npm?: { requiredDevDependencies?: string[] } };
+  for (const dep of config.npm?.requiredDevDependencies ?? []) {
+    try {
+      import.meta.resolve(dep);
+      console.log(`[ok] npm dependency: ${dep}`);
+    } catch {
+      warnings.push(`npm dependency missing: ${dep} — let c420ui ensure npm dependencies`);
+      console.warn(`[warn] npm dependency missing: ${dep} — let c420ui ensure npm dependencies`);
     }
   }
 
@@ -87,7 +79,7 @@ export function runDoctorValidation(context: ValidationContext): ValidationResul
   return okResult(warnings);
 }
 
-if (require.main === module) {
+if (/doctor\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const result = runDoctorValidation({ rootDir: process.cwd() });
   process.exit(result.ok ? 0 : 1);
 }

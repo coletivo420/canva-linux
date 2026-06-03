@@ -1,4 +1,4 @@
-import { info, ok, section, subsection, cmd } from "../../host/ui";
+import { info, ok, section, subsection, cmd } from "../../host/ui.js";
 
 export function printDebugGuidanceForCommand(runCmd: string): void {
   section("Run");

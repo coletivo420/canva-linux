@@ -1,13 +1,12 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { createRequire } from "node:module";
 import type {
   c420uiHostDependency,
   c420uiHostDependencyCheckResult,
   c420uiNpmDependencyConfig,
   c420uiPlannedHostDependencyCommand,
-} from "./host-dependencies";
+} from "./host-dependencies.js";
 
 export type c420uiNpmCommandRunner = (
   command: string,
@@ -84,12 +83,13 @@ function declaredDependencyNames(
 }
 
 export function resolveC420UINpmDependency(dependency: string, rootDir: string): boolean {
-  try {
-    const projectRequire = createRequire(path.join(rootDir, "package.json"));
-    projectRequire.resolve(dependency, { paths: [rootDir] });
-    return true;
-  } catch {
-    return false;
+  let currentDir = path.resolve(rootDir);
+  while (true) {
+    const candidate = path.join(currentDir, "node_modules", dependency, "package.json");
+    if (fs.existsSync(candidate)) return true;
+    const parent = path.dirname(currentDir);
+    if (parent === currentDir) return false;
+    currentDir = parent;
   }
 }
 

@@ -1,5 +1,5 @@
-import { configureLinuxNativeCredentialStore } from "./linux-credential-runtime";
-import type { CanvaLinuxRuntimeCliOptions, RuntimeDebugLevel } from "./runtime-cli";
+import { configureLinuxNativeCredentialStore } from "./linux-credential-runtime.js";
+import type { CanvaLinuxRuntimeCliOptions, RuntimeDebugLevel } from "./runtime-cli.js";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type CommandLineLike = {

@@ -1,14 +1,15 @@
-import path from "path";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types";
-import { attachTabEventHandlers } from "./tab-events";
+import type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types.js";
+import { attachTabEventHandlers } from "./tab-events.js";
 import type {
   BrowserWindowLike as OAuthBrowserWindowLike,
   OAuthPopupEntry,
   RegisterAuthPopupOptions,
-} from "./oauth";
+} from "./oauth.js";
 
-export type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types";
+export type { DebugLog, TabEntry, WebContentsViewLike } from "../shared/types.js";
 export type NavigationDecision = { kind: string; category?: string };
 export type ClassifyNavigationRequest = (request: {
   url: string;
@@ -58,6 +59,8 @@ export type AttachTabEventHandlersLike = (
   tab: TabEntry,
   helpers: Record<string, unknown>,
 ) => void;
+
+const RUNTIME_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 type CreateTabControllerOptions = {
   appName: string;
@@ -157,10 +160,10 @@ export function createTabController({
     );
     const id = state.nextTabIdRef();
     const preloadPath = path.resolve(
-      __dirname,
+      RUNTIME_DIR,
       "..",
       "preload",
-      "canva.bundle.js",
+      "canva.bundle.mjs",
     );
     debugLog("tabs:navigation", "preload-path", preloadPath);
 
@@ -170,7 +173,7 @@ export function createTabController({
       webPreferences: {
         preload: preloadPath,
         contextIsolation: false,
-        sandbox: false,
+        sandbox: true,
         nodeIntegration: false,
         nodeIntegrationInSubFrames: true,
         session: getCanvaSession(),

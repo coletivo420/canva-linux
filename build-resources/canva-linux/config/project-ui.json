@@ -1,7 +1,7 @@
 {
   "displayVersion": "0.1.4-15.Dev",
   "status": "Alpha",
-  "phase": "0.1.4-15.Dev.10",
+  "phase": "0.1.4-15.Dev.11",
   "projectName": "Canva Linux",
   "projectSubtitle": "Install and Development Workspace",
   "toolTitle": "Canva Linux Builder powered by c420ui",
@@ -26,5 +26,5 @@
     "│ .::==++**########**++==:::.  │",
     "└──────────────────────────────┘"
   ],
-  "versionReleaseNotes": "Dev.10 opens with TypeScript-first workflow hardening."
+  "versionReleaseNotes": "Dev.11 opens with ESM-only maintained source guardrail closure."
 }

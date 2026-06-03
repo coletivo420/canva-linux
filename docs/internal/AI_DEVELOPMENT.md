@@ -23,7 +23,7 @@ This document defines project conventions for AI-assisted development and vibeco
 
 - Do not revive native Linux/Wayland OAuth popup icon work unless explicitly requested.
 - Keep runtime behavior unchanged when a patch is documentation/readability-only.
-- Keep `packages/electron/preload/canva.bundle.js` generated-only; edit the modular preload sources and regenerate the bundle with `npm run build:preload`.
+- Keep `build-resources/electron/preload/canva.bundle.mjs` generated-only; edit the modular preload sources and regenerate the bundle with `npm run build:preload`.
 - Do not pass untrusted or unsupported URL schemes to Electron's system opener.
 - Keep eyedropper snapshot IPC scoped to the requesting Canva tab.
 

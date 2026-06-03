@@ -4,8 +4,8 @@ import {
   type c420uiAction,
   type c420uiLinuxRootCommandRunner,
   type c420uiRootProvider,
-} from "../../c420ui/src";
-import { buildCanvaLinuxOverviewStatus } from "./detection/provider";
+} from "../../c420ui/src/index.js";
+import { buildCanvaLinuxOverviewStatus } from "./detection/provider.js";
 
 type CanvaLinuxRootProviderOptions = {
   runCommand?: c420uiLinuxRootCommandRunner;
@@ -57,7 +57,7 @@ export function createCanvaLinuxRootProvider(
   const base = createC420UILinuxRootProviderBase({
     id: "canva-linux-root-provider",
     label: "Canva Linux root provider",
-    sudoHelperPath: "build-resources/c420ui/host/linux/sudo-helper.sh",
+    sudoCommand: "sudo",
     rootAuthEnvKey: "C420UI_ROOT_AUTH",
     rootAuthEnvValue: "1",
     runCommand: options.runCommand,

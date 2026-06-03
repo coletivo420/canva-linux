@@ -1,7 +1,7 @@
 export const C420UI_BOOTSTRAP_ARTIFACT_FILES = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
+  "run-c420ui.mjs",
+  "run-c420ui-cli.mjs",
+  "c420ui-builder.mjs",
 ] as const;
 
 export type C420UIBootstrapArtifactFile =

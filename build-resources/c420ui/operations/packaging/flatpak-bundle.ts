@@ -2,16 +2,16 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { projectRoot } from "../../host/paths";
-import { requireCommands } from "../../host/preflight";
-import { runCommand } from "../../host/command-runner";
-import { info, ok, warn } from "../../host/ui";
-import { parseDryRun } from "../../host/dry-run";
-import { writeBuildMetadataSidecar } from "../install/build-metadata-marker";
-import { resolveFlatpakScope } from "../flatpak/scope";
-import { ensureFlathubRuntime } from "../flatpak/runtime";
-import { buildFlatpakRepo, repoHasAppRef } from "../flatpak/repo";
-import { printFlatpakBundleNotice } from "../host/guidance";
+import { projectRoot } from "../../host/paths.js";
+import { requireCommands } from "../../host/preflight.js";
+import { runCommand } from "../../host/command-runner.js";
+import { info, ok, warn } from "../../host/ui.js";
+import { parseDryRun } from "../../host/dry-run.js";
+import { writeBuildMetadataSidecar } from "../install/build-metadata-marker.js";
+import { resolveFlatpakScope } from "../flatpak/scope.js";
+import { ensureFlathubRuntime } from "../flatpak/runtime.js";
+import { buildFlatpakRepo, repoHasAppRef } from "../flatpak/repo.js";
+import { printFlatpakBundleNotice } from "../host/guidance.js";
 
 const APP_ID = "io.github.coletivo420.canva-linux";
 

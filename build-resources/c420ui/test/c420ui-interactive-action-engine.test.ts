@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   createInteractiveActionRunner,
   type InteractiveActionRunnerState,
-} from "../src/terminal/interactive-action-runner";
+} from "../src/terminal/interactive-action-runner.js";
 import {
   c420uiExitCodes,
   type c420uiAction,
@@ -14,7 +14,7 @@ import {
   type c420uiProjectBridge,
   type c420uiRootAccessRequester,
   type c420uiRootProvider,
-} from "../src";
+} from "../src/index.js";
 
 function createFakeBridge(options: {
   actions: c420uiAction[];
@@ -82,7 +82,7 @@ function createRunner(options: {
   bridge: c420uiProjectBridge;
   rootProvider?: c420uiRootProvider;
   requestRootAccess?: c420uiRootAccessRequester;
-  createActionEngine?: typeof import("../src").createC420UIActionEngine;
+  createActionEngine?: typeof import("../src/index.js").createC420UIActionEngine;
 }) {
   const logs: Array<{ text: string; source: c420uiLogSource }> = [];
   const progress: Array<{ state: string; percent?: number; label: string }> = [];

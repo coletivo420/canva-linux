@@ -210,15 +210,3 @@ export {
   isSafeExternalUrl,
   shouldGrantRemotePermission,
 };
-
-module.exports = {
-  classifyWindowOpenRequest,
-  detectCanvaOAuthCallback,
-  extractHostname,
-  isBlankPopupUrl,
-  isCanvaAuthUrl,
-  isOAuthProviderUrl,
-  isCanvaUrl,
-  isSafeExternalUrl,
-  shouldGrantRemotePermission,
-};

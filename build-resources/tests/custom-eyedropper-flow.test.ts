@@ -1,13 +1,14 @@
-// @ts-check
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   normalizeHex,
   createAbortError,
   createOperationError,
-} = require("./helpers/runtime-module").loadRuntimeModule(
+} = await loadRuntimeModule(
   "preload/custom-eyedropper-flow",
 );
 

@@ -5,6 +5,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- Closed obsolete Dev11 ESM migration leftovers: Node tests now compile to `.mjs`, root `scripts/` is no longer a
+  fallback compilation area, preload bundling rejects maintained `.js` source, runtime builds require
+  `toolbar.bundle.mjs`, and repository policy blocks CommonJS bridges across maintained TypeScript.
 - The c420ui builder now auto-generates missing, empty, invalid, or stale bootstrap bundles before launch.
 - Normal users only need npm installed; they no longer need to run `npm run build:c420ui-bootstrap` manually.
 - Validation gates remain check-only and fail when committed bootstrap artifacts are stale.
@@ -48,13 +51,13 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   sidecars, and c420ui must prefer that metadata when displaying artifact versions.
 
 - Restored the c420ui bootstrap as a TypeScript-generated artifact and hardened artifact validation.
-  build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
+  build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts. Do not edit them manually.
   Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 - Added anti-corruption coverage so the c420ui bootstrap check must fail on syntax errors, stale generated output,
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-- build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+- build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
   output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
   on every committed bootstrap entrypoint.
 - Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
@@ -69,6 +72,14 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   dirtying the worktree with a not-yet-materialized commit hash.
   To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
   `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
+
+## 0.1.4-15.Dev.11 — ESM-only TypeScript migration
+
+- Opened the Dev11 line focused on full ESM migration.
+- Declared CommonJS as transitional build debt rather than an accepted maintained format.
+- Kept generated JavaScript allowed only as build output.
+- Preserved the Dev10 build-resources ownership model.
+- Prepared the repository policy for ESM-first tooling, runtime and bootstrap migration.
 
 ## 0.1.4-15.Dev.10 — TypeScript hardening
 
@@ -224,7 +235,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Slimmed the Canva Linux c420ui adapter so `runAction()` only executes concrete commands after the c420ui
   Action Engine applies planned-action, dry-run, root, and confirmation policy.
 - Classified remaining shell helpers as c420ui host tools, Canva Linux recipes, repository checks, or obsolete
-  helpers, and documented `scripts/preflight-common.sh` as repository-check-only.
+  helpers, and documented `root scripts/ ownership` as scripts/ must not return.
 - Hardened c420ui host dependency management with config validation, dry-run planned commands, npm declaration checks, and executable command lookup.
 - Renamed the project-local c420ui adapter directory to `canva-linux/c420ui-adapter/` so future dependent projects can reuse the same path pattern.
 - Moved host dependency policy into c420ui so the generic runner owns command, Node and npm checks, npm install strategy, repair mode and skip mode.
@@ -255,7 +266,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Moved reusable operational command execution into the c420ui command runner.
 - Routed interactive c420ui action execution through the shared c420ui Action Engine and root provider.
 - Moved direct CLI root/sudo preflight into the c420ui root provider contract with a Canva Linux provider backed
-  by `build-resources/c420ui/host/linux/sudo-helper.sh`.
+  by `build-resources/c420ui/operations/host/sudo.ts`.
 - Moved generic c420ui TypeScript config contracts from `build-resources/c420ui/src/terminal/app.ts` into the private `build-resources/c420ui` skeleton.
 - Canva Linux no longer treats persistent login as available when no secure Linux Secret Service backend is detected
   or when safe storage encryption is unavailable.
@@ -377,3 +388,23 @@ Canva Linux and c420ui now use separate deterministic content hashes.
 `combinedSourceHash` changes when either component hash changes.
 `buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
 Docs, tests and generated artifacts must not affect either source hash.
+
+## Dev11 final ESM boundaries
+
+Dev11 closes the radical ESM migration.
+
+- All maintained runtime/tooling/check/build source is TypeScript.
+- All generated Node/tooling outputs are ESM `.mjs`.
+- Electron runtime starts from `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.mjs`.
+- c420ui bootstrap generated artifacts are `.mjs`.
+- Versioned `.cjs` files are forbidden.
+- CommonJS bridges are forbidden in maintained TypeScript.
+- Shell remains only as POSIX/bootstrap boundary.
+
+The only remaining shell files are documented runtime/bootstrap boundaries:
+
+- `canva-linux-c420ui-builder`: stage-0 c420ui bootstrap launcher.
+- `run.sh`: Flatpak/POSIX runtime launcher.
+
+They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.

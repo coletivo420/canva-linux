@@ -1,9 +1,9 @@
-import { parseDryRun } from "../../host/dry-run";
-import { projectRoot } from "../../host/paths";
-import { info } from "../../host/ui";
-import { detectInstallations } from "../detection/install-detection";
-import { runNativeUninstall } from "./native";
-import { runFlatpakUninstall } from "./flatpak";
+import { parseDryRun } from "../../host/dry-run.js";
+import { projectRoot } from "../../host/paths.js";
+import { info } from "../../host/ui.js";
+import { detectInstallations } from "../detection/install-detection.js";
+import { runNativeUninstall } from "./native.js";
+import { runFlatpakUninstall } from "./flatpak.js";
 
 export function runDetectedUninstall(argv: string[]): void {
   const rootDir = projectRoot();

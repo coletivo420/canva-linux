@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Private c420ui workspace for modular development, build, maintenance and packaging workflows",
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "GPL-3.0-or-later"

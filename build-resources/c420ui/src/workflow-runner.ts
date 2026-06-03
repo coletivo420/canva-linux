@@ -1,7 +1,7 @@
-import type { c420uiActionResult } from "./bridge";
-import { createC420UIEvent, type C420UIEventSink } from "./events";
-import { c420uiExitCodes } from "./exit-codes";
-import type { c420uiRunnableArtifactWorkflow } from "./workflows";
+import type { c420uiActionResult } from "./bridge.js";
+import { createC420UIEvent, type C420UIEventSink } from "./events.js";
+import { c420uiExitCodes } from "./exit-codes.js";
+import type { c420uiRunnableArtifactWorkflow } from "./workflows.js";
 
 export type c420uiWorkflowPhase =
   | "build"

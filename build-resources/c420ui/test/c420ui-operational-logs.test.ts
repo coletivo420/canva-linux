@@ -4,7 +4,7 @@ import test from "node:test";
 import {
   createC420UIOperationalLogEvent,
   redactC420UILogLine,
-} from "../src";
+} from "../src/index.js";
 
 test("c420ui operational logs redact password assignments", () => {
   assert.equal(redactC420UILogLine("password=abc"), "password=[redacted]");

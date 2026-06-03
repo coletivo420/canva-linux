@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import type { c420uiProjectBridge } from "../src";
-import type { C420UIAppOptions } from "../src/terminal/app";
-import { formatC420UITerminalHelp } from "../src/terminal/help";
-import { runC420UITerminalApp } from "../src/terminal/runtime";
+import type { c420uiProjectBridge } from "../src/index.js";
+import type { C420UIAppOptions } from "../src/terminal/app.js";
+import { formatC420UITerminalHelp } from "../src/terminal/help.js";
+import { runC420UITerminalApp } from "../src/terminal/runtime.js";
 
 function createRuntimeOptions(): C420UIAppOptions {
   const bridge: c420uiProjectBridge = {

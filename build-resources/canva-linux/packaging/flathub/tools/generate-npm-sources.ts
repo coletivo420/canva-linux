@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../../project-root.js";
 
 const repoRoot =
-  process.env.CANVA_SCRIPT_REPO_ROOT ||
-  path.resolve(__dirname, "..", "..", "..");
+  findProjectRoot(process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd());
 const lockfilePath = path.join(repoRoot, "package-lock.json");
-const flathubDir = path.join(repoRoot, "packaging", "flathub");
+const flathubDir = path.join(repoRoot, "build-resources/canva-linux/packaging/flathub");
 const manifestPath = path.join(flathubDir, "manifest.yml");
 const outputPath = path.join(flathubDir, "generated-sources.json");
 
@@ -357,4 +357,4 @@ export function main(): void {
   );
 }
 
-if (require.main === module) main();
+if (/generate-npm-sources\.(mjs|js|ts)$/.test(process.argv[1] || "")) main();

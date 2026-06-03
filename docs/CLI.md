@@ -17,8 +17,7 @@ It provides access to the c420ui terminal interface and direct CLI actions.
 - The builder only parses global builder flags. It does not maintain its own action allowlist.
 - Direct CLI actions are resolved by the c420ui CLI bridge from the project Action Registry.
 - Direct CLI actions are routed through the c420ui CLI bridge and the c420ui Action Engine.
-- The builder command rebuilds the c420ui CLI bridge when relevant TypeScript sources, project adapter files or
-  action registry metadata are newer than `.build/build-resources/c420ui/scripts/run-c420ui-cli.js`.
+- Development CLI flows build the c420ui CLI bridge as `.build/scripts/run-c420ui-cli.mjs`.
 - The builder does not decide whether an action is concrete, planned, or invalid; the Action Registry and Action Engine own that policy.
 - Do not run Canva Linux Builder powered by c420ui as root. When an operation needs administrator privileges,
   Canva Linux asks for authentication only for that specific action.
@@ -33,7 +32,7 @@ It provides access to the c420ui terminal interface and direct CLI actions.
 | `--dry-run` | Resolve direct action metadata without executing command scripts. |
 
 `./canva-linux-c420ui-builder --help` is stable builder command help. The compiled bridge help
-(`node .build/build-resources/c420ui/scripts/run-c420ui-cli.js --help`) is dynamic and lists the
+(`node .build/scripts/run-c420ui-cli.mjs --help`) is dynamic and lists the
 action flags exposed by the active project bridge.
 
 The current direct CLI accepts flag-only global options. Options that take values
@@ -74,7 +73,7 @@ with code `78`; `--dry-run` only resolves metadata and still exits `0`.
 
 The c420ui Action Engine enforces Action Registry metadata before starting a
 backend script. Actions with `requiresRoot: true` validate administrator access
-through `build-resources/c420ui/host/linux/sudo-helper.sh --validate`; direct CLI mode uses the c420ui CLI
+through `build-resources/c420ui/operations/host/sudo.ts --validate`; direct CLI mode uses the c420ui CLI
 bridge, while c420ui uses previously cached credentials in non-interactive mode.
 
 `scope: "user"` actions must not require root, and the Action Engine refuses an

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
 
 function read(relativePath: string): string {
   return fs.readFileSync(path.join(rootDir, relativePath), "utf8");
@@ -13,7 +13,7 @@ test("app.ts imports inputDialog", () => {
   const app = read("build-resources/c420ui/src/terminal/app.ts");
 
   assert.equal(app.includes("inputDialog"), true);
-  assert.equal(app.includes('from "./modal"'), true);
+  assert.equal(/\}\s+from "\.\/modal\.js";/.test(app), true);
 });
 
 test("app.ts passes requestRootAccess to createInteractiveActionRunner", () => {

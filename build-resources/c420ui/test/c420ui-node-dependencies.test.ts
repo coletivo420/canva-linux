@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { checkC420UINodeDependency } from "../src/node-dependencies";
+import { checkC420UINodeDependency } from "../src/node-dependencies.js";
 
 test("Node >= minimum passes", () => {
   assert.equal(

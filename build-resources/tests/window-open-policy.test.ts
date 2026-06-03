@@ -1,14 +1,10 @@
-// @ts-nocheck
-"use strict";
 
-// @ts-check
+import test from "node:test";
+import assert from "node:assert/strict";
 
-const test = require("node:test");
-const assert = require("node:assert/strict");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
-
-const { createWindowOpenPolicy } = loadRuntimeModule("main/window-open-policy");
+const { createWindowOpenPolicy } = await loadRuntimeModule("main/window-open-policy");
 
 /**
  * @param {'oauth-popup' | 'internal-tab' | 'blocked-external' | 'external'} kindToReturn

@@ -3,14 +3,14 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { validateFlatpakBrandingTokens } from "../packaging/flatpak/branding-policy";
-import { validateFlatpakPermissions } from "../packaging/flatpak/permission-policy";
-import { validateGeneratedSources } from "../packaging/flathub/policy/generated-sources-policy";
-import { extractArchiveSha256, extractArchiveUrl, readManifest, validateSubmissionManifestTokens } from "../packaging/flathub/policy/submission-policy";
-import { verifyArchiveSha256 } from "../packaging/flathub/policy/source-archive-policy";
-import { hasCommand } from "./optional-command";
-import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result";
-import { runStep } from "./run-step";
+import { validateFlatpakBrandingTokens } from "../packaging/flatpak/branding-policy.js";
+import { validateFlatpakPermissions } from "../packaging/flatpak/permission-policy.js";
+import { validateGeneratedSources } from "../packaging/flathub/policy/generated-sources-policy.js";
+import { extractArchiveSha256, extractArchiveUrl, readManifest, validateSubmissionManifestTokens } from "../packaging/flathub/policy/submission-policy.js";
+import { verifyArchiveSha256 } from "../packaging/flathub/policy/source-archive-policy.js";
+import { hasCommand } from "./optional-command.js";
+import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result.js";
+import { runStep } from "./run-step.js";
 
 export function runFlathubSubmissionValidation(context: ValidationContext): ValidationResult {
   const warnings: string[] = [];
@@ -81,7 +81,7 @@ export function runFlathubSubmissionValidation(context: ValidationContext): Vali
   return okResult(warnings);
 }
 
-if (require.main === module) {
+if (/flathub-submission\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const result = runFlathubSubmissionValidation({ rootDir: process.cwd() });
   process.exit(result.ok ? 0 : 1);
 }

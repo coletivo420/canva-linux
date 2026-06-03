@@ -6,8 +6,8 @@ import path from "node:path";
 import {
   calculateCanvaLinuxSourceHash,
   combineSourceHashes,
-} from "../source-hash";
-import { calculateC420UISourceHash } from "../../c420ui/bootstrap/source-hash";
+} from "../source-hash.js";
+import { calculateC420UISourceHash } from "../../c420ui/bootstrap/source-hash.js";
 
 type PackageJson = {
   scripts?: Record<string, string>;
@@ -104,7 +104,7 @@ function reportMissingFragments(
 }
 
 function checkForbiddenPaths(rootDir: string, failures: string[]): void {
-  for (const relativePath of [
+  const legacyForbiddenPaths = [
     "packages",
     "packages/c420ui",
     "packages/electron",
@@ -118,12 +118,16 @@ function checkForbiddenPaths(rootDir: string, failures: string[]): void {
     "scripts/build-appimage.sh",
     "scripts/build-flatpak-bundle.sh",
     "scripts/install-native.sh",
+    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
+    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh",
     "build-resources/canva-linux/checks/check-c420ui-bootstrap.ts",
     "build-resources/canva-linux/checks/check-c420ui-artifact-gate.ts",
     "build-resources/canva-linux/checks/check-c420ui-node-check.ts",
     "build-resources/canva-linux/checks/c420ui-bootstrap-check-helpers.ts",
     "bootstrap/c420ui",
-  ] as const) {
+  ] as const;
+
+  for (const relativePath of legacyForbiddenPaths) {
     if (fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: must not exist`);
     }
@@ -166,9 +170,9 @@ function checkRequiredPaths(rootDir: string, failures: string[]): void {
     "build-resources/canva-linux/assets/icons",
     "build-resources/canva-linux/assets/icons/io.github.coletivo420.canva-linux.png",
     "build-resources/c420ui/bootstrap/generated/manifest.json",
-    "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
-    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-    "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs",
+    "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs",
   ] as const) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: must exist`);
@@ -187,16 +191,16 @@ function checkPackageScripts(rootDir: string, failures: string[]): void {
   const requiredScripts: Record<string, string> = {
     "build:metadata": "npm run run:ts -- build-resources/c420ui/scripts/generate-build-metadata.ts --committed",
     "build:metadata:effective": "npm run run:ts -- build-resources/c420ui/scripts/generate-build-metadata.ts --effective",
-    "build:c420ui-bootstrap": "npm run build:metadata && esbuild build-resources/c420ui/scripts/build-bootstrap.ts --bundle --platform=node --target=node22 --format=cjs --external:esbuild --outfile=.build/build-resources/c420ui/scripts/build-bootstrap.cjs && node .build/build-resources/c420ui/scripts/build-bootstrap.cjs",
-    "check:c420ui-node-check": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-node.js",
-    "check:c420ui-bootstrap": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-bootstrap.js",
-    "check:c420ui-bootstrap-artifacts": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-artifact-gate.js",
+    "build:c420ui-bootstrap": "npm run build:metadata && esbuild build-resources/c420ui/scripts/build-bootstrap.ts --bundle --platform=node --target=node22 --format=esm --external:esbuild --outfile=.build/build-resources/c420ui/scripts/build-bootstrap.mjs && node .build/build-resources/c420ui/scripts/build-bootstrap.mjs",
+    "check:c420ui-node-check": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-node.mjs",
+    "check:c420ui-bootstrap": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-bootstrap.mjs",
+    "check:c420ui-bootstrap-artifacts": "npm run build:c420ui-checks && node .build/build-resources/c420ui/checks/check-artifact-gate.mjs",
     "test:c420ui": "npm run test -- build-resources/c420ui/test",
-    "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.js",
-    "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.js",
-    "c420ui:install-native": "npm run build:scripts && node .build/scripts/install-native.js",
-    "c420ui:build-appimage": "npm run build:scripts && node .build/scripts/build-appimage.js",
-    "c420ui:build-flatpak-bundle": "npm run build:scripts && node .build/scripts/build-flatpak-bundle.js",
+    "c420ui": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui.mjs",
+    "c420ui:cli": "CANVA_SCRIPT_REPO_ROOT=$PWD npm run build:scripts && CANVA_SCRIPT_REPO_ROOT=$PWD node .build/scripts/run-c420ui-cli.mjs",
+    "c420ui:install-native": "npm run build:scripts && node .build/scripts/install-native.mjs",
+    "c420ui:build-appimage": "npm run build:scripts && node .build/scripts/build-appimage.mjs",
+    "c420ui:build-flatpak-bundle": "npm run build:scripts && node .build/scripts/build-flatpak-bundle.mjs",
   };
 
   for (const [name, expected] of Object.entries(requiredScripts)) {
@@ -428,6 +432,7 @@ function checkBuildResourcesLayoutContract(rootDir: string, failures: string[]):
     "build-resources/canva-linux/assets/desktop",
     "build-resources/canva-linux/assets/metainfo",
     "build-resources/canva-linux/assets/icons",
+    "build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts",
   ] as const) {
     if (!fs.existsSync(path.join(rootDir, relativePath))) {
       failures.push(`${relativePath}: required build-resources layout path must exist`);
@@ -579,7 +584,7 @@ function checkValidateProjectScript(rootDir: string, failures: string[]): void {
   const command = packageJson?.scripts?.["validate:project"] ?? "";
   if (
     !command.includes("npm run build:scripts") ||
-    !command.includes("node .build/scripts/validate-project.js")
+    !command.includes("node .build/scripts/validate-project.mjs")
   ) {
     failures.push("package.json scripts.validate:project: must execute the generated TypeScript entrypoint");
   }
@@ -641,7 +646,7 @@ function checkC420UIAutoBootstrapContract(rootDir: string, failures: string[]): 
     return;
   }
 
-  if (!builderSource.includes("import { ensureC420UIBootstrap } from \"../bootstrap/ensure-bootstrap\";")) {
+  if (!builderSource.includes("import { ensureC420UIBootstrap } from \"../bootstrap/ensure-bootstrap.js\";")) {
     failures.push("build-resources/c420ui/scripts/c420ui-builder.ts: must import ensureC420UIBootstrap");
   }
 

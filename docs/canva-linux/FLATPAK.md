@@ -53,3 +53,7 @@ root policy before the Flatpak scripts run.
 
 - Flatpak policy parsing and decisions are TypeScript-owned under `build-resources/canva-linux/validation` and `build-resources/canva-linux/packaging/flatpak`.
 - `scripts/validate-flatpak.sh` is a compatibility wrapper only and must not contain policy logic or JavaScript heredocs.
+
+## Dev11 command
+
+- Flatpak bundle packaging runs through `npm run package:flatpak-bundle`.

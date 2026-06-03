@@ -2,12 +2,12 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { createBuildMetadata } from "../../electron/main/build-metadata";
+import { createBuildMetadata } from "../../electron/main/build-metadata.js";
 import {
   calculateCanvaLinuxSourceHash,
   combineSourceHashes,
-} from "../../canva-linux/source-hash";
-import { calculateC420UISourceHash } from "../bootstrap/source-hash";
+} from "../../canva-linux/source-hash.js";
+import { calculateC420UISourceHash } from "../bootstrap/source-hash.js";
 
 type PackageJson = { version?: string };
 type ProjectUiJson = { displayVersion?: string; phase?: string };
@@ -99,4 +99,4 @@ export function main(): void {
   console.log(`[build-metadata] wrote ${path.relative(rootDir, outputPath)}`);
 }
 
-if (require.main === module) main();
+if (/generate-build-metadata\.(mjs|js|ts)$/.test(process.argv[1] || "")) main();

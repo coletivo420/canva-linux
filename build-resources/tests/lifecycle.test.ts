@@ -1,12 +1,9 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
-
-const { registerAppLifecycle } = loadRuntimeModule("main/lifecycle");
+const { registerAppLifecycle } = await loadRuntimeModule("main/lifecycle");
 
 function createLifecycleOptions({
   canvaSession = null,

@@ -8,7 +8,7 @@ import {
   validateC420UIArtifactWorkflowsAgainstActions,
   type C420UIActionDescriptor,
   type c420uiArtifactRecipeConfig,
-} from "../src";
+} from "../src/index.js";
 
 const capabilities = {
   supportsArtifacts: true,

@@ -7,7 +7,7 @@ import {
   createC420UILinuxRootProviderBase,
   validateC420UILinuxActionScope,
   type c420uiAction,
-} from "../src";
+} from "../src/index.js";
 
 const rootAction: c420uiAction = {
   id: "install-system",
@@ -21,7 +21,7 @@ const rootAction: c420uiAction = {
 
 test("buildActionEnvironment merges base env and action env", () => {
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "custom-helper.sh",
+    sudoCommand: "custom-sudo",
   });
   const env = provider.buildActionEnvironment(rootAction, {
     ACTION_ENV: "base",
@@ -56,7 +56,7 @@ test("validateC420UILinuxActionScope allows requiresRoot true with system scope"
 
 test("buildRootActionEnvironment injects configured root auth env", () => {
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "custom-helper.sh",
+    sudoCommand: "custom-sudo",
     rootAuthEnvKey: "PROJECT_ROOT_AUTH",
     rootAuthEnvValue: "yes",
   });
@@ -67,14 +67,14 @@ test("buildRootActionEnvironment injects configured root auth env", () => {
   });
 });
 
-test("validateRootAccess calls configured sudo helper with --validate", () => {
+test("validateRootAccess calls configured sudo command with --validate", () => {
   const calls: Array<{
     command: string;
     args: string[];
     options: { cwd?: string; env?: NodeJS.ProcessEnv; shell?: boolean };
   }> = [];
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "project-helper.sh",
+    sudoCommand: "sudo",
     runCommand(command, args, options) {
       calls.push({
         command,
@@ -93,8 +93,8 @@ test("validateRootAccess calls configured sudo helper with --validate", () => {
   assert.deepEqual(provider.validateRootAccess("/repo", env), { ok: true });
   assert.deepEqual(calls, [
     {
-      command: "bash",
-      args: ["project-helper.sh", "--validate"],
+      command: "sudo",
+      args: ["-v"],
       options: {
         cwd: "/repo",
         env,
@@ -105,9 +105,9 @@ test("validateRootAccess calls configured sudo helper with --validate", () => {
   ]);
 });
 
-test("validateRootAccess returns an error when sudo helper fails", () => {
+test("validateRootAccess returns an error when sudo command fails", () => {
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "project-helper.sh",
+    sudoCommand: "sudo",
     runCommand() {
       return { status: 5 } as SpawnSyncReturns<Buffer>;
     },
@@ -120,28 +120,28 @@ test("validateRootAccess returns an error when sudo helper fails", () => {
   });
 });
 
-test("sudo helper path is configurable instead of hardcoded", () => {
-  const calls: string[][] = [];
+test("sudo command path is configurable instead of hardcoded", () => {
+  const calls: Array<{ command: string; args: string[] }> = [];
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "another-helper.sh",
-    runCommand(_command, args) {
-      calls.push([...args]);
+    sudoCommand: "another-sudo",
+    runCommand(command, args) {
+      calls.push({ command, args: [...args] });
       return { status: 0 } as SpawnSyncReturns<Buffer>;
     },
   });
 
   provider.validateRootAccess("/repo", {});
 
-  assert.deepEqual(calls, [["another-helper.sh", "--validate"]]);
+  assert.deepEqual(calls, [{ command: "another-sudo", args: ["-v"] }]);
 });
 
 
 test("validateRootAccess supports a custom validation command builder", () => {
   const calls: Array<{ command: string; args: string[] }> = [];
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "direct-helper",
-    buildRootValidationCommand(sudoHelperPath) {
-      return { command: sudoHelperPath, args: ["--validate"] };
+    sudoCommand: "direct-sudo",
+    buildRootValidationCommand(sudoCommand) {
+      return { command: sudoCommand, args: ["--validate"] };
     },
     runCommand(command, args) {
       calls.push({ command, args: [...args] });
@@ -152,14 +152,14 @@ test("validateRootAccess supports a custom validation command builder", () => {
   provider.validateRootAccess("/repo", {});
 
   assert.deepEqual(calls, [
-    { command: "direct-helper", args: ["--validate"] },
+    { command: "direct-sudo", args: ["--validate"] },
   ]);
 });
 
-test("validateRootAccessWithInput calls configured sudo helper with --validate-stdin", () => {
+test("validateRootAccessWithInput calls configured sudo command with --validate-stdin", () => {
   const calls: Array<{ command: string; args: string[] }> = [];
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "project-helper.sh",
+    sudoCommand: "sudo",
     runCommand(command, args) {
       calls.push({ command, args: [...args] });
       return { status: 0 } as SpawnSyncReturns<Buffer>;
@@ -170,14 +170,14 @@ test("validateRootAccessWithInput calls configured sudo helper with --validate-s
     ok: true,
   });
   assert.deepEqual(calls, [
-    { command: "bash", args: ["project-helper.sh", "--validate-stdin"] },
+    { command: "sudo", args: ["-S", "-v", "-p", ""] },
   ]);
 });
 
 test("validateRootAccessWithInput passes password through stdin", () => {
   const inputs: unknown[] = [];
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "project-helper.sh",
+    sudoCommand: "sudo",
     runCommand(_command, _args, options) {
       inputs.push(options.input);
       return { status: 0 } as SpawnSyncReturns<Buffer>;
@@ -192,7 +192,7 @@ test("validateRootAccessWithInput passes password through stdin", () => {
 test("validateRootAccessWithInput does not use stdio inherit", () => {
   const stdioValues: unknown[] = [];
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "project-helper.sh",
+    sudoCommand: "sudo",
     runCommand(_command, _args, options) {
       stdioValues.push(options.stdio);
       return { status: 0 } as SpawnSyncReturns<Buffer>;
@@ -206,7 +206,7 @@ test("validateRootAccessWithInput does not use stdio inherit", () => {
 
 test("validateRootAccessWithInput returns ok on status 0", () => {
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "project-helper.sh",
+    sudoCommand: "sudo",
     runCommand() {
       return { status: 0 } as SpawnSyncReturns<Buffer>;
     },
@@ -219,7 +219,7 @@ test("validateRootAccessWithInput returns ok on status 0", () => {
 
 test("validateRootAccessWithInput returns failed on non-zero status", () => {
   const provider = createC420UILinuxRootProviderBase({
-    sudoHelperPath: "project-helper.sh",
+    sudoCommand: "sudo",
     runCommand() {
       return { status: 5 } as SpawnSyncReturns<Buffer>;
     },

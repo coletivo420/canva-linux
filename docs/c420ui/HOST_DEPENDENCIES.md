@@ -60,16 +60,16 @@ only to select the generated `bootstrap/c420ui` bundle and start c420ui from a c
 - Do not run `npm ci`, `npm install`, or full-project dependency repair directly from Canva Linux launchers.
 - Do not restore `scripts/ensure-npm-dependencies.sh`.
 - Do not put concrete Canva Linux dependency lists in c420ui core.
-- Do not let `scripts/preflight-common.sh` own npm install or repair policy.
+- Do not let `root scripts/ ownership` own npm install or repair policy.
 - Do not silently ignore missing required dependencies.
 
 ## Standalone bootstrap boundary
 
-Release checkouts must be able to start c420ui from the generated bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The Stage 0 launcher only selects `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` or `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs` and starts Node.
+Release checkouts must be able to start c420ui from the generated bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The Stage 0 launcher only selects `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs` or `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs` and starts Node.
 
 The bootstrap bundle starts c420ui and contains the generic c420ui engine plus the minimal Canva Linux adapter needed to load project configuration. Full dependency validation, npm declared-versus-installed checks, repair, `C420UI_SKIP_DEPENDENCY_INSTALL`, and `C420UI_DEPENDENCY_REPAIR` remain Stage 1 c420ui Host Dependency Runner responsibilities after startup.
 
-The bootstrap artifact is CommonJS for this release. ESM is documented as future work and requires a separate migration phase.
+The bootstrap artifacts are explicit ESM `.mjs` files for Dev11. CommonJS bootstrap artifacts and `.cjs` fallbacks are forbidden; any bootstrap behavior change must be made in TypeScript source and regenerated through the bootstrap build.
 
 
 ## Bootstrap identity

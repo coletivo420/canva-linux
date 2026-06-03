@@ -1,6 +1,6 @@
-import type { DebugLog, TabEntry } from "../shared/types";
+import type { DebugLog, TabEntry } from "../shared/types.js";
 
-export type { TabEntry, WebContentsLike } from "../shared/types";
+export type { TabEntry, WebContentsLike } from "../shared/types.js";
 export type NavigationDecision = { category: string; kind: string };
 export type PreventableEvent = { preventDefault(): void };
 type AttachTabEventHandlersHelpers = {

@@ -1,8 +1,8 @@
 import fs from "node:fs";
-import { parseDryRun } from "../../host/dry-run";
-import { c420uiSudoRun } from "../host/sudo";
-import { ok, warn } from "../../host/ui";
-import { projectRoot } from "../../host/paths";
+import { parseDryRun } from "../../host/dry-run.js";
+import { c420uiSudoRun } from "../../host/sudo.js";
+import { ok, warn } from "../../host/ui.js";
+import { projectRoot } from "../../host/paths.js";
 
 const ALLOWED = [".build", "dist", "build-dir", "repo", ".flatpak-builder"];
 

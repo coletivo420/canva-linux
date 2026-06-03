@@ -71,9 +71,3 @@ function createDebugTools({
 }
 
 export { createDebugTools, normalizeDebugCategory, normalizeDebugLevel };
-
-module.exports = {
-  createDebugTools,
-  normalizeDebugCategory,
-  normalizeDebugLevel,
-};

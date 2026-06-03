@@ -3,8 +3,8 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
-import { ensureC420UIBootstrap } from "../bootstrap/ensure-bootstrap";
+import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader.js";
+import { ensureC420UIBootstrap } from "../bootstrap/ensure-bootstrap.js";
 
 export const BUILDER_INTERNAL_NAME = "c420ui-builder";
 export const BUILDER_ALIAS = "canva-linux-c420ui-builder";
@@ -38,8 +38,15 @@ Run this builder as your regular user. When an operation needs administrator pri
 
 Running the whole builder as root may break file ownership, user sessions, build artifacts and desktop integration.`;
 
-function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()): string {
-  let current = startDir;
+function defaultRootSearchDir(): string {
+  if (process.env.CANVA_SCRIPT_REPO_ROOT) return process.env.CANVA_SCRIPT_REPO_ROOT;
+  const scriptPath = process.argv[1];
+  if (scriptPath) return path.dirname(path.resolve(scriptPath));
+  return process.cwd();
+}
+
+function findProjectRoot(startDir = defaultRootSearchDir()): string {
+  let current = path.resolve(startDir);
   while (true) {
     if (fs.existsSync(path.join(current, "package.json"))) {
       const scripts = readJsonFile<{ scripts?: Record<string, string> }>(
@@ -142,12 +149,12 @@ function createSession(rootDir: string): { sessionLog?: string; sessionId: strin
 function selectEntrypoint(rootDir: string, kind: "ui" | "cli"): string {
   const candidates = kind === "ui"
     ? [
-        path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs"),
-        path.join(rootDir, ".build/scripts/run-c420ui.js"),
+        path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs"),
+        path.join(rootDir, ".build/scripts/run-c420ui.mjs"),
       ]
     : [
-        path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs"),
-        path.join(rootDir, ".build/scripts/run-c420ui-cli.js"),
+        path.join(rootDir, "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs"),
+        path.join(rootDir, ".build/scripts/run-c420ui-cli.mjs"),
       ];
 
   for (const candidate of candidates) {
@@ -223,8 +230,9 @@ function assertNonRoot(): void {
 
 export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   const parsed = normalizeBuilderArgs(argv);
+  const rootDir = findProjectRoot();
   if (parsed.help) {
-    console.log(builderHelp(findProjectRoot(path.resolve(__dirname, ".."))));
+    console.log(builderHelp(rootDir));
     return 0;
   }
 
@@ -233,7 +241,6 @@ export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   }
 
   assertNonRoot();
-  const rootDir = findProjectRoot(path.resolve(__dirname, ".."));
   ensureC420UIBootstrap(rootDir);
   const session = createSession(rootDir);
   const kind = parsed.hasBridgeAction ? "cli" : "ui";
@@ -250,7 +257,7 @@ export function runC420UIBuilder(argv = process.argv.slice(2)): number {
   return result.status ?? 1;
 }
 
-if (require.main === module) {
+if (/c420ui-builder\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(runC420UIBuilder());
   } catch (error) {

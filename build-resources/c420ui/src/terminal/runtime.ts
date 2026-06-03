@@ -1,8 +1,8 @@
-import type { createApp, C420UIAppOptions } from "./app";
-import { enforceC420UIRootLaunchGuard } from "./root-guard";
+import { createApp as defaultCreateApp, type C420UIAppOptions } from "./app.js";
+import { enforceC420UIRootLaunchGuard } from "./root-guard.js";
 
 export type c420uiTerminalRuntimeOptions = {
-  create?: typeof createApp;
+  create?: typeof defaultCreateApp;
   getuid?: () => number;
   writeError?: (message: string) => void;
   exit?: (code: number) => never;
@@ -10,11 +10,6 @@ export type c420uiTerminalRuntimeOptions = {
     listener: (error: Error) => void,
   ) => NodeJS.Process;
 };
-
-function loadC420UITerminalApp(): typeof createApp {
-  const app = require("./app") as typeof import("./app");
-  return app.createApp;
-}
 
 export function runC420UITerminalApp(
   options: C420UIAppOptions,
@@ -30,7 +25,7 @@ export function runC420UITerminalApp(
     exit,
   });
 
-  const create = runtimeOptions.create ?? loadC420UITerminalApp();
+  const create = runtimeOptions.create ?? defaultCreateApp;
   const screen = create(options);
   const onUncaughtException =
     runtimeOptions.onUncaughtException ??

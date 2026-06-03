@@ -1,12 +1,9 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
-
-const { createStatusLogger } = loadRuntimeModule("main/logging");
+const { createStatusLogger } = await loadRuntimeModule("main/logging");
 
 test("release status logs runtime metadata without inline changelog entries", () => {
   const calls = [];

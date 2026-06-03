@@ -9,7 +9,7 @@ import {
   type c420uiCommandRunnerOptions,
   type c420uiLogEvent,
   type c420uiProgressEvent,
-} from "../src";
+} from "../src/index.js";
 
 function createOptions(
   overrides: Partial<c420uiCommandRunnerOptions> = {},

@@ -7,7 +7,7 @@ import {
   parseC420UIDetectionKeyValueLines,
   runC420UIDetectionProbes,
   type c420uiOverviewStatus,
-} from "../src/detection";
+} from "../src/detection.js";
 
 test("parseC420UIDetectionKeyValueLines parses key value lines", () => {
   assert.deepEqual(

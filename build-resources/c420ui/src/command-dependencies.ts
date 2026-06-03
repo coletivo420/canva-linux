@@ -4,7 +4,7 @@ import type {
   c420uiCommandDependency,
   c420uiHostDependency,
   c420uiHostDependencyCheckResult,
-} from "./host-dependencies";
+} from "./host-dependencies.js";
 
 export type c420uiCommandLookup = (
   command: string,

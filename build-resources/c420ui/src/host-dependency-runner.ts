@@ -1,16 +1,16 @@
-import { checkC420UICommandDependencies } from "./command-dependencies";
-import { checkC420UINodeDependency } from "./node-dependencies";
+import { checkC420UICommandDependencies } from "./command-dependencies.js";
+import { checkC420UINodeDependency } from "./node-dependencies.js";
 import {
   checkC420UINpmDependencies,
   ensureC420UINpmDependencies,
   planC420UINpmInstallCommand,
   type c420uiNpmCommandRunner,
-} from "./npm-dependencies";
+} from "./npm-dependencies.js";
 import type {
   c420uiHostDependencyCheckResult,
   c420uiHostDependencyConfig,
   c420uiHostDependencyEnsureOptions,
-} from "./host-dependencies";
+} from "./host-dependencies.js";
 
 function firstFailure(results: c420uiHostDependencyCheckResult[]): c420uiHostDependencyCheckResult | undefined {
   return results.find((result) => result.status === "failed" || result.status === "missing");

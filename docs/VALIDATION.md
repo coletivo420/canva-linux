@@ -1,12 +1,36 @@
-# Validation Checklist (0.1.4-15.Dev.10)
+# Validation Checklist (0.1.4-15.Dev.11)
+
+## Dev11 ESM-only validation policy
+
+Dev11 is ESM-only by target.
+Maintained TypeScript source must use ESM imports/exports.
+CommonJS patterns are forbidden in maintained source:
+- `require()`
+- `module.exports`
+- `exports.*`
+- `__dirname` without an ESM helper
+- `__filename` without an ESM helper
+- `createRequire()`
+- `require.resolve()`
+- `node:module` `createRequire` bridges
+
+CommonJS may exist only inside external dependencies under `node_modules/`.
+Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
+Electron runtime must start from `.build/electron/main/index.mjs`.
+Electron preload bundles must be `.build/electron/preload/canva.bundle.mjs` and
+`.build/electron/preload/toolbar.bundle.mjs`.
+Node tooling, core checks, c420ui checks, and c420ui terminal generated outputs
+must use ESM `.mjs` artifacts.
+The electron-builder `beforeBuild` hook output must use ESM `.mjs`.
+The c420ui bootstrap generator must emit and run `build-bootstrap.mjs`.
 
 ## Source language policy validation
 
-Dev.10 validation must prove:
+Dev11 validation must prove:
 
 - no maintained JavaScript source was added;
 - generated JavaScript remains under generated-output paths;
-- generated c420ui `.cjs` artifacts remain validated;
+- generated c420ui `.mjs` artifacts remain validated;
 - shell scripts do not contain new JavaScript heredoc policy blocks;
 - shell wrappers stay thin unless explicitly documented as host-operation boundaries.
 
@@ -72,8 +96,8 @@ c420ui bootstrap must be covered by the c420ui bootstrap source-hash input list.
 
 The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 
-- Native User: detected v0.1.4-15.Dev.10+g...
-- AppImage: detected v0.1.4-15.Dev.10+g...
+- Native User: detected v0.1.4-15.Dev.11+g...
+- AppImage: detected v0.1.4-15.Dev.11+g...
 - Flatpak System/User continuam exibindo +gHASH.
 
 Verify metadata installation:
@@ -103,8 +127,8 @@ Check that c420ui renders generated artifacts from the registry, preferring effe
 
 ```text
 Generated Artifacts
-  Flatpak bundle: detected v0.1.4-15.Dev.10+g...
-  AppImage:       detected v0.1.4-15.Dev.10+g...
+  Flatpak bundle: detected v0.1.4-15.Dev.11+g...
+  AppImage:       detected v0.1.4-15.Dev.11+g...
 ```
 
 ## Dev.8 pinned home tab-strip guardrail
@@ -117,13 +141,13 @@ launch. Normal users only need npm installed and do not need to run
 Validation gates remain check-only and still fail when committed bootstrap artifacts are stale.
 Runtime/builder auto-fixes missing or stale bundles automatically; CI checks detect drift.
 
-build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
+build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts. Do not edit them manually.
 Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
 Rebuild from TypeScript sources and validate with `node --check` plus the c420ui artifact gates.
 
 Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
 known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
 output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
 on every committed bootstrap entrypoint.
 Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
@@ -139,12 +163,12 @@ dirtying the worktree with a not-yet-materialized commit hash.
 To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
 `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
-The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
+The c420ui bootstrap check must fail if run-c420ui.mjs has syntax errors, stale generated output,
 malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner. Validate this with:
 
-- `node --check build-resources/c420ui/bootstrap/generated/run-c420ui.cjs`
-- `node --check build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs`
-- `node --check build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs`
+- `node --check build-resources/c420ui/bootstrap/generated/run-c420ui.mjs`
+- `node --check build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs`
+- `node --check build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs`
 - `npm run check:c420ui-node-check`
 - `npm run check:c420ui-bootstrap`
 - `npm run check:c420ui-bootstrap-artifacts`
@@ -153,9 +177,9 @@ malformed SIGCONT blocks, or host-dependency validators interleaved into the int
 Bootstrap PR logs must include these exact success lines after regenerating bootstrap artifacts:
 
 ```text
-[ok] node --check build-resources/c420ui/bootstrap/generated/run-c420ui.cjs
-[ok] node --check build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs
-[ok] node --check build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs
+[ok] node --check build-resources/c420ui/bootstrap/generated/run-c420ui.mjs
+[ok] node --check build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs
+[ok] node --check build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs
 [ok] npm run check:c420ui-bootstrap-artifacts
 ```
 
@@ -173,16 +197,16 @@ For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDE
 
 Current target:
 
-- Version: `0.1.4-15.Dev.10 (Alpha)`
-- Release: `v0.1.4-15.Dev.10`
+- Version: `0.1.4-15.Dev.11 (Alpha)`
+- Release: `v0.1.4-15.Dev.11`
 - Versioning rule: `N.N.N-X` with optional `.Dev.N` development phase suffixes
 
 ## Detected Installations version visibility
 
 The c420ui `Detected Installations` panel must prefer detected effective/hashed version fields (`*FullVersion`) when
 they are available, then fall back to the base detected version fields for older native, Flatpak, or AppImage markers.
-For example, a Flatpak system install with build metadata should render `v0.1.4-15.Dev.10+g<hash>`, while a legacy marker
-that only exposes `version` should continue rendering `v0.1.4-15.Dev.10`.
+For example, a Flatpak system install with build metadata should render `v0.1.4-15.Dev.11+g<hash>`, while a legacy marker
+that only exposes `version` should continue rendering `v0.1.4-15.Dev.11`.
 
 ## c420ui logs
 
@@ -192,11 +216,11 @@ The broken Plain Logs mode was removed from c420ui. The normal logs panel remain
 
 The validation baseline protects these release facts:
 
-- `package.json` version is `0.1.4-15.Dev.10`.
-- `package-lock.json` top-level version is `0.1.4-15.Dev.10`.
-- `package-lock.json` root package version is `0.1.4-15.Dev.10`.
+- `package.json` version is `0.1.4-15.Dev.11`.
+- `package-lock.json` top-level version is `0.1.4-15.Dev.11`.
+- `package-lock.json` root package version is `0.1.4-15.Dev.11`.
 - `build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
-- Active release docs point to `v0.1.4-15.Dev.10`.
+- Active release docs point to `v0.1.4-15.Dev.11`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 
 ## Validation tiers
@@ -342,7 +366,7 @@ Generated dependency source manifests may retain platform package names that con
 - Confirm `./canva-linux-c420ui-builder --canva-debug=1` is rejected because runtime flags belong to the compiled runtime app.
 - Confirm runtime `electron . --help` and `electron . --canva-debug=1` remain runtime-owned.
 - Confirm `flatpak run io.github.coletivo420.canva-linux --debug=1` fails with the reserved Electron/Node flag message before the runtime starts.
-- Confirm `Release: v0.1.4-15.Dev.10` appears in current release docs.
+- Confirm `Release: v0.1.4-15.Dev.11` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.
@@ -378,12 +402,17 @@ OAuth validation also checks that the first post-OAuth reload targets the curren
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under build-resources/c420ui.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by build-resources/c420ui/checks.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `scripts/checks/canva-linux`, root `scripts/`, root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import scripts/canva-linux registries, the specific imported scripts/canva-linux submodules must remain in C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or
+  generated artifacts under `scripts/checks/canva-linux`, root `scripts/`,
+  root `build-resources/tests/`, `scripts/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that
+  transitively import scripts/canva-linux registries, the specific imported
+  scripts/canva-linux submodules must remain in
+  `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 
-## Dev.10 preload typing
+## Dev11 preload typing
 
-Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Dev11 keeps preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
   root `build-resources/tests/`, `build-resources/canva-linux/c420ui-adapter`, or `packages/`.
@@ -416,17 +445,43 @@ Expected results:
 - `build-resources/canva-linux/config/build-metadata.json` must contain stable deterministic source hashes.
 - `.build/canva-linux/build-metadata.effective.json` may change `buildRevision` and derived version strings, but must preserve the same source hashes.
 
-## Dev.10 validation ownership
+## Dev11 validation ownership
 
 - Project validation runs from `build-resources/canva-linux/validation/project.ts` via `validate:project`.
 - Doctor runs from `build-resources/canva-linux/validation/doctor.ts` via `validate:doctor`.
-- Flatpak and Flathub policy checks run from TypeScript entrypoints; shell scripts are dispatch wrappers only.
+- Flatpak and Flathub policy checks run from TypeScript entrypoints; shell dispatch wrappers are not allowed outside documented POSIX/bootstrap boundaries.
 
-## Dev.10 operational ownership
+## Dev11 operational ownership
 
 - Install/uninstall/maintenance/packaging/build/versioning mechanics are routed
   through c420ui-owned TypeScript sources under `build-resources/c420ui/*`.
-- Action Registry operational commands continue targeting compiled
-  `.build/scripts/*.js` routes.
-- `scripts/canva-linux/*` remains project-specific for validation and product
-  policy only.
+- Action Registry operational commands target generated ESM `.build/scripts/*.mjs` routes.
+- The root `scripts/` path is not an active ownership root in Dev11 final mode.
+
+## Dev11 final ESM boundaries
+
+Dev11 closes the radical ESM migration.
+
+- All maintained runtime/tooling/check/build source is TypeScript.
+- All generated Node/tooling outputs are ESM `.mjs`.
+- Electron runtime starts from `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.mjs`.
+- c420ui bootstrap generated artifacts are `.mjs`.
+- Versioned `.cjs` files are forbidden.
+- CommonJS bridges are forbidden in maintained TypeScript.
+- Shell remains only as POSIX/bootstrap boundary.
+
+The only remaining shell files are documented runtime/bootstrap boundaries:
+
+- `canva-linux-c420ui-builder`: stage-0 c420ui bootstrap launcher.
+- `run.sh`: Flatpak/POSIX runtime launcher.
+
+They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.
+
+## Dev11 obsolete migration leftovers
+
+- `npm test` emits and runs compiled test files as `.mjs` under `.build/build-resources/tests/` and `.build/build-resources/c420ui/test/`.
+- The root `scripts/` path is not a fallback source, test, or runtime compilation area.
+- Preload bundling accepts only TypeScript source under `build-resources/electron/preload/*.ts`; maintained `.js` preload source is invalid.
+- `build:runtime` must require both `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- Repository policy rejects CommonJS bridges in all maintained `build-resources/**/*.ts`.

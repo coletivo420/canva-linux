@@ -2,7 +2,7 @@
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root.js";
 
 type PolicyCheck = {
   name: string;
@@ -88,6 +88,13 @@ function allRepositoryFiles(rootDir: string): string[] {
   return repositoryFilesCache.files;
 }
 
+function stripTypeScriptCommentsAndStrings(source: string): string {
+  return source.replace(
+    /\/\*[\s\S]*?\*\/|\/\/.*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/g,
+    (match) => (match.startsWith("/") ? "" : '""'),
+  );
+}
+
 const checkTypeScriptWrappersContract = (() => {
 type PackageJson = {
   scripts?: Record<string, string>;
@@ -116,21 +123,21 @@ const requiredStandaloneEntrypoints = [
 const requiredBootstrapEntrypoints = {
   "bootstrap:typescript": {
     source: "build-resources/c420ui/scripts/run-typescript-script.ts",
-    artifact: ".build/scripts/bootstrap/run-typescript-script.js",
+    artifact: ".build/scripts/bootstrap/run-typescript-script.mjs",
   },
   "bootstrap:electron-builder": {
     source: "build-resources/c420ui/scripts/electron-builder-before-build.ts",
-    artifact: ".build/scripts/bootstrap/electron-builder-before-build.js",
+    artifact: ".build/scripts/bootstrap/electron-builder-before-build.mjs",
   },
 } as const;
 
 const requiredArtifactScripts = {
-  test: ".build/scripts/run-node-tests.js",
-  "build:preload": ".build/scripts/build-preload-bundle.js",
-  "clean:runtime": ".build/scripts/clean-runtime-build.js",
-  "build:runtime": ".build/scripts/build-runtime.js",
-  c420ui: ".build/scripts/run-c420ui.js",
-  "check:c420ui": ".build/scripts/run-c420ui.js",
+  test: ".build/scripts/run-node-tests.mjs",
+  "build:preload": ".build/scripts/build-preload-bundle.mjs",
+  "clean:runtime": ".build/scripts/clean-runtime-build.mjs",
+  "build:runtime": ".build/scripts/build-runtime.mjs",
+  c420ui: ".build/scripts/run-c420ui.mjs",
+  "check:c420ui": ".build/scripts/run-c420ui.mjs",
 } as const;
 
 function main(): number {
@@ -223,10 +230,8 @@ type TsConfigJson = {
 };
 
 const allowedJavaScriptPrefixes = [".build/", "node_modules/"] as const;
-const allowedCommonJsPrefixes = [
+const allowedModuleJsPrefixes = [
   ".build/",
-  "dist/",
-  "coverage/",
   "node_modules/",
   "build-resources/c420ui/bootstrap/generated/",
 ] as const;
@@ -246,6 +251,11 @@ const forbiddenSourceRoots = [
   "build-resources/tests/",
   "build-resources/canva-linux/packaging/flathub/scripts/",
 ] as const;
+
+const allowedShellBoundaryFiles = new Set([
+  "canva-linux-c420ui-builder",
+  "run.sh",
+]);
 
 const forbiddenConfigFiles = new Set([
   "eslint.config.js",
@@ -277,17 +287,63 @@ function validateNoMaintainedModuleJavaScript(
 ): void {
   for (const file of files) {
     if (file.endsWith(".mjs")) {
+      if (allowedModuleJsPrefixes.some((prefix) => file.startsWith(prefix)))
+        continue;
       failures.push(
-        `${file}: maintained .mjs source is forbidden by the Dev.10 TypeScript hardening policy`,
+        `${file}: maintained .mjs source is forbidden outside generated ESM bootstrap artifacts; use TypeScript source instead`,
       );
       continue;
     }
 
     if (!file.endsWith(".cjs")) continue;
-    if (allowedCommonJsPrefixes.some((prefix) => file.startsWith(prefix))) continue;
+    if (file.startsWith("node_modules/")) continue;
 
     failures.push(
-      `${file}: maintained .cjs source is forbidden outside generated bootstrap/output paths`,
+      `${file}: CommonJS .cjs files are forbidden in Dev11 ESM-only mode`,
+    );
+  }
+}
+
+function validateNoCommonJsPatternsInTypeScript(
+  rootDir: string,
+  files: string[],
+  failures: string[],
+): void {
+  const tsNoCheckPattern = "@ts-" + "nocheck";
+  const forbiddenPatterns: Array<[RegExp, string]> = [
+    [/(?<!\.)\brequire\s*\(/, "use ESM import or dynamic import()"],
+    [/\bmodule\s*\.\s*exports\b/, "use ESM exports"],
+    [/(?<!\.)\bexports\s*\./, "use ESM exports"],
+    [/(?<!\.)\brequire\s*\.\s*extensions\b/, "do not patch CommonJS loaders"],
+    [/\bModuleKind\s*\.\s*CommonJS\b/, "do not emit CommonJS in Dev11 ESM-only mode"],
+    [/(?<!\.)\bcreate\s*Require\b/, "avoid CommonJS bridges in ESM-only mode"],
+  ] as const;
+
+  for (const file of files) {
+    if (!file.startsWith("build-resources/") || !file.endsWith(".ts")) continue;
+
+    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    if (content.includes(tsNoCheckPattern)) {
+      failures.push(`${file}: remove ${tsNoCheckPattern} and type the module`);
+    }
+
+    const contentWithoutCommentsOrStrings = stripTypeScriptCommentsAndStrings(content);
+
+    for (const [pattern, message] of forbiddenPatterns) {
+      if (pattern.test(contentWithoutCommentsOrStrings)) {
+        failures.push(`${file}: ${message}`);
+      }
+    }
+  }
+}
+
+function validateShellBoundaries(files: string[], failures: string[]): void {
+  for (const file of files) {
+    if (!file.endsWith(".sh") && file !== "canva-linux-c420ui-builder") continue;
+    if (allowedShellBoundaryFiles.has(file)) continue;
+
+    failures.push(
+      `${file}: shell is allowed only for documented POSIX/bootstrap boundaries; migrate maintained logic to TypeScript`,
     );
   }
 }
@@ -301,7 +357,7 @@ function validateRequiredTypeScriptEntrypoints(
     "build-resources/config/playwright/playwright.config.ts",
     "build-resources/c420ui/scripts/run-node-tests.ts",
     "build-resources/c420ui/scripts/run-typescript-script.ts",
-    "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
+    "build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts",
   ] as const;
 
   for (const file of required) {
@@ -338,7 +394,7 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
 
   if (
     pkg.build?.beforeBuild !==
-    "./.build/scripts/bootstrap/electron-builder-before-build.js"
+    "./.build/scripts/bootstrap/electron-builder-before-build.mjs"
   ) {
     failures.push(
       "package.json build.beforeBuild: must point at generated .build TypeScript output",
@@ -346,13 +402,23 @@ function validatePackageScripts(rootDir: string, failures: string[]): void {
   }
 }
 
+function stripJsonCommentsAndTrailingCommas(content: string): string {
+  // 1. Remove block comments: /* ... */
+  // 2. Remove line comments: // ...
+  // 3. Remove trailing commas: , followed by whitespace and then } or ]
+  return content
+    .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1")
+    .replace(/,(\s*([}\]]))/g, "$2");
+}
+
 function validateTypeScriptConfig(
   rootDir: string,
   configPath: string,
   failures: string[],
 ): void {
+  const content = fs.readFileSync(path.join(rootDir, configPath), "utf8");
   const config = JSON.parse(
-    fs.readFileSync(path.join(rootDir, configPath), "utf8"),
+    stripJsonCommentsAndTrailingCommas(content),
   ) as TsConfigJson;
   if (Object.hasOwn(config.compilerOptions ?? {}, "allowJs")) {
     failures.push(
@@ -406,12 +472,13 @@ function validateNoCommonJsRuntimeExports(
   files: string[],
   failures: string[],
 ): void {
+  const moduleExportsPattern = "module" + ".exports";
   for (const file of files) {
     if (!file.startsWith("build-resources/electron/main/") || !file.endsWith(".ts")) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
-    if (content.includes("module.exports")) {
+    if (content.includes(moduleExportsPattern)) {
       failures.push(
-        `${file}: use ESM exports only; duplicate module.exports blocks are forbidden in Electron main TypeScript`,
+        `${file}: use ESM exports only; duplicate ${"module" + ".exports"} blocks are forbidden in Electron main TypeScript`,
       );
     }
   }
@@ -438,20 +505,23 @@ function validatePreloadTypeScriptStyle(
   files: string[],
   failures: string[],
 ): void {
+  const moduleExportsPattern = "module" + ".exports";
+  const requirePattern = "requ" + "ire(";
+  const tsNoCheckPattern = "@ts-" + "nocheck";
   for (const file of files) {
     if (!file.startsWith("build-resources/electron/preload/") || !file.endsWith(".ts")) continue;
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
     const contentWithoutComments = content
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/^\s*\/\/.*$/gm, "");
-    if (content.includes("@ts-nocheck")) {
-      failures.push(`${file}: preload modules must not use @ts-nocheck`);
+    if (content.includes(tsNoCheckPattern)) {
+      failures.push(`${file}: preload modules must not use ${"@ts-" + "nocheck"}`);
     }
-    if (contentWithoutComments.includes("module.exports")) {
+    if (contentWithoutComments.includes(moduleExportsPattern)) {
       failures.push(`${file}: preload modules must use ESM exports`);
     }
-    if (contentWithoutComments.includes("require(")) {
-      failures.push(`${file}: preload modules must not use require(); use ESM imports`);
+    if (contentWithoutComments.includes(requirePattern)) {
+      failures.push(`${file}: preload modules must not use ${"requ" + "ire"}(); use ESM imports`);
     }
   }
 }
@@ -512,6 +582,8 @@ function main(): number {
 
   validateNoMaintainedJavaScript(files, failures);
   validateNoMaintainedModuleJavaScript(files, failures);
+  validateNoCommonJsPatternsInTypeScript(rootDir, files, failures);
+  validateShellBoundaries(files, failures);
   validateSourceRootExtensions(files, failures);
   validateShellInlineJavaScriptPolicy(rootDir, files, failures);
   validateForbiddenConfigs(rootDir, failures);
@@ -584,7 +656,7 @@ const requiredVersionedPaths = [
   "io.github.coletivo420.canva-linux.yml",
   "build-resources/canva-linux/packaging/flathub/manifest.yml",
   "build-resources/canva-linux/packaging/flathub/generated-sources.json",
-  "build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts",
+  "build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts",
   "build-resources/canva-linux/assets/desktop/io.github.coletivo420.canva-linux.desktop",
   "build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml",
   "build-resources/canva-linux/assets/icons/hicolor/128x128/apps/io.github.coletivo420.canva-linux.png",
@@ -873,7 +945,7 @@ const requiredJsonFiles = ["package.json", "package-lock.json"] as const;
 
 const requiredShellFiles = [
   "canva-linux-c420ui-builder",
-  "build-resources/c420ui/host/linux/sudo-helper.sh",
+  "run.sh",
 ] as const;
 
 const centralDocumentationFiles = [
@@ -1140,7 +1212,7 @@ function validateNoCoreProductDetectionLogic(
     for (const fragment of [
       "DETECTED_NATIVE_" + "SYSTEM",
       "install-detection-common" + ".sh",
-      "operations/detection/install-detection",
+      "operations/detection/" + "install-detection",
     ] as const) {
       if (content.includes(fragment)) {
         failures.push(`${relativePath}: build-resources/canva-linux/checks/core must not contain product detection logic`);
@@ -1304,9 +1376,14 @@ function checkNoLegacyActionRunner(rootDir: string, failures: string[]): void {
   }
 
   const scriptsCoreBuild = scripts["build:scripts-core"] ?? "";
-  if (!scriptsCoreBuild.includes("rm -rf .build/scripts/core")) {
+  if (!scriptsCoreBuild.includes("build-scripts-core.mjs")) {
     failures.push(
-      "package.json build:scripts-core: must clean .build/scripts/core before rebuilding so stale removed entries cannot survive",
+      "package.json build:scripts-core: must use the ESM build-scripts-core entrypoint",
+    );
+  }
+  if (scriptsCoreBuild.includes("rm -rf")) {
+    failures.push(
+      "package.json build:scripts-core: must not use shell rm -rf cleanup; use the TypeScript builder",
     );
   }
 
@@ -1428,7 +1505,7 @@ function validateProjectValidationScriptShape(
   const validateProjectCommand = packageJson?.scripts?.["validate:project"] ?? "";
   if (
     !validateProjectCommand.includes("npm run build:scripts") ||
-    !validateProjectCommand.includes("node .build/scripts/validate-project.js")
+    !validateProjectCommand.includes("node .build/scripts/validate-project.mjs")
   ) {
     failures.push(
       "package.json scripts.validate:project: must run generated TypeScript validation entrypoint",
@@ -1470,21 +1547,10 @@ function validateScriptsRootDecommissioned(
 ): void {
   const scriptsDir = path.join(rootDir, "scripts");
   if (!fs.existsSync(scriptsDir)) return;
-  const allowed = new Set([
-    "README.md",
-    "app-identity-common.sh",
-    "preflight-common.sh",
-    "theme.json",
-    "ui-common.sh",
-    "user-data-common.sh",
-    "xdg-common.sh",
-  ]);
   for (const entry of fs.readdirSync(scriptsDir)) {
-    if (!allowed.has(entry)) {
-      failures.push(
-        `scripts/${entry}: scripts/ is no longer a maintained source root; move maintained tooling under build-resources`,
-      );
-    }
+    failures.push(
+      `scripts/${entry}: scripts/ is no longer a maintained source root; move maintained tooling under build-resources`,
+    );
   }
 }
 
@@ -1510,8 +1576,8 @@ function validateLauncherScriptShape(
   }
 
   for (const fragment of [
-    "build-resources/c420ui/bootstrap/generated/c420ui-builder.cjs",
-    ".build/scripts/c420ui-builder.js",
+    "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs",
+    ".build/scripts/c420ui-builder.mjs",
     "Run npm run build:c420ui-bootstrap",
   ] as const) {
     if (!content.includes(fragment)) {
@@ -1524,10 +1590,10 @@ function validateLauncherScriptShape(
     "No direct action was provided.",
     "hasBridgeAction",
     "selectEntrypoint",
-    "build-resources/c420ui/bootstrap/generated/run-c420ui.cjs",
-    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs",
-    ".build/scripts/run-c420ui.js",
-    ".build/scripts/run-c420ui-cli.js",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
+    "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs",
+    ".build/scripts/run-c420ui.mjs",
+    ".build/scripts/run-c420ui-cli.mjs",
   ] as const) {
     if (!source.includes(fragment)) {
       failures.push(`${sourcePath}: builder source is missing required fragment ${JSON.stringify(fragment)}`);
@@ -1593,7 +1659,7 @@ function validateRootProviderContracts(
 
   for (const fragment of [
     "createCanvaLinuxRootProvider",
-    "build-resources/c420ui/host/linux/sudo-helper.sh",
+    "sudoCommand",
     "buildCanvaLinuxOverviewStatus",
     "CANVA_NATIVE_SCOPE",
     "CANVA_FLATPAK_SCOPE",
@@ -1773,8 +1839,229 @@ function checkReviewChecklist(failures: string[]): void {
   runCheck(failures, { name: "review checklist", run: checkReviewChecklistContract.main });
 }
 
+const checkDev11EsmPolicyContract = (() => {
+function hasForbiddenPattern(source: string): string | null {
+  const tsNoCheckPattern = "@ts-" + "nocheck";
+  if (source.includes(tsNoCheckPattern)) return tsNoCheckPattern;
+
+  const contentWithoutCommentsOrStrings = stripTypeScriptCommentsAndStrings(source);
+
+  if (/(?<!\.)\brequire\s*\(/.test(contentWithoutCommentsOrStrings))
+    return "requ" + "ire(";
+  if (/\bmodule\s*\.\s*exports\b/.test(contentWithoutCommentsOrStrings))
+    return "module" + ".exports";
+  if (/(?<!\.)\bexports\s*\./.test(contentWithoutCommentsOrStrings))
+    return "exports" + ".";
+  if (/(?<!\.)\bcreate\s*Require\s*\(/.test(contentWithoutCommentsOrStrings))
+    return "create" + "Require(";
+  if (new RegExp("\\b__" + "filename\\b").test(contentWithoutCommentsOrStrings))
+    return "__" + "filename";
+  if (new RegExp("\\b__" + "dirname\\b").test(contentWithoutCommentsOrStrings))
+    return "__" + "dirname";
+  if (/(?<!\.)\brequire\s*\.\s*resolve\s*\(/.test(contentWithoutCommentsOrStrings))
+    return "require" + ".resolve(";
+
+  const nodeModuleSpec = "node" + ":" + "module";
+  const importFromNodeModulePatterns = [
+    "from " + `"${nodeModuleSpec}"`,
+    "from " + `'${nodeModuleSpec}'`,
+  ] as const;
+  for (const pattern of importFromNodeModulePatterns) {
+    if (contentWithoutCommentsOrStrings.includes(pattern)) return pattern;
+  }
+
+  return null;
+}
+
+function main(): number {
+  const rootDir = findProjectRoot();
+  const failures: string[] = [];
+  const files = allRepositoryFiles(rootDir).filter(
+    (file) => {
+      const normalized = file.replace(/\\/g, "/");
+      return normalized.startsWith("build-resources/") && normalized.endsWith(".ts");
+    },
+  );
+
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    const forbidden = hasForbiddenPattern(content);
+    if (!forbidden) continue;
+    failures.push(
+      `${file}: Dev11 ESM-only regression (${forbidden}) is forbidden in maintained TypeScript source`,
+    );
+  }
+
+  const packageJson = JSON.parse(
+    fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
+  ) as { scripts?: Record<string, string> };
+  const scripts = packageJson.scripts ?? {};
+  const requiredEsmBuildScripts = [
+    "build:scripts",
+    "build:scripts-core",
+    "build:c420ui-checks",
+    "build:canva-linux-checks",
+    "build:c420ui-terminal",
+    "build:c420ui-bootstrap",
+    "bootstrap:typescript",
+    "bootstrap:electron-builder",
+  ] as const;
+  for (const scriptName of requiredEsmBuildScripts) {
+    const command = scripts[scriptName] ?? "";
+    if (!command.includes("--format=esm")) {
+      failures.push(
+        `package.json scripts.${scriptName}: Dev11 ESM policy requires --format=esm`,
+      );
+    }
+    if (
+      (scriptName === "build:scripts" ||
+        scriptName === "build:c420ui-checks" ||
+        scriptName === "build:canva-linux-checks") &&
+      !command.includes("--out-extension:.js=.mjs")
+    ) {
+      failures.push(
+        `package.json scripts.${scriptName}: Dev11 ESM policy requires --out-extension:.js=.mjs`,
+      );
+    }
+    if (
+      scriptName === "build:scripts-core" &&
+      !command.includes("build-scripts-core.mjs")
+    ) {
+      failures.push(
+        "package.json scripts.build:scripts-core: Dev11 ESM policy requires build-scripts-core.mjs output",
+      );
+    }
+    if (
+      scriptName === "build:c420ui-bootstrap" &&
+      !command.includes("build-bootstrap.mjs")
+    ) {
+      failures.push(
+        "package.json scripts.build:c420ui-bootstrap: Dev11 ESM policy requires build-bootstrap.mjs output",
+      );
+    }
+  }
+  for (const [scriptName, command] of Object.entries(scripts)) {
+    if (command.includes("--format=" + "cjs")) {
+      failures.push(
+        `package.json scripts.${scriptName}: Dev11 ESM policy forbids --format=${"cjs"}`,
+      );
+    }
+    if (command.includes(".cjs")) {
+      failures.push(
+        `package.json scripts.${scriptName}: Dev11 ESM policy forbids .cjs script artifacts`,
+      );
+    }
+  }
+
+  const tsconfigPaths = [
+    "build-resources/config/typescript/tsconfig.json",
+    "build-resources/config/typescript/tsconfig.build.json",
+    "build-resources/config/typescript/tsconfig.strict.json",
+  ] as const;
+  for (const relativePath of tsconfigPaths) {
+    const absolutePath = path.join(rootDir, relativePath);
+    if (!fs.existsSync(absolutePath)) {
+      failures.push(`${relativePath}: Dev11 requires module/moduleResolution NodeNext`);
+      continue;
+    }
+    try {
+      const content = fs.readFileSync(absolutePath, "utf8");
+      const config = JSON.parse(stripJsonCommentsAndTrailingCommas(content)) as {
+        compilerOptions?: { module?: string; moduleResolution?: string };
+      };
+      const moduleValue = config.compilerOptions?.module;
+      const moduleResolutionValue = config.compilerOptions?.moduleResolution;
+      if (moduleValue !== "NodeNext" || moduleResolutionValue !== "NodeNext") {
+        failures.push(`${relativePath}: Dev11 requires module/moduleResolution NodeNext`);
+      }
+    } catch {
+      failures.push(`${relativePath}: Dev11 requires module/moduleResolution NodeNext`);
+    }
+  }
+
+  const generatedBootstrapDir = path.join(
+    rootDir,
+    "build-resources/c420ui/bootstrap/generated",
+  );
+  if (fs.existsSync(generatedBootstrapDir)) {
+    for (const name of fs.readdirSync(generatedBootstrapDir)) {
+      if (name.endsWith(".cjs")) {
+        failures.push(
+          `build-resources/c420ui/bootstrap/generated/${name}: Dev11 ESM policy forbids generated bootstrap .cjs artifacts`,
+        );
+      }
+    }
+  }
+
+  const manifestPath = path.join(
+    rootDir,
+    "build-resources/c420ui/bootstrap/generated/manifest.json",
+  );
+  if (fs.existsSync(manifestPath)) {
+    try {
+      const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as {
+        bundleFormat?: string;
+        moduleFormat?: string;
+        entrypoint?: string;
+        cliEntrypoint?: string;
+        entrypoints?: { ui?: string; cli?: string; builder?: string };
+        artifactHashes?: Record<string, string>;
+      };
+      if (manifest.bundleFormat !== "esm") {
+        failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires bundleFormat \"esm\"`);
+      }
+      if (manifest.moduleFormat !== "esm") {
+        failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires moduleFormat \"esm\"`);
+      }
+      if (manifest.entrypoint !== "run-c420ui.mjs") {
+        failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires entrypoint run-c420ui.mjs`);
+      }
+      if (manifest.cliEntrypoint !== "run-c420ui-cli.mjs") {
+        failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires cliEntrypoint run-c420ui-cli.mjs`);
+      }
+      const expectedEntrypoints = {
+        ui: "build-resources/c420ui/bootstrap/generated/run-c420ui.mjs",
+        cli: "build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs",
+        builder: "build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs",
+      };
+      for (const [key, value] of Object.entries(expectedEntrypoints)) {
+        if (manifest.entrypoints?.[key as "ui" | "cli" | "builder"] !== value) {
+          failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires entrypoints.${key} ${value}`);
+        }
+      }
+      for (const key of [
+        "run-c420ui.mjs",
+        "run-c420ui-cli.mjs",
+        "c420ui-builder.mjs",
+      ] as const) {
+        if (!manifest.artifactHashes?.[key]) {
+          failures.push(`${path.relative(rootDir, manifestPath)}: Dev11 ESM policy requires artifactHashes.${key}`);
+        }
+      }
+    } catch (error) {
+      failures.push(`${path.relative(rootDir, manifestPath)}: invalid JSON (${error instanceof Error ? error.message : String(error)})`);
+    }
+  }
+
+  if (failures.length) {
+    console.error("[dev11-esm-policy] FAILED:");
+    for (const failure of failures) console.error(`- ${failure}`);
+    return 1;
+  }
+
+  console.log("[repository-policy] Dev11 ESM regression guard OK");
+  return 0;
+}
+
+  return { main };
+})();
+
 function checkC420UIRootGuardOwnership(failures: string[]): void {
   runCheck(failures, { name: "c420ui root guard ownership", run: checkC420UIRootGuardOwnershipContract.main });
+}
+
+function checkDev11EsmPolicy(failures: string[]): void {
+  runCheck(failures, { name: "Dev11 ESM policy", run: checkDev11EsmPolicyContract.main });
 }
 
 
@@ -1783,7 +2070,6 @@ function main(): number {
   const rootDir = findProjectRoot();
   const failures: string[] = [];
   const ensurePath = "scripts/" + "ensure-npm-dependencies.sh";
-  const preflightPath = "scripts/preflight-common.sh";
   const shellClassificationPath = "docs/checks/SHELL_HELPERS.md";
   const runEntrypointPath = "build-resources/c420ui/scripts/run-c420ui.ts";
   const dependenciesPath = "build-resources/canva-linux/c420ui-adapter/dependencies.ts";
@@ -1800,45 +2086,26 @@ function main(): number {
   if (!fs.existsSync(path.join(rootDir, dependenciesPath))) {
     failures.push(`${dependenciesPath}: dependency loader is required`);
   }
-  if (!fs.existsSync(path.join(rootDir, preflightPath))) {
-    failures.push(`${preflightPath}: shared project preflight helpers must remain in scripts/`);
-  }
   if (!fs.existsSync(path.join(rootDir, shellClassificationPath))) {
     failures.push(`${shellClassificationPath}: shell helper classification is required`);
   }
 
-  const preflight = fs.existsSync(path.join(rootDir, preflightPath))
-    ? fs.readFileSync(path.join(rootDir, preflightPath), "utf8")
-    : "";
-  if (preflight.includes("CANVA_" + "REQUIRED_NPM_DEPS")) {
-    failures.push(`${preflightPath}: must not contain the legacy hardcoded npm dependency list`);
-  }
-  if (preflight.includes("npm ci") || preflight.includes("npm install")) {
-    failures.push(`${preflightPath}: must not contain active npm install policy`);
-  }
-  if (!preflight.includes("Repository-check-only")) {
-    failures.push(`${preflightPath}: must be explicitly marked repository-check-only`);
-  }
-  if (preflight.includes("ensure_" + "npm_dependencies")) {
-    failures.push(`${preflightPath}: must not contain removed npm dependency bootstrap helper`);
-  }
-
   if (fs.existsSync(path.join(rootDir, ensurePath))) {
     failures.push(`${ensurePath}: obsolete npm dependency bootstrap script must not exist`);
+  }
+  if (fs.existsSync(path.join(rootDir, "scripts"))) {
+    failures.push("scripts/: root scripts ownership path must not exist in Dev11 final ESM mode");
   }
 
   const shellClassification = fs.existsSync(path.join(rootDir, shellClassificationPath))
     ? fs.readFileSync(path.join(rootDir, shellClassificationPath), "utf8")
     : "";
   for (const fragment of [
-    "c420ui host tool",
-    "Canva Linux recipes",
-    "Repository check helper",
-    "Obsolete",
-    "build-runtime.sh",
-    "install-flatpak-local.sh",
-    "build-resources/c420ui/host/linux/sudo-helper.sh",
-    "scripts/preflight-common.sh",
+    "canva-linux-c420ui-builder",
+    "stage-0 c420ui bootstrap launcher",
+    "run.sh",
+    "Flatpak/POSIX runtime launcher",
+    "Any additional shell file is a regression",
   ] as const) {
     if (!shellClassification.includes(fragment)) {
       failures.push(`${shellClassificationPath}: missing shell classification fragment ${fragment}`);
@@ -1878,6 +2145,7 @@ export function main(): number {
   checkNoSourceJavaScript(failures);
   checkSourceIntegrity(failures);
   checkReviewChecklist(failures);
+  checkDev11EsmPolicy(failures);
   checkSharedHostDependencyTooling(failures);
   checkC420UIRootGuardOwnership(failures);
 
@@ -1886,7 +2154,7 @@ export function main(): number {
   return 0;
 }
 
-if (require.main === module) {
+if (/check-repository-policy\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

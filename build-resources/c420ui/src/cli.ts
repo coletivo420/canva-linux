@@ -1,9 +1,9 @@
-import { createC420UIActionEngine } from "./action-engine";
-import { getC420UIActionCliFlags, type c420uiAction } from "./actions";
-import { c420uiExitCodes } from "./exit-codes";
-import type { c420uiProjectBridge } from "./bridge";
-import type { c420uiRootProvider } from "./root-provider";
-import type { C420UIEventSink } from "./events";
+import { createC420UIActionEngine } from "./action-engine.js";
+import { getC420UIActionCliFlags, type c420uiAction } from "./actions.js";
+import { c420uiExitCodes } from "./exit-codes.js";
+import type { c420uiProjectBridge } from "./bridge.js";
+import type { c420uiRootProvider } from "./root-provider.js";
+import type { C420UIEventSink } from "./events.js";
 
 export type c420uiCliOptions = {
   bridge: c420uiProjectBridge;

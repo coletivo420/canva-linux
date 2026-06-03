@@ -1,6 +1,6 @@
-import { c420uiKnownActionScopes, type c420uiActionScope } from "./scopes";
-import { isC420UIPlannedAction, type C420UIActionDescriptor, type C420UIWorkflowPhase } from "./actions";
-import type { C420UIWorkflow } from "./workflows";
+import { c420uiKnownActionScopes, type c420uiActionScope } from "./scopes.js";
+import { isC420UIPlannedAction, type C420UIActionDescriptor, type C420UIWorkflowPhase } from "./actions.js";
+import type { C420UIWorkflow } from "./workflows.js";
 
 export type c420uiDevelopmentTaskKind =
   | "doctor"

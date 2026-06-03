@@ -6,7 +6,7 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 
 const repoRoot = process.cwd();
-const copyRuntimeAssetsEntrypoint = path.join(repoRoot, ".build", "scripts", "copy-runtime-assets.js");
+const copyRuntimeAssetsEntrypoint = path.join(repoRoot, ".build", "scripts", "copy-runtime-assets.mjs");
 
 function writeJson(filePath: string, payload: unknown): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });

@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-const REPO_ROOT = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
+const REPO_ROOT = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
 
 test("Flatpak bundle reuse path does not write checkout metadata sidecar blindly", () => {
   const source = fs.readFileSync(

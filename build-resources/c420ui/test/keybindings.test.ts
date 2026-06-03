@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-const rootDir = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 const terminalSourceDir = path.join(rootDir, "build-resources/c420ui/src/terminal");
 const terminalSources = fs.readdirSync(terminalSourceDir)
   .filter((file) => file.endsWith(".ts"))

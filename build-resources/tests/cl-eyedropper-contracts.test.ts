@@ -1,19 +1,16 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const repoRoot =
-  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
-test("CL-EyeDropper module loads without runtime side effects", () => {
+test("CL-EyeDropper module loads without runtime side effects", async () => {
   const before = Object.keys(globalThis);
-  const contracts = loadRuntimeModule("preload/cl-eyedropper/index");
+  const contracts = await loadRuntimeModule("preload/cl-eyedropper/index");
   const after = Object.keys(globalThis);
 
   assert.equal(typeof contracts.CLEyeDropper, "function");

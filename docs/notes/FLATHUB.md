@@ -37,7 +37,7 @@ Notes:
 
 `0.1.4-dev.22` keeps the Flathub source/readiness focus while standardizing the canonical repository as `coletivo420/canva-linux` and the active app-id as `io.github.coletivo420.canva-linux`.
 
-The preload bundle is generated automatically before the Electron build used by `./canva-linux-c420ui-builder --install-flatpak` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `build-resources/electron/preload/canva.bundle.js` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux-c420ui-builder --bundle-flatpak` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
+The preload bundle is generated automatically before the Electron build used by `./canva-linux-c420ui-builder --install-flatpak` and by bundle workflows whenever the Flatpak repo is rebuilt. Treat `build-resources/electron/preload/canva.bundle.mjs` as a generated build artifact, not as reviewed source for Flathub. Do not prepare a release bundle from an old `repo/` if preload source changed; `./canva-linux-c420ui-builder --bundle-flatpak` rebuilds the Electron output and Flatpak repo before creating the `.flatpak` artifact.
 
 The lower-level `build-resources/c420ui/scripts/build-flatpak-bundle.sh --use-existing-repo` option exists only for explicit local reuse of an already reviewed `repo/`. It should not be used for release publication after source, preload, metadata, or packaging changes.
 
@@ -96,12 +96,12 @@ Submission-path workflow lives in `docs/notes/FLATHUB_SUBMISSION_PATH.md`, and r
 
 ### npm source generation
 
-`build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.ts` is the maintained source for `generated-sources.json`; the adjacent `.sh` file is only a shell bootstrap. The TypeScript generator reads `package-lock.json`, emits deterministic `npm-cache` tarball sources, converts npm integrity values to Flatpak hash fields, rejects local/workspace/link and `node_modules` path sources, requires HTTPS `.tgz` URLs, checks duplicate URL/hash consistency, and verifies the submission manifest includes `generated-sources.json`.
+`build-resources/canva-linux/packaging/flathub/tools/generate-npm-sources.ts` is the maintained source for `generated-sources.json`; The TypeScript generator reads `package-lock.json`, emits deterministic `npm-cache` tarball sources, converts npm integrity values to Flatpak hash fields, rejects local/workspace/link and `node_modules` path sources, requires HTTPS `.tgz` URLs, checks duplicate URL/hash consistency, and verifies the submission manifest includes `generated-sources.json`.
 
 Run it after every lockfile change:
 
 ```bash
-./build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh
+./npm run flathub:generate-npm-sources
 ```
 
 

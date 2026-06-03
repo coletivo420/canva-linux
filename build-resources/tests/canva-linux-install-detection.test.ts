@@ -6,7 +6,7 @@ import test from "node:test";
 import {
   detectAppImageFullVersion,
   detectAppImageVersion,
-} from "../c420ui/operations/detection/appimage-detection";
+} from "../c420ui/operations/detection/appimage-detection.js";
 
 function withTestEnv(run: (envDir: string) => void): void {
   const envDir = mkdtempSync(path.join(tmpdir(), "canva-linux-install-detection-test-"));

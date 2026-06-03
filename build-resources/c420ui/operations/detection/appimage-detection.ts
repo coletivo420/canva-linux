@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   readBuildMetadataBaseVersion,
   readBuildMetadataFullVersion,
-} from "./version-marker";
+} from "./version-marker.js";
 
 export function detectAppImageArtifacts(rootDir: string): boolean {
   const distDir = path.join(rootDir, "dist");

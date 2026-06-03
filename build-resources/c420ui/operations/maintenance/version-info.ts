@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { projectRoot } from "../../host/paths";
+import { projectRoot } from "../../host/paths.js";
 
 export function runVersionInfo(): void {
   const rootDir = projectRoot();

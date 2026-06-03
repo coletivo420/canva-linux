@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { projectValidationSteps } from "../canva-linux/validation/project";
+import { projectValidationSteps } from "../canva-linux/validation/project.js";
 
 test("validate-project preserves source-first step order", () => {
   const labels = projectValidationSteps().map((step) => step.label);
@@ -15,8 +15,6 @@ test("validate-project preserves source-first step order", () => {
     "npm run check:c420ui-bootstrap-artifacts",
     "git diff --exit-code",
     "npm run docs:check-ai",
-    "check flatpak scope policy",
-    "check shell ui api",
     "npm run check:c420ui-core",
     "npm run check:canva-linux",
     "npm run check:shared-tooling",

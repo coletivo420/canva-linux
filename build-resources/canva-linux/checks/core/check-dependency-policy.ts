@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root.js";
 
 const minimumDirectVersions: Record<string, string> = {
   electron: "41.5.0",
@@ -69,7 +69,7 @@ export function main(): number {
 
   if (
     pkg.build?.beforeBuild !==
-    "./.build/scripts/bootstrap/electron-builder-before-build.js"
+    "./.build/scripts/bootstrap/electron-builder-before-build.mjs"
   ) {
     console.error(
       "[dependency-policy] electron-builder beforeBuild hook must point at generated TypeScript output",
@@ -93,10 +93,7 @@ export function main(): number {
   return 0;
 }
 
-if (
-  require.main === module &&
-  /check-dependency-policy\.js$/.test(process.argv[1] || "")
-) {
+if (/check-dependency-policy\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {
