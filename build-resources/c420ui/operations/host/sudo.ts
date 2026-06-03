@@ -69,14 +69,15 @@ export function c420uiSudoRun(
 ): number {
   const rootDir = options.cwd?.toString() || projectRoot();
   const dryRun = options.dryRun ?? false;
+  const sudoArgs = isNonInteractiveRootMode() ? ["-n", command, ...args] : [command, ...args];
 
   if (dryRun) {
-    console.log(`[dry-run] sudo ${command} ${args.join(" ")}`);
+    console.log(`[dry-run] sudo ${sudoArgs.join(" ")}`);
     return 0;
   }
   if (!c420uiSudoValidate(rootDir)) return 1;
 
-  const result = spawnSync("sudo", [command, ...args], {
+  const result = spawnSync("sudo", sudoArgs, {
     ...options,
     cwd: rootDir,
     stdio: options.stdio ?? "inherit",

@@ -144,7 +144,7 @@ export function createShellHelpers({
       webPreferences: {
         preload: preloadPath,
         contextIsolation: true,
-        sandbox: true,
+        sandbox: false,
         nodeIntegration: false,
       },
     });

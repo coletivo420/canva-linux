@@ -309,8 +309,8 @@ function validateNoCommonJsPatternsInTypeScript(
   files: string[],
   failures: string[],
 ): void {
+  const tsNoCheckPattern = "@ts-" + "nocheck";
   const forbiddenPatterns: Array<[RegExp, string]> = [
-    [new RegExp("@ts-" + "nocheck"), "remove @ts-" + "nocheck and type the module"],
     [/(?<!\.)\brequire\s*\(/, "use ESM import or dynamic import()"],
     [/\bmodule\s*\.\s*exports\b/, "use ESM exports"],
     [/(?<!\.)\bexports\s*\./, "use ESM exports"],
@@ -323,6 +323,10 @@ function validateNoCommonJsPatternsInTypeScript(
     if (!file.startsWith("build-resources/") || !file.endsWith(".ts")) continue;
 
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
+    if (content.includes(tsNoCheckPattern)) {
+      failures.push(`${file}: remove ${tsNoCheckPattern} and type the module`);
+    }
+
     const contentWithoutCommentsOrStrings = stripTypeScriptCommentsAndStrings(content);
 
     for (const [pattern, message] of forbiddenPatterns) {
@@ -1827,6 +1831,9 @@ function checkReviewChecklist(failures: string[]): void {
 
 const checkDev11EsmPolicyContract = (() => {
 function hasForbiddenPattern(source: string): string | null {
+  const tsNoCheckPattern = "@ts-" + "nocheck";
+  if (source.includes(tsNoCheckPattern)) return tsNoCheckPattern;
+
   const contentWithoutCommentsOrStrings = stripTypeScriptCommentsAndStrings(source);
 
   if (/(?<!\.)\brequire\s*\(/.test(contentWithoutCommentsOrStrings))
@@ -1853,9 +1860,6 @@ function hasForbiddenPattern(source: string): string | null {
     if (contentWithoutCommentsOrStrings.includes(pattern)) return pattern;
   }
 
-  const tsNoCheckPattern = "@ts-" + "nocheck";
-  if (contentWithoutCommentsOrStrings.includes(tsNoCheckPattern))
-    return tsNoCheckPattern;
   return null;
 }
 
