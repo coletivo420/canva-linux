@@ -32,7 +32,7 @@ Canva Linux workflow actions are split into four layers:
 1. `build-resources/canva-linux/config/actions.json` (canonical registry)
 2. c420ui Action Engine, Root Provider, Command Runner, and CLI bridge
 3. Interfaces (c420ui workspace and direct CLI flags)
-4. Backend scripts under `scripts/`
+4. Backend operations under `build-resources/c420ui/operations/` and Canva Linux adapters under `build-resources/canva-linux/`
 
 All maintained Node.js source code is TypeScript. Project-generated JavaScript
 belongs in `.build/` only. The `dist/`, `coverage/`, and `node_modules/`
@@ -115,9 +115,9 @@ Privileged actions follow a shared contract defined in `build-resources/c420ui/o
 ## TypeScript Script Core
 
 The project validations and contracts are implemented in TypeScript under
-`build-resources/canva-linux/checks/core/`. These are compiled into `.build/build-resources/canva-linux/checks/core/` and executed
-through `scripts/run-core-entry.sh`. All project validations are integrated into
-the `npm run check:scripts-core` quality gate. The gate includes
+`build-resources/canva-linux/checks/core/`. These are compiled into `.build/build-resources/canva-linux/checks/core/*.mjs` and executed
+through the generated check runners. All project validations are integrated into
+the `npm run check:scripts-core` and `npm run check:shared-tooling` quality gates. The gates include
 `check-repository-policy`, so maintained `.js` files under script, test,
 config, or Flathub helper paths fail validation.
 

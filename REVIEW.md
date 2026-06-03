@@ -462,7 +462,7 @@ Request changes if a PR:
 
 - breaks `bash -n canva-linux-c420ui-builder`;
 - hardcodes project action flags in the launcher parser;
-- routes direct CLI actions around `run-c420ui-cli.js`;
+- routes direct CLI actions around `run-c420ui-cli.mjs` or the generated bootstrap CLI bundle;
 - removes `--dry-run` propagation from the launcher;
 - allows multiple direct action flags in one invocation.
 
@@ -470,7 +470,7 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- lets `canva-linux-c420ui-builder` execute a stale `.build/build-resources/c420ui/scripts/run-c420ui-cli.js`;
+- lets `canva-linux-c420ui-builder` execute stale generated CLI output instead of validating the generated bootstrap builder or `.build/scripts/c420ui-builder.mjs`;
 - removes freshness coverage for `build-resources/c420ui/src`;
 - removes freshness coverage for `canva-linux/c420ui-adapter`;
 - tests launcher behavior by executing real destructive actions instead of a stub.

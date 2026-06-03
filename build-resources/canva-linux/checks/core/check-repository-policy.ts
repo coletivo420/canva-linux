@@ -88,6 +88,13 @@ function allRepositoryFiles(rootDir: string): string[] {
   return repositoryFilesCache.files;
 }
 
+function stripTypeScriptCommentsAndStrings(source: string): string {
+  return source.replace(
+    /\/\*[\s\S]*?\*\/|\/\/.*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/g,
+    (match) => (match.startsWith("/") ? "" : '""'),
+  );
+}
+
 const checkTypeScriptWrappersContract = (() => {
 type PackageJson = {
   scripts?: Record<string, string>;
@@ -316,10 +323,7 @@ function validateNoCommonJsPatternsInTypeScript(
     if (!file.startsWith("build-resources/") || !file.endsWith(".ts")) continue;
 
     const content = fs.readFileSync(path.join(rootDir, file), "utf8");
-    const contentWithoutCommentsOrStrings = content.replace(
-      /\/\*[\s\S]*?\*\/|\/\/.*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`/g,
-      (match) => (match.startsWith("/") ? "" : '""'),
-    );
+    const contentWithoutCommentsOrStrings = stripTypeScriptCommentsAndStrings(content);
 
     for (const [pattern, message] of forbiddenPatterns) {
       if (pattern.test(contentWithoutCommentsOrStrings)) {
@@ -1823,13 +1827,7 @@ function checkReviewChecklist(failures: string[]): void {
 
 const checkDev11EsmPolicyContract = (() => {
 function hasForbiddenPattern(source: string): string | null {
-  const contentWithoutComments = source
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/(?:^|\s)\/\/.*$/gm, "");
-  const contentWithoutCommentsOrStrings = contentWithoutComments.replace(
-    /(["'`])(?:\\.|(?!\1)[^\\])*\1/g,
-    '""',
-  );
+  const contentWithoutCommentsOrStrings = stripTypeScriptCommentsAndStrings(source);
 
   if (/(?<!\.)\brequire\s*\(/.test(contentWithoutCommentsOrStrings))
     return "requ" + "ire(";
@@ -1932,6 +1930,11 @@ function main(): number {
     if (command.includes("--format=" + "cjs")) {
       failures.push(
         `package.json scripts.${scriptName}: Dev11 ESM policy forbids --format=${"cjs"}`,
+      );
+    }
+    if (command.includes(".cjs")) {
+      failures.push(
+        `package.json scripts.${scriptName}: Dev11 ESM policy forbids .cjs script artifacts`,
       );
     }
   }

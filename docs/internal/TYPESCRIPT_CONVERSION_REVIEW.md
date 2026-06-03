@@ -1,58 +1,42 @@
 # TypeScript Conversion Review
 
-This project is migrating to TypeScript incrementally.
+This project has completed the Dev11 TypeScript/ESM migration for maintained Node/Electron source.
 
 ## Current mode
 
-The app runtime is compiled from TypeScript, while a small set of CommonJS wrappers remains for Node and electron-builder entrypoint compatibility.
+The app runtime, tooling, c420ui bootstrap, checks and tests are maintained as TypeScript and emitted as explicit ESM `.mjs` artifacts where Node/Electron executes generated code.
 
-TypeScript is currently used through:
+TypeScript is enforced through:
 
 - broad `npm run typecheck`;
-- strict JSDoc islands through `npm run typecheck:strict`;
-- emitted Electron runtime output through `npm run build:runtime`;
-- bundled script entrypoints that keep `.js` CLI wrappers thin while moving implementation logic to `.ts`.
+- strict TypeScript surfaces through `npm run typecheck:strict`;
+- explicit Electron runtime output through `npm run build:runtime`;
+- bundled script/check/test entrypoints emitted as `.mjs`;
+- repository policy checks that reject CommonJS bridges and maintained JavaScript source.
 
-## DEV10 expansion
+## Dev11 ESM-only contract
 
-DEV10 expands strict typing to the remaining extracted main-process modules.
+- Electron runtime starts at `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- Tooling/check/test outputs are generated `.mjs`.
+- c420ui bootstrap generated artifacts are committed `.mjs` files with source and artifact hash validation.
+- Versioned `.cjs` files are forbidden outside external dependencies.
+- CommonJS bridges such as `createRequire`, `require.resolve`, `__filename` and `__dirname` are forbidden in maintained TypeScript.
 
-## Full conversion roadmap
+## Maintained-source rule
 
-The cleanup phase must happen after full TypeScript conversion, not before it.
+All maintained Node/Electron logic must be TypeScript. A new source file is acceptable only when:
 
-Planned sequence:
-
-- DEV10: strict typing for extracted main-process modules.
-- DEV11: strict typing for `packages/electron/main/index.js`.
-- DEV12: TypeScript build pipeline.
-- DEV13: convert the first pure shared/logging helper modules to `.ts` and validate the test strategy for converted source modules.
-- DEV14: convert main infrastructure modules to `.ts`.
-- DEV15: convert shell/tabs/OAuth modules to `.ts`.
-- DEV16: convert main entrypoint to `.ts`.
-- DEV17: convert preload source modules to `.ts`.
-- DEV18: decide conversion/isolation strategy for the former third-party picker module.
-- DEV19: convert tests/config/scripts when safe. Runtime build, preload bundling, asset copy, clean, electron-builder hook, C420UI launcher and toolbar preload now have TypeScript implementations with thin compatibility wrappers where Node tooling still needs `.js` entrypoints.
-- DEV20: verify full TypeScript conversion.
-- DEV21: post-conversion cleanup.
-- DEV22: stabilization and RC readiness.
-
-## Actual `.ts` conversion rule
-
-A file may be converted to `.ts` only when:
-
-- it is already covered by strict JSDoc or tests;
-- conversion keeps loader changes explicit and constrained to thin compatibility wrappers when Node tooling still requires `.js` entrypoints;
+- it uses ESM imports/exports;
+- it does not rely on CommonJS bridges or loader patches;
 - conversion does not affect Flatpak packaging unexpectedly;
 - conversion does not change public behavior;
-- behavior is checked against `CHANGELOG.md`.
+- behavior is checked against `CHANGELOG.md` and relevant validation gates.
 
-## Not ready yet
+## Non-TypeScript boundaries
 
-Do not convert yet:
+Do not convert these POSIX/runtime boundaries to TypeScript:
 
-- legacy `.js` wrappers that are still referenced directly by npm scripts or electron-builder;
-- `packages/electron/preload/canva.bundle.js`;
-- the former third-party picker module;
-- shell scripts;
-- Flatpak manifests.
+- `canva-linux-c420ui-builder`: stage-0 bootstrap launcher.
+- `run.sh`: Flatpak/POSIX runtime launcher.
+- Flatpak manifests and Linux metadata files.
