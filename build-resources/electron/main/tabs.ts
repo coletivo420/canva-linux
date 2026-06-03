@@ -156,13 +156,15 @@ export function createTabHelpers({
   function ensureTopLevelView(view: unknown): void {
     const mainWindow = mainWindowRef();
     if (!mainWindow || !view) return;
-    const contentView = mainWindow.contentView;
-    const children = contentView?.children || [];
     // Electron uses child order as z-order. To keep the toolbar visible and the
     // active tab directly beneath it, re-adding an existing child must first
-    // remove the old attachment instead of silently no-oping.
-    if (children.includes(view)) {
-      contentView.removeChildView(view);
+    // remove the old attachment instead of silently no-oping. WebContentsView
+    // child tracking is not always exposed as a reliable array, so attempt the
+    // detach unconditionally before re-adding.
+    try {
+      mainWindow.contentView.removeChildView(view);
+    } catch {
+      // Electron may throw when the view is not currently attached.
     }
     mainWindow.contentView.addChildView(view);
   }
@@ -257,15 +259,11 @@ export function createTabHelpers({
     const tab = state.tabs.get(id);
     if (!tab) return;
 
-    if (state.activeTabId === id) {
-      tab.view.webContents.focus();
-      debugLog("tabs:navigation", "switch-active", id, tab.url);
-      return;
+    for (const entry of state.tabs.values()) {
+      setTabVisibility(entry, entry.id === id);
     }
 
-    detachActiveContentView();
     ensureTopLevelView(tab.view);
-    setTabVisibility(tab, true);
     setActiveTabId(id);
     layoutViews();
     ensureTopLevelView(toolbarViewRef());
