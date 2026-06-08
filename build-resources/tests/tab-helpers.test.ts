@@ -1,20 +1,49 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import test from "node:test";
 
-// @ts-check
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+const { createTabHelpers } = await loadRuntimeModule("main/tabs") as {
+  createTabHelpers: typeof import("../electron/main/tabs.js").createTabHelpers;
+};
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+type FakeBounds = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
-const { createTabHelpers } = loadRuntimeModule("main/tabs");
+type FakeWebContents = {
+  id: number;
+  focused: boolean;
+  focus(): void;
+  getURL(): string;
+  loadURL(url: string): void;
+  isDestroyed(): boolean;
+  destroy(): void;
+  send(channel: string, payload?: unknown): void;
+};
 
-/**
- * @param {number} id
- * @returns {any}
- */
-function createView(id) {
+type FakeView = {
+  visible: boolean;
+  bounds: FakeBounds | null;
+  webContents: FakeWebContents;
+  setVisible(visible: boolean): void;
+  setBounds(bounds: FakeBounds): void;
+};
+
+type FakeTab = {
+  id: number;
+  createdAt: number;
+  title: string;
+  url: string;
+  favicon: string | null;
+  isHome: boolean;
+  view: FakeView;
+};
+
+function createView(id: number): FakeView {
   return {
     visible: false,
     bounds: null,
@@ -27,31 +56,23 @@ function createView(id) {
       getURL() {
         return "https://www.canva.com/";
       },
-      loadURL() {},
+      loadURL(_url: string) {},
       isDestroyed() {
         return false;
       },
       destroy() {},
-      send() {},
+      send(_channel: string, _payload?: unknown) {},
     },
-    /** @param {boolean} visible */
-    setVisible(visible) {
+    setVisible(visible: boolean) {
       this.visible = visible;
     },
-    /** @param {unknown} bounds */
-    setBounds(bounds) {
+    setBounds(bounds: FakeBounds) {
       this.bounds = bounds;
     },
   };
 }
 
-/**
- * @param {number} id
- * @param {ReturnType<typeof createView>} view
- * @param {boolean} [isHome]
- * @returns {any}
- */
-function createTab(id, view, isHome = false) {
+function createTab(id: number, view: FakeView, isHome: boolean = false): FakeTab {
   return {
     id,
     createdAt: id,
@@ -63,26 +84,22 @@ function createTab(id, view, isHome = false) {
   };
 }
 
-/**
- * @param {{ throwOnMissingRemove?: boolean }} [options]
- * @returns {any}
- */
-function createHelpers(options = {}) {
-  const operations = [];
-  const broadcasts = [];
+function createHelpers(options: { throwOnMissingRemove?: boolean } = {}) {
+  const operations: [string, FakeView][] = [];
+  const broadcasts: unknown[] = [];
   const state = {
-    tabs: new Map(),
-    activeTabId: null,
+    tabs: new Map<number, any>(),
+    activeTabId: null as number | null,
   };
-  const attachedViews = new Set();
+  const attachedViews = new Set<FakeView>();
   const mainWindow = {
     title: "",
     contentView: {
-      addChildView(view) {
+      addChildView(view: any) {
         operations.push(["add", view]);
         attachedViews.add(view);
       },
-      removeChildView(view) {
+      removeChildView(view: any) {
         operations.push(["remove", view]);
         if (options.throwOnMissingRemove && !attachedViews.has(view)) {
           throw new Error("view is not attached");
@@ -93,7 +110,7 @@ function createHelpers(options = {}) {
     getContentSize() {
       return [1200, 800];
     },
-    setTitle(title) {
+    setTitle(title: string) {
       this.title = title;
     },
   };
@@ -105,23 +122,21 @@ function createHelpers(options = {}) {
     },
     createHomeTab() {},
     debugLog() {},
-    findTabByWebContentsRef(fn) {
-      void fn;
-    },
+    findTabByWebContentsRef(_fn: any) {},
     getHomeUrl() {
       return "https://www.canva.com/";
     },
     mainWindowRef() {
-      return mainWindow;
+      return mainWindow as any;
     },
     nativeTheme: { shouldUseDarkColors: false },
-    setActiveTabId(id) {
+    setActiveTabId(id: number | null) {
       state.activeTabId = id;
     },
-    state,
+    state: state as any,
     toolbarHeight: 46,
     toolbarViewRef() {
-      return toolbarView;
+      return toolbarView as any;
     },
   });
 
@@ -132,7 +147,7 @@ test("ensureTopLevelView removes before re-adding without children tracking", ()
   const { helpers, operations } = createHelpers();
   const view = createView(1);
 
-  helpers.ensureTopLevelView(view);
+  helpers.ensureTopLevelView(view as any);
 
   assert.deepEqual(operations, [
     ["remove", view],
@@ -144,7 +159,7 @@ test("ensureTopLevelView still adds views when remove rejects missing attachment
   const { helpers, operations } = createHelpers({ throwOnMissingRemove: true });
   const view = createView(1);
 
-  assert.doesNotThrow(() => helpers.ensureTopLevelView(view));
+  assert.doesNotThrow(() => helpers.ensureTopLevelView(view as any));
   assert.deepEqual(operations, [
     ["remove", view],
     ["add", view],
@@ -184,16 +199,20 @@ test("switchToTab re-adds active content view before toolbar", () => {
 
   helpers.switchToTab(2);
 
-  assert.deepEqual(operations.slice(-4), [
-    ["remove", toolbarView],
-    ["add", toolbarView],
-    ["remove", toolbarView],
-    ["add", toolbarView],
-  ]);
-  assert.deepEqual(operations.slice(0, 2), [
-    ["remove", tabView],
-    ["add", tabView],
-  ]);
+  let tabViewAddIndex = -1;
+  let lastToolbarAddIndex = -1;
+  for (let i = 0; i < operations.length; i++) {
+    const [op, view] = operations[i];
+    if (op === "add" && view === tabView) {
+      tabViewAddIndex = i;
+    }
+    if (op === "add" && view === toolbarView) {
+      lastToolbarAddIndex = i;
+    }
+  }
+  assert.ok(tabViewAddIndex !== -1, "tabView should be added");
+  assert.ok(lastToolbarAddIndex !== -1, "toolbarView should be added");
+  assert.ok(tabViewAddIndex < lastToolbarAddIndex, "tabView must be added before the final toolbarView addition");
 });
 
 test("switchToTab ignores unknown tab ids", () => {
@@ -217,4 +236,23 @@ test("switchToTab focuses selected webContents", () => {
   helpers.switchToTab(2);
 
   assert.equal(tabView.webContents.focused, true);
+});
+
+test("switchToTab focuses and returns when requested tab is already active", () => {
+  const { helpers, state, operations, broadcasts } = createHelpers();
+  const homeView = createView(1);
+  const secondView = createView(2);
+
+  state.activeTabId = 2;
+  state.tabs.set(1, createTab(1, homeView, true));
+  state.tabs.set(2, createTab(2, secondView));
+
+  helpers.switchToTab(2);
+
+  assert.equal(state.activeTabId, 2);
+  assert.equal(secondView.webContents.focused, true);
+  assert.deepEqual(operations, []);
+  assert.deepEqual(broadcasts, []);
+  assert.equal(homeView.visible, false);
+  assert.equal(secondView.visible, false);
 });

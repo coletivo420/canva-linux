@@ -259,6 +259,12 @@ export function createTabHelpers({
     const tab = state.tabs.get(id);
     if (!tab) return;
 
+    if (state.activeTabId === id) {
+      tab.view.webContents.focus();
+      debugLog("tabs:navigation", "switch-active", id, tab.url);
+      return;
+    }
+
     for (const entry of state.tabs.values()) {
       setTabVisibility(entry, entry.id === id);
     }
