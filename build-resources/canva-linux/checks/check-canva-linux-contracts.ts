@@ -676,6 +676,93 @@ function checkC420UIAutoBootstrapContract(rootDir: string, failures: string[]): 
   }
 }
 
+function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
+  const buildPreloadSource = readText(rootDir, "build-resources/c420ui/scripts/build-preload-bundle.ts");
+  if (!buildPreloadSource) {
+    failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must exist");
+  } else {
+    if (buildPreloadSource.includes('format: "cjs"')) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must not use format: \"cjs\" for Electron preloads");
+    }
+    if (!buildPreloadSource.includes('format: "esm"')) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must use format: \"esm\" for Electron preloads");
+    }
+    if (buildPreloadSource.includes(".bundle.cjs")) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must not use .cjs for preload bundles");
+    }
+    if (!buildPreloadSource.includes("canva.bundle.mjs") || !buildPreloadSource.includes("toolbar.bundle.mjs")) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: preload bundles must stay ESM .mjs outputs");
+    }
+  }
+
+  const indexSource = readText(rootDir, "build-resources/electron/main/index.ts");
+  if (indexSource?.includes("toolbar.bundle.cjs")) {
+    failures.push("build-resources/electron/main/index.ts: must not use toolbar.bundle.cjs");
+  }
+  if (indexSource && !indexSource.includes("toolbar.bundle.mjs")) {
+    failures.push("build-resources/electron/main/index.ts: must keep toolbar.bundle.mjs preload path");
+  }
+
+  const controllerSource = readText(rootDir, "build-resources/electron/main/tab-controller.ts");
+  if (controllerSource?.includes("canva.bundle.cjs")) {
+    failures.push("build-resources/electron/main/tab-controller.ts: must not use canva.bundle.cjs");
+  }
+  if (controllerSource && !controllerSource.includes("canva.bundle.mjs")) {
+    failures.push("build-resources/electron/main/tab-controller.ts: must keep canva.bundle.mjs preload path");
+  }
+}
+
+function checkToolbarUIContract(rootDir: string, failures: string[]): void {
+  const toolbarHtml = readText(rootDir, "build-resources/electron/ui/toolbar.html");
+  if (!toolbarHtml) {
+    failures.push("build-resources/electron/ui/toolbar.html: must exist");
+    return;
+  }
+
+  if (toolbarHtml.includes("class=\"brand\"") || toolbarHtml.includes(".brand")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must not render duplicate brand slot");
+  }
+
+  if (!toolbarHtml.includes("getPinnedHomeLabel")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must use getPinnedHomeLabel for home tab labeling");
+  }
+  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome"] as const) {
+    if (!toolbarHtml.includes(`canvaTabs.${bridgeMethod}`)) {
+      failures.push(`build-resources/electron/ui/toolbar.html: must use canvaTabs.${bridgeMethod}`);
+    }
+  }
+
+  const toolbarPreload = readText(rootDir, "build-resources/electron/preload/toolbar.ts");
+  if (!toolbarPreload) {
+    failures.push("build-resources/electron/preload/toolbar.ts: must exist");
+    return;
+  }
+
+  if (!toolbarPreload.includes('contextBridge.exposeInMainWorld("canvaTabs"')) {
+    failures.push("build-resources/electron/preload/toolbar.ts: must expose window.canvaTabs");
+  }
+  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome"] as const) {
+    if (!toolbarPreload.includes(bridgeMethod)) {
+      failures.push(`build-resources/electron/preload/toolbar.ts: canvaTabs must expose ${bridgeMethod}`);
+    }
+  }
+}
+
+function checkTabSwitchingContract(rootDir: string, failures: string[]): void {
+  const tabsSource = readText(rootDir, "build-resources/electron/main/tabs.ts");
+  if (!tabsSource) {
+    failures.push("build-resources/electron/main/tabs.ts: must exist");
+    return;
+  }
+
+  if (tabsSource.includes("for (const entry of state.tabs.values())") && tabsSource.includes("setTabVisibility(entry, entry.id === id)")) {
+    failures.push("build-resources/electron/main/tabs.ts: switchToTab must not sweep all tabs; use targeted detach instead");
+  }
+  if (!tabsSource.includes("detachActiveContentView();") || !tabsSource.includes("ensureTopLevelView(tab.view);")) {
+    failures.push("build-resources/electron/main/tabs.ts: switchToTab must detach active content view before showing requested tab");
+  }
+}
+
 function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]): void {
   checkProjectLayoutOwnership(rootDir, failures);
   checkForbiddenPaths(rootDir, failures);
@@ -686,6 +773,9 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkBuildMetadataContracts(rootDir, failures);
   checkSourceHashContracts(rootDir, failures);
   checkRuntimeAssetsMetadataCopyContract(rootDir, failures);
+  checkPreloadBundleContract(rootDir, failures);
+  checkToolbarUIContract(rootDir, failures);
+  checkTabSwitchingContract(rootDir, failures);
   checkBuildResourcesLayoutContract(rootDir, failures);
   checkRootLayoutMinimizationContract(rootDir, failures);
   checkDocs(rootDir, failures);

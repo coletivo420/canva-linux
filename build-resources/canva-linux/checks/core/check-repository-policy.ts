@@ -1958,6 +1958,11 @@ function main(): number {
     "build-resources/config/typescript/tsconfig.build.json",
     "build-resources/config/typescript/tsconfig.strict.json",
   ] as const;
+  const stripTsConfigJson = (content: string): string =>
+    content
+      .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, "$1")
+      .replace(/,(\s*([}\]]))/g, "$2");
+
   for (const relativePath of tsconfigPaths) {
     const absolutePath = path.join(rootDir, relativePath);
     if (!fs.existsSync(absolutePath)) {
@@ -1966,7 +1971,7 @@ function main(): number {
     }
     try {
       const content = fs.readFileSync(absolutePath, "utf8");
-      const config = JSON.parse(stripJsonCommentsAndTrailingCommas(content)) as {
+      const config = JSON.parse(stripTsConfigJson(content)) as {
         compilerOptions?: { module?: string; moduleResolution?: string };
       };
       const moduleValue = config.compilerOptions?.module;

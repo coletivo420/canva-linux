@@ -52,30 +52,57 @@ let tabsStateListener:
   | ((event: IpcRendererEvent, state: unknown) => void)
   | null = null;
 
+function sendToolbarAction(
+  action: "switch-tab" | "close-tab" | "go-home",
+  payload: Record<string, unknown> = {},
+): void {
+  debugLog("tabs:toolbar", "toolbar-send", action, JSON.stringify(payload));
+  ipcRenderer.send("toolbar-action", { action, payload });
+}
+
+function subscribeTabsState(callback: (state: unknown) => void): void {
+  if (tabsStateListener) {
+    ipcRenderer.removeListener("tabs-state", tabsStateListener);
+  }
+
+  tabsStateListener = (_event, state) => {
+    const toolbarState = state as
+      | { tabs?: unknown[]; activeTabId?: unknown }
+      | null
+      | undefined;
+    debugLog(
+      "tabs:state",
+      "toolbar-state",
+      `count=${toolbarState?.tabs?.length || 0}`,
+      `active=${toolbarState?.activeTabId || "none"}`,
+    );
+    callback(state);
+  };
+  ipcRenderer.on("tabs-state", tabsStateListener);
+}
+
 contextBridge.exposeInMainWorld("canvaTabs", {
+  subscribeTabsState,
+  switchTab(id: number) {
+    sendToolbarAction("switch-tab", { id });
+  },
+  closeTab(id: number) {
+    sendToolbarAction("close-tab", { id });
+  },
+  goHome() {
+    sendToolbarAction("go-home");
+  },
   send(action: string, payload: Record<string, unknown> = {}) {
-    debugLog("tabs:toolbar", "toolbar-send", action, JSON.stringify(payload));
-    ipcRenderer.send("toolbar-action", { action, payload });
+    if (
+      action === "switch-tab" ||
+      action === "close-tab" ||
+      action === "go-home"
+    ) {
+      sendToolbarAction(action, payload);
+    }
   },
   onState(callback: (state: unknown) => void) {
-    if (tabsStateListener) {
-      ipcRenderer.removeListener("tabs-state", tabsStateListener);
-    }
-
-    tabsStateListener = (_event, state) => {
-      const toolbarState = state as
-        | { tabs?: unknown[]; activeTabId?: unknown }
-        | null
-        | undefined;
-      debugLog(
-        "tabs:state",
-        "toolbar-state",
-        `count=${toolbarState?.tabs?.length || 0}`,
-        `active=${toolbarState?.activeTabId || "none"}`,
-      );
-      callback(state);
-    };
-    ipcRenderer.on("tabs-state", tabsStateListener);
+    subscribeTabsState(callback);
   },
   getSystemTheme(): "dark" | "light" {
     return window.matchMedia &&

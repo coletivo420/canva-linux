@@ -88,18 +88,18 @@ function createHelpers(options: { throwOnMissingRemove?: boolean } = {}) {
   const operations: [string, FakeView][] = [];
   const broadcasts: unknown[] = [];
   const state = {
-    tabs: new Map<number, any>(),
+    tabs: new Map<number, FakeTab>(),
     activeTabId: null as number | null,
   };
   const attachedViews = new Set<FakeView>();
   const mainWindow = {
     title: "",
     contentView: {
-      addChildView(view: any) {
+      addChildView(view: FakeView) {
         operations.push(["add", view]);
         attachedViews.add(view);
       },
-      removeChildView(view: any) {
+      removeChildView(view: FakeView) {
         operations.push(["remove", view]);
         if (options.throwOnMissingRemove && !attachedViews.has(view)) {
           throw new Error("view is not attached");
@@ -122,7 +122,7 @@ function createHelpers(options: { throwOnMissingRemove?: boolean } = {}) {
     },
     createHomeTab() {},
     debugLog() {},
-    findTabByWebContentsRef(_fn: any) {},
+    findTabByWebContentsRef(_fn: (webContents: { id?: number } | null | undefined) => TabEntry | null) {},
     getHomeUrl() {
       return "https://www.canva.com/";
     },
@@ -147,7 +147,7 @@ test("ensureTopLevelView removes before re-adding without children tracking", ()
   const { helpers, operations } = createHelpers();
   const view = createView(1);
 
-  helpers.ensureTopLevelView(view as any);
+  helpers.ensureTopLevelView(view);
 
   assert.deepEqual(operations, [
     ["remove", view],
@@ -159,14 +159,14 @@ test("ensureTopLevelView still adds views when remove rejects missing attachment
   const { helpers, operations } = createHelpers({ throwOnMissingRemove: true });
   const view = createView(1);
 
-  assert.doesNotThrow(() => helpers.ensureTopLevelView(view as any));
+  assert.doesNotThrow(() => helpers.ensureTopLevelView(view));
   assert.deepEqual(operations, [
     ["remove", view],
     ["add", view],
   ]);
 });
 
-test("switchToTab hides inactive tabs and shows requested tab", () => {
+test("switchToTab hides previous active tab and shows requested tab", () => {
   const { broadcasts, helpers, state } = createHelpers();
   const homeView = createView(1);
   const secondView = createView(2);
@@ -176,17 +176,23 @@ test("switchToTab hides inactive tabs and shows requested tab", () => {
   state.tabs.set(2, createTab(2, secondView));
   state.tabs.set(3, createTab(3, thirdView));
 
+  // Manually show home and third tab to see if switchToTab touches them
+  homeView.setVisible(true);
+  thirdView.setVisible(true);
+
   helpers.switchToTab(2);
-  assert.equal(homeView.visible, false);
-  assert.equal(secondView.visible, true);
-  assert.equal(thirdView.visible, false);
+
+  assert.equal(homeView.visible, false, "home tab (previous active) must be hidden");
+  assert.equal(secondView.visible, true, "second tab (new active) must be shown");
+  assert.equal(thirdView.visible, true, "third tab (not involved) should not be touched");
   assert.equal(state.activeTabId, 2);
   assert.equal(broadcasts.length, 1);
 
   helpers.switchToTab(3);
-  assert.equal(homeView.visible, false);
-  assert.equal(secondView.visible, false);
-  assert.equal(thirdView.visible, true);
+
+  assert.equal(secondView.visible, false, "second tab (previous active) must be hidden");
+  assert.equal(thirdView.visible, true, "third tab (new active) must be shown");
+  assert.equal(homeView.visible, false, "home tab (hidden before) should not be touched");
   assert.equal(state.activeTabId, 3);
   assert.equal(broadcasts.length, 2);
 });
@@ -247,6 +253,10 @@ test("switchToTab focuses and returns when requested tab is already active", () 
   state.tabs.set(1, createTab(1, homeView, true));
   state.tabs.set(2, createTab(2, secondView));
 
+  // Pre-set visibility to ensure they aren't touched
+  homeView.setVisible(false);
+  secondView.setVisible(true);
+
   helpers.switchToTab(2);
 
   assert.equal(state.activeTabId, 2);
@@ -254,5 +264,5 @@ test("switchToTab focuses and returns when requested tab is already active", () 
   assert.deepEqual(operations, []);
   assert.deepEqual(broadcasts, []);
   assert.equal(homeView.visible, false);
-  assert.equal(secondView.visible, false);
+  assert.equal(secondView.visible, true, "already active tab visibility should not be touched");
 });

@@ -156,11 +156,17 @@ function createToolbarHarness() {
       getSystemTheme() {
         return "light";
       },
-      onState(callback) {
+      subscribeTabsState(callback) {
         renderState = callback;
       },
-      send(channel, payload) {
-        sent.push({ channel, payload });
+      switchTab(id) {
+        sent.push({ channel: "switch-tab", payload: { id } });
+      },
+      closeTab(id) {
+        sent.push({ channel: "close-tab", payload: { id } });
+      },
+      goHome() {
+        sent.push({ channel: "go-home", payload: undefined });
       },
     },
     addEventListener() {},
@@ -274,4 +280,55 @@ test("pinned home click sends go-home and no duplicate home button exists", () =
   assert.deepEqual(sent, [{ channel: "go-home", payload: undefined }]);
   assert.equal(document.querySelector("#home"), null);
   assert.equal(actions.querySelector("#home"), null);
+});
+
+test("toolbar bridge controls switch-tab", () => {
+  const { render, sent, document } = createToolbarHarness();
+
+  render({ activeTabId: 1, pinnedHomeTab: homeTab, tabs: [designTab], theme: "light" });
+  document.querySelector(".tab-activate").click();
+
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].channel, "switch-tab");
+  assert.equal(sent[0].payload.id, 2);
+});
+
+test("toolbar does not render duplicate brand slot", () => {
+  const { document } = createToolbarHarness();
+  assert.equal(document.querySelector(".brand"), null);
+});
+
+test("pinned home strips Canva suffix", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: { ...homeTab, title: "Home - Canva" },
+    tabs: [],
+    theme: "light",
+  });
+
+  assert.equal(document.querySelector(".pinned-home").textContent, "Home");
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: { ...homeTab, title: "Home - Canva Linux" },
+    tabs: [],
+    theme: "light",
+  });
+
+  assert.equal(document.querySelector(".pinned-home").textContent, "Home");
+});
+
+test("missing pinned home title falls back to Home", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: { ...homeTab, title: "" },
+    tabs: [],
+    theme: "light",
+  });
+
+  assert.equal(document.querySelector(".pinned-home").textContent, "Home");
 });

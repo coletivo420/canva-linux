@@ -60,24 +60,6 @@
       border-bottom: 1px solid var(--line);
       background: linear-gradient(180deg, var(--bar-start), var(--bar-end));
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 116px;
-      padding: 0 8px 0 4px;
-    }
-    .brand img {
-      width: 22px;
-      height: 22px;
-      border-radius: 6px;
-      flex: 0 0 auto;
-    }
-    .brand span {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-    }
     .tab-strip {
       display: flex;
       align-items: stretch;
@@ -212,10 +194,6 @@
 </head>
 <body>
   <div class="bar">
-    <div class="brand">
-      <img src="../assets/canva-icon.png" alt="Canva" />
-      <span>Canva</span>
-    </div>
     <div class="tab-strip">
       <div class="pinned-home-slot" id="pinned-home-slot"></div>
       <div class="tabs" id="tabs"></div>
@@ -236,6 +214,21 @@
       const reason = event?.reason instanceof Error ? event.reason.stack || event.reason.message : String(event?.reason || 'unknown-rejection');
       console.error('[toolbar-ui] unhandledrejection', reason);
     });
+
+    function getPinnedHomeLabel(tab) {
+      const rawTitle = String(tab?.title || '').trim();
+
+      if (!rawTitle) {
+        return 'Home';
+      }
+
+      const withoutCanvaSuffix = rawTitle
+        .replace(/\s+[-–—]\s+Canva(?:\s+Linux)?$/iu, '')
+        .replace(/^Canva\s*[-–—:]\s*/iu, '')
+        .trim();
+
+      return withoutCanvaSuffix || rawTitle;
+    }
 
     // Apply the system theme to the lightweight shell toolbar.
     function applyTheme(theme) {
@@ -267,10 +260,11 @@
 
       if (!tab) return;
 
+      const homeLabel = getPinnedHomeLabel(tab);
       const button = document.createElement('button');
       button.className = 'pinned-home' + (tab.id === activeTabId ? ' active' : '');
       button.type = 'button';
-      button.title = tab.title || 'Canva';
+      button.title = homeLabel;
       button.setAttribute('role', 'tab');
       button.setAttribute('aria-selected', tab.id === activeTabId ? 'true' : 'false');
 
@@ -280,14 +274,14 @@
       installIconFallback(favicon);
 
       const title = document.createElement('span');
-      title.textContent = tab.title || 'Canva';
+      title.textContent = homeLabel;
 
       button.appendChild(favicon);
       button.appendChild(title);
 
       button.addEventListener('click', () => {
         console.log('[toolbar-ui] pinned-home-click');
-        window.canvaTabs.send('go-home');
+        window.canvaTabs.goHome();
       });
 
       pinnedHomeSlot.appendChild(button);
@@ -308,7 +302,7 @@
         activate.className = 'tab-activate';
         activate.type = 'button';
         activate.title = tab.title || tab.url || 'Canva';
-        activate.addEventListener('click', () => window.canvaTabs.send('switch-tab', { id: tab.id }));
+        activate.addEventListener('click', () => window.canvaTabs.switchTab(tab.id));
 
         const favicon = document.createElement('img');
         favicon.className = 'tab-favicon';
@@ -332,7 +326,7 @@
           close.textContent = '×';
           close.addEventListener('click', (event) => {
             event.stopPropagation();
-            window.canvaTabs.send('close-tab', { id: tab.id });
+            window.canvaTabs.closeTab(tab.id);
           });
           tabEl.appendChild(close);
         }
@@ -344,7 +338,7 @@
       console.error('[toolbar-ui] missing-bridge');
     } else {
       console.log('[toolbar-ui] subscribe-tabs-state');
-      window.canvaTabs.onState(render);
+      window.canvaTabs.subscribeTabsState(render);
     }
   </script>
 </body>

@@ -44,7 +44,23 @@ async function buildPreloadBundle(name: string, outputName: string): Promise<voi
     platform: "node",
     target: "es2022",
     format: "esm",
-    external: ["electron"],
+    plugins: [
+      {
+        name: "electron-shim",
+        setup(build) {
+          build.onResolve({ filter: /^electron$/ }, (args) => {
+            return { path: args.path, namespace: "electron-shim" };
+          });
+          build.onLoad({ filter: /^electron$/, namespace: "electron-shim" }, () => {
+            return {
+              contents:
+                'export default require("electron"); export const contextBridge = require("electron").contextBridge; export const ipcRenderer = require("electron").ipcRenderer;',
+              loader: "js",
+            };
+          });
+        },
+      },
+    ],
     sourcemap: false,
     minify: false,
     legalComments: "none",

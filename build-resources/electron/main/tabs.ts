@@ -265,16 +265,13 @@ export function createTabHelpers({
       return;
     }
 
-    for (const entry of state.tabs.values()) {
-      setTabVisibility(entry, entry.id === id);
-    }
-
+    detachActiveContentView();
     ensureTopLevelView(tab.view);
+    setTabVisibility(tab, true);
     setActiveTabId(id);
     layoutViews();
     ensureTopLevelView(toolbarViewRef());
     tab.view.webContents.focus();
-    debugLog("tabs:navigation", "switch-active", id, tab.url);
     broadcastTabsState();
   }
 

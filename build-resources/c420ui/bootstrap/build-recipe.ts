@@ -55,6 +55,7 @@ export function createC420UIBootstrapEsbuildCliArgs(outdir: string): string[] {
     `--outdir=${outdir}`,
     "--entry-names=[name]",
     "--out-extension:.js=.mjs",
+    "--banner:js=import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
     ...C420UI_BOOTSTRAP_EXTERNALS.map((external) => `--external:${external}`),
   ];
 }
