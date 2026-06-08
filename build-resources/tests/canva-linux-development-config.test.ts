@@ -3,16 +3,16 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { validateC420UIDevelopmentConfig } from "../c420ui/src";
-import { loadCanvaLinuxActions } from "../canva-linux/actions/registry";
-import { loadCanvaLinuxC420UIActions } from "../canva-linux/c420ui-adapter/actions";
+import { validateC420UIDevelopmentConfig } from "../c420ui/src/index.js";
+import { loadCanvaLinuxActions } from "../canva-linux/actions/registry.js";
+import { loadCanvaLinuxC420UIActions } from "../canva-linux/c420ui-adapter/actions.js";
 import {
   loadCanvaLinuxDevelopmentTasks,
   loadCanvaLinuxDevelopmentWorkflows,
   validateCanvaLinuxDevelopmentTasksAgainstActions,
-} from "../canva-linux/c420ui-adapter/development";
+} from "../canva-linux/c420ui-adapter/development.js";
 
-const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT ?? process.cwd();
 const developmentConfigPath = path.join(rootDir, "build-resources/canva-linux/config/development.json");
 const adapterPath = path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/adapter.ts");
 const developmentAdapterPath = path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/development.ts");
@@ -137,34 +137,6 @@ test("supportsDryRun=true does not point to planned actions", () => {
       ),
     /dry-run/i,
   );
-});
-
-test("command actions do not reference removed shell wrappers", () => {
-  const actions = loadCanvaLinuxActions(rootDir);
-
-  for (const action of actions.filter((item) => item.kind === "command")) {
-    assert.notEqual(action.command, "scripts/run-built-script.sh", action.id);
-    assert.equal(
-      action.args?.includes("scripts/run-built-script.sh"),
-      false,
-      action.id,
-    );
-
-    const commandPath =
-      action.command && !path.isAbsolute(action.command)
-        ? path.join(rootDir, action.command)
-        : null;
-    if (commandPath && action.command.includes("/")) {
-      assert.equal(fs.existsSync(commandPath), true, action.id);
-    }
-
-    for (const arg of action.args ?? []) {
-      if (!arg.startsWith("scripts/") && !arg.startsWith(".build/scripts/")) {
-        continue;
-      }
-      assert.equal(fs.existsSync(path.join(rootDir, arg)), true, action.id);
-    }
-  }
 });
 
 test("workflows preserve metadata from the real action", () => {

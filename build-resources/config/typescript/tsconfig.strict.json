@@ -7,6 +7,8 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUncheckedIndexedAccess": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "moduleDetection": "force"
   },
   "include": [
@@ -14,24 +16,6 @@
     "../../electron/shared/**/*.ts",
     "../../electron/preload/**/*.ts",
     "../../../build-resources/canva-linux/checks/core/**/*.ts",
-    "../../canva-linux/**/*.ts",
-    "../../tests/c420ui-action-engine.test.ts",
-    "../../tests/logging-normalize.test.ts",
-    "../../tests/debug-levels.test.ts",
-    "../../tests/gpu-diagnostics.test.ts",
-    "../../tests/runtime.test.ts",
-    "../../tests/lifecycle.test.ts",
-    "../../tests/logging-helpers.test.ts",
-    "../../tests/tabs-state.test.ts",
-    "../../tests/eyedropper-bridge.test.ts",
-    "../../tests/window-open-policy.test.ts",
-    "../../tests/navigation.test.ts",
-    "../../tests/tab-events.test.ts",
-    "../../tests/toolbar-preload.test.ts",
-    "../../tests/oauth-helpers.test.ts",
-    "../../tests/preload-debug.test.ts",
-    "../../tests/upload-diagnostics.test.ts",
-    "../../tests/eyedropper-preload.test.ts",
-    "../../tests/helpers/runtime-module.ts"
+    "../../canva-linux/**/*.ts"
   ]
 }

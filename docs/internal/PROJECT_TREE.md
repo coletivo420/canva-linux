@@ -35,6 +35,13 @@ build-resources/canva-linux/validation/    Canva Linux project validation.
 
 `build-resources/` is the canonical home for project-owned runtime/build resources. Root `packages/`, `electron/`, `data/`, and loose icon assets are legacy paths and must not be restored.
 
+Dev11 finalizes explicit ESM outputs:
+
+- Electron runtime entrypoint: `.build/electron/main/index.mjs`.
+- Electron preload bundles: `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- Node tooling, checks, c420ui terminal output, and c420ui bootstrap artifacts use `.mjs`.
+- Versioned `.cjs` files are forbidden outside external dependencies.
+
 ## Config ownership
 
 - `build-resources/canva-linux/config/actions.json`: Canva Linux action declarations.
@@ -53,7 +60,7 @@ build-resources/canva-linux/validation/    Canva Linux project validation.
 - Canva Linux launchers do not run dependency installation directly.
 - Canva Linux does not validate generic artifact recipes.
 - The adapter does not duplicate Action Engine policy.
-- `scripts/preflight-common.sh` is repository-check-only.
+- `root scripts/ ownership` is scripts/ must not return.
 
 ## Version and release line
 
@@ -69,3 +76,13 @@ build-resources/canva-linux/validation/    Canva Linux project validation.
 - Do not reintroduce `scripts/c420ui/`.
 - Do not create generated JavaScript outside `.build/`, `dist/`, `coverage`, or
   dependency output.
+
+## Dev11 shell boundary
+
+POSIX/bootstrap boundaries are limited to `canva-linux-c420ui-builder` and `run.sh`; scripts/ must not return as an active ownership path.
+
+## Dev11 cleanup boundary
+
+- Test compilation emits `.mjs` files under `.build/build-resources/tests/` and `.build/build-resources/c420ui/test/`.
+- Root `scripts/` is not a fallback source, test, or runtime compilation area.
+- Electron preload source lives in TypeScript under `build-resources/electron/preload/`; generated preload output lives under `.build/electron/preload/*.mjs`.

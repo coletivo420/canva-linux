@@ -19,6 +19,7 @@ This index separates c420ui engine documentation, Canva Linux dependent-project 
 - [Project tree reference](PROJECT_TREE.md)
 - [Technical architecture](TECHNICAL.md)
 - [TypeScript notes](TYPESCRIPT.md)
+- [Dev11 ESM migration plan](dev/DEV11_ESM_MIGRATION.md)
 - [CL EyeDropper architecture](CANVA_LINUX_EYEDROPPER.md)
 
 ## c420ui generic engine docs

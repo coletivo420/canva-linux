@@ -1,4 +1,4 @@
-import { runAppImageValidation } from "../validation/appimage";
+import { runAppImageValidation } from "../validation/appimage.js";
 
 function main(): void {
   const result = runAppImageValidation({ rootDir: process.cwd() }, process.argv.slice(2));

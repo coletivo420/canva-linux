@@ -29,7 +29,7 @@ recipes, and host scripts.
 - concrete root policy decisions
 - concrete dependency declarations, including minimum Node major, required host commands, npm dependency names, lockfile, install strategy and usage purposes
 - concrete shell scripts
-- repository-check-only preflight helpers
+- scripts/ must not return preflight helpers
 - project-specific root action scope decisions and environment names
 - package naming
 - release process
@@ -89,7 +89,7 @@ recipes, and host scripts.
   messages and exit codes.
 - Dependent projects own concrete dependency declarations only.
 - `build-resources/canva-linux/config/dependencies.json` is the Canva Linux declaration; c420ui owns host dependency management.
-- `scripts/preflight-common.sh` remains in `scripts/` for now and must not be moved into c420ui core in this phase.
+- `root scripts/ ownership` remains in `scripts/` for now and must not be moved into c420ui core in this phase.
 
 ## Project config ownership
 
@@ -109,7 +109,7 @@ runner.
 ## Shell helper classification
 
 Shell helper classifications are maintained in `docs/checks/SHELL_HELPERS.md`.
-`scripts/preflight-common.sh` is repository-check-only and must not own npm
+`root scripts/ ownership` is scripts/ must not return and must not own npm
 install or dependency repair policy.
 
 ## Current 0.1.4-14 maintenance rules
@@ -128,5 +128,9 @@ install or dependency repair policy.
   and let c420ui validate generic artifact recipe contracts.
 - The Canva Linux adapter must not duplicate Action Engine policy for planned
   actions, dry-run, confirmation, root policy, or fallback execution.
-- `scripts/preflight-common.sh` is repository-check-only and must not own npm
+- `root scripts/ ownership` is scripts/ must not return and must not own npm
   install, repair, or skip behavior.
+
+## Dev11 shell boundary
+
+POSIX/bootstrap boundaries are limited to `canva-linux-c420ui-builder` and `run.sh`; scripts/ must not return as an active ownership path.

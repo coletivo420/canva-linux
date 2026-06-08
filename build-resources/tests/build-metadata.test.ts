@@ -1,20 +1,18 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   appendBuildRevision,
   createBuildMetadata,
   normalizeBuildRevision,
-} = loadRuntimeModule("main/build-metadata");
+} = await loadRuntimeModule("main/build-metadata");
 const repoRoot =
-  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+  process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 test("normalizes build revisions", () => {
   assert.equal(normalizeBuildRevision("abc1234"), "gabc1234");
@@ -97,11 +95,8 @@ test("committed/effective metadata preserve source hashes while build revision f
   assert.notEqual(effective.fullVersion, committed.fullVersion);
 });
 
-test("fallback metadata uses neutral values without source files", () => {
-  const fs = require("node:fs");
-  const os = require("node:os");
-  const path = require("node:path");
-  const { fallbackBaseMetadata } = loadRuntimeModule("main/build-metadata");
+test("fallback metadata uses neutral values without source files", async () => {
+  const { fallbackBaseMetadata } = await loadRuntimeModule("main/build-metadata");
   const previousCwd = process.cwd();
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "canva-metadata-fallback-"));
 
@@ -128,8 +123,8 @@ test("fallback metadata uses neutral values without source files", () => {
   }
 });
 
-test("partial loaded metadata is rejected before effective version creation", () => {
-  const { normalizeLoadedBuildMetadata } = loadRuntimeModule("main/build-metadata");
+test("partial loaded metadata is rejected before effective version creation", async () => {
+  const { normalizeLoadedBuildMetadata } = await loadRuntimeModule("main/build-metadata");
 
   assert.equal(
     normalizeLoadedBuildMetadata({
@@ -148,8 +143,8 @@ test("partial loaded metadata is rejected before effective version creation", ()
   );
 });
 
-test("loaded metadata is normalized with unknown revision fallback", () => {
-  const { normalizeLoadedBuildMetadata } = loadRuntimeModule("main/build-metadata");
+test("loaded metadata is normalized with unknown revision fallback", async () => {
+  const { normalizeLoadedBuildMetadata } = await loadRuntimeModule("main/build-metadata");
 
   const metadata = normalizeLoadedBuildMetadata({
     baseVersion: "0.1.4-15.Dev.7",
@@ -169,7 +164,7 @@ test("loaded metadata is normalized with unknown revision fallback", () => {
 test("build metadata source does not hardcode current Dev.7 fallbacks", () => {
   const source = fs.readFileSync(
     path.join(
-      process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, ".."),
+      process.env.CANVA_TEST_REPO_ROOT || process.cwd(),
       "build-resources",
       "electron",
       "main",

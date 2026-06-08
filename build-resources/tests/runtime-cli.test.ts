@@ -1,14 +1,11 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
-
-const { formatCanvaLinuxVersion } = loadRuntimeModule("main/build-metadata");
+const { formatCanvaLinuxVersion } = await loadRuntimeModule("main/build-metadata");
 const { parseCanvaLinuxRuntimeCli, printCanvaLinuxRuntimeHelp } =
-  loadRuntimeModule("main/runtime-cli");
+  await loadRuntimeModule("main/runtime-cli");
 
 function parse(...args) {
   return parseCanvaLinuxRuntimeCli(["/usr/bin/electron", "/app/main", ...args]);

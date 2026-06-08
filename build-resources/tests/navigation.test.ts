@@ -1,12 +1,8 @@
-// @ts-nocheck
-"use strict";
 
-// @ts-check
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   classifyWindowOpenRequest,
@@ -18,7 +14,7 @@ const {
   isOAuthProviderUrl,
   isSafeExternalUrl,
   shouldGrantRemotePermission,
-} = loadRuntimeModule("shared/navigation");
+} = await loadRuntimeModule("shared/navigation");
 
 test("detects Canva URLs", () => {
   assert.equal(isCanvaUrl("https://www.canva.com/design"), true);

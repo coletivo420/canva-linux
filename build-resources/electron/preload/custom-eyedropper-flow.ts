@@ -1,10 +1,11 @@
-import { ipcRenderer } from "electron";
+import electron from "electron";
+const { ipcRenderer } = electron;
 
 import {
   CLEyeDropper,
   installClEyeDropperScalingPatch,
   removeClEyeDropperUi,
-} from "./cl-eyedropper";
+} from "./cl-eyedropper/index.js";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type EyeDropperLog = (...args: unknown[]) => void;

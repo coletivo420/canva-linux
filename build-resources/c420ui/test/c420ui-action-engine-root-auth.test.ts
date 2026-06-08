@@ -7,7 +7,7 @@ import {
   type c420uiAction,
   type c420uiProjectBridge,
   type c420uiRootProvider,
-} from "../src";
+} from "../src/index.js";
 
 const rootAction: c420uiAction = {
   id: "install-native",

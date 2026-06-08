@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
-import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 
@@ -12,20 +11,19 @@ import {
   C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
   createC420UIBootstrapEsbuildCliArgs,
-  C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
-} from "../bootstrap/build-recipe";
+} from "../bootstrap/build-recipe.js";
 import {
   calculateC420UISourceHash,
   C420UI_SOURCE_HASH_ALGORITHM,
   C420UI_SOURCE_HASH_INPUTS,
-} from "../bootstrap/source-hash";
+} from "../bootstrap/source-hash.js";
 import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
-} from "./bootstrap-check-helpers";
-import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader";
+} from "./bootstrap-check-helpers.js";
+import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader.js";
 
 type PackageJson = {
   version?: string;
@@ -110,9 +108,7 @@ function runGitDiffCheck(rootDir: string, label: string): void {
 }
 
 function copyBlessedRuntimeAssets(rootDir: string, expectedBootstrapDir: string): void {
-  const requireFromRoot = createRequire(path.join(rootDir, "package.json"));
-  const blessedPackageJsonPath = requireFromRoot.resolve("blessed/package.json");
-  const blessedUsrDir = path.join(path.dirname(blessedPackageJsonPath), "usr");
+  const blessedUsrDir = path.join(rootDir, "node_modules", "blessed", "usr");
   const expectedUsrDir = path.join(path.dirname(expectedBootstrapDir), "usr");
 
   fs.mkdirSync(expectedUsrDir, { recursive: true });
@@ -221,12 +217,12 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     dependentProjectDisplayVersion:
       buildMetadata.displayVersion ?? dependentProjectVersion,
     dependentProjectPhase: buildMetadata.phase ?? dependentProjectVersion,
-    entrypoint: "run-c420ui.cjs",
-    cliEntrypoint: "run-c420ui-cli.cjs",
+    entrypoint: "run-c420ui.mjs",
+    cliEntrypoint: "run-c420ui-cli.mjs",
     entrypoints: {
-      ui: c420uiBootstrapArtifactPath("run-c420ui.cjs"),
-      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.cjs"),
-      builder: c420uiBootstrapArtifactPath("c420ui-builder.cjs"),
+      ui: c420uiBootstrapArtifactPath("run-c420ui.mjs"),
+      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.mjs"),
+      builder: c420uiBootstrapArtifactPath("c420ui-builder.mjs"),
     },
     requiresNode: ">=22.0.0",
     buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,
@@ -234,7 +230,6 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     buildTarget: C420UI_BOOTSTRAP_BUILD_TARGET,
     bundleFormat: C420UI_BOOTSTRAP_BUNDLE_FORMAT,
     moduleFormat: C420UI_BOOTSTRAP_MODULE_FORMAT,
-    futureModuleFormat: C420UI_BOOTSTRAP_FUTURE_MODULE_FORMAT,
     typescriptFirst: true,
     ownsFullDependencyPolicy: true,
     c420uiSourceHashAlgorithm: C420UI_SOURCE_HASH_ALGORITHM,
@@ -308,7 +303,7 @@ function validateExpectedManifestMetadata(rootDir: string, expectedBootstrapDir:
 function runStructuralBootstrapCheck(rootDir: string, expectedBootstrapDir: string): void {
   const result = spawnSync(
     process.execPath,
-    [".build/scripts/check-bootstrap.js"],
+    [".build/scripts/check-bootstrap.mjs"],
     {
       cwd: rootDir,
       encoding: "utf8",

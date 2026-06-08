@@ -7,6 +7,13 @@ c420ui is the generic terminal engine used by Canva Linux. It owns shared
 terminal behavior and action orchestration, while Canva Linux remains the
 dependent project that supplies metadata, actions, recipes, and runtime scripts.
 
+## Dev11 ESM-only migration policy
+
+Dev11 is ESM-only by target.
+Maintained TypeScript source must use ESM imports/exports.
+CommonJS source patterns are migration regressions; versioned `.cjs` artifacts are forbidden outside external dependencies.
+Dev11 bootstrap policy now requires `moduleFormat: esm` and ESM `.mjs` entrypoints.
+
 ## Controls
 
 - Terminal workspace composition, focus zones, help text, logs, progress state,
@@ -43,7 +50,7 @@ dependent project that supplies metadata, actions, recipes, and runtime scripts.
 - `build-resources/c420ui/src/detection.ts`
 - `build-resources/c420ui/src/terminal/`
 - `build-resources/c420ui/operations/`
-- `build-resources/c420ui/host/linux/sudo-helper.sh`
+- `build-resources/c420ui/operations/host/sudo.ts`
 
 ## Consumed configs and adapters
 

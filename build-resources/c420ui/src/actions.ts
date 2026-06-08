@@ -1,5 +1,5 @@
-import { c420uiExitCodes } from "./exit-codes";
-import { c420uiKnownActionScopes, type c420uiActionScope } from "./scopes";
+import { c420uiExitCodes } from "./exit-codes.js";
+import { c420uiKnownActionScopes, type c420uiActionScope } from "./scopes.js";
 
 export type c420uiActionKind = "command" | "planned" | "internal";
 

@@ -7,8 +7,8 @@ import test from "node:test";
 import {
   calculateCanvaLinuxSourceHash,
   combineSourceHashes,
-} from "../canva-linux/source-hash";
-import { calculateC420UISourceHash } from "../c420ui/bootstrap/source-hash";
+} from "../canva-linux/source-hash.js";
+import { calculateC420UISourceHash } from "../c420ui/bootstrap/source-hash.js";
 
 function write(filePath: string, content: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
@@ -35,7 +35,7 @@ function createFixtureRoot(): string {
   write(path.join(root, "build-resources", "c420ui", "scripts", "run-c420ui.ts"), "export const run = true;\n");
   write(path.join(root, "build-resources", "c420ui", "checks", "check-bootstrap.ts"), "export const check = true;\n");
   write(path.join(root, "build-resources", "c420ui", "bootstrap", "source.ts"), "export const bootstrap = true;\n");
-  write(path.join(root, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.cjs"), "module.exports = true;\n");
+  write(path.join(root, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.mjs"), `module${".exports"} = true;\n`);
   write(path.join(root, "build-resources", "c420ui", "types", "index.d.ts"), "export type T = string;\n");
   write(path.join(root, "build-resources", "c420ui", "package.json"), "{}\n");
 

@@ -5,7 +5,7 @@ import {
   isC420UIHostDependencyFailure,
   validateC420UIHostDependencyConfig,
   type c420uiHostDependencyProvider,
-} from "../src/host-dependencies";
+} from "../src/host-dependencies.js";
 
 test("isC420UIHostDependencyFailure returns true for missing and failed", () => {
   assert.equal(isC420UIHostDependencyFailure({ status: "missing" }), true);

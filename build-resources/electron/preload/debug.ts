@@ -1,5 +1,6 @@
-import { ipcRenderer } from "electron";
-import { createDebugTools } from "../shared/debug";
+import electron from "electron";
+const { ipcRenderer } = electron;
+import { createDebugTools } from "../shared/debug.js";
 
 type PreloadDebugOptions = {
   source?: string;

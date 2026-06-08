@@ -5,17 +5,17 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-import { validateManifestArtifactHashes } from "../checks/check-bootstrap";
+import { validateManifestArtifactHashes } from "../checks/check-bootstrap.js";
 import {
   C420UI_BOOTSTRAP_ARTIFACT_FILES,
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
-} from "../checks/bootstrap-check-helpers";
+} from "../checks/bootstrap-check-helpers.js";
 
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT ||
   process.env.CANVA_TEST_REPO_ROOT ||
-  path.resolve(__dirname, "..", "..", "..");
+  process.cwd();
 type BootstrapManifest = {
   generatedBy?: string;
   artifactHashes?: Record<string, string>;
@@ -63,7 +63,7 @@ function copyBootstrapToTemp(tempDir: string): string {
 }
 
 function compileBootstrapBuilder(tempDir: string): string {
-  const outfile = path.join(tempDir, "build-c420ui-bootstrap.cjs");
+  const outfile = path.join(tempDir, "build-bootstrap.mjs");
   const result = spawnSync(
     "npx",
     [
@@ -72,7 +72,7 @@ function compileBootstrapBuilder(tempDir: string): string {
       "--bundle",
       "--platform=node",
       "--target=node22",
-      "--format=cjs",
+      "--format=esm",
       "--external:esbuild",
       `--outfile=${outfile}`,
     ],
@@ -113,7 +113,7 @@ test("manifest hash validation fails when an artifact is manually edited", () =>
   try {
     const tempRoot = copyBootstrapToTemp(tempDir);
     fs.appendFileSync(
-      path.join(tempRoot, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.cjs"),
+      path.join(tempRoot, "build-resources", "c420ui", "bootstrap", "generated", "run-c420ui.mjs"),
       "\n// manual edit\n",
     );
 
@@ -124,7 +124,7 @@ test("manifest hash validation fails when an artifact is manually edited", () =>
     validateManifestArtifactHashes(tempRoot, manifest, failures);
 
     assert.equal(failures.length, 1);
-    assert.match(failures[0], /run-c420ui\.cjs: artifact hash differs/);
+    assert.match(failures[0], /run-c420ui\.mjs: artifact hash differs/);
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }

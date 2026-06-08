@@ -1,13 +1,10 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const { safeStringify, normalizeLogArg, normalizeArgs, createLogSignature } =
-  loadRuntimeModule("main/logging-normalize");
+  await loadRuntimeModule("main/logging-normalize");
 
 test("normalizes primitive values", () => {
   assert.deepEqual(normalizeArgs(["text", 123, true, null, undefined]), [

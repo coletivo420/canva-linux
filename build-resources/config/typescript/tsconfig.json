@@ -2,8 +2,8 @@
   "compilerOptions": {
     "noEmit": true,
     "target": "ES2022",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "moduleDetection": "force",
     "ignoreDeprecations": "6.0",
     "strict": false,
@@ -17,7 +17,6 @@
     "../../electron/**/*.ts",
     "../../canva-linux/**/*.ts",
     "../../c420ui/**/*.ts",
-    "../../tests/**/*.ts",
     "../playwright/playwright.config.ts",
     "../eslint/eslint.config.ts",
     "../../canva-linux/packaging/flathub/scripts/**/*.ts"
@@ -28,6 +27,6 @@
     "repo",
     "build-dir",
     ".flatpak-builder",
-    "build-resources/electron/preload/canva.bundle.js"
+    "build-resources/electron/preload/canva.bundle.mjs"
   ]
 }

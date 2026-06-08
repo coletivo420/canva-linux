@@ -1,10 +1,8 @@
-// @ts-nocheck
-"use strict";
 
-// @ts-check
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   describeDragTarget,
@@ -14,9 +12,7 @@ const {
   summarizeClipboardKinds,
   rememberUploadIngress,
   recentUploadIngressSummary,
-} = require("./helpers/runtime-module").loadRuntimeModule(
-  "preload/upload-diagnostics",
-);
+} = await loadRuntimeModule("preload/upload-diagnostics");
 
 class TestHTMLInputElement {
   constructor() {

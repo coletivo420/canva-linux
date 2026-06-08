@@ -1,4 +1,4 @@
-import type { SessionLike } from "./runtime";
+import type { SessionLike } from "./runtime.js";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type AppLike = {
@@ -22,7 +22,7 @@ type ClearEphemeralSessionData = (
 type BrowserWindowConstructorLike = { getAllWindows(): unknown[] };
 type NativeThemeLike = { on(event: "updated", listener: () => void): unknown };
 type TabControllerLike = { createHomeTab(): void };
-type CredentialStoragePolicy = import("./credential-storage").CredentialStoragePolicy;
+type CredentialStoragePolicy = import("./credential-storage.js").CredentialStoragePolicy;
 type LifecycleOptions = {
   app: AppLike;
   BrowserWindow: BrowserWindowConstructorLike;

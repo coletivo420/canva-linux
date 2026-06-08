@@ -3,8 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { runC420UIHostDependencyEnsure } from "../src/host-dependency-runner";
-import type { c420uiHostDependencyConfig } from "../src/host-dependencies";
+import { runC420UIHostDependencyEnsure } from "../src/host-dependency-runner.js";
+import type { c420uiHostDependencyConfig } from "../src/host-dependencies.js";
 
 function makeProject(): string {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-runner-"));

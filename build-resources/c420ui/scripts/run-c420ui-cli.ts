@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { runCanvaLinuxC420UICli } from "../../canva-linux/c420ui-adapter/cli";
+import { runCanvaLinuxC420UICli } from "../../canva-linux/c420ui-adapter/cli.js";
 
 runCanvaLinuxC420UICli(process.argv.slice(2))
   .then((code) => {

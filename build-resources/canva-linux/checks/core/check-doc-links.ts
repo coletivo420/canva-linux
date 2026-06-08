@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../../project-root.js";
 
 const skipDirs = new Set([
   ".git",
@@ -219,10 +219,7 @@ export function main(): number {
   return 1;
 }
 
-if (
-  require.main === module &&
-  /check-doc-links\.js$/.test(process.argv[1] || "")
-) {
+if (/check-doc-links\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   try {
     process.exit(main());
   } catch (error) {

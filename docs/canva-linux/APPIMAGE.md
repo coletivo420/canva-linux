@@ -46,3 +46,7 @@ execution through the Action Engine and Command Runner.
 - Do not create the complete release `SHA256SUMS` manifest in the AppImage build
   script.
 - Do not change AppImage runtime behavior as part of documentation work.
+
+## Dev11 command
+
+- AppImage packaging runs through `npm run package:appimage`.

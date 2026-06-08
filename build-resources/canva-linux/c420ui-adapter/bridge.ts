@@ -8,9 +8,9 @@ import {
   type C420UIProjectAdapter,
   type C420UIWorkflowResult,
   type C420UIWorkflowRunOptions,
-} from "../../c420ui/src";
-import { createCanvaLinuxC420UIAdapter } from "./adapter";
-import { createCanvaLinuxRootProvider } from "./root-provider";
+} from "../../c420ui/src/index.js";
+import { createCanvaLinuxC420UIAdapter } from "./adapter.js";
+import { createCanvaLinuxRootProvider } from "./root-provider.js";
 
 export function createCanvaLinuxBridge(
   rootDir = process.cwd(),

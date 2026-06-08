@@ -2,7 +2,7 @@ export {
   CLEyeDropper,
   installClEyeDropperScalingPatch,
   removeClEyeDropperUi,
-} from "./cl-eyedropper";
+} from "./cl-eyedropper.js";
 
 export type {
   CLEyeDropperOpenOptions,
@@ -11,4 +11,4 @@ export type {
   EyeDropperLog,
   LTCodeCompatibleResult,
   RgbTuple,
-} from "./types";
+} from "./types.js";

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import { runDoctorValidation } from "../canva-linux/validation/doctor";
+import { runDoctorValidation } from "../canva-linux/validation/doctor.js";
 
 test("doctor source enforces Node >=22 requirement", () => {
   const source = fs.readFileSync("build-resources/canva-linux/validation/doctor.ts", "utf8");

@@ -1,12 +1,8 @@
-// @ts-nocheck
-"use strict";
 
-// @ts-check
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 class FakeElement {
   constructor(tagName = "div") {
@@ -130,8 +126,8 @@ function createFakeDom(_context) {
   return { body, document };
 }
 
-test("CLEyeDropper exports the Canva Linux picker API surface", () => {
-  const cl = loadRuntimeModule("preload/cl-eyedropper/index");
+test("CLEyeDropper exports the Canva Linux picker API surface", async () => {
+  const cl = await loadRuntimeModule("preload/cl-eyedropper/index");
   const eyedropper = new cl.CLEyeDropper({ overlay: { zIndex: 7 } });
 
   assert.equal(typeof cl.CLEyeDropper, "function");
@@ -141,8 +137,8 @@ test("CLEyeDropper exports the Canva Linux picker API surface", () => {
   assert.equal(eyedropper._rgbToHex(255, 0, 128), "#ff0080");
 });
 
-test("CLEyeDropper rejects non-browser environments", () => {
-  const { CLEyeDropper } = loadRuntimeModule("preload/cl-eyedropper/index");
+test("CLEyeDropper rejects non-browser environments", async () => {
+  const { CLEyeDropper } = await loadRuntimeModule("preload/cl-eyedropper/index");
   const previousDocument = globalThis.document;
   const previousWindow = globalThis.window;
 
@@ -159,7 +155,7 @@ test("CLEyeDropper rejects non-browser environments", () => {
   }
 });
 
-test("removeClEyeDropperUi removes the overlay id", () => {
+test("removeClEyeDropperUi removes the overlay id", async () => {
   const context = {
     imageSmoothingEnabled: true,
     clearRect() {},
@@ -176,7 +172,7 @@ test("removeClEyeDropperUi removes the overlay id", () => {
 
   try {
     /** @type {any} */ globalThis.document = document;
-    const { removeClEyeDropperUi } = loadRuntimeModule(
+    const { removeClEyeDropperUi } = await loadRuntimeModule(
       "preload/cl-eyedropper/index",
     );
     removeClEyeDropperUi();
@@ -219,7 +215,7 @@ test("CLEyeDropper preserves the canvas event model and scaled picking", async (
     fakeWindow.requestAnimationFrame;
 
   try {
-    const { CLEyeDropper, installClEyeDropperScalingPatch } = loadRuntimeModule(
+    const { CLEyeDropper, installClEyeDropperScalingPatch } = await loadRuntimeModule(
       "preload/cl-eyedropper/index",
     );
     installClEyeDropperScalingPatch((...args) => {

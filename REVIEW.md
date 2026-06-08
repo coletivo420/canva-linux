@@ -1,5 +1,26 @@
 # Review Checklist
 
+## Dev11 ESM review rules
+
+Request changes if a PR:
+
+- adds `require()` to maintained TypeScript;
+- adds `createRequire()` or `require.resolve()` to maintained TypeScript;
+- adds `__filename` or `__dirname` compatibility bridges in maintained TypeScript;
+- adds `node:module` `createRequire` bridges in maintained TypeScript;
+- adds `module.exports` or `exports.*`;
+- adds new `.cjs` files in the repository;
+- adds new esbuild `--format=cjs`;
+- restores `.build/scripts/*.js` generated tooling outputs instead of `.mjs` for migrated Dev11 tooling;
+- restores electron-builder `beforeBuild` hook output to `.js` or `--format=cjs`;
+- restores c420ui bootstrap generator output to `.cjs` or `--format=cjs`;
+- adds new tsconfig `module: commonjs`;
+- adds new tsconfig `moduleResolution: node`;
+- restores `@ts-nocheck`;
+- changes package output to CommonJS while claiming ESM migration;
+- keeps `.cjs` bootstrap or other versioned `.cjs` artifacts as permanent architecture;
+- breaks Dev11 build-resources ownership boundaries.
+
 ## c420ui package refactor and structural ownership
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
@@ -28,7 +49,7 @@
 
 - The broken Plain Logs mode was removed from c420ui. The normal logs panel remains the supported log view, and F5 Copy Logs remains available when supported.
 
-## Dev.10 TypeScript hardening review
+## Dev11 ESM-only TypeScript review
 
 Request changes if a PR:
 
@@ -53,17 +74,17 @@ Do not request changes merely because these remain shell:
 - The c420ui builder/runtime must auto-generate missing or stale bootstrap bundles before selecting entrypoints.
 - Normal users only need npm installed; review must reject manual-only guidance to run `npm run build:c420ui-bootstrap`.
 - Validation gates remain check-only and must fail on stale bootstrap artifacts without auto-regeneration.
-- build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts. Do not edit them manually.
+- build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts. Do not edit them manually.
   Any behavioral change must be made in TypeScript sources and then propagated through npm run build:c420ui-bootstrap.
-- The c420ui bootstrap check must fail if run-c420ui.cjs has syntax errors, stale generated output,
+- The c420ui bootstrap check must fail if run-c420ui.mjs has syntax errors, stale generated output,
   malformed SIGCONT blocks, or host-dependency validators interleaved into the interactive action runner.
 - Dev.8 hotfix: c420ui bootstrap artifacts now have an explicit artifact gate that validates node --check,
   known structural corruption patterns, generated-vs-recipe equality, and manifest/build-metadata consistency.
-- build-resources/c420ui/bootstrap/generated/*.cjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
+- build-resources/c420ui/bootstrap/generated/*.mjs are generated artifacts and must never be edited manually. The bootstrap build now cleans the
   output directory before emitting artifacts, records artifact hashes in manifest.json, and validation runs node --check
   on every committed bootstrap entrypoint.
 - Regex-based bundle integrity checks are secondary. Syntax validation and artifact hash verification are mandatory gates.
-- Reject changes that treat `build-resources/c420ui/bootstrap/generated/*.cjs` as source of truth, must not restore `canva-linux.sh`,
+- Reject changes that treat `build-resources/c420ui/bootstrap/generated/*.mjs` as source of truth, must not restore `canva-linux.sh`,
   or bypass the official TypeScript bootstrap build recipe.
 - Dev.8 adds an explicit c420ui node --check gate and a strict artifact gate.
   `check:c420ui-bootstrap-artifacts` is a verification gate, not a regeneration command: it must not run
@@ -86,10 +107,6 @@ Do not request changes merely because these remain shell:
   native title handling, OAuth, credential storage, GPU diagnostics, or c420ui metadata/bootstrap logic for this feature.
 - Do not render the home tab twice: regular tab state must exclude home, the pinned home control is the only visible
   home-return control, and it must send `go-home`.
-- Pinned home uses Canva's localized `tab.title` as the source of truth; reviewers should reject hardcoded localized
-  labels and accept `Home` only as the empty-title fallback.
-- The duplicate Canva brand slot before pinned home must not be restored. The toolbar should start with the pinned home
-  control, followed by regular tabs.
 
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
@@ -97,7 +114,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Dev.7 OAuth completion review
 
-Request changes if a PR preparing `0.1.4-15.Dev.10` OAuth completion:
+Request changes if a PR preparing `0.1.4-15.Dev.11` OAuth completion:
 
 - reloads a generic active tab instead of resolving the tab that opened the OAuth popup by `sourceWebContentsId`;
 - closes the popup or reloads the source tab before an authorized Canva callback is finalized by callback type, the
@@ -115,7 +132,7 @@ Request changes if a PR preparing `0.1.4-15.Dev.10` OAuth completion:
 
 ## Dev.6 cleanup handoff review
 
-Request changes if a PR closing `0.1.4-15.Dev.10`:
+Request changes if a PR closing `0.1.4-15.Dev.11`:
 
 - describes Dev.6 as feature expansion instead of post-migration cleanup;
 - omits the dead-code audit, obsolete validation-contract cleanup, streamlined smoke tests, runtime CLI diagnostics cleanup,
@@ -147,12 +164,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.10` for cleanup handoff validation:
+Request changes if a PR preparing `0.1.4-15.Dev.11` for cleanup handoff validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-15.Dev.10` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.11` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -190,7 +207,7 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The c
 
 Request changes if a PR:
 
-- changes version `0.1.4-15.Dev.10` without an explicit maintainer request;
+- changes version `0.1.4-15.Dev.11` without an explicit maintainer request;
 - introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
@@ -236,7 +253,7 @@ Request changes if a PR:
 - imports root/sudo helpers from removed legacy runner surfaces into the Canva Linux adapter;
 - triggers sudo for dry-run, planned actions, or confirmation failures;
 - calls sudo directly from `build-resources/c420ui/src`;
-- bypasses `build-resources/c420ui/host/linux/sudo-helper.sh` for Canva Linux privileged actions;
+- bypasses `build-resources/c420ui/operations/host/sudo.ts` for Canva Linux privileged actions;
 - removes user-scope protection for root actions.
 
 ## c420ui scope/root provider boundary review
@@ -245,7 +262,7 @@ Request changes if a PR:
 
 - reimplements generic scope helpers inside Canva Linux code;
 - hardcodes `CANVA_NATIVE_SCOPE`, `CANVA_FLATPAK_SCOPE` or `C420UI_ROOT_AUTH` in c420ui core;
-- hardcodes `build-resources/c420ui/host/linux/sudo-helper.sh` in c420ui core;
+- hardcodes `build-resources/c420ui/operations/host/sudo.ts` in c420ui core;
 - reimplements `validateRootAccess` in the Canva Linux root provider;
 - moves conditional Canva Linux detection policy into c420ui core.
 
@@ -277,7 +294,7 @@ Request changes if a PR:
 - calls `adapter.runAction()` directly instead of routing through the c420ui Action Engine;
 - duplicates root or confirmation policy outside the c420ui Action Engine and root provider;
 - restores the obsolete npm dependency bootstrap script;
-- adds npm install, repair, or skip policy to `scripts/preflight-common.sh`;
+- adds npm install, repair, or skip policy to `root scripts/ ownership`;
 - leaves shell helper classifications in `docs/checks/SHELL_HELPERS.md` stale.
 
 ## Artifact workflow runner review
@@ -445,7 +462,7 @@ Request changes if a PR:
 
 - breaks `bash -n canva-linux-c420ui-builder`;
 - hardcodes project action flags in the launcher parser;
-- routes direct CLI actions around `run-c420ui-cli.js`;
+- routes direct CLI actions around `run-c420ui-cli.mjs` or the generated bootstrap CLI bundle;
 - removes `--dry-run` propagation from the launcher;
 - allows multiple direct action flags in one invocation.
 
@@ -453,7 +470,7 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- lets `canva-linux-c420ui-builder` execute a stale `.build/build-resources/c420ui/scripts/run-c420ui-cli.js`;
+- lets `canva-linux-c420ui-builder` execute stale generated CLI output instead of validating the generated bootstrap builder or `.build/scripts/c420ui-builder.mjs`;
 - removes freshness coverage for `build-resources/c420ui/src`;
 - removes freshness coverage for `canva-linux/c420ui-adapter`;
 - tests launcher behavior by executing real destructive actions instead of a stub.
@@ -553,7 +570,7 @@ Request changes if a PR:
 - duplicates `createBuildMetadata` or `normalizeLoadedBuildMetadata` in `canva-linux/c420ui-adapter/build-metadata-loader.ts`;
 - stops loading build metadata formatting from `build-resources/electron/main/build-metadata`;
 - bundles `scripts/canva-linux` registry/config modules without adding them to `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`;
-- edits `build-resources/c420ui/bootstrap/generated/*.cjs` manually instead of rebuilding from TypeScript sources;
+- edits `build-resources/c420ui/bootstrap/generated/*.mjs` manually instead of rebuilding from TypeScript sources;
 - leaves c420ui bootstrap artifacts without passing `node --check` and the c420ui artifact gates.
 
 ## Host dependency ownership review
@@ -580,11 +597,11 @@ while runtime flags belong to the compiled `canva-linux` app.
 - [x] Public alias remains `canva-linux-c420ui-builder`.
 - [x] Legacy `canva-linux.sh` is removed.
 - [x] Runtime remains `canva-linux`.
-- [x] No `canva-linux-c420ui-builder.cjs` bootstrap artifact remains.
+- [x] No `canva-linux-c420ui-builder.mjs` bootstrap artifact remains.
 
 ## Dev.7 review note: effective versions and OAuth fallback
 
-- Source identity remains `0.1.4-15.Dev.10` / `0.1.4-15.Dev` / `0.1.4-15.Dev.10`.
+- Source identity remains `0.1.4-15.Dev.11` / `0.1.4-15.Dev` / `0.1.4-15.Dev.11`.
 - Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
 - The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
 - Runtime metadata fallback must be neutral `0.0.0`/`unknown`; request changes if `build-resources/electron/main/build-metadata.ts`
@@ -614,9 +631,9 @@ while runtime flags belong to the compiled `canva-linux` app.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`, root `build-resources/tests/`, `canva-linux/c420ui-adapter`, or `packages/`.
 - When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
 
-## Dev.10 preload typing
+## Dev11 preload typing
 
-Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Dev11 keeps preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.
 Canva Linux and c420ui now use separate deterministic content hashes. Canva Linux changes update canvaLinuxSourceHash, c420ui changes update c420uiSourceHash, and combinedSourceHash changes when either side changes. Git buildRevision remains separate and is only used by effective metadata/release builds.
 
@@ -627,18 +644,47 @@ Canva Linux and c420ui now use separate deterministic content hashes.
 `buildRevision` remains separate from source hashes and is used only for effective build/release metadata.
 Docs, tests and generated artifacts must not affect either source hash.
 
-## Dev.10 validation ownership review
+## Dev11 validation ownership review
 
 Request changes if a PR:
-- adds validation policy logic back into `scripts/*.sh` validation scripts;
-- reintroduces JavaScript heredocs (`node <<'NODE'`) inside validation wrappers;
+- adds validation policy logic back into shell validation scripts;
+- reintroduces JavaScript heredocs inside validation wrappers;
 - bypasses TypeScript validation entrypoints for doctor/project/flatpak/flathub checks.
 
-## Dev.10 operational TypeScript review
+## Dev11 operational TypeScript review
 
 Request changes if a PR:
-- moves operational install/uninstall/purge/packaging orchestration from TypeScript back into shell scripts;
+- moves operational install/uninstall/purge/packaging orchestration from TypeScript back into shell scripts outside documented POSIX/bootstrap boundaries;
 - removes dry-run support from operational TypeScript entrypoints;
 - rewrites artifact architecture naming instead of preserving generated upstream names.
 - adds build, operation, packaging, install, uninstall, purge, clean, artifact,
   sudo, dry-run, or versioning mechanics under `scripts/canva-linux`.
+
+## Dev11 final ESM boundaries
+
+Dev11 closes the radical ESM migration.
+
+- All maintained runtime/tooling/check/build source is TypeScript.
+- All generated Node/tooling outputs are ESM `.mjs`.
+- Electron runtime starts from `.build/electron/main/index.mjs`.
+- Electron preload bundles are `.mjs`.
+- c420ui bootstrap generated artifacts are `.mjs`.
+- Versioned `.cjs` files are forbidden.
+- CommonJS bridges are forbidden in maintained TypeScript.
+- Shell remains only as POSIX/bootstrap boundary.
+
+The only remaining shell files are documented runtime/bootstrap boundaries:
+
+- `canva-linux-c420ui-builder`: stage-0 c420ui bootstrap launcher.
+- `run.sh`: Flatpak/POSIX runtime launcher.
+
+They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.
+
+## Dev11 obsolete migration leftover review
+
+Request changes if a PR:
+- compiles tests or Node tooling back to generated `.js` instead of `.mjs`;
+- treats root `scripts/` as a fallback test/runtime/source compilation area;
+- accepts maintained `.js` preload source instead of TypeScript preload source;
+- removes `toolbar.bundle.mjs` from runtime build or validation requirements;
+- reintroduces CommonJS bridges in any maintained `build-resources/**/*.ts`.

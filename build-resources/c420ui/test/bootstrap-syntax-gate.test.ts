@@ -7,11 +7,11 @@ import test from "node:test";
 const rootDir =
   process.env.CANVA_SCRIPT_REPO_ROOT ||
   process.env.CANVA_TEST_REPO_ROOT ||
-  path.resolve(__dirname, "..", "..", "..");
+  process.cwd();
 const artifacts = [
-  "run-c420ui.cjs",
-  "run-c420ui-cli.cjs",
-  "c420ui-builder.cjs",
+  "run-c420ui.mjs",
+  "run-c420ui-cli.mjs",
+  "c420ui-builder.mjs",
 ] as const;
 
 function makeTempDir(prefix: string): string {
@@ -21,7 +21,7 @@ function makeTempDir(prefix: string): string {
 }
 
 function compileNodeCheckGate(tempDir: string): string {
-  const outfile = path.join(tempDir, "check-node.cjs");
+  const outfile = path.join(tempDir, "check-node.mjs");
   const result = spawnSync(
     "npx",
     [
@@ -30,7 +30,7 @@ function compileNodeCheckGate(tempDir: string): string {
       "--bundle",
       "--platform=node",
       "--target=node22",
-      "--format=cjs",
+      "--format=esm",
       `--outfile=${outfile}`,
     ],
     {

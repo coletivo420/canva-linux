@@ -40,7 +40,7 @@ Before submission, the maintainer must review:
 
 ## Generated preload bundle
 
-The Canva editor runtime uses `build-resources/electron/preload/canva.bundle.js`, but that file is generated from the modular source files before the Electron build.
+The Canva editor runtime uses `build-resources/electron/preload/canva.bundle.mjs`, but that file is generated from the modular source files before the Electron build.
 
 For source review, treat the maintained files under `build-resources/electron/preload/*.ts`, `build-resources/electron/shared/*.ts`, and `scripts/build-preload-bundle.ts` as the source of truth. The final Flathub build path should regenerate the bundle from those sources instead of relying on a local untracked bundle artifact.
 
@@ -60,8 +60,8 @@ That folder contains:
 
 - `manifest.yml` (submission-oriented manifest)
 - `generated-sources.json` (npm dependency manifest for Flathub source builds)
-- `scripts/generate-npm-sources.sh` (shell bootstrap) and `scripts/generate-npm-sources.ts` (lockfile-to-manifest generator)
-- `scripts/prepare-flathub-submission.sh` and `scripts/validate-flathub-submission.sh` (submission-path automation)
+- `tools/generate-npm-sources.ts` (lockfile-to-manifest generator)
+- TypeScript validation entrypoints for submission-path automation
 
 The repository-root `io.github.coletivo420.canva-linux.yml` is the canonical **local** workflow manifest used by `./canva-linux-c420ui-builder`.
 
@@ -71,7 +71,7 @@ Using `dist/linux-unpacked` as an **internal build artifact** is acceptable. The
 
 For Flathub-reviewable Node/Electron builds, keep npm dependencies in `build-resources/canva-linux/packaging/flathub/generated-sources.json` and run `npm install --offline` inside the sandbox build.
 
-Regenerate `generated-sources.json` with `build-resources/canva-linux/packaging/flathub/scripts/generate-npm-sources.sh`. The maintained generator is `generate-npm-sources.ts`; it validates package-lock tarball URLs and integrity hashes, blocks local or `node_modules` path sources, keeps output sorted, and verifies the Flathub submission manifest consumes `generated-sources.json`.
+Regenerate `generated-sources.json` with `npm run flathub:generate-npm-sources`. The maintained generator is `generate-npm-sources.ts`; it validates package-lock tarball URLs and integrity hashes, blocks local or `node_modules` path sources, keeps output sorted, and verifies the Flathub submission manifest consumes `generated-sources.json`.
 
 ## Release workflow separation
 

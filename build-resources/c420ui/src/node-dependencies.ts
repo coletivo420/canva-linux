@@ -1,7 +1,7 @@
 import type {
   c420uiHostDependencyCheckResult,
   c420uiNodeDependencyConfig,
-} from "./host-dependencies";
+} from "./host-dependencies.js";
 
 function parseMajor(version: string): number | null {
   const normalized = version.startsWith("v") ? version.slice(1) : version;

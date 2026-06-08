@@ -1,5 +1,5 @@
-import type { DebugLog, WebContentsLike } from "../shared/types";
-import type { SessionLike } from "./runtime";
+import type { DebugLog, WebContentsLike } from "../shared/types.js";
+import type { SessionLike } from "./runtime.js";
 export type CanvaTabEntry = {
   id: number;
   view: {
@@ -36,7 +36,7 @@ export type OAuthPopupEntry = {
   sourceWebContentsId: number | null;
 };
 export type AuthPopupMap = Map<number, OAuthPopupEntry>;
-export type { SessionLike } from "./runtime";
+export type { SessionLike } from "./runtime.js";
 export type BrowserWindowLike = {
   webContents: WebContentsLike;
   isDestroyed(): boolean;

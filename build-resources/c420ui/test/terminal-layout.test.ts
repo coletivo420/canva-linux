@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-const rootDir = process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 const appSource = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/app.ts"), "utf8");
 
 test("renders Detected Installations in its own panel", () => {

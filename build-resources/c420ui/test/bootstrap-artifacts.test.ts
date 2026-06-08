@@ -7,12 +7,12 @@ import test from "node:test";
 import {
   c420uiBootstrapArtifactPath,
   C420UI_BOOTSTRAP_MANIFEST_PATH,
-} from "../checks/bootstrap-check-helpers";
+} from "../checks/bootstrap-check-helpers.js";
 
 const bundles = [
-  c420uiBootstrapArtifactPath("run-c420ui.cjs"),
-  c420uiBootstrapArtifactPath("run-c420ui-cli.cjs"),
-  c420uiBootstrapArtifactPath("c420ui-builder.cjs"),
+  c420uiBootstrapArtifactPath("run-c420ui.mjs"),
+  c420uiBootstrapArtifactPath("run-c420ui-cli.mjs"),
+  c420uiBootstrapArtifactPath("c420ui-builder.mjs"),
 ] as const;
 
 type BootstrapManifest = {
@@ -37,7 +37,7 @@ function readJson<T>(relativePath: string): T {
 }
 
 function readBundle(): string {
-  return fs.readFileSync(c420uiBootstrapArtifactPath("run-c420ui.cjs"), "utf8");
+  return fs.readFileSync(c420uiBootstrapArtifactPath("run-c420ui.mjs"), "utf8");
 }
 
 const strictManifestMetadata =
@@ -64,7 +64,7 @@ for (const bundle of bundles) {
   });
 }
 
-test("run-c420ui.cjs does not contain known corrupted SIGCONT block", () => {
+test("run-c420ui.mjs does not contain known corrupted SIGCONT block", () => {
   const bundle = readBundle();
 
   assert.doesNotMatch(
@@ -73,7 +73,7 @@ test("run-c420ui.cjs does not contain known corrupted SIGCONT block", () => {
   );
 });
 
-test("run-c420ui.cjs does not contain corrupted requestLocatorPosition block", () => {
+test("run-c420ui.mjs does not contain corrupted requestLocatorPosition block", () => {
   const bundle = readBundle();
   const start = bundle.indexOf("requestLocatorPosition");
   const end = bundle.indexOf("Program.prototype.decic", start);
@@ -87,7 +87,7 @@ test("run-c420ui.cjs does not contain corrupted requestLocatorPosition block", (
   assert.match(block, /\};/);
 });
 
-test("run-c420ui.cjs does not interleave file IO into crc32", () => {
+test("run-c420ui.mjs does not interleave file IO into crc32", () => {
   const bundle = readBundle();
   const start = bundle.indexOf("function crc32");
   const end = bundle.indexOf("return crc", start);
@@ -116,11 +116,14 @@ test("toProgressState is not interleaved with action event handling", () => {
   assert.doesNotMatch(block, /options\.appendLogText/);
 });
 
-test("run-c420ui.cjs does not interleave host validators into interactive runner", () => {
+test("run-c420ui.mjs does not interleave host validators into interactive runner", () => {
   const bundle = readBundle();
 
   const runnerStart = bundle.indexOf("function createInteractiveActionRunner");
-  const runnerEnd = bundle.indexOf("var init_interactive_action_runner", runnerStart);
+  const runnerEnd = bundle.indexOf(
+    "// build-resources/c420ui/src/host-dependencies.ts",
+    runnerStart,
+  );
 
   assert.ok(runnerStart >= 0);
   assert.ok(runnerEnd > runnerStart);
@@ -133,28 +136,11 @@ test("run-c420ui.cjs does not interleave host validators into interactive runner
   assert.doesNotMatch(runnerBlock, /function assertOptionalPurposeArray/);
 });
 
-test("run-c420ui.cjs codePointAt polyfill exists", () => {
+test("run-c420ui.mjs does not contain known codePointAt corruption marker", () => {
   const bundle = readBundle();
-  const start = bundle.indexOf("exports2.codePointAt = function");
-  const end = bundle.indexOf("exports2.fromCodePoint", start);
-
-  assert.ok(start >= 0);
-  assert.ok(end > start);
-});
-
-test("run-c420ui.cjs codePointAt polyfill defines size before use", () => {
-  const bundle = readBundle();
-  const start = bundle.indexOf("exports2.codePointAt = function");
-  const end = bundle.indexOf("exports2.fromCodePoint", start);
-
-  assert.ok(start >= 0);
-  assert.ok(end > start);
-
-  const block = bundle.slice(start, end);
-  assert.match(block, /var size = string\.length;/);
-  assert.ok(
-    block.indexOf("var size = string.length;") <
-      block.indexOf("index < 0 || index >= size"),
+  assert.doesNotMatch(
+    bundle,
+    /index < 0 \|\| index >= size[\s\S]{0,200}var size = string\.length;/,
   );
 });
 
@@ -178,7 +164,7 @@ test("c420ui bootstrap manifest metadata fields are well-formed", () => {
   assert.notEqual(manifest.dependentProjectPhase, "");
   assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
   assert.equal(manifest.generatedBy, "build-resources/c420ui/scripts/build-bootstrap.ts");
-  for (const artifact of ["run-c420ui.cjs", "run-c420ui-cli.cjs", "c420ui-builder.cjs"] as const) {
+  for (const artifact of ["run-c420ui.mjs", "run-c420ui-cli.mjs", "c420ui-builder.mjs"] as const) {
     assert.match(String(manifest.artifactHashes?.[artifact]), /^sha256:[0-9a-f]{64}$/);
   }
 

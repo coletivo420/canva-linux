@@ -7,8 +7,9 @@ For the builder naming contract, see [c420ui Builder Alias Policy](docs/c420ui/B
 `./canva-linux-c420ui-builder`. The compiled runtime app remains `canva-linux`.
 
 Status: **Alpha**
-Version: **0.1.4-15.Dev.10**
-Release target: **v0.1.4-15.Dev.10**
+Version: **0.1.4-15.Dev.11**
+Release target: **v0.1.4-15.Dev.11**
+Development focus: **ESM-only TypeScript runtime and tooling migration**
 License: **GPL-3.0-or-later**
 
 Independent community project. Not affiliated with Canva.
@@ -141,7 +142,7 @@ c420ui owns generic terminal/action orchestration. `canva-linux/c420ui-adapter/`
 
 ## Release and Packaging
 
-Current release target: `0.1.4-15.Dev.10`.
+Current release target: `0.1.4-15.Dev.11`.
 
 Dev.6 is the post-migration cleanup handoff for dead-code auditing, obsolete validation-contract cleanup, streamlined smoke tests,
 runtime CLI diagnostics cleanup, and GPU/display `runtime-options` logging. It preserves active behavior boundaries, including
@@ -199,7 +200,7 @@ while runtime flags belong to the compiled `canva-linux` app.
 
 ## Build metadata and OAuth context
 
-Canva Linux keeps the source base version at `0.1.4-15.Dev.10` and generates an effective build version with
+Canva Linux keeps the source base version at `0.1.4-15.Dev.11` and generates an effective build version with
 `+g<short-hash>` for runtime logs, `--version`, manifests, and artifacts. See `docs/VERSIONING.md` for the
 source/effective version contract.
 

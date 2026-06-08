@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result";
-import { info, ok, warn } from "../../c420ui/host/ui";
+import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result.js";
+import { info, ok, warn } from "../../c420ui/host/ui.js";
 
 export function runAppImageValidation(context: ValidationContext, args: string[]): ValidationResult {
   const { rootDir } = context;
@@ -122,7 +122,7 @@ export function runAppImageValidation(context: ValidationContext, args: string[]
   return failures.length > 0 ? failResult(failures) : okResult();
 }
 
-if (require.main === module) {
+if (/appimage\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const result = runAppImageValidation({ rootDir: process.cwd() }, process.argv.slice(2));
   process.exit(result.ok ? 0 : 1);
 }

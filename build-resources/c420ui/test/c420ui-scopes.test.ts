@@ -8,7 +8,7 @@ import {
   normalizeC420UIActionScope,
   validateC420UIActions,
   type c420uiAction,
-} from "../src";
+} from "../src/index.js";
 
 test("normalizeC420UIActionScope returns undefined for undefined scope", () => {
   assert.equal(normalizeC420UIActionScope(undefined), undefined);

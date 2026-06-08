@@ -1,2 +1,2 @@
-import { runVersionInfo } from "../operations/maintenance/version-info";
+import { runVersionInfo } from "../operations/maintenance/version-info.js";
 runVersionInfo();

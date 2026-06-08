@@ -1,12 +1,12 @@
 import {
   createC420UIActionEngine,
   type c420uiRootAccessRequester,
-} from "../action-engine";
-import { requiresC420UIActionConfirmation, type c420uiAction } from "../actions";
-import { c420uiExitCodes } from "../exit-codes";
-import type { c420uiActionResult, c420uiProjectBridge } from "../bridge";
-import type { C420UIEvent, c420uiLogSource } from "../events";
-import type { c420uiRootProvider } from "../root-provider";
+} from "../action-engine.js";
+import { requiresC420UIActionConfirmation, type c420uiAction } from "../actions.js";
+import { c420uiExitCodes } from "../exit-codes.js";
+import type { c420uiActionResult, c420uiProjectBridge } from "../bridge.js";
+import type { C420UIEvent, c420uiLogSource } from "../events.js";
+import type { c420uiRootProvider } from "../root-provider.js";
 
 export type InteractiveProgressState =
   | "idle"

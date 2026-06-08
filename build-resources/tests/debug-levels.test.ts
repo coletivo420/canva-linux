@@ -1,12 +1,9 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
-
-const { createDebugTools, normalizeDebugLevel } = loadRuntimeModule("shared/debug");
+const { createDebugTools, normalizeDebugLevel } = await loadRuntimeModule("shared/debug");
 
 test("normalizes unsupported debug levels to disabled", () => {
   assert.equal(normalizeDebugLevel(0), 0);

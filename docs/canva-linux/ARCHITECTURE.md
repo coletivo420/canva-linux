@@ -10,6 +10,13 @@ Canva Linux is the dependent desktop-wrapper project that consumes c420ui as its
 generic terminal and action engine. Canva Linux owns product behavior and
 project data; c420ui owns reusable orchestration.
 
+## Dev11 ESM-only migration policy
+
+Dev11 is ESM-only by target.
+Maintained TypeScript source must use ESM imports/exports.
+CommonJS source patterns are migration regressions; versioned `.cjs` artifacts are forbidden outside external dependencies.
+Dev11 bootstrap policy now requires `moduleFormat: esm` and ESM `.mjs` entrypoints.
+
 ## Runtime CLI ownership
 
 The compiled `canva-linux` Electron runtime owns app flags such as `--help`, `--version`, `--canva-debug=1`, `--canva-debug=2`, `--credential-store=...`, and display/GPU runtime controls. `canva-linux-c420ui-builder` remains the c420ui installer/development launcher and must not implement app runtime debug flags.
@@ -69,7 +76,7 @@ The `canva-linux-c420ui-builder` launcher contains a Stage 0 bootstrap only to m
 
 ## Stage 0 c420ui bootstrap
 
-`canva-linux-c420ui-builder` now treats `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` as the primary interactive c420ui entrypoint and `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.cjs` as the primary direct-action entrypoint. The `.build/scripts` files remain development fallbacks only when the generated bootstrap artifacts are absent.
+`canva-linux-c420ui-builder` now treats `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs` as the primary interactive c420ui entrypoint and `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs` as the primary direct-action entrypoint. The `.build/scripts` files remain development fallbacks only when the generated bootstrap artifacts are absent.
 
 A release checkout must start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The bundle may include the c420ui engine and the minimum Canva Linux adapter code that reads `build-resources/canva-linux/config`, but it must not embed the full dependent-project dependency policy. c420ui takes over dependency validation and repair after startup.
 
@@ -82,14 +89,14 @@ The c420ui bootstrap manifest must keep engine identity and dependent-project id
 
 ## Dependency repair inside the UI
 
-The Canva Linux interactive launcher starts `build-resources/c420ui/bootstrap/generated/run-c420ui.cjs` first. Dependency validation and repair for
+The Canva Linux interactive launcher starts `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs` first. Dependency validation and repair for
 Canva Linux are wired through the c420ui startup task in `build-resources/canva-linux/c420ui-adapter/run.ts`, so a clean checkout can open the
 UI before any dependent-project npm repair is attempted.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging, maintenance and project diagnostics entrypoint. The compiled `canva-linux` Electron app remains the final runtime application.
 
-## Dev.10 preload typing
+## Dev11 preload typing
 
-Dev.10 converted preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
+Dev11 keeps preload modules from CommonJS-style TypeScript to typed ESM-style TypeScript.
 Preload modules must not use `@ts-nocheck`, `require()`, `module.exports`, or JSDoc typedefs as a substitute for TypeScript types.

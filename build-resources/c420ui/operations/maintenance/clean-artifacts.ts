@@ -1,8 +1,8 @@
 import fs from "node:fs";
-import { parseDryRun } from "../../host/dry-run";
-import { ensurePathIsSafe, projectRoot } from "../../host/paths";
-import { info, ok } from "../../host/ui";
-import { runWithOptionalSudo } from "../../host/sudo";
+import { parseDryRun } from "../../host/dry-run.js";
+import { ensurePathIsSafe, projectRoot } from "../../host/paths.js";
+import { info, ok } from "../../host/ui.js";
+import { runWithOptionalSudo } from "../../host/sudo.js";
 
 export function runCleanArtifacts(argv: string[]): void {
   const { dryRun } = parseDryRun(argv);

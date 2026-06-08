@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
 
-import { normalizeArgs, createLogSignature } from "./logging-normalize";
+import { normalizeArgs, createLogSignature } from "./logging-normalize.js";
 
-type CredentialStoragePolicy = import("./credential-storage").CredentialStoragePolicy;
-type BuildMetadata = import("./build-metadata").CanvaLinuxBuildMetadata;
+type CredentialStoragePolicy = import("./credential-storage.js").CredentialStoragePolicy;
+type BuildMetadata = import("./build-metadata.js").CanvaLinuxBuildMetadata;
 
 type StatusLevel = "ok" | "warn" | "critical";
 type LogOptions = { source?: string; level?: StatusLevel };

@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety";
+import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety.js";
 
 test("rejects C420UI_BOOTSTRAP_OUT_DIR=.", () => {
   const rootDir = path.resolve("/tmp/c420ui-safety-root");

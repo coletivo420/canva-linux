@@ -1,4 +1,4 @@
-import type { EyeDropperCtor, EyeDropperLog, EyeDropperOpenOptions, EyeDropperResult } from "./types";
+import type { EyeDropperCtor, EyeDropperLog, EyeDropperOpenOptions, EyeDropperResult } from "./types.js";
 
 type WrapOpenCall = (options?: EyeDropperOpenOptions) => Promise<EyeDropperResult>;
 

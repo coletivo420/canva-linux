@@ -1,8 +1,5 @@
-const tui = {
-  box: require("blessed/lib/widgets/box"),
-  textbox: require("blessed/lib/widgets/textbox"),
-};
-import { c420uiTheme } from "./theme";
+import { c420uiTheme } from "./theme.js";
+import { tui } from "./blessed-widgets.js";
 
 export type ConfirmOptions = {
   title: string;

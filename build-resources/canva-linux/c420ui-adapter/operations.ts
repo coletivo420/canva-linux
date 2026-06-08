@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { C420UIProjectOperationsAdapter } from "../../c420ui/operations/project-adapter";
+import type { C420UIProjectOperationsAdapter } from "../../c420ui/operations/project-adapter.js";
 
 type PackageJson = { version?: string; productName?: string; build?: { appId?: string } };
 

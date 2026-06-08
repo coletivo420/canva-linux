@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { projectRoot } from "../../host/paths";
-import { c420uiSudoInstall } from "../host/sudo";
+import { projectRoot } from "../../host/paths.js";
+import { c420uiSudoInstall } from "../../host/sudo.js";
 
 export function getBuildMetadataSource(rootDir: string = projectRoot()): string {
   const effective = path.join(

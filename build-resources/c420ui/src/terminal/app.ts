@@ -1,24 +1,19 @@
-const tui = {
-  screen: require("blessed/lib/widgets/screen"),
-  box: require("blessed/lib/widgets/box"),
-  list: require("blessed/lib/widgets/list"),
-  log: require("blessed/lib/widgets/log"),
-};
 import {
   confirmDialog,
   inputDialog,
   messageDialog,
   type InputDialogResult,
-} from "./modal";
-import { c420uiTheme } from "./theme";
-import { formatDetectionPanelSummaries } from "./detected-installations-summary";
-import { copyTextToClipboard } from "./clipboard";
+} from "./modal.js";
+import { tui } from "./blessed-widgets.js";
+import { c420uiTheme } from "./theme.js";
+import { formatDetectionPanelSummaries } from "./detected-installations-summary.js";
+import { copyTextToClipboard } from "./clipboard.js";
 import {
   loadToolSettings,
   saveToolSettings,
   toolSettingsPath,
   type ToolSettings,
-} from "./settings";
+} from "./settings.js";
 import fs from "node:fs";
 import path from "node:path";
 import { Writable } from "node:stream";
@@ -26,25 +21,25 @@ import {
   createC420UIActionEngine,
   type c420uiRootAccessRequest,
   type c420uiRootAccessRequestResult,
-} from "../action-engine";
-import type { c420uiAction } from "../actions";
-import type { c420uiProjectBridge } from "../bridge";
-import type { c420uiOverviewStatus } from "../detection";
-import { c420uiExitCodes } from "../exit-codes";
-import type { c420uiRootProvider } from "../root-provider";
+} from "../action-engine.js";
+import type { c420uiAction } from "../actions.js";
+import type { c420uiProjectBridge } from "../bridge.js";
+import type { c420uiOverviewStatus } from "../detection.js";
+import { c420uiExitCodes } from "../exit-codes.js";
+import type { c420uiRootProvider } from "../root-provider.js";
 import type {
   C420UIBrandConfig,
   C420UIConfig,
   C420UIProjectConfig,
-} from "../types";
+} from "../types.js";
 import {
   createInteractiveActionRunner,
   interactiveActionRequiresConfirmation,
-} from "./interactive-action-runner";
+} from "./interactive-action-runner.js";
 import {
   runC420UIStartupTasks,
   type c420uiStartupTask,
-} from "../startup-task";
+} from "../startup-task.js";
 
 // --- Types ---
 
@@ -81,6 +76,11 @@ export type C420UIAppOptions = {
 };
 
 type FocusZone = "menu" | "diagnostics" | "content" | "logs";
+
+type SelectableMenu = ReturnType<typeof tui.list> & {
+  selected: number;
+  items?: unknown[];
+};
 
 type HeaderBoxLayout = {
   top: number;
@@ -285,7 +285,7 @@ export function createApp(options: C420UIAppOptions) {
     tags: true,
     label: "Main Menu",
     style: c420uiTheme.menu,
-  });
+  }) as SelectableMenu;
 
   const diagnostics = tui.box({
     top: headerLayout.workspaceTop,

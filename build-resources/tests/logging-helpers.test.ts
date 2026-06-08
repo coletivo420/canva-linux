@@ -1,14 +1,10 @@
-// @ts-nocheck
-"use strict";
 
-// @ts-check
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
-
-const { createLoggingHelpers } = loadRuntimeModule("main/logging-helpers");
+const { createLoggingHelpers } = await loadRuntimeModule("main/logging-helpers");
 
 test("labels main window, OAuth popup window and generic windows", () => {
   const mainWindow = { id: 1 };

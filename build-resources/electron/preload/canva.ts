@@ -1,5 +1,10 @@
-import { createPreloadDebug } from "./debug";
-import type { EyeDropperCtor, EyeDropperOpenOptions, EyeDropperResult } from "./types";
+import { createPreloadDebug } from "./debug.js";
+import type { EyeDropperCtor, EyeDropperOpenOptions, EyeDropperResult } from "./types.js";
+import { createCustomEyeDropperFlow } from "./custom-eyedropper-flow.js";
+import { installNativeEyeDropperWrapper } from "./native-eyedropper-wrapper.js";
+import { installUploadDiagnostics } from "./upload-diagnostics.js";
+import { installEyeDropperRoutingDiagnostics as installPrimaryEyeDropperRoutingDiagnostics } from "./eyedropper-routing-diagnostics.js";
+import { installEyeDropperRoutingDiagnostics as installFallbackEyeDropperRoutingDiagnostics } from "./browser-capture-diagnostics.js";
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
   source: "canva-preload",
@@ -18,36 +23,23 @@ void (async () => {
   try {
     debugLog("startup", "modules-loaded");
 
-    const wrapOpenCall: WrapOpenCall = await (async () => {
-      try {
-        const { createCustomEyeDropperFlow } = await import("./custom-eyedropper-flow");
-        return createCustomEyeDropperFlow({ debugLog, logEyeDropper }).wrapOpenCall;
-      } catch (error) {
-        logEyeDropper("eyedropper:flow", "module-load-failed", (error as Error)?.message);
-        return () => Promise.reject(new Error("custom-eyedropper-flow unavailable"));
-      }
-    })();
+    const wrapOpenCall: WrapOpenCall = createCustomEyeDropperFlow({
+      debugLog,
+      logEyeDropper,
+    }).wrapOpenCall;
 
-    const ensureWrappedEyeDropperInstalled = await (async () => {
-      try {
-        const { installNativeEyeDropperWrapper } = await import("./native-eyedropper-wrapper");
-        return installNativeEyeDropperWrapper({ logEyeDropper, wrapOpenCall }).ensureWrappedEyeDropperInstalled;
-      } catch (error) {
-        logEyeDropper("eyedropper:wrapper", "module-load-failed", (error as Error)?.message);
-        return () => false;
-      }
-    })();
+    const { ensureWrappedEyeDropperInstalled } = installNativeEyeDropperWrapper({
+      logEyeDropper,
+      wrapOpenCall,
+    });
 
     try {
-      const { installUploadDiagnostics } = await import("./upload-diagnostics");
       installUploadDiagnostics({ debugEnabled, debugLog });
     } catch (error) {
       debugLog("startup", "upload-diagnostics-failed", (error as Error)?.message);
     }
 
     try {
-      const { installEyeDropperRoutingDiagnostics: installPrimaryEyeDropperRoutingDiagnostics } =
-        await import("./eyedropper-routing-diagnostics");
       installPrimaryEyeDropperRoutingDiagnostics({
         debugEnabled,
         debugLog,
@@ -56,8 +48,6 @@ void (async () => {
       });
     } catch (primaryError) {
       try {
-        const { installEyeDropperRoutingDiagnostics: installFallbackEyeDropperRoutingDiagnostics } =
-          await import("./browser-capture-diagnostics");
         installFallbackEyeDropperRoutingDiagnostics({
           debugEnabled,
           debugLog,

@@ -1,6 +1,6 @@
-import { assertC420UIActionContract, isC420UIPlannedAction, type C420UIActionDescriptor, type C420UIWorkflowPhase } from "./actions";
-import { createC420UIEvent, type C420UIEventSink } from "./events";
-import { c420uiExitCodes, type C420UIExitCode } from "./exit-codes";
+import { assertC420UIActionContract, isC420UIPlannedAction, type C420UIActionDescriptor, type C420UIWorkflowPhase } from "./actions.js";
+import { createC420UIEvent, type C420UIEventSink } from "./events.js";
+import { c420uiExitCodes, type C420UIExitCode } from "./exit-codes.js";
 
 export type C420UIWorkflow = {
   id: string;

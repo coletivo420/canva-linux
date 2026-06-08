@@ -1,14 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
-import { parseDryRun } from "../../host/dry-run";
-import { projectRoot } from "../../host/paths";
-import { requireCommands } from "../../host/preflight";
-import { runCommand } from "../../host/command-runner";
-import { info, ok, section, warn } from "../../host/ui";
-import { resolveFlatpakScope } from "../flatpak/scope";
-import { ensureFlathubRuntime } from "../flatpak/runtime";
-import { installFlatpakDirect } from "../flatpak/repo";
-import { printFlatpakPostInstallGuidance } from "../host/guidance";
+import { parseDryRun } from "../../host/dry-run.js";
+import { projectRoot } from "../../host/paths.js";
+import { requireCommands } from "../../host/preflight.js";
+import { runCommand } from "../../host/command-runner.js";
+import { info, ok, section, warn } from "../../host/ui.js";
+import { resolveFlatpakScope } from "../flatpak/scope.js";
+import { ensureFlathubRuntime } from "../flatpak/runtime.js";
+import { installFlatpakDirect } from "../flatpak/repo.js";
+import { printFlatpakPostInstallGuidance } from "../host/guidance.js";
 
 function parseFlatpakInstallArgs(argv: string[]): { dryRun: boolean; skipElectronBuild: boolean } {
   const { dryRun } = parseDryRun(argv);

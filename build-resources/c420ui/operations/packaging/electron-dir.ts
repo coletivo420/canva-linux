@@ -1,6 +1,6 @@
-import { parseDryRun } from "../../host/dry-run";
-import { projectRoot } from "../../host/paths";
-import { runCommand } from "../../host/command-runner";
+import { parseDryRun } from "../../host/dry-run.js";
+import { projectRoot } from "../../host/paths.js";
+import { runCommand } from "../../host/command-runner.js";
 
 export function runBuildElectronDir(argv: string[]): void {
   const rootDir = projectRoot();

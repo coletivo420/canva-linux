@@ -7,8 +7,8 @@ import {
   checkC420UINpmDependencies,
   ensureC420UINpmDependencies,
   type c420uiNpmCommandRunner,
-} from "../src/npm-dependencies";
-import type { c420uiNpmDependencyConfig } from "../src/host-dependencies";
+} from "../src/npm-dependencies.js";
+import type { c420uiNpmDependencyConfig } from "../src/host-dependencies.js";
 
 type ProjectOptions = {
   withLockfile?: boolean;

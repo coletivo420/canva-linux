@@ -8,7 +8,7 @@ import {
   type c420uiActionResult,
   type c420uiExecutionContext,
   type c420uiProjectBridge,
-} from "../src";
+} from "../src/index.js";
 
 function createFakeBridge(options?: { result?: c420uiActionResult }) {
   const runCalls: Array<{ actionId: string; context: c420uiExecutionContext }> = [];

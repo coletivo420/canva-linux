@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 
-const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || path.resolve(__dirname, "..");
+const rootDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
 const wrapperPath = path.join(rootDir, "build-resources/c420ui/scripts/run-c420ui.ts");
 
 test("run-c420ui wrapper calls the project runner instead of the terminal barrel bundle", () => {

@@ -1,68 +1,15 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const Module = require("node:module");
-const path = require("node:path");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule, withElectronMock } from "./helpers/runtime-module.js";
 
 const repoRoot =
-  process.env.CANVA_TEST_REPO_ROOT || path.resolve(__dirname, "..");
-
-/**
- * @template T
- * @param {() => T} fn
- * @returns {T}
- */
-function withElectronMock(fn) {
-  const moduleLoader =
-    /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ Module;
-  const originalLoad = moduleLoader._load;
-  moduleLoader._load = function mockElectron(request, parent, isMain) {
-    if (request === "electron") {
-      return {
-        ipcRenderer: {
-          invoke() {
-            return Promise.resolve(null);
-          },
-        },
-      };
-    }
-    return originalLoad.call(this, request, parent, isMain);
-  };
-  try {
-    return fn();
-  } finally {
-    moduleLoader._load = originalLoad;
-  }
-}
+  process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 function withFreshCustomFlowElectronMock(invoke, fn) {
-  const moduleLoader =
-    /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ Module;
-  const originalLoad = moduleLoader._load;
-  const runtimeFiles = [
-    "build-resources/electron/preload/custom-eyedropper-flow.ts",
-    "build-resources/electron/preload/cl-eyedropper/index.ts",
-    "build-resources/electron/preload/cl-eyedropper/cl-eyedropper.ts",
-  ];
-  for (const file of runtimeFiles) {
-    delete require.cache[require.resolve(path.join(repoRoot, file))];
-  }
-  moduleLoader._load = function mockElectron(request, parent, isMain) {
-    if (request === "electron") {
-      return { ipcRenderer: { invoke } };
-    }
-    return originalLoad.call(this, request, parent, isMain);
-  };
-  try {
-    return fn();
-  } finally {
-    moduleLoader._load = originalLoad;
-  }
+  return withElectronMock({ ipcRenderer: { invoke } }, fn);
 }
 
 class FakeElement {
@@ -215,15 +162,15 @@ async function flushMicrotasks() {
   await Promise.resolve();
 }
 
-test("CL-EyeDropper runtime exports the only picker surface", () => {
-  const cl = loadRuntimeModule("preload/cl-eyedropper/index");
+test("CL-EyeDropper runtime exports the only picker surface", async () => {
+  const cl = await loadRuntimeModule("preload/cl-eyedropper/index");
 
   assert.equal(typeof cl.CLEyeDropper, "function");
   assert.equal(typeof cl.installClEyeDropperScalingPatch, "function");
   assert.equal(typeof cl.removeClEyeDropperUi, "function");
 });
 
-test("custom EyeDropper flow loads without the removed selector module", () => {
+test("custom EyeDropper flow loads without the removed selector module", async () => {
   const selectorModule = ["eye", "dropper-implementation"].join("");
   const source = fs.readFileSync(
     path.join(repoRoot, "build-resources/electron/preload/custom-eyedropper-flow.ts"),
@@ -232,8 +179,11 @@ test("custom EyeDropper flow loads without the removed selector module", () => {
 
   assert.equal(source.includes(selectorModule), false);
   assert.equal(
-    typeof withElectronMock(() =>
-      loadRuntimeModule("preload/custom-eyedropper-flow"),
+    typeof (
+      await withElectronMock(
+        { ipcRenderer: { invoke: () => Promise.resolve(null) } },
+        () => loadRuntimeModule("preload/custom-eyedropper-flow"),
+      )
     ).createCustomEyeDropperFlow,
     "function",
   );
@@ -280,7 +230,7 @@ test("custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and 
   };
 
   try {
-    const custom = withFreshCustomFlowElectronMock(
+    const custom = await withFreshCustomFlowElectronMock(
       () =>
         Promise.resolve({
           dataUrl: "data:image/png;base64,test",

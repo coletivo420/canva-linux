@@ -1,6 +1,6 @@
-import { hasCommand } from "./optional-command";
-import { runStep } from "./run-step";
-import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result";
+import { hasCommand } from "./optional-command.js";
+import { runStep } from "./run-step.js";
+import { failResult, okResult, type ValidationContext, type ValidationResult } from "./result.js";
 
 export type ValidationStep = { label: string; command: string; args: string[] };
 
@@ -15,8 +15,6 @@ export function projectValidationSteps(): ValidationStep[] {
     { label: "npm run check:c420ui-bootstrap-artifacts", command: "npm", args: ["run", "check:c420ui-bootstrap-artifacts"] },
     { label: "git diff --exit-code", command: "git", args: ["diff", "--exit-code"] },
     { label: "npm run docs:check-ai", command: "npm", args: ["run", "docs:check-ai"] },
-    { label: "check flatpak scope policy", command: "bash", args: ["scripts/check-flatpak-scope-policy.sh"] },
-    { label: "check shell ui api", command: "bash", args: ["scripts/check-shell-ui-api.sh"] },
     { label: "npm run check:c420ui-core", command: "npm", args: ["run", "check:c420ui-core"] },
     { label: "npm run check:canva-linux", command: "npm", args: ["run", "check:canva-linux"] },
     { label: "npm run check:shared-tooling", command: "npm", args: ["run", "check:shared-tooling"] },
@@ -71,8 +69,8 @@ export function runProjectValidation(context: ValidationContext): ValidationResu
   }
 
   for (const [label, script] of [
-    ["validate flatpak", ".build/scripts/validate-flatpak.js"],
-    ["validate flathub submission", ".build/scripts/validate-flathub-submission.js"],
+    ["validate flatpak", ".build/scripts/validate-flatpak.mjs"],
+    ["validate flathub submission", ".build/scripts/validate-flathub-submission.mjs"],
   ] as const) {
     const result = runStep(label, "node", [script], context.rootDir);
     if (!result.ok) failures.push(`${label} failed`);
@@ -86,7 +84,7 @@ export function runProjectValidation(context: ValidationContext): ValidationResu
   return okResult(warnings);
 }
 
-if (require.main === module) {
+if (/project\.(mjs|js|ts)$/.test(process.argv[1] || "")) {
   const result = runProjectValidation({ rootDir: process.cwd() });
   process.exit(result.ok ? 0 : 1);
 }

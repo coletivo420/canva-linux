@@ -32,7 +32,7 @@ Canva Linux workflow actions are split into four layers:
 1. `build-resources/canva-linux/config/actions.json` (canonical registry)
 2. c420ui Action Engine, Root Provider, Command Runner, and CLI bridge
 3. Interfaces (c420ui workspace and direct CLI flags)
-4. Backend scripts under `scripts/`
+4. Backend operations under `build-resources/c420ui/operations/` and Canva Linux adapters under `build-resources/canva-linux/`
 
 All maintained Node.js source code is TypeScript. Project-generated JavaScript
 belongs in `.build/` only. The `dist/`, `coverage/`, and `node_modules/`
@@ -98,15 +98,15 @@ Logs may report the backend name and policy mode, but must not include cookies, 
 
 ## Sudo Contract
 
-Privileged actions follow a shared contract defined in `build-resources/c420ui/host/linux/sudo-helper.sh`.
+Privileged actions follow a shared contract defined in `build-resources/c420ui/operations/host/sudo.ts`.
 
 1. The c420ui Action Engine interprets Action Registry metadata, including
    `requiresRoot`, `scope`, `env`, confirmation flags and planned state.
 2. Actions with `requiresRoot: true` validate root access through
-   `build-resources/c420ui/host/linux/sudo-helper.sh --validate` before backend scripts start.
+   `build-resources/c420ui/operations/host/sudo.ts --validate` before backend scripts start.
 3. The c420ui requests the root password via a secure prompt and the c420ui Root
    Provider passes the root-auth environment marker to backend execution.
-4. `build-resources/c420ui/host/linux/sudo-helper.sh` detects this environment variable and uses
+4. `build-resources/c420ui/operations/host/sudo.ts` detects this environment variable and uses
    `sudo -n` for non-interactive cached-credential validation and execution.
 5. In direct CLI mode, `sudo` prompts for the password as usual in the terminal.
 6. User-scope actions are refused if they also declare `requiresRoot: true`;
@@ -115,9 +115,9 @@ Privileged actions follow a shared contract defined in `build-resources/c420ui/h
 ## TypeScript Script Core
 
 The project validations and contracts are implemented in TypeScript under
-`build-resources/canva-linux/checks/core/`. These are compiled into `.build/build-resources/canva-linux/checks/core/` and executed
-through `scripts/run-core-entry.sh`. All project validations are integrated into
-the `npm run check:scripts-core` quality gate. The gate includes
+`build-resources/canva-linux/checks/core/`. These are compiled into `.build/build-resources/canva-linux/checks/core/*.mjs` and executed
+through the generated check runners. All project validations are integrated into
+the `npm run check:scripts-core` and `npm run check:shared-tooling` quality gates. The gates include
 `check-repository-policy`, so maintained `.js` files under script, test,
 config, or Flathub helper paths fail validation.
 

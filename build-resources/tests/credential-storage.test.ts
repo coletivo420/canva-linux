@@ -1,15 +1,12 @@
-// @ts-nocheck
-"use strict";
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const test = require("node:test");
-
-const { loadRuntimeModule } = require("./helpers/runtime-module");
+import { loadRuntimeModule } from "./helpers/runtime-module.js";
 
 const {
   createCredentialStoragePolicy,
   resolveCredentialStoragePolicy,
-} = loadRuntimeModule("main/credential-storage");
+} = await loadRuntimeModule("main/credential-storage");
 
 test("basic_text Linux credential backend uses an ephemeral non-persist partition", () => {
   const policy = createCredentialStoragePolicy({

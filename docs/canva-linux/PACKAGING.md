@@ -60,3 +60,12 @@ does not implement real DEB/RPM/AUR package builds.
 - Do not make planned DEB/RPM/AUR workflows report executable success.
 - Do not bypass c420ui orchestration for artifact actions.
 - Do not alter AppImage or Flatpak behavior in docs-only release work.
+
+## Dev11 packaging commands
+
+- AppImage packaging runs through `npm run package:appimage`.
+- Flatpak bundle packaging runs through `npm run package:flatpak-bundle`.
+
+Package guidance is maintained in TypeScript-backed c420ui operations and package docs, not in shell helper files.
+
+package guidance remains TypeScript-backed and must not live in shell helper files.

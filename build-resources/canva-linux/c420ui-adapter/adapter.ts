@@ -12,17 +12,17 @@ import {
   type C420UIProjectAdapter,
   type C420UIProjectConfig,
   type C420UIWorkflow,
-} from "../../c420ui/src";
-import { c420uiLogoLines } from "../../c420ui/src/terminal/logo";
-import { toolSettingsPath } from "../../c420ui/src/terminal/settings";
-import { buildCanvaLinuxOverviewStatus } from "./detection/provider";
-import { loadEffectiveBuildMetadata } from "./build-metadata-loader";
+} from "../../c420ui/src/index.js";
+import { c420uiLogoLines } from "../../c420ui/src/terminal/logo.js";
+import { toolSettingsPath } from "../../c420ui/src/terminal/settings.js";
+import { buildCanvaLinuxOverviewStatus } from "./detection/provider.js";
+import { loadEffectiveBuildMetadata } from "./build-metadata-loader.js";
 import {
   loadCanvaLinuxArtifactWorkflows,
   loadCanvaLinuxCapabilities,
-} from "./artifacts";
-import { loadCanvaLinuxC420UIActions } from "./actions";
-import { loadCanvaLinuxDevelopmentWorkflows } from "./development";
+} from "./artifacts.js";
+import { loadCanvaLinuxC420UIActions } from "./actions.js";
+import { loadCanvaLinuxDevelopmentWorkflows } from "./development.js";
 
 type ProjectUiJson = {
   displayVersion?: string;
@@ -93,10 +93,13 @@ function readJsonFile<T>(filePath: string): T {
 
 function readAppIdentity(identityPath: string): AppIdentity {
   try {
-    const content = fs.readFileSync(identityPath, "utf8");
+    const identity = readJsonFile<{
+      displayVersion?: string;
+      phase?: string;
+    }>(identityPath);
     return {
-      projectDisplayVersion: content.match(/^PROJECT_DISPLAY_VERSION="([^"]+)"/m)?.[1],
-      projectPhase: content.match(/^PROJECT_PHASE="([^"]+)"/m)?.[1],
+      projectDisplayVersion: identity.displayVersion,
+      projectPhase: identity.phase,
     };
   } catch {
     return {};
@@ -120,7 +123,7 @@ export function createCanvaLinuxC420UIAdapter(
   const artifactsJsonPath = path.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
   const appIdentityPath = path.join(
     resolvedRootDir,
-    "scripts/app-identity-common.sh",
+    "build-resources/canva-linux/config/project-ui.json",
   );
   const buildMetadataPath = path.join(
     resolvedRootDir,

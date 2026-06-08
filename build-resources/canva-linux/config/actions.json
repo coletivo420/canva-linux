@@ -7,7 +7,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/install-native.js"
+      ".build/scripts/install-native.mjs"
     ],
     "cli": [
       "--install-native"
@@ -30,7 +30,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/install-native.js"
+      ".build/scripts/install-native.mjs"
     ],
     "longRunning": true,
     "description": "Install Canva Linux natively for the current user.",
@@ -49,7 +49,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/install-flatpak.js"
+      ".build/scripts/install-flatpak.mjs"
     ],
     "cli": [
       "--install-flatpak"
@@ -72,7 +72,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/install-flatpak.js"
+      ".build/scripts/install-flatpak.mjs"
     ],
     "longRunning": true,
     "description": "Build and install Canva Linux locally as a Flatpak for the current user.",
@@ -92,7 +92,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/build-flatpak-bundle.js"
+      ".build/scripts/build-flatpak-bundle.mjs"
     ],
     "cli": [
       "--bundle-flatpak"
@@ -108,7 +108,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/build-appimage.js"
+      ".build/scripts/build-appimage.mjs"
     ],
     "cli": [
       "--bundle-appimage"
@@ -160,7 +160,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/build-runtime-entry.js"
+      ".build/scripts/build-runtime-entry.mjs"
     ],
     "cli": [
       "--build-runtime"
@@ -176,7 +176,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/build-electron-dir-entry.js"
+      ".build/scripts/build-electron-dir-entry.mjs"
     ],
     "cli": [
       "--build-dir"
@@ -192,7 +192,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/validate-project.js"
+      ".build/scripts/validate-project.mjs"
     ],
     "cli": [
       "--validate"
@@ -208,7 +208,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/validate-appimage.js"
+      ".build/scripts/validate-appimage.mjs"
     ],
     "cli": [
       "--validate-appimage"
@@ -223,7 +223,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/validate-appimage.js",
+      ".build/scripts/validate-appimage.mjs",
       "--extract-check"
     ],
     "cli": [
@@ -240,7 +240,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/doctor.js"
+      ".build/scripts/doctor.mjs"
     ],
     "cli": [
       "--doctor"
@@ -255,7 +255,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/clean-artifacts.js"
+      ".build/scripts/clean-artifacts.mjs"
     ],
     "cli": [
       "--clean"
@@ -282,7 +282,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/show-detected-installations.js"
+      ".build/scripts/show-detected-installations.mjs"
     ],
     "cli": [],
     "hidden": true,
@@ -296,7 +296,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/show-version-info.js"
+      ".build/scripts/show-version-info.mjs"
     ],
     "cli": [],
     "hidden": true,
@@ -310,7 +310,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/reset-user-data.js"
+      ".build/scripts/reset-user-data.mjs"
     ],
     "cli": [
       "--reset-user-data"
@@ -327,7 +327,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/uninstall-native.js"
+      ".build/scripts/uninstall-native.mjs"
     ],
     "cli": [
       "--uninstall-native"
@@ -351,7 +351,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/uninstall-native.js"
+      ".build/scripts/uninstall-native.mjs"
     ],
     "cli": [],
     "dangerous": true,
@@ -373,7 +373,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/uninstall-flatpak.js"
+      ".build/scripts/uninstall-flatpak.mjs"
     ],
     "cli": [
       "--uninstall-flatpak"
@@ -397,7 +397,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/uninstall-flatpak.js"
+      ".build/scripts/uninstall-flatpak.mjs"
     ],
     "cli": [],
     "dangerous": true,
@@ -421,7 +421,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/uninstall-detected.js"
+      ".build/scripts/uninstall-detected.mjs"
     ],
     "cli": [
       "--uninstall"
@@ -443,7 +443,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/purge-installations.js"
+      ".build/scripts/purge-installations.mjs"
     ],
     "cli": [
       "--purge"
@@ -464,7 +464,7 @@
     "kind": "command",
     "command": "node",
     "args": [
-      ".build/scripts/fix-build-permissions.js"
+      ".build/scripts/fix-build-permissions.mjs"
     ],
     "requiresRoot": true,
     "description": "Restore ownership of generated build directories to the current user."

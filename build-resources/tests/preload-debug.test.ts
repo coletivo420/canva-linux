@@ -1,42 +1,12 @@
-// @ts-nocheck
-"use strict";
 
-// @ts-check
+import assert from "node:assert/strict";
+import test from "node:test";
 
-const assert = require("node:assert/strict");
-const Module = require("node:module");
-const test = require("node:test");
+import { loadRuntimeModule, withElectronMock } from "./helpers/runtime-module.js";
 
-const { loadRuntimeModule } = require("./helpers/runtime-module");
-
-/**
- * @template T
- * @param {() => T} fn
- * @returns {T}
- */
-function withElectronMock(fn) {
-  const moduleLoader =
-    /** @type {typeof Module & { _load: (request: string, parent: unknown, isMain: boolean) => unknown }} */ Module;
-  const originalLoad = moduleLoader._load;
-  moduleLoader._load = function mockElectron(request, parent, isMain) {
-    if (request === "electron") {
-      return {
-        ipcRenderer: {
-          send() {},
-        },
-      };
-    }
-    return originalLoad.call(this, request, parent, isMain);
-  };
-  try {
-    return fn();
-  } finally {
-    moduleLoader._load = originalLoad;
-  }
-}
-
-const { normalizeEyeDropperCategoryHint } = withElectronMock(() =>
-  loadRuntimeModule("preload/debug"),
+const { normalizeEyeDropperCategoryHint } = await withElectronMock(
+  { ipcRenderer: { send() {} } },
+  () => loadRuntimeModule("preload/debug"),
 );
 
 test("normalizes EyeDropper category hints", () => {

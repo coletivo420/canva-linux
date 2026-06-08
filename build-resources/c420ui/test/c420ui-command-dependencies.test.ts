@@ -6,7 +6,7 @@ import test from "node:test";
 import {
   checkC420UICommandDependencies,
   lookupC420UICommandInPath,
-} from "../src/command-dependencies";
+} from "../src/command-dependencies.js";
 
 test("required missing command fails", () => {
   const result = checkC420UICommandDependencies(
