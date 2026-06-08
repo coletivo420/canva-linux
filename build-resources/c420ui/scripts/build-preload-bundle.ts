@@ -54,7 +54,7 @@ async function buildPreloadBundle(name: string, outputName: string): Promise<voi
           build.onLoad({ filter: /^electron$/, namespace: "electron-shim" }, () => {
             return {
               contents:
-                'export default require("electron"); export const contextBridge = require("electron").contextBridge; export const ipcRenderer = require("electron").ipcRenderer;',
+                'const electron = (0, eval)("require")("electron"); export default electron; export const contextBridge = electron.contextBridge; export const ipcRenderer = electron.ipcRenderer;',
               loader: "js",
             };
           });
