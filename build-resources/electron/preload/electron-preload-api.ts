@@ -9,9 +9,19 @@ type PreloadGlobal = typeof globalThis & {
   require?: (moduleName: "electron") => ElectronPreloadApi;
 };
 
-export function loadElectronPreloadApi(): ElectronPreloadApi {
-  const preloadRequire = (globalThis as PreloadGlobal).require;
+function resolvePreloadRequire(): PreloadGlobal["require"] | undefined {
+  const globalRequire = (globalThis as PreloadGlobal).require;
+  if (typeof globalRequire === "function") return globalRequire;
 
+  try {
+    return (0, eval)("require") as PreloadGlobal["require"] | undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function loadElectronPreloadApi(): ElectronPreloadApi {
+  const preloadRequire = resolvePreloadRequire();
   if (typeof preloadRequire !== "function") {
     throw new Error("Electron preload require is unavailable.");
   }
