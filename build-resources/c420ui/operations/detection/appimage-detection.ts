@@ -3,6 +3,7 @@ import path from "node:path";
 import {
   readBuildMetadataBaseVersion,
   readBuildMetadataFullVersion,
+  readBuildMetadataHash,
 } from "./version-marker.js";
 
 export function detectAppImageArtifacts(rootDir: string): boolean {
@@ -137,4 +138,43 @@ export function detectAppImageFullVersion(rootDir: string): string {
   }
 
   return detectAppImageVersion(rootDir);
+}
+
+export function detectAppImageHash(rootDir: string): string {
+  const file = findLatestAppImageArtifact(rootDir);
+  const metadata = findArtifactBuildMetadataMarker(file, rootDir);
+
+  let hash = readBuildMetadataHash(metadata, "canvaLinuxSourceHash");
+  if (hash) return hash;
+
+  const findMetadataInDist = (dir: string, depth: number): string => {
+    if (depth > 8) return "";
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          const found = findMetadataInDist(fullPath, depth + 1);
+          if (found) return found;
+        } else if (
+          entry.isFile() &&
+          fullPath.endsWith("/resources/config/canva-linux/build-metadata.json")
+        ) {
+          return fullPath;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+    return "";
+  };
+
+  const distDir = path.join(rootDir, "dist");
+  if (fs.existsSync(distDir)) {
+    const distMetadata = findMetadataInDist(distDir, 0);
+    hash = readBuildMetadataHash(distMetadata, "canvaLinuxSourceHash");
+    if (hash) return hash;
+  }
+
+  return "";
 }

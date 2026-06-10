@@ -1146,6 +1146,43 @@ function checkHeaderLayoutContract(failures: string[]): void {
   }
 }
 
+function checkSourceHashDisplayContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const detectionTypes = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/detection.ts"), "utf8");
+  const packageTypes = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/types.ts"), "utf8");
+  const summary = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/detected-installations-summary.ts"), "utf8");
+  const app = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/app.ts"), "utf8");
+  const adapter = fs.readFileSync(path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/adapter.ts"), "utf8");
+  const artifactFragments = fs.readFileSync(
+    path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments.ts"),
+    "utf8",
+  );
+
+  for (const source of [detectionTypes, packageTypes] as const) {
+    if (!source.includes("hash?: string") || !source.includes("hashKind?: string")) {
+      failures.push("c420ui detection/config types must carry normalized hash and hashKind fields");
+    }
+  }
+  if (!summary.includes("formatShortHash(hash") || !summary.includes("formatDetectedStatus(colors") || !summary.includes("linuxUnpacked?.hash")) {
+    failures.push("Detection UI must render a source hash next to detected versions");
+  }
+  if (!app.includes("formatShortHash(brandConfig.hash") || !app.includes("formatShortHash(projectConfig.hash")) {
+    failures.push("c420ui header UI must render source hashes next to c420ui and project versions");
+  }
+  if (!artifactFragments.includes('path.join(rootDir, ".build", "canva-linux", "build-metadata.effective.json")')) {
+    failures.push("Linux Unpacked must prefer effective build metadata before committed fallback");
+  }
+  if (!artifactFragments.includes("canvaLinuxSourceHash") || !artifactFragments.includes('hashKind: "canvaLinuxSourceHash"')) {
+    failures.push("Linux Unpacked and generated artifacts must display canvaLinuxSourceHash");
+  }
+  if (!adapter.includes("c420uiSourceHash") || !adapter.includes('hashKind: "c420uiSourceHash"')) {
+    failures.push("c420ui version must display c420uiSourceHash");
+  }
+  if (!adapter.includes("combinedSourceHash") || !adapter.includes('combinedHashKind: "combinedSourceHash"')) {
+    failures.push("aggregate/build overview must carry combinedSourceHash");
+  }
+}
+
 function checkSettingsContract(failures: string[]): void {
   const rootDir = process.cwd();
   const app = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/app.ts"), "utf8");
@@ -1382,6 +1419,7 @@ export function main(): number {
   checkHostDependencyContract(failures);
   checkTerminalUiContract(failures);
   checkHeaderLayoutContract(failures);
+  checkSourceHashDisplayContract(failures);
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[c420ui-core-contracts] OK");

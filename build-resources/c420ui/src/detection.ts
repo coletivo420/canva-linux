@@ -18,6 +18,8 @@ export type CanvaLinuxArtifactFragment = {
   path?: string;
   version?: string;
   fullVersion?: string;
+  hash?: string;
+  hashKind?: string;
 };
 
 export type c420uiOverviewProjectStatus = {

@@ -131,6 +131,16 @@ function longestLineLength(lines: string[]): number {
   return Math.max(0, ...lines.map((line) => line.length));
 }
 
+function formatShortHash(hash: string | undefined, version: string | undefined): string {
+  if (!version) return "";
+  if (!hash) return "";
+  if (hash === "unknown") return " · unknown";
+  const parts = hash.split(":");
+  const algo = parts.length > 1 ? `${parts[0]}:` : "";
+  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
+  return ` · ${algo}${value.slice(0, 8)}`;
+}
+
 export function computeHeaderLayout(
   screenWidth: number,
   brandConfig: C420UIBrandConfig,
@@ -139,13 +149,13 @@ export function computeHeaderLayout(
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
   const c420uiHeaderContentWidth = longestLineLength([
-    `${brandConfig.name} v${brandConfig.version}`,
+    `${brandConfig.name} v${brandConfig.version}${formatShortHash(brandConfig.hash, brandConfig.version)}`,
     ...brandConfig.logoLines,
   ]);
   const projectHeaderContentWidth = longestLineLength([
     projectConfig.projectName,
     projectConfig.projectSubtitle,
-    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""} | Phase: ${projectConfig.phase ?? "unknown"}`,
+    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`,
   ]);
   const c420uiMinWidth = Math.max(
     c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
@@ -1363,6 +1373,9 @@ export function createApp(options: C420UIAppOptions) {
           "",
           "Version:",
           `  {${c420uiTheme.colors.version}-fg}${opts.project.displayVersion}{/${c420uiTheme.colors.version}-fg}`,
+          "",
+          "Hash:",
+          `  {${c420uiTheme.colors.muted}-fg}${opts.project.hash ?? "unknown"}{/${c420uiTheme.colors.muted}-fg}`,
           "",
           "Phase:",
           `  {${c420uiTheme.colors.phase}-fg}${opts.project.phase ?? "unknown"}{/${c420uiTheme.colors.phase}-fg}`,

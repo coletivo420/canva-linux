@@ -1,6 +1,8 @@
 export type C420UIBrandConfig = {
   name: string;
   version: string;
+  hash?: string;
+  hashKind?: string;
   logoLines: string[];
 };
 
@@ -11,6 +13,10 @@ export type C420UIProjectConfig = {
   phase?: string;
   fullVersion?: string;
   buildRevision?: string;
+  hash?: string;
+  hashKind?: string;
+  combinedHash?: string;
+  combinedHashKind?: string;
   status?: string;
   logoLines: string[];
   appId: string;

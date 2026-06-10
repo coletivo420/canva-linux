@@ -36,3 +36,19 @@ export function readBuildMetadataBaseVersion(metadataFile: string): string {
     return "";
   }
 }
+
+export function readBuildMetadataHash(
+  metadataFile: string,
+  field:
+    | "canvaLinuxSourceHash"
+    | "c420uiSourceHash"
+    | "combinedSourceHash" = "canvaLinuxSourceHash",
+): string {
+  if (!fs.existsSync(metadataFile)) return "";
+  try {
+    const m = JSON.parse(fs.readFileSync(metadataFile, "utf8"));
+    return m[field] || "";
+  } catch {
+    return "";
+  }
+}

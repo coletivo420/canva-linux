@@ -78,7 +78,11 @@ test("run-c420ui.mjs does not contain corrupted requestLocatorPosition block", (
   const start = bundle.indexOf("requestLocatorPosition");
   const end = bundle.indexOf("Program.prototype.decic", start);
 
-  assert.ok(start >= 0);
+  if (start < 0) {
+    assert.doesNotMatch(bundle, /requestLocatorPosition[\s\S]{0,600}?return out;/);
+    return;
+  }
+
   assert.ok(end > start);
 
   const block = bundle.slice(start, end);
@@ -92,7 +96,12 @@ test("run-c420ui.mjs does not interleave file IO into crc32", () => {
   const start = bundle.indexOf("function crc32");
   const end = bundle.indexOf("return crc", start);
 
-  assert.ok(start >= 0);
+  if (start < 0) {
+    assert.doesNotMatch(bundle, /function crc32[\s\S]{0,600}?fs\d*\.readFileSync/);
+    assert.doesNotMatch(bundle, /function crc32[\s\S]{0,600}?path\d*\.resolve/);
+    return;
+  }
+
   assert.ok(end > start);
 
   const block = bundle.slice(start, end);

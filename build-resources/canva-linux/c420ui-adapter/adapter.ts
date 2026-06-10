@@ -53,6 +53,9 @@ type BuildMetadata = {
   displayVersion?: string;
   phase?: string;
   fullVersion?: string;
+  canvaLinuxSourceHash?: string;
+  c420uiSourceHash?: string;
+  combinedSourceHash?: string;
 };
 
 type AppIdentity = {
@@ -191,6 +194,14 @@ export function createCanvaLinuxC420UIAdapter(
     return loadBuildMetadata().buildRevision || "unknown";
   }
 
+  function getEffectiveProjectSourceHash(): string {
+    return loadBuildMetadata().canvaLinuxSourceHash || "unknown";
+  }
+
+  function getEffectiveProjectCombinedSourceHash(): string {
+    return loadBuildMetadata().combinedSourceHash || "unknown";
+  }
+
   function loadProjectConfig(): C420UIProjectConfig {
     const projectUi = loadProjectUi();
     return {
@@ -200,6 +211,10 @@ export function createCanvaLinuxC420UIAdapter(
       phase: getEffectiveProjectPhase(),
       fullVersion: getEffectiveProjectFullVersion(),
       buildRevision: getEffectiveProjectBuildRevision(),
+      hash: getEffectiveProjectSourceHash(),
+      hashKind: "canvaLinuxSourceHash",
+      combinedHash: getEffectiveProjectCombinedSourceHash(),
+      combinedHashKind: "combinedSourceHash",
       status: projectUi.status,
       logoLines: [...projectUi.logoLines],
       appId: projectUi.appId,
@@ -214,6 +229,8 @@ export function createCanvaLinuxC420UIAdapter(
     return {
       name: "c420ui",
       version: loadC420UIPackageJson().version ?? "unknown",
+      hash: loadBuildMetadata().c420uiSourceHash || "unknown",
+      hashKind: "c420uiSourceHash",
       logoLines: [...c420uiLogoLines],
     };
   }

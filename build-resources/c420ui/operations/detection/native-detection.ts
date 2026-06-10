@@ -4,6 +4,7 @@ import os from "node:os";
 import {
   readBuildMetadataBaseVersion,
   readBuildMetadataFullVersion,
+  readBuildMetadataHash,
   readPackageJsonVersion,
   readVersionFile,
 } from "./version-marker.js";
@@ -76,4 +77,19 @@ export function detectNativeUserFullVersion(): string {
   if (version) return version;
 
   return detectNativeUserVersion();
+}
+
+export function detectNativeSystemHash(): string {
+  return readBuildMetadataHash(
+    "/opt/canva-linux/config/canva-linux/build-metadata.json",
+    "canvaLinuxSourceHash",
+  );
+}
+
+export function detectNativeUserHash(): string {
+  const home = os.homedir();
+  return readBuildMetadataHash(
+    path.join(home, ".local/opt/canva-linux/config/canva-linux/build-metadata.json"),
+    "canvaLinuxSourceHash",
+  );
 }
