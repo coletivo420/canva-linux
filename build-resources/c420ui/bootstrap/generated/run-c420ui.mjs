@@ -1196,6 +1196,9 @@ async function runC420UIStartupTasks(tasks, log) {
 }
 
 // build-resources/c420ui/src/terminal/app.ts
+var PANEL_VERTICAL_FRAME_ROWS = 2;
+var DETECTED_INSTALLATION_ROWS = 4;
+var DETECTED_INSTALLATIONS_MIN_HEIGHT = DETECTED_INSTALLATION_ROWS + PANEL_VERTICAL_FRAME_ROWS;
 var MAX_LOG_HISTORY_LINES = 5e3;
 var TOOL_LOG_PREFIX = "Tool |";
 var ACTION_LOG_PREFIX = "Action |";
@@ -1488,10 +1491,13 @@ function createApp(options) {
     const menuHeight = Math.max(3, Math.floor(workspaceHeight * 0.68));
     const diagnosticsTop = workspaceTop + menuHeight;
     const detectionPanelsHeight = Math.max(
-      9,
+      DETECTED_INSTALLATIONS_MIN_HEIGHT + 6,
       screenHeight - diagnosticsTop - reservedFooterRows
     );
-    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
+    const detectedInstallationsHeight = Math.max(
+      DETECTED_INSTALLATIONS_MIN_HEIGHT,
+      Math.floor(detectionPanelsHeight * 0.34)
+    );
     const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
     const linuxArtifactsHeight = Math.max(
       3,

@@ -77,6 +77,11 @@ export type C420UIAppOptions = {
 
 type FocusZone = "menu" | "diagnostics" | "content" | "logs";
 
+const PANEL_VERTICAL_FRAME_ROWS = 2;
+const DETECTED_INSTALLATION_ROWS = 4;
+const DETECTED_INSTALLATIONS_MIN_HEIGHT =
+  DETECTED_INSTALLATION_ROWS + PANEL_VERTICAL_FRAME_ROWS;
+
 type SelectableMenu = ReturnType<typeof tui.list> & {
   selected: number;
   items?: unknown[];
@@ -451,10 +456,13 @@ export function createApp(options: C420UIAppOptions) {
     const menuHeight = Math.max(3, Math.floor(workspaceHeight * 0.68));
     const diagnosticsTop = workspaceTop + menuHeight;
     const detectionPanelsHeight = Math.max(
-      9,
+      DETECTED_INSTALLATIONS_MIN_HEIGHT + 6,
       screenHeight - diagnosticsTop - reservedFooterRows,
     );
-    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
+    const detectedInstallationsHeight = Math.max(
+      DETECTED_INSTALLATIONS_MIN_HEIGHT,
+      Math.floor(detectionPanelsHeight * 0.34),
+    );
     const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
     const linuxArtifactsHeight = Math.max(
       3,
