@@ -23,3 +23,10 @@ test("toolbar state subscription removes only its previous tabs-state listener",
   );
   assert.doesNotMatch(source, /removeAllListeners\([\"']tabs-state[\"']\)/);
 });
+
+test("toolbar preload debug lookup is safe when process argv is unavailable", () => {
+  const source = fs.readFileSync(toolbarPreloadPath, "utf8");
+
+  assert.match(source, /getPreloadArgv\(\)\.find/);
+  assert.doesNotMatch(source, /process\.argv/);
+});

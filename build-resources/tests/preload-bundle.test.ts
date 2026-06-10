@@ -91,3 +91,12 @@ test("generated toolbar preload exposes canvaTabs bridge", () => {
     assert.match(content, new RegExp(`\\b${method}\\b`));
   }
 });
+
+test("generated toolbar preload does not read process argv before exposing canvaTabs", () => {
+  const bundle = path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs");
+  if (!fs.existsSync(bundle)) return;
+
+  const content = fs.readFileSync(bundle, "utf8");
+  assert.doesNotMatch(content, /process\.argv/);
+  assert.match(content, /getPreloadArgv\(\)\.find/);
+});

@@ -7,6 +7,10 @@ type ElectronPreloadApi = {
 
 type PreloadGlobal = typeof globalThis & {
   require?: (moduleName: "electron") => ElectronPreloadApi;
+  process?: {
+    argv?: unknown;
+    isMainFrame?: unknown;
+  };
 };
 
 function resolvePreloadRequire(): PreloadGlobal["require"] | undefined {
@@ -33,4 +37,18 @@ export function loadElectronPreloadApi(): ElectronPreloadApi {
   }
 
   return electron;
+}
+
+export function getPreloadArgv(): string[] {
+  const argv = (globalThis as PreloadGlobal).process?.argv;
+  if (!Array.isArray(argv)) return [];
+
+  return argv.filter((arg): arg is string => typeof arg === "string");
+}
+
+export function describePreloadFrame(): "main-frame" | "sub-frame" | "unknown-frame" {
+  const isMainFrame = (globalThis as PreloadGlobal).process?.isMainFrame;
+  if (isMainFrame === true) return "main-frame";
+  if (isMainFrame === false) return "sub-frame";
+  return "unknown-frame";
 }

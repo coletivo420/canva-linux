@@ -1,7 +1,10 @@
 // Expose a tiny read-only bridge for the custom tab bar UI.
 import type { IpcRendererEvent } from "electron";
 
-import { loadElectronPreloadApi } from "./electron-preload-api.js";
+import {
+  getPreloadArgv,
+  loadElectronPreloadApi,
+} from "./electron-preload-api.js";
 
 const { contextBridge, ipcRenderer } = loadElectronPreloadApi();
 
@@ -19,7 +22,7 @@ function normalizeDebugCategory(category: unknown = "app"): string {
 }
 
 function getDebugLevel(): number {
-  const debugArg = process.argv.find(
+  const debugArg = getPreloadArgv().find(
     (arg) => arg === "--debug=1" || arg === "--debug=2",
   );
   if (debugArg === "--debug=1") return 1;
