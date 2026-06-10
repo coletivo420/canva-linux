@@ -44,23 +44,6 @@ async function buildPreloadBundle(name: string, outputName: string): Promise<voi
     platform: "node",
     target: "es2022",
     format: "esm",
-    plugins: [
-      {
-        name: "electron-shim",
-        setup(build) {
-          build.onResolve({ filter: /^electron$/ }, (args) => {
-            return { path: args.path, namespace: "electron-shim" };
-          });
-          build.onLoad({ filter: /^electron$/, namespace: "electron-shim" }, () => {
-            return {
-              contents:
-                'const electron = (0, eval)("require")("electron"); export default electron; export const contextBridge = electron.contextBridge; export const ipcRenderer = electron.ipcRenderer;',
-              loader: "js",
-            };
-          });
-        },
-      },
-    ],
     sourcemap: false,
     minify: false,
     legalComments: "none",
@@ -72,6 +55,26 @@ async function buildPreloadBundle(name: string, outputName: string): Promise<voi
       ].join("\n"),
     },
   });
+
+  const output = fs.readFileSync(outputFile, "utf8");
+  const relativeOutput = path.relative(repoRoot, outputFile);
+  if (/^\s*import\s+.*["']electron["'];?/m.test(output)) {
+    throw new Error(
+      `[preload-bundle] ${relativeOutput} must not contain runtime electron imports.`,
+    );
+  }
+  if (/(^|[^.\w$])require\(["']electron["']\)/m.test(output)) {
+    throw new Error(
+      `[preload-bundle] ${relativeOutput} must not contain CommonJS electron require wrappers.`,
+    );
+  }
+  for (const forbidden of ["exports.__esModule", "module.exports"] as const) {
+    if (output.includes(forbidden)) {
+      throw new Error(
+        `[preload-bundle] ${relativeOutput} must not contain ${forbidden}.`,
+      );
+    }
+  }
 
   console.log(`[preload-bundle] wrote ${path.relative(repoRoot, outputFile)}`);
 }

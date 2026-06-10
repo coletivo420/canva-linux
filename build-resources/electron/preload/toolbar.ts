@@ -1,6 +1,9 @@
 // Expose a tiny read-only bridge for the custom tab bar UI.
-import electron, { type IpcRendererEvent } from "electron";
-const { contextBridge, ipcRenderer } = electron;
+import type { IpcRendererEvent } from "electron";
+
+import { loadElectronPreloadApi } from "./electron-preload-api.js";
+
+const { contextBridge, ipcRenderer } = loadElectronPreloadApi();
 
 // This preload runs with sandbox enabled, so it cannot rely on local helper
 // module loading. Keep the debug transport inline here.

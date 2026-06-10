@@ -138,6 +138,7 @@ function checkRequiredPaths(rootDir: string, failures: string[]): void {
   for (const relativePath of [
     "build-resources/c420ui",
     "build-resources/electron",
+    "build-resources/electron/preload/electron-preload-api.ts",
     "build-resources/canva-linux/assets",
     "build-resources/c420ui/scripts/build-bootstrap.ts",
     "build-resources/c420ui/scripts/c420ui-builder.ts",
@@ -693,6 +694,15 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
     if (!buildPreloadSource.includes("canva.bundle.mjs") || !buildPreloadSource.includes("toolbar.bundle.mjs")) {
       failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: preload bundles must stay ESM .mjs outputs");
     }
+    for (const requiredFragment of [
+      "must not contain runtime electron imports",
+      "exports.__esModule",
+      "module.exports",
+    ] as const) {
+      if (!buildPreloadSource.includes(requiredFragment)) {
+        failures.push(`build-resources/c420ui/scripts/build-preload-bundle.ts: missing preload bundle validation for ${requiredFragment}`);
+      }
+    }
   }
 
   const indexSource = readText(rootDir, "build-resources/electron/main/index.ts");
@@ -710,6 +720,42 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
   if (controllerSource && !controllerSource.includes("canva.bundle.mjs")) {
     failures.push("build-resources/electron/main/tab-controller.ts: must keep canva.bundle.mjs preload path");
   }
+  if (controllerSource && !/contextIsolation:\s*true/.test(controllerSource)) {
+    failures.push("build-resources/electron/main/tab-controller.ts: Canva tabs must keep contextIsolation: true");
+  }
+
+  const preloadApiSource = readText(rootDir, "build-resources/electron/preload/electron-preload-api.ts");
+  if (!preloadApiSource) {
+    failures.push("build-resources/electron/preload/electron-preload-api.ts: must exist");
+  } else if (!preloadApiSource.includes("globalThis") || !preloadApiSource.includes('require?: (moduleName: "electron")')) {
+    failures.push("build-resources/electron/preload/electron-preload-api.ts: must resolve Electron through preload global require");
+  }
+
+  for (const relativePath of [
+    "build-resources/electron/preload/toolbar.ts",
+    "build-resources/electron/preload/debug.ts",
+    "build-resources/electron/preload/canva.ts",
+  ] as const) {
+    const source = readText(rootDir, relativePath);
+    if (!source) continue;
+    if (/^\s*import\s+(?!type\b).*["']electron["'];?/m.test(source)) {
+      failures.push(`${relativePath}: preload source must not use runtime imports from "electron"`);
+    }
+  }
+
+  for (const relativePath of [
+    ".build/electron/preload/canva.bundle.mjs",
+    ".build/electron/preload/toolbar.bundle.mjs",
+  ] as const) {
+    const bundle = readText(rootDir, relativePath);
+    if (!bundle) continue;
+    if (/^\s*import\s+.*["']electron["'];?/m.test(bundle)) {
+      failures.push(`${relativePath}: generated preload bundle must not contain import from "electron"`);
+    }
+    if (/(^|[^.\w$])require\(["']electron["']\)/m.test(bundle)) {
+      failures.push(`${relativePath}: generated preload bundle must not contain CommonJS require("electron")`);
+    }
+  }
 }
 
 function checkToolbarUIContract(rootDir: string, failures: string[]): void {
@@ -725,6 +771,12 @@ function checkToolbarUIContract(rootDir: string, failures: string[]): void {
 
   if (!toolbarHtml.includes("getPinnedHomeLabel")) {
     failures.push("build-resources/electron/ui/toolbar.html: must use getPinnedHomeLabel for home tab labeling");
+  }
+  if (!toolbarHtml.includes("data-bridge='missing'") || !toolbarHtml.includes("Toolbar bridge unavailable")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must expose a visible missing-bridge diagnostic");
+  }
+  if (!toolbarHtml.includes("document.body.dataset.bridge = 'missing'")) {
+    failures.push("build-resources/electron/ui/toolbar.html: missing bridge branch must mark body dataset");
   }
   for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome"] as const) {
     if (!toolbarHtml.includes(`canvaTabs.${bridgeMethod}`)) {

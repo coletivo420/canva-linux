@@ -172,7 +172,7 @@ export function createTabController({
     const view = new WebContentsView({
       webPreferences: {
         preload: preloadPath,
-        contextIsolation: false,
+        contextIsolation: true,
         sandbox: true,
         nodeIntegration: false,
         nodeIntegrationInSubFrames: true,

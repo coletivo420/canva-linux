@@ -1,6 +1,7 @@
-import electron from "electron";
-const { ipcRenderer } = electron;
 import { createDebugTools } from "../shared/debug.js";
+import { loadElectronPreloadApi } from "./electron-preload-api.js";
+
+const { ipcRenderer } = loadElectronPreloadApi();
 
 type PreloadDebugOptions = {
   source?: string;

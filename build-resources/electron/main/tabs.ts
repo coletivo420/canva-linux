@@ -272,6 +272,7 @@ export function createTabHelpers({
     layoutViews();
     ensureTopLevelView(toolbarViewRef());
     tab.view.webContents.focus();
+    debugLog("tabs:navigation", "switch-active", id, tab.url);
     broadcastTabsState();
   }
 

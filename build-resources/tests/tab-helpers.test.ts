@@ -27,6 +27,7 @@ type FakeWebContents = {
 
 type FakeView = {
   visible: boolean;
+  visibilityWrites: boolean[];
   bounds: FakeBounds | null;
   webContents: FakeWebContents;
   setVisible(visible: boolean): void;
@@ -46,6 +47,7 @@ type FakeTab = {
 function createView(id: number): FakeView {
   return {
     visible: false,
+    visibilityWrites: [],
     bounds: null,
     webContents: {
       id,
@@ -64,6 +66,7 @@ function createView(id: number): FakeView {
       send(_channel: string, _payload?: unknown) {},
     },
     setVisible(visible: boolean) {
+      this.visibilityWrites.push(visible);
       this.visible = visible;
     },
     setBounds(bounds: FakeBounds) {
@@ -195,6 +198,23 @@ test("switchToTab hides previous active tab and shows requested tab", () => {
   assert.equal(homeView.visible, false, "home tab (hidden before) should not be touched");
   assert.equal(state.activeTabId, 3);
   assert.equal(broadcasts.length, 2);
+});
+
+test("switchToTab does not sweep every tab in state.tabs", () => {
+  const { helpers, state } = createHelpers();
+  const homeView = createView(1);
+  const secondView = createView(2);
+  const thirdView = createView(3);
+  state.activeTabId = 1;
+  state.tabs.set(1, createTab(1, homeView, true));
+  state.tabs.set(2, createTab(2, secondView));
+  state.tabs.set(3, createTab(3, thirdView));
+
+  helpers.switchToTab(2);
+
+  assert.deepEqual(homeView.visibilityWrites, [false]);
+  assert.deepEqual(secondView.visibilityWrites, [true]);
+  assert.deepEqual(thirdView.visibilityWrites, []);
 });
 
 test("switchToTab re-adds active content view before toolbar", () => {

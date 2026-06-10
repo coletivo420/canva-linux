@@ -67,6 +67,13 @@
       min-width: 0;
       flex: 1 1 auto;
     }
+    body[data-bridge='missing'] .tab-strip::before {
+      content: 'Toolbar bridge unavailable';
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+    }
     .pinned-home-slot {
       display: flex;
       align-items: stretch;
@@ -336,6 +343,9 @@
 
     if (!window.canvaTabs) {
       console.error('[toolbar-ui] missing-bridge');
+      pinnedHomeSlot.textContent = '';
+      tabsEl.textContent = '';
+      document.body.dataset.bridge = 'missing';
     } else {
       console.log('[toolbar-ui] subscribe-tabs-state');
       window.canvaTabs.subscribeTabsState(render);
