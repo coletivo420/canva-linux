@@ -4,8 +4,6 @@ import {
   loadElectronPreloadApi,
 } from "./electron-preload-api.js";
 
-const { ipcRenderer } = loadElectronPreloadApi();
-
 type PreloadDebugOptions = {
   source?: string;
 };
@@ -33,13 +31,13 @@ export function normalizeEyeDropperCategoryHint(value: unknown): string | null {
 
 export function createPreloadDebug({ source = "preload" }: PreloadDebugOptions): PreloadDebugTools {
   function routeDebug(category: string, ...args: unknown[]): void {
-    try {
+    void loadElectronPreloadApi().then(({ ipcRenderer }) => {
       ipcRenderer.send("wrapper:debug-log", { category, args, source });
-    } catch {
+    }).catch(() => {
       try {
         console.log(`[canva:${source}:${category}]`, ...args);
       } catch {}
-    }
+    });
   }
 
   const debugArg = getPreloadArgv().find((arg) => arg === "--debug=1" || arg === "--debug=2");

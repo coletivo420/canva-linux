@@ -5,8 +5,6 @@ import {
 } from "./cl-eyedropper/index.js";
 import { loadElectronPreloadApi } from "./electron-preload-api.js";
 
-const { ipcRenderer } = loadElectronPreloadApi();
-
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type EyeDropperLog = (...args: unknown[]) => void;
 type EyeDropperSnapshot = {
@@ -196,6 +194,7 @@ export function createCustomEyeDropperFlow({
       location.href,
     );
 
+    const { ipcRenderer } = await loadElectronPreloadApi();
     const snapshot =
       /** @type {EyeDropperSnapshot | null | undefined} */ await ipcRenderer.invoke(
         "wrapper:eyedropper-snapshot",

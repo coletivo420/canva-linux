@@ -212,6 +212,7 @@
     const tabsEl = document.getElementById('tabs');
     const bridgeAvailable = Boolean(window.canvaTabs);
     const iconPath = '../assets/canva-icon.png';
+    let fallbackRendered = false;
 
     console.log('[toolbar-ui] bootstrap', JSON.stringify({ bridgeAvailable }));
     window.addEventListener('error', (event) => {
@@ -242,6 +243,36 @@
       document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
     }
 
+    function getSystemTheme() {
+      if (window.canvaTabs) return window.canvaTabs.getSystemTheme();
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+    }
+
+    function sendToolbarAction(action, payload = {}) {
+      if (window.canvaTabs) {
+        if (action === 'switch-tab') {
+          window.canvaTabs.switchTab(payload.id);
+          return;
+        }
+        if (action === 'close-tab') {
+          window.canvaTabs.closeTab(payload.id);
+          return;
+        }
+        if (action === 'go-home') {
+          window.canvaTabs.goHome();
+          return;
+        }
+      }
+
+      const actionUrl = new URL(`canva-toolbar://${action}`);
+      if (typeof payload.id === 'number') {
+        actionUrl.searchParams.set('id', String(payload.id));
+      }
+      window.location.href = actionUrl.toString();
+    }
+
     function installIconFallback(favicon) {
       favicon.onerror = () => {
         favicon.onerror = null;
@@ -256,7 +287,7 @@
         pinnedHomeTab: Boolean(state?.pinnedHomeTab),
         count: state?.tabs?.length || 0,
       }));
-      applyTheme(state.theme || window.canvaTabs.getSystemTheme());
+      applyTheme(state.theme || getSystemTheme());
 
       renderPinnedHomeTab(state.pinnedHomeTab, state.activeTabId);
       renderRegularTabs(state.tabs || [], state.activeTabId);
@@ -288,7 +319,7 @@
 
       button.addEventListener('click', () => {
         console.log('[toolbar-ui] pinned-home-click');
-        window.canvaTabs.goHome();
+        sendToolbarAction('go-home');
       });
 
       pinnedHomeSlot.appendChild(button);
@@ -309,7 +340,7 @@
         activate.className = 'tab-activate';
         activate.type = 'button';
         activate.title = tab.title || tab.url || 'Canva';
-        activate.addEventListener('click', () => window.canvaTabs.switchTab(tab.id));
+        activate.addEventListener('click', () => sendToolbarAction('switch-tab', { id: tab.id }));
 
         const favicon = document.createElement('img');
         favicon.className = 'tab-favicon';
@@ -333,7 +364,7 @@
           close.textContent = '×';
           close.addEventListener('click', (event) => {
             event.stopPropagation();
-            window.canvaTabs.closeTab(tab.id);
+            sendToolbarAction('close-tab', { id: tab.id });
           });
           tabEl.appendChild(close);
         }
@@ -341,11 +372,23 @@
       }
     }
 
+    window.__canvaToolbarRenderState = (state) => {
+      fallbackRendered = true;
+      document.body.dataset.bridge = 'main';
+      render(state);
+    };
+
     if (!window.canvaTabs) {
-      console.error('[toolbar-ui] missing-bridge');
+      console.warn('[toolbar-ui] preload-bridge-missing; waiting-main-fallback');
       pinnedHomeSlot.textContent = '';
       tabsEl.textContent = '';
-      document.body.dataset.bridge = 'missing';
+      document.body.dataset.bridge = 'pending';
+      setTimeout(() => {
+        if (!fallbackRendered && !window.canvaTabs) {
+          console.error('[toolbar-ui] missing-bridge');
+          document.body.dataset.bridge = 'missing';
+        }
+      }, 1500);
     } else {
       console.log('[toolbar-ui] subscribe-tabs-state');
       window.canvaTabs.subscribeTabsState(render);

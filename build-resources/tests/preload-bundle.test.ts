@@ -77,6 +77,7 @@ test("generated preload bundles keep electron access through preload global requ
     const content = fs.readFileSync(bundle, "utf8");
     assert.match(content, /globalRequire\s*=\s*globalThis\.require/, `${path.basename(bundle)} should read preload global require`);
     assert.match(content, /preloadRequire\("electron"\)/, `${path.basename(bundle)} should resolve electron through preload global require`);
+    assert.doesNotMatch(content, /import\("electron"\)/, `${path.basename(bundle)} should not use runtime electron imports`);
     assert.ok(!content.includes("electron_default = (init_electron(), __toCommonJS(electron_exports))"), `${path.basename(bundle)} should not resolve electron shim to itself`);
   }
 });

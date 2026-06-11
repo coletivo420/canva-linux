@@ -137,6 +137,8 @@ function createToolbarHarness(options = { bridge: true }) {
   const sent = [];
   const logs = [];
   const errors = [];
+  const timers = [];
+  const navigations = [];
   let renderState = null;
   const document = {
     documentElement,
@@ -176,6 +178,17 @@ function createToolbarHarness(options = { bridge: true }) {
   const window = {
     ...(canvaTabs ? { canvaTabs } : {}),
     addEventListener() {},
+    matchMedia() {
+      return { matches: false };
+    },
+    location: {
+      set href(value) {
+        navigations.push(String(value));
+      },
+      get href() {
+        return navigations.at(-1) || "";
+      },
+    },
   };
 
   vm.runInNewContext(script, {
@@ -188,17 +201,38 @@ function createToolbarHarness(options = { bridge: true }) {
       error(...args) {
         errors.push(args.join(" "));
       },
+      warn(...args) {
+        logs.push(args.join(" "));
+      },
     },
     Boolean,
     JSON,
     String,
     Error,
+    URL,
+    setTimeout(callback) {
+      timers.push(callback);
+    },
   });
 
   if (options.bridge !== false) {
     assert.equal(typeof renderState, "function");
   }
-  return { actions, document, errors, logs, pinnedHomeSlot, render: renderState, sent, tabs };
+  return {
+    actions,
+    document,
+    errors,
+    logs,
+    navigations,
+    pinnedHomeSlot,
+    render: renderState,
+    runTimers() {
+      for (const timer of timers.splice(0)) timer();
+    },
+    sent,
+    tabs,
+    window,
+  };
 }
 
 const homeTab = {
@@ -244,13 +278,38 @@ test("toolbar subscribes when canvaTabs bridge exists", () => {
   assert.ok(logs.some((line) => line.includes("[toolbar-ui] subscribe-tabs-state")));
 });
 
-test("toolbar marks bridge missing when canvaTabs is unavailable", () => {
-  const { document, errors, pinnedHomeSlot, tabs } = createToolbarHarness({ bridge: false });
+test("toolbar waits for main fallback when canvaTabs is unavailable", () => {
+  const { document, errors, logs, pinnedHomeSlot, tabs } = createToolbarHarness({ bridge: false });
 
-  assert.equal(document.body.dataset.bridge, "missing");
+  assert.equal(document.body.dataset.bridge, "pending");
   assert.equal(pinnedHomeSlot.textContent, "");
   assert.equal(tabs.textContent, "");
+  assert.ok(logs.some((line) => line.includes("[toolbar-ui] preload-bridge-missing; waiting-main-fallback")));
+  assert.equal(errors.some((line) => line.includes("[toolbar-ui] missing-bridge")), false);
+});
+
+test("toolbar marks bridge missing only when fallback never renders", () => {
+  const { document, errors, runTimers } = createToolbarHarness({ bridge: false });
+
+  runTimers();
+
+  assert.equal(document.body.dataset.bridge, "missing");
   assert.ok(errors.some((line) => line.includes("[toolbar-ui] missing-bridge")));
+});
+
+test("toolbar main fallback renders tabs when preload bridge is unavailable", () => {
+  const { document, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 2,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+
+  assert.equal(document.body.dataset.bridge, "main");
+  assert.equal(document.querySelectorAll(".pinned-home").length, 1);
+  assert.equal(document.querySelectorAll(".tab").length, 1);
 });
 
 test("render with home and regular tabs keeps home out of regular renderer", () => {
@@ -346,6 +405,20 @@ test("toolbar bridge controls switch-tab", () => {
   assert.equal(sent.length, 1);
   assert.equal(sent[0].channel, "switch-tab");
   assert.equal(sent[0].payload.id, 2);
+});
+
+test("toolbar fallback sends switch-tab through navigation URL", () => {
+  const { document, navigations, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 1,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+  document.querySelector(".tab-activate").click();
+
+  assert.equal(navigations.at(-1), "canva-toolbar://switch-tab?id=2");
 });
 
 test("toolbar does not render duplicate brand slot", () => {

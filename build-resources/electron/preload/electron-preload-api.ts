@@ -24,19 +24,24 @@ function resolvePreloadRequire(): PreloadGlobal["require"] | undefined {
   }
 }
 
-export function loadElectronPreloadApi(): ElectronPreloadApi {
-  const preloadRequire = resolvePreloadRequire();
-  if (typeof preloadRequire !== "function") {
-    throw new Error("Electron preload require is unavailable.");
-  }
-
-  const electron = preloadRequire("electron");
-
+function normalizeElectronPreloadApi(electron: Partial<ElectronPreloadApi>): ElectronPreloadApi {
   if (!electron?.contextBridge || !electron?.ipcRenderer) {
     throw new Error("Electron preload bridge APIs are unavailable.");
   }
 
-  return electron;
+  return {
+    contextBridge: electron.contextBridge,
+    ipcRenderer: electron.ipcRenderer,
+  };
+}
+
+export async function loadElectronPreloadApi(): Promise<ElectronPreloadApi> {
+  const preloadRequire = resolvePreloadRequire();
+  if (typeof preloadRequire === "function") {
+    return normalizeElectronPreloadApi(preloadRequire("electron"));
+  }
+
+  throw new Error("Electron preload require is unavailable.");
 }
 
 export function getPreloadArgv(): string[] {

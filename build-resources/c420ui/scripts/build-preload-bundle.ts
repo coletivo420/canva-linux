@@ -44,6 +44,7 @@ async function buildPreloadBundle(name: string, outputName: string): Promise<voi
     platform: "node",
     target: "es2022",
     format: "esm",
+    external: ["electron"],
     sourcemap: false,
     minify: false,
     legalComments: "none",
