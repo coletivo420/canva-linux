@@ -49,6 +49,13 @@ type AttachTabEventHandlersHelpers = {
   switchRelativeTab: (step: number) => void;
   broadcastTabsState: () => void;
 };
+type SnapshotImageLike = {
+  getSize(): { width: number; height: number };
+  toDataURL(): string;
+};
+type SnapshotWebContentsLike = {
+  capturePage(): Promise<SnapshotImageLike>;
+};
 
 // Attach all BrowserView/WebContents event wiring for a single Canva tab.
 // This module exists so tab lifecycle policy can evolve without forcing the
@@ -87,6 +94,203 @@ function isKnownUpstreamFedCmWarning(
   } catch {
     return false;
   }
+}
+
+function createEyeDropperFallbackScript(tabId: number): string {
+  return `
+    (function installCanvaLinuxEyeDropperFallback() {
+      if (window.__canvaEyeDropperFallback && window.__canvaEyeDropperFallback.installed) {
+        return true;
+      }
+
+      const pending = new Map();
+      let nextRequestId = 1;
+
+      function domError(name, message) {
+        try {
+          return new DOMException(message, name);
+        } catch {
+          const error = new Error(message);
+          error.name = name;
+          return error;
+        }
+      }
+
+      function toHex(value) {
+        const hex = Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0');
+        return hex;
+      }
+
+      function cleanupHost(host, onKeyDown) {
+        try { window.removeEventListener('keydown', onKeyDown, true); } catch {}
+        try { host.remove(); } catch {}
+      }
+
+      function rejectPending(id, error) {
+        const request = pending.get(String(id));
+        if (!request) return;
+        pending.delete(String(id));
+        request.reject(error);
+      }
+
+      function resolvePending(id, payload) {
+        const request = pending.get(String(id));
+        if (!request) return;
+        pending.delete(String(id));
+        request.resolve(payload);
+      }
+
+      async function openFromSnapshot(id, snapshot) {
+        const request = pending.get(String(id));
+        if (!request) return false;
+        if (!snapshot || typeof snapshot.dataUrl !== 'string') {
+          rejectPending(id, domError('OperationError', 'The Canva window snapshot failed.'));
+          return false;
+        }
+
+        const image = new Image();
+        image.onload = () => {
+          const cssWidth = Math.max(1, Number(snapshot.cssWidth) || window.innerWidth || image.naturalWidth || 1);
+          const cssHeight = Math.max(1, Number(snapshot.cssHeight) || window.innerHeight || image.naturalHeight || 1);
+          const nativeWidth = Math.max(1, Number(snapshot.width) || image.naturalWidth || cssWidth);
+          const nativeHeight = Math.max(1, Number(snapshot.height) || image.naturalHeight || cssHeight);
+
+          const host = document.createElement('div');
+          host.setAttribute('data-canva-eyedropper-host', 'true');
+          Object.assign(host.style, {
+            position: 'fixed',
+            inset: '0',
+            zIndex: '2147483647',
+            cursor: 'crosshair',
+            pointerEvents: 'auto',
+            background: 'transparent',
+          });
+
+          const canvas = document.createElement('canvas');
+          canvas.width = nativeWidth;
+          canvas.height = nativeHeight;
+          Object.assign(canvas.style, {
+            position: 'absolute',
+            left: '0',
+            top: '0',
+            width: cssWidth + 'px',
+            height: cssHeight + 'px',
+            cursor: 'crosshair',
+            display: 'block',
+          });
+          const context = canvas.getContext('2d', { willReadFrequently: true, alpha: false });
+          if (!context) {
+            rejectPending(id, domError('OperationError', 'Failed to create the color picker canvas.'));
+            return;
+          }
+          context.imageSmoothingEnabled = false;
+          context.drawImage(image, 0, 0, nativeWidth, nativeHeight);
+
+          const onKeyDown = (event) => {
+            if (event.key !== 'Escape') return;
+            event.preventDefault();
+            event.stopPropagation();
+            cleanupHost(host, onKeyDown);
+            rejectPending(id, domError('AbortError', 'The operation was aborted.'));
+          };
+          const onClick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.max(0, Math.min(canvas.width - 1, Math.floor((event.clientX - rect.left) * canvas.width / Math.max(1, rect.width))));
+            const y = Math.max(0, Math.min(canvas.height - 1, Math.floor((event.clientY - rect.top) * canvas.height / Math.max(1, rect.height))));
+            const data = context.getImageData(x, y, 1, 1).data;
+            cleanupHost(host, onKeyDown);
+            resolvePending(id, { sRGBHex: '#' + toHex(data[0]) + toHex(data[1]) + toHex(data[2]) });
+          };
+
+          canvas.addEventListener('click', onClick, { once: true, capture: true });
+          window.addEventListener('keydown', onKeyDown, true);
+          host.appendChild(canvas);
+          (document.body || document.documentElement).appendChild(host);
+        };
+        image.onerror = () => {
+          rejectPending(id, domError('OperationError', 'Failed to load the Canva window snapshot.'));
+        };
+        image.src = snapshot.dataUrl;
+        return true;
+      }
+
+      class WrappedEyeDropper {
+        open(options = {}) {
+          return new Promise((resolve, reject) => {
+            const id = String(nextRequestId++);
+            const signal = options && options.signal;
+            if (signal && signal.aborted) {
+              reject(domError('AbortError', 'The operation was aborted.'));
+              return;
+            }
+            const abortHandler = () => {
+              pending.delete(id);
+              reject(domError('AbortError', 'The operation was aborted.'));
+            };
+            if (signal && typeof signal.addEventListener === 'function') {
+              signal.addEventListener('abort', abortHandler, { once: true });
+            }
+            pending.set(id, { resolve, reject });
+            window.location.href = 'canva-eyedropper://open?id=' + encodeURIComponent(id);
+          });
+        }
+      }
+
+      try {
+        if (!window.__canvaNativeEyeDropper && typeof window.EyeDropper === 'function') {
+          window.__canvaNativeEyeDropper = window.EyeDropper;
+        }
+      } catch {}
+
+      Object.defineProperty(window, 'EyeDropper', {
+        configurable: true,
+        enumerable: false,
+        get() {
+          return WrappedEyeDropper;
+        },
+        set(value) {
+          window.__canvaNativeEyeDropper = value;
+        },
+      });
+      window.__canvaWrappedEyeDropper = WrappedEyeDropper;
+      window.__canvaWrappedEyeDropperInstalled = true;
+      window.ensureWrappedEyeDropperInstalled = function ensureWrappedEyeDropperInstalled() {
+        return true;
+      };
+      window.__canvaIsWrappedEyeDropperInstalled = function __canvaIsWrappedEyeDropperInstalled() {
+        return true;
+      };
+      window.__canvaEyeDropperFallback = {
+        installed: true,
+        openFromSnapshot,
+      };
+      console.log('[canva:eyedropper:fallback] installed tab=${tabId}');
+      return true;
+    })();
+  `;
+}
+
+async function captureEyeDropperSnapshot(tab: TabEntry): Promise<Record<string, unknown>> {
+  const view = tab.view as TabEntry["view"] & {
+    getBounds?: () => { width: number; height: number };
+  };
+  const snapshotWebContents = view.webContents as typeof view.webContents &
+    SnapshotWebContentsLike;
+  const image = await snapshotWebContents.capturePage();
+  const size = image.getSize();
+  const bounds = typeof view.getBounds === "function"
+    ? view.getBounds()
+    : { width: size.width, height: size.height };
+
+  return {
+    dataUrl: image.toDataURL(),
+    width: size.width,
+    height: size.height,
+    cssWidth: Math.max(1, bounds.width),
+    cssHeight: Math.max(1, bounds.height),
+  };
 }
 
 /**
@@ -140,6 +344,18 @@ export function attachTabEventHandlers(
 
   debugLog("view", "attach-handlers", `tab=${tab.id}`);
   const wc = tab.view.webContents;
+
+  function installEyeDropperFallback(reason: string): void {
+    wc.executeJavaScript(createEyeDropperFallbackScript(tab.id)).catch((error) => {
+      debugLog(
+        "eyedropper:diagnostics",
+        "fallback-install-error",
+        `tab=${tab.id}`,
+        reason,
+        String(error),
+      );
+    });
+  }
 
   wc.setWindowOpenHandler(
     ({
@@ -251,6 +467,29 @@ export function attachTabEventHandlers(
   );
 
   wc.on("will-navigate", (event: PreventableEvent, url: string) => {
+    if (url.startsWith("canva-eyedropper://")) {
+      event.preventDefault();
+      void (async () => {
+        try {
+          const requestUrl = new URL(url);
+          const id = requestUrl.searchParams.get("id") || "";
+          debugLog("eyedropper:bridge", "fallback-open", `tab=${tab.id}`, `id=${id || "none"}`);
+          const snapshot = await captureEyeDropperSnapshot(tab);
+          await wc.executeJavaScript(
+            `globalThis.__canvaEyeDropperFallback?.openFromSnapshot(${JSON.stringify(id)}, ${JSON.stringify(snapshot)});`,
+          );
+        } catch (error) {
+          debugLog(
+            "eyedropper:bridge",
+            "fallback-open-error",
+            `tab=${tab.id}`,
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      })();
+      return;
+    }
+
     const request = classifyNavigationRequest({
       url,
       openerUrl: wc.getURL(),
@@ -304,22 +543,7 @@ export function attachTabEventHandlers(
 
     // Ensure the eyedropper wrapper is active even if the preload failed to
     // stick during a complex Canva editor load.
-    wc.executeJavaScript(
-      `
-      try {
-        if (typeof ensureWrappedEyeDropperInstalled === 'function') {
-          ensureWrappedEyeDropperInstalled();
-        }
-      } catch {}
-    `,
-    ).catch((error) => {
-      debugLog(
-        "eyedropper:diagnostics",
-        "execute-javascript-error",
-        `tab=${tab.id}`,
-        String(error),
-      );
-    });
+    installEyeDropperFallback("navigation");
   };
 
   wc.on("did-navigate", syncNavigation);
@@ -345,6 +569,7 @@ export function attachTabEventHandlers(
 
   wc.on("dom-ready", () => {
     debugLog("view", "dom-ready", `tab=${tab.id}`, wc.getURL() || tab.url);
+    installEyeDropperFallback("dom-ready");
     wc.insertCSS(
       `
       html { text-rendering: optimizeLegibility; }
@@ -428,6 +653,7 @@ export function attachTabEventHandlers(
     wc.executeJavaScript(
       `
       (function() {
+        ${createEyeDropperFallbackScript(tab.id)}
         let ensured = false;
         let installed = false;
 

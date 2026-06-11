@@ -16,6 +16,7 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
   const createdTabs = [];
   const externalUrls = [];
   const debugLogs = [];
+  const executedScripts = [];
   const wc = {
     id: 42,
     getURL() {
@@ -23,7 +24,8 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
     },
     focus() {},
     loadURL() {},
-    executeJavaScript() {
+    executeJavaScript(script) {
+      executedScripts.push(script);
       return Promise.resolve();
     },
     insertCSS() {
@@ -43,7 +45,12 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
       title: "Design",
       url: "https://www.canva.com/design",
       favicon: null,
-      view: { webContents: wc },
+      view: {
+        getBounds() {
+          return { width: 640, height: 360 };
+        },
+        webContents: wc,
+      },
     },
     {
       appName: "Canva",
@@ -102,6 +109,8 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
     listeners,
     registeredPopups,
     debugLogs,
+    executedScripts,
+    wc,
   };
 }
 
@@ -289,4 +298,53 @@ test("EyeDropper injected diagnostic log includes the concrete tab id expression
     source,
     /console\.log\('\[canva:eyedropper:check\] tab=\$\{tab\.id\}/,
   );
+});
+
+test("EyeDropper fallback navigation captures a snapshot and returns it to the page", async () => {
+  const { debugLogs, executedScripts, listeners, wc } = createHarness(() => ({
+    category: "tabs",
+    kind: "external-browser",
+  }));
+  wc.capturePage = () =>
+    Promise.resolve({
+      getSize() {
+        return { width: 1280, height: 720 };
+      },
+      toDataURL() {
+        return "data:image/png;base64,snapshot";
+      },
+    });
+  let prevented = false;
+
+  listeners.get("will-navigate")(
+    {
+      preventDefault() {
+        prevented = true;
+      },
+    },
+    "canva-eyedropper://open?id=request-1",
+  );
+
+  await Promise.resolve();
+  await Promise.resolve();
+
+  assert.equal(prevented, true);
+  assert.ok(
+    debugLogs.some(
+      ([category, event, tab, id]) =>
+        category === "eyedropper:bridge" &&
+        event === "fallback-open" &&
+        tab === "tab=7" &&
+        id === "id=request-1",
+    ),
+  );
+  const callbackScript = executedScripts.find((script) =>
+    script.includes("__canvaEyeDropperFallback?.openFromSnapshot"),
+  );
+  assert.match(callbackScript, /"request-1"/);
+  assert.match(callbackScript, /"dataUrl":"data:image\/png;base64,snapshot"/);
+  assert.match(callbackScript, /"width":1280/);
+  assert.match(callbackScript, /"height":720/);
+  assert.match(callbackScript, /"cssWidth":640/);
+  assert.match(callbackScript, /"cssHeight":360/);
 });
