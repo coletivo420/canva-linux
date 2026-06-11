@@ -106,6 +106,12 @@ function createEyeDropperFallbackScript(tabId: number): string {
       const pending = new Map();
       let nextRequestId = 1;
 
+      function logFallback() {
+        try {
+          console.log('[canva:eyedropper:fallback]', ...arguments);
+        } catch {}
+      }
+
       function domError(name, message) {
         try {
           return new DOMException(message, name);
@@ -119,6 +125,12 @@ function createEyeDropperFallbackScript(tabId: number): string {
       function toHex(value) {
         const hex = Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0');
         return hex;
+      }
+
+      function normalizeHex(value) {
+        if (typeof value !== 'string') return null;
+        const match = value.trim().match(/^#?([0-9a-fA-F]{6})$/);
+        return match && match[1] ? '#' + match[1].toLowerCase() : null;
       }
 
       function cleanupHost(host, onKeyDown) {
@@ -218,6 +230,7 @@ function createEyeDropperFallbackScript(tabId: number): string {
 
       class WrappedEyeDropper {
         open(options = {}) {
+          logFallback('open-request', 'tab=${tabId}', location.href);
           return new Promise((resolve, reject) => {
             const id = String(nextRequestId++);
             const signal = options && options.signal;
@@ -238,6 +251,142 @@ function createEyeDropperFallbackScript(tabId: number): string {
         }
       }
 
+      function patchNativeEyeDropperPrototype(nativeCtor) {
+        if (typeof nativeCtor !== 'function' || !nativeCtor.prototype) return false;
+        const proto = nativeCtor.prototype;
+        if (typeof proto.open !== 'function' || proto.__canvaMainWorldOpenPatched) return true;
+        try {
+          Object.defineProperty(proto, '__canvaOriginalOpen', {
+            configurable: true,
+            enumerable: false,
+            value: proto.open,
+            writable: false,
+          });
+          Object.defineProperty(proto, 'open', {
+            configurable: true,
+            enumerable: false,
+            writable: true,
+            value: function patchedNativeOpen(options = {}) {
+              logFallback('native-open-intercepted', 'tab=${tabId}', location.href);
+              return new WrappedEyeDropper().open(options);
+            },
+          });
+          Object.defineProperty(proto, '__canvaMainWorldOpenPatched', {
+            configurable: true,
+            enumerable: false,
+            value: true,
+            writable: false,
+          });
+          return true;
+        } catch (error) {
+          logFallback('native-patch-error', String(error && error.message || error));
+          return false;
+        }
+      }
+
+      function isColorInput(input) {
+        return typeof HTMLInputElement !== 'undefined'
+          && input instanceof HTMLInputElement
+          && String(input.type).toLowerCase() === 'color';
+      }
+
+      function describeColorInput(input) {
+        if (!isColorInput(input)) return 'input:unknown';
+        const id = input.id ? '#' + input.id : '';
+        const name = input.name ? '[name=' + input.name + ']' : '';
+        const hidden = input.hidden || input.type === 'hidden' ? 'hidden' : 'visible';
+        const classes = typeof input.className === 'string' && input.className.trim()
+          ? '.' + input.className.trim().split(/\\s+/).slice(0, 3).join('.')
+          : '';
+        return 'input[type=color]' + id + name + classes + ':' + hidden;
+      }
+
+      function dispatchSyntheticEvent(target, type) {
+        const event = new Event(type, {
+          bubbles: true,
+          cancelable: false,
+          composed: true,
+        });
+        target.dispatchEvent(event);
+      }
+
+      function openCustomColorInput(input, trigger) {
+        if (!isColorInput(input) || input.__canvaCustomColorInputPending) return;
+        input.__canvaCustomColorInputPending = true;
+        logFallback('color-input-open', trigger, describeColorInput(input), 'tab=${tabId}');
+        Promise.resolve()
+          .then(() => new WrappedEyeDropper().open({}))
+          .then((result) => {
+            const hex = normalizeHex(result && (result.sRGBHex || result.hex));
+            if (!hex) throw new Error('Custom color picker did not return a valid color.');
+            input.value = hex;
+            dispatchSyntheticEvent(input, 'input');
+            dispatchSyntheticEvent(input, 'change');
+            logFallback('color-input-picked', trigger, describeColorInput(input), hex);
+          })
+          .catch((error) => {
+            const name = error && error.name ? error.name : 'Error';
+            const message = error && error.message ? error.message : String(error);
+            logFallback(name === 'AbortError' ? 'color-input-abort' : 'color-input-error', trigger, describeColorInput(input), message);
+            if (name !== 'AbortError') {
+              console.error('[canva:eyedropper:wrapper] color-input-error', error);
+            }
+          })
+          .finally(() => {
+            input.__canvaCustomColorInputPending = false;
+          });
+      }
+
+      function wrapColorInputMethod(methodName) {
+        if (typeof HTMLInputElement === 'undefined') return;
+        const proto = HTMLInputElement.prototype;
+        if (!proto || typeof proto[methodName] !== 'function') return;
+        const original = proto[methodName];
+        const marker = '__canvaMainWorldColorInput' + methodName + 'Wrapped';
+        if (original && original[marker]) return;
+        const wrapped = function wrappedColorInputMethod() {
+          if (!isColorInput(this)) {
+            return original.apply(this, arguments);
+          }
+          const trigger = methodName === 'click' ? 'input.click' : 'showPicker';
+          openCustomColorInput(this, trigger);
+          return undefined;
+        };
+        wrapped[marker] = true;
+        try {
+          Object.defineProperty(proto, methodName, {
+            configurable: true,
+            enumerable: false,
+            writable: true,
+            value: wrapped,
+          });
+          logFallback('color-input-' + methodName + '-wrapped', 'tab=${tabId}');
+        } catch (error) {
+          try {
+            proto[methodName] = wrapped;
+            logFallback('color-input-' + methodName + '-assigned', 'tab=${tabId}');
+          } catch (assignError) {
+            logFallback('color-input-' + methodName + '-wrap-error', String(assignError && assignError.message || assignError));
+          }
+        }
+      }
+
+      function installColorInputInterception() {
+        if (window.__canvaMainWorldColorInputInterceptionInstalled) return;
+        window.__canvaMainWorldColorInputInterceptionInstalled = true;
+        wrapColorInputMethod('showPicker');
+        wrapColorInputMethod('click');
+        window.addEventListener('click', (event) => {
+          const input = typeof HTMLInputElement !== 'undefined' && event.target instanceof HTMLInputElement
+            ? event.target
+            : null;
+          if (!isColorInput(input)) return;
+          event.preventDefault();
+          openCustomColorInput(input, 'dom-click');
+        }, true);
+        logFallback('color-input-interception-installed', 'tab=${tabId}');
+      }
+
       try {
         if (!window.__canvaNativeEyeDropper && typeof window.EyeDropper === 'function') {
           window.__canvaNativeEyeDropper = window.EyeDropper;
@@ -254,9 +403,12 @@ function createEyeDropperFallbackScript(tabId: number): string {
           window.__canvaNativeEyeDropper = value;
         },
       });
+      patchNativeEyeDropperPrototype(window.__canvaNativeEyeDropper);
       window.__canvaWrappedEyeDropper = WrappedEyeDropper;
       window.__canvaWrappedEyeDropperInstalled = true;
       window.ensureWrappedEyeDropperInstalled = function ensureWrappedEyeDropperInstalled() {
+        installColorInputInterception();
+        patchNativeEyeDropperPrototype(window.__canvaNativeEyeDropper);
         return true;
       };
       window.__canvaIsWrappedEyeDropperInstalled = function __canvaIsWrappedEyeDropperInstalled() {
@@ -266,7 +418,8 @@ function createEyeDropperFallbackScript(tabId: number): string {
         installed: true,
         openFromSnapshot,
       };
-      console.log('[canva:eyedropper:fallback] installed tab=${tabId}');
+      installColorInputInterception();
+      logFallback('installed', 'tab=${tabId}');
       return true;
     })();
   `;

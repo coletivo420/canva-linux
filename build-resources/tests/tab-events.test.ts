@@ -348,3 +348,99 @@ test("EyeDropper fallback navigation captures a snapshot and returns it to the p
   assert.match(callbackScript, /"cssWidth":640/);
   assert.match(callbackScript, /"cssHeight":360/);
 });
+
+test("EyeDropper fallback intercepts color input pickers in the page world", async () => {
+  const { executedScripts, listeners } = createHarness(() => ({
+    category: "tabs",
+    kind: "external-browser",
+  }));
+  listeners.get("dom-ready")();
+  const installScript = executedScripts.find((script) =>
+    script.includes("installCanvaLinuxEyeDropperFallback"),
+  );
+  assert.ok(installScript);
+
+  const fakeLocation = { href: "https://www.canva.com/design/test" };
+  const fakeWindow = {
+    __listeners: new Map(),
+    addEventListener(type, listener) {
+      this.__listeners.set(type, listener);
+    },
+    removeEventListener(type, listener) {
+      if (this.__listeners.get(type) === listener) {
+        this.__listeners.delete(type);
+      }
+    },
+    console,
+    innerWidth: 640,
+    innerHeight: 360,
+    location: fakeLocation,
+  };
+  class FakeInput {
+    constructor() {
+      this.type = "color";
+      this.id = "brand-color";
+      this.name = "";
+      this.className = "";
+      this.hidden = false;
+      this.value = "#000000";
+    }
+
+    click() {
+      throw new Error("native picker should be intercepted");
+    }
+
+    showPicker() {
+      throw new Error("native picker should be intercepted");
+    }
+
+    dispatchEvent() {
+      return true;
+    }
+  }
+  const fakeDocument = {
+    body: {
+      appendChild() {},
+    },
+    documentElement: {
+      appendChild() {},
+    },
+    createElement() {
+      return {};
+    },
+  };
+
+  Function(
+    "window",
+    "document",
+    "HTMLInputElement",
+    "Event",
+    "DOMException",
+    "location",
+    "self",
+    "console",
+    installScript,
+  )(
+    fakeWindow,
+    fakeDocument,
+    FakeInput,
+    Event,
+    DOMException,
+    fakeLocation,
+    fakeWindow,
+    { error() {}, log() {} },
+  );
+
+  const input = new FakeInput();
+  input.showPicker();
+  await Promise.resolve();
+
+  assert.match(fakeLocation.href, /^canva-eyedropper:\/\/open\?id=/);
+
+  fakeLocation.href = "https://www.canva.com/design/test";
+  input.__canvaCustomColorInputPending = false;
+  input.click();
+  await Promise.resolve();
+
+  assert.match(fakeLocation.href, /^canva-eyedropper:\/\/open\?id=/);
+});
