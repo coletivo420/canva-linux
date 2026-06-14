@@ -36,12 +36,22 @@ function normalizeElectronPreloadApi(electron: Partial<ElectronPreloadApi>): Ele
 }
 
 export async function loadElectronPreloadApi(): Promise<ElectronPreloadApi> {
-  const preloadRequire = resolvePreloadRequire();
-  if (typeof preloadRequire === "function") {
-    return normalizeElectronPreloadApi(preloadRequire("electron"));
+  try {
+    // Attempt ESM import first (e.g. for Vitest or non-sandboxed contexts)
+    const electron = await import("electron");
+    return normalizeElectronPreloadApi(electron as unknown as Partial<ElectronPreloadApi>);
+  } catch {
+    const preloadRequire = resolvePreloadRequire();
+    if (typeof preloadRequire === "function") {
+      // Electron preload boundary:
+      // In sandboxed/preload contexts, Electron may expose its preload APIs through
+      // the preload require bridge even when the project runtime is ESM-only.
+      // This fallback must remain local to this boundary and must not be reused by
+      // build, validation, packaging, tests or c420ui code.
+      return normalizeElectronPreloadApi(preloadRequire("electron"));
+    }
+    throw new Error("Electron preload bridge APIs are unavailable.");
   }
-
-  throw new Error("Electron preload require is unavailable.");
 }
 
 export function getPreloadArgv(): string[] {

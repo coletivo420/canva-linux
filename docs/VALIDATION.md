@@ -1,8 +1,8 @@
 # Validation Checklist (0.1.4-15.Dev.11)
 
-## Dev11 ESM-only validation policy
+## Dev11 ESM-only validation policy (FINALIZED)
 
-Dev11 is ESM-only by target.
+Dev11 finalized the TypeScript/ESM migration.
 Maintained TypeScript source must use ESM imports/exports.
 CommonJS patterns are forbidden in maintained source:
 - `require()`
@@ -81,8 +81,9 @@ but must not embed c420ui bootstrap implementation details.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
   root `build-resources/tests/`, `build-resources/canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
-  the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that
+  transitively import `scripts/canva-linux` registries, Canva Linux source hash
+  must exclude c420ui-owned roots except via the combined hash.
 
 All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, and build metadata
 resolution must live under `build-resources/canva-linux/c420ui-adapter`; bootstrap helpers must live under `build-resources/c420ui/bootstrap`.

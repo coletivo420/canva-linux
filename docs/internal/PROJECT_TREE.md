@@ -35,7 +35,7 @@ build-resources/canva-linux/validation/    Canva Linux project validation.
 
 `build-resources/` is the canonical home for project-owned runtime/build resources. Root `packages/`, `electron/`, `data/`, and loose icon assets are legacy paths and must not be restored.
 
-Dev11 finalizes explicit ESM outputs:
+Dev11 finalized explicit ESM outputs:
 
 - Electron runtime entrypoint: `.build/electron/main/index.mjs`.
 - Electron preload bundles: `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.

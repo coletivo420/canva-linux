@@ -3,9 +3,11 @@
 Canva Linux is TypeScript-first for Electron runtime code, Node.js maintenance
 logic, tests, tooling configs and Flathub helper scripts.
 
-## Dev11 ESM-only policy
+## Dev11 ESM-only policy (FINALIZED)
 
-Dev11 is ESM-only by target.
+Dev11 finalized the TypeScript/ESM migration. All maintained implementation code
+is TypeScript, and all generated Node/Electron/c420ui execution artifacts are
+ESM .mjs.
 
 Maintained TypeScript source must use ESM imports/exports.
 CommonJS patterns are forbidden in maintained source:

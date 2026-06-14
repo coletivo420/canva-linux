@@ -7,6 +7,7 @@ import {
   calculateCanvaLinuxSourceHash,
   combineSourceHashes,
 } from "../source-hash.js";
+import { findCanvaLinuxProjectRoot as findProjectRoot } from "../project-root.js";
 import { calculateC420UISourceHash } from "../../c420ui/bootstrap/source-hash.js";
 
 type PackageJson = {
@@ -21,16 +22,6 @@ type PackageJson = {
     };
   };
 };
-
-function findProjectRoot(startDir = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd()): string {
-  let current = startDir;
-  while (true) {
-    if (fs.existsSync(path.join(current, "package.json"))) return current;
-    const parent = path.dirname(current);
-    if (parent === current) throw new Error("Unable to locate project root.");
-    current = parent;
-  }
-}
 
 function readText(rootDir: string, relativePath: string): string | null {
   try {
@@ -86,7 +77,7 @@ const C420UI_OWNERSHIP_GUARDRAILS = [
   "Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.",
   "No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.",
   "Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`",
-  "`scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.",
+  "exclude c420ui-owned roots except via the combined hash.",
 ] as const;
 
 function reportMissingFragments(
@@ -696,8 +687,8 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
     }
     for (const requiredFragment of [
       "must not contain runtime electron imports",
-      "exports.__esModule",
-      "module.exports",
+      "exportsFragment",
+      "moduleExportsFragment",
     ] as const) {
       if (!buildPreloadSource.includes(requiredFragment)) {
         failures.push(`build-resources/c420ui/scripts/build-preload-bundle.ts: missing preload bundle validation for ${requiredFragment}`);

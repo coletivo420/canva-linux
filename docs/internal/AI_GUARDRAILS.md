@@ -1,8 +1,8 @@
 # AI Guardrails
 
-## Dev11 ESM-only guardrails
+## Dev11 ESM-only guardrails (FINALIZED)
 
-- Dev11 is ESM-only by target.
+Dev11 finalized the TypeScript/ESM migration.
 - Maintained TypeScript source must use ESM imports/exports.
 - CommonJS patterns are forbidden in maintained source: `require()`,
   `module.exports`, `exports.*`, `__dirname` without ESM helper, and
@@ -42,11 +42,7 @@
 - Do not place c420ui-owned generated artifacts under root `scripts/`,
   root `build-resources/tests/`,
   `build-resources/canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that
-  transitively import `scripts/canva-linux` registries, the specific imported
-  `scripts/canva-linux` submodules must remain in
-  `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
-- `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- Canva Linux source hash must exclude c420ui-owned roots except via the combined hash.
 
 ## Dev.9 metadata persistence and c420ui repair
 

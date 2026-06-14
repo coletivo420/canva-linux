@@ -20,8 +20,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
   root `build-resources/tests/`, `canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
-  the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that
+  transitively import `scripts/canva-linux` registries,
+  Canva Linux source hash must exclude c420ui-owned roots except via the combined hash.
 - Optimized detection provider: consolidated `package.json` reading with caching and implemented closure-based
   caching for `npm --version` to improve terminal interface refresh performance.
 
@@ -73,13 +74,12 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
   `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
-## 0.1.4-15.Dev.11 — ESM-only TypeScript migration
+## 0.1.4-15.Dev.11 — ESM-only TypeScript migration (FINALIZED)
 
-- Opened the Dev11 line focused on full ESM migration.
-- Declared CommonJS as transitional build debt rather than an accepted maintained format.
-- Kept generated JavaScript allowed only as build output.
-- Preserved the Dev10 build-resources ownership model.
-- Prepared the repository policy for ESM-first tooling, runtime and bootstrap migration.
+- Dev11 finalized the TypeScript/ESM migration. All maintained implementation code is TypeScript, and all generated execution artifacts are ESM .mjs.
+- Closed obsolete Dev11 ESM migration leftovers: Node tests now compile to `.mjs`, root `scripts/` is no longer a
+  fallback compilation area, preload bundling rejects maintained `.js` source, runtime builds require
+  `toolbar.bundle.mjs`, and repository policy blocks CommonJS bridges across maintained TypeScript.
 
 ## 0.1.4-15.Dev.10 — TypeScript hardening
 

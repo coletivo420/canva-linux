@@ -1,6 +1,6 @@
 # Review Checklist
 
-## Dev11 ESM review rules
+## Dev11 ESM review rules (FINALIZED)
 
 Request changes if a PR:
 
@@ -628,8 +628,10 @@ while runtime flags belong to the compiled `canva-linux` app.
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`, root `build-resources/tests/`, `canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
+  root `build-resources/tests/`, `canva-linux/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
+  Canva Linux source hash must exclude c420ui-owned roots except via the combined hash.
 
 ## Dev11 preload typing
 

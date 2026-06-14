@@ -136,6 +136,17 @@ function collectFiles(directory: string, predicate: (entryName: string) => boole
 }
 
 function rewriteCompiledRelativeImportsToMjs(outputRoot: string): void {
+  // NodeNext source imports use .js specifiers while this Dev11 test runner
+  // emits .mjs files via esbuild. Rewrite only compiled relative specifiers
+  // inside .build outputs, never maintained TypeScript source.
+  const absoluteOutputRoot = path.resolve(outputRoot);
+  const absoluteBuildRoot = path.join(rootDir, ".build");
+  if (!absoluteOutputRoot.startsWith(absoluteBuildRoot)) {
+    throw new Error(
+      `Safety violation: rewriteCompiledRelativeImportsToMjs refused to operate outside .build directory: ${outputRoot}`,
+    );
+  }
+
   const compiledModules = collectFiles(outputRoot, (entryName) => entryName.endsWith(".mjs"));
   const staticRelativeImportPattern =
     /(\bfrom\s*["'])(\.{1,2}\/[^"']+)\.js(["'])/g;

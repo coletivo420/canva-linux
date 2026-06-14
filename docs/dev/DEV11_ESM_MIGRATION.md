@@ -1,4 +1,6 @@
-# Dev11 ESM Migration Plan
+# Dev11 ESM Migration Plan (FINALIZED)
+
+Dev11 finalized the TypeScript/ESM migration. All maintained implementation code is TypeScript, and all generated execution artifacts are ESM .mjs.
 
 ## Final Dev11 ESM-only contract
 

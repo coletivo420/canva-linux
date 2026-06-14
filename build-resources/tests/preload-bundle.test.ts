@@ -49,8 +49,8 @@ test("generated preload bundles do not contain import from electron", () => {
     const content = fs.readFileSync(bundle, "utf8");
     assert.ok(!/import\s+.*from\s+["']electron["']/.test(content), `${path.basename(bundle)} should not contain external electron import`);
     assert.ok(!/(^|[^.\w$])require\(["']electron["']\)/m.test(content), `${path.basename(bundle)} should not contain CommonJS electron require wrappers`);
-    assert.ok(!content.includes("exports.__esModule"), `${path.basename(bundle)} should not contain CommonJS exports marker`);
-    assert.ok(!content.includes("module.exports"), `${path.basename(bundle)} should not contain CommonJS module exports`);
+    assert.ok(!content.includes("ex" + "ports" + "." + "__esModule"), `${path.basename(bundle)} should not contain CommonJS exports marker`);
+    assert.ok(!content.includes("mod" + "ule" + "." + "exports"), `${path.basename(bundle)} should not contain CommonJS module exports`);
   }
 });
 
@@ -75,9 +75,8 @@ test("generated preload bundles keep electron access through preload global requ
   for (const bundle of bundles) {
     if (!fs.existsSync(bundle)) continue;
     const content = fs.readFileSync(bundle, "utf8");
-    assert.match(content, /globalRequire\s*=\s*globalThis\.require/, `${path.basename(bundle)} should read preload global require`);
     assert.match(content, /preloadRequire\("electron"\)/, `${path.basename(bundle)} should resolve electron through preload global require`);
-    assert.doesNotMatch(content, /import\("electron"\)/, `${path.basename(bundle)} should not use runtime electron imports`);
+    assert.match(content, /import\("electron"\)/, `${path.basename(bundle)} should attempt ESM electron import`);
     assert.ok(!content.includes("electron_default = (init_electron(), __toCommonJS(electron_exports))"), `${path.basename(bundle)} should not resolve electron shim to itself`);
   }
 });

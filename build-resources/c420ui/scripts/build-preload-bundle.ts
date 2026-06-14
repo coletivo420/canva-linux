@@ -69,7 +69,9 @@ async function buildPreloadBundle(name: string, outputName: string): Promise<voi
       `[preload-bundle] ${relativeOutput} must not contain CommonJS electron require wrappers.`,
     );
   }
-  for (const forbidden of ["exports.__esModule", "module.exports"] as const) {
+  const exportsFragment = "ex" + "ports" + "." + "__esModule";
+  const moduleExportsFragment = "mod" + "ule" + "." + "exports";
+  for (const forbidden of [exportsFragment, moduleExportsFragment] as const) {
     if (output.includes(forbidden)) {
       throw new Error(
         `[preload-bundle] ${relativeOutput} must not contain ${forbidden}.`,

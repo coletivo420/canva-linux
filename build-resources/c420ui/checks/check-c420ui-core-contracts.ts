@@ -1356,7 +1356,7 @@ function checkDevelopmentProviderContract(failures: string[]): void {
 function checkLinuxHostSudoContract(failures: string[]): void {
   const rootDir = process.cwd();
   const providerPath = "build-resources/c420ui/src/linux-root-provider.ts";
-  const operationsPath = "build-resources/c420ui/operations/host/sudo.ts";
+  const operationsPath = "build-resources/c420ui/host/sudo.ts";
   const providerSource = fs.readFileSync(path.join(rootDir, providerPath), "utf8");
   const operationsSource = fs.readFileSync(path.join(rootDir, operationsPath), "utf8");
 
