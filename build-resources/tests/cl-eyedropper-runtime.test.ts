@@ -9,7 +9,15 @@ const repoRoot =
   process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 function withFreshCustomFlowElectronMock(invoke, fn) {
-  return withElectronMock({ ipcRenderer: { invoke } }, fn);
+  const previousRequire = globalThis.require;
+  globalThis.require = (moduleName) => {
+    assert.equal(moduleName, "electron");
+    return { contextBridge: {}, ipcRenderer: { invoke } };
+  };
+  return withElectronMock({ ipcRenderer: { invoke } }, fn).finally(() => {
+    if (previousRequire === undefined) delete globalThis.require;
+    else globalThis.require = previousRequire;
+  });
 }
 
 class FakeElement {
@@ -132,9 +140,18 @@ function createCustomFlowDom() {
     },
   };
   const body = new FakeElement("body");
+  const windowListeners = new Map();
   const document = {
     body,
     documentElement: body,
+    addEventListener(type, listener) {
+      windowListeners.set(`document:${type}`, listener);
+    },
+    removeEventListener(type, listener) {
+      if (windowListeners.get(`document:${type}`) === listener) {
+        windowListeners.delete(`document:${type}`);
+      }
+    },
     createElement(tagName) {
       if (tagName === "canvas") return new FakeCanvas(context);
       return new FakeElement(tagName);
@@ -143,7 +160,6 @@ function createCustomFlowDom() {
       return findById(body, id);
     },
   };
-  const windowListeners = new Map();
   const window = {
     innerWidth: 100,
     innerHeight: 50,
@@ -158,8 +174,9 @@ function createCustomFlowDom() {
 }
 
 async function flushMicrotasks() {
-  await Promise.resolve();
-  await Promise.resolve();
+  for (let index = 0; index < 8; index += 1) {
+    await Promise.resolve();
+  }
 }
 
 test("CL-EyeDropper runtime exports the only picker surface", async () => {
@@ -216,6 +233,9 @@ test("custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and 
   const previousImage = globalThis.Image;
   const previousLocation = globalThis.location;
   const previousRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const previousRequire = globalThis.require;
+  const previousAddEventListener = globalThis.addEventListener;
+  const previousRemoveEventListener = globalThis.removeEventListener;
 
   /** @type {any} */ globalThis.document = dom.document;
   /** @type {any} */ globalThis.window = dom.window;
@@ -228,6 +248,8 @@ test("custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and 
     callback(0);
     return 1;
   };
+  /** @type {any} */ globalThis.addEventListener = dom.window.addEventListener.bind(dom.window);
+  /** @type {any} */ globalThis.removeEventListener = dom.window.removeEventListener.bind(dom.window);
 
   try {
     const custom = await withFreshCustomFlowElectronMock(
@@ -247,6 +269,22 @@ test("custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and 
       },
       logEyeDropper() {},
     });
+    globalThis.require = (moduleName) => {
+      assert.equal(moduleName, "electron");
+      return {
+        contextBridge: {},
+        ipcRenderer: {
+          invoke: () =>
+            Promise.resolve({
+              dataUrl: "data:image/png;base64,test",
+              width: 200,
+              height: 100,
+              cssWidth: 100,
+              cssHeight: 50,
+            }),
+        },
+      };
+    };
 
     const resultPromise = flow.wrapOpenCall();
     await flushMicrotasks();
@@ -278,6 +316,10 @@ test("custom EyeDropper flow resolves through CL-EyeDropper snapshot canvas and 
     /** @type {any} */ globalThis.location = previousLocation;
     /** @type {any} */ globalThis.requestAnimationFrame =
       previousRequestAnimationFrame;
+    if (previousRequire === undefined) delete globalThis.require;
+    else globalThis.require = previousRequire;
+    /** @type {any} */ globalThis.addEventListener = previousAddEventListener;
+    /** @type {any} */ globalThis.removeEventListener = previousRemoveEventListener;
   }
 });
 

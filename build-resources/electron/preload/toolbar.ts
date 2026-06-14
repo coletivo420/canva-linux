@@ -1,6 +1,10 @@
 // Expose a tiny read-only bridge for the custom tab bar UI.
-import electron, { type IpcRendererEvent } from "electron";
-const { contextBridge, ipcRenderer } = electron;
+import type { IpcRendererEvent } from "electron";
+
+import {
+  getPreloadArgv,
+  loadElectronPreloadApi,
+} from "./electron-preload-api.js";
 
 // This preload runs with sandbox enabled, so it cannot rely on local helper
 // module loading. Keep the debug transport inline here.
@@ -16,7 +20,7 @@ function normalizeDebugCategory(category: unknown = "app"): string {
 }
 
 function getDebugLevel(): number {
-  const debugArg = process.argv.find(
+  const debugArg = getPreloadArgv().find(
     (arg) => arg === "--debug=1" || arg === "--debug=2",
   );
   if (debugArg === "--debug=1") return 1;
@@ -28,36 +32,40 @@ function debugEnabled(): boolean {
   return getDebugLevel() > 0;
 }
 
-function debugLog(category: unknown, ...args: unknown[]): void {
-  const normalized = normalizeDebugCategory(category);
-  if (!debugEnabled()) return;
-  try {
-    ipcRenderer.send("wrapper:debug-log", {
-      category: normalized,
-      args,
-      source: "toolbar-preload",
-    });
-  } catch {
-    try {
-      console.log(`[canva:toolbar-preload:${normalized}]`, ...args);
-    } catch {
-      // Logging must never break toolbar boot.
-    }
-  }
-}
-
-debugLog("tabs:toolbar", "toolbar-preload-loaded");
-
 let tabsStateListener:
   | ((event: IpcRendererEvent, state: unknown) => void)
   | null = null;
 
-contextBridge.exposeInMainWorld("canvaTabs", {
-  send(action: string, payload: Record<string, unknown> = {}) {
+async function bootToolbarPreload(): Promise<void> {
+  const { contextBridge, ipcRenderer } = await loadElectronPreloadApi();
+
+  function debugLog(category: unknown, ...args: unknown[]): void {
+    const normalized = normalizeDebugCategory(category);
+    if (!debugEnabled()) return;
+    try {
+      ipcRenderer.send("wrapper:debug-log", {
+        category: normalized,
+        args,
+        source: "toolbar-preload",
+      });
+    } catch {
+      try {
+        console.log(`[canva:toolbar-preload:${normalized}]`, ...args);
+      } catch {
+        // Logging must never break toolbar boot.
+      }
+    }
+  }
+
+  function sendToolbarAction(
+    action: "switch-tab" | "close-tab" | "go-home",
+    payload: Record<string, unknown> = {},
+  ): void {
     debugLog("tabs:toolbar", "toolbar-send", action, JSON.stringify(payload));
     ipcRenderer.send("toolbar-action", { action, payload });
-  },
-  onState(callback: (state: unknown) => void) {
+  }
+
+  function subscribeTabsState(callback: (state: unknown) => void): void {
     if (tabsStateListener) {
       ipcRenderer.removeListener("tabs-state", tabsStateListener);
     }
@@ -76,29 +84,60 @@ contextBridge.exposeInMainWorld("canvaTabs", {
       callback(state);
     };
     ipcRenderer.on("tabs-state", tabsStateListener);
-  },
-  getSystemTheme(): "dark" | "light" {
-    return window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light";
-  },
-});
+  }
 
-window.addEventListener("error", (event) => {
-  debugLog(
-    "tabs:toolbar",
-    "toolbar-window-error",
-    event.message || "unknown-error",
-    event.filename || "inline",
-    `line=${event.lineno || 0}`,
-  );
-});
+  contextBridge.exposeInMainWorld("canvaTabs", {
+    subscribeTabsState,
+    switchTab(id: number) {
+      sendToolbarAction("switch-tab", { id });
+    },
+    closeTab(id: number) {
+      sendToolbarAction("close-tab", { id });
+    },
+    goHome() {
+      sendToolbarAction("go-home");
+    },
+    send(action: string, payload: Record<string, unknown> = {}) {
+      if (
+        action === "switch-tab" ||
+        action === "close-tab" ||
+        action === "go-home"
+      ) {
+        sendToolbarAction(action, payload);
+      }
+    },
+    onState(callback: (state: unknown) => void) {
+      subscribeTabsState(callback);
+    },
+    getSystemTheme(): "dark" | "light" {
+      return window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    },
+  });
 
-window.addEventListener("unhandledrejection", (event) => {
-  const reason =
-    event?.reason instanceof Error
-      ? event.reason.stack || event.reason.message
-      : String(event?.reason || "unknown-rejection");
-  debugLog("tabs:toolbar", "toolbar-unhandled-rejection", reason);
+  debugLog("tabs:toolbar", "toolbar-preload-loaded");
+
+  window.addEventListener("error", (event) => {
+    debugLog(
+      "tabs:toolbar",
+      "toolbar-window-error",
+      event.message || "unknown-error",
+      event.filename || "inline",
+      `line=${event.lineno || 0}`,
+    );
+  });
+
+  window.addEventListener("unhandledrejection", (event) => {
+    const reason =
+      event?.reason instanceof Error
+        ? event.reason.stack || event.reason.message
+        : String(event?.reason || "unknown-rejection");
+    debugLog("tabs:toolbar", "toolbar-unhandled-rejection", reason);
+  });
+}
+
+void bootToolbarPreload().catch((error: unknown) => {
+  console.warn("[toolbar-preload] native-bridge-unavailable; using main fallback", error);
 });

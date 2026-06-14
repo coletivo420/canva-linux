@@ -5,6 +5,7 @@ import { installNativeEyeDropperWrapper } from "./native-eyedropper-wrapper.js";
 import { installUploadDiagnostics } from "./upload-diagnostics.js";
 import { installEyeDropperRoutingDiagnostics as installPrimaryEyeDropperRoutingDiagnostics } from "./eyedropper-routing-diagnostics.js";
 import { installEyeDropperRoutingDiagnostics as installFallbackEyeDropperRoutingDiagnostics } from "./browser-capture-diagnostics.js";
+import { describePreloadFrame } from "./electron-preload-api.js";
 
 const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
   source: "canva-preload",
@@ -13,7 +14,7 @@ const { debugEnabled, debugLog, logEyeDropper } = createPreloadDebug({
 debugLog(
   "startup",
   "preload-init",
-  process.isMainFrame ? "main-frame" : "sub-frame",
+  describePreloadFrame(),
   location.href,
 );
 

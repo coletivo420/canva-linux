@@ -7,7 +7,7 @@ type CredentialStoragePolicy = import("./credential-storage.js").CredentialStora
 type BuildMetadata = import("./build-metadata.js").CanvaLinuxBuildMetadata;
 
 type StatusLevel = "ok" | "warn" | "critical";
-type LogOptions = { source?: string; level?: StatusLevel };
+type LogOptions = { source?: string; level?: StatusLevel; terminal?: boolean };
 type AppLike = { getPath(name: string): string };
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type StatusLogger = (
@@ -103,7 +103,7 @@ function createCentralLogger({ app }: { app: AppLike }) {
   function logDebug(
     category: string,
     args: unknown[] = [],
-    { source = "main", level = "ok" }: LogOptions = {},
+    { source = "main", level = "ok", terminal = true }: LogOptions = {},
   ): void {
     const normalizedArgs = normalizeArgs(args);
     const signature = createLogSignature([
@@ -119,7 +119,9 @@ function createCentralLogger({ app }: { app: AppLike }) {
 
     const terminalPrefix = formatTerminalPrefix({ category, source, level });
     const filePrefix = formatFilePrefix({ category, source, level });
-    write(level, terminalPrefix, normalizedArgs);
+    if (terminal) {
+      write(level, terminalPrefix, normalizedArgs);
+    }
     appendFileLine(filePrefix, normalizedArgs);
   }
 

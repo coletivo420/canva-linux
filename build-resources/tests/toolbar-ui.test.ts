@@ -111,7 +111,7 @@ class FakeElement {
   }
 }
 
-function createToolbarHarness() {
+function createToolbarHarness(options = { bridge: true }) {
   const html = fs.readFileSync(toolbarPath, "utf8");
   const script = html.match(/<script>([\s\S]*)<\/script>/)?.[1];
   assert.ok(script, "toolbar inline script should exist");
@@ -120,6 +120,7 @@ function createToolbarHarness() {
   const documentElement = new FakeElement("html");
   documentElement.dataset = {};
   const body = new FakeElement("body");
+  body.dataset = {};
   const pinnedHomeSlot = new FakeElement("div");
   pinnedHomeSlot.id = "pinned-home-slot";
   const tabs = new FakeElement("div");
@@ -134,6 +135,10 @@ function createToolbarHarness() {
   elements.set("tabs", tabs);
 
   const sent = [];
+  const logs = [];
+  const errors = [];
+  const timers = [];
+  const navigations = [];
   let renderState = null;
   const document = {
     documentElement,
@@ -151,33 +156,83 @@ function createToolbarHarness() {
       return body.querySelectorAll(selector);
     },
   };
-  const window = {
-    canvaTabs: {
+  const canvaTabs = options.bridge === false
+    ? undefined
+    : {
       getSystemTheme() {
         return "light";
       },
-      onState(callback) {
+      subscribeTabsState(callback) {
         renderState = callback;
       },
-      send(channel, payload) {
-        sent.push({ channel, payload });
+      switchTab(id) {
+        sent.push({ channel: "switch-tab", payload: { id } });
+      },
+      closeTab(id) {
+        sent.push({ channel: "close-tab", payload: { id } });
+      },
+      goHome() {
+        sent.push({ channel: "go-home", payload: undefined });
+      },
+    };
+  const window = {
+    ...(canvaTabs ? { canvaTabs } : {}),
+    addEventListener() {},
+    matchMedia() {
+      return { matches: false };
+    },
+    location: {
+      set href(value) {
+        navigations.push(String(value));
+      },
+      get href() {
+        return navigations.at(-1) || "";
       },
     },
-    addEventListener() {},
   };
 
   vm.runInNewContext(script, {
     window,
     document,
-    console: { log() {}, error() {} },
+    console: {
+      log(...args) {
+        logs.push(args.join(" "));
+      },
+      error(...args) {
+        errors.push(args.join(" "));
+      },
+      warn(...args) {
+        logs.push(args.join(" "));
+      },
+    },
     Boolean,
     JSON,
     String,
     Error,
+    URL,
+    setTimeout(callback) {
+      timers.push(callback);
+    },
   });
 
-  assert.equal(typeof renderState, "function");
-  return { actions, document, pinnedHomeSlot, render: renderState, sent, tabs };
+  if (options.bridge !== false) {
+    assert.equal(typeof renderState, "function");
+  }
+  return {
+    actions,
+    document,
+    errors,
+    logs,
+    navigations,
+    pinnedHomeSlot,
+    render: renderState,
+    runTimers() {
+      for (const timer of timers.splice(0)) timer();
+    },
+    sent,
+    tabs,
+    window,
+  };
 }
 
 const homeTab = {
@@ -216,6 +271,47 @@ test("render with only home creates pinned home and no regular tab", () => {
   assert.equal(document.querySelector(".pinned-home .tab-close"), null);
 });
 
+test("toolbar subscribes when canvaTabs bridge exists", () => {
+  const { logs, render } = createToolbarHarness();
+
+  assert.equal(typeof render, "function");
+  assert.ok(logs.some((line) => line.includes("[toolbar-ui] subscribe-tabs-state")));
+});
+
+test("toolbar waits for main fallback when canvaTabs is unavailable", () => {
+  const { document, errors, logs, pinnedHomeSlot, tabs } = createToolbarHarness({ bridge: false });
+
+  assert.equal(document.body.dataset.bridge, "pending");
+  assert.equal(pinnedHomeSlot.textContent, "");
+  assert.equal(tabs.textContent, "");
+  assert.ok(logs.some((line) => line.includes("[toolbar-ui] preload-bridge-missing; waiting-main-fallback")));
+  assert.equal(errors.some((line) => line.includes("[toolbar-ui] missing-bridge")), false);
+});
+
+test("toolbar marks bridge missing only when fallback never renders", () => {
+  const { document, errors, runTimers } = createToolbarHarness({ bridge: false });
+
+  runTimers();
+
+  assert.equal(document.body.dataset.bridge, "missing");
+  assert.ok(errors.some((line) => line.includes("[toolbar-ui] missing-bridge")));
+});
+
+test("toolbar main fallback renders tabs when preload bridge is unavailable", () => {
+  const { document, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 2,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+
+  assert.equal(document.body.dataset.bridge, "main");
+  assert.equal(document.querySelectorAll(".pinned-home").length, 1);
+  assert.equal(document.querySelectorAll(".tab").length, 1);
+});
+
 test("render with home and regular tabs keeps home out of regular renderer", () => {
   const { document, render } = createToolbarHarness();
 
@@ -231,6 +327,30 @@ test("render with home and regular tabs keeps home out of regular renderer", () 
   assert.equal(document.querySelector(".pinned-home").classList.contains("active"), false);
   assert.equal(document.querySelectorAll(".tab.active").length, 1);
   assert.match(document.querySelector(".tab.active").textContent, /Design/);
+});
+
+test("toolbar renders pinnedHomeTab inside pinned-home-slot", () => {
+  const { pinnedHomeSlot, render } = createToolbarHarness();
+
+  render({ activeTabId: 1, pinnedHomeTab: homeTab, tabs: [designTab], theme: "light" });
+
+  assert.equal(pinnedHomeSlot.querySelectorAll(".pinned-home").length, 1);
+});
+
+test("toolbar renders normal tabs inside tabs container", () => {
+  const { render, tabs } = createToolbarHarness();
+
+  render({ activeTabId: 2, pinnedHomeTab: homeTab, tabs: [designTab, docsTab], theme: "light" });
+
+  assert.equal(tabs.querySelectorAll(".tab").length, 2);
+});
+
+test("home remains excluded from regular tabs", () => {
+  const { render, tabs } = createToolbarHarness();
+
+  render({ activeTabId: 1, pinnedHomeTab: homeTab, tabs: [], theme: "light" });
+
+  assert.equal(tabs.querySelectorAll(".tab").length, 0);
 });
 
 test("pinned home renders tab.title as label", () => {
@@ -274,4 +394,69 @@ test("pinned home click sends go-home and no duplicate home button exists", () =
   assert.deepEqual(sent, [{ channel: "go-home", payload: undefined }]);
   assert.equal(document.querySelector("#home"), null);
   assert.equal(actions.querySelector("#home"), null);
+});
+
+test("toolbar bridge controls switch-tab", () => {
+  const { render, sent, document } = createToolbarHarness();
+
+  render({ activeTabId: 1, pinnedHomeTab: homeTab, tabs: [designTab], theme: "light" });
+  document.querySelector(".tab-activate").click();
+
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].channel, "switch-tab");
+  assert.equal(sent[0].payload.id, 2);
+});
+
+test("toolbar fallback sends switch-tab through navigation URL", () => {
+  const { document, navigations, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 1,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+  document.querySelector(".tab-activate").click();
+
+  assert.equal(navigations.at(-1), "canva-toolbar://switch-tab?id=2");
+});
+
+test("toolbar does not render duplicate brand slot", () => {
+  const { document } = createToolbarHarness();
+  assert.equal(document.querySelector(".brand"), null);
+});
+
+test("pinned home strips Canva suffix", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: { ...homeTab, title: "Home - Canva" },
+    tabs: [],
+    theme: "light",
+  });
+
+  assert.equal(document.querySelector(".pinned-home").textContent, "Home");
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: { ...homeTab, title: "Home - Canva Linux" },
+    tabs: [],
+    theme: "light",
+  });
+
+  assert.equal(document.querySelector(".pinned-home").textContent, "Home");
+});
+
+test("missing pinned home title falls back to Home", () => {
+  const { document, render } = createToolbarHarness();
+
+  render({
+    activeTabId: 1,
+    pinnedHomeTab: { ...homeTab, title: "" },
+    tabs: [],
+    theme: "light",
+  });
+
+  assert.equal(document.querySelector(".pinned-home").textContent, "Home");
 });

@@ -341,26 +341,34 @@ function detectedVersion(fullVersion, version) {
   }
   return version;
 }
+function formatShortHash(hash, version) {
+  void version;
+  if (!hash) return "";
+  if (hash === "unknown") return " \xB7 unknown";
+  const parts = hash.split(":");
+  const algo = parts.length > 1 ? `${parts[0]}:` : "";
+  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
+  return ` \xB7 ${algo}${value.slice(0, 8)}`;
+}
 function artifactVersion(fragment) {
   return fragment.fullVersion || fragment.version;
 }
-function formatDetectedStatus(colors2, detected, version) {
+function formatDetectedStatus(colors2, detected, version, hash) {
   if (!detected) {
     return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
   }
-  const v = typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}` : "version unknown";
-  return `{${colors2.statusDetected}-fg}detected{/${colors2.statusDetected}-fg}      ${v}`;
+  return typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "version unknown";
 }
 function formatArtifactLine(fragment, colors2) {
-  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment))}`;
+  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment), fragment.hash)}`;
 }
 function isGeneratedArtifactFragment(fragment) {
   if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
   if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
   return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
 }
-function versionSummaryItem(label, version) {
-  return `${label} ${version ? `v${version.trim().replace(/^v/, "")}` : "unknown"}`;
+function versionSummaryItem(label, version, hash) {
+  return `${label} ${version ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "unknown"}`;
 }
 function formatDetectionPanelSummaries(s, colors2) {
   if (!s) {
@@ -384,15 +392,16 @@ function formatDetectionPanelSummaries(s, colors2) {
     `  AppImage: ${formatDetectedStatus(
       colors2,
       Boolean(i.appImageArtifacts),
-      detectedVersion(i.appImageFullVersion, i.appImageVersion)
+      detectedVersion(i.appImageFullVersion, i.appImageVersion),
+      i.appImageHash
     )}`
   ];
   return {
     detectedInstallations: [
-      `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion))}`,
-      `  Native User: ${formatDetectedStatus(colors2, Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion))}`,
-      `  Flatpak System: ${formatDetectedStatus(colors2, Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion))}`,
-      `  Flatpak User: ${formatDetectedStatus(colors2, Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion))}`
+      `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion), i.nativeSystemHash)}`,
+      `  Native User: ${formatDetectedStatus(colors2, Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion), i.nativeUserHash)}`,
+      `  Flatpak System: ${formatDetectedStatus(colors2, Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion), i.flatpakSystemHash)}`,
+      `  Flatpak User: ${formatDetectedStatus(colors2, Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion), i.flatpakUserHash)}`
     ],
     generatedArtifacts,
     linuxArtifacts: [
@@ -402,7 +411,8 @@ function formatDetectionPanelSummaries(s, colors2) {
         versionSummaryItem("npm", s.runtime?.npmVersion),
         versionSummaryItem(
           "Linux unpacked",
-          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0
+          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0,
+          linuxUnpacked?.hash
         )
       ].join(", ")
     ]
@@ -1186,6 +1196,9 @@ async function runC420UIStartupTasks(tasks, log) {
 }
 
 // build-resources/c420ui/src/terminal/app.ts
+var PANEL_VERTICAL_FRAME_ROWS = 2;
+var DETECTED_INSTALLATION_ROWS = 4;
+var DETECTED_INSTALLATIONS_MIN_HEIGHT = DETECTED_INSTALLATION_ROWS + PANEL_VERTICAL_FRAME_ROWS;
 var MAX_LOG_HISTORY_LINES = 5e3;
 var TOOL_LOG_PREFIX = "Tool |";
 var ACTION_LOG_PREFIX = "Action |";
@@ -1200,17 +1213,26 @@ function isPlannedAction(action) {
 function longestLineLength(lines) {
   return Math.max(0, ...lines.map((line) => line.length));
 }
+function formatShortHash2(hash, version) {
+  if (!version) return "";
+  if (!hash) return "";
+  if (hash === "unknown") return " \xB7 unknown";
+  const parts = hash.split(":");
+  const algo = parts.length > 1 ? `${parts[0]}:` : "";
+  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
+  return ` \xB7 ${algo}${value.slice(0, 8)}`;
+}
 function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
   const c420uiHeaderContentWidth = longestLineLength([
-    `${brandConfig.name} v${brandConfig.version}`,
+    `${brandConfig.name} v${brandConfig.version}${formatShortHash2(brandConfig.hash, brandConfig.version)}`,
     ...brandConfig.logoLines
   ]);
   const projectHeaderContentWidth = longestLineLength([
     projectConfig.projectName,
     projectConfig.projectSubtitle,
-    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""} | Phase: ${projectConfig.phase ?? "unknown"}`
+    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash2(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`
   ]);
   const c420uiMinWidth = Math.max(
     c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
@@ -1469,10 +1491,13 @@ function createApp(options) {
     const menuHeight = Math.max(3, Math.floor(workspaceHeight * 0.68));
     const diagnosticsTop = workspaceTop + menuHeight;
     const detectionPanelsHeight = Math.max(
-      9,
+      DETECTED_INSTALLATIONS_MIN_HEIGHT + 6,
       screenHeight - diagnosticsTop - reservedFooterRows
     );
-    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
+    const detectedInstallationsHeight = Math.max(
+      DETECTED_INSTALLATIONS_MIN_HEIGHT,
+      Math.floor(detectionPanelsHeight * 0.34)
+    );
     const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
     const linuxArtifactsHeight = Math.max(
       3,
@@ -2228,6 +2253,9 @@ function createApp(options) {
           "",
           "Version:",
           `  {${c420uiTheme.colors.version}-fg}${opts.project.displayVersion}{/${c420uiTheme.colors.version}-fg}`,
+          "",
+          "Hash:",
+          `  {${c420uiTheme.colors.muted}-fg}${opts.project.hash ?? "unknown"}{/${c420uiTheme.colors.muted}-fg}`,
           "",
           "Phase:",
           `  {${c420uiTheme.colors.phase}-fg}${opts.project.phase ?? "unknown"}{/${c420uiTheme.colors.phase}-fg}`,
@@ -3765,9 +3793,13 @@ function normalizeMetadata(metadata) {
     metadata.baseVersion,
     metadata.basePhase
   );
+  const hash = metadata.canvaLinuxSourceHash?.trim();
   return {
+    metadataFound: true,
     ...version ? { version } : {},
-    ...fullVersion ? { fullVersion } : {}
+    ...fullVersion ? { fullVersion } : {},
+    hash: hash || "unknown",
+    hashKind: "canvaLinuxSourceHash"
   };
 }
 function readVersionSidecar(filePath) {
@@ -3795,7 +3827,10 @@ function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
     const markers = [
       path7.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
       path7.join(artifactPath, "config/canva-linux/build-metadata.json"),
-      ...artifactKindValue === "linux-unpacked" ? [path7.join(rootDir2, "build-resources/canva-linux/config/build-metadata.json")] : []
+      ...artifactKindValue === "linux-unpacked" ? [
+        path7.join(rootDir2, ".build", "canva-linux", "build-metadata.effective.json"),
+        path7.join(rootDir2, "build-resources", "canva-linux", "config", "build-metadata.json")
+      ] : []
     ];
     for (const marker of markers) {
       if (fs6.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
@@ -3836,14 +3871,17 @@ function buildCanvaLinuxArtifactFragments(rootDir2) {
     const kind = artifactKind(workflow.id, workflow.kind);
     const metadata = artifactPath ? readArtifactMetadata(rootDir2, artifactPath, kind) : {};
     const fallbackVersion = artifactPath && kind !== "linux-unpacked" ? inferVersionFromFilename(artifactPath, packageVersion) : void 0;
+    const version = metadata.version ?? fallbackVersion;
+    const hash = metadata.hash ?? (fallbackVersion ? "unknown" : void 0);
     fragments.push({
       id: workflow.id,
       kind,
       label: workflow.label,
       detected,
       ...artifactPath ? { path: toRelativeArtifactPath(rootDir2, artifactPath) } : {},
-      ...metadata.version ? { version: metadata.version } : fallbackVersion ? { version: fallbackVersion } : {},
-      ...metadata.fullVersion ? { fullVersion: metadata.fullVersion } : {}
+      ...version ? { version } : {},
+      ...metadata.fullVersion ? { fullVersion: metadata.fullVersion } : {},
+      ...hash ? { hash, hashKind: metadata.hashKind ?? "canvaLinuxSourceHash" } : {}
     });
   }
   return fragments;
@@ -3884,6 +3922,15 @@ function readBuildMetadataBaseVersion(metadataFile) {
   try {
     const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
     return m.baseVersion || m.basePhase || m.version || "";
+  } catch {
+    return "";
+  }
+}
+function readBuildMetadataHash(metadataFile, field = "canvaLinuxSourceHash") {
+  if (!fs7.existsSync(metadataFile)) return "";
+  try {
+    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
+    return m[field] || "";
   } catch {
     return "";
   }
@@ -3988,6 +4035,36 @@ function detectAppImageFullVersion(rootDir2) {
     if (version) return version;
   }
   return detectAppImageVersion(rootDir2);
+}
+function detectAppImageHash(rootDir2) {
+  const file = findLatestAppImageArtifact(rootDir2);
+  const metadata = findArtifactBuildMetadataMarker(file, rootDir2);
+  let hash = readBuildMetadataHash(metadata, "canvaLinuxSourceHash");
+  if (hash) return hash;
+  const findMetadataInDist = (dir, depth) => {
+    if (depth > 8) return "";
+    try {
+      const entries = fs8.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path8.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          const found = findMetadataInDist(fullPath, depth + 1);
+          if (found) return found;
+        } else if (entry.isFile() && fullPath.endsWith("/resources/config/canva-linux/build-metadata.json")) {
+          return fullPath;
+        }
+      }
+    } catch {
+    }
+    return "";
+  };
+  const distDir = path8.join(rootDir2, "dist");
+  if (fs8.existsSync(distDir)) {
+    const distMetadata = findMetadataInDist(distDir, 0);
+    hash = readBuildMetadataHash(distMetadata, "canvaLinuxSourceHash");
+    if (hash) return hash;
+  }
+  return "";
 }
 
 // build-resources/c420ui/operations/detection/flatpak-detection.ts
@@ -4118,6 +4195,20 @@ function detectFlatpakUserFullVersion() {
   if (version) return version;
   return detectFlatpakUserVersion();
 }
+function readFlatpakHashMarker(markerFile) {
+  return readFlatpakVersionMarkerKey(markerFile, "canvaLinuxSourceHash");
+}
+function detectFlatpakSystemHash() {
+  const marker = findFlatpakVersionMarker("/var/lib/flatpak");
+  return readFlatpakHashMarker(marker);
+}
+function detectFlatpakUserHash() {
+  const home = os.homedir();
+  const marker = findFlatpakVersionMarker(
+    path9.join(home, ".local/share/flatpak")
+  );
+  return readFlatpakHashMarker(marker);
+}
 
 // build-resources/c420ui/operations/detection/native-detection.ts
 import fs10 from "node:fs";
@@ -4172,6 +4263,19 @@ function detectNativeUserFullVersion() {
   if (version) return version;
   return detectNativeUserVersion();
 }
+function detectNativeSystemHash() {
+  return readBuildMetadataHash(
+    "/opt/canva-linux/config/canva-linux/build-metadata.json",
+    "canvaLinuxSourceHash"
+  );
+}
+function detectNativeUserHash() {
+  const home = os2.homedir();
+  return readBuildMetadataHash(
+    path10.join(home, ".local/opt/canva-linux/config/canva-linux/build-metadata.json"),
+    "canvaLinuxSourceHash"
+  );
+}
 
 // build-resources/c420ui/operations/detection/install-detection.ts
 function detectInstallations(rootDir2) {
@@ -4190,7 +4294,12 @@ function detectInstallations(rootDir2) {
     DETECTED_NATIVE_USER_FULL_VERSION: detectNativeUserFullVersion(),
     DETECTED_FLATPAK_SYSTEM_FULL_VERSION: detectFlatpakSystemFullVersion(),
     DETECTED_FLATPAK_USER_FULL_VERSION: detectFlatpakUserFullVersion(),
-    DETECTED_APPIMAGE_FULL_VERSION: detectAppImageFullVersion(rootDir2)
+    DETECTED_APPIMAGE_FULL_VERSION: detectAppImageFullVersion(rootDir2),
+    DETECTED_NATIVE_SYSTEM_HASH: detectNativeSystemHash(),
+    DETECTED_NATIVE_USER_HASH: detectNativeUserHash(),
+    DETECTED_FLATPAK_SYSTEM_HASH: detectFlatpakSystemHash(),
+    DETECTED_FLATPAK_USER_HASH: detectFlatpakUserHash(),
+    DETECTED_APPIMAGE_HASH: detectAppImageHash(rootDir2)
   };
 }
 
@@ -4252,7 +4361,12 @@ var emptyInstallations = {
   nativeUserFullVersion: "",
   flatpakSystemFullVersion: "",
   flatpakUserFullVersion: "",
-  appImageFullVersion: ""
+  appImageFullVersion: "",
+  nativeSystemHash: "",
+  nativeUserHash: "",
+  flatpakSystemHash: "",
+  flatpakUserHash: "",
+  appImageHash: ""
 };
 function readPhase(rootDir2) {
   const projectUiPath = path11.join(rootDir2, "build-resources/canva-linux/config/project-ui.json");
@@ -4306,7 +4420,17 @@ function buildInstallations(values, artifactFragments = []) {
     nativeUserFullVersion: values.DETECTED_NATIVE_USER_FULL_VERSION || values.DETECTED_NATIVE_USER_VERSION || "",
     flatpakSystemFullVersion: values.DETECTED_FLATPAK_SYSTEM_FULL_VERSION || values.DETECTED_FLATPAK_SYSTEM_VERSION || "",
     flatpakUserFullVersion: values.DETECTED_FLATPAK_USER_FULL_VERSION || values.DETECTED_FLATPAK_USER_VERSION || "",
-    appImageFullVersion: appImageFragment?.fullVersion || appImageFragment?.version || values.DETECTED_APPIMAGE_FULL_VERSION || values.DETECTED_APPIMAGE_VERSION || ""
+    appImageFullVersion: appImageFragment?.fullVersion || appImageFragment?.version || values.DETECTED_APPIMAGE_FULL_VERSION || values.DETECTED_APPIMAGE_VERSION || "",
+    nativeSystemHash: values.DETECTED_NATIVE_SYSTEM_HASH || "",
+    nativeUserHash: values.DETECTED_NATIVE_USER_HASH || "",
+    flatpakSystemHash: values.DETECTED_FLATPAK_SYSTEM_HASH || "",
+    flatpakUserHash: values.DETECTED_FLATPAK_USER_HASH || "",
+    appImageHash: appImageFragment?.hash || values.DETECTED_APPIMAGE_HASH || "",
+    nativeSystemHashKind: "canvaLinuxSourceHash",
+    nativeUserHashKind: "canvaLinuxSourceHash",
+    flatpakSystemHashKind: "canvaLinuxSourceHash",
+    flatpakUserHashKind: "canvaLinuxSourceHash",
+    appImageHashKind: "canvaLinuxSourceHash"
   };
 }
 function createCanvaLinuxDetectionProvider(options = {}) {
@@ -4827,6 +4951,12 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   function getEffectiveProjectBuildRevision() {
     return loadBuildMetadata().buildRevision || "unknown";
   }
+  function getEffectiveProjectSourceHash() {
+    return loadBuildMetadata().canvaLinuxSourceHash || "unknown";
+  }
+  function getEffectiveProjectCombinedSourceHash() {
+    return loadBuildMetadata().combinedSourceHash || "unknown";
+  }
   function loadProjectConfig() {
     const projectUi = loadProjectUi();
     return {
@@ -4836,6 +4966,10 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
       phase: getEffectiveProjectPhase(),
       fullVersion: getEffectiveProjectFullVersion(),
       buildRevision: getEffectiveProjectBuildRevision(),
+      hash: getEffectiveProjectSourceHash(),
+      hashKind: "canvaLinuxSourceHash",
+      combinedHash: getEffectiveProjectCombinedSourceHash(),
+      combinedHashKind: "combinedSourceHash",
       status: projectUi.status,
       logoLines: [...projectUi.logoLines],
       appId: projectUi.appId,
@@ -4849,6 +4983,8 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return {
       name: "c420ui",
       version: loadC420UIPackageJson().version ?? "unknown",
+      hash: loadBuildMetadata().c420uiSourceHash || "unknown",
+      hashKind: "c420uiSourceHash",
       logoLines: [...c420uiLogoLines]
     };
   }

@@ -11,6 +11,12 @@ test("renders Detected Installations in its own panel", () => {
   assert.match(appSource, /diagnostics\.setContent\(panels\.detectedInstallations\.join/);
 });
 
+test("Detected Installations panel is tall enough for all install rows", () => {
+  assert.match(appSource, /const DETECTED_INSTALLATION_ROWS = 4/);
+  assert.match(appSource, /DETECTED_INSTALLATIONS_MIN_HEIGHT[\s\S]*DETECTED_INSTALLATION_ROWS \+ PANEL_VERTICAL_FRAME_ROWS/);
+  assert.match(appSource, /Math\.max\(\s*DETECTED_INSTALLATIONS_MIN_HEIGHT,\s*Math\.floor\(detectionPanelsHeight \* 0\.34\),\s*\)/);
+});
+
 test("renders Generated Artifacts in its own panel", () => {
   assert.match(appSource, /const generatedArtifacts = tui\.box/);
   assert.match(appSource, /label: "Generated Artifacts"/);

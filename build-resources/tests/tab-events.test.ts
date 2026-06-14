@@ -16,6 +16,7 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
   const createdTabs = [];
   const externalUrls = [];
   const debugLogs = [];
+  const executedScripts = [];
   const wc = {
     id: 42,
     getURL() {
@@ -23,7 +24,8 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
     },
     focus() {},
     loadURL() {},
-    executeJavaScript() {
+    executeJavaScript(script) {
+      executedScripts.push(script);
       return Promise.resolve();
     },
     insertCSS() {
@@ -43,7 +45,12 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
       title: "Design",
       url: "https://www.canva.com/design",
       favicon: null,
-      view: { webContents: wc },
+      view: {
+        getBounds() {
+          return { width: 640, height: 360 };
+        },
+        webContents: wc,
+      },
     },
     {
       appName: "Canva",
@@ -102,6 +109,8 @@ function createHarness(classifyWindowOpenRequest, { shell } = {}) {
     listeners,
     registeredPopups,
     debugLogs,
+    executedScripts,
+    wc,
   };
 }
 
@@ -289,4 +298,149 @@ test("EyeDropper injected diagnostic log includes the concrete tab id expression
     source,
     /console\.log\('\[canva:eyedropper:check\] tab=\$\{tab\.id\}/,
   );
+});
+
+test("EyeDropper fallback navigation captures a snapshot and returns it to the page", async () => {
+  const { debugLogs, executedScripts, listeners, wc } = createHarness(() => ({
+    category: "tabs",
+    kind: "external-browser",
+  }));
+  wc.capturePage = () =>
+    Promise.resolve({
+      getSize() {
+        return { width: 1280, height: 720 };
+      },
+      toDataURL() {
+        return "data:image/png;base64,snapshot";
+      },
+    });
+  let prevented = false;
+
+  listeners.get("will-navigate")(
+    {
+      preventDefault() {
+        prevented = true;
+      },
+    },
+    "canva-eyedropper://open?id=request-1",
+  );
+
+  await Promise.resolve();
+  await Promise.resolve();
+
+  assert.equal(prevented, true);
+  assert.ok(
+    debugLogs.some(
+      ([category, event, tab, id]) =>
+        category === "eyedropper:bridge" &&
+        event === "fallback-open" &&
+        tab === "tab=7" &&
+        id === "id=request-1",
+    ),
+  );
+  const callbackScript = executedScripts.find((script) =>
+    script.includes("__canvaEyeDropperFallback?.openFromSnapshot"),
+  );
+  assert.match(callbackScript, /"request-1"/);
+  assert.match(callbackScript, /"dataUrl":"data:image\/png;base64,snapshot"/);
+  assert.match(callbackScript, /"width":1280/);
+  assert.match(callbackScript, /"height":720/);
+  assert.match(callbackScript, /"cssWidth":640/);
+  assert.match(callbackScript, /"cssHeight":360/);
+});
+
+test("EyeDropper fallback intercepts color input pickers in the page world", async () => {
+  const { executedScripts, listeners } = createHarness(() => ({
+    category: "tabs",
+    kind: "external-browser",
+  }));
+  listeners.get("dom-ready")();
+  const installScript = executedScripts.find((script) =>
+    script.includes("installCanvaLinuxEyeDropperFallback"),
+  );
+  assert.ok(installScript);
+
+  const fakeLocation = { href: "https://www.canva.com/design/test" };
+  const fakeWindow = {
+    __listeners: new Map(),
+    addEventListener(type, listener) {
+      this.__listeners.set(type, listener);
+    },
+    removeEventListener(type, listener) {
+      if (this.__listeners.get(type) === listener) {
+        this.__listeners.delete(type);
+      }
+    },
+    console,
+    innerWidth: 640,
+    innerHeight: 360,
+    location: fakeLocation,
+  };
+  class FakeInput {
+    constructor() {
+      this.type = "color";
+      this.id = "brand-color";
+      this.name = "";
+      this.className = "";
+      this.hidden = false;
+      this.value = "#000000";
+    }
+
+    click() {
+      throw new Error("native picker should be intercepted");
+    }
+
+    showPicker() {
+      throw new Error("native picker should be intercepted");
+    }
+
+    dispatchEvent() {
+      return true;
+    }
+  }
+  const fakeDocument = {
+    body: {
+      appendChild() {},
+    },
+    documentElement: {
+      appendChild() {},
+    },
+    createElement() {
+      return {};
+    },
+  };
+
+  Function(
+    "window",
+    "document",
+    "HTMLInputElement",
+    "Event",
+    "DOMException",
+    "location",
+    "self",
+    "console",
+    installScript,
+  )(
+    fakeWindow,
+    fakeDocument,
+    FakeInput,
+    Event,
+    DOMException,
+    fakeLocation,
+    fakeWindow,
+    { error() {}, log() {} },
+  );
+
+  const input = new FakeInput();
+  input.showPicker();
+  await Promise.resolve();
+
+  assert.match(fakeLocation.href, /^canva-eyedropper:\/\/open\?id=/);
+
+  fakeLocation.href = "https://www.canva.com/design/test";
+  input.__canvaCustomColorInputPending = false;
+  input.click();
+  await Promise.resolve();
+
+  assert.match(fakeLocation.href, /^canva-eyedropper:\/\/open\?id=/);
 });

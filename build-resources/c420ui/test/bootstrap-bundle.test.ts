@@ -206,6 +206,14 @@ test("c420ui bootstrap entrypoints are syntactically valid JavaScript", () => {
 
 test("run-c420ui.mjs does not interleave summary code into blessed Program", () => {
   const bundle = readRunBundle();
+  if (!bundle.includes("var require_program = __commonJS")) {
+    const summaryMarker = "// build-resources/c420ui/src/terminal/detected-installations-summary.ts";
+    const summaryStart = bundle.indexOf(summaryMarker);
+    assert.ok(summaryStart >= 0, `missing bundle marker ${summaryMarker}`);
+    assert.doesNotMatch(bundle.slice(0, summaryStart), /function artifactVersion/);
+    return;
+  }
+
   const programBlock = bundleBlock(
     bundle,
     "var require_program = __commonJS",

@@ -138,6 +138,7 @@ function checkRequiredPaths(rootDir: string, failures: string[]): void {
   for (const relativePath of [
     "build-resources/c420ui",
     "build-resources/electron",
+    "build-resources/electron/preload/electron-preload-api.ts",
     "build-resources/canva-linux/assets",
     "build-resources/c420ui/scripts/build-bootstrap.ts",
     "build-resources/c420ui/scripts/c420ui-builder.ts",
@@ -676,6 +677,144 @@ function checkC420UIAutoBootstrapContract(rootDir: string, failures: string[]): 
   }
 }
 
+function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
+  const buildPreloadSource = readText(rootDir, "build-resources/c420ui/scripts/build-preload-bundle.ts");
+  if (!buildPreloadSource) {
+    failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must exist");
+  } else {
+    if (buildPreloadSource.includes('format: "cjs"')) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must not use format: \"cjs\" for Electron preloads");
+    }
+    if (!buildPreloadSource.includes('format: "esm"')) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must use format: \"esm\" for Electron preloads");
+    }
+    if (buildPreloadSource.includes(".bundle.cjs")) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must not use .cjs for preload bundles");
+    }
+    if (!buildPreloadSource.includes("canva.bundle.mjs") || !buildPreloadSource.includes("toolbar.bundle.mjs")) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: preload bundles must stay ESM .mjs outputs");
+    }
+    for (const requiredFragment of [
+      "must not contain runtime electron imports",
+      "exports.__esModule",
+      "module.exports",
+    ] as const) {
+      if (!buildPreloadSource.includes(requiredFragment)) {
+        failures.push(`build-resources/c420ui/scripts/build-preload-bundle.ts: missing preload bundle validation for ${requiredFragment}`);
+      }
+    }
+  }
+
+  const indexSource = readText(rootDir, "build-resources/electron/main/index.ts");
+  if (indexSource?.includes("toolbar.bundle.cjs")) {
+    failures.push("build-resources/electron/main/index.ts: must not use toolbar.bundle.cjs");
+  }
+  if (indexSource && !indexSource.includes("toolbar.bundle.mjs")) {
+    failures.push("build-resources/electron/main/index.ts: must keep toolbar.bundle.mjs preload path");
+  }
+
+  const controllerSource = readText(rootDir, "build-resources/electron/main/tab-controller.ts");
+  if (controllerSource?.includes("canva.bundle.cjs")) {
+    failures.push("build-resources/electron/main/tab-controller.ts: must not use canva.bundle.cjs");
+  }
+  if (controllerSource && !controllerSource.includes("canva.bundle.mjs")) {
+    failures.push("build-resources/electron/main/tab-controller.ts: must keep canva.bundle.mjs preload path");
+  }
+  if (controllerSource && !/contextIsolation:\s*true/.test(controllerSource)) {
+    failures.push("build-resources/electron/main/tab-controller.ts: Canva tabs must keep contextIsolation: true");
+  }
+
+  const preloadApiSource = readText(rootDir, "build-resources/electron/preload/electron-preload-api.ts");
+  if (!preloadApiSource) {
+    failures.push("build-resources/electron/preload/electron-preload-api.ts: must exist");
+  } else if (!preloadApiSource.includes("globalThis") || !preloadApiSource.includes('require?: (moduleName: "electron")')) {
+    failures.push("build-resources/electron/preload/electron-preload-api.ts: must resolve Electron through preload global require");
+  }
+
+  for (const relativePath of [
+    "build-resources/electron/preload/toolbar.ts",
+    "build-resources/electron/preload/debug.ts",
+    "build-resources/electron/preload/canva.ts",
+  ] as const) {
+    const source = readText(rootDir, relativePath);
+    if (!source) continue;
+    if (/^\s*import\s+(?!type\b).*["']electron["'];?/m.test(source)) {
+      failures.push(`${relativePath}: preload source must not use runtime imports from "electron"`);
+    }
+  }
+
+  for (const relativePath of [
+    ".build/electron/preload/canva.bundle.mjs",
+    ".build/electron/preload/toolbar.bundle.mjs",
+  ] as const) {
+    const bundle = readText(rootDir, relativePath);
+    if (!bundle) continue;
+    if (/^\s*import\s+.*["']electron["'];?/m.test(bundle)) {
+      failures.push(`${relativePath}: generated preload bundle must not contain import from "electron"`);
+    }
+    if (/(^|[^.\w$])require\(["']electron["']\)/m.test(bundle)) {
+      failures.push(`${relativePath}: generated preload bundle must not contain CommonJS require("electron")`);
+    }
+  }
+}
+
+function checkToolbarUIContract(rootDir: string, failures: string[]): void {
+  const toolbarHtml = readText(rootDir, "build-resources/electron/ui/toolbar.html");
+  if (!toolbarHtml) {
+    failures.push("build-resources/electron/ui/toolbar.html: must exist");
+    return;
+  }
+
+  if (toolbarHtml.includes("class=\"brand\"") || toolbarHtml.includes(".brand")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must not render duplicate brand slot");
+  }
+
+  if (!toolbarHtml.includes("getPinnedHomeLabel")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must use getPinnedHomeLabel for home tab labeling");
+  }
+  if (!toolbarHtml.includes("data-bridge='missing'") || !toolbarHtml.includes("Toolbar bridge unavailable")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must expose a visible missing-bridge diagnostic");
+  }
+  if (!toolbarHtml.includes("document.body.dataset.bridge = 'missing'")) {
+    failures.push("build-resources/electron/ui/toolbar.html: missing bridge branch must mark body dataset");
+  }
+  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome"] as const) {
+    if (!toolbarHtml.includes(`canvaTabs.${bridgeMethod}`)) {
+      failures.push(`build-resources/electron/ui/toolbar.html: must use canvaTabs.${bridgeMethod}`);
+    }
+  }
+
+  const toolbarPreload = readText(rootDir, "build-resources/electron/preload/toolbar.ts");
+  if (!toolbarPreload) {
+    failures.push("build-resources/electron/preload/toolbar.ts: must exist");
+    return;
+  }
+
+  if (!toolbarPreload.includes('contextBridge.exposeInMainWorld("canvaTabs"')) {
+    failures.push("build-resources/electron/preload/toolbar.ts: must expose window.canvaTabs");
+  }
+  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome"] as const) {
+    if (!toolbarPreload.includes(bridgeMethod)) {
+      failures.push(`build-resources/electron/preload/toolbar.ts: canvaTabs must expose ${bridgeMethod}`);
+    }
+  }
+}
+
+function checkTabSwitchingContract(rootDir: string, failures: string[]): void {
+  const tabsSource = readText(rootDir, "build-resources/electron/main/tabs.ts");
+  if (!tabsSource) {
+    failures.push("build-resources/electron/main/tabs.ts: must exist");
+    return;
+  }
+
+  if (tabsSource.includes("for (const entry of state.tabs.values())") && tabsSource.includes("setTabVisibility(entry, entry.id === id)")) {
+    failures.push("build-resources/electron/main/tabs.ts: switchToTab must not sweep all tabs; use targeted detach instead");
+  }
+  if (!tabsSource.includes("detachActiveContentView();") || !tabsSource.includes("ensureTopLevelView(tab.view);")) {
+    failures.push("build-resources/electron/main/tabs.ts: switchToTab must detach active content view before showing requested tab");
+  }
+}
+
 function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]): void {
   checkProjectLayoutOwnership(rootDir, failures);
   checkForbiddenPaths(rootDir, failures);
@@ -686,6 +825,9 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkBuildMetadataContracts(rootDir, failures);
   checkSourceHashContracts(rootDir, failures);
   checkRuntimeAssetsMetadataCopyContract(rootDir, failures);
+  checkPreloadBundleContract(rootDir, failures);
+  checkToolbarUIContract(rootDir, failures);
+  checkTabSwitchingContract(rootDir, failures);
   checkBuildResourcesLayoutContract(rootDir, failures);
   checkRootLayoutMinimizationContract(rootDir, failures);
   checkDocs(rootDir, failures);

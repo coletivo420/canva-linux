@@ -1,11 +1,9 @@
-import electron from "electron";
-const { ipcRenderer } = electron;
-
 import {
   CLEyeDropper,
   installClEyeDropperScalingPatch,
   removeClEyeDropperUi,
 } from "./cl-eyedropper/index.js";
+import { loadElectronPreloadApi } from "./electron-preload-api.js";
 
 type DebugLog = (category: string, ...args: unknown[]) => boolean;
 type EyeDropperLog = (...args: unknown[]) => void;
@@ -196,6 +194,7 @@ export function createCustomEyeDropperFlow({
       location.href,
     );
 
+    const { ipcRenderer } = await loadElectronPreloadApi();
     const snapshot =
       /** @type {EyeDropperSnapshot | null | undefined} */ await ipcRenderer.invoke(
         "wrapper:eyedropper-snapshot",

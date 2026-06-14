@@ -41,7 +41,7 @@ test("detected installations summary prefers flatpak full version", () => {
 
   assert.match(
     panels.detectedInstallations.join("\n"),
-    /Flatpak System: .*detected.*v0\.1\.4-15\.Dev\.9\+gabc1234/,
+    /Flatpak System: .*v0\.1\.4-15\.Dev\.9\+gabc1234/,
   );
 });
 
@@ -56,7 +56,7 @@ test("detected installations summary falls back to base version", () => {
 
   assert.match(
     panels.detectedInstallations.join("\n"),
-    /Flatpak System: .*detected.*v0\.1\.4-15\.Dev\.9/,
+    /Flatpak System: .*v0\.1\.4-15\.Dev\.9/,
   );
 });
 
@@ -102,8 +102,8 @@ test("renders Generated Artifacts in its own panel", () => {
   );
   const text = panels.generatedArtifacts.join("\n");
 
-  assert.match(text, /Flatpak bundle: .*detected.*v0\.1\.4-15\.Dev\.9\+gflatpak/);
-  assert.match(text, /AppImage: .*detected.*v0\.1\.4-15\.Dev\.9\+gappimage/);
+  assert.match(text, /Flatpak bundle: .*v0\.1\.4-15\.Dev\.9\+gflatpak/);
+  assert.match(text, /AppImage: .*v0\.1\.4-15\.Dev\.9\+gappimage/);
   assert.doesNotMatch(text, /Linux unpacked/);
   assert.doesNotMatch(text, /Generated Artifacts|Detected Installations|Linux Artifacts/);
 });
@@ -185,7 +185,7 @@ test("artifact summary falls back to artifact version", () => {
     colors,
   );
 
-  assert.match(panels.generatedArtifacts.join("\n"), /AppImage: .*detected.*v0\.1\.4-15\.Dev\.9/);
+  assert.match(panels.generatedArtifacts.join("\n"), /AppImage: .*v0\.1\.4-15\.Dev\.9/);
 });
 
 test("preserves legacy appImageArtifacts fallback", () => {
@@ -199,7 +199,7 @@ test("preserves legacy appImageArtifacts fallback", () => {
   );
   const text = panels.generatedArtifacts.join("\n");
 
-  assert.match(text, /AppImage: .*detected.*v0\.1\.4-15\.Dev\.9\+glegacy/);
+  assert.match(text, /AppImage: .*v0\.1\.4-15\.Dev\.9\+glegacy/);
 });
 
 test("does not duplicate AppImage when artifactFragments exist", () => {
@@ -254,4 +254,70 @@ test("legacy combined summary still includes panel labels for callers that need 
   assert.ok(lines.includes("Detected Installations"));
   assert.ok(lines.includes("Generated Artifacts"));
   assert.ok(lines.includes("Linux Artifacts"));
+});
+
+test("detected installations summary includes source hash", () => {
+  const panels = formatDetectionPanelSummaries(
+    status({
+      nativeSystem: true,
+      nativeSystemFullVersion: "0.1.4-15.Dev.9",
+      nativeSystemHash: "sha256:3c46ce2ccd0fca47ccc09c0c622536dd0b83bd1f19fccfc041b002c7fb377ef0",
+    }),
+    colors,
+  );
+
+  assert.match(
+    panels.detectedInstallations.join("\n"),
+    /Native System: .*v0\.1\.4-15\.Dev\.9 · sha256:3c46ce2c/,
+  );
+});
+
+test("generated artifacts include source hash", () => {
+  const panels = formatDetectionPanelSummaries(
+    status({}, [
+      {
+        id: "appimage",
+        kind: "appimage",
+        label: "AppImage",
+        detected: true,
+        fullVersion: "0.1.4-15.Dev.9",
+        hash: "sha256:3c46ce2ccd0fca47ccc09c0c622536dd0b83bd1f19fccfc041b002c7fb377ef0",
+      },
+    ]),
+    colors,
+  );
+
+  assert.match(
+    panels.generatedArtifacts.join("\n"),
+    /AppImage: .*v0\.1\.4-15\.Dev\.9 · sha256:3c46ce2c/,
+  );
+});
+
+test("Linux artifacts include source hash for unpacked linux", () => {
+  const panels = formatDetectionPanelSummaries(
+    status(
+      {},
+      [
+        {
+          id: "linux-unpacked",
+          kind: "linux-unpacked",
+          label: "Linux unpacked",
+          detected: true,
+          fullVersion: "0.1.4-15.Dev.9",
+          hash: "sha256:3c46ce2ccd0fca47ccc09c0c622536dd0b83bd1f19fccfc041b002c7fb377ef0",
+        },
+      ],
+      {
+        electronVersion: "v41.5.0",
+        nodeVersion: "v22.12.0",
+        npmVersion: "10.9.0",
+      },
+    ),
+    colors,
+  );
+
+  assert.match(
+    panels.linuxArtifacts[0],
+    /Linux unpacked v0\.1\.4-15\.Dev\.9 · sha256:3c46ce2c/,
+  );
 });

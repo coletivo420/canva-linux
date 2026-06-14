@@ -57,6 +57,26 @@ async function buildPreloadBundle(name: string, outputName: string): Promise<voi
     },
   });
 
+  const output = fs.readFileSync(outputFile, "utf8");
+  const relativeOutput = path.relative(repoRoot, outputFile);
+  if (/^\s*import\s+.*["']electron["'];?/m.test(output)) {
+    throw new Error(
+      `[preload-bundle] ${relativeOutput} must not contain runtime electron imports.`,
+    );
+  }
+  if (/(^|[^.\w$])require\(["']electron["']\)/m.test(output)) {
+    throw new Error(
+      `[preload-bundle] ${relativeOutput} must not contain CommonJS electron require wrappers.`,
+    );
+  }
+  for (const forbidden of ["exports.__esModule", "module.exports"] as const) {
+    if (output.includes(forbidden)) {
+      throw new Error(
+        `[preload-bundle] ${relativeOutput} must not contain ${forbidden}.`,
+      );
+    }
+  }
+
   console.log(`[preload-bundle] wrote ${path.relative(repoRoot, outputFile)}`);
 }
 

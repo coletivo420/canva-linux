@@ -77,6 +77,11 @@ export type C420UIAppOptions = {
 
 type FocusZone = "menu" | "diagnostics" | "content" | "logs";
 
+const PANEL_VERTICAL_FRAME_ROWS = 2;
+const DETECTED_INSTALLATION_ROWS = 4;
+const DETECTED_INSTALLATIONS_MIN_HEIGHT =
+  DETECTED_INSTALLATION_ROWS + PANEL_VERTICAL_FRAME_ROWS;
+
 type SelectableMenu = ReturnType<typeof tui.list> & {
   selected: number;
   items?: unknown[];
@@ -131,6 +136,16 @@ function longestLineLength(lines: string[]): number {
   return Math.max(0, ...lines.map((line) => line.length));
 }
 
+function formatShortHash(hash: string | undefined, version: string | undefined): string {
+  if (!version) return "";
+  if (!hash) return "";
+  if (hash === "unknown") return " · unknown";
+  const parts = hash.split(":");
+  const algo = parts.length > 1 ? `${parts[0]}:` : "";
+  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
+  return ` · ${algo}${value.slice(0, 8)}`;
+}
+
 export function computeHeaderLayout(
   screenWidth: number,
   brandConfig: C420UIBrandConfig,
@@ -139,13 +154,13 @@ export function computeHeaderLayout(
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
   const c420uiHeaderContentWidth = longestLineLength([
-    `${brandConfig.name} v${brandConfig.version}`,
+    `${brandConfig.name} v${brandConfig.version}${formatShortHash(brandConfig.hash, brandConfig.version)}`,
     ...brandConfig.logoLines,
   ]);
   const projectHeaderContentWidth = longestLineLength([
     projectConfig.projectName,
     projectConfig.projectSubtitle,
-    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""} | Phase: ${projectConfig.phase ?? "unknown"}`,
+    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`,
   ]);
   const c420uiMinWidth = Math.max(
     c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
@@ -441,10 +456,13 @@ export function createApp(options: C420UIAppOptions) {
     const menuHeight = Math.max(3, Math.floor(workspaceHeight * 0.68));
     const diagnosticsTop = workspaceTop + menuHeight;
     const detectionPanelsHeight = Math.max(
-      9,
+      DETECTED_INSTALLATIONS_MIN_HEIGHT + 6,
       screenHeight - diagnosticsTop - reservedFooterRows,
     );
-    const detectedInstallationsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.34));
+    const detectedInstallationsHeight = Math.max(
+      DETECTED_INSTALLATIONS_MIN_HEIGHT,
+      Math.floor(detectionPanelsHeight * 0.34),
+    );
     const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
     const linuxArtifactsHeight = Math.max(
       3,
@@ -1363,6 +1381,9 @@ export function createApp(options: C420UIAppOptions) {
           "",
           "Version:",
           `  {${c420uiTheme.colors.version}-fg}${opts.project.displayVersion}{/${c420uiTheme.colors.version}-fg}`,
+          "",
+          "Hash:",
+          `  {${c420uiTheme.colors.muted}-fg}${opts.project.hash ?? "unknown"}{/${c420uiTheme.colors.muted}-fg}`,
           "",
           "Phase:",
           `  {${c420uiTheme.colors.phase}-fg}${opts.project.phase ?? "unknown"}{/${c420uiTheme.colors.phase}-fg}`,

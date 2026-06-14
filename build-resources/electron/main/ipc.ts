@@ -8,7 +8,7 @@ type CentralLoggerLike = {
   logDebug(
     category: string,
     args?: unknown[],
-    options?: { source?: string },
+    options?: { source?: string; terminal?: boolean },
   ): void;
 };
 type TabControllerLike = {
@@ -19,6 +19,7 @@ type TabControllerLike = {
 type DebugPayload = { category?: unknown; args?: unknown; source?: unknown };
 type ToolbarPayload = { id?: unknown };
 type ToolbarMessage = { action?: unknown; payload?: ToolbarPayload };
+type HandleToolbarAction = (action: string, payload?: ToolbarPayload) => void;
 
 // Keep main-process IPC routing out of the entrypoint so startup composition can
 // stay declarative while IPC behavior remains easy to audit in one place.
@@ -26,14 +27,15 @@ function registerMainIpcHandlers({
   centralLogger,
   debugEnabled,
   debugLog,
+  handleToolbarAction,
   ipcMain,
-  tabController,
 }: {
   centralLogger: CentralLoggerLike;
   debugEnabled: DebugEnabled;
   debugLog: DebugLog;
+  handleToolbarAction: HandleToolbarAction;
   ipcMain: IpcMainLike;
-  tabController: TabControllerLike;
+  tabController?: TabControllerLike;
 }): void {
   ipcMain.on("wrapper:debug-log", (_event, payload = {}) => {
     const message = (payload || {}) as DebugPayload;
@@ -46,8 +48,10 @@ function registerMainIpcHandlers({
       typeof message.source === "string" && message.source
         ? message.source
         : "preload";
-    if (!debugEnabled(category)) return;
-    centralLogger.logDebug(category, args, { source });
+    centralLogger.logDebug(category, args, {
+      source,
+      terminal: debugEnabled(),
+    });
   });
 
   ipcMain.on("toolbar-action", (_event, message = {}) => {
@@ -55,18 +59,8 @@ function registerMainIpcHandlers({
     const action =
       typeof toolbarMessage.action === "string" ? toolbarMessage.action : "";
     const payload = toolbarMessage.payload || {};
-    debugLog("tabs:toolbar", "toolbar-action", action, payload);
-    if (action === "switch-tab") {
-      if (typeof payload.id === "number") tabController.switchToTab(payload.id);
-      return;
-    }
-    if (action === "close-tab") {
-      if (typeof payload.id === "number") tabController.closeTab(payload.id);
-      return;
-    }
-    if (action === "go-home") {
-      tabController.focusHomeTab({ resetToHome: true });
-    }
+    debugLog("tabs:toolbar", "toolbar-ipc-action", action, payload);
+    handleToolbarAction(action, payload);
   });
 }
 

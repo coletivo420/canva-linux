@@ -156,3 +156,20 @@ export function detectFlatpakUserFullVersion(): string {
 
   return detectFlatpakUserVersion();
 }
+
+function readFlatpakHashMarker(markerFile: string): string {
+  return readFlatpakVersionMarkerKey(markerFile, "canvaLinuxSourceHash");
+}
+
+export function detectFlatpakSystemHash(): string {
+  const marker = findFlatpakVersionMarker("/var/lib/flatpak");
+  return readFlatpakHashMarker(marker);
+}
+
+export function detectFlatpakUserHash(): string {
+  const home = os.homedir();
+  const marker = findFlatpakVersionMarker(
+    path.join(home, ".local/share/flatpak"),
+  );
+  return readFlatpakHashMarker(marker);
+}

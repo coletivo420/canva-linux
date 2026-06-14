@@ -104,12 +104,25 @@ if (!runtimeCli) {
 
 function startRuntime(runtimeCli: RuntimeCli): void {
 const centralLogger = createCentralLogger({ app });
-const { debugLevel, debugEnabled, debugLog } = createDebugTools({
+const debugTools = createDebugTools({
   debugLevel: runtimeCli.debugLevel,
   emit(category: string, args: unknown[]) {
     centralLogger.logDebug(category, args, { source: "main" });
   },
 });
+const { debugLevel, debugEnabled } = debugTools;
+
+function debugLog(category: string, ...args: unknown[]): boolean {
+  if (debugEnabled()) {
+    return debugTools.debugLog(category, ...args);
+  }
+
+  centralLogger.logDebug(category, args, {
+    source: "main",
+    terminal: false,
+  });
+  return false;
+}
 
 type BrowserWindowInstance = import("./shell.js").BrowserWindowLike &
   import("./oauth.js").BrowserWindowLike &
@@ -321,6 +334,7 @@ function createToolbarView(): WebContentsViewInstance {
     ensureTopLevelView: ensureTopLevelView as unknown as (
       view: import("./shell.js").WebContentsViewLike,
     ) => void,
+    handleToolbarAction,
     layoutViews,
     makeToolbarUrl,
     preloadPath: path.join(RUNTIME_DIR, "..", "preload", "toolbar.bundle.mjs"),
@@ -362,6 +376,17 @@ function broadcastTabsState(): void {
       `titles=${state.tabs.map((tab: { id: number; title: string }) => `${tab.id}:${tab.title}`).join(" | ") || "none"}`,
     );
     toolbarView.webContents.send("tabs-state", state);
+    void toolbarView.webContents
+      .executeJavaScript(
+        `globalThis.__canvaToolbarRenderState?.(${JSON.stringify(state)});`,
+      )
+      .catch((error: unknown) => {
+        debugLog(
+          "tabs:toolbar",
+          "toolbar-main-render-failed",
+          error instanceof Error ? error.message : String(error),
+        );
+      });
   } else {
     debugLog(
       "tabs:state",
@@ -371,6 +396,21 @@ function broadcastTabsState(): void {
     );
   }
   tabHelpers.updateWindowTitle();
+}
+
+function handleToolbarAction(action: string, payload: { id?: unknown } = {}): void {
+  debugLog("tabs:toolbar", "toolbar-action", action, payload);
+  if (action === "switch-tab") {
+    if (typeof payload.id === "number") tabController.switchToTab(payload.id);
+    return;
+  }
+  if (action === "close-tab") {
+    if (typeof payload.id === "number") tabController.closeTab(payload.id);
+    return;
+  }
+  if (action === "go-home") {
+    tabController.focusHomeTab({ resetToHome: true });
+  }
 }
 
 // The tab controller owns tab creation plus the wiring between tab-events.js
@@ -417,6 +457,7 @@ registerMainIpcHandlers({
   debugLog,
   ipcMain,
   tabController,
+  handleToolbarAction,
 });
 
 registerAppLifecycle({

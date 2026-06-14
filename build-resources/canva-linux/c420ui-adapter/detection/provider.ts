@@ -119,6 +119,12 @@ const emptyInstallations = {
   flatpakSystemFullVersion: "",
   flatpakUserFullVersion: "",
   appImageFullVersion: "",
+
+  nativeSystemHash: "",
+  nativeUserHash: "",
+  flatpakSystemHash: "",
+  flatpakUserHash: "",
+  appImageHash: "",
 };
 
 function readPhase(rootDir: string): string {
@@ -207,6 +213,17 @@ function buildInstallations(
       values.DETECTED_APPIMAGE_FULL_VERSION ||
       values.DETECTED_APPIMAGE_VERSION ||
       "",
+
+    nativeSystemHash: values.DETECTED_NATIVE_SYSTEM_HASH || "",
+    nativeUserHash: values.DETECTED_NATIVE_USER_HASH || "",
+    flatpakSystemHash: values.DETECTED_FLATPAK_SYSTEM_HASH || "",
+    flatpakUserHash: values.DETECTED_FLATPAK_USER_HASH || "",
+    appImageHash: appImageFragment?.hash || values.DETECTED_APPIMAGE_HASH || "",
+    nativeSystemHashKind: "canvaLinuxSourceHash",
+    nativeUserHashKind: "canvaLinuxSourceHash",
+    flatpakSystemHashKind: "canvaLinuxSourceHash",
+    flatpakUserHashKind: "canvaLinuxSourceHash",
+    appImageHashKind: "canvaLinuxSourceHash",
   };
 }
 
