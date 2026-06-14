@@ -40,6 +40,7 @@ import {
   runC420UIStartupTasks,
   type c420uiStartupTask,
 } from "../startup-task.js";
+import { formatC420UIVersionLabel } from "../version-info.js";
 
 // --- Types ---
 
@@ -154,7 +155,11 @@ export function computeHeaderLayout(
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
   const c420uiHeaderContentWidth = longestLineLength([
-    `${brandConfig.name} v${brandConfig.version}${formatShortHash(brandConfig.hash, brandConfig.version)}`,
+    formatC420UIVersionLabel({
+      packageName: brandConfig.name,
+      packageVersion: brandConfig.version,
+      sourceHash: brandConfig.hash ?? null,
+    }),
     ...brandConfig.logoLines,
   ]);
   const projectHeaderContentWidth = longestLineLength([
@@ -268,7 +273,11 @@ export function createApp(options: C420UIAppOptions) {
     border: "line",
     tags: true,
     content: [
-      `{bold}${opts.brand.name} v${opts.brand.version}{/bold}`,
+      `{bold}${formatC420UIVersionLabel({
+        packageName: opts.brand.name,
+        packageVersion: opts.brand.version,
+        sourceHash: opts.brand.hash ?? null,
+      })}{/bold}`,
       ...opts.brand.logoLines,
     ].join("\n"),
     style: c420uiTheme.header,

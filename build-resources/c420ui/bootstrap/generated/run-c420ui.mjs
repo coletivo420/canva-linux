@@ -1195,6 +1195,19 @@ async function runC420UIStartupTasks(tasks, log) {
   }
 }
 
+// build-resources/c420ui/src/version-info.ts
+function shortSourceHash(hash) {
+  if (!hash || hash === "unknown") return "hash unknown";
+  if (hash.startsWith("sha256:")) {
+    const digest = hash.slice("sha256:".length);
+    return `sha256:${digest.slice(0, 8)}`;
+  }
+  return hash.slice(0, 12);
+}
+function formatC420UIVersionLabel(info) {
+  return `${info.packageName} ${info.packageVersion} \xB7 ${shortSourceHash(info.sourceHash)}`;
+}
+
 // build-resources/c420ui/src/terminal/app.ts
 var PANEL_VERTICAL_FRAME_ROWS = 2;
 var DETECTED_INSTALLATION_ROWS = 4;
@@ -1226,7 +1239,11 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
   const c420uiHeaderContentWidth = longestLineLength([
-    `${brandConfig.name} v${brandConfig.version}${formatShortHash2(brandConfig.hash, brandConfig.version)}`,
+    formatC420UIVersionLabel({
+      packageName: brandConfig.name,
+      packageVersion: brandConfig.version,
+      sourceHash: brandConfig.hash ?? null
+    }),
     ...brandConfig.logoLines
   ]);
   const projectHeaderContentWidth = longestLineLength([
@@ -1317,7 +1334,11 @@ function createApp(options) {
     border: "line",
     tags: true,
     content: [
-      `{bold}${opts.brand.name} v${opts.brand.version}{/bold}`,
+      `{bold}${formatC420UIVersionLabel({
+        packageName: opts.brand.name,
+        packageVersion: opts.brand.version,
+        sourceHash: opts.brand.hash ?? null
+      })}{/bold}`,
       ...opts.brand.logoLines
     ].join("\n"),
     style: c420uiTheme.header

@@ -53,6 +53,24 @@ Confirm logs include `toolbar-preload-loaded`, `[toolbar-ui] subscribe-tabs-stat
 `[canva:eyedropper:check]`, `eyedropper:flow open-request`,
 `eyedropper:flow snapshot-ready`, and `eyedropper:library picked`.
 
+## c420ui Version Hash Validation
+
+c420ui now displays its own package version with `c420uiSourceHash`.
+The c420ui package version is read from
+`build-resources/c420ui/package.json` and must not be confused with the
+Canva Linux release version.
+
+When rendering c420ui status/version, use
+`build-resources/c420ui/package.json.version` plus `c420uiSourceHash`. Do not
+substitute Canva Linux `version`, `canvaLinuxSourceHash`, or
+`combinedSourceHash`.
+
+Focused validation:
+
+- `npm test -- build-resources/c420ui/test/c420ui-version-hash.test.ts`
+- `npm run test:c420ui`
+- `npm run check:c420ui-bootstrap`
+
 ## Source language policy validation
 
 Dev11 validation must prove:

@@ -5,6 +5,8 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- c420ui now displays its own package version with `c420uiSourceHash`. The c420ui package version is read from
+  `build-resources/c420ui/package.json` and is no longer visually separated from the matching c420ui source hash.
 - Hardened toolbar, preload, tab, and CLeyedropper stability contracts without changing runtime behavior. The toolbar
   remains protected by ESM preload bundles, the main-process render fallback, and `canva-toolbar://` action fallback;
   CLeyedropper remains protected by the scaling patch, snapshot-backed canvas flow, cleanup behavior, abort handling,

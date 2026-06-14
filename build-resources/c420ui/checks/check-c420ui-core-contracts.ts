@@ -1166,8 +1166,22 @@ function checkSourceHashDisplayContract(failures: string[]): void {
   if (!summary.includes("formatShortHash(hash") || !summary.includes("formatDetectedStatus(colors") || !summary.includes("linuxUnpacked?.hash")) {
     failures.push("Detection UI must render a source hash next to detected versions");
   }
-  if (!app.includes("formatShortHash(brandConfig.hash") || !app.includes("formatShortHash(projectConfig.hash")) {
+  if (!app.includes("formatC420UIVersionLabel") || !app.includes("sourceHash: brandConfig.hash") || !app.includes("formatShortHash(projectConfig.hash")) {
     failures.push("c420ui header UI must render source hashes next to c420ui and project versions");
+  }
+  const versionInfo = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/version-info.ts"), "utf8");
+  for (const requiredFragment of [
+    "C420UIVersionInfo",
+    "formatC420UIVersionLabel",
+    "shortSourceHash",
+    "sourceHash",
+  ] as const) {
+    if (!versionInfo.includes(requiredFragment)) {
+      failures.push(`build-resources/c420ui/src/version-info.ts must keep ${requiredFragment}`);
+    }
+  }
+  if (!adapter.includes("c420uiPackageJsonPath") || !adapter.includes("build-resources/c420ui/package.json")) {
+    failures.push("c420ui version renderer must read build-resources/c420ui/package.json");
   }
   if (!artifactFragments.includes('path.join(rootDir, ".build", "canva-linux", "build-metadata.effective.json")')) {
     failures.push("Linux Unpacked must prefer effective build metadata before committed fallback");
@@ -1177,6 +1191,15 @@ function checkSourceHashDisplayContract(failures: string[]): void {
   }
   if (!adapter.includes("c420uiSourceHash") || !adapter.includes('hashKind: "c420uiSourceHash"')) {
     failures.push("c420ui version must display c420uiSourceHash");
+  }
+  if (/loadBrandConfig\(\)[\s\S]*version:\s*(?:loadBuildMetadata\(\)\.)?version/.test(adapter)) {
+    failures.push("c420ui version renderer must not use metadata.version as package version");
+  }
+  if (/loadBrandConfig\(\)[\s\S]*hash:\s*loadBuildMetadata\(\)\.canvaLinuxSourceHash/.test(adapter)) {
+    failures.push("c420ui version renderer must not use canvaLinuxSourceHash");
+  }
+  if (/loadBrandConfig\(\)[\s\S]*hash:\s*loadBuildMetadata\(\)\.combinedSourceHash/.test(adapter)) {
+    failures.push("c420ui version renderer must not use combinedSourceHash");
   }
   if (!adapter.includes("combinedSourceHash") || !adapter.includes('combinedHashKind: "combinedSourceHash"')) {
     failures.push("aggregate/build overview must carry combinedSourceHash");

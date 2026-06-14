@@ -83,7 +83,7 @@ test("c420ui local version shows c420uiSourceHash", () => {
     );
     fs.writeFileSync(
       path.join(rootDir, "build-resources/c420ui/package.json"),
-      `${JSON.stringify({ name: "c420ui", version: "0.1.4-15.Dev.11" }, null, 2)}\n`,
+      `${JSON.stringify({ name: "@coletivo420/c420ui", version: "0.1.0" }, null, 2)}\n`,
     );
     fs.writeFileSync(
       path.join(rootDir, "build-resources/canva-linux/config/project-ui.json"),
@@ -119,7 +119,7 @@ test("c420ui local version shows c420uiSourceHash", () => {
     const brand = adapter.loadBrandConfig();
     const project = adapter.loadProjectConfig();
 
-    assert.equal(brand.version, "0.1.4-15.Dev.11");
+    assert.equal(brand.version, "0.1.0");
     assert.equal(brand.hash, "sha256:c420uihash");
     assert.equal(brand.hashKind, "c420uiSourceHash");
     assert.equal(project.hash, "sha256:canvalinuxhash");

@@ -47,6 +47,16 @@ Request changes if a PR:
 - Flatpak and Flathub policy checks run from TypeScript entrypoints.
 - Install, uninstall, maintenance, packaging, build, artifact and versioning mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
 
+## c420ui version/hash review
+
+Request changes if a PR:
+
+- renders c420ui status/version without `c420uiSourceHash`;
+- uses Canva Linux `metadata.version` as the c420ui package version;
+- uses `canvaLinuxSourceHash` or `combinedSourceHash` as the c420ui hash;
+- stops reading the c420ui package version from `build-resources/c420ui/package.json`;
+- removes `formatC420UIVersionLabel` or `shortSourceHash` without an equivalent c420ui-specific replacement.
+
 ## Dev.9 metadata persistence and c420ui repair
 
 - Dev.9 corrected the adapter boundary: registry-driven artifact fragment detection stays in `canva-linux/c420ui-adapter`, while bootstrap helpers now live under `build-resources/c420ui/bootstrap`. Shell scripts and checks owned by c420ui live under `build-resources/c420ui`.
