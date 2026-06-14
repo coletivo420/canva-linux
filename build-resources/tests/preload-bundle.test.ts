@@ -54,7 +54,7 @@ test("generated preload bundles do not contain import from electron", () => {
   }
 });
 
-test("preload source does not use runtime electron imports", () => {
+test("preload source does not use static runtime electron imports", () => {
   const preloadDir = path.join(repoRoot, "build-resources", "electron", "preload");
   const sources = fs.readdirSync(preloadDir)
     .filter((name) => name.endsWith(".ts"))
@@ -66,7 +66,18 @@ test("preload source does not use runtime electron imports", () => {
   }
 });
 
-test("generated preload bundles keep electron access through preload global require", () => {
+test("electron-preload-api uses ESM electron import without CommonJS fallbacks", () => {
+  const preloadApiPath = path.join(repoRoot, "build-resources", "electron", "preload", "electron-preload-api.ts");
+  const content = fs.readFileSync(preloadApiPath, "utf8");
+
+  assert.match(content, /import\("electron"\)/);
+  assert.doesNotMatch(content, /eval\(["']require["']\)/);
+  assert.doesNotMatch(content, /globalThis\.require/);
+  assert.doesNotMatch(content, /require\?:\s*\(moduleName:\s*["']electron["']\)/);
+  assert.doesNotMatch(content, /preloadRequire/);
+});
+
+test("generated preload bundles do not contain CommonJS electron fallbacks", () => {
   const bundles = [
     path.join(repoRoot, ".build", "electron", "preload", "canva.bundle.mjs"),
     path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs"),
@@ -75,10 +86,30 @@ test("generated preload bundles keep electron access through preload global requ
   for (const bundle of bundles) {
     if (!fs.existsSync(bundle)) continue;
     const content = fs.readFileSync(bundle, "utf8");
-    assert.match(content, /preloadRequire\("electron"\)/, `${path.basename(bundle)} should resolve electron through preload global require`);
     assert.match(content, /import\("electron"\)/, `${path.basename(bundle)} should attempt ESM electron import`);
+    assert.doesNotMatch(content, /preloadRequire\("electron"\)/, `${path.basename(bundle)} should not resolve electron through preload global require`);
+    assert.doesNotMatch(content, /globalThis\.require/, `${path.basename(bundle)} should not read globalThis.require`);
+    assert.doesNotMatch(content, /eval\(["']require["']\)/, `${path.basename(bundle)} should not use eval require`);
     assert.ok(!content.includes("electron_default = (init_electron(), __toCommonJS(electron_exports))"), `${path.basename(bundle)} should not resolve electron shim to itself`);
   }
+});
+
+test("toolbar preload dispatches canva-tabs-bridge-ready", () => {
+  const toolbarPreloadPath = path.join(repoRoot, "build-resources", "electron", "preload", "toolbar.ts");
+  const content = fs.readFileSync(toolbarPreloadPath, "utf8");
+
+  assert.match(content, /dispatchEvent\(new CustomEvent\("canva-tabs-bridge-ready"\)\)/);
+});
+
+test("toolbar preload exposes only explicit bridge methods", () => {
+  const toolbarPreloadPath = path.join(repoRoot, "build-resources", "electron", "preload", "toolbar.ts");
+  const content = fs.readFileSync(toolbarPreloadPath, "utf8");
+
+  for (const method of ["subscribeTabsState", "switchTab", "closeTab", "goHome", "getSystemTheme"]) {
+    assert.match(content, new RegExp(`\\b${method}\\b`));
+  }
+  assert.doesNotMatch(content, /(?:^|\n)\s*send\s*\(/);
+  assert.doesNotMatch(content, /\bonState\(/);
 });
 
 test("generated toolbar preload exposes canvaTabs bridge", () => {
@@ -100,6 +131,7 @@ test("generated toolbar preload contains subscribeTabsState/switchTab/closeTab/g
   for (const method of ["subscribeTabsState", "switchTab", "closeTab", "goHome"]) {
     assert.match(content, new RegExp(`\\b${method}\\b`));
   }
+  assert.doesNotMatch(content, /\bonState\b/);
 });
 
 test("generated toolbar preload does not read process argv before exposing canvaTabs", () => {

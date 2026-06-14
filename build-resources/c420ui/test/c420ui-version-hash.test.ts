@@ -27,6 +27,9 @@ const packageJson = JSON.parse(
     "utf8",
   ),
 ) as { name: string; version: string };
+const rootPackageJson = JSON.parse(
+  fs.readFileSync(path.join(repoRoot, "package.json"), "utf8"),
+) as { scripts?: Record<string, string> };
 
 const c420uiPackage = {
   name: "@coletivo420/c420ui",
@@ -122,4 +125,37 @@ test("c420ui builder logs and version blocks use c420uiSourceHash", () => {
 
 test("c420ui startup log includes formatted builder version hash", () => {
   assert.match(appSource, /\[info\] c420ui started\. builder=\$\{formatC420UIVersionLabel/);
+});
+
+test("project header renders the same version/hash line used for width calculation", () => {
+  assert.match(appSource, /function formatProjectVersionLine\(projectConfig: C420UIProjectConfig\)/);
+  assert.match(appSource, /projectHeaderContentWidth[\s\S]*formatProjectVersionLine\(projectConfig\)/);
+  assert.match(appSource, /content:\s*\[[\s\S]*formatProjectVersionLine\(opts\.project\)/);
+});
+
+test("adapter does not keep redundant app identity fallback", () => {
+  assert.doesNotMatch(adapterSource, /appIdentityPath/);
+  assert.doesNotMatch(adapterSource, /loadAppIdentity/);
+  assert.doesNotMatch(adapterSource, /readAppIdentity/);
+  assert.doesNotMatch(adapterSource, /getProjectPhase/);
+  assert.doesNotMatch(adapterSource, /CANVA_PROJECT_PHASE/);
+  assert.match(adapterSource, /function getEffectiveProjectPhase\(\)/);
+  assert.match(adapterSource, /const buildMetadata = loadBuildMetadata\(\)/);
+  assert.match(adapterSource, /const projectUi = loadProjectUi\(\)/);
+});
+
+test("package scripts do not expose duplicate c420ui aliases for canonical actions", () => {
+  const scripts = rootPackageJson.scripts ?? {};
+
+  for (const duplicateAlias of [
+    "c420ui:install-native",
+    "c420ui:build-appimage",
+    "c420ui:build-flatpak-bundle",
+  ]) {
+    assert.equal(scripts[duplicateAlias], undefined);
+  }
+
+  assert.equal(scripts["install:native"], "npm run build:scripts && node .build/scripts/install-native.mjs");
+  assert.equal(scripts["package:appimage"], "npm run build:scripts && node .build/scripts/build-appimage.mjs");
+  assert.equal(scripts["package:flatpak-bundle"], "npm run build:scripts && node .build/scripts/build-flatpak-bundle.mjs");
 });

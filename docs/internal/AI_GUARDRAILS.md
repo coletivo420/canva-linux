@@ -25,10 +25,11 @@ Dev11 finalized the TypeScript/ESM migration.
 ## Toolbar and CLeyedropper stabilized runtime surfaces
 
 The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
-The toolbar must keep ESM preload bundles, the main-process render fallback,
-and the `canva-toolbar://` action fallback. Do not simplify the toolbar by
-removing fallback paths unless a dedicated commit proves the replacement across
-Flatpak, AppImage, and native runtime.
+The post-migration compatibility fallbacks were removed after Dev11
+stabilization. The toolbar now relies on ESM `.mjs` preload bundles, explicit
+`window.canvaTabs` bridge methods, and the `canva-tabs-bridge-ready` handshake.
+Do not reintroduce `canvaTabs.send`/`onState`, `canva-toolbar://` navigation,
+main-process toolbar render injection, or eval/global-require Electron loading.
 
 The CLeyedropper must keep the scaling patch, snapshot-backed canvas flow,
 cleanup behavior, abort handling, and `sRGBHex`-compatible result contract. Do
@@ -614,8 +615,8 @@ Canva Linux-specific dependency wiring in `build-resources/canva-linux/c420ui-ad
 
 - Do not open `Dev.8` or add `+g<hash>` to source `package.json` / `project-ui.json` values in this phase.
 - Generate effective build metadata deterministically from commit metadata only.
-- Runtime fallback metadata must never hardcode the current Canva Linux phase; if generated metadata and source files are
-  unavailable, use neutral `0.0.0` values with `buildRevision: "unknown"`.
+- Runtime metadata must fail clearly when generated, source, and committed metadata are all unavailable.
+  `0.0.0` fallback metadata is allowed only in explicit tests or marked recovery contexts.
 - Normalize generated metadata before using it; partial generated metadata must be ignored rather than converted into broken effective versions.
 - Keep post-OAuth reload context-preserving by default; use canonical Canva home only as the post-probe localized public landing fallback.
 - Localized OAuth landing detection may use generic auth-signal counts, but must not log DOM text, `aria-label`, `href`,

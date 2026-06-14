@@ -2165,7 +2165,10 @@ function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule)
     buildRevision: UNKNOWN_BUILD_REVISION2
   });
 }
-function loadEffectiveBuildMetadata(rootDir) {
+function missingBuildMetadataError() {
+  return new Error("Missing Canva Linux build metadata. Run npm run build:metadata.");
+}
+function loadEffectiveBuildMetadata(rootDir, options = {}) {
   const resolvedRootDir = path10.resolve(rootDir);
   const metadataModule = build_metadata_exports;
   const effective = loadEffectiveFileMetadata(resolvedRootDir, metadataModule);
@@ -2180,7 +2183,12 @@ function loadEffectiveBuildMetadata(rootDir) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  const packaged = loadPackagedMetadata(resolvedRootDir, metadataModule);
+  if (packaged) return packaged;
+  if (options.allowFallback) {
+    return fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  }
+  throw missingBuildMetadataError();
 }
 
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
@@ -2349,17 +2357,6 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir, actions = loadCanvaLinuxC42
 function readJsonFile6(filePath) {
   return JSON.parse(fs13.readFileSync(filePath, "utf8"));
 }
-function readAppIdentity(identityPath) {
-  try {
-    const identity = readJsonFile6(identityPath);
-    return {
-      projectDisplayVersion: identity.displayVersion,
-      projectPhase: identity.phase
-    };
-  } catch {
-    return {};
-  }
-}
 function stateHome() {
   const xdgStateHome = process.env.XDG_STATE_HOME?.trim();
   if (xdgStateHome) return xdgStateHome;
@@ -2371,10 +2368,6 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
   const packageJsonPath = path14.join(resolvedRootDir, "package.json");
   const actionsJsonPath = path14.join(resolvedRootDir, "build-resources/canva-linux/config/actions.json");
   const artifactsJsonPath = path14.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
-  const appIdentityPath = path14.join(
-    resolvedRootDir,
-    "build-resources/canva-linux/config/project-ui.json"
-  );
   const buildMetadataPath = path14.join(
     resolvedRootDir,
     "build-resources/canva-linux/config/build-metadata.json"
@@ -2389,9 +2382,6 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
   function loadPackageJson() {
     return readJsonFile6(packageJsonPath);
   }
-  function loadAppIdentity() {
-    return readAppIdentity(appIdentityPath);
-  }
   function loadBuildMetadata() {
     return loadEffectiveBuildMetadata(resolvedRootDir);
   }
@@ -2400,13 +2390,6 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
   }
   function getPackageVersion() {
     return loadPackageJson().version ?? "unknown";
-  }
-  function getProjectPhase() {
-    const fromEnv = process.env.CANVA_PROJECT_PHASE?.trim();
-    if (fromEnv) return fromEnv;
-    const identity = loadAppIdentity();
-    if (identity.projectPhase) return identity.projectPhase;
-    return loadProjectUi().phase || "unknown";
   }
   function getEffectiveProjectDisplayVersion() {
     const buildMetadata = loadBuildMetadata();
@@ -2418,7 +2401,9 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
   function getEffectiveProjectPhase() {
     const buildMetadata = loadBuildMetadata();
     if (buildMetadata.phase) return buildMetadata.phase;
-    return getProjectPhase();
+    const projectUi = loadProjectUi();
+    if (projectUi.phase) return projectUi.phase;
+    return "unknown";
   }
   function getEffectiveProjectFullVersion() {
     const buildMetadata = loadBuildMetadata();
@@ -2579,7 +2564,6 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
       packageJson: packageJsonPath,
       actionsJson: actionsJsonPath,
       artifactsJson: artifactsJsonPath,
-      appIdentity: appIdentityPath,
       buildMetadata: buildMetadataPath,
       c420uiPackageJson: c420uiPackageJsonPath
     },
@@ -2587,7 +2571,6 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
     loadConfig: toC420UIConfig,
     loadProjectUi,
     loadPackageJson,
-    loadAppIdentity,
     loadBuildMetadata,
     loadProjectConfig,
     loadBrandConfig,
@@ -2595,7 +2578,6 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
     loadArtifactWorkflows: loadArtifactWorkflows2,
     loadWorkflows,
     loadCapabilities: () => loadCanvaLinuxCapabilities(resolvedRootDir),
-    getProjectPhase,
     getEffectiveProjectDisplayVersion,
     getEffectiveProjectPhase,
     getEffectiveProjectFullVersion,

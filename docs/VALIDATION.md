@@ -27,10 +27,13 @@ The c420ui bootstrap generator must emit and run `build-bootstrap.mjs`.
 ## Stabilized toolbar and CLeyedropper validation
 
 The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
-The toolbar must keep ESM preload bundles, the main-process render fallback,
-and the `canva-toolbar://` action fallback. The CLeyedropper must keep the
-scaling patch, snapshot-backed canvas flow, cleanup behavior, abort handling,
-and `sRGBHex`-compatible result contract.
+The post-migration compatibility fallbacks were removed after Dev11
+stabilization. The toolbar must keep ESM preload bundles, explicit
+`window.canvaTabs` bridge methods, and the `canva-tabs-bridge-ready` handshake.
+Do not reintroduce `canvaTabs.send`/`onState`, `canva-toolbar://`, or
+`__canvaToolbarRenderState`. The CLeyedropper must keep the scaling patch,
+snapshot-backed canvas flow, cleanup behavior, abort handling, and
+`sRGBHex`-compatible result contract.
 
 Focused gates:
 
@@ -252,10 +255,10 @@ Current target:
 
 ## Detected Installations version visibility
 
-The c420ui `Detected Installations` panel must prefer detected effective/hashed version fields (`*FullVersion`) when
-they are available, then fall back to the base detected version fields for older native, Flatpak, or AppImage markers.
-For example, a Flatpak system install with build metadata should render `v0.1.4-15.Dev.11+g<hash>`, while a legacy marker
-that only exposes `version` should continue rendering `v0.1.4-15.Dev.11`.
+The c420ui `Detected Installations` panel must prefer detected effective/hashed
+version fields (`*FullVersion`) when they are available. Legacy marker-only
+installs may render their base detected version, but current package outputs
+must carry build metadata.
 
 ## c420ui logs
 

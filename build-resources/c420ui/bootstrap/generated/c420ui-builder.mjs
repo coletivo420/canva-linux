@@ -222,7 +222,10 @@ function fallbackEffectiveBuildMetadata(rootDir = process.cwd(), metadataModule)
     buildRevision: UNKNOWN_BUILD_REVISION2
   });
 }
-function loadEffectiveBuildMetadata(rootDir) {
+function missingBuildMetadataError() {
+  return new Error("Missing Canva Linux build metadata. Run npm run build:metadata.");
+}
+function loadEffectiveBuildMetadata(rootDir, options = {}) {
   const resolvedRootDir = path2.resolve(rootDir);
   const metadataModule = build_metadata_exports;
   const effective = loadEffectiveFileMetadata(resolvedRootDir, metadataModule);
@@ -237,7 +240,12 @@ function loadEffectiveBuildMetadata(rootDir) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  const packaged = loadPackagedMetadata(resolvedRootDir, metadataModule);
+  if (packaged) return packaged;
+  if (options.allowFallback) {
+    return fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  }
+  throw missingBuildMetadataError();
 }
 
 // build-resources/c420ui/bootstrap/ensure-bootstrap.ts

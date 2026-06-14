@@ -20,6 +20,7 @@ type DebugPayload = { category?: unknown; args?: unknown; source?: unknown };
 type ToolbarPayload = { id?: unknown };
 type ToolbarMessage = { action?: unknown; payload?: ToolbarPayload };
 type HandleToolbarAction = (action: string, payload?: ToolbarPayload) => void;
+type HandleToolbarReady = () => void;
 
 // Keep main-process IPC routing out of the entrypoint so startup composition can
 // stay declarative while IPC behavior remains easy to audit in one place.
@@ -27,12 +28,14 @@ function registerMainIpcHandlers({
   centralLogger,
   debugEnabled,
   debugLog,
+  handleToolbarReady,
   handleToolbarAction,
   ipcMain,
 }: {
   centralLogger: CentralLoggerLike;
   debugEnabled: DebugEnabled;
   debugLog: DebugLog;
+  handleToolbarReady: HandleToolbarReady;
   handleToolbarAction: HandleToolbarAction;
   ipcMain: IpcMainLike;
   tabController?: TabControllerLike;
@@ -61,6 +64,11 @@ function registerMainIpcHandlers({
     const payload = toolbarMessage.payload || {};
     debugLog("tabs:toolbar", "toolbar-ipc-action", action, payload);
     handleToolbarAction(action, payload);
+  });
+
+  ipcMain.on("toolbar-ready", () => {
+    debugLog("tabs:toolbar", "toolbar-ready");
+    handleToolbarReady();
   });
 }
 

@@ -26,9 +26,10 @@ Request changes if a PR:
 Request changes if a PR:
 
 - removes the toolbar ESM `.mjs` preload bundle contract;
-- removes the main-process toolbar render fallback through `__canvaToolbarRenderState`;
-- removes the `canva-toolbar://` action fallback;
-- removes `send` or `onState` aliases from `window.canvaTabs` before a dedicated deprecation commit;
+- reintroduces the main-process toolbar render fallback through `__canvaToolbarRenderState`;
+- reintroduces the `canva-toolbar://` action fallback;
+- reintroduces `send` or `onState` aliases on `window.canvaTabs`;
+- removes the `canva-tabs-bridge-ready` handshake;
 - changes toolbar visual CSS or height while claiming contract-only hardening;
 - merges the pinned home tab into regular toolbar tabs;
 - replaces CLeyedropper with a raw EyeDropper call;
@@ -631,8 +632,8 @@ while runtime flags belong to the compiled `canva-linux` app.
 - Source identity remains `0.1.4-15.Dev.11` / `0.1.4-15.Dev` / `0.1.4-15.Dev.11`.
 - Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
 - The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
-- Runtime metadata fallback must be neutral `0.0.0`/`unknown`; request changes if `build-resources/electron/main/build-metadata.ts`
-  hardcodes the current Dev.7 phase as a fallback.
+- Runtime metadata must fail clearly when generated, source, and committed metadata are all unavailable; request changes if
+  normal c420ui/runtime paths silently substitute `0.0.0`/`unknown`.
 - Generated build metadata must be normalized before use so partial metadata cannot produce broken effective version strings.
 - Localized OAuth landing probes may log only `loginLinks`, `signupLinks`, and `authButtons` counts; request changes if DOM
   text, `aria-label`, `href`, or `data-testid` values are logged.

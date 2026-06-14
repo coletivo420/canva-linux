@@ -27,17 +27,16 @@ test("toolbar shell logs preload errors", () => {
   assert.match(source, /"toolbar-preload-error"/);
 });
 
-test("toolbar shell intercepts fallback navigation actions", () => {
+test("toolbar shell does not intercept fallback navigation actions", () => {
   const source = fs.readFileSync(shellPath, "utf8");
 
-  assert.match(source, /"will-navigate"/);
-  assert.match(source, /canva-toolbar:\/\//);
-  assert.match(source, /handleToolbarAction\(action/);
+  assert.doesNotMatch(source, /canva-toolbar:\/\//);
+  assert.doesNotMatch(source, /handleToolbarAction/);
 });
 
-test("toolbar state broadcast also renders through main fallback", () => {
+test("toolbar state broadcast uses IPC without main render injection", () => {
   const source = fs.readFileSync(indexPath, "utf8");
 
-  assert.match(source, /__canvaToolbarRenderState/);
-  assert.match(source, /executeJavaScript/);
+  assert.match(source, /webContents\.send\("tabs-state"/);
+  assert.doesNotMatch(source, /__canvaToolbarRenderState/);
 });

@@ -37,7 +37,6 @@ type CreateShellWindowOptions = {
 type CreateToolbarViewOptions = {
   broadcastTabsState(): void;
   ensureTopLevelView(view: WebContentsViewLike): void;
-  handleToolbarAction(action: string, payload?: { id?: unknown }): void;
   layoutViews(): void;
   makeToolbarUrl(): string;
   preloadPath: string;
@@ -135,7 +134,6 @@ export function createShellHelpers({
   function createToolbarView({
     broadcastTabsState,
     ensureTopLevelView,
-    handleToolbarAction,
     layoutViews,
     makeToolbarUrl,
     preloadPath,
@@ -179,32 +177,6 @@ export function createShellHelpers({
       );
       broadcastTabsState();
     });
-    toolbarView.webContents.on(
-      "will-navigate",
-      (event: { preventDefault?: () => void }, url: string) => {
-        if (!url.startsWith("canva-toolbar://")) return;
-        event.preventDefault?.();
-        try {
-          const actionUrl = new URL(url);
-          const action = actionUrl.hostname || actionUrl.pathname.replace(/^\/+/, "");
-          const idValue = actionUrl.searchParams.get("id");
-          const id = idValue ? Number(idValue) : undefined;
-          debugLog(
-            "tabs:toolbar",
-            "toolbar-fallback-action",
-            action || "unknown-action",
-            id === undefined ? "id=none" : `id=${id}`,
-          );
-          handleToolbarAction(action, Number.isFinite(id) ? { id } : {});
-        } catch (error) {
-          debugLog(
-            "tabs:toolbar",
-            "toolbar-fallback-action-error",
-            error instanceof Error ? error.message : String(error),
-          );
-        }
-      },
-    );
     toolbarView.webContents.on(
       "did-fail-load",
       (

@@ -84,6 +84,7 @@ async function bootToolbarPreload(): Promise<void> {
       callback(state);
     };
     ipcRenderer.on("tabs-state", tabsStateListener);
+    ipcRenderer.send("toolbar-ready");
   }
 
   contextBridge.exposeInMainWorld("canvaTabs", {
@@ -97,18 +98,6 @@ async function bootToolbarPreload(): Promise<void> {
     goHome() {
       sendToolbarAction("go-home");
     },
-    send(action: string, payload: Record<string, unknown> = {}) {
-      if (
-        action === "switch-tab" ||
-        action === "close-tab" ||
-        action === "go-home"
-      ) {
-        sendToolbarAction(action, payload);
-      }
-    },
-    onState(callback: (state: unknown) => void) {
-      subscribeTabsState(callback);
-    },
     getSystemTheme(): "dark" | "light" {
       return window.matchMedia &&
         window.matchMedia("(prefers-color-scheme: dark)").matches
@@ -118,6 +107,7 @@ async function bootToolbarPreload(): Promise<void> {
   });
 
   debugLog("tabs:toolbar", "toolbar-preload-loaded");
+  window.dispatchEvent(new CustomEvent("canva-tabs-bridge-ready"));
 
   window.addEventListener("error", (event) => {
     debugLog(
@@ -139,5 +129,5 @@ async function bootToolbarPreload(): Promise<void> {
 }
 
 void bootToolbarPreload().catch((error: unknown) => {
-  console.warn("[toolbar-preload] native-bridge-unavailable; using main fallback", error);
+  console.warn("[toolbar-preload] native-bridge-unavailable", error);
 });

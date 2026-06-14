@@ -139,7 +139,46 @@ function createToolbarHarness(options = { bridge: true }) {
   const errors = [];
   const timers = [];
   const navigations = [];
+  const windowListeners = new Map();
   let renderState = null;
+  class ImmediatePromise {
+    constructor(executor) {
+      this.resolved = false;
+      this.rejected = false;
+      this.value = undefined;
+      this.error = undefined;
+      this.thenHandler = null;
+      this.catchHandler = null;
+      executor(
+        (value) => {
+          this.resolved = true;
+          this.value = value;
+          if (this.thenHandler) this.thenHandler(value);
+        },
+        (error) => {
+          this.rejected = true;
+          this.error = error;
+          if (this.catchHandler) this.catchHandler(error);
+        },
+      );
+    }
+
+    static resolve(value) {
+      return new ImmediatePromise((resolve) => resolve(value));
+    }
+
+    then(handler) {
+      this.thenHandler = handler;
+      if (this.resolved) handler(this.value);
+      return this;
+    }
+
+    catch(handler) {
+      this.catchHandler = handler;
+      if (this.rejected) handler(this.error);
+      return this;
+    }
+  }
   const document = {
     documentElement,
     body,
@@ -156,9 +195,7 @@ function createToolbarHarness(options = { bridge: true }) {
       return body.querySelectorAll(selector);
     },
   };
-  const canvaTabs = options.bridge === false
-    ? undefined
-    : {
+  const createCanvaTabs = () => ({
       getSystemTheme() {
         return "light";
       },
@@ -174,10 +211,23 @@ function createToolbarHarness(options = { bridge: true }) {
       goHome() {
         sent.push({ channel: "go-home", payload: undefined });
       },
-    };
+    });
+  const canvaTabs = options.bridge === false ? undefined : createCanvaTabs();
   const window = {
     ...(canvaTabs ? { canvaTabs } : {}),
-    addEventListener() {},
+    addEventListener(type, listener) {
+      const listeners = windowListeners.get(type) || [];
+      listeners.push(listener);
+      windowListeners.set(type, listeners);
+    },
+    removeEventListener(type, listener) {
+      const listeners = windowListeners.get(type) || [];
+      windowListeners.set(type, listeners.filter((entry) => entry !== listener));
+    },
+    dispatchEvent(event) {
+      for (const listener of windowListeners.get(event.type) || []) listener(event);
+      return true;
+    },
     matchMedia() {
       return { matches: false };
     },
@@ -209,9 +259,15 @@ function createToolbarHarness(options = { bridge: true }) {
     JSON,
     String,
     Error,
+    Promise: ImmediatePromise,
     URL,
     setTimeout(callback) {
       timers.push(callback);
+      return callback;
+    },
+    clearTimeout(callback) {
+      const index = timers.indexOf(callback);
+      if (index >= 0) timers.splice(index, 1);
     },
   });
 
@@ -225,7 +281,15 @@ function createToolbarHarness(options = { bridge: true }) {
     logs,
     navigations,
     pinnedHomeSlot,
-    render: renderState,
+    get render() {
+      return renderState;
+    },
+    setCanvaTabs() {
+      window.canvaTabs = createCanvaTabs();
+    },
+    dispatchBridgeReady() {
+      window.dispatchEvent({ type: "canva-tabs-bridge-ready" });
+    },
     runTimers() {
       for (const timer of timers.splice(0)) timer();
     },
@@ -278,38 +342,34 @@ test("toolbar subscribes when canvaTabs bridge exists", () => {
   assert.ok(logs.some((line) => line.includes("[toolbar-ui] subscribe-tabs-state")));
 });
 
-test("toolbar waits for main fallback when canvaTabs is unavailable", () => {
+test("toolbar waits for canva-tabs-bridge-ready", () => {
   const { document, errors, logs, pinnedHomeSlot, tabs } = createToolbarHarness({ bridge: false });
 
   assert.equal(document.body.dataset.bridge, "pending");
   assert.equal(pinnedHomeSlot.textContent, "");
   assert.equal(tabs.textContent, "");
-  assert.ok(logs.some((line) => line.includes("[toolbar-ui] preload-bridge-missing; waiting-main-fallback")));
-  assert.equal(errors.some((line) => line.includes("[toolbar-ui] missing-bridge")), false);
+  assert.equal(logs.some((line) => line.includes("[toolbar-ui] subscribe-tabs-state")), false);
+  assert.equal(errors.some((line) => line.includes("[toolbar-ui] bridge-initialization-failed")), false);
 });
 
-test("toolbar marks bridge missing only when fallback never renders", () => {
+test("toolbar subscribes after bridge readiness", () => {
+  const harness = createToolbarHarness({ bridge: false });
+
+  harness.setCanvaTabs();
+  harness.dispatchBridgeReady();
+
+  assert.equal(harness.document.body.dataset.bridge, "ready");
+  assert.equal(typeof harness.render, "function");
+  assert.ok(harness.logs.some((line) => line.includes("[toolbar-ui] subscribe-tabs-state")));
+});
+
+test("toolbar marks bridge-initialization-failed on timeout", () => {
   const { document, errors, runTimers } = createToolbarHarness({ bridge: false });
 
   runTimers();
 
-  assert.equal(document.body.dataset.bridge, "missing");
-  assert.ok(errors.some((line) => line.includes("[toolbar-ui] missing-bridge")));
-});
-
-test("toolbar main fallback renders tabs when preload bridge is unavailable", () => {
-  const { document, window } = createToolbarHarness({ bridge: false });
-
-  window.__canvaToolbarRenderState({
-    activeTabId: 2,
-    pinnedHomeTab: homeTab,
-    tabs: [designTab],
-    theme: "light",
-  });
-
-  assert.equal(document.body.dataset.bridge, "main");
-  assert.equal(document.querySelectorAll(".pinned-home").length, 1);
-  assert.equal(document.querySelectorAll(".tab").length, 1);
+  assert.equal(document.body.dataset.bridge, "failed");
+  assert.ok(errors.some((line) => line.includes("[toolbar-ui] bridge-initialization-failed")));
 });
 
 test("render with home and regular tabs keeps home out of regular renderer", () => {
@@ -407,65 +467,29 @@ test("toolbar bridge controls switch-tab", () => {
   assert.equal(sent[0].payload.id, 2);
 });
 
-test("toolbar fallback sends switch-tab through navigation URL", () => {
-  const { document, navigations, window } = createToolbarHarness({ bridge: false });
+test("toolbar bridge controls close-tab directly", () => {
+  const { render, sent, document } = createToolbarHarness();
 
-  window.__canvaToolbarRenderState({
-    activeTabId: 1,
-    pinnedHomeTab: homeTab,
-    tabs: [designTab],
-    theme: "light",
-  });
-  document.querySelector(".tab-activate").click();
-
-  assert.equal(navigations.at(-1), "canva-toolbar://switch-tab?id=2");
-});
-
-test("toolbar fallback sends close-tab through navigation URL", () => {
-  const { document, navigations, window } = createToolbarHarness({ bridge: false });
-
-  window.__canvaToolbarRenderState({
-    activeTabId: 2,
-    pinnedHomeTab: homeTab,
-    tabs: [designTab],
-    theme: "light",
-  });
+  render({ activeTabId: 2, pinnedHomeTab: homeTab, tabs: [designTab], theme: "light" });
   document.querySelector(".tab-close").click();
 
-  assert.equal(navigations.at(-1), "canva-toolbar://close-tab?id=2");
+  assert.deepEqual(sent, [{ channel: "close-tab", payload: { id: 2 } }]);
 });
 
-test("toolbar fallback sends go-home through navigation URL", () => {
-  const { document, navigations, window } = createToolbarHarness({ bridge: false });
-
-  window.__canvaToolbarRenderState({
-    activeTabId: 2,
-    pinnedHomeTab: homeTab,
-    tabs: [designTab],
-    theme: "light",
-  });
-  document.querySelector(".pinned-home").click();
-
-  assert.equal(navigations.at(-1), "canva-toolbar://go-home");
+test("toolbar does not contain canva-toolbar fallback URLs", () => {
+  const html = fs.readFileSync(toolbarPath, "utf8");
+  assert.equal(html.includes("canva-toolbar://"), false);
 });
 
-test("toolbar never stays blank when bridge is missing", () => {
-  const { document, pinnedHomeSlot, tabs, window } = createToolbarHarness({ bridge: false });
+test("toolbar does not define __canvaToolbarRenderState", () => {
+  const html = fs.readFileSync(toolbarPath, "utf8");
+  assert.equal(html.includes("__canvaToolbarRenderState"), false);
+});
 
-  assert.equal(pinnedHomeSlot.textContent, "");
-  assert.equal(tabs.textContent, "");
-
-  window.__canvaToolbarRenderState({
-    activeTabId: 2,
-    pinnedHomeTab: homeTab,
-    tabs: [designTab, docsTab],
-    theme: "light",
-  });
-
-  assert.equal(document.body.dataset.bridge, "main");
-  assert.match(pinnedHomeSlot.textContent, /Home/);
-  assert.match(tabs.textContent, /Design/);
-  assert.match(tabs.textContent, /Docs/);
+test("toolbar does not call canvaTabs.send or canvaTabs.onState", () => {
+  const html = fs.readFileSync(toolbarPath, "utf8");
+  assert.equal(html.includes("canvaTabs.send"), false);
+  assert.equal(html.includes("canvaTabs.onState"), false);
 });
 
 test("toolbar does not render duplicate brand slot", () => {

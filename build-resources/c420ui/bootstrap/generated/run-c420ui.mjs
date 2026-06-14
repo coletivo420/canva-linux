@@ -1235,6 +1235,9 @@ function formatShortHash2(hash, version) {
   const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
   return ` \xB7 ${algo}${value.slice(0, 8)}`;
 }
+function formatProjectVersionLine(projectConfig) {
+  return `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash2(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`;
+}
 function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
@@ -1249,7 +1252,7 @@ function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
   const projectHeaderContentWidth = longestLineLength([
     projectConfig.projectName,
     projectConfig.projectSubtitle,
-    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash2(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`
+    formatProjectVersionLine(projectConfig)
   ]);
   const c420uiMinWidth = Math.max(
     c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
@@ -1353,7 +1356,7 @@ function createApp(options) {
     content: [
       `{bold}${opts.project.projectName}{/bold}`,
       opts.project.projectSubtitle,
-      `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""}${formatShortHash2(opts.project.hash, opts.project.displayVersion)} | Phase: ${opts.project.phase ?? "unknown"}`
+      formatProjectVersionLine(opts.project)
     ].join("\n"),
     style: c420uiTheme.header
   });
@@ -4712,7 +4715,10 @@ function fallbackEffectiveBuildMetadata(rootDir2 = process.cwd(), metadataModule
     buildRevision: UNKNOWN_BUILD_REVISION2
   });
 }
-function loadEffectiveBuildMetadata(rootDir2) {
+function missingBuildMetadataError() {
+  return new Error("Missing Canva Linux build metadata. Run npm run build:metadata.");
+}
+function loadEffectiveBuildMetadata(rootDir2, options = {}) {
   const resolvedRootDir = path13.resolve(rootDir2);
   const metadataModule = build_metadata_exports;
   const effective = loadEffectiveFileMetadata(resolvedRootDir, metadataModule);
@@ -4727,7 +4733,12 @@ function loadEffectiveBuildMetadata(rootDir2) {
     const sourceMetadata = createSourceMetadata(resolvedRootDir, gitRevision, metadataModule);
     if (sourceMetadata) return sourceMetadata;
   }
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  const packaged = loadPackagedMetadata(resolvedRootDir, metadataModule);
+  if (packaged) return packaged;
+  if (options.allowFallback) {
+    return fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  }
+  throw missingBuildMetadataError();
 }
 
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
@@ -4896,17 +4907,6 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir2, actions = loadCanvaLinuxC4
 function readJsonFile6(filePath) {
   return JSON.parse(fs17.readFileSync(filePath, "utf8"));
 }
-function readAppIdentity(identityPath) {
-  try {
-    const identity = readJsonFile6(identityPath);
-    return {
-      projectDisplayVersion: identity.displayVersion,
-      projectPhase: identity.phase
-    };
-  } catch {
-    return {};
-  }
-}
 function stateHome() {
   const xdgStateHome = process.env.XDG_STATE_HOME?.trim();
   if (xdgStateHome) return xdgStateHome;
@@ -4918,10 +4918,6 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   const packageJsonPath = path17.join(resolvedRootDir, "package.json");
   const actionsJsonPath = path17.join(resolvedRootDir, "build-resources/canva-linux/config/actions.json");
   const artifactsJsonPath = path17.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
-  const appIdentityPath = path17.join(
-    resolvedRootDir,
-    "build-resources/canva-linux/config/project-ui.json"
-  );
   const buildMetadataPath = path17.join(
     resolvedRootDir,
     "build-resources/canva-linux/config/build-metadata.json"
@@ -4936,9 +4932,6 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   function loadPackageJson() {
     return readJsonFile6(packageJsonPath);
   }
-  function loadAppIdentity() {
-    return readAppIdentity(appIdentityPath);
-  }
   function loadBuildMetadata() {
     return loadEffectiveBuildMetadata(resolvedRootDir);
   }
@@ -4947,13 +4940,6 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   }
   function getPackageVersion() {
     return loadPackageJson().version ?? "unknown";
-  }
-  function getProjectPhase() {
-    const fromEnv = process.env.CANVA_PROJECT_PHASE?.trim();
-    if (fromEnv) return fromEnv;
-    const identity = loadAppIdentity();
-    if (identity.projectPhase) return identity.projectPhase;
-    return loadProjectUi().phase || "unknown";
   }
   function getEffectiveProjectDisplayVersion() {
     const buildMetadata = loadBuildMetadata();
@@ -4965,7 +4951,9 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   function getEffectiveProjectPhase() {
     const buildMetadata = loadBuildMetadata();
     if (buildMetadata.phase) return buildMetadata.phase;
-    return getProjectPhase();
+    const projectUi = loadProjectUi();
+    if (projectUi.phase) return projectUi.phase;
+    return "unknown";
   }
   function getEffectiveProjectFullVersion() {
     const buildMetadata = loadBuildMetadata();
@@ -5126,7 +5114,6 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
       packageJson: packageJsonPath,
       actionsJson: actionsJsonPath,
       artifactsJson: artifactsJsonPath,
-      appIdentity: appIdentityPath,
       buildMetadata: buildMetadataPath,
       c420uiPackageJson: c420uiPackageJsonPath
     },
@@ -5134,7 +5121,6 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     loadConfig: toC420UIConfig,
     loadProjectUi,
     loadPackageJson,
-    loadAppIdentity,
     loadBuildMetadata,
     loadProjectConfig,
     loadBrandConfig,
@@ -5142,7 +5128,6 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     loadArtifactWorkflows: loadArtifactWorkflows2,
     loadWorkflows,
     loadCapabilities: () => loadCanvaLinuxCapabilities(resolvedRootDir),
-    getProjectPhase,
     getEffectiveProjectDisplayVersion,
     getEffectiveProjectPhase,
     getEffectiveProjectFullVersion,

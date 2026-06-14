@@ -61,7 +61,7 @@ Shell remains allowed only for:
 
 - Stage-0 launchers
 - Flatpak or POSIX runtime entrypoints
-- thin compatibility wrappers
+- thin POSIX/runtime boundaries
 - unavoidable host-operation bridges
 
 Shell must not own project policy, JSON/YAML/XML parsing, validation rules,

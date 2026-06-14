@@ -147,6 +147,10 @@ function formatShortHash(hash: string | undefined, version: string | undefined):
   return ` · ${algo}${value.slice(0, 8)}`;
 }
 
+function formatProjectVersionLine(projectConfig: C420UIProjectConfig): string {
+  return `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`;
+}
+
 export function computeHeaderLayout(
   screenWidth: number,
   brandConfig: C420UIBrandConfig,
@@ -165,7 +169,7 @@ export function computeHeaderLayout(
   const projectHeaderContentWidth = longestLineLength([
     projectConfig.projectName,
     projectConfig.projectSubtitle,
-    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`,
+    formatProjectVersionLine(projectConfig),
   ]);
   const c420uiMinWidth = Math.max(
     c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
@@ -293,7 +297,7 @@ export function createApp(options: C420UIAppOptions) {
     content: [
       `{bold}${opts.project.projectName}{/bold}`,
       opts.project.projectSubtitle,
-      `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""}${formatShortHash(opts.project.hash, opts.project.displayVersion)} | Phase: ${opts.project.phase ?? "unknown"}`,
+      formatProjectVersionLine(opts.project),
     ].join("\n"),
     style: c420uiTheme.header,
   });
