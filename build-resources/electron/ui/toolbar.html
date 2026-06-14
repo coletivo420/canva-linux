@@ -371,19 +371,23 @@
 
       document.body.dataset.bridge = 'pending';
       return new Promise((resolve, reject) => {
+        let interval = null;
         const timeout = setTimeout(() => {
           window.removeEventListener('canva-tabs-bridge-ready', onReady);
+          if (interval) clearInterval(interval);
           reject(new Error('canvaTabs bridge did not initialize'));
         }, 1500);
 
         function onReady() {
           if (!window.canvaTabs) return;
           clearTimeout(timeout);
+          if (interval) clearInterval(interval);
           window.removeEventListener('canva-tabs-bridge-ready', onReady);
           resolve(window.canvaTabs);
         }
 
         window.addEventListener('canva-tabs-bridge-ready', onReady);
+        interval = setInterval(onReady, 25);
       });
     }
 

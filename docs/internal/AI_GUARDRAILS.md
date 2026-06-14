@@ -29,7 +29,9 @@ The post-migration compatibility fallbacks were removed after Dev11
 stabilization. The toolbar now relies on ESM `.mjs` preload bundles, explicit
 `window.canvaTabs` bridge methods, and the `canva-tabs-bridge-ready` handshake.
 Do not reintroduce `canvaTabs.send`/`onState`, `canva-toolbar://` navigation,
-main-process toolbar render injection, or eval/global-require Electron loading.
+or main-process toolbar render injection. Keep Electron preload API resolution
+centralized in `loadElectronPreloadApi`; its sandbox `globalThis.require` /
+`eval("require")` fallback is allowed only at that Electron preload boundary.
 
 The CLeyedropper must keep the scaling patch, snapshot-backed canvas flow,
 cleanup behavior, abort handling, and `sRGBHex`-compatible result contract. Do

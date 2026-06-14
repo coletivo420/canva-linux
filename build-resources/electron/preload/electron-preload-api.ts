@@ -6,11 +6,23 @@ type ElectronPreloadApi = {
 };
 
 type PreloadGlobal = typeof globalThis & {
+  require?: (moduleName: "electron") => ElectronPreloadApi;
   process?: {
     argv?: unknown;
     isMainFrame?: unknown;
   };
 };
+
+function resolvePreloadRequire(): PreloadGlobal["require"] | undefined {
+  const globalRequire = (globalThis as PreloadGlobal).require;
+  if (typeof globalRequire === "function") return globalRequire;
+
+  try {
+    return (0, eval)("require") as PreloadGlobal["require"] | undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 function normalizeElectronPreloadApi(electron: Partial<ElectronPreloadApi>): ElectronPreloadApi {
   if (!electron?.contextBridge || !electron?.ipcRenderer) {
@@ -24,8 +36,16 @@ function normalizeElectronPreloadApi(electron: Partial<ElectronPreloadApi>): Ele
 }
 
 export async function loadElectronPreloadApi(): Promise<ElectronPreloadApi> {
-  const electron = await import("electron");
-  return normalizeElectronPreloadApi(electron as unknown as Partial<ElectronPreloadApi>);
+  try {
+    const electron = await import("electron");
+    return normalizeElectronPreloadApi(electron as unknown as Partial<ElectronPreloadApi>);
+  } catch {
+    const preloadRequire = resolvePreloadRequire();
+    if (typeof preloadRequire === "function") {
+      return normalizeElectronPreloadApi(preloadRequire("electron"));
+    }
+    throw new Error("Electron preload bridge APIs are unavailable.");
+  }
 }
 
 export function getPreloadArgv(): string[] {

@@ -10,8 +10,8 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   including builder help/version output, session logs, and startup logs.
 - Removed post-migration toolbar/preload compatibility fallbacks. The toolbar now uses explicit ESM preload bridge
   methods and the `canva-tabs-bridge-ready` handshake; `canvaTabs.send`/`onState`, `canva-toolbar://`,
-  `__canvaToolbarRenderState`, toolbar render injection, and eval/global-require Electron loading are blocked by tests
-  and contracts.
+  `__canvaToolbarRenderState`, and toolbar render injection are blocked by tests and contracts. The Electron preload
+  API resolver keeps its sandbox `require` fallback so the bridge can initialize in packaged runtimes.
 - CLeyedropper remains protected by the scaling patch, snapshot-backed canvas flow, cleanup behavior, abort handling,
   and `sRGBHex` result contract.
 - Closed obsolete Dev11 ESM migration leftovers: Node tests now compile to `.mjs`, root `scripts/` is no longer a

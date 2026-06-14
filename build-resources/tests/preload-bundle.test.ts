@@ -66,18 +66,17 @@ test("preload source does not use static runtime electron imports", () => {
   }
 });
 
-test("electron-preload-api uses ESM electron import without CommonJS fallbacks", () => {
+test("electron-preload-api keeps sandbox preload require fallback after ESM import", () => {
   const preloadApiPath = path.join(repoRoot, "build-resources", "electron", "preload", "electron-preload-api.ts");
   const content = fs.readFileSync(preloadApiPath, "utf8");
 
   assert.match(content, /import\("electron"\)/);
-  assert.doesNotMatch(content, /eval\(["']require["']\)/);
-  assert.doesNotMatch(content, /globalThis\.require/);
-  assert.doesNotMatch(content, /require\?:\s*\(moduleName:\s*["']electron["']\)/);
-  assert.doesNotMatch(content, /preloadRequire/);
+  assert.match(content, /globalThis[\s\S]*require/);
+  assert.match(content, /eval\)\("require"\)|eval\(["']require["']\)/);
+  assert.match(content, /preloadRequire\("electron"\)/);
 });
 
-test("generated preload bundles do not contain CommonJS electron fallbacks", () => {
+test("generated preload bundles keep sandbox preload require fallback", () => {
   const bundles = [
     path.join(repoRoot, ".build", "electron", "preload", "canva.bundle.mjs"),
     path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs"),
@@ -87,9 +86,8 @@ test("generated preload bundles do not contain CommonJS electron fallbacks", () 
     if (!fs.existsSync(bundle)) continue;
     const content = fs.readFileSync(bundle, "utf8");
     assert.match(content, /import\("electron"\)/, `${path.basename(bundle)} should attempt ESM electron import`);
-    assert.doesNotMatch(content, /preloadRequire\("electron"\)/, `${path.basename(bundle)} should not resolve electron through preload global require`);
-    assert.doesNotMatch(content, /globalThis\.require/, `${path.basename(bundle)} should not read globalThis.require`);
-    assert.doesNotMatch(content, /eval\(["']require["']\)/, `${path.basename(bundle)} should not use eval require`);
+    assert.match(content, /preloadRequire\("electron"\)/, `${path.basename(bundle)} should resolve electron through preload global require when ESM import is unavailable`);
+    assert.match(content, /globalThis\.require/, `${path.basename(bundle)} should read Electron preload global require`);
     assert.ok(!content.includes("electron_default = (init_electron(), __toCommonJS(electron_exports))"), `${path.basename(bundle)} should not resolve electron shim to itself`);
   }
 });

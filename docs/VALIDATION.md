@@ -31,7 +31,9 @@ The post-migration compatibility fallbacks were removed after Dev11
 stabilization. The toolbar must keep ESM preload bundles, explicit
 `window.canvaTabs` bridge methods, and the `canva-tabs-bridge-ready` handshake.
 Do not reintroduce `canvaTabs.send`/`onState`, `canva-toolbar://`, or
-`__canvaToolbarRenderState`. The CLeyedropper must keep the scaling patch,
+`__canvaToolbarRenderState`. `loadElectronPreloadApi` must keep the sandbox
+Electron preload resolver so the bridge initializes in Flatpak/AppImage/native
+runtime. The CLeyedropper must keep the scaling patch,
 snapshot-backed canvas flow, cleanup behavior, abort handling, and
 `sRGBHex`-compatible result contract.
 

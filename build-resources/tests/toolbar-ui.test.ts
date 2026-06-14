@@ -138,6 +138,7 @@ function createToolbarHarness(options = { bridge: true }) {
   const logs = [];
   const errors = [];
   const timers = [];
+  const intervals = [];
   const navigations = [];
   const windowListeners = new Map();
   let renderState = null;
@@ -269,6 +270,14 @@ function createToolbarHarness(options = { bridge: true }) {
       const index = timers.indexOf(callback);
       if (index >= 0) timers.splice(index, 1);
     },
+    setInterval(callback) {
+      intervals.push(callback);
+      return callback;
+    },
+    clearInterval(callback) {
+      const index = intervals.indexOf(callback);
+      if (index >= 0) intervals.splice(index, 1);
+    },
   });
 
   if (options.bridge !== false) {
@@ -289,6 +298,9 @@ function createToolbarHarness(options = { bridge: true }) {
     },
     dispatchBridgeReady() {
       window.dispatchEvent({ type: "canva-tabs-bridge-ready" });
+    },
+    runIntervals() {
+      for (const interval of [...intervals]) interval();
     },
     runTimers() {
       for (const timer of timers.splice(0)) timer();
@@ -357,6 +369,17 @@ test("toolbar subscribes after bridge readiness", () => {
 
   harness.setCanvaTabs();
   harness.dispatchBridgeReady();
+
+  assert.equal(harness.document.body.dataset.bridge, "ready");
+  assert.equal(typeof harness.render, "function");
+  assert.ok(harness.logs.some((line) => line.includes("[toolbar-ui] subscribe-tabs-state")));
+});
+
+test("toolbar subscribes when bridge appears before readiness event crosses worlds", () => {
+  const harness = createToolbarHarness({ bridge: false });
+
+  harness.setCanvaTabs();
+  harness.runIntervals();
 
   assert.equal(harness.document.body.dataset.bridge, "ready");
   assert.equal(typeof harness.render, "function");

@@ -25,8 +25,8 @@
   "ownsFullDependencyPolicy": true,
   "c420uiSourceHashAlgorithm": "sha256",
   "c420uiSourceHash": "sha256:be006b1a564472d3bc36e0d5783804de9ece0109c8d34ec8f968415d231928f0",
-  "canvaLinuxSourceHash": "sha256:9fed99a0aaa02bfd5cc20d3053d8878427a7e0817edbf4e2f506319b334ed9fd",
-  "combinedSourceHash": "sha256:64193c753dc1e68f395b32daf844bca0294e4fc499e2e64b666608b15a1c26fe",
+  "canvaLinuxSourceHash": "sha256:3c894ab9762ba0d6daf2c837576c6fa0f29fcf349108379bf21fd40b74db3794",
+  "combinedSourceHash": "sha256:3d31b2028650bc915957aa7ffe1cdaa4ca756134b41031b9464d1bfab42338ae",
   "c420uiSourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",

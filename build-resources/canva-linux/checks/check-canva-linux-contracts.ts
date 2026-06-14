@@ -761,15 +761,15 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
     if (!preloadApiSource.includes('import("electron")')) {
       failures.push("build-resources/electron/preload/electron-preload-api.ts: must load Electron through dynamic ESM import");
     }
-    for (const forbiddenFragment of [
-      'eval("require")',
-      'eval)("require")',
-      "globalThis.require",
+    for (const requiredFragment of [
+      "resolvePreloadRequire",
+      "globalThis",
       'require?: (moduleName: "electron")',
-      "preloadRequire",
+      'eval)("require")',
+      'preloadRequire("electron")',
     ] as const) {
-      if (preloadApiSource.includes(forbiddenFragment)) {
-        failures.push(`build-resources/electron/preload/electron-preload-api.ts: must not keep CommonJS/eval Electron fallback ${forbiddenFragment}`);
+      if (!preloadApiSource.includes(requiredFragment)) {
+        failures.push(`build-resources/electron/preload/electron-preload-api.ts: must keep sandbox Electron preload fallback ${requiredFragment}`);
       }
     }
   }
@@ -817,6 +817,9 @@ function checkToolbarUIContract(rootDir: string, failures: string[]): void {
   }
   if (!toolbarHtml.includes("canva-tabs-bridge-ready")) {
     failures.push("build-resources/electron/ui/toolbar.html: must wait for canva-tabs-bridge-ready");
+  }
+  if (!toolbarHtml.includes("setInterval(onReady, 25)")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must poll for canvaTabs bridge in case readiness event does not cross contexts");
   }
   if (!toolbarHtml.includes("bridge-initialization-failed") || !toolbarHtml.includes("document.body.dataset.bridge = 'failed'")) {
     failures.push("build-resources/electron/ui/toolbar.html: must expose bridge-initialization-failed on timeout");
