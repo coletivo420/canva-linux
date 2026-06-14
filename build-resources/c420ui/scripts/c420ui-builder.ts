@@ -5,6 +5,7 @@ import path from "node:path";
 
 import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader.js";
 import { ensureC420UIBootstrap } from "../bootstrap/ensure-bootstrap.js";
+import { formatC420UIVersionLabel } from "../src/version-info.js";
 
 export const BUILDER_INTERNAL_NAME = "c420ui-builder";
 export const BUILDER_ALIAS = "canva-linux-c420ui-builder";
@@ -24,7 +25,7 @@ const RUNTIME_ONLY_BOOLEAN_OPTIONS = [
   "--disable-wayland-color-manager",
 ];
 
-type PackageJson = { version?: string };
+type PackageJson = { name?: string; version?: string };
 
 type NormalizedBuilderArgs = {
   help: boolean;
@@ -70,10 +71,15 @@ function readJsonFile<T>(filePath: string): T | null {
   }
 }
 
-function c420uiVersion(rootDir: string): string {
-  return readJsonFile<PackageJson>(
+function c420uiVersionLabel(rootDir: string, sourceHash: string | null | undefined): string {
+  const packageJson = readJsonFile<PackageJson>(
     path.join(rootDir, "build-resources", "c420ui", "package.json"),
-  )?.version ?? "unknown";
+  );
+  return formatC420UIVersionLabel({
+    packageName: packageJson?.name ?? "c420ui",
+    packageVersion: packageJson?.version ?? "unknown",
+    sourceHash: sourceHash ?? null,
+  });
 }
 
 function builderVersionBlock(rootDir: string): string {
@@ -83,7 +89,7 @@ function builderVersionBlock(rootDir: string): string {
   buildRevision ${metadata.buildRevision || "unknown"}
 
 Builder:
-  c420ui ${c420uiVersion(rootDir)}`;
+  ${c420uiVersionLabel(rootDir, metadata.c420uiSourceHash)}`;
 }
 
 function builderHelp(rootDir = findProjectRoot()): string {

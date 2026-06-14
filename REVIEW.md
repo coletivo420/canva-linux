@@ -55,6 +55,7 @@ Request changes if a PR:
 - uses Canva Linux `metadata.version` as the c420ui package version;
 - uses `canvaLinuxSourceHash` or `combinedSourceHash` as the c420ui hash;
 - stops reading the c420ui package version from `build-resources/c420ui/package.json`;
+- omits the c420ui hash from builder help/version output, session logs, or startup logs;
 - removes `formatC420UIVersionLabel` or `shortSourceHash` without an equivalent c420ui-specific replacement.
 
 ## Dev.9 metadata persistence and c420ui repair

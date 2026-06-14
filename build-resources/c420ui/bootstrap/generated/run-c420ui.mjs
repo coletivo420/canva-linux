@@ -1353,7 +1353,7 @@ function createApp(options) {
     content: [
       `{bold}${opts.project.projectName}{/bold}`,
       opts.project.projectSubtitle,
-      `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""} | Phase: ${opts.project.phase ?? "unknown"}`
+      `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""}${formatShortHash2(opts.project.hash, opts.project.displayVersion)} | Phase: ${opts.project.phase ?? "unknown"}`
     ].join("\n"),
     style: c420uiTheme.header
   });
@@ -2636,7 +2636,11 @@ function createApp(options) {
   applyLogPanelLabel();
   importLauncherSessionLog();
   appendLogText(
-    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
+    `[info] c420ui started. builder=${formatC420UIVersionLabel({
+      packageName: opts.brand.name,
+      packageVersion: opts.brand.version,
+      sourceHash: opts.brand.hash ?? null
+    })} project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
 `,
     "system"
   );

@@ -17,6 +17,10 @@ const appSource = fs.readFileSync(
   path.join(repoRoot, "build-resources/c420ui/src/terminal/app.ts"),
   "utf8",
 );
+const builderSource = fs.readFileSync(
+  path.join(repoRoot, "build-resources/c420ui/scripts/c420ui-builder.ts"),
+  "utf8",
+);
 const packageJson = JSON.parse(
   fs.readFileSync(
     path.join(repoRoot, "build-resources/c420ui/package.json"),
@@ -106,4 +110,16 @@ test("falls back to hash unknown when c420uiSourceHash is missing", () => {
 
 test("c420ui header renderer uses the c420ui version formatter", () => {
   assert.match(appSource, /formatC420UIVersionLabel\(\{[\s\S]*packageName:\s*opts\.brand\.name[\s\S]*packageVersion:\s*opts\.brand\.version[\s\S]*sourceHash:\s*opts\.brand\.hash/);
+});
+
+test("c420ui builder logs and version blocks use c420uiSourceHash", () => {
+  assert.match(builderSource, /formatC420UIVersionLabel/);
+  assert.match(builderSource, /sourceHash:\s*sourceHash\s*\?\?\s*null/);
+  assert.match(builderSource, /metadata\.c420uiSourceHash/);
+  assert.doesNotMatch(builderSource, /sourceHash:\s*metadata\.canvaLinuxSourceHash/);
+  assert.doesNotMatch(builderSource, /sourceHash:\s*metadata\.combinedSourceHash/);
+});
+
+test("c420ui startup log includes formatted builder version hash", () => {
+  assert.match(appSource, /\[info\] c420ui started\. builder=\$\{formatC420UIVersionLabel/);
 });

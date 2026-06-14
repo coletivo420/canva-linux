@@ -293,7 +293,7 @@ export function createApp(options: C420UIAppOptions) {
     content: [
       `{bold}${opts.project.projectName}{/bold}`,
       opts.project.projectSubtitle,
-      `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""} | Phase: ${opts.project.phase ?? "unknown"}`,
+      `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""}${formatShortHash(opts.project.hash, opts.project.displayVersion)} | Phase: ${opts.project.phase ?? "unknown"}`,
     ].join("\n"),
     style: c420uiTheme.header,
   });
@@ -1818,7 +1818,11 @@ export function createApp(options: C420UIAppOptions) {
   importLauncherSessionLog();
 
   appendLogText(
-    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}\n`,
+    `[info] c420ui started. builder=${formatC420UIVersionLabel({
+      packageName: opts.brand.name,
+      packageVersion: opts.brand.version,
+      sourceHash: opts.brand.hash ?? null,
+    })} project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}\n`,
     "system",
   );
   appendLogText(`[info] Settings loaded from ${settingsPath}.\n`, "system");

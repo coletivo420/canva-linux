@@ -59,7 +59,9 @@ or `loadElectronPreloadApi` from `custom-eyedropper-flow`.
 - Canva Linux source hash must exclude c420ui-owned roots except via the combined hash.
 - c420ui status/version rendering must use `build-resources/c420ui/package.json.version`
   plus `c420uiSourceHash`. Do not substitute the Canva Linux release version,
-  `canvaLinuxSourceHash`, or `combinedSourceHash` for the c420ui block.
+  `canvaLinuxSourceHash`, or `combinedSourceHash` for the c420ui block. This
+  includes c420ui headers, builder help/version output, session logs, and
+  startup logs.
 
 ## Dev.9 metadata persistence and c420ui repair
 

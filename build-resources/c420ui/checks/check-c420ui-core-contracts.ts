@@ -1152,6 +1152,7 @@ function checkSourceHashDisplayContract(failures: string[]): void {
   const packageTypes = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/types.ts"), "utf8");
   const summary = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/detected-installations-summary.ts"), "utf8");
   const app = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/app.ts"), "utf8");
+  const builder = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/scripts/c420ui-builder.ts"), "utf8");
   const adapter = fs.readFileSync(path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/adapter.ts"), "utf8");
   const artifactFragments = fs.readFileSync(
     path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments.ts"),
@@ -1168,6 +1169,15 @@ function checkSourceHashDisplayContract(failures: string[]): void {
   }
   if (!app.includes("formatC420UIVersionLabel") || !app.includes("sourceHash: brandConfig.hash") || !app.includes("formatShortHash(projectConfig.hash")) {
     failures.push("c420ui header UI must render source hashes next to c420ui and project versions");
+  }
+  if (!app.includes("builder=${formatC420UIVersionLabel") || !app.includes("sourceHash: opts.brand.hash")) {
+    failures.push("c420ui startup logs must render c420uiSourceHash next to the builder version");
+  }
+  if (!builder.includes("formatC420UIVersionLabel") || !builder.includes("metadata.c420uiSourceHash")) {
+    failures.push("c420ui builder version/help/session log must render c420uiSourceHash next to the builder version");
+  }
+  if (builder.includes("metadata.canvaLinuxSourceHash") || builder.includes("metadata.combinedSourceHash")) {
+    failures.push("c420ui builder version/help/session log must not use Canva Linux or combined source hashes");
   }
   const versionInfo = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/version-info.ts"), "utf8");
   for (const requiredFragment of [

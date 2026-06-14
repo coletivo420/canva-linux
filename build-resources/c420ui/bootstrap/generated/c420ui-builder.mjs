@@ -480,6 +480,19 @@ function ensureC420UIBootstrap(rootDir) {
   ensureC420UIBootstrapWithDeps(rootDir, DEFAULT_DEPS);
 }
 
+// build-resources/c420ui/src/version-info.ts
+function shortSourceHash(hash) {
+  if (!hash || hash === "unknown") return "hash unknown";
+  if (hash.startsWith("sha256:")) {
+    const digest = hash.slice("sha256:".length);
+    return `sha256:${digest.slice(0, 8)}`;
+  }
+  return hash.slice(0, 12);
+}
+function formatC420UIVersionLabel(info) {
+  return `${info.packageName} ${info.packageVersion} \xB7 ${shortSourceHash(info.sourceHash)}`;
+}
+
 // build-resources/c420ui/scripts/c420ui-builder.ts
 var BUILDER_INTERNAL_NAME = "c420ui-builder";
 var BUILDER_ALIAS = "canva-linux-c420ui-builder";
@@ -527,10 +540,15 @@ function readJsonFile3(filePath) {
     return null;
   }
 }
-function c420uiVersion(rootDir) {
-  return readJsonFile3(
+function c420uiVersionLabel(rootDir, sourceHash) {
+  const packageJson = readJsonFile3(
     path5.join(rootDir, "build-resources", "c420ui", "package.json")
-  )?.version ?? "unknown";
+  );
+  return formatC420UIVersionLabel({
+    packageName: packageJson?.name ?? "c420ui",
+    packageVersion: packageJson?.version ?? "unknown",
+    sourceHash: sourceHash ?? null
+  });
 }
 function builderVersionBlock(rootDir) {
   const metadata = loadEffectiveBuildMetadata(rootDir);
@@ -539,7 +557,7 @@ function builderVersionBlock(rootDir) {
   buildRevision ${metadata.buildRevision || "unknown"}
 
 Builder:
-  c420ui ${c420uiVersion(rootDir)}`;
+  ${c420uiVersionLabel(rootDir, metadata.c420uiSourceHash)}`;
 }
 function builderHelp(rootDir = findProjectRoot()) {
   return `${BUILDER_TITLE}

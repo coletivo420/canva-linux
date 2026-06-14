@@ -63,7 +63,8 @@ Canva Linux release version.
 When rendering c420ui status/version, use
 `build-resources/c420ui/package.json.version` plus `c420uiSourceHash`. Do not
 substitute Canva Linux `version`, `canvaLinuxSourceHash`, or
-`combinedSourceHash`.
+`combinedSourceHash`. This applies to the c420ui header, builder
+help/version output, session logs, and startup logs.
 
 Focused validation:
 
