@@ -22,6 +22,20 @@ Dev11 finalized the TypeScript/ESM migration.
 - electron-builder `beforeBuild` hook output moved to ESM `.mjs`.
 - c420ui bootstrap generator output moved to ESM `.mjs`.
 
+## Toolbar and CLeyedropper stabilized runtime surfaces
+
+The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
+The toolbar must keep ESM preload bundles, the main-process render fallback,
+and the `canva-toolbar://` action fallback. Do not simplify the toolbar by
+removing fallback paths unless a dedicated commit proves the replacement across
+Flatpak, AppImage, and native runtime.
+
+The CLeyedropper must keep the scaling patch, snapshot-backed canvas flow,
+cleanup behavior, abort handling, and `sRGBHex`-compatible result contract. Do
+not replace CLeyedropper with a raw EyeDropper call; Canva Linux depends on the
+snapshot-backed custom picker. Do not remove `installClEyeDropperScalingPatch`
+or `loadElectronPreloadApi` from `custom-eyedropper-flow`.
+
 ## c420ui structural ownership and efficiency
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.

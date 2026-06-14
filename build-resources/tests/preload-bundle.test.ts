@@ -87,6 +87,16 @@ test("generated toolbar preload exposes canvaTabs bridge", () => {
 
   const content = fs.readFileSync(bundle, "utf8");
   assert.match(content, /\.exposeInMainWorld\("canvaTabs"/);
+  for (const method of ["subscribeTabsState", "switchTab", "closeTab", "goHome", "getSystemTheme"]) {
+    assert.match(content, new RegExp(`\\b${method}\\b`));
+  }
+});
+
+test("generated toolbar preload contains subscribeTabsState/switchTab/closeTab/goHome", () => {
+  const bundle = path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs");
+  if (!fs.existsSync(bundle)) return;
+
+  const content = fs.readFileSync(bundle, "utf8");
   for (const method of ["subscribeTabsState", "switchTab", "closeTab", "goHome"]) {
     assert.match(content, new RegExp(`\\b${method}\\b`));
   }

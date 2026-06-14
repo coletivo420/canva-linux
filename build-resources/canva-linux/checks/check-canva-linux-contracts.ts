@@ -718,8 +718,13 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
   const preloadApiSource = readText(rootDir, "build-resources/electron/preload/electron-preload-api.ts");
   if (!preloadApiSource) {
     failures.push("build-resources/electron/preload/electron-preload-api.ts: must exist");
-  } else if (!preloadApiSource.includes("globalThis") || !preloadApiSource.includes('require?: (moduleName: "electron")')) {
-    failures.push("build-resources/electron/preload/electron-preload-api.ts: must resolve Electron through preload global require");
+  } else {
+    if (!preloadApiSource.includes("globalThis") || !preloadApiSource.includes('require?: (moduleName: "electron")')) {
+      failures.push("build-resources/electron/preload/electron-preload-api.ts: must resolve Electron through preload global require");
+    }
+    if (!preloadApiSource.includes('eval)("require")') && !preloadApiSource.includes('eval("require")')) {
+      failures.push("build-resources/electron/preload/electron-preload-api.ts: must keep eval(\"require\") compatibility fallback");
+    }
   }
 
   for (const relativePath of [
@@ -769,7 +774,13 @@ function checkToolbarUIContract(rootDir: string, failures: string[]): void {
   if (!toolbarHtml.includes("document.body.dataset.bridge = 'missing'")) {
     failures.push("build-resources/electron/ui/toolbar.html: missing bridge branch must mark body dataset");
   }
-  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome"] as const) {
+  if (!toolbarHtml.includes("window.__canvaToolbarRenderState")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must define window.__canvaToolbarRenderState main fallback");
+  }
+  if (!toolbarHtml.includes("canva-toolbar://")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must support canva-toolbar:// fallback actions");
+  }
+  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome", "getSystemTheme"] as const) {
     if (!toolbarHtml.includes(`canvaTabs.${bridgeMethod}`)) {
       failures.push(`build-resources/electron/ui/toolbar.html: must use canvaTabs.${bridgeMethod}`);
     }
@@ -784,10 +795,28 @@ function checkToolbarUIContract(rootDir: string, failures: string[]): void {
   if (!toolbarPreload.includes('contextBridge.exposeInMainWorld("canvaTabs"')) {
     failures.push("build-resources/electron/preload/toolbar.ts: must expose window.canvaTabs");
   }
-  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome"] as const) {
+  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome", "getSystemTheme"] as const) {
     if (!toolbarPreload.includes(bridgeMethod)) {
       failures.push(`build-resources/electron/preload/toolbar.ts: canvaTabs must expose ${bridgeMethod}`);
     }
+  }
+  for (const legacyAlias of ["send(", "onState("] as const) {
+    if (!toolbarPreload.includes(legacyAlias)) {
+      failures.push(`build-resources/electron/preload/toolbar.ts: canvaTabs must keep legacy alias ${legacyAlias}`);
+    }
+  }
+
+  const indexSource = readText(rootDir, "build-resources/electron/main/index.ts");
+  if (!indexSource?.includes("__canvaToolbarRenderState")) {
+    failures.push("build-resources/electron/main/index.ts: must keep executeJavaScript(__canvaToolbarRenderState) fallback");
+  }
+  if (!indexSource?.includes("executeJavaScript")) {
+    failures.push("build-resources/electron/main/index.ts: must keep executeJavaScript toolbar render fallback");
+  }
+
+  const shellSource = readText(rootDir, "build-resources/electron/main/shell.ts");
+  if (!shellSource?.includes("canva-toolbar://") || !shellSource.includes("will-navigate")) {
+    failures.push("build-resources/electron/main/shell.ts: must intercept canva-toolbar:// in will-navigate");
   }
 }
 
@@ -804,6 +833,81 @@ function checkTabSwitchingContract(rootDir: string, failures: string[]): void {
   if (!tabsSource.includes("detachActiveContentView();") || !tabsSource.includes("ensureTopLevelView(tab.view);")) {
     failures.push("build-resources/electron/main/tabs.ts: switchToTab must detach active content view before showing requested tab");
   }
+  if (!tabsSource.includes("pinnedHomeTab") || !tabsSource.includes("orderedTabs.filter((tab) => !tab.isHome).map(toToolbarTabItem)")) {
+    failures.push("build-resources/electron/main/tabs.ts: toolbarState must keep pinnedHomeTab separate from regular tabs");
+  }
+  if (!/if\s*\(\s*state\.activeTabId\s*===\s*id\s*\)\s*{[\s\S]*?return;/.test(tabsSource)) {
+    failures.push("build-resources/electron/main/tabs.ts: switchToTab must keep active-tab early return");
+  }
+  if (!tabsSource.includes("if (!tab || tab.isHome) return")) {
+    failures.push("build-resources/electron/main/tabs.ts: closeTab must never close home tab");
+  }
+}
+
+function checkCLEyeDropperContracts(rootDir: string, failures: string[]): void {
+  const indexPath = "build-resources/electron/preload/cl-eyedropper/index.ts";
+  const implementationPath = "build-resources/electron/preload/cl-eyedropper/cl-eyedropper.ts";
+  const customFlowPath = "build-resources/electron/preload/custom-eyedropper-flow.ts";
+  const indexSource = readText(rootDir, indexPath);
+  const implementationSource = readText(rootDir, implementationPath);
+  const customFlowSource = readText(rootDir, customFlowPath);
+
+  if (!indexSource) {
+    failures.push(`${indexPath}: must exist`);
+  } else {
+    for (const exportedName of ["CLEyeDropper", "installClEyeDropperScalingPatch", "removeClEyeDropperUi"] as const) {
+      if (!indexSource.includes(exportedName)) {
+        failures.push(`${indexPath}: must export ${exportedName}`);
+      }
+    }
+  }
+
+  if (!customFlowSource) {
+    failures.push(`${customFlowPath}: must exist`);
+  } else {
+    reportMissingFragments(failures, customFlowPath, customFlowSource, [
+      'from "./cl-eyedropper/index.js"',
+      "loadElectronPreloadApi",
+      '"wrapper:eyedropper-snapshot"',
+      "installClEyeDropperScalingPatch",
+      "removeClEyeDropperUi",
+      '"Escape"',
+      "sRGBHex",
+      "data-canva-eyedropper-host",
+      "2147483647",
+      "activePickerCleanup",
+    ], "CLeyedropper custom flow contract");
+    if (/^\s*import\s+(?!type\b).*["']electron["'];?/m.test(customFlowSource)) {
+      failures.push(`${customFlowPath}: must not import electron at runtime`);
+    }
+    if (customFlowSource.includes("ipcRenderer") && !customFlowSource.includes("await loadElectronPreloadApi()")) {
+      failures.push(`${customFlowPath}: must not bypass loadElectronPreloadApi`);
+    }
+    if (/resolve\(\s*{\s*hex\s*}/.test(customFlowSource) || /return\s+{\s*hex\s*}/.test(customFlowSource)) {
+      failures.push(`${customFlowPath}: must not return raw { hex } only; keep sRGBHex contract`);
+    }
+  }
+
+  if (!implementationSource) {
+    failures.push(`${implementationPath}: must exist`);
+  } else {
+    reportMissingFragments(failures, implementationPath, implementationSource, [
+      "__canvaScalingPatchInstalled",
+      "getScaledCanvasPosition",
+      "_currentPosition",
+      "_lastPixel",
+      "removeEventListener",
+      "eyedropper-overlay",
+      "installClEyeDropperScalingPatch",
+      ".toLowerCase()",
+    ], "CLeyedropper scaling/cleanup contract");
+    if (!implementationSource.includes("export function installClEyeDropperScalingPatch")) {
+      failures.push(`${implementationPath}: must not remove scaling patch`);
+    }
+    if (!implementationSource.includes("removeEventListener(\"mousemove\"") || !implementationSource.includes("removeEventListener(\"click\"")) {
+      failures.push(`${implementationPath}: must not remove cleanup of event listeners`);
+    }
+  }
 }
 
 function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]): void {
@@ -819,6 +923,7 @@ function checkC420uiPackageOwnershipBoundary(rootDir: string, failures: string[]
   checkPreloadBundleContract(rootDir, failures);
   checkToolbarUIContract(rootDir, failures);
   checkTabSwitchingContract(rootDir, failures);
+  checkCLEyeDropperContracts(rootDir, failures);
   checkBuildResourcesLayoutContract(rootDir, failures);
   checkRootLayoutMinimizationContract(rootDir, failures);
   checkDocs(rootDir, failures);

@@ -24,6 +24,35 @@ must use ESM `.mjs` artifacts.
 The electron-builder `beforeBuild` hook output must use ESM `.mjs`.
 The c420ui bootstrap generator must emit and run `build-bootstrap.mjs`.
 
+## Stabilized toolbar and CLeyedropper validation
+
+The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
+The toolbar must keep ESM preload bundles, the main-process render fallback,
+and the `canva-toolbar://` action fallback. The CLeyedropper must keep the
+scaling patch, snapshot-backed canvas flow, cleanup behavior, abort handling,
+and `sRGBHex`-compatible result contract.
+
+Focused gates:
+
+- `npm run build:runtime`
+- `npm test -- build-resources/tests/preload-bundle.test.ts`
+- `npm test -- build-resources/tests/toolbar-ui.test.ts`
+- `npm test -- build-resources/tests/tab-helpers.test.ts`
+- `npm test -- build-resources/tests/cl-eyedropper-contracts.test.ts`
+- `npm run test:wiring`
+- `npm run typecheck`
+- `npm run check:canva-linux`
+
+Manual runtime validation remains outside normal repository checks:
+
+```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
+```
+
+Confirm logs include `toolbar-preload-loaded`, `[toolbar-ui] subscribe-tabs-state`,
+`[canva:eyedropper:check]`, `eyedropper:flow open-request`,
+`eyedropper:flow snapshot-ready`, and `eyedropper:library picked`.
+
 ## Source language policy validation
 
 Dev11 validation must prove:

@@ -5,6 +5,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+- Hardened toolbar, preload, tab, and CLeyedropper stability contracts without changing runtime behavior. The toolbar
+  remains protected by ESM preload bundles, the main-process render fallback, and `canva-toolbar://` action fallback;
+  CLeyedropper remains protected by the scaling patch, snapshot-backed canvas flow, cleanup behavior, abort handling,
+  and `sRGBHex` result contract.
 - Closed obsolete Dev11 ESM migration leftovers: Node tests now compile to `.mjs`, root `scripts/` is no longer a
   fallback compilation area, preload bundling rejects maintained `.js` source, runtime builds require
   `toolbar.bundle.mjs`, and repository policy blocks CommonJS bridges across maintained TypeScript.

@@ -21,6 +21,22 @@ Request changes if a PR:
 - keeps `.cjs` bootstrap or other versioned `.cjs` artifacts as permanent architecture;
 - breaks Dev11 build-resources ownership boundaries.
 
+## Stabilized toolbar and CLeyedropper review
+
+Request changes if a PR:
+
+- removes the toolbar ESM `.mjs` preload bundle contract;
+- removes the main-process toolbar render fallback through `__canvaToolbarRenderState`;
+- removes the `canva-toolbar://` action fallback;
+- removes `send` or `onState` aliases from `window.canvaTabs` before a dedicated deprecation commit;
+- changes toolbar visual CSS or height while claiming contract-only hardening;
+- merges the pinned home tab into regular toolbar tabs;
+- replaces CLeyedropper with a raw EyeDropper call;
+- removes `installClEyeDropperScalingPatch`;
+- removes `loadElectronPreloadApi` from `custom-eyedropper-flow`;
+- stops returning an `sRGBHex`-compatible custom EyeDropper result;
+- removes CLeyedropper DOM/listener cleanup, abort handling, or snapshot-backed canvas capture.
+
 ## c420ui package refactor and structural ownership
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.

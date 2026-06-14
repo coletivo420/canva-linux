@@ -421,6 +421,53 @@ test("toolbar fallback sends switch-tab through navigation URL", () => {
   assert.equal(navigations.at(-1), "canva-toolbar://switch-tab?id=2");
 });
 
+test("toolbar fallback sends close-tab through navigation URL", () => {
+  const { document, navigations, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 2,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+  document.querySelector(".tab-close").click();
+
+  assert.equal(navigations.at(-1), "canva-toolbar://close-tab?id=2");
+});
+
+test("toolbar fallback sends go-home through navigation URL", () => {
+  const { document, navigations, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 2,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+  document.querySelector(".pinned-home").click();
+
+  assert.equal(navigations.at(-1), "canva-toolbar://go-home");
+});
+
+test("toolbar never stays blank when bridge is missing", () => {
+  const { document, pinnedHomeSlot, tabs, window } = createToolbarHarness({ bridge: false });
+
+  assert.equal(pinnedHomeSlot.textContent, "");
+  assert.equal(tabs.textContent, "");
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 2,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab, docsTab],
+    theme: "light",
+  });
+
+  assert.equal(document.body.dataset.bridge, "main");
+  assert.match(pinnedHomeSlot.textContent, /Home/);
+  assert.match(tabs.textContent, /Design/);
+  assert.match(tabs.textContent, /Docs/);
+});
+
 test("toolbar does not render duplicate brand slot", () => {
   const { document } = createToolbarHarness();
   assert.equal(document.querySelector(".brand"), null);
