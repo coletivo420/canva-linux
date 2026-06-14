@@ -334,6 +334,7 @@ function createToolbarView(): WebContentsViewInstance {
     ensureTopLevelView: ensureTopLevelView as unknown as (
       view: import("./shell.js").WebContentsViewLike,
     ) => void,
+    handleToolbarAction,
     layoutViews,
     makeToolbarUrl,
     preloadPath: path.join(RUNTIME_DIR, "..", "preload", "toolbar.bundle.mjs"),
@@ -375,6 +376,17 @@ function broadcastTabsState(): void {
       `titles=${state.tabs.map((tab: { id: number; title: string }) => `${tab.id}:${tab.title}`).join(" | ") || "none"}`,
     );
     toolbarView.webContents.send("tabs-state", state);
+    void toolbarView.webContents
+      .executeJavaScript(
+        `globalThis.__canvaToolbarRenderState?.(${JSON.stringify(state)});`,
+      )
+      .catch((error: unknown) => {
+        debugLog(
+          "tabs:toolbar",
+          "toolbar-main-render-failed",
+          error instanceof Error ? error.message : String(error),
+        );
+      });
   } else {
     debugLog(
       "tabs:state",

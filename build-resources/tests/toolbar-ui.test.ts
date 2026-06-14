@@ -395,6 +395,38 @@ test("toolbar marks bridge-initialization-failed on timeout", () => {
   assert.ok(errors.some((line) => line.includes("[toolbar-ui] bridge-initialization-failed")));
 });
 
+test("toolbar main fallback renders tabs when preload bridge is unavailable", () => {
+  const { document, errors, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 2,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+
+  assert.equal(document.body.dataset.bridge, "main");
+  assert.equal(document.querySelectorAll(".pinned-home").length, 1);
+  assert.equal(document.querySelectorAll(".tab").length, 1);
+  assert.match(document.querySelector(".tab.active").textContent, /Design/);
+  assert.equal(errors.some((line) => line.includes("[toolbar-ui] bridge-initialization-failed")), false);
+});
+
+test("toolbar never marks bridge failed after main fallback renders", () => {
+  const { document, errors, runTimers, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 1,
+    pinnedHomeTab: homeTab,
+    tabs: [],
+    theme: "light",
+  });
+  runTimers();
+
+  assert.equal(document.body.dataset.bridge, "main");
+  assert.equal(errors.some((line) => line.includes("[toolbar-ui] bridge-initialization-failed")), false);
+});
+
 test("render with home and regular tabs keeps home out of regular renderer", () => {
   const { document, render } = createToolbarHarness();
 
@@ -499,14 +531,56 @@ test("toolbar bridge controls close-tab directly", () => {
   assert.deepEqual(sent, [{ channel: "close-tab", payload: { id: 2 } }]);
 });
 
-test("toolbar does not contain canva-toolbar fallback URLs", () => {
-  const html = fs.readFileSync(toolbarPath, "utf8");
-  assert.equal(html.includes("canva-toolbar://"), false);
+test("toolbar fallback sends switch-tab through canva-toolbar navigation URL", () => {
+  const { document, navigations, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 1,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+  document.querySelector(".tab-activate").click();
+
+  assert.deepEqual(navigations, ["canva-toolbar://switch-tab?id=2"]);
 });
 
-test("toolbar does not define __canvaToolbarRenderState", () => {
+test("toolbar fallback sends close-tab through canva-toolbar navigation URL", () => {
+  const { document, navigations, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 2,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+  document.querySelector(".tab-close").click();
+
+  assert.deepEqual(navigations, ["canva-toolbar://close-tab?id=2"]);
+});
+
+test("toolbar fallback sends go-home through canva-toolbar navigation URL", () => {
+  const { document, navigations, window } = createToolbarHarness({ bridge: false });
+
+  window.__canvaToolbarRenderState({
+    activeTabId: 2,
+    pinnedHomeTab: homeTab,
+    tabs: [designTab],
+    theme: "light",
+  });
+  document.querySelector(".pinned-home").click();
+
+  assert.deepEqual(navigations, ["canva-toolbar://go-home"]);
+});
+
+test("toolbar defines canva-toolbar fallback URLs", () => {
   const html = fs.readFileSync(toolbarPath, "utf8");
-  assert.equal(html.includes("__canvaToolbarRenderState"), false);
+  assert.equal(html.includes("canva-toolbar://"), true);
+});
+
+test("toolbar defines __canvaToolbarRenderState main fallback", () => {
+  const html = fs.readFileSync(toolbarPath, "utf8");
+  assert.equal(html.includes("__canvaToolbarRenderState"), true);
 });
 
 test("toolbar does not call canvaTabs.send or canvaTabs.onState", () => {

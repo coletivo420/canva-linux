@@ -212,6 +212,7 @@
     const tabsEl = document.getElementById('tabs');
     const bridgeAvailable = Boolean(window.canvaTabs);
     const iconPath = '../assets/canva-icon.png';
+    let fallbackRendered = false;
     console.log('[toolbar-ui] bootstrap', JSON.stringify({ bridgeAvailable }));
     window.addEventListener('error', (event) => {
       console.error('[toolbar-ui] error', event.message || 'unknown-error', event.filename || 'inline', event.lineno || 0);
@@ -249,22 +250,23 @@
     }
 
     function sendToolbarAction(action, payload = {}) {
-      if (!window.canvaTabs) {
-        console.error('[toolbar-ui] bridge-action-unavailable', action);
-        document.body.dataset.bridge = 'failed';
-        return;
-      }
-      if (action === 'switch-tab') {
+      if (window.canvaTabs && action === 'switch-tab') {
         window.canvaTabs.switchTab(payload.id);
         return;
       }
-      if (action === 'close-tab') {
+      if (window.canvaTabs && action === 'close-tab') {
         window.canvaTabs.closeTab(payload.id);
         return;
       }
-      if (action === 'go-home') {
+      if (window.canvaTabs && action === 'go-home') {
         window.canvaTabs.goHome();
+        return;
       }
+
+      const actionUrl = new URL(`canva-toolbar://${action}`);
+      if (payload.id !== undefined) actionUrl.searchParams.set('id', String(payload.id));
+      console.warn('[toolbar-ui] bridge-action-fallback', action);
+      window.location.href = actionUrl.toString();
     }
 
     function installIconFallback(favicon) {
@@ -391,6 +393,12 @@
       });
     }
 
+    window.__canvaToolbarRenderState = (state) => {
+      fallbackRendered = true;
+      document.body.dataset.bridge = 'main';
+      render(state);
+    };
+
     waitForCanvaTabsBridge()
       .then((bridge) => {
         document.body.dataset.bridge = 'ready';
@@ -398,6 +406,7 @@
         bridge.subscribeTabsState(render);
       })
       .catch((error) => {
+        if (fallbackRendered) return;
         console.error('[toolbar-ui] bridge-initialization-failed', error);
         document.body.dataset.bridge = 'failed';
       });

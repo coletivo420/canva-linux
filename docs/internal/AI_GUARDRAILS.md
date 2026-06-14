@@ -25,13 +25,14 @@ Dev11 finalized the TypeScript/ESM migration.
 ## Toolbar and CLeyedropper stabilized runtime surfaces
 
 The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
-The post-migration compatibility fallbacks were removed after Dev11
-stabilization. The toolbar now relies on ESM `.mjs` preload bundles, explicit
+The toolbar now relies first on ESM `.mjs` preload bundles, explicit
 `window.canvaTabs` bridge methods, and the `canva-tabs-bridge-ready` handshake.
-Do not reintroduce `canvaTabs.send`/`onState`, `canva-toolbar://` navigation,
-or main-process toolbar render injection. Keep Electron preload API resolution
-centralized in `loadElectronPreloadApi`; its sandbox `globalThis.require` /
-`eval("require")` fallback is allowed only at that Electron preload boundary.
+It must also keep the main-process `__canvaToolbarRenderState` render fallback
+and `canva-toolbar://` action fallback, because sandboxed runtime preloads can
+fail before exposing `window.canvaTabs`. Do not reintroduce
+`canvaTabs.send`/`onState`. Keep Electron preload API resolution centralized in
+`loadElectronPreloadApi`; its sandbox `globalThis.require` / `eval("require")`
+fallback is allowed only at that Electron preload boundary.
 
 The CLeyedropper must keep the scaling patch, snapshot-backed canvas flow,
 cleanup behavior, abort handling, and `sRGBHex`-compatible result contract. Do

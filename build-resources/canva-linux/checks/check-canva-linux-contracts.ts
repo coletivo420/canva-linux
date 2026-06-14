@@ -763,6 +763,7 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
     }
     for (const requiredFragment of [
       "resolvePreloadRequire",
+      "electron.default",
       "globalThis",
       'require?: (moduleName: "electron")',
       'eval)("require")',
@@ -824,15 +825,15 @@ function checkToolbarUIContract(rootDir: string, failures: string[]): void {
   if (!toolbarHtml.includes("bridge-initialization-failed") || !toolbarHtml.includes("document.body.dataset.bridge = 'failed'")) {
     failures.push("build-resources/electron/ui/toolbar.html: must expose bridge-initialization-failed on timeout");
   }
-  for (const forbiddenFragment of [
-    "window.__canvaToolbarRenderState",
-    "__canvaToolbarRenderState",
-    "canva-toolbar://",
-    "canvaTabs.send",
-    "canvaTabs.onState",
-  ] as const) {
+  if (!toolbarHtml.includes("window.__canvaToolbarRenderState")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must define window.__canvaToolbarRenderState main render fallback");
+  }
+  if (!toolbarHtml.includes("canva-toolbar://")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must keep canva-toolbar:// action fallback");
+  }
+  for (const forbiddenFragment of ["canvaTabs.send", "canvaTabs.onState"] as const) {
     if (toolbarHtml.includes(forbiddenFragment)) {
-      failures.push(`build-resources/electron/ui/toolbar.html: must not keep legacy toolbar fallback ${forbiddenFragment}`);
+      failures.push(`build-resources/electron/ui/toolbar.html: must not call legacy canvaTabs alias ${forbiddenFragment}`);
     }
   }
   for (const bridgeMethod of ["switchTab", "closeTab", "goHome", "getSystemTheme"] as const) {
@@ -869,19 +870,19 @@ function checkToolbarUIContract(rootDir: string, failures: string[]): void {
   }
 
   const indexSource = readText(rootDir, "build-resources/electron/main/index.ts");
-  if (indexSource?.includes("__canvaToolbarRenderState")) {
-    failures.push("build-resources/electron/main/index.ts: must not call executeJavaScript(__canvaToolbarRenderState)");
+  if (!indexSource?.includes("__canvaToolbarRenderState")) {
+    failures.push("build-resources/electron/main/index.ts: must keep executeJavaScript(__canvaToolbarRenderState) toolbar render fallback");
   }
-  if (indexSource?.includes("executeJavaScript") && indexSource.includes("tabs-state")) {
-    failures.push("build-resources/electron/main/index.ts: must not use executeJavaScript for toolbar render state");
+  if (!indexSource?.includes("executeJavaScript")) {
+    failures.push("build-resources/electron/main/index.ts: must use executeJavaScript for toolbar main render fallback");
   }
 
   const shellSource = readText(rootDir, "build-resources/electron/main/shell.ts");
-  if (shellSource?.includes("canva-toolbar://")) {
-    failures.push("build-resources/electron/main/shell.ts: must not intercept canva-toolbar://");
+  if (!shellSource?.includes("canva-toolbar://")) {
+    failures.push("build-resources/electron/main/shell.ts: must intercept canva-toolbar:// fallback actions");
   }
-  if (shellSource?.includes("handleToolbarAction")) {
-    failures.push("build-resources/electron/main/shell.ts: createToolbarView must not accept handleToolbarAction");
+  if (!shellSource?.includes("handleToolbarAction")) {
+    failures.push("build-resources/electron/main/shell.ts: createToolbarView must accept handleToolbarAction for fallback actions");
   }
 }
 

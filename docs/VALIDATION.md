@@ -27,13 +27,13 @@ The c420ui bootstrap generator must emit and run `build-bootstrap.mjs`.
 ## Stabilized toolbar and CLeyedropper validation
 
 The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
-The post-migration compatibility fallbacks were removed after Dev11
-stabilization. The toolbar must keep ESM preload bundles, explicit
-`window.canvaTabs` bridge methods, and the `canva-tabs-bridge-ready` handshake.
-Do not reintroduce `canvaTabs.send`/`onState`, `canva-toolbar://`, or
-`__canvaToolbarRenderState`. `loadElectronPreloadApi` must keep the sandbox
-Electron preload resolver so the bridge initializes in Flatpak/AppImage/native
-runtime. The CLeyedropper must keep the scaling patch,
+The toolbar must keep ESM preload bundles, explicit `window.canvaTabs` bridge
+methods, and the `canva-tabs-bridge-ready` handshake. Because sandboxed
+preloads can fail before exposing the bridge in Flatpak/AppImage/native runtime,
+the toolbar must also keep the main-process `__canvaToolbarRenderState` render
+fallback and `canva-toolbar://` action fallback. Do not reintroduce
+`canvaTabs.send`/`onState`. `loadElectronPreloadApi` must keep the sandbox
+Electron preload resolver. The CLeyedropper must keep the scaling patch,
 snapshot-backed canvas flow, cleanup behavior, abort handling, and
 `sRGBHex`-compatible result contract.
 

@@ -71,6 +71,7 @@ test("electron-preload-api keeps sandbox preload require fallback after ESM impo
   const content = fs.readFileSync(preloadApiPath, "utf8");
 
   assert.match(content, /import\("electron"\)/);
+  assert.match(content, /electron\.default/);
   assert.match(content, /globalThis[\s\S]*require/);
   assert.match(content, /eval\)\("require"\)|eval\(["']require["']\)/);
   assert.match(content, /preloadRequire\("electron"\)/);

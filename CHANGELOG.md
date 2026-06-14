@@ -8,10 +8,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - c420ui now displays its own package version with `c420uiSourceHash`. The c420ui package version is read from
   `build-resources/c420ui/package.json` and is no longer visually separated from the matching c420ui source hash,
   including builder help/version output, session logs, and startup logs.
-- Removed post-migration toolbar/preload compatibility fallbacks. The toolbar now uses explicit ESM preload bridge
-  methods and the `canva-tabs-bridge-ready` handshake; `canvaTabs.send`/`onState`, `canva-toolbar://`,
-  `__canvaToolbarRenderState`, and toolbar render injection are blocked by tests and contracts. The Electron preload
-  API resolver keeps its sandbox `require` fallback so the bridge can initialize in packaged runtimes.
+- Restored the stabilized toolbar main-process fallback after local logs showed the sandboxed toolbar preload can fail
+  before exposing `window.canvaTabs`. The toolbar still uses explicit ESM preload bridge methods and the
+  `canva-tabs-bridge-ready` handshake when available, but `__canvaToolbarRenderState` and `canva-toolbar://` remain
+  guarded fallback paths to avoid a blank toolbar; `canvaTabs.send`/`onState` remain blocked by tests and contracts.
 - CLeyedropper remains protected by the scaling patch, snapshot-backed canvas flow, cleanup behavior, abort handling,
   and `sRGBHex` result contract.
 - Closed obsolete Dev11 ESM migration leftovers: Node tests now compile to `.mjs`, root `scripts/` is no longer a

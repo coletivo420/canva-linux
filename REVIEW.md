@@ -26,8 +26,8 @@ Request changes if a PR:
 Request changes if a PR:
 
 - removes the toolbar ESM `.mjs` preload bundle contract;
-- reintroduces the main-process toolbar render fallback through `__canvaToolbarRenderState`;
-- reintroduces the `canva-toolbar://` action fallback;
+- removes the main-process toolbar render fallback through `__canvaToolbarRenderState`;
+- removes the `canva-toolbar://` action fallback;
 - reintroduces `send` or `onState` aliases on `window.canvaTabs`;
 - removes the `canva-tabs-bridge-ready` handshake;
 - changes toolbar visual CSS or height while claiming contract-only hardening;
