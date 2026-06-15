@@ -5,6 +5,8 @@ export * from "./command-dependencies.js";
 export * from "./node-dependencies.js";
 export * from "./npm-dependencies.js";
 export * from "./host-dependency-runner.js";
+export * from "./host-dependency-resolver.js";
+export * from "./rust-host.js";
 export * from "./startup-task.js";
 export type * from "./actions.js";
 export type * from "./artifacts.js";

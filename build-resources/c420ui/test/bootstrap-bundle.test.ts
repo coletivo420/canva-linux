@@ -184,7 +184,8 @@ test("interactive run-c420ui entrypoint starts c420ui before dependent dependenc
   assert.equal(entrypointSource.includes("isC420UIHostDependencyFailure"), false);
   assert.match(entrypointSource, /runCanvaLinuxC420UI\(\{/);
   assert.match(adapterRunSource, /startupTasks/);
-  assert.match(adapterRunSource, /ensureCanvaLinuxHostDependencies/);
+  assert.match(adapterRunSource, /runC420UIHostDependencyEnsure/);
+  assert.match(adapterRunSource, /config\.hostDependencies/);
   assert.match(adapterRunSource, /Checking dependent project dependencies/);
 });
 

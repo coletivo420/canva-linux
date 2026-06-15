@@ -637,10 +637,18 @@ Request changes if a PR:
 Request changes if a PR:
 
 - hardcodes Canva Linux dependency names inside `build-resources/c420ui/src`;
+- hardcodes dependent-project dependency names inside `build-resources/c420ui-rs`;
 - calls `scripts/ensure-npm-dependencies.sh` directly from project launchers or generic c420ui code;
 - runs `npm ci` or `npm install` directly from project launchers;
 - moves project dependency lists into c420ui core instead of project config;
 - moves npm dependency policy back into project shell helpers.
+- resolves host dependencies inside the Canva Linux adapter instead of passing
+  declarations to c420ui.
+
+Dependent projects declare host dependencies through their adapter/config.
+c420ui resolves those dependencies and routes generic host probes through
+`c420ui-host`. Canva Linux only declares what it needs; it does not resolve host
+dependencies directly.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging,

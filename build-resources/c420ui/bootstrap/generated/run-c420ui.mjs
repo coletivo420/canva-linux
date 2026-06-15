@@ -1075,30 +1075,30 @@ var c420uiKnownNpmInstallStrategies = ["auto", "ci", "install"];
 function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-function assertOptionalBoolean(value, key, failures, path19) {
+function assertOptionalBoolean(value, key, failures, path18) {
   if (key in value && typeof value[key] !== "boolean") {
-    failures.push(`${path19}.${key} must be a boolean`);
+    failures.push(`${path18}.${key} must be a boolean`);
   }
 }
-function assertOptionalString(value, key, failures, path19) {
+function assertOptionalString(value, key, failures, path18) {
   if (key in value && typeof value[key] !== "string") {
-    failures.push(`${path19}.${key} must be a string`);
+    failures.push(`${path18}.${key} must be a string`);
   }
 }
-function assertOptionalStringArray(value, key, failures, path19) {
+function assertOptionalStringArray(value, key, failures, path18) {
   if (!(key in value)) return;
   const array = value[key];
   if (!Array.isArray(array) || array.some((item) => typeof item !== "string")) {
-    failures.push(`${path19}.${key} must be a string array`);
+    failures.push(`${path18}.${key} must be a string array`);
   }
 }
-function assertOptionalPurposeArray(value, key, failures, path19) {
+function assertOptionalPurposeArray(value, key, failures, path18) {
   if (!(key in value)) return;
   const array = value[key];
   if (!Array.isArray(array) || array.some(
     (item) => typeof item !== "string" || !c420uiKnownHostDependencyPurposes.includes(item)
   )) {
-    failures.push(`${path19}.${key} must contain only known host dependency purposes`);
+    failures.push(`${path18}.${key} must contain only known host dependency purposes`);
   }
 }
 function validateConfigShape(value) {
@@ -2722,10 +2722,6 @@ function runC420UITerminalApp(options, runtimeOptions = {}) {
   });
 }
 
-// build-resources/canva-linux/c420ui-adapter/adapter.ts
-import fs17 from "node:fs";
-import path17 from "node:path";
-
 // build-resources/c420ui/src/linux-root-provider.ts
 import {
   spawnSync as spawnSync2
@@ -2843,104 +2839,17 @@ function createC420UILinuxRootProviderBase(options) {
   };
 }
 
-// build-resources/c420ui/src/command-dependencies.ts
-import fs3 from "node:fs";
-import path3 from "node:path";
-function candidateNames(command, env) {
-  if (process.platform !== "win32") return [command];
-  const extensions = (env?.PATHEXT || ".COM;.EXE;.BAT;.CMD").split(";").filter(Boolean);
-  return path3.extname(command) ? [command] : [command, ...extensions.map((extension) => `${command}${extension}`)];
-}
-var lookupC420UICommandInPath = (command, options) => {
-  if (!command) return false;
-  const env = options.env ?? process.env;
-  const pathValue = env.PATH || "";
-  const pathSeparator = process.platform === "win32" ? ";" : ":";
-  const commandHasDirectory = command.includes("/") || command.includes("\\");
-  const directories = commandHasDirectory ? [""] : pathValue.split(pathSeparator);
-  for (const directory of directories) {
-    for (const candidate of candidateNames(command, env)) {
-      const fullPath = commandHasDirectory ? candidate : path3.join(directory, candidate);
-      try {
-        const stat = fs3.statSync(fullPath);
-        if (!stat.isFile()) continue;
-        if (process.platform !== "win32") {
-          fs3.accessSync(fullPath, fs3.constants.X_OK);
-        }
-        return true;
-      } catch {
-      }
-    }
-  }
-  return false;
-};
-function checkC420UICommandDependencies(dependencies = [], options = {}) {
-  if (dependencies.length === 0) {
-    return { status: "skipped", message: "No command dependencies were declared." };
-  }
-  const lookupCommand = options.lookupCommand ?? lookupC420UICommandInPath;
-  const missing = [];
-  for (const dependency of dependencies) {
-    if (lookupCommand(dependency.command, { env: options.env })) continue;
-    if (dependency.required === false) continue;
-    missing.push({
-      id: dependency.id,
-      label: dependency.installHint ? `${dependency.command} (${dependency.installHint})` : dependency.command,
-      command: dependency.command,
-      requiredFor: dependency.requiredFor
-    });
-  }
-  if (missing.length > 0) {
-    return {
-      status: "missing",
-      dependencies: missing,
-      exitCode: 1,
-      message: `Missing required command dependencies: ${missing.map((item) => item.command ?? item.id).join(", ")}.`
-    };
-  }
-  return { status: "available", message: "Required command dependencies are available." };
-}
-
-// build-resources/c420ui/src/node-dependencies.ts
-function parseMajor(version) {
-  const normalized = version.startsWith("v") ? version.slice(1) : version;
-  const major = Number(normalized.split(".")[0]);
-  return Number.isFinite(major) ? major : null;
-}
-function checkC420UINodeDependency(config, options = {}) {
-  if (!config || config.required === false) {
-    return { status: "skipped", message: "No required Node.js dependency was declared." };
-  }
-  const nodeVersion = options.nodeVersion ?? process.versions.node;
-  const currentMajor = parseMajor(nodeVersion);
-  if (currentMajor === null) {
-    return {
-      status: "failed",
-      exitCode: 1,
-      message: `Unable to parse Node.js version: ${nodeVersion}.`
-    };
-  }
-  if (typeof config.minimumMajor === "number" && currentMajor < config.minimumMajor) {
-    return {
-      status: "failed",
-      exitCode: 1,
-      message: `Node.js major version ${config.minimumMajor} or newer is required. Current version: ${nodeVersion}.`
-    };
-  }
-  return { status: "available", message: "Node.js dependency is available." };
-}
-
 // build-resources/c420ui/src/npm-dependencies.ts
 import { spawnSync as spawnSync3 } from "node:child_process";
-import fs4 from "node:fs";
-import path4 from "node:path";
+import fs3 from "node:fs";
+import path3 from "node:path";
 function readPackageJson(rootDir2) {
-  const packagePath = path4.join(rootDir2, "package.json");
-  if (!fs4.existsSync(packagePath)) {
+  const packagePath = path3.join(rootDir2, "package.json");
+  if (!fs3.existsSync(packagePath)) {
     return { result: { status: "failed", exitCode: 1, message: "package.json was not found." } };
   }
   try {
-    const packageJson = JSON.parse(fs4.readFileSync(packagePath, "utf8"));
+    const packageJson = JSON.parse(fs3.readFileSync(packagePath, "utf8"));
     return { packageJson };
   } catch (error) {
     return {
@@ -2982,11 +2891,11 @@ function declaredDependencyNames(packageJson, config) {
   ]);
 }
 function resolveC420UINpmDependency(dependency, rootDir2) {
-  let currentDir = path4.resolve(rootDir2);
+  let currentDir = path3.resolve(rootDir2);
   while (true) {
-    const candidate = path4.join(currentDir, "node_modules", dependency, "package.json");
-    if (fs4.existsSync(candidate)) return true;
-    const parent = path4.dirname(currentDir);
+    const candidate = path3.join(currentDir, "node_modules", dependency, "package.json");
+    if (fs3.existsSync(candidate)) return true;
+    const parent = path3.dirname(currentDir);
     if (parent === currentDir) return false;
     currentDir = parent;
   }
@@ -3000,7 +2909,7 @@ function requiredNpmDependencies(config) {
 function installArgs(config, rootDir2) {
   const strategy = config.installStrategy ?? "auto";
   const lockfile = config.lockfile ?? "package-lock.json";
-  const hasLockfile = fs4.existsSync(path4.join(rootDir2, lockfile));
+  const hasLockfile = fs3.existsSync(path3.join(rootDir2, lockfile));
   const command = strategy === "ci" || strategy === "auto" && hasLockfile ? "ci" : "install";
   return config.includeDev === false ? [command] : [command, "--include=dev"];
 }
@@ -3114,42 +3023,162 @@ function ensureC420UINpmDependencies(config, options) {
   return { status: "available", message: `npm ${args.join(" ")} completed successfully${repairMessage}.` };
 }
 
-// build-resources/c420ui/src/host-dependency-runner.ts
-function runC420UIHostDependencyEnsure(config, options) {
-  const nodeResult = checkC420UINodeDependency(config.node);
-  if (nodeResult.status === "failed" || nodeResult.status === "missing") return nodeResult;
-  const commandResult = checkC420UICommandDependencies(config.commands ?? [], {
-    env: options.env
+// build-resources/c420ui/src/rust-host.ts
+import { spawn } from "node:child_process";
+import fs4 from "node:fs";
+import path4 from "node:path";
+async function runC420UIRustHost(options) {
+  const { rootDir: rootDir2, command, input, timeoutMs = 1e4, env = {} } = options;
+  let binPath = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
+  if (!binPath) {
+    const debugPath = path4.join(rootDir2, "build-resources/c420ui-rs/target/debug/c420ui-host");
+    const releasePath = path4.join(rootDir2, "build-resources/c420ui-rs/target/release/c420ui-host");
+    if (fs4.existsSync(debugPath)) {
+      binPath = debugPath;
+    } else if (fs4.existsSync(releasePath)) {
+      binPath = releasePath;
+    }
+  }
+  if (!binPath || !fs4.existsSync(binPath)) {
+    throw new Error("c420ui Rust host is missing. Run npm run build:c420ui-rs.");
+  }
+  const childEnv = {};
+  if (env.PATH) {
+    childEnv.PATH = env.PATH;
+  } else if (process.env.PATH) {
+    childEnv.PATH = process.env.PATH;
+  }
+  if (env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN) {
+    childEnv.C420UI_HOST_BIN = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
+  }
+  return new Promise((resolve, reject) => {
+    const child = spawn(binPath, [command, "--json"], {
+      env: childEnv,
+      shell: false
+    });
+    let stdoutData = "";
+    let stderrData = "";
+    let killedByTimeout = false;
+    const timer = setTimeout(() => {
+      killedByTimeout = true;
+      child.kill();
+      clearTimeout(timer);
+      reject(new Error(`c420ui-host command timed out after ${timeoutMs}ms.`));
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => {
+      stdoutData += chunk.toString();
+    });
+    child.stderr.on("data", (chunk) => {
+      stderrData += chunk.toString();
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (killedByTimeout) return;
+      if (code !== 0) {
+        reject(
+          new Error(
+            `c420ui-host exited with code ${code}. Stderr: ${stderrData.slice(0, 500).trim()}`
+          )
+        );
+        return;
+      }
+      try {
+        const parsed = JSON.parse(stdoutData.trim());
+        resolve(parsed);
+      } catch (err) {
+        reject(new Error("Failed to parse c420ui-host output as JSON."));
+      }
+    });
+    child.stdin.write(JSON.stringify(input ?? {}) + "\n");
+    child.stdin.end();
   });
-  if (commandResult.status === "failed" || commandResult.status === "missing") return commandResult;
-  const npmResult = checkC420UINpmDependencies(config.npm, {
+}
+
+// build-resources/c420ui/src/host-dependency-resolver.ts
+async function resolveC420UIHostDependencies(config, options) {
+  const validatedConfig = validateC420UIHostDependencyConfig(config);
+  const action = options.action ?? "check";
+  const rustInput = {
+    node: validatedConfig.node ? {
+      required: validatedConfig.node.required,
+      minimumMajor: validatedConfig.node.minimumMajor,
+      version: process.version
+    } : void 0,
+    commands: validatedConfig.commands,
+    env: {
+      PATH: options.env?.PATH || process.env.PATH || ""
+    }
+  };
+  let rustResult;
+  try {
+    rustResult = await runC420UIRustHost({
+      rootDir: options.rootDir,
+      command: "check-host-dependencies",
+      input: rustInput,
+      env: options.env
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return {
+      status: "failed",
+      exitCode: 1,
+      message: `c420ui Rust host check failed: ${msg}. Run "npm run build:c420ui-rs" to compile it.`
+    };
+  }
+  if (rustResult.status === "failed" || rustResult.status === "missing") {
+    return {
+      status: rustResult.status,
+      message: rustResult.message,
+      dependencies: rustResult.dependencies
+    };
+  }
+  const npmResult = checkC420UINpmDependencies(validatedConfig.npm, {
     rootDir: options.rootDir,
     env: options.env
   });
-  const repairRequested = options.env?.C420UI_DEPENDENCY_REPAIR === "clean";
-  if (npmResult.status === "available" && !repairRequested) {
-    return { status: "available", message: "Host dependencies are available." };
-  }
-  if (npmResult.status === "failed") return npmResult;
-  if (npmResult.status === "missing" || repairRequested) {
-    if (options.dryRun) {
-      return {
-        status: "skipped",
-        message: "Host dependency installation would run, but dry-run is enabled.",
-        plannedCommand: planC420UINpmInstallCommand(config.npm, options.rootDir)
-      };
+  if (action === "ensure") {
+    const repairRequested = options.env?.C420UI_DEPENDENCY_REPAIR === "clean";
+    if (npmResult.status === "available" && !repairRequested) {
+      return { status: "available", message: "Host dependencies are available." };
     }
-    return ensureC420UINpmDependencies(config.npm, {
-      rootDir: options.rootDir,
-      env: options.env,
-      runCommand: options.runCommand
-    });
+    if (npmResult.status === "failed") return npmResult;
+    if (npmResult.status === "missing" || repairRequested) {
+      if (options.dryRun) {
+        return {
+          status: "skipped",
+          message: "Host dependency installation would run, but dry-run is enabled.",
+          plannedCommand: planC420UINpmInstallCommand(validatedConfig.npm, options.rootDir)
+        };
+      }
+      return ensureC420UINpmDependencies(validatedConfig.npm, {
+        rootDir: options.rootDir,
+        env: options.env,
+        runCommand: options.runCommand
+      });
+    }
+  } else {
+    if (npmResult.status === "failed" || npmResult.status === "missing") {
+      return npmResult;
+    }
   }
   return { status: "available", message: "Host dependencies are available." };
 }
 
+// build-resources/c420ui/src/host-dependency-runner.ts
+async function runC420UIHostDependencyEnsure(config, options) {
+  return resolveC420UIHostDependencies(config, {
+    ...options,
+    action: "ensure",
+    runCommand: options.runCommand
+  });
+}
+
 // build-resources/c420ui/src/command-runner.ts
-import { spawn } from "node:child_process";
+import { spawn as spawn2 } from "node:child_process";
 import { StringDecoder } from "node:string_decoder";
 
 // build-resources/c420ui/src/operational-logs.ts
@@ -3202,7 +3231,7 @@ function emitRemainingChunk(stream, source, emitLog) {
   stream.ended = true;
 }
 async function runC420UICommand(options) {
-  const spawnCommand = options.spawnCommand ?? spawn;
+  const spawnCommand = options.spawnCommand ?? spawn2;
   const args = options.args ?? [];
   const stdoutStream = { decoder: new StringDecoder("utf8"), pending: "", ended: false };
   const stderrStream = { decoder: new StringDecoder("utf8"), pending: "", ended: false };
@@ -3677,6 +3706,10 @@ function createC420UIDevelopmentWorkflowFromAction(task, action) {
     supportsDryRun: task.supportsDryRun
   };
 }
+
+// build-resources/canva-linux/c420ui-adapter/adapter.ts
+import fs17 from "node:fs";
+import path17 from "node:path";
 
 // build-resources/c420ui/src/terminal/logo.ts
 var c420uiLogoLines = [
@@ -4926,6 +4959,10 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     resolvedRootDir,
     "build-resources/c420ui/package.json"
   );
+  const hostDependenciesJsonPath = path17.join(
+    resolvedRootDir,
+    "build-resources/canva-linux/config/host-dependencies.json"
+  );
   function loadProjectUi() {
     return readJsonFile6(projectUiPath);
   }
@@ -4937,6 +4974,10 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   }
   function loadC420UIPackageJson() {
     return readJsonFile6(c420uiPackageJsonPath);
+  }
+  function loadHostDependencies() {
+    const config = readJsonFile6(hostDependenciesJsonPath);
+    return validateC420UIHostDependencyConfig(config);
   }
   function getPackageVersion() {
     return loadPackageJson().version ?? "unknown";
@@ -5098,7 +5139,8 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
       project: loadProjectConfig(),
       releaseNotes: projectUi.versionReleaseNotes,
       sessionLogPath: getSessionLogPath(),
-      sessionId: getSessionId()
+      sessionId: getSessionId(),
+      hostDependencies: loadHostDependencies()
     };
   }
   const adapter = {
@@ -5109,13 +5151,15 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     artifactWorkflows,
     runAction,
     overviewStatus,
+    hostDependencies: loadHostDependencies,
     paths: {
       projectUi: projectUiPath,
       packageJson: packageJsonPath,
       actionsJson: actionsJsonPath,
       artifactsJson: artifactsJsonPath,
       buildMetadata: buildMetadataPath,
-      c420uiPackageJson: c420uiPackageJsonPath
+      c420uiPackageJson: c420uiPackageJsonPath,
+      hostDependenciesJson: hostDependenciesJsonPath
     },
     loadProjectInfo: loadProjectConfig,
     loadConfig: toC420UIConfig,
@@ -5135,21 +5179,10 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     getSessionLogPath,
     getSessionId,
     getToolSettingsPath,
-    toC420UIConfig
+    toC420UIConfig,
+    loadHostDependencies
   };
   return createC420UIBridge(adapter);
-}
-
-// build-resources/canva-linux/c420ui-adapter/dependencies.ts
-import fs18 from "node:fs";
-import path18 from "node:path";
-function loadCanvaLinuxDependencyConfig(rootDir2) {
-  const relativeConfigPath = "build-resources/canva-linux/config/dependencies.json";
-  const configPath = path18.join(rootDir2, relativeConfigPath);
-  return validateC420UIHostDependencyConfig(JSON.parse(fs18.readFileSync(configPath, "utf8")));
-}
-function ensureCanvaLinuxHostDependencies(options) {
-  return runC420UIHostDependencyEnsure(loadCanvaLinuxDependencyConfig(options.rootDir), options);
 }
 
 // build-resources/canva-linux/c420ui-adapter/root-provider.ts
@@ -5241,7 +5274,7 @@ function runCanvaLinuxC420UI(options = {}) {
       {
         id: "host-dependencies",
         label: "Checking dependent project dependencies",
-        run: () => ensureCanvaLinuxHostDependencies({
+        run: () => runC420UIHostDependencyEnsure(config.hostDependencies ?? {}, {
           rootDir: rootDir2,
           env: options.env
         })

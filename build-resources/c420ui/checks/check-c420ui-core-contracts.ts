@@ -221,6 +221,8 @@ function main(): number {
     "scopes.ts",
     "linux-root-provider.ts",
     "host-dependencies.ts",
+    "host-dependency-resolver.ts",
+    "rust-host.ts",
     "types.ts",
     "workflow-runner.ts",
     "workflows.ts",
@@ -1256,6 +1258,8 @@ function checkHostDependencyContract(failures: string[]): void {
     "build-resources/c420ui/src/node-dependencies.ts",
     "build-resources/c420ui/src/npm-dependencies.ts",
     "build-resources/c420ui/src/host-dependency-runner.ts",
+    "build-resources/c420ui/src/host-dependency-resolver.ts",
+    "build-resources/c420ui/src/rust-host.ts",
   ] as const;
   const indexPath = "build-resources/c420ui/src/index.ts";
 
@@ -1294,6 +1298,8 @@ function checkHostDependencyContract(failures: string[]): void {
     "./node-dependencies.js",
     "./npm-dependencies.js",
     "./host-dependency-runner.js",
+    "./host-dependency-resolver.js",
+    "./rust-host.js",
   ] as const) {
     if (!index.includes(`export * from "${exportPath}"`)) {
       failures.push(`${indexPath}: missing public export for ${exportPath}`);
@@ -1319,9 +1325,36 @@ function checkHostDependencyContract(failures: string[]): void {
     }
   }
 
+  const typesSource = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/types.ts"), "utf8");
+  if (!typesSource.includes("hostDependencies?: c420uiHostDependencyConfig")) {
+    failures.push("build-resources/c420ui/src/types.ts: C420UIConfig must expose hostDependencies");
+  }
+
+  const bridgeSource = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/bridge.ts"), "utf8");
+  if (!bridgeSource.includes("loadHostDependencies?(): c420uiHostDependencyConfig")) {
+    failures.push("build-resources/c420ui/src/bridge.ts: C420UIProjectAdapter must expose optional loadHostDependencies");
+  }
+
   const runner = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/host-dependency-runner.ts"), "utf8");
-  if (!runner.includes("plannedCommand") || !runner.includes("planC420UINpmInstallCommand")) {
-    failures.push("build-resources/c420ui/src/host-dependency-runner.ts: dry-run must expose the planned host dependency command");
+  if (!runner.includes("resolveC420UIHostDependencies")) {
+    failures.push("build-resources/c420ui/src/host-dependency-runner.ts: host-dependency-runner must use host-dependency-resolver");
+  }
+
+  const resolver = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/host-dependency-resolver.ts"), "utf8");
+  if (!resolver.includes("runC420UIRustHost")) {
+    failures.push("build-resources/c420ui/src/host-dependency-resolver.ts: host-dependency-resolver must call runC420UIRustHost");
+  }
+  for (const fragment of [
+    "checkC420UINpmDependencies",
+    "ensureC420UINpmDependencies",
+    "planC420UINpmInstallCommand",
+  ] as const) {
+    if (!resolver.includes(fragment)) {
+      failures.push(`build-resources/c420ui/src/host-dependency-resolver.ts: host-dependency-resolver must keep npm policy in TypeScript (${fragment})`);
+    }
+  }
+  if (resolver.includes("./command-dependencies.js") || resolver.includes("./node-dependencies.js")) {
+    failures.push("build-resources/c420ui/src/host-dependency-resolver.ts: resolver must not use TypeScript command/node lookup for real host probes");
   }
 
   for (const sourcePath of requiredFiles) {

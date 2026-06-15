@@ -16,6 +16,20 @@ function makeProject(): string {
   return rootDir;
 }
 
+function makeRustHostStub(): string {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-rust-host-stub-"));
+  const binPath = path.join(rootDir, "c420ui-host");
+  fs.writeFileSync(
+    binPath,
+    `#!/bin/sh
+cat >/dev/null
+printf '%s' '{"ok":true,"command":"check-host-dependencies","version":"0.1.0","status":"available","message":"Host dependencies are available.","dependencies":[]}'
+`,
+  );
+  fs.chmodSync(binPath, 0o755);
+  return binPath;
+}
+
 const config: c420uiHostDependencyConfig = {
   node: { minimumMajor: 1, required: true },
   commands: [],
@@ -39,12 +53,13 @@ const missingDependencyConfig: c420uiHostDependencyConfig = {
   },
 };
 
-test("clean repair forces npm install even when checks pass", () => {
+test("clean repair forces npm install even when checks pass", async () => {
   const rootDir = makeProject();
+  const rustHostBin = makeRustHostStub();
   const calls: string[][] = [];
-  const result = runC420UIHostDependencyEnsure(config, {
+  const result = await runC420UIHostDependencyEnsure(config, {
     rootDir,
-    env: { C420UI_DEPENDENCY_REPAIR: "clean" },
+    env: { C420UI_DEPENDENCY_REPAIR: "clean", C420UI_HOST_BIN: rustHostBin },
     runCommand: (_command, args) => {
       calls.push(args);
       return { status: 0 };
@@ -55,11 +70,12 @@ test("clean repair forces npm install even when checks pass", () => {
   assert.deepEqual(calls[0], ["ci", "--include=dev"]);
 });
 
-test("dryRun returns plannedCommand", () => {
+test("dryRun returns plannedCommand", async () => {
   const rootDir = makeProject();
-  const result = runC420UIHostDependencyEnsure(missingDependencyConfig, {
+  const rustHostBin = makeRustHostStub();
+  const result = await runC420UIHostDependencyEnsure(missingDependencyConfig, {
     rootDir,
-    env: {},
+    env: { C420UI_HOST_BIN: rustHostBin },
     dryRun: true,
   });
 
@@ -71,12 +87,13 @@ test("dryRun returns plannedCommand", () => {
   });
 });
 
-test("C420UI_DEPENDENCY_REPAIR=clean with dryRun does not execute npm", () => {
+test("C420UI_DEPENDENCY_REPAIR=clean with dryRun does not execute npm", async () => {
   const rootDir = makeProject();
+  const rustHostBin = makeRustHostStub();
   let called = false;
-  const result = runC420UIHostDependencyEnsure(config, {
+  const result = await runC420UIHostDependencyEnsure(config, {
     rootDir,
-    env: { C420UI_DEPENDENCY_REPAIR: "clean" },
+    env: { C420UI_DEPENDENCY_REPAIR: "clean", C420UI_HOST_BIN: rustHostBin },
     dryRun: true,
     runCommand: () => {
       called = true;

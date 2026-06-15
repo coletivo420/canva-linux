@@ -4,8 +4,10 @@ import {
   c420uiExitCodes,
   createC420UIBridge,
   runC420UICommand,
+  validateC420UIHostDependencyConfig,
   type c420uiActionResult,
   type c420uiExecutionContext,
+  type c420uiHostDependencyConfig,
   type c420uiProjectInfo,
   type C420UIActionDescriptor,
   type C420UIConfig,
@@ -66,6 +68,7 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
     artifactsJson: string;
     buildMetadata: string;
     c420uiPackageJson: string;
+    hostDependenciesJson: string;
   };
   loadProjectUi(): ProjectUiJson;
   loadPackageJson(): PackageJson;
@@ -80,6 +83,7 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
   getSessionId(): string;
   getToolSettingsPath(): string;
   toC420UIConfig(): C420UIConfig;
+  loadHostDependencies(): c420uiHostDependencyConfig;
 };
 
 function readJsonFile<T>(filePath: string): T {
@@ -109,6 +113,10 @@ export function createCanvaLinuxC420UIAdapter(
     resolvedRootDir,
     "build-resources/c420ui/package.json",
   );
+  const hostDependenciesJsonPath = path.join(
+    resolvedRootDir,
+    "build-resources/canva-linux/config/host-dependencies.json",
+  );
 
   function loadProjectUi(): ProjectUiJson {
     return readJsonFile<ProjectUiJson>(projectUiPath);
@@ -124,6 +132,11 @@ export function createCanvaLinuxC420UIAdapter(
 
   function loadC420UIPackageJson(): PackageJson {
     return readJsonFile<PackageJson>(c420uiPackageJsonPath);
+  }
+
+  function loadHostDependencies(): c420uiHostDependencyConfig {
+    const config = readJsonFile<unknown>(hostDependenciesJsonPath);
+    return validateC420UIHostDependencyConfig(config);
   }
 
   function getPackageVersion(): string {
@@ -314,6 +327,7 @@ export function createCanvaLinuxC420UIAdapter(
       releaseNotes: projectUi.versionReleaseNotes,
       sessionLogPath: getSessionLogPath(),
       sessionId: getSessionId(),
+      hostDependencies: loadHostDependencies(),
     };
   }
 
@@ -325,6 +339,7 @@ export function createCanvaLinuxC420UIAdapter(
     artifactWorkflows,
     runAction,
     overviewStatus,
+    hostDependencies: loadHostDependencies,
     paths: {
       projectUi: projectUiPath,
       packageJson: packageJsonPath,
@@ -332,6 +347,7 @@ export function createCanvaLinuxC420UIAdapter(
       artifactsJson: artifactsJsonPath,
       buildMetadata: buildMetadataPath,
       c420uiPackageJson: c420uiPackageJsonPath,
+      hostDependenciesJson: hostDependenciesJsonPath,
     },
     loadProjectInfo: loadProjectConfig,
     loadConfig: toC420UIConfig,
@@ -352,6 +368,7 @@ export function createCanvaLinuxC420UIAdapter(
     getSessionId,
     getToolSettingsPath,
     toC420UIConfig,
+    loadHostDependencies,
   };
 
   return createC420UIBridge(adapter) as CanvaLinuxC420UIAdapter;

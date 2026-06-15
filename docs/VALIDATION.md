@@ -86,11 +86,17 @@ Rust validation starts with:
 - `cargo test --manifest-path build-resources/c420ui-rs/Cargo.toml`
 - `npm run check:c420ui-rs-boundary`
 - `npm run check:c420ui-rs`
+- `npm run check:dev12-rust`
 
 These checks are Dev12 Rust scaffold checks and are not yet part of the global validation chain until the Rust toolchain requirement is confirmed.
 
-- TypeScript wrapper tests (Future)
-- JSON contract tests between TypeScript and Rust (Future)
+Dependent projects now declare host dependencies through their adapter/config.
+c420ui resolves those dependencies and routes generic host probes through
+`c420ui-host`. Canva Linux only declares what it needs; it does not resolve host
+dependencies directly.
+
+- TypeScript wrapper tests
+- JSON contract tests between TypeScript and Rust
 
 ## c420ui Version Hash Validation
 

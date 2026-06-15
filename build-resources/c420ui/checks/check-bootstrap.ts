@@ -451,7 +451,7 @@ function main(): void {
   }
 
   const adapterRun = read(rootDir, "build-resources/canva-linux/c420ui-adapter/run.ts");
-  for (const fragment of ["startupTasks", "Checking dependent project dependencies", "ensureCanvaLinuxHostDependencies"]) {
+  for (const fragment of ["startupTasks", "Checking dependent project dependencies", "runC420UIHostDependencyEnsure", "config.hostDependencies"]) {
     if (!adapterRun.includes(fragment)) {
       failures.push(`build-resources/canva-linux/c420ui-adapter/run.ts: missing startup dependency task fragment ${fragment}`);
     }

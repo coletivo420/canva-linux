@@ -6,25 +6,32 @@ const forbiddenFragments = [
   "Canva Linux",
   "canva-linux",
   "io.github.coletivo420.canva-linux",
+  "io.github",
   "build-resources/electron",
   "build-resources/canva-linux",
+  "build-resources/canva-linux/c420ui-adapter",
   "CLeyedropper",
   "toolbar",
   "Electron runtime",
   "Flatpak policy",
   "AppImage policy",
+  "productName",
+  "package:appimage",
+  "package:flatpak-bundle",
 ];
 
 function collectRustFiles(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     if (entry.name === "target") return [];
+    if (entry.name === "Cargo.lock") return [];
     const entryPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       return collectRustFiles(entryPath);
     }
     if (entry.isFile()) {
-      return [entryPath];
+      if (/\.(rs|toml|md)$/.test(entry.name)) return [entryPath];
+      return [];
     }
     return [];
   });

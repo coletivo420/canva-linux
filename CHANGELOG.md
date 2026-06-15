@@ -438,3 +438,15 @@ The only remaining shell files are documented runtime/bootstrap boundaries:
 - `run.sh`: Flatpak/POSIX runtime launcher.
 
 They are not migration debt. Any additional shell file is a regression unless explicitly documented as an external runtime boundary.
+
+## Dev12 dependent project host dependencies
+
+- Added the first real c420ui Rust host dependency resolver path.
+- Dependent projects declare host dependencies through their own config and
+  adapter; Canva Linux declares them in
+  `build-resources/canva-linux/config/host-dependencies.json`.
+- c420ui resolves declared dependencies generically and routes Node.js plus
+  command availability probes through `c420ui-host`.
+- npm lockfile/install policy remains in TypeScript for this phase.
+- Rust remains c420ui-only and must not hardcode Canva Linux identity,
+  packaging policy, runtime paths, toolbar, tabs, or CLeyedropper details.

@@ -1,3 +1,5 @@
+import type { c420uiHostDependencyConfig } from "./host-dependencies.js";
+
 export type C420UIBrandConfig = {
   name: string;
   version: string;
@@ -34,4 +36,5 @@ export type C420UIConfig = {
   releaseNotes: string;
   sessionLogPath?: string;
   sessionId?: string;
+  hostDependencies?: c420uiHostDependencyConfig;
 };

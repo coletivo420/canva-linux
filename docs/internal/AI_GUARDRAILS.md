@@ -98,6 +98,15 @@ Canva Linux release policy.
 Rust should provide generic c420ui host-operation commands with stable JSON
 output and stable exit codes.
 
+Dependent projects declare host dependencies in their own config and adapter.
+c420ui resolves those declarations generically. Rust may probe Node.js and
+commands from JSON input, but it must not hardcode dependent-project dependency
+names, app identity, packaging policy, or runtime paths.
+
+Do not hardcode dependent-project dependencies in c420ui core or Rust. Dependent
+projects declare dependencies in their own config, and c420ui resolves them
+generically.
+
 ## c420ui structural ownership and efficiency
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.

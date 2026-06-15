@@ -83,7 +83,7 @@ build-resources/c420ui-rs/
   tests/
 ```
 
-This layout is planned only. Dev11 must not create it.
+This layout is active in Dev12. It remains owned by c420ui infrastructure only.
 
 ## Initial Binary
 
@@ -97,6 +97,7 @@ c420ui-host
 c420ui-host --version
 c420ui-host doctor --json
 c420ui-host host-info --json
+c420ui-host check-host-dependencies --json
 ```
 
 ## TypeScript Bridge
@@ -167,3 +168,22 @@ The first Dev12 implementation commit adds `build-resources/c420ui-rs/` with the
 
 This commit must not wire Rust into Canva Linux runtime, Electron, toolbar, tabs, CLeyedropper, packaging policy, or the Canva Linux adapter.
 
+## Dev12 Commit 2 — Dependent Project Dependencies
+
+Dependent projects declare host dependencies through their own config and adapter.
+c420ui resolves those dependencies generically and routes Node.js plus command
+availability probes through `c420ui-host`.
+
+Canva Linux declares its requirements in:
+
+```text
+build-resources/canva-linux/config/host-dependencies.json
+```
+
+The c420ui core and Rust host must not hardcode those Canva Linux dependencies.
+Canva Linux only declares what it needs; it does not resolve host dependencies
+directly. npm lockfile/install policy remains in TypeScript for this phase.
+
+Do not hardcode dependent-project dependencies in c420ui core or Rust.
+Dependent projects declare dependencies in their own config, and c420ui resolves
+them generically.
