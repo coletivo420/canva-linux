@@ -58,6 +58,35 @@ Confirm logs include `toolbar-loaded`, `state-broadcast-toolbar`,
 `[canva:eyedropper:check]`, `eyedropper:flow open-request`,
 `eyedropper:flow snapshot-ready`, and `eyedropper:library picked`.
 
+Dev11 finalizes the ESM/TypeScript migration. Further changes to toolbar
+architecture, c420ui host-operation execution, or shell replacement belong to
+Dev12 or later.
+
+## Dev12 Rust c420ui migration validation preview
+
+Dev12 introduces Rust only as the c420ui host-operation execution layer.
+
+Canva Linux remains ESM/TypeScript for:
+
+- Electron main process
+- Electron preload
+- toolbar
+- tabs
+- CLeyedropper integration
+- Canva Linux adapter
+- build metadata policy
+- packaging policy
+- Flatpak/AppImage/native integration policy
+- project-specific validation
+
+Rust validation will start with:
+
+- `cargo fmt`
+- `cargo clippy`
+- `cargo test`
+- TypeScript wrapper tests
+- JSON contract tests between TypeScript and Rust
+
 ## c420ui Version Hash Validation
 
 c420ui now displays its own package version with `c420uiSourceHash`.
@@ -127,8 +156,9 @@ The adapter layer in `build-resources/canva-linux/c420ui-adapter` is reserved fo
 bootstrap validation or runtime tooling. Detection providers must avoid repeated `package.json` parsing and repeated
 `npm` process spawning during UI refresh cycles.
 c420ui-owned scripts, checks, bootstrap artifacts and tests live under `build-resources/c420ui`. The root `scripts/`
-directory may keep only compatibility wrappers when needed. Canva Linux contracts may delegate to c420ui checks
-but must not embed c420ui bootstrap implementation details.
+directory is not a maintained compatibility layer. Canva Linux contracts may
+delegate to c420ui checks but must not embed c420ui bootstrap implementation
+details.
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.

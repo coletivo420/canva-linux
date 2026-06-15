@@ -37,6 +37,38 @@ Request changes if a PR:
 - stops returning an `sRGBHex`-compatible custom EyeDropper result;
 - removes CLeyedropper DOM/listener cleanup, abort handling, or snapshot-backed canvas capture.
 
+## Dev11 final handoff
+
+Dev11 is ready to merge when:
+
+- `npm run lint` passes.
+- `npm run typecheck` passes.
+- `npm run typecheck:strict` passes.
+- `npm test` passes.
+- `npm run check:scripts-core` passes.
+- `npm run check:shared-tooling` passes.
+- `npm run check:c420ui-bootstrap` passes.
+- `npm run check:c420ui-bootstrap-artifacts` passes.
+- Manual Flatpak validation confirms the main-driven toolbar, tabs and
+  CLeyedropper.
+
+Manual checklist:
+
+```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
+```
+
+Confirm:
+
+- `toolbar-loaded`
+- `state-broadcast-toolbar`
+- `toolbar-url-action`
+- pinned home works
+- tab switching works
+- closing tabs works
+- CLeyedropper works
+- c420ui shows `0.1.0` with `c420uiSourceHash`
+
 ## c420ui package refactor and structural ownership
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.

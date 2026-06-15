@@ -40,6 +40,59 @@ not replace CLeyedropper with a raw EyeDropper call; Canva Linux depends on the
 snapshot-backed custom picker. Do not remove `installClEyeDropperScalingPatch`
 or `loadElectronPreloadApi` from `custom-eyedropper-flow`.
 
+## Dev11 final architecture
+
+Dev11 is finalized.
+
+Do not reintroduce:
+
+- `toolbar.bundle.mjs`
+- `window.canvaTabs`
+- `toolbar-action` IPC
+- maintained JavaScript wrappers
+- CommonJS compatibility
+- root `packages/`
+- root `electron/`
+- root `data/`
+- root `test/`
+- root `types/`
+
+The toolbar is intentionally main-driven. State is applied by the main process
+through `__canvaToolbarApplyState`. Actions use the `canva-toolbar://` action
+channel intercepted by `shell.ts` before navigation.
+
+## Dev12 Rust c420ui boundary
+
+Dev12 Rust migration is c420ui-only.
+
+Rust may be introduced under:
+
+```text
+build-resources/c420ui-rs/
+```
+
+Rust must not migrate, replace, wrap or own Canva Linux runtime code.
+
+Canva Linux remains ESM/TypeScript for:
+
+- Electron main process
+- Electron preload
+- toolbar
+- tabs
+- CLeyedropper integration
+- Canva Linux adapter
+- build metadata policy
+- packaging policy
+- project-specific validation
+- Flatpak/AppImage/native integration policy
+
+Rust must not contain Canva Linux names, app IDs, package names, Flatpak IDs,
+repository URLs, Electron runtime paths, toolbar rules, CLeyedropper rules or
+Canva Linux release policy.
+
+Rust should provide generic c420ui host-operation commands with stable JSON
+output and stable exit codes.
+
 ## c420ui structural ownership and efficiency
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.

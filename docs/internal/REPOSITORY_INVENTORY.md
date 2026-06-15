@@ -14,6 +14,12 @@ This generated inventory is kept outside `REVIEW.md` so the review checklist rem
 - Versioned `.cjs` files are forbidden outside external dependencies.
 - Root `packages/`, `electron/`, `data/`, and loose icon assets must not be restored.
 
+Dev12 will introduce `build-resources/c420ui-rs/` as a c420ui-owned Rust
+host-operation executor after the Dev11 merge.
+
+This Rust area is not for Canva Linux Electron runtime, toolbar, tabs,
+CLeyedropper, packaging policy or project-specific adapters.
+
 ## Files
 
 - `.codex`

@@ -2,6 +2,13 @@
 
 This project has completed the Dev11 TypeScript/ESM migration for maintained Node/Electron source.
 
+Dev11 closed the TypeScript/ESM migration.
+
+Remaining shell-to-host-operation cleanup is no longer part of the TypeScript
+conversion. It belongs to Dev12 and is scoped to the c420ui Rust migration.
+
+Canva Linux remains ESM/TypeScript.
+
 ## Current mode
 
 The app runtime, tooling, c420ui bootstrap, checks and tests are maintained as TypeScript and emitted as explicit ESM `.mjs` artifacts where Node/Electron executes generated code.

@@ -5,6 +5,24 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+### Dev11 finalized
+
+- Dev11 finalized the ESM/TypeScript migration. Electron runtime remains
+  ESM-first; Canva Linux runtime, toolbar, tabs, CLeyedropper integration and
+  project-specific adapters remain TypeScript/ESM; c420ui tooling remains
+  TypeScript-first with generated ESM `.mjs` artifacts. The toolbar is
+  main-driven, the Canva page preload remains ESM for Canva/CLeyedropper, c420ui
+  displays its own package version with `c420uiSourceHash`, and legacy root
+  `packages/`, `electron/`, `data/`, `test/`, and `types/` layouts remain
+  forbidden.
+
+### Dev12 opened
+
+- Dev12 opens the Rust migration for c420ui host-operation logic only. Canva
+  Linux remains ESM/TypeScript.
+
+### Current changes
+
 - c420ui now displays its own package version with `c420uiSourceHash`. The c420ui package version is read from
   `build-resources/c420ui/package.json` and is no longer visually separated from the matching c420ui source hash,
   including builder help/version output, session logs, and startup logs.

@@ -64,9 +64,20 @@ Shell remains allowed only for:
 - thin POSIX/runtime boundaries
 - unavoidable host-operation bridges
 
+Shell is allowed only for unavoidable POSIX/runtime boundaries and external
+host-operation entrypoints. Shell compatibility wrappers are not a maintained
+c420ui architecture layer.
+
 Shell must not own project policy, JSON/YAML/XML parsing, validation rules,
 install scope decisions, artifact metadata decisions, release policy, or
 complex dry-run logic.
+
+Dev12 starts migrating c420ui host-operation logic from Shell/POSIX scripts to
+Rust. TypeScript remains the c420ui orchestration, terminal UI, workflow and
+policy layer.
+
+This Rust migration is c420ui-only. Canva Linux runtime and project-specific
+code remain ESM/TypeScript.
 
 ### Forbidden JavaScript forms
 
@@ -307,8 +318,9 @@ Docs, tests and generated artifacts must not affect either source hash.
 ## Dev11 validation migration status
 
 Validation and doctor workflows are TypeScript-owned in
-`build-resources/canva-linux/validation/*`. Shell validation scripts are compatibility wrappers
-and must not own project policy logic.
+`build-resources/canva-linux/validation/*`. Shell validation entrypoints are
+allowed only as unavoidable POSIX/runtime boundaries and must not own project
+policy logic.
 
 ## Dev11 operational migration status
 
