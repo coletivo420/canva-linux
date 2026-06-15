@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { runC420UIRustHost } from "../src/rust-host.js";
+import { runC420UIRustHost, runC420UIRustHostJsonLines } from "../src/rust-host.js";
 
 function makeRustHostStub(source: string): string {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-rust-host-test-"));
@@ -77,7 +77,7 @@ printf '%s' 'not-json'
 
 test("applies timeout", async () => {
   const binPath = makeRustHostStub(`
-while true; do :; done
+sleep 0.2
 `);
 
   await assert.rejects(
@@ -109,4 +109,68 @@ printf '{"ok":true,"secret":%s}' "$(if [ -n "$C420UI_SECRET_SHOULD_NOT_PASS" ]; 
   });
 
   assert.equal(result.secret, null);
+});
+
+test("run-process parser handles JSONL events", async () => {
+  const binPath = makeRustHostStub(`
+read config
+printf '%s\n' '{"event":"started","pid":123}' '{"event":"stdout","line":"ok"}' '{"event":"exit","code":0}'
+`);
+  const events: unknown[] = [];
+
+  const code = await runC420UIRustHostJsonLines({
+    rootDir: process.cwd(),
+    command: "run-process",
+    input: { command: "echo", args: ["ok"], cwd: process.cwd(), env: {} },
+    env: { C420UI_HOST_BIN: binPath },
+    onEvent(event) {
+      events.push(event);
+    },
+  });
+
+  assert.equal(code, 0);
+  assert.deepEqual(events, [
+    { event: "started", pid: 123 },
+    { event: "stdout", line: "ok" },
+    { event: "exit", code: 0 },
+  ]);
+});
+
+test("invalid JSONL event fails clearly", async () => {
+  const binPath = makeRustHostStub(`
+read config
+printf '%s\n' 'not-json'
+`);
+
+  await assert.rejects(
+    () =>
+      runC420UIRustHostJsonLines({
+        rootDir: process.cwd(),
+        command: "run-process",
+        input: { command: "echo", args: ["ok"], cwd: process.cwd(), env: {} },
+        env: { C420UI_HOST_BIN: binPath },
+        onEvent() {},
+      }),
+    /Invalid JSONL event from c420ui-host/,
+  );
+});
+
+test("run-process timeout kills c420ui-host", async () => {
+  const binPath = makeRustHostStub(`
+read config
+sleep 0.2
+`);
+
+  await assert.rejects(
+    () =>
+      runC420UIRustHostJsonLines({
+        rootDir: process.cwd(),
+        command: "run-process",
+        input: { command: "echo", args: ["ok"], cwd: process.cwd(), env: {} },
+        timeoutMs: 10,
+        env: { C420UI_HOST_BIN: binPath },
+        onEvent() {},
+      }),
+    /timed out/,
+  );
 });

@@ -2840,16 +2840,339 @@ function createC420UILinuxRootProviderBase(options) {
 }
 
 // build-resources/c420ui/src/npm-dependencies.ts
-import { spawnSync as spawnSync3 } from "node:child_process";
+import fs4 from "node:fs";
+import path4 from "node:path";
+
+// build-resources/c420ui/src/rust-host.ts
+import { spawn } from "node:child_process";
+import { StringDecoder } from "node:string_decoder";
 import fs3 from "node:fs";
 import path3 from "node:path";
+function resolveC420UIRustHostBinary(rootDir2, env = {}) {
+  let binPath = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
+  if (!binPath) {
+    const debugPath = path3.join(rootDir2, "build-resources/c420ui-rs/target/debug/c420ui-host");
+    const releasePath = path3.join(rootDir2, "build-resources/c420ui-rs/target/release/c420ui-host");
+    if (fs3.existsSync(debugPath)) {
+      binPath = debugPath;
+    } else if (fs3.existsSync(releasePath)) {
+      binPath = releasePath;
+    }
+  }
+  if (!binPath || !fs3.existsSync(binPath)) {
+    throw new Error("c420ui Rust host is missing. Run npm run build:c420ui-rs.");
+  }
+  return binPath;
+}
+function buildRustHostProcessEnv(env = {}) {
+  const childEnv = {};
+  if (env.PATH) {
+    childEnv.PATH = env.PATH;
+  } else if (process.env.PATH) {
+    childEnv.PATH = process.env.PATH;
+  }
+  if (env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN) {
+    childEnv.C420UI_HOST_BIN = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
+  }
+  return childEnv;
+}
+async function runC420UIRustHost(options) {
+  const { rootDir: rootDir2, command, input, timeoutMs = 1e4, env = {} } = options;
+  const binPath = resolveC420UIRustHostBinary(rootDir2, env);
+  const childEnv = buildRustHostProcessEnv(env);
+  return new Promise((resolve, reject) => {
+    const child = spawn(binPath, [command, "--json"], {
+      env: childEnv,
+      shell: false
+    });
+    let stdoutData = "";
+    let stderrData = "";
+    let killedByTimeout = false;
+    const timer = setTimeout(() => {
+      killedByTimeout = true;
+      child.kill();
+      clearTimeout(timer);
+      reject(new Error(`c420ui-host command timed out after ${timeoutMs}ms.`));
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => {
+      stdoutData += chunk.toString();
+    });
+    child.stderr.on("data", (chunk) => {
+      stderrData += chunk.toString();
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (killedByTimeout) return;
+      if (code !== 0) {
+        reject(
+          new Error(
+            `c420ui-host exited with code ${code}. Stderr: ${stderrData.slice(0, 500).trim()}`
+          )
+        );
+        return;
+      }
+      try {
+        const parsed = JSON.parse(stdoutData.trim());
+        resolve(parsed);
+      } catch (err) {
+        reject(new Error("Failed to parse c420ui-host output as JSON."));
+      }
+    });
+    child.stdin.write(JSON.stringify(input ?? {}) + "\n");
+    child.stdin.end();
+  });
+}
+function parseJsonLine(line) {
+  try {
+    const parsed = JSON.parse(line);
+    if (!parsed || typeof parsed !== "object" || !("event" in parsed)) {
+      throw new Error("missing event field");
+    }
+    return parsed;
+  } catch (error) {
+    throw new Error(`Invalid JSONL event from c420ui-host: ${error instanceof Error ? error.message : String(error)}.`);
+  }
+}
+async function runC420UIRustHostJsonLines(options) {
+  const { rootDir: rootDir2, input, timeoutMs = 0, env = {}, signal, onEvent } = options;
+  const binPath = resolveC420UIRustHostBinary(rootDir2, env);
+  const childEnv = buildRustHostProcessEnv(env);
+  return new Promise((resolve, reject) => {
+    const child = spawn(binPath, ["run-process", "--json-lines"], {
+      env: childEnv,
+      shell: false,
+      stdio: ["pipe", "pipe", "pipe"]
+    });
+    let stdoutPending = "";
+    let stderrData = "";
+    let settled = false;
+    let timeout;
+    const decoder = new StringDecoder("utf8");
+    function settle(error, code = 0) {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      signal?.removeEventListener("abort", abort);
+      if (error) reject(error);
+      else resolve(code);
+    }
+    function abort() {
+      try {
+        child.stdin.write(JSON.stringify({ event: "cancel" }) + "\n");
+      } catch {
+      }
+      if (timeoutMs > 0) {
+        setTimeout(() => {
+          if (!settled) child.kill();
+        }, Math.min(timeoutMs, 1e3)).unref();
+      }
+    }
+    if (timeoutMs > 0) {
+      timeout = setTimeout(() => {
+        child.kill();
+        settle(new Error(`c420ui-host run-process timed out after ${timeoutMs}ms.`));
+      }, timeoutMs);
+      timeout.unref();
+    }
+    child.on("error", (error) => settle(error));
+    child.stderr.on("data", (chunk) => {
+      stderrData += chunk.toString();
+    });
+    child.stdout.on("data", (chunk) => {
+      stdoutPending += decoder.write(chunk);
+      const lines = stdoutPending.split(/\r?\n/);
+      stdoutPending = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          onEvent(parseJsonLine(line));
+        } catch (error) {
+          settle(error instanceof Error ? error : new Error(String(error)));
+          child.kill();
+          return;
+        }
+      }
+    });
+    child.stdout.on("end", () => {
+      stdoutPending += decoder.end();
+      const line = stdoutPending.trim();
+      if (!line) return;
+      try {
+        onEvent(parseJsonLine(line));
+      } catch (error) {
+        settle(error instanceof Error ? error : new Error(String(error)));
+      }
+    });
+    child.on("close", (code) => {
+      if (settled) return;
+      if (stderrData.trim() && code !== 0) {
+        stderrData = stderrData.slice(0, 500);
+      }
+      settle(null, code ?? 1);
+    });
+    signal?.addEventListener("abort", abort, { once: true });
+    child.stdin.write(JSON.stringify(input) + "\n");
+    if (signal?.aborted) {
+      abort();
+    }
+  });
+}
+
+// build-resources/c420ui/src/operational-logs.ts
+var c420uiDefaultRedactionPatterns = [
+  {
+    id: "token-assignment",
+    pattern: /\b(token|secret|password|passwd|api[_-]?key)=([^\s]+)/gi,
+    replacement: "$1=[redacted]"
+  },
+  {
+    id: "bearer-token",
+    pattern: /\bBearer\s+[A-Za-z0-9._~+/=-]+/g,
+    replacement: "Bearer [redacted]"
+  }
+];
+function redactC420UILogLine(line) {
+  return c420uiDefaultRedactionPatterns.reduce(
+    (redactedLine, redaction) => redactedLine.replace(redaction.pattern, redaction.replacement),
+    line
+  );
+}
+function createC420UIOperationalLogEvent(options) {
+  return {
+    source: options.source,
+    line: options.redact === false ? options.line : redactC420UILogLine(options.line),
+    level: options.level,
+    timestamp: (/* @__PURE__ */ new Date()).toISOString()
+  };
+}
+
+// build-resources/c420ui/src/rust-process-runner.ts
+var rustProcessEnvAllowlist = /* @__PURE__ */ new Set([
+  "PATH",
+  "HOME",
+  "XDG_CACHE_HOME",
+  "XDG_CONFIG_HOME",
+  "XDG_DATA_HOME",
+  "XDG_STATE_HOME",
+  "TMPDIR",
+  "TEMP",
+  "TMP",
+  "CI",
+  "FORCE_COLOR",
+  "NO_COLOR",
+  "npm_config_cache",
+  "npm_config_userconfig",
+  "npm_config_prefix",
+  "npm_config_loglevel",
+  "npm_config_update_notifier",
+  "C420UI_HOST_BIN"
+]);
+function buildC420UIRustProcessEnv(env) {
+  const safeEnv = {};
+  for (const key of rustProcessEnvAllowlist) {
+    const value = env[key];
+    if (typeof value === "string") safeEnv[key] = value;
+  }
+  return safeEnv;
+}
+function emitActionLog(options, line, level = "info") {
+  options.emitLog(createC420UIOperationalLogEvent({ source: "action", line, level }));
+}
+function mapEvent(options, event) {
+  if (event.event === "stdout" || event.event === "stderr") {
+    options.emitLog(createC420UIOperationalLogEvent({ source: event.event, line: event.line }));
+    return;
+  }
+  if (event.event === "error") {
+    emitActionLog(options, `[error] Failed to start ${options.label}: ${event.message}`, "error");
+  }
+}
+async function runC420UIRustProcess(options) {
+  if (options.signal?.aborted) {
+    emitActionLog(options, `[action] Cancel requested for ${options.label}`);
+    options.emitProgress({ state: "canceled", percent: 0, label: options.label });
+    return {
+      code: c420uiExitCodes.canceled,
+      status: "canceled",
+      message: "Action canceled before start."
+    };
+  }
+  emitActionLog(options, `[action] Starting ${options.label}`);
+  options.emitProgress({ state: "running", label: options.label });
+  let exitCode = c420uiExitCodes.generalError;
+  let canceled = false;
+  let errorMessage;
+  try {
+    const hostExitCode = await runC420UIRustHostJsonLines({
+      rootDir: options.rootDir,
+      command: "run-process",
+      timeoutMs: options.timeoutMs,
+      signal: options.signal,
+      env: options.env,
+      input: {
+        command: options.command,
+        args: options.args ?? [],
+        cwd: options.cwd,
+        env: buildC420UIRustProcessEnv(options.env),
+        label: options.label
+      },
+      onEvent(event) {
+        mapEvent(options, event);
+        if (event.event === "exit") exitCode = event.code;
+        if (event.event === "canceled") {
+          canceled = true;
+          errorMessage = event.message;
+        }
+        if (event.event === "error") {
+          errorMessage = event.message;
+        }
+      }
+    });
+    if (exitCode === c420uiExitCodes.generalError && hostExitCode !== c420uiExitCodes.success) {
+      exitCode = hostExitCode;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    emitActionLog(options, `[error] Failed to start ${options.label}: ${message}`, "error");
+    options.emitProgress({ state: "failed", label: options.label });
+    return { code: c420uiExitCodes.generalError, status: "failed", message };
+  }
+  if (canceled || options.signal?.aborted || exitCode === c420uiExitCodes.canceled) {
+    options.emitProgress({ state: "canceled", percent: 0, label: options.label });
+    return {
+      code: c420uiExitCodes.canceled,
+      status: "canceled",
+      message: errorMessage ?? "Action canceled."
+    };
+  }
+  const success = exitCode === c420uiExitCodes.success;
+  if (!success) {
+    emitActionLog(options, `[error] ${options.label} exited with code ${exitCode}`, "error");
+  }
+  options.emitProgress({
+    state: success ? "success" : "failed",
+    percent: success ? 100 : void 0,
+    label: options.label
+  });
+  return {
+    code: exitCode,
+    status: success ? "success" : "failed",
+    message: errorMessage
+  };
+}
+
+// build-resources/c420ui/src/npm-dependencies.ts
 function readPackageJson(rootDir2) {
-  const packagePath = path3.join(rootDir2, "package.json");
-  if (!fs3.existsSync(packagePath)) {
+  const packagePath = path4.join(rootDir2, "package.json");
+  if (!fs4.existsSync(packagePath)) {
     return { result: { status: "failed", exitCode: 1, message: "package.json was not found." } };
   }
   try {
-    const packageJson = JSON.parse(fs3.readFileSync(packagePath, "utf8"));
+    const packageJson = JSON.parse(fs4.readFileSync(packagePath, "utf8"));
     return { packageJson };
   } catch (error) {
     return {
@@ -2891,11 +3214,11 @@ function declaredDependencyNames(packageJson, config) {
   ]);
 }
 function resolveC420UINpmDependency(dependency, rootDir2) {
-  let currentDir = path3.resolve(rootDir2);
+  let currentDir = path4.resolve(rootDir2);
   while (true) {
-    const candidate = path3.join(currentDir, "node_modules", dependency, "package.json");
-    if (fs3.existsSync(candidate)) return true;
-    const parent = path3.dirname(currentDir);
+    const candidate = path4.join(currentDir, "node_modules", dependency, "package.json");
+    if (fs4.existsSync(candidate)) return true;
+    const parent = path4.dirname(currentDir);
     if (parent === currentDir) return false;
     currentDir = parent;
   }
@@ -2909,7 +3232,7 @@ function requiredNpmDependencies(config) {
 function installArgs(config, rootDir2) {
   const strategy = config.installStrategy ?? "auto";
   const lockfile = config.lockfile ?? "package-lock.json";
-  const hasLockfile = fs3.existsSync(path3.join(rootDir2, lockfile));
+  const hasLockfile = fs4.existsSync(path4.join(rootDir2, lockfile));
   const command = strategy === "ci" || strategy === "auto" && hasLockfile ? "ci" : "install";
   return config.includeDev === false ? [command] : [command, "--include=dev"];
 }
@@ -2977,13 +3300,29 @@ function checkC420UINpmDependencies(config, options) {
     resolveDependency: options.resolveDependency
   });
 }
-var defaultNpmCommandRunner = (command, args, options) => spawnSync3(command, args, {
-  cwd: options.cwd,
-  env: options.env,
-  stdio: options.stdio ?? "inherit",
-  shell: false
-});
-function ensureC420UINpmDependencies(config, options) {
+var defaultNpmCommandRunner = async (options) => {
+  const result = await runC420UIRustProcess({
+    rootDir: options.rootDir,
+    command: options.command,
+    args: options.args,
+    cwd: options.cwd,
+    env: options.env,
+    label: options.label,
+    emitLog: options.emitLog ?? (() => {
+    }),
+    emitProgress: options.emitProgress ?? (() => {
+    })
+  });
+  if (result.status === "success") {
+    return { status: "available", message: `${options.label} completed successfully.` };
+  }
+  return {
+    status: "failed",
+    exitCode: result.code,
+    message: result.message ?? `${options.label} failed.`
+  };
+};
+async function ensureC420UINpmDependencies(config, options) {
   if (!config) {
     return { status: "skipped", message: "No npm dependencies were declared." };
   }
@@ -3004,98 +3343,24 @@ function ensureC420UINpmDependencies(config, options) {
   const args = installArgs(config, options.rootDir);
   const runCommand = options.runCommand ?? defaultNpmCommandRunner;
   const repairMessage = env.C420UI_DEPENDENCY_REPAIR === "clean" ? " after clean repair was requested" : "";
-  const commandResult = runCommand("npm", args, {
+  const commandResult = await runCommand({
+    rootDir: options.rootDir,
+    command: "npm",
+    args,
     cwd: options.rootDir,
     env,
-    stdio: "inherit"
+    label: `npm ${args.join(" ")}`,
+    emitLog: options.emitLog,
+    emitProgress: options.emitProgress
   });
-  if (commandResult.error) {
-    return { status: "failed", exitCode: 1, message: commandResult.error.message };
-  }
-  const status = commandResult.status ?? 1;
-  if (status !== 0) {
+  if (commandResult.status === "failed") {
     return {
       status: "failed",
-      exitCode: status,
+      exitCode: commandResult.exitCode ?? 1,
       message: `npm ${args.join(" ")} failed${repairMessage}.`
     };
   }
   return { status: "available", message: `npm ${args.join(" ")} completed successfully${repairMessage}.` };
-}
-
-// build-resources/c420ui/src/rust-host.ts
-import { spawn } from "node:child_process";
-import fs4 from "node:fs";
-import path4 from "node:path";
-async function runC420UIRustHost(options) {
-  const { rootDir: rootDir2, command, input, timeoutMs = 1e4, env = {} } = options;
-  let binPath = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
-  if (!binPath) {
-    const debugPath = path4.join(rootDir2, "build-resources/c420ui-rs/target/debug/c420ui-host");
-    const releasePath = path4.join(rootDir2, "build-resources/c420ui-rs/target/release/c420ui-host");
-    if (fs4.existsSync(debugPath)) {
-      binPath = debugPath;
-    } else if (fs4.existsSync(releasePath)) {
-      binPath = releasePath;
-    }
-  }
-  if (!binPath || !fs4.existsSync(binPath)) {
-    throw new Error("c420ui Rust host is missing. Run npm run build:c420ui-rs.");
-  }
-  const childEnv = {};
-  if (env.PATH) {
-    childEnv.PATH = env.PATH;
-  } else if (process.env.PATH) {
-    childEnv.PATH = process.env.PATH;
-  }
-  if (env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN) {
-    childEnv.C420UI_HOST_BIN = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
-  }
-  return new Promise((resolve, reject) => {
-    const child = spawn(binPath, [command, "--json"], {
-      env: childEnv,
-      shell: false
-    });
-    let stdoutData = "";
-    let stderrData = "";
-    let killedByTimeout = false;
-    const timer = setTimeout(() => {
-      killedByTimeout = true;
-      child.kill();
-      clearTimeout(timer);
-      reject(new Error(`c420ui-host command timed out after ${timeoutMs}ms.`));
-    }, timeoutMs);
-    child.stdout.on("data", (chunk) => {
-      stdoutData += chunk.toString();
-    });
-    child.stderr.on("data", (chunk) => {
-      stderrData += chunk.toString();
-    });
-    child.on("error", (err) => {
-      clearTimeout(timer);
-      reject(err);
-    });
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      if (killedByTimeout) return;
-      if (code !== 0) {
-        reject(
-          new Error(
-            `c420ui-host exited with code ${code}. Stderr: ${stderrData.slice(0, 500).trim()}`
-          )
-        );
-        return;
-      }
-      try {
-        const parsed = JSON.parse(stdoutData.trim());
-        resolve(parsed);
-      } catch (err) {
-        reject(new Error("Failed to parse c420ui-host output as JSON."));
-      }
-    });
-    child.stdin.write(JSON.stringify(input ?? {}) + "\n");
-    child.stdin.end();
-  });
 }
 
 // build-resources/c420ui/src/host-dependency-resolver.ts
@@ -3154,10 +3419,12 @@ async function resolveC420UIHostDependencies(config, options) {
           plannedCommand: planC420UINpmInstallCommand(validatedConfig.npm, options.rootDir)
         };
       }
-      return ensureC420UINpmDependencies(validatedConfig.npm, {
+      return await ensureC420UINpmDependencies(validatedConfig.npm, {
         rootDir: options.rootDir,
         env: options.env,
-        runCommand: options.runCommand
+        runCommand: options.runCommand,
+        emitLog: options.emitLog,
+        emitProgress: options.emitProgress
       });
     }
   } else {
@@ -3178,201 +3445,19 @@ async function runC420UIHostDependencyEnsure(config, options) {
 }
 
 // build-resources/c420ui/src/command-runner.ts
-import { spawn as spawn2 } from "node:child_process";
-import { StringDecoder } from "node:string_decoder";
-
-// build-resources/c420ui/src/operational-logs.ts
-var c420uiDefaultRedactionPatterns = [
-  {
-    id: "token-assignment",
-    pattern: /\b(token|secret|password|passwd|api[_-]?key)=([^\s]+)/gi,
-    replacement: "$1=[redacted]"
-  },
-  {
-    id: "bearer-token",
-    pattern: /\bBearer\s+[A-Za-z0-9._~+/=-]+/g,
-    replacement: "Bearer [redacted]"
-  }
-];
-function redactC420UILogLine(line) {
-  return c420uiDefaultRedactionPatterns.reduce(
-    (redactedLine, redaction) => redactedLine.replace(redaction.pattern, redaction.replacement),
-    line
-  );
-}
-function createC420UIOperationalLogEvent(options) {
-  return {
-    source: options.source,
-    line: options.redact === false ? options.line : redactC420UILogLine(options.line),
-    level: options.level,
-    timestamp: (/* @__PURE__ */ new Date()).toISOString()
-  };
-}
-
-// build-resources/c420ui/src/command-runner.ts
-function emitOperationalLog(options, event) {
-  options.emitLog(createC420UIOperationalLogEvent(event));
-}
-function emitDecodedChunk(stream, chunk, source, emitLog) {
-  stream.pending += stream.decoder.write(chunk);
-  const lines = stream.pending.split(/\r?\n/);
-  stream.pending = lines.pop() ?? "";
-  for (const line of lines) {
-    emitLog(createC420UIOperationalLogEvent({ source, line }));
-  }
-}
-function emitRemainingChunk(stream, source, emitLog) {
-  if (stream.ended) return;
-  stream.pending += stream.decoder.end();
-  if (stream.pending) {
-    emitLog(createC420UIOperationalLogEvent({ source, line: stream.pending }));
-  }
-  stream.pending = "";
-  stream.ended = true;
-}
 async function runC420UICommand(options) {
-  const spawnCommand = options.spawnCommand ?? spawn2;
-  const args = options.args ?? [];
-  const stdoutStream = { decoder: new StringDecoder("utf8"), pending: "", ended: false };
-  const stderrStream = { decoder: new StringDecoder("utf8"), pending: "", ended: false };
-  const cancelSignal = options.cancelSignal ?? "SIGINT";
-  const cancelKillSignal = options.cancelKillSignal ?? "SIGTERM";
-  const cancelKillTimeoutMs = options.cancelKillTimeoutMs ?? 5e3;
-  if (options.signal?.aborted) {
-    emitOperationalLog(options, {
-      source: "action",
-      line: `[action] Cancel requested for ${options.label}`,
-      level: "info"
-    });
-    options.emitProgress({ state: "canceled", percent: 0, label: options.label });
-    return {
-      code: c420uiExitCodes.canceled,
-      status: "canceled",
-      message: "Action canceled before start."
-    };
-  }
-  return new Promise((resolve) => {
-    let settled = false;
-    let closeObserved = false;
-    let cancellationRequested = false;
-    let canceledProgressEmitted = false;
-    let cancelKillTimer;
-    let child;
-    function emitCanceledProgress() {
-      if (canceledProgressEmitted) return;
-      canceledProgressEmitted = true;
-      options.emitProgress({ state: "canceled", percent: 0, label: options.label });
-    }
-    function clearCancelKillTimer() {
-      if (!cancelKillTimer) return;
-      clearTimeout(cancelKillTimer);
-      cancelKillTimer = void 0;
-    }
-    function settle(result) {
-      if (settled) return;
-      settled = true;
-      clearCancelKillTimer();
-      options.signal?.removeEventListener("abort", abortAction);
-      resolve(result);
-    }
-    function abortAction() {
-      cancellationRequested = true;
-      emitOperationalLog(options, {
-        source: "action",
-        line: `[action] Cancel requested for ${options.label}`,
-        level: "info"
-      });
-      emitCanceledProgress();
-      child.kill(cancelSignal);
-      cancelKillTimer = setTimeout(() => {
-        if (!closeObserved) child.kill(cancelKillSignal);
-      }, cancelKillTimeoutMs);
-      cancelKillTimer.unref();
-    }
-    emitOperationalLog(options, {
-      source: "action",
-      line: `[action] Starting ${options.label}`,
-      level: "info"
-    });
-    options.emitProgress({ state: "running", label: options.label });
-    try {
-      child = spawnCommand(options.command, args, {
-        cwd: options.cwd,
-        env: options.env,
-        shell: false,
-        stdio: ["ignore", "pipe", "pipe"]
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      emitOperationalLog(options, {
-        source: "action",
-        line: `[error] Failed to start ${options.label}: ${message}`,
-        level: "error"
-      });
-      options.emitProgress({ state: "failed", label: options.label });
-      settle({ code: c420uiExitCodes.generalError, status: "failed", message });
-      return;
-    }
-    options.signal?.addEventListener("abort", abortAction, { once: true });
-    child.stdout?.on("data", (chunk) => {
-      emitDecodedChunk(stdoutStream, chunk, "stdout", options.emitLog);
-    });
-    child.stderr?.on("data", (chunk) => {
-      emitDecodedChunk(stderrStream, chunk, "stderr", options.emitLog);
-    });
-    child.stdout?.on("end", () => {
-      emitRemainingChunk(stdoutStream, "stdout", options.emitLog);
-    });
-    child.stderr?.on("end", () => {
-      emitRemainingChunk(stderrStream, "stderr", options.emitLog);
-    });
-    child.on("error", (error) => {
-      if (settled) return;
-      if (options.signal?.aborted) {
-        settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
-        return;
-      }
-      emitOperationalLog(options, {
-        source: "action",
-        line: `[error] Failed to start ${options.label}: ${error.message}`,
-        level: "error"
-      });
-      options.emitProgress({ state: "failed", label: options.label });
-      settle({ code: c420uiExitCodes.generalError, status: "failed", message: error.message });
-    });
-    child.on("close", (code, signal) => {
-      if (settled) return;
-      closeObserved = true;
-      clearCancelKillTimer();
-      setImmediate(() => {
-        if (settled) return;
-        emitRemainingChunk(stdoutStream, "stdout", options.emitLog);
-        emitRemainingChunk(stderrStream, "stderr", options.emitLog);
-        if (cancellationRequested || options.signal?.aborted || signal === cancelSignal) {
-          emitCanceledProgress();
-          settle({ code: c420uiExitCodes.canceled, status: "canceled", message: "Action canceled." });
-          return;
-        }
-        const resultCode = code ?? c420uiExitCodes.generalError;
-        const success = resultCode === c420uiExitCodes.success;
-        if (!success) {
-          emitOperationalLog(options, {
-            source: "action",
-            line: `[error] ${options.label} exited with code ${resultCode}`,
-            level: "error"
-          });
-        }
-        options.emitProgress({
-          state: success ? "success" : "failed",
-          percent: success ? 100 : void 0,
-          label: options.label
-        });
-        settle({
-          code: resultCode,
-          status: success ? "success" : "failed"
-        });
-      });
-    });
+  const processRunner = options.processRunner ?? runC420UIRustProcess;
+  return processRunner({
+    rootDir: options.cwd,
+    command: options.command,
+    args: options.args ?? [],
+    cwd: options.cwd,
+    env: options.env,
+    label: options.label,
+    signal: options.signal,
+    timeoutMs: options.timeoutMs,
+    emitLog: options.emitLog,
+    emitProgress: options.emitProgress
   });
 }
 
@@ -4132,11 +4217,11 @@ function detectAppImageHash(rootDir2) {
 import fs9 from "node:fs";
 import path9 from "node:path";
 import os from "node:os";
-import { spawnSync as spawnSync4 } from "node:child_process";
+import { spawnSync as spawnSync3 } from "node:child_process";
 var APP_ID = "io.github.coletivo420.canva-linux";
 function detectFlatpakSystemInstall() {
   try {
-    const result = spawnSync4("flatpak", ["--system", "info", APP_ID], {
+    const result = spawnSync3("flatpak", ["--system", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -4146,7 +4231,7 @@ function detectFlatpakSystemInstall() {
 }
 function detectFlatpakUserInstall() {
   try {
-    const result = spawnSync4("flatpak", ["--user", "info", APP_ID], {
+    const result = spawnSync3("flatpak", ["--user", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -4213,7 +4298,7 @@ function detectFlatpakSystemVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = spawnSync4(
+    const result = spawnSync3(
       "flatpak",
       ["--system", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }
@@ -4231,7 +4316,7 @@ function detectFlatpakUserVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = spawnSync4(
+    const result = spawnSync3(
       "flatpak",
       ["--user", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }

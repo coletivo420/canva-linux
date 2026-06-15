@@ -10,6 +10,7 @@ fn print_usage() {
     eprintln!("  host-info --json");
     eprintln!("  doctor --json");
     eprintln!("  check-host-dependencies --json");
+    eprintln!("  run-process --json-lines");
     eprintln!("Options:");
     eprintln!("  --version");
 }
@@ -72,6 +73,15 @@ fn main() {
                 std::process::exit(exit_codes::INVALID_USAGE);
             }
         }
+    }
+
+    if cmd == "run-process" {
+        let has_json_lines = args.iter().any(|arg| arg == "--json-lines");
+        if !has_json_lines {
+            eprintln!("Error: run-process command requires --json-lines");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        std::process::exit(commands::run_process::execute());
     }
 
     eprintln!("Error: unknown command '{}'", cmd);

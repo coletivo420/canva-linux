@@ -95,6 +95,10 @@ c420ui resolves those dependencies and routes generic host probes through
 `c420ui-host`. Canva Linux only declares what it needs; it does not resolve host
 dependencies directly.
 
+Dev12 also routes generic c420ui host process execution through
+`c420ui-host run-process --json-lines`. TypeScript remains responsible for UI,
+workflow policy, dependency policy and dependent-project boundaries.
+
 - TypeScript wrapper tests
 - JSON contract tests between TypeScript and Rust
 

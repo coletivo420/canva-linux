@@ -89,10 +89,12 @@ export async function resolveC420UIHostDependencies(
           plannedCommand: planC420UINpmInstallCommand(validatedConfig.npm, options.rootDir),
         };
       }
-      return ensureC420UINpmDependencies(validatedConfig.npm, {
+      return await ensureC420UINpmDependencies(validatedConfig.npm, {
         rootDir: options.rootDir,
         env: options.env,
         runCommand: options.runCommand,
+        emitLog: options.emitLog,
+        emitProgress: options.emitProgress,
       });
     }
   } else {

@@ -60,9 +60,9 @@ test("clean repair forces npm install even when checks pass", async () => {
   const result = await runC420UIHostDependencyEnsure(config, {
     rootDir,
     env: { C420UI_DEPENDENCY_REPAIR: "clean", C420UI_HOST_BIN: rustHostBin },
-    runCommand: (_command, args) => {
-      calls.push(args);
-      return { status: 0 };
+    runCommand: async (options) => {
+      calls.push(options.args);
+      return { status: "available" };
     },
   });
 
@@ -95,9 +95,9 @@ test("C420UI_DEPENDENCY_REPAIR=clean with dryRun does not execute npm", async ()
     rootDir,
     env: { C420UI_DEPENDENCY_REPAIR: "clean", C420UI_HOST_BIN: rustHostBin },
     dryRun: true,
-    runCommand: () => {
+    runCommand: async () => {
       called = true;
-      return { status: 0 };
+      return { status: "available" };
     },
   });
 

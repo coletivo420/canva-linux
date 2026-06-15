@@ -1,6 +1,35 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
 
+fn run_process(input: &str) -> std::process::Output {
+    let bin = env!("CARGO_BIN_EXE_c420ui-host");
+    let mut child = Command::new(bin)
+        .arg("run-process")
+        .arg("--json-lines")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to spawn binary");
+
+    {
+        let stdin = child.stdin.as_mut().expect("failed to open stdin");
+        stdin
+            .write_all(input.as_bytes())
+            .expect("failed to write to stdin");
+    }
+
+    child.wait_with_output().expect("failed to read output")
+}
+
+fn json_lines(output: &std::process::Output) -> Vec<serde_json::Value> {
+    let stdout = String::from_utf8(output.stdout.clone()).unwrap();
+    stdout
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| serde_json::from_str(line).expect("stdout line is not valid JSON"))
+        .collect()
+}
+
 #[test]
 fn test_version() {
     let bin = env!("CARGO_BIN_EXE_c420ui-host");
@@ -311,4 +340,114 @@ fn test_check_host_dependencies_custom_path() {
     let dependencies = json["dependencies"].as_array().unwrap();
     assert_eq!(dependencies.len(), 1);
     assert_eq!(dependencies[0]["id"], "sh-test");
+}
+
+#[test]
+fn test_run_process_json_lines_runs_simple_command_successfully() {
+    let input = format!(
+        "{{\"command\":\"printf\",\"args\":[\"ok\"],\"cwd\":{},\"env\":{{\"PATH\":\"{}\"}},\"label\":\"print ok\"}}\n",
+        serde_json::to_string(&std::env::current_dir().unwrap().display().to_string()).unwrap(),
+        std::env::var("PATH").unwrap_or_default()
+    );
+    let output = run_process(&input);
+    let events = json_lines(&output);
+
+    assert!(output.status.success());
+    assert!(events.iter().any(|event| event["event"] == "started"));
+    assert!(events.iter().any(|event| event["event"] == "stdout" && event["line"] == "ok"));
+    assert!(events.iter().any(|event| event["event"] == "exit" && event["code"] == 0));
+}
+
+#[test]
+fn test_run_process_emits_stderr_event() {
+    let input = format!(
+        "{{\"command\":\"sh\",\"args\":[\"-c\",\"printf warn >&2\"],\"cwd\":{},\"env\":{{\"PATH\":\"{}\"}},\"label\":\"stderr\"}}\n",
+        serde_json::to_string(&std::env::current_dir().unwrap().display().to_string()).unwrap(),
+        std::env::var("PATH").unwrap_or_default()
+    );
+    let output = run_process(&input);
+    let events = json_lines(&output);
+
+    assert!(output.status.success());
+    assert!(events.iter().any(|event| event["event"] == "stderr" && event["line"] == "warn"));
+}
+
+#[test]
+fn test_run_process_exits_non_zero_when_child_exits_non_zero() {
+    let input = format!(
+        "{{\"command\":\"sh\",\"args\":[\"-c\",\"exit 7\"],\"cwd\":{},\"env\":{{\"PATH\":\"{}\"}},\"label\":\"fail\"}}\n",
+        serde_json::to_string(&std::env::current_dir().unwrap().display().to_string()).unwrap(),
+        std::env::var("PATH").unwrap_or_default()
+    );
+    let output = run_process(&input);
+    let events = json_lines(&output);
+
+    assert_eq!(output.status.code(), Some(7));
+    assert!(events.iter().any(|event| event["event"] == "exit" && event["code"] == 7));
+}
+
+#[test]
+fn test_run_process_rejects_invalid_cwd() {
+    let input = "{\"command\":\"printf\",\"args\":[\"ok\"],\"cwd\":\"/tmp/definitely-missing-c420ui-cwd\",\"env\":{},\"label\":\"bad cwd\"}\n";
+    let output = run_process(input);
+    let events = json_lines(&output);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(events.iter().any(|event| event["event"] == "error"));
+}
+
+#[test]
+fn test_run_process_rejects_empty_command() {
+    let input = format!(
+        "{{\"command\":\"\",\"args\":[],\"cwd\":{},\"env\":{{}},\"label\":\"empty\"}}\n",
+        serde_json::to_string(&std::env::current_dir().unwrap().display().to_string()).unwrap()
+    );
+    let output = run_process(&input);
+    let events = json_lines(&output);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(events.iter().any(|event| event["event"] == "error"));
+}
+
+#[test]
+fn test_run_process_does_not_invoke_shell_for_command_string() {
+    let input = format!(
+        "{{\"command\":\"echo ok\",\"args\":[],\"cwd\":{},\"env\":{{\"PATH\":\"{}\"}},\"label\":\"no shell\"}}\n",
+        serde_json::to_string(&std::env::current_dir().unwrap().display().to_string()).unwrap(),
+        std::env::var("PATH").unwrap_or_default()
+    );
+    let output = run_process(&input);
+    let events = json_lines(&output);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert!(events.iter().any(|event| event["event"] == "error"));
+}
+
+#[test]
+fn test_run_process_cancels_child_when_receiving_cancel_event() {
+    let bin = env!("CARGO_BIN_EXE_c420ui-host");
+    let mut child = Command::new(bin)
+        .arg("run-process")
+        .arg("--json-lines")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to spawn binary");
+
+    let input = format!(
+        "{{\"command\":\"sh\",\"args\":[\"-c\",\"while true; do :; done\"],\"cwd\":{},\"env\":{{\"PATH\":\"{}\"}},\"label\":\"cancel\"}}\n",
+        serde_json::to_string(&std::env::current_dir().unwrap().display().to_string()).unwrap(),
+        std::env::var("PATH").unwrap_or_default()
+    );
+    {
+        let stdin = child.stdin.as_mut().expect("failed to open stdin");
+        stdin.write_all(input.as_bytes()).unwrap();
+        stdin.write_all(b"{\"event\":\"cancel\"}\n").unwrap();
+    }
+
+    let output = child.wait_with_output().expect("failed to read output");
+    let events = json_lines(&output);
+
+    assert_eq!(output.status.code(), Some(130));
+    assert!(events.iter().any(|event| event["event"] == "canceled"));
 }

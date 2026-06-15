@@ -187,3 +187,27 @@ directly. npm lockfile/install policy remains in TypeScript for this phase.
 Do not hardcode dependent-project dependencies in c420ui core or Rust.
 Dependent projects declare dependencies in their own config, and c420ui resolves
 them generically.
+
+## Dev12 Commit 3 — Rust Host Process Execution
+
+c420ui now routes generic host process execution through:
+
+```text
+c420ui-host run-process --json-lines
+```
+
+Dependent projects still declare actions and dependencies. c420ui decides what
+to execute. Rust executes generic host processes without shell interpretation and
+without hardcoded Canva Linux policy.
+
+TypeScript remains responsible for:
+
+- terminal UI
+- workflow policy
+- action/dependency policy
+- npm lockfile/install strategy
+- dependent-project adapter boundaries
+
+Do not reintroduce `child_process.spawn` or `spawnSync` as maintained c420ui
+generic process execution. Generic host process execution belongs to
+`c420ui-host`.

@@ -223,6 +223,7 @@ function main(): number {
     "host-dependencies.ts",
     "host-dependency-resolver.ts",
     "rust-host.ts",
+    "rust-process-runner.ts",
     "types.ts",
     "workflow-runner.ts",
     "workflows.ts",
@@ -652,19 +653,23 @@ function main(): number {
   for (const fragment of [
     "runC420UICommand",
     "c420uiCommandRunnerOptions",
-    "StringDecoder",
     "emitLog",
     "emitProgress",
-    "shell: false",
-    "createC420UIOperationalLogEvent",
-    "cancelKillTimeoutMs",
-    "Cancel requested",
-    "SIGINT",
-    "SIGTERM",
-    'stdio: ["ignore", "pipe", "pipe"]',
+    "runC420UIRustProcess",
+    "processRunner",
   ]) {
     if (!runner.includes(fragment)) {
       failures.push(`command runner must include contract fragment: ${fragment}`);
+    }
+  }
+  for (const forbidden of [
+    "node:child_process",
+    "spawnCommand",
+    "StringDecoder",
+    'stdio: ["ignore", "pipe", "pipe"]',
+  ]) {
+    if (runner.includes(forbidden)) {
+      failures.push(`command runner must not include legacy process fragment: ${forbidden}`);
     }
   }
 
@@ -1260,6 +1265,7 @@ function checkHostDependencyContract(failures: string[]): void {
     "build-resources/c420ui/src/host-dependency-runner.ts",
     "build-resources/c420ui/src/host-dependency-resolver.ts",
     "build-resources/c420ui/src/rust-host.ts",
+    "build-resources/c420ui/src/rust-process-runner.ts",
   ] as const;
   const indexPath = "build-resources/c420ui/src/index.ts";
 
@@ -1300,6 +1306,7 @@ function checkHostDependencyContract(failures: string[]): void {
     "./host-dependency-runner.js",
     "./host-dependency-resolver.js",
     "./rust-host.js",
+    "./rust-process-runner.js",
   ] as const) {
     if (!index.includes(`export * from "${exportPath}"`)) {
       failures.push(`${indexPath}: missing public export for ${exportPath}`);
@@ -1334,6 +1341,16 @@ function checkHostDependencyContract(failures: string[]): void {
   if (!bridgeSource.includes("loadHostDependencies?(): c420uiHostDependencyConfig")) {
     failures.push("build-resources/c420ui/src/bridge.ts: C420UIProjectAdapter must expose optional loadHostDependencies");
   }
+  if (npmDependencies.includes("spawnSync") || npmDependencies.includes("node:child_process")) {
+    failures.push("build-resources/c420ui/src/npm-dependencies.ts: npm ensure must execute through c420ui-host, not spawnSync");
+  }
+  if (
+    !npmDependencies.includes("checkC420UINpmDependencies") ||
+    !npmDependencies.includes("checkC420UINpmDeclaredDependencies") ||
+    !npmDependencies.includes("installArgs")
+  ) {
+    failures.push("build-resources/c420ui/src/npm-dependencies.ts: npm policy must remain in TypeScript");
+  }
 
   const runner = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/host-dependency-runner.ts"), "utf8");
   if (!runner.includes("resolveC420UIHostDependencies")) {
@@ -1355,6 +1372,25 @@ function checkHostDependencyContract(failures: string[]): void {
   }
   if (resolver.includes("./command-dependencies.js") || resolver.includes("./node-dependencies.js")) {
     failures.push("build-resources/c420ui/src/host-dependency-resolver.ts: resolver must not use TypeScript command/node lookup for real host probes");
+  }
+
+  const commandRunner = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/command-runner.ts"), "utf8");
+  if (commandRunner.includes("node:child_process")) {
+    failures.push("build-resources/c420ui/src/command-runner.ts: command-runner.ts must not import node:child_process");
+  }
+  if (commandRunner.includes("spawnCommand")) {
+    failures.push("build-resources/c420ui/src/command-runner.ts: command-runner.ts must not expose spawnCommand fallback");
+  }
+  if (!commandRunner.includes("runC420UIRustProcess")) {
+    failures.push("build-resources/c420ui/src/command-runner.ts: command-runner.ts must use rust-process-runner");
+  }
+
+  const rustProcessRunner = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-process-runner.ts"), "utf8");
+  if (!rustProcessRunner.includes("run-process") || !rustProcessRunner.includes("runC420UIRustHostJsonLines")) {
+    failures.push("build-resources/c420ui/src/rust-process-runner.ts: rust-process-runner.ts must call c420ui-host run-process");
+  }
+  if (rustProcessRunner.includes("process.env")) {
+    failures.push("build-resources/c420ui/src/rust-process-runner.ts: rust-process-runner.ts must not pass process.env wholesale");
   }
 
   for (const sourcePath of requiredFiles) {

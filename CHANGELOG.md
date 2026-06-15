@@ -450,3 +450,13 @@ They are not migration debt. Any additional shell file is a regression unless ex
 - npm lockfile/install policy remains in TypeScript for this phase.
 - Rust remains c420ui-only and must not hardcode Canva Linux identity,
   packaging policy, runtime paths, toolbar, tabs, or CLeyedropper details.
+
+## Dev12 Rust host process execution
+
+- Routed generic c420ui host process execution through `c420ui-host run-process --json-lines`.
+- `runC420UICommand` now delegates process execution to the Rust host instead of
+  maintaining direct `child_process.spawn` execution.
+- npm dependency repair still keeps lockfile/install policy in TypeScript, but
+  executes `npm ci`/`npm install` through the Rust host process runner.
+- Dependent projects still declare actions and dependencies; c420ui decides what
+  to run; Rust executes generic host processes without Canva Linux policy.

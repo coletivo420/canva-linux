@@ -107,6 +107,11 @@ Do not hardcode dependent-project dependencies in c420ui core or Rust. Dependent
 projects declare dependencies in their own config, and c420ui resolves them
 generically.
 
+Dev12 c420ui host process execution goes through `c420ui-host run-process
+--json-lines`. Do not reintroduce `child_process.spawn` or `spawnSync` as
+maintained c420ui generic process execution. TypeScript remains responsible for
+UI, workflow policy, dependency policy and dependent-project boundaries.
+
 ## c420ui structural ownership and efficiency
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.

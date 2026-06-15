@@ -27,3 +27,19 @@ pub struct CheckInput {
     pub commands: Option<Vec<InputCommand>>,
     pub env: Option<HashMap<String, String>>,
 }
+
+#[derive(Deserialize, Debug)]
+pub struct RunProcessInput {
+    pub command: String,
+    #[serde(default)]
+    pub args: Vec<String>,
+    pub cwd: String,
+    pub env: Option<HashMap<String, String>>,
+    #[allow(dead_code)]
+    pub label: Option<String>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct CancelInput {
+    pub event: String,
+}

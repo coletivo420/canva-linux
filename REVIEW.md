@@ -644,11 +644,18 @@ Request changes if a PR:
 - moves npm dependency policy back into project shell helpers.
 - resolves host dependencies inside the Canva Linux adapter instead of passing
   declarations to c420ui.
+- reintroduces `child_process.spawn` or `spawnSync` as maintained generic c420ui
+  process execution.
+- bypasses `c420ui-host run-process --json-lines` for generic host commands.
 
 Dependent projects declare host dependencies through their adapter/config.
 c420ui resolves those dependencies and routes generic host probes through
 `c420ui-host`. Canva Linux only declares what it needs; it does not resolve host
 dependencies directly.
+
+Dev12 routes c420ui host process execution through `c420ui-host`. Dependent
+projects still declare actions and dependencies; c420ui decides what to run;
+Rust executes generic host processes without hardcoding Canva Linux policy.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging,

@@ -59,38 +59,38 @@ test("npm deps missing are reported", () => {
   assert.equal(result.dependencies?.[0]?.id, "typescript");
 });
 
-test("missing npm deps choose npm ci when lockfile exists", () => {
+test("missing npm deps choose npm ci when lockfile exists", async () => {
   const rootDir = makeProject({ withLockfile: true });
   const calls: string[][] = [];
-  const runCommand: c420uiNpmCommandRunner = (_command, args) => {
-    calls.push(args);
-    return { status: 0 };
+  const runCommand: c420uiNpmCommandRunner = async (options) => {
+    calls.push(options.args);
+    return { status: "available" };
   };
-  const result = ensureC420UINpmDependencies(config, { rootDir, env: {}, runCommand });
+  const result = await ensureC420UINpmDependencies(config, { rootDir, env: {}, runCommand });
   assert.equal(result.status, "available");
   assert.deepEqual(calls[0], ["ci", "--include=dev"]);
 });
 
-test("missing npm deps choose npm install without lockfile", () => {
+test("missing npm deps choose npm install without lockfile", async () => {
   const rootDir = makeProject({ withLockfile: false });
   const calls: string[][] = [];
-  const runCommand: c420uiNpmCommandRunner = (_command, args) => {
-    calls.push(args);
-    return { status: 0 };
+  const runCommand: c420uiNpmCommandRunner = async (options) => {
+    calls.push(options.args);
+    return { status: "available" };
   };
-  ensureC420UINpmDependencies(config, { rootDir, env: {}, runCommand });
+  await ensureC420UINpmDependencies(config, { rootDir, env: {}, runCommand });
   assert.deepEqual(calls[0], ["install", "--include=dev"]);
 });
 
-test("C420UI_SKIP_DEPENDENCY_INSTALL=1 does not install", () => {
+test("C420UI_SKIP_DEPENDENCY_INSTALL=1 does not install", async () => {
   const rootDir = makeProject();
   let called = false;
-  const result = ensureC420UINpmDependencies(config, {
+  const result = await ensureC420UINpmDependencies(config, {
     rootDir,
     env: { C420UI_SKIP_DEPENDENCY_INSTALL: "1" },
-    runCommand: () => {
+    runCommand: async () => {
       called = true;
-      return { status: 0 };
+      return { status: "available" };
     },
   });
   assert.equal(result.status, "failed");
@@ -119,34 +119,34 @@ test("multiline npm script fails", () => {
   assert.match(result.message ?? "", /must stay on one line/);
 });
 
-test('installStrategy="ci" uses ci without lockfile', () => {
+test('installStrategy="ci" uses ci without lockfile', async () => {
   const rootDir = makeProject({ withLockfile: false });
   const calls: string[][] = [];
-  ensureC420UINpmDependencies(
+  await ensureC420UINpmDependencies(
     { ...config, installStrategy: "ci" },
     {
       rootDir,
       env: {},
-      runCommand: (_command, args) => {
-        calls.push(args);
-        return { status: 0 };
+      runCommand: async (options) => {
+        calls.push(options.args);
+        return { status: "available" };
       },
     },
   );
   assert.deepEqual(calls[0], ["ci", "--include=dev"]);
 });
 
-test('installStrategy="install" uses install with lockfile', () => {
+test('installStrategy="install" uses install with lockfile', async () => {
   const rootDir = makeProject({ withLockfile: true });
   const calls: string[][] = [];
-  ensureC420UINpmDependencies(
+  await ensureC420UINpmDependencies(
     { ...config, installStrategy: "install" },
     {
       rootDir,
       env: {},
-      runCommand: (_command, args) => {
-        calls.push(args);
-        return { status: 0 };
+      runCommand: async (options) => {
+        calls.push(options.args);
+        return { status: "available" };
       },
     },
   );
@@ -199,4 +199,36 @@ test("installed but undeclared dependency fails", () => {
   });
   assert.equal(result.status, "failed");
   assert.match(result.message ?? "", /not declared/);
+});
+
+test("npm ensure uses Rust process runner contract", async () => {
+  const rootDir = makeProject({ withLockfile: true });
+  let observed: Parameters<c420uiNpmCommandRunner>[0] | undefined;
+  const result = await ensureC420UINpmDependencies(config, {
+    rootDir,
+    env: { PATH: "/usr/bin", SECRET_TOKEN: "must-not-pass" },
+    runCommand: async (options) => {
+      observed = options;
+      return { status: "available" };
+    },
+  });
+
+  assert.equal(result.status, "available");
+  assert.equal(observed?.command, "npm");
+  assert.deepEqual(observed?.args, ["ci", "--include=dev"]);
+  assert.equal(observed?.cwd, rootDir);
+  assert.equal(observed?.label, "npm ci --include=dev");
+});
+
+test("npm failure maps to failed result", async () => {
+  const rootDir = makeProject({ withLockfile: true });
+  const result = await ensureC420UINpmDependencies(config, {
+    rootDir,
+    env: {},
+    runCommand: async () => ({ status: "failed", exitCode: 9 }),
+  });
+
+  assert.equal(result.status, "failed");
+  assert.equal(result.exitCode, 9);
+  assert.match(result.message ?? "", /npm ci --include=dev failed/);
 });
