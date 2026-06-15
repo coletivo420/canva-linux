@@ -1,4 +1,5 @@
 import type { c420uiHostDependencyConfig } from "./host-dependencies.js";
+import type { c420uiMaintenanceConfig } from "./maintenance-config.js";
 
 export type C420UIBrandConfig = {
   name: string;
@@ -37,4 +38,5 @@ export type C420UIConfig = {
   sessionLogPath?: string;
   sessionId?: string;
   hostDependencies?: c420uiHostDependencyConfig;
+  maintenance?: c420uiMaintenanceConfig;
 };

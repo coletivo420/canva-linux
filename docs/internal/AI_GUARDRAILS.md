@@ -112,6 +112,11 @@ Dev12 c420ui host process execution goes through `c420ui-host run-process
 maintained c420ui generic process execution. TypeScript remains responsible for
 UI, workflow policy, dependency policy and dependent-project boundaries.
 
+Maintenance targets belong to dependent-project config. Do not hardcode cleanup
+targets in c420ui TypeScript, do not reintroduce `fs.rmSync` maintenance
+deletion, and do not run direct `chown` from TypeScript maintenance operations.
+Generic filesystem maintenance belongs to `c420ui-host`.
+
 ## c420ui structural ownership and efficiency
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.

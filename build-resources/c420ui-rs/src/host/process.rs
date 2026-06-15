@@ -8,13 +8,18 @@ pub fn validate_process_input(input: &RunProcessInput) -> Result<(), String> {
         return Err("command must not be empty".to_string());
     }
     if input.command.contains([' ', '\t', '\n', '\r']) {
-        return Err("command must be an executable name or path, not a shell command string".to_string());
+        return Err(
+            "command must be an executable name or path, not a shell command string".to_string(),
+        );
     }
     if input.cwd.trim().is_empty() {
         return Err("cwd must not be empty".to_string());
     }
     if !Path::new(&input.cwd).is_dir() {
-        return Err(format!("cwd does not exist or is not a directory: {}", input.cwd));
+        return Err(format!(
+            "cwd does not exist or is not a directory: {}",
+            input.cwd
+        ));
     }
     Ok(())
 }

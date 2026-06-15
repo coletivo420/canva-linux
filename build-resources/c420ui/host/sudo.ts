@@ -1,7 +1,10 @@
-import { spawnSync, type SpawnSyncOptions } from "node:child_process";
 import { projectRoot } from "./paths.js";
 import { runCommand, type RunOptions } from "./command-runner.js";
 import * as ui from "./ui.js";
+
+type SudoRunOptions = Omit<RunOptions, "cwd"> & {
+  cwd?: string;
+};
 
 const sudoTimeoutSeconds = Number.parseInt(
   process.env.C420UI_SUDO_TIMEOUT_SECONDS ?? "30",
@@ -50,24 +53,26 @@ function reportSudoSpawnError(error: Error): void {
 
 export function c420uiSudoValidate(rootDir: string = projectRoot()): boolean {
   if (!assertNotUserScope()) return false;
-  const result = spawnSync("sudo", isNonInteractiveRootMode() ? ["-n", "-v"] : ["-v"], {
-    cwd: rootDir,
-    stdio: "inherit",
-    timeout: sudoTimeoutMilliseconds(),
-  });
-  if (result.error) {
-    reportSudoSpawnError(result.error);
+  try {
+    const status = runCommand("sudo", isNonInteractiveRootMode() ? ["-n", "-v"] : ["-v"], {
+      cwd: rootDir,
+      stdio: "inherit",
+      timeout: sudoTimeoutMilliseconds(),
+      allowFailure: true,
+    });
+    if (status === 0) return true;
+    reportSudoError(status);
+    return false;
+  } catch (error) {
+    reportSudoSpawnError(error instanceof Error ? error : new Error(String(error)));
     return false;
   }
-  if (result.status === 0) return true;
-  reportSudoError(result.status);
-  return false;
 }
 
 export function c420uiSudoRun(
   command: string,
   args: string[],
-  options: SpawnSyncOptions & { dryRun?: boolean } = {},
+  options: SudoRunOptions = {},
 ): number {
   const rootDir = options.cwd?.toString() || projectRoot();
   const dryRun = options.dryRun ?? false;
@@ -93,21 +98,21 @@ export function c420uiSudoRun(
 
 export function c420uiSudoInstall(
   args: string[],
-  options: SpawnSyncOptions & { dryRun?: boolean } = {},
+  options: SudoRunOptions = {},
 ): number {
   return c420uiSudoRun("install", args, options);
 }
 
 export function c420uiSudoMkdir(
   dir: string,
-  options: SpawnSyncOptions & { dryRun?: boolean } = {},
+  options: SudoRunOptions = {},
 ): number {
   return c420uiSudoRun("mkdir", ["-p", dir], options);
 }
 
 export function c420uiSudoRm(
   path: string,
-  options: SpawnSyncOptions & { dryRun?: boolean } = {},
+  options: SudoRunOptions = {},
 ): number {
   return c420uiSudoRun("rm", ["-rf", path], options);
 }
@@ -115,7 +120,7 @@ export function c420uiSudoRm(
 export function c420uiSudoCp(
   src: string,
   dst: string,
-  options: SpawnSyncOptions & { dryRun?: boolean } = {},
+  options: SudoRunOptions = {},
 ): number {
   return c420uiSudoRun("cp", ["-a", src, dst], options);
 }
@@ -123,7 +128,7 @@ export function c420uiSudoCp(
 export function c420uiSudoChmod(
   modeOrArgs: string | string[],
   path?: string,
-  options: SpawnSyncOptions & { dryRun?: boolean } = {},
+  options: SudoRunOptions = {},
 ): number {
   const args = Array.isArray(modeOrArgs) ? modeOrArgs : [modeOrArgs, path ?? ""];
   return c420uiSudoRun("chmod", args, options);
@@ -132,7 +137,7 @@ export function c420uiSudoChmod(
 export function c420uiSudoLn(
   src: string,
   dst: string,
-  options: SpawnSyncOptions & { dryRun?: boolean } = {},
+  options: SudoRunOptions = {},
 ): number {
   return c420uiSudoRun("ln", ["-sfn", src, dst], options);
 }

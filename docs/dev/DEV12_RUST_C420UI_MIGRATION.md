@@ -211,3 +211,12 @@ TypeScript remains responsible for:
 Do not reintroduce `child_process.spawn` or `spawnSync` as maintained c420ui
 generic process execution. Generic host process execution belongs to
 `c420ui-host`.
+
+## Dev12 Commit 4 — Rust Maintenance Operations
+
+c420ui maintenance targets are now declared by dependent-project config.
+c420ui validates and orchestrates those targets, while `c420ui-host` executes
+generic `remove-paths`, `fix-permissions` and `sudo-validate` operations.
+
+Do not reintroduce direct `fs.rmSync` maintenance deletion, direct TypeScript
+`chown`, or hardcoded cleanup target lists in c420ui operations.

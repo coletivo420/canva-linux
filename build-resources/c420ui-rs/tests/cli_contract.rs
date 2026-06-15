@@ -1,5 +1,38 @@
+use std::fs;
 use std::io::Write;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+fn temp_root(name: &str) -> PathBuf {
+    let millis = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+    let root = std::env::temp_dir().join(format!("c420ui-host-{}-{}", name, millis));
+    fs::create_dir_all(&root).unwrap();
+    root
+}
+
+fn run_json_command(command: &str, input: &str) -> std::process::Output {
+    let bin = env!("CARGO_BIN_EXE_c420ui-host");
+    let mut child = Command::new(bin)
+        .arg(command)
+        .arg("--json")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to spawn binary");
+
+    {
+        let stdin = child.stdin.as_mut().expect("failed to open stdin");
+        stdin
+            .write_all(input.as_bytes())
+            .expect("failed to write to stdin");
+    }
+
+    child.wait_with_output().expect("failed to read output")
+}
 
 fn run_process(input: &str) -> std::process::Output {
     let bin = env!("CARGO_BIN_EXE_c420ui-host");
@@ -354,8 +387,12 @@ fn test_run_process_json_lines_runs_simple_command_successfully() {
 
     assert!(output.status.success());
     assert!(events.iter().any(|event| event["event"] == "started"));
-    assert!(events.iter().any(|event| event["event"] == "stdout" && event["line"] == "ok"));
-    assert!(events.iter().any(|event| event["event"] == "exit" && event["code"] == 0));
+    assert!(events
+        .iter()
+        .any(|event| event["event"] == "stdout" && event["line"] == "ok"));
+    assert!(events
+        .iter()
+        .any(|event| event["event"] == "exit" && event["code"] == 0));
 }
 
 #[test]
@@ -369,7 +406,9 @@ fn test_run_process_emits_stderr_event() {
     let events = json_lines(&output);
 
     assert!(output.status.success());
-    assert!(events.iter().any(|event| event["event"] == "stderr" && event["line"] == "warn"));
+    assert!(events
+        .iter()
+        .any(|event| event["event"] == "stderr" && event["line"] == "warn"));
 }
 
 #[test]
@@ -383,7 +422,9 @@ fn test_run_process_exits_non_zero_when_child_exits_non_zero() {
     let events = json_lines(&output);
 
     assert_eq!(output.status.code(), Some(7));
-    assert!(events.iter().any(|event| event["event"] == "exit" && event["code"] == 7));
+    assert!(events
+        .iter()
+        .any(|event| event["event"] == "exit" && event["code"] == 7));
 }
 
 #[test]
@@ -450,4 +491,161 @@ fn test_run_process_cancels_child_when_receiving_cancel_event() {
 
     assert_eq!(output.status.code(), Some(130));
     assert!(events.iter().any(|event| event["event"] == "canceled"));
+}
+
+#[test]
+fn test_remove_paths_removes_existing_temp_directory() {
+    let root = temp_root("remove");
+    fs::create_dir_all(root.join("dist")).unwrap();
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"dist\"],\"dryRun\":false,\"allowSudo\":false}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("remove-paths", &input);
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+
+    assert!(output.status.success());
+    assert!(!root.join("dist").exists());
+    assert_eq!(json["command"], "remove-paths");
+    assert_eq!(json["removed"][0]["status"], "removed");
+}
+
+#[test]
+fn test_remove_paths_reports_missing_target() {
+    let root = temp_root("missing");
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"dist\"],\"dryRun\":false,\"allowSudo\":false}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("remove-paths", &input);
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+
+    assert!(output.status.success());
+    assert_eq!(json["removed"][0]["status"], "missing");
+}
+
+#[test]
+fn test_remove_paths_rejects_absolute_target() {
+    let root = temp_root("absolute");
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"/tmp/dist\"],\"dryRun\":false,\"allowSudo\":false}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("remove-paths", &input);
+    assert_eq!(output.status.code(), Some(2));
+}
+
+#[test]
+fn test_remove_paths_rejects_parent_traversal() {
+    let root = temp_root("traversal");
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"../dist\"],\"dryRun\":false,\"allowSudo\":false}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("remove-paths", &input);
+    assert_eq!(output.status.code(), Some(2));
+}
+
+#[cfg(unix)]
+#[test]
+fn test_remove_paths_rejects_symlink_target() {
+    use std::os::unix::fs::symlink;
+    let root = temp_root("symlink");
+    fs::create_dir_all(root.join("real")).unwrap();
+    symlink(root.join("real"), root.join("link")).unwrap();
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"link\"],\"dryRun\":false,\"allowSudo\":false}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("remove-paths", &input);
+    assert_eq!(output.status.code(), Some(2));
+}
+
+#[test]
+fn test_remove_paths_dry_run_does_not_remove() {
+    let root = temp_root("dry-run");
+    fs::create_dir_all(root.join("dist")).unwrap();
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"dist\"],\"dryRun\":true,\"allowSudo\":false}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("remove-paths", &input);
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+
+    assert!(output.status.success());
+    assert!(root.join("dist").exists());
+    assert_eq!(json["removed"][0]["status"], "planned");
+}
+
+#[test]
+fn test_fix_permissions_rejects_empty_user() {
+    let root = temp_root("empty-user");
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"dist\"],\"user\":\"\",\"group\":null,\"dryRun\":true}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("fix-permissions", &input);
+    assert_eq!(output.status.code(), Some(2));
+}
+
+#[test]
+fn test_fix_permissions_rejects_unsafe_target() {
+    let root = temp_root("unsafe-permissions");
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"../dist\"],\"user\":\"builder\",\"group\":null,\"dryRun\":true}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("fix-permissions", &input);
+    assert_eq!(output.status.code(), Some(2));
+}
+
+#[test]
+fn test_fix_permissions_dry_run_reports_planned() {
+    let root = temp_root("fix-dry-run");
+    fs::create_dir_all(root.join("dist")).unwrap();
+    let input = format!(
+        "{{\"rootDir\":{},\"targets\":[\"dist\"],\"user\":\"builder\",\"group\":null,\"dryRun\":true}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("fix-permissions", &input);
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+
+    assert!(output.status.success());
+    assert_eq!(json["updated"][0]["status"], "planned");
+}
+
+#[test]
+fn test_sudo_validate_respects_user_scope_refusal() {
+    let root = temp_root("sudo-user-scope");
+    let input = format!(
+        "{{\"rootDir\":{},\"nonInteractive\":true,\"timeoutSeconds\":1,\"refuseUserScope\":true,\"actionScope\":\"user\"}}",
+        serde_json::to_string(&root.display().to_string()).unwrap()
+    );
+
+    let output = run_json_command("sudo-validate", &input);
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+
+    assert!(output.status.success());
+    assert_eq!(json["ok"], false);
+    assert_eq!(json["available"], false);
+}
+
+#[test]
+fn test_maintenance_invalid_json_exits_2() {
+    let output = run_json_command("remove-paths", "not-json");
+    assert_eq!(output.status.code(), Some(2));
 }

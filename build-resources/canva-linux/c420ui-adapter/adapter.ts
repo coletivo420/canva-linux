@@ -5,9 +5,11 @@ import {
   createC420UIBridge,
   runC420UICommand,
   validateC420UIHostDependencyConfig,
+  validateC420UIMaintenanceConfig,
   type c420uiActionResult,
   type c420uiExecutionContext,
   type c420uiHostDependencyConfig,
+  type c420uiMaintenanceConfig,
   type c420uiProjectInfo,
   type C420UIActionDescriptor,
   type C420UIConfig,
@@ -69,6 +71,7 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
     buildMetadata: string;
     c420uiPackageJson: string;
     hostDependenciesJson: string;
+    maintenanceJson: string;
   };
   loadProjectUi(): ProjectUiJson;
   loadPackageJson(): PackageJson;
@@ -84,6 +87,7 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
   getToolSettingsPath(): string;
   toC420UIConfig(): C420UIConfig;
   loadHostDependencies(): c420uiHostDependencyConfig;
+  loadMaintenanceConfig(): c420uiMaintenanceConfig;
 };
 
 function readJsonFile<T>(filePath: string): T {
@@ -117,6 +121,10 @@ export function createCanvaLinuxC420UIAdapter(
     resolvedRootDir,
     "build-resources/canva-linux/config/host-dependencies.json",
   );
+  const maintenanceJsonPath = path.join(
+    resolvedRootDir,
+    "build-resources/canva-linux/config/maintenance.json",
+  );
 
   function loadProjectUi(): ProjectUiJson {
     return readJsonFile<ProjectUiJson>(projectUiPath);
@@ -137,6 +145,11 @@ export function createCanvaLinuxC420UIAdapter(
   function loadHostDependencies(): c420uiHostDependencyConfig {
     const config = readJsonFile<unknown>(hostDependenciesJsonPath);
     return validateC420UIHostDependencyConfig(config);
+  }
+
+  function loadMaintenanceConfig(): c420uiMaintenanceConfig {
+    const config = readJsonFile<unknown>(maintenanceJsonPath);
+    return validateC420UIMaintenanceConfig(config);
   }
 
   function getPackageVersion(): string {
@@ -328,6 +341,7 @@ export function createCanvaLinuxC420UIAdapter(
       sessionLogPath: getSessionLogPath(),
       sessionId: getSessionId(),
       hostDependencies: loadHostDependencies(),
+      maintenance: loadMaintenanceConfig(),
     };
   }
 
@@ -340,6 +354,7 @@ export function createCanvaLinuxC420UIAdapter(
     runAction,
     overviewStatus,
     hostDependencies: loadHostDependencies,
+    maintenance: loadMaintenanceConfig,
     paths: {
       projectUi: projectUiPath,
       packageJson: packageJsonPath,
@@ -348,6 +363,7 @@ export function createCanvaLinuxC420UIAdapter(
       buildMetadata: buildMetadataPath,
       c420uiPackageJson: c420uiPackageJsonPath,
       hostDependenciesJson: hostDependenciesJsonPath,
+      maintenanceJson: maintenanceJsonPath,
     },
     loadProjectInfo: loadProjectConfig,
     loadConfig: toC420UIConfig,
@@ -369,6 +385,7 @@ export function createCanvaLinuxC420UIAdapter(
     getToolSettingsPath,
     toC420UIConfig,
     loadHostDependencies,
+    loadMaintenanceConfig,
   };
 
   return createC420UIBridge(adapter) as CanvaLinuxC420UIAdapter;

@@ -6,7 +6,10 @@ import path from "node:path";
 export type C420UIRustHostCommand =
   | "host-info"
   | "doctor"
-  | "check-host-dependencies";
+  | "check-host-dependencies"
+  | "sudo-validate"
+  | "remove-paths"
+  | "fix-permissions";
 
 export type C420UIRustHostRunOptions = {
   rootDir: string;

@@ -1,36 +1,27 @@
-import fs from "node:fs";
+import { loadCanvaLinuxMaintenanceConfig } from "../../../canva-linux/c420ui-adapter/maintenance.js";
 import { parseDryRun } from "../../host/dry-run.js";
-import { ensurePathIsSafe, projectRoot } from "../../host/paths.js";
+import { projectRoot } from "../../host/paths.js";
 import { info, ok } from "../../host/ui.js";
-import { runWithOptionalSudo } from "../../host/sudo.js";
+import { runC420UIRustRemovePaths } from "../../src/rust-maintenance.js";
 
-export function runCleanArtifacts(argv: string[]): void {
+export async function runCleanArtifacts(argv: string[]): Promise<void> {
   const { dryRun } = parseDryRun(argv);
   const rootDir = projectRoot();
-  for (const rel of [".build", "dist", "build-dir", "repo", ".flatpak-builder"] as const) {
-    ensurePathIsSafe(rootDir, rel);
-    if (!fs.existsSync(`${rootDir}/${rel}`)) continue;
-    if (dryRun) {
-      info(`[dry-run] rm -rf ${rel}`);
-      continue;
-    }
-    const absolutePath = `${rootDir}/${rel}`;
-    try {
-      fs.rmSync(absolutePath, { recursive: true, force: true });
-      ok(`Removed ${rel}`);
-    } catch (error) {
-      const code = error && typeof error === "object" && "code" in error
-        ? String((error as NodeJS.ErrnoException).code)
-        : "";
-      if (code !== "EACCES" && code !== "EPERM") throw error;
+  const maintenance = loadCanvaLinuxMaintenanceConfig(rootDir);
+  const targets = maintenance.cleanupTargets ?? [];
+  const result = await runC420UIRustRemovePaths({
+    rootDir,
+    targets,
+    dryRun,
+    allowSudo: true,
+    env: process.env,
+  });
 
-      info(`Permission denied removing ${rel}; retrying with sudo.`);
-      runWithOptionalSudo(true, "rm", ["-rf", absolutePath], {
-        cwd: rootDir,
-        dryRun,
-        env: process.env,
-      });
-      ok(`Removed ${rel}`);
+  for (const item of result.removed ?? []) {
+    if (item.status === "planned") {
+      info(`[dry-run] rm -rf ${item.target}`);
+    } else if (item.status === "removed") {
+      ok(`Removed ${item.target}`);
     }
   }
 }

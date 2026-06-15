@@ -222,7 +222,9 @@ function main(): number {
     "linux-root-provider.ts",
     "host-dependencies.ts",
     "host-dependency-resolver.ts",
+    "maintenance-config.ts",
     "rust-host.ts",
+    "rust-maintenance.ts",
     "rust-process-runner.ts",
     "types.ts",
     "workflow-runner.ts",
@@ -1264,7 +1266,9 @@ function checkHostDependencyContract(failures: string[]): void {
     "build-resources/c420ui/src/npm-dependencies.ts",
     "build-resources/c420ui/src/host-dependency-runner.ts",
     "build-resources/c420ui/src/host-dependency-resolver.ts",
+    "build-resources/c420ui/src/maintenance-config.ts",
     "build-resources/c420ui/src/rust-host.ts",
+    "build-resources/c420ui/src/rust-maintenance.ts",
     "build-resources/c420ui/src/rust-process-runner.ts",
   ] as const;
   const indexPath = "build-resources/c420ui/src/index.ts";
@@ -1305,7 +1309,9 @@ function checkHostDependencyContract(failures: string[]): void {
     "./npm-dependencies.js",
     "./host-dependency-runner.js",
     "./host-dependency-resolver.js",
+    "./maintenance-config.js",
     "./rust-host.js",
+    "./rust-maintenance.js",
     "./rust-process-runner.js",
   ] as const) {
     if (!index.includes(`export * from "${exportPath}"`)) {
@@ -1336,10 +1342,16 @@ function checkHostDependencyContract(failures: string[]): void {
   if (!typesSource.includes("hostDependencies?: c420uiHostDependencyConfig")) {
     failures.push("build-resources/c420ui/src/types.ts: C420UIConfig must expose hostDependencies");
   }
+  if (!typesSource.includes("maintenance?: c420uiMaintenanceConfig")) {
+    failures.push("build-resources/c420ui/src/types.ts: C420UIConfig must expose maintenance");
+  }
 
   const bridgeSource = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/bridge.ts"), "utf8");
   if (!bridgeSource.includes("loadHostDependencies?(): c420uiHostDependencyConfig")) {
     failures.push("build-resources/c420ui/src/bridge.ts: C420UIProjectAdapter must expose optional loadHostDependencies");
+  }
+  if (!bridgeSource.includes("loadMaintenanceConfig?(): c420uiMaintenanceConfig")) {
+    failures.push("build-resources/c420ui/src/bridge.ts: C420UIProjectAdapter must expose optional loadMaintenanceConfig");
   }
   if (npmDependencies.includes("spawnSync") || npmDependencies.includes("node:child_process")) {
     failures.push("build-resources/c420ui/src/npm-dependencies.ts: npm ensure must execute through c420ui-host, not spawnSync");
@@ -1391,6 +1403,13 @@ function checkHostDependencyContract(failures: string[]): void {
   }
   if (rustProcessRunner.includes("process.env")) {
     failures.push("build-resources/c420ui/src/rust-process-runner.ts: rust-process-runner.ts must not pass process.env wholesale");
+  }
+
+  const rustMaintenance = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-maintenance.ts"), "utf8");
+  for (const fragment of ["remove-paths", "fix-permissions", "sudo-validate", "runC420UIRustHost"] as const) {
+    if (!rustMaintenance.includes(fragment)) {
+      failures.push(`build-resources/c420ui/src/rust-maintenance.ts: missing Rust maintenance fragment ${fragment}`);
+    }
   }
 
   for (const sourcePath of requiredFiles) {
@@ -1480,11 +1499,14 @@ function checkLinuxHostSudoContract(failures: string[]): void {
     "C420UI_ROOT_AUTH",
     "C420UI_ACTION_SCOPE",
     "C420UI_SUDO_TIMEOUT_SECONDS",
-    "spawnSync(\"sudo\"",
   ] as const) {
     if (!operationsSource.includes(fragment)) {
       failures.push(`${operationsPath}: missing sudo operation fragment ${fragment}`);
     }
+  }
+
+  if (operationsSource.includes("spawnSync(\"sudo\"")) {
+    failures.push(`${operationsPath}: sudo validation must not require direct spawnSync(\"sudo\") after Rust maintenance migration`);
   }
 
   for (const forbidden of [
@@ -1500,6 +1522,47 @@ function checkLinuxHostSudoContract(failures: string[]): void {
   }
 }
 
+function checkMaintenanceContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const cleanPath = "build-resources/c420ui/operations/maintenance/clean-artifacts.ts";
+  const fixPath = "build-resources/c420ui/operations/maintenance/fix-build-permissions.ts";
+  const configPath = "build-resources/canva-linux/config/maintenance.json";
+  const adapterPath = "build-resources/canva-linux/c420ui-adapter/adapter.ts";
+  const cleanSource = fs.readFileSync(path.join(rootDir, cleanPath), "utf8");
+  const fixSource = fs.readFileSync(path.join(rootDir, fixPath), "utf8");
+  const adapterSource = fs.readFileSync(path.join(rootDir, adapterPath), "utf8");
+  const maintenanceConfig = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/maintenance-config.ts"), "utf8");
+
+  if (!fs.existsSync(path.join(rootDir, configPath))) {
+    failures.push(`${configPath}: dependent project maintenance config is required`);
+  }
+  if (!adapterSource.includes("loadMaintenanceConfig") || !adapterSource.includes("maintenance.json")) {
+    failures.push(`${adapterPath}: adapter must expose dependent project maintenance config`);
+  }
+  for (const fragment of ["validateC420UIMaintenanceConfig", "cleanupTargets", "permissionTargets"]) {
+    if (!maintenanceConfig.includes(fragment)) {
+      failures.push(`build-resources/c420ui/src/maintenance-config.ts: missing ${fragment}`);
+    }
+  }
+  if (!cleanSource.includes("runC420UIRustRemovePaths")) {
+    failures.push(`${cleanPath}: clean-artifacts must use rust-maintenance remove-paths`);
+  }
+  if (cleanSource.includes("node:fs") || cleanSource.includes("fs.rmSync") || cleanSource.includes("runWithOptionalSudo")) {
+    failures.push(`${cleanPath}: clean-artifacts must not remove paths directly in TypeScript`);
+  }
+  if (!fixSource.includes("runC420UIRustFixPermissions")) {
+    failures.push(`${fixPath}: fix-build-permissions must use rust-maintenance fix-permissions`);
+  }
+  if (fixSource.includes("node:fs") || fixSource.includes("c420uiSudoRun") || fixSource.includes("chown")) {
+    failures.push(`${fixPath}: fix-build-permissions must not chown directly in TypeScript`);
+  }
+  for (const target of [".flatpak-builder", "build-dir", "repo"] as const) {
+    if (cleanSource.includes(target) || fixSource.includes(target)) {
+      failures.push(`maintenance targets must come from dependent project config, not ${target} in c420ui operations`);
+    }
+  }
+}
+
 export function main(): number {
   const failures: string[] = [];
 
@@ -1507,6 +1570,7 @@ export function main(): number {
   runDependentProjectBoundaryContract(failures);
   runPackagePolicyContract(failures);
   runPublicApiExportsContract(failures);
+  checkMaintenanceContract(failures);
   runBridgeContract(failures);
   runDetectionContract(failures);
   runActionValidationContract(failures);

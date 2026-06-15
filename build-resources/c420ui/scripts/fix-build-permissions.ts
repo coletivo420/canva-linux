@@ -1,2 +1,2 @@
 import { runFixBuildPermissions } from "../operations/maintenance/fix-build-permissions.js";
-runFixBuildPermissions(process.argv.slice(2));
+await runFixBuildPermissions(process.argv.slice(2));

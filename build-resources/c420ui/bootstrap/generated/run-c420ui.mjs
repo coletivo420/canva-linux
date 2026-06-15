@@ -3444,6 +3444,40 @@ async function runC420UIHostDependencyEnsure(config, options) {
   });
 }
 
+// build-resources/c420ui/src/maintenance-config.ts
+function validateTargetList(input, field) {
+  if (input === void 0) return void 0;
+  if (!Array.isArray(input)) {
+    throw new Error(`${field} must be an array`);
+  }
+  return input.map((target, index) => {
+    if (typeof target !== "string") {
+      throw new Error(`${field}[${index}] must be a string`);
+    }
+    const trimmed = target.trim();
+    if (!trimmed) {
+      throw new Error(`${field}[${index}] must not be empty`);
+    }
+    if (trimmed.startsWith("/") || trimmed === "." || trimmed === "/" || trimmed.includes("\\")) {
+      throw new Error(`${field}[${index}] must be a safe relative path`);
+    }
+    if (trimmed.split("/").includes("..")) {
+      throw new Error(`${field}[${index}] must not contain ..`);
+    }
+    return trimmed;
+  });
+}
+function validateC420UIMaintenanceConfig(input) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new Error("maintenance config must be an object");
+  }
+  const value = input;
+  return {
+    cleanupTargets: validateTargetList(value.cleanupTargets, "cleanupTargets"),
+    permissionTargets: validateTargetList(value.permissionTargets, "permissionTargets")
+  };
+}
+
 // build-resources/c420ui/src/command-runner.ts
 async function runC420UICommand(options) {
   const processRunner = options.processRunner ?? runC420UIRustProcess;
@@ -5048,6 +5082,10 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     resolvedRootDir,
     "build-resources/canva-linux/config/host-dependencies.json"
   );
+  const maintenanceJsonPath = path17.join(
+    resolvedRootDir,
+    "build-resources/canva-linux/config/maintenance.json"
+  );
   function loadProjectUi() {
     return readJsonFile6(projectUiPath);
   }
@@ -5063,6 +5101,10 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
   function loadHostDependencies() {
     const config = readJsonFile6(hostDependenciesJsonPath);
     return validateC420UIHostDependencyConfig(config);
+  }
+  function loadMaintenanceConfig() {
+    const config = readJsonFile6(maintenanceJsonPath);
+    return validateC420UIMaintenanceConfig(config);
   }
   function getPackageVersion() {
     return loadPackageJson().version ?? "unknown";
@@ -5225,7 +5267,8 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
       releaseNotes: projectUi.versionReleaseNotes,
       sessionLogPath: getSessionLogPath(),
       sessionId: getSessionId(),
-      hostDependencies: loadHostDependencies()
+      hostDependencies: loadHostDependencies(),
+      maintenance: loadMaintenanceConfig()
     };
   }
   const adapter = {
@@ -5237,6 +5280,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     runAction,
     overviewStatus,
     hostDependencies: loadHostDependencies,
+    maintenance: loadMaintenanceConfig,
     paths: {
       projectUi: projectUiPath,
       packageJson: packageJsonPath,
@@ -5244,7 +5288,8 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
       artifactsJson: artifactsJsonPath,
       buildMetadata: buildMetadataPath,
       c420uiPackageJson: c420uiPackageJsonPath,
-      hostDependenciesJson: hostDependenciesJsonPath
+      hostDependenciesJson: hostDependenciesJsonPath,
+      maintenanceJson: maintenanceJsonPath
     },
     loadProjectInfo: loadProjectConfig,
     loadConfig: toC420UIConfig,
@@ -5265,7 +5310,8 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     getSessionId,
     getToolSettingsPath,
     toC420UIConfig,
-    loadHostDependencies
+    loadHostDependencies,
+    loadMaintenanceConfig
   };
   return createC420UIBridge(adapter);
 }

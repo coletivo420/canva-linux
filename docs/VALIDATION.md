@@ -99,6 +99,17 @@ Dev12 also routes generic c420ui host process execution through
 `c420ui-host run-process --json-lines`. TypeScript remains responsible for UI,
 workflow policy, dependency policy and dependent-project boundaries.
 
+Maintenance validation:
+
+```bash
+npm run maintenance:clean -- --dry-run
+npm run maintenance:fix-permissions -- --dry-run
+```
+
+Maintenance targets must come from dependent-project config. c420ui validates
+and orchestrates those targets; `c420ui-host` performs generic filesystem and
+sudo operations.
+
 - TypeScript wrapper tests
 - JSON contract tests between TypeScript and Rust
 

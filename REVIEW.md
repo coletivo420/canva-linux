@@ -647,6 +647,8 @@ Request changes if a PR:
 - reintroduces `child_process.spawn` or `spawnSync` as maintained generic c420ui
   process execution.
 - bypasses `c420ui-host run-process --json-lines` for generic host commands.
+- reintroduces `fs.rmSync` maintenance deletion or hardcoded maintenance targets
+  in c420ui TypeScript instead of dependent-project maintenance config.
 
 Dependent projects declare host dependencies through their adapter/config.
 c420ui resolves those dependencies and routes generic host probes through
@@ -656,6 +658,9 @@ dependencies directly.
 Dev12 routes c420ui host process execution through `c420ui-host`. Dependent
 projects still declare actions and dependencies; c420ui decides what to run;
 Rust executes generic host processes without hardcoding Canva Linux policy.
+Maintenance targets follow the same boundary: dependent projects declare them,
+c420ui validates and orchestrates, and Rust performs generic filesystem/sudo
+operations.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging,

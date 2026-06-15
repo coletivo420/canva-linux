@@ -31,12 +31,11 @@ fn emit(event: ProcessEvent) {
     }
 }
 
-fn spawn_cancel_reader<R>(reader: R) -> mpsc::Receiver<()>
-where
-    R: BufRead + Send + 'static,
-{
+fn spawn_cancel_reader() -> mpsc::Receiver<()> {
     let (sender, receiver) = mpsc::channel();
     thread::spawn(move || {
+        let stdin = std::io::stdin();
+        let reader = std::io::BufReader::new(stdin.lock());
         for line in reader.lines() {
             let Ok(line) = line else {
                 break;
@@ -57,9 +56,8 @@ where
 
 pub fn execute() -> i32 {
     let stdin = std::io::stdin();
-    let mut reader = std::io::BufReader::new(stdin.lock());
     let mut first_line = String::new();
-    if let Err(error) = reader.read_line(&mut first_line) {
+    if let Err(error) = stdin.read_line(&mut first_line) {
         emit(ProcessEvent::Error {
             message: format!("Invalid input: {}", error),
         });
@@ -87,7 +85,7 @@ pub fn execute() -> i32 {
         return exit_codes::INVALID_USAGE;
     }
 
-    let cancel_receiver = spawn_cancel_reader(reader);
+    let cancel_receiver = spawn_cancel_reader();
     let mut child = match spawn_process(&input) {
         Ok(child) => child,
         Err(message) => {
@@ -98,8 +96,14 @@ pub fn execute() -> i32 {
 
     emit(ProcessEvent::Started { pid: child.id() });
 
-    let stdout_handle = child.stdout.take().map(|stdout| spawn_line_reader(stdout, "stdout"));
-    let stderr_handle = child.stderr.take().map(|stderr| spawn_line_reader(stderr, "stderr"));
+    let stdout_handle = child
+        .stdout
+        .take()
+        .map(|stdout| spawn_line_reader(stdout, "stdout"));
+    let stderr_handle = child
+        .stderr
+        .take()
+        .map(|stderr| spawn_line_reader(stderr, "stderr"));
 
     loop {
         if cancel_receiver.try_recv().is_ok() {

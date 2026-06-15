@@ -20,6 +20,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 - Dev12 opens the Rust migration for c420ui host-operation logic only. Canva
   Linux remains ESM/TypeScript.
+- Dev12 maintenance targets are declared by dependent-project config; c420ui
+  validates and orchestrates them, and `c420ui-host` executes generic removal,
+  permission repair and sudo validation without hardcoding Canva Linux policy.
 
 ### Current changes
 

@@ -1,0 +1,16 @@
+{
+  "cleanupTargets": [
+    ".build",
+    "dist",
+    "build-dir",
+    "repo",
+    ".flatpak-builder"
+  ],
+  "permissionTargets": [
+    ".build",
+    "dist",
+    "build-dir",
+    "repo",
+    ".flatpak-builder"
+  ]
+}

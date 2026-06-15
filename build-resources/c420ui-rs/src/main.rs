@@ -11,6 +11,9 @@ fn print_usage() {
     eprintln!("  doctor --json");
     eprintln!("  check-host-dependencies --json");
     eprintln!("  run-process --json-lines");
+    eprintln!("  sudo-validate --json");
+    eprintln!("  remove-paths --json");
+    eprintln!("  fix-permissions --json");
     eprintln!("Options:");
     eprintln!("  --version");
 }
@@ -82,6 +85,51 @@ fn main() {
             std::process::exit(exit_codes::INVALID_USAGE);
         }
         std::process::exit(commands::run_process::execute());
+    }
+
+    if cmd == "sudo-validate" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: sudo-validate command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::sudo_validate::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
+    }
+
+    if cmd == "remove-paths" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: remove-paths command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::remove_paths::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
+    }
+
+    if cmd == "fix-permissions" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: fix-permissions command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::fix_permissions::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
     }
 
     eprintln!("Error: unknown command '{}'", cmd);

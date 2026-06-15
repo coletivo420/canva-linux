@@ -43,3 +43,39 @@ pub struct RunProcessInput {
 pub struct CancelInput {
     pub event: String,
 }
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RemovePathsInput {
+    pub root_dir: String,
+    #[serde(default)]
+    pub targets: Vec<String>,
+    #[serde(default)]
+    pub dry_run: bool,
+    #[serde(default)]
+    pub allow_sudo: bool,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct FixPermissionsInput {
+    pub root_dir: String,
+    #[serde(default)]
+    pub targets: Vec<String>,
+    pub user: String,
+    pub group: Option<String>,
+    #[serde(default)]
+    pub dry_run: bool,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SudoValidateInput {
+    pub root_dir: String,
+    #[serde(default)]
+    pub non_interactive: bool,
+    pub timeout_seconds: Option<u64>,
+    #[serde(default)]
+    pub refuse_user_scope: bool,
+    pub action_scope: Option<String>,
+}
