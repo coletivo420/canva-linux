@@ -71,6 +71,11 @@ Rust may be introduced under:
 build-resources/c420ui-rs/
 ```
 
+The first Rust commit may create build-resources/c420ui-rs/ only.
+Do not add Rust code under build-resources/canva-linux or build-resources/electron.
+Do not call Rust from Canva Linux runtime.
+Do not hardcode Canva Linux identity in Rust.
+
 Rust must not migrate, replace, wrap or own Canva Linux runtime code.
 
 Canva Linux remains ESM/TypeScript for:

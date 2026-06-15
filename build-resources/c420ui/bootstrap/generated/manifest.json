@@ -24,9 +24,9 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "c420uiSourceHashAlgorithm": "sha256",
-  "c420uiSourceHash": "sha256:09a5cb0c703a5dd0ea4a6205561984e067989f2fddca3457875b0c9e32db45bd",
-  "canvaLinuxSourceHash": "sha256:a0ac42427762ccda6a8f7bae0539cb286db6d3307697dc109044840b29aafbd2",
-  "combinedSourceHash": "sha256:fc9d7e8bb86231d40c60e88843670a667c24f8792ed881eef6a05332c5891a4f",
+  "c420uiSourceHash": "sha256:25c775427abf0d33ad4b6e11787a5b877b5d6d423e8d8f0b1b5a474c7e5dfe42",
+  "canvaLinuxSourceHash": "sha256:e09412b46b10b34a7aeca1b4a8c34905a03194c6b88753fcbec5f9a10a749291",
+  "combinedSourceHash": "sha256:932bdf4864c483914fbba6883bc240e335ddbca45d807467717ae6c35c79db61",
   "c420uiSourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",

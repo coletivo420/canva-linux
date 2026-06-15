@@ -79,13 +79,18 @@ Canva Linux remains ESM/TypeScript for:
 - Flatpak/AppImage/native integration policy
 - project-specific validation
 
-Rust validation will start with:
+Rust validation starts with:
 
-- `cargo fmt`
-- `cargo clippy`
-- `cargo test`
-- TypeScript wrapper tests
-- JSON contract tests between TypeScript and Rust
+- `cargo fmt --manifest-path build-resources/c420ui-rs/Cargo.toml --check`
+- `cargo clippy --manifest-path build-resources/c420ui-rs/Cargo.toml -- -D warnings`
+- `cargo test --manifest-path build-resources/c420ui-rs/Cargo.toml`
+- `npm run check:c420ui-rs-boundary`
+- `npm run check:c420ui-rs`
+
+These checks are Dev12 Rust scaffold checks and are not yet part of the global validation chain until the Rust toolchain requirement is confirmed.
+
+- TypeScript wrapper tests (Future)
+- JSON contract tests between TypeScript and Rust (Future)
 
 ## c420ui Version Hash Validation
 

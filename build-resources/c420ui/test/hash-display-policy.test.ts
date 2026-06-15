@@ -45,8 +45,9 @@ test("detected installation shows version and canvaLinuxSourceHash", () => {
 
   assert.match(
     panels.detectedInstallations.join("\n"),
-    /Native System: .*v0\.1\.4-15\.Dev\.11 · sha256:abc12345/,
+    /Native System: .*v0\.1\.4-15\.Dev\.12 · sha256:abc12345/,
   );
+
 });
 
 test("Linux Unpacked shows canvaLinuxSourceHash", () => {
@@ -67,7 +68,7 @@ test("Linux Unpacked shows canvaLinuxSourceHash", () => {
 
   assert.match(
     panels.linuxArtifacts[0],
-    /Linux unpacked v0\.1\.4-15\.Dev\.11 · sha256:linuxhas/,
+    /Linux unpacked v0\.1\.4-15\.Dev\.12 · sha256:linuxhas/,
   );
 });
 
@@ -157,8 +158,8 @@ test("generated artifacts show version and hash", () => {
   );
 
   const text = panels.generatedArtifacts.join("\n");
-  assert.match(text, /AppImage: .*v0\.1\.4-15\.Dev\.11 · sha256:appimage/);
-  assert.match(text, /Flatpak bundle: .*v0\.1\.4-15\.Dev\.11 · sha256:flatpakh/);
+  assert.match(text, /AppImage: .*v0\.1\.4-15\.Dev\.12 · sha256:appimage/);
+  assert.match(text, /Flatpak bundle: .*v0\.1\.4-15\.Dev\.12 · sha256:flatpakh/);
 });
 
 test("missing hash falls back to unknown only when metadata is absent", () => {
@@ -173,7 +174,7 @@ test("missing hash falls back to unknown only when metadata is absent", () => {
   );
   assert.match(
     withMissingHash.detectedInstallations.join("\n"),
-    /Native System: .*v0\.1\.4-15\.Dev\.11 · unknown/,
+    /Native System: .*v0\.1\.4-15\.Dev\.12 · unknown/,
   );
 
   const withoutVersion = formatDetectionPanelSummaries(

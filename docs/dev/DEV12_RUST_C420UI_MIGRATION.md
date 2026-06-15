@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned.
+Started.
 
 ## Goal
 
@@ -160,3 +160,10 @@ Rust must communicate with TypeScript through:
 - safe stderr
 - no project secrets
 - no hardcoded Canva Linux identity
+
+## Dev12 Commit 1 — Rust host scaffold
+
+The first Dev12 implementation commit adds `build-resources/c420ui-rs/` with the `c420ui-host` Rust binary, JSON command contracts, Rust integration tests, and a TypeScript boundary check.
+
+This commit must not wire Rust into Canva Linux runtime, Electron, toolbar, tabs, CLeyedropper, packaging policy, or the Canva Linux adapter.
+
