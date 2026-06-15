@@ -37,14 +37,14 @@ const c420uiPackage = {
 };
 
 const metadata = {
-  baseVersion: "0.1.4-15.Dev.11",
+  baseVersion: "0.1.4-15.Dev.12",
   baseDisplayVersion: "0.1.4-15.Dev",
-  basePhase: "0.1.4-15.Dev.11",
+  basePhase: "0.1.4-15.Dev.12",
   buildRevision: "unknown",
-  version: "0.1.4-15.Dev.11",
+  version: "0.1.4-15.Dev.12",
   displayVersion: "0.1.4-15.Dev",
-  phase: "0.1.4-15.Dev.11",
-  fullVersion: "0.1.4-15.Dev.11",
+  phase: "0.1.4-15.Dev.12",
+  fullVersion: "0.1.4-15.Dev.12",
   canvaLinuxSourceHash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
   c420uiSourceHash: "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
   combinedSourceHash: "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",

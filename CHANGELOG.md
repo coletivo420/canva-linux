@@ -100,6 +100,10 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
   `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
+## 0.1.4-15.Dev.12
+
+- Bumped version to 0.1.4-15.Dev.12.
+
 ## 0.1.4-15.Dev.11 — ESM-only TypeScript migration (FINALIZED)
 
 - Dev11 finalized the TypeScript/ESM migration. All maintained implementation code is TypeScript, and all generated execution artifacts are ESM .mjs.

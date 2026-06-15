@@ -19,8 +19,8 @@ Always read:
 
 ## Non-regression policy
 
-- Preserve version `0.1.4-14` unless the maintainer explicitly requests a versioning change.
-- Do not introduce `0.1.4-dev.14`, `0.1.4-rc.14`, or `0.1.4.14`.
+- Preserve version `0.1.4-15.Dev.12` unless the maintainer explicitly requests a versioning change.
+- Do not introduce `0.1.4-dev.15`, `0.1.4-rc.15`, or `0.1.4.15`.
 - Preserve the `N.N.N-X` release versioning rule.
 - Keep c420ui as the user-facing terminal interface name.
 - Do not reintroduce Terminal Assistant or TUI as product names.

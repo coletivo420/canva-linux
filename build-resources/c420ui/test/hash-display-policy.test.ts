@@ -20,8 +20,8 @@ function status(
 ): c420uiOverviewStatus {
   return {
     project: {
-      version: "0.1.4-15.Dev.11",
-      phase: "0.1.4-15.Dev.11",
+      version: "0.1.4-15.Dev.12",
+      phase: "0.1.4-15.Dev.12",
       appId: "io.github.coletivo420.canva-linux",
       executable: "canva-linux",
       repository: "https://github.com/coletivo420/canva-linux",
@@ -36,7 +36,7 @@ test("detected installation shows version and canvaLinuxSourceHash", () => {
   const panels = formatDetectionPanelSummaries(
     status({
       nativeSystem: true,
-      nativeSystemFullVersion: "0.1.4-15.Dev.11",
+      nativeSystemFullVersion: "0.1.4-15.Dev.12",
       nativeSystemHash: "sha256:abc123456789",
       nativeSystemHashKind: "canvaLinuxSourceHash",
     }),
@@ -57,7 +57,7 @@ test("Linux Unpacked shows canvaLinuxSourceHash", () => {
         kind: "linux-unpacked",
         label: "Linux unpacked",
         detected: true,
-        fullVersion: "0.1.4-15.Dev.11",
+        fullVersion: "0.1.4-15.Dev.12",
         hash: "sha256:linuxhash",
         hashKind: "canvaLinuxSourceHash",
       },
@@ -79,7 +79,7 @@ test("c420ui local version shows c420uiSourceHash", () => {
     fs.mkdirSync(path.join(rootDir, "build-resources/c420ui"), { recursive: true });
     fs.writeFileSync(
       path.join(rootDir, "package.json"),
-      `${JSON.stringify({ name: "canva-linux", version: "0.1.4-15.Dev.11" }, null, 2)}\n`,
+      `${JSON.stringify({ name: "canva-linux", version: "0.1.4-15.Dev.12" }, null, 2)}\n`,
     );
     fs.writeFileSync(
       path.join(rootDir, "build-resources/c420ui/package.json"),
@@ -88,8 +88,8 @@ test("c420ui local version shows c420uiSourceHash", () => {
     fs.writeFileSync(
       path.join(rootDir, "build-resources/canva-linux/config/project-ui.json"),
       `${JSON.stringify({
-        displayVersion: "0.1.4-15.Dev.11",
-        phase: "0.1.4-15.Dev.11",
+        displayVersion: "0.1.4-15.Dev.12",
+        phase: "0.1.4-15.Dev.12",
         projectName: "Canva Linux",
         projectSubtitle: "Desktop wrapper",
         c420uiTitle: "Canva Linux",
@@ -105,9 +105,9 @@ test("c420ui local version shows c420uiSourceHash", () => {
     fs.writeFileSync(
       path.join(rootDir, ".build/canva-linux/build-metadata.effective.json"),
       `${JSON.stringify({
-        baseVersion: "0.1.4-15.Dev.11",
-        baseDisplayVersion: "0.1.4-15.Dev.11",
-        basePhase: "0.1.4-15.Dev.11",
+        baseVersion: "0.1.4-15.Dev.12",
+        baseDisplayVersion: "0.1.4-15.Dev.12",
+        basePhase: "0.1.4-15.Dev.12",
         buildRevision: "unknown",
         canvaLinuxSourceHash: "sha256:canvalinuxhash",
         c420uiSourceHash: "sha256:c420uihash",
@@ -139,7 +139,7 @@ test("generated artifacts show version and hash", () => {
         kind: "appimage",
         label: "AppImage",
         detected: true,
-        fullVersion: "0.1.4-15.Dev.11",
+        fullVersion: "0.1.4-15.Dev.12",
         hash: "sha256:appimagehash",
         hashKind: "canvaLinuxSourceHash",
       },
@@ -148,7 +148,7 @@ test("generated artifacts show version and hash", () => {
         kind: "flatpak",
         label: "Flatpak bundle",
         detected: true,
-        fullVersion: "0.1.4-15.Dev.11",
+        fullVersion: "0.1.4-15.Dev.12",
         hash: "sha256:flatpakhash",
         hashKind: "canvaLinuxSourceHash",
       },
@@ -165,7 +165,7 @@ test("missing hash falls back to unknown only when metadata is absent", () => {
   const withMissingHash = formatDetectionPanelSummaries(
     status({
       nativeSystem: true,
-      nativeSystemFullVersion: "0.1.4-15.Dev.11",
+      nativeSystemFullVersion: "0.1.4-15.Dev.12",
       nativeSystemHash: "unknown",
       nativeSystemHashKind: "canvaLinuxSourceHash",
     }),

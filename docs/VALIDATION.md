@@ -1,4 +1,4 @@
-# Validation Checklist (0.1.4-15.Dev.11)
+# Validation Checklist (0.1.4-15.Dev.12)
 
 ## Dev11 ESM-only validation policy (FINALIZED)
 
@@ -180,8 +180,8 @@ c420ui bootstrap must be covered by the c420ui bootstrap source-hash input list.
 
 The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 
-- Native User: detected v0.1.4-15.Dev.11+g...
-- AppImage: detected v0.1.4-15.Dev.11+g...
+- Native User: detected v0.1.4-15.Dev.12+g...
+- AppImage: detected v0.1.4-15.Dev.12+g...
 - Flatpak System/User continuam exibindo +gHASH.
 
 Verify metadata installation:
@@ -211,8 +211,8 @@ Check that c420ui renders generated artifacts from the registry, preferring effe
 
 ```text
 Generated Artifacts
-  Flatpak bundle: detected v0.1.4-15.Dev.11+g...
-  AppImage:       detected v0.1.4-15.Dev.11+g...
+  Flatpak bundle: detected v0.1.4-15.Dev.12+g...
+  AppImage:       detected v0.1.4-15.Dev.12+g...
 ```
 
 ## Dev.8 pinned home tab-strip guardrail
@@ -281,8 +281,8 @@ For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDE
 
 Current target:
 
-- Version: `0.1.4-15.Dev.11 (Alpha)`
-- Release: `v0.1.4-15.Dev.11`
+- Version: `0.1.4-15.Dev.12 (Alpha)`
+- Release: `v0.1.4-15.Dev.12`
 - Versioning rule: `N.N.N-X` with optional `.Dev.N` development phase suffixes
 
 ## Detected Installations version visibility
@@ -300,11 +300,11 @@ The broken Plain Logs mode was removed from c420ui. The normal logs panel remain
 
 The validation baseline protects these release facts:
 
-- `package.json` version is `0.1.4-15.Dev.11`.
-- `package-lock.json` top-level version is `0.1.4-15.Dev.11`.
-- `package-lock.json` root package version is `0.1.4-15.Dev.11`.
+- `package.json` version is `0.1.4-15.Dev.12`.
+- `package-lock.json` top-level version is `0.1.4-15.Dev.12`.
+- `package-lock.json` root package version is `0.1.4-15.Dev.12`.
 - `build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
-- Active release docs point to `v0.1.4-15.Dev.11`.
+- Active release docs point to `v0.1.4-15.Dev.12`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 
 ## Validation tiers
@@ -450,7 +450,7 @@ Generated dependency source manifests may retain platform package names that con
 - Confirm `./canva-linux-c420ui-builder --canva-debug=1` is rejected because runtime flags belong to the compiled runtime app.
 - Confirm runtime `electron . --help` and `electron . --canva-debug=1` remain runtime-owned.
 - Confirm `flatpak run io.github.coletivo420.canva-linux --debug=1` fails with the reserved Electron/Node flag message before the runtime starts.
-- Confirm `Release: v0.1.4-15.Dev.11` appears in current release docs.
+- Confirm `Release: v0.1.4-15.Dev.12` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.
