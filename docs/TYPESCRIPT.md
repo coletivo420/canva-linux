@@ -23,8 +23,8 @@ CommonJS patterns are forbidden in maintained source:
 CommonJS may exist only inside external dependencies under `node_modules/`.
 Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
 Electron runtime starts from `.build/electron/main/index.mjs`.
-Electron preload bundles are `.build/electron/preload/canva.bundle.mjs` and
-`.build/electron/preload/toolbar.bundle.mjs`.
+The Canva page preload bundle is `.build/electron/preload/canva.bundle.mjs`.
+The toolbar is main-driven and must not have a preload bundle.
 Node tooling artifacts under `.build/scripts/` and checks under
 `.build/build-resources/**/checks/` emit ESM `.mjs` outputs.
 The c420ui bootstrap generator emits and executes

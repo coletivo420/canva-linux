@@ -10,7 +10,7 @@ test("preload bundles keep .mjs extension", () => {
   const content = fs.readFileSync(buildPreloadPath, "utf8");
 
   assert.match(content, /canva\.bundle\.mjs/);
-  assert.match(content, /toolbar\.bundle\.mjs/);
+  assert.doesNotMatch(content, /buildPreloadBundle\("toolbar"/);
   assert.ok(!content.includes(".bundle.cjs"), "build-preload-bundle.ts should not use .cjs extension");
 });
 
@@ -22,11 +22,11 @@ test("preload build keeps format esm", () => {
   assert.ok(!content.includes('format: "cjs"'), "build-preload-bundle.ts should not switch to CommonJS format");
 });
 
-test("runtime keeps toolbar.bundle.mjs path", () => {
+test("runtime does not reference toolbar.bundle.mjs path", () => {
   const mainPath = path.join(repoRoot, "build-resources", "electron", "main", "index.ts");
   const content = fs.readFileSync(mainPath, "utf8");
 
-  assert.match(content, /toolbar\.bundle\.mjs/);
+  assert.doesNotMatch(content, /toolbar\.bundle\.mjs/);
   assert.ok(!content.includes("toolbar.bundle.cjs"), "index.ts should not use .cjs for toolbar preload");
 });
 
@@ -38,10 +38,9 @@ test("runtime keeps canva.bundle.mjs path", () => {
   assert.ok(!content.includes("canva.bundle.cjs"), "tab-controller.ts should not use .cjs for canva preload");
 });
 
-test("generated preload bundles do not contain import from electron", () => {
+test("generated canva preload bundle does not contain import from electron", () => {
   const bundles = [
     path.join(repoRoot, ".build", "electron", "preload", "canva.bundle.mjs"),
-    path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs"),
   ];
 
   for (const bundle of bundles) {
@@ -77,10 +76,9 @@ test("electron-preload-api keeps sandbox preload require fallback after ESM impo
   assert.match(content, /preloadRequire\("electron"\)/);
 });
 
-test("generated preload bundles keep sandbox preload require fallback", () => {
+test("generated canva preload bundle keeps sandbox preload require fallback", () => {
   const bundles = [
     path.join(repoRoot, ".build", "electron", "preload", "canva.bundle.mjs"),
-    path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs"),
   ];
 
   for (const bundle of bundles) {
@@ -93,51 +91,15 @@ test("generated preload bundles keep sandbox preload require fallback", () => {
   }
 });
 
-test("toolbar preload dispatches canva-tabs-bridge-ready", () => {
-  const toolbarPreloadPath = path.join(repoRoot, "build-resources", "electron", "preload", "toolbar.ts");
-  const content = fs.readFileSync(toolbarPreloadPath, "utf8");
-
-  assert.match(content, /dispatchEvent\(new CustomEvent\("canva-tabs-bridge-ready"\)\)/);
-});
-
-test("toolbar preload exposes only explicit bridge methods", () => {
-  const toolbarPreloadPath = path.join(repoRoot, "build-resources", "electron", "preload", "toolbar.ts");
-  const content = fs.readFileSync(toolbarPreloadPath, "utf8");
-
-  for (const method of ["subscribeTabsState", "switchTab", "closeTab", "goHome", "getSystemTheme"]) {
-    assert.match(content, new RegExp(`\\b${method}\\b`));
-  }
-  assert.doesNotMatch(content, /(?:^|\n)\s*send\s*\(/);
-  assert.doesNotMatch(content, /\bonState\(/);
-});
-
-test("generated toolbar preload exposes canvaTabs bridge", () => {
+test("generated toolbar preload is not emitted", () => {
   const bundle = path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs");
-  if (!fs.existsSync(bundle)) return;
-
-  const content = fs.readFileSync(bundle, "utf8");
-  assert.match(content, /\.exposeInMainWorld\("canvaTabs"/);
-  for (const method of ["subscribeTabsState", "switchTab", "closeTab", "goHome", "getSystemTheme"]) {
-    assert.match(content, new RegExp(`\\b${method}\\b`));
-  }
+  assert.equal(fs.existsSync(bundle), false);
 });
 
-test("generated toolbar preload contains subscribeTabsState/switchTab/closeTab/goHome", () => {
-  const bundle = path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs");
-  if (!fs.existsSync(bundle)) return;
+test("build-preload-bundle does not include toolbar preload entry", () => {
+  const buildPreloadPath = path.join(repoRoot, "build-resources", "c420ui", "scripts", "build-preload-bundle.ts");
+  const content = fs.readFileSync(buildPreloadPath, "utf8");
 
-  const content = fs.readFileSync(bundle, "utf8");
-  for (const method of ["subscribeTabsState", "switchTab", "closeTab", "goHome"]) {
-    assert.match(content, new RegExp(`\\b${method}\\b`));
-  }
-  assert.doesNotMatch(content, /\bonState\b/);
-});
-
-test("generated toolbar preload does not read process argv before exposing canvaTabs", () => {
-  const bundle = path.join(repoRoot, ".build", "electron", "preload", "toolbar.bundle.mjs");
-  if (!fs.existsSync(bundle)) return;
-
-  const content = fs.readFileSync(bundle, "utf8");
-  assert.doesNotMatch(content, /process\.argv/);
-  assert.match(content, /getPreloadArgv\(\)\.find/);
+  assert.doesNotMatch(content, /buildPreloadBundle\("toolbar"/);
+  assert.match(content, /removeStaleToolbarPreloadBundle/);
 });

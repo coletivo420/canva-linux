@@ -82,9 +82,19 @@ async function buildPreloadBundle(name: string, outputName: string): Promise<voi
   console.log(`[preload-bundle] wrote ${path.relative(repoRoot, outputFile)}`);
 }
 
+function removeStaleToolbarPreloadBundle(): void {
+  const staleOutput = path.join(
+    runtimeRoot,
+    ...(useBuildOutput ? ["electron"] : ["build-resources", "electron"]),
+    "preload",
+    "toolbar.bundle.mjs",
+  );
+  fs.rmSync(staleOutput, { force: true });
+}
+
 export async function main(): Promise<void> {
+  removeStaleToolbarPreloadBundle();
   await buildPreloadBundle("canva", "canva.bundle.mjs");
-  await buildPreloadBundle("toolbar", "toolbar.bundle.mjs");
 }
 
 if (/build-preload-bundle\.(mjs|js|ts)$/.test(process.argv[1] || "")) {

@@ -17,8 +17,8 @@ CommonJS patterns are forbidden in maintained source:
 CommonJS may exist only inside external dependencies under `node_modules/`.
 Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
 Electron runtime must start from `.build/electron/main/index.mjs`.
-Electron preload bundles must be `.build/electron/preload/canva.bundle.mjs` and
-`.build/electron/preload/toolbar.bundle.mjs`.
+The Canva page preload bundle must be `.build/electron/preload/canva.bundle.mjs`.
+The toolbar is main-driven and must not emit `toolbar.bundle.mjs`.
 Node tooling, core checks, c420ui checks, and c420ui terminal generated outputs
 must use ESM `.mjs` artifacts.
 The electron-builder `beforeBuild` hook output must use ESM `.mjs`.
@@ -27,15 +27,15 @@ The c420ui bootstrap generator must emit and run `build-bootstrap.mjs`.
 ## Stabilized toolbar and CLeyedropper validation
 
 The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
-The toolbar must keep ESM preload bundles, explicit `window.canvaTabs` bridge
-methods, and the `canva-tabs-bridge-ready` handshake. Because sandboxed
-preloads can fail before exposing the bridge in Flatpak/AppImage/native runtime,
-the toolbar must also keep the main-process `__canvaToolbarRenderState` render
-fallback and `canva-toolbar://` action fallback. Do not reintroduce
-`canvaTabs.send`/`onState`. `loadElectronPreloadApi` must keep the sandbox
-Electron preload resolver. The CLeyedropper must keep the scaling patch,
-snapshot-backed canvas flow, cleanup behavior, abort handling, and
-`sRGBHex`-compatible result contract.
+The toolbar is intentionally main-driven. It does not depend on an Electron
+preload bridge. The main process applies toolbar state through
+`__canvaToolbarApplyState`, and toolbar actions are sent through the
+`canva-toolbar://` action channel intercepted by the shell before navigation.
+Do not reintroduce `window.canvaTabs`, `toolbar.bundle.mjs`, `toolbar-action`
+IPC, or toolbar preload dependencies. `loadElectronPreloadApi` must keep the
+sandbox Electron preload resolver for the Canva preload. The CLeyedropper must
+keep the scaling patch, snapshot-backed canvas flow, cleanup behavior, abort
+handling, and `sRGBHex`-compatible result contract.
 
 Focused gates:
 
@@ -54,7 +54,7 @@ Manual runtime validation remains outside normal repository checks:
 flatpak run io.github.coletivo420.canva-linux --canva-debug=2
 ```
 
-Confirm logs include `toolbar-preload-loaded`, `[toolbar-ui] subscribe-tabs-state`,
+Confirm logs include `toolbar-loaded`, `state-broadcast-toolbar`,
 `[canva:eyedropper:check]`, `eyedropper:flow open-request`,
 `eyedropper:flow snapshot-ready`, and `eyedropper:library picked`.
 
@@ -537,5 +537,5 @@ They are not migration debt. Any additional shell file is a regression unless ex
 - `npm test` emits and runs compiled test files as `.mjs` under `.build/build-resources/tests/` and `.build/build-resources/c420ui/test/`.
 - The root `scripts/` path is not a fallback source, test, or runtime compilation area.
 - Preload bundling accepts only TypeScript source under `build-resources/electron/preload/*.ts`; maintained `.js` preload source is invalid.
-- `build:runtime` must require both `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- `build:runtime` must require `.build/electron/preload/canva.bundle.mjs` and must not require `toolbar.bundle.mjs`.
 - Repository policy rejects CommonJS bridges in all maintained `build-resources/**/*.ts`.

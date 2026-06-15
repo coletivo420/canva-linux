@@ -5,7 +5,7 @@ Dev11 finalized the TypeScript/ESM migration. All maintained implementation code
 ## Final Dev11 ESM-only contract
 
 - Electron runtime is explicit ESM at `.build/electron/main/index.mjs`.
-- Electron preload bundles are explicit ESM at `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- The Canva page preload bundle is explicit ESM at `.build/electron/preload/canva.bundle.mjs`; the toolbar is main-driven and has no preload bundle.
 - Tooling and checks emit `.mjs` outputs.
 - c420ui bootstrap generated artifacts are `.mjs`.
 - Maintained TypeScript source uses ESM imports/exports only.

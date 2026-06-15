@@ -40,9 +40,32 @@ type CreateToolbarViewOptions = {
   handleToolbarAction(action: string, payload?: { id?: unknown }): void;
   layoutViews(): void;
   makeToolbarUrl(): string;
-  preloadPath: string;
   setToolbarView(value: WebContentsViewLike): void;
 };
+
+type ToolbarUrlAction =
+  | { action: "go-home"; payload: {} }
+  | { action: "switch-tab"; payload: { id: number } }
+  | { action: "close-tab"; payload: { id: number } };
+
+function parseToolbarActionUrl(url: string): ToolbarUrlAction | null {
+  if (!url.startsWith("canva-toolbar://")) return null;
+
+  const actionUrl = new URL(url);
+  const action = actionUrl.hostname || actionUrl.pathname.replace(/^\/+/, "");
+
+  if (action === "go-home") {
+    return { action, payload: {} };
+  }
+
+  if (action === "switch-tab" || action === "close-tab") {
+    const id = Number(actionUrl.searchParams.get("id"));
+    if (!Number.isSafeInteger(id) || id <= 0) return null;
+    return { action, payload: { id } };
+  }
+
+  return null;
+}
 
 /**
  * @param {{
@@ -127,7 +150,6 @@ export function createShellHelpers({
    *   ensureTopLevelView(view: WebContentsViewLike): void;
    *   layoutViews(): void;
    *   makeToolbarUrl(): string;
-   *   preloadPath: string;
    *   setToolbarView(value: WebContentsViewLike): void;
    * }} options
    * @returns {WebContentsViewLike}
@@ -138,13 +160,11 @@ export function createShellHelpers({
     handleToolbarAction,
     layoutViews,
     makeToolbarUrl,
-    preloadPath,
     setToolbarView,
   }: CreateToolbarViewOptions): WebContentsViewLike {
     debugLog("tabs:toolbar", "create-toolbar-view");
     const toolbarView = new WebContentsView({
       webPreferences: {
-        preload: preloadPath,
         contextIsolation: true,
         sandbox: true,
         nodeIntegration: false,
@@ -160,17 +180,6 @@ export function createShellHelpers({
         toolbarView.webContents.getURL() || "about:blank",
       );
     });
-    toolbarView.webContents.on(
-      "preload-error",
-      (_event: unknown, failedPreloadPath: string, error: unknown) => {
-        debugLog(
-          "tabs:toolbar",
-          "toolbar-preload-error",
-          failedPreloadPath || "unknown-preload",
-          error instanceof Error ? error.message : String(error),
-        );
-      },
-    );
     toolbarView.webContents.on("did-finish-load", () => {
       debugLog(
         "tabs:toolbar",
@@ -186,22 +195,22 @@ export function createShellHelpers({
         event.preventDefault?.();
 
         try {
-          const actionUrl = new URL(url);
-          const action =
-            actionUrl.hostname || actionUrl.pathname.replace(/^\/+/, "");
-          const idValue = actionUrl.searchParams.get("id");
-          const id = idValue ? Number(idValue) : undefined;
+          const parsed = parseToolbarActionUrl(url);
+          if (!parsed) {
+            debugLog("tabs:toolbar", "toolbar-url-action-invalid", url);
+            return;
+          }
           debugLog(
             "tabs:toolbar",
-            "toolbar-fallback-action",
-            action || "unknown-action",
-            id === undefined ? "id=none" : `id=${id}`,
+            "toolbar-url-action",
+            parsed.action,
+            parsed.payload,
           );
-          handleToolbarAction(action, Number.isFinite(id) ? { id } : {});
+          handleToolbarAction(parsed.action, parsed.payload);
         } catch (error) {
           debugLog(
             "tabs:toolbar",
-            "toolbar-fallback-action-error",
+            "toolbar-url-action-error",
             error instanceof Error ? error.message : String(error),
           );
         }

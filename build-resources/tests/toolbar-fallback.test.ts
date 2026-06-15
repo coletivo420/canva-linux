@@ -20,27 +20,31 @@ const indexPath = path.join(
   "index.ts",
 );
 
-test("toolbar shell logs preload errors", () => {
+test("toolbar shell does not configure toolbar preload", () => {
   const source = fs.readFileSync(shellPath, "utf8");
 
-  assert.match(source, /"preload-error"/);
-  assert.match(source, /"toolbar-preload-error"/);
+  assert.doesNotMatch(source, /preloadPath/);
+  assert.doesNotMatch(source, /preload:\s*preloadPath/);
 });
 
-test("toolbar shell intercepts fallback navigation actions", () => {
+test("toolbar shell intercepts and validates navigation actions", () => {
   const source = fs.readFileSync(shellPath, "utf8");
 
   assert.match(source, /"will-navigate"/);
   assert.match(source, /canva-toolbar:\/\//);
   assert.match(source, /handleToolbarAction/);
-  assert.match(source, /toolbar-fallback-action/);
+  assert.match(source, /parseToolbarActionUrl/);
+  assert.match(source, /Number\.isSafeInteger/);
+  assert.match(source, /toolbar-url-action/);
+  assert.match(source, /toolbar-url-action-invalid/);
 });
 
-test("toolbar state broadcast also renders through main fallback", () => {
+test("toolbar state broadcast applies through main-driven state injection", () => {
   const source = fs.readFileSync(indexPath, "utf8");
 
-  assert.match(source, /webContents\.send\("tabs-state"/);
+  assert.doesNotMatch(source, /webContents\.send\("tabs-state"/);
   assert.match(source, /executeJavaScript/);
-  assert.match(source, /__canvaToolbarRenderState/);
-  assert.match(source, /toolbar-main-render-failed/);
+  assert.match(source, /__canvaToolbarApplyState/);
+  assert.match(source, /serializeToolbarStateForJavaScript/);
+  assert.match(source, /toolbar-state-apply-failed/);
 });

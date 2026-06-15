@@ -157,7 +157,7 @@ Do not remove or weaken validation checks to make the command pass.
 ## Logging review
 
 1. Confirm terminal debug entries include the expected source prefix, such as
-   `main`, `canva-preload`, or `toolbar-preload`.
+   `main` or `canva-preload`.
 2. Confirm the file-backed debug log contains the same run and does not include
    stale content from a previous launch.
 3. Confirm `canva-linux --canva-debug=1` produces startup/runtime diagnostics appropriate for

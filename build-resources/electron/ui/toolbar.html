@@ -210,10 +210,11 @@
   <script>
     const pinnedHomeSlot = document.getElementById('pinned-home-slot');
     const tabsEl = document.getElementById('tabs');
-    const bridgeAvailable = Boolean(window.canvaTabs);
     const iconPath = '../assets/canva-icon.png';
-    let fallbackRendered = false;
-    console.log('[toolbar-ui] bootstrap', JSON.stringify({ bridgeAvailable }));
+    const allowedActions = new Set(['switch-tab', 'close-tab', 'go-home']);
+    let stateApplied = false;
+    document.body.dataset.state = 'waiting';
+    console.log('[toolbar-ui] bootstrap', JSON.stringify({ state: document.body.dataset.state }));
     window.addEventListener('error', (event) => {
       console.error('[toolbar-ui] error', event.message || 'unknown-error', event.filename || 'inline', event.lineno || 0);
     });
@@ -243,29 +244,19 @@
     }
 
     function getSystemTheme() {
-      if (window.canvaTabs) return window.canvaTabs.getSystemTheme();
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'dark'
         : 'light';
     }
 
     function sendToolbarAction(action, payload = {}) {
-      if (window.canvaTabs && action === 'switch-tab') {
-        window.canvaTabs.switchTab(payload.id);
-        return;
-      }
-      if (window.canvaTabs && action === 'close-tab') {
-        window.canvaTabs.closeTab(payload.id);
-        return;
-      }
-      if (window.canvaTabs && action === 'go-home') {
-        window.canvaTabs.goHome();
+      if (!allowedActions.has(action)) {
+        console.error('[toolbar-ui] invalid-action', action);
         return;
       }
 
       const actionUrl = new URL(`canva-toolbar://${action}`);
-      if (payload.id !== undefined) actionUrl.searchParams.set('id', String(payload.id));
-      console.warn('[toolbar-ui] bridge-action-fallback', action);
+      if (typeof payload.id === 'number') actionUrl.searchParams.set('id', String(payload.id));
       window.location.href = actionUrl.toString();
     }
 
@@ -368,48 +359,17 @@
       }
     }
 
-    function waitForCanvaTabsBridge() {
-      if (window.canvaTabs) return Promise.resolve(window.canvaTabs);
-
-      document.body.dataset.bridge = 'pending';
-      return new Promise((resolve, reject) => {
-        let interval = null;
-        const timeout = setTimeout(() => {
-          window.removeEventListener('canva-tabs-bridge-ready', onReady);
-          if (interval) clearInterval(interval);
-          reject(new Error('canvaTabs bridge did not initialize'));
-        }, 1500);
-
-        function onReady() {
-          if (!window.canvaTabs) return;
-          clearTimeout(timeout);
-          if (interval) clearInterval(interval);
-          window.removeEventListener('canva-tabs-bridge-ready', onReady);
-          resolve(window.canvaTabs);
-        }
-
-        window.addEventListener('canva-tabs-bridge-ready', onReady);
-        interval = setInterval(onReady, 25);
-      });
-    }
-
-    window.__canvaToolbarRenderState = (state) => {
-      fallbackRendered = true;
-      document.body.dataset.bridge = 'main';
+    window.__canvaToolbarApplyState = (state) => {
+      stateApplied = true;
+      document.body.dataset.state = 'ready';
       render(state);
     };
 
-    waitForCanvaTabsBridge()
-      .then((bridge) => {
-        document.body.dataset.bridge = 'ready';
-        console.log('[toolbar-ui] subscribe-tabs-state');
-        bridge.subscribeTabsState(render);
-      })
-      .catch((error) => {
-        if (fallbackRendered) return;
-        console.error('[toolbar-ui] bridge-initialization-failed', error);
-        document.body.dataset.bridge = 'failed';
-      });
+    setTimeout(() => {
+      if (stateApplied) return;
+      console.error('[toolbar-ui] state-timeout');
+      document.body.dataset.state = 'failed';
+    }, 1500);
   </script>
 </body>
 </html>

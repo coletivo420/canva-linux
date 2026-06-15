@@ -38,7 +38,6 @@ export function main(): number {
   const filesToRequire = [
     ".build/electron/main/index.mjs",
     ".build/electron/preload/canva.bundle.mjs",
-    ".build/electron/preload/toolbar.bundle.mjs",
     ".build/electron/ui/toolbar.html",
   ];
 
@@ -60,6 +59,7 @@ export function main(): number {
     ".build/electron/main/index.js",
     ".build/electron/preload/canva.bundle.js",
     ".build/electron/preload/toolbar.js",
+    ".build/electron/preload/toolbar.bundle.mjs",
   ] as const) {
     if (fs.existsSync(path.join(rootDir, staleOutput))) {
       failures.push(`${staleOutput}: stale CommonJS-era runtime output must not exist`);

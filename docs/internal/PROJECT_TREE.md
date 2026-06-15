@@ -38,7 +38,7 @@ build-resources/canva-linux/validation/    Canva Linux project validation.
 Dev11 finalized explicit ESM outputs:
 
 - Electron runtime entrypoint: `.build/electron/main/index.mjs`.
-- Electron preload bundles: `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- Electron preload bundle: `.build/electron/preload/canva.bundle.mjs`. The toolbar is main-driven and has no preload bundle.
 - Node tooling, checks, c420ui terminal output, and c420ui bootstrap artifacts use `.mjs`.
 - Versioned `.cjs` files are forbidden outside external dependencies.
 

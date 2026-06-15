@@ -721,8 +721,14 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
     if (buildPreloadSource.includes(".bundle.cjs")) {
       failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must not use .cjs for preload bundles");
     }
-    if (!buildPreloadSource.includes("canva.bundle.mjs") || !buildPreloadSource.includes("toolbar.bundle.mjs")) {
-      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: preload bundles must stay ESM .mjs outputs");
+    if (!buildPreloadSource.includes("canva.bundle.mjs")) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: Canva preload bundle must stay ESM .mjs output");
+    }
+    if (buildPreloadSource.includes('buildPreloadBundle("toolbar"')) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must not emit toolbar.bundle.mjs");
+    }
+    if (!buildPreloadSource.includes("removeStaleToolbarPreloadBundle")) {
+      failures.push("build-resources/c420ui/scripts/build-preload-bundle.ts: must remove stale toolbar.bundle.mjs output");
     }
     for (const requiredFragment of [
       "must not contain runtime electron imports",
@@ -739,8 +745,8 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
   if (indexSource?.includes("toolbar.bundle.cjs")) {
     failures.push("build-resources/electron/main/index.ts: must not use toolbar.bundle.cjs");
   }
-  if (indexSource && !indexSource.includes("toolbar.bundle.mjs")) {
-    failures.push("build-resources/electron/main/index.ts: must keep toolbar.bundle.mjs preload path");
+  if (indexSource?.includes("toolbar.bundle.mjs")) {
+    failures.push("build-resources/electron/main/index.ts: toolbar must not use toolbar.bundle.mjs preload path");
   }
 
   const controllerSource = readText(rootDir, "build-resources/electron/main/tab-controller.ts");
@@ -776,7 +782,6 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
   }
 
   for (const relativePath of [
-    "build-resources/electron/preload/toolbar.ts",
     "build-resources/electron/preload/debug.ts",
     "build-resources/electron/preload/canva.ts",
   ] as const) {
@@ -787,10 +792,7 @@ function checkPreloadBundleContract(rootDir: string, failures: string[]): void {
     }
   }
 
-  for (const relativePath of [
-    ".build/electron/preload/canva.bundle.mjs",
-    ".build/electron/preload/toolbar.bundle.mjs",
-  ] as const) {
+  for (const relativePath of [".build/electron/preload/canva.bundle.mjs"] as const) {
     const bundle = readText(rootDir, relativePath);
     if (!bundle) continue;
     if (/^\s*import\s+.*["']electron["'];?/m.test(bundle)) {
@@ -816,73 +818,56 @@ function checkToolbarUIContract(rootDir: string, failures: string[]): void {
   if (!toolbarHtml.includes("getPinnedHomeLabel")) {
     failures.push("build-resources/electron/ui/toolbar.html: must use getPinnedHomeLabel for home tab labeling");
   }
-  if (!toolbarHtml.includes("canva-tabs-bridge-ready")) {
-    failures.push("build-resources/electron/ui/toolbar.html: must wait for canva-tabs-bridge-ready");
-  }
-  if (!toolbarHtml.includes("setInterval(onReady, 25)")) {
-    failures.push("build-resources/electron/ui/toolbar.html: must poll for canvaTabs bridge in case readiness event does not cross contexts");
-  }
-  if (!toolbarHtml.includes("bridge-initialization-failed") || !toolbarHtml.includes("document.body.dataset.bridge = 'failed'")) {
-    failures.push("build-resources/electron/ui/toolbar.html: must expose bridge-initialization-failed on timeout");
-  }
-  if (!toolbarHtml.includes("window.__canvaToolbarRenderState")) {
-    failures.push("build-resources/electron/ui/toolbar.html: must define window.__canvaToolbarRenderState main render fallback");
+  if (!toolbarHtml.includes("window.__canvaToolbarApplyState")) {
+    failures.push("build-resources/electron/ui/toolbar.html: must define window.__canvaToolbarApplyState main-driven state contract");
   }
   if (!toolbarHtml.includes("canva-toolbar://")) {
-    failures.push("build-resources/electron/ui/toolbar.html: must keep canva-toolbar:// action fallback");
+    failures.push("build-resources/electron/ui/toolbar.html: must use canva-toolbar:// action channel");
   }
-  for (const forbiddenFragment of ["canvaTabs.send", "canvaTabs.onState"] as const) {
+  for (const forbiddenFragment of [
+    "window.canvaTabs",
+    "canvaTabs",
+    "subscribeTabsState",
+    "canva-tabs-bridge-ready",
+    "bridge-initialization-failed",
+    "__canvaToolbarRenderState",
+  ] as const) {
     if (toolbarHtml.includes(forbiddenFragment)) {
-      failures.push(`build-resources/electron/ui/toolbar.html: must not call legacy canvaTabs alias ${forbiddenFragment}`);
+      failures.push(`build-resources/electron/ui/toolbar.html: main-driven toolbar must not reference ${forbiddenFragment}`);
     }
   }
-  for (const bridgeMethod of ["switchTab", "closeTab", "goHome", "getSystemTheme"] as const) {
-    if (!toolbarHtml.includes(`canvaTabs.${bridgeMethod}`)) {
-      failures.push(`build-resources/electron/ui/toolbar.html: must use canvaTabs.${bridgeMethod}`);
-    }
-  }
-  if (!toolbarHtml.includes("bridge.subscribeTabsState(render)")) {
-    failures.push("build-resources/electron/ui/toolbar.html: must subscribe through the resolved canvaTabs bridge");
-  }
-
-  const toolbarPreload = readText(rootDir, "build-resources/electron/preload/toolbar.ts");
-  if (!toolbarPreload) {
-    failures.push("build-resources/electron/preload/toolbar.ts: must exist");
-    return;
-  }
-
-  if (!toolbarPreload.includes('contextBridge.exposeInMainWorld("canvaTabs"')) {
-    failures.push("build-resources/electron/preload/toolbar.ts: must expose window.canvaTabs");
-  }
-  for (const bridgeMethod of ["subscribeTabsState", "switchTab", "closeTab", "goHome", "getSystemTheme"] as const) {
-    if (!toolbarPreload.includes(bridgeMethod)) {
-      failures.push(`build-resources/electron/preload/toolbar.ts: canvaTabs must expose ${bridgeMethod}`);
-    }
-  }
-  if (!toolbarPreload.includes('CustomEvent("canva-tabs-bridge-ready")')) {
-    failures.push("build-resources/electron/preload/toolbar.ts: must dispatch canva-tabs-bridge-ready");
-  }
-  if (/(?:^|\n)\s*send\s*\(/.test(toolbarPreload)) {
-    failures.push("build-resources/electron/preload/toolbar.ts: canvaTabs must not expose legacy alias send");
-  }
-  if (/(?:^|\n)\s*onState\s*\(/.test(toolbarPreload)) {
-    failures.push("build-resources/electron/preload/toolbar.ts: canvaTabs must not expose legacy alias onState");
+  if (readText(rootDir, "build-resources/electron/preload/toolbar.ts") !== null) {
+    failures.push("build-resources/electron/preload/toolbar.ts: toolbar preload source must not exist");
   }
 
   const indexSource = readText(rootDir, "build-resources/electron/main/index.ts");
-  if (!indexSource?.includes("__canvaToolbarRenderState")) {
-    failures.push("build-resources/electron/main/index.ts: must keep executeJavaScript(__canvaToolbarRenderState) toolbar render fallback");
+  if (!indexSource?.includes("__canvaToolbarApplyState")) {
+    failures.push("build-resources/electron/main/index.ts: must apply toolbar state through __canvaToolbarApplyState");
   }
   if (!indexSource?.includes("executeJavaScript")) {
-    failures.push("build-resources/electron/main/index.ts: must use executeJavaScript for toolbar main render fallback");
+    failures.push("build-resources/electron/main/index.ts: must use executeJavaScript for main-driven toolbar state");
+  }
+  if (indexSource?.includes('webContents.send("tabs-state"')) {
+    failures.push("build-resources/electron/main/index.ts: must not send tabs-state IPC to toolbar");
   }
 
   const shellSource = readText(rootDir, "build-resources/electron/main/shell.ts");
   if (!shellSource?.includes("canva-toolbar://")) {
-    failures.push("build-resources/electron/main/shell.ts: must intercept canva-toolbar:// fallback actions");
+    failures.push("build-resources/electron/main/shell.ts: must intercept canva-toolbar:// toolbar action channel");
   }
   if (!shellSource?.includes("handleToolbarAction")) {
-    failures.push("build-resources/electron/main/shell.ts: createToolbarView must accept handleToolbarAction for fallback actions");
+    failures.push("build-resources/electron/main/shell.ts: createToolbarView must accept handleToolbarAction for toolbar action channel");
+  }
+  if (!shellSource?.includes("parseToolbarActionUrl") || !shellSource.includes("Number.isSafeInteger")) {
+    failures.push("build-resources/electron/main/shell.ts: must validate toolbar action URLs");
+  }
+  if (shellSource?.includes("preloadPath") || /preload:\s*preloadPath/.test(shellSource || "")) {
+    failures.push("build-resources/electron/main/shell.ts: createToolbarView must not configure toolbar preload");
+  }
+
+  const ipcSource = readText(rootDir, "build-resources/electron/main/ipc.ts");
+  if (ipcSource?.includes('"toolbar-action"') || ipcSource?.includes("toolbar-ipc-action")) {
+    failures.push("build-resources/electron/main/ipc.ts: must not register toolbar-action IPC");
   }
 }
 

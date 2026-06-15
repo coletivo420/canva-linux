@@ -25,11 +25,10 @@ Request changes if a PR:
 
 Request changes if a PR:
 
-- removes the toolbar ESM `.mjs` preload bundle contract;
-- removes the main-process toolbar render fallback through `__canvaToolbarRenderState`;
-- removes the `canva-toolbar://` action fallback;
-- reintroduces `send` or `onState` aliases on `window.canvaTabs`;
-- removes the `canva-tabs-bridge-ready` handshake;
+- reintroduces a toolbar preload bundle or `window.canvaTabs` dependency;
+- removes the main-process toolbar state contract through `__canvaToolbarApplyState`;
+- removes the `canva-toolbar://` toolbar action channel;
+- reintroduces `toolbar-action` IPC;
 - changes toolbar visual CSS or height while claiming contract-only hardening;
 - merges the pinned home tab into regular toolbar tabs;
 - replaces CLeyedropper with a raw EyeDropper call;
@@ -716,5 +715,5 @@ Request changes if a PR:
 - compiles tests or Node tooling back to generated `.js` instead of `.mjs`;
 - treats root `scripts/` as a fallback test/runtime/source compilation area;
 - accepts maintained `.js` preload source instead of TypeScript preload source;
-- removes `toolbar.bundle.mjs` from runtime build or validation requirements;
+- reintroduces `toolbar.bundle.mjs` as a runtime build or validation requirement;
 - reintroduces CommonJS bridges in any maintained `build-resources/**/*.ts`.

@@ -13,8 +13,8 @@ Dev11 finalized the TypeScript/ESM migration.
 - CommonJS may exist only inside external dependencies under `node_modules/`.
 - Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
 - Electron runtime starts from `.build/electron/main/index.mjs`.
-- Electron preload bundles are `.build/electron/preload/canva.bundle.mjs` and
-  `.build/electron/preload/toolbar.bundle.mjs`.
+- The Canva page preload bundle is `.build/electron/preload/canva.bundle.mjs`.
+  The toolbar is main-driven and must not have a preload bundle.
 - Node tooling generated outputs moved to ESM `.mjs` under `.build/scripts/`.
 - Core and c420ui checks generated outputs moved to ESM `.mjs`.
 - c420ui terminal generated output moved to ESM `.mjs`.
@@ -25,14 +25,14 @@ Dev11 finalized the TypeScript/ESM migration.
 ## Toolbar and CLeyedropper stabilized runtime surfaces
 
 The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
-The toolbar now relies first on ESM `.mjs` preload bundles, explicit
-`window.canvaTabs` bridge methods, and the `canva-tabs-bridge-ready` handshake.
-It must also keep the main-process `__canvaToolbarRenderState` render fallback
-and `canva-toolbar://` action fallback, because sandboxed runtime preloads can
-fail before exposing `window.canvaTabs`. Do not reintroduce
-`canvaTabs.send`/`onState`. Keep Electron preload API resolution centralized in
-`loadElectronPreloadApi`; its sandbox `globalThis.require` / `eval("require")`
-fallback is allowed only at that Electron preload boundary.
+The toolbar is intentionally main-driven. It does not depend on an Electron
+preload bridge. The main process applies toolbar state through
+`__canvaToolbarApplyState`, and toolbar actions are sent through the
+`canva-toolbar://` action channel intercepted by the shell before navigation.
+Do not reintroduce `window.canvaTabs`, `toolbar.bundle.mjs`, `toolbar-action`
+IPC, or toolbar preload dependencies. Keep Electron preload API resolution
+centralized in `loadElectronPreloadApi`; its sandbox `globalThis.require` /
+`eval("require")` fallback is allowed only at the Canva preload boundary.
 
 The CLeyedropper must keep the scaling patch, snapshot-backed canvas flow,
 cleanup behavior, abort handling, and `sRGBHex`-compatible result contract. Do
