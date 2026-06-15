@@ -1138,7 +1138,9 @@ function checkHeaderLayoutContract(failures: string[]): void {
   if (app.includes("const brandHeader")) {
     failures.push("c420ui brand header component must be named c420uiHeader");
   }
-  if (!app.includes("content: [\n      `{bold}${opts.brand.name}")) {
+  if (
+    !/content:\s*\[[\s\S]*formatC420UIVersionLabel\(\{[\s\S]*packageName:\s*opts\.brand\.name[\s\S]*packageVersion:\s*opts\.brand\.version[\s\S]*sourceHash:\s*opts\.brand\.hash/.test(app)
+  ) {
     failures.push("c420uiHeader content must come from brand config");
   }
   if (!app.includes("content: [\n      `{bold}${opts.project.projectName}")) {
