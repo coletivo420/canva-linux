@@ -337,7 +337,6 @@ function createToolbarView(): WebContentsViewInstance {
     handleToolbarAction,
     layoutViews,
     makeToolbarUrl,
-    preloadPath: path.join(RUNTIME_DIR, "..", "preload", "toolbar.bundle.mjs"),
     setToolbarView(value: import("./shell.js").WebContentsViewLike) {
       toolbarView = value as unknown as WebContentsViewInstance;
     },
@@ -375,15 +374,14 @@ function broadcastTabsState(): void {
       `theme=${state.theme}`,
       `titles=${state.tabs.map((tab: { id: number; title: string }) => `${tab.id}:${tab.title}`).join(" | ") || "none"}`,
     );
-    toolbarView.webContents.send("tabs-state", state);
     void toolbarView.webContents
       .executeJavaScript(
-        `globalThis.__canvaToolbarRenderState?.(${JSON.stringify(state)});`,
+        `globalThis.__canvaToolbarApplyState?.(${serializeToolbarStateForJavaScript(state)});`,
       )
       .catch((error: unknown) => {
         debugLog(
           "tabs:toolbar",
-          "toolbar-main-render-failed",
+          "toolbar-state-apply-failed",
           error instanceof Error ? error.message : String(error),
         );
       });
@@ -396,6 +394,13 @@ function broadcastTabsState(): void {
     );
   }
   tabHelpers.updateWindowTitle();
+}
+
+function serializeToolbarStateForJavaScript(state: unknown): string {
+  return (JSON.stringify(state) ?? "null")
+    .replace(/</g, "\\u003c")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
 }
 
 function handleToolbarAction(action: string, payload: { id?: unknown } = {}): void {
@@ -455,9 +460,8 @@ registerMainIpcHandlers({
   centralLogger,
   debugEnabled,
   debugLog,
+  handleToolbarReady: broadcastTabsState,
   ipcMain,
-  tabController,
-  handleToolbarAction,
 });
 
 registerAppLifecycle({

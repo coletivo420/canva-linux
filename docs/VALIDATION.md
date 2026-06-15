@@ -1,8 +1,8 @@
 # Validation Checklist (0.1.4-15.Dev.11)
 
-## Dev11 ESM-only validation policy
+## Dev11 ESM-only validation policy (FINALIZED)
 
-Dev11 is ESM-only by target.
+Dev11 finalized the TypeScript/ESM migration.
 Maintained TypeScript source must use ESM imports/exports.
 CommonJS patterns are forbidden in maintained source:
 - `require()`
@@ -17,12 +17,94 @@ CommonJS patterns are forbidden in maintained source:
 CommonJS may exist only inside external dependencies under `node_modules/`.
 Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
 Electron runtime must start from `.build/electron/main/index.mjs`.
-Electron preload bundles must be `.build/electron/preload/canva.bundle.mjs` and
-`.build/electron/preload/toolbar.bundle.mjs`.
+The Canva page preload bundle must be `.build/electron/preload/canva.bundle.mjs`.
+The toolbar is main-driven and must not emit `toolbar.bundle.mjs`.
 Node tooling, core checks, c420ui checks, and c420ui terminal generated outputs
 must use ESM `.mjs` artifacts.
 The electron-builder `beforeBuild` hook output must use ESM `.mjs`.
 The c420ui bootstrap generator must emit and run `build-bootstrap.mjs`.
+
+## Stabilized toolbar and CLeyedropper validation
+
+The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
+The toolbar is intentionally main-driven. It does not depend on an Electron
+preload bridge. The main process applies toolbar state through
+`__canvaToolbarApplyState`, and toolbar actions are sent through the
+`canva-toolbar://` action channel intercepted by the shell before navigation.
+Do not reintroduce `window.canvaTabs`, `toolbar.bundle.mjs`, `toolbar-action`
+IPC, or toolbar preload dependencies. `loadElectronPreloadApi` must keep the
+sandbox Electron preload resolver for the Canva preload. The CLeyedropper must
+keep the scaling patch, snapshot-backed canvas flow, cleanup behavior, abort
+handling, and `sRGBHex`-compatible result contract.
+
+Focused gates:
+
+- `npm run build:runtime`
+- `npm test -- build-resources/tests/preload-bundle.test.ts`
+- `npm test -- build-resources/tests/toolbar-ui.test.ts`
+- `npm test -- build-resources/tests/tab-helpers.test.ts`
+- `npm test -- build-resources/tests/cl-eyedropper-contracts.test.ts`
+- `npm run test:wiring`
+- `npm run typecheck`
+- `npm run check:canva-linux`
+
+Manual runtime validation remains outside normal repository checks:
+
+```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
+```
+
+Confirm logs include `toolbar-loaded`, `state-broadcast-toolbar`,
+`[canva:eyedropper:check]`, `eyedropper:flow open-request`,
+`eyedropper:flow snapshot-ready`, and `eyedropper:library picked`.
+
+Dev11 finalizes the ESM/TypeScript migration. Further changes to toolbar
+architecture, c420ui host-operation execution, or shell replacement belong to
+Dev12 or later.
+
+## Dev12 Rust c420ui migration validation preview
+
+Dev12 introduces Rust only as the c420ui host-operation execution layer.
+
+Canva Linux remains ESM/TypeScript for:
+
+- Electron main process
+- Electron preload
+- toolbar
+- tabs
+- CLeyedropper integration
+- Canva Linux adapter
+- build metadata policy
+- packaging policy
+- Flatpak/AppImage/native integration policy
+- project-specific validation
+
+Rust validation will start with:
+
+- `cargo fmt`
+- `cargo clippy`
+- `cargo test`
+- TypeScript wrapper tests
+- JSON contract tests between TypeScript and Rust
+
+## c420ui Version Hash Validation
+
+c420ui now displays its own package version with `c420uiSourceHash`.
+The c420ui package version is read from
+`build-resources/c420ui/package.json` and must not be confused with the
+Canva Linux release version.
+
+When rendering c420ui status/version, use
+`build-resources/c420ui/package.json.version` plus `c420uiSourceHash`. Do not
+substitute Canva Linux `version`, `canvaLinuxSourceHash`, or
+`combinedSourceHash`. This applies to the c420ui header, builder
+help/version output, session logs, and startup logs.
+
+Focused validation:
+
+- `npm test -- build-resources/c420ui/test/c420ui-version-hash.test.ts`
+- `npm run test:c420ui`
+- `npm run check:c420ui-bootstrap`
 
 ## Source language policy validation
 
@@ -74,15 +156,17 @@ The adapter layer in `build-resources/canva-linux/c420ui-adapter` is reserved fo
 bootstrap validation or runtime tooling. Detection providers must avoid repeated `package.json` parsing and repeated
 `npm` process spawning during UI refresh cycles.
 c420ui-owned scripts, checks, bootstrap artifacts and tests live under `build-resources/c420ui`. The root `scripts/`
-directory may keep only compatibility wrappers when needed. Canva Linux contracts may delegate to c420ui checks
-but must not embed c420ui bootstrap implementation details.
+directory is not a maintained compatibility layer. Canva Linux contracts may
+delegate to c420ui checks but must not embed c420ui bootstrap implementation
+details.
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
   root `build-resources/tests/`, `build-resources/canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
-  the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that
+  transitively import `scripts/canva-linux` registries, Canva Linux source hash
+  must exclude c420ui-owned roots except via the combined hash.
 
 All TypeScript modules consumed by c420ui for project integration, overview detection, artifact fragments, and build metadata
 resolution must live under `build-resources/canva-linux/c420ui-adapter`; bootstrap helpers must live under `build-resources/c420ui/bootstrap`.
@@ -203,10 +287,10 @@ Current target:
 
 ## Detected Installations version visibility
 
-The c420ui `Detected Installations` panel must prefer detected effective/hashed version fields (`*FullVersion`) when
-they are available, then fall back to the base detected version fields for older native, Flatpak, or AppImage markers.
-For example, a Flatpak system install with build metadata should render `v0.1.4-15.Dev.11+g<hash>`, while a legacy marker
-that only exposes `version` should continue rendering `v0.1.4-15.Dev.11`.
+The c420ui `Detected Installations` panel must prefer detected effective/hashed
+version fields (`*FullVersion`) when they are available. Legacy marker-only
+installs may render their base detected version, but current package outputs
+must carry build metadata.
 
 ## c420ui logs
 
@@ -483,5 +567,5 @@ They are not migration debt. Any additional shell file is a regression unless ex
 - `npm test` emits and runs compiled test files as `.mjs` under `.build/build-resources/tests/` and `.build/build-resources/c420ui/test/`.
 - The root `scripts/` path is not a fallback source, test, or runtime compilation area.
 - Preload bundling accepts only TypeScript source under `build-resources/electron/preload/*.ts`; maintained `.js` preload source is invalid.
-- `build:runtime` must require both `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- `build:runtime` must require `.build/electron/preload/canva.bundle.mjs` and must not require `toolbar.bundle.mjs`.
 - Repository policy rejects CommonJS bridges in all maintained `build-resources/**/*.ts`.

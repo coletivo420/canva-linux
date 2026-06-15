@@ -5,9 +5,35 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Unreleased
 
+### Dev11 finalized
+
+- Dev11 finalized the ESM/TypeScript migration. Electron runtime remains
+  ESM-first; Canva Linux runtime, toolbar, tabs, CLeyedropper integration and
+  project-specific adapters remain TypeScript/ESM; c420ui tooling remains
+  TypeScript-first with generated ESM `.mjs` artifacts. The toolbar is
+  main-driven, the Canva page preload remains ESM for Canva/CLeyedropper, c420ui
+  displays its own package version with `c420uiSourceHash`, and legacy root
+  `packages/`, `electron/`, `data/`, `test/`, and `types/` layouts remain
+  forbidden.
+
+### Dev12 opened
+
+- Dev12 opens the Rust migration for c420ui host-operation logic only. Canva
+  Linux remains ESM/TypeScript.
+
+### Current changes
+
+- c420ui now displays its own package version with `c420uiSourceHash`. The c420ui package version is read from
+  `build-resources/c420ui/package.json` and is no longer visually separated from the matching c420ui source hash,
+  including builder help/version output, session logs, and startup logs.
+- Made the toolbar main-driven. It no longer depends on `window.canvaTabs` or `toolbar.bundle.mjs`; the main process
+  applies state through `__canvaToolbarApplyState`, and toolbar actions use the validated `canva-toolbar://` action
+  channel intercepted by the shell before navigation.
+- CLeyedropper remains protected by the scaling patch, snapshot-backed canvas flow, cleanup behavior, abort handling,
+  and `sRGBHex` result contract.
 - Closed obsolete Dev11 ESM migration leftovers: Node tests now compile to `.mjs`, root `scripts/` is no longer a
-  fallback compilation area, preload bundling rejects maintained `.js` source, runtime builds require
-  `toolbar.bundle.mjs`, and repository policy blocks CommonJS bridges across maintained TypeScript.
+  fallback compilation area, preload bundling rejects maintained `.js` source, runtime builds require only the Canva
+  preload bundle, and repository policy blocks CommonJS bridges across maintained TypeScript.
 - The c420ui builder now auto-generates missing, empty, invalid, or stale bootstrap bundles before launch.
 - Normal users only need npm installed; they no longer need to run `npm run build:c420ui-bootstrap` manually.
 - Validation gates remain check-only and fail when committed bootstrap artifacts are stale.
@@ -20,8 +46,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
 - Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
   root `build-resources/tests/`, `canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
-  the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that
+  transitively import `scripts/canva-linux` registries,
+  Canva Linux source hash must exclude c420ui-owned roots except via the combined hash.
 - Optimized detection provider: consolidated `package.json` reading with caching and implemented closure-based
   caching for `npm --version` to improve terminal interface refresh performance.
 
@@ -73,13 +100,12 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
   To regenerate committed artifacts intentionally, run `npm run build:metadata`, `npm run build:scripts`, and
   `npm run build:c420ui-bootstrap`, then rerun the artifact gate.
 
-## 0.1.4-15.Dev.11 — ESM-only TypeScript migration
+## 0.1.4-15.Dev.11 — ESM-only TypeScript migration (FINALIZED)
 
-- Opened the Dev11 line focused on full ESM migration.
-- Declared CommonJS as transitional build debt rather than an accepted maintained format.
-- Kept generated JavaScript allowed only as build output.
-- Preserved the Dev10 build-resources ownership model.
-- Prepared the repository policy for ESM-first tooling, runtime and bootstrap migration.
+- Dev11 finalized the TypeScript/ESM migration. All maintained implementation code is TypeScript, and all generated execution artifacts are ESM .mjs.
+- Closed obsolete Dev11 ESM migration leftovers: Node tests now compile to `.mjs`, root `scripts/` is no longer a
+  fallback compilation area, preload bundling rejects maintained `.js` source, runtime builds require the Canva
+  preload bundle only, and repository policy blocks CommonJS bridges across maintained TypeScript.
 
 ## 0.1.4-15.Dev.10 — TypeScript hardening
 

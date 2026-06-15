@@ -11,15 +11,8 @@ type CentralLoggerLike = {
     options?: { source?: string; terminal?: boolean },
   ): void;
 };
-type TabControllerLike = {
-  switchToTab(id: number): void;
-  closeTab(id: number): void;
-  focusHomeTab(options?: { resetToHome?: boolean }): void;
-};
 type DebugPayload = { category?: unknown; args?: unknown; source?: unknown };
-type ToolbarPayload = { id?: unknown };
-type ToolbarMessage = { action?: unknown; payload?: ToolbarPayload };
-type HandleToolbarAction = (action: string, payload?: ToolbarPayload) => void;
+type HandleToolbarReady = () => void;
 
 // Keep main-process IPC routing out of the entrypoint so startup composition can
 // stay declarative while IPC behavior remains easy to audit in one place.
@@ -27,15 +20,14 @@ function registerMainIpcHandlers({
   centralLogger,
   debugEnabled,
   debugLog,
-  handleToolbarAction,
+  handleToolbarReady,
   ipcMain,
 }: {
   centralLogger: CentralLoggerLike;
   debugEnabled: DebugEnabled;
   debugLog: DebugLog;
-  handleToolbarAction: HandleToolbarAction;
+  handleToolbarReady: HandleToolbarReady;
   ipcMain: IpcMainLike;
-  tabController?: TabControllerLike;
 }): void {
   ipcMain.on("wrapper:debug-log", (_event, payload = {}) => {
     const message = (payload || {}) as DebugPayload;
@@ -54,13 +46,9 @@ function registerMainIpcHandlers({
     });
   });
 
-  ipcMain.on("toolbar-action", (_event, message = {}) => {
-    const toolbarMessage = (message || {}) as ToolbarMessage;
-    const action =
-      typeof toolbarMessage.action === "string" ? toolbarMessage.action : "";
-    const payload = toolbarMessage.payload || {};
-    debugLog("tabs:toolbar", "toolbar-ipc-action", action, payload);
-    handleToolbarAction(action, payload);
+  ipcMain.on("toolbar-ready", () => {
+    debugLog("tabs:toolbar", "toolbar-ready");
+    handleToolbarReady();
   });
 }
 

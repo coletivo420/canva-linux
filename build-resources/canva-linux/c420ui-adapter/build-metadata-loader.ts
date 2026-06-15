@@ -7,6 +7,9 @@ type PackageJson = { version?: string };
 type ProjectUiJson = { displayVersion?: string; phase?: string };
 type CanvaLinuxBuildMetadataModule = typeof import("../../electron/main/build-metadata.js");
 type CanvaLinuxBuildMetadata = ReturnType<CanvaLinuxBuildMetadataModule["createBuildMetadata"]>;
+type LoadBuildMetadataOptions = {
+  allowFallback?: boolean;
+};
 
 const UNKNOWN_BASE_VERSION = "0.0.0";
 const UNKNOWN_BUILD_REVISION = "unknown";
@@ -109,7 +112,14 @@ export function fallbackEffectiveBuildMetadata(
   });
 }
 
-export function loadEffectiveBuildMetadata(rootDir: string): CanvaLinuxBuildMetadata {
+function missingBuildMetadataError(): Error {
+  return new Error("Missing Canva Linux build metadata. Run npm run build:metadata.");
+}
+
+export function loadEffectiveBuildMetadata(
+  rootDir: string,
+  options: LoadBuildMetadataOptions = {},
+): CanvaLinuxBuildMetadata {
   const resolvedRootDir = path.resolve(rootDir);
   const metadataModule = buildMetadataModule;
 
@@ -128,12 +138,25 @@ export function loadEffectiveBuildMetadata(rootDir: string): CanvaLinuxBuildMeta
     if (sourceMetadata) return sourceMetadata;
   }
 
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  const packaged = loadPackagedMetadata(resolvedRootDir, metadataModule);
+  if (packaged) return packaged;
+  if (options.allowFallback) {
+    return fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  }
+  throw missingBuildMetadataError();
 }
 
-export function loadCommittedBuildMetadata(rootDir: string): CanvaLinuxBuildMetadata {
+export function loadCommittedBuildMetadata(
+  rootDir: string,
+  options: LoadBuildMetadataOptions = {},
+): CanvaLinuxBuildMetadata {
   const resolvedRootDir = path.resolve(rootDir);
   const metadataModule = buildMetadataModule;
 
-  return loadPackagedMetadata(resolvedRootDir, metadataModule) ?? fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  const packaged = loadPackagedMetadata(resolvedRootDir, metadataModule);
+  if (packaged) return packaged;
+  if (options.allowFallback) {
+    return fallbackEffectiveBuildMetadata(resolvedRootDir, metadataModule);
+  }
+  throw missingBuildMetadataError();
 }

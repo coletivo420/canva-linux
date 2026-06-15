@@ -4,6 +4,9 @@ type ElectronPreloadApi = {
   contextBridge: ContextBridge;
   ipcRenderer: IpcRenderer;
 };
+type ElectronPreloadModule = Partial<ElectronPreloadApi> & {
+  default?: Partial<ElectronPreloadApi>;
+};
 
 type PreloadGlobal = typeof globalThis & {
   require?: (moduleName: "electron") => ElectronPreloadApi;
@@ -24,24 +27,31 @@ function resolvePreloadRequire(): PreloadGlobal["require"] | undefined {
   }
 }
 
-function normalizeElectronPreloadApi(electron: Partial<ElectronPreloadApi>): ElectronPreloadApi {
-  if (!electron?.contextBridge || !electron?.ipcRenderer) {
+function normalizeElectronPreloadApi(electron: ElectronPreloadModule): ElectronPreloadApi {
+  const api = electron.contextBridge && electron.ipcRenderer
+    ? electron
+    : electron.default;
+  if (!api?.contextBridge || !api?.ipcRenderer) {
     throw new Error("Electron preload bridge APIs are unavailable.");
   }
 
   return {
-    contextBridge: electron.contextBridge,
-    ipcRenderer: electron.ipcRenderer,
+    contextBridge: api.contextBridge,
+    ipcRenderer: api.ipcRenderer,
   };
 }
 
 export async function loadElectronPreloadApi(): Promise<ElectronPreloadApi> {
-  const preloadRequire = resolvePreloadRequire();
-  if (typeof preloadRequire === "function") {
-    return normalizeElectronPreloadApi(preloadRequire("electron"));
+  try {
+    const electron = await import("electron");
+    return normalizeElectronPreloadApi(electron as unknown as ElectronPreloadModule);
+  } catch {
+    const preloadRequire = resolvePreloadRequire();
+    if (typeof preloadRequire === "function") {
+      return normalizeElectronPreloadApi(preloadRequire("electron"));
+    }
+    throw new Error("Electron preload bridge APIs are unavailable.");
   }
-
-  throw new Error("Electron preload require is unavailable.");
 }
 
 export function getPreloadArgv(): string[] {

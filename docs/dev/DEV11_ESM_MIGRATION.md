@@ -1,9 +1,25 @@
-# Dev11 ESM Migration Plan
+# Dev11 ESM Migration
+
+Status: Finalized.
+
+Dev11 finalized the TypeScript/ESM migration. All maintained implementation code is TypeScript, and all generated execution artifacts are ESM .mjs.
+
+Dev11 is complete. New work must not reopen the ESM/TypeScript migration unless
+fixing a regression.
+
+Final architecture:
+
+- Canva Linux runtime remains ESM/TypeScript.
+- Electron main and Canva page preload remain ESM.
+- Toolbar is main-driven and must not reintroduce `toolbar.bundle.mjs`.
+- c420ui tooling is TypeScript-first with generated ESM `.mjs` artifacts.
+- CLeyedropper remains protected by contracts.
+- Shell-to-Rust migration belongs to Dev12.
 
 ## Final Dev11 ESM-only contract
 
 - Electron runtime is explicit ESM at `.build/electron/main/index.mjs`.
-- Electron preload bundles are explicit ESM at `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- The Canva page preload bundle is explicit ESM at `.build/electron/preload/canva.bundle.mjs`; the toolbar is main-driven and has no preload bundle.
 - Tooling and checks emit `.mjs` outputs.
 - c420ui bootstrap generated artifacts are `.mjs`.
 - Maintained TypeScript source uses ESM imports/exports only.
@@ -67,5 +83,6 @@ They are not migration debt. Any additional shell file is a regression unless ex
 - Node test outputs are explicit `.mjs` files under `.build/build-resources/tests/` and `.build/build-resources/c420ui/test/`.
 - Root `scripts/` is retired as a source/test/runtime fallback path.
 - Preload bundling resolves only TypeScript preload entrypoints and rejects maintained JavaScript preload fallbacks.
-- Runtime builds require both Canva and toolbar preload `.mjs` bundles.
+- Runtime builds require the Canva page preload `.mjs` bundle; the toolbar is
+  main-driven and has no preload bundle.
 - Repository policy blocks CommonJS patterns across maintained `build-resources/**/*.ts`.

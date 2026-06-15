@@ -12,21 +12,22 @@ const toolbarPreloadPath = path.join(
   "preload",
   "toolbar.ts",
 );
+const toolbarHtmlPath = path.join(
+  repoRoot,
+  "build-resources",
+  "electron",
+  "ui",
+  "toolbar.html",
+);
 
-test("toolbar state subscription removes only its previous tabs-state listener", () => {
-  const source = fs.readFileSync(toolbarPreloadPath, "utf8");
-
-  assert.match(source, /let tabsStateListener:/);
-  assert.match(
-    source,
-    /ipcRenderer\.removeListener\([\"']tabs-state[\"'], tabsStateListener\)/,
-  );
-  assert.doesNotMatch(source, /removeAllListeners\([\"']tabs-state[\"']\)/);
+test("toolbar preload source is removed", () => {
+  assert.equal(fs.existsSync(toolbarPreloadPath), false);
 });
 
-test("toolbar preload debug lookup is safe when process argv is unavailable", () => {
-  const source = fs.readFileSync(toolbarPreloadPath, "utf8");
+test("toolbar html does not depend on canvaTabs bridge", () => {
+  const source = fs.readFileSync(toolbarHtmlPath, "utf8");
 
-  assert.match(source, /getPreloadArgv\(\)\.find/);
-  assert.doesNotMatch(source, /process\.argv/);
+  assert.doesNotMatch(source, /canvaTabs/);
+  assert.doesNotMatch(source, /subscribeTabsState/);
+  assert.doesNotMatch(source, /toolbar-action/);
 });

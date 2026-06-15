@@ -1,6 +1,6 @@
 # Review Checklist
 
-## Dev11 ESM review rules
+## Dev11 ESM review rules (FINALIZED)
 
 Request changes if a PR:
 
@@ -21,6 +21,54 @@ Request changes if a PR:
 - keeps `.cjs` bootstrap or other versioned `.cjs` artifacts as permanent architecture;
 - breaks Dev11 build-resources ownership boundaries.
 
+## Stabilized toolbar and CLeyedropper review
+
+Request changes if a PR:
+
+- reintroduces a toolbar preload bundle or `window.canvaTabs` dependency;
+- removes the main-process toolbar state contract through `__canvaToolbarApplyState`;
+- removes the `canva-toolbar://` toolbar action channel;
+- reintroduces `toolbar-action` IPC;
+- changes toolbar visual CSS or height while claiming contract-only hardening;
+- merges the pinned home tab into regular toolbar tabs;
+- replaces CLeyedropper with a raw EyeDropper call;
+- removes `installClEyeDropperScalingPatch`;
+- removes `loadElectronPreloadApi` from `custom-eyedropper-flow`;
+- stops returning an `sRGBHex`-compatible custom EyeDropper result;
+- removes CLeyedropper DOM/listener cleanup, abort handling, or snapshot-backed canvas capture.
+
+## Dev11 final handoff
+
+Dev11 is ready to merge when:
+
+- `npm run lint` passes.
+- `npm run typecheck` passes.
+- `npm run typecheck:strict` passes.
+- `npm test` passes.
+- `npm run check:scripts-core` passes.
+- `npm run check:shared-tooling` passes.
+- `npm run check:c420ui-bootstrap` passes.
+- `npm run check:c420ui-bootstrap-artifacts` passes.
+- Manual Flatpak validation confirms the main-driven toolbar, tabs and
+  CLeyedropper.
+
+Manual checklist:
+
+```bash
+flatpak run io.github.coletivo420.canva-linux --canva-debug=2
+```
+
+Confirm:
+
+- `toolbar-loaded`
+- `state-broadcast-toolbar`
+- `toolbar-url-action`
+- pinned home works
+- tab switching works
+- closing tabs works
+- CLeyedropper works
+- c420ui shows `0.1.0` with `c420uiSourceHash`
+
 ## c420ui package refactor and structural ownership
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
@@ -30,6 +78,17 @@ Request changes if a PR:
 - Doctor runs from `build-resources/canva-linux/validation/doctor.ts` via `validate:doctor`.
 - Flatpak and Flathub policy checks run from TypeScript entrypoints.
 - Install, uninstall, maintenance, packaging, build, artifact and versioning mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
+
+## c420ui version/hash review
+
+Request changes if a PR:
+
+- renders c420ui status/version without `c420uiSourceHash`;
+- uses Canva Linux `metadata.version` as the c420ui package version;
+- uses `canvaLinuxSourceHash` or `combinedSourceHash` as the c420ui hash;
+- stops reading the c420ui package version from `build-resources/c420ui/package.json`;
+- omits the c420ui hash from builder help/version output, session logs, or startup logs;
+- removes `formatC420UIVersionLabel` or `shortSourceHash` without an equivalent c420ui-specific replacement.
 
 ## Dev.9 metadata persistence and c420ui repair
 
@@ -604,8 +663,8 @@ while runtime flags belong to the compiled `canva-linux` app.
 - Source identity remains `0.1.4-15.Dev.11` / `0.1.4-15.Dev` / `0.1.4-15.Dev.11`.
 - Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
 - The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
-- Runtime metadata fallback must be neutral `0.0.0`/`unknown`; request changes if `build-resources/electron/main/build-metadata.ts`
-  hardcodes the current Dev.7 phase as a fallback.
+- Runtime metadata must fail clearly when generated, source, and committed metadata are all unavailable; request changes if
+  normal c420ui/runtime paths silently substitute `0.0.0`/`unknown`.
 - Generated build metadata must be normalized before use so partial metadata cannot produce broken effective version strings.
 - Localized OAuth landing probes may log only `loginLinks`, `signupLinks`, and `authButtons` counts; request changes if DOM
   text, `aria-label`, `href`, or `data-testid` values are logged.
@@ -628,8 +687,10 @@ while runtime flags belong to the compiled `canva-linux` app.
 - c420ui-owned scripts, checks, tests and generated bootstrap artifacts live only under `build-resources/c420ui`.
 - Canva Linux contracts enforce ownership boundaries only; c420ui bootstrap internals are validated by `build-resources/c420ui/checks`.
 - No temporary aliases, wrappers or legacy compatibility paths are allowed for c420ui-owned tooling.
-- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`, root `build-resources/tests/`, `canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries, the specific imported `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- Do not place c420ui-owned checks, scripts, tests, bootstrap gates or generated artifacts under `build-resources/canva-linux/checks`, root `scripts/`,
+  root `build-resources/tests/`, `canva-linux/c420ui-adapter`, or `packages/`.
+- When c420ui bootstrap entrypoints import Canva Linux adapter modules that transitively import `scripts/canva-linux` registries,
+  Canva Linux source hash must exclude c420ui-owned roots except via the combined hash.
 
 ## Dev11 preload typing
 
@@ -686,5 +747,5 @@ Request changes if a PR:
 - compiles tests or Node tooling back to generated `.js` instead of `.mjs`;
 - treats root `scripts/` as a fallback test/runtime/source compilation area;
 - accepts maintained `.js` preload source instead of TypeScript preload source;
-- removes `toolbar.bundle.mjs` from runtime build or validation requirements;
+- reintroduces `toolbar.bundle.mjs` as a runtime build or validation requirement;
 - reintroduces CommonJS bridges in any maintained `build-resources/**/*.ts`.

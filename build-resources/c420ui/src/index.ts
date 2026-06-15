@@ -38,6 +38,8 @@ export { createC420UIBridge } from "./bridge.js";
 export { boolFromC420UIDetectionValue, buildC420UIOverviewStatus, parseC420UIDetectionKeyValueLines, runC420UIDetectionProbes } from "./detection.js";
 export { hasC420UICapability } from "./capabilities.js";
 export { createC420UIEvent } from "./events.js";
+export { formatC420UIVersionLabel, shortSourceHash } from "./version-info.js";
+export type { C420UIVersionInfo } from "./version-info.js";
 export type {
   C420UIWorkflow,
   C420UIWorkflowResult,

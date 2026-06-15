@@ -7,6 +7,7 @@ import test from "node:test";
 import { loadEffectiveBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader.js";
 
 type TestProjectOptions = {
+  includePackagedMetadata?: boolean;
   packagedRevision?: string;
 };
 
@@ -64,15 +65,17 @@ function withTestProject(options: TestProjectOptions, run: (rootDir: string) => 
       path.join(rootDir, "build-resources", "canva-linux", "config", "project-ui.json"),
       `${JSON.stringify({ displayVersion: "1.2.3 Display", phase: "1.2.3 Phase" }, null, 2)}\n`,
     );
-    fs.writeFileSync(
-      path.join(rootDir, "build-resources", "canva-linux", "config", "build-metadata.json"),
-      `${JSON.stringify({
-        baseVersion: "9.9.9",
-        baseDisplayVersion: "9.9.9 Display",
-        basePhase: "9.9.9 Phase",
-        buildRevision: options.packagedRevision ?? "packagedrev",
-      }, null, 2)}\n`,
-    );
+    if (options.includePackagedMetadata !== false) {
+      fs.writeFileSync(
+        path.join(rootDir, "build-resources", "canva-linux", "config", "build-metadata.json"),
+        `${JSON.stringify({
+          baseVersion: "9.9.9",
+          baseDisplayVersion: "9.9.9 Display",
+          basePhase: "9.9.9 Phase",
+          buildRevision: options.packagedRevision ?? "packagedrev",
+        }, null, 2)}\n`,
+      );
+    }
     run(rootDir);
   } finally {
     fs.rmSync(rootDir, { recursive: true, force: true });
@@ -135,7 +138,7 @@ test("git revision is used in source checkout when env revision is missing", () 
   });
 });
 
-test("packaged build-metadata.json fallback still works", () => {
+test("packaged build-metadata.json is used when source metadata is unavailable", () => {
   withTestProject({ packagedRevision: "packaged999" }, (rootDir) => {
     withEnvRevision(undefined, () => {
       const metadata = loadEffectiveBuildMetadata(rootDir);
@@ -143,6 +146,28 @@ test("packaged build-metadata.json fallback still works", () => {
       assert.equal(metadata.buildRevision, "gpackage");
       assert.equal(metadata.baseVersion, "9.9.9");
       assert.equal(metadata.fullVersion, "9.9.9 Phase+gpackage");
+    });
+  });
+});
+
+test("missing build metadata fails clearly instead of falling back to 0.0.0", () => {
+  withTestProject({ includePackagedMetadata: false }, (rootDir) => {
+    withEnvRevision(undefined, () => {
+      assert.throws(
+        () => loadEffectiveBuildMetadata(rootDir),
+        /Missing Canva Linux build metadata\. Run npm run build:metadata\./,
+      );
+    });
+  });
+});
+
+test("fallback build metadata requires explicit opt-in", () => {
+  withTestProject({ includePackagedMetadata: false }, (rootDir) => {
+    withEnvRevision(undefined, () => {
+      const metadata = loadEffectiveBuildMetadata(rootDir, { allowFallback: true });
+
+      assert.equal(metadata.baseVersion, "0.0.0");
+      assert.equal(metadata.buildRevision, "unknown");
     });
   });
 });

@@ -2,6 +2,13 @@
 
 This project has completed the Dev11 TypeScript/ESM migration for maintained Node/Electron source.
 
+Dev11 closed the TypeScript/ESM migration.
+
+Remaining shell-to-host-operation cleanup is no longer part of the TypeScript
+conversion. It belongs to Dev12 and is scoped to the c420ui Rust migration.
+
+Canva Linux remains ESM/TypeScript.
+
 ## Current mode
 
 The app runtime, tooling, c420ui bootstrap, checks and tests are maintained as TypeScript and emitted as explicit ESM `.mjs` artifacts where Node/Electron executes generated code.
@@ -17,7 +24,7 @@ TypeScript is enforced through:
 ## Dev11 ESM-only contract
 
 - Electron runtime starts at `.build/electron/main/index.mjs`.
-- Electron preload bundles are `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- The Canva page preload bundle is `.build/electron/preload/canva.bundle.mjs`; the toolbar is main-driven and has no preload bundle.
 - Tooling/check/test outputs are generated `.mjs`.
 - c420ui bootstrap generated artifacts are committed `.mjs` files with source and artifact hash validation.
 - Versioned `.cjs` files are forbidden outside external dependencies.

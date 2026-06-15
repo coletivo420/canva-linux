@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 
 import { loadRuntimeModule } from "./helpers/runtime-module.js";
@@ -6,6 +8,8 @@ import { loadRuntimeModule } from "./helpers/runtime-module.js";
 const { createTabHelpers } = await loadRuntimeModule("main/tabs") as {
   createTabHelpers: typeof import("../electron/main/tabs.js").createTabHelpers;
 };
+
+const repoRoot = process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 type FakeBounds = {
   x: number;
@@ -285,4 +289,87 @@ test("switchToTab focuses and returns when requested tab is already active", () 
   assert.deepEqual(broadcasts, []);
   assert.equal(homeView.visible, false);
   assert.equal(secondView.visible, true, "already active tab visibility should not be touched");
+});
+
+test("toolbarState separates pinnedHomeTab from regular tabs", () => {
+  const { helpers, state } = createHelpers();
+  const home = createTab(1, createView(1), true);
+  const regular = createTab(2, createView(2));
+  state.activeTabId = 1;
+  state.tabs.set(1, home);
+  state.tabs.set(2, regular);
+
+  const toolbarState = helpers.toolbarState();
+
+  assert.equal(toolbarState.pinnedHomeTab?.id, 1);
+  assert.deepEqual(toolbarState.tabs.map((tab) => tab.id), [2]);
+});
+
+test("home tab is never included in regular tabs", () => {
+  const { helpers, state } = createHelpers();
+  state.tabs.set(1, createTab(1, createView(1), true));
+  state.tabs.set(2, createTab(2, createView(2)));
+  state.tabs.set(3, createTab(3, createView(3)));
+
+  assert.equal(helpers.toolbarState().tabs.some((tab) => tab.isHome), false);
+});
+
+test("switchToTab keeps early return for already active tab", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "build-resources/electron/main/tabs.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /if\s*\(\s*state\.activeTabId\s*===\s*id\s*\)\s*{[\s\S]*?return;/);
+});
+
+test("switchToTab does not sweep all tabs", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "build-resources/electron/main/tabs.ts"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(source, /setTabVisibility\(\s*entry\s*,\s*entry\.id\s*===\s*id\s*\)/);
+});
+
+test("switchToTab re-adds toolbar above active content", () => {
+  const source = fs.readFileSync(
+    path.join(repoRoot, "build-resources/electron/main/tabs.ts"),
+    "utf8",
+  );
+  const switchStart = source.indexOf("function switchToTab");
+  const switchEnd = source.indexOf("function switchRelativeTab");
+  const switchSource = source.slice(switchStart, switchEnd);
+
+  assert.ok(switchStart >= 0 && switchEnd > switchStart);
+  assert.match(switchSource, /ensureTopLevelView\(tab\.view\);[\s\S]*ensureTopLevelView\(toolbarViewRef\(\)\);/);
+});
+
+test("closeTab never closes home tab", () => {
+  const { helpers, state } = createHelpers();
+  const home = createTab(1, createView(1), true);
+  state.activeTabId = 1;
+  state.tabs.set(1, home);
+
+  helpers.closeTab(1);
+
+  assert.equal(state.tabs.has(1), true);
+  assert.equal(home.view.webContents.isDestroyed(), false);
+});
+
+test("closeTab focuses fallback tab after closing active regular tab", () => {
+  const { helpers, state } = createHelpers();
+  const homeView = createView(1);
+  const activeView = createView(2);
+  const fallbackView = createView(3);
+  state.activeTabId = 2;
+  state.tabs.set(1, createTab(1, homeView, true));
+  state.tabs.set(2, createTab(2, activeView));
+  state.tabs.set(3, createTab(3, fallbackView));
+
+  helpers.closeTab(2);
+
+  assert.equal(state.tabs.has(2), false);
+  assert.equal(state.activeTabId, 3);
+  assert.equal(fallbackView.webContents.focused, true);
 });

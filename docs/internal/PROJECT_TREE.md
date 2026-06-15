@@ -31,14 +31,15 @@ build-resources/canva-linux/assets/ Canonical Canva Linux desktop, metainfo, and
 build-resources/canva-linux/c420ui-adapter/    Canva Linux adapter bridge into c420ui.
 build-resources/canva-linux/config/        Canva Linux declarations.
 build-resources/canva-linux/validation/    Canva Linux project validation.
+build-resources/c420ui-rs/        planned Dev12 Rust host-operation executor for c420ui only.
 ```
 
 `build-resources/` is the canonical home for project-owned runtime/build resources. Root `packages/`, `electron/`, `data/`, and loose icon assets are legacy paths and must not be restored.
 
-Dev11 finalizes explicit ESM outputs:
+Dev11 finalized explicit ESM outputs:
 
 - Electron runtime entrypoint: `.build/electron/main/index.mjs`.
-- Electron preload bundles: `.build/electron/preload/canva.bundle.mjs` and `.build/electron/preload/toolbar.bundle.mjs`.
+- Electron preload bundle: `.build/electron/preload/canva.bundle.mjs`. The toolbar is main-driven and has no preload bundle.
 - Node tooling, checks, c420ui terminal output, and c420ui bootstrap artifacts use `.mjs`.
 - Versioned `.cjs` files are forbidden outside external dependencies.
 
@@ -55,8 +56,13 @@ Dev11 finalizes explicit ESM outputs:
 - c420ui owns Action Engine, Command Runner, Root Provider, host dependency
   policy, development provider, artifact recipe validation, workflow runner, and
   terminal UI.
+- Dev12 may add `build-resources/c420ui-rs/` for generic c420ui host-operation
+  execution only.
 - Canva Linux owns Electron runtime, OAuth behavior, runtime debug flags, package
   recipes, metadata, and project config.
+- Rust must not own Canva Linux Electron runtime, toolbar, tabs, CLeyedropper,
+  project identity, packaging policy, metadata policy, adapter code, or
+  project-specific validation.
 - Canva Linux launchers do not run dependency installation directly.
 - Canva Linux does not validate generic artifact recipes.
 - The adapter does not duplicate Action Engine policy.

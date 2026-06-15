@@ -40,6 +40,7 @@ import {
   runC420UIStartupTasks,
   type c420uiStartupTask,
 } from "../startup-task.js";
+import { formatC420UIVersionLabel } from "../version-info.js";
 
 // --- Types ---
 
@@ -146,6 +147,10 @@ function formatShortHash(hash: string | undefined, version: string | undefined):
   return ` · ${algo}${value.slice(0, 8)}`;
 }
 
+function formatProjectVersionLine(projectConfig: C420UIProjectConfig): string {
+  return `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`;
+}
+
 export function computeHeaderLayout(
   screenWidth: number,
   brandConfig: C420UIBrandConfig,
@@ -154,13 +159,17 @@ export function computeHeaderLayout(
   const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
   const projectHeaderHeight = 5;
   const c420uiHeaderContentWidth = longestLineLength([
-    `${brandConfig.name} v${brandConfig.version}${formatShortHash(brandConfig.hash, brandConfig.version)}`,
+    formatC420UIVersionLabel({
+      packageName: brandConfig.name,
+      packageVersion: brandConfig.version,
+      sourceHash: brandConfig.hash ?? null,
+    }),
     ...brandConfig.logoLines,
   ]);
   const projectHeaderContentWidth = longestLineLength([
     projectConfig.projectName,
     projectConfig.projectSubtitle,
-    `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`,
+    formatProjectVersionLine(projectConfig),
   ]);
   const c420uiMinWidth = Math.max(
     c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
@@ -268,7 +277,11 @@ export function createApp(options: C420UIAppOptions) {
     border: "line",
     tags: true,
     content: [
-      `{bold}${opts.brand.name} v${opts.brand.version}{/bold}`,
+      `{bold}${formatC420UIVersionLabel({
+        packageName: opts.brand.name,
+        packageVersion: opts.brand.version,
+        sourceHash: opts.brand.hash ?? null,
+      })}{/bold}`,
       ...opts.brand.logoLines,
     ].join("\n"),
     style: c420uiTheme.header,
@@ -284,7 +297,7 @@ export function createApp(options: C420UIAppOptions) {
     content: [
       `{bold}${opts.project.projectName}{/bold}`,
       opts.project.projectSubtitle,
-      `Version: ${opts.project.displayVersion}${opts.project.status ? ` ${opts.project.status}` : ""} | Phase: ${opts.project.phase ?? "unknown"}`,
+      formatProjectVersionLine(opts.project),
     ].join("\n"),
     style: c420uiTheme.header,
   });
@@ -1809,7 +1822,11 @@ export function createApp(options: C420UIAppOptions) {
   importLauncherSessionLog();
 
   appendLogText(
-    `[info] c420ui started. project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}\n`,
+    `[info] c420ui started. builder=${formatC420UIVersionLabel({
+      packageName: opts.brand.name,
+      packageVersion: opts.brand.version,
+      sourceHash: opts.brand.hash ?? null,
+    })} project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}\n`,
     "system",
   );
   appendLogText(`[info] Settings loaded from ${settingsPath}.\n`, "system");

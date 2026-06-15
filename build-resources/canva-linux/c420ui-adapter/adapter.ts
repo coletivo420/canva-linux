@@ -58,28 +58,20 @@ type BuildMetadata = {
   combinedSourceHash?: string;
 };
 
-type AppIdentity = {
-  projectDisplayVersion?: string;
-  projectPhase?: string;
-};
-
 type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
   paths: {
     projectUi: string;
     packageJson: string;
     actionsJson: string;
     artifactsJson: string;
-    appIdentity: string;
     buildMetadata: string;
     c420uiPackageJson: string;
   };
   loadProjectUi(): ProjectUiJson;
   loadPackageJson(): PackageJson;
-  loadAppIdentity(): AppIdentity;
   loadBuildMetadata(): BuildMetadata;
   loadProjectConfig(): C420UIProjectConfig;
   loadBrandConfig(): C420UIConfig["brand"];
-  getProjectPhase(): string;
   getEffectiveProjectDisplayVersion(): string;
   getEffectiveProjectPhase(): string;
   getEffectiveProjectFullVersion(): string;
@@ -92,21 +84,6 @@ type CanvaLinuxC420UIAdapter = C420UIProjectAdapter & {
 
 function readJsonFile<T>(filePath: string): T {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
-}
-
-function readAppIdentity(identityPath: string): AppIdentity {
-  try {
-    const identity = readJsonFile<{
-      displayVersion?: string;
-      phase?: string;
-    }>(identityPath);
-    return {
-      projectDisplayVersion: identity.displayVersion,
-      projectPhase: identity.phase,
-    };
-  } catch {
-    return {};
-  }
 }
 
 function stateHome(): string {
@@ -124,10 +101,6 @@ export function createCanvaLinuxC420UIAdapter(
   const packageJsonPath = path.join(resolvedRootDir, "package.json");
   const actionsJsonPath = path.join(resolvedRootDir, "build-resources/canva-linux/config/actions.json");
   const artifactsJsonPath = path.join(resolvedRootDir, "build-resources/canva-linux/config/artifacts.json");
-  const appIdentityPath = path.join(
-    resolvedRootDir,
-    "build-resources/canva-linux/config/project-ui.json",
-  );
   const buildMetadataPath = path.join(
     resolvedRootDir,
     "build-resources/canva-linux/config/build-metadata.json",
@@ -145,10 +118,6 @@ export function createCanvaLinuxC420UIAdapter(
     return readJsonFile<PackageJson>(packageJsonPath);
   }
 
-  function loadAppIdentity(): AppIdentity {
-    return readAppIdentity(appIdentityPath);
-  }
-
   function loadBuildMetadata(): BuildMetadata {
     return loadEffectiveBuildMetadata(resolvedRootDir);
   }
@@ -159,14 +128,6 @@ export function createCanvaLinuxC420UIAdapter(
 
   function getPackageVersion(): string {
     return loadPackageJson().version ?? "unknown";
-  }
-
-  function getProjectPhase(): string {
-    const fromEnv = process.env.CANVA_PROJECT_PHASE?.trim();
-    if (fromEnv) return fromEnv;
-    const identity = loadAppIdentity();
-    if (identity.projectPhase) return identity.projectPhase;
-    return loadProjectUi().phase || "unknown";
   }
 
   function getEffectiveProjectDisplayVersion(): string {
@@ -180,7 +141,9 @@ export function createCanvaLinuxC420UIAdapter(
   function getEffectiveProjectPhase(): string {
     const buildMetadata = loadBuildMetadata();
     if (buildMetadata.phase) return buildMetadata.phase;
-    return getProjectPhase();
+    const projectUi = loadProjectUi();
+    if (projectUi.phase) return projectUi.phase;
+    return "unknown";
   }
 
   function getEffectiveProjectFullVersion(): string {
@@ -367,7 +330,6 @@ export function createCanvaLinuxC420UIAdapter(
       packageJson: packageJsonPath,
       actionsJson: actionsJsonPath,
       artifactsJson: artifactsJsonPath,
-      appIdentity: appIdentityPath,
       buildMetadata: buildMetadataPath,
       c420uiPackageJson: c420uiPackageJsonPath,
     },
@@ -375,7 +337,6 @@ export function createCanvaLinuxC420UIAdapter(
     loadConfig: toC420UIConfig,
     loadProjectUi,
     loadPackageJson,
-    loadAppIdentity,
     loadBuildMetadata,
     loadProjectConfig,
     loadBrandConfig,
@@ -383,7 +344,6 @@ export function createCanvaLinuxC420UIAdapter(
     loadArtifactWorkflows,
     loadWorkflows,
     loadCapabilities: () => loadCanvaLinuxCapabilities(resolvedRootDir),
-    getProjectPhase,
     getEffectiveProjectDisplayVersion,
     getEffectiveProjectPhase,
     getEffectiveProjectFullVersion,

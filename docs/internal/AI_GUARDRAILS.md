@@ -1,8 +1,8 @@
 # AI Guardrails
 
-## Dev11 ESM-only guardrails
+## Dev11 ESM-only guardrails (FINALIZED)
 
-- Dev11 is ESM-only by target.
+Dev11 finalized the TypeScript/ESM migration.
 - Maintained TypeScript source must use ESM imports/exports.
 - CommonJS patterns are forbidden in maintained source: `require()`,
   `module.exports`, `exports.*`, `__dirname` without ESM helper, and
@@ -13,14 +13,85 @@
 - CommonJS may exist only inside external dependencies under `node_modules/`.
 - Generated bootstrap artifacts are ESM `.mjs` and CommonJS bootstrap artifacts are forbidden.
 - Electron runtime starts from `.build/electron/main/index.mjs`.
-- Electron preload bundles are `.build/electron/preload/canva.bundle.mjs` and
-  `.build/electron/preload/toolbar.bundle.mjs`.
+- The Canva page preload bundle is `.build/electron/preload/canva.bundle.mjs`.
+  The toolbar is main-driven and must not have a preload bundle.
 - Node tooling generated outputs moved to ESM `.mjs` under `.build/scripts/`.
 - Core and c420ui checks generated outputs moved to ESM `.mjs`.
 - c420ui terminal generated output moved to ESM `.mjs`.
 - TypeScript runner bootstrap moved to ESM `.mjs`.
 - electron-builder `beforeBuild` hook output moved to ESM `.mjs`.
 - c420ui bootstrap generator output moved to ESM `.mjs`.
+
+## Toolbar and CLeyedropper stabilized runtime surfaces
+
+The toolbar and CLeyedropper are guarded as stabilized runtime surfaces.
+The toolbar is intentionally main-driven. It does not depend on an Electron
+preload bridge. The main process applies toolbar state through
+`__canvaToolbarApplyState`, and toolbar actions are sent through the
+`canva-toolbar://` action channel intercepted by the shell before navigation.
+Do not reintroduce `window.canvaTabs`, `toolbar.bundle.mjs`, `toolbar-action`
+IPC, or toolbar preload dependencies. Keep Electron preload API resolution
+centralized in `loadElectronPreloadApi`; its sandbox `globalThis.require` /
+`eval("require")` fallback is allowed only at the Canva preload boundary.
+
+The CLeyedropper must keep the scaling patch, snapshot-backed canvas flow,
+cleanup behavior, abort handling, and `sRGBHex`-compatible result contract. Do
+not replace CLeyedropper with a raw EyeDropper call; Canva Linux depends on the
+snapshot-backed custom picker. Do not remove `installClEyeDropperScalingPatch`
+or `loadElectronPreloadApi` from `custom-eyedropper-flow`.
+
+## Dev11 final architecture
+
+Dev11 is finalized.
+
+Do not reintroduce:
+
+- `toolbar.bundle.mjs`
+- `window.canvaTabs`
+- `toolbar-action` IPC
+- maintained JavaScript wrappers
+- CommonJS compatibility
+- root `packages/`
+- root `electron/`
+- root `data/`
+- root `test/`
+- root `types/`
+
+The toolbar is intentionally main-driven. State is applied by the main process
+through `__canvaToolbarApplyState`. Actions use the `canva-toolbar://` action
+channel intercepted by `shell.ts` before navigation.
+
+## Dev12 Rust c420ui boundary
+
+Dev12 Rust migration is c420ui-only.
+
+Rust may be introduced under:
+
+```text
+build-resources/c420ui-rs/
+```
+
+Rust must not migrate, replace, wrap or own Canva Linux runtime code.
+
+Canva Linux remains ESM/TypeScript for:
+
+- Electron main process
+- Electron preload
+- toolbar
+- tabs
+- CLeyedropper integration
+- Canva Linux adapter
+- build metadata policy
+- packaging policy
+- project-specific validation
+- Flatpak/AppImage/native integration policy
+
+Rust must not contain Canva Linux names, app IDs, package names, Flatpak IDs,
+repository URLs, Electron runtime paths, toolbar rules, CLeyedropper rules or
+Canva Linux release policy.
+
+Rust should provide generic c420ui host-operation commands with stable JSON
+output and stable exit codes.
 
 ## c420ui structural ownership and efficiency
 
@@ -42,11 +113,12 @@
 - Do not place c420ui-owned generated artifacts under root `scripts/`,
   root `build-resources/tests/`,
   `build-resources/canva-linux/c420ui-adapter`, or `packages/`.
-- When c420ui bootstrap entrypoints import Canva Linux adapter modules that
-  transitively import `scripts/canva-linux` registries, the specific imported
-  `scripts/canva-linux` submodules must remain in
-  `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
-- `scripts/canva-linux` submodules must remain in `C420UI_BOOTSTRAP_SOURCE_HASH_INPUTS`.
+- Canva Linux source hash must exclude c420ui-owned roots except via the combined hash.
+- c420ui status/version rendering must use `build-resources/c420ui/package.json.version`
+  plus `c420uiSourceHash`. Do not substitute the Canva Linux release version,
+  `canvaLinuxSourceHash`, or `combinedSourceHash` for the c420ui block. This
+  includes c420ui headers, builder help/version output, session logs, and
+  startup logs.
 
 ## Dev.9 metadata persistence and c420ui repair
 
@@ -599,8 +671,8 @@ Canva Linux-specific dependency wiring in `build-resources/canva-linux/c420ui-ad
 
 - Do not open `Dev.8` or add `+g<hash>` to source `package.json` / `project-ui.json` values in this phase.
 - Generate effective build metadata deterministically from commit metadata only.
-- Runtime fallback metadata must never hardcode the current Canva Linux phase; if generated metadata and source files are
-  unavailable, use neutral `0.0.0` values with `buildRevision: "unknown"`.
+- Runtime metadata must fail clearly when generated, source, and committed metadata are all unavailable.
+  `0.0.0` fallback metadata is allowed only in explicit tests or marked recovery contexts.
 - Normalize generated metadata before using it; partial generated metadata must be ignored rather than converted into broken effective versions.
 - Keep post-OAuth reload context-preserving by default; use canonical Canva home only as the post-probe localized public landing fallback.
 - Localized OAuth landing detection may use generic auth-signal counts, but must not log DOM text, `aria-label`, `href`,

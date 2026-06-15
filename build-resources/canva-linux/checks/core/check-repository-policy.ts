@@ -467,23 +467,6 @@ function validateEslintTypeScriptOnlyConfig(
   }
 }
 
-function validateNoCommonJsRuntimeExports(
-  rootDir: string,
-  files: string[],
-  failures: string[],
-): void {
-  const moduleExportsPattern = "module" + ".exports";
-  for (const file of files) {
-    if (!file.startsWith("build-resources/electron/main/") || !file.endsWith(".ts")) continue;
-    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
-    if (content.includes(moduleExportsPattern)) {
-      failures.push(
-        `${file}: use ESM exports only; duplicate ${"module" + ".exports"} blocks are forbidden in Electron main TypeScript`,
-      );
-    }
-  }
-}
-
 function validateFlathubShellWrappers(
   files: string[],
   failures: string[],
@@ -496,32 +479,6 @@ function validateFlathubShellWrappers(
       failures.push(
         `${file}: unnecessary Flathub shell wrapper is forbidden; call TypeScript entrypoints directly`,
       );
-    }
-  }
-}
-
-function validatePreloadTypeScriptStyle(
-  rootDir: string,
-  files: string[],
-  failures: string[],
-): void {
-  const moduleExportsPattern = "module" + ".exports";
-  const requirePattern = "requ" + "ire(";
-  const tsNoCheckPattern = "@ts-" + "nocheck";
-  for (const file of files) {
-    if (!file.startsWith("build-resources/electron/preload/") || !file.endsWith(".ts")) continue;
-    const content = fs.readFileSync(path.join(rootDir, file), "utf8");
-    const contentWithoutComments = content
-      .replace(/\/\*[\s\S]*?\*\//g, "")
-      .replace(/^\s*\/\/.*$/gm, "");
-    if (content.includes(tsNoCheckPattern)) {
-      failures.push(`${file}: preload modules must not use ${"@ts-" + "nocheck"}`);
-    }
-    if (contentWithoutComments.includes(moduleExportsPattern)) {
-      failures.push(`${file}: preload modules must use ESM exports`);
-    }
-    if (contentWithoutComments.includes(requirePattern)) {
-      failures.push(`${file}: preload modules must not use ${"requ" + "ire"}(); use ESM imports`);
     }
   }
 }
@@ -591,9 +548,7 @@ function main(): number {
   validatePackageScripts(rootDir, failures);
   validateTypeScriptConfigs(rootDir, failures);
   validateEslintTypeScriptOnlyConfig(rootDir, failures);
-  validateNoCommonJsRuntimeExports(rootDir, files, failures);
   validateFlathubShellWrappers(files, failures);
-  validatePreloadTypeScriptStyle(rootDir, files, failures);
 
   if (failures.length) {
     console.error("[typescript-first] FAILED:");

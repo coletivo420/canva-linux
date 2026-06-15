@@ -67,8 +67,8 @@
       min-width: 0;
       flex: 1 1 auto;
     }
-    body[data-bridge='missing'] .tab-strip::before {
-      content: 'Toolbar bridge unavailable';
+    body[data-bridge='failed'] .tab-strip::before {
+      content: 'Toolbar bridge failed to initialize';
       color: var(--muted);
       font-size: 12px;
       display: flex;
@@ -210,11 +210,11 @@
   <script>
     const pinnedHomeSlot = document.getElementById('pinned-home-slot');
     const tabsEl = document.getElementById('tabs');
-    const bridgeAvailable = Boolean(window.canvaTabs);
     const iconPath = '../assets/canva-icon.png';
-    let fallbackRendered = false;
-
-    console.log('[toolbar-ui] bootstrap', JSON.stringify({ bridgeAvailable }));
+    const allowedActions = new Set(['switch-tab', 'close-tab', 'go-home']);
+    let stateApplied = false;
+    document.body.dataset.state = 'waiting';
+    console.log('[toolbar-ui] bootstrap', JSON.stringify({ state: document.body.dataset.state }));
     window.addEventListener('error', (event) => {
       console.error('[toolbar-ui] error', event.message || 'unknown-error', event.filename || 'inline', event.lineno || 0);
     });
@@ -244,32 +244,19 @@
     }
 
     function getSystemTheme() {
-      if (window.canvaTabs) return window.canvaTabs.getSystemTheme();
       return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'dark'
         : 'light';
     }
 
     function sendToolbarAction(action, payload = {}) {
-      if (window.canvaTabs) {
-        if (action === 'switch-tab') {
-          window.canvaTabs.switchTab(payload.id);
-          return;
-        }
-        if (action === 'close-tab') {
-          window.canvaTabs.closeTab(payload.id);
-          return;
-        }
-        if (action === 'go-home') {
-          window.canvaTabs.goHome();
-          return;
-        }
+      if (!allowedActions.has(action)) {
+        console.error('[toolbar-ui] invalid-action', action);
+        return;
       }
 
       const actionUrl = new URL(`canva-toolbar://${action}`);
-      if (typeof payload.id === 'number') {
-        actionUrl.searchParams.set('id', String(payload.id));
-      }
+      if (typeof payload.id === 'number') actionUrl.searchParams.set('id', String(payload.id));
       window.location.href = actionUrl.toString();
     }
 
@@ -372,27 +359,17 @@
       }
     }
 
-    window.__canvaToolbarRenderState = (state) => {
-      fallbackRendered = true;
-      document.body.dataset.bridge = 'main';
+    window.__canvaToolbarApplyState = (state) => {
+      stateApplied = true;
+      document.body.dataset.state = 'ready';
       render(state);
     };
 
-    if (!window.canvaTabs) {
-      console.warn('[toolbar-ui] preload-bridge-missing; waiting-main-fallback');
-      pinnedHomeSlot.textContent = '';
-      tabsEl.textContent = '';
-      document.body.dataset.bridge = 'pending';
-      setTimeout(() => {
-        if (!fallbackRendered && !window.canvaTabs) {
-          console.error('[toolbar-ui] missing-bridge');
-          document.body.dataset.bridge = 'missing';
-        }
-      }, 1500);
-    } else {
-      console.log('[toolbar-ui] subscribe-tabs-state');
-      window.canvaTabs.subscribeTabsState(render);
-    }
+    setTimeout(() => {
+      if (stateApplied) return;
+      console.error('[toolbar-ui] state-timeout');
+      document.body.dataset.state = 'failed';
+    }, 1500);
   </script>
 </body>
 </html>
