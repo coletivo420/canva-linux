@@ -112,7 +112,15 @@ Maintenance targets must come from dependent-project config. c420ui validates
 and orchestrates those targets; `c420ui-host` performs generic filesystem and
 sudo operations. Validation includes accurate reporting of missing, planned,
 removed and updated statuses.
-sudo operations.
+
+Install and artifact filesystem validation:
+
+- Native install identity and paths come from dependent-project config.
+- Native install filesystem writes and icon installation use `c420ui-host fs-ops`.
+- `linux-unpacked` normalization uses `c420ui-host ensure-linux-unpacked` and
+  preserves the generated directory name.
+- AppImage cleanup/find and checksum sidecar writes use Rust host commands.
+- `build-resources/c420ui/host/preflight.ts` must not exist.
 
 - TypeScript wrapper tests
 - JSON contract tests between TypeScript and Rust

@@ -238,3 +238,24 @@ generic `remove-paths`, `fix-permissions` and `sudo-validate` operations.
 
 Do not reintroduce direct `fs.rmSync` maintenance deletion, direct TypeScript
 `chown`, or hardcoded cleanup target lists in c420ui operations.
+
+## Dev12 Commit 5 — Install And Artifact Filesystem Operations
+
+c420ui now routes mutable install and artifact filesystem operations through
+`c420ui-host`.
+
+New Rust host commands:
+
+```text
+c420ui-host fs-ops --json
+c420ui-host ensure-linux-unpacked --json
+c420ui-host artifact-file-ops --json
+```
+
+Dependent projects declare install identity and paths in their own config.
+c420ui validates/orchestrates that config and Rust executes generic filesystem
+operations. Rust must not hardcode Canva Linux identity, paths, package names or
+packaging policy.
+
+`ensure-linux-unpacked` must preserve the generated directory name and only
+create the canonical `linux-unpacked` link when needed.

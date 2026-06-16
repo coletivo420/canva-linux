@@ -79,6 +79,18 @@ Confirm:
 - Flatpak and Flathub policy checks run from TypeScript entrypoints.
 - Install, uninstall, maintenance, packaging, build, artifact and versioning mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
 
+## Dev12 Rust host-operation review
+
+Request changes if a PR:
+
+- reintroduces `build-resources/c420ui/host/preflight.ts`;
+- reintroduces `spawnSync` or Bash command probing for maintained c420ui preflight;
+- performs native install filesystem writes without `runC420UIRustFsOps`;
+- installs icons without passing the dependent project `appId` from config;
+- normalizes `linux-unpacked` in TypeScript instead of `c420ui-host`;
+- cleans/selects AppImage artifacts or writes checksum sidecars without Rust host commands;
+- hardcodes Canva Linux install identity or native paths inside Rust.
+
 ## c420ui version/hash review
 
 Request changes if a PR:

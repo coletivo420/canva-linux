@@ -9,7 +9,10 @@ export type C420UIRustHostCommand =
   | "check-host-dependencies"
   | "sudo-validate"
   | "remove-paths"
-  | "fix-permissions";
+  | "fix-permissions"
+  | "fs-ops"
+  | "ensure-linux-unpacked"
+  | "artifact-file-ops";
 
 export type C420UIRustHostRunOptions = {
   rootDir: string;

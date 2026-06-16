@@ -1,8 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { projectRoot } from "../../host/paths.js";
-import { requireCommands } from "../../host/preflight.js";
 import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
+import { runC420UIRustArtifactFileOps } from "../../src/rust-artifacts.js";
+import { runC420UIRustFsOps } from "../../src/rust-fs.js";
+import { requireC420UIRustCommands } from "../../src/rust-preflight.js";
 import { info, ok, warn, error } from "../../host/ui.js";
 import { parseDryRun } from "../../host/dry-run.js";
 import { writeBuildMetadataSidecar } from "../install/build-metadata-marker.js";
@@ -22,7 +24,11 @@ export async function runBuildAppImage(argv: string[]): Promise<void> {
   const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
 
-  requireCommands(["node", "npm", "sha256sum"]);
+  await requireC420UIRustCommands({
+    rootDir,
+    commands: ["node", "npm", "sha256sum"],
+    env: process.env,
+  });
 
   const packageJson = JSON.parse(
     fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
@@ -34,13 +40,12 @@ export async function runBuildAppImage(argv: string[]): Promise<void> {
 
   info("Cleaning previous AppImage artifacts");
   if (!dryRun) {
-    if (!fs.existsSync(distDir)) fs.mkdirSync(distDir, { recursive: true });
-    const files = fs.readdirSync(distDir);
-    for (const file of files) {
-      if (file.endsWith(".AppImage") || file.endsWith(".AppImage.sha256")) {
-        fs.unlinkSync(path.join(distDir, file));
-      }
-    }
+    await runC420UIRustArtifactFileOps({
+      rootDir,
+      distDir,
+      cleanup: [".AppImage", ".AppImage.sha256"],
+      env: process.env,
+    });
   }
 
   info("Building AppImage with electron-builder");
@@ -78,24 +83,21 @@ export async function runBuildAppImage(argv: string[]): Promise<void> {
     return;
   }
 
-  const appimageCandidates = fs
-    .readdirSync(distDir)
-    .filter(
-      (file) => file.startsWith(`canva-linux-${version}-`) && file.endsWith(".AppImage"),
-    );
-
-  if (appimageCandidates.length !== 1) {
-    throw new Error(
-      `Expected exactly one generated AppImage matching dist/canva-linux-${version}-*.AppImage, found ${appimageCandidates.length}`,
-    );
+  const artifactResult = await runC420UIRustArtifactFileOps({
+    rootDir,
+    distDir,
+    find: {
+      startsWith: `canva-linux-${version}-`,
+      endsWith: ".AppImage",
+      expect: "one",
+    },
+    env: process.env,
+  });
+  if (!artifactResult.selected) {
+    throw new Error(`Expected exactly one generated AppImage matching dist/canva-linux-${version}-*.AppImage`);
   }
-
-  const appImagePath = path.join(distDir, appimageCandidates[0]);
+  const appImagePath = artifactResult.selected;
   const appImageSha256Path = `${appImagePath}.sha256`;
-
-  if (!fs.existsSync(appImagePath) || fs.statSync(appImagePath).size === 0) {
-    throw new Error(`Expected AppImage was not generated: ${appImagePath}`);
-  }
 
   let shaStdout = "";
   const shaResult = await runC420UIRustProcess({
@@ -113,7 +115,11 @@ export async function runBuildAppImage(argv: string[]): Promise<void> {
   });
 
   if (shaResult.code === 0 && shaStdout.trim()) {
-    fs.writeFileSync(appImageSha256Path, shaStdout, "utf8");
+    await runC420UIRustFsOps({
+      rootDir,
+      operations: [{ kind: "write-file", path: appImageSha256Path, content: shaStdout, mode: 0o644 }],
+      env: process.env,
+    });
     ok(`AppImage checksum generated: ${appImageSha256Path}`);
   } else {
     throw new Error("Failed to generate checksum");

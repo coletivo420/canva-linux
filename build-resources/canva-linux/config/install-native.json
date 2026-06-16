@@ -1,0 +1,17 @@
+{
+  "appId": "io.github.coletivo420.canva-linux",
+  "executable": "canva-linux",
+  "desktopName": "io.github.coletivo420.canva-linux.native.desktop",
+  "system": {
+    "prefix": "/opt/canva-linux",
+    "bin": "/usr/local/bin/canva-linux",
+    "desktop": "/usr/local/share/applications/io.github.coletivo420.canva-linux.native.desktop",
+    "iconRoot": "/usr/local/share/icons/hicolor"
+  },
+  "user": {
+    "prefix": ".local/opt/canva-linux",
+    "bin": ".local/bin/canva-linux",
+    "desktop": ".local/share/applications/io.github.coletivo420.canva-linux.native.desktop",
+    "iconRoot": ".local/share/icons/hicolor"
+  }
+}

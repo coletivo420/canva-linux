@@ -1,8 +1,11 @@
+pub mod artifact_file_ops;
 pub mod check_command;
 pub mod check_host_dependencies;
 pub mod check_node;
 pub mod doctor;
+pub mod ensure_linux_unpacked;
 pub mod fix_permissions;
+pub mod fs_ops;
 pub mod host_info;
 pub mod remove_paths;
 pub mod run_process;

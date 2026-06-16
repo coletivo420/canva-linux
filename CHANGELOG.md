@@ -18,6 +18,13 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ### Dev12 opened
 
+- Dev12 now moves install and artifact filesystem operations to `c420ui-host`.
+  Dependent projects declare install identity and paths in config; c420ui
+  validates/orchestrates generically; Rust performs safe filesystem operations
+  without hardcoding Canva Linux policy.
+- Native install filesystem writes, icon installation, `linux-unpacked`
+  normalization, AppImage cleanup/find and checksum sidecar writes now route
+  through Rust host commands.
 - Dev12 removes the legacy synchronous c420ui host runners. Maintenance
   operations now receive dependent-project maintenance declarations through the
   adapter boundary, while c420ui validates/orchestrates generically and

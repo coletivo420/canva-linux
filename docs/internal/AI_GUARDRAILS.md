@@ -117,6 +117,13 @@ targets in c420ui TypeScript, do not reintroduce `fs.rmSync` maintenance
 deletion, and do not run direct `chown` from TypeScript maintenance operations.
 Generic filesystem maintenance belongs to `c420ui-host`.
 
+Install identity, native paths and artifact naming policy belong to the
+dependent project config. Do not hardcode those values in Rust. Do not
+reintroduce `build-resources/c420ui/host/preflight.ts`, Bash command probes, or
+TypeScript filesystem mutation for native install, icon install,
+`linux-unpacked` normalization, AppImage cleanup/find, or checksum sidecar
+writes. Generic mutable filesystem operations belong to `c420ui-host`.
+
 ## c420ui structural ownership and efficiency
 
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.

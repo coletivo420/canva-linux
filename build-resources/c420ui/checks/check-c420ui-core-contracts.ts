@@ -222,9 +222,13 @@ function main(): number {
     "linux-root-provider.ts",
     "host-dependencies.ts",
     "host-dependency-resolver.ts",
+    "install-config.ts",
     "maintenance-config.ts",
+    "rust-artifacts.ts",
+    "rust-fs.ts",
     "rust-host.ts",
     "rust-maintenance.ts",
+    "rust-preflight.ts",
     "rust-process-runner.ts",
     "types.ts",
     "workflow-runner.ts",
@@ -1571,6 +1575,72 @@ function checkMaintenanceContract(failures: string[]): void {
   }
 }
 
+function checkRustFilesystemOperationsContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const preflightPath = "build-resources/c420ui/host/preflight.ts";
+  const nativePath = "build-resources/c420ui/operations/install/native.ts";
+  const iconsPath = "build-resources/c420ui/operations/install/icons.ts";
+  const flatpakPath = "build-resources/c420ui/operations/install/flatpak.ts";
+  const appimagePath = "build-resources/c420ui/operations/packaging/appimage.ts";
+  const bundlePath = "build-resources/c420ui/operations/packaging/flatpak-bundle.ts";
+  const rustFsPath = "build-resources/c420ui/src/rust-fs.ts";
+  const rustArtifactsPath = "build-resources/c420ui/src/rust-artifacts.ts";
+  const rustPreflightPath = "build-resources/c420ui/src/rust-preflight.ts";
+
+  if (fs.existsSync(path.join(rootDir, preflightPath))) {
+    failures.push(`${preflightPath} must not exist after Rust host command resolution`);
+  }
+
+  const native = fs.readFileSync(path.join(rootDir, nativePath), "utf8");
+  const icons = fs.readFileSync(path.join(rootDir, iconsPath), "utf8");
+  const flatpak = fs.readFileSync(path.join(rootDir, flatpakPath), "utf8");
+  const appimage = fs.readFileSync(path.join(rootDir, appimagePath), "utf8");
+  const bundle = fs.readFileSync(path.join(rootDir, bundlePath), "utf8");
+  const rustFs = fs.readFileSync(path.join(rootDir, rustFsPath), "utf8");
+  const rustArtifacts = fs.readFileSync(path.join(rootDir, rustArtifactsPath), "utf8");
+  const rustPreflight = fs.readFileSync(path.join(rootDir, rustPreflightPath), "utf8");
+
+  if (!native.includes("validateC420UINativeInstallConfig")) {
+    failures.push(`${nativePath}: native install identity and paths must come from config`);
+  }
+  for (const [label, source] of [
+    [nativePath, native],
+    [iconsPath, icons],
+  ] as const) {
+    if (!source.includes("runC420UIRustFsOps")) {
+      failures.push(`${label}: filesystem mutations must use rust-fs`);
+    }
+  }
+  if (!flatpak.includes("runC420UIRustEnsureLinuxUnpacked") || !bundle.includes("runC420UIRustEnsureLinuxUnpacked")) {
+    failures.push("Flatpak linux-unpacked normalization must use Rust");
+  }
+  if (!appimage.includes("runC420UIRustArtifactFileOps")) {
+    failures.push(`${appimagePath}: AppImage cleanup/find must use Rust artifact ops`);
+  }
+  if (!appimage.includes("runC420UIRustFsOps")) {
+    failures.push(`${appimagePath}: AppImage checksum sidecar must use rust-fs`);
+  }
+  if (!rustFs.includes('command: "fs-ops"') || !rustFs.includes('command: "ensure-linux-unpacked"')) {
+    failures.push(`${rustFsPath}: must call c420ui-host fs-ops and ensure-linux-unpacked`);
+  }
+  if (!rustArtifacts.includes('command: "artifact-file-ops"')) {
+    failures.push(`${rustArtifactsPath}: must call c420ui-host artifact-file-ops`);
+  }
+  if (!rustPreflight.includes("resolveC420UIHostDependencies")) {
+    failures.push(`${rustPreflightPath}: must resolve commands through host dependencies`);
+  }
+  for (const [label, source] of [
+    [nativePath, native],
+    [flatpakPath, flatpak],
+    [appimagePath, appimage],
+    [bundlePath, bundle],
+  ] as const) {
+    if (source.includes("../../host/preflight.js") || source.includes("requireCommands(")) {
+      failures.push(`${label}: must not use legacy requireCommands preflight`);
+    }
+  }
+}
+
 export function main(): number {
   const failures: string[] = [];
 
@@ -1579,6 +1649,7 @@ export function main(): number {
   runPackagePolicyContract(failures);
   runPublicApiExportsContract(failures);
   checkMaintenanceContract(failures);
+  checkRustFilesystemOperationsContract(failures);
   runBridgeContract(failures);
   runDetectionContract(failures);
   runActionValidationContract(failures);

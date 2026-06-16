@@ -14,6 +14,9 @@ fn print_usage() {
     eprintln!("  sudo-validate --json");
     eprintln!("  remove-paths --json");
     eprintln!("  fix-permissions --json");
+    eprintln!("  fs-ops --json");
+    eprintln!("  ensure-linux-unpacked --json");
+    eprintln!("  artifact-file-ops --json");
     eprintln!("Options:");
     eprintln!("  --version");
 }
@@ -124,6 +127,51 @@ fn main() {
             std::process::exit(exit_codes::INVALID_USAGE);
         }
         match commands::fix_permissions::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
+    }
+
+    if cmd == "fs-ops" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: fs-ops command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::fs_ops::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
+    }
+
+    if cmd == "ensure-linux-unpacked" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: ensure-linux-unpacked command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::ensure_linux_unpacked::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
+    }
+
+    if cmd == "artifact-file-ops" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: artifact-file-ops command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::artifact_file_ops::execute() {
             Ok(_) => std::process::exit(exit_codes::SUCCESS),
             Err(e) => {
                 eprintln!("Error: {}", e);

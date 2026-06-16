@@ -3,12 +3,14 @@ import path from "node:path";
 import os from "node:os";
 import { parseDryRun } from "../../host/dry-run.js";
 import { projectRoot } from "../../host/paths.js";
-import { requireCommands } from "../../host/preflight.js";
 import { info, ok, section, warn, error } from "../../host/ui.js";
 import { resolveNativeScope, type NativeScope } from "./native-paths.js";
 import {
   runC420UIRustSudoValidate,
 } from "../../src/rust-maintenance.js";
+import { runC420UIRustFsOps } from "../../src/rust-fs.js";
+import { requireC420UIRustCommands } from "../../src/rust-preflight.js";
+import { validateC420UINativeInstallConfig, type c420uiNativeInstallConfig } from "../../src/install-config.js";
 import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
 import { installBuildMetadataMarker } from "./build-metadata-marker.js";
 import { writeDesktopFile } from "./desktop-entry.js";
@@ -17,9 +19,10 @@ import { updateDesktopCaches } from "./desktop-cache.js";
 import { printNativePostInstallGuidance } from "../host/guidance.js";
 import type { c420uiLogEvent } from "../../src/events.js";
 
-const APP_ID = "io.github.coletivo420.canva-linux";
-const APP_EXECUTABLE = "canva-linux";
-const APP_NATIVE_DESKTOP_NAME = `${APP_ID}.native.desktop`;
+function loadNativeInstallConfig(rootDir: string): c420uiNativeInstallConfig {
+  const configPath = path.join(rootDir, "build-resources/canva-linux/config/install-native.json");
+  return validateC420UINativeInstallConfig(JSON.parse(fs.readFileSync(configPath, "utf8")));
+}
 
 function emitLog(event: c420uiLogEvent): void {
   if (event.level === "error") error(event.line);
@@ -31,8 +34,13 @@ export async function runNativeInstall(argv: string[]): Promise<void> {
   const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
   const scope = resolveNativeScope(process.env);
+  const nativeInstall = loadNativeInstallConfig(rootDir);
 
-  requireCommands(["node", "npm", "bash"]);
+  await requireC420UIRustCommands({
+    rootDir,
+    commands: ["node", "npm", "bash"],
+    env: process.env,
+  });
 
   if (dryRun) {
     info("[dry-run] npm run build:metadata:effective");
@@ -49,7 +57,7 @@ export async function runNativeInstall(argv: string[]): Promise<void> {
     });
   }
 
-  const installPaths = resolveInstallPaths(scope);
+  const installPaths = resolveInstallPaths(scope, nativeInstall);
 
   if (scope === "system") {
     section("Native system install");
@@ -85,7 +93,11 @@ export async function runNativeInstall(argv: string[]): Promise<void> {
     throw new Error(`[error] ${distUnpacked} was not generated`);
   }
 
-  await installNativeFromDist(distUnpacked, installPaths, scope, { dryRun, rootDir });
+  await installNativeFromDist(distUnpacked, installPaths, scope, {
+    dryRun,
+    rootDir,
+    executable: nativeInstall.executable,
+  });
 
   const buildMetadataTarget = path.join(installPaths.prefix, "config/canva-linux/build-metadata.json");
   await installBuildMetadataMarker(buildMetadataTarget, scope, { dryRun, rootDir });
@@ -121,14 +133,18 @@ export async function runNativeInstall(argv: string[]): Promise<void> {
   } else if (dryRun) {
     console.log(`[dry-run] printf "%s\\n" "${versionMarker}" > ${versionTarget}`);
   } else {
-    fs.writeFileSync(versionTarget, `${versionMarker}\n`, "utf8");
+    await runC420UIRustFsOps({
+      rootDir,
+      operations: [{ kind: "write-file", path: versionTarget, content: `${versionMarker}\n`, mode: 0o644 }],
+      env: process.env,
+    });
   }
 
   const tmpDesktop = path.join(os.tmpdir(), `canva-linux-${Date.now()}.desktop`);
   if (dryRun) {
     console.log(`[dry-run] build desktop file at ${tmpDesktop}`);
   } else {
-    writeDesktopFile(tmpDesktop, path.join(installPaths.prefix, APP_EXECUTABLE), APP_ID);
+    writeDesktopFile(tmpDesktop, path.join(installPaths.prefix, nativeInstall.executable), nativeInstall.appId);
   }
 
   if (scope === "system") {
@@ -152,14 +168,16 @@ export async function runNativeInstall(argv: string[]): Promise<void> {
   } else if (dryRun) {
     console.log(`[dry-run] install -Dm644 ${tmpDesktop} ${installPaths.desktop}`);
   } else {
-    fs.mkdirSync(path.dirname(installPaths.desktop), { recursive: true });
-    fs.copyFileSync(tmpDesktop, installPaths.desktop);
-    fs.chmodSync(installPaths.desktop, 0o644);
+    await runC420UIRustFsOps({
+      rootDir,
+      operations: [{ kind: "install-file", from: tmpDesktop, to: installPaths.desktop, mode: 0o644 }],
+      env: process.env,
+    });
   }
   if (!dryRun && fs.existsSync(tmpDesktop)) fs.rmSync(tmpDesktop, { force: true });
 
   const iconSrc = path.join(rootDir, "build-resources/canva-linux/assets/icons/hicolor");
-  await installIcons(scope, iconSrc, installPaths.iconRoot, { dryRun });
+  await installIcons(scope, nativeInstall.appId, iconSrc, installPaths.iconRoot, { dryRun });
 
   await updateDesktopCaches(scope, { dryRun });
 
@@ -167,22 +185,17 @@ export async function runNativeInstall(argv: string[]): Promise<void> {
   ok(`Native ${scope} install completed`);
 }
 
-function resolveInstallPaths(scope: NativeScope) {
+function resolveInstallPaths(scope: NativeScope, config: c420uiNativeInstallConfig) {
   if (scope === "system") {
-    return {
-      prefix: "/opt/canva-linux",
-      bin: `/usr/local/bin/${APP_EXECUTABLE}`,
-      desktop: `/usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME}`,
-      iconRoot: "/usr/local/share/icons/hicolor",
-    };
+    return config.system;
   }
 
   const home = os.homedir();
   return {
-    prefix: path.join(home, ".local/opt/canva-linux"),
-    bin: path.join(home, `.local/bin/${APP_EXECUTABLE}`),
-    desktop: path.join(home, `.local/share/applications/${APP_NATIVE_DESKTOP_NAME}`),
-    iconRoot: path.join(home, ".local/share/icons/hicolor"),
+    prefix: path.join(home, config.user.prefix),
+    bin: path.join(home, config.user.bin),
+    desktop: path.join(home, config.user.desktop),
+    iconRoot: path.join(home, config.user.iconRoot),
   };
 }
 
@@ -190,9 +203,9 @@ async function installNativeFromDist(
   distDir: string,
   paths: ReturnType<typeof resolveInstallPaths>,
   scope: NativeScope,
-  options: { dryRun?: boolean; rootDir: string },
+  options: { dryRun?: boolean; rootDir: string; executable: string },
 ) {
-  const { dryRun, rootDir } = options;
+  const { dryRun, rootDir, executable } = options;
 
   if (scope === "system") {
     if (dryRun) {
@@ -202,7 +215,7 @@ async function installNativeFromDist(
       info(`[dry-run] sudo mkdir -p ${path.dirname(paths.desktop)}`);
       info(`[dry-run] sudo cp -a ${distDir}/. ${paths.prefix}`);
       info(`[dry-run] sudo chmod -R a+rX ${paths.prefix}`);
-      info(`[dry-run] sudo ln -sfn ${path.join(paths.prefix, APP_EXECUTABLE)} ${paths.bin}`);
+      info(`[dry-run] sudo ln -sfn ${path.join(paths.prefix, executable)} ${paths.bin}`);
     } else {
       await runC420UIRustProcess({
         rootDir,
@@ -267,7 +280,7 @@ async function installNativeFromDist(
       await runC420UIRustProcess({
         rootDir,
         command: "sudo",
-        args: ["ln", "-sfn", path.join(paths.prefix, APP_EXECUTABLE), paths.bin],
+        args: ["ln", "-sfn", path.join(paths.prefix, executable), paths.bin],
         cwd: rootDir,
         env: process.env,
         label: "ln-bin",
@@ -278,20 +291,17 @@ async function installNativeFromDist(
     return;
   }
 
-  if (dryRun) {
-    console.log(`[dry-run] rm -rf ${paths.prefix}`);
-    console.log(`[dry-run] mkdir -p ${paths.prefix} ...`);
-    console.log(`[dry-run] cp -a ${distDir}/. ${paths.prefix}/`);
-    console.log(`[dry-run] ln -sfn ${path.join(paths.prefix, APP_EXECUTABLE)} ${paths.bin}`);
-    return;
-  }
-
-  if (fs.existsSync(paths.prefix)) fs.rmSync(paths.prefix, { recursive: true, force: true });
-  fs.mkdirSync(paths.prefix, { recursive: true });
-  fs.mkdirSync(path.dirname(paths.bin), { recursive: true });
-  fs.mkdirSync(path.dirname(paths.desktop), { recursive: true });
-  fs.cpSync(distDir, paths.prefix, { recursive: true });
-
-  if (fs.existsSync(paths.bin)) fs.rmSync(paths.bin, { recursive: true, force: true });
-  fs.symlinkSync(path.join(paths.prefix, APP_EXECUTABLE), paths.bin);
+  await runC420UIRustFsOps({
+    rootDir,
+    operations: [
+      { kind: "remove", path: paths.prefix, recursive: true, force: true },
+      { kind: "ensure-dir", path: paths.prefix },
+      { kind: "ensure-dir", path: path.dirname(paths.bin) },
+      { kind: "ensure-dir", path: path.dirname(paths.desktop) },
+      { kind: "copy-tree", from: distDir, to: paths.prefix },
+      { kind: "symlink", from: path.join(paths.prefix, executable), to: paths.bin, force: true },
+    ],
+    dryRun,
+    env: process.env,
+  });
 }
