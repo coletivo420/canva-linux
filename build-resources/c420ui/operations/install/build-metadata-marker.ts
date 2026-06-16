@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { projectRoot } from "../../host/paths.js";
-import { c420uiSudoInstall } from "../../host/sudo.js";
+import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
+import { info } from "../../host/ui.js";
 
 export function getBuildMetadataSource(rootDir: string = projectRoot()): string {
   const effective = path.join(
@@ -17,11 +18,11 @@ export function getBuildMetadataSource(rootDir: string = projectRoot()): string 
   return committed;
 }
 
-export function installBuildMetadataMarker(
+export async function installBuildMetadataMarker(
   target: string,
   scope: "system" | "user",
   options: { dryRun?: boolean; rootDir?: string } = {},
-): void {
+): Promise<void> {
   const rootDir = options.rootDir ?? projectRoot();
   const dryRun = options.dryRun ?? false;
   const source = getBuildMetadataSource(rootDir);
@@ -29,7 +30,20 @@ export function installBuildMetadataMarker(
   if (!fs.existsSync(source)) return;
 
   if (scope === "system") {
-    c420uiSudoInstall(["-Dm644", source, target], { dryRun });
+    if (dryRun) {
+      info(`[dry-run] sudo install -Dm644 ${source} ${target}`);
+    } else {
+      await runC420UIRustProcess({
+        rootDir,
+        command: "sudo",
+        args: ["install", "-Dm644", source, target],
+        cwd: rootDir,
+        env: process.env,
+        label: "install-build-metadata",
+        emitLog: () => {},
+        emitProgress: () => {},
+      });
+    }
   } else {
     if (dryRun) {
       console.log(`[dry-run] install -Dm644 ${source} ${target}`);

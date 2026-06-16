@@ -18,11 +18,16 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ### Dev12 opened
 
-- Dev12 opens the Rust migration for c420ui host-operation logic only. Canva
-  Linux remains ESM/TypeScript.
-- Dev12 maintenance targets are declared by dependent-project config; c420ui
-  validates and orchestrates them, and `c420ui-host` executes generic removal,
-  permission repair and sudo validation without hardcoding Canva Linux policy.
+- Dev12 removes the legacy synchronous c420ui host runners. Maintenance
+  operations now receive dependent-project maintenance declarations through the
+  adapter boundary, while c420ui validates/orchestrates generically and
+  c420ui-host executes filesystem/sudo operations.
+- Maintenance scripts and entrypoints for Canva Linux were moved to the Canva
+  Linux adapter to keep c420ui generic.
+- Legacy `host/command-runner.ts` and `host/sudo.ts` were removed. All host
+  operations now use the async Rust-based process and maintenance runners.
+- Visual reporting for maintenance tasks now includes missing, planned, removed and updated statuses accurately.
+- Rust maintenance operations were hardened to prevent symlink following and directory traversal, requiring canonical project root and relative targets.
 
 ### Current changes
 

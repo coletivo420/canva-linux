@@ -1480,8 +1480,15 @@ function checkLinuxHostSudoContract(failures: string[]): void {
   const rootDir = process.cwd();
   const providerPath = "build-resources/c420ui/src/linux-root-provider.ts";
   const operationsPath = "build-resources/c420ui/host/sudo.ts";
+  const legacyOperationsPath = "build-resources/c420ui/operations/host/sudo.ts";
   const providerSource = fs.readFileSync(path.join(rootDir, providerPath), "utf8");
-  const operationsSource = fs.readFileSync(path.join(rootDir, operationsPath), "utf8");
+
+  if (fs.existsSync(path.join(rootDir, operationsPath))) {
+    failures.push(`${operationsPath} must not exist after Rust host migration`);
+  }
+  if (fs.existsSync(path.join(rootDir, legacyOperationsPath))) {
+    failures.push(`${legacyOperationsPath} must not exist after Rust host migration`);
+  }
 
   for (const fragment of [
     "sudoCommand",
@@ -1493,22 +1500,6 @@ function checkLinuxHostSudoContract(failures: string[]): void {
     }
   }
 
-  for (const fragment of [
-    "c420uiSudoValidate",
-    "c420uiSudoRun",
-    "C420UI_ROOT_AUTH",
-    "C420UI_ACTION_SCOPE",
-    "C420UI_SUDO_TIMEOUT_SECONDS",
-  ] as const) {
-    if (!operationsSource.includes(fragment)) {
-      failures.push(`${operationsPath}: missing sudo operation fragment ${fragment}`);
-    }
-  }
-
-  if (operationsSource.includes("spawnSync(\"sudo\"")) {
-    failures.push(`${operationsPath}: sudo validation must not require direct spawnSync(\"sudo\") after Rust maintenance migration`);
-  }
-
   for (const forbidden of [
     "CANVA" + "_",
     "canva_",
@@ -1516,7 +1507,7 @@ function checkLinuxHostSudoContract(failures: string[]): void {
     "Canva Linux",
     "sudo-helper.sh",
   ] as const) {
-    if (providerSource.includes(forbidden) || operationsSource.includes(forbidden)) {
+    if (providerSource.includes(forbidden)) {
       failures.push(`c420ui sudo TypeScript must not contain fragment ${forbidden}`);
     }
   }
@@ -1526,16 +1517,13 @@ function checkMaintenanceContract(failures: string[]): void {
   const rootDir = process.cwd();
   const cleanPath = "build-resources/c420ui/operations/maintenance/clean-artifacts.ts";
   const fixPath = "build-resources/c420ui/operations/maintenance/fix-build-permissions.ts";
-  const configPath = "build-resources/canva-linux/config/maintenance.json";
   const adapterPath = "build-resources/canva-linux/c420ui-adapter/adapter.ts";
   const cleanSource = fs.readFileSync(path.join(rootDir, cleanPath), "utf8");
   const fixSource = fs.readFileSync(path.join(rootDir, fixPath), "utf8");
   const adapterSource = fs.readFileSync(path.join(rootDir, adapterPath), "utf8");
   const maintenanceConfig = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/maintenance-config.ts"), "utf8");
+  const operationSources = collectTypeScriptFiles(path.join(rootDir, "build-resources/c420ui/operations"));
 
-  if (!fs.existsSync(path.join(rootDir, configPath))) {
-    failures.push(`${configPath}: dependent project maintenance config is required`);
-  }
   if (!adapterSource.includes("loadMaintenanceConfig") || !adapterSource.includes("maintenance.json")) {
     failures.push(`${adapterPath}: adapter must expose dependent project maintenance config`);
   }
@@ -1547,18 +1535,38 @@ function checkMaintenanceContract(failures: string[]): void {
   if (!cleanSource.includes("runC420UIRustRemovePaths")) {
     failures.push(`${cleanPath}: clean-artifacts must use rust-maintenance remove-paths`);
   }
-  if (cleanSource.includes("node:fs") || cleanSource.includes("fs.rmSync") || cleanSource.includes("runWithOptionalSudo")) {
-    failures.push(`${cleanPath}: clean-artifacts must not remove paths directly in TypeScript`);
+  if (!cleanSource.includes("runC420UICleanArtifacts")) {
+    failures.push(`${cleanPath}: clean-artifacts must export generic runC420UICleanArtifacts`);
+  }
+  if (cleanSource.includes("node:fs") || cleanSource.includes("fs.rmSync") || cleanSource.includes("runWithOptionalSudo") || cleanSource.includes("loadCanvaLinuxMaintenanceConfig")) {
+    failures.push(`${cleanPath}: clean-artifacts must not remove paths directly in TypeScript or import dependent adapters`);
   }
   if (!fixSource.includes("runC420UIRustFixPermissions")) {
     failures.push(`${fixPath}: fix-build-permissions must use rust-maintenance fix-permissions`);
   }
-  if (fixSource.includes("node:fs") || fixSource.includes("c420uiSudoRun") || fixSource.includes("chown")) {
-    failures.push(`${fixPath}: fix-build-permissions must not chown directly in TypeScript`);
+  if (!fixSource.includes("runC420UIFixBuildPermissions")) {
+    failures.push(`${fixPath}: fix-build-permissions must export generic runC420UIFixBuildPermissions`);
+  }
+  if (fixSource.includes("node:fs") || fixSource.includes("c420uiSudoRun") || fixSource.includes("runC420UIRustProcess") || fixSource.includes("loadCanvaLinuxMaintenanceConfig")) {
+    failures.push(`${fixPath}: fix-build-permissions must not chown directly in TypeScript or import dependent adapters`);
   }
   for (const target of [".flatpak-builder", "build-dir", "repo"] as const) {
     if (cleanSource.includes(target) || fixSource.includes(target)) {
       failures.push(`maintenance targets must come from dependent project config, not ${target} in c420ui operations`);
+    }
+  }
+  for (const file of operationSources) {
+    const relativePath = path.relative(rootDir, file).replace(/\\/g, "/");
+    const source = fs.readFileSync(file, "utf8");
+    for (const forbidden of [
+      "loadCanvaLinuxMaintenanceConfig",
+      "canva-linux/c420ui-adapter",
+      "../../../canva-linux",
+      "../../canva-linux",
+    ] as const) {
+      if (source.includes(forbidden)) {
+        failures.push(`${relativePath}: c420ui operations must not import dependent-project adapters or config (${forbidden})`);
+      }
     }
   }
 }

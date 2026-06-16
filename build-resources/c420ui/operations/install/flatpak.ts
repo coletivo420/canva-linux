@@ -3,12 +3,20 @@ import path from "node:path";
 import { parseDryRun } from "../../host/dry-run.js";
 import { projectRoot } from "../../host/paths.js";
 import { requireCommands } from "../../host/preflight.js";
-import { runCommand } from "../../host/command-runner.js";
-import { info, ok, section, warn } from "../../host/ui.js";
+import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
+import { runC420UIRustSudoValidate } from "../../src/rust-maintenance.js";
+import { info, ok, section, warn, error } from "../../host/ui.js";
 import { resolveFlatpakScope } from "../flatpak/scope.js";
 import { ensureFlathubRuntime } from "../flatpak/runtime.js";
 import { installFlatpakDirect } from "../flatpak/repo.js";
 import { printFlatpakPostInstallGuidance } from "../host/guidance.js";
+import type { c420uiLogEvent } from "../../src/events.js";
+
+function emitLog(event: c420uiLogEvent): void {
+  if (event.level === "error") error(event.line);
+  else if (event.level === "warning") warn(event.line);
+  else info(event.line);
+}
 
 function parseFlatpakInstallArgs(argv: string[]): { dryRun: boolean; skipElectronBuild: boolean } {
   const { dryRun } = parseDryRun(argv);
@@ -24,7 +32,7 @@ function parseFlatpakInstallArgs(argv: string[]): { dryRun: boolean; skipElectro
   return { dryRun, skipElectronBuild };
 }
 
-export function runFlatpakInstall(argv: string[]): void {
+export async function runFlatpakInstall(argv: string[]): Promise<void> {
   const rootDir = projectRoot();
   const { dryRun, skipElectronBuild } = parseFlatpakInstallArgs(argv);
   const scope = resolveFlatpakScope(process.env);
@@ -35,18 +43,46 @@ export function runFlatpakInstall(argv: string[]): void {
   info(`Flatpak install scope: ${scope}`);
   section(scope === "system" ? "System-wide Flatpak installation" : "User Flatpak installation");
 
-  ensureFlathubRuntime(scope, { dryRun, rootDir });
+  if (scope === "system" && !dryRun) {
+    const valid = await runC420UIRustSudoValidate({ rootDir, env: process.env });
+    if (!valid) throw new Error("Sudo validation failed");
+  }
+
+  await ensureFlathubRuntime(scope, { dryRun, rootDir });
 
   if (!skipElectronBuild) {
     info("Building Electron app (target: dir)");
-    runCommand("npm", ["run", "build:metadata:effective"], { cwd: rootDir, dryRun });
-    runCommand("npm", ["run", "dist"], { cwd: rootDir, dryRun });
+    if (dryRun) {
+      info("[dry-run] npm run build:metadata:effective");
+      info("[dry-run] npm run dist");
+    } else {
+      await runC420UIRustProcess({
+        rootDir,
+        command: "npm",
+        args: ["run", "build:metadata:effective"],
+        cwd: rootDir,
+        env: process.env,
+        label: "build:metadata:effective",
+        emitLog,
+        emitProgress: () => {},
+      });
+      await runC420UIRustProcess({
+        rootDir,
+        command: "npm",
+        args: ["run", "dist"],
+        cwd: rootDir,
+        env: process.env,
+        label: "dist",
+        emitLog,
+        emitProgress: () => {},
+      });
+    }
   } else {
     warn("Skipping Electron build (--skip-electron-build)");
   }
 
   ensureLinuxUnpacked(rootDir, { dryRun });
-  installFlatpakDirect(rootDir, scope, { dryRun });
+  await installFlatpakDirect(rootDir, scope, { dryRun });
 
   printFlatpakPostInstallGuidance();
   ok(`Flatpak ${scope} install completed`);

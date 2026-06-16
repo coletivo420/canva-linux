@@ -1,2 +1,2 @@
 import { runBuildAppImage } from "../operations/packaging/appimage.js";
-runBuildAppImage(process.argv.slice(2));
+await runBuildAppImage(process.argv.slice(2));

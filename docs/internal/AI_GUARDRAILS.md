@@ -486,6 +486,11 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Detection refresh must not clear or override progress results.
 - Progress refresh must not convert a completed action into an error.
 - Installed-version detection must be updated whenever install layout changes.
+- Do not import Canva Linux adapters from c420ui generic operations.
+- Do not reintroduce `spawnSync`-based host runners.
+- Maintenance targets must be declared by the dependent project and passed into generic c420ui operations.
+- Legacy `host/command-runner.ts` and `host/sudo.ts` must not be reintroduced.
+- All maintenance operations must use Rust-based runners for filesystem/sudo tasks.
 
 ## Root/sudo
 

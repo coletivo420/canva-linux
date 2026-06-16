@@ -655,12 +655,38 @@ c420ui resolves those dependencies and routes generic host probes through
 `c420ui-host`. Canva Linux only declares what it needs; it does not resolve host
 dependencies directly.
 
+## Dev12 Rust migration review rules
+
+Request changes if a PR:
+
+- reintroduces `spawnSync`-based host runners in c420ui or Canva Linux adapters;
+- reintroduces `build-resources/c420ui/host/command-runner.ts` or `build-resources/c420ui/host/sudo.ts`;
+- imports Canva Linux adapters or config from generic c420ui operations;
+- hardcodes maintenance targets in c420ui operations instead of receiving them via injection;
+- bypasses `c420ui-host` for privileged host operations;
+- removes security hardening in Rust maintenance operations (relative paths, symlink checks, rootDir canonicalization);
+- introduces project-specific identity (Canva Linux) in the generic Rust `c420ui-host`.
+
 Dev12 routes c420ui host process execution through `c420ui-host`. Dependent
 projects still declare actions and dependencies; c420ui decides what to run;
 Rust executes generic host processes without hardcoding Canva Linux policy.
 Maintenance targets follow the same boundary: dependent projects declare them,
 c420ui validates and orchestrates, and Rust performs generic filesystem/sudo
 operations.
+
+## Dev12 final handoff
+
+Dev12 is ready to merge when:
+
+- `npm run build:c420ui-rs` passes.
+- `npm run test:c420ui-rs` passes.
+- `npm run check:c420ui-rs-boundary` passes.
+- `npm run check:dev12-rust` passes.
+- `npm run build:scripts` passes.
+- `npm test` passes.
+- `npm run check:c420ui-core` passes.
+- `npm run check:canva-linux` passes.
+- manual validation of `maintenance:clean` and `maintenance:fix-permissions` with `--dry-run` confirms accurate status reporting.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging,

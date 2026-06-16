@@ -1,21 +1,36 @@
 import fs from "node:fs";
 import path from "node:path";
-import { c420uiSudoInstall } from "../../host/sudo.js";
+import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
 import { info, warn } from "../../host/ui.js";
+import { projectRoot } from "../../host/paths.js";
 
 const APP_ID = "io.github.coletivo420.canva-linux";
 
-export function installIconFile(
+export async function installIconFile(
   scope: "system" | "user",
   src: string,
   dst: string,
   options: { dryRun?: boolean } = {},
-): void {
+): Promise<void> {
   const dryRun = options.dryRun ?? false;
   const dstDir = path.dirname(dst);
+  const rootDir = projectRoot();
 
   if (scope === "system") {
-    c420uiSudoInstall(["-Dm644", src, dst], { dryRun });
+    if (dryRun) {
+      info(`[dry-run] sudo install -Dm644 ${src} ${dst}`);
+    } else {
+      await runC420UIRustProcess({
+        rootDir,
+        command: "sudo",
+        args: ["install", "-Dm644", src, dst],
+        cwd: rootDir,
+        env: process.env,
+        label: "install-icon",
+        emitLog: () => {},
+        emitProgress: () => {},
+      });
+    }
   } else {
     if (dryRun) {
       console.log(`[dry-run] install -Dm644 ${src} ${dst}`);
@@ -27,12 +42,12 @@ export function installIconFile(
   }
 }
 
-export function installIcons(
+export async function installIcons(
   scope: "system" | "user",
   srcRoot: string,
   targetIconRoot: string,
   options: { dryRun?: boolean } = {},
-): void {
+): Promise<void> {
   const sizes = [
     "16x16",
     "24x24",
@@ -58,7 +73,7 @@ export function installIcons(
 
     if (src) {
       const dst = path.join(targetIconRoot, `${size}/apps/${APP_ID}.png`);
-      installIconFile(scope, src, dst, options);
+      await installIconFile(scope, src, dst, options);
       installedCount++;
     }
   }

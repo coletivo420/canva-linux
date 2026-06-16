@@ -148,6 +148,24 @@ dependent-project fragments such as:
 - CLeyedropper
 - toolbar
 - Electron runtime paths
+
+## Legacy Removal
+
+Dev12 removes the following legacy components:
+
+- `build-resources/c420ui/host/command-runner.ts`: Replaced by `runC420UIRustProcess` and `runC420UIRustHostJsonLines`.
+- `build-resources/c420ui/host/sudo.ts`: Replaced by Rust-based sudo validation and `run-process` with sudo.
+
+All maintenance and installation operations are now async and use the Rust-based execution layer.
+
+## Maintenance Boundary
+
+The boundary between generic c420ui and dependent projects (Canva Linux) is now strictly enforced:
+
+1.  **Canva Linux Adapter**: Declares `cleanupTargets` and `permissionTargets` in `maintenance.json`.
+2.  **Canva Linux Script**: Loads config and calls the generic c420ui operation.
+3.  **c420ui Operation**: Generic function receiving config as parameter.
+4.  **c420ui-host**: Generic Rust binary executing operations.
 - Flatpak/AppImage project policy
 
 Rust must remain generic c420ui infrastructure.

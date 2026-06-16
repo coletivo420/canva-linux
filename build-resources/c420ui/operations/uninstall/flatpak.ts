@@ -1,13 +1,20 @@
 import { spawnSync } from "node:child_process";
 import { parseDryRun } from "../../host/dry-run.js";
-import { info, ok, warn } from "../../host/ui.js";
+import { info, ok, warn, error } from "../../host/ui.js";
 import { detectInstallations } from "../detection/install-detection.js";
 import { projectRoot } from "../../host/paths.js";
-import { c420uiSudoRun } from "../../host/sudo.js";
+import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
+import type { c420uiLogEvent } from "../../src/events.js";
 
 const APP_ID = "io.github.coletivo420.canva-linux";
 
-export function runFlatpakUninstall(argv: string[]): void {
+function emitLog(event: c420uiLogEvent): void {
+  if (event.level === "error") error(event.line);
+  else if (event.level === "warning") warn(event.line);
+  else info(event.line);
+}
+
+export async function runFlatpakUninstall(argv: string[]): Promise<void> {
   const { dryRun } = parseDryRun(argv);
   const scope = process.env.CANVA_FLATPAK_SCOPE || "all";
   const rootDir = projectRoot();
@@ -23,20 +30,33 @@ export function runFlatpakUninstall(argv: string[]): void {
     return;
   }
 
-  spawnSync("flatpak", ["kill", APP_ID], { stdio: "ignore" });
+  // Kill running app before uninstall
+  if (!dryRun) {
+    await runC420UIRustProcess({
+      rootDir,
+      command: "flatpak",
+      args: ["kill", APP_ID],
+      cwd: rootDir,
+      env: process.env,
+      label: "flatpak-kill",
+      emitLog: () => {}, // silent kill
+      emitProgress: () => {},
+    });
+  }
+
   const detected = detectInstallations(rootDir);
 
   switch (scope) {
     case "system":
-      uninstallSystem(detected.DETECTED_FLATPAK_SYSTEM, dryRun);
+      await uninstallSystem(rootDir, detected.DETECTED_FLATPAK_SYSTEM, dryRun);
       break;
     case "user":
-      uninstallUser(detected.DETECTED_FLATPAK_USER, dryRun);
+      await uninstallUser(rootDir, detected.DETECTED_FLATPAK_USER, dryRun);
       break;
     case "all":
     case "":
-      uninstallUser(detected.DETECTED_FLATPAK_USER, dryRun);
-      uninstallSystem(detected.DETECTED_FLATPAK_SYSTEM, dryRun);
+      await uninstallUser(rootDir, detected.DETECTED_FLATPAK_USER, dryRun);
+      await uninstallSystem(rootDir, detected.DETECTED_FLATPAK_SYSTEM, dryRun);
       break;
     default:
       throw new Error(`Invalid CANVA_FLATPAK_SCOPE: ${scope} (expected: user, system, all)`);
@@ -46,17 +66,31 @@ export function runFlatpakUninstall(argv: string[]): void {
   info(`Detected installs: native(system=${after.DETECTED_NATIVE_SYSTEM}, user=${after.DETECTED_NATIVE_USER}), flatpak(system=${after.DETECTED_FLATPAK_SYSTEM}, user=${after.DETECTED_FLATPAK_USER}), appimage_artifacts=${after.DETECTED_APPIMAGE_ARTIFACTS}`);
 }
 
-function uninstallSystem(installed: boolean, dryRun: boolean): void {
+async function uninstallSystem(rootDir: string, installed: boolean, dryRun: boolean): Promise<void> {
   if (!installed) {
     info("No Flatpak system install detected");
     return;
   }
-  const status = c420uiSudoRun("flatpak", ["uninstall", "--system", "-y", APP_ID], { dryRun });
-  if (status !== 0) warn("Flatpak system uninstall failed");
+  if (dryRun) {
+    info("[dry-run] sudo flatpak uninstall --system -y io.github.coletivo420.canva-linux");
+    ok("Flatpak system uninstall complete");
+    return;
+  }
+  const result = await runC420UIRustProcess({
+    rootDir,
+    command: "sudo",
+    args: ["flatpak", "uninstall", "--system", "-y", APP_ID],
+    cwd: rootDir,
+    env: process.env,
+    label: "flatpak-system-uninstall",
+    emitLog,
+    emitProgress: () => {},
+  });
+  if (result.code !== 0) warn("Flatpak system uninstall failed");
   else ok("Flatpak system uninstall complete");
 }
 
-function uninstallUser(installed: boolean, dryRun: boolean): void {
+async function uninstallUser(rootDir: string, installed: boolean, dryRun: boolean): Promise<void> {
   if (!installed) {
     info("No Flatpak user install detected");
     return;
@@ -66,7 +100,16 @@ function uninstallUser(installed: boolean, dryRun: boolean): void {
     ok("Flatpak user uninstall complete");
     return;
   }
-  const result = spawnSync("flatpak", ["uninstall", "--user", "-y", APP_ID], { stdio: "ignore" });
-  if ((result.status ?? 1) !== 0) warn("Flatpak user uninstall failed");
+  const result = await runC420UIRustProcess({
+    rootDir,
+    command: "flatpak",
+    args: ["uninstall", "--user", "-y", APP_ID],
+    cwd: rootDir,
+    env: process.env,
+    label: "flatpak-user-uninstall",
+    emitLog,
+    emitProgress: () => {},
+  });
+  if (result.code !== 0) warn("Flatpak user uninstall failed");
   else ok("Flatpak user uninstall complete");
 }

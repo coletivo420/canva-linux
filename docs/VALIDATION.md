@@ -98,6 +98,8 @@ dependencies directly.
 Dev12 also routes generic c420ui host process execution through
 `c420ui-host run-process --json-lines`. TypeScript remains responsible for UI,
 workflow policy, dependency policy and dependent-project boundaries.
+Legacy synchronous host runners (`spawnSync`) and the `host/command-runner.ts`
+abstraction are removed in favor of the async Rust-based runners.
 
 Maintenance validation:
 
@@ -108,6 +110,8 @@ npm run maintenance:fix-permissions -- --dry-run
 
 Maintenance targets must come from dependent-project config. c420ui validates
 and orchestrates those targets; `c420ui-host` performs generic filesystem and
+sudo operations. Validation includes accurate reporting of missing, planned,
+removed and updated statuses.
 sudo operations.
 
 - TypeScript wrapper tests
