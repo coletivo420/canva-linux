@@ -100,3 +100,12 @@ test("contract does not execute c420ui-tui", () => {
   assert.equal(source.includes("runC420UIRustHost"), false);
   assert.equal(source.includes("c420ui-tui"), false);
 });
+
+test("runner uses the shared Rust TUI render contract", () => {
+  const source = fs.readFileSync(
+    path.join(process.cwd(), "build-resources/c420ui/src/rust-tui-runner.ts"),
+    "utf8",
+  );
+
+  assert.equal(source.includes("createC420UITuiRenderInput"), true);
+});

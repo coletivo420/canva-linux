@@ -205,60 +205,15 @@ test("c420ui bootstrap entrypoints are syntactically valid JavaScript", () => {
   }
 });
 
-test("run-c420ui.mjs does not interleave summary code into blessed Program", () => {
+test("run-c420ui.mjs routes terminal runtime through the Rust TUI runner", () => {
   const bundle = readRunBundle();
-  if (!bundle.includes("var require_program = __commonJS")) {
-    const summaryMarker = "// build-resources/c420ui/src/terminal/detected-installations-summary.ts";
-    const summaryStart = bundle.indexOf(summaryMarker);
-    assert.ok(summaryStart >= 0, `missing bundle marker ${summaryMarker}`);
-    assert.doesNotMatch(bundle.slice(0, summaryStart), /function artifactVersion/);
-    return;
-  }
 
-  const programBlock = bundleBlock(
-    bundle,
-    "var require_program = __commonJS",
-    "var require_tput =",
-    "var require_tng =",
-  );
-
-  assert.doesNotMatch(programBlock, /function artifactVersion/);
-  assert.doesNotMatch(programBlock, /scripts\/c420ui-adapter\/detection\/artifact-fragments/);
-});
-
-test("run-c420ui.mjs does not interleave detected-installations summary into inputDialog", () => {
-  const bundle = readRunBundle();
-  const inputDialogBlock = bundleBlock(
-    bundle,
-    "function inputDialog(",
-    "// build-resources/c420ui/src/terminal/detected-installations-summary.ts",
-  );
-
-  assert.doesNotMatch(inputDialogBlock, /function artifactVersion/);
-  assert.doesNotMatch(inputDialogBlock, /formatDetectedInstallationsSummary/);
-});
-
-test("run-c420ui.mjs does not interleave validators into interactive action runner", () => {
-  const bundle = readRunBundle();
-  const runnerBlock = bundleBlock(
-    bundle,
-    "function createInteractiveActionRunner(options)",
-    "// build-resources/c420ui/src/host-dependencies.ts",
-  );
-
-  assert.doesNotMatch(runnerBlock, /function assertOptionalBoolean/);
-  assert.doesNotMatch(runnerBlock, /function assertOptionalString/);
-});
-
-test("run-c420ui.mjs does not interleave terminal app loader into createApp appendLogText", () => {
-  const bundle = readRunBundle();
-  const actionRunnerOptionsBlock = bundleBlock(
-    bundle,
-    "const actionRunner = createInteractiveActionRunner({",
-    "let progressState",
-  );
-
-  assert.doesNotMatch(actionRunnerOptionsBlock, /function loadC420UITerminalApp/);
+  assert.match(bundle, /runC420UIRustTuiApp/);
+  assert.match(bundle, /c420ui-tui/);
+  assert.doesNotMatch(bundle, /function inputDialog\(/);
+  assert.doesNotMatch(bundle, /function createInteractiveActionRunner\(options\)/);
+  assert.doesNotMatch(bundle, /const actionRunner = createInteractiveActionRunner\(\{/);
+  assert.doesNotMatch(bundle, /var require_program = __commonJS/);
 });
 
 test("c420ui bootstrap entrypoints match the build recipe", () => {

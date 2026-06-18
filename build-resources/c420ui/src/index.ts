@@ -15,6 +15,7 @@ export * from "./rust-maintenance.js";
 export * from "./rust-preflight.js";
 export * from "./rust-process-runner.js";
 export * from "./rust-tui-contracts.js";
+export * from "./rust-tui-runner.js";
 export * from "./startup-task.js";
 export type * from "./actions.js";
 export type * from "./artifacts.js";

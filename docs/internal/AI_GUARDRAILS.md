@@ -69,10 +69,11 @@ and process work moves to Rust. Phase 3-5 migrate `c420ui-tui` directly after
 final contracts are defined. There is no experimental terminal backend and no
 long-lived optional TypeScript/Rust toggle.
 
-Dev12 Phase 3 introduces `c420ui-tui` as the final Rust terminal UI target. The
-initial binary may expose JSON smoke contracts only. Do not wire it as a runtime
-backend yet, do not add a terminal backend environment switch, and do not
-migrate the TypeScript Action Engine in the scaffold commit.
+Dev12 Phase 4 routes `runC420UITerminalApp()` through `c420ui-tui run
+--json-lines` as the official terminal runtime. Do not add a terminal backend
+environment switch and do not migrate the TypeScript Action Engine, workflow
+registry, dependent-project adapter, Electron runtime, toolbar, tabs or
+CLeyedropper into Rust.
 
 Rust may be introduced under:
 
@@ -117,10 +118,10 @@ projects declare dependencies in their own config, and c420ui resolves them
 generically.
 
 Dev12 c420ui host process execution goes through `c420ui-host run-process
---json-lines`. Do not reintroduce `child_process.spawn` or `spawnSync` as
-maintained c420ui generic process execution. TypeScript remains responsible for
-the terminal UI during Phase 1-2, plus workflow policy, dependency policy and
-dependent-project boundaries.
+--json-lines`. Do not reintroduce `spawnSync` as maintained c420ui generic
+process execution. TypeScript remains responsible for workflow policy,
+dependency policy, action execution and dependent-project boundaries; Rust owns
+terminal rendering and interaction through `c420ui-tui`.
 
 Maintenance targets belong to dependent-project config. Do not hardcode cleanup
 targets in c420ui TypeScript, do not reintroduce `fs.rmSync` maintenance

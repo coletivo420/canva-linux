@@ -21,6 +21,36 @@ fn run_tui_json(command: &str, input: &str) -> std::process::Output {
     child.wait_with_output().expect("failed to read output")
 }
 
+fn run_tui_json_lines(input: &str) -> std::process::Output {
+    let bin = env!("CARGO_BIN_EXE_c420ui-tui");
+    let mut child = Command::new(bin)
+        .arg("run")
+        .arg("--json-lines")
+        .arg("--headless-test")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("failed to spawn tui binary");
+
+    {
+        let stdin = child.stdin.as_mut().expect("failed to open stdin");
+        stdin
+            .write_all(input.as_bytes())
+            .expect("failed to write stdin");
+    }
+
+    child.wait_with_output().expect("failed to read output")
+}
+
+fn json_lines(output: &std::process::Output) -> Vec<serde_json::Value> {
+    let stdout = String::from_utf8(output.stdout.clone()).unwrap();
+    stdout
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .map(|line| serde_json::from_str(line).expect("stdout line is not valid JSON"))
+        .collect()
+}
+
 fn render_input(actions: &str, hash: &str) -> String {
     format!(
         r#"{{
@@ -121,4 +151,49 @@ fn tui_render_uses_generic_project_identity() {
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("Example"));
+}
+
+#[test]
+fn tui_run_json_lines_emits_ready_action_and_quit() {
+    let input = format!(
+        "{}\n",
+        serde_json::json!({
+            "event": "init",
+            "state": serde_json::from_str::<serde_json::Value>(&render_input(
+                r#"[{ "id": "install-native", "label": "Install native", "group": "install" }]"#,
+                "",
+            ))
+            .unwrap()
+        })
+    );
+    let output = run_tui_json_lines(&input);
+    assert!(output.status.success());
+    let events = json_lines(&output);
+    assert_eq!(events[0]["event"], "ready");
+    assert_eq!(events[1]["event"], "action-selected");
+    assert_eq!(events[1]["actionId"], "install-native");
+    assert_eq!(events[2]["event"], "quit");
+}
+
+#[test]
+fn tui_run_json_lines_rejects_invalid_jsonl() {
+    let output = run_tui_json_lines("{invalid\n");
+    assert!(!output.status.success());
+    assert_eq!(output.status.code(), Some(2));
+}
+
+#[test]
+fn tui_run_json_lines_does_not_mention_dependent_project() {
+    let output = run_tui_json_lines(&format!(
+        "{}\n",
+        serde_json::json!({
+            "event": "init",
+            "state": serde_json::from_str::<serde_json::Value>(&render_input("[]", "")).unwrap()
+        })
+    ));
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    let forbidden = ["Canva", "Linux"].join(" ");
+    assert!(!stdout.contains(&forbidden));
+    assert!(!stderr.contains(&forbidden));
 }

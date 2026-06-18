@@ -1052,6 +1052,12 @@ function checkTerminalUiContract(failures: string[]): void {
   if (!index.includes("runC420UITerminalApp")) {
     failures.push("build-resources/c420ui/src/terminal/index.ts must export runC420UITerminalApp");
   }
+  if (!runtime.includes("runC420UIRustTuiApp")) {
+    failures.push("build-resources/c420ui/src/terminal/runtime.ts must call runC420UIRustTuiApp");
+  }
+  if (runtime.includes("createApp") || runtime.includes("blessed-widgets")) {
+    failures.push("build-resources/c420ui/src/terminal/runtime.ts must not construct the legacy blessed UI");
+  }
   if (!help.includes("formatC420UITerminalHelp") || !index.includes("formatC420UITerminalHelp")) {
     failures.push("build-resources/c420ui/src/terminal/help.ts must provide exported help formatting");
   }
@@ -1059,9 +1065,9 @@ function checkTerminalUiContract(failures: string[]): void {
     failures.push("build-resources/c420ui/src/terminal/settings.ts must not contain rootLaunchGuardMessage");
   }
   const guardIndex = runtime.indexOf("enforceC420UIRootLaunchGuard");
-  const createIndex = runtime.indexOf("create(options)");
-  if (guardIndex < 0 || createIndex < 0 || guardIndex > createIndex) {
-    failures.push("build-resources/c420ui/src/terminal/runtime.ts must enforce root guard before createApp");
+  const rustRunIndex = runtime.indexOf("runRustTuiApp");
+  if (guardIndex < 0 || rustRunIndex < 0 || guardIndex > rustRunIndex) {
+    failures.push("build-resources/c420ui/src/terminal/runtime.ts must enforce root guard before c420ui-tui startup");
   }
 }
 
@@ -1664,8 +1670,12 @@ function checkRustFilesystemOperationsContract(failures: string[]): void {
 function checkRustTuiContract(failures: string[]): void {
   const rootDir = process.cwd();
   const rustTuiPath = "build-resources/c420ui/src/rust-tui-contracts.ts";
+  const rustTuiRunnerPath = "build-resources/c420ui/src/rust-tui-runner.ts";
   const cargoPath = "build-resources/c420ui-rs/Cargo.toml";
   const terminalPath = "build-resources/c420ui/src/terminal/index.ts";
+  const runtimePath = "build-resources/c420ui/src/terminal/runtime.ts";
+  const rustTuiBinPath = "build-resources/c420ui-rs/src/bin/c420ui-tui.rs";
+  const rustTuiRuntimePath = "build-resources/c420ui-rs/src/tui/runtime.rs";
   const roadmapPath = "docs/dev/DEV12_RUST_C420UI_MIGRATION.md";
   const validationPath = "docs/VALIDATION.md";
   const guardrailsPath = "docs/internal/AI_GUARDRAILS.md";
@@ -1675,9 +1685,17 @@ function checkRustTuiContract(failures: string[]): void {
     failures.push(`${rustTuiPath} must exist before c420ui-tui migration`);
     return;
   }
+  if (!fs.existsSync(path.join(rootDir, rustTuiRunnerPath))) {
+    failures.push(`${rustTuiRunnerPath} must exist once c420ui-tui is the runtime path`);
+    return;
+  }
 
   const rustTui = fs.readFileSync(path.join(rootDir, rustTuiPath), "utf8");
+  const rustTuiRunner = fs.readFileSync(path.join(rootDir, rustTuiRunnerPath), "utf8");
   const cargo = fs.readFileSync(path.join(rootDir, cargoPath), "utf8");
+  const runtime = fs.readFileSync(path.join(rootDir, runtimePath), "utf8");
+  const rustTuiBin = fs.readFileSync(path.join(rootDir, rustTuiBinPath), "utf8");
+  const rustTuiRuntime = fs.readFileSync(path.join(rootDir, rustTuiRuntimePath), "utf8");
   const roadmap = fs.readFileSync(path.join(rootDir, roadmapPath), "utf8");
   const validation = fs.readFileSync(path.join(rootDir, validationPath), "utf8");
   const guardrails = fs.readFileSync(path.join(rootDir, guardrailsPath), "utf8");
@@ -1691,6 +1709,8 @@ function checkRustTuiContract(failures: string[]): void {
   }
   for (const [label, source] of [
     [rustTuiPath, rustTui],
+    [rustTuiRunnerPath, rustTuiRunner],
+    [runtimePath, runtime],
     [packagePath, packageJson],
     [roadmapPath, roadmap],
     [validationPath, validation],
@@ -1701,7 +1721,22 @@ function checkRustTuiContract(failures: string[]): void {
     }
   }
   if (rustTui.includes("runC420UIRustHost") || rustTui.includes("c420ui-tui")) {
-    failures.push(`${rustTuiPath}: contract bridge must not execute c420ui-tui yet`);
+    failures.push(`${rustTuiPath}: contract bridge must not execute c420ui-tui directly`);
+  }
+  if (!runtime.includes("runC420UIRustTuiApp")) {
+    failures.push(`${runtimePath}: runC420UITerminalApp must route through c420ui-tui`);
+  }
+  if (!rustTuiRunner.includes('"run"') || !rustTuiRunner.includes('"--json-lines"') || !rustTuiRunner.includes("c420ui-tui")) {
+    failures.push(`${rustTuiRunnerPath}: must start c420ui-tui run --json-lines`);
+  }
+  if (!rustTuiRunner.includes("createC420UIActionEngine")) {
+    failures.push(`${rustTuiRunnerPath}: TypeScript Action Engine must remain the execution owner`);
+  }
+  if (!rustTuiRuntime.includes("ActionSelected") || !rustTuiRuntime.includes("action_id")) {
+    failures.push(`${rustTuiRuntimePath}: c420ui-tui must emit action-selected events instead of executing actions`);
+  }
+  if (rustTuiRuntime.includes("runAction") || rustTuiBin.includes("runAction")) {
+    failures.push("c420ui-tui must not execute project actions directly");
   }
   for (const [label, source] of [
     [roadmapPath, roadmap],

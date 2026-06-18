@@ -1,4 +1,4 @@
-import type { C420UIActionDescriptor } from "./actions.js";
+import type { c420uiAction } from "./actions.js";
 import type { C420UIConfig } from "./types.js";
 
 export type C420UITuiRenderInput = {
@@ -35,7 +35,7 @@ export type C420UITuiRenderInput = {
 
 export type C420UITuiRenderInputOptions = {
   config: C420UIConfig;
-  actions: readonly C420UIActionDescriptor[];
+  actions: readonly c420uiAction[];
   logs?: C420UITuiRenderInput["logs"];
   progress?: C420UITuiRenderInput["progress"];
 };

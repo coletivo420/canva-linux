@@ -70,10 +70,12 @@ operational filesystem/process work moves to Rust; Phase 3-5 define and migrate
 `c420ui-tui` directly. There is no experimental backend phase and no optional
 TypeScript/Rust terminal toggle.
 
-Dev12 now enters Phase 3: final Rust TUI contracts. The `c420ui-tui` binary is
-introduced as the direct migration target for the terminal UI. It exposes
-`--version`, `doctor --json`, and `render --json` smoke contracts, but the
-TypeScript terminal UI remains wired until the direct replacement phase.
+Dev12 now starts Phase 4 of the direct TUI migration. `runC420UITerminalApp`
+routes through `c420ui-tui run --json-lines` as the official terminal runtime.
+There is no experimental backend switch and no TypeScript/Rust optional toggle.
+TypeScript remains the action/workflow/controller layer while Rust owns terminal
+rendering, interaction, action selection, visual logs/progress and the root
+prompt. The legacy TypeScript TUI remains only until Phase 5 removal.
 
 Canva Linux remains ESM/TypeScript for:
 
@@ -95,6 +97,7 @@ Rust validation starts with:
 - `cargo test --manifest-path build-resources/c420ui-rs/Cargo.toml`
 - `npm run build:c420ui-host`
 - `npm run build:c420ui-tui`
+- `npm run build:c420ui-terminal`
 - `npm run check:c420ui-tui`
 - `npm run check:c420ui-rs-boundary`
 - `npm run check:c420ui-rs`

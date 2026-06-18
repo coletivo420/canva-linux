@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 3 in progress.
+Phase 4 in progress.
 
 ## Goal
 
@@ -92,7 +92,9 @@ terminal UI remains wired until direct replacement.
 Move the c420ui terminal UI directly to Rust under the c420ui boundary.
 
 The TypeScript side keeps project adapters, workflow declarations and Canva
-Linux-specific policy. Rust owns the terminal UI implementation.
+Linux-specific policy. Rust owns the terminal rendering and interaction.
+`runC420UITerminalApp()` now routes through `c420ui-tui run --json-lines` as
+the official terminal runtime.
 
 ### Phase 5 - Remove TypeScript TUI and Close Dev12
 
@@ -105,9 +107,12 @@ are cleanly split from dependent project policy.
 ```text
 build-resources/c420ui-rs/
   Cargo.toml
-  src/main.rs
+  src/bin/c420ui-host.rs
+  src/bin/c420ui-tui.rs
+  src/lib.rs
   src/commands/
   src/host/
+  src/tui/
   tests/
 ```
 
@@ -127,17 +132,22 @@ c420ui-host artifact-file-ops --json
 c420ui-tui --version
 c420ui-tui doctor --json
 c420ui-tui render --json
+c420ui-tui run --json-lines
 ```
 
-## Phase 3 TUI Contract
+## Phase 4 TUI Runtime Contract
 
-Dev12 now enters Phase 3: final Rust TUI contracts. The `c420ui-tui` binary is
-introduced as the direct migration target for the terminal UI. There is no
-experimental backend switch and no TypeScript/Rust optional toggle.
+Dev12 now starts the direct TUI migration. `runC420UITerminalApp()` routes
+through `c420ui-tui` as the official terminal runtime. There is no experimental
+backend switch and no TypeScript/Rust optional toggle.
 
 The TypeScript Action Engine remains responsible for action resolution,
-execution, root-provider interaction and progress/log events in this phase.
-`c420ui-tui` only defines the render/input contract and a smoke textual render.
+execution, root-provider interaction and progress/log events. Rust owns terminal
+rendering, navigation, action selection, progress display, log display and the
+visual root prompt. Rust emits `action-selected`; TypeScript executes the action
+and sends logs/progress/action lifecycle updates back over JSON-lines.
+
+The legacy TypeScript TUI remains only until Phase 5 removal.
 
 ## Phase 2 Filesystem Contract
 
@@ -181,4 +191,4 @@ Do not migrate these Canva Linux runtime areas in Dev12:
 - Canva Linux adapter policy
 - Canva Linux packaging policy
 
-Do not replace the TypeScript terminal UI before Phase 4.
+Do not remove the legacy TypeScript terminal UI before Phase 5.

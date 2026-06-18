@@ -115,6 +115,12 @@ test("toProgressState is not interleaved with action event handling", () => {
   const start = bundle.indexOf("function toProgressState");
   const end = bundle.indexOf("function createInteractiveActionRunner", start);
 
+  if (start < 0 || end < 0) {
+    assert.match(bundle, /runC420UIRustTuiApp/);
+    assert.doesNotMatch(bundle, /function createInteractiveActionRunner/);
+    return;
+  }
+
   assert.ok(start >= 0);
   assert.ok(end > start);
 
@@ -133,6 +139,12 @@ test("run-c420ui.mjs does not interleave host validators into interactive runner
     "// build-resources/c420ui/src/host-dependencies.ts",
     runnerStart,
   );
+
+  if (runnerStart < 0 || runnerEnd < 0) {
+    assert.match(bundle, /runC420UIRustTuiApp/);
+    assert.doesNotMatch(bundle, /function createInteractiveActionRunner/);
+    return;
+  }
 
   assert.ok(runnerStart >= 0);
   assert.ok(runnerEnd > runnerStart);

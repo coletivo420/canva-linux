@@ -28,6 +28,11 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Dev12 now enters Phase 3 with a `c420ui-tui` Rust binary scaffold, JSON render
   contracts, smoke tests, and a TypeScript contract bridge. The TypeScript TUI
   remains in place until direct replacement; no optional backend switch exists.
+- Dev12 now starts Phase 4 of the direct TUI migration. `runC420UITerminalApp`
+  routes through `c420ui-tui run --json-lines` as the official terminal runtime;
+  TypeScript remains the action/workflow/controller layer while Rust owns
+  terminal rendering, interaction, action selection, visual logs/progress and
+  the root prompt. There is no optional TypeScript/Rust backend switch.
 - Native install filesystem writes, icon installation, `linux-unpacked`
   normalization, AppImage cleanup/find and checksum sidecar writes now route
   through Rust host commands.

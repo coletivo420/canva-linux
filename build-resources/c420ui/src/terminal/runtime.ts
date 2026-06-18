@@ -1,14 +1,15 @@
-import { createApp as defaultCreateApp, type C420UIAppOptions } from "./app.js";
+import {
+  runC420UIRustTuiApp,
+  type C420UIRustTuiRunnerOptions,
+} from "../rust-tui-runner.js";
+import type { C420UIAppOptions } from "./app.js";
 import { enforceC420UIRootLaunchGuard } from "./root-guard.js";
 
 export type c420uiTerminalRuntimeOptions = {
-  create?: typeof defaultCreateApp;
   getuid?: () => number;
   writeError?: (message: string) => void;
   exit?: (code: number) => never;
-  onUncaughtException?: (
-    listener: (error: Error) => void,
-  ) => NodeJS.Process;
+  runRustTuiApp?: (options: C420UIRustTuiRunnerOptions) => void;
 };
 
 export function runC420UITerminalApp(
@@ -25,18 +26,10 @@ export function runC420UITerminalApp(
     exit,
   });
 
-  const create = runtimeOptions.create ?? defaultCreateApp;
-  const screen = create(options);
-  const onUncaughtException =
-    runtimeOptions.onUncaughtException ??
-    ((listener: (error: Error) => void) =>
-      process.on("uncaughtException", listener));
-
-  onUncaughtException((err) => {
-    try {
-      screen.destroy();
-    } catch {}
-    writeError(err instanceof Error ? err.stack || err.message : String(err));
-    exit(1);
+  const runRustTuiApp = runtimeOptions.runRustTuiApp ?? runC420UIRustTuiApp;
+  return runRustTuiApp({
+    ...options,
+    writeError,
+    exit,
   });
 }

@@ -1,6 +1,6 @@
 use c420ui_rs::exit_codes;
 use c420ui_rs::tui::contracts::TuiRenderInput;
-use c420ui_rs::tui::render_smoke;
+use c420ui_rs::tui::{render_smoke, runtime};
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -26,8 +26,18 @@ fn print_usage() {
     eprintln!("Commands:");
     eprintln!("  doctor --json");
     eprintln!("  render --json");
+    eprintln!("  run --json-lines");
     eprintln!("Options:");
     eprintln!("  --version");
+}
+
+fn require_json_lines(args: &[String], command: &str) -> bool {
+    if args.iter().any(|arg| arg == "--json-lines") {
+        true
+    } else {
+        eprintln!("Error: {} command requires --json-lines", command);
+        false
+    }
 }
 
 fn require_json(args: &[String], command: &str) -> bool {
@@ -94,6 +104,12 @@ fn main() {
                 std::process::exit(exit_codes::INVALID_USAGE);
             }
             render()
+        }
+        "run" => {
+            if !require_json_lines(&args, "run") {
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+            runtime::run_json_lines(args.iter().any(|arg| arg == "--headless-test"))
         }
         _ => {
             eprintln!("Error: unknown command '{}'", command);

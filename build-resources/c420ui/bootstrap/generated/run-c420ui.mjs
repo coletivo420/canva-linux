@@ -138,382 +138,8 @@ var tui = {
   textbox: blessed.textbox
 };
 
-// build-resources/c420ui/src/terminal/modal.ts
-function createModalShell(screen, title, dangerous = false) {
-  const overlay = tui.box({
-    parent: screen,
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    style: {
-      bg: c420uiTheme.colors.background,
-      transparent: true
-    }
-  });
-  const modal = tui.box({
-    parent: overlay,
-    top: "center",
-    left: "center",
-    width: "70%",
-    height: 11,
-    border: "line",
-    tags: true,
-    label: dangerous ? `{${c420uiTheme.colors.error}-fg}${title}{/${c420uiTheme.colors.error}-fg}` : `{${c420uiTheme.colors.lightBlue}-fg}${title}{/${c420uiTheme.colors.lightBlue}-fg}`,
-    style: {
-      fg: c420uiTheme.modal.text,
-      bg: c420uiTheme.modal.background,
-      border: {
-        fg: dangerous ? c420uiTheme.modal.dangerousBorder : c420uiTheme.modal.normalBorder
-      }
-    }
-  });
-  return { overlay, modal };
-}
-function confirmDialog(screen, options) {
-  return new Promise((resolve) => {
-    const previousFocus = screen.focused;
-    const { overlay, modal } = createModalShell(
-      screen,
-      options.title,
-      options.dangerous
-    );
-    const message = tui.box({
-      parent: modal,
-      top: 1,
-      left: 2,
-      right: 2,
-      height: 5,
-      tags: true,
-      content: options.message
-    });
-    const footer = tui.box({
-      parent: modal,
-      bottom: 1,
-      left: 2,
-      right: 2,
-      height: 1,
-      tags: true,
-      content: [
-        `{${c420uiTheme.colors.lightBlue}-fg}[y/Enter]{/${c420uiTheme.colors.lightBlue}-fg} ${options.confirmLabel ?? "Confirm"}`,
-        `    `,
-        `{${c420uiTheme.colors.lightBlue}-fg}[Esc/n]{/${c420uiTheme.colors.lightBlue}-fg} ${options.cancelLabel ?? "Cancel"}`
-      ].join("")
-    });
-    const close = (confirmed) => {
-      message.destroy();
-      footer.destroy();
-      modal.destroy();
-      overlay.destroy();
-      if (previousFocus && typeof previousFocus.focus === "function") {
-        previousFocus.focus();
-      }
-      screen.render();
-      resolve(confirmed);
-    };
-    overlay.key(["enter", "y"], () => {
-      close(true);
-    });
-    overlay.key(["escape", "n"], () => {
-      close(false);
-    });
-    overlay.on("click", () => {
-      overlay.focus();
-    });
-    modal.on("click", () => {
-      overlay.focus();
-    });
-    overlay.focus();
-    screen.render();
-  });
-}
-async function messageDialog(screen, title, message) {
-  await confirmDialog(screen, {
-    title,
-    message,
-    confirmLabel: "OK",
-    cancelLabel: "Close"
-  });
-}
-function inputDialog(screen, title, prompt, timeoutMs = 3e4) {
-  return new Promise((resolve) => {
-    const previousFocus = screen.focused;
-    const { overlay, modal } = createModalShell(screen, title, false);
-    const label = tui.box({
-      parent: modal,
-      top: 1,
-      left: 2,
-      right: 2,
-      height: 2,
-      content: prompt
-    });
-    const input = tui.textbox({
-      parent: modal,
-      top: 4,
-      left: 2,
-      right: 2,
-      height: 3,
-      border: "line",
-      inputOnFocus: true,
-      censor: true
-    });
-    const footer = tui.box({
-      parent: modal,
-      bottom: 1,
-      left: 2,
-      right: 2,
-      height: 1,
-      tags: true,
-      content: [
-        `{${c420uiTheme.colors.lightBlue}-fg}[Enter]{/${c420uiTheme.colors.lightBlue}-fg} Submit`,
-        `  `,
-        `{${c420uiTheme.colors.lightBlue}-fg}[Esc]{/${c420uiTheme.colors.lightBlue}-fg} Cancel`
-      ].join("")
-    });
-    let timer = null;
-    let closed = false;
-    const close = (result) => {
-      if (closed) {
-        return;
-      }
-      closed = true;
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
-      label.destroy();
-      input.destroy();
-      footer.destroy();
-      modal.destroy();
-      overlay.destroy();
-      if (previousFocus && typeof previousFocus.focus === "function") {
-        previousFocus.focus();
-      }
-      screen.render();
-      resolve(result);
-    };
-    timer = setTimeout(() => {
-      close({
-        status: "timeout"
-      });
-    }, timeoutMs);
-    overlay.key(["escape"], () => {
-      close({
-        status: "canceled"
-      });
-    });
-    input.key(["enter"], () => {
-      input.submit();
-    });
-    input.on("cancel", () => {
-      setImmediate(() => {
-        close({
-          status: "canceled"
-        });
-      });
-    });
-    input.on("submit", (value) => {
-      close({
-        status: "submitted",
-        value: String(value ?? "")
-      });
-    });
-    overlay.focus();
-    input.focus();
-    input.readInput();
-    screen.render();
-  });
-}
-
-// build-resources/c420ui/src/terminal/detected-installations-summary.ts
-var GENERATED_ARTIFACT_KINDS = /* @__PURE__ */ new Set([
-  "appimage",
-  "flatpak",
-  "tarball",
-  "sha256sums",
-  "deb",
-  "rpm",
-  "aur"
-]);
-function detectedVersion(fullVersion, version) {
-  if (typeof fullVersion === "string" && fullVersion.trim()) {
-    return fullVersion;
-  }
-  return version;
-}
-function formatShortHash(hash, version) {
-  void version;
-  if (!hash) return "";
-  if (hash === "unknown") return " \xB7 unknown";
-  const parts = hash.split(":");
-  const algo = parts.length > 1 ? `${parts[0]}:` : "";
-  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
-  return ` \xB7 ${algo}${value.slice(0, 8)}`;
-}
-function artifactVersion(fragment) {
-  return fragment.fullVersion || fragment.version;
-}
-function formatDetectedStatus(colors2, detected, version, hash) {
-  if (!detected) {
-    return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
-  }
-  return typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "version unknown";
-}
-function formatArtifactLine(fragment, colors2) {
-  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment), fragment.hash)}`;
-}
-function isGeneratedArtifactFragment(fragment) {
-  if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
-  if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
-  return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
-}
-function versionSummaryItem(label, version, hash) {
-  return `${label} ${version ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "unknown"}`;
-}
-function formatDetectionPanelSummaries(s, colors2) {
-  if (!s) {
-    const loading = `{${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`;
-    return {
-      detectedInstallations: [
-        `  Native System: ${loading}`,
-        `  Native User: ${loading}`,
-        `  Flatpak System: ${loading}`,
-        `  Flatpak User: ${loading}`
-      ],
-      generatedArtifacts: [`  AppImage: ${loading}`],
-      linuxArtifacts: [`Electron/Node/npm loading...`]
-    };
-  }
-  const i = s.installations;
-  const linuxUnpacked = s.artifactFragments?.find(
-    (fragment) => fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked"
-  );
-  const generatedArtifacts = s.artifactFragments ? s.artifactFragments.filter(isGeneratedArtifactFragment).map((fragment) => formatArtifactLine(fragment, colors2)) : [
-    `  AppImage: ${formatDetectedStatus(
-      colors2,
-      Boolean(i.appImageArtifacts),
-      detectedVersion(i.appImageFullVersion, i.appImageVersion),
-      i.appImageHash
-    )}`
-  ];
-  return {
-    detectedInstallations: [
-      `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion), i.nativeSystemHash)}`,
-      `  Native User: ${formatDetectedStatus(colors2, Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion), i.nativeUserHash)}`,
-      `  Flatpak System: ${formatDetectedStatus(colors2, Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion), i.flatpakSystemHash)}`,
-      `  Flatpak User: ${formatDetectedStatus(colors2, Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion), i.flatpakUserHash)}`
-    ],
-    generatedArtifacts,
-    linuxArtifacts: [
-      [
-        versionSummaryItem("Electron", s.runtime?.electronVersion),
-        versionSummaryItem("Node", s.runtime?.nodeVersion),
-        versionSummaryItem("npm", s.runtime?.npmVersion),
-        versionSummaryItem(
-          "Linux unpacked",
-          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0,
-          linuxUnpacked?.hash
-        )
-      ].join(", ")
-    ]
-  };
-}
-
-// build-resources/c420ui/src/terminal/clipboard.ts
-import { spawnSync } from "node:child_process";
-function has(command) {
-  return spawnSync("bash", ["-c", `command -v ${command}`]).status === 0;
-}
-function runWithInput(command, args, input) {
-  const result = spawnSync(command, args, {
-    input,
-    encoding: "utf8"
-  });
-  return result.status === 0;
-}
-function copyTextToClipboard(text) {
-  if (!text.trim()) {
-    return {
-      ok: false,
-      message: "No logs to copy."
-    };
-  }
-  if (process.env.WAYLAND_DISPLAY && has("wl-copy") && runWithInput("wl-copy", [], text)) {
-    return {
-      ok: true,
-      message: "Logs copied to clipboard via wl-copy."
-    };
-  }
-  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("kde")) {
-    if (has("qdbus6") && runWithInput(
-      "bash",
-      [
-        "-c",
-        'input=$(cat); qdbus6 org.kde.klipper /klipper setClipboardContents "$input"'
-      ],
-      text
-    )) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via KDE Klipper (qdbus6)."
-      };
-    }
-    if (has("qdbus") && runWithInput(
-      "bash",
-      [
-        "-c",
-        'input=$(cat); qdbus org.kde.klipper /klipper setClipboardContents "$input"'
-      ],
-      text
-    )) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via KDE Klipper (qdbus)."
-      };
-    }
-  }
-  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("gnome")) {
-    if (has("gpaste-client") && runWithInput("gpaste-client", ["add"], text)) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via GPaste."
-      };
-    }
-    if (has("gpaste") && runWithInput("gpaste", ["add"], text)) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via GPaste."
-      };
-    }
-  }
-  if (has("xclip") && runWithInput("xclip", ["-selection", "clipboard"], text)) {
-    return {
-      ok: true,
-      message: "Logs copied to clipboard via xclip."
-    };
-  }
-  if (has("xsel") && runWithInput("xsel", ["--clipboard", "--input"], text)) {
-    return {
-      ok: true,
-      message: "Logs copied to clipboard via xsel."
-    };
-  }
-  return {
-    ok: false,
-    message: "No clipboard tool found. Install wl-clipboard, KDE qdbus support, GPaste, xclip or xsel."
-  };
-}
-
 // build-resources/c420ui/src/terminal/settings.ts
-import fs from "node:fs";
 import path from "node:path";
-var DEFAULT_TOOL_SETTINGS = {
-  tool: {
-    generalLogsEnabled: true,
-    terminalTextSelectionMode: false
-  },
-  runtime: {}
-};
 function configHome() {
   const xdgConfigHome = process.env.XDG_CONFIG_HOME?.trim();
   if (xdgConfigHome) {
@@ -524,51 +150,6 @@ function configHome() {
 function toolSettingsPath(stateDirectoryName) {
   return path.join(configHome(), stateDirectoryName, "tool-settings.json");
 }
-function isObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-function normalizeSettings(raw) {
-  const rawRoot = isObject(raw) ? raw : {};
-  const rawTool = isObject(rawRoot.tool) ? rawRoot.tool : {};
-  const runtime = isObject(rawRoot.runtime) ? rawRoot.runtime : {};
-  return {
-    tool: {
-      generalLogsEnabled: typeof rawTool.generalLogsEnabled === "boolean" ? rawTool.generalLogsEnabled : DEFAULT_TOOL_SETTINGS.tool.generalLogsEnabled,
-      terminalTextSelectionMode: typeof rawTool.terminalTextSelectionMode === "boolean" ? rawTool.terminalTextSelectionMode : DEFAULT_TOOL_SETTINGS.tool.terminalTextSelectionMode
-    },
-    runtime
-  };
-}
-function loadToolSettings(stateDirectoryName) {
-  const settingsPath = toolSettingsPath(stateDirectoryName);
-  if (!fs.existsSync(settingsPath)) {
-    try {
-      saveToolSettings(DEFAULT_TOOL_SETTINGS, stateDirectoryName);
-    } catch {
-    }
-    return structuredClone(DEFAULT_TOOL_SETTINGS);
-  }
-  try {
-    const rawContent = fs.readFileSync(settingsPath, "utf8");
-    return normalizeSettings(JSON.parse(rawContent));
-  } catch {
-    return structuredClone(DEFAULT_TOOL_SETTINGS);
-  }
-}
-function saveToolSettings(settings, stateDirectoryName) {
-  const settingsPath = toolSettingsPath(stateDirectoryName);
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-  fs.writeFileSync(
-    settingsPath,
-    `${JSON.stringify(normalizeSettings(settings), null, 2)}
-`,
-    "utf8"
-  );
-}
-
-// build-resources/c420ui/src/terminal/app.ts
-import fs2 from "node:fs";
-import path2 from "node:path";
 
 // build-resources/c420ui/src/scopes.ts
 var c420uiKnownActionScopes = ["user", "system", "auto"];
@@ -931,136 +512,6 @@ function createC420UIActionEngine(options) {
   };
 }
 
-// build-resources/c420ui/src/terminal/interactive-action-runner.ts
-function toProgressState(state) {
-  if (state === "idle" || state === "running" || state === "success" || state === "warning" || state === "failed" || state === "canceled") {
-    return state;
-  }
-  return "running";
-}
-function interactiveActionRequiresConfirmation(action) {
-  return requiresC420UIActionConfirmation(action);
-}
-function createInteractiveActionRunner(options) {
-  const state = {
-    running: false,
-    progressState: "idle"
-  };
-  let activeAbortController = null;
-  function applyEvent(event) {
-    if (event.type === "log") {
-      options.appendLogText(`${event.line}
-`, event.source);
-      return;
-    }
-    if (event.type === "progress") {
-      const nextState = toProgressState(event.state);
-      state.progressState = nextState;
-      options.setProgress(
-        nextState,
-        event.percent,
-        event.label ?? nextState
-      );
-      return;
-    }
-    if (event.type === "action:start") {
-      state.running = true;
-      state.progressState = "running";
-      options.setRunning(true);
-      options.setProgress("running", 5, event.message || "Starting");
-      return;
-    }
-    if (event.type === "action:planned") {
-      state.progressState = "warning";
-      options.appendLogText(
-        `[planned] ${event.message}
-`,
-        "system"
-      );
-      options.setProgress("warning", 100, "Planned action");
-      return;
-    }
-    if (event.type === "action:finish") {
-      const status = event.data?.status;
-      const exitCode = event.data?.exitCode;
-      const success = status === "success" || exitCode === c420uiExitCodes.success;
-      const canceled = status === "canceled";
-      state.running = false;
-      state.progressState = canceled ? "canceled" : success ? "success" : "failed";
-      options.setRunning(false);
-      options.setProgress(
-        state.progressState,
-        success ? 100 : 0,
-        canceled ? "Canceled" : success ? "Completed" : `exit code ${String(exitCode ?? "unknown")}`
-      );
-    }
-  }
-  const makeEngine = options.createActionEngine ?? createC420UIActionEngine;
-  const engine = makeEngine({
-    bridge: options.bridge,
-    rootDir: options.rootDir,
-    env: options.env,
-    rootProvider: options.rootProvider,
-    requestRootAccess: options.requestRootAccess,
-    emit: applyEvent
-  });
-  async function runAction(action, runOptions = {}) {
-    const dryRun = runOptions.dryRun === true;
-    const confirmed = runOptions.confirmed === true;
-    if (!dryRun && interactiveActionRequiresConfirmation(action) && !confirmed) {
-      const result = {
-        code: c420uiExitCodes.generalError,
-        status: "canceled",
-        message: "Action canceled before execution."
-      };
-      state.running = false;
-      state.progressState = "canceled";
-      options.setRunning(false);
-      options.setProgress("canceled", 0, "Canceled");
-      options.appendLogText("[info] Action canceled before execution.\n", "system");
-      state.lastResult = result;
-      return result;
-    }
-    const abortController = new AbortController();
-    activeAbortController = abortController;
-    try {
-      const result = await engine.runAction(action, {
-        dryRun,
-        yes: confirmed,
-        signal: abortController.signal
-      });
-      state.lastResult = result;
-      if (result.status === "failed" && result.message) {
-        options.appendLogText(`${result.message}
-`, "system");
-        state.progressState = "failed";
-        options.setRunning(false);
-        options.setProgress("failed", 0, result.message);
-      }
-      return result;
-    } finally {
-      if (activeAbortController === abortController) {
-        activeAbortController = null;
-      }
-    }
-  }
-  function cancel() {
-    if (!activeAbortController || activeAbortController.signal.aborted) {
-      return false;
-    }
-    activeAbortController.abort();
-    options.appendLogText("[info] Cancellation requested.\n", "system");
-    state.progressState = "canceled";
-    options.setProgress("canceled", 0, "Canceled");
-    return true;
-  }
-  return {
-    cancel,
-    runAction,
-    state
-  };
-}
-
 // build-resources/c420ui/src/host-dependencies.ts
 var c420uiKnownHostDependencyPurposes = [
   "terminal",
@@ -1195,1473 +646,10 @@ async function runC420UIStartupTasks(tasks, log) {
   }
 }
 
-// build-resources/c420ui/src/version-info.ts
-function shortSourceHash(hash) {
-  if (!hash || hash === "unknown") return "hash unknown";
-  if (hash.startsWith("sha256:")) {
-    const digest = hash.slice("sha256:".length);
-    return `sha256:${digest.slice(0, 8)}`;
-  }
-  return hash.slice(0, 12);
-}
-function formatC420UIVersionLabel(info) {
-  return `${info.packageName} ${info.packageVersion} \xB7 ${shortSourceHash(info.sourceHash)}`;
-}
-
 // build-resources/c420ui/src/terminal/app.ts
 var PANEL_VERTICAL_FRAME_ROWS = 2;
 var DETECTED_INSTALLATION_ROWS = 4;
 var DETECTED_INSTALLATIONS_MIN_HEIGHT = DETECTED_INSTALLATION_ROWS + PANEL_VERTICAL_FRAME_ROWS;
-var MAX_LOG_HISTORY_LINES = 5e3;
-var TOOL_LOG_PREFIX = "Tool |";
-var ACTION_LOG_PREFIX = "Action |";
-var FOCUS_ZONES = ["menu", "diagnostics", "content", "logs"];
-var HEADER_GAP = 0;
-var HEADER_BOX_HORIZONTAL_PADDING = 4;
-var c420uiHeaderMinWidth = 28;
-var PROJECT_HEADER_MIN_WIDTH = 40;
-function isPlannedAction(action) {
-  return action.kind === "planned" || Boolean(action.planned);
-}
-function longestLineLength(lines) {
-  return Math.max(0, ...lines.map((line) => line.length));
-}
-function formatShortHash2(hash, version) {
-  if (!version) return "";
-  if (!hash) return "";
-  if (hash === "unknown") return " \xB7 unknown";
-  const parts = hash.split(":");
-  const algo = parts.length > 1 ? `${parts[0]}:` : "";
-  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
-  return ` \xB7 ${algo}${value.slice(0, 8)}`;
-}
-function formatProjectVersionLine(projectConfig) {
-  return `Version: ${projectConfig.displayVersion}${projectConfig.status ? ` ${projectConfig.status}` : ""}${formatShortHash2(projectConfig.hash, projectConfig.displayVersion)} | Phase: ${projectConfig.phase ?? "unknown"}`;
-}
-function computeHeaderLayout(screenWidth, brandConfig, projectConfig) {
-  const c420uiHeaderHeight = brandConfig.logoLines.length + 3;
-  const projectHeaderHeight = 5;
-  const c420uiHeaderContentWidth = longestLineLength([
-    formatC420UIVersionLabel({
-      packageName: brandConfig.name,
-      packageVersion: brandConfig.version,
-      sourceHash: brandConfig.hash ?? null
-    }),
-    ...brandConfig.logoLines
-  ]);
-  const projectHeaderContentWidth = longestLineLength([
-    projectConfig.projectName,
-    projectConfig.projectSubtitle,
-    formatProjectVersionLine(projectConfig)
-  ]);
-  const c420uiMinWidth = Math.max(
-    c420uiHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
-    c420uiHeaderMinWidth
-  );
-  const projectMinWidth = Math.max(
-    projectHeaderContentWidth + HEADER_BOX_HORIZONTAL_PADDING,
-    PROJECT_HEADER_MIN_WIDTH
-  );
-  const normalizedScreenWidth = Math.max(1, screenWidth);
-  const canUseSideBySide = normalizedScreenWidth >= c420uiMinWidth + projectMinWidth;
-  if (!canUseSideBySide) {
-    return {
-      c420uiHeader: {
-        top: 0,
-        left: 0,
-        width: normalizedScreenWidth,
-        height: c420uiHeaderHeight
-      },
-      projectHeader: {
-        top: c420uiHeaderHeight,
-        left: 0,
-        width: normalizedScreenWidth,
-        height: projectHeaderHeight
-      },
-      workspaceTop: c420uiHeaderHeight + projectHeaderHeight + HEADER_GAP,
-      layoutMode: "stacked"
-    };
-  }
-  const c420uiHeaderWidth = Math.min(c420uiMinWidth, normalizedScreenWidth);
-  const projectHeaderWidth = normalizedScreenWidth - c420uiHeaderWidth;
-  return {
-    c420uiHeader: {
-      top: 0,
-      left: 0,
-      width: c420uiHeaderWidth,
-      height: c420uiHeaderHeight
-    },
-    projectHeader: {
-      top: 0,
-      left: c420uiHeaderWidth,
-      width: projectHeaderWidth,
-      height: projectHeaderHeight
-    },
-    workspaceTop: Math.max(c420uiHeaderHeight, projectHeaderHeight) + HEADER_GAP,
-    layoutMode: "side-by-side"
-  };
-}
-function createApp(options) {
-  const opts = options.config;
-  const { bridge, rootProvider } = options;
-  let toolSettings = loadToolSettings(opts.project.stateDirectoryName);
-  const settingsPath = toolSettingsPath(opts.project.stateDirectoryName);
-  let terminalTextSelectionModeActive = toolSettings.tool.terminalTextSelectionMode;
-  let tuiMouseEnabled = !terminalTextSelectionModeActive;
-  function footerContent() {
-    return [
-      terminalTextSelectionModeActive ? "{bold}Text selection mode enabled{/bold}" : "",
-      "{bold}Tab{/bold} Focus",
-      "{bold}Enter{/bold} Select",
-      "{bold}Space{/bold} Toggle",
-      "{bold}F5{/bold} Copy Logs",
-      "{bold}?{/bold} Help",
-      "{bold}q{/bold} Quit"
-    ].filter(Boolean).join(" | ");
-  }
-  const screen = tui.screen({
-    smartCSR: true,
-    title: opts.title,
-    fullUnicode: true
-  });
-  let headerLayout = computeHeaderLayout(
-    Number(screen.width) || process.stdout.columns || 80,
-    opts.brand,
-    opts.project
-  );
-  const c420uiHeader = tui.box({
-    top: headerLayout.c420uiHeader.top,
-    left: headerLayout.c420uiHeader.left,
-    width: headerLayout.c420uiHeader.width,
-    height: headerLayout.c420uiHeader.height,
-    border: "line",
-    tags: true,
-    content: [
-      `{bold}${formatC420UIVersionLabel({
-        packageName: opts.brand.name,
-        packageVersion: opts.brand.version,
-        sourceHash: opts.brand.hash ?? null
-      })}{/bold}`,
-      ...opts.brand.logoLines
-    ].join("\n"),
-    style: c420uiTheme.header
-  });
-  const projectHeader = tui.box({
-    top: headerLayout.projectHeader.top,
-    left: headerLayout.projectHeader.left,
-    width: headerLayout.projectHeader.width,
-    height: headerLayout.projectHeader.height,
-    border: "line",
-    tags: true,
-    content: [
-      `{bold}${opts.project.projectName}{/bold}`,
-      opts.project.projectSubtitle,
-      formatProjectVersionLine(opts.project)
-    ].join("\n"),
-    style: c420uiTheme.header
-  });
-  const menu = tui.list({
-    top: headerLayout.workspaceTop,
-    left: 0,
-    width: "32%",
-    height: 1,
-    keys: true,
-    mouse: tuiMouseEnabled,
-    border: "line",
-    tags: true,
-    label: "Main Menu",
-    style: c420uiTheme.menu
-  });
-  const diagnostics = tui.box({
-    top: headerLayout.workspaceTop,
-    left: 0,
-    width: "32%",
-    height: 1,
-    border: "line",
-    label: "Detected Installations",
-    tags: true,
-    scrollable: true,
-    alwaysScroll: true,
-    keys: true,
-    mouse: tuiMouseEnabled,
-    style: c420uiTheme.content
-  });
-  const generatedArtifacts = tui.box({
-    top: headerLayout.workspaceTop,
-    left: 0,
-    width: "32%",
-    height: 1,
-    border: "line",
-    label: "Generated Artifacts",
-    tags: true,
-    scrollable: true,
-    alwaysScroll: true,
-    keys: true,
-    mouse: tuiMouseEnabled,
-    style: c420uiTheme.content
-  });
-  const linuxArtifacts = tui.box({
-    top: headerLayout.workspaceTop,
-    left: 0,
-    width: "32%",
-    height: 1,
-    border: "line",
-    label: "Linux Artifacts",
-    tags: true,
-    scrollable: true,
-    alwaysScroll: true,
-    keys: true,
-    mouse: tuiMouseEnabled,
-    style: c420uiTheme.content
-  });
-  const content = tui.box({
-    top: headerLayout.workspaceTop,
-    left: "32%",
-    width: "68%",
-    height: 1,
-    border: "line",
-    label: "Overview",
-    tags: true,
-    scrollable: true,
-    alwaysScroll: true,
-    keys: true,
-    mouse: tuiMouseEnabled,
-    style: c420uiTheme.content
-  });
-  const logs = tui.log({
-    top: headerLayout.workspaceTop,
-    left: "32%",
-    width: "68%",
-    height: 1,
-    border: "line",
-    label: "Logs",
-    keys: true,
-    mouse: tuiMouseEnabled,
-    scrollable: true,
-    alwaysScroll: true,
-    scrollbar: {
-      ch: " ",
-      track: {
-        bg: c420uiTheme.colors.surfaceAlt
-      },
-      style: {
-        bg: c420uiTheme.colors.lightBlue
-      }
-    },
-    scrollback: MAX_LOG_HISTORY_LINES,
-    tags: true,
-    style: c420uiTheme.logs
-  });
-  const footer = tui.box({
-    bottom: 0,
-    height: 1,
-    width: "100%",
-    tags: true,
-    content: footerContent(),
-    style: c420uiTheme.footer
-  });
-  const progress = tui.box({
-    bottom: 1,
-    height: 1,
-    left: "32%",
-    width: "68%",
-    tags: true,
-    content: "",
-    style: {
-      fg: "white",
-      bg: "black"
-    }
-  });
-  screen.append(c420uiHeader);
-  screen.append(projectHeader);
-  screen.append(menu);
-  screen.append(diagnostics);
-  screen.append(generatedArtifacts);
-  screen.append(linuxArtifacts);
-  screen.append(content);
-  screen.append(logs);
-  screen.append(progress);
-  screen.append(footer);
-  function applyHeaderBoxLayout(widget, boxLayout) {
-    widget.top = boxLayout.top;
-    widget.left = boxLayout.left;
-    widget.width = boxLayout.width;
-    widget.height = boxLayout.height;
-  }
-  function applyLayout() {
-    const screenWidth = Math.max(
-      1,
-      Number(screen.width) || process.stdout.columns || 80
-    );
-    const screenHeight = Math.max(
-      1,
-      Number(screen.height) || process.stdout.rows || 24
-    );
-    headerLayout = computeHeaderLayout(screenWidth, opts.brand, opts.project);
-    applyHeaderBoxLayout(c420uiHeader, headerLayout.c420uiHeader);
-    applyHeaderBoxLayout(projectHeader, headerLayout.projectHeader);
-    const workspaceTop = headerLayout.workspaceTop;
-    const reservedFooterRows = 2;
-    const workspaceHeight = Math.max(
-      1,
-      screenHeight - workspaceTop - reservedFooterRows
-    );
-    const leftColumnWidth = Math.min(
-      Math.max(18, Math.floor(screenWidth * 0.32)),
-      Math.max(1, screenWidth - 1)
-    );
-    const rightColumnLeft = leftColumnWidth;
-    const rightColumnWidth = Math.max(1, screenWidth - rightColumnLeft);
-    const menuHeight = Math.max(3, Math.floor(workspaceHeight * 0.68));
-    const diagnosticsTop = workspaceTop + menuHeight;
-    const detectionPanelsHeight = Math.max(
-      DETECTED_INSTALLATIONS_MIN_HEIGHT + 6,
-      screenHeight - diagnosticsTop - reservedFooterRows
-    );
-    const detectedInstallationsHeight = Math.max(
-      DETECTED_INSTALLATIONS_MIN_HEIGHT,
-      Math.floor(detectionPanelsHeight * 0.34)
-    );
-    const generatedArtifactsHeight = Math.max(3, Math.floor(detectionPanelsHeight * 0.43));
-    const linuxArtifactsHeight = Math.max(
-      3,
-      detectionPanelsHeight - detectedInstallationsHeight - generatedArtifactsHeight
-    );
-    const generatedArtifactsTop = diagnosticsTop + detectedInstallationsHeight;
-    const linuxArtifactsTop = generatedArtifactsTop + generatedArtifactsHeight;
-    const contentHeight = Math.max(3, Math.floor(workspaceHeight * 0.36));
-    const logsTop = workspaceTop + contentHeight;
-    const logsHeight = Math.max(3, screenHeight - logsTop - reservedFooterRows);
-    menu.top = workspaceTop;
-    menu.left = 0;
-    menu.width = leftColumnWidth;
-    menu.height = menuHeight;
-    diagnostics.top = diagnosticsTop;
-    diagnostics.left = 0;
-    diagnostics.width = leftColumnWidth;
-    diagnostics.height = detectedInstallationsHeight;
-    generatedArtifacts.top = generatedArtifactsTop;
-    generatedArtifacts.left = 0;
-    generatedArtifacts.width = leftColumnWidth;
-    generatedArtifacts.height = generatedArtifactsHeight;
-    linuxArtifacts.top = linuxArtifactsTop;
-    linuxArtifacts.left = 0;
-    linuxArtifacts.width = leftColumnWidth;
-    linuxArtifacts.height = linuxArtifactsHeight;
-    content.top = workspaceTop;
-    content.left = rightColumnLeft;
-    content.width = rightColumnWidth;
-    content.height = contentHeight;
-    logs.top = logsTop;
-    logs.left = rightColumnLeft;
-    logs.width = rightColumnWidth;
-    logs.height = logsHeight;
-    progress.left = rightColumnLeft;
-    progress.width = rightColumnWidth;
-    footer.width = screenWidth;
-  }
-  applyLayout();
-  screen.on("resize", () => {
-    applyLayout();
-    screen.render();
-  });
-  function applyProgramMouseMode() {
-    const program = screen.program;
-    if (terminalTextSelectionModeActive) {
-      program?.disableMouse?.();
-      return;
-    }
-    program?.enableMouse?.();
-  }
-  function setWidgetMouseEnabled(widget, enabled) {
-    widget.options = { ...widget.options ?? {}, mouse: enabled };
-    widget.mouse = enabled;
-  }
-  function applyGlobalMouseMode() {
-    terminalTextSelectionModeActive = toolSettings.tool.terminalTextSelectionMode;
-    tuiMouseEnabled = !terminalTextSelectionModeActive;
-    applyProgramMouseMode();
-    for (const widget of [menu, diagnostics, generatedArtifacts, linuxArtifacts, content, logs]) {
-      setWidgetMouseEnabled(widget, tuiMouseEnabled);
-    }
-    footer.setContent(footerContent());
-  }
-  applyGlobalMouseMode();
-  const mainItems = [
-    { label: "Install", view: "install" },
-    { label: "Development", view: "development" },
-    { label: "Maintenance & Uninstall", view: "maintenance" },
-    { label: "Application Settings", view: "settings" },
-    { label: "Help", view: "help" }
-  ];
-  const settingsItems = [
-    {
-      kind: "section",
-      label: `${opts.project.projectName} Install and Development Tool`
-    },
-    {
-      kind: "toggle",
-      key: "generalLogsEnabled",
-      label: `Enable general logs for ${opts.project.projectName} Install and Development Tool`
-    },
-    {
-      kind: "toggle",
-      key: "terminalTextSelectionMode",
-      label: "Manual text selection mode"
-    },
-    {
-      kind: "section",
-      label: `${opts.project.projectName} final build`
-    },
-    {
-      kind: "note",
-      label: "Final build settings will be added in a later phase"
-    }
-  ];
-  let currentView = "main";
-  let focusZone = "menu";
-  let menuLabelText = "Main Menu";
-  const diagnosticsLabelText = "Detected Installations";
-  const generatedArtifactsLabelText = "Generated Artifacts";
-  const linuxArtifactsLabelText = "Linux Artifacts";
-  let contentLabelText = "Overview";
-  let logsLabelText = "Logs";
-  let currentActions = [];
-  let running = false;
-  let modalActive = false;
-  async function requestInteractiveRootAccess(request) {
-    if (!rootProvider?.validateRootAccessWithInput) {
-      return {
-        ok: false,
-        code: c420uiExitCodes.rootPolicyError,
-        message: "[error] Interactive root authentication is unavailable."
-      };
-    }
-    const maxAttempts = 3;
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      let result;
-      modalActive = true;
-      try {
-        result = await inputDialog(
-          screen,
-          "Administrator authorization",
-          [
-            `${request.action.label}`,
-            "",
-            "Enter your sudo password to continue.",
-            `Reason: ${request.reason}`
-          ].join("\n"),
-          3e4
-        );
-      } catch {
-        return {
-          ok: false,
-          code: c420uiExitCodes.generalError,
-          message: "[error] Administrator authorization prompt failed."
-        };
-      } finally {
-        modalActive = false;
-      }
-      if (result.status === "canceled") {
-        return {
-          ok: false,
-          code: c420uiExitCodes.canceled,
-          message: "[info] Administrator authorization canceled."
-        };
-      }
-      if (result.status === "timeout") {
-        return {
-          ok: false,
-          code: c420uiExitCodes.canceled,
-          message: "[error] Administrator authorization timed out."
-        };
-      }
-      let validation;
-      let submittedInput = result.value;
-      try {
-        validation = rootProvider.validateRootAccessWithInput(
-          opts.rootDir,
-          request.actionEnv,
-          submittedInput
-        );
-      } catch {
-        return {
-          ok: false,
-          code: c420uiExitCodes.rootPolicyError,
-          message: "[error] Administrator authorization validation failed."
-        };
-      } finally {
-        submittedInput = "";
-      }
-      if (validation.ok) {
-        const env = rootProvider.buildRootActionEnvironment ? rootProvider.buildRootActionEnvironment(
-          request.action,
-          request.actionEnv
-        ) : request.actionEnv;
-        return { ok: true, env };
-      }
-      appendLogText(
-        `[warn] Administrator authorization failed (${attempt}/${maxAttempts}).
-`,
-        "system"
-      );
-      if (attempt === maxAttempts) {
-        return validation;
-      }
-    }
-    return {
-      ok: false,
-      code: c420uiExitCodes.rootPolicyError,
-      message: "[error] Administrator authorization failed."
-    };
-  }
-  const actionRunner = createInteractiveActionRunner({
-    bridge,
-    rootDir: opts.rootDir,
-    env: process.env,
-    rootProvider,
-    requestRootAccess: rootProvider ? requestInteractiveRootAccess : void 0,
-    createActionEngine: createC420UIActionEngine,
-    appendLogText(text, source) {
-      appendLogText(
-        text,
-        source === "stdout" || source === "stderr" ? source : "system"
-      );
-    },
-    setProgress(state, percent, label) {
-      if (state === "running") {
-        setProgressRunning(percent ?? 5, label);
-      } else if (state === "success") {
-        setProgressSuccess(label);
-      } else if (state === "warning") {
-        setProgressWarning(label);
-      } else if (state === "canceled") {
-        setProgressCanceled();
-      } else if (state === "failed") {
-        setProgressError(label);
-      } else {
-        clearProgress();
-      }
-    },
-    setRunning(nextRunning) {
-      running = nextRunning;
-    }
-  });
-  let progressState = "idle";
-  let lastCtrlCAt = 0;
-  let updatingSettingsMenuItems = false;
-  const logBuffers = {
-    stdout: "",
-    stderr: "",
-    system: ""
-  };
-  const logHistory = [];
-  const sessionLogPath = opts.sessionLogPath || path2.join(
-    process.env.XDG_STATE_HOME || path2.join(process.env.HOME || ".", ".local/state"),
-    opts.project.stateDirectoryName,
-    "tool-session.log"
-  );
-  const launcherSessionId = opts.sessionId?.trim() || "";
-  function readExistingSessionLog(logPath) {
-    try {
-      return fs2.existsSync(logPath) ? fs2.readFileSync(logPath, "utf8") : "";
-    } catch {
-      return "";
-    }
-  }
-  let sessionStreamOpenError = null;
-  let sessionLogUnavailableWarningShown = false;
-  function warnSessionLogUnavailableOnce() {
-    if (sessionLogUnavailableWarningShown) {
-      return;
-    }
-    sessionLogUnavailableWarningShown = true;
-    const reason = sessionStreamOpenError ? ` (${sessionStreamOpenError})` : "";
-    const warning = `[warn] Session log stream is unavailable: ${sessionLogPath}${reason}`;
-    displayLogLine(warning, "system");
-    try {
-      console.warn(warning);
-    } catch {
-    }
-  }
-  function recordSessionStreamError(error) {
-    sessionStreamOpenError = error instanceof Error ? error.message : String(error);
-    warnSessionLogUnavailableOnce();
-  }
-  function openSessionStream(logPath) {
-    try {
-      fs2.mkdirSync(path2.dirname(logPath), { recursive: true });
-      const stream = fs2.createWriteStream(logPath, { flags: "a" });
-      stream.on("error", (error) => {
-        recordSessionStreamError(error);
-      });
-      return stream;
-    } catch (error) {
-      recordSessionStreamError(error);
-      return null;
-    }
-  }
-  const launcherSessionLog = readExistingSessionLog(sessionLogPath);
-  const sessionStream = openSessionStream(sessionLogPath);
-  const writeSession = (line) => {
-    if (!sessionStream || sessionStreamOpenError) {
-      warnSessionLogUnavailableOnce();
-      return;
-    }
-    try {
-      sessionStream.write(`${line}
-`);
-    } catch (error) {
-      recordSessionStreamError(error);
-    }
-  };
-  writeSession("[mode] c420ui");
-  process.on("exit", () => {
-    writeSession("[session] ended");
-  });
-  let overviewStatus = null;
-  let overviewDetectionPromise = null;
-  let overviewDetectionError = null;
-  function renderDiagnosticsBox() {
-    if (overviewDetectionError) {
-      diagnostics.setContent(
-        `  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}
-  ${overviewDetectionError}`
-      );
-      generatedArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
-      linuxArtifacts.setContent(`  {${c420uiTheme.colors.error}-fg}Detection error{/${c420uiTheme.colors.error}-fg}`);
-      return;
-    }
-    const panels = formatDetectionPanelSummaries(overviewStatus, c420uiTheme.colors);
-    diagnostics.setContent(panels.detectedInstallations.join("\n"));
-    generatedArtifacts.setContent(panels.generatedArtifacts.join("\n"));
-    linuxArtifacts.setContent(panels.linuxArtifacts.join("\n"));
-  }
-  function refreshDetectedInstallations(reason = "unknown") {
-    if (overviewDetectionPromise) {
-      return overviewDetectionPromise;
-    }
-    appendLogText(`[info] Detection started (${reason}).
-`, "system");
-    overviewDetectionPromise = detectInstallationStatusNow().then((latestStatus) => {
-      if (latestStatus) {
-        overviewStatus = latestStatus;
-        overviewDetectionError = null;
-      } else {
-        overviewDetectionError = "Unable to parse status output";
-        appendLogText("[error] Detection status parsing failed.\n", "system");
-      }
-      appendLogText(`[info] Detection finished (${reason}).
-`, "system");
-      renderDiagnosticsBox();
-      renderCurrentContentPreservingProgress();
-      return overviewStatus;
-    }).finally(() => {
-      overviewDetectionPromise = null;
-    });
-    return overviewDetectionPromise;
-  }
-  function getInstallDetectionKey(action) {
-    return action.installDetectionKey ?? null;
-  }
-  async function detectInstallationStatusNow() {
-    if (!bridge.overviewStatus) {
-      return null;
-    }
-    try {
-      return await bridge.overviewStatus();
-    } catch (error) {
-      appendLogText(
-        `[error] Detection status failed: ${error instanceof Error ? error.message : String(error)}
-`,
-        "system"
-      );
-      return null;
-    }
-  }
-  function isCriticalToolLog(line) {
-    return /^\[(error|warn)\]/i.test(line) || /authentication failed/i.test(line);
-  }
-  function shouldDisplayLogLine(line, source) {
-    if (source !== "system") {
-      return true;
-    }
-    return toolSettings.tool.generalLogsEnabled || isCriticalToolLog(line);
-  }
-  function displayLogLine(line, source) {
-    const prefix = source === "system" ? TOOL_LOG_PREFIX : ACTION_LOG_PREFIX;
-    const msg = `${prefix} ${line}`.replace(
-      /[{}]/g,
-      (c) => c === "{" ? "\\{" : "\\}"
-    );
-    logHistory.push(`${prefix} ${line}`);
-    if (logHistory.length > MAX_LOG_HISTORY_LINES) {
-      logHistory.shift();
-    }
-    if (source === "stderr") {
-      logs.log(`{red-fg}${msg}{/red-fg}`);
-    } else if (source === "system") {
-      logs.log(`{cyan-fg}${msg}{/cyan-fg}`);
-    } else {
-      logs.log(msg);
-    }
-  }
-  function appendLogLine(line, source) {
-    writeSession(`[${source}] ${line}`);
-    if (shouldDisplayLogLine(line, source)) {
-      displayLogLine(line, source);
-    }
-  }
-  function appendLogText(text, source = "stdout") {
-    logBuffers[source] += text;
-    while (true) {
-      const m = logBuffers[source].match(/\r?\n/);
-      if (!m || m.index === void 0) {
-        break;
-      }
-      const i = m.index;
-      const n = m[0].length;
-      appendLogLine(logBuffers[source].slice(0, i), source);
-      logBuffers[source] = logBuffers[source].slice(i + n);
-    }
-    screen.render();
-  }
-  function importLauncherSessionLog() {
-    if (!toolSettings.tool.generalLogsEnabled || !launcherSessionId || !launcherSessionLog.includes(`[session] started id=${launcherSessionId}`)) {
-      return;
-    }
-    for (const line of launcherSessionLog.split(/\r?\n/)) {
-      if (line.trim()) {
-        displayLogLine(line, "system");
-      }
-    }
-  }
-  function activeLabel(label) {
-    return `{${c420uiTheme.colors.activeLabel}-fg}${label}{/${c420uiTheme.colors.activeLabel}-fg}`;
-  }
-  function inactiveLabel(label) {
-    return `{${c420uiTheme.colors.inactiveLabel}-fg}${label}{/${c420uiTheme.colors.inactiveLabel}-fg}`;
-  }
-  function setWidgetBorder(widget, active) {
-    widget.style.border = {
-      ...widget.style.border ?? {},
-      fg: active ? c420uiTheme.colors.activeBorder : c420uiTheme.colors.inactiveBorder
-    };
-  }
-  function setLabeledPanel(widget, label, active) {
-    setWidgetBorder(widget, active);
-    widget.setLabel(active ? activeLabel(label) : inactiveLabel(label));
-  }
-  function setFocusZone(nextZone) {
-    if (modalActive || focusZone === nextZone) {
-      return;
-    }
-    focusZone = nextZone;
-    if (focusZone === "menu") {
-      menu.focus();
-    } else if (focusZone === "diagnostics") {
-      diagnostics.focus();
-    } else if (focusZone === "content") {
-      content.focus();
-    } else {
-      logs.focus();
-    }
-    applyFocusStyles();
-    screen.render();
-  }
-  function moveFocus(delta) {
-    const index = FOCUS_ZONES.indexOf(focusZone);
-    const nextIndex = (index + delta + FOCUS_ZONES.length) % FOCUS_ZONES.length;
-    setFocusZone(FOCUS_ZONES[nextIndex] ?? "menu");
-  }
-  function applyFocusStyles() {
-    setLabeledPanel(menu, menuLabelText, focusZone === "menu");
-    setLabeledPanel(
-      diagnostics,
-      diagnosticsLabelText,
-      focusZone === "diagnostics"
-    );
-    setLabeledPanel(
-      generatedArtifacts,
-      generatedArtifactsLabelText,
-      focusZone === "diagnostics"
-    );
-    setLabeledPanel(
-      linuxArtifacts,
-      linuxArtifactsLabelText,
-      focusZone === "diagnostics"
-    );
-    setLabeledPanel(content, contentLabelText, focusZone === "content");
-    setLabeledPanel(logs, logsLabelText, focusZone === "logs");
-    menu.style.selected = {
-      ...menu.style.selected ?? {},
-      fg: focusZone === "menu" ? c420uiTheme.colors.activeCellFg : c420uiTheme.colors.menuInactiveSelectedFg,
-      bg: focusZone === "menu" ? c420uiTheme.colors.activeCellBg : c420uiTheme.colors.menuInactiveSelectedBg,
-      bold: focusZone === "menu"
-    };
-  }
-  function applyLogPanelLabel() {
-    logsLabelText = terminalTextSelectionModeActive ? "Logs - Text selection mode enabled" : "Logs";
-    applyFocusStyles();
-  }
-  function clearProgress() {
-    progress.setContent("");
-    progressState = "idle";
-  }
-  function setProgressRunning(percent, label) {
-    progressState = "running";
-    setProgress(percent, label, false);
-  }
-  function setProgressSuccess(label = "Completed") {
-    progressState = "success";
-    setProgress(100, label, false);
-  }
-  function setProgressWarning(label = "Completed with warnings") {
-    progressState = "warning";
-    setProgress(100, label, false);
-  }
-  function setProgressError(label) {
-    progressState = "failed";
-    setProgress(0, `Error: ${label}`, true);
-  }
-  function setProgressCanceled() {
-    progressState = "canceled";
-    setProgress(0, "Canceled", true);
-  }
-  function clearProgressOnNavigation() {
-    if (!running) {
-      clearProgress();
-    }
-  }
-  function setProgress(percent, label, isError = false) {
-    const barWidth = 20;
-    const fill = Math.max(
-      0,
-      Math.min(barWidth, Math.round(percent / 100 * barWidth))
-    );
-    const bar = `${"\u2588".repeat(fill)}${"\u2591".repeat(barWidth - fill)}`;
-    const color = isError || progressState === "failed" || progressState === "canceled" ? "red-fg" : progressState === "success" || progressState === "warning" ? "green-fg" : progressState === "running" ? "yellow-fg" : "white-fg";
-    progress.setContent(
-      `Progress: [{${color}}${bar}{/${color}}] ${percent}% - ${label}`
-    );
-  }
-  function renderSelectionDetails() {
-    if (["install", "development", "maintenance"].includes(currentView)) {
-      clearProgressOnNavigation();
-      renderActionHelp(currentView, menu.selected);
-    } else if (currentView === "settings") {
-      setSettingsMenuItems();
-      renderSettingsHelp();
-    }
-  }
-  function scrollFocusedPanel(delta) {
-    if (focusZone === "menu") {
-      if (delta < 0) {
-        menu.up(Math.abs(delta));
-      } else {
-        menu.down(delta);
-      }
-      renderSelectionDetails();
-      return;
-    }
-    if (focusZone === "diagnostics") {
-      diagnostics.scroll(delta);
-      generatedArtifacts.scroll(delta);
-      linuxArtifacts.scroll(delta);
-    } else if (focusZone === "content") {
-      content.scroll(delta);
-    } else {
-      logs.scroll(delta);
-    }
-  }
-  function setFocusedPanelScroll(percent) {
-    if (focusZone === "menu") {
-      if (percent === 0) {
-        menu.select(0);
-      } else {
-        menu.select(Math.max(0, (menu.items?.length ?? 1) - 1));
-      }
-      renderSelectionDetails();
-      return;
-    }
-    if (focusZone === "diagnostics") {
-      diagnostics.setScrollPerc(percent);
-      generatedArtifacts.setScrollPerc(percent);
-      linuxArtifacts.setScrollPerc(percent);
-    } else if (focusZone === "content") {
-      content.setScrollPerc(percent);
-    } else {
-      logs.setScrollPerc(percent);
-    }
-  }
-  function renderActionHelp(view, selectedIndex) {
-    if (!["install", "development", "maintenance"].includes(view)) {
-      return;
-    }
-    const selected = currentActions[selectedIndex] ?? null;
-    const base = [
-      `{${c420uiTheme.colors.helpTitle}-fg}${view.charAt(0).toUpperCase() + view.slice(1)} Actions{/${c420uiTheme.colors.helpTitle}-fg}`
-    ];
-    if (!selected) {
-      return content.setContent(base.join("\n"));
-    }
-    const plannedBlock = isPlannedAction(selected) ? [
-      "",
-      `{${c420uiTheme.colors.infoItemTitle}-fg}Status:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-      `  {${c420uiTheme.colors.warning}-fg}Planned - visible in c420ui, but not executable in this phase.{/${c420uiTheme.colors.warning}-fg}`
-    ] : [];
-    const warningBlock = selected.warning ? [
-      "",
-      `{${c420uiTheme.colors.infoItemTitle}-fg}Warning:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-      `  {${c420uiTheme.colors.error}-fg}${selected.warning}{/${c420uiTheme.colors.error}-fg}`
-    ] : [];
-    content.setContent(
-      [
-        ...base,
-        "",
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Selected action:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-        `  {${c420uiTheme.colors.infoText}-fg}${selected.label}{/${c420uiTheme.colors.infoText}-fg}`,
-        "",
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Description:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-        `  {${c420uiTheme.colors.descriptionText}-fg}${selected.description ?? "No description available."}{/${c420uiTheme.colors.descriptionText}-fg}`,
-        ...plannedBlock,
-        ...warningBlock
-      ].join("\n")
-    );
-  }
-  function activeSettingsSectionIndex() {
-    for (let index = menu.selected; index >= 0; index -= 1) {
-      if (settingsItems[index]?.kind === "section") {
-        return index;
-      }
-    }
-    return -1;
-  }
-  function settingsItemLabel(item, index) {
-    if (item.kind === "section") {
-      const sectionColor = activeSettingsSectionIndex() === index ? c420uiTheme.colors.activeLabel : c420uiTheme.colors.inactiveLabel;
-      return `{${sectionColor}-fg}{bold}${item.label}{/bold}{/${sectionColor}-fg}`;
-    }
-    if (item.kind === "note") {
-      return `  {${c420uiTheme.colors.inactiveLabel}-fg}${item.label}{/${c420uiTheme.colors.inactiveLabel}-fg}`;
-    }
-    const enabled = Boolean(toolSettings.tool[item.key]);
-    const checkbox = enabled ? "\u2713" : " ";
-    const checkboxColor = enabled ? c420uiTheme.colors.activeCheckboxFg : c420uiTheme.colors.inactiveCheckboxFg;
-    return `  {${checkboxColor}-fg}[${checkbox}]{/${checkboxColor}-fg} ${item.label}`;
-  }
-  function setSettingsMenuItems() {
-    const selected = Math.min(
-      Math.max(menu.selected, 0),
-      settingsItems.length - 1
-    );
-    updatingSettingsMenuItems = true;
-    try {
-      menu.setItems(settingsItems.map(settingsItemLabel));
-      menu.select(selected);
-    } finally {
-      updatingSettingsMenuItems = false;
-    }
-  }
-  function selectedSettingsItem() {
-    return settingsItems[menu.selected] ?? null;
-  }
-  function renderSettingsHelp() {
-    const selected = selectedSettingsItem();
-    const details = [
-      `{${c420uiTheme.colors.helpTitle}-fg}Application Settings{/${c420uiTheme.colors.helpTitle}-fg}`,
-      "",
-      `{${c420uiTheme.colors.infoItemTitle}-fg}Settings file:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-      `  {${c420uiTheme.colors.descriptionText}-fg}${settingsPath}{/${c420uiTheme.colors.descriptionText}-fg}`,
-      ""
-    ];
-    if (selected?.kind === "toggle") {
-      details.push(
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Selected setting:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-        `  {${c420uiTheme.colors.infoText}-fg}${selected.label}{/${c420uiTheme.colors.infoText}-fg}`,
-        ""
-      );
-      if (selected.key === "generalLogsEnabled") {
-        details.push(
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Behavior{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  When enabled, Tool-level logs such as startup, settings, detection and authentication events are visible in the logs panel.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  When disabled, Action logs remain visible and critical Tool warnings/errors still appear. The session log file continues recording Tool diagnostics.{/${c420uiTheme.colors.descriptionText}-fg}`
-        );
-      } else {
-        details.push(
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Behavior{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode disables c420ui mouse capture globally and keeps keyboard navigation active.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Changes take effect immediately and are saved for the next c420ui start. Use PageUp, PageDown, Home and End to scroll logs while this mode is active.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  F5 continues to copy the visible log history to the clipboard.{/${c420uiTheme.colors.descriptionText}-fg}`
-        );
-      }
-    } else if (selected?.kind === "section") {
-      details.push(
-        `{${c420uiTheme.colors.infoItemTitle}-fg}Section:{/${c420uiTheme.colors.infoItemTitle}-fg}`,
-        `  {${c420uiTheme.colors.infoText}-fg}${selected.label}{/${c420uiTheme.colors.infoText}-fg}`,
-        "",
-        `{${c420uiTheme.colors.descriptionText}-fg}Tool settings affect this installer/development interface. Final build settings will apply to the packaged ${opts.project.projectName} app in a later phase.{/${c420uiTheme.colors.descriptionText}-fg}`
-      );
-    } else {
-      details.push(
-        `{${c420uiTheme.colors.descriptionText}-fg}Use Enter or Space on a checkbox setting to toggle it. Application Settings are persistent c420ui state, not shell actions.{/${c420uiTheme.colors.descriptionText}-fg}`
-      );
-    }
-    content.setContent(details.join("\n"));
-  }
-  function persistSettings(reason) {
-    try {
-      saveToolSettings(toolSettings, opts.project.stateDirectoryName);
-    } catch (error) {
-      appendLogText(
-        `[error] Settings could not be saved: ${error instanceof Error ? error.message : String(error)}
-`,
-        "system"
-      );
-      return;
-    }
-    applyGlobalMouseMode();
-    applyLogPanelLabel();
-    if (currentView === "settings") {
-      setSettingsMenuItems();
-    }
-    appendLogText(`[info] Settings changed (${reason}).
-`, "system");
-    renderSettingsHelp();
-    screen.render();
-  }
-  function toggleSelectedSetting() {
-    const selected = selectedSettingsItem();
-    if (selected?.kind !== "toggle") {
-      return;
-    }
-    toolSettings = {
-      ...toolSettings,
-      tool: {
-        ...toolSettings.tool,
-        [selected.key]: !toolSettings.tool[selected.key]
-      }
-    };
-    persistSettings(selected.key);
-  }
-  function renderCurrentContentPreservingProgress() {
-    if (currentView === "main") {
-      renderDiagnosticsBox();
-      screen.render();
-      return;
-    }
-    if (["install", "development", "maintenance"].includes(currentView)) {
-      renderActionHelp(currentView, menu.selected);
-      screen.render();
-    }
-    if (currentView === "settings") {
-      renderSettingsHelp();
-      screen.render();
-    }
-  }
-  function setView(view) {
-    currentView = view;
-    clearProgressOnNavigation();
-    if (view === "main") {
-      if (!overviewStatus) {
-        void refreshDetectedInstallations("enter-overview");
-      }
-      renderDiagnosticsBox();
-      currentActions = [];
-      menu.setItems(mainItems.map((item) => item.label));
-      menuLabelText = "Main Menu";
-      contentLabelText = "Overview";
-      content.setContent(
-        [
-          `{${c420uiTheme.colors.logo}-fg}${opts.project.logoLines.join("\n")}{/${c420uiTheme.colors.logo}-fg}`,
-          "",
-          "Version:",
-          `  {${c420uiTheme.colors.version}-fg}${opts.project.displayVersion}{/${c420uiTheme.colors.version}-fg}`,
-          "",
-          "Hash:",
-          `  {${c420uiTheme.colors.muted}-fg}${opts.project.hash ?? "unknown"}{/${c420uiTheme.colors.muted}-fg}`,
-          "",
-          "Phase:",
-          `  {${c420uiTheme.colors.phase}-fg}${opts.project.phase ?? "unknown"}{/${c420uiTheme.colors.phase}-fg}`,
-          "",
-          "Version Release Notes:",
-          `  ${opts.releaseNotes}`,
-          "",
-          "Package / Version Information:",
-          `  App ID: ${opts.project.appId}`,
-          `  Executable: ${opts.project.executableName}`,
-          `  Repository: ${opts.project.repositoryUrl}`
-        ].join("\n")
-      );
-      applyFocusStyles();
-      screen.render();
-      return;
-    }
-    if (view === "help") {
-      currentActions = [];
-      menu.setItems(["Back to Main"]);
-      menuLabelText = "Help";
-      contentLabelText = "Help";
-      content.setContent(
-        [
-          `{${c420uiTheme.colors.helpTitle}-fg}Help{/${c420uiTheme.colors.helpTitle}-fg}`,
-          "",
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Navigation{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Tab / Shift+Tab       Move focus between menu, diagnostics, action panel and logs{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Up/Down               Move menu selection when the menu is focused{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Enter                 Select action only when the menu is focused{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Space                 Toggle setting checkbox only when Application Settings is focused{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown       Scroll the focused panel{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Home/End              Move the focused scrollable panel to start/end{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Esc                   Back to main or confirm exit{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  q                     Quit{/${c420uiTheme.colors.descriptionText}-fg}`,
-          "",
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Panels{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Active panel: highlighted border and label{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Active cell: highlighted menu/settings row{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Alt+Up/Down or Shift+PgUp/PgDn still scroll action panel directly{/${c420uiTheme.colors.descriptionText}-fg}`,
-          "",
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Logs{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  F5             Copy logs to clipboard{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  PageUp/PageDown/Home/End{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Manual text selection mode can be enabled in Application Settings. It disables c420ui mouse capture globally, keeps keyboard navigation active, and some terminals may still require Shift during selection.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          "",
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Launcher{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  ${opts.project.launcherCommand} opens the c420ui.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Any direct action flag runs CLI mode instead.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Do not run the Tool with sudo or as root; privileged actions ask for administrator authentication only when needed.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Root authentication failures are shown in a centered popup and the action is not started.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          "",
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Settings{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Tool settings file: ${settingsPath}{/${c420uiTheme.colors.descriptionText}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  Tool settings affect this installer/development interface. Final build settings apply to the packaged app and are reserved for a later phase.{/${c420uiTheme.colors.descriptionText}-fg}`,
-          "",
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Status colors{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `  {${c420uiTheme.colors.activeLabel}-fg}Active panel border / label{/${c420uiTheme.colors.activeLabel}-fg}`,
-          `  {${c420uiTheme.colors.activeCellFg}-fg}{${c420uiTheme.colors.activeCellBg}-bg}Active cell row{/${c420uiTheme.colors.activeCellBg}-bg}{/${c420uiTheme.colors.activeCellFg}-fg}`,
-          `  {${c420uiTheme.colors.statusDetected}-fg}Detected / Completed{/${c420uiTheme.colors.statusDetected}-fg}`,
-          `  {${c420uiTheme.colors.statusNotDetected}-fg}Not detected{/${c420uiTheme.colors.statusNotDetected}-fg}`,
-          `  {${c420uiTheme.colors.warning}-fg}Running{/${c420uiTheme.colors.warning}-fg}`,
-          `  {${c420uiTheme.colors.error}-fg}Error / Canceled{/${c420uiTheme.colors.error}-fg}`,
-          "",
-          `{${c420uiTheme.colors.helpSectionTitle}-fg}Clipboard order{/${c420uiTheme.colors.helpSectionTitle}-fg}`,
-          `{${c420uiTheme.colors.descriptionText}-fg}  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel{/${c420uiTheme.colors.descriptionText}-fg}`
-        ].join("\n")
-      );
-      applyFocusStyles();
-      screen.render();
-      return;
-    }
-    if (view === "settings") {
-      currentActions = [];
-      setSettingsMenuItems();
-      menuLabelText = "Application Settings";
-      contentLabelText = "Application Settings";
-      renderSettingsHelp();
-      applyFocusStyles();
-      screen.render();
-      return;
-    }
-    const group = view === "install" ? "install" : view === "maintenance" ? "maintenance" : "development";
-    currentActions = bridge.actions().filter((action) => action.group === group);
-    menu.setItems(currentActions.map((a) => a.label));
-    menuLabelText = `${view.charAt(0).toUpperCase() + view.slice(1)} Actions`;
-    contentLabelText = view.charAt(0).toUpperCase() + view.slice(1);
-    renderActionHelp(view, menu.selected);
-    applyFocusStyles();
-    screen.render();
-  }
-  menu.on("select", async (_, index) => {
-    if (running || modalActive || focusZone !== "menu") {
-      return;
-    }
-    if (currentView === "main") {
-      return setView(mainItems[index]?.view ?? "main");
-    }
-    if (currentView === "help") {
-      return setView("main");
-    }
-    if (currentView === "settings") {
-      toggleSelectedSetting();
-      return;
-    }
-    const action = currentActions[index];
-    if (!action) {
-      return;
-    }
-    if (isPlannedAction(action)) {
-      const message = action.description || `${action.label} is not implemented in this phase.`;
-      await actionRunner.runAction(action, { dryRun: false });
-      modalActive = true;
-      await messageDialog(
-        screen,
-        "Planned action",
-        [
-          message,
-          "",
-          "This action is visible in c420ui for roadmap awareness, but it is not executable in this phase."
-        ].join("\n")
-      );
-      modalActive = false;
-      return;
-    }
-    const requiresConfirmation = interactiveActionRequiresConfirmation(action);
-    let confirmed = false;
-    if (requiresConfirmation) {
-      modalActive = true;
-      const ok = await confirmDialog(screen, {
-        title: action.confirmationTitle ?? "Confirm",
-        message: action.confirmationMessage ?? action.description ?? "Continue?",
-        dangerous: action.dangerous === true
-      });
-      modalActive = false;
-      if (!ok) {
-        return;
-      }
-      confirmed = true;
-    }
-    appendLogText(`[action] ${action.id} ${action.label}
-`, "system");
-    writeSession(`[action] ${action.id} ${action.label}`);
-    const result = await actionRunner.runAction(action, {
-      confirmed,
-      dryRun: false
-    });
-    const installAction = action.id.startsWith("install-");
-    let detectedNow = false;
-    if (installAction) {
-      const detectionKey = getInstallDetectionKey(action);
-      if (detectionKey) {
-        const latestStatus = await detectInstallationStatusNow();
-        if (latestStatus) {
-          overviewStatus = latestStatus;
-        }
-        detectedNow = Boolean(latestStatus?.installations?.[detectionKey]);
-      }
-    }
-    if (result.status === "canceled") {
-      setProgressCanceled();
-    } else if (installAction && detectedNow && result.code !== 0) {
-      setProgressWarning("Completed with warnings");
-    } else if (result.code === 0 || installAction && detectedNow) {
-      setProgressSuccess("Completed");
-    } else if (result.status === "planned") {
-      setProgressWarning("Planned action");
-    } else {
-      setProgressError(`exit code ${result.code ?? "unknown"}`);
-    }
-    appendLogText(
-      `[info] Action finished (${result.status}:${result.code}).
-`,
-      "system"
-    );
-    await refreshDetectedInstallations(`action:${action.id}`);
-    running = false;
-    renderActionHelp(currentView, menu.selected);
-    screen.render();
-  });
-  const confirmExit = async () => {
-    if (modalActive) {
-      return;
-    }
-    modalActive = true;
-    const ok = await confirmDialog(screen, {
-      title: "Exit Application",
-      message: "Do you want to exit the application?",
-      confirmLabel: "Yes",
-      cancelLabel: "No"
-    });
-    modalActive = false;
-    if (ok) {
-      screen.destroy();
-      process.exit(0);
-    }
-  };
-  screen.key(["q"], () => {
-    void confirmExit();
-  });
-  screen.key(["tab"], () => {
-    if (!modalActive) {
-      moveFocus(1);
-    }
-  });
-  screen.key(["S-tab", "backtab"], () => {
-    if (!modalActive) {
-      moveFocus(-1);
-    }
-  });
-  screen.key(["escape"], () => {
-    if (modalActive) {
-      return;
-    }
-    if (running) {
-      void confirmExit();
-      return;
-    }
-    if (currentView === "main") {
-      void confirmExit();
-      return;
-    }
-    setView("main");
-  });
-  screen.key(["C-c"], () => {
-    if (modalActive) {
-      return;
-    }
-    const now = Date.now();
-    if (running) {
-      if (now - lastCtrlCAt < 1500) {
-        void confirmExit();
-        return;
-      }
-      lastCtrlCAt = now;
-      if (actionRunner.cancel()) {
-        appendLogText(
-          "[warn] Interrupt requested for running action. Press Ctrl+C again to exit application.\n",
-          "system"
-        );
-      } else {
-        appendLogText(
-          "[warn] Action is running. Press Ctrl+C again to exit application.\n",
-          "system"
-        );
-      }
-      return;
-    }
-    void confirmExit();
-  });
-  screen.key(["f5"], () => {
-    const result = copyTextToClipboard(logHistory.join("\n"));
-    appendLogText(
-      `${result.ok ? "[ok]" : "[warn]"} ${result.message}
-`,
-      "system"
-    );
-  });
-  screen.key(["S-pageup", "M-up"], () => {
-    content.scroll(-5);
-    screen.render();
-  });
-  screen.key(["S-pagedown", "M-down"], () => {
-    content.scroll(5);
-    screen.render();
-  });
-  screen.key(["pageup"], () => {
-    if (!modalActive) {
-      scrollFocusedPanel(-10);
-    }
-    screen.render();
-  });
-  screen.key(["pagedown"], () => {
-    if (!modalActive) {
-      scrollFocusedPanel(10);
-    }
-    screen.render();
-  });
-  screen.key(["home"], () => {
-    if (!modalActive) {
-      setFocusedPanelScroll(0);
-    }
-    screen.render();
-  });
-  screen.key(["end"], () => {
-    if (!modalActive) {
-      setFocusedPanelScroll(100);
-    }
-    screen.render();
-  });
-  screen.key(["?"], () => {
-    if (!running && !modalActive) {
-      setView("help");
-    }
-  });
-  screen.key(["space"], () => {
-    if (!running && !modalActive && focusZone === "menu" && currentView === "settings") {
-      toggleSelectedSetting();
-    }
-  });
-  menu.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("menu");
-    }
-  });
-  diagnostics.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("diagnostics");
-    }
-  });
-  generatedArtifacts.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("diagnostics");
-    }
-  });
-  linuxArtifacts.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("diagnostics");
-    }
-  });
-  content.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("content");
-    }
-  });
-  logs.on("click", () => {
-    if (!modalActive) {
-      setFocusZone("logs");
-    }
-  });
-  menu.on("keypress", (_, key) => {
-    if (updatingSettingsMenuItems) {
-      return;
-    }
-    if ((key.name === "up" || key.name === "down") && ["install", "development", "maintenance"].includes(currentView)) {
-      renderSelectionDetails();
-      screen.render();
-    }
-    if ((key.name === "up" || key.name === "down") && currentView === "settings") {
-      renderSelectionDetails();
-      screen.render();
-    }
-  });
-  menu.on("select item", () => {
-    if (updatingSettingsMenuItems) {
-      return;
-    }
-    if (["install", "development", "maintenance"].includes(currentView)) {
-      renderSelectionDetails();
-      screen.render();
-    }
-    if (currentView === "settings") {
-      renderSelectionDetails();
-      screen.render();
-    }
-  });
-  applyLogPanelLabel();
-  importLauncherSessionLog();
-  appendLogText(
-    `[info] c420ui started. builder=${formatC420UIVersionLabel({
-      packageName: opts.brand.name,
-      packageVersion: opts.brand.version,
-      sourceHash: opts.brand.hash ?? null
-    })} project=${opts.project.projectName} version=${opts.project.displayVersion} phase=${opts.project.phase}
-`,
-    "system"
-  );
-  appendLogText(`[info] Settings loaded from ${settingsPath}.
-`, "system");
-  setView("main");
-  void refreshDetectedInstallations("startup");
-  renderDiagnosticsBox();
-  menu.focus();
-  if (options.startupTasks?.length) {
-    setImmediate(() => {
-      void runC420UIStartupTasks(options.startupTasks ?? [], (text) => {
-        appendLogText(text, "system");
-      }).then(() => screen.render());
-    });
-  }
-  return screen;
-}
 
 // build-resources/c420ui/src/terminal/help.ts
 function formatC420UITerminalHelp(options) {
@@ -2699,6 +687,326 @@ function enforceC420UIRootLaunchGuard(options) {
   options.exit?.(1);
 }
 
+// build-resources/c420ui/src/rust-tui-runner.ts
+import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path2 from "node:path";
+import { StringDecoder } from "node:string_decoder";
+
+// build-resources/c420ui/src/rust-tui-contracts.ts
+function createC420UITuiRenderInput(options) {
+  const { config } = options;
+  const input = {
+    brand: {
+      name: requireNonEmpty(config.brand.name, "brand.name"),
+      version: requireNonEmpty(config.brand.version, "brand.version"),
+      hash: optionalNonEmpty(config.brand.hash)
+    },
+    project: {
+      name: requireNonEmpty(config.project.projectName, "project.name"),
+      subtitle: requireNonEmpty(config.project.projectSubtitle, "project.subtitle"),
+      version: requireNonEmpty(
+        config.project.fullVersion ?? config.project.displayVersion,
+        "project.version"
+      ),
+      phase: optionalNonEmpty(config.project.phase),
+      hash: optionalNonEmpty(config.project.hash)
+    },
+    actions: options.actions.map((action) => ({
+      id: requireNonEmpty(action.id, "action.id"),
+      label: requireNonEmpty(action.label, `${action.id}.label`),
+      group: requireNonEmpty(action.group, `${action.id}.group`),
+      dangerous: action.dangerous === true || action.requiresConfirmation === true || void 0,
+      planned: action.planned === true || action.kind === "planned" || void 0
+    })),
+    logs: (options.logs ?? []).map((log) => ({
+      source: requireNonEmpty(log.source, "log.source"),
+      line: String(log.line),
+      level: optionalNonEmpty(log.level)
+    }))
+  };
+  if (options.progress) {
+    input.progress = {
+      state: requireNonEmpty(options.progress.state, "progress.state"),
+      label: optionalNonEmpty(options.progress.label),
+      percent: options.progress.percent
+    };
+  }
+  return input;
+}
+function requireNonEmpty(value, label) {
+  if (!value?.trim()) throw new Error(`${label} is required`);
+  return value;
+}
+function optionalNonEmpty(value) {
+  return value?.trim() ? value : void 0;
+}
+
+// build-resources/c420ui/src/rust-tui-runner.ts
+function runC420UIRustTuiApp(options) {
+  const writeError = options.writeError ?? console.error;
+  const exit = options.exit ?? process.exit;
+  const abortController = new AbortController();
+  const pendingRootRequests = /* @__PURE__ */ new Map();
+  let child;
+  try {
+    const binary = (options.resolveBinary ?? resolveC420UITuiBinary)({
+      rootDir: options.config.rootDir,
+      env: options.env
+    });
+    const spawnProcess = options.spawnProcess ?? spawn;
+    child = spawnProcess(binary, ["run", "--json-lines"], {
+      cwd: options.config.rootDir,
+      env: createC420UITuiProcessEnv(options.env ?? process.env),
+      stdio: ["pipe", "pipe", "inherit"]
+    });
+  } catch (error) {
+    writeError(formatRustTuiError(error));
+    exit(c420uiExitCodes.generalError);
+    return;
+  }
+  const send = (event) => {
+    child.stdin.write(`${JSON.stringify(event)}
+`);
+  };
+  const actions = options.bridge.actions();
+  send({
+    event: "init",
+    state: createC420UITuiRenderInput({
+      config: options.config,
+      actions
+    })
+  });
+  const engine = createC420UIActionEngine({
+    bridge: options.bridge,
+    rootDir: options.config.rootDir,
+    env: options.env,
+    rootProvider: options.rootProvider,
+    requestRootAccess: (request) => requestRootAccessThroughTui(
+      request,
+      send,
+      pendingRootRequests,
+      options.rootProvider
+    ),
+    emit(event) {
+      forwardActionEngineEvent(event, send);
+    }
+  });
+  child.on("error", (error) => {
+    writeError(formatRustTuiError(error));
+    exit(c420uiExitCodes.generalError);
+  });
+  child.on("close", (code) => {
+    if (code && code !== 0) {
+      writeError(`c420ui-tui exited with code ${code}`);
+      exit(code);
+    }
+  });
+  readJsonLines(child.stdout, (event) => {
+    void handleTuiEvent({
+      event,
+      engine,
+      send,
+      startupTasks: options.startupTasks ?? [],
+      pendingRootRequests,
+      abortController,
+      writeError,
+      exit
+    });
+  }, (error) => {
+    writeError(error);
+    exit(c420uiExitCodes.generalError);
+  });
+}
+function resolveC420UITuiBinary(options) {
+  const configured = options.env?.C420UI_TUI_BIN?.trim();
+  if (configured) {
+    if (!fs.existsSync(configured)) {
+      throw new Error(`Configured c420ui-tui binary does not exist: ${configured}`);
+    }
+    return configured;
+  }
+  const extension = process.platform === "win32" ? ".exe" : "";
+  const candidates = [
+    path2.join(
+      options.rootDir,
+      "build-resources",
+      "c420ui-rs",
+      "target",
+      "debug",
+      `c420ui-tui${extension}`
+    ),
+    path2.join(
+      options.rootDir,
+      "build-resources",
+      "c420ui-rs",
+      "target",
+      "release",
+      `c420ui-tui${extension}`
+    )
+  ];
+  const binary = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!binary) {
+    throw new Error("Missing c420ui-tui binary. Run npm run build:c420ui-tui.");
+  }
+  return binary;
+}
+function createC420UITuiProcessEnv(env) {
+  const output = {};
+  for (const key of ["PATH", "TERM", "COLORTERM", "LANG", "LC_ALL", "C420UI_TUI_BIN"]) {
+    const value = env[key];
+    if (value) output[key] = value;
+  }
+  return output;
+}
+async function handleTuiEvent(options) {
+  const {
+    event,
+    engine,
+    send,
+    startupTasks,
+    pendingRootRequests,
+    abortController,
+    writeError,
+    exit
+  } = options;
+  if (event.event === "ready") {
+    if (startupTasks.length > 0) {
+      await runC420UIStartupTasks(startupTasks, (text) => {
+        for (const line of splitLogLines(text)) {
+          send({ event: "log", source: "system", line });
+        }
+      });
+    }
+    return;
+  }
+  if (event.event === "action-selected") {
+    const result = await engine.runActionById(event.actionId, {
+      yes: true,
+      signal: abortController.signal
+    });
+    if (result.message) {
+      if (result.status === "success") {
+        send({ event: "log", source: "action", line: result.message });
+      } else {
+        send({ event: "error", message: result.message });
+      }
+    }
+    return;
+  }
+  if (event.event === "root-request-response") {
+    const resolve = pendingRootRequests.get(event.requestId);
+    if (resolve) {
+      pendingRootRequests.delete(event.requestId);
+      resolve({ accepted: event.accepted });
+    }
+    return;
+  }
+  if (event.event === "cancel") {
+    abortController.abort();
+    exit(c420uiExitCodes.canceled);
+    return;
+  }
+  if (event.event === "quit") {
+    exit(c420uiExitCodes.success);
+    return;
+  }
+  writeError(`Unknown c420ui-tui event: ${JSON.stringify(event)}`);
+}
+async function requestRootAccessThroughTui(request, send, pendingRootRequests, rootProvider) {
+  const requestId = `root-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  send({
+    event: "root-request",
+    requestId,
+    actionId: request.action.id,
+    reason: request.reason
+  });
+  const response = await new Promise((resolve) => {
+    pendingRootRequests.set(requestId, resolve);
+  });
+  if (!response.accepted) {
+    return {
+      ok: false,
+      code: c420uiExitCodes.canceled,
+      message: "Root access was canceled."
+    };
+  }
+  const access = rootProvider?.validateRootAccess(
+    request.rootDir,
+    request.actionEnv
+  );
+  if (access?.ok === false) {
+    return access;
+  }
+  return { ok: true };
+}
+function forwardActionEngineEvent(event, send) {
+  if (event.type === "log") {
+    send({
+      event: "log",
+      source: event.source,
+      line: event.line,
+      level: event.level
+    });
+    return;
+  }
+  if (event.type === "progress") {
+    send({
+      event: "progress",
+      state: event.state,
+      label: event.label,
+      percent: event.percent
+    });
+    return;
+  }
+  if (event.type === "action:start" && event.actionId) {
+    send({ event: "action-start", actionId: event.actionId });
+    return;
+  }
+  if (event.type === "action:finish" && event.actionId) {
+    const data = event.data ?? {};
+    const code = typeof data.exitCode === "number" ? data.exitCode : 0;
+    const status = typeof data.status === "string" ? data.status : "success";
+    send({
+      event: "action-finish",
+      actionId: event.actionId,
+      status,
+      code
+    });
+    return;
+  }
+  if (event.message) {
+    send({ event: "log", source: "system", line: event.message });
+  }
+}
+function readJsonLines(stream, onEvent, onError) {
+  const decoder = new StringDecoder("utf8");
+  let buffer = "";
+  stream.on("data", (chunk) => {
+    buffer += typeof chunk === "string" ? chunk : decoder.write(chunk);
+    let newlineIndex = buffer.indexOf("\n");
+    while (newlineIndex !== -1) {
+      const line = buffer.slice(0, newlineIndex).trim();
+      buffer = buffer.slice(newlineIndex + 1);
+      if (line) {
+        try {
+          onEvent(JSON.parse(line));
+        } catch (error) {
+          onError(`Invalid c420ui-tui JSONL event: ${formatRustTuiError(error)}`);
+          return;
+        }
+      }
+      newlineIndex = buffer.indexOf("\n");
+    }
+  });
+}
+function splitLogLines(text) {
+  return text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+}
+function formatRustTuiError(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
 // build-resources/c420ui/src/terminal/runtime.ts
 function runC420UITerminalApp(options, runtimeOptions = {}) {
   const writeError = runtimeOptions.writeError ?? console.error;
@@ -2709,22 +1017,17 @@ function runC420UITerminalApp(options, runtimeOptions = {}) {
     writeError,
     exit
   });
-  const create = runtimeOptions.create ?? createApp;
-  const screen = create(options);
-  const onUncaughtException = runtimeOptions.onUncaughtException ?? ((listener) => process.on("uncaughtException", listener));
-  onUncaughtException((err) => {
-    try {
-      screen.destroy();
-    } catch {
-    }
-    writeError(err instanceof Error ? err.stack || err.message : String(err));
-    exit(1);
+  const runRustTuiApp = runtimeOptions.runRustTuiApp ?? runC420UIRustTuiApp;
+  return runRustTuiApp({
+    ...options,
+    writeError,
+    exit
   });
 }
 
 // build-resources/c420ui/src/linux-root-provider.ts
 import {
-  spawnSync as spawnSync2
+  spawnSync
 } from "node:child_process";
 
 // build-resources/c420ui/src/root-provider.ts
@@ -2755,7 +1058,7 @@ function validateC420UILinuxActionScope(action, actionEnv, actionHasUserScope = 
   return { ok: true };
 }
 function createC420UILinuxRootProviderBase(options) {
-  const runCommand = options.runCommand ?? spawnSync2;
+  const runCommand = options.runCommand ?? spawnSync;
   const buildActionEnvironment = options.buildActionEnvironment ?? defaultC420UILinuxBuildActionEnvironment;
   const actionHasUserScope = options.actionHasUserScope ?? defaultC420UILinuxActionHasUserScope;
   const buildRootValidationCommand = options.buildRootValidationCommand ?? defaultC420UILinuxRootValidationCommand;
@@ -2840,26 +1143,26 @@ function createC420UILinuxRootProviderBase(options) {
 }
 
 // build-resources/c420ui/src/npm-dependencies.ts
-import fs4 from "node:fs";
+import fs3 from "node:fs";
 import path4 from "node:path";
 
 // build-resources/c420ui/src/rust-host.ts
-import { spawn } from "node:child_process";
-import { StringDecoder } from "node:string_decoder";
-import fs3 from "node:fs";
+import { spawn as spawn2 } from "node:child_process";
+import { StringDecoder as StringDecoder2 } from "node:string_decoder";
+import fs2 from "node:fs";
 import path3 from "node:path";
 function resolveC420UIRustHostBinary(rootDir2, env = {}) {
   let binPath = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
   if (!binPath) {
     const debugPath = path3.join(rootDir2, "build-resources/c420ui-rs/target/debug/c420ui-host");
     const releasePath = path3.join(rootDir2, "build-resources/c420ui-rs/target/release/c420ui-host");
-    if (fs3.existsSync(debugPath)) {
+    if (fs2.existsSync(debugPath)) {
       binPath = debugPath;
-    } else if (fs3.existsSync(releasePath)) {
+    } else if (fs2.existsSync(releasePath)) {
       binPath = releasePath;
     }
   }
-  if (!binPath || !fs3.existsSync(binPath)) {
+  if (!binPath || !fs2.existsSync(binPath)) {
     throw new Error("c420ui Rust host is missing. Run npm run build:c420ui-rs.");
   }
   return binPath;
@@ -2881,7 +1184,7 @@ async function runC420UIRustHost(options) {
   const binPath = resolveC420UIRustHostBinary(rootDir2, env);
   const childEnv = buildRustHostProcessEnv(env);
   return new Promise((resolve, reject) => {
-    const child = spawn(binPath, [command, "--json"], {
+    const child = spawn2(binPath, [command, "--json"], {
       env: childEnv,
       shell: false
     });
@@ -2942,7 +1245,7 @@ async function runC420UIRustHostJsonLines(options) {
   const binPath = resolveC420UIRustHostBinary(rootDir2, env);
   const childEnv = buildRustHostProcessEnv(env);
   return new Promise((resolve, reject) => {
-    const child = spawn(binPath, ["run-process", "--json-lines"], {
+    const child = spawn2(binPath, ["run-process", "--json-lines"], {
       env: childEnv,
       shell: false,
       stdio: ["pipe", "pipe", "pipe"]
@@ -2951,7 +1254,7 @@ async function runC420UIRustHostJsonLines(options) {
     let stderrData = "";
     let settled = false;
     let timeout;
-    const decoder = new StringDecoder("utf8");
+    const decoder = new StringDecoder2("utf8");
     function settle(error, code = 0) {
       if (settled) return;
       settled = true;
@@ -3168,11 +1471,11 @@ async function runC420UIRustProcess(options) {
 // build-resources/c420ui/src/npm-dependencies.ts
 function readPackageJson(rootDir2) {
   const packagePath = path4.join(rootDir2, "package.json");
-  if (!fs4.existsSync(packagePath)) {
+  if (!fs3.existsSync(packagePath)) {
     return { result: { status: "failed", exitCode: 1, message: "package.json was not found." } };
   }
   try {
-    const packageJson = JSON.parse(fs4.readFileSync(packagePath, "utf8"));
+    const packageJson = JSON.parse(fs3.readFileSync(packagePath, "utf8"));
     return { packageJson };
   } catch (error) {
     return {
@@ -3217,7 +1520,7 @@ function resolveC420UINpmDependency(dependency, rootDir2) {
   let currentDir = path4.resolve(rootDir2);
   while (true) {
     const candidate = path4.join(currentDir, "node_modules", dependency, "package.json");
-    if (fs4.existsSync(candidate)) return true;
+    if (fs3.existsSync(candidate)) return true;
     const parent = path4.dirname(currentDir);
     if (parent === currentDir) return false;
     currentDir = parent;
@@ -3232,7 +1535,7 @@ function requiredNpmDependencies(config) {
 function installArgs(config, rootDir2) {
   const strategy = config.installStrategy ?? "auto";
   const lockfile = config.lockfile ?? "package-lock.json";
-  const hasLockfile = fs4.existsSync(path4.join(rootDir2, lockfile));
+  const hasLockfile = fs3.existsSync(path4.join(rootDir2, lockfile));
   const command = strategy === "ci" || strategy === "auto" && hasLockfile ? "ci" : "install";
   return config.includeDev === false ? [command] : [command, "--include=dev"];
 }
@@ -3827,7 +2130,7 @@ function createC420UIDevelopmentWorkflowFromAction(task, action) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/adapter.ts
-import fs17 from "node:fs";
+import fs16 from "node:fs";
 import path17 from "node:path";
 
 // build-resources/c420ui/src/terminal/logo.ts
@@ -3838,17 +2141,17 @@ var c420uiLogoLines = [
 ];
 
 // build-resources/canva-linux/c420ui-adapter/detection/provider.ts
-import fs11 from "node:fs";
+import fs10 from "node:fs";
 import path11 from "node:path";
 import {
   execFileSync
 } from "node:child_process";
 
 // build-resources/canva-linux/project-root.ts
-import fs5 from "node:fs";
+import fs4 from "node:fs";
 import path6 from "node:path";
 function isProjectRoot(dir) {
-  return fs5.existsSync(path6.join(dir, "package.json")) && fs5.existsSync(path6.join(dir, "build-resources/canva-linux/config/actions.json")) && fs5.existsSync(path6.join(dir, "build-resources/canva-linux/config/project-ui.json"));
+  return fs4.existsSync(path6.join(dir, "package.json")) && fs4.existsSync(path6.join(dir, "build-resources/canva-linux/config/actions.json")) && fs4.existsSync(path6.join(dir, "build-resources/canva-linux/config/project-ui.json"));
 }
 function scriptDirFromArgv() {
   const scriptPath = process.argv[1];
@@ -3881,7 +2184,7 @@ function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments.ts
-import fs6 from "node:fs";
+import fs5 from "node:fs";
 import path7 from "node:path";
 var ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
 var ARTIFACT_PATH_COLLATOR = new Intl.Collator(void 0, {
@@ -3900,14 +2203,14 @@ var SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
   "*.pkg.tar.*"
 ];
 function readJsonFile(filePath) {
-  return JSON.parse(fs6.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs5.readFileSync(filePath, "utf8"));
 }
 function readPackageVersion(rootDir2) {
   return readJsonFile(path7.join(rootDir2, "package.json")).version ?? "unknown";
 }
 function loadArtifactWorkflows(rootDir2) {
   const configPath = path7.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-  if (!fs6.existsSync(configPath)) return [];
+  if (!fs5.existsSync(configPath)) return [];
   const config = readJsonFile(configPath);
   return Array.isArray(config.workflows) ? config.workflows : [];
 }
@@ -3934,15 +2237,15 @@ function candidatePathsForPattern(rootDir2, outputPattern) {
   const resolvedPattern = normalizeConfigPath(outputPattern);
   if (!resolvedPattern.includes("*")) {
     const absolutePath = path7.join(rootDir2, resolvedPattern);
-    return fs6.existsSync(absolutePath) ? [absolutePath] : [];
+    return fs5.existsSync(absolutePath) ? [absolutePath] : [];
   }
   const firstWildcard = resolvedPattern.indexOf("*");
   const scanRootRelative = path7.dirname(resolvedPattern.slice(0, firstWildcard));
   const scanRoot = path7.join(rootDir2, scanRootRelative || ".");
-  if (!fs6.existsSync(scanRoot)) return [];
+  if (!fs5.existsSync(scanRoot)) return [];
   const matcher = patternToRegExp(resolvedPattern);
   const candidates = [];
-  for (const entry of fs6.readdirSync(scanRoot, { withFileTypes: true })) {
+  for (const entry of fs5.readdirSync(scanRoot, { withFileTypes: true })) {
     const absolutePath = path7.join(scanRoot, entry.name);
     const relativePath = normalizeConfigPath(path7.relative(rootDir2, absolutePath));
     if (matcher.test(relativePath)) candidates.push(absolutePath);
@@ -3983,12 +2286,12 @@ function normalizeMetadata(metadata) {
   };
 }
 function readVersionSidecar(filePath) {
-  const raw = fs6.readFileSync(filePath, "utf8").trim();
+  const raw = fs5.readFileSync(filePath, "utf8").trim();
   return raw ? { version: raw, fullVersion: raw } : {};
 }
 function readArtifactPackageJsonVersion(artifactPath) {
   const packageJsonPath = path7.join(artifactPath, "package.json");
-  if (!fs6.existsSync(packageJsonPath)) return {};
+  if (!fs5.existsSync(packageJsonPath)) return {};
   const version = readJsonFile(packageJsonPath).version?.trim();
   return version ? { version, fullVersion: version } : {};
 }
@@ -3999,11 +2302,11 @@ function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
     `${artifactPath}.version`
   ];
   for (const sidecar of sidecars) {
-    if (!fs6.existsSync(sidecar)) continue;
+    if (!fs5.existsSync(sidecar)) continue;
     if (sidecar.endsWith(".json")) return normalizeMetadata(readMetadataJson(sidecar));
     return readVersionSidecar(sidecar);
   }
-  if (fs6.existsSync(artifactPath) && fs6.statSync(artifactPath).isDirectory()) {
+  if (fs5.existsSync(artifactPath) && fs5.statSync(artifactPath).isDirectory()) {
     const markers = [
       path7.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
       path7.join(artifactPath, "config/canva-linux/build-metadata.json"),
@@ -4013,7 +2316,7 @@ function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
       ] : []
     ];
     for (const marker of markers) {
-      if (fs6.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
+      if (fs5.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
     }
     return readArtifactPackageJsonVersion(artifactPath);
   }
@@ -4068,48 +2371,48 @@ function buildCanvaLinuxArtifactFragments(rootDir2) {
 }
 
 // build-resources/c420ui/operations/detection/appimage-detection.ts
-import fs8 from "node:fs";
+import fs7 from "node:fs";
 import path8 from "node:path";
 
 // build-resources/c420ui/operations/detection/version-marker.ts
-import fs7 from "node:fs";
+import fs6 from "node:fs";
 function readVersionFile(versionFile) {
-  if (fs7.existsSync(versionFile)) {
-    return fs7.readFileSync(versionFile, "utf8").trim();
+  if (fs6.existsSync(versionFile)) {
+    return fs6.readFileSync(versionFile, "utf8").trim();
   }
   return "";
 }
 function readPackageJsonVersion(packageFile) {
-  if (!fs7.existsSync(packageFile)) return "";
+  if (!fs6.existsSync(packageFile)) return "";
   try {
-    const pkg = JSON.parse(fs7.readFileSync(packageFile, "utf8"));
+    const pkg = JSON.parse(fs6.readFileSync(packageFile, "utf8"));
     return pkg.version || "";
   } catch {
     return "";
   }
 }
 function readBuildMetadataFullVersion(metadataFile) {
-  if (!fs7.existsSync(metadataFile)) return "";
+  if (!fs6.existsSync(metadataFile)) return "";
   try {
-    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
+    const m = JSON.parse(fs6.readFileSync(metadataFile, "utf8"));
     return m.fullVersion || m.version || "";
   } catch {
     return "";
   }
 }
 function readBuildMetadataBaseVersion(metadataFile) {
-  if (!fs7.existsSync(metadataFile)) return "";
+  if (!fs6.existsSync(metadataFile)) return "";
   try {
-    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
+    const m = JSON.parse(fs6.readFileSync(metadataFile, "utf8"));
     return m.baseVersion || m.basePhase || m.version || "";
   } catch {
     return "";
   }
 }
 function readBuildMetadataHash(metadataFile, field = "canvaLinuxSourceHash") {
-  if (!fs7.existsSync(metadataFile)) return "";
+  if (!fs6.existsSync(metadataFile)) return "";
   try {
-    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
+    const m = JSON.parse(fs6.readFileSync(metadataFile, "utf8"));
     return m[field] || "";
   } catch {
     return "";
@@ -4119,9 +2422,9 @@ function readBuildMetadataHash(metadataFile, field = "canvaLinuxSourceHash") {
 // build-resources/c420ui/operations/detection/appimage-detection.ts
 function detectAppImageArtifacts(rootDir2) {
   const distDir = path8.join(rootDir2, "dist");
-  if (!fs8.existsSync(distDir)) return false;
+  if (!fs7.existsSync(distDir)) return false;
   try {
-    const files = fs8.readdirSync(distDir);
+    const files = fs7.readdirSync(distDir);
     return files.some((file) => file.endsWith(".AppImage"));
   } catch {
     return false;
@@ -4129,9 +2432,9 @@ function detectAppImageArtifacts(rootDir2) {
 }
 function findLatestAppImageArtifact(rootDir2) {
   const distDir = path8.join(rootDir2, "dist");
-  if (!fs8.existsSync(distDir)) return "";
+  if (!fs7.existsSync(distDir)) return "";
   try {
-    const files = fs8.readdirSync(distDir).filter((file) => file.endsWith(".AppImage")).sort();
+    const files = fs7.readdirSync(distDir).filter((file) => file.endsWith(".AppImage")).sort();
     const latest = files[files.length - 1];
     return latest ? path8.join("dist", latest) : "";
   } catch {
@@ -4147,7 +2450,7 @@ function findArtifactBuildMetadataMarker(artifactPath, rootDir2) {
     `${absoluteArtifactPath}.version`
   ];
   for (const marker of markers) {
-    if (fs8.existsSync(marker)) return marker;
+    if (fs7.existsSync(marker)) return marker;
   }
   return "";
 }
@@ -4159,7 +2462,7 @@ function detectAppImageVersion(rootDir2) {
   const findMetadataInDist = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = fs8.readdirSync(dir, { withFileTypes: true });
+      const entries = fs7.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path8.join(dir, entry.name);
         if (entry.isDirectory()) {
@@ -4174,7 +2477,7 @@ function detectAppImageVersion(rootDir2) {
     return "";
   };
   const distDir = path8.join(rootDir2, "dist");
-  if (fs8.existsSync(distDir)) {
+  if (fs7.existsSync(distDir)) {
     const distMetadata = findMetadataInDist(distDir, 0);
     version = readBuildMetadataBaseVersion(distMetadata);
     if (version) return version;
@@ -4194,7 +2497,7 @@ function detectAppImageFullVersion(rootDir2) {
   const findMetadataInDist = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = fs8.readdirSync(dir, { withFileTypes: true });
+      const entries = fs7.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path8.join(dir, entry.name);
         if (entry.isDirectory()) {
@@ -4209,7 +2512,7 @@ function detectAppImageFullVersion(rootDir2) {
     return "";
   };
   const distDir = path8.join(rootDir2, "dist");
-  if (fs8.existsSync(distDir)) {
+  if (fs7.existsSync(distDir)) {
     const distMetadata = findMetadataInDist(distDir, 0);
     version = readBuildMetadataFullVersion(distMetadata);
     if (version) return version;
@@ -4224,7 +2527,7 @@ function detectAppImageHash(rootDir2) {
   const findMetadataInDist = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = fs8.readdirSync(dir, { withFileTypes: true });
+      const entries = fs7.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path8.join(dir, entry.name);
         if (entry.isDirectory()) {
@@ -4239,7 +2542,7 @@ function detectAppImageHash(rootDir2) {
     return "";
   };
   const distDir = path8.join(rootDir2, "dist");
-  if (fs8.existsSync(distDir)) {
+  if (fs7.existsSync(distDir)) {
     const distMetadata = findMetadataInDist(distDir, 0);
     hash = readBuildMetadataHash(distMetadata, "canvaLinuxSourceHash");
     if (hash) return hash;
@@ -4248,14 +2551,14 @@ function detectAppImageHash(rootDir2) {
 }
 
 // build-resources/c420ui/operations/detection/flatpak-detection.ts
-import fs9 from "node:fs";
+import fs8 from "node:fs";
 import path9 from "node:path";
 import os from "node:os";
-import { spawnSync as spawnSync3 } from "node:child_process";
+import { spawnSync as spawnSync2 } from "node:child_process";
 var APP_ID = "io.github.coletivo420.canva-linux";
 function detectFlatpakSystemInstall() {
   try {
-    const result = spawnSync3("flatpak", ["--system", "info", APP_ID], {
+    const result = spawnSync2("flatpak", ["--system", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -4265,7 +2568,7 @@ function detectFlatpakSystemInstall() {
 }
 function detectFlatpakUserInstall() {
   try {
-    const result = spawnSync3("flatpak", ["--user", "info", APP_ID], {
+    const result = spawnSync2("flatpak", ["--user", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -4276,13 +2579,13 @@ function detectFlatpakUserInstall() {
 function findFlatpakVersionMarker(scopeRoot) {
   const markerBase = `app/${APP_ID}/current/active/files/share/canva-linux/version`;
   const directPath = path9.join(scopeRoot, markerBase);
-  if (fs9.existsSync(directPath)) return directPath;
+  if (fs8.existsSync(directPath)) return directPath;
   const appDir = path9.join(scopeRoot, `app/${APP_ID}`);
-  if (!fs9.existsSync(appDir)) return "";
+  if (!fs8.existsSync(appDir)) return "";
   const findVersionMarker = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = fs9.readdirSync(dir, { withFileTypes: true });
+      const entries = fs8.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path9.join(dir, entry.name);
         if (entry.isDirectory()) {
@@ -4299,9 +2602,9 @@ function findFlatpakVersionMarker(scopeRoot) {
   return findVersionMarker(appDir, 0);
 }
 function readFlatpakVersionMarkerKey(markerFile, key) {
-  if (!fs9.existsSync(markerFile)) return "";
+  if (!fs8.existsSync(markerFile)) return "";
   try {
-    const raw = fs9.readFileSync(markerFile, "utf8").trim();
+    const raw = fs8.readFileSync(markerFile, "utf8").trim();
     if (!raw) return "";
     if (raw.includes(`"${key}"`)) {
       const match = raw.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
@@ -4312,17 +2615,17 @@ function readFlatpakVersionMarkerKey(markerFile, key) {
   return "";
 }
 function readFlatpakVersionMarker(markerFile) {
-  if (!fs9.existsSync(markerFile)) return "";
+  if (!fs8.existsSync(markerFile)) return "";
   const version = readFlatpakVersionMarkerKey(markerFile, "version");
   if (version) return version;
   try {
-    return fs9.readFileSync(markerFile, "utf8").split("\n")[0]?.trim() ?? "";
+    return fs8.readFileSync(markerFile, "utf8").split("\n")[0]?.trim() ?? "";
   } catch {
     return "";
   }
 }
 function readFlatpakFullVersionMarker(markerFile) {
-  if (!fs9.existsSync(markerFile)) return "";
+  if (!fs8.existsSync(markerFile)) return "";
   const version = readFlatpakVersionMarkerKey(markerFile, "fullVersion");
   if (version) return version;
   return readFlatpakVersionMarker(markerFile);
@@ -4332,7 +2635,7 @@ function detectFlatpakSystemVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = spawnSync3(
+    const result = spawnSync2(
       "flatpak",
       ["--system", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }
@@ -4350,7 +2653,7 @@ function detectFlatpakUserVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = spawnSync3(
+    const result = spawnSync2(
       "flatpak",
       ["--user", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }
@@ -4391,17 +2694,17 @@ function detectFlatpakUserHash() {
 }
 
 // build-resources/c420ui/operations/detection/native-detection.ts
-import fs10 from "node:fs";
+import fs9 from "node:fs";
 import path10 from "node:path";
 import os2 from "node:os";
 var APP_EXECUTABLE = "canva-linux";
 var APP_NATIVE_DESKTOP_NAME = "io.github.coletivo420.canva-linux.native.desktop";
 function detectNativeSystemInstall() {
-  return fs10.existsSync("/opt/canva-linux") || fs10.existsSync(`/usr/local/bin/${APP_EXECUTABLE}`) || fs10.existsSync(`/usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME}`);
+  return fs9.existsSync("/opt/canva-linux") || fs9.existsSync(`/usr/local/bin/${APP_EXECUTABLE}`) || fs9.existsSync(`/usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME}`);
 }
 function detectNativeUserInstall() {
   const home = os2.homedir();
-  return fs10.existsSync(path10.join(home, ".local/opt/canva-linux")) || fs10.existsSync(path10.join(home, `.local/bin/${APP_EXECUTABLE}`)) || fs10.existsSync(
+  return fs9.existsSync(path10.join(home, ".local/opt/canva-linux")) || fs9.existsSync(path10.join(home, `.local/bin/${APP_EXECUTABLE}`)) || fs9.existsSync(
     path10.join(home, `.local/share/applications/${APP_NATIVE_DESKTOP_NAME}`)
   );
 }
@@ -4490,7 +2793,7 @@ function readPackage(rootDir2) {
     return cachedPackageJson.packageJson;
   }
   const packageJson = JSON.parse(
-    fs11.readFileSync(path11.join(rootDir2, "package.json"), "utf8")
+    fs10.readFileSync(path11.join(rootDir2, "package.json"), "utf8")
   );
   cachedPackageJson = {
     rootDir: rootDir2,
@@ -4551,8 +2854,8 @@ var emptyInstallations = {
 function readPhase(rootDir2) {
   const projectUiPath = path11.join(rootDir2, "build-resources/canva-linux/config/project-ui.json");
   try {
-    if (!fs11.existsSync(projectUiPath)) return "unknown";
-    const projectUi = JSON.parse(fs11.readFileSync(projectUiPath, "utf8"));
+    if (!fs10.existsSync(projectUiPath)) return "unknown";
+    const projectUi = JSON.parse(fs10.readFileSync(projectUiPath, "utf8"));
     return projectUi.phase ?? "unknown";
   } catch {
     return "unknown";
@@ -4658,7 +2961,7 @@ function buildCanvaLinuxOverviewStatus(rootDir2 = findCanvaLinuxProjectRoot()) {
 
 // build-resources/canva-linux/c420ui-adapter/build-metadata-loader.ts
 import { execFileSync as execFileSync2 } from "node:child_process";
-import fs13 from "node:fs";
+import fs12 from "node:fs";
 import path13 from "node:path";
 
 // build-resources/electron/main/build-metadata.ts
@@ -4672,7 +2975,7 @@ __export(build_metadata_exports, {
   normalizeBuildRevision: () => normalizeBuildRevision,
   normalizeLoadedBuildMetadata: () => normalizeLoadedBuildMetadata
 });
-import fs12 from "node:fs";
+import fs11 from "node:fs";
 import path12 from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -4725,7 +3028,7 @@ function createBuildMetadata(input) {
 }
 function readJsonFile2(filePath) {
   try {
-    return JSON.parse(fs12.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs11.readFileSync(filePath, "utf8"));
   } catch {
     return null;
   }
@@ -4796,13 +3099,13 @@ var UNKNOWN_BASE_VERSION2 = "0.0.0";
 var UNKNOWN_BUILD_REVISION2 = "unknown";
 function readJsonFile3(filePath) {
   try {
-    return JSON.parse(fs13.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs12.readFileSync(filePath, "utf8"));
   } catch {
     return null;
   }
 }
 function hasGitRepository(rootDir2) {
-  return fs13.existsSync(path13.join(rootDir2, ".git"));
+  return fs12.existsSync(path13.join(rootDir2, ".git"));
 }
 function resolveEnvBuildRevision() {
   for (const key of [
@@ -4894,11 +3197,11 @@ function loadEffectiveBuildMetadata(rootDir2, options = {}) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
-import fs15 from "node:fs";
+import fs14 from "node:fs";
 import path15 from "node:path";
 
 // build-resources/canva-linux/actions/registry.ts
-import fs14 from "node:fs";
+import fs13 from "node:fs";
 import path14 from "node:path";
 var ACTION_GROUPS = ["install", "development", "maintenance"];
 var ACTION_SECTIONS = [
@@ -4945,7 +3248,7 @@ function loadCanvaLinuxActionRegistry(rootDir2 = findProjectRoot()) {
   const resolvedRoot = path14.resolve(rootDir2);
   if (cachedActions && cachedRoot === resolvedRoot) return cachedActions;
   const actions = JSON.parse(
-    fs14.readFileSync(actionsPath(resolvedRoot), "utf8")
+    fs13.readFileSync(actionsPath(resolvedRoot), "utf8")
   );
   validateCanvaLinuxActions(actions);
   cachedRoot = resolvedRoot;
@@ -4980,11 +3283,11 @@ function loadCanvaLinuxC420UIActions(rootDir2) {
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
 var ARTIFACTS_CONFIG_PATH2 = "build-resources/canva-linux/config/artifacts.json";
 function readJsonFile4(filePath) {
-  if (!fs15.existsSync(filePath)) {
+  if (!fs14.existsSync(filePath)) {
     throw new Error(`Missing Canva Linux configuration file: ${filePath}`);
   }
   try {
-    return JSON.parse(fs15.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs14.readFileSync(filePath, "utf8"));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to parse configuration file ${filePath}: ${message}`);
@@ -5018,10 +3321,10 @@ function loadCanvaLinuxArtifactWorkflows(rootDir2, version) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/development.ts
-import fs16 from "node:fs";
+import fs15 from "node:fs";
 import path16 from "node:path";
 function readJsonFile5(filePath) {
-  return JSON.parse(fs16.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs15.readFileSync(filePath, "utf8"));
 }
 function loadCanvaLinuxDevelopmentTasks(rootDir2) {
   const developmentConfigPath = path16.join(
@@ -5057,7 +3360,7 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir2, actions = loadCanvaLinuxC4
 
 // build-resources/canva-linux/c420ui-adapter/adapter.ts
 function readJsonFile6(filePath) {
-  return JSON.parse(fs17.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs16.readFileSync(filePath, "utf8"));
 }
 function stateHome() {
   const xdgStateHome = process.env.XDG_STATE_HOME?.trim();
@@ -5185,7 +3488,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return toolSettingsPath(loadProjectUi().stateDirectoryName);
   }
   function loadCanvaLinuxActions2() {
-    if (!fs17.existsSync(actionsJsonPath)) {
+    if (!fs16.existsSync(actionsJsonPath)) {
       throw new Error(`Missing Canva Linux actions registry: ${actionsJsonPath}`);
     }
     return loadCanvaLinuxC420UIActions(resolvedRootDir);

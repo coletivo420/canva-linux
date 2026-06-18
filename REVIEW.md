@@ -94,9 +94,11 @@ Request changes if a PR:
   `build-resources/c420ui/operations`;
 - treats the future `c420ui-tui` migration as an optional backend toggle instead
   of the direct Dev12 Phase 3-5 roadmap.
-- wires `c420ui-tui` as a runtime backend before the direct replacement phase;
+- bypasses `c420ui-tui run --json-lines` for the official c420ui terminal runtime;
 - introduces a terminal backend environment switch;
 - moves the TypeScript Action Engine into Rust in the TUI contract scaffold.
+- executes project actions directly inside `c420ui-tui` instead of emitting
+  `action-selected` for the TypeScript Action Engine.
 
 ## c420ui version/hash review
 
