@@ -1,7 +1,6 @@
-import fs from "node:fs";
 import path from "node:path";
 import { info, warn } from "../../host/ui.js";
-import { projectRoot } from "../../host/paths.js";
+import { exists as pathExists, projectRoot } from "../../host/paths.js";
 import { runC420UIRustFsOps, type c420uiRustFsOperation } from "../../src/rust-fs.js";
 
 export async function installIconFile(
@@ -54,9 +53,9 @@ export async function installIcons(
     const sizePath = path.join(srcRoot, `${size}.png`);
     const sizeAppsPath = path.join(srcRoot, `${size}/apps/${appId}.png`);
 
-    if (fs.existsSync(sizePath)) {
+    if (pathExists(sizePath)) {
       src = sizePath;
-    } else if (fs.existsSync(sizeAppsPath)) {
+    } else if (pathExists(sizeAppsPath)) {
       src = sizeAppsPath;
     }
 

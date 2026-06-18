@@ -11,6 +11,14 @@ export type c420uiNativeInstallConfig = {
   appId: string;
   executable: string;
   desktopName: string;
+  buildMetadataTarget: string;
+  versionMarkerName: string;
+  desktop: {
+    name: string;
+    comment: string;
+    categories: string;
+    startupWMClass: string;
+  };
   system: c420uiNativeInstallPaths;
   user: c420uiNativeInstallPaths;
 };
@@ -60,12 +68,27 @@ export function validateC420UINativeInstallConfig(input: unknown): c420uiNativeI
     appId: requireString(obj.appId, "appId"),
     executable: requireString(obj.executable, "executable"),
     desktopName: requireString(obj.desktopName, "desktopName"),
+    buildMetadataTarget: requireString(obj.buildMetadataTarget, "buildMetadataTarget"),
+    versionMarkerName: requireString(obj.versionMarkerName, "versionMarkerName"),
+    desktop: validateDesktopConfig(obj.desktop),
     system: validatePathGroup(obj.system, "system", true),
     user: validatePathGroup(obj.user, "user", false),
   };
   assertNoTraversal(config.executable, "executable");
+  assertNoTraversal(config.buildMetadataTarget, "buildMetadataTarget");
+  assertNoTraversal(config.versionMarkerName, "versionMarkerName");
   if (!config.desktopName.endsWith(".desktop")) {
     throw new Error("desktopName must end with .desktop");
   }
   return config;
+}
+
+function validateDesktopConfig(input: unknown): c420uiNativeInstallConfig["desktop"] {
+  const obj = requireObject(input, "desktop");
+  return {
+    name: requireString(obj.name, "desktop.name"),
+    comment: requireString(obj.comment, "desktop.comment"),
+    categories: requireString(obj.categories, "desktop.categories"),
+    startupWMClass: requireString(obj.startupWMClass, "desktop.startupWMClass"),
+  };
 }

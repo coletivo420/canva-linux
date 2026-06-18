@@ -1,26 +1,21 @@
-import fs from "node:fs";
-
 export function buildDesktopFileContent(
-  execPath: string,
-  iconName: string,
+  options: {
+    execPath: string;
+    iconName: string;
+    name: string;
+    comment: string;
+    categories: string;
+    startupWMClass: string;
+  },
 ): string {
   return `[Desktop Entry]
 Type=Application
-Name=Canva
-Comment=A community opensource desktop wrapper for use with Canva
-Exec=${execPath}
-Icon=${iconName}
+Name=${options.name}
+Comment=${options.comment}
+Exec=${options.execPath}
+Icon=${options.iconName}
 Terminal=false
-Categories=Graphics;
-StartupWMClass=io.github.coletivo420.canva-linux
+Categories=${options.categories}
+StartupWMClass=${options.startupWMClass}
 `;
-}
-
-export function writeDesktopFile(
-  targetPath: string,
-  execPath: string,
-  iconName: string,
-): void {
-  const content = buildDesktopFileContent(execPath, iconName);
-  fs.writeFileSync(targetPath, content, "utf8");
 }

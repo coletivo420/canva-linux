@@ -4,6 +4,7 @@ use crate::json::CommandEnvelope;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Serialize)]
 struct FsOpResult {
@@ -48,6 +49,14 @@ fn ensure_parent(path: &Path) -> Result<(), String> {
         .map_err(|e| format!("failed to create parent {}: {}", parent.display(), e))
 }
 
+fn run_sudo_command(root: &Path, command: &str, args: Vec<String>) -> Result<(), String> {
+    let status = run_sudo(root, false, command, &args)?;
+    if status != 0 {
+        return Err(format!("sudo {} failed with status {}", command, status));
+    }
+    Ok(())
+}
+
 #[cfg(unix)]
 fn apply_mode(path: &Path, mode: Option<u32>) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
@@ -71,6 +80,22 @@ fn chmod_path(path: &Path, mode: &str) -> Result<(), String> {
         .map_err(|e| format!("invalid chmod mode {}: {}", mode, e))?;
     fs::set_permissions(path, fs::Permissions::from_mode(parsed))
         .map_err(|e| format!("failed to chmod {}: {}", path.display(), e))
+}
+
+fn chmod_recursive(path: &Path, mode: &str) -> Result<(), String> {
+    chmod_path(path, mode)?;
+    let metadata = fs::symlink_metadata(path)
+        .map_err(|e| format!("failed to inspect {}: {}", path.display(), e))?;
+    if !metadata.is_dir() || metadata.file_type().is_symlink() {
+        return Ok(());
+    }
+    for entry in
+        fs::read_dir(path).map_err(|e| format!("failed to read {}: {}", path.display(), e))?
+    {
+        let entry = entry.map_err(|e| format!("failed to read directory entry: {}", e))?;
+        chmod_recursive(&entry.path(), mode)?;
+    }
+    Ok(())
 }
 
 #[cfg(not(unix))]
@@ -138,15 +163,72 @@ fn sudo_install_file(
         source.to_string_lossy().to_string(),
         target.to_string_lossy().to_string(),
     ];
-    let status = run_sudo(root, false, "install", &args)?;
-    if status != 0 {
-        return Err(format!(
-            "sudo install failed for {} with status {}",
-            target.display(),
-            status
-        ));
+    run_sudo_command(root, "install", args).map_err(|e| format!("{} for {}", e, target.display()))
+}
+
+fn sudo_write_file(
+    root: &Path,
+    target: &Path,
+    content: &str,
+    mode: Option<u32>,
+) -> Result<(), String> {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| format!("failed to read system time: {}", e))?
+        .as_nanos();
+    let temp_path = std::env::temp_dir().join(format!("c420ui-host-write-{}", nanos));
+    fs::write(&temp_path, content)
+        .map_err(|e| format!("failed to write temp file {}: {}", temp_path.display(), e))?;
+    let result = sudo_install_file(root, &temp_path, target, mode);
+    let _ = fs::remove_file(&temp_path);
+    result
+}
+
+fn sudo_copy_tree(root: &Path, source: &Path, target: &Path) -> Result<(), String> {
+    run_sudo_command(
+        root,
+        "rm",
+        vec!["-rf".to_string(), target.to_string_lossy().to_string()],
+    )?;
+    run_sudo_command(
+        root,
+        "mkdir",
+        vec!["-p".to_string(), target.to_string_lossy().to_string()],
+    )?;
+    run_sudo_command(
+        root,
+        "cp",
+        vec![
+            "-a".to_string(),
+            format!("{}/.", source.to_string_lossy()),
+            target.to_string_lossy().to_string(),
+        ],
+    )
+}
+
+fn sudo_remove_existing(
+    root: &Path,
+    target: &Path,
+    recursive: bool,
+    force: bool,
+) -> Result<&'static str, String> {
+    if !target.exists() && target.symlink_metadata().is_err() {
+        if force {
+            return Ok("missing");
+        }
+        return Err(format!("path does not exist: {}", target.display()));
     }
-    Ok(())
+    let mut args = Vec::new();
+    if recursive && force {
+        args.push("-rf".to_string());
+    } else if recursive {
+        args.push("-r".to_string());
+    } else if force {
+        args.push("-f".to_string());
+    }
+    args.push(target.to_string_lossy().to_string());
+    run_sudo_command(root, "rm", args)?;
+    Ok("done")
 }
 
 #[cfg(unix)]
@@ -210,6 +292,19 @@ pub fn execute() -> Result<(), String> {
                     });
                     continue;
                 }
+                if input.allow_sudo {
+                    run_sudo_command(
+                        &root,
+                        "mkdir",
+                        vec!["-p".to_string(), target.to_string_lossy().to_string()],
+                    )?;
+                    results.push(FsOpResult {
+                        kind: "ensure-dir",
+                        path,
+                        status: "done",
+                    });
+                    continue;
+                }
                 fs::create_dir_all(&target)
                     .map_err(|e| format!("failed to create {}: {}", target.display(), e))?;
                 results.push(FsOpResult {
@@ -226,6 +321,15 @@ pub fn execute() -> Result<(), String> {
                         kind: "copy-tree",
                         path: to,
                         status: "planned",
+                    });
+                    continue;
+                }
+                if input.allow_sudo {
+                    sudo_copy_tree(&root, &source, &target)?;
+                    results.push(FsOpResult {
+                        kind: "copy-tree",
+                        path: to,
+                        status: "done",
                     });
                     continue;
                 }
@@ -325,6 +429,15 @@ pub fn execute() -> Result<(), String> {
                     });
                     continue;
                 }
+                if input.allow_sudo {
+                    sudo_write_file(&root, &target, &content, mode)?;
+                    results.push(FsOpResult {
+                        kind: "write-file",
+                        path,
+                        status: "done",
+                    });
+                    continue;
+                }
                 ensure_parent(&target)?;
                 fs::write(&target, content)
                     .map_err(|e| format!("failed to write {}: {}", target.display(), e))?;
@@ -349,7 +462,11 @@ pub fn execute() -> Result<(), String> {
                     });
                     continue;
                 }
-                let status = remove_existing(&target, recursive, force)?;
+                let status = if input.allow_sudo {
+                    sudo_remove_existing(&root, &target, recursive, force)?
+                } else {
+                    remove_existing(&target, recursive, force)?
+                };
                 results.push(FsOpResult {
                     kind: "remove",
                     path,
@@ -364,6 +481,44 @@ pub fn execute() -> Result<(), String> {
                         kind: "symlink",
                         path: to,
                         status: "planned",
+                    });
+                    continue;
+                }
+                if input.allow_sudo {
+                    run_sudo_command(
+                        &root,
+                        "mkdir",
+                        vec![
+                            "-p".to_string(),
+                            target
+                                .parent()
+                                .ok_or_else(|| format!("path has no parent: {}", target.display()))?
+                                .to_string_lossy()
+                                .to_string(),
+                        ],
+                    )?;
+                    if target.exists() || fs::symlink_metadata(&target).is_ok() {
+                        if !force {
+                            return Err(format!(
+                                "symlink target already exists: {}",
+                                target.display()
+                            ));
+                        }
+                        sudo_remove_existing(&root, &target, true, true)?;
+                    }
+                    run_sudo_command(
+                        &root,
+                        "ln",
+                        vec![
+                            "-s".to_string(),
+                            source.to_string_lossy().to_string(),
+                            target.to_string_lossy().to_string(),
+                        ],
+                    )?;
+                    results.push(FsOpResult {
+                        kind: "symlink",
+                        path: to,
+                        status: "done",
                     });
                     continue;
                 }
@@ -387,7 +542,7 @@ pub fn execute() -> Result<(), String> {
             FsOperationInput::Chmod {
                 path,
                 mode,
-                recursive: _,
+                recursive,
             } => {
                 let target = validate_absolute_path(&path)?;
                 if input.dry_run {
@@ -398,7 +553,26 @@ pub fn execute() -> Result<(), String> {
                     });
                     continue;
                 }
-                chmod_path(&target, &mode)?;
+                if input.allow_sudo {
+                    let mut args = Vec::new();
+                    if recursive {
+                        args.push("-R".to_string());
+                    }
+                    args.push(mode);
+                    args.push(target.to_string_lossy().to_string());
+                    run_sudo_command(&root, "chmod", args)?;
+                    results.push(FsOpResult {
+                        kind: "chmod",
+                        path,
+                        status: "done",
+                    });
+                    continue;
+                }
+                if recursive {
+                    chmod_recursive(&target, &mode)?;
+                } else {
+                    chmod_path(&target, &mode)?;
+                }
                 results.push(FsOpResult {
                     kind: "chmod",
                     path,

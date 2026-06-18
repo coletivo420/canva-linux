@@ -6,6 +6,14 @@ const fixture = {
   appId: "example.app",
   executable: "example-app",
   desktopName: "example.app.desktop",
+  buildMetadataTarget: "config/example/build-metadata.json",
+  versionMarkerName: "EXAMPLE_VERSION",
+  desktop: {
+    name: "Example",
+    comment: "Example desktop wrapper",
+    categories: "Graphics;",
+    startupWMClass: "example.app",
+  },
   system: {
     prefix: "/opt/example-app",
     bin: "/usr/local/bin/example-app",

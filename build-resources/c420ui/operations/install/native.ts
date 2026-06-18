@@ -13,14 +13,13 @@ import { requireC420UIRustCommands } from "../../src/rust-preflight.js";
 import { validateC420UINativeInstallConfig, type c420uiNativeInstallConfig } from "../../src/install-config.js";
 import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
 import { installBuildMetadataMarker } from "./build-metadata-marker.js";
-import { writeDesktopFile } from "./desktop-entry.js";
+import { buildDesktopFileContent } from "./desktop-entry.js";
 import { installIcons } from "./icons.js";
 import { updateDesktopCaches } from "./desktop-cache.js";
 import { printNativePostInstallGuidance } from "../host/guidance.js";
 import type { c420uiLogEvent } from "../../src/events.js";
 
-function loadNativeInstallConfig(rootDir: string): c420uiNativeInstallConfig {
-  const configPath = path.join(rootDir, "build-resources/canva-linux/config/install-native.json");
+function loadNativeInstallConfig(configPath: string): c420uiNativeInstallConfig {
   return validateC420UINativeInstallConfig(JSON.parse(fs.readFileSync(configPath, "utf8")));
 }
 
@@ -30,11 +29,16 @@ function emitLog(event: c420uiLogEvent): void {
   else info(event.line);
 }
 
-export async function runNativeInstall(argv: string[]): Promise<void> {
+export async function runNativeInstall(
+  argv: string[],
+  options: { configPath?: string } = {},
+): Promise<void> {
   const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
   const scope = resolveNativeScope(process.env);
-  const nativeInstall = loadNativeInstallConfig(rootDir);
+  const nativeInstall = loadNativeInstallConfig(
+    options.configPath ?? path.join(rootDir, "build-resources/canva-linux/config/install-native.json"),
+  );
 
   await requireC420UIRustCommands({
     rootDir,
@@ -99,82 +103,26 @@ export async function runNativeInstall(argv: string[]): Promise<void> {
     executable: nativeInstall.executable,
   });
 
-  const buildMetadataTarget = path.join(installPaths.prefix, "config/canva-linux/build-metadata.json");
+  const buildMetadataTarget = path.join(installPaths.prefix, nativeInstall.buildMetadataTarget);
   await installBuildMetadataMarker(buildMetadataTarget, scope, { dryRun, rootDir });
 
   const versionMarker = process.env.PROJECT_PHASE || "unknown";
-  const versionTarget = path.join(installPaths.prefix, "CANVA_LINUX_VERSION");
-  if (scope === "system") {
-    const tmpVersionMarker = path.join(os.tmpdir(), `canva-linux-version-${Date.now()}`);
-    try {
-      if (!dryRun) {
-        fs.writeFileSync(tmpVersionMarker, `${versionMarker}\n`, "utf8");
-      }
-      if (dryRun) {
-        info(`[dry-run] sudo install -Dm644 ${tmpVersionMarker} ${versionTarget}`);
-      } else {
-        const res = await runC420UIRustProcess({
-          rootDir,
-          command: "sudo",
-          args: ["install", "-Dm644", tmpVersionMarker, versionTarget],
-          cwd: rootDir,
-          env: process.env,
-          label: "install-version-marker",
-          emitLog,
-          emitProgress: () => {},
-        });
-        if (res.code !== 0) {
-          throw new Error(`Failed to write version marker to ${versionTarget}`);
-        }
-      }
-    } finally {
-      if (!dryRun) fs.rmSync(tmpVersionMarker, { force: true });
-    }
-  } else if (dryRun) {
-    console.log(`[dry-run] printf "%s\\n" "${versionMarker}" > ${versionTarget}`);
-  } else {
-    await runC420UIRustFsOps({
-      rootDir,
-      operations: [{ kind: "write-file", path: versionTarget, content: `${versionMarker}\n`, mode: 0o644 }],
-      env: process.env,
-    });
-  }
-
-  const tmpDesktop = path.join(os.tmpdir(), `canva-linux-${Date.now()}.desktop`);
-  if (dryRun) {
-    console.log(`[dry-run] build desktop file at ${tmpDesktop}`);
-  } else {
-    writeDesktopFile(tmpDesktop, path.join(installPaths.prefix, nativeInstall.executable), nativeInstall.appId);
-  }
-
-  if (scope === "system") {
-    if (dryRun) {
-      info(`[dry-run] sudo install -Dm644 ${tmpDesktop} ${installPaths.desktop}`);
-    } else {
-      const res = await runC420UIRustProcess({
-        rootDir,
-        command: "sudo",
-        args: ["install", "-Dm644", tmpDesktop, installPaths.desktop],
-        cwd: rootDir,
-        env: process.env,
-        label: "install-desktop-file",
-        emitLog,
-        emitProgress: () => {},
-      });
-      if (res.code !== 0) {
-        throw new Error(`Failed to install desktop file: ${installPaths.desktop}`);
-      }
-    }
-  } else if (dryRun) {
-    console.log(`[dry-run] install -Dm644 ${tmpDesktop} ${installPaths.desktop}`);
-  } else {
-    await runC420UIRustFsOps({
-      rootDir,
-      operations: [{ kind: "install-file", from: tmpDesktop, to: installPaths.desktop, mode: 0o644 }],
-      env: process.env,
-    });
-  }
-  if (!dryRun && fs.existsSync(tmpDesktop)) fs.rmSync(tmpDesktop, { force: true });
+  const versionTarget = path.join(installPaths.prefix, nativeInstall.versionMarkerName);
+  const desktopContent = buildDesktopFileContent({
+    execPath: path.join(installPaths.prefix, nativeInstall.executable),
+    iconName: nativeInstall.appId,
+    ...nativeInstall.desktop,
+  });
+  await runC420UIRustFsOps({
+    rootDir,
+    operations: [
+      { kind: "write-file", path: versionTarget, content: `${versionMarker}\n`, mode: 0o644 },
+      { kind: "write-file", path: installPaths.desktop, content: desktopContent, mode: 0o644 },
+    ],
+    dryRun,
+    allowSudo: scope === "system",
+    env: process.env,
+  });
 
   const iconSrc = path.join(rootDir, "build-resources/canva-linux/assets/icons/hicolor");
   await installIcons(scope, nativeInstall.appId, iconSrc, installPaths.iconRoot, { dryRun });
@@ -207,90 +155,6 @@ async function installNativeFromDist(
 ) {
   const { dryRun, rootDir, executable } = options;
 
-  if (scope === "system") {
-    if (dryRun) {
-      info(`[dry-run] sudo rm -rf ${paths.prefix}`);
-      info(`[dry-run] sudo mkdir -p ${paths.prefix}`);
-      info(`[dry-run] sudo mkdir -p ${path.dirname(paths.bin)}`);
-      info(`[dry-run] sudo mkdir -p ${path.dirname(paths.desktop)}`);
-      info(`[dry-run] sudo cp -a ${distDir}/. ${paths.prefix}`);
-      info(`[dry-run] sudo chmod -R a+rX ${paths.prefix}`);
-      info(`[dry-run] sudo ln -sfn ${path.join(paths.prefix, executable)} ${paths.bin}`);
-    } else {
-      await runC420UIRustProcess({
-        rootDir,
-        command: "sudo",
-        args: ["rm", "-rf", paths.prefix],
-        cwd: rootDir,
-        env: process.env,
-        label: "rm-prefix",
-        emitLog,
-        emitProgress: () => {},
-      });
-      await runC420UIRustProcess({
-        rootDir,
-        command: "sudo",
-        args: ["mkdir", "-p", paths.prefix],
-        cwd: rootDir,
-        env: process.env,
-        label: "mkdir-prefix",
-        emitLog,
-        emitProgress: () => {},
-      });
-      await runC420UIRustProcess({
-        rootDir,
-        command: "sudo",
-        args: ["mkdir", "-p", path.dirname(paths.bin)],
-        cwd: rootDir,
-        env: process.env,
-        label: "mkdir-bin",
-        emitLog,
-        emitProgress: () => {},
-      });
-      await runC420UIRustProcess({
-        rootDir,
-        command: "sudo",
-        args: ["mkdir", "-p", path.dirname(paths.desktop)],
-        cwd: rootDir,
-        env: process.env,
-        label: "mkdir-desktop",
-        emitLog,
-        emitProgress: () => {},
-      });
-      await runC420UIRustProcess({
-        rootDir,
-        command: "sudo",
-        args: ["cp", "-a", `${distDir}/.`, paths.prefix],
-        cwd: rootDir,
-        env: process.env,
-        label: "cp-dist",
-        emitLog,
-        emitProgress: () => {},
-      });
-      await runC420UIRustProcess({
-        rootDir,
-        command: "sudo",
-        args: ["chmod", "-R", "a+rX", paths.prefix],
-        cwd: rootDir,
-        env: process.env,
-        label: "chmod-prefix",
-        emitLog,
-        emitProgress: () => {},
-      });
-      await runC420UIRustProcess({
-        rootDir,
-        command: "sudo",
-        args: ["ln", "-sfn", path.join(paths.prefix, executable), paths.bin],
-        cwd: rootDir,
-        env: process.env,
-        label: "ln-bin",
-        emitLog,
-        emitProgress: () => {},
-      });
-    }
-    return;
-  }
-
   await runC420UIRustFsOps({
     rootDir,
     operations: [
@@ -300,8 +164,10 @@ async function installNativeFromDist(
       { kind: "ensure-dir", path: path.dirname(paths.desktop) },
       { kind: "copy-tree", from: distDir, to: paths.prefix },
       { kind: "symlink", from: path.join(paths.prefix, executable), to: paths.bin, force: true },
+      { kind: "chmod", path: paths.prefix, mode: "755", recursive: true },
     ],
     dryRun,
+    allowSudo: scope === "system",
     env: process.env,
   });
 }

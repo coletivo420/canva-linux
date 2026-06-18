@@ -2,6 +2,14 @@
   "appId": "io.github.coletivo420.canva-linux",
   "executable": "canva-linux",
   "desktopName": "io.github.coletivo420.canva-linux.native.desktop",
+  "buildMetadataTarget": "config/canva-linux/build-metadata.json",
+  "versionMarkerName": "CANVA_LINUX_VERSION",
+  "desktop": {
+    "name": "Canva",
+    "comment": "A community opensource desktop wrapper for use with Canva",
+    "categories": "Graphics;",
+    "startupWMClass": "io.github.coletivo420.canva-linux"
+  },
   "system": {
     "prefix": "/opt/canva-linux",
     "bin": "/usr/local/bin/canva-linux",
