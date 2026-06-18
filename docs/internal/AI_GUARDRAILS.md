@@ -66,8 +66,13 @@ channel intercepted by `shell.ts` before navigation.
 Dev12 Rust migration is c420ui-only.
 Phase 1-2 keep the TypeScript c420ui terminal UI while operational filesystem
 and process work moves to Rust. Phase 3-5 migrate `c420ui-tui` directly after
-final contracts are defined. Do not introduce an experimental terminal backend
-or a long-lived optional TypeScript/Rust toggle.
+final contracts are defined. There is no experimental terminal backend and no
+long-lived optional TypeScript/Rust toggle.
+
+Dev12 Phase 3 introduces `c420ui-tui` as the final Rust terminal UI target. The
+initial binary may expose JSON smoke contracts only. Do not wire it as a runtime
+backend yet, do not add a terminal backend environment switch, and do not
+migrate the TypeScript Action Engine in the scaffold commit.
 
 Rust may be introduced under:
 

@@ -230,6 +230,7 @@ function main(): number {
     "rust-maintenance.ts",
     "rust-preflight.ts",
     "rust-process-runner.ts",
+    "rust-tui-contracts.ts",
     "types.ts",
     "workflow-runner.ts",
     "workflows.ts",
@@ -1660,6 +1661,60 @@ function checkRustFilesystemOperationsContract(failures: string[]): void {
   }
 }
 
+function checkRustTuiContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const rustTuiPath = "build-resources/c420ui/src/rust-tui-contracts.ts";
+  const cargoPath = "build-resources/c420ui-rs/Cargo.toml";
+  const terminalPath = "build-resources/c420ui/src/terminal/index.ts";
+  const roadmapPath = "docs/dev/DEV12_RUST_C420UI_MIGRATION.md";
+  const validationPath = "docs/VALIDATION.md";
+  const guardrailsPath = "docs/internal/AI_GUARDRAILS.md";
+  const packagePath = "package.json";
+
+  if (!fs.existsSync(path.join(rootDir, rustTuiPath))) {
+    failures.push(`${rustTuiPath} must exist before c420ui-tui migration`);
+    return;
+  }
+
+  const rustTui = fs.readFileSync(path.join(rootDir, rustTuiPath), "utf8");
+  const cargo = fs.readFileSync(path.join(rootDir, cargoPath), "utf8");
+  const roadmap = fs.readFileSync(path.join(rootDir, roadmapPath), "utf8");
+  const validation = fs.readFileSync(path.join(rootDir, validationPath), "utf8");
+  const guardrails = fs.readFileSync(path.join(rootDir, guardrailsPath), "utf8");
+  const packageJson = fs.readFileSync(path.join(rootDir, packagePath), "utf8");
+
+  if (!cargo.includes('name = "c420ui-tui"') || !cargo.includes('path = "src/bin/c420ui-tui.rs"')) {
+    failures.push(`${cargoPath}: c420ui-tui binary must be declared explicitly`);
+  }
+  if (!fs.existsSync(path.join(rootDir, terminalPath))) {
+    failures.push(`${terminalPath}: TypeScript terminal UI must remain until direct replacement phase`);
+  }
+  for (const [label, source] of [
+    [rustTuiPath, rustTui],
+    [packagePath, packageJson],
+    [roadmapPath, roadmap],
+    [validationPath, validation],
+    [guardrailsPath, guardrails],
+  ] as const) {
+    if (source.includes("C420UI_" + "TUI_BACKEND")) {
+      failures.push(`${label}: must not introduce an optional c420ui-tui backend switch`);
+    }
+  }
+  if (rustTui.includes("runC420UIRustHost") || rustTui.includes("c420ui-tui")) {
+    failures.push(`${rustTuiPath}: contract bridge must not execute c420ui-tui yet`);
+  }
+  for (const [label, source] of [
+    [roadmapPath, roadmap],
+    [validationPath, validation],
+    [guardrailsPath, guardrails],
+  ] as const) {
+    const normalized = source.toLowerCase();
+    if (!normalized.includes("direct") || !normalized.includes("no experimental")) {
+      failures.push(`${label}: docs must describe direct c420ui-tui migration with no experimental backend`);
+    }
+  }
+}
+
 export function main(): number {
   const failures: string[] = [];
 
@@ -1669,6 +1724,7 @@ export function main(): number {
   runPublicApiExportsContract(failures);
   checkMaintenanceContract(failures);
   checkRustFilesystemOperationsContract(failures);
+  checkRustTuiContract(failures);
   runBridgeContract(failures);
   runDetectionContract(failures);
   runActionValidationContract(failures);

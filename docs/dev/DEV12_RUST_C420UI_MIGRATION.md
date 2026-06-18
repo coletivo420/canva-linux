@@ -2,7 +2,7 @@
 
 ## Status
 
-In progress.
+Phase 3 in progress.
 
 ## Goal
 
@@ -83,6 +83,9 @@ Define the final c420ui-tui contracts before migration:
 - TypeScript adapter boundary
 
 There is no experimental backend and no optional TypeScript/Rust toggle.
+The `c420ui-tui` binary is introduced in this phase as the direct migration
+target. It starts with JSON doctor/render smoke contracts only; the TypeScript
+terminal UI remains wired until direct replacement.
 
 ### Phase 4 - Direct c420ui-tui Migration
 
@@ -121,7 +124,20 @@ c420ui-host remove-paths --json
 c420ui-host fs-ops --json
 c420ui-host ensure-linux-unpacked --json
 c420ui-host artifact-file-ops --json
+c420ui-tui --version
+c420ui-tui doctor --json
+c420ui-tui render --json
 ```
+
+## Phase 3 TUI Contract
+
+Dev12 now enters Phase 3: final Rust TUI contracts. The `c420ui-tui` binary is
+introduced as the direct migration target for the terminal UI. There is no
+experimental backend switch and no TypeScript/Rust optional toggle.
+
+The TypeScript Action Engine remains responsible for action resolution,
+execution, root-provider interaction and progress/log events in this phase.
+`c420ui-tui` only defines the render/input contract and a smoke textual render.
 
 ## Phase 2 Filesystem Contract
 
@@ -165,4 +181,4 @@ Do not migrate these Canva Linux runtime areas in Dev12:
 - Canva Linux adapter policy
 - Canva Linux packaging policy
 
-Do not implement c420ui-tui before Phase 3 contracts are complete.
+Do not replace the TypeScript terminal UI before Phase 4.

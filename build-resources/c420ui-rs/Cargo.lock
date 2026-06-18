@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "c420ui-host"
+name = "c420ui-rs"
 version = "0.1.0"
 dependencies = [
  "serde",

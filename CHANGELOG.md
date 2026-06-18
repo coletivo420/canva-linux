@@ -25,6 +25,9 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 - Dev12 Phase 2 now routes c420ui install and artifact filesystem through
   Rust host commands and updates the roadmap for a direct `c420ui-tui`
   migration after operational cleanup, with no experimental backend phase.
+- Dev12 now enters Phase 3 with a `c420ui-tui` Rust binary scaffold, JSON render
+  contracts, smoke tests, and a TypeScript contract bridge. The TypeScript TUI
+  remains in place until direct replacement; no optional backend switch exists.
 - Native install filesystem writes, icon installation, `linux-unpacked`
   normalization, AppImage cleanup/find and checksum sidecar writes now route
   through Rust host commands.

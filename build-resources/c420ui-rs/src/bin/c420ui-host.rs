@@ -1,8 +1,4 @@
-mod commands;
-mod exit_codes;
-mod host;
-mod input;
-mod json;
+use c420ui_rs::{commands, exit_codes};
 
 fn print_usage() {
     eprintln!("Usage: c420ui-host <command> [options]");
