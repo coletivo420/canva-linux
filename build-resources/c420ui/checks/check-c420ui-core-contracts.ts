@@ -1583,6 +1583,7 @@ function checkRustFilesystemOperationsContract(failures: string[]): void {
   const flatpakPath = "build-resources/c420ui/operations/install/flatpak.ts";
   const appimagePath = "build-resources/c420ui/operations/packaging/appimage.ts";
   const bundlePath = "build-resources/c420ui/operations/packaging/flatpak-bundle.ts";
+  const guidancePath = "build-resources/c420ui/operations/host/guidance.ts";
   const rustFsPath = "build-resources/c420ui/src/rust-fs.ts";
   const rustArtifactsPath = "build-resources/c420ui/src/rust-artifacts.ts";
   const rustPreflightPath = "build-resources/c420ui/src/rust-preflight.ts";
@@ -1596,12 +1597,27 @@ function checkRustFilesystemOperationsContract(failures: string[]): void {
   const flatpak = fs.readFileSync(path.join(rootDir, flatpakPath), "utf8");
   const appimage = fs.readFileSync(path.join(rootDir, appimagePath), "utf8");
   const bundle = fs.readFileSync(path.join(rootDir, bundlePath), "utf8");
+  const guidance = fs.readFileSync(path.join(rootDir, guidancePath), "utf8");
   const rustFs = fs.readFileSync(path.join(rootDir, rustFsPath), "utf8");
   const rustArtifacts = fs.readFileSync(path.join(rootDir, rustArtifactsPath), "utf8");
   const rustPreflight = fs.readFileSync(path.join(rootDir, rustPreflightPath), "utf8");
 
-  if (!native.includes("validateC420UINativeInstallConfig")) {
-    failures.push(`${nativePath}: native install identity and paths must come from config`);
+  if (!native.includes("c420uiNativeInstallConfig")) {
+    failures.push(`${nativePath}: native install identity and paths must come from validated config`);
+  }
+  for (const forbidden of [
+    "build-resources/canva-linux/config/install-native.json",
+    "build-resources/canva-linux/assets/icons",
+    "io.github.coletivo420.canva-linux",
+    "/opt/canva-linux",
+    ".local/opt/canva-linux",
+  ] as const) {
+    if (native.includes(forbidden)) {
+      failures.push(`${nativePath}: native install must not hardcode dependent-project install policy (${forbidden})`);
+    }
+  }
+  if (guidance.includes("Canva Linux") || guidance.includes("canva-linux") || guidance.includes("io.github.coletivo420.canva-linux")) {
+    failures.push(`${guidancePath}: post-install guidance must receive dependent-project commands from callers`);
   }
   for (const [label, source] of [
     [nativePath, native],
@@ -1616,6 +1632,9 @@ function checkRustFilesystemOperationsContract(failures: string[]): void {
   }
   if (!appimage.includes("runC420UIRustArtifactFileOps")) {
     failures.push(`${appimagePath}: AppImage cleanup/find must use Rust artifact ops`);
+  }
+  if (appimage.includes("canva-linux-")) {
+    failures.push(`${appimagePath}: AppImage artifact naming must come from dependent-project config`);
   }
   if (!appimage.includes("runC420UIRustFsOps")) {
     failures.push(`${appimagePath}: AppImage checksum sidecar must use rust-fs`);

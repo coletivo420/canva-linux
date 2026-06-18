@@ -1,8 +1,7 @@
-import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { parseDryRun } from "../../host/dry-run.js";
-import { projectRoot } from "../../host/paths.js";
+import { exists as pathExists, projectRoot } from "../../host/paths.js";
 import { info, ok, section, warn, error } from "../../host/ui.js";
 import { resolveNativeScope, type NativeScope } from "./native-paths.js";
 import {
@@ -10,7 +9,7 @@ import {
 } from "../../src/rust-maintenance.js";
 import { runC420UIRustFsOps } from "../../src/rust-fs.js";
 import { requireC420UIRustCommands } from "../../src/rust-preflight.js";
-import { validateC420UINativeInstallConfig, type c420uiNativeInstallConfig } from "../../src/install-config.js";
+import type { c420uiNativeInstallConfig } from "../../src/install-config.js";
 import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
 import { installBuildMetadataMarker } from "./build-metadata-marker.js";
 import { buildDesktopFileContent } from "./desktop-entry.js";
@@ -18,10 +17,6 @@ import { installIcons } from "./icons.js";
 import { updateDesktopCaches } from "./desktop-cache.js";
 import { printNativePostInstallGuidance } from "../host/guidance.js";
 import type { c420uiLogEvent } from "../../src/events.js";
-
-function loadNativeInstallConfig(configPath: string): c420uiNativeInstallConfig {
-  return validateC420UINativeInstallConfig(JSON.parse(fs.readFileSync(configPath, "utf8")));
-}
 
 function emitLog(event: c420uiLogEvent): void {
   if (event.level === "error") error(event.line);
@@ -31,14 +26,15 @@ function emitLog(event: c420uiLogEvent): void {
 
 export async function runNativeInstall(
   argv: string[],
-  options: { configPath?: string } = {},
+  options: {
+    nativeInstall: c420uiNativeInstallConfig;
+    iconSourceRoot: string;
+  },
 ): Promise<void> {
   const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
   const scope = resolveNativeScope(process.env);
-  const nativeInstall = loadNativeInstallConfig(
-    options.configPath ?? path.join(rootDir, "build-resources/canva-linux/config/install-native.json"),
-  );
+  const { nativeInstall } = options;
 
   await requireC420UIRustCommands({
     rootDir,
@@ -93,7 +89,7 @@ export async function runNativeInstall(
   }
 
   const distUnpacked = path.join(rootDir, "dist/linux-unpacked");
-  if (!dryRun && !fs.existsSync(distUnpacked)) {
+  if (!dryRun && !pathExists(distUnpacked)) {
     throw new Error(`[error] ${distUnpacked} was not generated`);
   }
 
@@ -124,12 +120,11 @@ export async function runNativeInstall(
     env: process.env,
   });
 
-  const iconSrc = path.join(rootDir, "build-resources/canva-linux/assets/icons/hicolor");
-  await installIcons(scope, nativeInstall.appId, iconSrc, installPaths.iconRoot, { dryRun });
+  await installIcons(scope, nativeInstall.appId, options.iconSourceRoot, installPaths.iconRoot, { dryRun });
 
   await updateDesktopCaches(scope, { dryRun });
 
-  printNativePostInstallGuidance();
+  printNativePostInstallGuidance(nativeInstall.executable);
   ok(`Native ${scope} install completed`);
 }
 

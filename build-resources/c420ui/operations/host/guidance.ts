@@ -4,14 +4,14 @@ export function printDebugGuidanceForCommand(runCmd: string): void {
   section("Run");
   cmd(runCmd);
   console.log("");
-  subsection("Internal Canva Linux logs");
+  subsection("Internal application logs");
   cmd(`${runCmd} --canva-debug=1`);
   info(
-    "Shows all internal Canva Linux diagnostics, including startup, session, tabs, toolbar, permissions, uploads, OAuth, drag-and-drop, eyedropper, preload and GPU acceleration monitoring.",
+    "Shows internal application diagnostics, including startup, session, tabs, toolbar, permissions, uploads, OAuth, drag-and-drop, eyedropper, preload and GPU acceleration monitoring.",
   );
   cmd(`${runCmd} --canva-debug=2`);
   info(
-    "Shows all internal Canva Linux diagnostics plus verbose Chromium/Electron stderr logs.",
+    "Shows internal application diagnostics plus verbose Chromium/Electron stderr logs.",
   );
   console.log("");
   printDisplayBackendGuidance(runCmd);
@@ -19,14 +19,14 @@ export function printDebugGuidanceForCommand(runCmd: string): void {
   printGpuBackendGuidance(runCmd);
 }
 
-export function printNativePostInstallGuidance(): void {
+export function printNativePostInstallGuidance(runCommand: string): void {
   ok("Native Install completed.");
   console.log("");
-  printDebugGuidanceForCommand("canva-linux");
+  printDebugGuidanceForCommand(runCommand);
 }
 
-export function printFlatpakPostInstallGuidance(): void {
-  printDebugGuidanceForCommand("flatpak run io.github.coletivo420.canva-linux");
+export function printFlatpakPostInstallGuidance(appId: string): void {
+  printDebugGuidanceForCommand(`flatpak run ${appId}`);
 }
 
 export function printDisplayBackendGuidance(runCmd: string): void {

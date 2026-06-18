@@ -90,6 +90,10 @@ Request changes if a PR:
 - normalizes `linux-unpacked` in TypeScript instead of `c420ui-host`;
 - cleans/selects AppImage artifacts or writes checksum sidecars without Rust host commands;
 - hardcodes Canva Linux install identity or native paths inside Rust.
+- hardcodes Canva Linux install identity or native paths inside
+  `build-resources/c420ui/operations`;
+- treats the future `c420ui-tui` migration as an optional backend toggle instead
+  of the direct Dev12 Phase 3-5 roadmap.
 
 ## c420ui version/hash review
 

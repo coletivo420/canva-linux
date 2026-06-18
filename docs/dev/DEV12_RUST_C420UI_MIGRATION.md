@@ -2,25 +2,21 @@
 
 ## Status
 
-Started.
+In progress.
 
 ## Goal
 
-Dev12 migrates c420ui host-operation Shell logic to Rust.
+Dev12 moves c420ui host, filesystem, process and terminal ownership toward Rust
+without moving Canva Linux runtime code.
 
-This migration is c420ui-only.
+The boundary remains:
 
-Canva Linux remains ESM/TypeScript.
+- Canva Linux declares project identity, paths and policy.
+- c420ui validates and orchestrates generic workflows.
+- c420ui-host executes host filesystem and process primitives.
+- c420ui-tui becomes the direct terminal UI migration target after operational cleanup.
 
-## Boundary Rule
-
-Rust may be introduced only under c420ui-owned boundaries, starting with:
-
-```text
-build-resources/c420ui-rs/
-```
-
-Rust must not migrate, replace, wrap or own Canva Linux Electron runtime code.
+## Permanent Boundary
 
 Canva Linux remains ESM/TypeScript for:
 
@@ -35,43 +31,73 @@ Canva Linux remains ESM/TypeScript for:
 - project-specific validation
 - Flatpak/AppImage/native integration policy
 
-TypeScript remains owner of:
+Rust must not hardcode Canva Linux identity, app id, Flatpak id, executable
+name, install paths, metadata paths, artifact naming policy or packaging policy.
 
-- c420ui terminal UI
-- Action Engine
-- workflow orchestration
-- workflow registry
-- dependent-project adapters
-- metadata policy
-- validation policy
-- Canva Linux integration boundary
+Rust must not touch Canva Linux runtime, Electron, toolbar, tabs or
+CLeyedropper code.
 
-## Rust May Own
+## Roadmap
 
+### Phase 1 - Rust Operational Engine
+
+Build the generic Rust host foundation:
+
+- JSON command contracts
 - host dependency probes
 - command availability checks
-- filesystem probes
-- permission checks
-- safe process execution helpers
-- artifact filesystem inspection
-- install/uninstall execution primitives
-- maintenance operation primitives
+- safe process execution
+- sudo validation
+- maintenance primitives
+- Rust boundary checks
 
-## Rust Must Not Own
+TypeScript still owns the c420ui terminal UI in this phase.
 
-- Canva Linux Electron runtime
-- Canva Linux toolbar
-- Canva Linux tabs
-- Canva Linux CLeyedropper integration
-- Canva Linux project identity
-- Canva Linux packaging policy
-- Canva Linux metadata policy
-- Canva Linux adapter
-- c420ui terminal UI
-- c420ui Action Engine
-- c420ui workflow registry
+### Phase 2 - Remove Remaining TypeScript Operational Filesystem
 
-## Proposed Rust Layout
+Move mutable operational filesystem work out of TypeScript:
+
+- install copy/remove/symlink/chmod/write operations
+- icon installation
+- linux-unpacked normalization
+- AppImage cleanup/find/checksum sidecars
+- Flatpak bundle sidecars where practical
+- preflight command checks
+
+Dependent projects declare install identity and paths in their own config.
+c420ui validates and orders work. c420ui-host performs safe filesystem and
+process operations.
+
+TypeScript still owns the c420ui terminal UI in this phase.
+
+### Phase 3 - Final Rust TUI Contracts
+
+Define the final c420ui-tui contracts before migration:
+
+- terminal event model
+- action rendering contract
+- root prompt contract
+- log rendering contract
+- workflow progress contract
+- settings/state persistence boundary
+- TypeScript adapter boundary
+
+There is no experimental backend and no optional TypeScript/Rust toggle.
+
+### Phase 4 - Direct c420ui-tui Migration
+
+Move the c420ui terminal UI directly to Rust under the c420ui boundary.
+
+The TypeScript side keeps project adapters, workflow declarations and Canva
+Linux-specific policy. Rust owns the terminal UI implementation.
+
+### Phase 5 - Remove TypeScript TUI and Close Dev12
+
+Remove the old TypeScript terminal UI after c420ui-tui is complete and covered
+by contracts. Close Dev12 once c420ui host operations and terminal UI ownership
+are cleanly split from dependent project policy.
+
+## Active Rust Layout
 
 ```text
 build-resources/c420ui-rs/
@@ -79,183 +105,64 @@ build-resources/c420ui-rs/
   src/main.rs
   src/commands/
   src/host/
-  src/json/
   tests/
 ```
 
-This layout is active in Dev12. It remains owned by c420ui infrastructure only.
-
-## Initial Binary
-
-```text
-c420ui-host
-```
-
-## Initial Commands
+## Active Commands
 
 ```text
 c420ui-host --version
 c420ui-host doctor --json
 c420ui-host host-info --json
 c420ui-host check-host-dependencies --json
-```
-
-## TypeScript Bridge
-
-The bridge belongs to c420ui:
-
-```text
-build-resources/c420ui/src/rust-host.ts
-```
-
-Responsibilities:
-
-- locate the Rust binary
-- execute commands with timeout
-- parse JSON
-- normalize errors
-- keep stderr safe
-- preserve dry-run behavior
-- keep Canva Linux-specific policy outside Rust
-
-## Migration Order
-
-1. Add Rust scaffold and JSON contracts.
-2. Add TypeScript bridge.
-3. Move host dependency probes.
-4. Move command/filesystem probes.
-5. Move artifact filesystem inspection.
-6. Move maintenance operation primitives.
-7. Move install/uninstall execution primitives.
-8. Remove remaining Shell ownership of c420ui operational logic.
-
-## Future Boundary Check
-
-Dev12 should add:
-
-```text
-check:c420ui-rs-boundary
-```
-
-The check must fail if `build-resources/c420ui-rs/` contains hardcoded
-dependent-project fragments such as:
-
-- Canva Linux
-- canva-linux
-- io.github.coletivo420.canva-linux
-- build-resources/electron
-- build-resources/canva-linux
-- CLeyedropper
-- toolbar
-- Electron runtime paths
-
-## Legacy Removal
-
-Dev12 removes the following legacy components:
-
-- `build-resources/c420ui/host/command-runner.ts`: Replaced by `runC420UIRustProcess` and `runC420UIRustHostJsonLines`.
-- `build-resources/c420ui/host/sudo.ts`: Replaced by Rust-based sudo validation and `run-process` with sudo.
-
-All maintenance and installation operations are now async and use the Rust-based execution layer.
-
-## Maintenance Boundary
-
-The boundary between generic c420ui and dependent projects (Canva Linux) is now strictly enforced:
-
-1.  **Canva Linux Adapter**: Declares `cleanupTargets` and `permissionTargets` in `maintenance.json`.
-2.  **Canva Linux Script**: Loads config and calls the generic c420ui operation.
-3.  **c420ui Operation**: Generic function receiving config as parameter.
-4.  **c420ui-host**: Generic Rust binary executing operations.
-- Flatpak/AppImage project policy
-
-Rust must remain generic c420ui infrastructure.
-
-## Data Contract
-
-Rust must communicate with TypeScript through:
-
-- stdin/stdout JSON
-- stable exit codes
-- safe stderr
-- no project secrets
-- no hardcoded Canva Linux identity
-
-## Dev12 Commit 1 — Rust host scaffold
-
-The first Dev12 implementation commit adds `build-resources/c420ui-rs/` with the `c420ui-host` Rust binary, JSON command contracts, Rust integration tests, and a TypeScript boundary check.
-
-This commit must not wire Rust into Canva Linux runtime, Electron, toolbar, tabs, CLeyedropper, packaging policy, or the Canva Linux adapter.
-
-## Dev12 Commit 2 — Dependent Project Dependencies
-
-Dependent projects declare host dependencies through their own config and adapter.
-c420ui resolves those dependencies generically and routes Node.js plus command
-availability probes through `c420ui-host`.
-
-Canva Linux declares its requirements in:
-
-```text
-build-resources/canva-linux/config/host-dependencies.json
-```
-
-The c420ui core and Rust host must not hardcode those Canva Linux dependencies.
-Canva Linux only declares what it needs; it does not resolve host dependencies
-directly. npm lockfile/install policy remains in TypeScript for this phase.
-
-Do not hardcode dependent-project dependencies in c420ui core or Rust.
-Dependent projects declare dependencies in their own config, and c420ui resolves
-them generically.
-
-## Dev12 Commit 3 — Rust Host Process Execution
-
-c420ui now routes generic host process execution through:
-
-```text
 c420ui-host run-process --json-lines
-```
-
-Dependent projects still declare actions and dependencies. c420ui decides what
-to execute. Rust executes generic host processes without shell interpretation and
-without hardcoded Canva Linux policy.
-
-TypeScript remains responsible for:
-
-- terminal UI
-- workflow policy
-- action/dependency policy
-- npm lockfile/install strategy
-- dependent-project adapter boundaries
-
-Do not reintroduce `child_process.spawn` or `spawnSync` as maintained c420ui
-generic process execution. Generic host process execution belongs to
-`c420ui-host`.
-
-## Dev12 Commit 4 — Rust Maintenance Operations
-
-c420ui maintenance targets are now declared by dependent-project config.
-c420ui validates and orchestrates those targets, while `c420ui-host` executes
-generic `remove-paths`, `fix-permissions` and `sudo-validate` operations.
-
-Do not reintroduce direct `fs.rmSync` maintenance deletion, direct TypeScript
-`chown`, or hardcoded cleanup target lists in c420ui operations.
-
-## Dev12 Commit 5 — Install And Artifact Filesystem Operations
-
-c420ui now routes mutable install and artifact filesystem operations through
-`c420ui-host`.
-
-New Rust host commands:
-
-```text
+c420ui-host fix-permissions --json
+c420ui-host remove-paths --json
 c420ui-host fs-ops --json
 c420ui-host ensure-linux-unpacked --json
 c420ui-host artifact-file-ops --json
 ```
 
-Dependent projects declare install identity and paths in their own config.
-c420ui validates/orchestrates that config and Rust executes generic filesystem
-operations. Rust must not hardcode Canva Linux identity, paths, package names or
-packaging policy.
+## Phase 2 Filesystem Contract
 
-`ensure-linux-unpacked` must preserve the generated directory name and only
-create the canonical `linux-unpacked` link when needed.
+Dev12 now continues Phase 2 by moving install and artifact filesystem
+operations to c420ui-host. Dependent projects declare install identity and
+paths; c420ui validates and orchestrates; Rust performs safe filesystem
+operations. The Dev12 roadmap now includes direct c420ui-tui migration after
+operational cleanup, with no experimental backend phase.
+
+Phase 2 acceptance:
+
+- `build-resources/c420ui/host/preflight.ts` is removed.
+- native install uses `rust-fs`.
+- icon install uses `rust-fs`.
+- linux-unpacked normalization uses Rust and preserves the selected architecture name.
+- AppImage cleanup/find/checksum sidecars use Rust host operations.
+- c420ui operations do not hardcode Canva Linux install identity.
+- Canva Linux declares install identity and paths in dependent config.
+- Rust contains no Canva Linux identity.
+
+## Data Contract
+
+Rust communicates with TypeScript through:
+
+- stdin/stdout JSON
+- JSON-lines for streaming process events
+- stable exit codes
+- safe stderr
+- no shell interpretation for structured commands
+- no project secrets
+- no hardcoded dependent-project identity
+
+## Not In Dev12 Runtime Scope
+
+Do not migrate these Canva Linux runtime areas in Dev12:
+
+- Electron runtime
+- toolbar
+- tabs
+- CLeyedropper
+- Canva Linux adapter policy
+- Canva Linux packaging policy
+
+Do not implement c420ui-tui before Phase 3 contracts are complete.

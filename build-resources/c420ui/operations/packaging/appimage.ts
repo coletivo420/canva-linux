@@ -1,5 +1,5 @@
-import fs from "node:fs";
 import path from "node:path";
+import { exists as pathExists } from "../../host/paths.js";
 import { projectRoot } from "../../host/paths.js";
 import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
 import { runC420UIRustArtifactFileOps } from "../../src/rust-artifacts.js";
@@ -20,7 +20,15 @@ function emitLog(event: c420uiLogEvent): void {
   else info(event.line);
 }
 
-export async function runBuildAppImage(argv: string[]): Promise<void> {
+export async function runBuildAppImage(
+  argv: string[],
+  options: {
+    artifactPattern: {
+      startsWith: string;
+      endsWith: string;
+    };
+  },
+): Promise<void> {
   const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
 
@@ -30,10 +38,6 @@ export async function runBuildAppImage(argv: string[]): Promise<void> {
     env: process.env,
   });
 
-  const packageJson = JSON.parse(
-    fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
-  );
-  const version = packageJson.version;
   const distDir = path.join(rootDir, "dist");
 
   printAppImageBundleNotice();
@@ -87,14 +91,14 @@ export async function runBuildAppImage(argv: string[]): Promise<void> {
     rootDir,
     distDir,
     find: {
-      startsWith: `canva-linux-${version}-`,
-      endsWith: ".AppImage",
+      startsWith: options.artifactPattern.startsWith,
+      endsWith: options.artifactPattern.endsWith,
       expect: "one",
     },
     env: process.env,
   });
   if (!artifactResult.selected) {
-    throw new Error(`Expected exactly one generated AppImage matching dist/canva-linux-${version}-*.AppImage`);
+    throw new Error("Expected exactly one generated AppImage matching the configured artifact pattern");
   }
   const appImagePath = artifactResult.selected;
   const appImageSha256Path = `${appImagePath}.sha256`;
@@ -127,7 +131,7 @@ export async function runBuildAppImage(argv: string[]): Promise<void> {
 
   writeBuildMetadataSidecar(appImagePath, { rootDir });
 
-  if (fs.existsSync(`${appImagePath}.build-metadata.json`)) {
+  if (pathExists(`${appImagePath}.build-metadata.json`)) {
     ok(`AppImage metadata generated: ${appImagePath}.build-metadata.json`);
   } else {
     warn(

@@ -65,6 +65,10 @@ Dev12 or later.
 ## Dev12 Rust c420ui migration validation preview
 
 Dev12 introduces Rust only as the c420ui host-operation execution layer.
+The roadmap is direct: Phase 1-2 keep the TypeScript terminal UI while
+operational filesystem/process work moves to Rust; Phase 3-5 define and migrate
+`c420ui-tui` directly. There is no experimental backend phase and no optional
+TypeScript/Rust terminal toggle.
 
 Canva Linux remains ESM/TypeScript for:
 
@@ -96,8 +100,9 @@ c420ui resolves those dependencies and routes generic host probes through
 dependencies directly.
 
 Dev12 also routes generic c420ui host process execution through
-`c420ui-host run-process --json-lines`. TypeScript remains responsible for UI,
-workflow policy, dependency policy and dependent-project boundaries.
+`c420ui-host run-process --json-lines`. TypeScript remains responsible for the
+terminal UI during Phase 1-2, plus workflow policy, dependency policy and
+dependent-project boundaries.
 Legacy synchronous host runners (`spawnSync`) and the `host/command-runner.ts`
 abstraction are removed in favor of the async Rust-based runners.
 

@@ -64,6 +64,10 @@ channel intercepted by `shell.ts` before navigation.
 ## Dev12 Rust c420ui boundary
 
 Dev12 Rust migration is c420ui-only.
+Phase 1-2 keep the TypeScript c420ui terminal UI while operational filesystem
+and process work moves to Rust. Phase 3-5 migrate `c420ui-tui` directly after
+final contracts are defined. Do not introduce an experimental terminal backend
+or a long-lived optional TypeScript/Rust toggle.
 
 Rust may be introduced under:
 
@@ -110,7 +114,8 @@ generically.
 Dev12 c420ui host process execution goes through `c420ui-host run-process
 --json-lines`. Do not reintroduce `child_process.spawn` or `spawnSync` as
 maintained c420ui generic process execution. TypeScript remains responsible for
-UI, workflow policy, dependency policy and dependent-project boundaries.
+the terminal UI during Phase 1-2, plus workflow policy, dependency policy and
+dependent-project boundaries.
 
 Maintenance targets belong to dependent-project config. Do not hardcode cleanup
 targets in c420ui TypeScript, do not reintroduce `fs.rmSync` maintenance

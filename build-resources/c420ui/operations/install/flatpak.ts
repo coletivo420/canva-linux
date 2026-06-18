@@ -32,7 +32,10 @@ function parseFlatpakInstallArgs(argv: string[]): { dryRun: boolean; skipElectro
   return { dryRun, skipElectronBuild };
 }
 
-export async function runFlatpakInstall(argv: string[]): Promise<void> {
+export async function runFlatpakInstall(
+  argv: string[],
+  options: { appId: string },
+): Promise<void> {
   const rootDir = projectRoot();
   const { dryRun, skipElectronBuild } = parseFlatpakInstallArgs(argv);
   const scope = resolveFlatpakScope(process.env);
@@ -87,7 +90,7 @@ export async function runFlatpakInstall(argv: string[]): Promise<void> {
   await ensureLinuxUnpacked(rootDir, { dryRun });
   await installFlatpakDirect(rootDir, scope, { dryRun });
 
-  printFlatpakPostInstallGuidance();
+  printFlatpakPostInstallGuidance(options.appId);
   ok(`Flatpak ${scope} install completed`);
 }
 
