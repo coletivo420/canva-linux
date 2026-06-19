@@ -855,8 +855,8 @@ function createC420UITuiRenderInput(options) {
         lines: []
       },
       content: options.panels?.content ?? {
-        label: "Overview",
-        lines: createOverviewLines(config)
+        label: viewContentLabel(options.view ?? "main"),
+        lines: createContentLines(options.view ?? "main", config)
       },
       logs: options.panels?.logs ?? {
         label: "Logs",
@@ -946,6 +946,33 @@ function createLegacyMenu(view, actions) {
       selected: 0
     };
   }
+  if (view === "help") {
+    return {
+      label: "Help",
+      items: [
+        { id: "help-navigation", label: "Navigation" },
+        { id: "help-panels", label: "Panels" },
+        { id: "help-logs", label: "Logs" },
+        { id: "help-launcher", label: "Launcher" },
+        { id: "help-settings", label: "Settings" },
+        { id: "help-status-colors", label: "Status colors" },
+        { id: "help-clipboard", label: "Clipboard order" },
+        { id: "back-main", label: "Back to Main", view: "main" }
+      ],
+      selected: 0
+    };
+  }
+  if (view === "settings") {
+    return {
+      label: "Application Settings",
+      items: [
+        { id: "settings-general", label: "General logs" },
+        { id: "settings-text-selection", label: "Text selection mode" },
+        { id: "back-main", label: "Back to Main", view: "main" }
+      ],
+      selected: 0
+    };
+  }
   const group = view === "install" ? "install" : view === "maintenance" ? "maintenance" : "development";
   return {
     label: `${view.charAt(0).toUpperCase()}${view.slice(1)} Actions`,
@@ -960,6 +987,14 @@ function createLegacyMenu(view, actions) {
     })),
     selected: 0
   };
+}
+function viewContentLabel(view) {
+  return view === "help" ? "Help" : view === "settings" ? "Application Settings" : "Overview";
+}
+function createContentLines(view, config) {
+  if (view === "help") return createHelpLines(config);
+  if (view === "settings") return createSettingsLines(config);
+  return createOverviewLines(config);
 }
 function createOverviewLines(config) {
   return [
@@ -981,6 +1016,62 @@ function createOverviewLines(config) {
     `  App ID: ${config.project.appId}`,
     `  Executable: ${config.project.executableName}`,
     `  Repository: ${config.project.repositoryUrl}`
+  ];
+}
+function createHelpLines(config) {
+  return [
+    "Help",
+    "",
+    "Navigation",
+    "  Tab / Shift+Tab       Move focus between menu, diagnostics, action panel and logs",
+    "  Up/Down               Move menu selection when the menu is focused",
+    "  Enter                 Select action only when the menu is focused",
+    "  Space                 Toggle setting checkbox only when Application Settings is focused",
+    "  PageUp/PageDown       Scroll the focused panel",
+    "  Home/End              Move the focused scrollable panel to start/end",
+    "  Esc                   Back to main or confirm exit",
+    "  q                     Quit",
+    "",
+    "Panels",
+    "  Active panel: highlighted border and label",
+    "  Active cell: highlighted menu/settings row",
+    "  Alt+Up/Down or Shift+PgUp/PgDn still scroll action panel directly",
+    "",
+    "Logs",
+    "  F5             Copy logs to clipboard",
+    "  PageUp/PageDown/Home/End",
+    "  Manual text selection mode can be enabled in Application Settings.",
+    "",
+    "Launcher",
+    `  ${config.project.launcherCommand} opens the c420ui.`,
+    "  Any direct action flag runs CLI mode instead.",
+    "  Do not run the Tool with sudo or as root.",
+    "  Root authentication failures are shown in a centered popup.",
+    "",
+    "Settings",
+    `  Tool settings file: ${config.project.stateDirectoryName}`,
+    "",
+    "Status colors",
+    "  Active panel border / label",
+    "  Active cell row",
+    "  Detected / Completed",
+    "  Not detected",
+    "  Running",
+    "  Error / Canceled",
+    "",
+    "Clipboard order",
+    "  wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel"
+  ];
+}
+function createSettingsLines(config) {
+  return [
+    "Application Settings",
+    "",
+    "Settings file:",
+    `  ${config.project.stateDirectoryName}`,
+    "",
+    "Use Enter or Space on a checkbox setting to toggle it.",
+    "Application Settings are persistent c420ui state, not shell actions."
   ];
 }
 function requireNonEmpty(value, label) {

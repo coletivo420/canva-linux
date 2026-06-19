@@ -86,6 +86,33 @@ test("contrato envia descricao e overview legado com logo do projeto", () => {
   assert.ok(input.panels.content.lines.includes("Package / Version Information:"));
 });
 
+test("help menu is informational and never maps help items to executable actions", () => {
+  const input = createC420UITuiRenderInput({
+    config,
+    actions: [
+      {
+        id: "dev-action",
+        label: "Dev action",
+        group: "development",
+        kind: "command",
+        description: "Should not appear as executable help.",
+      },
+    ],
+    view: "help",
+  }) as any;
+
+  assert.equal(input.menu.label, "Help");
+  assert.equal(input.panels.content.label, "Help");
+  assert.ok(input.panels.content.lines.includes("Navigation"));
+  assert.ok(input.panels.content.lines.includes("Clipboard order"));
+  assert.equal(input.menu.items.some((item: any) => item.actionId), false);
+  assert.deepEqual(input.menu.items.at(-1), {
+    id: "back-main",
+    label: "Back to Main",
+    view: "main",
+  });
+});
+
 test("nao existe C420UI_TUI_BACKEND", () => {
   const source = fs.readFileSync(
     path.join(process.cwd(), "build-resources/c420ui/src/rust-tui-contracts.ts"),
