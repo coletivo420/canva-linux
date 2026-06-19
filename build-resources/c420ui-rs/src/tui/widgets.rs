@@ -113,6 +113,10 @@ pub fn draw_action_content<'a>(
     theme: &LegacyTheme,
     active: bool,
 ) -> Paragraph<'a> {
+    if matches!(view, crate::tui::contracts::TuiView::Help) {
+        return draw_help_content(panel, selected, theme, active);
+    }
+
     if selected.is_none()
         || !matches!(
             view,
@@ -175,6 +179,77 @@ pub fn draw_action_content<'a>(
             )),
         ]);
     }
+
+    Paragraph::new(lines).block(panel_block(&panel.label, theme, active))
+}
+
+fn draw_help_content<'a>(
+    panel: &'a TuiPanel,
+    selected: Option<&'a TuiMenuItem>,
+    theme: &LegacyTheme,
+    active: bool,
+) -> Paragraph<'a> {
+    let selected_id = selected
+        .map(|item| item.id.as_str())
+        .unwrap_or("help-navigation");
+    let selected_label = selected
+        .map(|item| item.label.as_str())
+        .unwrap_or("Navigation");
+    let body = match selected_id {
+        "help-panels" => vec![
+            "Active panel: highlighted border and label",
+            "Active cell: highlighted menu/settings row",
+            "Alt+Up/Down or Shift+PgUp/PgDn still scroll action panel directly",
+        ],
+        "help-logs" => vec![
+            "F5 copies logs to the clipboard",
+            "PageUp/PageDown/Home/End scroll the focused log panel",
+            "Manual text selection mode can be enabled in Application Settings",
+        ],
+        "help-launcher" => vec![
+            "The project launcher opens c420ui",
+            "Direct action flags run CLI mode instead",
+            "Do not run the Tool with sudo or as root",
+            "Root authentication failures are shown in a centered popup",
+        ],
+        "help-settings" => vec![
+            "Tool settings affect this installer/development interface",
+            "Application Settings are persistent c420ui state",
+            "Use Space or Enter only on real setting toggles",
+        ],
+        "help-status-colors" => vec![
+            "Active panel border / label",
+            "Active cell row",
+            "Detected / Completed",
+            "Not detected",
+            "Running",
+            "Error / Canceled",
+        ],
+        "help-clipboard" => vec!["wl-copy -> KDE qdbus6/qdbus -> GPaste -> xclip -> xsel"],
+        "back-main" => vec!["Return to the Main Menu."],
+        _ => vec![
+            "Tab / Shift+Tab moves focus between menu, diagnostics, action panel and logs",
+            "Up/Down moves menu selection when the menu is focused",
+            "Enter selects executable actions only outside Help",
+            "Esc goes back to main or confirms exit",
+            "q quits",
+        ],
+    };
+
+    let mut lines = vec![
+        Line::from(Span::styled("Help", Style::default().fg(theme.blue))),
+        Line::from(""),
+        Line::from(Span::styled(
+            format!("{}:", selected_label),
+            Style::default().fg(theme.success),
+        )),
+    ];
+    lines.extend(body.into_iter().map(|line| {
+        Line::from(Span::styled(
+            format!("  {}", line),
+            Style::default().fg(theme.text),
+        ))
+    }));
 
     Paragraph::new(lines).block(panel_block(&panel.label, theme, active))
 }

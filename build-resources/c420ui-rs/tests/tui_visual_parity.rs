@@ -211,3 +211,62 @@ fn test_render_preserves_logos_and_action_description() {
     assert!(text.contains("Native System"));
     assert!(text.contains("not detected"));
 }
+
+#[test]
+fn test_help_description_follows_selected_item_without_action() {
+    let backend = TestBackend::new(120, 36);
+    let mut terminal = Terminal::new(backend).unwrap();
+    let mut state = create_test_state();
+    state.render.view = TuiView::Help;
+    state.render.menu = TuiMenu {
+        label: "Help".to_string(),
+        selected: 2,
+        items: vec![
+            TuiMenuItem {
+                id: "help-navigation".to_string(),
+                label: "Navigation".to_string(),
+                view: None,
+                action_id: None,
+                description: None,
+                warning: None,
+                dangerous: None,
+                planned: None,
+            },
+            TuiMenuItem {
+                id: "help-panels".to_string(),
+                label: "Panels".to_string(),
+                view: None,
+                action_id: None,
+                description: None,
+                warning: None,
+                dangerous: None,
+                planned: None,
+            },
+            TuiMenuItem {
+                id: "help-logs".to_string(),
+                label: "Logs".to_string(),
+                view: None,
+                action_id: None,
+                description: None,
+                warning: None,
+                dangerous: None,
+                planned: None,
+            },
+        ],
+    };
+    state.render.panels.content.label = "Help".to_string();
+
+    renderer::render(&mut terminal, &state).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let text: String = buffer
+        .content
+        .iter()
+        .map(|c| c.symbol().to_string())
+        .collect();
+
+    assert!(text.contains("Logs:"));
+    assert!(text.contains("F5 copies logs"));
+    assert!(!text.contains("Enter selects executable actions only outside Help"));
+    assert_eq!(state.selected_action_id(), None);
+}
