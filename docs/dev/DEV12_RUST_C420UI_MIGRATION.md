@@ -141,6 +141,11 @@ Dev12 now starts the direct TUI migration. `runC420UITerminalApp()` routes
 through `c420ui-tui` as the official terminal runtime. There is no experimental
 backend switch and no TypeScript/Rust optional toggle.
 
+Dev12 now requires the Rust TUI to preserve the visual contract of the legacy
+TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it
+must match the legacy layout, theme, panels, focus behavior, footer, progress
+bar, logs, and root prompt before the TypeScript TUI can be removed.
+
 The TypeScript Action Engine remains responsible for action resolution,
 execution, root-provider interaction and progress/log events. Rust owns terminal
 rendering, navigation, action selection, progress display, log display and the

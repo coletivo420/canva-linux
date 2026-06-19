@@ -30,18 +30,35 @@ pub fn run_sudo(
 pub fn validate_sudo(
     root_dir: &Path,
     non_interactive: bool,
-    _timeout: Duration,
+    timeout: Duration,
 ) -> Result<bool, String> {
     let args = if non_interactive {
         vec!["-n", "-v"]
     } else {
         vec!["-v"]
     };
-    let status = Command::new("sudo")
+
+    let mut child = Command::new("sudo")
         .args(args)
         .current_dir(root_dir)
         .stdin(Stdio::null())
-        .status()
-        .map_err(|e| format!("failed to validate sudo: {}", e))?;
-    Ok(status.success())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .map_err(|e| format!("failed to spawn sudo validation: {}", e))?;
+
+    let start = std::time::Instant::now();
+    loop {
+        match child.try_wait() {
+            Ok(Some(status)) => return Ok(status.success()),
+            Ok(None) => {
+                if start.elapsed() >= timeout {
+                    let _ = child.kill();
+                    return Err(format!("sudo validation timed out after {:?}", timeout));
+                }
+                std::thread::sleep(Duration::from_millis(50));
+            }
+            Err(e) => return Err(format!("failed to wait for sudo validation: {}", e)),
+        }
+    }
 }

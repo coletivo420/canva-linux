@@ -5,13 +5,138 @@ use serde::{Deserialize, Serialize};
 pub struct TuiRenderInput {
     pub brand: TuiBrand,
     pub project: TuiProject,
-    #[serde(default)]
-    pub actions: Vec<TuiAction>,
-    pub status: Option<TuiStatus>,
-    #[serde(default)]
-    pub logs: Vec<TuiLogLine>,
+    pub view: TuiView,
+    pub focus_zone: TuiFocusZone,
+    pub menu: TuiMenu,
+    pub panels: TuiPanels,
+    pub footer: TuiFooter,
     pub progress: Option<TuiProgress>,
+    pub modal: Option<TuiModal>,
+    pub theme: TuiTheme,
     pub layout: Option<TuiLayoutHints>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum TuiView {
+    Main,
+    Install,
+    Development,
+    Maintenance,
+    Settings,
+    Help,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum TuiFocusZone {
+    Menu,
+    Diagnostics,
+    Content,
+    Logs,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiMenu {
+    pub label: String,
+    pub items: Vec<TuiMenuItem>,
+    pub selected: usize,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiMenuItem {
+    pub id: String,
+    pub label: String,
+    pub view: Option<TuiView>,
+    pub action_id: Option<String>,
+    pub dangerous: Option<bool>,
+    pub planned: Option<bool>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiPanels {
+    pub detected_installations: TuiPanel,
+    pub generated_artifacts: TuiPanel,
+    pub linux_artifacts: TuiPanel,
+    pub content: TuiPanel,
+    pub logs: TuiLogPanel,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiPanel {
+    pub label: String,
+    pub lines: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiLogPanel {
+    pub label: String,
+    pub lines: Vec<TuiLogLine>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiFooter {
+    pub text_selection_mode: bool,
+    pub items: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiModal {
+    pub kind: TuiModalKind,
+    pub title: String,
+    pub message: String,
+    pub dangerous: Option<bool>,
+    pub secret: Option<bool>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum TuiModalKind {
+    Confirm,
+    Input,
+    Message,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiTheme {
+    pub supports_true_color: bool,
+    pub colors: TuiColors,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiColors {
+    pub light_blue: String,
+    pub blue: String,
+    pub purple: String,
+    pub success: String,
+    pub warning: String,
+    pub error: String,
+    pub text: String,
+    pub muted: String,
+    pub background: String,
+    pub surface: String,
+    pub surface_alt: String,
+    pub menu_selected_bg: String,
+    pub menu_selected_fg: String,
+    pub menu_inactive_selected_bg: String,
+    pub menu_inactive_selected_fg: String,
+    pub footer_bg: String,
+    pub footer_fg: String,
+    pub active_border: String,
+    pub inactive_border: String,
+    pub active_label: String,
+    pub inactive_label: String,
+    pub active_cell_bg: String,
+    pub active_cell_fg: String,
 }
 
 #[derive(Debug, Deserialize)]

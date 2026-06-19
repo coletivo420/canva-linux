@@ -23,11 +23,15 @@ enum ProcessEvent {
 
 fn emit(event: ProcessEvent) {
     match serde_json::to_string(&event) {
-        Ok(json) => println!("{}", json),
-        Err(error) => println!(
-            "{}",
-            serde_json::json!({"event":"error","message":format!("Failed to serialize event: {}", error)})
-        ),
+        Ok(json) => {
+            println!("{}", json);
+            let _ = std::io::Write::flush(&mut std::io::stdout());
+        }
+        Err(error) => {
+            let err_json = serde_json::json!({"event":"error","message":format!("Failed to serialize event: {}", error)});
+            println!("{}", err_json);
+            let _ = std::io::Write::flush(&mut std::io::stdout());
+        }
     }
 }
 

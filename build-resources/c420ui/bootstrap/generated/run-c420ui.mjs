@@ -704,7 +704,10 @@ function createC420UITuiRenderInput(options) {
     },
     project: {
       name: requireNonEmpty(config.project.projectName, "project.name"),
-      subtitle: requireNonEmpty(config.project.projectSubtitle, "project.subtitle"),
+      subtitle: requireNonEmpty(
+        config.project.projectSubtitle,
+        "project.subtitle"
+      ),
       version: requireNonEmpty(
         config.project.fullVersion ?? config.project.displayVersion,
         "project.version"
@@ -719,11 +722,79 @@ function createC420UITuiRenderInput(options) {
       dangerous: action.dangerous === true || action.requiresConfirmation === true || void 0,
       planned: action.planned === true || action.kind === "planned" || void 0
     })),
+    view: options.view ?? "main",
+    focusZone: options.focusZone ?? "menu",
+    menu: options.menu ?? createLegacyMenu(options.view ?? "main", options.actions),
+    panels: {
+      detectedInstallations: options.panels?.detectedInstallations ?? {
+        label: "Detected Installations",
+        lines: []
+      },
+      generatedArtifacts: options.panels?.generatedArtifacts ?? {
+        label: "Generated Artifacts",
+        lines: []
+      },
+      linuxArtifacts: options.panels?.linuxArtifacts ?? {
+        label: "Linux Artifacts",
+        lines: []
+      },
+      content: options.panels?.content ?? {
+        label: "Overview",
+        lines: []
+      },
+      logs: options.panels?.logs ?? {
+        label: "Logs",
+        lines: (options.logs ?? []).map((log) => ({
+          source: requireNonEmpty(log.source, "log.source"),
+          line: String(log.line),
+          level: optionalNonEmpty(log.level)
+        }))
+      }
+    },
     logs: (options.logs ?? []).map((log) => ({
       source: requireNonEmpty(log.source, "log.source"),
       line: String(log.line),
       level: optionalNonEmpty(log.level)
-    }))
+    })),
+    footer: options.footer ?? {
+      textSelectionMode: false,
+      items: [
+        "Tab Focus",
+        "Enter Select",
+        "Space Toggle",
+        "F5 Copy Logs",
+        "? Help",
+        "q Quit"
+      ]
+    },
+    theme: options.theme ?? {
+      supportsTrueColor: true,
+      colors: {
+        lightBlue: "#00C4CC",
+        blue: "#007C89",
+        purple: "#7D2AE8",
+        success: "#00843D",
+        warning: "#E67E22",
+        error: "#EB001B",
+        text: "#FFFFFF",
+        muted: "#9EA1A2",
+        background: "#0E1318",
+        surface: "#181D23",
+        surfaceAlt: "#252B33",
+        menuSelectedBg: "#7D2AE8",
+        menuSelectedFg: "#FFFFFF",
+        menuInactiveSelectedBg: "#252B33",
+        menuInactiveSelectedFg: "#00C4CC",
+        activeBorder: "#00C4CC",
+        inactiveBorder: "#252B33",
+        activeLabel: "#FFFFFF",
+        inactiveLabel: "#9EA1A2",
+        activeCellBg: "#00C4CC",
+        activeCellFg: "#000000",
+        footerBg: "#181D23",
+        footerFg: "#9EA1A2"
+      }
+    }
   };
   if (options.progress) {
     input.progress = {
@@ -732,7 +803,45 @@ function createC420UITuiRenderInput(options) {
       percent: options.progress.percent
     };
   }
+  if (options.modal) {
+    input.modal = options.modal;
+  }
   return input;
+}
+function createLegacyMenu(view, actions) {
+  if (view === "main") {
+    return {
+      label: "Main Menu",
+      items: [
+        { id: "view-install", label: "Install", view: "install" },
+        { id: "view-development", label: "Development", view: "development" },
+        {
+          id: "view-maintenance",
+          label: "Maintenance & Uninstall",
+          view: "maintenance"
+        },
+        {
+          id: "view-settings",
+          label: "Application Settings",
+          view: "settings"
+        },
+        { id: "view-help", label: "Help", view: "help" }
+      ],
+      selected: 0
+    };
+  }
+  const group = view === "install" ? "install" : view === "maintenance" ? "maintenance" : "development";
+  return {
+    label: `${view.charAt(0).toUpperCase()}${view.slice(1)} Actions`,
+    items: actions.filter((action) => action.group === group).map((action) => ({
+      id: requireNonEmpty(action.id, "action.id"),
+      label: requireNonEmpty(action.label, `${action.id}.label`),
+      dangerous: action.dangerous === true || action.requiresConfirmation === true || void 0,
+      planned: action.planned === true || action.kind === "planned" || void 0,
+      actionId: action.id
+    })),
+    selected: 0
+  };
 }
 function requireNonEmpty(value, label) {
   if (!value?.trim()) throw new Error(`${label} is required`);
@@ -770,11 +879,17 @@ function runC420UIRustTuiApp(options) {
 `);
   };
   const actions = options.bridge.actions();
+  const theme = {
+    supportsTrueColor: c420uiTheme.supportsTrueColor,
+    colors: c420uiTheme.colors
+  };
   send({
     event: "init",
     state: createC420UITuiRenderInput({
       config: options.config,
-      actions
+      actions,
+      theme,
+      view: "main"
     })
   });
   const engine = createC420UIActionEngine({
@@ -807,6 +922,8 @@ function runC420UIRustTuiApp(options) {
       event,
       engine,
       send,
+      config: options.config,
+      bridge: options.bridge,
       startupTasks: options.startupTasks ?? [],
       pendingRootRequests,
       abortController,
@@ -864,6 +981,8 @@ async function handleTuiEvent(options) {
     event,
     engine,
     send,
+    config,
+    bridge,
     startupTasks,
     pendingRootRequests,
     abortController,
@@ -894,11 +1013,26 @@ async function handleTuiEvent(options) {
     }
     return;
   }
+  if (event.event === "view-changed") {
+    send({
+      event: "state",
+      state: createC420UITuiRenderInput({
+        config,
+        actions: bridge.actions(),
+        theme: {
+          supportsTrueColor: c420uiTheme.supportsTrueColor,
+          colors: c420uiTheme.colors
+        },
+        view: event.view
+      })
+    });
+    return;
+  }
   if (event.event === "root-request-response") {
     const resolve = pendingRootRequests.get(event.requestId);
     if (resolve) {
       pendingRootRequests.delete(event.requestId);
-      resolve({ accepted: event.accepted });
+      resolve({ accepted: event.accepted, input: event.input });
     }
     return;
   }
@@ -921,9 +1055,11 @@ async function requestRootAccessThroughTui(request, send, pendingRootRequests, r
     actionId: request.action.id,
     reason: request.reason
   });
-  const response = await new Promise((resolve) => {
-    pendingRootRequests.set(requestId, resolve);
-  });
+  const response = await new Promise(
+    (resolve) => {
+      pendingRootRequests.set(requestId, resolve);
+    }
+  );
   if (!response.accepted) {
     return {
       ok: false,
@@ -931,10 +1067,17 @@ async function requestRootAccessThroughTui(request, send, pendingRootRequests, r
       message: "Root access was canceled."
     };
   }
-  const access = rootProvider?.validateRootAccess(
-    request.rootDir,
-    request.actionEnv
-  );
+  let submittedInput = response.input ?? "";
+  let access;
+  try {
+    access = rootProvider?.validateRootAccessWithInput ? rootProvider.validateRootAccessWithInput(
+      request.rootDir,
+      request.actionEnv,
+      submittedInput
+    ) : rootProvider?.validateRootAccess(request.rootDir, request.actionEnv);
+  } finally {
+    submittedInput = "";
+  }
   if (access?.ok === false) {
     return access;
   }
@@ -993,6 +1136,7 @@ function readJsonLines(stream, onEvent, onError) {
           onEvent(JSON.parse(line));
         } catch (error) {
           onError(`Invalid c420ui-tui JSONL event: ${formatRustTuiError(error)}`);
+          stream.destroy();
           return;
         }
       }
@@ -1206,6 +1350,12 @@ async function runC420UIRustHost(options) {
     child.on("error", (err) => {
       clearTimeout(timer);
       reject(err);
+    });
+    child.stdin.on("error", (err) => {
+      if (err.code !== "EPIPE") {
+        clearTimeout(timer);
+        reject(err);
+      }
     });
     child.on("close", (code) => {
       clearTimeout(timer);

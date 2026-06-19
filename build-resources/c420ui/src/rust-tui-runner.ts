@@ -20,6 +20,7 @@ import {
   type c420uiStartupTask,
 } from "./startup-task.js";
 import type { C420UIAppOptions } from "./terminal/app.js";
+import { c420uiTheme } from "./terminal/theme.js";
 import type { c420uiRootProvider } from "./root-provider.js";
 
 type C420UITuiChildProcess = {
@@ -57,9 +58,15 @@ type C420UITuiRuntimeInput =
 type C420UITuiRuntimeOutput =
   | { event: "ready" }
   | { event: "action-selected"; actionId: string }
+  | { event: "view-changed"; view: C420UITuiRenderInput["view"] }
   | { event: "quit" }
   | { event: "cancel" }
-  | { event: "root-request-response"; requestId: string; accepted: boolean };
+  | {
+      event: "root-request-response";
+      requestId: string;
+      accepted: boolean;
+      input?: string;
+    };
 
 export type C420UIRustTuiRunnerOptions = C420UIAppOptions & {
   env?: NodeJS.ProcessEnv;
@@ -80,7 +87,7 @@ export function runC420UIRustTuiApp(
   const abortController = new AbortController();
   const pendingRootRequests = new Map<
     string,
-    (response: { accepted: boolean }) => void
+    (response: { accepted: boolean; input?: string }) => void
   >();
 
   let child: C420UITuiChildProcess;
@@ -107,11 +114,18 @@ export function runC420UIRustTuiApp(
   };
 
   const actions = options.bridge.actions();
+  const theme = {
+    supportsTrueColor: c420uiTheme.supportsTrueColor,
+    colors: c420uiTheme.colors,
+  };
+
   send({
     event: "init",
     state: createC420UITuiRenderInput({
       config: options.config,
       actions,
+      theme,
+      view: "main",
     }),
   });
 
@@ -149,6 +163,8 @@ export function runC420UIRustTuiApp(
       event,
       engine,
       send,
+      config: options.config,
+      bridge: options.bridge,
       startupTasks: options.startupTasks ?? [],
       pendingRootRequests,
       abortController,
@@ -213,10 +229,12 @@ async function handleTuiEvent(options: {
   event: C420UITuiRuntimeOutput;
   engine: ReturnType<typeof createC420UIActionEngine>;
   send: (event: C420UITuiRuntimeInput) => void;
+  config: C420UIAppOptions["config"];
+  bridge: C420UIAppOptions["bridge"];
   startupTasks: c420uiStartupTask[];
   pendingRootRequests: Map<
     string,
-    (response: { accepted: boolean }) => void
+    (response: { accepted: boolean; input?: string }) => void
   >;
   abortController: AbortController;
   writeError: (message: string) => void;
@@ -226,6 +244,8 @@ async function handleTuiEvent(options: {
     event,
     engine,
     send,
+    config,
+    bridge,
     startupTasks,
     pendingRootRequests,
     abortController,
@@ -259,11 +279,27 @@ async function handleTuiEvent(options: {
     return;
   }
 
+  if (event.event === "view-changed") {
+    send({
+      event: "state",
+      state: createC420UITuiRenderInput({
+        config,
+        actions: bridge.actions(),
+        theme: {
+          supportsTrueColor: c420uiTheme.supportsTrueColor,
+          colors: c420uiTheme.colors,
+        },
+        view: event.view,
+      }),
+    });
+    return;
+  }
+
   if (event.event === "root-request-response") {
     const resolve = pendingRootRequests.get(event.requestId);
     if (resolve) {
       pendingRootRequests.delete(event.requestId);
-      resolve({ accepted: event.accepted });
+      resolve({ accepted: event.accepted, input: event.input });
     }
     return;
   }
@@ -287,7 +323,7 @@ async function requestRootAccessThroughTui(
   send: (event: C420UITuiRuntimeInput) => void,
   pendingRootRequests: Map<
     string,
-    (response: { accepted: boolean }) => void
+    (response: { accepted: boolean; input?: string }) => void
   >,
   rootProvider: c420uiRootProvider | undefined,
 ): Promise<c420uiRootAccessRequestResult> {
@@ -299,9 +335,11 @@ async function requestRootAccessThroughTui(
     reason: request.reason,
   });
 
-  const response = await new Promise<{ accepted: boolean }>((resolve) => {
-    pendingRootRequests.set(requestId, resolve);
-  });
+  const response = await new Promise<{ accepted: boolean; input?: string }>(
+    (resolve) => {
+      pendingRootRequests.set(requestId, resolve);
+    },
+  );
 
   if (!response.accepted) {
     return {
@@ -311,10 +349,19 @@ async function requestRootAccessThroughTui(
     };
   }
 
-  const access = rootProvider?.validateRootAccess(
-    request.rootDir,
-    request.actionEnv,
-  );
+  let submittedInput = response.input ?? "";
+  let access: c420uiRootAccessRequestResult | undefined;
+  try {
+    access = rootProvider?.validateRootAccessWithInput
+      ? rootProvider.validateRootAccessWithInput(
+          request.rootDir,
+          request.actionEnv,
+          submittedInput,
+        )
+      : rootProvider?.validateRootAccess(request.rootDir, request.actionEnv);
+  } finally {
+    submittedInput = "";
+  }
   if (access?.ok === false) {
     return access;
   }
@@ -388,6 +435,7 @@ function readJsonLines(
           onEvent(JSON.parse(line) as C420UITuiRuntimeOutput);
         } catch (error) {
           onError(`Invalid c420ui-tui JSONL event: ${formatRustTuiError(error)}`);
+          stream.destroy();
           return;
         }
       }

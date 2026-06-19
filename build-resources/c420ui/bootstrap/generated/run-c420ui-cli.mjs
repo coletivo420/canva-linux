@@ -888,6 +888,129 @@ function createC420UIActionEngine(options) {
   };
 }
 
+// build-resources/c420ui/src/theme.json
+var theme_default = {
+  palette: {
+    canvaLightBlue: "#07B9CE",
+    canvaBlue: "#3969E7",
+    canvaPurple: "#7D2AE7",
+    success: "#00C853",
+    warning: "#FFD166",
+    error: "#FF4D4F",
+    text: "#EAF7FF",
+    muted: "#8FA3B8",
+    background: "#10131A",
+    surface: "#171B24",
+    surfaceAlt: "#202635"
+  },
+  ansiFallback: {
+    primary: "cyan",
+    secondary: "blue",
+    accent: "magenta",
+    success: "green",
+    warning: "yellow",
+    error: "red"
+  }
+};
+
+// build-resources/c420ui/src/terminal/theme.ts
+var supportsTrueColor = process.env.COLORTERM === "truecolor" || process.env.COLORTERM === "24bit";
+var colors = {
+  lightBlue: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.primary,
+  blue: supportsTrueColor ? theme_default.palette.canvaBlue : theme_default.ansiFallback.secondary,
+  purple: supportsTrueColor ? theme_default.palette.canvaPurple : theme_default.ansiFallback.accent,
+  success: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  warning: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
+  error: supportsTrueColor ? theme_default.palette.error : theme_default.ansiFallback.error,
+  text: supportsTrueColor ? theme_default.palette.text : "white",
+  muted: supportsTrueColor ? theme_default.palette.muted : "gray",
+  background: supportsTrueColor ? theme_default.palette.background : "black",
+  surface: supportsTrueColor ? theme_default.palette.surface : "black",
+  surfaceAlt: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
+  menuSelectedBg: supportsTrueColor ? theme_default.palette.canvaPurple : "magenta",
+  menuSelectedFg: "white",
+  menuInactiveSelectedBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
+  menuInactiveSelectedFg: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
+  footerBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
+  footerFg: "white",
+  statusDetected: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  statusNotDetected: supportsTrueColor ? theme_default.palette.canvaPurple : theme_default.ansiFallback.accent,
+  helpTitle: supportsTrueColor ? theme_default.palette.canvaBlue : theme_default.ansiFallback.secondary,
+  helpSectionTitle: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  infoItemTitle: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  infoText: supportsTrueColor ? theme_default.palette.text : "white",
+  descriptionText: supportsTrueColor ? theme_default.palette.text : "white",
+  logo: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.secondary,
+  version: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.secondary,
+  phase: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
+  appImageLoading: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
+  activeBorder: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
+  inactiveBorder: supportsTrueColor ? theme_default.palette.canvaBlue : "blue",
+  activeLabel: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
+  inactiveLabel: supportsTrueColor ? theme_default.palette.muted : "gray",
+  activeBlockBg: supportsTrueColor ? theme_default.palette.surface : "black",
+  activeCellBg: supportsTrueColor ? theme_default.palette.canvaBlue : "blue",
+  activeCellFg: "white",
+  activeCheckboxFg: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  activeCheckboxBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
+  inactiveCheckboxFg: supportsTrueColor ? theme_default.palette.muted : "gray"
+};
+var c420uiTheme = {
+  supportsTrueColor,
+  colors,
+  header: {
+    fg: colors.lightBlue,
+    bg: colors.background,
+    bold: true
+  },
+  menu: {
+    fg: colors.text,
+    bg: colors.background,
+    border: {
+      fg: colors.blue
+    },
+    selected: {
+      fg: colors.menuSelectedFg,
+      bg: colors.menuSelectedBg,
+      bold: true
+    },
+    item: {
+      fg: colors.text
+    }
+  },
+  content: {
+    fg: colors.text,
+    bg: colors.background,
+    border: {
+      fg: colors.purple
+    },
+    label: {
+      fg: colors.lightBlue
+    }
+  },
+  logs: {
+    fg: colors.text,
+    bg: colors.background,
+    border: {
+      fg: colors.blue
+    },
+    label: {
+      fg: colors.lightBlue
+    }
+  },
+  footer: {
+    fg: colors.footerFg,
+    bg: colors.footerBg,
+    bold: true
+  },
+  modal: {
+    normalBorder: colors.lightBlue,
+    dangerousBorder: colors.error,
+    text: colors.text,
+    background: colors.background
+  }
+};
+
 // build-resources/c420ui/src/cli.ts
 function writeLine(writer, line) {
   writer?.(line);

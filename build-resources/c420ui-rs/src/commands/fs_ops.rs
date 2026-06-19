@@ -172,13 +172,35 @@ fn sudo_write_file(
     content: &str,
     mode: Option<u32>,
 ) -> Result<(), String> {
+    use std::fs::OpenOptions;
+    use std::io::Write;
+
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map_err(|e| format!("failed to read system time: {}", e))?
         .as_nanos();
     let temp_path = std::env::temp_dir().join(format!("c420ui-host-write-{}", nanos));
-    fs::write(&temp_path, content)
-        .map_err(|e| format!("failed to write temp file {}: {}", temp_path.display(), e))?;
+
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temp_path)
+        .map_err(|e| {
+            format!(
+                "failed to create secure temp file {}: {}",
+                temp_path.display(),
+                e
+            )
+        })?;
+
+    file.write_all(content.as_bytes()).map_err(|e| {
+        format!(
+            "failed to write to temp file {}: {}",
+            temp_path.display(),
+            e
+        )
+    })?;
+
     let result = sudo_install_file(root, &temp_path, target, mode);
     let _ = fs::remove_file(&temp_path);
     result

@@ -52,15 +52,48 @@ fn json_lines(output: &std::process::Output) -> Vec<serde_json::Value> {
 }
 
 fn render_input(actions: &str, hash: &str) -> String {
-    format!(
-        r#"{{
-  "brand": {{ "name": "c420ui", "version": "0.1.0", "hash": "{hash}" }},
-  "project": {{ "name": "Example", "subtitle": "Workspace", "version": "1.0.0", "phase": "dev" }},
-  "actions": {actions},
-  "logs": [{{ "source": "stdout", "line": "ready" }}],
-  "progress": {{ "state": "running", "label": "Rendering", "percent": 50 }}
-}}"#
-    )
+    let actions_val: serde_json::Value =
+        serde_json::from_str(actions).unwrap_or(serde_json::Value::Array(vec![]));
+    let mut brand = serde_json::json!({
+        "name": "c420ui",
+        "version": "0.1.0"
+    });
+    if !hash.is_empty() {
+        brand["hash"] = serde_json::Value::String(hash.to_string());
+    }
+
+    let json_val = serde_json::json!({
+        "brand": brand,
+        "project": { "name": "Example", "subtitle": "Workspace", "version": "1.0.0", "phase": "dev" },
+        "actions": actions_val,
+        "view": "main",
+        "focusZone": "menu",
+        "menu": { "label": "Main Menu", "items": actions_val, "selected": 0 },
+        "panels": {
+            "detectedInstallations": { "label": "Detected Installations", "lines": [] },
+            "generatedArtifacts": { "label": "Generated Artifacts", "lines": [] },
+            "linuxArtifacts": { "label": "Linux Artifacts", "lines": [] },
+            "content": { "label": "Overview", "lines": [] },
+            "logs": { "label": "Logs", "lines": [] }
+        },
+        "footer": { "textSelectionMode": false, "items": [] },
+        "progress": { "state": "running", "label": "Rendering", "percent": 50 },
+        "theme": {
+            "supportsTrueColor": true,
+            "colors": {
+                "lightBlue": "#00C4CC", "blue": "#007C89", "purple": "#7D2AE8", "success": "#00843D",
+                "warning": "#E67E22", "error": "#EB001B", "text": "#FFFFFF", "muted": "#9EA1A2",
+                "background": "#0E1318", "surface": "#181D23", "surfaceAlt": "#252B33",
+                "menuSelectedBg": "#7D2AE8", "menuSelectedFg": "#FFFFFF",
+                "menuInactiveSelectedBg": "#252B33", "menuInactiveSelectedFg": "#00C4CC",
+                "activeBorder": "#00C4CC", "inactiveBorder": "#252B33", "activeLabel": "#FFFFFF",
+                "inactiveLabel": "#9EA1A2", "activeCellBg": "#00C4CC", "activeCellFg": "#000000",
+                "footerBg": "#181D23", "footerFg": "#9EA1A2"
+            }
+        }
+    });
+
+    json_val.to_string()
 }
 
 #[test]
@@ -100,9 +133,9 @@ fn tui_render_json_returns_screen_lines() {
         "render",
         &render_input(
             r#"[
-              { "id": "build", "label": "Build", "group": "package" },
-              { "id": "run", "label": "Run", "group": "development" },
-              { "id": "clean", "label": "Clean", "group": "maintenance", "dangerous": true }
+              { "id": "build", "label": "Build", "group": "package", "actionId": "build" },
+              { "id": "run", "label": "Run", "group": "development", "actionId": "run" },
+              { "id": "clean", "label": "Clean", "group": "maintenance", "dangerous": true, "actionId": "clean" }
             ]"#,
             "sha256:abcdef123456",
         ),
@@ -160,7 +193,7 @@ fn tui_run_json_lines_emits_ready_action_and_quit() {
         serde_json::json!({
             "event": "init",
             "state": serde_json::from_str::<serde_json::Value>(&render_input(
-                r#"[{ "id": "install-native", "label": "Install native", "group": "install" }]"#,
+                r#"[{ "id": "install-native", "label": "Install native", "group": "install", "actionId": "install-native" }]"#,
                 "",
             ))
             .unwrap()

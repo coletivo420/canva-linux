@@ -1,7 +1,13 @@
 use super::events::{progress_from_protocol, TuiRuntimeInputEvent, TuiRuntimeOutputEvent};
 use super::input::{spawn_tty_input_thread, TuiInputEvent};
+use super::renderer;
 use super::state::TuiRuntimeState;
-use super::view::render_to_stderr;
+use crossterm::{
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
 use std::io::{self, BufRead, Write};
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
@@ -18,6 +24,10 @@ pub fn run_json_lines(headless_test: bool) -> Result<(), String> {
     spawn_protocol_thread(sender.clone());
 
     if !headless_test {
+        enable_raw_mode().map_err(|e| e.to_string())?;
+        let mut stdout = io::stderr();
+        execute!(stdout, EnterAlternateScreen).map_err(|e| e.to_string())?;
+
         let input_sender = sender.clone();
         let (tty_sender, tty_receiver) = mpsc::channel::<TuiInputEvent>();
         spawn_tty_input_thread(tty_sender);
@@ -30,7 +40,18 @@ pub fn run_json_lines(headless_test: bool) -> Result<(), String> {
         });
     }
 
-    run_loop(receiver, headless_test)
+    let backend = CrosstermBackend::new(io::stderr());
+    let mut terminal = Terminal::new(backend).map_err(|e| e.to_string())?;
+
+    let result = run_loop(&mut terminal, receiver, headless_test);
+
+    if !headless_test {
+        disable_raw_mode().map_err(|e| e.to_string())?;
+        execute!(io::stderr(), LeaveAlternateScreen).map_err(|e| e.to_string())?;
+        terminal.show_cursor().map_err(|e| e.to_string())?;
+    }
+
+    result
 }
 
 fn spawn_protocol_thread(sender: mpsc::Sender<RuntimeEvent>) {
@@ -69,7 +90,11 @@ fn spawn_protocol_thread(sender: mpsc::Sender<RuntimeEvent>) {
     });
 }
 
-fn run_loop(receiver: Receiver<RuntimeEvent>, headless_test: bool) -> Result<(), String> {
+fn run_loop<B: ratatui::backend::Backend>(
+    terminal: &mut Terminal<B>,
+    receiver: Receiver<RuntimeEvent>,
+    headless_test: bool,
+) -> Result<(), String> {
     let mut state: Option<TuiRuntimeState> = None;
 
     while let Ok(event) = receiver.recv() {
@@ -80,7 +105,9 @@ fn run_loop(receiver: Receiver<RuntimeEvent>, headless_test: bool) -> Result<(),
                     state = Some(TuiRuntimeState::new(render));
                     write_event(&TuiRuntimeOutputEvent::Ready)?;
                     if let Some(state) = &state {
-                        render_to_stderr(state).map_err(|e| e.to_string())?;
+                        if !headless_test {
+                            renderer::render(terminal, state).map_err(|e| e.to_string())?;
+                        }
                     }
                     if headless_test {
                         if let Some(action_id) =
@@ -91,60 +118,101 @@ fn run_loop(receiver: Receiver<RuntimeEvent>, headless_test: bool) -> Result<(),
                         write_event(&TuiRuntimeOutputEvent::Quit)?;
                         return Ok(());
                     }
-                    continue;
                 }
                 TuiRuntimeInputEvent::Progress {
                     state: progress_state,
                     label,
+                    percent,
                 } => {
                     if let Some(state) = state.as_mut() {
-                        state.set_progress(progress_from_protocol(progress_state, label));
-                        render_to_stderr(state).map_err(|e| e.to_string())?;
+                        state.set_progress(progress_from_protocol(progress_state, label, percent));
+                        if !headless_test {
+                            renderer::render(terminal, state).map_err(|e| e.to_string())?;
+                        }
                     }
-                    continue;
                 }
-                protocol => handle_non_state_protocol(protocol, state.as_mut())?,
+                protocol => {
+                    handle_non_state_protocol(protocol, state.as_mut())?;
+                    if let Some(state) = &state {
+                        if !headless_test {
+                            renderer::render(terminal, state).map_err(|e| e.to_string())?;
+                        }
+                    }
+                }
             },
             RuntimeEvent::Input(input) => {
                 if let Some(state) = state.as_mut() {
-                    match input {
-                        TuiInputEvent::Next => state.select_next(),
-                        TuiInputEvent::Previous => state.select_previous(),
-                        TuiInputEvent::Select => {
-                            if let Some(request) = state.take_pending_root_request() {
-                                write_event(&TuiRuntimeOutputEvent::RootRequestResponse {
-                                    request_id: request.request_id,
-                                    accepted: true,
-                                })?;
-                            } else if let Some(action_id) = state.selected_action_id() {
-                                write_event(&TuiRuntimeOutputEvent::ActionSelected { action_id })?;
+                    if state.render.modal.is_some() {
+                        match input {
+                            TuiInputEvent::Char(c) => state.push_char(c),
+                            TuiInputEvent::Backspace => state.pop_char(),
+                            TuiInputEvent::Select => {
+                                if let Some(request) = state.take_pending_root_request() {
+                                    let typed_input = if state.modal_input.is_empty() {
+                                        None
+                                    } else {
+                                        Some(state.modal_input.clone())
+                                    };
+                                    state.modal_input.clear();
+                                    write_event(&TuiRuntimeOutputEvent::RootRequestResponse {
+                                        request_id: request.request_id,
+                                        accepted: true,
+                                        input: typed_input,
+                                    })?;
+                                }
                             }
-                        }
-                        TuiInputEvent::Deny => {
-                            if let Some(request) = state.take_pending_root_request() {
-                                write_event(&TuiRuntimeOutputEvent::RootRequestResponse {
-                                    request_id: request.request_id,
-                                    accepted: false,
-                                })?;
+                            TuiInputEvent::Cancel => {
+                                if let Some(request) = state.take_pending_root_request() {
+                                    state.modal_input.clear();
+                                    write_event(&TuiRuntimeOutputEvent::RootRequestResponse {
+                                        request_id: request.request_id,
+                                        accepted: false,
+                                        input: None,
+                                    })?;
+                                }
                             }
+                            _ => {}
                         }
-                        TuiInputEvent::Quit => {
-                            write_event(&TuiRuntimeOutputEvent::Quit)?;
-                            return Ok(());
-                        }
-                        TuiInputEvent::Cancel => {
-                            if let Some(request) = state.take_pending_root_request() {
-                                write_event(&TuiRuntimeOutputEvent::RootRequestResponse {
-                                    request_id: request.request_id,
-                                    accepted: false,
-                                })?;
-                            } else {
-                                write_event(&TuiRuntimeOutputEvent::Cancel)?;
+                    } else {
+                        match input {
+                            TuiInputEvent::Next => state.select_next(),
+                            TuiInputEvent::Previous => state.select_previous(),
+                            TuiInputEvent::FocusNext => state.next_focus(),
+                            TuiInputEvent::FocusPrevious => state.previous_focus(),
+                            TuiInputEvent::Char('j') => state.select_next(),
+                            TuiInputEvent::Char('k') => state.select_previous(),
+                            TuiInputEvent::Char('q') => {
+                                write_event(&TuiRuntimeOutputEvent::Quit)?;
                                 return Ok(());
                             }
+                            TuiInputEvent::Select | TuiInputEvent::Char('y') => {
+                                let old_view = state.render.view.clone();
+                                if let Some(action_id) = state.enter_selected() {
+                                    write_event(&TuiRuntimeOutputEvent::ActionSelected {
+                                        action_id,
+                                    })?;
+                                } else if state.render.view != old_view {
+                                    write_event(&TuiRuntimeOutputEvent::ViewChanged {
+                                        view: state.render.view.clone(),
+                                    })?;
+                                }
+                            }
+                            TuiInputEvent::Backspace
+                            | TuiInputEvent::Cancel
+                            | TuiInputEvent::Char('n') => {
+                                if state.render.view != crate::tui::contracts::TuiView::Main {
+                                    state.go_back();
+                                } else {
+                                    write_event(&TuiRuntimeOutputEvent::Cancel)?;
+                                    return Ok(());
+                                }
+                            }
+                            _ => {}
                         }
                     }
-                    render_to_stderr(state).map_err(|e| e.to_string())?;
+                    if !headless_test {
+                        renderer::render(terminal, state).map_err(|e| e.to_string())?;
+                    }
                 }
             }
             RuntimeEvent::Invalid(error) => return Err(error),
@@ -162,18 +230,21 @@ fn handle_non_state_protocol(
     match event {
         TuiRuntimeInputEvent::Log { source, line } => {
             if let Some(state) = state {
-                state.render.logs.push(super::contracts::TuiLogLine {
-                    source,
-                    line,
-                    level: None,
-                });
-                render_to_stderr(state).map_err(|e| e.to_string())?;
+                state
+                    .render
+                    .panels
+                    .logs
+                    .lines
+                    .push(super::contracts::TuiLogLine {
+                        source,
+                        line,
+                        level: None,
+                    });
             }
         }
         TuiRuntimeInputEvent::ActionStart { action_id } => {
             if let Some(state) = state {
                 state.set_status(format!("Running {}", action_id));
-                render_to_stderr(state).map_err(|e| e.to_string())?;
             }
         }
         TuiRuntimeInputEvent::ActionFinish {
@@ -183,7 +254,6 @@ fn handle_non_state_protocol(
         } => {
             if let Some(state) = state {
                 state.set_status(format!("Finished {}: {} ({})", action_id, status, code));
-                render_to_stderr(state).map_err(|e| e.to_string())?;
             }
         }
         TuiRuntimeInputEvent::RootRequest {
@@ -193,18 +263,14 @@ fn handle_non_state_protocol(
         } => {
             if let Some(state) = state {
                 state.set_pending_root_request(request_id, action_id, reason);
-                render_to_stderr(state).map_err(|e| e.to_string())?;
             }
         }
         TuiRuntimeInputEvent::Error { message } => {
             if let Some(state) = state {
                 state.set_status(format!("Error: {}", message));
-                render_to_stderr(state).map_err(|e| e.to_string())?;
             }
         }
-        TuiRuntimeInputEvent::Init { .. }
-        | TuiRuntimeInputEvent::State { .. }
-        | TuiRuntimeInputEvent::Progress { .. } => {}
+        _ => {}
     }
     Ok(())
 }

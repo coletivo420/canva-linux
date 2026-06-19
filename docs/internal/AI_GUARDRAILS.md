@@ -1,5 +1,12 @@
 # AI Guardrails
 
+## Dev12 Rust TUI visual contract
+
+Dev12 now requires the Rust TUI to preserve the visual contract of the legacy
+TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it
+must match the legacy layout, theme, panels, focus behavior, footer, progress
+bar, logs, and root prompt before the TypeScript TUI can be removed.
+
 ## Dev11 ESM-only guardrails (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

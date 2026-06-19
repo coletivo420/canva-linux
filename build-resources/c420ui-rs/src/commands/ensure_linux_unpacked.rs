@@ -42,12 +42,22 @@ pub fn execute() -> Result<(), String> {
     if input.candidate_contains.trim().is_empty() {
         return Err("candidateContains must not be empty".to_string());
     }
-    let dist_dir = PathBuf::from(input.dist_dir.trim());
-    if !dist_dir.is_absolute() {
+    let dist_dir_path = PathBuf::from(input.dist_dir.trim());
+    if !dist_dir_path.is_absolute() {
         return Err("distDir must be absolute".to_string());
     }
-    let dist_dir = fs::canonicalize(&dist_dir)
-        .map_err(|e| format!("failed to canonicalize distDir: {}", e))?;
+
+    let dist_dir = if input.dry_run && !dist_dir_path.exists() {
+        dist_dir_path
+    } else {
+        fs::canonicalize(&dist_dir_path).map_err(|e| {
+            format!(
+                "failed to canonicalize distDir {}: {}",
+                dist_dir_path.display(),
+                e
+            )
+        })?
+    };
 
     let mut candidates = Vec::new();
     for entry in fs::read_dir(&dist_dir)

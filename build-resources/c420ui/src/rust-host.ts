@@ -110,6 +110,14 @@ export async function runC420UIRustHost<T>(
       reject(err);
     });
 
+    child.stdin.on("error", (err) => {
+      // Ignore EPIPE as we handle process exit in 'close'
+      if ((err as any).code !== "EPIPE") {
+        clearTimeout(timer);
+        reject(err);
+      }
+    });
+
     child.on("close", (code) => {
       clearTimeout(timer);
       if (killedByTimeout) return;

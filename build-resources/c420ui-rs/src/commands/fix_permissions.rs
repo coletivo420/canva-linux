@@ -24,7 +24,12 @@ fn ownership_arg(user: &str, group: Option<&str>) -> Result<String, String> {
         return Err("user must not contain ':'".to_string());
     }
     match group.map(str::trim).filter(|value| !value.is_empty()) {
-        Some(group) => Ok(format!("{}:{}", user, group)),
+        Some(group) => {
+            if group.contains(':') {
+                return Err("group must not contain ':'".to_string());
+            }
+            Ok(format!("{}:{}", user, group))
+        }
         None => Ok(user.to_string()),
     }
 }

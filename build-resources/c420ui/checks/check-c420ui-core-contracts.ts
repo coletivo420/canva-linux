@@ -1675,7 +1675,13 @@ function checkRustTuiContract(failures: string[]): void {
   const terminalPath = "build-resources/c420ui/src/terminal/index.ts";
   const runtimePath = "build-resources/c420ui/src/terminal/runtime.ts";
   const rustTuiBinPath = "build-resources/c420ui-rs/src/bin/c420ui-tui.rs";
+  const rustContractsPath = "build-resources/c420ui-rs/src/tui/contracts.rs";
+  const rustRendererPath = "build-resources/c420ui-rs/src/tui/renderer.rs";
+  const rustWidgetsPath = "build-resources/c420ui-rs/src/tui/widgets.rs";
+  const rustLegacyLayoutPath = "build-resources/c420ui-rs/src/tui/legacy_layout.rs";
+  const rustLegacyThemePath = "build-resources/c420ui-rs/src/tui/legacy_theme.rs";
   const rustTuiRuntimePath = "build-resources/c420ui-rs/src/tui/runtime.rs";
+  const rustTuiStatePath = "build-resources/c420ui-rs/src/tui/state.rs";
   const roadmapPath = "docs/dev/DEV12_RUST_C420UI_MIGRATION.md";
   const validationPath = "docs/VALIDATION.md";
   const guardrailsPath = "docs/internal/AI_GUARDRAILS.md";
@@ -1695,7 +1701,13 @@ function checkRustTuiContract(failures: string[]): void {
   const cargo = fs.readFileSync(path.join(rootDir, cargoPath), "utf8");
   const runtime = fs.readFileSync(path.join(rootDir, runtimePath), "utf8");
   const rustTuiBin = fs.readFileSync(path.join(rootDir, rustTuiBinPath), "utf8");
+  const rustContracts = fs.readFileSync(path.join(rootDir, rustContractsPath), "utf8");
+  const rustRenderer = fs.readFileSync(path.join(rootDir, rustRendererPath), "utf8");
+  const rustWidgets = fs.readFileSync(path.join(rootDir, rustWidgetsPath), "utf8");
+  const rustLegacyLayout = fs.readFileSync(path.join(rootDir, rustLegacyLayoutPath), "utf8");
+  const rustLegacyTheme = fs.readFileSync(path.join(rootDir, rustLegacyThemePath), "utf8");
   const rustTuiRuntime = fs.readFileSync(path.join(rootDir, rustTuiRuntimePath), "utf8");
+  const rustTuiState = fs.readFileSync(path.join(rootDir, rustTuiStatePath), "utf8");
   const roadmap = fs.readFileSync(path.join(rootDir, roadmapPath), "utf8");
   const validation = fs.readFileSync(path.join(rootDir, validationPath), "utf8");
   const guardrails = fs.readFileSync(path.join(rootDir, guardrailsPath), "utf8");
@@ -1737,6 +1749,76 @@ function checkRustTuiContract(failures: string[]): void {
   }
   if (rustTuiRuntime.includes("runAction") || rustTuiBin.includes("runAction")) {
     failures.push("c420ui-tui must not execute project actions directly");
+  }
+  if (!cargo.includes("ratatui") || !cargo.includes("crossterm")) {
+    failures.push(`${cargoPath}: c420ui-tui must use ratatui/crossterm for the runtime renderer`);
+  }
+  if (!rustTuiBin.includes("render_smoke::render") || rustTuiRuntime.includes("render_smoke::render")) {
+    failures.push("c420ui-tui must keep plain JSON render smoke out of the runtime visual renderer");
+  }
+  for (const label of [
+    "Main Menu",
+    "Detected Installations",
+    "Generated Artifacts",
+    "Linux Artifacts",
+    "Overview",
+    "Logs",
+  ] as const) {
+    if (!rustTui.includes(label) && !rustWidgets.includes(label) && !rustRenderer.includes(label)) {
+      failures.push(`tui renderer contract must preserve legacy panel label: ${label}`);
+    }
+  }
+  if (!rustLegacyLayout.includes("Percentage(32)") || !rustLegacyLayout.includes("Percentage(68)")) {
+    failures.push(`${rustLegacyLayoutPath}: must implement the legacy 32/68 layout split`);
+  }
+  for (const fragment of [
+    "menu_selected_bg",
+    "menu_inactive_selected_bg",
+    "active_border",
+    "footer_bg",
+  ] as const) {
+    if (!rustLegacyTheme.includes(fragment)) {
+      failures.push(`${rustLegacyThemePath}: must map legacy theme color ${fragment}`);
+    }
+  }
+  for (const fragment of [
+    "view:",
+    "focusZone:",
+    "panels:",
+    "footer:",
+    "theme:",
+    "modal?:",
+  ] as const) {
+    if (!rustTui.includes(fragment)) {
+      failures.push(`${rustTuiPath}: render contract must include ${fragment}`);
+    }
+  }
+  for (const fragment of [
+    "pub view: TuiView",
+    "pub focus_zone: TuiFocusZone",
+    "pub panels: TuiPanels",
+    "pub footer: TuiFooter",
+    "pub theme: TuiTheme",
+  ] as const) {
+    if (!rustContracts.includes(fragment) && !rustTuiRuntime.includes(fragment) && !rustTuiRunner.includes(fragment)) {
+      failures.push(`Rust TUI/root contract must include ${fragment}`);
+    }
+  }
+  if (!rustTuiRunner.includes("input?: string") || !rustTuiRunner.includes("validateRootAccessWithInput")) {
+    failures.push(`${rustTuiRunnerPath}: root-request-response must support secret input validation`);
+  }
+  if (!rustWidgets.includes("Tool | ") || !rustWidgets.includes("Action | ")) {
+    failures.push(`${rustWidgetsPath}: logs must preserve legacy Tool | and Action | prefixes`);
+  }
+  if (!rustWidgets.includes('"█"') || !rustWidgets.includes('"░"')) {
+    failures.push(`${rustWidgetsPath}: progress must preserve the legacy filled/empty cell glyphs`);
+  }
+  if (
+    !rustWidgets.includes("Administrator authorization") &&
+    !rustTuiRuntime.includes("Administrator authorization") &&
+    !rustTuiState.includes("Administrator authorization")
+  ) {
+    failures.push("c420ui-tui root prompt must render the legacy administrator authorization modal");
   }
   for (const [label, source] of [
     [roadmapPath, roadmap],

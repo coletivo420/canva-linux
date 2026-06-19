@@ -99,6 +99,11 @@ Request changes if a PR:
 - moves the TypeScript Action Engine into Rust in the TUI contract scaffold.
 - executes project actions directly inside `c420ui-tui` instead of emitting
   `action-selected` for the TypeScript Action Engine.
+- treats Rust TUI visuals as cosmetic instead of preserving the legacy
+  TypeScript/Blessed visual contract. `c420ui-tui` is not a simplified terminal
+  frontend; it must match the legacy layout, theme, panels, focus behavior,
+  footer, progress bar, logs, and root prompt before the TypeScript TUI can be
+  removed.
 
 ## c420ui version/hash review
 

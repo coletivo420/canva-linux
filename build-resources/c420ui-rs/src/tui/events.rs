@@ -21,6 +21,7 @@ pub enum TuiRuntimeInputEvent {
     Progress {
         state: String,
         label: Option<String>,
+        percent: Option<u8>,
     },
     ActionStart {
         action_id: String,
@@ -48,16 +49,29 @@ pub enum TuiRuntimeInputEvent {
 )]
 pub enum TuiRuntimeOutputEvent {
     Ready,
-    ActionSelected { action_id: String },
+    ActionSelected {
+        action_id: String,
+    },
+    ViewChanged {
+        view: crate::tui::contracts::TuiView,
+    },
     Quit,
     Cancel,
-    RootRequestResponse { request_id: String, accepted: bool },
+    RootRequestResponse {
+        request_id: String,
+        accepted: bool,
+        input: Option<String>,
+    },
 }
 
-pub fn progress_from_protocol(state: String, label: Option<String>) -> TuiProgress {
+pub fn progress_from_protocol(
+    state: String,
+    label: Option<String>,
+    percent: Option<u8>,
+) -> TuiProgress {
     TuiProgress {
         state,
         label,
-        percent: None,
+        percent,
     }
 }

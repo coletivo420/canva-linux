@@ -31,6 +31,7 @@ where
             };
             if let Ok(json) = serde_json::to_string(&payload) {
                 println!("{}", json);
+                let _ = std::io::Write::flush(&mut std::io::stdout());
             }
         }
     })
