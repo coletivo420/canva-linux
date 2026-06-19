@@ -2,6 +2,7 @@ use c420ui_rs::tui::contracts::*;
 use c420ui_rs::tui::renderer;
 use c420ui_rs::tui::state::TuiRuntimeState;
 use ratatui::backend::TestBackend;
+use ratatui::style::Color;
 use ratatui::Terminal;
 
 fn create_test_state() -> TuiRuntimeState {
@@ -269,4 +270,76 @@ fn test_help_description_follows_selected_item_without_action() {
     assert!(text.contains("F5 copies logs"));
     assert!(!text.contains("Enter selects executable actions only outside Help"));
     assert_eq!(state.selected_action_id(), None);
+}
+
+#[test]
+fn test_auto_render_menu_items_use_distinct_colors() {
+    let backend = TestBackend::new(120, 36);
+    let mut terminal = Terminal::new(backend).unwrap();
+    let mut state = create_test_state();
+    state.render.view = TuiView::Help;
+    state.render.menu = TuiMenu {
+        label: "Help".to_string(),
+        selected: 1,
+        items: vec![
+            TuiMenuItem {
+                id: "help-navigation".to_string(),
+                label: "Navigation".to_string(),
+                view: None,
+                action_id: None,
+                description: None,
+                warning: None,
+                dangerous: None,
+                planned: None,
+            },
+            TuiMenuItem {
+                id: "help-logs".to_string(),
+                label: "Logs".to_string(),
+                view: None,
+                action_id: None,
+                description: None,
+                warning: None,
+                dangerous: None,
+                planned: None,
+            },
+            TuiMenuItem {
+                id: "back-main".to_string(),
+                label: "Back to Main".to_string(),
+                view: Some(TuiView::Main),
+                action_id: None,
+                description: None,
+                warning: None,
+                dangerous: None,
+                planned: None,
+            },
+        ],
+    };
+
+    renderer::render(&mut terminal, &state).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let logs_cell = find_first_cell(buffer, "Logs").expect("Logs menu item is rendered");
+    let back_cell =
+        find_first_cell(buffer, "Back to Main").expect("Back to Main menu item is rendered");
+
+    assert_eq!(logs_cell.fg, Color::Rgb(0, 196, 204));
+    assert_eq!(logs_cell.bg, Color::Rgb(37, 43, 51));
+    assert_eq!(back_cell.fg, Color::Rgb(255, 255, 255));
+    assert_ne!(logs_cell.fg, back_cell.fg);
+}
+
+fn find_first_cell<'a>(
+    buffer: &'a ratatui::buffer::Buffer,
+    needle: &str,
+) -> Option<&'a ratatui::buffer::Cell> {
+    for y in 0..buffer.area.height {
+        let mut row = String::new();
+        for x in 0..buffer.area.width {
+            row.push_str(buffer.get(x, y).symbol());
+        }
+        if let Some(index) = row.find(needle) {
+            return Some(buffer.get(index as u16, y));
+        }
+    }
+    None
 }

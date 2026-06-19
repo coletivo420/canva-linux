@@ -53,8 +53,11 @@ pub fn draw_menu<'a>(
         .iter()
         .enumerate()
         .map(|(i, item)| {
+            let actionable = item.action_id.is_some() || item.view.is_some();
             let style = if i == selected {
-                if active {
+                if !actionable {
+                    Style::default().fg(theme.light_blue).bg(theme.surface_alt)
+                } else if active {
                     Style::default()
                         .fg(theme.menu_selected_fg)
                         .bg(theme.menu_selected_bg)
@@ -63,6 +66,8 @@ pub fn draw_menu<'a>(
                         .fg(theme.menu_inactive_selected_fg)
                         .bg(theme.menu_inactive_selected_bg)
                 }
+            } else if !actionable {
+                Style::default().fg(theme.muted)
             } else {
                 Style::default().fg(theme.text)
             };
