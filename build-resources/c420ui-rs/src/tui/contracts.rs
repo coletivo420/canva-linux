@@ -51,6 +51,8 @@ pub struct TuiMenuItem {
     pub label: String,
     pub view: Option<TuiView>,
     pub action_id: Option<String>,
+    pub description: Option<String>,
+    pub warning: Option<String>,
     pub dangerous: Option<bool>,
     pub planned: Option<bool>,
 }
@@ -145,6 +147,7 @@ pub struct TuiBrand {
     pub name: String,
     pub version: String,
     pub hash: Option<String>,
+    pub logo_lines: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -153,8 +156,15 @@ pub struct TuiProject {
     pub name: String,
     pub subtitle: Option<String>,
     pub version: String,
+    pub display_version: String,
     pub phase: Option<String>,
     pub hash: Option<String>,
+    pub logo_lines: Vec<String>,
+    pub release_notes: String,
+    pub app_id: String,
+    pub executable_name: String,
+    pub repository_url: String,
+    pub launcher_command: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -163,6 +173,8 @@ pub struct TuiAction {
     pub id: String,
     pub label: String,
     pub group: String,
+    pub description: Option<String>,
+    pub warning: Option<String>,
     #[serde(default)]
     pub dangerous: bool,
     #[serde(default)]

@@ -6,18 +6,28 @@ export type C420UITuiRenderInput = {
     name: string;
     version: string;
     hash?: string;
+    logoLines: string[];
   };
   project: {
     name: string;
     subtitle: string;
     version: string;
+    displayVersion: string;
     phase?: string;
     hash?: string;
+    logoLines: string[];
+    releaseNotes: string;
+    appId: string;
+    executableName: string;
+    repositoryUrl: string;
+    launcherCommand: string;
   };
   actions: Array<{
     id: string;
     label: string;
     group: string;
+    description?: string;
+    warning?: string;
     dangerous?: boolean;
     planned?: boolean;
   }>;
@@ -36,6 +46,8 @@ export type C420UITuiRenderInput = {
       label: string;
       view?: C420UITuiRenderInput["view"];
       actionId?: string;
+      description?: string;
+      warning?: string;
       dangerous?: boolean;
       planned?: boolean;
     }>;
@@ -129,6 +141,7 @@ export function createC420UITuiRenderInput(
       name: requireNonEmpty(config.brand.name, "brand.name"),
       version: requireNonEmpty(config.brand.version, "brand.version"),
       hash: optionalNonEmpty(config.brand.hash),
+      logoLines: config.brand.logoLines,
     },
     project: {
       name: requireNonEmpty(config.project.projectName, "project.name"),
@@ -140,13 +153,34 @@ export function createC420UITuiRenderInput(
         config.project.fullVersion ?? config.project.displayVersion,
         "project.version",
       ),
+      displayVersion: requireNonEmpty(
+        config.project.displayVersion,
+        "project.displayVersion",
+      ),
       phase: optionalNonEmpty(config.project.phase),
       hash: optionalNonEmpty(config.project.hash),
+      logoLines: config.project.logoLines,
+      releaseNotes: config.releaseNotes,
+      appId: requireNonEmpty(config.project.appId, "project.appId"),
+      executableName: requireNonEmpty(
+        config.project.executableName,
+        "project.executableName",
+      ),
+      repositoryUrl: requireNonEmpty(
+        config.project.repositoryUrl,
+        "project.repositoryUrl",
+      ),
+      launcherCommand: requireNonEmpty(
+        config.project.launcherCommand,
+        "project.launcherCommand",
+      ),
     },
     actions: options.actions.map((action) => ({
       id: requireNonEmpty(action.id, "action.id"),
       label: requireNonEmpty(action.label, `${action.id}.label`),
       group: requireNonEmpty(action.group, `${action.id}.group`),
+      description: optionalNonEmpty(action.description),
+      warning: optionalNonEmpty(action.warning),
       dangerous:
         action.dangerous === true ||
         action.requiresConfirmation === true ||
@@ -171,7 +205,7 @@ export function createC420UITuiRenderInput(
       },
       content: options.panels?.content ?? {
         label: "Overview",
-        lines: [],
+        lines: createOverviewLines(config),
       },
       logs: options.panels?.logs ?? {
         label: "Logs",
@@ -283,6 +317,8 @@ function createLegacyMenu(
       .map((action) => ({
         id: requireNonEmpty(action.id, "action.id"),
         label: requireNonEmpty(action.label, `${action.id}.label`),
+        description: optionalNonEmpty(action.description),
+        warning: optionalNonEmpty(action.warning),
         dangerous:
           action.dangerous === true ||
           action.requiresConfirmation === true ||
@@ -293,6 +329,29 @@ function createLegacyMenu(
       })),
     selected: 0,
   };
+}
+
+function createOverviewLines(config: C420UIConfig): string[] {
+  return [
+    ...config.project.logoLines,
+    "",
+    "Version:",
+    `  ${config.project.displayVersion}`,
+    "",
+    "Hash:",
+    `  ${config.project.hash ?? "unknown"}`,
+    "",
+    "Phase:",
+    `  ${config.project.phase ?? "unknown"}`,
+    "",
+    "Version Release Notes:",
+    `  ${config.releaseNotes}`,
+    "",
+    "Package / Version Information:",
+    `  App ID: ${config.project.appId}`,
+    `  Executable: ${config.project.executableName}`,
+    `  Repository: ${config.project.repositoryUrl}`,
+  ];
 }
 
 function requireNonEmpty(value: string | undefined, label: string): string {

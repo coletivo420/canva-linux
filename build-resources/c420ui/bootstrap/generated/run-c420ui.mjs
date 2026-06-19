@@ -138,6 +138,100 @@ var tui = {
   textbox: blessed.textbox
 };
 
+// build-resources/c420ui/src/terminal/detected-installations-summary.ts
+var GENERATED_ARTIFACT_KINDS = /* @__PURE__ */ new Set([
+  "appimage",
+  "flatpak",
+  "tarball",
+  "sha256sums",
+  "deb",
+  "rpm",
+  "aur"
+]);
+function detectedVersion(fullVersion, version) {
+  if (typeof fullVersion === "string" && fullVersion.trim()) {
+    return fullVersion;
+  }
+  return version;
+}
+function formatShortHash(hash, version) {
+  void version;
+  if (!hash) return "";
+  if (hash === "unknown") return " \xB7 unknown";
+  const parts = hash.split(":");
+  const algo = parts.length > 1 ? `${parts[0]}:` : "";
+  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
+  return ` \xB7 ${algo}${value.slice(0, 8)}`;
+}
+function artifactVersion(fragment) {
+  return fragment.fullVersion || fragment.version;
+}
+function formatDetectedStatus(colors2, detected, version, hash) {
+  if (!detected) {
+    return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
+  }
+  return typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "version unknown";
+}
+function formatArtifactLine(fragment, colors2) {
+  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment), fragment.hash)}`;
+}
+function isGeneratedArtifactFragment(fragment) {
+  if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
+  if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
+  return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
+}
+function versionSummaryItem(label, version, hash) {
+  return `${label} ${version ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "unknown"}`;
+}
+function formatDetectionPanelSummaries(s, colors2) {
+  if (!s) {
+    const loading = `{${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`;
+    return {
+      detectedInstallations: [
+        `  Native System: ${loading}`,
+        `  Native User: ${loading}`,
+        `  Flatpak System: ${loading}`,
+        `  Flatpak User: ${loading}`
+      ],
+      generatedArtifacts: [`  AppImage: ${loading}`],
+      linuxArtifacts: [`Electron/Node/npm loading...`]
+    };
+  }
+  const i = s.installations;
+  const linuxUnpacked = s.artifactFragments?.find(
+    (fragment) => fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked"
+  );
+  const generatedArtifacts = s.artifactFragments ? s.artifactFragments.filter(isGeneratedArtifactFragment).map((fragment) => formatArtifactLine(fragment, colors2)) : [
+    `  AppImage: ${formatDetectedStatus(
+      colors2,
+      Boolean(i.appImageArtifacts),
+      detectedVersion(i.appImageFullVersion, i.appImageVersion),
+      i.appImageHash
+    )}`
+  ];
+  return {
+    detectedInstallations: [
+      `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion), i.nativeSystemHash)}`,
+      `  Native User: ${formatDetectedStatus(colors2, Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion), i.nativeUserHash)}`,
+      `  Flatpak System: ${formatDetectedStatus(colors2, Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion), i.flatpakSystemHash)}`,
+      `  Flatpak User: ${formatDetectedStatus(colors2, Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion), i.flatpakUserHash)}`
+    ],
+    generatedArtifacts,
+    linuxArtifacts: [
+      [
+        versionSummaryItem("Electron", s.runtime?.electronVersion),
+        versionSummaryItem("Node", s.runtime?.nodeVersion),
+        versionSummaryItem("npm", s.runtime?.npmVersion),
+        versionSummaryItem(
+          "Linux unpacked",
+          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0,
+          linuxUnpacked?.hash
+        )
+      ].join(", ")
+    ]
+  };
+}
+
 // build-resources/c420ui/src/terminal/settings.ts
 import path from "node:path";
 function configHome() {
@@ -700,7 +794,8 @@ function createC420UITuiRenderInput(options) {
     brand: {
       name: requireNonEmpty(config.brand.name, "brand.name"),
       version: requireNonEmpty(config.brand.version, "brand.version"),
-      hash: optionalNonEmpty(config.brand.hash)
+      hash: optionalNonEmpty(config.brand.hash),
+      logoLines: config.brand.logoLines
     },
     project: {
       name: requireNonEmpty(config.project.projectName, "project.name"),
@@ -712,13 +807,34 @@ function createC420UITuiRenderInput(options) {
         config.project.fullVersion ?? config.project.displayVersion,
         "project.version"
       ),
+      displayVersion: requireNonEmpty(
+        config.project.displayVersion,
+        "project.displayVersion"
+      ),
       phase: optionalNonEmpty(config.project.phase),
-      hash: optionalNonEmpty(config.project.hash)
+      hash: optionalNonEmpty(config.project.hash),
+      logoLines: config.project.logoLines,
+      releaseNotes: config.releaseNotes,
+      appId: requireNonEmpty(config.project.appId, "project.appId"),
+      executableName: requireNonEmpty(
+        config.project.executableName,
+        "project.executableName"
+      ),
+      repositoryUrl: requireNonEmpty(
+        config.project.repositoryUrl,
+        "project.repositoryUrl"
+      ),
+      launcherCommand: requireNonEmpty(
+        config.project.launcherCommand,
+        "project.launcherCommand"
+      )
     },
     actions: options.actions.map((action) => ({
       id: requireNonEmpty(action.id, "action.id"),
       label: requireNonEmpty(action.label, `${action.id}.label`),
       group: requireNonEmpty(action.group, `${action.id}.group`),
+      description: optionalNonEmpty(action.description),
+      warning: optionalNonEmpty(action.warning),
       dangerous: action.dangerous === true || action.requiresConfirmation === true || void 0,
       planned: action.planned === true || action.kind === "planned" || void 0
     })),
@@ -740,7 +856,7 @@ function createC420UITuiRenderInput(options) {
       },
       content: options.panels?.content ?? {
         label: "Overview",
-        lines: []
+        lines: createOverviewLines(config)
       },
       logs: options.panels?.logs ?? {
         label: "Logs",
@@ -836,12 +952,36 @@ function createLegacyMenu(view, actions) {
     items: actions.filter((action) => action.group === group).map((action) => ({
       id: requireNonEmpty(action.id, "action.id"),
       label: requireNonEmpty(action.label, `${action.id}.label`),
+      description: optionalNonEmpty(action.description),
+      warning: optionalNonEmpty(action.warning),
       dangerous: action.dangerous === true || action.requiresConfirmation === true || void 0,
       planned: action.planned === true || action.kind === "planned" || void 0,
       actionId: action.id
     })),
     selected: 0
   };
+}
+function createOverviewLines(config) {
+  return [
+    ...config.project.logoLines,
+    "",
+    "Version:",
+    `  ${config.project.displayVersion}`,
+    "",
+    "Hash:",
+    `  ${config.project.hash ?? "unknown"}`,
+    "",
+    "Phase:",
+    `  ${config.project.phase ?? "unknown"}`,
+    "",
+    "Version Release Notes:",
+    `  ${config.releaseNotes}`,
+    "",
+    "Package / Version Information:",
+    `  App ID: ${config.project.appId}`,
+    `  Executable: ${config.project.executableName}`,
+    `  Repository: ${config.project.repositoryUrl}`
+  ];
 }
 function requireNonEmpty(value, label) {
   if (!value?.trim()) throw new Error(`${label} is required`);
@@ -883,15 +1023,15 @@ function runC420UIRustTuiApp(options) {
     supportsTrueColor: c420uiTheme.supportsTrueColor,
     colors: c420uiTheme.colors
   };
-  send({
-    event: "init",
-    state: createC420UITuiRenderInput({
-      config: options.config,
-      actions,
-      theme,
-      view: "main"
-    })
+  const renderState = async (view = "main") => createC420UITuiRenderInput({
+    config: options.config,
+    actions: options.bridge.actions(),
+    theme,
+    view,
+    panels: await createLegacyPanels(options)
   });
+  send({ event: "init", state: createInitialRenderState(options, actions, theme) });
+  void renderState("main").then((state) => send({ event: "state", state }));
   const engine = createC420UIActionEngine({
     bridge: options.bridge,
     rootDir: options.config.rootDir,
@@ -924,6 +1064,7 @@ function runC420UIRustTuiApp(options) {
       send,
       config: options.config,
       bridge: options.bridge,
+      renderState,
       startupTasks: options.startupTasks ?? [],
       pendingRootRequests,
       abortController,
@@ -983,6 +1124,7 @@ async function handleTuiEvent(options) {
     send,
     config,
     bridge,
+    renderState,
     startupTasks,
     pendingRootRequests,
     abortController,
@@ -1016,15 +1158,7 @@ async function handleTuiEvent(options) {
   if (event.event === "view-changed") {
     send({
       event: "state",
-      state: createC420UITuiRenderInput({
-        config,
-        actions: bridge.actions(),
-        theme: {
-          supportsTrueColor: c420uiTheme.supportsTrueColor,
-          colors: c420uiTheme.colors
-        },
-        view: event.view
-      })
+      state: await renderState(event.view)
     });
     return;
   }
@@ -1046,6 +1180,66 @@ async function handleTuiEvent(options) {
     return;
   }
   writeError(`Unknown c420ui-tui event: ${JSON.stringify(event)}`);
+}
+function createInitialRenderState(options, actions, theme) {
+  return createC420UITuiRenderInput({
+    config: options.config,
+    actions,
+    theme,
+    view: "main",
+    panels: createLoadingPanels()
+  });
+}
+function createLoadingPanels() {
+  const loading = "loading...";
+  return {
+    detectedInstallations: {
+      label: "Detected Installations",
+      lines: [
+        `  Native System: ${loading}`,
+        `  Native User: ${loading}`,
+        `  Flatpak System: ${loading}`,
+        `  Flatpak User: ${loading}`
+      ]
+    },
+    generatedArtifacts: {
+      label: "Generated Artifacts",
+      lines: [`  AppImage: ${loading}`]
+    },
+    linuxArtifacts: {
+      label: "Linux Artifacts",
+      lines: ["Electron/Node/npm loading..."]
+    },
+    content: {
+      label: "Overview",
+      lines: []
+    },
+    logs: {
+      label: "Logs",
+      lines: []
+    }
+  };
+}
+async function createLegacyPanels(options) {
+  const status = options.bridge.overviewStatus ? await options.bridge.overviewStatus() : null;
+  const panels = formatDetectionPanelSummaries(status, c420uiTheme.colors);
+  return {
+    detectedInstallations: {
+      label: "Detected Installations",
+      lines: panels.detectedInstallations.map(stripBlessedTags)
+    },
+    generatedArtifacts: {
+      label: "Generated Artifacts",
+      lines: panels.generatedArtifacts.map(stripBlessedTags)
+    },
+    linuxArtifacts: {
+      label: "Linux Artifacts",
+      lines: panels.linuxArtifacts.map(stripBlessedTags)
+    }
+  };
+}
+function stripBlessedTags(line) {
+  return line.replace(/\{\/?[^}]+\}/g, "");
 }
 async function requestRootAccessThroughTui(request, send, pendingRootRequests, rootProvider) {
   const requestId = `root-${Date.now()}-${Math.random().toString(36).slice(2)}`;

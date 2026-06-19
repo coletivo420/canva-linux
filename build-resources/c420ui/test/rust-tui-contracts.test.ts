@@ -62,6 +62,7 @@ test("creates render input with brand project and actions", () => {
     name: "c420ui",
     version: "0.1.0",
     hash: "sha256:c420uihash",
+    logoLines: [],
   });
   assert.equal(input.project.name, "Example Project");
   assert.equal(input.project.version, "1.2.3-dev");

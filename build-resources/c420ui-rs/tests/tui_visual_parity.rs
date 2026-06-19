@@ -36,13 +36,21 @@ fn create_test_state() -> TuiRuntimeState {
             name: "c420ui".to_string(),
             version: "0.1.4".to_string(),
             hash: None,
+            logo_lines: vec!["c420ui".to_string()],
         },
         project: TuiProject {
             name: "Example Project".to_string(),
             subtitle: Some("Workspace".to_string()),
             version: "0.1.4".to_string(),
+            display_version: "0.1.4".to_string(),
             phase: None,
             hash: None,
+            logo_lines: vec!["Example".to_string(), "Project".to_string()],
+            release_notes: "Release notes".to_string(),
+            app_id: "example.app".to_string(),
+            executable_name: "example".to_string(),
+            repository_url: "https://example.invalid/repo".to_string(),
+            launcher_command: "example".to_string(),
         },
         view: TuiView::Main,
         focus_zone: TuiFocusZone::Menu,
@@ -52,8 +60,10 @@ fn create_test_state() -> TuiRuntimeState {
                 TuiMenuItem {
                     id: "1".to_string(),
                     label: "Install".to_string(),
-                    view: Some(TuiView::Install),
-                    action_id: None,
+                    view: None,
+                    action_id: Some("install".to_string()),
+                    description: Some("Install the app".to_string()),
+                    warning: None,
                     dangerous: None,
                     planned: None,
                 },
@@ -62,6 +72,8 @@ fn create_test_state() -> TuiRuntimeState {
                     label: "Development".to_string(),
                     view: Some(TuiView::Development),
                     action_id: None,
+                    description: Some("Run development tasks".to_string()),
+                    warning: None,
                     dangerous: None,
                     planned: None,
                 },
@@ -170,4 +182,32 @@ fn test_render_root_modal() {
 
     assert!(text.contains("Administrator authorization"));
     assert!(text.contains("Enter your sudo password to continue."));
+}
+
+#[test]
+fn test_render_preserves_logos_and_action_description() {
+    let backend = TestBackend::new(120, 36);
+    let mut terminal = Terminal::new(backend).unwrap();
+    let mut state = create_test_state();
+    state.render.view = TuiView::Install;
+    state.render.panels.detected_installations.lines = vec![
+        "  Native System: not detected".to_string(),
+        "  Native User: v1.0.0".to_string(),
+    ];
+
+    renderer::render(&mut terminal, &state).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let text: String = buffer
+        .content
+        .iter()
+        .map(|c| c.symbol().to_string())
+        .collect();
+
+    assert!(text.contains("c420ui"));
+    assert!(text.contains("Example"));
+    assert!(text.contains("Project"));
+    assert!(text.contains("Install the app"));
+    assert!(text.contains("Native System"));
+    assert!(text.contains("not detected"));
 }

@@ -51,6 +51,39 @@ test("contrato envia panels obrigatorios, footer antigo, theme resolvido, view e
   assert.equal(input.theme.supportsTrueColor, true);
   assert.ok(input.theme.colors);
   assert.equal(input.theme.colors.lightBlue, "#00C4CC");
+  assert.deepEqual(input.brand.logoLines, []);
+  assert.deepEqual(input.project.logoLines, []);
+  assert.equal(input.project.appId, "example.app");
+});
+
+test("contrato envia descricao e overview legado com logo do projeto", () => {
+  const input = createC420UITuiRenderInput({
+    config: {
+      ...config,
+      project: {
+        ...config.project,
+        logoLines: ["Example", "Logo"],
+      },
+    },
+    actions: [
+      {
+        id: "build",
+        label: "Build",
+        group: "development",
+        kind: "command",
+        description: "Build the project.",
+        warning: "Needs dependencies.",
+      },
+    ],
+    view: "development",
+  }) as any;
+
+  assert.equal(input.actions[0].description, "Build the project.");
+  assert.equal(input.menu.items[0].description, "Build the project.");
+  assert.equal(input.menu.items[0].warning, "Needs dependencies.");
+  assert.ok(input.panels.content.lines.includes("Example"));
+  assert.ok(input.panels.content.lines.includes("Logo"));
+  assert.ok(input.panels.content.lines.includes("Package / Version Information:"));
 });
 
 test("nao existe C420UI_TUI_BACKEND", () => {

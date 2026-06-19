@@ -7,6 +7,7 @@ use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
 
 pub fn draw_header<'a>(
     title: &'a str,
+    lines: &'a [String],
     _area: Rect,
     theme: &LegacyTheme,
     active: bool,
@@ -28,7 +29,17 @@ pub fn draw_header<'a>(
         })
         .title(title);
 
-    Paragraph::new("").block(block).style(style)
+    let content: Vec<Line> = lines
+        .iter()
+        .map(|line| {
+            Line::from(Span::styled(
+                line.clone(),
+                Style::default().fg(theme.light_blue),
+            ))
+        })
+        .collect();
+
+    Paragraph::new(content).block(block).style(style)
 }
 
 pub fn draw_menu<'a>(
@@ -55,7 +66,12 @@ pub fn draw_menu<'a>(
             } else {
                 Style::default().fg(theme.text)
             };
-            ListItem::new(item.label.clone()).style(style)
+            let marker = if item.planned.unwrap_or(false) {
+                " (planned)"
+            } else {
+                ""
+            };
+            ListItem::new(format!("{}{}", item.label, marker)).style(style)
         })
         .collect();
 
@@ -81,9 +97,86 @@ pub fn draw_panel<'a>(panel: &'a TuiPanel, theme: &LegacyTheme, active: bool) ->
         })
         .title(panel.label.clone());
 
-    let lines: Vec<Line> = panel.lines.iter().map(|l| Line::from(l.clone())).collect();
+    let lines: Vec<Line> = panel
+        .lines
+        .iter()
+        .map(|l| styled_content_line(l, theme))
+        .collect();
 
     Paragraph::new(lines).block(block)
+}
+
+pub fn draw_action_content<'a>(
+    panel: &'a TuiPanel,
+    selected: Option<&'a TuiMenuItem>,
+    view: &crate::tui::contracts::TuiView,
+    theme: &LegacyTheme,
+    active: bool,
+) -> Paragraph<'a> {
+    if selected.is_none()
+        || !matches!(
+            view,
+            crate::tui::contracts::TuiView::Install
+                | crate::tui::contracts::TuiView::Development
+                | crate::tui::contracts::TuiView::Maintenance
+        )
+    {
+        return draw_panel(panel, theme, active);
+    }
+
+    let selected = selected.expect("checked above");
+    let mut lines = vec![
+        Line::from(Span::styled(
+            format!("{} Actions", view_title(view)),
+            Style::default().fg(theme.blue),
+        )),
+        Line::from(""),
+        Line::from(Span::styled(
+            "Selected action:",
+            Style::default().fg(theme.success),
+        )),
+        Line::from(Span::styled(
+            format!("  {}", selected.label),
+            Style::default().fg(theme.text),
+        )),
+        Line::from(""),
+        Line::from(Span::styled(
+            "Description:",
+            Style::default().fg(theme.success),
+        )),
+        Line::from(Span::styled(
+            format!(
+                "  {}",
+                selected
+                    .description
+                    .as_deref()
+                    .unwrap_or("No description available.")
+            ),
+            Style::default().fg(theme.text),
+        )),
+    ];
+    if selected.planned.unwrap_or(false) {
+        lines.extend([
+            Line::from(""),
+            Line::from(Span::styled("Status:", Style::default().fg(theme.success))),
+            Line::from(Span::styled(
+                "  Planned - visible in c420ui, but not executable in this phase.",
+                Style::default().fg(theme.warning),
+            )),
+        ]);
+    }
+    if let Some(warning) = selected.warning.as_deref() {
+        lines.extend([
+            Line::from(""),
+            Line::from(Span::styled("Warning:", Style::default().fg(theme.success))),
+            Line::from(Span::styled(
+                format!("  {}", warning),
+                Style::default().fg(theme.error),
+            )),
+        ]);
+    }
+
+    Paragraph::new(lines).block(panel_block(&panel.label, theme, active))
 }
 
 pub fn draw_logs<'a>(
@@ -181,6 +274,47 @@ pub fn draw_modal<'a>(
 pub fn draw_footer<'a>(items: &'a [String], theme: &LegacyTheme) -> Paragraph<'a> {
     let content = items.join(" | ");
     Paragraph::new(content).style(Style::default().fg(theme.footer_fg).bg(theme.footer_bg))
+}
+
+fn panel_block<'a>(label: &'a str, theme: &LegacyTheme, active: bool) -> Block<'a> {
+    Block::default()
+        .borders(Borders::ALL)
+        .border_style(if active {
+            Style::default().fg(theme.active_border)
+        } else {
+            Style::default().fg(theme.inactive_border)
+        })
+        .title(Span::styled(
+            label.to_string(),
+            Style::default().fg(if active {
+                theme.active_label
+            } else {
+                theme.inactive_label
+            }),
+        ))
+}
+
+fn styled_content_line<'a>(line: &'a str, theme: &LegacyTheme) -> Line<'a> {
+    let trimmed = line.trim();
+    let style = if trimmed.ends_with(':') {
+        Style::default().fg(theme.success)
+    } else if trimmed == "not detected" || trimmed.contains("not detected") {
+        Style::default().fg(theme.purple)
+    } else {
+        Style::default().fg(theme.text)
+    };
+    Line::from(Span::styled(line.to_string(), style))
+}
+
+fn view_title(view: &crate::tui::contracts::TuiView) -> &'static str {
+    match view {
+        crate::tui::contracts::TuiView::Install => "Install",
+        crate::tui::contracts::TuiView::Development => "Development",
+        crate::tui::contracts::TuiView::Maintenance => "Maintenance",
+        crate::tui::contracts::TuiView::Settings => "Application Settings",
+        crate::tui::contracts::TuiView::Help => "Help",
+        crate::tui::contracts::TuiView::Main => "Main",
+    }
 }
 
 pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {

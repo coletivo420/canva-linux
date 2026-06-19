@@ -20,6 +20,7 @@ import {
   type c420uiStartupTask,
 } from "./startup-task.js";
 import type { C420UIAppOptions } from "./terminal/app.js";
+import { formatDetectionPanelSummaries } from "./terminal/detected-installations-summary.js";
 import { c420uiTheme } from "./terminal/theme.js";
 import type { c420uiRootProvider } from "./root-provider.js";
 
@@ -118,16 +119,19 @@ export function runC420UIRustTuiApp(
     supportsTrueColor: c420uiTheme.supportsTrueColor,
     colors: c420uiTheme.colors,
   };
-
-  send({
-    event: "init",
-    state: createC420UITuiRenderInput({
+  const renderState = async (
+    view: C420UITuiRenderInput["view"] = "main",
+  ): Promise<C420UITuiRenderInput> =>
+    createC420UITuiRenderInput({
       config: options.config,
-      actions,
+      actions: options.bridge.actions(),
       theme,
-      view: "main",
-    }),
-  });
+      view,
+      panels: await createLegacyPanels(options),
+    });
+
+  send({ event: "init", state: createInitialRenderState(options, actions, theme) });
+  void renderState("main").then((state) => send({ event: "state", state }));
 
   const engine = createC420UIActionEngine({
     bridge: options.bridge,
@@ -165,6 +169,7 @@ export function runC420UIRustTuiApp(
       send,
       config: options.config,
       bridge: options.bridge,
+      renderState,
       startupTasks: options.startupTasks ?? [],
       pendingRootRequests,
       abortController,
@@ -231,6 +236,7 @@ async function handleTuiEvent(options: {
   send: (event: C420UITuiRuntimeInput) => void;
   config: C420UIAppOptions["config"];
   bridge: C420UIAppOptions["bridge"];
+  renderState: (view: C420UITuiRenderInput["view"]) => Promise<C420UITuiRenderInput>;
   startupTasks: c420uiStartupTask[];
   pendingRootRequests: Map<
     string,
@@ -246,6 +252,7 @@ async function handleTuiEvent(options: {
     send,
     config,
     bridge,
+    renderState,
     startupTasks,
     pendingRootRequests,
     abortController,
@@ -282,15 +289,7 @@ async function handleTuiEvent(options: {
   if (event.event === "view-changed") {
     send({
       event: "state",
-      state: createC420UITuiRenderInput({
-        config,
-        actions: bridge.actions(),
-        theme: {
-          supportsTrueColor: c420uiTheme.supportsTrueColor,
-          colors: c420uiTheme.colors,
-        },
-        view: event.view,
-      }),
+      state: await renderState(event.view),
     });
     return;
   }
@@ -316,6 +315,78 @@ async function handleTuiEvent(options: {
   }
 
   writeError(`Unknown c420ui-tui event: ${JSON.stringify(event)}`);
+}
+
+function createInitialRenderState(
+  options: C420UIRustTuiRunnerOptions,
+  actions: ReturnType<C420UIAppOptions["bridge"]["actions"]>,
+  theme: C420UITuiRenderInput["theme"],
+): C420UITuiRenderInput {
+  return createC420UITuiRenderInput({
+    config: options.config,
+    actions,
+    theme,
+    view: "main",
+    panels: createLoadingPanels(),
+  });
+}
+
+function createLoadingPanels(): C420UITuiRenderInput["panels"] {
+  const loading = "loading...";
+  return {
+    detectedInstallations: {
+      label: "Detected Installations",
+      lines: [
+        `  Native System: ${loading}`,
+        `  Native User: ${loading}`,
+        `  Flatpak System: ${loading}`,
+        `  Flatpak User: ${loading}`,
+      ],
+    },
+    generatedArtifacts: {
+      label: "Generated Artifacts",
+      lines: [`  AppImage: ${loading}`],
+    },
+    linuxArtifacts: {
+      label: "Linux Artifacts",
+      lines: ["Electron/Node/npm loading..."],
+    },
+    content: {
+      label: "Overview",
+      lines: [],
+    },
+    logs: {
+      label: "Logs",
+      lines: [],
+    },
+  };
+}
+
+async function createLegacyPanels(
+  options: C420UIRustTuiRunnerOptions,
+): Promise<Partial<C420UITuiRenderInput["panels"]>> {
+  const status = options.bridge.overviewStatus
+    ? await options.bridge.overviewStatus()
+    : null;
+  const panels = formatDetectionPanelSummaries(status, c420uiTheme.colors);
+  return {
+    detectedInstallations: {
+      label: "Detected Installations",
+      lines: panels.detectedInstallations.map(stripBlessedTags),
+    },
+    generatedArtifacts: {
+      label: "Generated Artifacts",
+      lines: panels.generatedArtifacts.map(stripBlessedTags),
+    },
+    linuxArtifacts: {
+      label: "Linux Artifacts",
+      lines: panels.linuxArtifacts.map(stripBlessedTags),
+    },
+  };
+}
+
+function stripBlessedTags(line: string): string {
+  return line.replace(/\{\/?[^}]+\}/g, "");
 }
 
 async function requestRootAccessThroughTui(

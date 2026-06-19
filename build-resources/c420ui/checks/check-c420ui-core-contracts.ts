@@ -1768,7 +1768,12 @@ function checkRustTuiContract(failures: string[]): void {
       failures.push(`tui renderer contract must preserve legacy panel label: ${label}`);
     }
   }
-  if (!rustLegacyLayout.includes("Percentage(32)") || !rustLegacyLayout.includes("Percentage(68)")) {
+  if (
+    !(
+      (rustLegacyLayout.includes("Percentage(32)") && rustLegacyLayout.includes("Percentage(68)")) ||
+      (rustLegacyLayout.includes("* 0.32") && rustLegacyLayout.includes("* 0.68"))
+    )
+  ) {
     failures.push(`${rustLegacyLayoutPath}: must implement the legacy 32/68 layout split`);
   }
   for (const fragment of [

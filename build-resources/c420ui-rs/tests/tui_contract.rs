@@ -56,7 +56,8 @@ fn render_input(actions: &str, hash: &str) -> String {
         serde_json::from_str(actions).unwrap_or(serde_json::Value::Array(vec![]));
     let mut brand = serde_json::json!({
         "name": "c420ui",
-        "version": "0.1.0"
+        "version": "0.1.0",
+        "logoLines": ["c420ui"]
     });
     if !hash.is_empty() {
         brand["hash"] = serde_json::Value::String(hash.to_string());
@@ -64,7 +65,19 @@ fn render_input(actions: &str, hash: &str) -> String {
 
     let json_val = serde_json::json!({
         "brand": brand,
-        "project": { "name": "Example", "subtitle": "Workspace", "version": "1.0.0", "phase": "dev" },
+        "project": {
+            "name": "Example",
+            "subtitle": "Workspace",
+            "version": "1.0.0",
+            "displayVersion": "1.0.0",
+            "phase": "dev",
+            "logoLines": ["Example"],
+            "releaseNotes": "Release notes",
+            "appId": "example.app",
+            "executableName": "example",
+            "repositoryUrl": "https://example.invalid/repo",
+            "launcherCommand": "example"
+        },
         "actions": actions_val,
         "view": "main",
         "focusZone": "menu",
