@@ -1,3 +1,4 @@
+pub mod action_run;
 pub mod artifact_file_ops;
 pub mod check_command;
 pub mod check_host_dependencies;

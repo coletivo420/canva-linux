@@ -372,20 +372,25 @@ function read(rootDir: string, relativePath: string): string {
 function main(): number {
   const rootDir = process.cwd();
   const actionEngine = read(rootDir, "build-resources/c420ui/src/action-engine.ts");
+  const rustActionEngine = read(rootDir, "build-resources/c420ui/src/rust-action-engine.ts");
+  const hostBin = read(rootDir, "build-resources/c420ui-rs/src/bin/c420ui-host.rs");
+  const commandsMod = read(rootDir, "build-resources/c420ui-rs/src/commands/mod.rs");
   const index = read(rootDir, "build-resources/c420ui/src/index.ts");
   const required = [
-    "createC420UIActionEngine",
+    "createC420UIRustActionEngine as createC420UIActionEngine",
+    "./rust-action-engine.js",
+  ];
+  const rustRequired = [
+    "createC420UIRustActionEngine",
     "resolveActionById",
     "resolveActionByCliFlag",
     "runActionById",
     "runAction",
-    "bridge.runAction",
-    "c420uiExitCodes.plannedAction",
-    "c420uiExitCodes.success",
-    "isC420UIPlannedAction",
+    "action-run",
+    "--json-lines",
+    "requestRootAccess",
     "dryRun",
-    "requiresC420UIActionConfirmation",
-    "Action requires confirmation",
+    "yes",
   ];
   const forbidden = [
     "Canva Linux",
@@ -398,10 +403,23 @@ function main(): number {
     ...required
       .filter((fragment) => !actionEngine.includes(fragment))
       .map((fragment) => `missing action engine contract fragment: ${fragment}`),
+    ...rustRequired
+      .filter((fragment) => !rustActionEngine.includes(fragment))
+      .map((fragment) => `missing Rust action engine bridge fragment: ${fragment}`),
     ...forbidden
-      .filter((fragment) => actionEngine.includes(fragment))
+      .filter((fragment) => actionEngine.includes(fragment) || rustActionEngine.includes(fragment))
       .map((fragment) => `action engine must not contain project-specific fragment: ${fragment}`),
   ];
+
+  if (actionEngine.includes("bridge.runAction")) {
+    failures.push("action-engine.ts must not execute bridge.runAction directly");
+  }
+  if (!hostBin.includes('"action-run"') || !hostBin.includes('"--json-lines"')) {
+    failures.push("c420ui-host must expose action-run --json-lines");
+  }
+  if (!commandsMod.includes("action_run")) {
+    failures.push("commands/mod.rs must include action_run");
+  }
 
   if (!index.includes('export { createC420UIActionEngine } from "./action-engine.js"')) {
     failures.push("index must export createC420UIActionEngine");
@@ -477,7 +495,7 @@ function main(): number {
   const linuxRootProvider = read(rootDir, "build-resources/c420ui/src/linux-root-provider.ts");
   const scopes = read(rootDir, "build-resources/c420ui/src/scopes.ts");
   const actions = read(rootDir, "build-resources/c420ui/src/actions.ts");
-  const actionEngine = read(rootDir, "build-resources/c420ui/src/action-engine.ts");
+  const actionEngine = read(rootDir, "build-resources/c420ui/src/rust-action-engine.ts");
   const index = read(rootDir, "build-resources/c420ui/src/index.ts");
   const failures: string[] = [];
 
@@ -502,26 +520,21 @@ function main(): number {
     "rootProvider.buildActionEnvironment",
     "rootProvider.validateActionScope",
     "rootProvider.resolveRootPolicy",
-    "rootProvider.validateRootAccess",
+    "validateRootAccess",
     "requestRootAccess",
     "rootProvider.buildRootActionEnvironment",
-    "bridge.runAction",
+    "root-response",
+    "root-request",
   ]) {
     if (!actionEngine.includes(fragment)) {
       failures.push(`action engine root provider preflight missing: ${fragment}`);
     }
   }
 
-  const rootPreflightIndex = actionEngine.indexOf(
-    "rootProvider.validateRootAccess",
-  );
-  const runActionIndex = actionEngine.indexOf("bridge.runAction");
-  if (
-    rootPreflightIndex === -1 ||
-    runActionIndex === -1 ||
-    rootPreflightIndex > runActionIndex
-  ) {
-    failures.push("root provider preflight must run before bridge.runAction");
+  const rootPreflightIndex = actionEngine.indexOf("validateRootAccess");
+  const rootResponseIndex = actionEngine.indexOf("root-response");
+  if (rootPreflightIndex === -1 || rootResponseIndex === -1) {
+    failures.push("root provider preflight must feed Rust root-response");
   }
 
   if (!index.includes('export type * from "./root-provider.js"')) {
@@ -582,7 +595,7 @@ function main(): number {
   if (!index.includes('c420uiRootPolicyExitCode')) {
     failures.push("index must export c420uiRootPolicyExitCode");
   }
-  if (!actionEngine.includes("rootPolicy.warning")) {
+  if (!actionEngine.includes("policy.warning")) {
     failures.push("action engine must emit root policy warnings");
   }
   const bridge = read(rootDir, "build-resources/c420ui/src/bridge.ts");
@@ -812,9 +825,9 @@ function main(): number {
       failures.push(`interactive action runner must include action engine fragment: ${fragment}`);
     }
   }
-  for (const fragment of ["runActionById", "rootProvider", "validateRootAccessWithInput"]) {
+  for (const fragment of ["createC420UIRustActionEngine", "runActionById", "rootProvider", "validateRootAccessWithInput"]) {
     if (!rustTuiRunner.includes(fragment)) {
-      failures.push(`rust-tui-runner must keep TypeScript Action Engine bridge fragment: ${fragment}`);
+      failures.push(`rust-tui-runner must keep Rust Action Engine bridge fragment: ${fragment}`);
     }
   }
   if (bridge.includes("C420UISudoProvider")) {
@@ -1695,8 +1708,11 @@ function checkRustTuiContract(failures: string[]): void {
   if (!actions.includes('"id": "doctor"') || !actions.includes('".build/scripts/doctor.mjs"')) {
     failures.push(`${actionsPath}: Doctor action must target generated doctor script`);
   }
-  if (!rustTuiRunner.includes("createC420UIActionEngine")) {
-    failures.push(`${rustTuiRunnerPath}: TypeScript Action Engine must remain the execution owner`);
+  if (!rustTuiRunner.includes("createC420UIRustActionEngine")) {
+    failures.push(`${rustTuiRunnerPath}: Rust Action Engine must own action execution`);
+  }
+  if (rustTuiRunner.includes('./action-engine.js')) {
+    failures.push(`${rustTuiRunnerPath}: must not import the legacy action-engine bridge directly`);
   }
   if (!rustTuiRuntime.includes("ActionSelected") || !rustTuiRuntime.includes("action_id")) {
     failures.push(`${rustTuiRuntimePath}: c420ui-tui must emit action-selected events instead of executing actions`);
@@ -1835,10 +1851,14 @@ function checkRustMigrationTestContract(failures: string[]): void {
   const rootDir = process.cwd();
   const tests = collectTestSources(rootDir);
   const forbiddenBackend = ["C420UI", "TUI", "BACKEND"].join("_");
+  const forbiddenActionBackend = ["C420UI", "ACTION", "ENGINE", "BACKEND"].join("_");
 
   for (const { relativePath, source } of tests) {
     if (source.includes(forbiddenBackend)) {
       failures.push(`${relativePath}: tests must not reference the removed optional TUI backend switch`);
+    }
+    if (source.includes(forbiddenActionBackend)) {
+      failures.push(`${relativePath}: tests must not reference an optional Action Engine backend switch`);
     }
     if (
       /includes blessed runtime terminfo assets|blessed runtime assets match installed blessed package|node_modules\/blessed\/usr/.test(

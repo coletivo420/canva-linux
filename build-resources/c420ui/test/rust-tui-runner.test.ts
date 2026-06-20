@@ -7,7 +7,7 @@ import { PassThrough } from "node:stream";
 import test, { afterEach } from "node:test";
 
 import type { c420uiAction } from "../src/actions.js";
-import type { c420uiExecutionContext, c420uiProjectBridge } from "../src/bridge.js";
+import type { c420uiProjectBridge } from "../src/bridge.js";
 import { c420uiExitCodes } from "../src/exit-codes.js";
 import type { c420uiRootProvider } from "../src/root-provider.js";
 import {
@@ -48,18 +48,43 @@ function createAction(overrides: Partial<c420uiAction> = {}): c420uiAction {
     id: "install-native",
     label: "Install native",
     group: "install",
-    kind: "internal",
+    kind: "command",
+    command: "node",
+    args: ["install-native.mjs"],
     ...overrides,
   };
+}
+
+function makeRustHostStub(mode = "success"): string {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-rust-tui-host-"));
+  const binPath = path.join(rootDir, "c420ui-host");
+  fs.writeFileSync(
+    binPath,
+    `#!/bin/sh
+read input
+if printf '%s' "$input" | grep -q '"requiresRoot":true'; then
+  printf '%s\\n' '{"event":"root-request","requestId":"root-1","actionId":"install-native","reason":"System install requires root"}'
+  read root_response
+fi
+printf '%s\\n' '{"event":"action:start","actionId":"install-native","message":"Install native","data":{"dryRun":false}}'
+printf '%s\\n' '{"event":"log","source":"stdout","line":"started"}'
+printf '%s\\n' '{"event":"progress","state":"running","label":"Halfway"}'
+if [ "${mode}" = "wait" ]; then
+  read cancel
+  printf '%s\\n' '{"event":"progress","state":"interrupted","label":"Interrupted"}'
+  printf '%s\\n' '{"event":"action:finish","actionId":"install-native","status":"canceled","code":130}'
+else
+  printf '%s\\n' '{"event":"action:finish","actionId":"install-native","status":"success","code":0}'
+fi
+`,
+  );
+  fs.chmodSync(binPath, 0o755);
+  return binPath;
 }
 
 function createRunnerOptions(
   overrides: Partial<C420UIAppOptions> & {
     actions?: c420uiAction[];
-    runAction?: (
-      actionId: string,
-      context: c420uiExecutionContext,
-    ) => ReturnType<c420uiProjectBridge["runAction"]>;
   } = {},
 ): C420UIAppOptions {
   const actions = overrides.actions ?? [createAction()];
@@ -74,13 +99,9 @@ function createRunnerOptions(
     artifactWorkflows() {
       return [];
     },
-    runAction:
-      overrides.runAction ??
-      (async (_actionId, context) => {
-        context.emitLog({ source: "stdout", line: "running" });
-        context.emitProgress({ state: "running", label: "Working" });
-        return { code: 0, status: "success", message: "done" };
-      }),
+    async runAction() {
+      throw new Error("legacy TypeScript action execution must not be used by the Rust TUI runner");
+    },
   };
 
   return {
@@ -111,10 +132,6 @@ function createRunnerOptions(
 
 type StartRunnerOptions = Partial<C420UIRustTuiRunnerOptions> & {
   actions?: c420uiAction[];
-  runAction?: (
-    actionId: string,
-    context: c420uiExecutionContext,
-  ) => ReturnType<c420uiProjectBridge["runAction"]>;
 };
 
 function startRunner(options: StartRunnerOptions = {}) {
@@ -134,19 +151,28 @@ function startRunner(options: StartRunnerOptions = {}) {
   });
 
   const exitCodes: number[] = [];
+  const rustHostBin =
+    options.env?.C420UI_HOST_BIN ??
+    makeRustHostStub(options.env?.C420UI_TEST_ACTION_MODE);
   runC420UIRustTuiApp({
     ...createRunnerOptions(options),
-    env: { PATH: "/usr/bin", SECRET: "do-not-forward", TERM: "xterm-256color" },
+    ...options,
+    env: {
+      PATH: "/usr/bin",
+      SECRET: "do-not-forward",
+      TERM: "xterm-256color",
+      C420UI_HOST_BIN: rustHostBin,
+      ...options.env,
+    },
     resolveBinary: () => "/tmp/c420ui-tui",
     spawnProcess(command, args, spawnOptions) {
       spawnCalls.push({ command, args, env: spawnOptions.env });
       return child;
     },
-    exit(code) {
+    exit: options.exit ?? ((code) => {
       exitCodes.push(code);
       throw new Error(`exit ${code}`);
-    },
-    ...options,
+    }),
   });
 
   return { child, writes, spawnCalls, exitCodes };
@@ -185,19 +211,17 @@ test("runner starts c420ui-tui run --json-lines and sends initial state", async 
 });
 
 test("runner maps action-selected to Action Engine execution and forwards events", async () => {
-  let ranAction = false;
-  const { child, writes } = startRunner({
-    runAction: async (_actionId, context) => {
-      ranAction = true;
-      context.emitLog({ source: "stdout", line: "started" });
-      context.emitProgress({ state: "running", label: "Halfway" });
-      return { code: 0, status: "success", message: "done" };
-    },
-  });
+  const { child, writes } = startRunner();
 
   child.stdout.write('{"event":"action-selected","actionId":"install-native"}\n');
 
-  await waitFor(() => (ranAction ? true : undefined), "action execution");
+  await waitFor(
+    () =>
+      parseWrites(writes).some((event) => event.event === "action-finish")
+        ? true
+        : undefined,
+    "action execution",
+  );
   const events = parseWrites(writes);
   assert.ok(events.some((event) => event.event === "action-start"));
   assert.ok(events.some((event) => event.event === "log" && event.line === "started"));
@@ -209,12 +233,7 @@ test("runner writes session log and refreshes panels after actions", async () =>
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-rust-runner-"));
   const sessionLogPath = path.join(tempDir, "tool-session.log");
   let overviewCalls = 0;
-  const options = createRunnerOptions({
-    runAction: async (_actionId, context) => {
-      context.emitLog({ source: "stdout", line: "installing" });
-      return { code: 0, status: "success", message: "installed" };
-    },
-  });
+  const options = createRunnerOptions();
   options.config.sessionLogPath = sessionLogPath;
   options.bridge.overviewStatus = async () => {
     overviewCalls += 1;
@@ -237,26 +256,13 @@ test("runner writes session log and refreshes panels after actions", async () =>
   const sessionLog = fs.readFileSync(sessionLogPath, "utf8");
   assert.match(sessionLog, /\[mode\] c420ui/);
   assert.match(sessionLog, /\[action\] install-native Install native/);
-  assert.match(sessionLog, /\[stdout\] installing/);
-  assert.match(sessionLog, /\[action\] installed/);
+  assert.match(sessionLog, /\[stdout\] started/);
 });
 
 test("runner processes interrupt-action and aborts the active action", async () => {
-  let aborted = false;
   const { child, writes } = startRunner({
-    runAction: async (_actionId, context) => {
-      assert.ok(context.signal, "action context must include AbortSignal");
-      await new Promise<void>((resolve) => {
-        context.signal?.addEventListener(
-          "abort",
-          () => {
-            aborted = true;
-            resolve();
-          },
-          { once: true },
-        );
-      });
-      return { code: c420uiExitCodes.canceled, status: "canceled", message: "interrupted" };
+    env: {
+      C420UI_TEST_ACTION_MODE: "wait",
     },
   });
 
@@ -270,7 +276,18 @@ test("runner processes interrupt-action and aborts the active action", async () 
   );
   child.stdout.write('{"event":"interrupt-action","actionId":"install-native"}\n');
 
-  await waitFor(() => (aborted ? true : undefined), "abort signal");
+  await waitFor(
+    () =>
+      parseWrites(writes).some(
+        (event) =>
+          event.event === "action-finish" &&
+          event.actionId === "install-native" &&
+          event.status === "canceled",
+      )
+        ? true
+        : undefined,
+    "canceled action finish",
+  );
   const events = parseWrites(writes);
   assert.ok(
     events.some(
@@ -359,7 +376,6 @@ test("runner handles quit from c420ui-tui", async () => {
 });
 
 test("runner handles root requests through the root provider", async () => {
-  let actionEnv: NodeJS.ProcessEnv | undefined;
   let validatedRoot = false;
   const rootProvider: c420uiRootProvider = {
     id: "test-root",
@@ -385,10 +401,6 @@ test("runner handles root requests through the root provider", async () => {
   const { child, writes } = startRunner({
     actions: [createAction({ requiresRoot: true })],
     rootProvider,
-    runAction: async (_actionId, context) => {
-      actionEnv = context.env;
-      return { code: 0, status: "success", message: "done" };
-    },
   });
 
   child.stdout.write('{"event":"action-selected","actionId":"install-native"}\n');
@@ -404,9 +416,14 @@ test("runner handles root requests through the root provider", async () => {
     })}\n`,
   );
 
-  await waitFor(() => actionEnv, "root action env");
+  await waitFor(
+    () =>
+      parseWrites(writes).some((event) => event.event === "action-finish")
+        ? true
+        : undefined,
+    "root action finish",
+  );
   assert.equal(validatedRoot, true);
-  assert.equal(actionEnv?.ROOT_ENV, "1");
 });
 
 test("runner retries root input without logging the secret", async () => {

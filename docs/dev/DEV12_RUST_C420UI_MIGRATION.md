@@ -130,6 +130,7 @@ c420ui-host fs-ops --json
 c420ui-host ensure-linux-unpacked --json
 c420ui-host artifact-file-ops --json
 c420ui-host clipboard-write --json
+c420ui-host action-run --json-lines
 c420ui-tui --version
 c420ui-tui doctor --json
 c420ui-tui render --json
@@ -161,7 +162,7 @@ scroll/wrapping is restored for overview/logs/artifact panels, and status
 panels now color only values while preserving label colors.
 
 Dev12 test coverage was reorganized after the Rust host/TUI migration. Tests now
-protect c420ui-host, c420ui-tui, the TypeScript Action Engine bridge, and the
+protect c420ui-host, c420ui-tui, the Rust Action Engine bridge, and the
 dependent-project boundary instead of the removed Blessed/spawnSync/sudo runner
 paths.
 
@@ -173,11 +174,14 @@ Dev12 moves c420ui clipboard writes to `c420ui-host`. F5 Copy Logs now delegates
 host clipboard integration to Rust, removing shell-based clipboard probing from
 the TypeScript terminal bridge.
 
-The TypeScript Action Engine remains responsible for action resolution,
-execution, root-provider interaction and progress/log events. Rust owns terminal
-rendering, navigation, action selection, progress display, log display and the
-visual root prompt. Rust emits `action-selected`; TypeScript executes the action
-and sends logs/progress/action lifecycle updates back over JSON-lines.
+Dev12 starts the Rust Action Engine migration. `c420ui-host` now owns action
+resolution, lifecycle events, command execution, cancellation and root request
+orchestration through `action-run --json-lines`. TypeScript remains only a thin
+bridge for TUI integration and project-provided contracts.
+
+Do not reintroduce TypeScript action execution. Action execution belongs to
+`c420ui-host`; TypeScript may only marshal config/events until the adapter and
+config migration removes the bridge.
 
 The legacy TypeScript TUI remains only until Phase 5 removal.
 

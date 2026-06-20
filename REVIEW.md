@@ -96,9 +96,11 @@ Request changes if a PR:
   of the direct Dev12 Phase 3-5 roadmap.
 - bypasses `c420ui-tui run --json-lines` for the official c420ui terminal runtime;
 - introduces a terminal backend environment switch;
-- moves the TypeScript Action Engine into Rust in the TUI contract scaffold.
+- reintroduces TypeScript action execution instead of routing action lifecycle,
+  command execution, cancellation and root request orchestration through
+  `c420ui-host action-run --json-lines`.
 - executes project actions directly inside `c420ui-tui` instead of emitting
-  `action-selected` for the TypeScript Action Engine.
+  `action-selected` for the Rust Action Engine bridge.
 - treats Rust TUI visuals as cosmetic instead of preserving the legacy
   TypeScript/Blessed visual contract. `c420ui-tui` is not a simplified terminal
   frontend; it must match the legacy layout, theme, panels, focus behavior,
@@ -114,7 +116,7 @@ Request changes if a PR:
   warning/error/success colors must stay distinct, artifact/log/overview panels
   must wrap and scroll, and status panels must color only values.
 - restores tests that protect the removed Blessed/spawnSync/sudo runner paths
-  instead of the current c420ui-host, c420ui-tui, TypeScript Action Engine
+  instead of the current c420ui-host, c420ui-tui, Rust Action Engine
   bridge, and dependent-project boundary contracts.
 - reintroduces the legacy Blessed/TypeScript terminal runtime, exports
   `createApp`, restores `terminal/app.ts`, `terminal/blessed-widgets.ts` or
@@ -122,6 +124,10 @@ Request changes if a PR:
 - reintroduces TypeScript clipboard probing. Clipboard access is a c420ui-host
   responsibility; do not reintroduce `spawnSync`, Bash, `command -v` or
   desktop-specific clipboard probing in TypeScript.
+- reintroduces a TypeScript Action Engine fallback or an action-engine backend
+  switch. Action execution belongs to `c420ui-host`; TypeScript may only marshal
+  config, events, root responses and TUI integration until the remaining adapter
+  contracts move.
 - makes Blessed an external/dependency again.
 
 ## c420ui version/hash review

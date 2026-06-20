@@ -5,10 +5,10 @@ import { StringDecoder } from "node:string_decoder";
 import type { Readable, Writable } from "node:stream";
 
 import {
-  createC420UIActionEngine,
+  createC420UIRustActionEngine,
   type c420uiRootAccessRequest,
   type c420uiRootAccessRequestResult,
-} from "./action-engine.js";
+} from "./rust-action-engine.js";
 import { c420uiExitCodes } from "./exit-codes.js";
 import type { C420UIEvent } from "./events.js";
 import {
@@ -181,7 +181,7 @@ export function runC420UIRustTuiApp(
   send({ event: "init", state: createInitialRenderState(options, actions, theme, toolSettings) });
   void renderState("main").then((state) => send({ event: "state", state }));
 
-  const engine = createC420UIActionEngine({
+  const engine = createC420UIRustActionEngine({
     bridge: options.bridge,
     rootDir: options.config.rootDir,
     env: options.env,
@@ -294,7 +294,7 @@ function createC420UITuiProcessEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 
 async function handleTuiEvent(options: {
   event: C420UITuiRuntimeOutput;
-  engine: ReturnType<typeof createC420UIActionEngine>;
+  engine: ReturnType<typeof createC420UIRustActionEngine>;
   send: (event: C420UITuiRuntimeInput) => void;
   config: C420UIAppOptions["config"];
   bridge: C420UIAppOptions["bridge"];

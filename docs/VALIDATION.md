@@ -21,7 +21,7 @@ scroll/wrapping is restored for overview/logs/artifact panels, and status
 panels now color only values while preserving label colors.
 
 Dev12 test coverage was reorganized after the Rust host/TUI migration. Tests now
-protect c420ui-host, c420ui-tui, the TypeScript Action Engine bridge, and the
+protect c420ui-host, c420ui-tui, the Rust Action Engine bridge, and the
 dependent-project boundary instead of the removed Blessed/spawnSync/sudo runner
 paths.
 
@@ -32,6 +32,11 @@ Action Engine, bridge contracts, settings, clipboard and project integration.
 Dev12 moves c420ui clipboard writes to `c420ui-host`. F5 Copy Logs now delegates
 host clipboard integration to Rust, removing shell-based clipboard probing from
 the TypeScript terminal bridge.
+
+Dev12 starts the Rust Action Engine migration. `c420ui-host` now owns action
+resolution, lifecycle events, command execution, cancellation and root request
+orchestration through `action-run --json-lines`. TypeScript remains only a thin
+bridge for TUI integration and project-provided contracts.
 
 ## Dev11 ESM-only validation policy (FINALIZED)
 

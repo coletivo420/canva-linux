@@ -34,6 +34,12 @@ Dev12 moves c420ui clipboard writes to `c420ui-host`. Clipboard access is a
 c420ui-host responsibility. Do not reintroduce `spawnSync`, Bash, `command -v`
 or desktop-specific clipboard probing in TypeScript.
 
+Dev12 starts the Rust Action Engine migration. `c420ui-host` owns action
+resolution, lifecycle events, command execution, cancellation and root request
+orchestration through `action-run --json-lines`. Do not reintroduce TypeScript
+action execution; TypeScript may only marshal config, events, root responses and
+TUI integration until the remaining adapter/config migration removes the bridge.
+
 ## Dev11 ESM-only guardrails (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.
@@ -105,9 +111,9 @@ long-lived optional TypeScript/Rust toggle.
 
 Dev12 Phase 4 routes `runC420UITerminalApp()` through `c420ui-tui run
 --json-lines` as the official terminal runtime. Do not add a terminal backend
-environment switch and do not migrate the TypeScript Action Engine, workflow
-registry, dependent-project adapter, Electron runtime, toolbar, tabs or
-CLeyedropper into Rust.
+environment switch. Action execution now belongs to `c420ui-host`, but do not
+migrate the workflow registry, dependent-project adapter, Electron runtime,
+toolbar, tabs or CLeyedropper into Rust.
 
 Rust may be introduced under:
 
@@ -492,17 +498,17 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Any `system`/`user` scope action must behave the same in c420ui and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
-- c420ui and CLI must share the same TypeScript action contract.
-- Direct CLI and interactive c420ui actions already route through the c420ui Action Engine.
-- Action execution belongs to the c420ui Action Engine.
+- c420ui and CLI must share the same action contract.
+- Direct CLI and interactive c420ui actions already route through the Rust-backed c420ui Action Engine bridge.
+- Action execution belongs to `c420ui-host action-run --json-lines`.
 - Direct CLI execution belongs to the c420ui CLI bridge.
-- Command execution belongs to the c420ui Command Runner.
-- New action execution policy belongs to the c420ui Action Engine, Root Provider, Command Runner, and operational log policy.
+- Command execution for c420ui actions belongs to `c420ui-host`.
+- New action execution policy belongs to `c420ui-host`, the Root Provider bridge, and operational log policy.
 
 - c420ui owns generic action resolution by id and CLI flag.
 - c420ui owns planned-action and dry-run semantics.
-- Project adapters execute concrete actions but must not reimplement generic action-engine policy.
-- Generic command execution belongs to `build-resources/c420ui/src/command-runner.ts`.
+- Project adapters declare concrete actions but must not execute them or reimplement generic action-engine policy.
+- Generic action command execution belongs to `c420ui-host action-run --json-lines`.
 - c420ui operational command logs must pass through `createC420UIOperationalLogEvent()`.
 - Do not emit raw secrets from command stdout/stderr when using c420ui operational logs.
 - Project adapters must not reimplement stdout/stderr process handling.
@@ -511,8 +517,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Project adapters must not prepare action env after the Action Engine/root provider has prepared it.
 - Project adapters must not reimplement command cancellation.
 - Runtime app logs remain separate from c420ui operational command logs.
-- Direct CLI actions must pass through the c420ui CLI bridge.
-- Interactive c420ui actions and direct CLI actions must share the c420ui Action Engine.
+- Direct CLI actions must pass through the c420ui CLI bridge and Rust-backed Action Engine.
+- Interactive c420ui actions and direct CLI actions must share the Rust-backed c420ui Action Engine.
 - Do not bypass the c420ui Action Engine from `canva-linux-c420ui-builder`.
 - Do not reintroduce direct process execution from `build-resources/c420ui/src/terminal/app.ts`.
 - Do not import `./process-runner` from the interactive app after the Action Engine migration.

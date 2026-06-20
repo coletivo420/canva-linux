@@ -1,3 +1,4 @@
+pub mod action;
 pub mod commands;
 pub mod exit_codes;
 pub mod host;

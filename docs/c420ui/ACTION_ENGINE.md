@@ -1,8 +1,8 @@
 # c420ui Action Engine
 
 The c420ui Action Engine is the central action-policy layer. It resolves an
-action from a bridge, applies policy, and calls `bridge.runAction` only after the
-action is allowed to execute.
+action from a bridge, marshals the project-provided contract, and delegates
+execution to `c420ui-host action-run --json-lines`.
 
 ## Controls
 
@@ -24,10 +24,10 @@ action is allowed to execute.
 
 ## Planned actions
 
-Planned actions are declared by project metadata and reported as planned without
-running concrete commands. A dry-run of a planned action reports success for the
-inspection path, while a normal planned-action invocation returns the planned
-exit code. Planned actions must not call `bridge.runAction`.
+Planned actions are declared by project metadata and reported as planned by
+`c420ui-host` without running concrete commands. A dry-run of a planned action
+reports success for the inspection path, while a normal planned-action
+invocation returns the planned exit code.
 
 ## Dry-run
 
@@ -38,15 +38,16 @@ builds, or adapter fallback execution.
 ## Confirmation
 
 Dangerous actions require confirmation unless the caller passed `--yes` or the
-launcher translated `--force` into yes semantics. Confirmation failure stops
-before root policy and before `bridge.runAction`.
+launcher translated `--force` into yes semantics. Confirmation failure is
+reported by `c420ui-host` before command execution.
 
 ## Root policy and requestRootAccess
 
-For root actions, the engine uses the configured root provider before concrete
-execution. In terminal mode, `requestRootAccess` can collect administrator input
-through the c420ui popup flow. In non-interactive CLI mode, the root provider can
-run `validateRootAccess` directly.
+For root actions, `c420ui-host` emits a `root-request` event before concrete
+execution. The TypeScript bridge still owns project-provided root provider
+integration for now: terminal mode can collect administrator input through
+`requestRootAccess`, and non-interactive CLI mode can run `validateRootAccess`
+directly before sending `root-response` back to Rust.
 
 The ordering is intentional:
 
@@ -54,12 +55,15 @@ The ordering is intentional:
 2. Apply planned-action policy.
 3. Apply dry-run policy.
 4. Apply confirmation policy.
-5. Apply root policy through `validateRootAccess` or `requestRootAccess`.
-6. Call `bridge.runAction` only after all policy succeeds.
+5. Emit/handle `root-request` and `root-response` when root is required.
+6. Execute declarative command actions in `c420ui-host`.
 
 ## Implementing files
 
 - `build-resources/c420ui/src/action-engine.ts`
+- `build-resources/c420ui/src/rust-action-engine.ts`
+- `build-resources/c420ui-rs/src/action/`
+- `build-resources/c420ui-rs/src/commands/action_run.rs`
 - `build-resources/c420ui/src/terminal/interactive-action-runner.ts`
 - `build-resources/c420ui/src/cli.ts`
 - `build-resources/c420ui/src/bridge.ts`
@@ -74,8 +78,8 @@ and `build-resources/canva-linux/actions/registry.ts`.
 
 ## Boundary checks
 
-- `npm run check:c420ui-core` checks policy ordering and ensures root preflight
-  happens before `bridge.runAction`.
+- `npm run check:c420ui-core` checks that TypeScript uses the Rust Action Engine
+  bridge and does not reintroduce TypeScript action execution.
 - `npm run check:canva-linux` checks that the Canva Linux adapter stays thin and
   does not become a policy engine.
 - `npm test` covers planned, dry-run, confirmation, root, and interactive root
@@ -83,8 +87,7 @@ and `build-resources/canva-linux/actions/registry.ts`.
 
 ## Forbidden regressions
 
-- Do not call `bridge.runAction` before planned, dry-run, confirmation, and root
-  policy finish.
+- Do not reintroduce TypeScript action execution or a fallback Action Engine.
 - Do not duplicate planned-action, dry-run, root, or confirmation fallback logic
   inside the Canva Linux adapter.
 - Do not make planned actions report executable success.

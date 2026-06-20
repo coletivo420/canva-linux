@@ -9,6 +9,7 @@ export * from "./host-dependency-resolver.js";
 export * from "./install-config.js";
 export * from "./maintenance-config.js";
 export * from "./rust-host.js";
+export * from "./rust-action-engine.js";
 export * from "./rust-clipboard.js";
 export * from "./rust-artifacts.js";
 export * from "./rust-fs.js";

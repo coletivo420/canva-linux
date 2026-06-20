@@ -34,6 +34,9 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
 - c420ui clipboard writes belong to `c420ui-host`; TypeScript must not
   reintroduce `spawnSync`, Bash, `command -v`, or desktop-specific clipboard
   probing for F5 Copy Logs.
+- c420ui action execution belongs to `c420ui-host action-run --json-lines`.
+  TypeScript must not reintroduce action execution, a fallback Action Engine,
+  or an action-engine backend switch.
 - `root scripts/ ownership` is scripts/ must not return and must not own npm
   install, dependency repair, or skip policy.
 - Artifact names must preserve generated architecture strings such as `x86_64`

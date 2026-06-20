@@ -7,6 +7,7 @@ fn print_usage() {
     eprintln!("  doctor --json");
     eprintln!("  check-host-dependencies --json");
     eprintln!("  clipboard-write --json");
+    eprintln!("  action-run --json-lines");
     eprintln!("  run-process --json-lines");
     eprintln!("  sudo-validate --json");
     eprintln!("  remove-paths --json");
@@ -100,6 +101,15 @@ fn main() {
             std::process::exit(exit_codes::INVALID_USAGE);
         }
         std::process::exit(commands::run_process::execute());
+    }
+
+    if cmd == "action-run" {
+        let has_json_lines = args.iter().any(|arg| arg == "--json-lines");
+        if !has_json_lines {
+            eprintln!("Error: action-run command requires --json-lines");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        std::process::exit(commands::action_run::execute());
     }
 
     if cmd == "sudo-validate" {
