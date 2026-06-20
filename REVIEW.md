@@ -104,6 +104,10 @@ Request changes if a PR:
   frontend; it must match the legacy layout, theme, panels, focus behavior,
   footer, progress bar, logs, and root prompt before the TypeScript TUI can be
   removed.
+- drops Rust TUI interaction parity with the legacy TypeScript/Blessed TUI:
+  keyboard shortcuts, panel scrolling, settings toggles, F5 log copy, root
+  prompt retry behavior, session log persistence and post-action panel refresh
+  are required before the TypeScript TUI can be removed.
 
 ## c420ui version/hash review
 

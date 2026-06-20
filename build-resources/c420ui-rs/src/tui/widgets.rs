@@ -48,6 +48,7 @@ pub fn draw_menu<'a>(
     selected: usize,
     theme: &LegacyTheme,
     active: bool,
+    scroll: u16,
 ) -> List<'a> {
     let list_items: Vec<ListItem> = items
         .iter()
@@ -89,10 +90,17 @@ pub fn draw_menu<'a>(
         })
         .title(label);
 
-    List::new(list_items).block(block)
+    List::new(list_items)
+        .block(block)
+        .scroll_padding(scroll as usize)
 }
 
-pub fn draw_panel<'a>(panel: &'a TuiPanel, theme: &LegacyTheme, active: bool) -> Paragraph<'a> {
+pub fn draw_panel<'a>(
+    panel: &'a TuiPanel,
+    theme: &LegacyTheme,
+    active: bool,
+    scroll: u16,
+) -> Paragraph<'a> {
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(if active {
@@ -108,7 +116,7 @@ pub fn draw_panel<'a>(panel: &'a TuiPanel, theme: &LegacyTheme, active: bool) ->
         .map(|l| styled_content_line(l, theme))
         .collect();
 
-    Paragraph::new(lines).block(block)
+    Paragraph::new(lines).block(block).scroll((scroll, 0))
 }
 
 pub fn draw_action_content<'a>(
@@ -117,9 +125,10 @@ pub fn draw_action_content<'a>(
     view: &crate::tui::contracts::TuiView,
     theme: &LegacyTheme,
     active: bool,
+    scroll: u16,
 ) -> Paragraph<'a> {
     if matches!(view, crate::tui::contracts::TuiView::Help) {
-        return draw_help_content(panel, selected, theme, active);
+        return draw_help_content(panel, selected, theme, active, scroll);
     }
 
     if selected.is_none()
@@ -130,7 +139,7 @@ pub fn draw_action_content<'a>(
                 | crate::tui::contracts::TuiView::Maintenance
         )
     {
-        return draw_panel(panel, theme, active);
+        return draw_panel(panel, theme, active, scroll);
     }
 
     let selected = selected.expect("checked above");
@@ -185,7 +194,9 @@ pub fn draw_action_content<'a>(
         ]);
     }
 
-    Paragraph::new(lines).block(panel_block(&panel.label, theme, active))
+    Paragraph::new(lines)
+        .block(panel_block(&panel.label, theme, active))
+        .scroll((scroll, 0))
 }
 
 fn draw_help_content<'a>(
@@ -193,6 +204,7 @@ fn draw_help_content<'a>(
     selected: Option<&'a TuiMenuItem>,
     theme: &LegacyTheme,
     active: bool,
+    scroll: u16,
 ) -> Paragraph<'a> {
     let selected_id = selected
         .map(|item| item.id.as_str())
@@ -256,7 +268,9 @@ fn draw_help_content<'a>(
         ))
     }));
 
-    Paragraph::new(lines).block(panel_block(&panel.label, theme, active))
+    Paragraph::new(lines)
+        .block(panel_block(&panel.label, theme, active))
+        .scroll((scroll, 0))
 }
 
 pub fn draw_logs<'a>(
@@ -264,6 +278,7 @@ pub fn draw_logs<'a>(
     lines: &'a [TuiLogLine],
     theme: &LegacyTheme,
     active: bool,
+    scroll: u16,
 ) -> Paragraph<'a> {
     let block = Block::default()
         .borders(Borders::ALL)
@@ -290,7 +305,7 @@ pub fn draw_logs<'a>(
         })
         .collect();
 
-    Paragraph::new(content).block(block)
+    Paragraph::new(content).block(block).scroll((scroll, 0))
 }
 
 pub fn draw_progress<'a>(
@@ -324,7 +339,7 @@ pub fn draw_modal<'a>(
     modal: &'a crate::tui::contracts::TuiModal,
     modal_input: &'a str,
     theme: &LegacyTheme,
-    _area: Rect,
+    area: Rect,
 ) -> Paragraph<'a> {
     let block = Block::default()
         .borders(Borders::ALL)
@@ -335,20 +350,70 @@ pub fn draw_modal<'a>(
         }))
         .title(modal.title.clone());
 
-    let mut lines = vec![Line::from(modal.message.clone()), Line::from("")];
+    let mut lines: Vec<Line> = modal
+        .message
+        .lines()
+        .map(|line| Line::from(line.to_string()))
+        .collect();
+    lines.push(Line::from(""));
 
     if modal.kind == crate::tui::contracts::TuiModalKind::Input {
-        lines.push(Line::from("Enter your sudo password to continue."));
-        if modal.secret.unwrap_or(false) {
-            lines.push(Line::from("*".repeat(modal_input.len())));
+        let input_width = area.width.saturating_sub(8).max(12) as usize;
+        let typed = if modal.secret.unwrap_or(false) {
+            "*".repeat(modal_input.len())
         } else {
-            lines.push(Line::from(modal_input));
+            modal_input.to_string()
+        };
+        let clipped = typed
+            .chars()
+            .take(input_width.saturating_sub(4))
+            .collect::<String>();
+        lines.push(Line::from(format!("┌{}┐", "─".repeat(input_width))));
+        if modal.secret.unwrap_or(false) {
+            lines.push(Line::from(format!(
+                "│ {:width$} │",
+                clipped,
+                width = input_width - 2
+            )));
+        } else {
+            lines.push(Line::from(format!(
+                "│ {:width$} │",
+                clipped,
+                width = input_width - 2
+            )));
         }
+        lines.push(Line::from(format!("└{}┘", "─".repeat(input_width))));
+        lines.push(Line::from(""));
+        lines.push(Line::from("[Enter] Submit  [Esc] Cancel"));
+    } else if modal.kind == crate::tui::contracts::TuiModalKind::Confirm {
+        lines.push(Line::from("[y/Enter] Confirm    [Esc/n] Cancel"));
     }
 
     Paragraph::new(lines)
         .block(block)
         .style(Style::default().fg(theme.text).bg(theme.background))
+}
+
+pub fn centered_fixed_height(percent_x: u16, height: u16, r: Rect) -> Rect {
+    let height = height.min(r.height.saturating_sub(2)).max(5);
+    let vertical_margin = r.height.saturating_sub(height) / 2;
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(vertical_margin),
+            Constraint::Length(height),
+            Constraint::Min(0),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }
 
 pub fn draw_footer<'a>(items: &'a [String], theme: &LegacyTheme) -> Paragraph<'a> {

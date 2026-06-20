@@ -31,6 +31,11 @@ pub enum TuiRuntimeInputEvent {
         status: String,
         code: i32,
     },
+    RootRequestResult {
+        request_id: String,
+        ok: bool,
+        message: Option<String>,
+    },
     RootRequest {
         request_id: String,
         action_id: String,
@@ -54,6 +59,13 @@ pub enum TuiRuntimeOutputEvent {
     },
     ViewChanged {
         view: crate::tui::contracts::TuiView,
+        selected: usize,
+    },
+    CopyLogs,
+    Help,
+    Toggle,
+    SettingToggle {
+        setting: String,
     },
     Quit,
     Cancel,

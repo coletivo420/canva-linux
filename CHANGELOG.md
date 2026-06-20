@@ -3,6 +3,7 @@
 ## Dev12 Rust TUI legacy visual parity
 
 - Dev12 now requires the Rust TUI to preserve the visual contract of the legacy TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it must match the legacy layout, theme, panels, focus behavior, footer, progress bar, logs, and root prompt before the TypeScript TUI can be removed.
+- Dev12 continues the direct Rust TUI migration by restoring legacy interaction parity: full keyboard shortcuts, panel scrolling, settings toggles, log copy, root prompt retries, session log behavior and post-action status refresh. `c420ui-tui` remains the official runtime; the TypeScript/Blessed TUI must not return as a backend.
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).

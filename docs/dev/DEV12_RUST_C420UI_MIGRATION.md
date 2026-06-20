@@ -146,6 +146,12 @@ TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it
 must match the legacy layout, theme, panels, focus behavior, footer, progress
 bar, logs, and root prompt before the TypeScript TUI can be removed.
 
+Dev12 now also requires legacy interaction parity. The Rust TUI must keep the
+same keyboard shortcuts, panel scrolling, settings toggles, F5 log copy, root
+prompt retry behavior, session log behavior and post-action status refresh.
+`c420ui-tui` remains the official runtime; the TypeScript/Blessed TUI must not
+return as a backend.
+
 The TypeScript Action Engine remains responsible for action resolution,
 execution, root-provider interaction and progress/log events. Rust owns terminal
 rendering, navigation, action selection, progress display, log display and the

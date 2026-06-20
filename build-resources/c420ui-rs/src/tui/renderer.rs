@@ -53,6 +53,7 @@ pub fn render<B: Backend>(
                 input.menu.selected,
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Menu),
+                state.menu_scroll,
             ),
             layout.menu,
         );
@@ -63,6 +64,7 @@ pub fn render<B: Backend>(
                 &input.panels.detected_installations,
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Diagnostics),
+                state.diagnostics_scroll,
             ),
             layout.detected_installations,
         );
@@ -71,6 +73,7 @@ pub fn render<B: Backend>(
                 &input.panels.generated_artifacts,
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Diagnostics),
+                state.diagnostics_scroll,
             ),
             layout.generated_artifacts,
         );
@@ -79,6 +82,7 @@ pub fn render<B: Backend>(
                 &input.panels.linux_artifacts,
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Diagnostics),
+                state.diagnostics_scroll,
             ),
             layout.linux_artifacts,
         );
@@ -92,6 +96,7 @@ pub fn render<B: Backend>(
                 &input.view,
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Content),
+                state.content_scroll,
             ),
             layout.overview,
         );
@@ -103,6 +108,7 @@ pub fn render<B: Backend>(
                 &input.panels.logs.lines,
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Logs),
+                state.logs_scroll,
             ),
             layout.logs,
         );
@@ -125,7 +131,7 @@ pub fn render<B: Backend>(
 
         // Draw Modal
         if let Some(modal) = &input.modal {
-            let modal_area = centered_rect(70, 50, area);
+            let modal_area = centered_fixed_height(70, 14, area);
             f.render_widget(ratatui::widgets::Clear, modal_area);
             f.render_widget(
                 draw_modal(modal, &state.modal_input, &theme, modal_area),

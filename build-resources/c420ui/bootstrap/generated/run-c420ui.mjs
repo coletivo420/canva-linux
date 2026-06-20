@@ -232,8 +232,101 @@ function formatDetectionPanelSummaries(s, colors2) {
   };
 }
 
+// build-resources/c420ui/src/terminal/clipboard.ts
+import { spawnSync } from "node:child_process";
+function has(command) {
+  return spawnSync("bash", ["-c", `command -v ${command}`]).status === 0;
+}
+function runWithInput(command, args, input) {
+  const result = spawnSync(command, args, {
+    input,
+    encoding: "utf8"
+  });
+  return result.status === 0;
+}
+function copyTextToClipboard(text) {
+  if (!text.trim()) {
+    return {
+      ok: false,
+      message: "No logs to copy."
+    };
+  }
+  if (process.env.WAYLAND_DISPLAY && has("wl-copy") && runWithInput("wl-copy", [], text)) {
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via wl-copy."
+    };
+  }
+  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("kde")) {
+    if (has("qdbus6") && runWithInput(
+      "bash",
+      [
+        "-c",
+        'input=$(cat); qdbus6 org.kde.klipper /klipper setClipboardContents "$input"'
+      ],
+      text
+    )) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via KDE Klipper (qdbus6)."
+      };
+    }
+    if (has("qdbus") && runWithInput(
+      "bash",
+      [
+        "-c",
+        'input=$(cat); qdbus org.kde.klipper /klipper setClipboardContents "$input"'
+      ],
+      text
+    )) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via KDE Klipper (qdbus)."
+      };
+    }
+  }
+  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("gnome")) {
+    if (has("gpaste-client") && runWithInput("gpaste-client", ["add"], text)) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via GPaste."
+      };
+    }
+    if (has("gpaste") && runWithInput("gpaste", ["add"], text)) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via GPaste."
+      };
+    }
+  }
+  if (has("xclip") && runWithInput("xclip", ["-selection", "clipboard"], text)) {
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via xclip."
+    };
+  }
+  if (has("xsel") && runWithInput("xsel", ["--clipboard", "--input"], text)) {
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via xsel."
+    };
+  }
+  return {
+    ok: false,
+    message: "No clipboard tool found. Install wl-clipboard, KDE qdbus support, GPaste, xclip or xsel."
+  };
+}
+
 // build-resources/c420ui/src/terminal/settings.ts
+import fs from "node:fs";
 import path from "node:path";
+var DEFAULT_TOOL_SETTINGS = {
+  tool: {
+    generalLogsEnabled: true,
+    terminalTextSelectionMode: false
+  },
+  runtime: {}
+};
 function configHome() {
   const xdgConfigHome = process.env.XDG_CONFIG_HOME?.trim();
   if (xdgConfigHome) {
@@ -243,6 +336,47 @@ function configHome() {
 }
 function toolSettingsPath(stateDirectoryName) {
   return path.join(configHome(), stateDirectoryName, "tool-settings.json");
+}
+function isObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+function normalizeSettings(raw) {
+  const rawRoot = isObject(raw) ? raw : {};
+  const rawTool = isObject(rawRoot.tool) ? rawRoot.tool : {};
+  const runtime = isObject(rawRoot.runtime) ? rawRoot.runtime : {};
+  return {
+    tool: {
+      generalLogsEnabled: typeof rawTool.generalLogsEnabled === "boolean" ? rawTool.generalLogsEnabled : DEFAULT_TOOL_SETTINGS.tool.generalLogsEnabled,
+      terminalTextSelectionMode: typeof rawTool.terminalTextSelectionMode === "boolean" ? rawTool.terminalTextSelectionMode : DEFAULT_TOOL_SETTINGS.tool.terminalTextSelectionMode
+    },
+    runtime
+  };
+}
+function loadToolSettings(stateDirectoryName) {
+  const settingsPath = toolSettingsPath(stateDirectoryName);
+  if (!fs.existsSync(settingsPath)) {
+    try {
+      saveToolSettings(DEFAULT_TOOL_SETTINGS, stateDirectoryName);
+    } catch {
+    }
+    return structuredClone(DEFAULT_TOOL_SETTINGS);
+  }
+  try {
+    const rawContent = fs.readFileSync(settingsPath, "utf8");
+    return normalizeSettings(JSON.parse(rawContent));
+  } catch {
+    return structuredClone(DEFAULT_TOOL_SETTINGS);
+  }
+}
+function saveToolSettings(settings, stateDirectoryName) {
+  const settingsPath = toolSettingsPath(stateDirectoryName);
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+  fs.writeFileSync(
+    settingsPath,
+    `${JSON.stringify(normalizeSettings(settings), null, 2)}
+`,
+    "utf8"
+  );
 }
 
 // build-resources/c420ui/src/scopes.ts
@@ -783,7 +917,7 @@ function enforceC420UIRootLaunchGuard(options) {
 
 // build-resources/c420ui/src/rust-tui-runner.ts
 import { spawn } from "node:child_process";
-import fs from "node:fs";
+import fs2 from "node:fs";
 import path2 from "node:path";
 import { StringDecoder } from "node:string_decoder";
 
@@ -1083,10 +1217,18 @@ function optionalNonEmpty(value) {
 }
 
 // build-resources/c420ui/src/rust-tui-runner.ts
+var MAX_LOG_HISTORY_LINES = 5e3;
+var ROOT_PROMPT_MAX_ATTEMPTS = 3;
+var ROOT_PROMPT_TIMEOUT_MS = 3e4;
 function runC420UIRustTuiApp(options) {
   const writeError = options.writeError ?? console.error;
   const exit = options.exit ?? process.exit;
   const abortController = new AbortController();
+  const toolSettings = loadToolSettings(options.config.project.stateDirectoryName);
+  const logHistory = [];
+  const sessionLogPath = resolveSessionLogPath(options);
+  const sessionStream = openSessionStream(sessionLogPath, writeError);
+  let currentView = "main";
   const pendingRootRequests = /* @__PURE__ */ new Map();
   let child;
   try {
@@ -1109,6 +1251,9 @@ function runC420UIRustTuiApp(options) {
     child.stdin.write(`${JSON.stringify(event)}
 `);
   };
+  const sendLog = (source, line, level) => {
+    appendLogLine({ source, line, level }, { logHistory, send, sessionStream, toolSettings });
+  };
   const actions = options.bridge.actions();
   const theme = {
     supportsTrueColor: c420uiTheme.supportsTrueColor,
@@ -1119,9 +1264,12 @@ function runC420UIRustTuiApp(options) {
     actions: options.bridge.actions(),
     theme,
     view,
-    panels: await createLegacyPanels(options)
+    menu: view === "settings" ? createSettingsMenu(toolSettings) : void 0,
+    panels: await createLegacyPanels(options, logHistory, toolSettings),
+    footer: createFooter(toolSettings)
   });
-  send({ event: "init", state: createInitialRenderState(options, actions, theme) });
+  writeSession(sessionStream, "[mode] c420ui");
+  send({ event: "init", state: createInitialRenderState(options, actions, theme, toolSettings) });
   void renderState("main").then((state) => send({ event: "state", state }));
   const engine = createC420UIActionEngine({
     bridge: options.bridge,
@@ -1131,11 +1279,12 @@ function runC420UIRustTuiApp(options) {
     requestRootAccess: (request) => requestRootAccessThroughTui(
       request,
       send,
+      sendLog,
       pendingRootRequests,
       options.rootProvider
     ),
     emit(event) {
-      forwardActionEngineEvent(event, send);
+      forwardActionEngineEvent(event, send, sendLog);
     }
   });
   child.on("error", (error) => {
@@ -1159,6 +1308,15 @@ function runC420UIRustTuiApp(options) {
       startupTasks: options.startupTasks ?? [],
       pendingRootRequests,
       abortController,
+      toolSettings,
+      logHistory,
+      sessionStream,
+      sessionLogPath,
+      sendLog,
+      getCurrentView: () => currentView,
+      setCurrentView: (view) => {
+        currentView = view;
+      },
       writeError,
       exit
     });
@@ -1170,7 +1328,7 @@ function runC420UIRustTuiApp(options) {
 function resolveC420UITuiBinary(options) {
   const configured = options.env?.C420UI_TUI_BIN?.trim();
   if (configured) {
-    if (!fs.existsSync(configured)) {
+    if (!fs2.existsSync(configured)) {
       throw new Error(`Configured c420ui-tui binary does not exist: ${configured}`);
     }
     return configured;
@@ -1194,7 +1352,7 @@ function resolveC420UITuiBinary(options) {
       `c420ui-tui${extension}`
     )
   ];
-  const binary = candidates.find((candidate) => fs.existsSync(candidate));
+  const binary = candidates.find((candidate) => fs2.existsSync(candidate));
   if (!binary) {
     throw new Error("Missing c420ui-tui binary. Run npm run build:c420ui-tui.");
   }
@@ -1219,6 +1377,13 @@ async function handleTuiEvent(options) {
     startupTasks,
     pendingRootRequests,
     abortController,
+    toolSettings,
+    logHistory,
+    sessionStream,
+    sessionLogPath,
+    sendLog,
+    getCurrentView,
+    setCurrentView,
     writeError,
     exit
   } = options;
@@ -1226,31 +1391,54 @@ async function handleTuiEvent(options) {
     if (startupTasks.length > 0) {
       await runC420UIStartupTasks(startupTasks, (text) => {
         for (const line of splitLogLines(text)) {
-          send({ event: "log", source: "system", line });
+          sendLog("system", line);
         }
       });
     }
     return;
   }
   if (event.event === "action-selected") {
+    const action = bridge.actions().find((candidate) => candidate.id === event.actionId);
+    sendLog("action", `${event.actionId}${action ? ` ${action.label}` : ""}`);
     const result = await engine.runActionById(event.actionId, {
       yes: true,
       signal: abortController.signal
     });
     if (result.message) {
       if (result.status === "success") {
-        send({ event: "log", source: "action", line: result.message });
+        sendLog("action", result.message);
       } else {
         send({ event: "error", message: result.message });
+        writeSession(sessionStream, `[error] ${result.message}`);
       }
     }
+    send({ event: "state", state: await renderState(getCurrentView()) });
     return;
   }
   if (event.event === "view-changed") {
+    setCurrentView(event.view);
     send({
       event: "state",
       state: await renderState(event.view)
     });
+    return;
+  }
+  if (event.event === "copy-logs") {
+    const result = copyTextToClipboard(collectLogCopyText(logHistory, sessionLogPath));
+    sendLog("system", result.message, result.ok ? "info" : "warning");
+    return;
+  }
+  if (event.event === "setting-toggle") {
+    const setting = event.setting;
+    if (setting === "generalLogsEnabled" || setting === "terminalTextSelectionMode") {
+      toolSettings.tool[setting] = !toolSettings.tool[setting];
+      saveToolSettings(toolSettings, config.project.stateDirectoryName);
+      sendLog("system", `${setting} ${toolSettings.tool[setting] ? "enabled" : "disabled"}`);
+      send({ event: "state", state: await renderState("settings") });
+    }
+    return;
+  }
+  if (event.event === "help" || event.event === "toggle") {
     return;
   }
   if (event.event === "root-request-response") {
@@ -1263,22 +1451,27 @@ async function handleTuiEvent(options) {
   }
   if (event.event === "cancel") {
     abortController.abort();
+    writeSession(sessionStream, "[session] ended");
+    sessionStream?.end();
     exit(c420uiExitCodes.canceled);
     return;
   }
   if (event.event === "quit") {
+    writeSession(sessionStream, "[session] ended");
+    sessionStream?.end();
     exit(c420uiExitCodes.success);
     return;
   }
   writeError(`Unknown c420ui-tui event: ${JSON.stringify(event)}`);
 }
-function createInitialRenderState(options, actions, theme) {
+function createInitialRenderState(options, actions, theme, toolSettings) {
   return createC420UITuiRenderInput({
     config: options.config,
     actions,
     theme,
     view: "main",
-    panels: createLoadingPanels()
+    panels: createLoadingPanels(),
+    footer: createFooter(toolSettings)
   });
 }
 function createLoadingPanels() {
@@ -1311,7 +1504,7 @@ function createLoadingPanels() {
     }
   };
 }
-async function createLegacyPanels(options) {
+async function createLegacyPanels(options, logHistory, toolSettings) {
   const status = options.bridge.overviewStatus ? await options.bridge.overviewStatus() : null;
   const panels = formatDetectionPanelSummaries(status, c420uiTheme.colors);
   return {
@@ -1326,13 +1519,48 @@ async function createLegacyPanels(options) {
     linuxArtifacts: {
       label: "Linux Artifacts",
       lines: panels.linuxArtifacts.map(stripBlessedTags)
+    },
+    logs: {
+      label: toolSettings.tool.terminalTextSelectionMode ? "Logs - Text selection mode enabled" : "Logs",
+      lines: visibleLogHistory(logHistory, toolSettings)
     }
   };
 }
 function stripBlessedTags(line) {
   return line.replace(/\{\/?[^}]+\}/g, "");
 }
-async function requestRootAccessThroughTui(request, send, pendingRootRequests, rootProvider) {
+function createFooter(toolSettings) {
+  const items = [
+    "Tab Focus",
+    "Enter Select",
+    "Space Toggle",
+    "F5 Copy Logs",
+    "? Help",
+    "q Quit"
+  ];
+  return {
+    textSelectionMode: toolSettings.tool.terminalTextSelectionMode,
+    items: toolSettings.tool.terminalTextSelectionMode ? ["Text selection mode enabled", ...items] : items
+  };
+}
+function createSettingsMenu(toolSettings) {
+  return {
+    label: "Application Settings",
+    selected: 0,
+    items: [
+      {
+        id: "settings-general",
+        label: `${toolSettings.tool.generalLogsEnabled ? "[x]" : "[ ]"} General logs`
+      },
+      {
+        id: "settings-text-selection",
+        label: `${toolSettings.tool.terminalTextSelectionMode ? "[x]" : "[ ]"} Text selection mode`
+      },
+      { id: "back-main", label: "Back to Main", view: "main" }
+    ]
+  };
+}
+async function requestRootAccessThroughTui(request, send, sendLog, pendingRootRequests, rootProvider) {
   const requestId = `root-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   send({
     event: "root-request",
@@ -1340,42 +1568,56 @@ async function requestRootAccessThroughTui(request, send, pendingRootRequests, r
     actionId: request.action.id,
     reason: request.reason
   });
-  const response = await new Promise(
-    (resolve) => {
-      pendingRootRequests.set(requestId, resolve);
+  for (let attempt = 1; attempt <= ROOT_PROMPT_MAX_ATTEMPTS; attempt += 1) {
+    const response = await waitForRootResponse(requestId, pendingRootRequests);
+    if (!response.accepted) {
+      sendLog("system", "Root access was canceled.", "warning");
+      return {
+        ok: false,
+        code: c420uiExitCodes.canceled,
+        message: "Root access was canceled."
+      };
     }
-  );
-  if (!response.accepted) {
-    return {
-      ok: false,
-      code: c420uiExitCodes.canceled,
-      message: "Root access was canceled."
-    };
+    let submittedInput = response.input ?? "";
+    let access;
+    try {
+      access = rootProvider?.validateRootAccessWithInput ? rootProvider.validateRootAccessWithInput(
+        request.rootDir,
+        request.actionEnv,
+        submittedInput
+      ) : rootProvider?.validateRootAccess(request.rootDir, request.actionEnv);
+    } finally {
+      submittedInput = "";
+    }
+    if (access?.ok === false) {
+      const message = access.message ?? "Root authentication failed.";
+      send({
+        event: "root-request-result",
+        requestId,
+        ok: false,
+        message
+      });
+      sendLog(
+        "system",
+        `Root authentication failed (${attempt}/${ROOT_PROMPT_MAX_ATTEMPTS}).`,
+        "warning"
+      );
+      if (attempt === ROOT_PROMPT_MAX_ATTEMPTS) return access;
+      continue;
+    }
+    send({ event: "root-request-result", requestId, ok: true });
+    sendLog("system", "Root authentication accepted.");
+    return { ok: true };
   }
-  let submittedInput = response.input ?? "";
-  let access;
-  try {
-    access = rootProvider?.validateRootAccessWithInput ? rootProvider.validateRootAccessWithInput(
-      request.rootDir,
-      request.actionEnv,
-      submittedInput
-    ) : rootProvider?.validateRootAccess(request.rootDir, request.actionEnv);
-  } finally {
-    submittedInput = "";
-  }
-  if (access?.ok === false) {
-    return access;
-  }
-  return { ok: true };
+  return {
+    ok: false,
+    code: c420uiExitCodes.generalError,
+    message: "Root authentication failed."
+  };
 }
-function forwardActionEngineEvent(event, send) {
+function forwardActionEngineEvent(event, send, sendLog) {
   if (event.type === "log") {
-    send({
-      event: "log",
-      source: event.source,
-      line: event.line,
-      level: event.level
-    });
+    sendLog(event.source, event.line, event.level);
     return;
   }
   if (event.type === "progress") {
@@ -1404,8 +1646,67 @@ function forwardActionEngineEvent(event, send) {
     return;
   }
   if (event.message) {
-    send({ event: "log", source: "system", line: event.message });
+    sendLog("system", event.message, event.level);
   }
+}
+function waitForRootResponse(requestId, pendingRootRequests) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      pendingRootRequests.delete(requestId);
+      resolve({ accepted: false });
+    }, ROOT_PROMPT_TIMEOUT_MS);
+    pendingRootRequests.set(requestId, (response) => {
+      clearTimeout(timer);
+      resolve(response);
+    });
+  });
+}
+function appendLogLine(log, options) {
+  const normalized = {
+    source: log.source,
+    line: log.line,
+    level: log.level
+  };
+  options.logHistory.push(normalized);
+  if (options.logHistory.length > MAX_LOG_HISTORY_LINES) {
+    options.logHistory.splice(0, options.logHistory.length - MAX_LOG_HISTORY_LINES);
+  }
+  writeSession(options.sessionStream, `[${normalized.source}] ${normalized.line}`);
+  if (isVisibleLog(normalized, options.toolSettings)) {
+    options.send({ event: "log", ...normalized });
+  }
+}
+function visibleLogHistory(logs, toolSettings) {
+  return logs.filter((line) => isVisibleLog(line, toolSettings));
+}
+function collectLogCopyText(logs, sessionLogPath) {
+  const sessionLog = fs2.existsSync(sessionLogPath) ? fs2.readFileSync(sessionLogPath, "utf8").trim() : "";
+  const runtimeLog = logs.map((log) => `[${log.source}] ${log.line}`).join("\n");
+  return [sessionLog, runtimeLog].filter(Boolean).join("\n");
+}
+function isVisibleLog(line, toolSettings) {
+  if (toolSettings.tool.generalLogsEnabled) return true;
+  if (line.level === "error" || line.level === "warning") return true;
+  return line.source !== "system";
+}
+function resolveSessionLogPath(options) {
+  const configured = options.config.sessionLogPath?.trim();
+  if (configured) return configured;
+  const stateHome2 = options.env?.XDG_STATE_HOME?.trim() || process.env.XDG_STATE_HOME?.trim() || path2.join(options.env?.HOME || process.env.HOME || ".", ".local", "state");
+  return path2.join(stateHome2, options.config.project.stateDirectoryName, "tool-session.log");
+}
+function openSessionStream(sessionLogPath, writeError) {
+  try {
+    fs2.mkdirSync(path2.dirname(sessionLogPath), { recursive: true });
+    return fs2.createWriteStream(sessionLogPath, { flags: "a" });
+  } catch (error) {
+    writeError(`Session log stream is unavailable: ${formatRustTuiError(error)}`);
+    return void 0;
+  }
+}
+function writeSession(stream, line) {
+  stream?.write(`${line}
+`);
 }
 function readJsonLines(stream, onEvent, onError) {
   const decoder = new StringDecoder("utf8");
@@ -1456,7 +1757,7 @@ function runC420UITerminalApp(options, runtimeOptions = {}) {
 
 // build-resources/c420ui/src/linux-root-provider.ts
 import {
-  spawnSync
+  spawnSync as spawnSync2
 } from "node:child_process";
 
 // build-resources/c420ui/src/root-provider.ts
@@ -1487,7 +1788,7 @@ function validateC420UILinuxActionScope(action, actionEnv, actionHasUserScope = 
   return { ok: true };
 }
 function createC420UILinuxRootProviderBase(options) {
-  const runCommand = options.runCommand ?? spawnSync;
+  const runCommand = options.runCommand ?? spawnSync2;
   const buildActionEnvironment = options.buildActionEnvironment ?? defaultC420UILinuxBuildActionEnvironment;
   const actionHasUserScope = options.actionHasUserScope ?? defaultC420UILinuxActionHasUserScope;
   const buildRootValidationCommand = options.buildRootValidationCommand ?? defaultC420UILinuxRootValidationCommand;
@@ -1572,26 +1873,26 @@ function createC420UILinuxRootProviderBase(options) {
 }
 
 // build-resources/c420ui/src/npm-dependencies.ts
-import fs3 from "node:fs";
+import fs4 from "node:fs";
 import path4 from "node:path";
 
 // build-resources/c420ui/src/rust-host.ts
 import { spawn as spawn2 } from "node:child_process";
 import { StringDecoder as StringDecoder2 } from "node:string_decoder";
-import fs2 from "node:fs";
+import fs3 from "node:fs";
 import path3 from "node:path";
 function resolveC420UIRustHostBinary(rootDir2, env = {}) {
   let binPath = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
   if (!binPath) {
     const debugPath = path3.join(rootDir2, "build-resources/c420ui-rs/target/debug/c420ui-host");
     const releasePath = path3.join(rootDir2, "build-resources/c420ui-rs/target/release/c420ui-host");
-    if (fs2.existsSync(debugPath)) {
+    if (fs3.existsSync(debugPath)) {
       binPath = debugPath;
-    } else if (fs2.existsSync(releasePath)) {
+    } else if (fs3.existsSync(releasePath)) {
       binPath = releasePath;
     }
   }
-  if (!binPath || !fs2.existsSync(binPath)) {
+  if (!binPath || !fs3.existsSync(binPath)) {
     throw new Error("c420ui Rust host is missing. Run npm run build:c420ui-rs.");
   }
   return binPath;
@@ -1906,11 +2207,11 @@ async function runC420UIRustProcess(options) {
 // build-resources/c420ui/src/npm-dependencies.ts
 function readPackageJson(rootDir2) {
   const packagePath = path4.join(rootDir2, "package.json");
-  if (!fs3.existsSync(packagePath)) {
+  if (!fs4.existsSync(packagePath)) {
     return { result: { status: "failed", exitCode: 1, message: "package.json was not found." } };
   }
   try {
-    const packageJson = JSON.parse(fs3.readFileSync(packagePath, "utf8"));
+    const packageJson = JSON.parse(fs4.readFileSync(packagePath, "utf8"));
     return { packageJson };
   } catch (error) {
     return {
@@ -1955,7 +2256,7 @@ function resolveC420UINpmDependency(dependency, rootDir2) {
   let currentDir = path4.resolve(rootDir2);
   while (true) {
     const candidate = path4.join(currentDir, "node_modules", dependency, "package.json");
-    if (fs3.existsSync(candidate)) return true;
+    if (fs4.existsSync(candidate)) return true;
     const parent = path4.dirname(currentDir);
     if (parent === currentDir) return false;
     currentDir = parent;
@@ -1970,7 +2271,7 @@ function requiredNpmDependencies(config) {
 function installArgs(config, rootDir2) {
   const strategy = config.installStrategy ?? "auto";
   const lockfile = config.lockfile ?? "package-lock.json";
-  const hasLockfile = fs3.existsSync(path4.join(rootDir2, lockfile));
+  const hasLockfile = fs4.existsSync(path4.join(rootDir2, lockfile));
   const command = strategy === "ci" || strategy === "auto" && hasLockfile ? "ci" : "install";
   return config.includeDev === false ? [command] : [command, "--include=dev"];
 }
@@ -2565,7 +2866,7 @@ function createC420UIDevelopmentWorkflowFromAction(task, action) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/adapter.ts
-import fs16 from "node:fs";
+import fs17 from "node:fs";
 import path17 from "node:path";
 
 // build-resources/c420ui/src/terminal/logo.ts
@@ -2576,17 +2877,17 @@ var c420uiLogoLines = [
 ];
 
 // build-resources/canva-linux/c420ui-adapter/detection/provider.ts
-import fs10 from "node:fs";
+import fs11 from "node:fs";
 import path11 from "node:path";
 import {
   execFileSync
 } from "node:child_process";
 
 // build-resources/canva-linux/project-root.ts
-import fs4 from "node:fs";
+import fs5 from "node:fs";
 import path6 from "node:path";
 function isProjectRoot(dir) {
-  return fs4.existsSync(path6.join(dir, "package.json")) && fs4.existsSync(path6.join(dir, "build-resources/canva-linux/config/actions.json")) && fs4.existsSync(path6.join(dir, "build-resources/canva-linux/config/project-ui.json"));
+  return fs5.existsSync(path6.join(dir, "package.json")) && fs5.existsSync(path6.join(dir, "build-resources/canva-linux/config/actions.json")) && fs5.existsSync(path6.join(dir, "build-resources/canva-linux/config/project-ui.json"));
 }
 function scriptDirFromArgv() {
   const scriptPath = process.argv[1];
@@ -2619,7 +2920,7 @@ function findCanvaLinuxProjectRoot(startDir = defaultRootSearchDir()) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/detection/artifact-fragments.ts
-import fs5 from "node:fs";
+import fs6 from "node:fs";
 import path7 from "node:path";
 var ARTIFACTS_CONFIG_PATH = "build-resources/canva-linux/config/artifacts.json";
 var ARTIFACT_PATH_COLLATOR = new Intl.Collator(void 0, {
@@ -2638,14 +2939,14 @@ var SUPPORTED_ARTIFACT_PATTERN_EXAMPLES = [
   "*.pkg.tar.*"
 ];
 function readJsonFile(filePath) {
-  return JSON.parse(fs5.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs6.readFileSync(filePath, "utf8"));
 }
 function readPackageVersion(rootDir2) {
   return readJsonFile(path7.join(rootDir2, "package.json")).version ?? "unknown";
 }
 function loadArtifactWorkflows(rootDir2) {
   const configPath = path7.join(rootDir2, ARTIFACTS_CONFIG_PATH);
-  if (!fs5.existsSync(configPath)) return [];
+  if (!fs6.existsSync(configPath)) return [];
   const config = readJsonFile(configPath);
   return Array.isArray(config.workflows) ? config.workflows : [];
 }
@@ -2672,15 +2973,15 @@ function candidatePathsForPattern(rootDir2, outputPattern) {
   const resolvedPattern = normalizeConfigPath(outputPattern);
   if (!resolvedPattern.includes("*")) {
     const absolutePath = path7.join(rootDir2, resolvedPattern);
-    return fs5.existsSync(absolutePath) ? [absolutePath] : [];
+    return fs6.existsSync(absolutePath) ? [absolutePath] : [];
   }
   const firstWildcard = resolvedPattern.indexOf("*");
   const scanRootRelative = path7.dirname(resolvedPattern.slice(0, firstWildcard));
   const scanRoot = path7.join(rootDir2, scanRootRelative || ".");
-  if (!fs5.existsSync(scanRoot)) return [];
+  if (!fs6.existsSync(scanRoot)) return [];
   const matcher = patternToRegExp(resolvedPattern);
   const candidates = [];
-  for (const entry of fs5.readdirSync(scanRoot, { withFileTypes: true })) {
+  for (const entry of fs6.readdirSync(scanRoot, { withFileTypes: true })) {
     const absolutePath = path7.join(scanRoot, entry.name);
     const relativePath = normalizeConfigPath(path7.relative(rootDir2, absolutePath));
     if (matcher.test(relativePath)) candidates.push(absolutePath);
@@ -2721,12 +3022,12 @@ function normalizeMetadata(metadata) {
   };
 }
 function readVersionSidecar(filePath) {
-  const raw = fs5.readFileSync(filePath, "utf8").trim();
+  const raw = fs6.readFileSync(filePath, "utf8").trim();
   return raw ? { version: raw, fullVersion: raw } : {};
 }
 function readArtifactPackageJsonVersion(artifactPath) {
   const packageJsonPath = path7.join(artifactPath, "package.json");
-  if (!fs5.existsSync(packageJsonPath)) return {};
+  if (!fs6.existsSync(packageJsonPath)) return {};
   const version = readJsonFile(packageJsonPath).version?.trim();
   return version ? { version, fullVersion: version } : {};
 }
@@ -2737,11 +3038,11 @@ function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
     `${artifactPath}.version`
   ];
   for (const sidecar of sidecars) {
-    if (!fs5.existsSync(sidecar)) continue;
+    if (!fs6.existsSync(sidecar)) continue;
     if (sidecar.endsWith(".json")) return normalizeMetadata(readMetadataJson(sidecar));
     return readVersionSidecar(sidecar);
   }
-  if (fs5.existsSync(artifactPath) && fs5.statSync(artifactPath).isDirectory()) {
+  if (fs6.existsSync(artifactPath) && fs6.statSync(artifactPath).isDirectory()) {
     const markers = [
       path7.join(artifactPath, "resources/config/canva-linux/build-metadata.json"),
       path7.join(artifactPath, "config/canva-linux/build-metadata.json"),
@@ -2751,7 +3052,7 @@ function readArtifactMetadata(rootDir2, artifactPath, artifactKindValue) {
       ] : []
     ];
     for (const marker of markers) {
-      if (fs5.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
+      if (fs6.existsSync(marker)) return normalizeMetadata(readMetadataJson(marker));
     }
     return readArtifactPackageJsonVersion(artifactPath);
   }
@@ -2806,48 +3107,48 @@ function buildCanvaLinuxArtifactFragments(rootDir2) {
 }
 
 // build-resources/c420ui/operations/detection/appimage-detection.ts
-import fs7 from "node:fs";
+import fs8 from "node:fs";
 import path8 from "node:path";
 
 // build-resources/c420ui/operations/detection/version-marker.ts
-import fs6 from "node:fs";
+import fs7 from "node:fs";
 function readVersionFile(versionFile) {
-  if (fs6.existsSync(versionFile)) {
-    return fs6.readFileSync(versionFile, "utf8").trim();
+  if (fs7.existsSync(versionFile)) {
+    return fs7.readFileSync(versionFile, "utf8").trim();
   }
   return "";
 }
 function readPackageJsonVersion(packageFile) {
-  if (!fs6.existsSync(packageFile)) return "";
+  if (!fs7.existsSync(packageFile)) return "";
   try {
-    const pkg = JSON.parse(fs6.readFileSync(packageFile, "utf8"));
+    const pkg = JSON.parse(fs7.readFileSync(packageFile, "utf8"));
     return pkg.version || "";
   } catch {
     return "";
   }
 }
 function readBuildMetadataFullVersion(metadataFile) {
-  if (!fs6.existsSync(metadataFile)) return "";
+  if (!fs7.existsSync(metadataFile)) return "";
   try {
-    const m = JSON.parse(fs6.readFileSync(metadataFile, "utf8"));
+    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
     return m.fullVersion || m.version || "";
   } catch {
     return "";
   }
 }
 function readBuildMetadataBaseVersion(metadataFile) {
-  if (!fs6.existsSync(metadataFile)) return "";
+  if (!fs7.existsSync(metadataFile)) return "";
   try {
-    const m = JSON.parse(fs6.readFileSync(metadataFile, "utf8"));
+    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
     return m.baseVersion || m.basePhase || m.version || "";
   } catch {
     return "";
   }
 }
 function readBuildMetadataHash(metadataFile, field = "canvaLinuxSourceHash") {
-  if (!fs6.existsSync(metadataFile)) return "";
+  if (!fs7.existsSync(metadataFile)) return "";
   try {
-    const m = JSON.parse(fs6.readFileSync(metadataFile, "utf8"));
+    const m = JSON.parse(fs7.readFileSync(metadataFile, "utf8"));
     return m[field] || "";
   } catch {
     return "";
@@ -2857,9 +3158,9 @@ function readBuildMetadataHash(metadataFile, field = "canvaLinuxSourceHash") {
 // build-resources/c420ui/operations/detection/appimage-detection.ts
 function detectAppImageArtifacts(rootDir2) {
   const distDir = path8.join(rootDir2, "dist");
-  if (!fs7.existsSync(distDir)) return false;
+  if (!fs8.existsSync(distDir)) return false;
   try {
-    const files = fs7.readdirSync(distDir);
+    const files = fs8.readdirSync(distDir);
     return files.some((file) => file.endsWith(".AppImage"));
   } catch {
     return false;
@@ -2867,9 +3168,9 @@ function detectAppImageArtifacts(rootDir2) {
 }
 function findLatestAppImageArtifact(rootDir2) {
   const distDir = path8.join(rootDir2, "dist");
-  if (!fs7.existsSync(distDir)) return "";
+  if (!fs8.existsSync(distDir)) return "";
   try {
-    const files = fs7.readdirSync(distDir).filter((file) => file.endsWith(".AppImage")).sort();
+    const files = fs8.readdirSync(distDir).filter((file) => file.endsWith(".AppImage")).sort();
     const latest = files[files.length - 1];
     return latest ? path8.join("dist", latest) : "";
   } catch {
@@ -2885,7 +3186,7 @@ function findArtifactBuildMetadataMarker(artifactPath, rootDir2) {
     `${absoluteArtifactPath}.version`
   ];
   for (const marker of markers) {
-    if (fs7.existsSync(marker)) return marker;
+    if (fs8.existsSync(marker)) return marker;
   }
   return "";
 }
@@ -2897,7 +3198,7 @@ function detectAppImageVersion(rootDir2) {
   const findMetadataInDist = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = fs7.readdirSync(dir, { withFileTypes: true });
+      const entries = fs8.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path8.join(dir, entry.name);
         if (entry.isDirectory()) {
@@ -2912,7 +3213,7 @@ function detectAppImageVersion(rootDir2) {
     return "";
   };
   const distDir = path8.join(rootDir2, "dist");
-  if (fs7.existsSync(distDir)) {
+  if (fs8.existsSync(distDir)) {
     const distMetadata = findMetadataInDist(distDir, 0);
     version = readBuildMetadataBaseVersion(distMetadata);
     if (version) return version;
@@ -2932,7 +3233,7 @@ function detectAppImageFullVersion(rootDir2) {
   const findMetadataInDist = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = fs7.readdirSync(dir, { withFileTypes: true });
+      const entries = fs8.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path8.join(dir, entry.name);
         if (entry.isDirectory()) {
@@ -2947,7 +3248,7 @@ function detectAppImageFullVersion(rootDir2) {
     return "";
   };
   const distDir = path8.join(rootDir2, "dist");
-  if (fs7.existsSync(distDir)) {
+  if (fs8.existsSync(distDir)) {
     const distMetadata = findMetadataInDist(distDir, 0);
     version = readBuildMetadataFullVersion(distMetadata);
     if (version) return version;
@@ -2962,7 +3263,7 @@ function detectAppImageHash(rootDir2) {
   const findMetadataInDist = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = fs7.readdirSync(dir, { withFileTypes: true });
+      const entries = fs8.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path8.join(dir, entry.name);
         if (entry.isDirectory()) {
@@ -2977,7 +3278,7 @@ function detectAppImageHash(rootDir2) {
     return "";
   };
   const distDir = path8.join(rootDir2, "dist");
-  if (fs7.existsSync(distDir)) {
+  if (fs8.existsSync(distDir)) {
     const distMetadata = findMetadataInDist(distDir, 0);
     hash = readBuildMetadataHash(distMetadata, "canvaLinuxSourceHash");
     if (hash) return hash;
@@ -2986,14 +3287,14 @@ function detectAppImageHash(rootDir2) {
 }
 
 // build-resources/c420ui/operations/detection/flatpak-detection.ts
-import fs8 from "node:fs";
+import fs9 from "node:fs";
 import path9 from "node:path";
 import os from "node:os";
-import { spawnSync as spawnSync2 } from "node:child_process";
+import { spawnSync as spawnSync3 } from "node:child_process";
 var APP_ID = "io.github.coletivo420.canva-linux";
 function detectFlatpakSystemInstall() {
   try {
-    const result = spawnSync2("flatpak", ["--system", "info", APP_ID], {
+    const result = spawnSync3("flatpak", ["--system", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -3003,7 +3304,7 @@ function detectFlatpakSystemInstall() {
 }
 function detectFlatpakUserInstall() {
   try {
-    const result = spawnSync2("flatpak", ["--user", "info", APP_ID], {
+    const result = spawnSync3("flatpak", ["--user", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -3014,13 +3315,13 @@ function detectFlatpakUserInstall() {
 function findFlatpakVersionMarker(scopeRoot) {
   const markerBase = `app/${APP_ID}/current/active/files/share/canva-linux/version`;
   const directPath = path9.join(scopeRoot, markerBase);
-  if (fs8.existsSync(directPath)) return directPath;
+  if (fs9.existsSync(directPath)) return directPath;
   const appDir = path9.join(scopeRoot, `app/${APP_ID}`);
-  if (!fs8.existsSync(appDir)) return "";
+  if (!fs9.existsSync(appDir)) return "";
   const findVersionMarker = (dir, depth) => {
     if (depth > 8) return "";
     try {
-      const entries = fs8.readdirSync(dir, { withFileTypes: true });
+      const entries = fs9.readdirSync(dir, { withFileTypes: true });
       for (const entry of entries) {
         const fullPath = path9.join(dir, entry.name);
         if (entry.isDirectory()) {
@@ -3037,9 +3338,9 @@ function findFlatpakVersionMarker(scopeRoot) {
   return findVersionMarker(appDir, 0);
 }
 function readFlatpakVersionMarkerKey(markerFile, key) {
-  if (!fs8.existsSync(markerFile)) return "";
+  if (!fs9.existsSync(markerFile)) return "";
   try {
-    const raw = fs8.readFileSync(markerFile, "utf8").trim();
+    const raw = fs9.readFileSync(markerFile, "utf8").trim();
     if (!raw) return "";
     if (raw.includes(`"${key}"`)) {
       const match = raw.match(new RegExp(`"${key}"\\s*:\\s*"([^"]+)"`));
@@ -3050,17 +3351,17 @@ function readFlatpakVersionMarkerKey(markerFile, key) {
   return "";
 }
 function readFlatpakVersionMarker(markerFile) {
-  if (!fs8.existsSync(markerFile)) return "";
+  if (!fs9.existsSync(markerFile)) return "";
   const version = readFlatpakVersionMarkerKey(markerFile, "version");
   if (version) return version;
   try {
-    return fs8.readFileSync(markerFile, "utf8").split("\n")[0]?.trim() ?? "";
+    return fs9.readFileSync(markerFile, "utf8").split("\n")[0]?.trim() ?? "";
   } catch {
     return "";
   }
 }
 function readFlatpakFullVersionMarker(markerFile) {
-  if (!fs8.existsSync(markerFile)) return "";
+  if (!fs9.existsSync(markerFile)) return "";
   const version = readFlatpakVersionMarkerKey(markerFile, "fullVersion");
   if (version) return version;
   return readFlatpakVersionMarker(markerFile);
@@ -3070,7 +3371,7 @@ function detectFlatpakSystemVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = spawnSync2(
+    const result = spawnSync3(
       "flatpak",
       ["--system", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }
@@ -3088,7 +3389,7 @@ function detectFlatpakUserVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = spawnSync2(
+    const result = spawnSync3(
       "flatpak",
       ["--user", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }
@@ -3129,17 +3430,17 @@ function detectFlatpakUserHash() {
 }
 
 // build-resources/c420ui/operations/detection/native-detection.ts
-import fs9 from "node:fs";
+import fs10 from "node:fs";
 import path10 from "node:path";
 import os2 from "node:os";
 var APP_EXECUTABLE = "canva-linux";
 var APP_NATIVE_DESKTOP_NAME = "io.github.coletivo420.canva-linux.native.desktop";
 function detectNativeSystemInstall() {
-  return fs9.existsSync("/opt/canva-linux") || fs9.existsSync(`/usr/local/bin/${APP_EXECUTABLE}`) || fs9.existsSync(`/usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME}`);
+  return fs10.existsSync("/opt/canva-linux") || fs10.existsSync(`/usr/local/bin/${APP_EXECUTABLE}`) || fs10.existsSync(`/usr/local/share/applications/${APP_NATIVE_DESKTOP_NAME}`);
 }
 function detectNativeUserInstall() {
   const home = os2.homedir();
-  return fs9.existsSync(path10.join(home, ".local/opt/canva-linux")) || fs9.existsSync(path10.join(home, `.local/bin/${APP_EXECUTABLE}`)) || fs9.existsSync(
+  return fs10.existsSync(path10.join(home, ".local/opt/canva-linux")) || fs10.existsSync(path10.join(home, `.local/bin/${APP_EXECUTABLE}`)) || fs10.existsSync(
     path10.join(home, `.local/share/applications/${APP_NATIVE_DESKTOP_NAME}`)
   );
 }
@@ -3228,7 +3529,7 @@ function readPackage(rootDir2) {
     return cachedPackageJson.packageJson;
   }
   const packageJson = JSON.parse(
-    fs10.readFileSync(path11.join(rootDir2, "package.json"), "utf8")
+    fs11.readFileSync(path11.join(rootDir2, "package.json"), "utf8")
   );
   cachedPackageJson = {
     rootDir: rootDir2,
@@ -3289,8 +3590,8 @@ var emptyInstallations = {
 function readPhase(rootDir2) {
   const projectUiPath = path11.join(rootDir2, "build-resources/canva-linux/config/project-ui.json");
   try {
-    if (!fs10.existsSync(projectUiPath)) return "unknown";
-    const projectUi = JSON.parse(fs10.readFileSync(projectUiPath, "utf8"));
+    if (!fs11.existsSync(projectUiPath)) return "unknown";
+    const projectUi = JSON.parse(fs11.readFileSync(projectUiPath, "utf8"));
     return projectUi.phase ?? "unknown";
   } catch {
     return "unknown";
@@ -3396,7 +3697,7 @@ function buildCanvaLinuxOverviewStatus(rootDir2 = findCanvaLinuxProjectRoot()) {
 
 // build-resources/canva-linux/c420ui-adapter/build-metadata-loader.ts
 import { execFileSync as execFileSync2 } from "node:child_process";
-import fs12 from "node:fs";
+import fs13 from "node:fs";
 import path13 from "node:path";
 
 // build-resources/electron/main/build-metadata.ts
@@ -3410,7 +3711,7 @@ __export(build_metadata_exports, {
   normalizeBuildRevision: () => normalizeBuildRevision,
   normalizeLoadedBuildMetadata: () => normalizeLoadedBuildMetadata
 });
-import fs11 from "node:fs";
+import fs12 from "node:fs";
 import path12 from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -3463,7 +3764,7 @@ function createBuildMetadata(input) {
 }
 function readJsonFile2(filePath) {
   try {
-    return JSON.parse(fs11.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs12.readFileSync(filePath, "utf8"));
   } catch {
     return null;
   }
@@ -3534,13 +3835,13 @@ var UNKNOWN_BASE_VERSION2 = "0.0.0";
 var UNKNOWN_BUILD_REVISION2 = "unknown";
 function readJsonFile3(filePath) {
   try {
-    return JSON.parse(fs12.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs13.readFileSync(filePath, "utf8"));
   } catch {
     return null;
   }
 }
 function hasGitRepository(rootDir2) {
-  return fs12.existsSync(path13.join(rootDir2, ".git"));
+  return fs13.existsSync(path13.join(rootDir2, ".git"));
 }
 function resolveEnvBuildRevision() {
   for (const key of [
@@ -3632,11 +3933,11 @@ function loadEffectiveBuildMetadata(rootDir2, options = {}) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
-import fs14 from "node:fs";
+import fs15 from "node:fs";
 import path15 from "node:path";
 
 // build-resources/canva-linux/actions/registry.ts
-import fs13 from "node:fs";
+import fs14 from "node:fs";
 import path14 from "node:path";
 var ACTION_GROUPS = ["install", "development", "maintenance"];
 var ACTION_SECTIONS = [
@@ -3683,7 +3984,7 @@ function loadCanvaLinuxActionRegistry(rootDir2 = findProjectRoot()) {
   const resolvedRoot = path14.resolve(rootDir2);
   if (cachedActions && cachedRoot === resolvedRoot) return cachedActions;
   const actions = JSON.parse(
-    fs13.readFileSync(actionsPath(resolvedRoot), "utf8")
+    fs14.readFileSync(actionsPath(resolvedRoot), "utf8")
   );
   validateCanvaLinuxActions(actions);
   cachedRoot = resolvedRoot;
@@ -3718,11 +4019,11 @@ function loadCanvaLinuxC420UIActions(rootDir2) {
 // build-resources/canva-linux/c420ui-adapter/artifacts.ts
 var ARTIFACTS_CONFIG_PATH2 = "build-resources/canva-linux/config/artifacts.json";
 function readJsonFile4(filePath) {
-  if (!fs14.existsSync(filePath)) {
+  if (!fs15.existsSync(filePath)) {
     throw new Error(`Missing Canva Linux configuration file: ${filePath}`);
   }
   try {
-    return JSON.parse(fs14.readFileSync(filePath, "utf8"));
+    return JSON.parse(fs15.readFileSync(filePath, "utf8"));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Failed to parse configuration file ${filePath}: ${message}`);
@@ -3756,10 +4057,10 @@ function loadCanvaLinuxArtifactWorkflows(rootDir2, version) {
 }
 
 // build-resources/canva-linux/c420ui-adapter/development.ts
-import fs15 from "node:fs";
+import fs16 from "node:fs";
 import path16 from "node:path";
 function readJsonFile5(filePath) {
-  return JSON.parse(fs15.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs16.readFileSync(filePath, "utf8"));
 }
 function loadCanvaLinuxDevelopmentTasks(rootDir2) {
   const developmentConfigPath = path16.join(
@@ -3795,7 +4096,7 @@ function loadCanvaLinuxDevelopmentWorkflows(rootDir2, actions = loadCanvaLinuxC4
 
 // build-resources/canva-linux/c420ui-adapter/adapter.ts
 function readJsonFile6(filePath) {
-  return JSON.parse(fs16.readFileSync(filePath, "utf8"));
+  return JSON.parse(fs17.readFileSync(filePath, "utf8"));
 }
 function stateHome() {
   const xdgStateHome = process.env.XDG_STATE_HOME?.trim();
@@ -3923,7 +4224,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return toolSettingsPath(loadProjectUi().stateDirectoryName);
   }
   function loadCanvaLinuxActions2() {
-    if (!fs16.existsSync(actionsJsonPath)) {
+    if (!fs17.existsSync(actionsJsonPath)) {
       throw new Error(`Missing Canva Linux actions registry: ${actionsJsonPath}`);
     }
     return loadCanvaLinuxC420UIActions(resolvedRootDir);

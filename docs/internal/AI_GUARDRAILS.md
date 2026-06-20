@@ -7,6 +7,11 @@ TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it
 must match the legacy layout, theme, panels, focus behavior, footer, progress
 bar, logs, and root prompt before the TypeScript TUI can be removed.
 
+Dev12 also requires legacy interaction parity in the Rust TUI: keyboard
+shortcuts, panel scrolling, settings toggles, F5 log copy, root prompt retries,
+session log behavior and post-action status refresh belong to `c420ui-tui`.
+Do not bring the TypeScript/Blessed TUI back as a runtime backend.
+
 ## Dev11 ESM-only guardrails (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

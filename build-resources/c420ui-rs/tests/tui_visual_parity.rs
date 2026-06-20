@@ -183,6 +183,30 @@ fn test_render_root_modal() {
 
     assert!(text.contains("Administrator authorization"));
     assert!(text.contains("Enter your sudo password to continue."));
+    assert!(text.contains("[Enter] Submit"));
+    assert!(text.contains("[Esc] Cancel"));
+}
+
+#[test]
+fn test_render_exit_confirmation_modal() {
+    let backend = TestBackend::new(80, 24);
+    let mut terminal = Terminal::new(backend).unwrap();
+    let mut state = create_test_state();
+    state.set_exit_confirmation();
+
+    renderer::render(&mut terminal, &state).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let text: String = buffer
+        .content
+        .iter()
+        .map(|c| c.symbol().to_string())
+        .collect();
+
+    assert!(text.contains("Exit Application"));
+    assert!(text.contains("Exit c420ui?"));
+    assert!(text.contains("[y/Enter] Confirm"));
+    assert!(text.contains("[Esc/n] Cancel"));
 }
 
 #[test]

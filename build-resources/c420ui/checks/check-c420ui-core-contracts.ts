@@ -1812,6 +1812,28 @@ function checkRustTuiContract(failures: string[]): void {
   if (!rustTuiRunner.includes("input?: string") || !rustTuiRunner.includes("validateRootAccessWithInput")) {
     failures.push(`${rustTuiRunnerPath}: root-request-response must support secret input validation`);
   }
+  for (const [fragment, message] of [
+    ["CopyLogs", "c420ui-tui must support F5/copy-logs event"],
+    ["SettingToggle", "c420ui-tui must support setting-toggle event"],
+    ["TuiInputEvent::Help", "c420ui-tui must support help shortcut"],
+    ["PageUp", "c420ui-tui must support scroll keys"],
+    ["menu_scroll", "c420ui-tui must preserve panel scroll state"],
+  ] as const) {
+    if (!rustTuiRuntime.includes(fragment) && !rustTuiState.includes(fragment) && !rustWidgets.includes(fragment) && !rustTuiRunner.includes(fragment)) {
+      failures.push(message);
+    }
+  }
+  for (const [fragment, message] of [
+    ["MAX_LOG_HISTORY_LINES", "rust-tui-runner must preserve bounded log history"],
+    ["copyTextToClipboard", "rust-tui-runner must process copy-logs"],
+    ["saveToolSettings", "rust-tui-runner must persist setting-toggle"],
+    ["Root authentication failed", "rust-tui-runner must retry root input without logging secrets"],
+    ["renderState(getCurrentView())", "rust-tui-runner must refresh panels after actions without losing view"],
+  ] as const) {
+    if (!rustTuiRunner.includes(fragment)) {
+      failures.push(`${rustTuiRunnerPath}: ${message}`);
+    }
+  }
   if (!rustWidgets.includes("Tool | ") || !rustWidgets.includes("Action | ")) {
     failures.push(`${rustWidgetsPath}: logs must preserve legacy Tool | and Action | prefixes`);
   }

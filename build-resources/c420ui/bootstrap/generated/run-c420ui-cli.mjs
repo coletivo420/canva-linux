@@ -888,6 +888,19 @@ function createC420UIActionEngine(options) {
   };
 }
 
+// build-resources/c420ui/src/terminal/settings.ts
+import path2 from "node:path";
+function configHome() {
+  const xdgConfigHome = process.env.XDG_CONFIG_HOME?.trim();
+  if (xdgConfigHome) {
+    return xdgConfigHome;
+  }
+  return path2.join(process.env.HOME || ".", ".config");
+}
+function toolSettingsPath(stateDirectoryName) {
+  return path2.join(configHome(), stateDirectoryName, "tool-settings.json");
+}
+
 // build-resources/c420ui/src/theme.json
 var theme_default = {
   palette: {
@@ -1126,7 +1139,7 @@ async function runC420UICommand(options) {
 }
 
 // build-resources/c420ui/src/artifacts.ts
-import path2 from "node:path";
+import path3 from "node:path";
 var artifactCapabilityFields = [
   "supportsArtifacts",
   "supportsInstall",
@@ -1217,7 +1230,7 @@ function isRootManagedArtifactActionField(field) {
   return field === "installActionId" || field === "uninstallActionId" || field === "purgeActionId";
 }
 function toConfigPath(configPath) {
-  return path2.normalize(configPath.replace(/^[\\/]+/, ""));
+  return path3.normalize(configPath.replace(/^[\\/]+/, ""));
 }
 function assertC420UIArtifactRecipeConfig(config, context = "artifact recipe config") {
   if (!isRecord3(config)) throw new Error(`${context}: artifacts config must be an object`);
@@ -1466,19 +1479,6 @@ var c420uiLogoLines = [
   "\u2588   \u2580\u2584\u2588  \u2584\u2580 \u2588 \u2588  \u2588 \u2588  \u2588",
   "\u2580\u2580    \u2588 \u2588\u2584\u2584  \u2580   \u2580\u2584\u2580  \u2580"
 ];
-
-// build-resources/c420ui/src/terminal/settings.ts
-import path3 from "node:path";
-function configHome() {
-  const xdgConfigHome = process.env.XDG_CONFIG_HOME?.trim();
-  if (xdgConfigHome) {
-    return xdgConfigHome;
-  }
-  return path3.join(process.env.HOME || ".", ".config");
-}
-function toolSettingsPath(stateDirectoryName) {
-  return path3.join(configHome(), stateDirectoryName, "tool-settings.json");
-}
 
 // build-resources/canva-linux/c420ui-adapter/detection/provider.ts
 import fs8 from "node:fs";

@@ -100,8 +100,7 @@ fn run_loop<B: ratatui::backend::Backend>(
     while let Ok(event) = receiver.recv() {
         match event {
             RuntimeEvent::Protocol(protocol) => match *protocol {
-                TuiRuntimeInputEvent::Init { state: render }
-                | TuiRuntimeInputEvent::State { state: render } => {
+                TuiRuntimeInputEvent::Init { state: render } => {
                     state = Some(TuiRuntimeState::new(render));
                     write_event(&TuiRuntimeOutputEvent::Ready)?;
                     if let Some(state) = &state {
@@ -117,6 +116,18 @@ fn run_loop<B: ratatui::backend::Backend>(
                         }
                         write_event(&TuiRuntimeOutputEvent::Quit)?;
                         return Ok(());
+                    }
+                }
+                TuiRuntimeInputEvent::State { state: render } => {
+                    if let Some(state) = state.as_mut() {
+                        state.replace_render(render);
+                    } else {
+                        state = Some(TuiRuntimeState::new(render));
+                    }
+                    if let Some(state) = &state {
+                        if !headless_test {
+                            renderer::render(terminal, state).map_err(|e| e.to_string())?;
+                        }
                     }
                 }
                 TuiRuntimeInputEvent::Progress {
@@ -144,10 +155,21 @@ fn run_loop<B: ratatui::backend::Backend>(
                 if let Some(state) = state.as_mut() {
                     if state.render.modal.is_some() {
                         match input {
+                            TuiInputEvent::Char('y') if state.is_exit_confirmation() => {
+                                write_event(&TuiRuntimeOutputEvent::Quit)?;
+                                return Ok(());
+                            }
+                            TuiInputEvent::Char('n') if state.is_exit_confirmation() => {
+                                state.clear_modal();
+                            }
                             TuiInputEvent::Char(c) => state.push_char(c),
                             TuiInputEvent::Backspace => state.pop_char(),
                             TuiInputEvent::Select => {
-                                if let Some(request) = state.take_pending_root_request() {
+                                if state.is_exit_confirmation() {
+                                    write_event(&TuiRuntimeOutputEvent::Quit)?;
+                                    return Ok(());
+                                }
+                                if let Some(request) = state.pending_root_request() {
                                     let typed_input = if state.modal_input.is_empty() {
                                         None
                                     } else {
@@ -169,6 +191,8 @@ fn run_loop<B: ratatui::backend::Backend>(
                                         accepted: false,
                                         input: None,
                                     })?;
+                                } else if state.is_exit_confirmation() {
+                                    state.clear_modal();
                                 }
                             }
                             _ => {}
@@ -179,21 +203,45 @@ fn run_loop<B: ratatui::backend::Backend>(
                             TuiInputEvent::Previous => state.select_previous(),
                             TuiInputEvent::FocusNext => state.next_focus(),
                             TuiInputEvent::FocusPrevious => state.previous_focus(),
+                            TuiInputEvent::PageUp => state.scroll_focused_panel(-5),
+                            TuiInputEvent::PageDown => state.scroll_focused_panel(5),
+                            TuiInputEvent::Home => state.scroll_focused_to_top(),
+                            TuiInputEvent::End => state.scroll_focused_to_bottom(),
+                            TuiInputEvent::ScrollContentUp => state.scroll_content_panel(-5),
+                            TuiInputEvent::ScrollContentDown => state.scroll_content_panel(5),
+                            TuiInputEvent::CopyLogs => {
+                                write_event(&TuiRuntimeOutputEvent::CopyLogs)?
+                            }
+                            TuiInputEvent::Help => {
+                                state.open_help();
+                                write_event(&TuiRuntimeOutputEvent::Help)?;
+                                write_event(&TuiRuntimeOutputEvent::ViewChanged {
+                                    view: state.render.view.clone(),
+                                    selected: state.render.menu.selected,
+                                })?;
+                            }
                             TuiInputEvent::Char('j') => state.select_next(),
                             TuiInputEvent::Char('k') => state.select_previous(),
                             TuiInputEvent::Char('q') => {
-                                write_event(&TuiRuntimeOutputEvent::Quit)?;
-                                return Ok(());
+                                state.set_exit_confirmation();
+                            }
+                            TuiInputEvent::Toggle => {
+                                if let Some(setting) = setting_for_selected_item(state) {
+                                    write_event(&TuiRuntimeOutputEvent::SettingToggle { setting })?;
+                                }
                             }
                             TuiInputEvent::Select | TuiInputEvent::Char('y') => {
                                 let old_view = state.render.view.clone();
-                                if let Some(action_id) = state.enter_selected() {
+                                if let Some(setting) = setting_for_selected_item(state) {
+                                    write_event(&TuiRuntimeOutputEvent::SettingToggle { setting })?;
+                                } else if let Some(action_id) = state.enter_selected() {
                                     write_event(&TuiRuntimeOutputEvent::ActionSelected {
                                         action_id,
                                     })?;
                                 } else if state.render.view != old_view {
                                     write_event(&TuiRuntimeOutputEvent::ViewChanged {
                                         view: state.render.view.clone(),
+                                        selected: state.render.menu.selected,
                                     })?;
                                 }
                             }
@@ -202,9 +250,12 @@ fn run_loop<B: ratatui::backend::Backend>(
                             | TuiInputEvent::Char('n') => {
                                 if state.render.view != crate::tui::contracts::TuiView::Main {
                                     state.go_back();
+                                    write_event(&TuiRuntimeOutputEvent::ViewChanged {
+                                        view: state.render.view.clone(),
+                                        selected: state.render.menu.selected,
+                                    })?;
                                 } else {
-                                    write_event(&TuiRuntimeOutputEvent::Cancel)?;
-                                    return Ok(());
+                                    state.set_exit_confirmation();
                                 }
                             }
                             _ => {}
@@ -256,6 +307,19 @@ fn handle_non_state_protocol(
                 state.set_status(format!("Finished {}: {} ({})", action_id, status, code));
             }
         }
+        TuiRuntimeInputEvent::RootRequestResult {
+            request_id,
+            ok,
+            message,
+        } => {
+            if let Some(state) = state {
+                if ok {
+                    state.root_request_succeeded(&request_id);
+                } else {
+                    state.root_request_failed(&request_id, message);
+                }
+            }
+        }
         TuiRuntimeInputEvent::RootRequest {
             request_id,
             action_id,
@@ -273,6 +337,14 @@ fn handle_non_state_protocol(
         _ => {}
     }
     Ok(())
+}
+
+fn setting_for_selected_item(state: &TuiRuntimeState) -> Option<String> {
+    match state.selected_setting_id()? {
+        "settings-general" => Some("generalLogsEnabled".to_string()),
+        "settings-text-selection" => Some("terminalTextSelectionMode".to_string()),
+        _ => None,
+    }
 }
 
 fn write_event(event: &TuiRuntimeOutputEvent) -> Result<(), String> {

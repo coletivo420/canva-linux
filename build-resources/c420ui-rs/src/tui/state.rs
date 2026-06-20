@@ -1,10 +1,11 @@
 use super::contracts::{TuiFocusZone, TuiProgress, TuiRenderInput, TuiView};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PendingRootRequest {
     pub request_id: String,
     pub action_id: String,
     pub reason: String,
+    pub attempts: u8,
 }
 
 #[derive(Debug)]
@@ -13,6 +14,10 @@ pub struct TuiRuntimeState {
     pub status: Option<String>,
     pub pending_root_request: Option<PendingRootRequest>,
     pub modal_input: String,
+    pub menu_scroll: u16,
+    pub diagnostics_scroll: u16,
+    pub content_scroll: u16,
+    pub logs_scroll: u16,
 }
 
 impl TuiRuntimeState {
@@ -22,10 +27,25 @@ impl TuiRuntimeState {
             status: None,
             pending_root_request: None,
             modal_input: String::new(),
+            menu_scroll: 0,
+            diagnostics_scroll: 0,
+            content_scroll: 0,
+            logs_scroll: 0,
         }
     }
 
-    pub fn replace_render(&mut self, render: TuiRenderInput) {
+    pub fn replace_render(&mut self, mut render: TuiRenderInput) {
+        if self.render.view == render.view {
+            render.focus_zone = self.render.focus_zone.clone();
+            if !render.menu.items.is_empty() {
+                render.menu.selected = self.render.menu.selected.min(render.menu.items.len() - 1);
+            }
+        } else {
+            self.reset_scroll_on_view_change();
+        }
+        if self.render.modal.is_some() && render.modal.is_none() {
+            render.modal = self.render.modal.take();
+        }
         self.render = render;
     }
 
@@ -44,17 +64,25 @@ impl TuiRuntimeState {
         }
         self.render.menu.selected =
             (self.render.menu.selected + 1).min(self.render.menu.items.len() - 1);
+        self.menu_scroll = self.render.menu.selected.saturating_sub(1) as u16;
     }
 
     pub fn select_previous(&mut self) {
         self.render.menu.selected = self.render.menu.selected.saturating_sub(1);
+        self.menu_scroll = self.render.menu.selected.saturating_sub(1) as u16;
     }
 
     pub fn enter_selected(&mut self) -> Option<String> {
         let item = self.render.menu.items.get(self.render.menu.selected)?;
+        if self.render.view == TuiView::Help && item.view != Some(TuiView::Main) {
+            return None;
+        }
         if let Some(view) = &item.view {
             self.render.view = view.clone();
             self.render.menu.selected = 0;
+            self.reset_scroll_on_view_change();
+            None
+        } else if self.render.view == TuiView::Settings {
             None
         } else {
             item.action_id.clone()
@@ -65,6 +93,15 @@ impl TuiRuntimeState {
         if self.render.view != TuiView::Main {
             self.render.view = TuiView::Main;
             self.render.menu.selected = 0;
+            self.reset_scroll_on_view_change();
+        }
+    }
+
+    pub fn open_help(&mut self) {
+        if self.render.view != TuiView::Help {
+            self.render.view = TuiView::Help;
+            self.render.menu.selected = 0;
+            self.reset_scroll_on_view_change();
         }
     }
 
@@ -105,12 +142,16 @@ impl TuiRuntimeState {
             request_id,
             action_id: action_id.clone(),
             reason: reason.clone(),
+            attempts: 0,
         });
         self.render.modal = Some(super::contracts::TuiModal {
             kind: super::contracts::TuiModalKind::Input,
             title: "Administrator authorization".to_string(),
-            message: format!("Action: {}\nReason: {}", action_id, reason),
-            dangerous: Some(true),
+            message: format!(
+                "{}\n\nEnter your sudo password to continue.\nReason: {}",
+                action_id, reason
+            ),
+            dangerous: Some(false),
             secret: Some(true),
         });
         self.modal_input.clear();
@@ -119,6 +160,126 @@ impl TuiRuntimeState {
     pub fn take_pending_root_request(&mut self) -> Option<PendingRootRequest> {
         self.render.modal = None;
         self.pending_root_request.take()
+    }
+
+    pub fn pending_root_request(&self) -> Option<PendingRootRequest> {
+        self.pending_root_request.clone()
+    }
+
+    pub fn root_request_succeeded(&mut self, request_id: &str) {
+        if self
+            .pending_root_request
+            .as_ref()
+            .is_some_and(|request| request.request_id == request_id)
+        {
+            self.pending_root_request = None;
+            self.render.modal = None;
+            self.modal_input.clear();
+        }
+    }
+
+    pub fn root_request_failed(&mut self, request_id: &str, message: Option<String>) {
+        if let Some(request) = self.pending_root_request.as_mut() {
+            if request.request_id != request_id {
+                return;
+            }
+            request.attempts = request.attempts.saturating_add(1);
+            self.modal_input.clear();
+            let remaining = 3u8.saturating_sub(request.attempts);
+            if remaining == 0 {
+                self.status = Some("Root access failed after 3 attempts.".to_string());
+                self.pending_root_request = None;
+                self.render.modal = None;
+                return;
+            }
+            let warning = message.unwrap_or_else(|| "Root authentication failed.".to_string());
+            self.render.modal = Some(super::contracts::TuiModal {
+                kind: super::contracts::TuiModalKind::Input,
+                title: "Administrator authorization".to_string(),
+                message: format!(
+                    "{}\n\n{}\nAttempts remaining: {}\n\nEnter your sudo password to continue.\nReason: {}",
+                    request.action_id, warning, remaining, request.reason
+                ),
+                dangerous: Some(false),
+                secret: Some(true),
+            });
+        }
+    }
+
+    pub fn set_exit_confirmation(&mut self) {
+        self.render.modal = Some(super::contracts::TuiModal {
+            kind: super::contracts::TuiModalKind::Confirm,
+            title: "Exit Application".to_string(),
+            message: "Exit c420ui?\n\nRunning actions will be canceled.".to_string(),
+            dangerous: Some(false),
+            secret: Some(false),
+        });
+    }
+
+    pub fn clear_modal(&mut self) {
+        self.render.modal = None;
+        self.modal_input.clear();
+    }
+
+    pub fn is_exit_confirmation(&self) -> bool {
+        self.pending_root_request.is_none()
+            && self
+                .render
+                .modal
+                .as_ref()
+                .is_some_and(|modal| modal.kind == super::contracts::TuiModalKind::Confirm)
+    }
+
+    pub fn selected_setting_id(&self) -> Option<&str> {
+        if self.render.view != TuiView::Settings {
+            return None;
+        }
+        self.render
+            .menu
+            .items
+            .get(self.render.menu.selected)
+            .map(|item| item.id.as_str())
+    }
+
+    pub fn scroll_focused_panel(&mut self, delta: i16) {
+        let offset = self.focused_scroll_mut();
+        if delta.is_negative() {
+            *offset = offset.saturating_sub(delta.unsigned_abs());
+        } else {
+            *offset = offset.saturating_add(delta as u16);
+        }
+    }
+
+    pub fn scroll_content_panel(&mut self, delta: i16) {
+        if delta.is_negative() {
+            self.content_scroll = self.content_scroll.saturating_sub(delta.unsigned_abs());
+        } else {
+            self.content_scroll = self.content_scroll.saturating_add(delta as u16);
+        }
+    }
+
+    pub fn scroll_focused_to_top(&mut self) {
+        *self.focused_scroll_mut() = 0;
+    }
+
+    pub fn scroll_focused_to_bottom(&mut self) {
+        *self.focused_scroll_mut() = u16::MAX / 2;
+    }
+
+    pub fn reset_scroll_on_view_change(&mut self) {
+        self.menu_scroll = 0;
+        self.diagnostics_scroll = 0;
+        self.content_scroll = 0;
+        self.logs_scroll = 0;
+    }
+
+    fn focused_scroll_mut(&mut self) -> &mut u16 {
+        match self.render.focus_zone {
+            TuiFocusZone::Menu => &mut self.menu_scroll,
+            TuiFocusZone::Diagnostics => &mut self.diagnostics_scroll,
+            TuiFocusZone::Content => &mut self.content_scroll,
+            TuiFocusZone::Logs => &mut self.logs_scroll,
+        }
     }
 
     pub fn push_char(&mut self, c: char) {

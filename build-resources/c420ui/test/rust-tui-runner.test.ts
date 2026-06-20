@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
 import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { PassThrough } from "node:stream";
 import test from "node:test";
 
@@ -180,6 +182,97 @@ test("runner maps action-selected to Action Engine execution and forwards events
   assert.ok(events.some((event) => event.event === "action-finish"));
 });
 
+test("runner writes session log and refreshes panels after actions", async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-rust-runner-"));
+  const sessionLogPath = path.join(tempDir, "tool-session.log");
+  let overviewCalls = 0;
+  const options = createRunnerOptions({
+    runAction: async (_actionId, context) => {
+      context.emitLog({ source: "stdout", line: "installing" });
+      return { code: 0, status: "success", message: "installed" };
+    },
+  });
+  options.config.sessionLogPath = sessionLogPath;
+  options.bridge.overviewStatus = async () => {
+    overviewCalls += 1;
+    return null;
+  };
+  const { child, writes } = startRunner(options);
+
+  child.stdout.write('{"event":"action-selected","actionId":"install-native"}\n');
+
+  await waitFor(
+    () =>
+      parseWrites(writes).some(
+        (event) => event.event === "state" && overviewCalls > 0,
+      )
+        ? true
+        : undefined,
+    "post-action state refresh",
+  );
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  const sessionLog = fs.readFileSync(sessionLogPath, "utf8");
+  assert.match(sessionLog, /\[mode\] c420ui/);
+  assert.match(sessionLog, /\[action\] install-native Install native/);
+  assert.match(sessionLog, /\[stdout\] installing/);
+  assert.match(sessionLog, /\[action\] installed/);
+});
+
+test("runner processes copy-logs from c420ui-tui", async () => {
+  const { child, writes } = startRunner();
+
+  child.stdout.write('{"event":"copy-logs"}\n');
+
+  const events = await waitFor(() => {
+    const parsed = parseWrites(writes);
+    return parsed.find(
+      (event) =>
+        event.event === "log" && String(event.line).toLowerCase().includes("logs"),
+    );
+  }, "copy logs response");
+  assert.equal(events?.source, "system");
+});
+
+test("runner persists setting toggles", async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-settings-"));
+  const oldConfigHome = process.env.XDG_CONFIG_HOME;
+  process.env.XDG_CONFIG_HOME = tempDir;
+  try {
+    const { child, writes } = startRunner();
+
+    child.stdout.write(
+      '{"event":"setting-toggle","setting":"terminalTextSelectionMode"}\n',
+    );
+
+    const state = await waitFor(
+      () =>
+        parseWrites(writes).find(
+          (event) =>
+            event.event === "state" &&
+            (event.state as { footer?: { textSelectionMode?: boolean } }).footer
+              ?.textSelectionMode === true,
+        ),
+      "settings state refresh",
+    );
+    assert.equal(
+      (state.state as { footer: { items: string[] } }).footer.items[0],
+      "Text selection mode enabled",
+    );
+    const settingsFile = path.join(
+      tempDir,
+      "example-project",
+      "tool-settings.json",
+    );
+    assert.match(fs.readFileSync(settingsFile, "utf8"), /terminalTextSelectionMode": true/);
+  } finally {
+    if (oldConfigHome === undefined) {
+      delete process.env.XDG_CONFIG_HOME;
+    } else {
+      process.env.XDG_CONFIG_HOME = oldConfigHome;
+    }
+  }
+});
+
 test("runner handles quit from c420ui-tui", async () => {
   const { child, exitCodes } = startRunner({
     exit(code) {
@@ -242,6 +335,72 @@ test("runner handles root requests through the root provider", async () => {
   await waitFor(() => actionEnv, "root action env");
   assert.equal(validatedRoot, true);
   assert.equal(actionEnv?.ROOT_ENV, "1");
+});
+
+test("runner retries root input without logging the secret", async () => {
+  let attempts = 0;
+  const rootProvider: c420uiRootProvider = {
+    id: "test-root",
+    label: "Test Root",
+    buildActionEnvironment(_action, env) {
+      return env;
+    },
+    validateActionScope() {
+      return { ok: true };
+    },
+    resolveRootPolicy() {
+      return { requiresRoot: true, reason: "System install requires root" };
+    },
+    validateRootAccessWithInput(_rootDir, _env, input) {
+      attempts += 1;
+      if (input === "correct-password") return { ok: true };
+      return { ok: false, code: 1, message: "Wrong password" };
+    },
+    validateRootAccess() {
+      return { ok: false, code: 1, message: "Password required" };
+    },
+    buildRootActionEnvironment(_action, env) {
+      return env;
+    },
+  };
+  const { child, writes } = startRunner({
+    actions: [createAction({ requiresRoot: true })],
+    rootProvider,
+  });
+
+  child.stdout.write('{"event":"action-selected","actionId":"install-native"}\n');
+  const rootRequest = await waitFor(
+    () => parseWrites(writes).find((event) => event.event === "root-request"),
+    "root request",
+  );
+  child.stdout.write(
+    `${JSON.stringify({
+      event: "root-request-response",
+      requestId: rootRequest.requestId,
+      accepted: true,
+      input: "wrong-password",
+    })}\n`,
+  );
+  await waitFor(
+    () =>
+      parseWrites(writes).find(
+        (event) => event.event === "root-request-result" && event.ok === false,
+      ),
+    "failed root request result",
+  );
+  child.stdout.write(
+    `${JSON.stringify({
+      event: "root-request-response",
+      requestId: rootRequest.requestId,
+      accepted: true,
+      input: "correct-password",
+    })}\n`,
+  );
+
+  await waitFor(() => (attempts === 2 ? true : undefined), "root retry");
+  const serialized = writes.join("\n");
+  assert.equal(serialized.includes("wrong-password"), false);
+  assert.equal(serialized.includes("correct-password"), false);
 });
 
 test("runner fails clearly when c420ui-tui is missing", () => {

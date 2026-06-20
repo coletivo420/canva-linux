@@ -19,10 +19,20 @@ import {
   runC420UIStartupTasks,
   type c420uiStartupTask,
 } from "./startup-task.js";
+import { copyTextToClipboard } from "./terminal/clipboard.js";
 import type { C420UIAppOptions } from "./terminal/app.js";
 import { formatDetectionPanelSummaries } from "./terminal/detected-installations-summary.js";
+import {
+  loadToolSettings,
+  saveToolSettings,
+  type ToolSettings,
+} from "./terminal/settings.js";
 import { c420uiTheme } from "./terminal/theme.js";
 import type { c420uiRootProvider } from "./root-provider.js";
+
+const MAX_LOG_HISTORY_LINES = 5000;
+const ROOT_PROMPT_MAX_ATTEMPTS = 3;
+const ROOT_PROMPT_TIMEOUT_MS = 30_000;
 
 type C420UITuiChildProcess = {
   stdin: Writable;
@@ -54,12 +64,26 @@ type C420UITuiRuntimeInput =
       actionId: string;
       reason: string;
     }
+  | {
+      event: "root-request-result";
+      requestId: string;
+      ok: boolean;
+      message?: string;
+    }
   | { event: "error"; message: string };
 
 type C420UITuiRuntimeOutput =
   | { event: "ready" }
   | { event: "action-selected"; actionId: string }
-  | { event: "view-changed"; view: C420UITuiRenderInput["view"] }
+  | {
+      event: "view-changed";
+      view: C420UITuiRenderInput["view"];
+      selected?: number;
+    }
+  | { event: "copy-logs" }
+  | { event: "help" }
+  | { event: "toggle" }
+  | { event: "setting-toggle"; setting: string }
   | { event: "quit" }
   | { event: "cancel" }
   | {
@@ -86,6 +110,11 @@ export function runC420UIRustTuiApp(
   const writeError = options.writeError ?? console.error;
   const exit = options.exit ?? (process.exit as (code: number) => never);
   const abortController = new AbortController();
+  const toolSettings = loadToolSettings(options.config.project.stateDirectoryName);
+  const logHistory: C420UITuiRenderInput["logs"] = [];
+  const sessionLogPath = resolveSessionLogPath(options);
+  const sessionStream = openSessionStream(sessionLogPath, writeError);
+  let currentView: C420UITuiRenderInput["view"] = "main";
   const pendingRootRequests = new Map<
     string,
     (response: { accepted: boolean; input?: string }) => void
@@ -113,6 +142,9 @@ export function runC420UIRustTuiApp(
   const send = (event: C420UITuiRuntimeInput): void => {
     child.stdin.write(`${JSON.stringify(event)}\n`);
   };
+  const sendLog = (source: string, line: string, level?: string): void => {
+    appendLogLine({ source, line, level }, { logHistory, send, sessionStream, toolSettings });
+  };
 
   const actions = options.bridge.actions();
   const theme = {
@@ -127,10 +159,13 @@ export function runC420UIRustTuiApp(
       actions: options.bridge.actions(),
       theme,
       view,
-      panels: await createLegacyPanels(options),
+      menu: view === "settings" ? createSettingsMenu(toolSettings) : undefined,
+      panels: await createLegacyPanels(options, logHistory, toolSettings),
+      footer: createFooter(toolSettings),
     });
 
-  send({ event: "init", state: createInitialRenderState(options, actions, theme) });
+  writeSession(sessionStream, "[mode] c420ui");
+  send({ event: "init", state: createInitialRenderState(options, actions, theme, toolSettings) });
   void renderState("main").then((state) => send({ event: "state", state }));
 
   const engine = createC420UIActionEngine({
@@ -142,11 +177,12 @@ export function runC420UIRustTuiApp(
       requestRootAccessThroughTui(
         request,
         send,
+        sendLog,
         pendingRootRequests,
         options.rootProvider,
       ),
     emit(event) {
-      forwardActionEngineEvent(event, send);
+      forwardActionEngineEvent(event, send, sendLog);
     },
   });
 
@@ -173,6 +209,15 @@ export function runC420UIRustTuiApp(
       startupTasks: options.startupTasks ?? [],
       pendingRootRequests,
       abortController,
+      toolSettings,
+      logHistory,
+      sessionStream,
+      sessionLogPath,
+      sendLog,
+      getCurrentView: () => currentView,
+      setCurrentView: (view) => {
+        currentView = view;
+      },
       writeError,
       exit,
     });
@@ -243,6 +288,13 @@ async function handleTuiEvent(options: {
     (response: { accepted: boolean; input?: string }) => void
   >;
   abortController: AbortController;
+  toolSettings: ToolSettings;
+  logHistory: C420UITuiRenderInput["logs"];
+  sessionStream: fs.WriteStream | undefined;
+  sessionLogPath: string;
+  sendLog: (source: string, line: string, level?: string) => void;
+  getCurrentView: () => C420UITuiRenderInput["view"];
+  setCurrentView: (view: C420UITuiRenderInput["view"]) => void;
   writeError: (message: string) => void;
   exit: (code: number) => never;
 }): Promise<void> {
@@ -256,6 +308,13 @@ async function handleTuiEvent(options: {
     startupTasks,
     pendingRootRequests,
     abortController,
+    toolSettings,
+    logHistory,
+    sessionStream,
+    sessionLogPath,
+    sendLog,
+    getCurrentView,
+    setCurrentView,
     writeError,
     exit,
   } = options;
@@ -264,7 +323,7 @@ async function handleTuiEvent(options: {
     if (startupTasks.length > 0) {
       await runC420UIStartupTasks(startupTasks, (text) => {
         for (const line of splitLogLines(text)) {
-          send({ event: "log", source: "system", line });
+          sendLog("system", line);
         }
       });
     }
@@ -272,25 +331,51 @@ async function handleTuiEvent(options: {
   }
 
   if (event.event === "action-selected") {
+    const action = bridge.actions().find((candidate) => candidate.id === event.actionId);
+    sendLog("action", `${event.actionId}${action ? ` ${action.label}` : ""}`);
     const result = await engine.runActionById(event.actionId, {
       yes: true,
       signal: abortController.signal,
     });
     if (result.message) {
       if (result.status === "success") {
-        send({ event: "log", source: "action", line: result.message });
+        sendLog("action", result.message);
       } else {
         send({ event: "error", message: result.message });
+        writeSession(sessionStream, `[error] ${result.message}`);
       }
     }
+    send({ event: "state", state: await renderState(getCurrentView()) });
     return;
   }
 
   if (event.event === "view-changed") {
+    setCurrentView(event.view);
     send({
       event: "state",
       state: await renderState(event.view),
     });
+    return;
+  }
+
+  if (event.event === "copy-logs") {
+    const result = copyTextToClipboard(collectLogCopyText(logHistory, sessionLogPath));
+    sendLog("system", result.message, result.ok ? "info" : "warning");
+    return;
+  }
+
+  if (event.event === "setting-toggle") {
+    const setting = event.setting;
+    if (setting === "generalLogsEnabled" || setting === "terminalTextSelectionMode") {
+      toolSettings.tool[setting] = !toolSettings.tool[setting];
+      saveToolSettings(toolSettings, config.project.stateDirectoryName);
+      sendLog("system", `${setting} ${toolSettings.tool[setting] ? "enabled" : "disabled"}`);
+      send({ event: "state", state: await renderState("settings") });
+    }
+    return;
+  }
+
+  if (event.event === "help" || event.event === "toggle") {
     return;
   }
 
@@ -305,11 +390,15 @@ async function handleTuiEvent(options: {
 
   if (event.event === "cancel") {
     abortController.abort();
+    writeSession(sessionStream, "[session] ended");
+    sessionStream?.end();
     exit(c420uiExitCodes.canceled);
     return;
   }
 
   if (event.event === "quit") {
+    writeSession(sessionStream, "[session] ended");
+    sessionStream?.end();
     exit(c420uiExitCodes.success);
     return;
   }
@@ -321,6 +410,7 @@ function createInitialRenderState(
   options: C420UIRustTuiRunnerOptions,
   actions: ReturnType<C420UIAppOptions["bridge"]["actions"]>,
   theme: C420UITuiRenderInput["theme"],
+  toolSettings: ToolSettings,
 ): C420UITuiRenderInput {
   return createC420UITuiRenderInput({
     config: options.config,
@@ -328,6 +418,7 @@ function createInitialRenderState(
     theme,
     view: "main",
     panels: createLoadingPanels(),
+    footer: createFooter(toolSettings),
   });
 }
 
@@ -364,6 +455,8 @@ function createLoadingPanels(): C420UITuiRenderInput["panels"] {
 
 async function createLegacyPanels(
   options: C420UIRustTuiRunnerOptions,
+  logHistory: C420UITuiRenderInput["logs"],
+  toolSettings: ToolSettings,
 ): Promise<Partial<C420UITuiRenderInput["panels"]>> {
   const status = options.bridge.overviewStatus
     ? await options.bridge.overviewStatus()
@@ -382,6 +475,12 @@ async function createLegacyPanels(
       label: "Linux Artifacts",
       lines: panels.linuxArtifacts.map(stripBlessedTags),
     },
+    logs: {
+      label: toolSettings.tool.terminalTextSelectionMode
+        ? "Logs - Text selection mode enabled"
+        : "Logs",
+      lines: visibleLogHistory(logHistory, toolSettings),
+    },
   };
 }
 
@@ -389,9 +488,45 @@ function stripBlessedTags(line: string): string {
   return line.replace(/\{\/?[^}]+\}/g, "");
 }
 
+function createFooter(toolSettings: ToolSettings): C420UITuiRenderInput["footer"] {
+  const items = [
+    "Tab Focus",
+    "Enter Select",
+    "Space Toggle",
+    "F5 Copy Logs",
+    "? Help",
+    "q Quit",
+  ];
+  return {
+    textSelectionMode: toolSettings.tool.terminalTextSelectionMode,
+    items: toolSettings.tool.terminalTextSelectionMode
+      ? ["Text selection mode enabled", ...items]
+      : items,
+  };
+}
+
+function createSettingsMenu(toolSettings: ToolSettings): C420UITuiRenderInput["menu"] {
+  return {
+    label: "Application Settings",
+    selected: 0,
+    items: [
+      {
+        id: "settings-general",
+        label: `${toolSettings.tool.generalLogsEnabled ? "[x]" : "[ ]"} General logs`,
+      },
+      {
+        id: "settings-text-selection",
+        label: `${toolSettings.tool.terminalTextSelectionMode ? "[x]" : "[ ]"} Text selection mode`,
+      },
+      { id: "back-main", label: "Back to Main", view: "main" },
+    ],
+  };
+}
+
 async function requestRootAccessThroughTui(
   request: c420uiRootAccessRequest,
   send: (event: C420UITuiRuntimeInput) => void,
+  sendLog: (source: string, line: string, level?: string) => void,
   pendingRootRequests: Map<
     string,
     (response: { accepted: boolean; input?: string }) => void
@@ -406,51 +541,67 @@ async function requestRootAccessThroughTui(
     reason: request.reason,
   });
 
-  const response = await new Promise<{ accepted: boolean; input?: string }>(
-    (resolve) => {
-      pendingRootRequests.set(requestId, resolve);
-    },
-  );
+  for (let attempt = 1; attempt <= ROOT_PROMPT_MAX_ATTEMPTS; attempt += 1) {
+    const response = await waitForRootResponse(requestId, pendingRootRequests);
 
-  if (!response.accepted) {
-    return {
-      ok: false,
-      code: c420uiExitCodes.canceled,
-      message: "Root access was canceled.",
-    };
+    if (!response.accepted) {
+      sendLog("system", "Root access was canceled.", "warning");
+      return {
+        ok: false,
+        code: c420uiExitCodes.canceled,
+        message: "Root access was canceled.",
+      };
+    }
+
+    let submittedInput = response.input ?? "";
+    let access: c420uiRootAccessRequestResult | undefined;
+    try {
+      access = rootProvider?.validateRootAccessWithInput
+        ? rootProvider.validateRootAccessWithInput(
+            request.rootDir,
+            request.actionEnv,
+            submittedInput,
+          )
+        : rootProvider?.validateRootAccess(request.rootDir, request.actionEnv);
+    } finally {
+      submittedInput = "";
+    }
+    if (access?.ok === false) {
+      const message = access.message ?? "Root authentication failed.";
+      send({
+        event: "root-request-result",
+        requestId,
+        ok: false,
+        message,
+      });
+      sendLog(
+        "system",
+        `Root authentication failed (${attempt}/${ROOT_PROMPT_MAX_ATTEMPTS}).`,
+        "warning",
+      );
+      if (attempt === ROOT_PROMPT_MAX_ATTEMPTS) return access;
+      continue;
+    }
+
+    send({ event: "root-request-result", requestId, ok: true });
+    sendLog("system", "Root authentication accepted.");
+    return { ok: true };
   }
 
-  let submittedInput = response.input ?? "";
-  let access: c420uiRootAccessRequestResult | undefined;
-  try {
-    access = rootProvider?.validateRootAccessWithInput
-      ? rootProvider.validateRootAccessWithInput(
-          request.rootDir,
-          request.actionEnv,
-          submittedInput,
-        )
-      : rootProvider?.validateRootAccess(request.rootDir, request.actionEnv);
-  } finally {
-    submittedInput = "";
-  }
-  if (access?.ok === false) {
-    return access;
-  }
-
-  return { ok: true };
+  return {
+    ok: false,
+    code: c420uiExitCodes.generalError,
+    message: "Root authentication failed.",
+  };
 }
 
 function forwardActionEngineEvent(
   event: C420UIEvent,
   send: (event: C420UITuiRuntimeInput) => void,
+  sendLog: (source: string, line: string, level?: string) => void,
 ): void {
   if (event.type === "log") {
-    send({
-      event: "log",
-      source: event.source,
-      line: event.line,
-      level: event.level,
-    });
+    sendLog(event.source, event.line, event.level);
     return;
   }
 
@@ -483,8 +634,105 @@ function forwardActionEngineEvent(
   }
 
   if (event.message) {
-    send({ event: "log", source: "system", line: event.message });
+    sendLog("system", event.message, event.level);
   }
+}
+
+function waitForRootResponse(
+  requestId: string,
+  pendingRootRequests: Map<
+    string,
+    (response: { accepted: boolean; input?: string }) => void
+  >,
+): Promise<{ accepted: boolean; input?: string }> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      pendingRootRequests.delete(requestId);
+      resolve({ accepted: false });
+    }, ROOT_PROMPT_TIMEOUT_MS);
+    pendingRootRequests.set(requestId, (response) => {
+      clearTimeout(timer);
+      resolve(response);
+    });
+  });
+}
+
+function appendLogLine(
+  log: { source: string; line: string; level?: string },
+  options: {
+    logHistory: C420UITuiRenderInput["logs"];
+    send: (event: C420UITuiRuntimeInput) => void;
+    sessionStream: fs.WriteStream | undefined;
+    toolSettings: ToolSettings;
+  },
+): void {
+  const normalized = {
+    source: log.source,
+    line: log.line,
+    level: log.level,
+  };
+  options.logHistory.push(normalized);
+  if (options.logHistory.length > MAX_LOG_HISTORY_LINES) {
+    options.logHistory.splice(0, options.logHistory.length - MAX_LOG_HISTORY_LINES);
+  }
+  writeSession(options.sessionStream, `[${normalized.source}] ${normalized.line}`);
+  if (isVisibleLog(normalized, options.toolSettings)) {
+    options.send({ event: "log", ...normalized });
+  }
+}
+
+function visibleLogHistory(
+  logs: C420UITuiRenderInput["logs"],
+  toolSettings: ToolSettings,
+): C420UITuiRenderInput["logs"] {
+  return logs.filter((line) => isVisibleLog(line, toolSettings));
+}
+
+function collectLogCopyText(
+  logs: C420UITuiRenderInput["logs"],
+  sessionLogPath: string,
+): string {
+  const sessionLog = fs.existsSync(sessionLogPath)
+    ? fs.readFileSync(sessionLogPath, "utf8").trim()
+    : "";
+  const runtimeLog = logs.map((log) => `[${log.source}] ${log.line}`).join("\n");
+  return [sessionLog, runtimeLog].filter(Boolean).join("\n");
+}
+
+function isVisibleLog(
+  line: { source: string; line: string; level?: string },
+  toolSettings: ToolSettings,
+): boolean {
+  if (toolSettings.tool.generalLogsEnabled) return true;
+  if (line.level === "error" || line.level === "warning") return true;
+  return line.source !== "system";
+}
+
+function resolveSessionLogPath(options: C420UIRustTuiRunnerOptions): string {
+  const configured = options.config.sessionLogPath?.trim();
+  if (configured) return configured;
+  const stateHome =
+    options.env?.XDG_STATE_HOME?.trim() ||
+    process.env.XDG_STATE_HOME?.trim() ||
+    path.join(options.env?.HOME || process.env.HOME || ".", ".local", "state");
+  return path.join(stateHome, options.config.project.stateDirectoryName, "tool-session.log");
+}
+
+function openSessionStream(
+  sessionLogPath: string,
+  writeError: (message: string) => void,
+): fs.WriteStream | undefined {
+  try {
+    fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
+    return fs.createWriteStream(sessionLogPath, { flags: "a" });
+  } catch (error) {
+    writeError(`Session log stream is unavailable: ${formatRustTuiError(error)}`);
+    return undefined;
+  }
+}
+
+function writeSession(stream: fs.WriteStream | undefined, line: string): void {
+  stream?.write(`${line}\n`);
 }
 
 function readJsonLines(
