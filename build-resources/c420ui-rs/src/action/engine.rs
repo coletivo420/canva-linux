@@ -2,6 +2,7 @@ use crate::action::contracts::{ActionControllerEvent, ActionDefinition, ActionRu
 use crate::action::events::{data, emit, emit_finish, emit_log, merge_env, ActionEvent};
 use crate::action::registry::ActionRegistry;
 use crate::exit_codes;
+use crate::project::config::load_project_config;
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
 use std::path::Path;
@@ -16,7 +17,14 @@ enum ChildOutput {
 }
 
 pub fn run_action(request: ActionRunRequest, input: mpsc::Receiver<ActionControllerEvent>) -> i32 {
-    let registry = match ActionRegistry::new(request.actions.clone()) {
+    let actions = match load_actions_for_request(&request) {
+        Ok(actions) => actions,
+        Err(message) => {
+            emit(ActionEvent::Error { message });
+            return exit_codes::INVALID_USAGE;
+        }
+    };
+    let registry = match ActionRegistry::new(actions) {
         Ok(registry) => registry,
         Err(message) => {
             emit(ActionEvent::Error { message });
@@ -42,6 +50,26 @@ pub fn run_action(request: ActionRunRequest, input: mpsc::Receiver<ActionControl
     };
 
     run_resolved_action(action, &request, input)
+}
+
+fn load_actions_for_request(request: &ActionRunRequest) -> Result<Vec<ActionDefinition>, String> {
+    if let Some(project_config_root) = request.project_config_root.as_deref() {
+        if !project_config_root.trim().is_empty() {
+            let project = load_project_config(&request.root_dir, project_config_root)?;
+            if project.diagnostics.iter().any(|item| item.level == "error") {
+                let messages = project
+                    .diagnostics
+                    .iter()
+                    .filter(|item| item.level == "error")
+                    .map(|item| format!("{}: {}", item.code, item.message))
+                    .collect::<Vec<_>>()
+                    .join("; ");
+                return Err(messages);
+            }
+            return Ok(project.project.actions);
+        }
+    }
+    Ok(request.actions.clone())
 }
 
 fn run_resolved_action(

@@ -33,6 +33,7 @@ export type c420uiRootAccessRequester = (
 export type c420uiActionEngineOptions = {
   bridge: c420uiProjectBridge;
   rootDir: string;
+  projectConfigRoot?: string;
   env?: NodeJS.ProcessEnv;
   emit?: C420UIEventSink;
   rootProvider?: c420uiRootProvider;
@@ -63,7 +64,7 @@ type RustActionEvent =
   | { event: "error"; message: string };
 
 export function createC420UIRustActionEngine(options: c420uiActionEngineOptions) {
-  const { bridge, rootDir, emit, rootProvider } = options;
+  const { bridge, rootDir, emit, rootProvider, projectConfigRoot } = options;
 
   function listActions(): c420uiAction[] {
     return bridge.actions();
@@ -91,6 +92,9 @@ export function createC420UIRustActionEngine(options: c420uiActionEngineOptions)
   ): Promise<c420uiActionResult> {
     const resolution = resolveActionById(actionId);
     if (!resolution.found) {
+      if (projectConfigRoot) {
+        return runAction(createProjectConfigResolvedAction(actionId), runOptions);
+      }
       return {
         code: c420uiExitCodes.invalidUsage,
         status: "failed",
@@ -144,6 +148,7 @@ export function createC420UIRustActionEngine(options: c420uiActionEngineOptions)
 
     const finalEvent = await runRustActionProcess({
       rootDir,
+      projectConfigRoot,
       action,
       actions: listActions(),
       env: pickStringEnv(actionEnv),
@@ -188,8 +193,18 @@ export function createC420UIRustActionEngine(options: c420uiActionEngineOptions)
   };
 }
 
+function createProjectConfigResolvedAction(actionId: string): c420uiAction {
+  return {
+    id: actionId,
+    label: actionId,
+    group: "custom",
+    kind: "command",
+  };
+}
+
 async function runRustActionProcess(options: {
   rootDir: string;
+  projectConfigRoot?: string;
   action: c420uiAction;
   actions: c420uiAction[];
   env: Record<string, string>;
@@ -289,10 +304,11 @@ async function runRustActionProcess(options: {
     child.stdin.write(`${JSON.stringify({
       rootDir: options.rootDir,
       actionId: options.action.id,
+      projectConfigRoot: options.projectConfigRoot,
       dryRun: options.dryRun,
       yes: options.yes,
       env: options.env,
-      actions: options.actions.map(toRustActionDefinition),
+      actions: options.projectConfigRoot ? [] : options.actions.map(toRustActionDefinition),
       rootPolicy: options.rootPolicy,
     })}\n`);
     if (options.signal?.aborted) abort();

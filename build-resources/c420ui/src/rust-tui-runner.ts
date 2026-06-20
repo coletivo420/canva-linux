@@ -184,6 +184,7 @@ export function runC420UIRustTuiApp(
   const engine = createC420UIRustActionEngine({
     bridge: options.bridge,
     rootDir: options.config.rootDir,
+    projectConfigRoot: options.config.projectConfigRoot,
     env: options.env,
     rootProvider: options.rootProvider,
     requestRootAccess: (request) =>

@@ -4,8 +4,6 @@ import {
   c420uiExitCodes,
   createC420UIBridge,
   runC420UICommand,
-  validateC420UIHostDependencyConfig,
-  validateC420UIMaintenanceConfig,
   type c420uiActionResult,
   type c420uiExecutionContext,
   type c420uiHostDependencyConfig,
@@ -113,6 +111,7 @@ export function createCanvaLinuxC420UIAdapter(
     resolvedRootDir,
     "build-resources/canva-linux/config/build-metadata.json",
   );
+  const projectConfigRoot = "build-resources/canva-linux/config";
   const c420uiPackageJsonPath = path.join(
     resolvedRootDir,
     "build-resources/c420ui/package.json",
@@ -143,13 +142,11 @@ export function createCanvaLinuxC420UIAdapter(
   }
 
   function loadHostDependencies(): c420uiHostDependencyConfig {
-    const config = readJsonFile<unknown>(hostDependenciesJsonPath);
-    return validateC420UIHostDependencyConfig(config);
+    return readJsonFile<c420uiHostDependencyConfig>(hostDependenciesJsonPath);
   }
 
   function loadMaintenanceConfig(): c420uiMaintenanceConfig {
-    const config = readJsonFile<unknown>(maintenanceJsonPath);
-    return validateC420UIMaintenanceConfig(config);
+    return readJsonFile<c420uiMaintenanceConfig>(maintenanceJsonPath);
   }
 
   function getPackageVersion(): string {
@@ -334,6 +331,7 @@ export function createCanvaLinuxC420UIAdapter(
     const projectUi = loadProjectUi();
     return {
       rootDir: resolvedRootDir,
+      projectConfigRoot,
       title: projectUi.c420uiTitle,
       brand: loadBrandConfig(),
       project: loadProjectConfig(),

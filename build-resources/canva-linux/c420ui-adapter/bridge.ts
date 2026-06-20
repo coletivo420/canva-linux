@@ -50,6 +50,7 @@ export async function runCanvaLinuxArtifactWorkflow(
   const engine = createC420UIActionEngine({
     bridge: adapter,
     rootDir,
+    projectConfigRoot: pathForProjectConfig(),
     env: options.env ?? process.env,
     rootProvider: createCanvaLinuxRootProvider(),
     emit: options.emit,
@@ -68,4 +69,8 @@ export async function runCanvaLinuxArtifactWorkflow(
       });
     },
   });
+}
+
+function pathForProjectConfig(): string {
+  return "build-resources/canva-linux/config";
 }

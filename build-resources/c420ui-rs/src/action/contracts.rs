@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
@@ -6,6 +6,8 @@ use std::collections::HashMap;
 pub struct ActionRunRequest {
     pub root_dir: String,
     pub action_id: String,
+    #[serde(default)]
+    pub project_config_root: Option<String>,
     #[serde(default)]
     pub cli_flag: Option<String>,
     #[serde(default)]
@@ -20,7 +22,7 @@ pub struct ActionRunRequest {
     pub root_policy: Option<RootPolicyInput>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ActionDefinition {
     pub id: String,

@@ -1,5 +1,15 @@
 # AI Guardrails
 
+## Dev12 Rust project config guardrail
+
+Canva Linux declares c420ui configuration through JSON files. c420ui Rust
+validates, normalizes and interprets actions, host dependencies, install,
+maintenance and UI metadata through `c420ui-host project-config --json`.
+
+Do not reintroduce TypeScript project config validation as the source of truth.
+Do not add `C420UI_ADAPTER_BACKEND` or `C420UI_ACTION_ENGINE_BACKEND`. Do not
+hardcode Canva Linux identity inside `build-resources/c420ui-rs`.
+
 ## Dev12 Rust TUI visual contract
 
 Dev12 now requires the Rust TUI to preserve the visual contract of the legacy

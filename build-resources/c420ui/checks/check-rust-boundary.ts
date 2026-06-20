@@ -53,6 +53,38 @@ export function main(): number {
     }
   }
 
+  const requiredRustFiles = [
+    "src/project/mod.rs",
+    "src/project/config.rs",
+    "src/project/actions.rs",
+    "src/project/dependencies.rs",
+    "src/project/install.rs",
+    "src/project/maintenance.rs",
+    "src/project/ui.rs",
+    "src/project/validation.rs",
+    "src/commands/project_config.rs",
+  ];
+  for (const required of requiredRustFiles) {
+    if (!fs.existsSync(path.join(rustDir, required))) {
+      failures.push(`build-resources/c420ui-rs/${required}: required Rust project config boundary file is missing`);
+    }
+  }
+
+  const hostSourcePath = path.join(rustDir, "src/bin/c420ui-host.rs");
+  const hostSource = fs.readFileSync(hostSourcePath, "utf8");
+  if (!hostSource.includes("project-config --json") || !hostSource.includes("commands::project_config::execute")) {
+    failures.push("build-resources/c420ui-rs/src/bin/c420ui-host.rs: c420ui-host must expose project-config --json");
+  }
+
+  const actionContracts = fs.readFileSync(path.join(rustDir, "src/action/contracts.rs"), "utf8");
+  const actionEngine = fs.readFileSync(path.join(rustDir, "src/action/engine.rs"), "utf8");
+  if (!actionContracts.includes("project_config_root")) {
+    failures.push("build-resources/c420ui-rs/src/action/contracts.rs: action-run must accept projectConfigRoot");
+  }
+  if (!actionEngine.includes("load_project_config") || !actionEngine.includes("project_config_root")) {
+    failures.push("build-resources/c420ui-rs/src/action/engine.rs: Action Engine must prefer projectConfigRoot");
+  }
+
   if (failures.length) {
     console.error("[check-rust-boundary] FAILED:\n" + failures.join("\n"));
     return 1;

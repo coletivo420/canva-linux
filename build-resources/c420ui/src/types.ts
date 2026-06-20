@@ -31,6 +31,7 @@ export type C420UIProjectConfig = {
 
 export type C420UIConfig = {
   rootDir: string;
+  projectConfigRoot?: string;
   title: string;
   brand: C420UIBrandConfig;
   project: C420UIProjectConfig;

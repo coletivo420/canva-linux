@@ -27,6 +27,8 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
 ## Boundary policy
 
 - Canva Linux is a dependent project; c420ui is the generic engine.
+- Canva Linux declares c420ui adapter/config JSON; c420ui Rust validates,
+  normalizes and interprets it through `c420ui-host project-config --json`.
 - Canva Linux does not install dependencies directly from launchers, except for the documented Stage 0 c420ui bootstrap
   that starts the generated `bootstrap/c420ui` bundle without npm dependencies.
 - Canva Linux does not validate generic artifact recipes; c420ui does.
@@ -37,6 +39,8 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
 - c420ui action execution belongs to `c420ui-host action-run --json-lines`.
   TypeScript must not reintroduce action execution, a fallback Action Engine,
   or an action-engine backend switch.
+- TypeScript must not reintroduce project config validation as the source of
+  truth for actions, dependency policy, install, maintenance or UI metadata.
 - `root scripts/ ownership` is scripts/ must not return and must not own npm
   install, dependency repair, or skip policy.
 - Artifact names must preserve generated architecture strings such as `x86_64`

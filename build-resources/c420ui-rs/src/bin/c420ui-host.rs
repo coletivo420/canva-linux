@@ -6,6 +6,7 @@ fn print_usage() {
     eprintln!("  host-info --json");
     eprintln!("  doctor --json");
     eprintln!("  check-host-dependencies --json");
+    eprintln!("  project-config --json");
     eprintln!("  clipboard-write --json");
     eprintln!("  action-run --json-lines");
     eprintln!("  run-process --json-lines");
@@ -71,6 +72,21 @@ fn main() {
             std::process::exit(exit_codes::INVALID_USAGE);
         }
         match commands::check_host_dependencies::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
+    }
+
+    if cmd == "project-config" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: project-config command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::project_config::execute() {
             Ok(_) => std::process::exit(exit_codes::SUCCESS),
             Err(e) => {
                 eprintln!("Error: {}", e);

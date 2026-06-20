@@ -1,5 +1,24 @@
 # Validation Checklist (0.1.4-15.Dev.12)
 
+## Dev12 Rust project config contract
+
+`c420ui-host project-config --json` is now the source of truth for declarative
+project adapter configuration. Canva Linux declares `actions.json`,
+`host-dependencies.json`, `dependencies.json`, `install-native.json`,
+`maintenance.json` and `project-ui.json`; c420ui Rust validates, normalizes and
+exposes those values to the Action Engine and TUI bridge.
+
+Do not reintroduce TypeScript project config validation as the source of truth.
+Dependent projects declare JSON; c420ui Rust validates and interprets it.
+
+Focused gates:
+
+- `npm run build:c420ui-rs`
+- `npm run test:c420ui-rs`
+- `npm run check:c420ui-rs-boundary`
+- `npm run check:c420ui-core`
+- `npm run test:c420ui`
+
 ## Dev12 Rust TUI visual contract
 
 Dev12 now requires the Rust TUI to preserve the visual contract of the legacy

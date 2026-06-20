@@ -20,6 +20,12 @@ host-operation executor after the Dev11 merge.
 This Rust area is not for Canva Linux Electron runtime, toolbar, tabs,
 CLeyedropper, packaging policy or project-specific adapters.
 
+Dev12 Rust project config now lives under `build-resources/c420ui-rs/src/project`.
+`c420ui-host project-config --json` validates and normalizes dependent-project
+JSON declarations for actions, dependencies, install, maintenance and UI
+metadata. TypeScript wrappers may call the command, but must not duplicate that
+validation as the source of truth.
+
 ## Files
 
 - `.codex`

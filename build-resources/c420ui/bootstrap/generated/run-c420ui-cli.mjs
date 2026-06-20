@@ -133,104 +133,6 @@ function createC420UILinuxRootProviderBase(options) {
   };
 }
 
-// build-resources/c420ui/src/host-dependencies.ts
-var c420uiKnownHostDependencyPurposes = [
-  "terminal",
-  "cli",
-  "development",
-  "build",
-  "package",
-  "validation",
-  "release"
-];
-var c420uiKnownNpmInstallStrategies = ["auto", "ci", "install"];
-function isRecord(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function assertOptionalBoolean(value, key, failures, path17) {
-  if (key in value && typeof value[key] !== "boolean") {
-    failures.push(`${path17}.${key} must be a boolean`);
-  }
-}
-function assertOptionalString(value, key, failures, path17) {
-  if (key in value && typeof value[key] !== "string") {
-    failures.push(`${path17}.${key} must be a string`);
-  }
-}
-function assertOptionalStringArray(value, key, failures, path17) {
-  if (!(key in value)) return;
-  const array = value[key];
-  if (!Array.isArray(array) || array.some((item) => typeof item !== "string")) {
-    failures.push(`${path17}.${key} must be a string array`);
-  }
-}
-function assertOptionalPurposeArray(value, key, failures, path17) {
-  if (!(key in value)) return;
-  const array = value[key];
-  if (!Array.isArray(array) || array.some(
-    (item) => typeof item !== "string" || !c420uiKnownHostDependencyPurposes.includes(item)
-  )) {
-    failures.push(`${path17}.${key} must contain only known host dependency purposes`);
-  }
-}
-function validateConfigShape(value) {
-  const failures = [];
-  if (!isRecord(value)) return ["host dependency config must be an object"];
-  if ("node" in value) {
-    if (!isRecord(value.node)) {
-      failures.push("node must be an object");
-    } else {
-      if ("minimumMajor" in value.node && typeof value.node.minimumMajor !== "number") {
-        failures.push("node.minimumMajor must be a number");
-      }
-      assertOptionalBoolean(value.node, "required", failures, "node");
-    }
-  }
-  if ("commands" in value) {
-    if (!Array.isArray(value.commands)) {
-      failures.push("commands must be an array");
-    } else {
-      value.commands.forEach((command, index) => {
-        const commandPath = `commands[${index}]`;
-        if (!isRecord(command)) {
-          failures.push(`${commandPath} must be an object`);
-          return;
-        }
-        if (typeof command.id !== "string") failures.push(`${commandPath}.id must be a string`);
-        if (typeof command.command !== "string") failures.push(`${commandPath}.command must be a string`);
-        assertOptionalBoolean(command, "required", failures, commandPath);
-        assertOptionalPurposeArray(command, "requiredFor", failures, commandPath);
-        assertOptionalString(command, "installHint", failures, commandPath);
-      });
-    }
-  }
-  if ("npm" in value) {
-    if (!isRecord(value.npm)) {
-      failures.push("npm must be an object");
-    } else {
-      if (value.npm.packageManager !== "npm") failures.push('npm.packageManager must be "npm"');
-      assertOptionalString(value.npm, "lockfile", failures, "npm");
-      if ("installStrategy" in value.npm && !c420uiKnownNpmInstallStrategies.includes(value.npm.installStrategy)) {
-        failures.push('npm.installStrategy must be "auto", "ci", or "install"');
-      }
-      assertOptionalBoolean(value.npm, "includeDev", failures, "npm");
-      assertOptionalStringArray(value.npm, "requiredDependencies", failures, "npm");
-      assertOptionalStringArray(value.npm, "requiredDevDependencies", failures, "npm");
-    }
-  }
-  return failures;
-}
-function assertC420UIHostDependencyConfig(value) {
-  const failures = validateConfigShape(value);
-  if (failures.length > 0) {
-    throw new Error(`Invalid c420ui host dependency config: ${failures.join("; ")}.`);
-  }
-}
-function validateC420UIHostDependencyConfig(value) {
-  assertC420UIHostDependencyConfig(value);
-  return value;
-}
-
 // build-resources/c420ui/src/exit-codes.ts
 var c420uiExitCodes = {
   success: 0,
@@ -517,40 +419,6 @@ async function runC420UIRustProcess(options) {
   };
 }
 
-// build-resources/c420ui/src/maintenance-config.ts
-function validateTargetList(input, field) {
-  if (input === void 0) return void 0;
-  if (!Array.isArray(input)) {
-    throw new Error(`${field} must be an array`);
-  }
-  return input.map((target, index) => {
-    if (typeof target !== "string") {
-      throw new Error(`${field}[${index}] must be a string`);
-    }
-    const trimmed = target.trim();
-    if (!trimmed) {
-      throw new Error(`${field}[${index}] must not be empty`);
-    }
-    if (trimmed.startsWith("/") || trimmed === "." || trimmed === "/" || trimmed.includes("\\")) {
-      throw new Error(`${field}[${index}] must be a safe relative path`);
-    }
-    if (trimmed.split("/").includes("..")) {
-      throw new Error(`${field}[${index}] must not contain ..`);
-    }
-    return trimmed;
-  });
-}
-function validateC420UIMaintenanceConfig(input) {
-  if (!input || typeof input !== "object" || Array.isArray(input)) {
-    throw new Error("maintenance config must be an object");
-  }
-  const value = input;
-  return {
-    cleanupTargets: validateTargetList(value.cleanupTargets, "cleanupTargets"),
-    permissionTargets: validateTargetList(value.permissionTargets, "permissionTargets")
-  };
-}
-
 // build-resources/c420ui/src/rust-action-engine.ts
 import { spawn as spawn2 } from "node:child_process";
 import fs2 from "node:fs";
@@ -570,7 +438,7 @@ function assertC420UIActionContract(action) {
   if (!action.id.trim()) throw new Error("c420ui action id is required");
   if (!action.label.trim()) throw new Error(`${action.id}: label is required`);
 }
-function isRecord2(value) {
+function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 function requireString(value, message) {
@@ -594,7 +462,7 @@ function requireOptionalString(action, key) {
 }
 function validateActionEnv(action) {
   if (action.env === void 0) return;
-  if (!isRecord2(action.env)) {
+  if (!isRecord(action.env)) {
     throw new Error(`Action env must be an object: ${String(action.id)}`);
   }
   for (const [key, value] of Object.entries(action.env)) {
@@ -616,7 +484,7 @@ function validateC420UIActions(actions, options = {}) {
   const ids = /* @__PURE__ */ new Set();
   const cliAliases = /* @__PURE__ */ new Set();
   for (const item of actions) {
-    if (!isRecord2(item)) throw new Error("Action entries must be objects");
+    if (!isRecord(item)) throw new Error("Action entries must be objects");
     requireString(item.id, "Action missing id");
     if (!/^[a-z0-9-]+$/.test(item.id)) {
       throw new Error(`Invalid action id format: ${item.id}`);
@@ -725,7 +593,7 @@ function createC420UIEvent(event) {
 
 // build-resources/c420ui/src/rust-action-engine.ts
 function createC420UIRustActionEngine(options) {
-  const { bridge, rootDir, emit, rootProvider } = options;
+  const { bridge, rootDir, emit, rootProvider, projectConfigRoot } = options;
   function listActions() {
     return bridge.actions();
   }
@@ -742,6 +610,9 @@ function createC420UIRustActionEngine(options) {
   async function runActionById(actionId, runOptions = {}) {
     const resolution = resolveActionById(actionId);
     if (!resolution.found) {
+      if (projectConfigRoot) {
+        return runAction(createProjectConfigResolvedAction(actionId), runOptions);
+      }
       return {
         code: c420uiExitCodes.invalidUsage,
         status: "failed",
@@ -778,6 +649,7 @@ function createC420UIRustActionEngine(options) {
     }
     const finalEvent = await runRustActionProcess({
       rootDir,
+      projectConfigRoot,
       action,
       actions: listActions(),
       env: pickStringEnv(actionEnv),
@@ -816,6 +688,14 @@ function createC420UIRustActionEngine(options) {
     resolveActionByCliFlag,
     runActionById,
     runAction
+  };
+}
+function createProjectConfigResolvedAction(actionId) {
+  return {
+    id: actionId,
+    label: actionId,
+    group: "custom",
+    kind: "command"
   };
 }
 async function runRustActionProcess(options) {
@@ -901,10 +781,11 @@ async function runRustActionProcess(options) {
     child.stdin.write(`${JSON.stringify({
       rootDir: options.rootDir,
       actionId: options.action.id,
+      projectConfigRoot: options.projectConfigRoot,
       dryRun: options.dryRun,
       yes: options.yes,
       env: options.env,
-      actions: options.actions.map(toRustActionDefinition),
+      actions: options.projectConfigRoot ? [] : options.actions.map(toRustActionDefinition),
       rootPolicy: options.rootPolicy
     })}
 `);
@@ -1215,6 +1096,7 @@ async function runC420UICli(options) {
   const engine = createC420UIRustActionEngine({
     bridge: options.bridge,
     rootDir: options.rootDir,
+    projectConfigRoot: options.projectConfigRoot,
     env: options.env,
     emit: options.emit,
     rootProvider: options.rootProvider
@@ -1318,7 +1200,7 @@ var executableArtifactActionIdFields = [
   "uninstallActionId",
   "purgeActionId"
 ];
-function isRecord3(value) {
+function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function assertRequiredString(value, field, context) {
@@ -1326,12 +1208,12 @@ function assertRequiredString(value, field, context) {
     throw new Error(`${context}: ${field} must be a non-empty string`);
   }
 }
-function assertOptionalBoolean2(value, field, context) {
+function assertOptionalBoolean(value, field, context) {
   if (value[field] !== void 0 && typeof value[field] !== "boolean") {
     throw new Error(`${context}: ${field} must be a boolean when present`);
   }
 }
-function assertOptionalString2(value, field, context) {
+function assertOptionalString(value, field, context) {
   if (value[field] !== void 0 && typeof value[field] !== "string") {
     throw new Error(`${context}: ${field} must be a string when present`);
   }
@@ -1369,8 +1251,8 @@ function toConfigPath(configPath) {
   return path4.normalize(configPath.replace(/^[\\/]+/, ""));
 }
 function assertC420UIArtifactRecipeConfig(config, context = "artifact recipe config") {
-  if (!isRecord3(config)) throw new Error(`${context}: artifacts config must be an object`);
-  if (!isRecord3(config.capabilities)) {
+  if (!isRecord2(config)) throw new Error(`${context}: artifacts config must be an object`);
+  if (!isRecord2(config.capabilities)) {
     throw new Error(`${context}: capabilities must be an object`);
   }
   for (const field of artifactCapabilityFields) {
@@ -1384,7 +1266,7 @@ function assertC420UIArtifactRecipeConfig(config, context = "artifact recipe con
   const workflowIds = /* @__PURE__ */ new Set();
   for (const [index, workflow] of config.workflows.entries()) {
     const workflowContext = `${context}: workflows[${index}]`;
-    if (!isRecord3(workflow)) throw new Error(`${workflowContext} must be an object`);
+    if (!isRecord2(workflow)) throw new Error(`${workflowContext} must be an object`);
     for (const field of ["id", "kind", "label", "scope"]) {
       assertRequiredString(workflow, field, workflowContext);
     }
@@ -1395,10 +1277,10 @@ function assertC420UIArtifactRecipeConfig(config, context = "artifact recipe con
     workflowIds.add(workflowId);
     assertKnownValue(workflow.kind, artifactWorkflowKinds, "kind", workflowContext);
     assertKnownValue(workflow.scope, artifactWorkflowScopes, "scope", workflowContext);
-    assertOptionalBoolean2(workflow, "planned", workflowContext);
-    assertOptionalBoolean2(workflow, "requiresRoot", workflowContext);
-    assertOptionalString2(workflow, "description", workflowContext);
-    assertOptionalString2(workflow, "outputPattern", workflowContext);
+    assertOptionalBoolean(workflow, "planned", workflowContext);
+    assertOptionalBoolean(workflow, "requiresRoot", workflowContext);
+    assertOptionalString(workflow, "description", workflowContext);
+    assertOptionalString(workflow, "outputPattern", workflowContext);
     validateOutputPattern(workflow.outputPattern, workflowContext);
     for (const field of artifactActionIdFields) {
       assertOptionalActionId(workflow, field, workflowContext);
@@ -1476,7 +1358,7 @@ var c420uiDevelopmentTaskRequiredForValues = [
   "release",
   "validation"
 ];
-function isRecord4(value) {
+function isRecord3(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 function requireString2(value, message) {
@@ -1533,7 +1415,7 @@ function validateC420UIDevelopmentTasks(tasks) {
   if (!Array.isArray(tasks)) throw new Error("development tasks must be an array");
   const ids = /* @__PURE__ */ new Set();
   for (const item of tasks) {
-    if (!isRecord4(item)) throw new Error("Development task entries must be objects");
+    if (!isRecord3(item)) throw new Error("Development task entries must be objects");
     requireString2(item.id, "Development task missing id");
     if (ids.has(item.id)) throw new Error(`Duplicate development task id: ${item.id}`);
     ids.add(item.id);
@@ -1554,7 +1436,7 @@ function validateC420UIDevelopmentTasks(tasks) {
   }
 }
 function validateC420UIDevelopmentConfig(config) {
-  if (!isRecord4(config)) throw new Error("development config must be an object");
+  if (!isRecord3(config)) throw new Error("development config must be an object");
   validateC420UIDevelopmentTasks(config.tasks);
 }
 function supportsDryRunAction(action) {
@@ -2853,6 +2735,7 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
     resolvedRootDir,
     "build-resources/canva-linux/config/build-metadata.json"
   );
+  const projectConfigRoot = "build-resources/canva-linux/config";
   const c420uiPackageJsonPath = path16.join(
     resolvedRootDir,
     "build-resources/c420ui/package.json"
@@ -2878,12 +2761,10 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
     return readJsonFile6(c420uiPackageJsonPath);
   }
   function loadHostDependencies() {
-    const config = readJsonFile6(hostDependenciesJsonPath);
-    return validateC420UIHostDependencyConfig(config);
+    return readJsonFile6(hostDependenciesJsonPath);
   }
   function loadMaintenanceConfig() {
-    const config = readJsonFile6(maintenanceJsonPath);
-    return validateC420UIMaintenanceConfig(config);
+    return readJsonFile6(maintenanceJsonPath);
   }
   function getPackageVersion() {
     return loadPackageJson().version ?? "unknown";
@@ -3040,6 +2921,7 @@ function createCanvaLinuxC420UIAdapter(rootDir) {
     const projectUi = loadProjectUi();
     return {
       rootDir: resolvedRootDir,
+      projectConfigRoot,
       title: projectUi.c420uiTitle,
       brand: loadBrandConfig(),
       project: loadProjectConfig(),
@@ -3185,6 +3067,7 @@ async function runCanvaLinuxC420UICli(argv) {
   const result = await runC420UICli({
     bridge,
     rootDir,
+    projectConfigRoot: "build-resources/canva-linux/config",
     argv,
     env: process.env,
     rootProvider: createCanvaLinuxRootProvider(),

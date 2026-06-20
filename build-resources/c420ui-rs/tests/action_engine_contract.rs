@@ -64,6 +64,35 @@ fn action_request(action: serde_json::Value) -> serde_json::Value {
     })
 }
 
+fn write_project_actions(root: &Path, actions: serde_json::Value) {
+    let config = root.join("config");
+    fs::create_dir_all(&config).unwrap();
+    fs::write(config.join("actions.json"), actions.to_string()).unwrap();
+    fs::write(
+        config.join("host-dependencies.json"),
+        json!({"commands": []}).to_string(),
+    )
+    .unwrap();
+    fs::write(config.join("dependencies.json"), json!({}).to_string()).unwrap();
+    fs::write(
+        config.join("install-native.json"),
+        json!({"executable": "example", "desktopName": "example.desktop"}).to_string(),
+    )
+    .unwrap();
+    fs::write(config.join("maintenance.json"), json!({}).to_string()).unwrap();
+    fs::write(
+        config.join("project-ui.json"),
+        json!({
+            "projectName": "Example",
+            "projectSubtitle": "Workspace",
+            "c420uiTitle": "Example",
+            "logoLines": []
+        })
+        .to_string(),
+    )
+    .unwrap();
+}
+
 #[test]
 fn action_run_requires_json_lines() {
     let output = Command::new(host_bin()).arg("action-run").output().unwrap();
@@ -102,6 +131,56 @@ fn action_run_unknown_action_finishes_failed() {
     assert!(events
         .iter()
         .any(|event| event["event"] == "action:finish" && event["status"] == "failed"));
+}
+
+#[test]
+fn action_run_loads_action_from_project_config_root() {
+    let root = temp_root("project-config-action");
+    let marker = root.join("marker");
+    write_project_actions(
+        &root,
+        json!([{
+            "id": "doctor",
+            "label": "Doctor",
+            "kind": "command",
+            "command": "/bin/sh",
+            "args": ["-c", format!("touch {}", marker.display())]
+        }]),
+    );
+
+    let (status, events) = run_action(json!({
+        "rootDir": root.display().to_string(),
+        "projectConfigRoot": "config",
+        "actionId": "doctor",
+        "yes": true,
+        "env": {}
+    }));
+
+    assert!(status.success());
+    assert!(marker.exists());
+    assert!(events
+        .iter()
+        .any(|event| event["event"] == "action:finish" && event["status"] == "success"));
+}
+
+#[test]
+fn action_run_rejects_unknown_action_from_project_config_root() {
+    let root = temp_root("project-config-missing");
+    write_project_actions(
+        &root,
+        json!([{"id": "doctor", "label": "Doctor", "kind": "command", "command": "/bin/true"}]),
+    );
+
+    let (status, events) = run_action(json!({
+        "rootDir": root.display().to_string(),
+        "projectConfigRoot": "config",
+        "actionId": "missing",
+        "yes": true,
+        "env": {}
+    }));
+
+    assert_eq!(status.code(), Some(64));
+    assert!(events.iter().any(|event| event["event"] == "error"));
 }
 
 #[test]

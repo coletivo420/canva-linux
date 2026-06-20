@@ -79,6 +79,17 @@ Confirm:
 - Flatpak and Flathub policy checks run from TypeScript entrypoints.
 - Install, uninstall, maintenance, packaging, build, artifact and versioning mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
 
+## Dev12 Rust project config review
+
+Request changes if a PR:
+
+- reintroduces TypeScript project config validation as the source of truth;
+- removes `c420ui-host project-config --json`;
+- makes the Rust Action Engine require inline `actions` instead of preferring `projectConfigRoot`;
+- hardcodes Canva Linux identity, app id, Flatpak id or executable names in `build-resources/c420ui-rs`;
+- adds `C420UI_ADAPTER_BACKEND` or `C420UI_ACTION_ENGINE_BACKEND`;
+- duplicates Rust-owned host dependency, install or maintenance validation in the Canva Linux adapter.
+
 ## Dev12 Rust host-operation review
 
 Request changes if a PR:

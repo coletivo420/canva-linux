@@ -21,6 +21,7 @@ export async function runCanvaLinuxC420UICli(
   const result = await runC420UICli({
     bridge,
     rootDir,
+    projectConfigRoot: "build-resources/canva-linux/config",
     argv,
     env: process.env,
     rootProvider: createCanvaLinuxRootProvider(),

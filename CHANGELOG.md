@@ -2,6 +2,7 @@
 
 ## Dev12 Rust TUI legacy visual parity
 
+- Dev12 migrates project adapter config handling to `c420ui-host project-config --json`. Canva Linux now declares c420ui configuration through JSON files, while Rust validates, normalizes and exposes actions, dependencies, install, maintenance and UI metadata to the Action Engine and TUI bridge.
 - Dev12 now requires the Rust TUI to preserve the visual contract of the legacy TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it must match the legacy layout, theme, panels, focus behavior, footer, progress bar, logs, and root prompt before the TypeScript TUI can be removed.
 - Dev12 continues the direct Rust TUI migration by restoring legacy interaction parity: full keyboard shortcuts, panel scrolling, settings toggles, log copy, root prompt retries, session log behavior and post-action status refresh. `c420ui-tui` remains the official runtime; the TypeScript/Blessed TUI must not return as a backend.
 - Dev12 stabilizes the Rust TUI behavior after the visual parity port. The session log now belongs to c420ui under `/tmp/c420ui`, Doctor / Host Tools is restored through `c420ui-host`, running actions lock the menu and expose an interruption confirmation modal, progress states use strict success/warning/error colors, scroll/wrapping is restored for overview/logs/artifact panels, and status panels now color only values while preserving label colors.

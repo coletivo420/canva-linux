@@ -890,6 +890,46 @@ function runInteractiveActionEngineContract(failures: string[]): void {
   runCheck(failures, { name: "interactive action engine", run: checkInteractiveActionEngineContract.main });
 }
 
+function checkRustProjectConfigContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const wrapperPath = "build-resources/c420ui/src/rust-project-config.ts";
+  const actionEnginePath = "build-resources/c420ui/src/rust-action-engine.ts";
+  const indexPath = "build-resources/c420ui/src/index.ts";
+  const adapterPath = "build-resources/canva-linux/c420ui-adapter/adapter.ts";
+  const wrapper = fs.existsSync(path.join(rootDir, wrapperPath))
+    ? fs.readFileSync(path.join(rootDir, wrapperPath), "utf8")
+    : "";
+  const actionEngine = fs.readFileSync(path.join(rootDir, actionEnginePath), "utf8");
+  const index = fs.readFileSync(path.join(rootDir, indexPath), "utf8");
+  const adapter = fs.readFileSync(path.join(rootDir, adapterPath), "utf8");
+
+  if (!wrapper) {
+    failures.push(`${wrapperPath}: rust-project-config.ts must exist`);
+  }
+  if (!wrapper.includes('["project-config", "--json"]')) {
+    failures.push(`${wrapperPath}: wrapper must call c420ui-host project-config --json`);
+  }
+  for (const forbidden of ["validateC420UI", "assertC420UI", "schema", "C420UI_ADAPTER_BACKEND", "C420UI_ACTION_ENGINE_BACKEND"]) {
+    if (wrapper.includes(forbidden)) {
+      failures.push(`${wrapperPath}: must not reintroduce TypeScript project config validation or backend switches (${forbidden})`);
+    }
+  }
+  if (!index.includes('export * from "./rust-project-config.js"')) {
+    failures.push(`${indexPath}: must export rust-project-config`);
+  }
+  if (!actionEngine.includes("projectConfigRoot") || !actionEngine.includes("actions: options.projectConfigRoot ? []")) {
+    failures.push(`${actionEnginePath}: rust-action-engine must prefer projectConfigRoot over inline actions`);
+  }
+  for (const forbiddenBackend of ["C420UI_ADAPTER_BACKEND", "C420UI_ACTION_ENGINE_BACKEND"]) {
+    if (actionEngine.includes(forbiddenBackend) || adapter.includes(forbiddenBackend)) {
+      failures.push(`c420ui adapter/action engine must not reintroduce ${forbiddenBackend}`);
+    }
+  }
+  if (adapter.includes("validateC420UIHostDependencyConfig(config)") || adapter.includes("validateC420UIMaintenanceConfig(config)")) {
+    failures.push(`${adapterPath}: adapter TS must not duplicate Rust-owned host dependency or maintenance config validation`);
+  }
+}
+
 
 
 function assertC420UIIncludes(
@@ -1907,6 +1947,7 @@ export function main(): number {
   runOperationalLogsContract(failures);
   runArtifactWorkflowContract(failures);
   runInteractiveActionEngineContract(failures);
+  checkRustProjectConfigContract(failures);
   checkSettingsContract(failures);
   checkDevelopmentProviderContract(failures);
   checkLinuxHostSudoContract(failures);

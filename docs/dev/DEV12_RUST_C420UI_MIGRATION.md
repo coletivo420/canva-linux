@@ -2,7 +2,7 @@
 
 ## Status
 
-Phase 4 in progress.
+Phase 4 in progress. Project adapter config migration to Rust is active.
 
 ## Goal
 
@@ -15,6 +15,7 @@ The boundary remains:
 - c420ui validates and orchestrates generic workflows.
 - c420ui-host executes host filesystem and process primitives.
 - c420ui-tui becomes the direct terminal UI migration target after operational cleanup.
+- c420ui-host validates and normalizes declarative project adapter config.
 
 ## Permanent Boundary
 
@@ -36,6 +37,9 @@ name, install paths, metadata paths, artifact naming policy or packaging policy.
 
 Rust must not touch Canva Linux runtime, Electron, toolbar, tabs or
 CLeyedropper code.
+
+Do not reintroduce TypeScript project config validation as the source of truth.
+Dependent projects declare JSON; c420ui Rust validates and interprets it.
 
 ## Roadmap
 
@@ -111,12 +115,22 @@ build-resources/c420ui-rs/
   src/bin/c420ui-tui.rs
   src/lib.rs
   src/commands/
+  src/project/
   src/host/
   src/tui/
   tests/
 ```
 
 ## Active Commands
+
+- `c420ui-host project-config --json`
+- `c420ui-host action-run --json-lines`
+
+`project-config --json` reads `rootDir` and `projectConfigRoot` from stdin,
+loads `actions.json`, `host-dependencies.json`, `dependencies.json`,
+`install-native.json`, `maintenance.json` and `project-ui.json`, then returns
+normalized project metadata plus diagnostics. The command is generic and must
+not hardcode dependent-project identity.
 
 ```text
 c420ui-host --version

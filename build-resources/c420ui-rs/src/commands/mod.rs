@@ -9,6 +9,7 @@ pub mod ensure_linux_unpacked;
 pub mod fix_permissions;
 pub mod fs_ops;
 pub mod host_info;
+pub mod project_config;
 pub mod remove_paths;
 pub mod run_process;
 pub mod sudo_validate;

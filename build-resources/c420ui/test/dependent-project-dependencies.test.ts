@@ -75,13 +75,13 @@ test("Canva Linux adapter does not resolve dependencies itself", () => {
   assert.equal(/fs\.accessSync|lookupC420UICommandInPath|npm\s+ci|npm\s+install|cargo|flatpak|sudo|rm\s+-rf|chown/.test(adapterSource), false);
 });
 
-test("missing or invalid host-dependencies.json fails clearly", () => {
+test("adapter leaves host dependency schema validation to c420ui Rust boundary", () => {
   const adapterSource = fs.readFileSync(
     path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/adapter.ts"),
     "utf8",
   );
 
   assert.match(adapterSource, /host-dependencies\.json/);
-  assert.match(adapterSource, /validateC420UIHostDependencyConfig/);
+  assert.doesNotMatch(adapterSource, /validateC420UIHostDependencyConfig/);
   assert.throws(() => validateC420UIHostDependencyConfig({ node: { minimumMajor: "22" } }), /node\.minimumMajor must be a number/);
 });

@@ -4,6 +4,12 @@ The c420ui Action Engine is the central action-policy layer. It resolves an
 action from a bridge, marshals the project-provided contract, and delegates
 execution to `c420ui-host action-run --json-lines`.
 
+Dev12 moves the action registry source toward Rust project config. When
+`projectConfigRoot` is provided, TypeScript sends only `rootDir`, `actionId`,
+`projectConfigRoot`, run flags and environment. `c420ui-host` loads
+`actions.json` through the Rust `project` module and resolves the action there.
+Inline `actions` remain only a transitional fallback.
+
 ## Controls
 
 - Action lookup by id and CLI flags.
@@ -72,9 +78,10 @@ The ordering is intentional:
 
 ## Consumed configs and adapters
 
-The engine consumes actions exposed by the bridge. Canva Linux loads those from
-`build-resources/canva-linux/config/actions.json` through `build-resources/canva-linux/c420ui-adapter/actions.ts`
-and `build-resources/canva-linux/actions/registry.ts`.
+The preferred engine path consumes actions from `projectConfigRoot` through
+`c420ui-host project-config --json` / Rust project config loading. The bridge
+may still expose actions for menus and transitional compatibility, but it must
+not be the source of truth for action validation or execution policy.
 
 ## Boundary checks
 

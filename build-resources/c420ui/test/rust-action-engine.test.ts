@@ -88,6 +88,53 @@ printf '%s\\n' '{"event":"action:finish","actionId":"doctor","status":"success",
   ]);
 });
 
+test("runActionById sends projectConfigRoot and omits inline actions on primary Rust path", async () => {
+  const captureDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-action-project-root-"));
+  const inputPath = path.join(captureDir, "input.json");
+  const binPath = makeRustHostStub(`
+read input
+printf '%s' "$input" > ${JSON.stringify(inputPath)}
+printf '%s\\n' '{"event":"action:finish","actionId":"doctor","status":"success","code":0}'
+`);
+  const engine = createC420UIRustActionEngine({
+    bridge: createBridge(),
+    rootDir: "/repo",
+    projectConfigRoot: "config",
+    env: { C420UI_HOST_BIN: binPath, PATH: process.env.PATH },
+  });
+
+  const result = await engine.runActionById("doctor", { yes: true });
+  const input = JSON.parse(fs.readFileSync(inputPath, "utf8"));
+
+  assert.deepEqual(result, { code: 0, status: "success" });
+  assert.equal(input.projectConfigRoot, "config");
+  assert.deepEqual(input.actions, []);
+});
+
+test("runActionById lets Rust resolve action ids from projectConfigRoot", async () => {
+  const captureDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-action-rust-resolve-"));
+  const inputPath = path.join(captureDir, "input.json");
+  const binPath = makeRustHostStub(`
+read input
+printf '%s' "$input" > ${JSON.stringify(inputPath)}
+printf '%s\\n' '{"event":"action:finish","actionId":"from-rust","status":"success","code":0}'
+`);
+  const engine = createC420UIRustActionEngine({
+    bridge: createBridge(),
+    rootDir: "/repo",
+    projectConfigRoot: "config",
+    env: { C420UI_HOST_BIN: binPath, PATH: process.env.PATH },
+  });
+
+  const result = await engine.runActionById("from-rust", { yes: true });
+  const input = JSON.parse(fs.readFileSync(inputPath, "utf8"));
+
+  assert.deepEqual(result, { code: 0, status: "success" });
+  assert.equal(input.actionId, "from-rust");
+  assert.equal(input.projectConfigRoot, "config");
+  assert.deepEqual(input.actions, []);
+});
+
 test("root-request calls requestRootAccess and sends root-response without logging env", async () => {
   const capturePath = path.join(os.tmpdir(), `c420ui-root-response-${process.pid}.jsonl`);
   const binPath = makeRustHostStub(`

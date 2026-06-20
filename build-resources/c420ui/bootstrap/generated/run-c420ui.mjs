@@ -220,7 +220,7 @@ var c420uiExitCodes = {
 
 // build-resources/c420ui/src/rust-action-engine.ts
 function createC420UIRustActionEngine(options) {
-  const { bridge, rootDir: rootDir2, emit, rootProvider } = options;
+  const { bridge, rootDir: rootDir2, emit, rootProvider, projectConfigRoot } = options;
   function listActions() {
     return bridge.actions();
   }
@@ -237,6 +237,9 @@ function createC420UIRustActionEngine(options) {
   async function runActionById(actionId, runOptions = {}) {
     const resolution = resolveActionById(actionId);
     if (!resolution.found) {
+      if (projectConfigRoot) {
+        return runAction(createProjectConfigResolvedAction(actionId), runOptions);
+      }
       return {
         code: c420uiExitCodes.invalidUsage,
         status: "failed",
@@ -273,6 +276,7 @@ function createC420UIRustActionEngine(options) {
     }
     const finalEvent = await runRustActionProcess({
       rootDir: rootDir2,
+      projectConfigRoot,
       action,
       actions: listActions(),
       env: pickStringEnv(actionEnv),
@@ -311,6 +315,14 @@ function createC420UIRustActionEngine(options) {
     resolveActionByCliFlag,
     runActionById,
     runAction
+  };
+}
+function createProjectConfigResolvedAction(actionId) {
+  return {
+    id: actionId,
+    label: actionId,
+    group: "custom",
+    kind: "command"
   };
 }
 async function runRustActionProcess(options) {
@@ -396,10 +408,11 @@ async function runRustActionProcess(options) {
     child.stdin.write(`${JSON.stringify({
       rootDir: options.rootDir,
       actionId: options.action.id,
+      projectConfigRoot: options.projectConfigRoot,
       dryRun: options.dryRun,
       yes: options.yes,
       env: options.env,
-      actions: options.actions.map(toRustActionDefinition),
+      actions: options.projectConfigRoot ? [] : options.actions.map(toRustActionDefinition),
       rootPolicy: options.rootPolicy
     })}
 `);
@@ -1545,6 +1558,7 @@ function runC420UIRustTuiApp(options) {
   const engine = createC420UIRustActionEngine({
     bridge: options.bridge,
     rootDir: options.config.rootDir,
+    projectConfigRoot: options.config.projectConfigRoot,
     env: options.env,
     rootProvider: options.rootProvider,
     requestRootAccess: (request) => requestRootAccessThroughTui(
@@ -2664,40 +2678,6 @@ async function runC420UIHostDependencyEnsure(config, options) {
     action: "ensure",
     runCommand: options.runCommand
   });
-}
-
-// build-resources/c420ui/src/maintenance-config.ts
-function validateTargetList(input, field) {
-  if (input === void 0) return void 0;
-  if (!Array.isArray(input)) {
-    throw new Error(`${field} must be an array`);
-  }
-  return input.map((target, index) => {
-    if (typeof target !== "string") {
-      throw new Error(`${field}[${index}] must be a string`);
-    }
-    const trimmed = target.trim();
-    if (!trimmed) {
-      throw new Error(`${field}[${index}] must not be empty`);
-    }
-    if (trimmed.startsWith("/") || trimmed === "." || trimmed === "/" || trimmed.includes("\\")) {
-      throw new Error(`${field}[${index}] must be a safe relative path`);
-    }
-    if (trimmed.split("/").includes("..")) {
-      throw new Error(`${field}[${index}] must not contain ..`);
-    }
-    return trimmed;
-  });
-}
-function validateC420UIMaintenanceConfig(input) {
-  if (!input || typeof input !== "object" || Array.isArray(input)) {
-    throw new Error("maintenance config must be an object");
-  }
-  const value = input;
-  return {
-    cleanupTargets: validateTargetList(value.cleanupTargets, "cleanupTargets"),
-    permissionTargets: validateTargetList(value.permissionTargets, "permissionTargets")
-  };
 }
 
 // build-resources/c420ui/src/command-runner.ts
@@ -4296,6 +4276,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     resolvedRootDir,
     "build-resources/canva-linux/config/build-metadata.json"
   );
+  const projectConfigRoot = "build-resources/canva-linux/config";
   const c420uiPackageJsonPath = path18.join(
     resolvedRootDir,
     "build-resources/c420ui/package.json"
@@ -4321,12 +4302,10 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     return readJsonFile6(c420uiPackageJsonPath);
   }
   function loadHostDependencies() {
-    const config = readJsonFile6(hostDependenciesJsonPath);
-    return validateC420UIHostDependencyConfig(config);
+    return readJsonFile6(hostDependenciesJsonPath);
   }
   function loadMaintenanceConfig() {
-    const config = readJsonFile6(maintenanceJsonPath);
-    return validateC420UIMaintenanceConfig(config);
+    return readJsonFile6(maintenanceJsonPath);
   }
   function getPackageVersion() {
     return loadPackageJson().version ?? "unknown";
@@ -4483,6 +4462,7 @@ function createCanvaLinuxC420UIAdapter(rootDir2) {
     const projectUi = loadProjectUi();
     return {
       rootDir: resolvedRootDir,
+      projectConfigRoot,
       title: projectUi.c420uiTitle,
       brand: loadBrandConfig(),
       project: loadProjectConfig(),

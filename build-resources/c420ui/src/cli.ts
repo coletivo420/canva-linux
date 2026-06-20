@@ -8,6 +8,7 @@ import type { C420UIEventSink } from "./events.js";
 export type c420uiCliOptions = {
   bridge: c420uiProjectBridge;
   rootDir: string;
+  projectConfigRoot?: string;
   argv: string[];
   env?: NodeJS.ProcessEnv;
   emit?: C420UIEventSink;
@@ -95,6 +96,7 @@ export async function runC420UICli(
   const engine = createC420UIActionEngine({
     bridge: options.bridge,
     rootDir: options.rootDir,
+    projectConfigRoot: options.projectConfigRoot,
     env: options.env,
     emit: options.emit,
     rootProvider: options.rootProvider,
