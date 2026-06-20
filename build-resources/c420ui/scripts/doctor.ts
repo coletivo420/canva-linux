@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -62,29 +62,61 @@ function readHostDependencyInput(): unknown {
   };
 }
 
-function runHostJson(binary: string, command: string, input?: unknown): DoctorEnvelope {
-  const result = spawnSync(binary, [command, "--json"], {
-    cwd: rootDir,
-    input: input === undefined ? undefined : JSON.stringify(input),
-    encoding: "utf8",
-    timeout: 15_000,
+function runHostJson(binary: string, command: string, input?: unknown): Promise<DoctorEnvelope> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(binary, [command, "--json"], {
+      cwd: rootDir,
+      shell: false,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    const timeout = setTimeout(() => {
+      child.kill("SIGTERM");
+      reject(new Error(`${command} timed out`));
+    }, 15_000);
+
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+    child.on("close", (code, signal) => {
+      clearTimeout(timeout);
+      if (signal) {
+        reject(new Error(`${command} timed out or was terminated by ${signal}`));
+        return;
+      }
+      const output = stdout.trim();
+      if (!output) {
+        reject(new Error(`${command} produced no JSON output: ${stderr.trim()}`));
+        return;
+      }
+      try {
+        const parsed = JSON.parse(output) as DoctorEnvelope;
+        printEnvelope(parsed);
+        if (code !== 0 || parsed.ok === false) {
+          process.exitCode = 1;
+        }
+        resolve(parsed);
+      } catch (error) {
+        reject(error);
+      }
+    });
+
+    if (input !== undefined) {
+      child.stdin.end(JSON.stringify(input));
+    } else {
+      child.stdin.end();
+    }
   });
-  if (result.error) {
-    throw result.error;
-  }
-  if (result.signal) {
-    throw new Error(`${command} timed out or was terminated by ${result.signal}`);
-  }
-  const output = result.stdout.trim();
-  if (!output) {
-    throw new Error(`${command} produced no JSON output: ${result.stderr.trim()}`);
-  }
-  const parsed = JSON.parse(output) as DoctorEnvelope;
-  printEnvelope(parsed);
-  if (result.status !== 0 || parsed.ok === false) {
-    process.exitCode = 1;
-  }
-  return parsed;
 }
 
 function printEnvelope(envelope: DoctorEnvelope): void {
@@ -105,22 +137,20 @@ function printEnvelope(envelope: DoctorEnvelope): void {
   }
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const binary = resolveHostBinary();
   console.log("[info] c420ui-host host-info");
-  runHostJson(binary, "host-info");
+  await runHostJson(binary, "host-info");
   console.log("[info] c420ui-host doctor");
-  runHostJson(binary, "doctor");
+  await runHostJson(binary, "doctor");
   console.log("[info] c420ui-host check-host-dependencies");
-  runHostJson(binary, "check-host-dependencies", readHostDependencyInput());
+  await runHostJson(binary, "check-host-dependencies", readHostDependencyInput());
   if (!process.exitCode) {
     console.log("[ok] Doctor / check host tools completed");
   }
 }
 
-try {
-  main();
-} catch (error) {
+main().catch((error) => {
   console.error(`[error] ${error instanceof Error ? error.message : String(error)}`);
   process.exitCode = 1;
-}
+});

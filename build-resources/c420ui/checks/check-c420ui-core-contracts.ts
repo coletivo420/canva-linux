@@ -25,6 +25,13 @@ function collectTypeScriptFiles(dir: string): string[] {
   });
 }
 
+function collectTestSources(rootDir: string): Array<{ relativePath: string; source: string }> {
+  return collectTypeScriptFiles(path.join(rootDir, "build-resources/c420ui/test")).map((filePath) => ({
+    relativePath: path.relative(rootDir, filePath),
+    source: fs.readFileSync(filePath, "utf8"),
+  }));
+}
+
 function collectInteractiveRootAuthHardeningFailures(
   app: string,
   context: string,
@@ -1898,6 +1905,41 @@ function checkRustTuiContract(failures: string[]): void {
   }
 }
 
+function checkRustMigrationTestContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const tests = collectTestSources(rootDir);
+  const forbiddenBackend = ["C420UI", "TUI", "BACKEND"].join("_");
+
+  for (const { relativePath, source } of tests) {
+    if (source.includes(forbiddenBackend)) {
+      failures.push(`${relativePath}: tests must not reference the removed optional TUI backend switch`);
+    }
+    if (
+      /includes blessed runtime terminfo assets|blessed runtime assets match installed blessed package|node_modules\/blessed\/usr/.test(
+        source,
+      )
+    ) {
+      failures.push(`${relativePath}: tests must not expect Blessed assets as runtime contract`);
+    }
+    if (
+      source.includes('".local", "state"') ||
+      source.includes("~/.local/state/canva-linux/tool-session.log") ||
+      source.includes("stateDirectoryName, \"tool-session.log\"")
+    ) {
+      failures.push(`${relativePath}: tests must not expect legacy local-state session logs`);
+    }
+    if (/from\s+["'][^"']*build-resources\/c420ui\/host\/(?:sudo|command-runner)\.ts["']/.test(source)) {
+      failures.push(`${relativePath}: tests must not import removed host/sudo or host/command-runner paths`);
+    }
+  }
+
+  const doctorSourcePath = path.join(rootDir, "build-resources/c420ui/scripts/doctor.ts");
+  const doctorSource = fs.existsSync(doctorSourcePath) ? fs.readFileSync(doctorSourcePath, "utf8") : "";
+  if (doctorSource.includes("spawnSync") || /\/bin\/bash|bash -lc|sh -c/.test(doctorSource)) {
+    failures.push("build-resources/c420ui/scripts/doctor.ts: Doctor must delegate to c420ui-host without legacy sync shell runners");
+  }
+}
+
 export function main(): number {
   const failures: string[] = [];
 
@@ -1908,6 +1950,7 @@ export function main(): number {
   checkMaintenanceContract(failures);
   checkRustFilesystemOperationsContract(failures);
   checkRustTuiContract(failures);
+  checkRustMigrationTestContract(failures);
   runBridgeContract(failures);
   runDetectionContract(failures);
   runActionValidationContract(failures);

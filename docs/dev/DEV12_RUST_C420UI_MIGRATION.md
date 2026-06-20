@@ -159,6 +159,11 @@ confirmation modal, progress states use strict success/warning/error colors,
 scroll/wrapping is restored for overview/logs/artifact panels, and status
 panels now color only values while preserving label colors.
 
+Dev12 test coverage was reorganized after the Rust host/TUI migration. Tests now
+protect c420ui-host, c420ui-tui, the TypeScript Action Engine bridge, and the
+dependent-project boundary instead of the removed Blessed/spawnSync/sudo runner
+paths.
+
 The TypeScript Action Engine remains responsible for action resolution,
 execution, root-provider interaction and progress/log events. Rust owns terminal
 rendering, navigation, action selection, progress display, log display and the

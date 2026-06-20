@@ -113,6 +113,9 @@ Request changes if a PR:
   actions must lock the menu behind an interruption confirmation modal, progress
   warning/error/success colors must stay distinct, artifact/log/overview panels
   must wrap and scroll, and status panels must color only values.
+- restores tests that protect the removed Blessed/spawnSync/sudo runner paths
+  instead of the current c420ui-host, c420ui-tui, TypeScript Action Engine
+  bridge, and dependent-project boundary contracts.
 
 ## c420ui version/hash review
 

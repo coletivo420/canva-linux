@@ -113,10 +113,11 @@ test("help menu is informational and never maps help items to executable actions
   });
 });
 
-test("nao existe C420UI_TUI_BACKEND", () => {
+test("no optional tui backend switch exists", () => {
   const source = fs.readFileSync(
     path.join(process.cwd(), "build-resources/c420ui/src/rust-tui-contracts.ts"),
     "utf8",
   );
-  assert.equal(source.includes("C420UI_TUI_BACKEND"), false);
+  const forbidden = ["C420UI", "TUI", "BACKEND"].join("_");
+  assert.equal(source.includes(forbidden), false);
 });

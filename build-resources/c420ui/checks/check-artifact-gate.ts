@@ -8,7 +8,6 @@ import {
   C420UI_BOOTSTRAP_BUILD_RECIPE,
   C420UI_BOOTSTRAP_BUILD_TARGET,
   C420UI_BOOTSTRAP_BUILD_TOOL,
-  C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
   createC420UIBootstrapEsbuildCliArgs,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
@@ -107,19 +106,6 @@ function runGitDiffCheck(rootDir: string, label: string): void {
   }
 }
 
-function copyBlessedRuntimeAssets(rootDir: string, expectedBootstrapDir: string): void {
-  const blessedUsrDir = path.join(rootDir, "node_modules", "blessed", "usr");
-  const expectedUsrDir = path.join(path.dirname(expectedBootstrapDir), "usr");
-
-  fs.mkdirSync(expectedUsrDir, { recursive: true });
-  for (const relativeAsset of C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS) {
-    fs.copyFileSync(
-      path.join(blessedUsrDir, relativeAsset),
-      path.join(expectedUsrDir, relativeAsset),
-    );
-  }
-}
-
 function calculateFileHash(filePath: string): string {
   return `sha256:${createHash("sha256")
     .update(fs.readFileSync(filePath))
@@ -203,7 +189,6 @@ function generateExpectedArtifacts(rootDir: string, expectedBootstrapDir: string
     throw new Error(`unable to generate temporary c420ui bootstrap artifacts (${summarizeCommandFailure(result)})`);
   }
 
-  copyBlessedRuntimeAssets(rootDir, expectedBootstrapDir);
   const artifactHashes = calculateBootstrapArtifactHashes(expectedBootstrapDir);
 
   const manifest = {

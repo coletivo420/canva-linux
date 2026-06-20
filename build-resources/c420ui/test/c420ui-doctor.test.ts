@@ -7,10 +7,29 @@ test("doctor source script exists and delegates host checks to c420ui-host", () 
   const source = fs.readFileSync(sourcePath, "utf8");
 
   assert.match(source, /c420ui-host/);
-  assert.match(source, /host-info/);
-  assert.match(source, /doctor/);
-  assert.match(source, /check-host-dependencies/);
+  assert.match(source, /runHostJson\(binary, "host-info"\)/);
+  assert.match(source, /runHostJson\(binary, "doctor"\)/);
+  assert.match(source, /runHostJson\(binary, "check-host-dependencies"/);
   assert.doesNotMatch(source, /runDoctorValidation/);
+});
+
+test("doctor source uses c420ui-host directly without bash or legacy sync runners", () => {
+  const source = fs.readFileSync("build-resources/c420ui/scripts/doctor.ts", "utf8");
+
+  assert.match(source, /spawn\(binary, \[command, "--json"\]/);
+  assert.match(source, /shell: false/);
+  assert.doesNotMatch(source, /spawnSync/);
+  assert.doesNotMatch(source, /execSync/);
+  assert.doesNotMatch(source, /\/bin\/bash|bash -lc|sh -c/);
+});
+
+test("doctor output differentiates ok, warning and error levels", () => {
+  const source = fs.readFileSync("build-resources/c420ui/scripts/doctor.ts", "utf8");
+
+  assert.match(source, /\[ok\]/);
+  assert.match(source, /\[warning\]/);
+  assert.match(source, /\[error\]/);
+  assert.match(source, /envelope\.data\.status === "missing"/);
 });
 
 test("doctor action targets the generated c420ui doctor script", () => {

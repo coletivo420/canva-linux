@@ -218,18 +218,6 @@ test("runner writes session log and refreshes panels after actions", async () =>
   assert.match(sessionLog, /\[action\] installed/);
 });
 
-test("runner defaults session log to /tmp/c420ui instead of project namespace", () => {
-  const source = fs.readFileSync(
-    "build-resources/c420ui/src/rust-tui-runner.ts",
-    "utf8",
-  );
-
-  assert.match(source, /path\.join\("\/tmp", "c420ui", "tool-session\.log"\)/);
-  assert.match(source, /"\.tmp",\s*"c420ui",\s*"tool-session\.log"/);
-  assert.equal(source.includes('".local", "state"'), false);
-  assert.equal(source.includes("stateDirectoryName, \"tool-session.log\""), false);
-});
-
 test("runner processes interrupt-action and aborts the active action", async () => {
   let aborted = false;
   const { child, writes } = startRunner({

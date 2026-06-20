@@ -8,7 +8,6 @@ import {
   C420UI_BOOTSTRAP_BUILD_RECIPE,
   C420UI_BOOTSTRAP_BUILD_TARGET,
   C420UI_BOOTSTRAP_BUILD_TOOL,
-  C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
   createC420UIBootstrapEsbuildCliArgs,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
@@ -173,29 +172,6 @@ export function validateManifestArtifactHashes(
   }
 }
 
-function validateBlessedRuntimeAssetsMatchPackage(
-  rootDir: string,
-  relativePaths: readonly string[],
-  failures: string[],
-): void {
-  const blessedUsrDir = path.join(rootDir, "node_modules", "blessed", "usr");
-  const bootstrapUsrDir = path.join(rootDir, "bootstrap", "usr");
-
-  for (const relativePath of relativePaths) {
-    const committedPath = path.join(rootDir, relativePath);
-    const relativeAsset = path.relative(bootstrapUsrDir, committedPath);
-    const packagePath = path.join(blessedUsrDir, relativeAsset);
-
-    if (!fs.existsSync(committedPath) || !fs.existsSync(packagePath)) continue;
-
-    const committed = fs.readFileSync(committedPath);
-    const packaged = fs.readFileSync(packagePath);
-    if (!committed.equals(packaged)) {
-      failures.push(`${relativePath}: runtime asset is stale; run npm run build:c420ui-bootstrap`);
-    }
-  }
-}
-
 function compareGeneratedArtifacts(
   rootDir: string,
   expectedBootstrapDir: string,
@@ -338,11 +314,7 @@ function main(): void {
   const uiBundlePath = c420uiBootstrapArtifactPath("run-c420ui.mjs");
   const cliBundlePath = c420uiBootstrapArtifactPath("run-c420ui-cli.mjs");
   const builderBundlePath = c420uiBootstrapArtifactPath("c420ui-builder.mjs");
-  const blessedRuntimeAssets = C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS.map(
-    (asset) => `build-resources/c420ui/bootstrap/usr/${asset}`,
-  );
-
-  for (const relativePath of [manifestPath, uiBundlePath, cliBundlePath, builderBundlePath, ...blessedRuntimeAssets]) {
+  for (const relativePath of [manifestPath, uiBundlePath, cliBundlePath, builderBundlePath]) {
     fileExistsAndIsNotEmpty(rootDir, relativePath, failures);
   }
 
@@ -480,10 +452,13 @@ function main(): void {
     validateJavaScriptSyntax(rootDir, relativePath, failures);
   }
   if (fs.existsSync(path.join(rootDir, uiBundlePath))) {
-    validateC420UIRuntimeBundleKnownCorruption(read(rootDir, uiBundlePath), failures);
+    const uiBundle = read(rootDir, uiBundlePath);
+    validateC420UIRuntimeBundleKnownCorruption(uiBundle, failures);
+    if (/createApp|blessed-widgets|from "blessed"/.test(uiBundle)) {
+      failures.push(`${uiBundlePath}: interactive bootstrap must route directly to the Rust TUI runtime, not bundle Blessed UI code`);
+    }
   }
   validateGeneratedArtifactsMatchBuildRecipe(rootDir, [uiBundlePath, cliBundlePath, builderBundlePath], failures);
-  validateBlessedRuntimeAssetsMatchPackage(rootDir, blessedRuntimeAssets, failures);
 
   if (failures.length) {
     console.error(failures.join("\n"));

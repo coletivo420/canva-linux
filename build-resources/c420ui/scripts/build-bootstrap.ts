@@ -12,7 +12,6 @@ import {
   C420UI_BOOTSTRAP_BUILD_TARGET,
   C420UI_BOOTSTRAP_BUILD_TOOL,
   C420UI_BOOTSTRAP_BUNDLE_FORMAT,
-  C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS,
   createC420UIBootstrapBuildOptions,
   C420UI_BOOTSTRAP_MODULE_FORMAT,
 } from "../bootstrap/build-recipe.js";
@@ -70,30 +69,6 @@ function calculateArtifactHashes(bootstrapDir: string): Record<string, string> {
   return hashes;
 }
 
-function copyBlessedRuntimeAssets(rootDir: string, bootstrapDir: string): void {
-  const blessedPackageJsonPath = path.join(
-    rootDir,
-    "node_modules",
-    "blessed",
-    "package.json",
-  );
-  if (!fs.existsSync(blessedPackageJsonPath)) {
-    throw new Error("node_modules/blessed/package.json not found; run npm install");
-  }
-  const blessedUsrDir = path.join(path.dirname(blessedPackageJsonPath), "usr");
-  const bootstrapUsrDir = path.join(path.dirname(bootstrapDir), "usr");
-
-  fs.rmSync(bootstrapUsrDir, { recursive: true, force: true });
-  fs.mkdirSync(bootstrapUsrDir, { recursive: true });
-
-  for (const relativeAsset of C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS) {
-    fs.copyFileSync(
-      path.join(blessedUsrDir, relativeAsset),
-      path.join(bootstrapUsrDir, relativeAsset),
-    );
-  }
-}
-
 async function main(): Promise<void> {
   const rootDir = findProjectRoot();
   const bootstrapDir = resolveBootstrapDir(rootDir);
@@ -107,7 +82,6 @@ async function main(): Promise<void> {
   const c420uiVersion = requirePackageVersion(c420uiPackageJson, "build-resources/c420ui/package.json");
 
   await esbuild.build(createC420UIBootstrapBuildOptions(rootDir, bootstrapDir));
-  copyBlessedRuntimeAssets(rootDir, bootstrapDir);
 
   const c420uiSourceHash = calculateC420UISourceHash(rootDir);
   const artifactHashes = calculateArtifactHashes(bootstrapDir);

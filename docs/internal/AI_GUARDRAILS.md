@@ -19,6 +19,11 @@ confirmation modal, progress states use strict success/warning/error colors,
 scroll/wrapping is restored for overview/logs/artifact panels, and status
 panels now color only values while preserving label colors.
 
+Dev12 test coverage now protects c420ui-host, c420ui-tui, the TypeScript Action
+Engine bridge, and the dependent-project boundary. Do not restore tests that
+expect the removed Blessed/spawnSync/sudo runner paths as the maintained
+architecture.
+
 ## Dev11 ESM-only guardrails (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

@@ -5,379 +5,26 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// build-resources/c420ui/src/theme.json
-var theme_default = {
-  palette: {
-    canvaLightBlue: "#07B9CE",
-    canvaBlue: "#3969E7",
-    canvaPurple: "#7D2AE7",
-    success: "#00C853",
-    warning: "#FFD166",
-    error: "#FF4D4F",
-    text: "#EAF7FF",
-    muted: "#8FA3B8",
-    background: "#10131A",
-    surface: "#171B24",
-    surfaceAlt: "#202635"
-  },
-  ansiFallback: {
-    primary: "cyan",
-    secondary: "blue",
-    accent: "magenta",
-    success: "green",
-    warning: "yellow",
-    error: "red"
-  }
-};
-
-// build-resources/c420ui/src/terminal/theme.ts
-var supportsTrueColor = process.env.COLORTERM === "truecolor" || process.env.COLORTERM === "24bit";
-var colors = {
-  lightBlue: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.primary,
-  blue: supportsTrueColor ? theme_default.palette.canvaBlue : theme_default.ansiFallback.secondary,
-  purple: supportsTrueColor ? theme_default.palette.canvaPurple : theme_default.ansiFallback.accent,
-  success: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
-  warning: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
-  error: supportsTrueColor ? theme_default.palette.error : theme_default.ansiFallback.error,
-  text: supportsTrueColor ? theme_default.palette.text : "white",
-  muted: supportsTrueColor ? theme_default.palette.muted : "gray",
-  background: supportsTrueColor ? theme_default.palette.background : "black",
-  surface: supportsTrueColor ? theme_default.palette.surface : "black",
-  surfaceAlt: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
-  menuSelectedBg: supportsTrueColor ? theme_default.palette.canvaPurple : "magenta",
-  menuSelectedFg: "white",
-  menuInactiveSelectedBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
-  menuInactiveSelectedFg: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
-  footerBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
-  footerFg: "white",
-  statusDetected: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
-  statusNotDetected: supportsTrueColor ? theme_default.palette.canvaPurple : theme_default.ansiFallback.accent,
-  helpTitle: supportsTrueColor ? theme_default.palette.canvaBlue : theme_default.ansiFallback.secondary,
-  helpSectionTitle: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
-  infoItemTitle: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
-  infoText: supportsTrueColor ? theme_default.palette.text : "white",
-  descriptionText: supportsTrueColor ? theme_default.palette.text : "white",
-  logo: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.secondary,
-  version: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.secondary,
-  phase: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
-  appImageLoading: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
-  activeBorder: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
-  inactiveBorder: supportsTrueColor ? theme_default.palette.canvaBlue : "blue",
-  activeLabel: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
-  inactiveLabel: supportsTrueColor ? theme_default.palette.muted : "gray",
-  activeBlockBg: supportsTrueColor ? theme_default.palette.surface : "black",
-  activeCellBg: supportsTrueColor ? theme_default.palette.canvaBlue : "blue",
-  activeCellFg: "white",
-  activeCheckboxFg: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
-  activeCheckboxBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
-  inactiveCheckboxFg: supportsTrueColor ? theme_default.palette.muted : "gray"
-};
-var c420uiTheme = {
-  supportsTrueColor,
-  colors,
-  header: {
-    fg: colors.lightBlue,
-    bg: colors.background,
-    bold: true
-  },
-  menu: {
-    fg: colors.text,
-    bg: colors.background,
-    border: {
-      fg: colors.blue
-    },
-    selected: {
-      fg: colors.menuSelectedFg,
-      bg: colors.menuSelectedBg,
-      bold: true
-    },
-    item: {
-      fg: colors.text
-    }
-  },
-  content: {
-    fg: colors.text,
-    bg: colors.background,
-    border: {
-      fg: colors.purple
-    },
-    label: {
-      fg: colors.lightBlue
-    }
-  },
-  logs: {
-    fg: colors.text,
-    bg: colors.background,
-    border: {
-      fg: colors.blue
-    },
-    label: {
-      fg: colors.lightBlue
-    }
-  },
-  footer: {
-    fg: colors.footerFg,
-    bg: colors.footerBg,
-    bold: true
-  },
-  modal: {
-    normalBorder: colors.lightBlue,
-    dangerousBorder: colors.error,
-    text: colors.text,
-    background: colors.background
-  }
-};
-
-// build-resources/c420ui/src/terminal/blessed-widgets.ts
-import blessed from "blessed";
-var tui = {
-  screen: blessed.screen,
-  box: blessed.box,
-  list: blessed.list,
-  log: blessed.log,
-  textbox: blessed.textbox
-};
-
-// build-resources/c420ui/src/terminal/detected-installations-summary.ts
-var GENERATED_ARTIFACT_KINDS = /* @__PURE__ */ new Set([
-  "appimage",
-  "flatpak",
-  "tarball",
-  "sha256sums",
-  "deb",
-  "rpm",
-  "aur"
-]);
-function detectedVersion(fullVersion, version) {
-  if (typeof fullVersion === "string" && fullVersion.trim()) {
-    return fullVersion;
-  }
-  return version;
+// build-resources/c420ui/src/terminal/help.ts
+function formatC420UITerminalHelp(options) {
+  const launcher = options.launcherCommand || options.config.project.launcherCommand;
+  return [
+    `${options.config.project.projectName} c420ui terminal interface`,
+    "",
+    "Usage:",
+    "  npm run c420ui",
+    launcher ? `  ${launcher}` : ""
+  ].filter(Boolean).join("\n");
 }
-function formatShortHash(hash, version) {
-  void version;
-  if (!hash) return "";
-  if (hash === "unknown") return " \xB7 unknown";
-  const parts = hash.split(":");
-  const algo = parts.length > 1 ? `${parts[0]}:` : "";
-  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
-  return ` \xB7 ${algo}${value.slice(0, 8)}`;
-}
-function artifactVersion(fragment) {
-  return fragment.fullVersion || fragment.version;
-}
-function formatDetectedStatus(colors2, detected, version, hash) {
-  if (!detected) {
-    return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
-  }
-  return typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "version unknown";
-}
-function formatArtifactLine(fragment, colors2) {
-  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment), fragment.hash)}`;
-}
-function isGeneratedArtifactFragment(fragment) {
-  if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
-  if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
-  return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
-}
-function versionSummaryItem(label, version, hash) {
-  return `${label} ${version ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "unknown"}`;
-}
-function formatDetectionPanelSummaries(s, colors2) {
-  if (!s) {
-    const loading = `{${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`;
-    return {
-      detectedInstallations: [
-        `  Native System: ${loading}`,
-        `  Native User: ${loading}`,
-        `  Flatpak System: ${loading}`,
-        `  Flatpak User: ${loading}`
-      ],
-      generatedArtifacts: [`  AppImage: ${loading}`],
-      linuxArtifacts: [`Electron/Node/npm loading...`]
-    };
-  }
-  const i = s.installations;
-  const linuxUnpacked = s.artifactFragments?.find(
-    (fragment) => fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked"
-  );
-  const generatedArtifacts = s.artifactFragments ? s.artifactFragments.filter(isGeneratedArtifactFragment).map((fragment) => formatArtifactLine(fragment, colors2)) : [
-    `  AppImage: ${formatDetectedStatus(
-      colors2,
-      Boolean(i.appImageArtifacts),
-      detectedVersion(i.appImageFullVersion, i.appImageVersion),
-      i.appImageHash
-    )}`
-  ];
-  return {
-    detectedInstallations: [
-      `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion), i.nativeSystemHash)}`,
-      `  Native User: ${formatDetectedStatus(colors2, Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion), i.nativeUserHash)}`,
-      `  Flatpak System: ${formatDetectedStatus(colors2, Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion), i.flatpakSystemHash)}`,
-      `  Flatpak User: ${formatDetectedStatus(colors2, Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion), i.flatpakUserHash)}`
-    ],
-    generatedArtifacts,
-    linuxArtifacts: [
-      [
-        versionSummaryItem("Electron", s.runtime?.electronVersion),
-        versionSummaryItem("Node", s.runtime?.nodeVersion),
-        versionSummaryItem("npm", s.runtime?.npmVersion),
-        versionSummaryItem(
-          "Linux unpacked",
-          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0,
-          linuxUnpacked?.hash
-        )
-      ].join(", ")
-    ]
-  };
+function printC420UITerminalHelp(options) {
+  console.log(formatC420UITerminalHelp(options));
 }
 
-// build-resources/c420ui/src/terminal/clipboard.ts
-import { spawnSync } from "node:child_process";
-function has(command) {
-  return spawnSync("bash", ["-c", `command -v ${command}`]).status === 0;
-}
-function runWithInput(command, args, input) {
-  const result = spawnSync(command, args, {
-    input,
-    encoding: "utf8"
-  });
-  return result.status === 0;
-}
-function copyTextToClipboard(text) {
-  if (!text.trim()) {
-    return {
-      ok: false,
-      message: "No logs to copy."
-    };
-  }
-  if (process.env.WAYLAND_DISPLAY && has("wl-copy") && runWithInput("wl-copy", [], text)) {
-    return {
-      ok: true,
-      message: "Logs copied to clipboard via wl-copy."
-    };
-  }
-  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("kde")) {
-    if (has("qdbus6") && runWithInput(
-      "bash",
-      [
-        "-c",
-        'input=$(cat); qdbus6 org.kde.klipper /klipper setClipboardContents "$input"'
-      ],
-      text
-    )) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via KDE Klipper (qdbus6)."
-      };
-    }
-    if (has("qdbus") && runWithInput(
-      "bash",
-      [
-        "-c",
-        'input=$(cat); qdbus org.kde.klipper /klipper setClipboardContents "$input"'
-      ],
-      text
-    )) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via KDE Klipper (qdbus)."
-      };
-    }
-  }
-  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("gnome")) {
-    if (has("gpaste-client") && runWithInput("gpaste-client", ["add"], text)) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via GPaste."
-      };
-    }
-    if (has("gpaste") && runWithInput("gpaste", ["add"], text)) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via GPaste."
-      };
-    }
-  }
-  if (has("xclip") && runWithInput("xclip", ["-selection", "clipboard"], text)) {
-    return {
-      ok: true,
-      message: "Logs copied to clipboard via xclip."
-    };
-  }
-  if (has("xsel") && runWithInput("xsel", ["--clipboard", "--input"], text)) {
-    return {
-      ok: true,
-      message: "Logs copied to clipboard via xsel."
-    };
-  }
-  return {
-    ok: false,
-    message: "No clipboard tool found. Install wl-clipboard, KDE qdbus support, GPaste, xclip or xsel."
-  };
-}
-
-// build-resources/c420ui/src/terminal/settings.ts
-import fs from "node:fs";
-import path from "node:path";
-var DEFAULT_TOOL_SETTINGS = {
-  tool: {
-    generalLogsEnabled: true,
-    terminalTextSelectionMode: false
-  },
-  runtime: {}
-};
-function configHome() {
-  const xdgConfigHome = process.env.XDG_CONFIG_HOME?.trim();
-  if (xdgConfigHome) {
-    return xdgConfigHome;
-  }
-  return path.join(process.env.HOME || ".", ".config");
-}
-function toolSettingsPath(stateDirectoryName) {
-  return path.join(configHome(), stateDirectoryName, "tool-settings.json");
-}
-function isObject(value) {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-function normalizeSettings(raw) {
-  const rawRoot = isObject(raw) ? raw : {};
-  const rawTool = isObject(rawRoot.tool) ? rawRoot.tool : {};
-  const runtime = isObject(rawRoot.runtime) ? rawRoot.runtime : {};
-  return {
-    tool: {
-      generalLogsEnabled: typeof rawTool.generalLogsEnabled === "boolean" ? rawTool.generalLogsEnabled : DEFAULT_TOOL_SETTINGS.tool.generalLogsEnabled,
-      terminalTextSelectionMode: typeof rawTool.terminalTextSelectionMode === "boolean" ? rawTool.terminalTextSelectionMode : DEFAULT_TOOL_SETTINGS.tool.terminalTextSelectionMode
-    },
-    runtime
-  };
-}
-function loadToolSettings(stateDirectoryName) {
-  const settingsPath = toolSettingsPath(stateDirectoryName);
-  if (!fs.existsSync(settingsPath)) {
-    try {
-      saveToolSettings(DEFAULT_TOOL_SETTINGS, stateDirectoryName);
-    } catch {
-    }
-    return structuredClone(DEFAULT_TOOL_SETTINGS);
-  }
-  try {
-    const rawContent = fs.readFileSync(settingsPath, "utf8");
-    return normalizeSettings(JSON.parse(rawContent));
-  } catch {
-    return structuredClone(DEFAULT_TOOL_SETTINGS);
-  }
-}
-function saveToolSettings(settings, stateDirectoryName) {
-  const settingsPath = toolSettingsPath(stateDirectoryName);
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-  fs.writeFileSync(
-    settingsPath,
-    `${JSON.stringify(normalizeSettings(settings), null, 2)}
-`,
-    "utf8"
-  );
-}
+// build-resources/c420ui/src/rust-tui-runner.ts
+import { spawn } from "node:child_process";
+import fs2 from "node:fs";
+import path2 from "node:path";
+import { StringDecoder } from "node:string_decoder";
 
 // build-resources/c420ui/src/scopes.ts
 var c420uiKnownActionScopes = ["user", "system", "auto"];
@@ -740,187 +387,6 @@ function createC420UIActionEngine(options) {
   };
 }
 
-// build-resources/c420ui/src/host-dependencies.ts
-var c420uiKnownHostDependencyPurposes = [
-  "terminal",
-  "cli",
-  "development",
-  "build",
-  "package",
-  "validation",
-  "release"
-];
-var c420uiKnownNpmInstallStrategies = ["auto", "ci", "install"];
-function isRecord2(value) {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-function assertOptionalBoolean(value, key, failures, path18) {
-  if (key in value && typeof value[key] !== "boolean") {
-    failures.push(`${path18}.${key} must be a boolean`);
-  }
-}
-function assertOptionalString(value, key, failures, path18) {
-  if (key in value && typeof value[key] !== "string") {
-    failures.push(`${path18}.${key} must be a string`);
-  }
-}
-function assertOptionalStringArray(value, key, failures, path18) {
-  if (!(key in value)) return;
-  const array = value[key];
-  if (!Array.isArray(array) || array.some((item) => typeof item !== "string")) {
-    failures.push(`${path18}.${key} must be a string array`);
-  }
-}
-function assertOptionalPurposeArray(value, key, failures, path18) {
-  if (!(key in value)) return;
-  const array = value[key];
-  if (!Array.isArray(array) || array.some(
-    (item) => typeof item !== "string" || !c420uiKnownHostDependencyPurposes.includes(item)
-  )) {
-    failures.push(`${path18}.${key} must contain only known host dependency purposes`);
-  }
-}
-function validateConfigShape(value) {
-  const failures = [];
-  if (!isRecord2(value)) return ["host dependency config must be an object"];
-  if ("node" in value) {
-    if (!isRecord2(value.node)) {
-      failures.push("node must be an object");
-    } else {
-      if ("minimumMajor" in value.node && typeof value.node.minimumMajor !== "number") {
-        failures.push("node.minimumMajor must be a number");
-      }
-      assertOptionalBoolean(value.node, "required", failures, "node");
-    }
-  }
-  if ("commands" in value) {
-    if (!Array.isArray(value.commands)) {
-      failures.push("commands must be an array");
-    } else {
-      value.commands.forEach((command, index) => {
-        const commandPath = `commands[${index}]`;
-        if (!isRecord2(command)) {
-          failures.push(`${commandPath} must be an object`);
-          return;
-        }
-        if (typeof command.id !== "string") failures.push(`${commandPath}.id must be a string`);
-        if (typeof command.command !== "string") failures.push(`${commandPath}.command must be a string`);
-        assertOptionalBoolean(command, "required", failures, commandPath);
-        assertOptionalPurposeArray(command, "requiredFor", failures, commandPath);
-        assertOptionalString(command, "installHint", failures, commandPath);
-      });
-    }
-  }
-  if ("npm" in value) {
-    if (!isRecord2(value.npm)) {
-      failures.push("npm must be an object");
-    } else {
-      if (value.npm.packageManager !== "npm") failures.push('npm.packageManager must be "npm"');
-      assertOptionalString(value.npm, "lockfile", failures, "npm");
-      if ("installStrategy" in value.npm && !c420uiKnownNpmInstallStrategies.includes(value.npm.installStrategy)) {
-        failures.push('npm.installStrategy must be "auto", "ci", or "install"');
-      }
-      assertOptionalBoolean(value.npm, "includeDev", failures, "npm");
-      assertOptionalStringArray(value.npm, "requiredDependencies", failures, "npm");
-      assertOptionalStringArray(value.npm, "requiredDevDependencies", failures, "npm");
-    }
-  }
-  return failures;
-}
-function assertC420UIHostDependencyConfig(value) {
-  const failures = validateConfigShape(value);
-  if (failures.length > 0) {
-    throw new Error(`Invalid c420ui host dependency config: ${failures.join("; ")}.`);
-  }
-}
-function validateC420UIHostDependencyConfig(value) {
-  assertC420UIHostDependencyConfig(value);
-  return value;
-}
-function isC420UIHostDependencyFailure(result) {
-  return result.status === "missing" || result.status === "failed";
-}
-
-// build-resources/c420ui/src/startup-task.ts
-function formatPlannedCommand(result) {
-  const command = result.plannedCommand;
-  if (!command) return null;
-  return [command.command, ...command.args].join(" ");
-}
-async function runC420UIStartupTasks(tasks, log) {
-  for (const task of tasks) {
-    log(`[info] ${task.label}...
-`);
-    try {
-      const result = await task.run();
-      const plannedCommand = formatPlannedCommand(result);
-      if (plannedCommand) {
-        log(`[info] Planned dependency command: ${plannedCommand}
-`);
-      }
-      if (isC420UIHostDependencyFailure(result)) {
-        log("[error] Failed to prepare dependent project dependencies.\n");
-        if (result.message) log(`[error] ${result.message}
-`);
-        continue;
-      }
-      log(`[info] ${result.message || "Dependent project dependencies are ready."}
-`);
-    } catch (error) {
-      log("[error] Failed to prepare dependent project dependencies.\n");
-      log(`[error] ${error instanceof Error ? error.message : String(error)}
-`);
-    }
-  }
-}
-
-// build-resources/c420ui/src/terminal/app.ts
-var PANEL_VERTICAL_FRAME_ROWS = 2;
-var DETECTED_INSTALLATION_ROWS = 4;
-var DETECTED_INSTALLATIONS_MIN_HEIGHT = DETECTED_INSTALLATION_ROWS + PANEL_VERTICAL_FRAME_ROWS;
-
-// build-resources/c420ui/src/terminal/help.ts
-function formatC420UITerminalHelp(options) {
-  const launcher = options.launcherCommand || options.config.project.launcherCommand;
-  return [
-    `${options.config.project.projectName} c420ui terminal interface`,
-    "",
-    "Usage:",
-    "  npm run c420ui",
-    launcher ? `  ${launcher}` : ""
-  ].filter(Boolean).join("\n");
-}
-function printC420UITerminalHelp(options) {
-  console.log(formatC420UITerminalHelp(options));
-}
-
-// build-resources/c420ui/src/terminal/root-guard.ts
-function createC420UIRootLaunchGuardMessage(projectName) {
-  const toolName = `${projectName} Install and Development Tool`;
-  return [
-    `Do not run ${toolName} with sudo or as root.`,
-    "",
-    `Run this tool as your regular user. When an operation needs administrator privileges, ${projectName} will ask for authentication only for that specific action.`,
-    "",
-    "Running the whole tool as root may break file ownership, user sessions, build artifacts and desktop integration."
-  ].join("\n");
-}
-function isC420UIRootLaunch(getuid = process.getuid) {
-  return typeof getuid === "function" && getuid() === 0;
-}
-function enforceC420UIRootLaunchGuard(options) {
-  if (!isC420UIRootLaunch(options.getuid)) return;
-  const message = createC420UIRootLaunchGuardMessage(options.projectName);
-  options.writeError?.(message);
-  options.exit?.(1);
-}
-
-// build-resources/c420ui/src/rust-tui-runner.ts
-import { spawn } from "node:child_process";
-import fs2 from "node:fs";
-import path2 from "node:path";
-import { StringDecoder } from "node:string_decoder";
-
 // build-resources/c420ui/src/rust-tui-contracts.ts
 function createC420UITuiRenderInput(options) {
   const { config } = options;
@@ -1215,6 +681,504 @@ function requireNonEmpty(value, label) {
 function optionalNonEmpty(value) {
   return value?.trim() ? value : void 0;
 }
+
+// build-resources/c420ui/src/host-dependencies.ts
+var c420uiKnownHostDependencyPurposes = [
+  "terminal",
+  "cli",
+  "development",
+  "build",
+  "package",
+  "validation",
+  "release"
+];
+var c420uiKnownNpmInstallStrategies = ["auto", "ci", "install"];
+function isRecord2(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function assertOptionalBoolean(value, key, failures, path18) {
+  if (key in value && typeof value[key] !== "boolean") {
+    failures.push(`${path18}.${key} must be a boolean`);
+  }
+}
+function assertOptionalString(value, key, failures, path18) {
+  if (key in value && typeof value[key] !== "string") {
+    failures.push(`${path18}.${key} must be a string`);
+  }
+}
+function assertOptionalStringArray(value, key, failures, path18) {
+  if (!(key in value)) return;
+  const array = value[key];
+  if (!Array.isArray(array) || array.some((item) => typeof item !== "string")) {
+    failures.push(`${path18}.${key} must be a string array`);
+  }
+}
+function assertOptionalPurposeArray(value, key, failures, path18) {
+  if (!(key in value)) return;
+  const array = value[key];
+  if (!Array.isArray(array) || array.some(
+    (item) => typeof item !== "string" || !c420uiKnownHostDependencyPurposes.includes(item)
+  )) {
+    failures.push(`${path18}.${key} must contain only known host dependency purposes`);
+  }
+}
+function validateConfigShape(value) {
+  const failures = [];
+  if (!isRecord2(value)) return ["host dependency config must be an object"];
+  if ("node" in value) {
+    if (!isRecord2(value.node)) {
+      failures.push("node must be an object");
+    } else {
+      if ("minimumMajor" in value.node && typeof value.node.minimumMajor !== "number") {
+        failures.push("node.minimumMajor must be a number");
+      }
+      assertOptionalBoolean(value.node, "required", failures, "node");
+    }
+  }
+  if ("commands" in value) {
+    if (!Array.isArray(value.commands)) {
+      failures.push("commands must be an array");
+    } else {
+      value.commands.forEach((command, index) => {
+        const commandPath = `commands[${index}]`;
+        if (!isRecord2(command)) {
+          failures.push(`${commandPath} must be an object`);
+          return;
+        }
+        if (typeof command.id !== "string") failures.push(`${commandPath}.id must be a string`);
+        if (typeof command.command !== "string") failures.push(`${commandPath}.command must be a string`);
+        assertOptionalBoolean(command, "required", failures, commandPath);
+        assertOptionalPurposeArray(command, "requiredFor", failures, commandPath);
+        assertOptionalString(command, "installHint", failures, commandPath);
+      });
+    }
+  }
+  if ("npm" in value) {
+    if (!isRecord2(value.npm)) {
+      failures.push("npm must be an object");
+    } else {
+      if (value.npm.packageManager !== "npm") failures.push('npm.packageManager must be "npm"');
+      assertOptionalString(value.npm, "lockfile", failures, "npm");
+      if ("installStrategy" in value.npm && !c420uiKnownNpmInstallStrategies.includes(value.npm.installStrategy)) {
+        failures.push('npm.installStrategy must be "auto", "ci", or "install"');
+      }
+      assertOptionalBoolean(value.npm, "includeDev", failures, "npm");
+      assertOptionalStringArray(value.npm, "requiredDependencies", failures, "npm");
+      assertOptionalStringArray(value.npm, "requiredDevDependencies", failures, "npm");
+    }
+  }
+  return failures;
+}
+function assertC420UIHostDependencyConfig(value) {
+  const failures = validateConfigShape(value);
+  if (failures.length > 0) {
+    throw new Error(`Invalid c420ui host dependency config: ${failures.join("; ")}.`);
+  }
+}
+function validateC420UIHostDependencyConfig(value) {
+  assertC420UIHostDependencyConfig(value);
+  return value;
+}
+function isC420UIHostDependencyFailure(result) {
+  return result.status === "missing" || result.status === "failed";
+}
+
+// build-resources/c420ui/src/startup-task.ts
+function formatPlannedCommand(result) {
+  const command = result.plannedCommand;
+  if (!command) return null;
+  return [command.command, ...command.args].join(" ");
+}
+async function runC420UIStartupTasks(tasks, log) {
+  for (const task of tasks) {
+    log(`[info] ${task.label}...
+`);
+    try {
+      const result = await task.run();
+      const plannedCommand = formatPlannedCommand(result);
+      if (plannedCommand) {
+        log(`[info] Planned dependency command: ${plannedCommand}
+`);
+      }
+      if (isC420UIHostDependencyFailure(result)) {
+        log("[error] Failed to prepare dependent project dependencies.\n");
+        if (result.message) log(`[error] ${result.message}
+`);
+        continue;
+      }
+      log(`[info] ${result.message || "Dependent project dependencies are ready."}
+`);
+    } catch (error) {
+      log("[error] Failed to prepare dependent project dependencies.\n");
+      log(`[error] ${error instanceof Error ? error.message : String(error)}
+`);
+    }
+  }
+}
+
+// build-resources/c420ui/src/terminal/clipboard.ts
+import { spawnSync } from "node:child_process";
+function has(command) {
+  return spawnSync("bash", ["-c", `command -v ${command}`]).status === 0;
+}
+function runWithInput(command, args, input) {
+  const result = spawnSync(command, args, {
+    input,
+    encoding: "utf8"
+  });
+  return result.status === 0;
+}
+function copyTextToClipboard(text) {
+  if (!text.trim()) {
+    return {
+      ok: false,
+      message: "No logs to copy."
+    };
+  }
+  if (process.env.WAYLAND_DISPLAY && has("wl-copy") && runWithInput("wl-copy", [], text)) {
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via wl-copy."
+    };
+  }
+  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("kde")) {
+    if (has("qdbus6") && runWithInput(
+      "bash",
+      [
+        "-c",
+        'input=$(cat); qdbus6 org.kde.klipper /klipper setClipboardContents "$input"'
+      ],
+      text
+    )) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via KDE Klipper (qdbus6)."
+      };
+    }
+    if (has("qdbus") && runWithInput(
+      "bash",
+      [
+        "-c",
+        'input=$(cat); qdbus org.kde.klipper /klipper setClipboardContents "$input"'
+      ],
+      text
+    )) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via KDE Klipper (qdbus)."
+      };
+    }
+  }
+  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("gnome")) {
+    if (has("gpaste-client") && runWithInput("gpaste-client", ["add"], text)) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via GPaste."
+      };
+    }
+    if (has("gpaste") && runWithInput("gpaste", ["add"], text)) {
+      return {
+        ok: true,
+        message: "Logs copied to clipboard via GPaste."
+      };
+    }
+  }
+  if (has("xclip") && runWithInput("xclip", ["-selection", "clipboard"], text)) {
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via xclip."
+    };
+  }
+  if (has("xsel") && runWithInput("xsel", ["--clipboard", "--input"], text)) {
+    return {
+      ok: true,
+      message: "Logs copied to clipboard via xsel."
+    };
+  }
+  return {
+    ok: false,
+    message: "No clipboard tool found. Install wl-clipboard, KDE qdbus support, GPaste, xclip or xsel."
+  };
+}
+
+// build-resources/c420ui/src/terminal/detected-installations-summary.ts
+var GENERATED_ARTIFACT_KINDS = /* @__PURE__ */ new Set([
+  "appimage",
+  "flatpak",
+  "tarball",
+  "sha256sums",
+  "deb",
+  "rpm",
+  "aur"
+]);
+function detectedVersion(fullVersion, version) {
+  if (typeof fullVersion === "string" && fullVersion.trim()) {
+    return fullVersion;
+  }
+  return version;
+}
+function formatShortHash(hash, version) {
+  void version;
+  if (!hash) return "";
+  if (hash === "unknown") return " \xB7 unknown";
+  const parts = hash.split(":");
+  const algo = parts.length > 1 ? `${parts[0]}:` : "";
+  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
+  return ` \xB7 ${algo}${value.slice(0, 8)}`;
+}
+function artifactVersion(fragment) {
+  return fragment.fullVersion || fragment.version;
+}
+function formatDetectedStatus(colors2, detected, version, hash) {
+  if (!detected) {
+    return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
+  }
+  return typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "version unknown";
+}
+function formatArtifactLine(fragment, colors2) {
+  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment), fragment.hash)}`;
+}
+function isGeneratedArtifactFragment(fragment) {
+  if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
+  if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
+  return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
+}
+function versionSummaryItem(label, version, hash) {
+  return `${label} ${version ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "unknown"}`;
+}
+function formatDetectionPanelSummaries(s, colors2) {
+  if (!s) {
+    const loading = `{${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`;
+    return {
+      detectedInstallations: [
+        `  Native System: ${loading}`,
+        `  Native User: ${loading}`,
+        `  Flatpak System: ${loading}`,
+        `  Flatpak User: ${loading}`
+      ],
+      generatedArtifacts: [`  AppImage: ${loading}`],
+      linuxArtifacts: [`Electron/Node/npm loading...`]
+    };
+  }
+  const i = s.installations;
+  const linuxUnpacked = s.artifactFragments?.find(
+    (fragment) => fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked"
+  );
+  const generatedArtifacts = s.artifactFragments ? s.artifactFragments.filter(isGeneratedArtifactFragment).map((fragment) => formatArtifactLine(fragment, colors2)) : [
+    `  AppImage: ${formatDetectedStatus(
+      colors2,
+      Boolean(i.appImageArtifacts),
+      detectedVersion(i.appImageFullVersion, i.appImageVersion),
+      i.appImageHash
+    )}`
+  ];
+  return {
+    detectedInstallations: [
+      `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion), i.nativeSystemHash)}`,
+      `  Native User: ${formatDetectedStatus(colors2, Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion), i.nativeUserHash)}`,
+      `  Flatpak System: ${formatDetectedStatus(colors2, Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion), i.flatpakSystemHash)}`,
+      `  Flatpak User: ${formatDetectedStatus(colors2, Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion), i.flatpakUserHash)}`
+    ],
+    generatedArtifacts,
+    linuxArtifacts: [
+      [
+        versionSummaryItem("Electron", s.runtime?.electronVersion),
+        versionSummaryItem("Node", s.runtime?.nodeVersion),
+        versionSummaryItem("npm", s.runtime?.npmVersion),
+        versionSummaryItem(
+          "Linux unpacked",
+          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0,
+          linuxUnpacked?.hash
+        )
+      ].join(", ")
+    ]
+  };
+}
+
+// build-resources/c420ui/src/terminal/settings.ts
+import fs from "node:fs";
+import path from "node:path";
+var DEFAULT_TOOL_SETTINGS = {
+  tool: {
+    generalLogsEnabled: true,
+    terminalTextSelectionMode: false
+  },
+  runtime: {}
+};
+function configHome() {
+  const xdgConfigHome = process.env.XDG_CONFIG_HOME?.trim();
+  if (xdgConfigHome) {
+    return xdgConfigHome;
+  }
+  return path.join(process.env.HOME || ".", ".config");
+}
+function toolSettingsPath(stateDirectoryName) {
+  return path.join(configHome(), stateDirectoryName, "tool-settings.json");
+}
+function isObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+function normalizeSettings(raw) {
+  const rawRoot = isObject(raw) ? raw : {};
+  const rawTool = isObject(rawRoot.tool) ? rawRoot.tool : {};
+  const runtime = isObject(rawRoot.runtime) ? rawRoot.runtime : {};
+  return {
+    tool: {
+      generalLogsEnabled: typeof rawTool.generalLogsEnabled === "boolean" ? rawTool.generalLogsEnabled : DEFAULT_TOOL_SETTINGS.tool.generalLogsEnabled,
+      terminalTextSelectionMode: typeof rawTool.terminalTextSelectionMode === "boolean" ? rawTool.terminalTextSelectionMode : DEFAULT_TOOL_SETTINGS.tool.terminalTextSelectionMode
+    },
+    runtime
+  };
+}
+function loadToolSettings(stateDirectoryName) {
+  const settingsPath = toolSettingsPath(stateDirectoryName);
+  if (!fs.existsSync(settingsPath)) {
+    try {
+      saveToolSettings(DEFAULT_TOOL_SETTINGS, stateDirectoryName);
+    } catch {
+    }
+    return structuredClone(DEFAULT_TOOL_SETTINGS);
+  }
+  try {
+    const rawContent = fs.readFileSync(settingsPath, "utf8");
+    return normalizeSettings(JSON.parse(rawContent));
+  } catch {
+    return structuredClone(DEFAULT_TOOL_SETTINGS);
+  }
+}
+function saveToolSettings(settings, stateDirectoryName) {
+  const settingsPath = toolSettingsPath(stateDirectoryName);
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+  fs.writeFileSync(
+    settingsPath,
+    `${JSON.stringify(normalizeSettings(settings), null, 2)}
+`,
+    "utf8"
+  );
+}
+
+// build-resources/c420ui/src/theme.json
+var theme_default = {
+  palette: {
+    canvaLightBlue: "#07B9CE",
+    canvaBlue: "#3969E7",
+    canvaPurple: "#7D2AE7",
+    success: "#00C853",
+    warning: "#FFD166",
+    error: "#FF4D4F",
+    text: "#EAF7FF",
+    muted: "#8FA3B8",
+    background: "#10131A",
+    surface: "#171B24",
+    surfaceAlt: "#202635"
+  },
+  ansiFallback: {
+    primary: "cyan",
+    secondary: "blue",
+    accent: "magenta",
+    success: "green",
+    warning: "yellow",
+    error: "red"
+  }
+};
+
+// build-resources/c420ui/src/terminal/theme.ts
+var supportsTrueColor = process.env.COLORTERM === "truecolor" || process.env.COLORTERM === "24bit";
+var colors = {
+  lightBlue: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.primary,
+  blue: supportsTrueColor ? theme_default.palette.canvaBlue : theme_default.ansiFallback.secondary,
+  purple: supportsTrueColor ? theme_default.palette.canvaPurple : theme_default.ansiFallback.accent,
+  success: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  warning: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
+  error: supportsTrueColor ? theme_default.palette.error : theme_default.ansiFallback.error,
+  text: supportsTrueColor ? theme_default.palette.text : "white",
+  muted: supportsTrueColor ? theme_default.palette.muted : "gray",
+  background: supportsTrueColor ? theme_default.palette.background : "black",
+  surface: supportsTrueColor ? theme_default.palette.surface : "black",
+  surfaceAlt: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
+  menuSelectedBg: supportsTrueColor ? theme_default.palette.canvaPurple : "magenta",
+  menuSelectedFg: "white",
+  menuInactiveSelectedBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
+  menuInactiveSelectedFg: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
+  footerBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
+  footerFg: "white",
+  statusDetected: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  statusNotDetected: supportsTrueColor ? theme_default.palette.canvaPurple : theme_default.ansiFallback.accent,
+  helpTitle: supportsTrueColor ? theme_default.palette.canvaBlue : theme_default.ansiFallback.secondary,
+  helpSectionTitle: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  infoItemTitle: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  infoText: supportsTrueColor ? theme_default.palette.text : "white",
+  descriptionText: supportsTrueColor ? theme_default.palette.text : "white",
+  logo: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.secondary,
+  version: supportsTrueColor ? theme_default.palette.canvaLightBlue : theme_default.ansiFallback.secondary,
+  phase: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
+  appImageLoading: supportsTrueColor ? theme_default.palette.warning : theme_default.ansiFallback.warning,
+  activeBorder: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
+  inactiveBorder: supportsTrueColor ? theme_default.palette.canvaBlue : "blue",
+  activeLabel: supportsTrueColor ? theme_default.palette.canvaLightBlue : "cyan",
+  inactiveLabel: supportsTrueColor ? theme_default.palette.muted : "gray",
+  activeBlockBg: supportsTrueColor ? theme_default.palette.surface : "black",
+  activeCellBg: supportsTrueColor ? theme_default.palette.canvaBlue : "blue",
+  activeCellFg: "white",
+  activeCheckboxFg: supportsTrueColor ? theme_default.palette.success : theme_default.ansiFallback.success,
+  activeCheckboxBg: supportsTrueColor ? theme_default.palette.surfaceAlt : "black",
+  inactiveCheckboxFg: supportsTrueColor ? theme_default.palette.muted : "gray"
+};
+var c420uiTheme = {
+  supportsTrueColor,
+  colors,
+  header: {
+    fg: colors.lightBlue,
+    bg: colors.background,
+    bold: true
+  },
+  menu: {
+    fg: colors.text,
+    bg: colors.background,
+    border: {
+      fg: colors.blue
+    },
+    selected: {
+      fg: colors.menuSelectedFg,
+      bg: colors.menuSelectedBg,
+      bold: true
+    },
+    item: {
+      fg: colors.text
+    }
+  },
+  content: {
+    fg: colors.text,
+    bg: colors.background,
+    border: {
+      fg: colors.purple
+    },
+    label: {
+      fg: colors.lightBlue
+    }
+  },
+  logs: {
+    fg: colors.text,
+    bg: colors.background,
+    border: {
+      fg: colors.blue
+    },
+    label: {
+      fg: colors.lightBlue
+    }
+  },
+  footer: {
+    fg: colors.footerFg,
+    bg: colors.footerBg,
+    bold: true
+  },
+  modal: {
+    normalBorder: colors.lightBlue,
+    dangerousBorder: colors.error,
+    text: colors.text,
+    background: colors.background
+  }
+};
 
 // build-resources/c420ui/src/rust-tui-runner.ts
 var MAX_LOG_HISTORY_LINES = 5e3;
@@ -1799,6 +1763,27 @@ function splitLogLines(text) {
 }
 function formatRustTuiError(error) {
   return error instanceof Error ? error.message : String(error);
+}
+
+// build-resources/c420ui/src/terminal/root-guard.ts
+function createC420UIRootLaunchGuardMessage(projectName) {
+  const toolName = `${projectName} Install and Development Tool`;
+  return [
+    `Do not run ${toolName} with sudo or as root.`,
+    "",
+    `Run this tool as your regular user. When an operation needs administrator privileges, ${projectName} will ask for authentication only for that specific action.`,
+    "",
+    "Running the whole tool as root may break file ownership, user sessions, build artifacts and desktop integration."
+  ].join("\n");
+}
+function isC420UIRootLaunch(getuid = process.getuid) {
+  return typeof getuid === "function" && getuid() === 0;
+}
+function enforceC420UIRootLaunchGuard(options) {
+  if (!isC420UIRootLaunch(options.getuid)) return;
+  const message = createC420UIRootLaunchGuardMessage(options.projectName);
+  options.writeError?.(message);
+  options.exit?.(1);
 }
 
 // build-resources/c420ui/src/terminal/runtime.ts

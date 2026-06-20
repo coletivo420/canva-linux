@@ -1,7 +1,9 @@
 import {
   printC420UITerminalHelp,
+} from "../../c420ui/src/terminal/help.js";
+import {
   runC420UITerminalApp,
-} from "../../c420ui/src/terminal/index.js";
+} from "../../c420ui/src/terminal/runtime.js";
 import { runC420UIHostDependencyEnsure } from "../../c420ui/src/index.js";
 import { createCanvaLinuxC420UIAdapter } from "./adapter.js";
 import { createCanvaLinuxRootProvider } from "./root-provider.js";
