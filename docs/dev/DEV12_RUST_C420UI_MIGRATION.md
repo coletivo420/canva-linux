@@ -164,6 +164,10 @@ protect c420ui-host, c420ui-tui, the TypeScript Action Engine bridge, and the
 dependent-project boundary instead of the removed Blessed/spawnSync/sudo runner
 paths.
 
+Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is
+now the only terminal UI runtime, while TypeScript remains responsible for
+Action Engine, bridge contracts, settings, clipboard and project integration.
+
 The TypeScript Action Engine remains responsible for action resolution,
 execution, root-provider interaction and progress/log events. Rust owns terminal
 rendering, navigation, action selection, progress display, log display and the

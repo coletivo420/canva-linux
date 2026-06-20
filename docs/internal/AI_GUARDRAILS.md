@@ -24,6 +24,12 @@ Engine bridge, and the dependent-project boundary. Do not restore tests that
 expect the removed Blessed/spawnSync/sudo runner paths as the maintained
 architecture.
 
+Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is
+the only terminal UI runtime. Keep TypeScript responsible for Action Engine,
+bridge contracts, settings, clipboard and project integration, but do not
+restore `terminal/app.ts`, `terminal/blessed-widgets.ts`, `terminal/modal.ts`,
+`createApp`, or Blessed runtime dependencies.
+
 ## Dev11 ESM-only guardrails (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

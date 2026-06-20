@@ -32,38 +32,6 @@ function collectTestSources(rootDir: string): Array<{ relativePath: string; sour
   }));
 }
 
-function collectInteractiveRootAuthHardeningFailures(
-  app: string,
-  context: string,
-): string[] {
-  const failures: string[] = [];
-  if (
-    !/try \{[\s\S]*?validateRootAccessWithInput\([\s\S]*?submittedInput[\s\S]*?\} catch \{[\s\S]*?Administrator authorization validation failed[\s\S]*?\} finally \{[\s\S]*?submittedInput = "";/.test(
-      app,
-    )
-  ) {
-    failures.push(`${context} must convert root validation throws into a generic failure and clear submittedInput`);
-  }
-  if (!app.includes("Administrator authorization failed")) {
-    failures.push(`${context} must keep a final administrator authorization failure fallback`);
-  }
-  if (!app.includes("Administrator authorization validation failed")) {
-    failures.push(`${context} must return a generic administrator authorization validation failure`);
-  }
-  for (const forbidden of [
-    /appendLogText\s*\(\s*(submittedInput|password|result\.value)\b/,
-    /writeSession\s*\(\s*(submittedInput|password|result\.value)\b/,
-    /console\.log\s*\(\s*(submittedInput|password|result\.value)\b/,
-    /console\.error\s*\(\s*(submittedInput|password|result\.value)\b/,
-    /logs\.log\s*\(\s*(submittedInput|password|result\.value)\b/,
-  ] as const) {
-    if (forbidden.test(app)) {
-      failures.push(`${context} must not log submitted administrator passwords`);
-    }
-  }
-  return failures;
-}
-
 const checkBoundaryContract = (() => {
 const forbidden = [
   "Canva Linux",
@@ -624,25 +592,18 @@ function main(): number {
   if (rootProvider.includes("sudo-common.sh") || actionEngine.includes("sudo")) {
     failures.push("c420ui core must not call sudo directly");
   }
-  const app = read(rootDir, "build-resources/c420ui/src/terminal/app.ts");
   const runner = read(rootDir, "build-resources/c420ui/src/terminal/interactive-action-runner.ts");
+  const rustTuiRunner = read(rootDir, "build-resources/c420ui/src/rust-tui-runner.ts");
   if (!runner.includes("requestRootAccess")) {
     failures.push("interactive-action-runner.ts must pass requestRootAccess to the action engine");
   }
-  if (!app.includes("inputDialog") || !app.includes("requestInteractiveRootAccess")) {
-    failures.push("app.ts must wire inputDialog for interactive root access");
-  }
-  if (!app.includes("finally")) {
-    failures.push("app.ts must restore interactive root auth modal state with finally");
-  }
   if (
-    !/modalActive = true;[\s\S]*?inputDialog\([\s\S]*?Administrator authorization[\s\S]*?finally \{[\s\S]*?modalActive = false;/.test(
-      app,
-    )
+    !rustTuiRunner.includes("validateRootAccessWithInput") ||
+    !rustTuiRunner.includes('submittedInput = ""') ||
+    !rustTuiRunner.includes("Root authentication failed")
   ) {
-    failures.push("app.ts must clear modalActive in the administrator authorization prompt finally block");
+    failures.push("rust-tui-runner.ts must validate root input, clear submittedInput and keep a generic failure message");
   }
-  failures.push(...collectInteractiveRootAuthHardeningFailures(app, "app.ts"));
 
   if (failures.length) throw new Error(failures.join("\n"));
   console.log("[c420ui-core-contracts] root provider OK");
@@ -661,7 +622,6 @@ function main(): number {
   const rootDir = process.cwd();
   const runner = read(rootDir, "build-resources/c420ui/src/command-runner.ts");
   const index = read(rootDir, "build-resources/c420ui/src/index.ts");
-  const app = read(rootDir, "build-resources/c420ui/src/terminal/app.ts");
   const failures: string[] = [];
 
   for (const fragment of [
@@ -692,9 +652,6 @@ function main(): number {
   }
   if (!index.includes('export type { c420uiCommandRunnerOptions } from "./command-runner.js"')) {
     failures.push("index must export c420uiCommandRunnerOptions");
-  }
-  if (app.includes('from "./process-runner.js"') || app.includes("from './process-runner.js'")) {
-    failures.push("interactive app must not import ./process-runner");
   }
   if (fs.existsSync(path.join(rootDir, "build-resources/c420ui/src/terminal/process-runner.ts"))) {
     failures.push("build-resources/c420ui/src/terminal/process-runner.ts must not exist after command runner migration");
@@ -841,63 +798,25 @@ function read(rootDir: string, relativePath: string): string {
 
 function main(): number {
   const rootDir = process.cwd();
-  const app = read(rootDir, "build-resources/c420ui/src/terminal/app.ts");
   const runner = read(rootDir, "build-resources/c420ui/src/terminal/interactive-action-runner.ts");
+  const rustTuiRunner = read(rootDir, "build-resources/c420ui/src/rust-tui-runner.ts");
   const bridge = read(rootDir, "build-resources/c420ui/src/bridge.ts");
   const failures: string[] = [];
 
   for (const fragment of [
     "createC420UIActionEngine",
-    "createInteractiveActionRunner",
-    "rootProvider?: c420uiRootProvider",
-    "bridge: c420uiProjectBridge",
-  ]) {
-    if (!app.includes(fragment)) {
-      failures.push(`interactive app must include action engine fragment: ${fragment}`);
-    }
-  }
-  for (const fragment of [
-    "createC420UIActionEngine",
     "requestRootAccess",
     "engine.runAction(action",
-    "requiresC420UIActionConfirmation",
-    "AbortController",
-    "signal: abortController.signal",
-    "function cancel()",
-    "Action canceled before execution",
-    'setProgress("canceled",',
   ]) {
     if (!runner.includes(fragment)) {
       failures.push(`interactive action runner must include action engine fragment: ${fragment}`);
     }
   }
-
-  if (app.includes('from "./process-runner.js"') || app.includes("from './process-runner.js'")) {
-    failures.push("interactive app must not import ./process-runner");
+  for (const fragment of ["runActionById", "rootProvider", "validateRootAccessWithInput"]) {
+    if (!rustTuiRunner.includes(fragment)) {
+      failures.push(`rust-tui-runner must keep TypeScript Action Engine bridge fragment: ${fragment}`);
+    }
   }
-  if (app.includes("scripts/run-core-entry.sh ${runnerArgs")) {
-    failures.push("interactive app must not route actions through the legacy action-runner path");
-  }
-  if (app.includes("sudo-common.sh")) {
-    failures.push("interactive app must not call sudo-common.sh directly");
-  }
-  if (!app.includes("inputDialog") || !app.includes("requestRootAccess:")) {
-    failures.push("interactive app must pass requestRootAccess using inputDialog");
-  }
-  if (!app.includes("requestInteractiveRootAccess")) {
-    failures.push("interactive app must keep requestInteractiveRootAccess wired");
-  }
-  if (!app.includes("finally")) {
-    failures.push("interactive app must restore modal state with finally");
-  }
-  if (
-    !/modalActive = true;[\s\S]*?inputDialog\([\s\S]*?Administrator authorization[\s\S]*?finally \{[\s\S]*?modalActive = false;/.test(
-      app,
-    )
-  ) {
-    failures.push("interactive app must clear modalActive in the administrator authorization prompt finally block");
-  }
-  failures.push(...collectInteractiveRootAuthHardeningFailures(app, "interactive app"));
   if (bridge.includes("C420UISudoProvider")) {
     failures.push("bridge contract must not reintroduce C420UISudoProvider");
   }
@@ -975,13 +894,12 @@ function checkTerminalUiContract(failures: string[]): void {
   const rootDir = process.cwd();
   const terminalDir = path.join(rootDir, "build-resources/c420ui/src/terminal");
   const required = [
-    "app.ts",
+    "app-options.ts",
     "index.ts",
     "interactive-action-runner.ts",
     "logo.ts",
     "settings.ts",
     "theme.ts",
-    "modal.ts",
     "clipboard.ts",
     "root-guard.ts",
     "runtime.ts",
@@ -994,6 +912,11 @@ function checkTerminalUiContract(failures: string[]): void {
   }
   if (fs.existsSync(path.join(rootDir, "scripts/c420ui"))) {
     failures.push("scripts/c420ui must not exist");
+  }
+  for (const removed of ["app.ts", "blessed-widgets.ts", "modal.ts"] as const) {
+    if (fs.existsSync(path.join(terminalDir, removed))) {
+      failures.push(`build-resources/c420ui/src/terminal/${removed} must not exist after Rust TUI migration`);
+    }
   }
   const terminalSource = fs.existsSync(terminalDir)
     ? collectTypeScriptFiles(terminalDir).map((file) => fs.readFileSync(file, "utf8")).join("\n")
@@ -1013,18 +936,6 @@ function checkTerminalUiContract(failures: string[]): void {
       failures.push(`build-resources/c420ui/src/terminal must not contain ${fragment}`);
     }
   }
-  const app = fs.existsSync(path.join(terminalDir, "app.ts"))
-    ? fs.readFileSync(path.join(terminalDir, "app.ts"), "utf8")
-    : "";
-  if (!app.includes("bridge.overviewStatus")) {
-    failures.push("build-resources/c420ui/src/terminal/app.ts must use bridge.overviewStatus");
-  }
-  if (!app.includes("createC420UIActionEngine")) {
-    failures.push("build-resources/c420ui/src/terminal/app.ts must use createC420UIActionEngine");
-  }
-  if (app.includes("spawn(")) {
-    failures.push("build-resources/c420ui/src/terminal/app.ts must not spawn overview diagnostics");
-  }
 
   const index = fs.existsSync(path.join(terminalDir, "index.ts"))
     ? fs.readFileSync(path.join(terminalDir, "index.ts"), "utf8")
@@ -1041,6 +952,15 @@ function checkTerminalUiContract(failures: string[]): void {
   const settings = fs.existsSync(path.join(terminalDir, "settings.ts"))
     ? fs.readFileSync(path.join(terminalDir, "settings.ts"), "utf8")
     : "";
+  const appOptions = fs.existsSync(path.join(terminalDir, "app-options.ts"))
+    ? fs.readFileSync(path.join(terminalDir, "app-options.ts"), "utf8")
+    : "";
+  if (!appOptions.includes("export type C420UIAppOptions") || !appOptions.includes("c420uiProjectBridge")) {
+    failures.push("build-resources/c420ui/src/terminal/app-options.ts must own C420UIAppOptions");
+  }
+  if (index.includes("createApp") || index.includes("HeaderLayout") || index.includes("./app.js")) {
+    failures.push("build-resources/c420ui/src/terminal/index.ts must not export the legacy Blessed app");
+  }
   for (const fragment of [
     "createC420UIRootLaunchGuardMessage",
     "isC420UIRootLaunch",
@@ -1076,32 +996,23 @@ function checkTerminalUiContract(failures: string[]): void {
   if (guardIndex < 0 || rustRunIndex < 0 || guardIndex > rustRunIndex) {
     failures.push("build-resources/c420ui/src/terminal/runtime.ts must enforce root guard before c420ui-tui startup");
   }
+  const packageJson = fs.readFileSync(path.join(rootDir, "package.json"), "utf8");
+  if (packageJson.includes("--external:blessed")) {
+    failures.push("package.json build scripts must not externalize blessed");
+  }
+  const bootstrapRecipe = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/bootstrap/build-recipe.ts"), "utf8");
+  for (const forbidden of ['"blessed"', '"term.js"', '"pty.js"'] as const) {
+    if (bootstrapRecipe.includes(forbidden)) {
+      failures.push(`build-resources/c420ui/bootstrap/build-recipe.ts must not externalize ${forbidden}`);
+    }
+  }
 }
 
 function checkHeaderLayoutContract(failures: string[]): void {
   const rootDir = process.cwd();
-  const app = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/app.ts"), "utf8");
   const packageTypes = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/types.ts"), "utf8");
-  const index = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/index.ts"), "utf8");
-
-  assertC420UIIncludes(
-    failures,
-    index,
-    "createApp",
-    "build-resources/c420ui/src/terminal/index.ts must export createApp",
-  );
-  assertC420UIIncludes(
-    failures,
-    app,
-    "export type HeaderLayout",
-    "build-resources/c420ui/src/terminal/app.ts must export HeaderLayout",
-  );
-  assertC420UIIncludes(
-    failures,
-    app,
-    "../action-engine",
-    "build-resources/c420ui/src/terminal/app.ts must import c420ui internals directly",
-  );
+  const legacyLayout = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/tui/legacy_layout.rs"), "utf8");
+  const rustRenderer = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/tui/renderer.rs"), "utf8");
 
   assertC420UIIncludes(
     failures,
@@ -1123,55 +1034,37 @@ function checkHeaderLayoutContract(failures: string[]): void {
   );
   assertC420UIIncludes(
     failures,
-    app,
-    "computeHeaderLayout",
-    "build-resources/c420ui/src/terminal/app.ts must centralize header layout math",
+    legacyLayout,
+    "LegacyLayout",
+    "build-resources/c420ui-rs/src/tui/legacy_layout.rs must own legacy layout math",
   );
   assertC420UIIncludes(
     failures,
-    app,
-    "c420uiHeader",
-    "build-resources/c420ui/src/terminal/app.ts must keep a dedicated c420uiHeader component",
+    legacyLayout,
+    "c420ui_header",
+    "Rust legacy layout must keep a dedicated c420ui header area",
   );
   assertC420UIIncludes(
     failures,
-    app,
-    "projectHeader",
-    "build-resources/c420ui/src/terminal/app.ts must keep a dedicated projectHeader component",
+    legacyLayout,
+    "project_header",
+    "Rust legacy layout must keep a dedicated project header area",
   );
   assertC420UIIncludes(
     failures,
-    app,
-    "workspaceTop",
-    "build-resources/c420ui/src/terminal/app.ts must apply a shared workspaceTop",
+    legacyLayout,
+    "workspace_top",
+    "Rust legacy layout must apply a shared workspace top",
   );
   assertC420UIIncludes(
     failures,
-    app,
-    "layoutMode",
-    "build-resources/c420ui/src/terminal/app.ts must expose side-by-side/stacked layoutMode",
+    legacyLayout,
+    "LegacyLayoutMode",
+    "Rust legacy layout must expose side-by-side/stacked layout mode",
   );
 
-  const focusZones = app.match(/const FOCUS_ZONES:[^=]+=\s*\[([^\]]+)\]/);
-  if (!focusZones) {
-    failures.push("build-resources/c420ui/src/terminal/app.ts must keep explicit FOCUS_ZONES");
-  } else if (
-    focusZones[1]?.includes("c420uiHeader") ||
-    focusZones[1]?.includes("projectHeader")
-  ) {
-    failures.push("headers must not be included in FOCUS_ZONES");
-  }
-
-  if (app.includes("const brandHeader")) {
-    failures.push("c420ui brand header component must be named c420uiHeader");
-  }
-  if (
-    !/content:\s*\[[\s\S]*formatC420UIVersionLabel\(\{[\s\S]*packageName:\s*opts\.brand\.name[\s\S]*packageVersion:\s*opts\.brand\.version[\s\S]*sourceHash:\s*opts\.brand\.hash/.test(app)
-  ) {
-    failures.push("c420uiHeader content must come from brand config");
-  }
-  if (!app.includes("content: [\n      `{bold}${opts.project.projectName}")) {
-    failures.push("projectHeader content must come from project config");
+  if (!rustRenderer.includes("format_c420ui_version_line") || !rustRenderer.includes("project_header_lines")) {
+    failures.push("Rust renderer must render c420ui and project header content");
   }
 }
 
@@ -1180,7 +1073,9 @@ function checkSourceHashDisplayContract(failures: string[]): void {
   const detectionTypes = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/detection.ts"), "utf8");
   const packageTypes = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/types.ts"), "utf8");
   const summary = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/detected-installations-summary.ts"), "utf8");
-  const app = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/app.ts"), "utf8");
+  const rustTuiContracts = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-tui-contracts.ts"), "utf8");
+  const rustRenderer = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/tui/renderer.rs"), "utf8");
+  const rustTuiRunner = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-tui-runner.ts"), "utf8");
   const builder = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/scripts/c420ui-builder.ts"), "utf8");
   const adapter = fs.readFileSync(path.join(rootDir, "build-resources/canva-linux/c420ui-adapter/adapter.ts"), "utf8");
   const artifactFragments = fs.readFileSync(
@@ -1196,11 +1091,11 @@ function checkSourceHashDisplayContract(failures: string[]): void {
   if (!summary.includes("formatShortHash(hash") || !summary.includes("formatDetectedStatus(colors") || !summary.includes("linuxUnpacked?.hash")) {
     failures.push("Detection UI must render a source hash next to detected versions");
   }
-  if (!app.includes("formatC420UIVersionLabel") || !app.includes("sourceHash: brandConfig.hash") || !app.includes("formatShortHash(projectConfig.hash")) {
-    failures.push("c420ui header UI must render source hashes next to c420ui and project versions");
+  if (!rustTuiContracts.includes("hash: optionalNonEmpty(config.brand.hash)") || !rustRenderer.includes("format_c420ui_version_line") || !rustRenderer.includes("short_hash(hash)")) {
+    failures.push("Rust TUI header must render source hashes next to c420ui and project versions");
   }
-  if (!app.includes("builder=${formatC420UIVersionLabel") || !app.includes("sourceHash: opts.brand.hash")) {
-    failures.push("c420ui startup logs must render c420uiSourceHash next to the builder version");
+  if (!rustTuiRunner.includes('writeSession(sessionStream, "[mode] c420ui")')) {
+    failures.push("c420ui startup logs must belong to the Rust TUI runner session");
   }
   if (!builder.includes("formatC420UIVersionLabel") || !builder.includes("metadata.c420uiSourceHash")) {
     failures.push("c420ui builder version/help/session log must render c420uiSourceHash next to the builder version");
@@ -1247,14 +1142,19 @@ function checkSourceHashDisplayContract(failures: string[]): void {
 
 function checkSettingsContract(failures: string[]): void {
   const rootDir = process.cwd();
-  const app = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/app.ts"), "utf8");
   const settings = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/settings.ts"), "utf8");
+  const rustContracts = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-tui-contracts.ts"), "utf8");
+  const rustRunner = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-tui-runner.ts"), "utf8");
 
-  if (!app.includes('"settings"') || !app.includes("Application Settings")) {
-    failures.push("build-resources/c420ui/src/terminal/app.ts: Application Settings view is required");
+  if (!rustContracts.includes('"settings"') || !rustContracts.includes("Application Settings")) {
+    failures.push("build-resources/c420ui/src/rust-tui-contracts.ts: Application Settings view is required");
   }
-  if (!app.includes("generalLogsEnabled") || !app.includes("Install and Development Tool")) {
-    failures.push("build-resources/c420ui/src/terminal/app.ts: general Tool logs setting is required");
+  if (
+    !rustRunner.includes("generalLogsEnabled") ||
+    !rustRunner.includes("terminalTextSelectionMode") ||
+    !rustRunner.includes("Text selection mode")
+  ) {
+    failures.push("build-resources/c420ui/src/rust-tui-runner.ts: Rust settings menu must expose persisted tool settings");
   }
   if (!settings.includes("generalLogsEnabled")) {
     failures.push("build-resources/c420ui/src/terminal/settings.ts: generalLogsEnabled setting is required");

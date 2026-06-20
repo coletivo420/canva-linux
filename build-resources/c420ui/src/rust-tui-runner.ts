@@ -20,7 +20,7 @@ import {
   type c420uiStartupTask,
 } from "./startup-task.js";
 import { copyTextToClipboard } from "./terminal/clipboard.js";
-import type { C420UIAppOptions } from "./terminal/app.js";
+import type { C420UIAppOptions } from "./terminal/app-options.js";
 import { formatDetectionPanelSummaries } from "./terminal/detected-installations-summary.js";
 import {
   loadToolSettings,

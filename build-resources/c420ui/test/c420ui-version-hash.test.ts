@@ -13,8 +13,12 @@ const adapterSource = fs.readFileSync(
   path.join(repoRoot, "build-resources/canva-linux/c420ui-adapter/adapter.ts"),
   "utf8",
 );
-const appSource = fs.readFileSync(
-  path.join(repoRoot, "build-resources/c420ui/src/terminal/app.ts"),
+const rustTuiContractsSource = fs.readFileSync(
+  path.join(repoRoot, "build-resources/c420ui/src/rust-tui-contracts.ts"),
+  "utf8",
+);
+const rustRendererSource = fs.readFileSync(
+  path.join(repoRoot, "build-resources/c420ui-rs/src/tui/renderer.rs"),
   "utf8",
 );
 const builderSource = fs.readFileSync(
@@ -111,8 +115,10 @@ test("falls back to hash unknown when c420uiSourceHash is missing", () => {
   );
 });
 
-test("c420ui header renderer uses the c420ui version formatter", () => {
-  assert.match(appSource, /formatC420UIVersionLabel\(\{[\s\S]*packageName:\s*opts\.brand\.name[\s\S]*packageVersion:\s*opts\.brand\.version[\s\S]*sourceHash:\s*opts\.brand\.hash/);
+test("Rust TUI contract carries the c420ui source hash", () => {
+  assert.match(rustTuiContractsSource, /hash:\s*optionalNonEmpty\(config\.brand\.hash\)/);
+  assert.match(rustRendererSource, /format_c420ui_version_line/);
+  assert.match(rustRendererSource, /input\.brand\.hash\.as_deref\(\)/);
 });
 
 test("c420ui builder logs and version blocks use c420uiSourceHash", () => {
@@ -123,14 +129,20 @@ test("c420ui builder logs and version blocks use c420uiSourceHash", () => {
   assert.doesNotMatch(builderSource, /sourceHash:\s*metadata\.combinedSourceHash/);
 });
 
-test("c420ui startup log includes formatted builder version hash", () => {
-  assert.match(appSource, /\[info\] c420ui started\. builder=\$\{formatC420UIVersionLabel/);
+test("c420ui startup log belongs to the Rust TUI runner session", () => {
+  const runnerSource = fs.readFileSync(
+    path.join(repoRoot, "build-resources/c420ui/src/rust-tui-runner.ts"),
+    "utf8",
+  );
+
+  assert.match(runnerSource, /writeSession\(sessionStream, "\[mode\] c420ui"\)/);
 });
 
 test("project header renders the same version/hash line used for width calculation", () => {
-  assert.match(appSource, /function formatProjectVersionLine\(projectConfig: C420UIProjectConfig\)/);
-  assert.match(appSource, /projectHeaderContentWidth[\s\S]*formatProjectVersionLine\(projectConfig\)/);
-  assert.match(appSource, /content:\s*\[[\s\S]*formatProjectVersionLine\(opts\.project\)/);
+  assert.match(rustRendererSource, /fn project_header_lines/);
+  assert.match(rustRendererSource, /input\.project\.display_version/);
+  assert.match(rustRendererSource, /input\s*\n\s*\.project\s*\n\s*\.hash/);
+  assert.match(rustRendererSource, /short_hash\(hash\)/);
 });
 
 test("adapter does not keep redundant app identity fallback", () => {

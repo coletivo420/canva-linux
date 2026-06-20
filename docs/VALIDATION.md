@@ -25,6 +25,10 @@ protect c420ui-host, c420ui-tui, the TypeScript Action Engine bridge, and the
 dependent-project boundary instead of the removed Blessed/spawnSync/sudo runner
 paths.
 
+Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is
+now the only terminal UI runtime, while TypeScript remains responsible for
+Action Engine, bridge contracts, settings, clipboard and project integration.
+
 ## Dev11 ESM-only validation policy (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 
 import type { c420uiProjectBridge } from "../src/index.js";
-import type { C420UIAppOptions } from "../src/terminal/app.js";
+import type { C420UIAppOptions } from "../src/terminal/app-options.js";
 import { formatC420UITerminalHelp } from "../src/terminal/help.js";
 import { runC420UITerminalApp } from "../src/terminal/runtime.js";
+
+const rootDir = process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 function createRuntimeOptions(): C420UIAppOptions {
   const bridge: c420uiProjectBridge = {
@@ -126,4 +130,36 @@ test("runC420UITerminalApp passes error writer and exit to the Rust TUI runner",
   receivedWriteError?.("boom");
   assert.equal(messages[0], "boom");
   assert.throws(() => receivedExit?.(1), /exit/);
+});
+
+test("legacy Blessed terminal runtime files are removed", () => {
+  for (const relativePath of [
+    "build-resources/c420ui/src/terminal/app.ts",
+    "build-resources/c420ui/src/terminal/blessed-widgets.ts",
+    "build-resources/c420ui/src/terminal/modal.ts",
+  ]) {
+    assert.equal(fs.existsSync(path.join(rootDir, relativePath)), false, `${relativePath} must not exist`);
+  }
+});
+
+test("terminal public index exposes Rust runtime types without createApp", () => {
+  const source = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/src/terminal/index.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /C420UIAppOptions/);
+  assert.match(source, /runC420UITerminalApp/);
+  assert.doesNotMatch(source, /createApp|HeaderLayout|\.\/app\.js/);
+});
+
+test("terminal build and bootstrap recipe do not externalize Blessed runtime packages", () => {
+  const packageJson = fs.readFileSync(path.join(rootDir, "package.json"), "utf8");
+  const bootstrapRecipe = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/bootstrap/build-recipe.ts"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(packageJson, /--external:blessed/);
+  assert.doesNotMatch(bootstrapRecipe, /"blessed"|"term\.js"|"pty\.js"/);
 });

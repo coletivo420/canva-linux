@@ -8,9 +8,6 @@ export const C420UI_BOOTSTRAP_ENTRYPOINTS = [
 
 export const C420UI_BOOTSTRAP_EXTERNALS = [
   "electron",
-  "blessed",
-  "term.js",
-  "pty.js",
 ] as const;
 
 export const C420UI_BOOTSTRAP_BUILD_RECIPE = "build-resources/c420ui/scripts/build-bootstrap.ts";

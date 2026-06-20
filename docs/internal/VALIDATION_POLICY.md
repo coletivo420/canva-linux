@@ -43,7 +43,6 @@ The shell launcher must not install npm dependencies or build c420ui before star
 Allowed bootstrap packages:
 
 - `esbuild`
-- `blessed`
 
 The launcher bootstrap must not replace the c420ui Host Dependency Runner. After c420ui starts, c420ui owns full host dependency validation and repair.
 

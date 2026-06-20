@@ -173,6 +173,5 @@ CLeyedropper, packaging policy or project-specific adapters.
 - `build-resources/config/typescript/tsconfig.build.json`
 - `build-resources/config/typescript/tsconfig.json`
 - `build-resources/config/typescript/tsconfig.strict.json`
-- `build-resources/c420ui/types/blessed.d.ts`
 
 - `build-resources/c420ui/scripts/c420ui-builder.ts`

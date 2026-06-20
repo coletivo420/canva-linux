@@ -14,7 +14,7 @@ import {
   runC420UIRustTuiApp,
   type C420UIRustTuiRunnerOptions,
 } from "../src/rust-tui-runner.js";
-import type { C420UIAppOptions } from "../src/terminal/app.js";
+import type { C420UIAppOptions } from "../src/terminal/app-options.js";
 
 class FakeTuiProcess extends EventEmitter {
   readonly stdin = new PassThrough();

@@ -116,6 +116,9 @@ Request changes if a PR:
 - restores tests that protect the removed Blessed/spawnSync/sudo runner paths
   instead of the current c420ui-host, c420ui-tui, TypeScript Action Engine
   bridge, and dependent-project boundary contracts.
+- reintroduces the legacy Blessed/TypeScript terminal runtime, exports
+  `createApp`, restores `terminal/app.ts`, `terminal/blessed-widgets.ts` or
+  `terminal/modal.ts`, or makes Blessed an external/dependency again.
 
 ## c420ui version/hash review
 

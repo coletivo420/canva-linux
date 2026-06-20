@@ -73,7 +73,7 @@ function buildEntry(rootDir: string, entryPoint: string): string {
     platform: "node",
     target: "node20",
     format: "esm",
-    external: ["electron", "blessed", "esbuild", "typescript"],
+    external: ["electron", "esbuild", "typescript"],
     sourcemap: false,
     minify: false,
     legalComments: "none",

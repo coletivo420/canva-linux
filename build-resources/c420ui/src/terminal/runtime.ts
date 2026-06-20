@@ -2,7 +2,7 @@ import {
   runC420UIRustTuiApp,
   type C420UIRustTuiRunnerOptions,
 } from "../rust-tui-runner.js";
-import type { C420UIAppOptions } from "./app.js";
+import type { C420UIAppOptions } from "./app-options.js";
 import { enforceC420UIRootLaunchGuard } from "./root-guard.js";
 
 export type c420uiTerminalRuntimeOptions = {
