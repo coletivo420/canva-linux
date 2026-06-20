@@ -238,6 +238,33 @@ fn test_render_preserves_logos_and_action_description() {
 }
 
 #[test]
+fn test_detected_installations_renders_all_legacy_targets() {
+    let backend = TestBackend::new(120, 36);
+    let mut terminal = Terminal::new(backend).unwrap();
+    let mut state = create_test_state();
+    state.render.panels.detected_installations.lines = vec![
+        "  Native System: not detected".to_string(),
+        "  Native User: not detected".to_string(),
+        "  Flatpak System: not detected".to_string(),
+        "  Flatpak User: not detected".to_string(),
+    ];
+
+    renderer::render(&mut terminal, &state).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let text: String = buffer
+        .content
+        .iter()
+        .map(|c| c.symbol().to_string())
+        .collect();
+
+    assert!(text.contains("Native System"));
+    assert!(text.contains("Native User"));
+    assert!(text.contains("Flatpak System"));
+    assert!(text.contains("Flatpak User"));
+}
+
+#[test]
 fn test_status_panel_colors_only_values() {
     let backend = TestBackend::new(120, 36);
     let mut terminal = Terminal::new(backend).unwrap();

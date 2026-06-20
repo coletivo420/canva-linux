@@ -66,6 +66,8 @@ test("renders Detected Installations in its own panel", () => {
 
   assert.match(text, /Native System:/);
   assert.match(text, /Native User:/);
+  assert.match(text, /Flatpak System:/);
+  assert.match(text, /Flatpak User:/);
   assert.doesNotMatch(text, /Generated Artifacts|Linux Artifacts|Detected Installations/);
 });
 

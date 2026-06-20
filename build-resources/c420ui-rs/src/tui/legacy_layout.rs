@@ -4,6 +4,12 @@ const HEADER_GAP: u16 = 0;
 const HEADER_BOX_HORIZONTAL_PADDING: u16 = 4;
 const C420UI_HEADER_MIN_WIDTH: u16 = 28;
 const PROJECT_HEADER_MIN_WIDTH: u16 = 40;
+const DETECTED_INSTALLATIONS_MIN_HEIGHT: u16 = 6;
+const GENERATED_ARTIFACTS_MIN_HEIGHT: u16 = 5;
+const LINUX_ARTIFACTS_MIN_HEIGHT: u16 = 3;
+const DIAGNOSTICS_MIN_HEIGHT: u16 = DETECTED_INSTALLATIONS_MIN_HEIGHT
+    + GENERATED_ARTIFACTS_MIN_HEIGHT
+    + LINUX_ARTIFACTS_MIN_HEIGHT;
 
 pub struct LegacyLayout {
     pub c420ui_header: Rect,
@@ -94,17 +100,19 @@ impl LegacyLayout {
         let right_left = area.x + left_width;
         let right_width = area.width.saturating_sub(left_width).max(1);
         let workspace_y = area.y + workspace_top;
-        let menu_height = ((workspace_height as f32 * 0.68).floor() as u16)
+        let preferred_menu_height = ((workspace_height as f32 * 0.68).floor() as u16).max(3);
+        let diagnostics_target_height = workspace_height
+            .saturating_sub(preferred_menu_height)
+            .max(DIAGNOSTICS_MIN_HEIGHT.min(workspace_height.saturating_sub(3).max(1)));
+        let menu_height = workspace_height
+            .saturating_sub(diagnostics_target_height)
             .max(3)
             .min(workspace_height.saturating_sub(1).max(1));
         let diagnostics_top = workspace_y + menu_height;
         let detection_panels_height = workspace_height.saturating_sub(menu_height).max(1);
-        let detected_height = ((detection_panels_height as f32 * 0.34).floor() as u16)
-            .max(1)
-            .min(detection_panels_height);
-        let generated_height = ((detection_panels_height as f32 * 0.43).floor() as u16)
-            .max(1)
-            .min(detection_panels_height.saturating_sub(detected_height));
+        let detected_height = DETECTED_INSTALLATIONS_MIN_HEIGHT.min(detection_panels_height);
+        let remaining_after_detected = detection_panels_height.saturating_sub(detected_height);
+        let generated_height = GENERATED_ARTIFACTS_MIN_HEIGHT.min(remaining_after_detected);
         let linux_height = detection_panels_height
             .saturating_sub(detected_height)
             .saturating_sub(generated_height);
