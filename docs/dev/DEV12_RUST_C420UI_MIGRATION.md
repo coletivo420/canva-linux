@@ -129,6 +129,7 @@ c420ui-host remove-paths --json
 c420ui-host fs-ops --json
 c420ui-host ensure-linux-unpacked --json
 c420ui-host artifact-file-ops --json
+c420ui-host clipboard-write --json
 c420ui-tui --version
 c420ui-tui doctor --json
 c420ui-tui render --json
@@ -167,6 +168,10 @@ paths.
 Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is
 now the only terminal UI runtime, while TypeScript remains responsible for
 Action Engine, bridge contracts, settings, clipboard and project integration.
+
+Dev12 moves c420ui clipboard writes to `c420ui-host`. F5 Copy Logs now delegates
+host clipboard integration to Rust, removing shell-based clipboard probing from
+the TypeScript terminal bridge.
 
 The TypeScript Action Engine remains responsible for action resolution,
 execution, root-provider interaction and progress/log events. Rust owns terminal

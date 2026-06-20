@@ -29,6 +29,10 @@ Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is
 now the only terminal UI runtime, while TypeScript remains responsible for
 Action Engine, bridge contracts, settings, clipboard and project integration.
 
+Dev12 moves c420ui clipboard writes to `c420ui-host`. F5 Copy Logs now delegates
+host clipboard integration to Rust, removing shell-based clipboard probing from
+the TypeScript terminal bridge.
+
 ## Dev11 ESM-only validation policy (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

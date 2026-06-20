@@ -6,6 +6,7 @@ fn print_usage() {
     eprintln!("  host-info --json");
     eprintln!("  doctor --json");
     eprintln!("  check-host-dependencies --json");
+    eprintln!("  clipboard-write --json");
     eprintln!("  run-process --json-lines");
     eprintln!("  sudo-validate --json");
     eprintln!("  remove-paths --json");
@@ -69,6 +70,21 @@ fn main() {
             std::process::exit(exit_codes::INVALID_USAGE);
         }
         match commands::check_host_dependencies::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
+    }
+
+    if cmd == "clipboard-write" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: clipboard-write command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::clipboard_write::execute() {
             Ok(_) => std::process::exit(exit_codes::SUCCESS),
             Err(e) => {
                 eprintln!("Error: {}", e);

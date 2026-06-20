@@ -7,6 +7,7 @@ export type C420UIRustHostCommand =
   | "host-info"
   | "doctor"
   | "check-host-dependencies"
+  | "clipboard-write"
   | "sudo-validate"
   | "remove-paths"
   | "fix-permissions"

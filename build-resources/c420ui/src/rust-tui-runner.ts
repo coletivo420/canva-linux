@@ -51,6 +51,10 @@ type C420UITuiSpawn = (
   },
 ) => C420UITuiChildProcess;
 
+type C420UIClipboardCopy = (
+  text: string,
+) => Promise<{ ok: boolean; message: string }> | { ok: boolean; message: string };
+
 type C420UITuiRuntimeInput =
   | { event: "init"; state: C420UITuiRenderInput }
   | { event: "state"; state: C420UITuiRenderInput }
@@ -103,7 +107,7 @@ export type C420UIRustTuiRunnerOptions = C420UIAppOptions & {
     env?: NodeJS.ProcessEnv;
   }) => string;
   spawnProcess?: C420UITuiSpawn;
-  copyTextToClipboard?: typeof copyTextToClipboard;
+  copyTextToClipboard?: C420UIClipboardCopy;
 };
 
 export function runC420UIRustTuiApp(
@@ -311,7 +315,7 @@ async function handleTuiEvent(options: {
   setActiveAction: (
     action: { actionId: string; abortController: AbortController } | undefined,
   ) => void;
-  copyTextToClipboard: typeof copyTextToClipboard;
+  copyTextToClipboard: C420UIClipboardCopy;
   writeError: (message: string) => void;
   exit: (code: number) => never;
 }): Promise<void> {
@@ -398,7 +402,7 @@ async function handleTuiEvent(options: {
   }
 
   if (event.event === "copy-logs") {
-    const result = copyTextToClipboard(collectLogCopyText(logHistory, sessionLogPath));
+    const result = await copyTextToClipboard(collectLogCopyText(logHistory, sessionLogPath));
     sendLog("system", result.message, result.ok ? "info" : "warning");
     return;
   }

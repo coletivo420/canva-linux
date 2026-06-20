@@ -952,6 +952,13 @@ function checkTerminalUiContract(failures: string[]): void {
   const settings = fs.existsSync(path.join(terminalDir, "settings.ts"))
     ? fs.readFileSync(path.join(terminalDir, "settings.ts"), "utf8")
     : "";
+  const clipboard = fs.existsSync(path.join(terminalDir, "clipboard.ts"))
+    ? fs.readFileSync(path.join(terminalDir, "clipboard.ts"), "utf8")
+    : "";
+  const rustClipboardPath = path.join(rootDir, "build-resources/c420ui/src/rust-clipboard.ts");
+  const rustClipboard = fs.existsSync(rustClipboardPath)
+    ? fs.readFileSync(rustClipboardPath, "utf8")
+    : "";
   const appOptions = fs.existsSync(path.join(terminalDir, "app-options.ts"))
     ? fs.readFileSync(path.join(terminalDir, "app-options.ts"), "utf8")
     : "";
@@ -991,6 +998,17 @@ function checkTerminalUiContract(failures: string[]): void {
   if (settings.includes("rootLaunchGuardMessage")) {
     failures.push("build-resources/c420ui/src/terminal/settings.ts must not contain rootLaunchGuardMessage");
   }
+  if (!rustClipboard) {
+    failures.push("build-resources/c420ui/src/rust-clipboard.ts must exist");
+  }
+  if (!clipboard.includes("copyTextToClipboardWithRust")) {
+    failures.push("build-resources/c420ui/src/terminal/clipboard.ts must delegate to rust-clipboard");
+  }
+  for (const forbidden of ["node:child_process", "spawnSync", "bash", "command -v", "wl-copy", "qdbus", "gpaste", "xclip", "xsel"] as const) {
+    if (clipboard.includes(forbidden)) {
+      failures.push(`build-resources/c420ui/src/terminal/clipboard.ts must not contain ${forbidden}`);
+    }
+  }
   const guardIndex = runtime.indexOf("enforceC420UIRootLaunchGuard");
   const rustRunIndex = runtime.indexOf("runRustTuiApp");
   if (guardIndex < 0 || rustRunIndex < 0 || guardIndex > rustRunIndex) {
@@ -1005,6 +1023,14 @@ function checkTerminalUiContract(failures: string[]): void {
     if (bootstrapRecipe.includes(forbidden)) {
       failures.push(`build-resources/c420ui/bootstrap/build-recipe.ts must not externalize ${forbidden}`);
     }
+  }
+  const hostBin = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/bin/c420ui-host.rs"), "utf8");
+  const commandsMod = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/commands/mod.rs"), "utf8");
+  if (!hostBin.includes("clipboard-write --json") || !hostBin.includes("commands::clipboard_write::execute")) {
+    failures.push("c420ui-host usage and command dispatch must include clipboard-write --json");
+  }
+  if (!commandsMod.includes("pub mod clipboard_write")) {
+    failures.push("build-resources/c420ui-rs/src/commands/mod.rs must include clipboard_write");
   }
 }
 

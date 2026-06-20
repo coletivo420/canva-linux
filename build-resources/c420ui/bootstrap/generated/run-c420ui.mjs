@@ -21,10 +21,10 @@ function printC420UITerminalHelp(options) {
 }
 
 // build-resources/c420ui/src/rust-tui-runner.ts
-import { spawn } from "node:child_process";
-import fs2 from "node:fs";
-import path2 from "node:path";
-import { StringDecoder } from "node:string_decoder";
+import { spawn as spawn2 } from "node:child_process";
+import fs3 from "node:fs";
+import path3 from "node:path";
+import { StringDecoder as StringDecoder2 } from "node:string_decoder";
 
 // build-resources/c420ui/src/scopes.ts
 var c420uiKnownActionScopes = ["user", "system", "auto"];
@@ -816,89 +816,259 @@ async function runC420UIStartupTasks(tasks, log) {
   }
 }
 
-// build-resources/c420ui/src/terminal/clipboard.ts
-import { spawnSync } from "node:child_process";
-function has(command) {
-  return spawnSync("bash", ["-c", `command -v ${command}`]).status === 0;
+// build-resources/c420ui/src/rust-host.ts
+import { spawn } from "node:child_process";
+import { StringDecoder } from "node:string_decoder";
+import fs from "node:fs";
+import path from "node:path";
+function resolveC420UIRustHostBinary(rootDir2, env = {}) {
+  let binPath = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
+  if (!binPath) {
+    const debugPath = path.join(rootDir2, "build-resources/c420ui-rs/target/debug/c420ui-host");
+    const releasePath = path.join(rootDir2, "build-resources/c420ui-rs/target/release/c420ui-host");
+    if (fs.existsSync(debugPath)) {
+      binPath = debugPath;
+    } else if (fs.existsSync(releasePath)) {
+      binPath = releasePath;
+    }
+  }
+  if (!binPath || !fs.existsSync(binPath)) {
+    throw new Error("c420ui Rust host is missing. Run npm run build:c420ui-rs.");
+  }
+  return binPath;
 }
-function runWithInput(command, args, input) {
-  const result = spawnSync(command, args, {
-    input,
-    encoding: "utf8"
+function buildRustHostProcessEnv(env = {}) {
+  const childEnv = {};
+  if (env.PATH) {
+    childEnv.PATH = env.PATH;
+  } else if (process.env.PATH) {
+    childEnv.PATH = process.env.PATH;
+  }
+  if (env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN) {
+    childEnv.C420UI_HOST_BIN = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
+  }
+  return childEnv;
+}
+async function runC420UIRustHost(options) {
+  const { rootDir: rootDir2, command, input, timeoutMs = 1e4, env = {} } = options;
+  const binPath = resolveC420UIRustHostBinary(rootDir2, env);
+  const childEnv = buildRustHostProcessEnv(env);
+  return new Promise((resolve, reject) => {
+    const child = spawn(binPath, [command, "--json"], {
+      env: childEnv,
+      shell: false
+    });
+    let stdoutData = "";
+    let stderrData = "";
+    let killedByTimeout = false;
+    const timer = setTimeout(() => {
+      killedByTimeout = true;
+      child.kill();
+      clearTimeout(timer);
+      reject(new Error(`c420ui-host command timed out after ${timeoutMs}ms.`));
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => {
+      stdoutData += chunk.toString();
+    });
+    child.stderr.on("data", (chunk) => {
+      stderrData += chunk.toString();
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.stdin.on("error", (err) => {
+      if (err.code !== "EPIPE") {
+        clearTimeout(timer);
+        reject(err);
+      }
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (killedByTimeout) return;
+      if (code !== 0) {
+        reject(
+          new Error(
+            `c420ui-host exited with code ${code}. Stderr: ${stderrData.slice(0, 500).trim()}`
+          )
+        );
+        return;
+      }
+      try {
+        const parsed = JSON.parse(stdoutData.trim());
+        resolve(parsed);
+      } catch (err) {
+        reject(new Error("Failed to parse c420ui-host output as JSON."));
+      }
+    });
+    try {
+      child.stdin.write(JSON.stringify(input ?? {}) + "\n");
+      child.stdin.end();
+    } catch (error) {
+      clearTimeout(timer);
+      reject(error);
+    }
   });
-  return result.status === 0;
 }
-function copyTextToClipboard(text) {
-  if (!text.trim()) {
+function parseJsonLine(line) {
+  try {
+    const parsed = JSON.parse(line);
+    if (!parsed || typeof parsed !== "object" || !("event" in parsed)) {
+      throw new Error("missing event field");
+    }
+    return parsed;
+  } catch (error) {
+    throw new Error(`Invalid JSONL event from c420ui-host: ${error instanceof Error ? error.message : String(error)}.`);
+  }
+}
+async function runC420UIRustHostJsonLines(options) {
+  const { rootDir: rootDir2, input, timeoutMs = 0, env = {}, signal, onEvent } = options;
+  const binPath = resolveC420UIRustHostBinary(rootDir2, env);
+  const childEnv = buildRustHostProcessEnv(env);
+  return new Promise((resolve, reject) => {
+    const child = spawn(binPath, ["run-process", "--json-lines"], {
+      env: childEnv,
+      shell: false,
+      stdio: ["pipe", "pipe", "pipe"]
+    });
+    let stdoutPending = "";
+    let stderrData = "";
+    let settled = false;
+    let timeout;
+    const decoder = new StringDecoder("utf8");
+    function settle(error, code = 0) {
+      if (settled) return;
+      settled = true;
+      if (timeout) clearTimeout(timeout);
+      signal?.removeEventListener("abort", abort);
+      if (error) reject(error);
+      else resolve(code);
+    }
+    function abort() {
+      try {
+        child.stdin.write(JSON.stringify({ event: "cancel" }) + "\n");
+      } catch {
+      }
+      if (timeoutMs > 0) {
+        setTimeout(() => {
+          if (!settled) child.kill();
+        }, Math.min(timeoutMs, 1e3)).unref();
+      }
+    }
+    if (timeoutMs > 0) {
+      timeout = setTimeout(() => {
+        child.kill();
+        settle(new Error(`c420ui-host run-process timed out after ${timeoutMs}ms.`));
+      }, timeoutMs);
+      timeout.unref();
+    }
+    child.on("error", (error) => settle(error));
+    child.stderr.on("data", (chunk) => {
+      stderrData += chunk.toString();
+    });
+    child.stdout.on("data", (chunk) => {
+      stdoutPending += decoder.write(chunk);
+      const lines = stdoutPending.split(/\r?\n/);
+      stdoutPending = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          onEvent(parseJsonLine(line));
+        } catch (error) {
+          settle(error instanceof Error ? error : new Error(String(error)));
+          child.kill();
+          return;
+        }
+      }
+    });
+    child.stdout.on("end", () => {
+      stdoutPending += decoder.end();
+      const line = stdoutPending.trim();
+      if (!line) return;
+      try {
+        onEvent(parseJsonLine(line));
+      } catch (error) {
+        settle(error instanceof Error ? error : new Error(String(error)));
+      }
+    });
+    child.on("close", (code) => {
+      if (settled) return;
+      if (stderrData.trim() && code !== 0) {
+        stderrData = stderrData.slice(0, 500);
+      }
+      settle(null, code ?? 1);
+    });
+    signal?.addEventListener("abort", abort, { once: true });
+    try {
+      child.stdin.write(JSON.stringify(input) + "\n");
+    } catch (error) {
+      settle(error instanceof Error ? error : new Error(String(error)));
+    }
+    if (signal?.aborted) {
+      abort();
+    }
+  });
+}
+
+// build-resources/c420ui/src/rust-clipboard.ts
+async function copyTextToClipboardWithRust(options) {
+  if (!options.text.trim()) {
     return {
       ok: false,
-      message: "No logs to copy."
+      message: "No logs to copy.",
+      backend: null
     };
   }
-  if (process.env.WAYLAND_DISPLAY && has("wl-copy") && runWithInput("wl-copy", [], text)) {
+  try {
+    const result = await runC420UIRustHost({
+      rootDir: options.rootDir,
+      command: "clipboard-write",
+      input: {
+        text: options.text,
+        env: pickClipboardEnv(options.env ?? process.env),
+        preferredBackends: ["wayland", "kde", "gnome", "x11"]
+      },
+      env: options.env
+    });
     return {
-      ok: true,
-      message: "Logs copied to clipboard via wl-copy."
+      ok: result.ok === true,
+      message: typeof result.message === "string" ? result.message : "Clipboard operation did not return a message.",
+      backend: result.backend ?? null
     };
-  }
-  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("kde")) {
-    if (has("qdbus6") && runWithInput(
-      "bash",
-      [
-        "-c",
-        'input=$(cat); qdbus6 org.kde.klipper /klipper setClipboardContents "$input"'
-      ],
-      text
-    )) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via KDE Klipper (qdbus6)."
-      };
-    }
-    if (has("qdbus") && runWithInput(
-      "bash",
-      [
-        "-c",
-        'input=$(cat); qdbus org.kde.klipper /klipper setClipboardContents "$input"'
-      ],
-      text
-    )) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via KDE Klipper (qdbus)."
-      };
-    }
-  }
-  if ((process.env.XDG_CURRENT_DESKTOP || "").toLowerCase().includes("gnome")) {
-    if (has("gpaste-client") && runWithInput("gpaste-client", ["add"], text)) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via GPaste."
-      };
-    }
-    if (has("gpaste") && runWithInput("gpaste", ["add"], text)) {
-      return {
-        ok: true,
-        message: "Logs copied to clipboard via GPaste."
-      };
-    }
-  }
-  if (has("xclip") && runWithInput("xclip", ["-selection", "clipboard"], text)) {
+  } catch (error) {
     return {
-      ok: true,
-      message: "Logs copied to clipboard via xclip."
+      ok: false,
+      message: `Clipboard operation failed: ${formatClipboardError(error)}`,
+      backend: null
     };
   }
-  if (has("xsel") && runWithInput("xsel", ["--clipboard", "--input"], text)) {
-    return {
-      ok: true,
-      message: "Logs copied to clipboard via xsel."
-    };
+}
+function pickClipboardEnv(env) {
+  const output = {};
+  for (const key of [
+    "PATH",
+    "WAYLAND_DISPLAY",
+    "DISPLAY",
+    "XDG_CURRENT_DESKTOP",
+    "C420UI_HOST_BIN"
+  ]) {
+    const value = env[key];
+    if (value) output[key] = value;
   }
-  return {
-    ok: false,
-    message: "No clipboard tool found. Install wl-clipboard, KDE qdbus support, GPaste, xclip or xsel."
-  };
+  return output;
+}
+function formatClipboardError(error) {
+  if (!(error instanceof Error)) return String(error);
+  return error.message.replace(/Stderr:.*$/s, "Stderr: <redacted>").trim();
+}
+
+// build-resources/c420ui/src/terminal/clipboard.ts
+function copyTextToClipboard(text) {
+  return copyTextToClipboardWithRust({
+    text,
+    rootDir: process.cwd(),
+    env: process.env
+  });
 }
 
 // build-resources/c420ui/src/terminal/detected-installations-summary.ts
@@ -996,8 +1166,8 @@ function formatDetectionPanelSummaries(s, colors2) {
 }
 
 // build-resources/c420ui/src/terminal/settings.ts
-import fs from "node:fs";
-import path from "node:path";
+import fs2 from "node:fs";
+import path2 from "node:path";
 var DEFAULT_TOOL_SETTINGS = {
   tool: {
     generalLogsEnabled: true,
@@ -1010,10 +1180,10 @@ function configHome() {
   if (xdgConfigHome) {
     return xdgConfigHome;
   }
-  return path.join(process.env.HOME || ".", ".config");
+  return path2.join(process.env.HOME || ".", ".config");
 }
 function toolSettingsPath(stateDirectoryName) {
-  return path.join(configHome(), stateDirectoryName, "tool-settings.json");
+  return path2.join(configHome(), stateDirectoryName, "tool-settings.json");
 }
 function isObject(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -1032,7 +1202,7 @@ function normalizeSettings(raw) {
 }
 function loadToolSettings(stateDirectoryName) {
   const settingsPath = toolSettingsPath(stateDirectoryName);
-  if (!fs.existsSync(settingsPath)) {
+  if (!fs2.existsSync(settingsPath)) {
     try {
       saveToolSettings(DEFAULT_TOOL_SETTINGS, stateDirectoryName);
     } catch {
@@ -1040,7 +1210,7 @@ function loadToolSettings(stateDirectoryName) {
     return structuredClone(DEFAULT_TOOL_SETTINGS);
   }
   try {
-    const rawContent = fs.readFileSync(settingsPath, "utf8");
+    const rawContent = fs2.readFileSync(settingsPath, "utf8");
     return normalizeSettings(JSON.parse(rawContent));
   } catch {
     return structuredClone(DEFAULT_TOOL_SETTINGS);
@@ -1048,8 +1218,8 @@ function loadToolSettings(stateDirectoryName) {
 }
 function saveToolSettings(settings, stateDirectoryName) {
   const settingsPath = toolSettingsPath(stateDirectoryName);
-  fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
-  fs.writeFileSync(
+  fs2.mkdirSync(path2.dirname(settingsPath), { recursive: true });
+  fs2.writeFileSync(
     settingsPath,
     `${JSON.stringify(normalizeSettings(settings), null, 2)}
 `,
@@ -1201,7 +1371,7 @@ function runC420UIRustTuiApp(options) {
       rootDir: options.config.rootDir,
       env: options.env
     });
-    const spawnProcess = options.spawnProcess ?? spawn;
+    const spawnProcess = options.spawnProcess ?? spawn2;
     child = spawnProcess(binary, ["run", "--json-lines"], {
       cwd: options.config.rootDir,
       env: createC420UITuiProcessEnv(options.env ?? process.env),
@@ -1301,14 +1471,14 @@ function runC420UIRustTuiApp(options) {
 function resolveC420UITuiBinary(options) {
   const configured = options.env?.C420UI_TUI_BIN?.trim();
   if (configured) {
-    if (!fs2.existsSync(configured)) {
+    if (!fs3.existsSync(configured)) {
       throw new Error(`Configured c420ui-tui binary does not exist: ${configured}`);
     }
     return configured;
   }
   const extension = process.platform === "win32" ? ".exe" : "";
   const candidates = [
-    path2.join(
+    path3.join(
       options.rootDir,
       "build-resources",
       "c420ui-rs",
@@ -1316,7 +1486,7 @@ function resolveC420UITuiBinary(options) {
       "debug",
       `c420ui-tui${extension}`
     ),
-    path2.join(
+    path3.join(
       options.rootDir,
       "build-resources",
       "c420ui-rs",
@@ -1325,7 +1495,7 @@ function resolveC420UITuiBinary(options) {
       `c420ui-tui${extension}`
     )
   ];
-  const binary = candidates.find((candidate) => fs2.existsSync(candidate));
+  const binary = candidates.find((candidate) => fs3.existsSync(candidate));
   if (!binary) {
     throw new Error("Missing c420ui-tui binary. Run npm run build:c420ui-tui.");
   }
@@ -1419,7 +1589,7 @@ async function handleTuiEvent(options) {
     return;
   }
   if (event.event === "copy-logs") {
-    const result = copyTextToClipboard2(collectLogCopyText(logHistory, sessionLogPath));
+    const result = await copyTextToClipboard2(collectLogCopyText(logHistory, sessionLogPath));
     sendLog("system", result.message, result.ok ? "info" : "warning");
     return;
   }
@@ -1701,7 +1871,7 @@ function visibleLogHistory(logs, toolSettings) {
   return logs.filter((line) => isVisibleLog(line, toolSettings));
 }
 function collectLogCopyText(logs, sessionLogPath) {
-  const sessionLog = fs2.existsSync(sessionLogPath) ? fs2.readFileSync(sessionLogPath, "utf8").trim() : "";
+  const sessionLog = fs3.existsSync(sessionLogPath) ? fs3.readFileSync(sessionLogPath, "utf8").trim() : "";
   const runtimeLog = logs.map((log) => `[${log.source}] ${log.line}`).join("\n");
   return [sessionLog, runtimeLog].filter(Boolean).join("\n");
 }
@@ -1713,29 +1883,29 @@ function isVisibleLog(line, toolSettings) {
 function resolveSessionLogPath(options) {
   const configured = options.config.sessionLogPath?.trim();
   if (configured) return configured;
-  return path2.join("/tmp", "c420ui", "tool-session.log");
+  return path3.join("/tmp", "c420ui", "tool-session.log");
 }
 function openSessionLog(sessionLogPath, writeError, env) {
   try {
-    fs2.mkdirSync(path2.dirname(sessionLogPath), { recursive: true });
-    const stream = fs2.createWriteStream(sessionLogPath, { flags: "a" });
+    fs3.mkdirSync(path3.dirname(sessionLogPath), { recursive: true });
+    const stream = fs3.createWriteStream(sessionLogPath, { flags: "a" });
     stream.on("error", (error) => {
       writeError(`Session log stream failed: ${formatRustTuiError(error)}`);
     });
     return { path: sessionLogPath, stream };
   } catch (error) {
-    const fallbackPath = path2.join(
+    const fallbackPath = path3.join(
       env?.HOME || process.env.HOME || ".",
       ".tmp",
       "c420ui",
       "tool-session.log"
     );
     try {
-      fs2.mkdirSync(path2.dirname(fallbackPath), { recursive: true });
+      fs3.mkdirSync(path3.dirname(fallbackPath), { recursive: true });
       writeError(
         `Session log primary path is unavailable, using fallback ${fallbackPath}: ${formatRustTuiError(error)}`
       );
-      const stream = fs2.createWriteStream(fallbackPath, { flags: "a" });
+      const stream = fs3.createWriteStream(fallbackPath, { flags: "a" });
       stream.on("error", (streamError) => {
         writeError(`Session log fallback stream failed: ${formatRustTuiError(streamError)}`);
       });
@@ -1751,7 +1921,7 @@ function writeSession(stream, line) {
 `);
 }
 function readJsonLines(stream, onEvent, onError) {
-  const decoder = new StringDecoder("utf8");
+  const decoder = new StringDecoder2("utf8");
   let buffer = "";
   stream.on("error", (error) => {
     onError(`c420ui-tui output stream failed: ${formatRustTuiError(error)}`);
@@ -1823,7 +1993,7 @@ function runC420UITerminalApp(options, runtimeOptions = {}) {
 
 // build-resources/c420ui/src/linux-root-provider.ts
 import {
-  spawnSync as spawnSync2
+  spawnSync
 } from "node:child_process";
 
 // build-resources/c420ui/src/root-provider.ts
@@ -1854,7 +2024,7 @@ function validateC420UILinuxActionScope(action, actionEnv, actionHasUserScope = 
   return { ok: true };
 }
 function createC420UILinuxRootProviderBase(options) {
-  const runCommand = options.runCommand ?? spawnSync2;
+  const runCommand = options.runCommand ?? spawnSync;
   const buildActionEnvironment = options.buildActionEnvironment ?? defaultC420UILinuxBuildActionEnvironment;
   const actionHasUserScope = options.actionHasUserScope ?? defaultC420UILinuxActionHasUserScope;
   const buildRootValidationCommand = options.buildRootValidationCommand ?? defaultC420UILinuxRootValidationCommand;
@@ -1941,200 +2111,6 @@ function createC420UILinuxRootProviderBase(options) {
 // build-resources/c420ui/src/npm-dependencies.ts
 import fs4 from "node:fs";
 import path4 from "node:path";
-
-// build-resources/c420ui/src/rust-host.ts
-import { spawn as spawn2 } from "node:child_process";
-import { StringDecoder as StringDecoder2 } from "node:string_decoder";
-import fs3 from "node:fs";
-import path3 from "node:path";
-function resolveC420UIRustHostBinary(rootDir2, env = {}) {
-  let binPath = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
-  if (!binPath) {
-    const debugPath = path3.join(rootDir2, "build-resources/c420ui-rs/target/debug/c420ui-host");
-    const releasePath = path3.join(rootDir2, "build-resources/c420ui-rs/target/release/c420ui-host");
-    if (fs3.existsSync(debugPath)) {
-      binPath = debugPath;
-    } else if (fs3.existsSync(releasePath)) {
-      binPath = releasePath;
-    }
-  }
-  if (!binPath || !fs3.existsSync(binPath)) {
-    throw new Error("c420ui Rust host is missing. Run npm run build:c420ui-rs.");
-  }
-  return binPath;
-}
-function buildRustHostProcessEnv(env = {}) {
-  const childEnv = {};
-  if (env.PATH) {
-    childEnv.PATH = env.PATH;
-  } else if (process.env.PATH) {
-    childEnv.PATH = process.env.PATH;
-  }
-  if (env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN) {
-    childEnv.C420UI_HOST_BIN = env.C420UI_HOST_BIN || process.env.C420UI_HOST_BIN || "";
-  }
-  return childEnv;
-}
-async function runC420UIRustHost(options) {
-  const { rootDir: rootDir2, command, input, timeoutMs = 1e4, env = {} } = options;
-  const binPath = resolveC420UIRustHostBinary(rootDir2, env);
-  const childEnv = buildRustHostProcessEnv(env);
-  return new Promise((resolve, reject) => {
-    const child = spawn2(binPath, [command, "--json"], {
-      env: childEnv,
-      shell: false
-    });
-    let stdoutData = "";
-    let stderrData = "";
-    let killedByTimeout = false;
-    const timer = setTimeout(() => {
-      killedByTimeout = true;
-      child.kill();
-      clearTimeout(timer);
-      reject(new Error(`c420ui-host command timed out after ${timeoutMs}ms.`));
-    }, timeoutMs);
-    child.stdout.on("data", (chunk) => {
-      stdoutData += chunk.toString();
-    });
-    child.stderr.on("data", (chunk) => {
-      stderrData += chunk.toString();
-    });
-    child.on("error", (err) => {
-      clearTimeout(timer);
-      reject(err);
-    });
-    child.stdin.on("error", (err) => {
-      if (err.code !== "EPIPE") {
-        clearTimeout(timer);
-        reject(err);
-      }
-    });
-    child.on("close", (code) => {
-      clearTimeout(timer);
-      if (killedByTimeout) return;
-      if (code !== 0) {
-        reject(
-          new Error(
-            `c420ui-host exited with code ${code}. Stderr: ${stderrData.slice(0, 500).trim()}`
-          )
-        );
-        return;
-      }
-      try {
-        const parsed = JSON.parse(stdoutData.trim());
-        resolve(parsed);
-      } catch (err) {
-        reject(new Error("Failed to parse c420ui-host output as JSON."));
-      }
-    });
-    try {
-      child.stdin.write(JSON.stringify(input ?? {}) + "\n");
-      child.stdin.end();
-    } catch (error) {
-      clearTimeout(timer);
-      reject(error);
-    }
-  });
-}
-function parseJsonLine(line) {
-  try {
-    const parsed = JSON.parse(line);
-    if (!parsed || typeof parsed !== "object" || !("event" in parsed)) {
-      throw new Error("missing event field");
-    }
-    return parsed;
-  } catch (error) {
-    throw new Error(`Invalid JSONL event from c420ui-host: ${error instanceof Error ? error.message : String(error)}.`);
-  }
-}
-async function runC420UIRustHostJsonLines(options) {
-  const { rootDir: rootDir2, input, timeoutMs = 0, env = {}, signal, onEvent } = options;
-  const binPath = resolveC420UIRustHostBinary(rootDir2, env);
-  const childEnv = buildRustHostProcessEnv(env);
-  return new Promise((resolve, reject) => {
-    const child = spawn2(binPath, ["run-process", "--json-lines"], {
-      env: childEnv,
-      shell: false,
-      stdio: ["pipe", "pipe", "pipe"]
-    });
-    let stdoutPending = "";
-    let stderrData = "";
-    let settled = false;
-    let timeout;
-    const decoder = new StringDecoder2("utf8");
-    function settle(error, code = 0) {
-      if (settled) return;
-      settled = true;
-      if (timeout) clearTimeout(timeout);
-      signal?.removeEventListener("abort", abort);
-      if (error) reject(error);
-      else resolve(code);
-    }
-    function abort() {
-      try {
-        child.stdin.write(JSON.stringify({ event: "cancel" }) + "\n");
-      } catch {
-      }
-      if (timeoutMs > 0) {
-        setTimeout(() => {
-          if (!settled) child.kill();
-        }, Math.min(timeoutMs, 1e3)).unref();
-      }
-    }
-    if (timeoutMs > 0) {
-      timeout = setTimeout(() => {
-        child.kill();
-        settle(new Error(`c420ui-host run-process timed out after ${timeoutMs}ms.`));
-      }, timeoutMs);
-      timeout.unref();
-    }
-    child.on("error", (error) => settle(error));
-    child.stderr.on("data", (chunk) => {
-      stderrData += chunk.toString();
-    });
-    child.stdout.on("data", (chunk) => {
-      stdoutPending += decoder.write(chunk);
-      const lines = stdoutPending.split(/\r?\n/);
-      stdoutPending = lines.pop() ?? "";
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          onEvent(parseJsonLine(line));
-        } catch (error) {
-          settle(error instanceof Error ? error : new Error(String(error)));
-          child.kill();
-          return;
-        }
-      }
-    });
-    child.stdout.on("end", () => {
-      stdoutPending += decoder.end();
-      const line = stdoutPending.trim();
-      if (!line) return;
-      try {
-        onEvent(parseJsonLine(line));
-      } catch (error) {
-        settle(error instanceof Error ? error : new Error(String(error)));
-      }
-    });
-    child.on("close", (code) => {
-      if (settled) return;
-      if (stderrData.trim() && code !== 0) {
-        stderrData = stderrData.slice(0, 500);
-      }
-      settle(null, code ?? 1);
-    });
-    signal?.addEventListener("abort", abort, { once: true });
-    try {
-      child.stdin.write(JSON.stringify(input) + "\n");
-    } catch (error) {
-      settle(error instanceof Error ? error : new Error(String(error)));
-    }
-    if (signal?.aborted) {
-      abort();
-    }
-  });
-}
 
 // build-resources/c420ui/src/operational-logs.ts
 var c420uiDefaultRedactionPatterns = [
@@ -3365,11 +3341,11 @@ function detectAppImageHash(rootDir2) {
 import fs9 from "node:fs";
 import path9 from "node:path";
 import os from "node:os";
-import { spawnSync as spawnSync3 } from "node:child_process";
+import { spawnSync as spawnSync2 } from "node:child_process";
 var APP_ID = "io.github.coletivo420.canva-linux";
 function detectFlatpakSystemInstall() {
   try {
-    const result = spawnSync3("flatpak", ["--system", "info", APP_ID], {
+    const result = spawnSync2("flatpak", ["--system", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -3379,7 +3355,7 @@ function detectFlatpakSystemInstall() {
 }
 function detectFlatpakUserInstall() {
   try {
-    const result = spawnSync3("flatpak", ["--user", "info", APP_ID], {
+    const result = spawnSync2("flatpak", ["--user", "info", APP_ID], {
       stdio: "ignore"
     });
     return result.status === 0;
@@ -3446,7 +3422,7 @@ function detectFlatpakSystemVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = spawnSync3(
+    const result = spawnSync2(
       "flatpak",
       ["--system", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }
@@ -3464,7 +3440,7 @@ function detectFlatpakUserVersion() {
   const version = readFlatpakVersionMarker(marker);
   if (version) return version;
   try {
-    const result = spawnSync3(
+    const result = spawnSync2(
       "flatpak",
       ["--user", "info", APP_ID, "--show-version"],
       { encoding: "utf8" }

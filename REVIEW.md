@@ -118,7 +118,11 @@ Request changes if a PR:
   bridge, and dependent-project boundary contracts.
 - reintroduces the legacy Blessed/TypeScript terminal runtime, exports
   `createApp`, restores `terminal/app.ts`, `terminal/blessed-widgets.ts` or
-  `terminal/modal.ts`, or makes Blessed an external/dependency again.
+  `terminal/modal.ts`.
+- reintroduces TypeScript clipboard probing. Clipboard access is a c420ui-host
+  responsibility; do not reintroduce `spawnSync`, Bash, `command -v` or
+  desktop-specific clipboard probing in TypeScript.
+- makes Blessed an external/dependency again.
 
 ## c420ui version/hash review
 

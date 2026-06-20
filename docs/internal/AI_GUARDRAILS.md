@@ -30,6 +30,10 @@ bridge contracts, settings, clipboard and project integration, but do not
 restore `terminal/app.ts`, `terminal/blessed-widgets.ts`, `terminal/modal.ts`,
 `createApp`, or Blessed runtime dependencies.
 
+Dev12 moves c420ui clipboard writes to `c420ui-host`. Clipboard access is a
+c420ui-host responsibility. Do not reintroduce `spawnSync`, Bash, `command -v`
+or desktop-specific clipboard probing in TypeScript.
+
 ## Dev11 ESM-only guardrails (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

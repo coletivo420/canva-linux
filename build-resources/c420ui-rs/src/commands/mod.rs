@@ -2,6 +2,7 @@ pub mod artifact_file_ops;
 pub mod check_command;
 pub mod check_host_dependencies;
 pub mod check_node;
+pub mod clipboard_write;
 pub mod doctor;
 pub mod ensure_linux_unpacked;
 pub mod fix_permissions;

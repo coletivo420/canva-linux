@@ -7,6 +7,7 @@
 - Dev12 stabilizes the Rust TUI behavior after the visual parity port. The session log now belongs to c420ui under `/tmp/c420ui`, Doctor / Host Tools is restored through `c420ui-host`, running actions lock the menu and expose an interruption confirmation modal, progress states use strict success/warning/error colors, scroll/wrapping is restored for overview/logs/artifact panels, and status panels now color only values while preserving label colors.
 - Dev12 test coverage was reorganized after the Rust host/TUI migration. Tests now protect c420ui-host, c420ui-tui, the TypeScript Action Engine bridge, and the dependent-project boundary instead of the removed Blessed/spawnSync/sudo runner paths.
 - Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is now the only terminal UI runtime, while TypeScript remains responsible for Action Engine, bridge contracts, settings, clipboard and project integration.
+- Dev12 moves c420ui clipboard writes to `c420ui-host`. F5 Copy Logs now delegates host clipboard integration to Rust, removing shell-based clipboard probing from the TypeScript terminal bridge.
 
 `canva-linux-c420ui-builder` is the Canva Linux public alias for the internal `c420ui-builder` entrypoint.
 See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).

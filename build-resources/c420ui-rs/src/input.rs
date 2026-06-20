@@ -168,3 +168,13 @@ pub struct ArtifactFileOpsInput {
     #[serde(default)]
     pub dry_run: bool,
 }
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ClipboardWriteInput {
+    pub text: String,
+    #[serde(default)]
+    pub env: HashMap<String, String>,
+    #[serde(default)]
+    pub preferred_backends: Vec<String>,
+}

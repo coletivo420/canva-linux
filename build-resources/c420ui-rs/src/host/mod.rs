@@ -1,3 +1,4 @@
+pub mod clipboard;
 pub mod env;
 pub mod fs_ops;
 pub mod line_reader;
