@@ -76,17 +76,24 @@ fn apply_mode(_path: &Path, _mode: Option<u32>) -> Result<(), String> {
 #[cfg(unix)]
 fn chmod_path(path: &Path, mode: &str) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
-    let parsed = u32::from_str_radix(mode.trim_start_matches("0o"), 8)
-        .map_err(|e| format!("invalid chmod mode {}: {}", mode, e))?;
+    let mode = mode
+        .strip_prefix("0o")
+        .or_else(|| mode.strip_prefix("0O"))
+        .unwrap_or(mode);
+    let parsed =
+        u32::from_str_radix(mode, 8).map_err(|e| format!("invalid chmod mode {}: {}", mode, e))?;
     fs::set_permissions(path, fs::Permissions::from_mode(parsed))
         .map_err(|e| format!("failed to chmod {}: {}", path.display(), e))
 }
 
 fn chmod_recursive(path: &Path, mode: &str) -> Result<(), String> {
-    chmod_path(path, mode)?;
     let metadata = fs::symlink_metadata(path)
         .map_err(|e| format!("failed to inspect {}: {}", path.display(), e))?;
-    if !metadata.is_dir() || metadata.file_type().is_symlink() {
+    if metadata.file_type().is_symlink() {
+        return Ok(());
+    }
+    chmod_path(path, mode)?;
+    if !metadata.is_dir() {
         return Ok(());
     }
     for entry in
@@ -179,7 +186,11 @@ fn sudo_write_file(
         .duration_since(UNIX_EPOCH)
         .map_err(|e| format!("failed to read system time: {}", e))?
         .as_nanos();
-    let temp_path = std::env::temp_dir().join(format!("c420ui-host-write-{}", nanos));
+    let temp_path = std::env::temp_dir().join(format!(
+        "c420ui-host-write-{}-{}",
+        std::process::id(),
+        nanos
+    ));
 
     let mut file = OpenOptions::new()
         .write(true)
@@ -193,13 +204,14 @@ fn sudo_write_file(
             )
         })?;
 
-    file.write_all(content.as_bytes()).map_err(|e| {
-        format!(
+    if let Err(error) = file.write_all(content.as_bytes()) {
+        let _ = fs::remove_file(&temp_path);
+        return Err(format!(
             "failed to write to temp file {}: {}",
             temp_path.display(),
-            e
-        )
-    })?;
+            error
+        ));
+    }
 
     let result = sudo_install_file(root, &temp_path, target, mode);
     let _ = fs::remove_file(&temp_path);

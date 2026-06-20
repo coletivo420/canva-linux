@@ -361,19 +361,11 @@ pub fn draw_modal<'a>(
             .take(input_width.saturating_sub(4))
             .collect::<String>();
         lines.push(Line::from(format!("┌{}┐", "─".repeat(input_width))));
-        if modal.secret.unwrap_or(false) {
-            lines.push(Line::from(format!(
-                "│ {:width$} │",
-                clipped,
-                width = input_width - 2
-            )));
-        } else {
-            lines.push(Line::from(format!(
-                "│ {:width$} │",
-                clipped,
-                width = input_width - 2
-            )));
-        }
+        lines.push(Line::from(format!(
+            "│ {:width$} │",
+            clipped,
+            width = input_width - 2
+        )));
         lines.push(Line::from(format!("└{}┘", "─".repeat(input_width))));
         lines.push(Line::from(""));
         lines.push(Line::from("[Enter] Submit  [Esc] Cancel"));
@@ -401,9 +393,9 @@ pub fn centered_fixed_height(percent_x: u16, height: u16, r: Rect) -> Rect {
     Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(100u16.saturating_sub(percent_x) / 2),
+            Constraint::Percentage(percent_x.min(100)),
+            Constraint::Percentage(100u16.saturating_sub(percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
 }
@@ -474,11 +466,22 @@ fn is_warning_value(value: &str) -> bool {
         || lower.contains("warning")
         || lower.contains("skipped")
         || lower.contains("partial")
+        || lower.contains("missing")
 }
 
 fn is_error_value(value: &str) -> bool {
     let lower = value.to_lowercase();
-    lower.contains("error") || lower.contains("failed")
+    lower.contains("error")
+        || lower.contains("failed")
+        || lower.contains("exit code 1")
+        || lower.contains("exit code 2")
+        || lower.contains("exit code 3")
+        || lower.contains("exit code 4")
+        || lower.contains("exit code 5")
+        || lower.contains("exit code 6")
+        || lower.contains("exit code 7")
+        || lower.contains("exit code 8")
+        || lower.contains("exit code 9")
 }
 
 fn is_success_value(value: &str) -> bool {
@@ -516,24 +519,4 @@ fn view_title(view: &crate::tui::contracts::TuiView) -> &'static str {
         crate::tui::contracts::TuiView::Help => "Help",
         crate::tui::contracts::TuiView::Main => "Main",
     }
-}
-
-pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - percent_y) / 2),
-            Constraint::Percentage(percent_y),
-            Constraint::Percentage((100 - percent_y) / 2),
-        ])
-        .split(r);
-
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
-        ])
-        .split(popup_layout[1])[1]
 }

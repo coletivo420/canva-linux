@@ -1213,8 +1213,12 @@ function runC420UIRustTuiApp(options) {
     return;
   }
   const send = (event) => {
-    child.stdin.write(`${JSON.stringify(event)}
+    try {
+      child.stdin.write(`${JSON.stringify(event)}
 `);
+    } catch (error) {
+      writeError(`Failed to write to c420ui-tui: ${formatRustTuiError(error)}`);
+    }
   };
   const sendLog = (source, line, level) => {
     appendLogLine({ source, line, level }, { logHistory, send, sessionStream, toolSettings });
@@ -1714,7 +1718,11 @@ function resolveSessionLogPath(options) {
 function openSessionLog(sessionLogPath, writeError, env) {
   try {
     fs2.mkdirSync(path2.dirname(sessionLogPath), { recursive: true });
-    return { path: sessionLogPath, stream: fs2.createWriteStream(sessionLogPath, { flags: "a" }) };
+    const stream = fs2.createWriteStream(sessionLogPath, { flags: "a" });
+    stream.on("error", (error) => {
+      writeError(`Session log stream failed: ${formatRustTuiError(error)}`);
+    });
+    return { path: sessionLogPath, stream };
   } catch (error) {
     const fallbackPath = path2.join(
       env?.HOME || process.env.HOME || ".",
@@ -1727,7 +1735,11 @@ function openSessionLog(sessionLogPath, writeError, env) {
       writeError(
         `Session log primary path is unavailable, using fallback ${fallbackPath}: ${formatRustTuiError(error)}`
       );
-      return { path: fallbackPath, stream: fs2.createWriteStream(fallbackPath, { flags: "a" }) };
+      const stream = fs2.createWriteStream(fallbackPath, { flags: "a" });
+      stream.on("error", (streamError) => {
+        writeError(`Session log fallback stream failed: ${formatRustTuiError(streamError)}`);
+      });
+      return { path: fallbackPath, stream };
     } catch (fallbackError) {
       writeError(`Session log stream is unavailable: ${formatRustTuiError(fallbackError)}`);
       return { path: fallbackPath, stream: void 0 };
@@ -1741,6 +1753,9 @@ function writeSession(stream, line) {
 function readJsonLines(stream, onEvent, onError) {
   const decoder = new StringDecoder("utf8");
   let buffer = "";
+  stream.on("error", (error) => {
+    onError(`c420ui-tui output stream failed: ${formatRustTuiError(error)}`);
+  });
   stream.on("data", (chunk) => {
     buffer += typeof chunk === "string" ? chunk : decoder.write(chunk);
     let newlineIndex = buffer.indexOf("\n");
@@ -2012,8 +2027,13 @@ async function runC420UIRustHost(options) {
         reject(new Error("Failed to parse c420ui-host output as JSON."));
       }
     });
-    child.stdin.write(JSON.stringify(input ?? {}) + "\n");
-    child.stdin.end();
+    try {
+      child.stdin.write(JSON.stringify(input ?? {}) + "\n");
+      child.stdin.end();
+    } catch (error) {
+      clearTimeout(timer);
+      reject(error);
+    }
   });
 }
 function parseJsonLine(line) {
@@ -2105,7 +2125,11 @@ async function runC420UIRustHostJsonLines(options) {
       settle(null, code ?? 1);
     });
     signal?.addEventListener("abort", abort, { once: true });
-    child.stdin.write(JSON.stringify(input) + "\n");
+    try {
+      child.stdin.write(JSON.stringify(input) + "\n");
+    } catch (error) {
+      settle(error instanceof Error ? error : new Error(String(error)));
+    }
     if (signal?.aborted) {
       abort();
     }

@@ -139,8 +139,13 @@ export async function runC420UIRustHost<T>(
       }
     });
 
-    child.stdin.write(JSON.stringify(input ?? {}) + "\n");
-    child.stdin.end();
+    try {
+      child.stdin.write(JSON.stringify(input ?? {}) + "\n");
+      child.stdin.end();
+    } catch (error) {
+      clearTimeout(timer);
+      reject(error);
+    }
   });
 }
 
@@ -242,7 +247,11 @@ export async function runC420UIRustHostJsonLines(
     });
 
     signal?.addEventListener("abort", abort, { once: true });
-    child.stdin.write(JSON.stringify(input) + "\n");
+    try {
+      child.stdin.write(JSON.stringify(input) + "\n");
+    } catch (error) {
+      settle(error instanceof Error ? error : new Error(String(error)));
+    }
     if (signal?.aborted) {
       abort();
     }

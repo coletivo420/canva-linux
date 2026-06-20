@@ -59,28 +59,26 @@ pub fn execute() -> Result<(), String> {
         })?
     };
 
-    let mut candidates = Vec::new();
-    for entry in fs::read_dir(&dist_dir)
+    let candidates = fs::read_dir(&dist_dir)
         .map_err(|e| format!("failed to read distDir {}: {}", dist_dir.display(), e))?
-    {
-        let entry = entry.map_err(|e| format!("failed to read distDir entry: {}", e))?;
-        let file_name = entry.file_name().to_string_lossy().to_string();
-        if file_name.contains(&input.candidate_contains) {
-            candidates.push(file_name);
-        }
-    }
+        .map(|entry| {
+            entry
+                .map(|entry| entry.file_name().to_string_lossy().to_string())
+                .map_err(|e| format!("failed to read distDir entry: {}", e))
+        })
+        .filter_map(|result| match result {
+            Ok(name) if name.contains(&input.candidate_contains) => Some(Ok(name)),
+            Ok(_) => None,
+            Err(error) => Some(Err(error)),
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut candidates = candidates;
     candidates.sort();
     let selected = candidates
-        .into_iter()
-        .find(|name| name == &input.canonical_name)
-        .or_else(|| {
-            fs::read_dir(&dist_dir)
-                .ok()?
-                .filter_map(Result::ok)
-                .map(|entry| entry.file_name().to_string_lossy().to_string())
-                .filter(|name| name.contains(&input.candidate_contains))
-                .min()
-        })
+        .iter()
+        .find(|name| name.as_str() == input.canonical_name)
+        .cloned()
+        .or_else(|| candidates.first().cloned())
         .ok_or_else(|| {
             format!(
                 "Folder matching '{}' was not found in {}",

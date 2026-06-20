@@ -289,6 +289,22 @@ fn test_status_panel_colors_only_values() {
     let version_cell = find_first_cell(terminal.backend().buffer(), "0.1.4-15.Dev.12")
         .expect("version value is rendered");
     assert_eq!(version_cell.fg, Color::Rgb(0, 132, 61));
+
+    state.render.panels.detected_installations.lines =
+        vec!["Flatpak User: missing".to_string()];
+    let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+    renderer::render(&mut terminal, &state).unwrap();
+    let missing_cell =
+        find_first_cell(terminal.backend().buffer(), "missing").expect("missing is rendered");
+    assert_eq!(missing_cell.fg, Color::Rgb(230, 126, 34));
+
+    state.render.panels.detected_installations.lines =
+        vec!["Doctor: exited with exit code 1".to_string()];
+    let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+    renderer::render(&mut terminal, &state).unwrap();
+    let exit_cell =
+        find_first_cell(terminal.backend().buffer(), "exit code 1").expect("exit code is rendered");
+    assert_eq!(exit_cell.fg, Color::Rgb(235, 0, 27));
 }
 
 #[test]

@@ -145,7 +145,11 @@ export function runC420UIRustTuiApp(
   }
 
   const send = (event: C420UITuiRuntimeInput): void => {
-    child.stdin.write(`${JSON.stringify(event)}\n`);
+    try {
+      child.stdin.write(`${JSON.stringify(event)}\n`);
+    } catch (error) {
+      writeError(`Failed to write to c420ui-tui: ${formatRustTuiError(error)}`);
+    }
   };
   const sendLog = (source: string, line: string, level?: string): void => {
     appendLogLine({ source, line, level }, { logHistory, send, sessionStream, toolSettings });
@@ -783,7 +787,11 @@ function openSessionLog(
 ): { path: string; stream: fs.WriteStream | undefined } {
   try {
     fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
-    return { path: sessionLogPath, stream: fs.createWriteStream(sessionLogPath, { flags: "a" }) };
+    const stream = fs.createWriteStream(sessionLogPath, { flags: "a" });
+    stream.on("error", (error) => {
+      writeError(`Session log stream failed: ${formatRustTuiError(error)}`);
+    });
+    return { path: sessionLogPath, stream };
   } catch (error) {
     const fallbackPath = path.join(
       env?.HOME || process.env.HOME || ".",
@@ -796,7 +804,11 @@ function openSessionLog(
       writeError(
         `Session log primary path is unavailable, using fallback ${fallbackPath}: ${formatRustTuiError(error)}`,
       );
-      return { path: fallbackPath, stream: fs.createWriteStream(fallbackPath, { flags: "a" }) };
+      const stream = fs.createWriteStream(fallbackPath, { flags: "a" });
+      stream.on("error", (streamError) => {
+        writeError(`Session log fallback stream failed: ${formatRustTuiError(streamError)}`);
+      });
+      return { path: fallbackPath, stream };
     } catch (fallbackError) {
       writeError(`Session log stream is unavailable: ${formatRustTuiError(fallbackError)}`);
       return { path: fallbackPath, stream: undefined };
@@ -815,6 +827,10 @@ function readJsonLines(
 ): void {
   const decoder = new StringDecoder("utf8");
   let buffer = "";
+
+  stream.on("error", (error) => {
+    onError(`c420ui-tui output stream failed: ${formatRustTuiError(error)}`);
+  });
 
   stream.on("data", (chunk: Buffer | string) => {
     buffer += typeof chunk === "string" ? chunk : decoder.write(chunk);

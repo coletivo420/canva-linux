@@ -54,6 +54,7 @@ pub fn validate_sudo(
             Ok(None) => {
                 if start.elapsed() >= timeout {
                     let _ = child.kill();
+                    let _ = child.wait();
                     return Err(format!("sudo validation timed out after {:?}", timeout));
                 }
                 std::thread::sleep(Duration::from_millis(50));

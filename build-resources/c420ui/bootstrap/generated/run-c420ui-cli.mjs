@@ -363,7 +363,11 @@ async function runC420UIRustHostJsonLines(options) {
       settle(null, code ?? 1);
     });
     signal?.addEventListener("abort", abort, { once: true });
-    child.stdin.write(JSON.stringify(input) + "\n");
+    try {
+      child.stdin.write(JSON.stringify(input) + "\n");
+    } catch (error) {
+      settle(error instanceof Error ? error : new Error(String(error)));
+    }
     if (signal?.aborted) {
       abort();
     }
