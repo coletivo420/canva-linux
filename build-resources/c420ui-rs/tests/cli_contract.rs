@@ -712,6 +712,26 @@ fn test_ensure_linux_unpacked_preserves_selected_name() {
 }
 
 #[test]
+fn test_ensure_linux_unpacked_dry_run_allows_missing_dist() {
+    let root = temp_root("linux-unpacked-dry-run");
+    let dist = root.join("missing-dist");
+    let input = format!(
+        "{{\"distDir\":{},\"canonicalName\":\"linux-unpacked\",\"candidateContains\":\"unpacked\",\"dryRun\":true}}",
+        serde_json::to_string(&dist.display().to_string()).unwrap(),
+    );
+
+    let output = run_json_command("ensure-linux-unpacked", &input);
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let json: serde_json::Value = serde_json::from_str(&stdout).unwrap();
+
+    assert!(output.status.success());
+    assert_eq!(json["selected"], "linux-unpacked");
+    assert_eq!(json["canonical"], "linux-unpacked");
+    assert_eq!(json["createdSymlink"], false);
+    assert_eq!(json["dryRun"], true);
+}
+
+#[test]
 fn test_artifact_file_ops_cleanup_and_find() {
     let root = temp_root("artifact-ops");
     let dist = root.join("dist");

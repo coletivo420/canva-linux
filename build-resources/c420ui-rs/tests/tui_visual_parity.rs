@@ -290,8 +290,7 @@ fn test_status_panel_colors_only_values() {
         .expect("version value is rendered");
     assert_eq!(version_cell.fg, Color::Rgb(0, 132, 61));
 
-    state.render.panels.detected_installations.lines =
-        vec!["Flatpak User: missing".to_string()];
+    state.render.panels.detected_installations.lines = vec!["Flatpak User: missing".to_string()];
     let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
     renderer::render(&mut terminal, &state).unwrap();
     let missing_cell =

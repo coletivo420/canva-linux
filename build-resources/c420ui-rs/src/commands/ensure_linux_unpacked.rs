@@ -59,6 +59,22 @@ pub fn execute() -> Result<(), String> {
         })?
     };
 
+    if input.dry_run && !dist_dir.exists() {
+        let envelope = CommandEnvelope {
+            ok: true,
+            command: "ensure-linux-unpacked",
+            version: "0.1.0",
+            data: EnsureLinuxUnpackedData {
+                selected: input.canonical_name.clone(),
+                canonical: input.canonical_name,
+                created_symlink: false,
+                dry_run: input.dry_run,
+            },
+        };
+        println!("{}", serde_json::to_string_pretty(&envelope).unwrap());
+        return Ok(());
+    }
+
     let candidates = fs::read_dir(&dist_dir)
         .map_err(|e| format!("failed to read distDir {}: {}", dist_dir.display(), e))?
         .map(|entry| {
