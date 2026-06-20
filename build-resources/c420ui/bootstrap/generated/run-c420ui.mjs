@@ -1216,98 +1216,18 @@ function copyTextToClipboard(text) {
   });
 }
 
-// build-resources/c420ui/src/terminal/detected-installations-summary.ts
-var GENERATED_ARTIFACT_KINDS = /* @__PURE__ */ new Set([
-  "appimage",
-  "flatpak",
-  "tarball",
-  "sha256sums",
-  "deb",
-  "rpm",
-  "aur"
-]);
-function detectedVersion(fullVersion, version) {
-  if (typeof fullVersion === "string" && fullVersion.trim()) {
-    return fullVersion;
-  }
-  return version;
-}
-function formatShortHash(hash, version) {
-  void version;
-  if (!hash) return "";
-  if (hash === "unknown") return " \xB7 unknown";
-  const parts = hash.split(":");
-  const algo = parts.length > 1 ? `${parts[0]}:` : "";
-  const value = (parts.length > 1 ? parts[1] : parts[0]) || "";
-  return ` \xB7 ${algo}${value.slice(0, 8)}`;
-}
-function artifactVersion(fragment) {
-  return fragment.fullVersion || fragment.version;
-}
-function formatDetectedStatus(colors2, detected, version, hash) {
-  if (!detected) {
-    return `{${colors2.statusNotDetected}-fg}not detected{/${colors2.statusNotDetected}-fg}`;
-  }
-  return typeof version === "string" && version.trim() ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "version unknown";
-}
-function formatArtifactLine(fragment, colors2) {
-  return `  ${fragment.label}: ${formatDetectedStatus(colors2, fragment.detected, artifactVersion(fragment), fragment.hash)}`;
-}
-function isGeneratedArtifactFragment(fragment) {
-  if (fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked") return false;
-  if (fragment.kind === "native" || fragment.id === "native-system" || fragment.id === "native-user") return false;
-  return GENERATED_ARTIFACT_KINDS.has(fragment.kind) || GENERATED_ARTIFACT_KINDS.has(fragment.id);
-}
-function versionSummaryItem(label, version, hash) {
-  return `${label} ${version ? `v${version.trim().replace(/^v/, "")}${formatShortHash(hash, version)}` : "unknown"}`;
-}
-function formatDetectionPanelSummaries(s, colors2) {
-  if (!s) {
-    const loading = `{${colors2.appImageLoading}-fg}loading...{/${colors2.appImageLoading}-fg}`;
-    return {
-      detectedInstallations: [
-        `  Native System: ${loading}`,
-        `  Native User: ${loading}`,
-        `  Flatpak System: ${loading}`,
-        `  Flatpak User: ${loading}`
-      ],
-      generatedArtifacts: [`  AppImage: ${loading}`],
-      linuxArtifacts: [`Electron/Node/npm loading...`]
-    };
-  }
-  const i = s.installations;
-  const linuxUnpacked = s.artifactFragments?.find(
-    (fragment) => fragment.kind === "linux-unpacked" || fragment.id === "linux-unpacked"
-  );
-  const generatedArtifacts = s.artifactFragments ? s.artifactFragments.filter(isGeneratedArtifactFragment).map((fragment) => formatArtifactLine(fragment, colors2)) : [
-    `  AppImage: ${formatDetectedStatus(
-      colors2,
-      Boolean(i.appImageArtifacts),
-      detectedVersion(i.appImageFullVersion, i.appImageVersion),
-      i.appImageHash
-    )}`
-  ];
-  return {
-    detectedInstallations: [
-      `  Native System: ${formatDetectedStatus(colors2, Boolean(i.nativeSystem), detectedVersion(i.nativeSystemFullVersion, i.nativeSystemVersion), i.nativeSystemHash)}`,
-      `  Native User: ${formatDetectedStatus(colors2, Boolean(i.nativeUser), detectedVersion(i.nativeUserFullVersion, i.nativeUserVersion), i.nativeUserHash)}`,
-      `  Flatpak System: ${formatDetectedStatus(colors2, Boolean(i.flatpakSystem), detectedVersion(i.flatpakSystemFullVersion, i.flatpakSystemVersion), i.flatpakSystemHash)}`,
-      `  Flatpak User: ${formatDetectedStatus(colors2, Boolean(i.flatpakUser), detectedVersion(i.flatpakUserFullVersion, i.flatpakUserVersion), i.flatpakUserHash)}`
-    ],
-    generatedArtifacts,
-    linuxArtifacts: [
-      [
-        versionSummaryItem("Electron", s.runtime?.electronVersion),
-        versionSummaryItem("Node", s.runtime?.nodeVersion),
-        versionSummaryItem("npm", s.runtime?.npmVersion),
-        versionSummaryItem(
-          "Linux unpacked",
-          linuxUnpacked ? artifactVersion(linuxUnpacked) : void 0,
-          linuxUnpacked?.hash
-        )
-      ].join(", ")
-    ]
-  };
+// build-resources/c420ui/src/rust-status-panels.ts
+async function createC420UIRustStatusPanels(options) {
+  return runC420UIRustHost({
+    rootDir: options.rootDir,
+    command: "status-panels",
+    input: {
+      rootDir: options.rootDir,
+      projectConfigRoot: options.projectConfigRoot,
+      overviewStatus: options.overviewStatus
+    },
+    env: options.env
+  });
 }
 
 // build-resources/c420ui/src/terminal/settings.ts
@@ -1817,19 +1737,24 @@ function createLoadingPanels() {
     detectedInstallations: {
       label: "Detected Installations",
       lines: [
-        `  Native System: ${loading}`,
-        `  Native User: ${loading}`,
-        `  Flatpak System: ${loading}`,
-        `  Flatpak User: ${loading}`
+        { label: "Native System", value: loading, state: "loading" },
+        { label: "Native User", value: loading, state: "loading" },
+        { label: "Flatpak System", value: loading, state: "loading" },
+        { label: "Flatpak User", value: loading, state: "loading" }
       ]
     },
     generatedArtifacts: {
       label: "Generated Artifacts",
-      lines: [`  AppImage: ${loading}`]
+      lines: [{ label: "AppImage", value: loading, state: "loading" }]
     },
     linuxArtifacts: {
       label: "Linux Artifacts",
-      lines: ["Electron/Node/npm loading..."]
+      lines: [
+        { label: "Electron", value: loading, state: "loading" },
+        { label: "Node", value: loading, state: "loading" },
+        { label: "npm", value: loading, state: "loading" },
+        { label: "Linux unpacked", value: loading, state: "loading" }
+      ]
     },
     content: {
       label: "Overview",
@@ -1843,28 +1768,22 @@ function createLoadingPanels() {
 }
 async function createLegacyPanels(options, logHistory, toolSettings) {
   const status = options.bridge.overviewStatus ? await options.bridge.overviewStatus() : null;
-  const panels = formatDetectionPanelSummaries(status, c420uiTheme.colors);
+  const panels = await createC420UIRustStatusPanels({
+    rootDir: options.config.rootDir,
+    projectConfigRoot: options.config.projectConfigRoot ?? "config",
+    overviewStatus: status,
+    env: options.env
+  });
   return {
-    detectedInstallations: {
-      label: "Detected Installations",
-      lines: panels.detectedInstallations.map(stripBlessedTags)
-    },
-    generatedArtifacts: {
-      label: "Generated Artifacts",
-      lines: panels.generatedArtifacts.map(stripBlessedTags)
-    },
-    linuxArtifacts: {
-      label: "Linux Artifacts",
-      lines: panels.linuxArtifacts.map(stripBlessedTags)
-    },
+    detectedInstallations: panels.panels.detectedInstallations,
+    generatedArtifacts: panels.panels.generatedArtifacts,
+    linuxArtifacts: panels.panels.linuxArtifacts,
+    content: panels.panels.content,
     logs: {
       label: toolSettings.tool.terminalTextSelectionMode ? "Logs - Text selection mode enabled" : "Logs",
       lines: visibleLogHistory(logHistory, toolSettings)
     }
   };
-}
-function stripBlessedTags(line) {
-  return line.replace(/\{\/?[^}]+\}/g, "");
 }
 function createFooter(toolSettings) {
   const items = [

@@ -5,4 +5,5 @@ pub mod host;
 pub mod input;
 pub mod json;
 pub mod project;
+pub mod status;
 pub mod tui;

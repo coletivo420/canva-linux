@@ -2,7 +2,8 @@
 
 ## Status
 
-Phase 4 in progress. Project adapter config migration to Rust is active.
+Phase 4 in progress. Project adapter config and status panel migration to Rust
+are active.
 
 ## Goal
 
@@ -16,6 +17,7 @@ The boundary remains:
 - c420ui-host executes host filesystem and process primitives.
 - c420ui-tui becomes the direct terminal UI migration target after operational cleanup.
 - c420ui-host validates and normalizes declarative project adapter config.
+- c420ui-host generates semantic status panels for the Rust TUI.
 
 ## Permanent Boundary
 
@@ -40,6 +42,9 @@ CLeyedropper code.
 
 Do not reintroduce TypeScript project config validation as the source of truth.
 Dependent projects declare JSON; c420ui Rust validates and interprets it.
+
+Status/detection summaries are also a Rust responsibility. Do not reintroduce
+TypeScript status classification or terminal color tags in project adapters.
 
 ## Roadmap
 
@@ -116,6 +121,7 @@ build-resources/c420ui-rs/
   src/lib.rs
   src/commands/
   src/project/
+  src/status/
   src/host/
   src/tui/
   tests/
@@ -124,6 +130,7 @@ build-resources/c420ui-rs/
 ## Active Commands
 
 - `c420ui-host project-config --json`
+- `c420ui-host status-panels --json`
 - `c420ui-host action-run --json-lines`
 
 `project-config --json` reads `rootDir` and `projectConfigRoot` from stdin,
@@ -131,6 +138,10 @@ loads `actions.json`, `host-dependencies.json`, `dependencies.json`,
 `install-native.json`, `maintenance.json` and `project-ui.json`, then returns
 normalized project metadata plus diagnostics. The command is generic and must
 not hardcode dependent-project identity.
+
+`status-panels --json` reads `overviewStatus` from stdin and returns semantic
+panel lines for Detected Installations, Generated Artifacts, Linux Artifacts and
+Overview. The Rust TUI colors values by `state`; labels keep panel text color.
 
 ```text
 c420ui-host --version

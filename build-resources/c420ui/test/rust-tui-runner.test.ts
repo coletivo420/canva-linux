@@ -61,6 +61,11 @@ function makeRustHostStub(mode = "success"): string {
   fs.writeFileSync(
     binPath,
     `#!/bin/sh
+if [ "$1" = "status-panels" ]; then
+  cat >/dev/null
+  printf '%s\\n' '{"ok":true,"command":"status-panels","panels":{"detectedInstallations":{"label":"Detected Installations","lines":[{"label":"Native System","value":"not detected","state":"not-detected"}]},"generatedArtifacts":{"label":"Generated Artifacts","lines":[{"label":"AppImage","value":"loading...","state":"loading"}]},"linuxArtifacts":{"label":"Linux Artifacts","lines":[{"label":"Electron","value":"loading...","state":"loading"},{"label":"Node","value":"loading...","state":"loading"},{"label":"npm","value":"loading...","state":"loading"},{"label":"Linux unpacked","value":"loading...","state":"loading"}]},"content":{"label":"Overview","lines":[]}},"diagnostics":[]}'
+  exit 0
+fi
 read input
 if printf '%s' "$input" | grep -q '"requiresRoot":true'; then
   printf '%s\\n' '{"event":"root-request","requestId":"root-1","actionId":"install-native","reason":"System install requires root"}'

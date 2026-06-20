@@ -216,8 +216,8 @@ fn test_render_preserves_logos_and_action_description() {
     let mut state = create_test_state();
     state.render.view = TuiView::Install;
     state.render.panels.detected_installations.lines = vec![
-        "  Native System: not detected".to_string(),
-        "  Native User: v1.0.0".to_string(),
+        TuiPanelLine::Text("  Native System: not detected".to_string()),
+        TuiPanelLine::Text("  Native User: v1.0.0".to_string()),
     ];
 
     renderer::render(&mut terminal, &state).unwrap();
@@ -243,10 +243,10 @@ fn test_detected_installations_renders_all_legacy_targets() {
     let mut terminal = Terminal::new(backend).unwrap();
     let mut state = create_test_state();
     state.render.panels.detected_installations.lines = vec![
-        "  Native System: not detected".to_string(),
-        "  Native User: not detected".to_string(),
-        "  Flatpak System: not detected".to_string(),
-        "  Flatpak User: not detected".to_string(),
+        TuiPanelLine::Text("  Native System: not detected".to_string()),
+        TuiPanelLine::Text("  Native User: not detected".to_string()),
+        TuiPanelLine::Text("  Flatpak System: not detected".to_string()),
+        TuiPanelLine::Text("  Flatpak User: not detected".to_string()),
     ];
 
     renderer::render(&mut terminal, &state).unwrap();
@@ -269,8 +269,9 @@ fn test_status_panel_colors_only_values() {
     let backend = TestBackend::new(120, 36);
     let mut terminal = Terminal::new(backend).unwrap();
     let mut state = create_test_state();
-    state.render.panels.detected_installations.lines =
-        vec!["Native System: not detected".to_string()];
+    state.render.panels.detected_installations.lines = vec![TuiPanelLine::Text(
+        "Native System: not detected".to_string(),
+    )];
 
     renderer::render(&mut terminal, &state).unwrap();
 
@@ -282,23 +283,26 @@ fn test_status_panel_colors_only_values() {
     assert_eq!(label_cell.fg, Color::Rgb(255, 255, 255));
     assert_eq!(not_detected_cell.fg, Color::Rgb(230, 126, 34));
 
-    state.render.panels.detected_installations.lines =
-        vec!["Native User: 0.1.4-15.Dev.12".to_string()];
+    state.render.panels.detected_installations.lines = vec![TuiPanelLine::Text(
+        "Native User: 0.1.4-15.Dev.12".to_string(),
+    )];
     let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
     renderer::render(&mut terminal, &state).unwrap();
     let version_cell = find_first_cell(terminal.backend().buffer(), "0.1.4-15.Dev.12")
         .expect("version value is rendered");
     assert_eq!(version_cell.fg, Color::Rgb(0, 132, 61));
 
-    state.render.panels.detected_installations.lines = vec!["Flatpak User: missing".to_string()];
+    state.render.panels.detected_installations.lines =
+        vec![TuiPanelLine::Text("Flatpak User: missing".to_string())];
     let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
     renderer::render(&mut terminal, &state).unwrap();
     let missing_cell =
         find_first_cell(terminal.backend().buffer(), "missing").expect("missing is rendered");
     assert_eq!(missing_cell.fg, Color::Rgb(230, 126, 34));
 
-    state.render.panels.detected_installations.lines =
-        vec!["Doctor: exited with exit code 1".to_string()];
+    state.render.panels.detected_installations.lines = vec![TuiPanelLine::Text(
+        "Doctor: exited with exit code 1".to_string(),
+    )];
     let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
     renderer::render(&mut terminal, &state).unwrap();
     let exit_cell =
@@ -312,11 +316,13 @@ fn test_linux_artifacts_wraps_long_names_and_marks_scroll() {
     let mut terminal = Terminal::new(backend).unwrap();
     let mut state = create_test_state();
     state.render.panels.linux_artifacts.lines = vec![
-        "Arch: x86_64".to_string(),
-        "AppImage: example-linux-0.1.4-15.Dev.12-x86_64.AppImage".to_string(),
-        "Checksum: example-linux-0.1.4-15.Dev.12-x86_64.AppImage.sha256".to_string(),
-        "linux-unpacked: linux-x86_64-unpacked".to_string(),
-        "Flatpak Bundle: not detected".to_string(),
+        TuiPanelLine::Text("Arch: x86_64".to_string()),
+        TuiPanelLine::Text("AppImage: example-linux-0.1.4-15.Dev.12-x86_64.AppImage".to_string()),
+        TuiPanelLine::Text(
+            "Checksum: example-linux-0.1.4-15.Dev.12-x86_64.AppImage.sha256".to_string(),
+        ),
+        TuiPanelLine::Text("linux-unpacked: linux-x86_64-unpacked".to_string()),
+        TuiPanelLine::Text("Flatpak Bundle: not detected".to_string()),
     ];
 
     renderer::render(&mut terminal, &state).unwrap();

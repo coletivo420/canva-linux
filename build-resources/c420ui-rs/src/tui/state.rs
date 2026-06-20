@@ -257,7 +257,7 @@ impl TuiRuntimeState {
     }
 
     pub fn scroll_content_panel(&mut self, delta: i16) {
-        let max = self.panel_scroll_max(&self.render.panels.content.lines);
+        let max = self.panel_scroll_max(self.render.panels.content.lines.len());
         if delta.is_negative() {
             self.content_scroll = self.content_scroll.saturating_sub(delta.unsigned_abs());
         } else {
@@ -299,13 +299,13 @@ impl TuiRuntimeState {
                     + self.render.panels.linux_artifacts.lines.len();
                 total.saturating_sub(1) as u16
             }
-            TuiFocusZone::Content => self.panel_scroll_max(&self.render.panels.content.lines),
+            TuiFocusZone::Content => self.panel_scroll_max(self.render.panels.content.lines.len()),
             TuiFocusZone::Logs => self.render.panels.logs.lines.len().saturating_sub(1) as u16,
         }
     }
 
-    fn panel_scroll_max(&self, lines: &[String]) -> u16 {
-        lines.len().saturating_sub(1) as u16
+    fn panel_scroll_max(&self, line_count: usize) -> u16 {
+        line_count.saturating_sub(1) as u16
     }
 
     pub fn set_running_action(&mut self, action_id: String) {

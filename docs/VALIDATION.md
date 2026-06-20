@@ -1,5 +1,22 @@
 # Validation Checklist (0.1.4-15.Dev.12)
 
+## Dev12 Rust status panels contract
+
+`c420ui-host status-panels --json` owns overview/status/detection summaries.
+Rust generates semantic panels for Detected Installations, Generated Artifacts,
+Linux Artifacts and Overview content. `c420ui-tui` renders label/value state
+colors from semantic line state.
+
+Status/detection summaries are a Rust responsibility. Do not reintroduce
+TypeScript status classification or terminal color tags in project adapters.
+
+Focused gates:
+
+- `npm run test:c420ui-rs`
+- `npm run test:c420ui`
+- `npm run check:c420ui-core`
+- `npm run check:dev12-rust`
+
 ## Dev12 Rust project config contract
 
 `c420ui-host project-config --json` is now the source of truth for declarative

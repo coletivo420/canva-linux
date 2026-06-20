@@ -1,4 +1,6 @@
-use crate::tui::contracts::{TuiLogLine, TuiMenuItem, TuiPanel};
+use crate::tui::contracts::{
+    TuiLogLine, TuiMenuItem, TuiPanel, TuiPanelLine, TuiSemanticPanelLine,
+};
 use crate::tui::legacy_theme::LegacyTheme;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::Style;
@@ -118,7 +120,7 @@ pub fn draw_panel<'a>(
     let lines: Vec<Line> = panel
         .lines
         .iter()
-        .map(|l| styled_status_line(l, theme))
+        .map(|line| styled_panel_line(line, theme))
         .collect();
 
     Paragraph::new(lines)
@@ -423,6 +425,32 @@ fn panel_block(label: String, theme: &LegacyTheme, active: bool) -> Block<'stati
         ))
 }
 
+fn styled_panel_line<'a>(line: &'a TuiPanelLine, theme: &LegacyTheme) -> Line<'a> {
+    match line {
+        TuiPanelLine::Text(text) => styled_status_line(text, theme),
+        TuiPanelLine::Semantic(line) => styled_semantic_status_line(line, theme),
+    }
+}
+
+fn styled_semantic_status_line<'a>(
+    line: &'a TuiSemanticPanelLine,
+    theme: &LegacyTheme,
+) -> Line<'a> {
+    let value = match line.hash.as_deref() {
+        Some(hash) if !hash.trim().is_empty() => format!("{} · {}", line.value, short_hash(hash)),
+        _ => line.value.clone(),
+    };
+    let value_style = status_state_style(line.state.as_deref(), theme);
+    match line.label.as_deref() {
+        Some(label) if !label.trim().is_empty() => Line::from(vec![
+            Span::styled(format!("{}:", label), Style::default().fg(theme.text)),
+            Span::raw(" "),
+            Span::styled(value, value_style),
+        ]),
+        _ => Line::from(Span::styled(value, value_style)),
+    }
+}
+
 fn styled_status_line<'a>(line: &'a str, theme: &LegacyTheme) -> Line<'a> {
     let trimmed = line.trim();
     if let Some((label, value)) = line.split_once(':') {
@@ -443,6 +471,29 @@ fn styled_status_line<'a>(line: &'a str, theme: &LegacyTheme) -> Line<'a> {
         Style::default().fg(theme.text)
     };
     Line::from(Span::styled(line.to_string(), style))
+}
+
+fn status_state_style(state: Option<&str>, theme: &LegacyTheme) -> Style {
+    match state.unwrap_or("").trim() {
+        "detected" | "found" | "available" | "success" => Style::default().fg(theme.success),
+        "not-detected" | "warning" => Style::default().fg(theme.warning),
+        "error" | "failed" => Style::default().fg(theme.error),
+        "unknown" | "loading" => Style::default().fg(theme.muted),
+        _ => Style::default().fg(theme.text),
+    }
+}
+
+fn short_hash(hash: &str) -> String {
+    let trimmed = hash.trim();
+    if trimmed == "unknown" {
+        return "unknown".to_string();
+    }
+    let mut parts = trimmed.splitn(2, ':');
+    let first = parts.next().unwrap_or("");
+    match parts.next() {
+        Some(rest) => format!("{}:{}", first, rest.chars().take(8).collect::<String>()),
+        None => first.chars().take(8).collect(),
+    }
 }
 
 fn status_value_style(value: &str, theme: &LegacyTheme) -> Style {

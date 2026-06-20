@@ -1,6 +1,16 @@
 import type { c420uiAction } from "./actions.js";
 import type { C420UIConfig } from "./types.js";
 
+export type C420UITuiPanelLine =
+  | string
+  | {
+      label?: string;
+      value: string;
+      state?: string;
+      hash?: string;
+      wrap?: boolean;
+    };
+
 export type C420UITuiRenderInput = {
   brand: {
     name: string;
@@ -54,10 +64,10 @@ export type C420UITuiRenderInput = {
     selected: number;
   };
   panels: {
-    detectedInstallations: { label: string; lines: string[] };
-    generatedArtifacts: { label: string; lines: string[] };
-    linuxArtifacts: { label: string; lines: string[] };
-    content: { label: string; lines: string[] };
+    detectedInstallations: { label: string; lines: C420UITuiPanelLine[] };
+    generatedArtifacts: { label: string; lines: C420UITuiPanelLine[] };
+    linuxArtifacts: { label: string; lines: C420UITuiPanelLine[] };
+    content: { label: string; lines: C420UITuiPanelLine[] };
     logs: {
       label: string;
       lines: Array<{

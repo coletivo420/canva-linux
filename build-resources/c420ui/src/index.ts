@@ -10,6 +10,7 @@ export * from "./install-config.js";
 export * from "./maintenance-config.js";
 export * from "./rust-host.js";
 export * from "./rust-project-config.js";
+export * from "./rust-status-panels.js";
 export * from "./rust-action-engine.js";
 export * from "./rust-clipboard.js";
 export * from "./rust-artifacts.js";

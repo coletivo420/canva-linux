@@ -12,4 +12,5 @@ pub mod host_info;
 pub mod project_config;
 pub mod remove_paths;
 pub mod run_process;
+pub mod status_panels;
 pub mod sudo_validate;

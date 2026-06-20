@@ -71,7 +71,24 @@ pub struct TuiPanels {
 #[serde(rename_all = "camelCase")]
 pub struct TuiPanel {
     pub label: String,
-    pub lines: Vec<String>,
+    pub lines: Vec<TuiPanelLine>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum TuiPanelLine {
+    Text(String),
+    Semantic(TuiSemanticPanelLine),
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TuiSemanticPanelLine {
+    pub label: Option<String>,
+    pub value: String,
+    pub state: Option<String>,
+    pub hash: Option<String>,
+    pub wrap: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]

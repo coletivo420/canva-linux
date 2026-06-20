@@ -26,6 +26,12 @@ JSON declarations for actions, dependencies, install, maintenance and UI
 metadata. TypeScript wrappers may call the command, but must not duplicate that
 validation as the source of truth.
 
+Dev12 Rust status panel generation lives under `build-resources/c420ui-rs/src/status`.
+`c420ui-host status-panels --json` emits semantic Detected Installations,
+Generated Artifacts, Linux Artifacts and Overview panels. TypeScript wrappers
+may transport the response, but must not own status classification or terminal
+color tags.
+
 ## Files
 
 - `.codex`

@@ -1,5 +1,13 @@
 # AI Guardrails
 
+## Dev12 Rust status panels guardrail
+
+Status/detection summaries are a Rust responsibility. `c420ui-host
+status-panels --json` generates semantic status panels, and `c420ui-tui`
+renders label/value state colors. Do not reintroduce TypeScript status
+classification, comma-joined Linux Artifacts summaries, or Blessed-style
+terminal color tags in project adapters.
+
 ## Dev12 Rust project config guardrail
 
 Canva Linux declares c420ui configuration through JSON files. c420ui Rust

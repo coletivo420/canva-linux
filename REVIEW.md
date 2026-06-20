@@ -90,6 +90,17 @@ Request changes if a PR:
 - adds `C420UI_ADAPTER_BACKEND` or `C420UI_ACTION_ENGINE_BACKEND`;
 - duplicates Rust-owned host dependency, install or maintenance validation in the Canva Linux adapter.
 
+## Dev12 Rust status panels review
+
+Request changes if a PR:
+
+- removes `c420ui-host status-panels --json`;
+- reintroduces TypeScript status classification as the source of truth;
+- adds Blessed-style tags such as `{green-fg}` or `{orange-fg}` to status summaries;
+- turns Linux Artifacts back into one comma-joined Electron/Node/npm/Linux unpacked line;
+- colors status labels instead of semantic values in the Rust renderer;
+- adds `C420UI_STATUS_BACKEND`.
+
 ## Dev12 Rust host-operation review
 
 Request changes if a PR:

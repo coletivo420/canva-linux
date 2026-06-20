@@ -930,6 +930,40 @@ function checkRustProjectConfigContract(failures: string[]): void {
   }
 }
 
+function checkRustStatusPanelsContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const wrapperPath = "build-resources/c420ui/src/rust-status-panels.ts";
+  const runnerPath = "build-resources/c420ui/src/rust-tui-runner.ts";
+  const summaryPath = "build-resources/c420ui/src/terminal/detected-installations-summary.ts";
+  const wrapper = fs.existsSync(path.join(rootDir, wrapperPath))
+    ? fs.readFileSync(path.join(rootDir, wrapperPath), "utf8")
+    : "";
+  const runner = fs.readFileSync(path.join(rootDir, runnerPath), "utf8");
+  const summary = fs.readFileSync(path.join(rootDir, summaryPath), "utf8");
+
+  if (!wrapper) {
+    failures.push(`${wrapperPath}: rust-status-panels.ts must exist`);
+  }
+  if (!wrapper.includes('command: "status-panels"')) {
+    failures.push(`${wrapperPath}: wrapper must call c420ui-host status-panels --json`);
+  }
+  if (!runner.includes("createC420UIRustStatusPanels")) {
+    failures.push(`${runnerPath}: rust-tui-runner must call rust-status-panels`);
+  }
+  for (const forbidden of ["{green-fg}", "{orange-fg}", "{red-fg}", "GENERATED_ARTIFACT_KINDS", "formatDetectedStatus"]) {
+    if (summary.includes(forbidden)) {
+      failures.push(`${summaryPath}: must not contain Blessed tags or status classification source of truth (${forbidden})`);
+    }
+  }
+  for (const source of [wrapper, runner, summary]) {
+    for (const forbiddenBackend of ["C420UI_STATUS_BACKEND", "C420UI_ADAPTER_BACKEND", "C420UI_ACTION_ENGINE_BACKEND"]) {
+      if (source.includes(forbiddenBackend)) {
+        failures.push(`c420ui status path must not reintroduce ${forbiddenBackend}`);
+      }
+    }
+  }
+}
+
 
 
 function assertC420UIIncludes(
@@ -1151,7 +1185,9 @@ function checkSourceHashDisplayContract(failures: string[]): void {
   const rootDir = process.cwd();
   const detectionTypes = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/detection.ts"), "utf8");
   const packageTypes = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/types.ts"), "utf8");
-  const summary = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/terminal/detected-installations-summary.ts"), "utf8");
+  const statusDetection = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/status/detection.rs"), "utf8");
+  const statusArtifacts = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/status/artifacts.rs"), "utf8");
+  const tuiWidgets = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/tui/widgets.rs"), "utf8");
   const rustTuiContracts = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-tui-contracts.ts"), "utf8");
   const rustRenderer = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/tui/renderer.rs"), "utf8");
   const rustTuiRunner = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-tui-runner.ts"), "utf8");
@@ -1167,8 +1203,8 @@ function checkSourceHashDisplayContract(failures: string[]): void {
       failures.push("c420ui detection/config types must carry normalized hash and hashKind fields");
     }
   }
-  if (!summary.includes("formatShortHash(hash") || !summary.includes("formatDetectedStatus(colors") || !summary.includes("linuxUnpacked?.hash")) {
-    failures.push("Detection UI must render a source hash next to detected versions");
+  if (!statusDetection.includes("with_hash") || !statusArtifacts.includes("with_hash") || !tuiWidgets.includes("short_hash(hash)")) {
+    failures.push("Rust status UI must carry source hashes and render short hashes next to detected values");
   }
   if (!rustTuiContracts.includes("hash: optionalNonEmpty(config.brand.hash)") || !rustRenderer.includes("format_c420ui_version_line") || !rustRenderer.includes("short_hash(hash)")) {
     failures.push("Rust TUI header must render source hashes next to c420ui and project versions");
@@ -1948,6 +1984,7 @@ export function main(): number {
   runArtifactWorkflowContract(failures);
   runInteractiveActionEngineContract(failures);
   checkRustProjectConfigContract(failures);
+  checkRustStatusPanelsContract(failures);
   checkSettingsContract(failures);
   checkDevelopmentProviderContract(failures);
   checkLinuxHostSudoContract(failures);

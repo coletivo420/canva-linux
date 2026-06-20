@@ -63,6 +63,14 @@ export function main(): number {
     "src/project/ui.rs",
     "src/project/validation.rs",
     "src/commands/project_config.rs",
+    "src/commands/status_panels.rs",
+    "src/status/mod.rs",
+    "src/status/contracts.rs",
+    "src/status/detection.rs",
+    "src/status/artifacts.rs",
+    "src/status/overview.rs",
+    "src/status/panels.rs",
+    "src/status/classify.rs",
   ];
   for (const required of requiredRustFiles) {
     if (!fs.existsSync(path.join(rustDir, required))) {
@@ -72,8 +80,21 @@ export function main(): number {
 
   const hostSourcePath = path.join(rustDir, "src/bin/c420ui-host.rs");
   const hostSource = fs.readFileSync(hostSourcePath, "utf8");
-  if (!hostSource.includes("project-config --json") || !hostSource.includes("commands::project_config::execute")) {
-    failures.push("build-resources/c420ui-rs/src/bin/c420ui-host.rs: c420ui-host must expose project-config --json");
+  if (
+    !hostSource.includes("project-config --json")
+    || !hostSource.includes("commands::project_config::execute")
+  ) {
+    failures.push(
+      "build-resources/c420ui-rs/src/bin/c420ui-host.rs: c420ui-host must expose project-config --json",
+    );
+  }
+  if (
+    !hostSource.includes("status-panels --json")
+    || !hostSource.includes("commands::status_panels::execute")
+  ) {
+    failures.push(
+      "build-resources/c420ui-rs/src/bin/c420ui-host.rs: c420ui-host must expose status-panels --json",
+    );
   }
 
   const actionContracts = fs.readFileSync(path.join(rustDir, "src/action/contracts.rs"), "utf8");
@@ -83,6 +104,19 @@ export function main(): number {
   }
   if (!actionEngine.includes("load_project_config") || !actionEngine.includes("project_config_root")) {
     failures.push("build-resources/c420ui-rs/src/action/engine.rs: Action Engine must prefer projectConfigRoot");
+  }
+
+  const statusPanels = fs.readFileSync(path.join(rustDir, "src/status/panels.rs"), "utf8");
+  const statusOverview = fs.readFileSync(path.join(rustDir, "src/status/overview.rs"), "utf8");
+  const tuiWidgets = fs.readFileSync(path.join(rustDir, "src/tui/widgets.rs"), "utf8");
+  if (!statusPanels.includes("build_status_panels")) {
+    failures.push("build-resources/c420ui-rs/src/status/panels.rs: Rust must generate semantic status panels");
+  }
+  if (statusOverview.includes("Electron, Node, npm")) {
+    failures.push("build-resources/c420ui-rs/src/status/overview.rs: Linux Artifacts must not be one comma-joined runtime line");
+  }
+  if (!tuiWidgets.includes("styled_semantic_status_line") || !tuiWidgets.includes("status_state_style")) {
+    failures.push("build-resources/c420ui-rs/src/tui/widgets.rs: status renderer must color semantic values by state");
   }
 
   if (failures.length) {

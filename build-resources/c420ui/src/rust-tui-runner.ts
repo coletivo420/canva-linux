@@ -21,7 +21,7 @@ import {
 } from "./startup-task.js";
 import { copyTextToClipboard } from "./terminal/clipboard.js";
 import type { C420UIAppOptions } from "./terminal/app-options.js";
-import { formatDetectionPanelSummaries } from "./terminal/detected-installations-summary.js";
+import { createC420UIRustStatusPanels } from "./rust-status-panels.js";
 import {
   loadToolSettings,
   saveToolSettings,
@@ -499,19 +499,24 @@ function createLoadingPanels(): C420UITuiRenderInput["panels"] {
     detectedInstallations: {
       label: "Detected Installations",
       lines: [
-        `  Native System: ${loading}`,
-        `  Native User: ${loading}`,
-        `  Flatpak System: ${loading}`,
-        `  Flatpak User: ${loading}`,
+        { label: "Native System", value: loading, state: "loading" },
+        { label: "Native User", value: loading, state: "loading" },
+        { label: "Flatpak System", value: loading, state: "loading" },
+        { label: "Flatpak User", value: loading, state: "loading" },
       ],
     },
     generatedArtifacts: {
       label: "Generated Artifacts",
-      lines: [`  AppImage: ${loading}`],
+      lines: [{ label: "AppImage", value: loading, state: "loading" }],
     },
     linuxArtifacts: {
       label: "Linux Artifacts",
-      lines: ["Electron/Node/npm loading..."],
+      lines: [
+        { label: "Electron", value: loading, state: "loading" },
+        { label: "Node", value: loading, state: "loading" },
+        { label: "npm", value: loading, state: "loading" },
+        { label: "Linux unpacked", value: loading, state: "loading" },
+      ],
     },
     content: {
       label: "Overview",
@@ -532,20 +537,17 @@ async function createLegacyPanels(
   const status = options.bridge.overviewStatus
     ? await options.bridge.overviewStatus()
     : null;
-  const panels = formatDetectionPanelSummaries(status, c420uiTheme.colors);
+  const panels = await createC420UIRustStatusPanels({
+    rootDir: options.config.rootDir,
+    projectConfigRoot: options.config.projectConfigRoot ?? "config",
+    overviewStatus: status,
+    env: options.env,
+  });
   return {
-    detectedInstallations: {
-      label: "Detected Installations",
-      lines: panels.detectedInstallations.map(stripBlessedTags),
-    },
-    generatedArtifacts: {
-      label: "Generated Artifacts",
-      lines: panels.generatedArtifacts.map(stripBlessedTags),
-    },
-    linuxArtifacts: {
-      label: "Linux Artifacts",
-      lines: panels.linuxArtifacts.map(stripBlessedTags),
-    },
+    detectedInstallations: panels.panels.detectedInstallations,
+    generatedArtifacts: panels.panels.generatedArtifacts,
+    linuxArtifacts: panels.panels.linuxArtifacts,
+    content: panels.panels.content,
     logs: {
       label: toolSettings.tool.terminalTextSelectionMode
         ? "Logs - Text selection mode enabled"
@@ -553,10 +555,6 @@ async function createLegacyPanels(
       lines: visibleLogHistory(logHistory, toolSettings),
     },
   };
-}
-
-function stripBlessedTags(line: string): string {
-  return line.replace(/\{\/?[^}]+\}/g, "");
 }
 
 function createFooter(toolSettings: ToolSettings): C420UITuiRenderInput["footer"] {

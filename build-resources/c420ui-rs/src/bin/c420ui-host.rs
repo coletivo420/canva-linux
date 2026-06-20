@@ -7,6 +7,7 @@ fn print_usage() {
     eprintln!("  doctor --json");
     eprintln!("  check-host-dependencies --json");
     eprintln!("  project-config --json");
+    eprintln!("  status-panels --json");
     eprintln!("  clipboard-write --json");
     eprintln!("  action-run --json-lines");
     eprintln!("  run-process --json-lines");
@@ -87,6 +88,21 @@ fn main() {
             std::process::exit(exit_codes::INVALID_USAGE);
         }
         match commands::project_config::execute() {
+            Ok(_) => std::process::exit(exit_codes::SUCCESS),
+            Err(e) => {
+                eprintln!("Error: {}", e);
+                std::process::exit(exit_codes::INVALID_USAGE);
+            }
+        }
+    }
+
+    if cmd == "status-panels" {
+        let has_json = args.iter().any(|arg| arg == "--json");
+        if !has_json {
+            eprintln!("Error: status-panels command requires --json");
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+        match commands::status_panels::execute() {
             Ok(_) => std::process::exit(exit_codes::SUCCESS),
             Err(e) => {
                 eprintln!("Error: {}", e);

@@ -8,6 +8,7 @@ export type C420UIRustHostCommand =
   | "doctor"
   | "check-host-dependencies"
   | "project-config"
+  | "status-panels"
   | "clipboard-write"
   | "sudo-validate"
   | "remove-paths"
