@@ -103,6 +103,7 @@ export type C420UIRustTuiRunnerOptions = C420UIAppOptions & {
     env?: NodeJS.ProcessEnv;
   }) => string;
   spawnProcess?: C420UITuiSpawn;
+  copyTextToClipboard?: typeof copyTextToClipboard;
 };
 
 export function runC420UIRustTuiApp(
@@ -225,6 +226,7 @@ export function runC420UIRustTuiApp(
       setActiveAction: (action) => {
         activeAction = action;
       },
+      copyTextToClipboard: options.copyTextToClipboard ?? copyTextToClipboard,
       writeError,
       exit,
     });
@@ -305,6 +307,7 @@ async function handleTuiEvent(options: {
   setActiveAction: (
     action: { actionId: string; abortController: AbortController } | undefined,
   ) => void;
+  copyTextToClipboard: typeof copyTextToClipboard;
   writeError: (message: string) => void;
   exit: (code: number) => never;
 }): Promise<void> {
@@ -326,6 +329,7 @@ async function handleTuiEvent(options: {
     setCurrentView,
     getActiveAction,
     setActiveAction,
+    copyTextToClipboard,
     writeError,
     exit,
   } = options;

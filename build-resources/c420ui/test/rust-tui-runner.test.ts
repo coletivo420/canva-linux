@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { PassThrough } from "node:stream";
-import test from "node:test";
+import test, { afterEach } from "node:test";
 
 import type { c420uiAction } from "../src/actions.js";
 import type { c420uiExecutionContext, c420uiProjectBridge } from "../src/bridge.js";
@@ -19,7 +19,29 @@ import type { C420UIAppOptions } from "../src/terminal/app-options.js";
 class FakeTuiProcess extends EventEmitter {
   readonly stdin = new PassThrough();
   readonly stdout = new PassThrough();
+  #closed = false;
+
+  close(code: number | null = 0): void {
+    if (this.#closed) return;
+    this.#closed = true;
+    this.stdin.removeAllListeners("data");
+    this.stdout.removeAllListeners("data");
+    this.stdin.write = (() => true) as typeof this.stdin.write;
+    this.stdout.write = (() => true) as typeof this.stdout.write;
+    this.stdin.end();
+    this.stdout.end();
+    this.emit("close", code);
+  }
 }
+
+const activeFakeTuiProcesses = new Set<FakeTuiProcess>();
+
+afterEach(() => {
+  for (const child of activeFakeTuiProcesses) {
+    child.close();
+  }
+  activeFakeTuiProcesses.clear();
+});
 
 function createAction(overrides: Partial<c420uiAction> = {}): c420uiAction {
   return {
@@ -97,6 +119,7 @@ type StartRunnerOptions = Partial<C420UIRustTuiRunnerOptions> & {
 
 function startRunner(options: StartRunnerOptions = {}) {
   const child = new FakeTuiProcess();
+  activeFakeTuiProcesses.add(child);
   const writes: string[] = [];
   const spawnCalls: Array<{
     command: string;
@@ -261,7 +284,13 @@ test("runner processes interrupt-action and aborts the active action", async () 
 });
 
 test("runner processes copy-logs from c420ui-tui", async () => {
-  const { child, writes } = startRunner();
+  let copiedText = "";
+  const { child, writes } = startRunner({
+    copyTextToClipboard(text) {
+      copiedText = text;
+      return { ok: true, message: "Logs copied by test clipboard." };
+    },
+  });
 
   child.stdout.write('{"event":"copy-logs"}\n');
 
@@ -273,6 +302,7 @@ test("runner processes copy-logs from c420ui-tui", async () => {
     );
   }, "copy logs response");
   assert.equal(events?.source, "system");
+  assert.match(copiedText, /\[mode\] c420ui|c420ui/);
 });
 
 test("runner persists setting toggles", async () => {

@@ -382,7 +382,14 @@ export function main(): void {
 
   const testResult = spawnSync(
     process.execPath,
-    ["--enable-source-maps", "--test", ...nodeArgs, ...compiledTestFiles],
+    [
+      "--enable-source-maps",
+      "--test",
+      "--test-concurrency=1",
+      "--test-force-exit",
+      ...nodeArgs.filter((arg) => arg !== "--test-force-exit" && !arg.startsWith("--test-concurrency")),
+      ...compiledTestFiles,
+    ],
     {
       cwd: rootDir,
       stdio: "inherit",

@@ -1285,6 +1285,7 @@ function runC420UIRustTuiApp(options) {
       setActiveAction: (action) => {
         activeAction = action;
       },
+      copyTextToClipboard: options.copyTextToClipboard ?? copyTextToClipboard,
       writeError,
       exit
     });
@@ -1353,6 +1354,7 @@ async function handleTuiEvent(options) {
     setCurrentView,
     getActiveAction,
     setActiveAction,
+    copyTextToClipboard: copyTextToClipboard2,
     writeError,
     exit
   } = options;
@@ -1413,7 +1415,7 @@ async function handleTuiEvent(options) {
     return;
   }
   if (event.event === "copy-logs") {
-    const result = copyTextToClipboard(collectLogCopyText(logHistory, sessionLogPath));
+    const result = copyTextToClipboard2(collectLogCopyText(logHistory, sessionLogPath));
     sendLog("system", result.message, result.ok ? "info" : "warning");
     return;
   }

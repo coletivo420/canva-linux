@@ -163,3 +163,15 @@ test("terminal build and bootstrap recipe do not externalize Blessed runtime pac
   assert.doesNotMatch(packageJson, /--external:blessed/);
   assert.doesNotMatch(bootstrapRecipe, /"blessed"|"term\.js"|"pty\.js"/);
 });
+
+test("node test wrapper forces exit after emitting the final summary", () => {
+  const source = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/scripts/run-node-tests.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /"--test-concurrency=1"/);
+  assert.match(source, /"--test-force-exit"/);
+  assert.match(source, /arg !== "--test-force-exit"/);
+  assert.match(source, /!arg\.startsWith\("--test-concurrency"\)/);
+});
