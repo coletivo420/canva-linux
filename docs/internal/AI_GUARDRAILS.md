@@ -12,6 +12,13 @@ shortcuts, panel scrolling, settings toggles, F5 log copy, root prompt retries,
 session log behavior and post-action status refresh belong to `c420ui-tui`.
 Do not bring the TypeScript/Blessed TUI back as a runtime backend.
 
+Dev12 stabilizes the Rust TUI behavior after the visual parity port. The session
+log now belongs to c420ui under `/tmp/c420ui`, Doctor / Host Tools is restored
+through `c420ui-host`, running actions lock the menu and expose an interruption
+confirmation modal, progress states use strict success/warning/error colors,
+scroll/wrapping is restored for overview/logs/artifact panels, and status
+panels now color only values while preserving label colors.
+
 ## Dev11 ESM-only guardrails (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

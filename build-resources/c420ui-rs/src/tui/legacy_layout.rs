@@ -94,18 +94,20 @@ impl LegacyLayout {
         let right_left = area.x + left_width;
         let right_width = area.width.saturating_sub(left_width).max(1);
         let workspace_y = area.y + workspace_top;
-        let menu_height = ((workspace_height as f32 * 0.68).floor() as u16).max(3);
+        let menu_height = ((workspace_height as f32 * 0.68).floor() as u16)
+            .max(3)
+            .min(workspace_height.saturating_sub(1).max(1));
         let diagnostics_top = workspace_y + menu_height;
-        let detection_panels_height = (area.height)
-            .saturating_sub(diagnostics_top.saturating_sub(area.y))
-            .saturating_sub(reserved_footer_rows)
-            .max(10);
-        let detected_height = ((detection_panels_height as f32 * 0.34).floor() as u16).max(6);
-        let generated_height = ((detection_panels_height as f32 * 0.43).floor() as u16).max(3);
+        let detection_panels_height = workspace_height.saturating_sub(menu_height).max(1);
+        let detected_height = ((detection_panels_height as f32 * 0.34).floor() as u16)
+            .max(1)
+            .min(detection_panels_height);
+        let generated_height = ((detection_panels_height as f32 * 0.43).floor() as u16)
+            .max(1)
+            .min(detection_panels_height.saturating_sub(detected_height));
         let linux_height = detection_panels_height
             .saturating_sub(detected_height)
-            .saturating_sub(generated_height)
-            .max(3);
+            .saturating_sub(generated_height);
         let generated_top = diagnostics_top + detected_height;
         let linux_top = generated_top + generated_height;
         let content_height = ((workspace_height as f32 * 0.36).floor() as u16).max(3);

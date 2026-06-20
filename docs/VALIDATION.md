@@ -13,6 +13,13 @@ root prompt retries, session log behavior and post-action status refresh.
 `c420ui-tui` remains the official runtime; the TypeScript/Blessed TUI must not
 return as a backend.
 
+Dev12 stabilizes the Rust TUI behavior after the visual parity port. The session
+log now belongs to c420ui under `/tmp/c420ui`, Doctor / Host Tools is restored
+through `c420ui-host`, running actions lock the menu and expose an interruption
+confirmation modal, progress states use strict success/warning/error colors,
+scroll/wrapping is restored for overview/logs/artifact panels, and status
+panels now color only values while preserving label colors.
+
 ## Dev11 ESM-only validation policy (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.

@@ -67,6 +67,9 @@ pub enum TuiRuntimeOutputEvent {
     SettingToggle {
         setting: String,
     },
+    InterruptAction {
+        action_id: String,
+    },
     Quit,
     Cancel,
     RootRequestResponse {

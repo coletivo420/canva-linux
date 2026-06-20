@@ -4,6 +4,7 @@ pub mod input;
 pub mod layout;
 pub mod legacy_layout;
 pub mod legacy_theme;
+pub mod progress;
 pub mod render_smoke;
 pub mod renderer;
 pub mod runtime;

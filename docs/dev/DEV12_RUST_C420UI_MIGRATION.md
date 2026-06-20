@@ -152,6 +152,13 @@ prompt retry behavior, session log behavior and post-action status refresh.
 `c420ui-tui` remains the official runtime; the TypeScript/Blessed TUI must not
 return as a backend.
 
+Dev12 stabilizes the Rust TUI behavior after the visual parity port. The session
+log now belongs to c420ui under `/tmp/c420ui`, Doctor / Host Tools is restored
+through `c420ui-host`, running actions lock the menu and expose an interruption
+confirmation modal, progress states use strict success/warning/error colors,
+scroll/wrapping is restored for overview/logs/artifact panels, and status
+panels now color only values while preserving label colors.
+
 The TypeScript Action Engine remains responsible for action resolution,
 execution, root-provider interaction and progress/log events. Rust owns terminal
 rendering, navigation, action selection, progress display, log display and the

@@ -1678,10 +1678,14 @@ function checkRustTuiContract(failures: string[]): void {
   const rustContractsPath = "build-resources/c420ui-rs/src/tui/contracts.rs";
   const rustRendererPath = "build-resources/c420ui-rs/src/tui/renderer.rs";
   const rustWidgetsPath = "build-resources/c420ui-rs/src/tui/widgets.rs";
+  const rustProgressPath = "build-resources/c420ui-rs/src/tui/progress.rs";
+  const rustInputPath = "build-resources/c420ui-rs/src/tui/input.rs";
   const rustLegacyLayoutPath = "build-resources/c420ui-rs/src/tui/legacy_layout.rs";
   const rustLegacyThemePath = "build-resources/c420ui-rs/src/tui/legacy_theme.rs";
   const rustTuiRuntimePath = "build-resources/c420ui-rs/src/tui/runtime.rs";
   const rustTuiStatePath = "build-resources/c420ui-rs/src/tui/state.rs";
+  const doctorSourcePath = "build-resources/c420ui/scripts/doctor.ts";
+  const actionsPath = "build-resources/canva-linux/config/actions.json";
   const roadmapPath = "docs/dev/DEV12_RUST_C420UI_MIGRATION.md";
   const validationPath = "docs/VALIDATION.md";
   const guardrailsPath = "docs/internal/AI_GUARDRAILS.md";
@@ -1704,10 +1708,16 @@ function checkRustTuiContract(failures: string[]): void {
   const rustContracts = fs.readFileSync(path.join(rootDir, rustContractsPath), "utf8");
   const rustRenderer = fs.readFileSync(path.join(rootDir, rustRendererPath), "utf8");
   const rustWidgets = fs.readFileSync(path.join(rootDir, rustWidgetsPath), "utf8");
+  const rustProgress = fs.readFileSync(path.join(rootDir, rustProgressPath), "utf8");
+  const rustInput = fs.readFileSync(path.join(rootDir, rustInputPath), "utf8");
   const rustLegacyLayout = fs.readFileSync(path.join(rootDir, rustLegacyLayoutPath), "utf8");
   const rustLegacyTheme = fs.readFileSync(path.join(rootDir, rustLegacyThemePath), "utf8");
   const rustTuiRuntime = fs.readFileSync(path.join(rootDir, rustTuiRuntimePath), "utf8");
   const rustTuiState = fs.readFileSync(path.join(rootDir, rustTuiStatePath), "utf8");
+  const doctorSource = fs.existsSync(path.join(rootDir, doctorSourcePath))
+    ? fs.readFileSync(path.join(rootDir, doctorSourcePath), "utf8")
+    : "";
+  const actions = fs.readFileSync(path.join(rootDir, actionsPath), "utf8");
   const roadmap = fs.readFileSync(path.join(rootDir, roadmapPath), "utf8");
   const validation = fs.readFileSync(path.join(rootDir, validationPath), "utf8");
   const guardrails = fs.readFileSync(path.join(rootDir, guardrailsPath), "utf8");
@@ -1740,6 +1750,17 @@ function checkRustTuiContract(failures: string[]): void {
   }
   if (!rustTuiRunner.includes('"run"') || !rustTuiRunner.includes('"--json-lines"') || !rustTuiRunner.includes("c420ui-tui")) {
     failures.push(`${rustTuiRunnerPath}: must start c420ui-tui run --json-lines`);
+  }
+  if (!doctorSource) {
+    failures.push(`${doctorSourcePath}: Doctor source script must exist`);
+  }
+  for (const fragment of ["c420ui-host", "host-info", "doctor", "check-host-dependencies"] as const) {
+    if (!doctorSource.includes(fragment)) {
+      failures.push(`${doctorSourcePath}: Doctor script must call c420ui-host ${fragment}`);
+    }
+  }
+  if (!actions.includes('"id": "doctor"') || !actions.includes('".build/scripts/doctor.mjs"')) {
+    failures.push(`${actionsPath}: Doctor action must target generated doctor script`);
   }
   if (!rustTuiRunner.includes("createC420UIActionEngine")) {
     failures.push(`${rustTuiRunnerPath}: TypeScript Action Engine must remain the execution owner`);
@@ -1818,6 +1839,7 @@ function checkRustTuiContract(failures: string[]): void {
     ["TuiInputEvent::Help", "c420ui-tui must support help shortcut"],
     ["PageUp", "c420ui-tui must support scroll keys"],
     ["menu_scroll", "c420ui-tui must preserve panel scroll state"],
+    ["InterruptAction", "c420ui-tui must support interrupt-action modal"],
   ] as const) {
     if (!rustTuiRuntime.includes(fragment) && !rustTuiState.includes(fragment) && !rustWidgets.includes(fragment) && !rustTuiRunner.includes(fragment)) {
       failures.push(message);
@@ -1829,6 +1851,8 @@ function checkRustTuiContract(failures: string[]): void {
     ["saveToolSettings", "rust-tui-runner must persist setting-toggle"],
     ["Root authentication failed", "rust-tui-runner must retry root input without logging secrets"],
     ["renderState(getCurrentView())", "rust-tui-runner must refresh panels after actions without losing view"],
+    ['path.join("/tmp", "c420ui", "tool-session.log")', "session log default must use /tmp/c420ui/tool-session.log"],
+    ['".tmp"', "session log fallback must use ~/.tmp/c420ui/tool-session.log"],
   ] as const) {
     if (!rustTuiRunner.includes(fragment)) {
       failures.push(`${rustTuiRunnerPath}: ${message}`);
@@ -1837,8 +1861,23 @@ function checkRustTuiContract(failures: string[]): void {
   if (!rustWidgets.includes("Tool | ") || !rustWidgets.includes("Action | ")) {
     failures.push(`${rustWidgetsPath}: logs must preserve legacy Tool | and Action | prefixes`);
   }
-  if (!rustWidgets.includes('"█"') || !rustWidgets.includes('"░"')) {
+  if (!rustProgress.includes('"█"') || !rustProgress.includes('"░"')) {
     failures.push(`${rustWidgetsPath}: progress must preserve the legacy filled/empty cell glyphs`);
+  }
+  if (!rustInput.includes("MouseEventKind::ScrollUp") || !rustInput.includes("MouseEventKind::ScrollDown")) {
+    failures.push(`${rustInputPath}: Rust TUI must support mouse scroll`);
+  }
+  if (!rustProgress.includes('"warning"') || !rustProgress.includes("theme.warning") || rustProgress.includes('"success" | "warning"')) {
+    failures.push(`${rustProgressPath}: progress warning must not use success color`);
+  }
+  if (!rustWidgets.includes("styled_status_line") || !rustWidgets.includes("status_value_style")) {
+    failures.push(`${rustWidgetsPath}: panel status renderer must color only values, not labels`);
+  }
+  if (!rustWidgets.includes("Wrap { trim: false }")) {
+    failures.push(`${rustWidgetsPath}: Linux Artifacts and scrollable panels must use wrapping`);
+  }
+  if (rustTuiRunner.includes('".local", "state"') || rustTuiRunner.includes('stateDirectoryName, "tool-session.log"')) {
+    failures.push(`${rustTuiRunnerPath}: session log default must not use canva-linux/local-state namespace`);
   }
   if (
     !rustWidgets.includes("Administrator authorization") &&

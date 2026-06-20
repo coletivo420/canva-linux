@@ -65,6 +65,7 @@ pub fn render<B: Backend>(
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Diagnostics),
                 state.diagnostics_scroll,
+                layout.detected_installations,
             ),
             layout.detected_installations,
         );
@@ -74,6 +75,7 @@ pub fn render<B: Backend>(
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Diagnostics),
                 state.diagnostics_scroll,
+                layout.generated_artifacts,
             ),
             layout.generated_artifacts,
         );
@@ -83,6 +85,7 @@ pub fn render<B: Backend>(
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Diagnostics),
                 state.diagnostics_scroll,
+                layout.linux_artifacts,
             ),
             layout.linux_artifacts,
         );
@@ -97,6 +100,7 @@ pub fn render<B: Backend>(
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Content),
                 state.content_scroll,
+                layout.overview,
             ),
             layout.overview,
         );
@@ -109,6 +113,7 @@ pub fn render<B: Backend>(
                 &theme,
                 matches!(input.focus_zone, TuiFocusZone::Logs),
                 state.logs_scroll,
+                layout.logs,
             ),
             layout.logs,
         );
@@ -116,7 +121,7 @@ pub fn render<B: Backend>(
         // Draw Progress
         if let Some(progress) = &input.progress {
             f.render_widget(
-                draw_progress(
+                crate::tui::progress::draw_progress(
                     &progress.state,
                     progress.label.as_deref(),
                     progress.percent,

@@ -84,6 +84,7 @@ type C420UITuiRuntimeOutput =
   | { event: "help" }
   | { event: "toggle" }
   | { event: "setting-toggle"; setting: string }
+  | { event: "interrupt-action"; actionId: string }
   | { event: "quit" }
   | { event: "cancel" }
   | {
@@ -109,12 +110,15 @@ export function runC420UIRustTuiApp(
 ): void {
   const writeError = options.writeError ?? console.error;
   const exit = options.exit ?? (process.exit as (code: number) => never);
-  const abortController = new AbortController();
   const toolSettings = loadToolSettings(options.config.project.stateDirectoryName);
   const logHistory: C420UITuiRenderInput["logs"] = [];
-  const sessionLogPath = resolveSessionLogPath(options);
-  const sessionStream = openSessionStream(sessionLogPath, writeError);
+  const sessionLog = openSessionLog(resolveSessionLogPath(options), writeError, options.env);
+  const sessionLogPath = sessionLog.path;
+  const sessionStream = sessionLog.stream;
   let currentView: C420UITuiRenderInput["view"] = "main";
+  let activeAction:
+    | { actionId: string; abortController: AbortController }
+    | undefined;
   const pendingRootRequests = new Map<
     string,
     (response: { accepted: boolean; input?: string }) => void
@@ -208,7 +212,6 @@ export function runC420UIRustTuiApp(
       renderState,
       startupTasks: options.startupTasks ?? [],
       pendingRootRequests,
-      abortController,
       toolSettings,
       logHistory,
       sessionStream,
@@ -217,6 +220,10 @@ export function runC420UIRustTuiApp(
       getCurrentView: () => currentView,
       setCurrentView: (view) => {
         currentView = view;
+      },
+      getActiveAction: () => activeAction,
+      setActiveAction: (action) => {
+        activeAction = action;
       },
       writeError,
       exit,
@@ -287,7 +294,6 @@ async function handleTuiEvent(options: {
     string,
     (response: { accepted: boolean; input?: string }) => void
   >;
-  abortController: AbortController;
   toolSettings: ToolSettings;
   logHistory: C420UITuiRenderInput["logs"];
   sessionStream: fs.WriteStream | undefined;
@@ -295,6 +301,10 @@ async function handleTuiEvent(options: {
   sendLog: (source: string, line: string, level?: string) => void;
   getCurrentView: () => C420UITuiRenderInput["view"];
   setCurrentView: (view: C420UITuiRenderInput["view"]) => void;
+  getActiveAction: () => { actionId: string; abortController: AbortController } | undefined;
+  setActiveAction: (
+    action: { actionId: string; abortController: AbortController } | undefined,
+  ) => void;
   writeError: (message: string) => void;
   exit: (code: number) => never;
 }): Promise<void> {
@@ -307,7 +317,6 @@ async function handleTuiEvent(options: {
     renderState,
     startupTasks,
     pendingRootRequests,
-    abortController,
     toolSettings,
     logHistory,
     sessionStream,
@@ -315,6 +324,8 @@ async function handleTuiEvent(options: {
     sendLog,
     getCurrentView,
     setCurrentView,
+    getActiveAction,
+    setActiveAction,
     writeError,
     exit,
   } = options;
@@ -331,21 +342,41 @@ async function handleTuiEvent(options: {
   }
 
   if (event.event === "action-selected") {
+    if (getActiveAction()) {
+      sendLog(
+        "system",
+        "An action is already running. Confirm interruption before starting another action.",
+        "warning",
+      );
+      return;
+    }
     const action = bridge.actions().find((candidate) => candidate.id === event.actionId);
     sendLog("action", `${event.actionId}${action ? ` ${action.label}` : ""}`);
-    const result = await engine.runActionById(event.actionId, {
-      yes: true,
-      signal: abortController.signal,
-    });
-    if (result.message) {
-      if (result.status === "success") {
-        sendLog("action", result.message);
-      } else {
-        send({ event: "error", message: result.message });
-        writeSession(sessionStream, `[error] ${result.message}`);
+    const actionAbortController = new AbortController();
+    setActiveAction({ actionId: event.actionId, abortController: actionAbortController });
+    try {
+      const result = await engine.runActionById(event.actionId, {
+        yes: true,
+        signal: actionAbortController.signal,
+      });
+      if (result.message) {
+        if (result.status === "success") {
+          sendLog("action", result.message);
+        } else {
+          send({ event: "error", message: result.message });
+          writeSession(sessionStream, `[error] ${result.message}`);
+        }
       }
+    } catch (error) {
+      const message = formatRustTuiError(error);
+      send({ event: "error", message });
+      writeSession(sessionStream, `[error] ${message}`);
+    } finally {
+      if (getActiveAction()?.actionId === event.actionId) {
+        setActiveAction(undefined);
+      }
+      send({ event: "state", state: await renderState(getCurrentView()) });
     }
-    send({ event: "state", state: await renderState(getCurrentView()) });
     return;
   }
 
@@ -379,6 +410,29 @@ async function handleTuiEvent(options: {
     return;
   }
 
+  if (event.event === "interrupt-action") {
+    const active = getActiveAction();
+    if (active?.actionId === event.actionId) {
+      active.abortController.abort();
+      sendLog("system", `Interrupt requested for ${event.actionId}.`, "warning");
+      send({
+        event: "progress",
+        state: "interrupted",
+        label: `Interrupted ${event.actionId}`,
+        percent: 0,
+      });
+      send({
+        event: "action-finish",
+        actionId: event.actionId,
+        status: "canceled",
+        code: c420uiExitCodes.canceled,
+      });
+      setActiveAction(undefined);
+      send({ event: "state", state: await renderState(getCurrentView()) });
+    }
+    return;
+  }
+
   if (event.event === "root-request-response") {
     const resolve = pendingRootRequests.get(event.requestId);
     if (resolve) {
@@ -389,7 +443,11 @@ async function handleTuiEvent(options: {
   }
 
   if (event.event === "cancel") {
-    abortController.abort();
+    const active = getActiveAction();
+    if (active) {
+      active.abortController.abort();
+      setActiveAction(undefined);
+    }
     writeSession(sessionStream, "[session] ended");
     sessionStream?.end();
     exit(c420uiExitCodes.canceled);
@@ -711,23 +769,34 @@ function isVisibleLog(
 function resolveSessionLogPath(options: C420UIRustTuiRunnerOptions): string {
   const configured = options.config.sessionLogPath?.trim();
   if (configured) return configured;
-  const stateHome =
-    options.env?.XDG_STATE_HOME?.trim() ||
-    process.env.XDG_STATE_HOME?.trim() ||
-    path.join(options.env?.HOME || process.env.HOME || ".", ".local", "state");
-  return path.join(stateHome, options.config.project.stateDirectoryName, "tool-session.log");
+  return path.join("/tmp", "c420ui", "tool-session.log");
 }
 
-function openSessionStream(
+function openSessionLog(
   sessionLogPath: string,
   writeError: (message: string) => void,
-): fs.WriteStream | undefined {
+  env: NodeJS.ProcessEnv | undefined,
+): { path: string; stream: fs.WriteStream | undefined } {
   try {
     fs.mkdirSync(path.dirname(sessionLogPath), { recursive: true });
-    return fs.createWriteStream(sessionLogPath, { flags: "a" });
+    return { path: sessionLogPath, stream: fs.createWriteStream(sessionLogPath, { flags: "a" }) };
   } catch (error) {
-    writeError(`Session log stream is unavailable: ${formatRustTuiError(error)}`);
-    return undefined;
+    const fallbackPath = path.join(
+      env?.HOME || process.env.HOME || ".",
+      ".tmp",
+      "c420ui",
+      "tool-session.log",
+    );
+    try {
+      fs.mkdirSync(path.dirname(fallbackPath), { recursive: true });
+      writeError(
+        `Session log primary path is unavailable, using fallback ${fallbackPath}: ${formatRustTuiError(error)}`,
+      );
+      return { path: fallbackPath, stream: fs.createWriteStream(fallbackPath, { flags: "a" }) };
+    } catch (fallbackError) {
+      writeError(`Session log stream is unavailable: ${formatRustTuiError(fallbackError)}`);
+      return { path: fallbackPath, stream: undefined };
+    }
   }
 }
 

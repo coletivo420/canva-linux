@@ -24,9 +24,9 @@
   "typescriptFirst": true,
   "ownsFullDependencyPolicy": true,
   "c420uiSourceHashAlgorithm": "sha256",
-  "c420uiSourceHash": "sha256:0026dd87ab12b49d135cdc16eb8673b38c371546a7dbcb83db625d2e37282d1d",
-  "canvaLinuxSourceHash": "sha256:1ab5f65f9998d34b7ac1a3c8af04bf5c14c1d6db8ab5fb519478cdc707d42211",
-  "combinedSourceHash": "sha256:aae7c302463ab75d36efc23ca273263586222a73ffd0b1a604de8e6b80badf8c",
+  "c420uiSourceHash": "sha256:ed7e613421e73441567ccceb66ca6239782cf23cd3dd0c96824631daa808ac1c",
+  "canvaLinuxSourceHash": "sha256:53f92e99c2a894f2f329905ae9d34cedc27429eb6f8d6c1b276cab49ce3e224a",
+  "combinedSourceHash": "sha256:f123fa918e969bd18a00242ce4ef4b7d214545bebd5091583d63867f0f79e8b8",
   "c420uiSourceHashInputs": [
     "build-resources/c420ui/src",
     "build-resources/c420ui/scripts",
@@ -38,7 +38,7 @@
     "build-resources/c420ui/package.json"
   ],
   "artifactHashes": {
-    "run-c420ui.mjs": "sha256:3a51643cb6220b9300201183ba0c31e7e28a15621edfbb396a1c5d034d51b86c",
+    "run-c420ui.mjs": "sha256:2180c822af8ae72666d5330257db598c0d2dcfd4d37731f7b5503408fbb0cd50",
     "run-c420ui-cli.mjs": "sha256:be6ec3525dbb65031500620d2440cbae8bf313c081a7e556e7532db9e2bd8cca",
     "c420ui-builder.mjs": "sha256:f7004c32a9587fdbc038cbb4fb9c8b1361aef6335dd48eee44763aae5ac5540b"
   }

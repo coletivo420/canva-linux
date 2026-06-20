@@ -218,6 +218,60 @@ test("runner writes session log and refreshes panels after actions", async () =>
   assert.match(sessionLog, /\[action\] installed/);
 });
 
+test("runner defaults session log to /tmp/c420ui instead of project namespace", () => {
+  const source = fs.readFileSync(
+    "build-resources/c420ui/src/rust-tui-runner.ts",
+    "utf8",
+  );
+
+  assert.match(source, /path\.join\("\/tmp", "c420ui", "tool-session\.log"\)/);
+  assert.match(source, /"\.tmp",\s*"c420ui",\s*"tool-session\.log"/);
+  assert.equal(source.includes('".local", "state"'), false);
+  assert.equal(source.includes("stateDirectoryName, \"tool-session.log\""), false);
+});
+
+test("runner processes interrupt-action and aborts the active action", async () => {
+  let aborted = false;
+  const { child, writes } = startRunner({
+    runAction: async (_actionId, context) => {
+      assert.ok(context.signal, "action context must include AbortSignal");
+      await new Promise<void>((resolve) => {
+        context.signal?.addEventListener(
+          "abort",
+          () => {
+            aborted = true;
+            resolve();
+          },
+          { once: true },
+        );
+      });
+      return { code: c420uiExitCodes.canceled, status: "canceled", message: "interrupted" };
+    },
+  });
+
+  child.stdout.write('{"event":"action-selected","actionId":"install-native"}\n');
+  await waitFor(
+    () =>
+      parseWrites(writes).some((event) => event.event === "action-start")
+        ? true
+        : undefined,
+    "action start",
+  );
+  child.stdout.write('{"event":"interrupt-action","actionId":"install-native"}\n');
+
+  await waitFor(() => (aborted ? true : undefined), "abort signal");
+  const events = parseWrites(writes);
+  assert.ok(
+    events.some(
+      (event) =>
+        event.event === "action-finish" &&
+        event.actionId === "install-native" &&
+        event.status === "canceled",
+    ),
+  );
+  assert.ok(events.some((event) => event.event === "progress" && event.state === "interrupted"));
+});
+
 test("runner processes copy-logs from c420ui-tui", async () => {
   const { child, writes } = startRunner();
 

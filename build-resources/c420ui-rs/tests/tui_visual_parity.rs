@@ -238,6 +238,125 @@ fn test_render_preserves_logos_and_action_description() {
 }
 
 #[test]
+fn test_status_panel_colors_only_values() {
+    let backend = TestBackend::new(120, 36);
+    let mut terminal = Terminal::new(backend).unwrap();
+    let mut state = create_test_state();
+    state.render.panels.detected_installations.lines =
+        vec!["Native System: not detected".to_string()];
+
+    renderer::render(&mut terminal, &state).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let label_cell = find_first_cell(buffer, "Native System").expect("status label is rendered");
+    let not_detected_cell =
+        find_first_cell(buffer, "not detected").expect("not detected value is rendered");
+
+    assert_eq!(label_cell.fg, Color::Rgb(255, 255, 255));
+    assert_eq!(not_detected_cell.fg, Color::Rgb(230, 126, 34));
+
+    state.render.panels.detected_installations.lines =
+        vec!["Native User: 0.1.4-15.Dev.12".to_string()];
+    let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+    renderer::render(&mut terminal, &state).unwrap();
+    let version_cell = find_first_cell(terminal.backend().buffer(), "0.1.4-15.Dev.12")
+        .expect("version value is rendered");
+    assert_eq!(version_cell.fg, Color::Rgb(0, 132, 61));
+}
+
+#[test]
+fn test_linux_artifacts_wraps_long_names_and_marks_scroll() {
+    let backend = TestBackend::new(160, 36);
+    let mut terminal = Terminal::new(backend).unwrap();
+    let mut state = create_test_state();
+    state.render.panels.linux_artifacts.lines = vec![
+        "Arch: x86_64".to_string(),
+        "AppImage: example-linux-0.1.4-15.Dev.12-x86_64.AppImage".to_string(),
+        "Checksum: example-linux-0.1.4-15.Dev.12-x86_64.AppImage.sha256".to_string(),
+        "linux-unpacked: linux-x86_64-unpacked".to_string(),
+        "Flatpak Bundle: not detected".to_string(),
+    ];
+
+    renderer::render(&mut terminal, &state).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let text: String = buffer
+        .content
+        .iter()
+        .map(|c| c.symbol().to_string())
+        .collect();
+
+    assert!(text.contains("x86_64"));
+    assert!(!text.contains("x64"));
+    assert!(text.contains("Linux Artifacts"));
+}
+
+#[test]
+fn test_progress_colors_follow_state() {
+    let mut state = create_test_state();
+    state.render.progress = Some(TuiProgress {
+        state: "warning".to_string(),
+        label: Some("Partial".to_string()),
+        percent: Some(40),
+    });
+    let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+    renderer::render(&mut terminal, &state).unwrap();
+    let warning_cell = find_first_cell(terminal.backend().buffer(), "Progress:")
+        .expect("warning progress is rendered");
+    assert_eq!(warning_cell.fg, Color::Rgb(230, 126, 34));
+
+    state.render.progress = Some(TuiProgress {
+        state: "success".to_string(),
+        label: Some("Done".to_string()),
+        percent: None,
+    });
+    let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+    renderer::render(&mut terminal, &state).unwrap();
+    let buffer = terminal.backend().buffer();
+    let success_cell = find_first_cell(buffer, "Progress:").expect("success progress is rendered");
+    let text: String = buffer
+        .content
+        .iter()
+        .map(|c| c.symbol().to_string())
+        .collect();
+    assert_eq!(success_cell.fg, Color::Rgb(0, 132, 61));
+    assert!(text.contains("100%"));
+
+    state.render.progress = Some(TuiProgress {
+        state: "error".to_string(),
+        label: Some("Failed".to_string()),
+        percent: Some(20),
+    });
+    let mut terminal = Terminal::new(TestBackend::new(120, 36)).unwrap();
+    renderer::render(&mut terminal, &state).unwrap();
+    let error_cell =
+        find_first_cell(terminal.backend().buffer(), "Progress:").expect("error progress");
+    assert_eq!(error_cell.fg, Color::Rgb(235, 0, 27));
+}
+
+#[test]
+fn test_interrupt_modal_renders_for_running_action() {
+    let backend = TestBackend::new(80, 24);
+    let mut terminal = Terminal::new(backend).unwrap();
+    let mut state = create_test_state();
+    state.set_running_action("install-native".to_string());
+    state.request_interrupt_confirmation();
+
+    renderer::render(&mut terminal, &state).unwrap();
+
+    let buffer = terminal.backend().buffer();
+    let text: String = buffer
+        .content
+        .iter()
+        .map(|c| c.symbol().to_string())
+        .collect();
+
+    assert!(text.contains("Interrupt running action?"));
+    assert!(text.contains("install-native"));
+    assert!(text.contains("[y/Enter] Confirm"));
+}
+
+#[test]
 fn test_help_description_follows_selected_item_without_action() {
     let backend = TestBackend::new(120, 36);
     let mut terminal = Terminal::new(backend).unwrap();

@@ -108,6 +108,11 @@ Request changes if a PR:
   keyboard shortcuts, panel scrolling, settings toggles, F5 log copy, root
   prompt retry behavior, session log persistence and post-action panel refresh
   are required before the TypeScript TUI can be removed.
+- regresses Rust TUI stabilization work: Doctor / Host Tools must execute
+  through `c420ui-host`, session logs must default to `/tmp/c420ui`, running
+  actions must lock the menu behind an interruption confirmation modal, progress
+  warning/error/success colors must stay distinct, artifact/log/overview panels
+  must wrap and scroll, and status panels must color only values.
 
 ## c420ui version/hash review
 

@@ -18,6 +18,8 @@ pub struct TuiRuntimeState {
     pub diagnostics_scroll: u16,
     pub content_scroll: u16,
     pub logs_scroll: u16,
+    pub running_action: Option<String>,
+    pub pending_interrupt_confirmation: bool,
 }
 
 impl TuiRuntimeState {
@@ -31,6 +33,8 @@ impl TuiRuntimeState {
             diagnostics_scroll: 0,
             content_scroll: 0,
             logs_scroll: 0,
+            running_action: None,
+            pending_interrupt_confirmation: false,
         }
     }
 
@@ -242,20 +246,24 @@ impl TuiRuntimeState {
     }
 
     pub fn scroll_focused_panel(&mut self, delta: i16) {
+        let max = self.focused_scroll_max();
         let offset = self.focused_scroll_mut();
         if delta.is_negative() {
             *offset = offset.saturating_sub(delta.unsigned_abs());
         } else {
             *offset = offset.saturating_add(delta as u16);
         }
+        *offset = (*offset).min(max);
     }
 
     pub fn scroll_content_panel(&mut self, delta: i16) {
+        let max = self.panel_scroll_max(&self.render.panels.content.lines);
         if delta.is_negative() {
             self.content_scroll = self.content_scroll.saturating_sub(delta.unsigned_abs());
         } else {
             self.content_scroll = self.content_scroll.saturating_add(delta as u16);
         }
+        self.content_scroll = self.content_scroll.min(max);
     }
 
     pub fn scroll_focused_to_top(&mut self) {
@@ -263,7 +271,7 @@ impl TuiRuntimeState {
     }
 
     pub fn scroll_focused_to_bottom(&mut self) {
-        *self.focused_scroll_mut() = u16::MAX / 2;
+        *self.focused_scroll_mut() = self.focused_scroll_max();
     }
 
     pub fn reset_scroll_on_view_change(&mut self) {
@@ -280,6 +288,63 @@ impl TuiRuntimeState {
             TuiFocusZone::Content => &mut self.content_scroll,
             TuiFocusZone::Logs => &mut self.logs_scroll,
         }
+    }
+
+    fn focused_scroll_max(&self) -> u16 {
+        match self.render.focus_zone {
+            TuiFocusZone::Menu => self.render.menu.items.len().saturating_sub(1) as u16,
+            TuiFocusZone::Diagnostics => {
+                let total = self.render.panels.detected_installations.lines.len()
+                    + self.render.panels.generated_artifacts.lines.len()
+                    + self.render.panels.linux_artifacts.lines.len();
+                total.saturating_sub(1) as u16
+            }
+            TuiFocusZone::Content => self.panel_scroll_max(&self.render.panels.content.lines),
+            TuiFocusZone::Logs => self.render.panels.logs.lines.len().saturating_sub(1) as u16,
+        }
+    }
+
+    fn panel_scroll_max(&self, lines: &[String]) -> u16 {
+        lines.len().saturating_sub(1) as u16
+    }
+
+    pub fn set_running_action(&mut self, action_id: String) {
+        self.running_action = Some(action_id);
+        self.pending_interrupt_confirmation = false;
+    }
+
+    pub fn clear_running_action(&mut self) {
+        self.running_action = None;
+        self.pending_interrupt_confirmation = false;
+    }
+
+    pub fn request_interrupt_confirmation(&mut self) {
+        if let Some(action_id) = &self.running_action {
+            self.pending_interrupt_confirmation = true;
+            self.render.modal = Some(super::contracts::TuiModal {
+                kind: super::contracts::TuiModalKind::Confirm,
+                title: "Interrupt running action?".to_string(),
+                message: format!(
+                    "Action `{}` is still running.\n\nInterrupt it now?",
+                    action_id
+                ),
+                dangerous: Some(true),
+                secret: Some(false),
+            });
+        }
+    }
+
+    pub fn is_interrupt_confirmation(&self) -> bool {
+        self.pending_interrupt_confirmation
+            && self
+                .render
+                .modal
+                .as_ref()
+                .is_some_and(|modal| modal.kind == super::contracts::TuiModalKind::Confirm)
+    }
+
+    pub fn interrupt_action_id(&self) -> Option<String> {
+        self.running_action.clone()
     }
 
     pub fn push_char(&mut self, c: char) {

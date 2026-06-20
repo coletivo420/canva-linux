@@ -1223,12 +1223,13 @@ var ROOT_PROMPT_TIMEOUT_MS = 3e4;
 function runC420UIRustTuiApp(options) {
   const writeError = options.writeError ?? console.error;
   const exit = options.exit ?? process.exit;
-  const abortController = new AbortController();
   const toolSettings = loadToolSettings(options.config.project.stateDirectoryName);
   const logHistory = [];
-  const sessionLogPath = resolveSessionLogPath(options);
-  const sessionStream = openSessionStream(sessionLogPath, writeError);
+  const sessionLog = openSessionLog(resolveSessionLogPath(options), writeError, options.env);
+  const sessionLogPath = sessionLog.path;
+  const sessionStream = sessionLog.stream;
   let currentView = "main";
+  let activeAction;
   const pendingRootRequests = /* @__PURE__ */ new Map();
   let child;
   try {
@@ -1307,7 +1308,6 @@ function runC420UIRustTuiApp(options) {
       renderState,
       startupTasks: options.startupTasks ?? [],
       pendingRootRequests,
-      abortController,
       toolSettings,
       logHistory,
       sessionStream,
@@ -1316,6 +1316,10 @@ function runC420UIRustTuiApp(options) {
       getCurrentView: () => currentView,
       setCurrentView: (view) => {
         currentView = view;
+      },
+      getActiveAction: () => activeAction,
+      setActiveAction: (action) => {
+        activeAction = action;
       },
       writeError,
       exit
@@ -1376,7 +1380,6 @@ async function handleTuiEvent(options) {
     renderState,
     startupTasks,
     pendingRootRequests,
-    abortController,
     toolSettings,
     logHistory,
     sessionStream,
@@ -1384,6 +1387,8 @@ async function handleTuiEvent(options) {
     sendLog,
     getCurrentView,
     setCurrentView,
+    getActiveAction,
+    setActiveAction,
     writeError,
     exit
   } = options;
@@ -1398,21 +1403,41 @@ async function handleTuiEvent(options) {
     return;
   }
   if (event.event === "action-selected") {
+    if (getActiveAction()) {
+      sendLog(
+        "system",
+        "An action is already running. Confirm interruption before starting another action.",
+        "warning"
+      );
+      return;
+    }
     const action = bridge.actions().find((candidate) => candidate.id === event.actionId);
     sendLog("action", `${event.actionId}${action ? ` ${action.label}` : ""}`);
-    const result = await engine.runActionById(event.actionId, {
-      yes: true,
-      signal: abortController.signal
-    });
-    if (result.message) {
-      if (result.status === "success") {
-        sendLog("action", result.message);
-      } else {
-        send({ event: "error", message: result.message });
-        writeSession(sessionStream, `[error] ${result.message}`);
+    const actionAbortController = new AbortController();
+    setActiveAction({ actionId: event.actionId, abortController: actionAbortController });
+    try {
+      const result = await engine.runActionById(event.actionId, {
+        yes: true,
+        signal: actionAbortController.signal
+      });
+      if (result.message) {
+        if (result.status === "success") {
+          sendLog("action", result.message);
+        } else {
+          send({ event: "error", message: result.message });
+          writeSession(sessionStream, `[error] ${result.message}`);
+        }
       }
+    } catch (error) {
+      const message = formatRustTuiError(error);
+      send({ event: "error", message });
+      writeSession(sessionStream, `[error] ${message}`);
+    } finally {
+      if (getActiveAction()?.actionId === event.actionId) {
+        setActiveAction(void 0);
+      }
+      send({ event: "state", state: await renderState(getCurrentView()) });
     }
-    send({ event: "state", state: await renderState(getCurrentView()) });
     return;
   }
   if (event.event === "view-changed") {
@@ -1441,6 +1466,28 @@ async function handleTuiEvent(options) {
   if (event.event === "help" || event.event === "toggle") {
     return;
   }
+  if (event.event === "interrupt-action") {
+    const active = getActiveAction();
+    if (active?.actionId === event.actionId) {
+      active.abortController.abort();
+      sendLog("system", `Interrupt requested for ${event.actionId}.`, "warning");
+      send({
+        event: "progress",
+        state: "interrupted",
+        label: `Interrupted ${event.actionId}`,
+        percent: 0
+      });
+      send({
+        event: "action-finish",
+        actionId: event.actionId,
+        status: "canceled",
+        code: c420uiExitCodes.canceled
+      });
+      setActiveAction(void 0);
+      send({ event: "state", state: await renderState(getCurrentView()) });
+    }
+    return;
+  }
   if (event.event === "root-request-response") {
     const resolve = pendingRootRequests.get(event.requestId);
     if (resolve) {
@@ -1450,7 +1497,11 @@ async function handleTuiEvent(options) {
     return;
   }
   if (event.event === "cancel") {
-    abortController.abort();
+    const active = getActiveAction();
+    if (active) {
+      active.abortController.abort();
+      setActiveAction(void 0);
+    }
     writeSession(sessionStream, "[session] ended");
     sessionStream?.end();
     exit(c420uiExitCodes.canceled);
@@ -1692,16 +1743,29 @@ function isVisibleLog(line, toolSettings) {
 function resolveSessionLogPath(options) {
   const configured = options.config.sessionLogPath?.trim();
   if (configured) return configured;
-  const stateHome2 = options.env?.XDG_STATE_HOME?.trim() || process.env.XDG_STATE_HOME?.trim() || path2.join(options.env?.HOME || process.env.HOME || ".", ".local", "state");
-  return path2.join(stateHome2, options.config.project.stateDirectoryName, "tool-session.log");
+  return path2.join("/tmp", "c420ui", "tool-session.log");
 }
-function openSessionStream(sessionLogPath, writeError) {
+function openSessionLog(sessionLogPath, writeError, env) {
   try {
     fs2.mkdirSync(path2.dirname(sessionLogPath), { recursive: true });
-    return fs2.createWriteStream(sessionLogPath, { flags: "a" });
+    return { path: sessionLogPath, stream: fs2.createWriteStream(sessionLogPath, { flags: "a" }) };
   } catch (error) {
-    writeError(`Session log stream is unavailable: ${formatRustTuiError(error)}`);
-    return void 0;
+    const fallbackPath = path2.join(
+      env?.HOME || process.env.HOME || ".",
+      ".tmp",
+      "c420ui",
+      "tool-session.log"
+    );
+    try {
+      fs2.mkdirSync(path2.dirname(fallbackPath), { recursive: true });
+      writeError(
+        `Session log primary path is unavailable, using fallback ${fallbackPath}: ${formatRustTuiError(error)}`
+      );
+      return { path: fallbackPath, stream: fs2.createWriteStream(fallbackPath, { flags: "a" }) };
+    } catch (fallbackError) {
+      writeError(`Session log stream is unavailable: ${formatRustTuiError(fallbackError)}`);
+      return { path: fallbackPath, stream: void 0 };
+    }
   }
 }
 function writeSession(stream, line) {

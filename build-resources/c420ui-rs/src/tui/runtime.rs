@@ -155,6 +155,17 @@ fn run_loop<B: ratatui::backend::Backend>(
                 if let Some(state) = state.as_mut() {
                     if state.render.modal.is_some() {
                         match input {
+                            TuiInputEvent::Char('y') if state.is_interrupt_confirmation() => {
+                                if let Some(action_id) = state.interrupt_action_id() {
+                                    state.clear_modal();
+                                    write_event(&TuiRuntimeOutputEvent::InterruptAction {
+                                        action_id,
+                                    })?;
+                                }
+                            }
+                            TuiInputEvent::Char('n') if state.is_interrupt_confirmation() => {
+                                state.clear_modal();
+                            }
                             TuiInputEvent::Char('y') if state.is_exit_confirmation() => {
                                 write_event(&TuiRuntimeOutputEvent::Quit)?;
                                 return Ok(());
@@ -165,6 +176,15 @@ fn run_loop<B: ratatui::backend::Backend>(
                             TuiInputEvent::Char(c) => state.push_char(c),
                             TuiInputEvent::Backspace => state.pop_char(),
                             TuiInputEvent::Select => {
+                                if state.is_interrupt_confirmation() {
+                                    if let Some(action_id) = state.interrupt_action_id() {
+                                        state.clear_modal();
+                                        write_event(&TuiRuntimeOutputEvent::InterruptAction {
+                                            action_id,
+                                        })?;
+                                    }
+                                    continue;
+                                }
                                 if state.is_exit_confirmation() {
                                     write_event(&TuiRuntimeOutputEvent::Quit)?;
                                     return Ok(());
@@ -193,12 +213,30 @@ fn run_loop<B: ratatui::backend::Backend>(
                                     })?;
                                 } else if state.is_exit_confirmation() {
                                     state.clear_modal();
+                                } else if state.is_interrupt_confirmation() {
+                                    state.clear_modal();
                                 }
                             }
                             _ => {}
                         }
                     } else {
                         match input {
+                            TuiInputEvent::Next
+                            | TuiInputEvent::Previous
+                            | TuiInputEvent::Select
+                            | TuiInputEvent::Toggle
+                            | TuiInputEvent::Help
+                            | TuiInputEvent::Backspace
+                            | TuiInputEvent::Cancel
+                            | TuiInputEvent::Char('q')
+                            | TuiInputEvent::Char('y')
+                            | TuiInputEvent::Char('n')
+                            | TuiInputEvent::Char('j')
+                            | TuiInputEvent::Char('k')
+                                if state.running_action.is_some() =>
+                            {
+                                state.request_interrupt_confirmation();
+                            }
                             TuiInputEvent::Next => state.select_next(),
                             TuiInputEvent::Previous => state.select_previous(),
                             TuiInputEvent::FocusNext => state.next_focus(),
@@ -209,6 +247,8 @@ fn run_loop<B: ratatui::backend::Backend>(
                             TuiInputEvent::End => state.scroll_focused_to_bottom(),
                             TuiInputEvent::ScrollContentUp => state.scroll_content_panel(-5),
                             TuiInputEvent::ScrollContentDown => state.scroll_content_panel(5),
+                            TuiInputEvent::MouseScrollUp => state.scroll_focused_panel(-3),
+                            TuiInputEvent::MouseScrollDown => state.scroll_focused_panel(3),
                             TuiInputEvent::CopyLogs => {
                                 write_event(&TuiRuntimeOutputEvent::CopyLogs)?
                             }
@@ -295,6 +335,7 @@ fn handle_non_state_protocol(
         }
         TuiRuntimeInputEvent::ActionStart { action_id } => {
             if let Some(state) = state {
+                state.set_running_action(action_id.clone());
                 state.set_status(format!("Running {}", action_id));
             }
         }
@@ -304,6 +345,7 @@ fn handle_non_state_protocol(
             code,
         } => {
             if let Some(state) = state {
+                state.clear_running_action();
                 state.set_status(format!("Finished {}: {} ({})", action_id, status, code));
             }
         }

@@ -3,7 +3,7 @@ use crate::tui::legacy_theme::LegacyTheme;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph};
+use ratatui::widgets::{Block, Borders, List, ListItem, Paragraph, Wrap};
 
 pub fn draw_header<'a>(
     title: &'a str,
@@ -100,6 +100,7 @@ pub fn draw_panel<'a>(
     theme: &LegacyTheme,
     active: bool,
     scroll: u16,
+    area: Rect,
 ) -> Paragraph<'a> {
     let block = Block::default()
         .borders(Borders::ALL)
@@ -108,15 +109,22 @@ pub fn draw_panel<'a>(
         } else {
             Style::default().fg(theme.inactive_border)
         })
-        .title(panel.label.clone());
+        .title(scrollable_title(
+            &panel.label,
+            panel.lines.len(),
+            area.height,
+        ));
 
     let lines: Vec<Line> = panel
         .lines
         .iter()
-        .map(|l| styled_content_line(l, theme))
+        .map(|l| styled_status_line(l, theme))
         .collect();
 
-    Paragraph::new(lines).block(block).scroll((scroll, 0))
+    Paragraph::new(lines)
+        .block(block)
+        .scroll((clamp_scroll(scroll, panel.lines.len()), 0))
+        .wrap(Wrap { trim: false })
 }
 
 pub fn draw_action_content<'a>(
@@ -126,9 +134,10 @@ pub fn draw_action_content<'a>(
     theme: &LegacyTheme,
     active: bool,
     scroll: u16,
+    area: Rect,
 ) -> Paragraph<'a> {
     if matches!(view, crate::tui::contracts::TuiView::Help) {
-        return draw_help_content(panel, selected, theme, active, scroll);
+        return draw_help_content(panel, selected, theme, active, scroll, area);
     }
 
     if selected.is_none()
@@ -139,7 +148,7 @@ pub fn draw_action_content<'a>(
                 | crate::tui::contracts::TuiView::Maintenance
         )
     {
-        return draw_panel(panel, theme, active, scroll);
+        return draw_panel(panel, theme, active, scroll, area);
     }
 
     let selected = selected.expect("checked above");
@@ -194,9 +203,11 @@ pub fn draw_action_content<'a>(
         ]);
     }
 
+    let scroll = clamp_scroll(scroll, lines.len());
     Paragraph::new(lines)
-        .block(panel_block(&panel.label, theme, active))
+        .block(panel_block(panel.label.clone(), theme, active))
         .scroll((scroll, 0))
+        .wrap(Wrap { trim: false })
 }
 
 fn draw_help_content<'a>(
@@ -205,6 +216,7 @@ fn draw_help_content<'a>(
     theme: &LegacyTheme,
     active: bool,
     scroll: u16,
+    area: Rect,
 ) -> Paragraph<'a> {
     let selected_id = selected
         .map(|item| item.id.as_str())
@@ -268,9 +280,12 @@ fn draw_help_content<'a>(
         ))
     }));
 
+    let title = scrollable_title(&panel.label, lines.len(), area.height);
+    let scroll = clamp_scroll(scroll, lines.len());
     Paragraph::new(lines)
-        .block(panel_block(&panel.label, theme, active))
+        .block(panel_block(title, theme, active))
         .scroll((scroll, 0))
+        .wrap(Wrap { trim: false })
 }
 
 pub fn draw_logs<'a>(
@@ -279,6 +294,7 @@ pub fn draw_logs<'a>(
     theme: &LegacyTheme,
     active: bool,
     scroll: u16,
+    area: Rect,
 ) -> Paragraph<'a> {
     let block = Block::default()
         .borders(Borders::ALL)
@@ -287,7 +303,7 @@ pub fn draw_logs<'a>(
         } else {
             Style::default().fg(theme.inactive_border)
         })
-        .title(label);
+        .title(scrollable_title(label, lines.len(), area.height));
 
     let content: Vec<Line> = lines
         .iter()
@@ -305,34 +321,10 @@ pub fn draw_logs<'a>(
         })
         .collect();
 
-    Paragraph::new(content).block(block).scroll((scroll, 0))
-}
-
-pub fn draw_progress<'a>(
-    state: &'a str,
-    label: Option<&'a str>,
-    percent: Option<u8>,
-    theme: &LegacyTheme,
-) -> Paragraph<'a> {
-    let percent = percent.unwrap_or(0);
-    let filled = (percent as f32 / 5.0) as usize;
-    let empty = 20 - filled;
-
-    let bar = format!(
-        "Progress: [{}{}] {}%{}",
-        "█".repeat(filled),
-        "░".repeat(empty),
-        percent,
-        label.map(|l| format!(" - {}", l)).unwrap_or_default()
-    );
-
-    let color = match state {
-        "error" | "canceled" => theme.error,
-        "success" | "warning" => theme.success,
-        _ => theme.warning,
-    };
-
-    Paragraph::new(bar).style(Style::default().fg(color))
+    Paragraph::new(content)
+        .block(block)
+        .scroll((clamp_scroll(scroll, lines.len()), 0))
+        .wrap(Wrap { trim: false })
 }
 
 pub fn draw_modal<'a>(
@@ -421,7 +413,7 @@ pub fn draw_footer<'a>(items: &'a [String], theme: &LegacyTheme) -> Paragraph<'a
     Paragraph::new(content).style(Style::default().fg(theme.footer_fg).bg(theme.footer_bg))
 }
 
-fn panel_block<'a>(label: &'a str, theme: &LegacyTheme, active: bool) -> Block<'a> {
+fn panel_block(label: String, theme: &LegacyTheme, active: bool) -> Block<'static> {
     Block::default()
         .borders(Borders::ALL)
         .border_style(if active {
@@ -430,7 +422,7 @@ fn panel_block<'a>(label: &'a str, theme: &LegacyTheme, active: bool) -> Block<'
             Style::default().fg(theme.inactive_border)
         })
         .title(Span::styled(
-            label.to_string(),
+            label,
             Style::default().fg(if active {
                 theme.active_label
             } else {
@@ -439,16 +431,80 @@ fn panel_block<'a>(label: &'a str, theme: &LegacyTheme, active: bool) -> Block<'
         ))
 }
 
-fn styled_content_line<'a>(line: &'a str, theme: &LegacyTheme) -> Line<'a> {
+fn styled_status_line<'a>(line: &'a str, theme: &LegacyTheme) -> Line<'a> {
     let trimmed = line.trim();
-    let style = if trimmed.ends_with(':') {
+    if let Some((label, value)) = line.split_once(':') {
+        return Line::from(vec![
+            Span::styled(format!("{}:", label), Style::default().fg(theme.text)),
+            Span::styled(value.to_string(), status_value_style(value, theme)),
+        ]);
+    }
+    let style = if is_error_value(trimmed) {
+        Style::default().fg(theme.error)
+    } else if is_warning_value(trimmed) {
+        Style::default().fg(theme.warning)
+    } else if is_success_value(trimmed) {
         Style::default().fg(theme.success)
-    } else if trimmed == "not detected" || trimmed.contains("not detected") {
-        Style::default().fg(theme.purple)
+    } else if is_muted_value(trimmed) {
+        Style::default().fg(theme.muted)
     } else {
         Style::default().fg(theme.text)
     };
     Line::from(Span::styled(line.to_string(), style))
+}
+
+fn status_value_style(value: &str, theme: &LegacyTheme) -> Style {
+    let trimmed = value.trim();
+    if is_error_value(trimmed) {
+        Style::default().fg(theme.error)
+    } else if is_warning_value(trimmed) {
+        Style::default().fg(theme.warning)
+    } else if is_success_value(trimmed) {
+        Style::default().fg(theme.success)
+    } else if is_muted_value(trimmed) {
+        Style::default().fg(theme.muted)
+    } else {
+        Style::default().fg(theme.text)
+    }
+}
+
+fn is_warning_value(value: &str) -> bool {
+    let lower = value.to_lowercase();
+    lower.contains("not detected")
+        || lower.contains("warning")
+        || lower.contains("skipped")
+        || lower.contains("partial")
+}
+
+fn is_error_value(value: &str) -> bool {
+    let lower = value.to_lowercase();
+    lower.contains("error") || lower.contains("failed")
+}
+
+fn is_success_value(value: &str) -> bool {
+    let lower = value.to_lowercase();
+    lower.contains("found")
+        || lower.contains("available")
+        || lower.contains("installed")
+        || (lower.contains("detected") && !lower.contains("not detected"))
+        || value.chars().any(|c| c.is_ascii_digit())
+}
+
+fn is_muted_value(value: &str) -> bool {
+    let lower = value.to_lowercase();
+    lower.is_empty() || lower.contains("unknown") || lower.contains("loading")
+}
+
+fn clamp_scroll(scroll: u16, lines: usize) -> u16 {
+    scroll.min(lines.saturating_sub(1) as u16)
+}
+
+fn scrollable_title(label: &str, line_count: usize, height: u16) -> String {
+    if line_count > height.saturating_sub(2) as usize {
+        format!("{} ↕", label)
+    } else {
+        label.to_string()
+    }
 }
 
 fn view_title(view: &crate::tui::contracts::TuiView) -> &'static str {
