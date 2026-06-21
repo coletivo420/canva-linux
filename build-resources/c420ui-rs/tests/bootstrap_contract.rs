@@ -110,6 +110,14 @@ fn bootstrap_generates_manifest_and_thin_launchers() {
         assert!(!content.contains("createInteractiveActionRunner"));
         assert!(!content.contains("status-panels"));
     }
+
+    let builder = fs::read_to_string(
+        root.join("build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs"),
+    )
+    .unwrap();
+    assert!(builder.contains("run(tui(root), [\"run\", \"--json-lines\"])"));
+    assert!(builder.contains("run(host(root), [\"action-run\", \"--json-lines\"]"));
+    assert!(!builder.contains("run(host(root), [\"bootstrap\", \"--json\"]"));
 }
 
 #[test]

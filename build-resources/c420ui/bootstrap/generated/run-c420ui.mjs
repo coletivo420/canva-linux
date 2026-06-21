@@ -30,7 +30,7 @@ function tui(root) {
 }
 function run(command, args, input) {
   const result = spawnSync(command, args, { stdio: input ? ["pipe", "inherit", "inherit"] : "inherit", input, encoding: "utf8", shell: false });
-  if (result.error) throw result.error;
+  if (result.error && result.status === null) throw result.error;
   process.exit(result.status ?? 1);
 }
 const root = findRoot();

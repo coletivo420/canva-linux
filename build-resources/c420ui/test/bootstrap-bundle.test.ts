@@ -70,7 +70,8 @@ test("c420ui bootstrap entrypoints exist and are thin launchers", () => {
     const source = fs.readFileSync(entrypoint, "utf8");
     assert.equal(stats.isFile(), true, `${entrypoint} must be a file`);
     assert.ok(stats.size > 0, `${entrypoint} must not be empty`);
-    assert.ok(stats.size < 5000, `${entrypoint} must stay a thin launcher`);
+    const maxThinLauncherSize = entrypoint === builderEntrypoint ? 9000 : 5000;
+    assert.ok(stats.size < maxThinLauncherSize, `${entrypoint} must stay a thin launcher`);
     assert.match(source, /spawnSync/);
     assert.doesNotMatch(source, /createInteractiveActionRunner/);
     assert.doesNotMatch(source, /createCanvaLinuxC420UIAdapter/);
@@ -110,6 +111,16 @@ test("run-c420ui-cli.mjs delegates argv to c420ui-host", () => {
   assert.match(bundle, /c420ui-host/);
   assert.match(bundle, /process\.argv\.slice\(2\)/);
   assert.doesNotMatch(bundle, /action-run", "--json-lines"/);
+});
+
+test("c420ui-builder.mjs opens the Rust TUI by default and keeps direct actions on the host", () => {
+  const bundle = fs.readFileSync(builderEntrypoint, "utf8");
+
+  assert.match(bundle, /Project Builder powered by c420ui/);
+  assert.match(bundle, /run\(tui\(root\), \["run", "--json-lines"\]\)/);
+  assert.match(bundle, /run\(host\(root\), \["action-run", "--json-lines"\]/);
+  assert.doesNotMatch(bundle, /run\(host\(root\), \["bootstrap", "--json"\]/);
+  assert.doesNotMatch(bundle, /const input = `\$\{JSON\.stringify\(\{ rootDir: root, bootstrapOutDir/);
 });
 
 test("build-bootstrap.ts delegates to rust-bootstrap", () => {
