@@ -1,5 +1,73 @@
 # AI Guardrails
 
+## Dev12 Rust bootstrap and metadata guardrail
+
+Dev12 migrates c420ui bootstrap, metadata, source hashes, settings and session
+log handling to `c420ui-host`. Generated MJS artifacts are launchers for
+`c420ui-host`/`c420ui-tui` only.
+
+Do not reintroduce heavy generated MJS bundles. Bootstrap and metadata belong to
+`c420ui-host`; MJS files must not carry Action Engine, adapter/config parser,
+TUI, status summaries, or manifest/hash builder logic.
+
+## Dev12 Rust status panels guardrail
+
+Status/detection summaries are a Rust responsibility. `c420ui-host
+status-panels --json` generates semantic status panels, and `c420ui-tui`
+renders label/value state colors. Do not reintroduce TypeScript status
+classification, comma-joined Linux Artifacts summaries, or Blessed-style
+terminal color tags in project adapters.
+
+## Dev12 Rust project config guardrail
+
+Canva Linux declares c420ui configuration through JSON files. c420ui Rust
+validates, normalizes and interprets actions, host dependencies, install,
+maintenance and UI metadata through `c420ui-host project-config --json`.
+
+Do not reintroduce TypeScript project config validation as the source of truth.
+Do not add `C420UI_ADAPTER_BACKEND` or `C420UI_ACTION_ENGINE_BACKEND`. Do not
+hardcode Canva Linux identity inside `build-resources/c420ui-rs`.
+
+## Dev12 Rust TUI visual contract
+
+Dev12 now requires the Rust TUI to preserve the visual contract of the legacy
+TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it
+must match the legacy layout, theme, panels, focus behavior, footer, progress
+bar, logs, and root prompt before the TypeScript TUI can be removed.
+
+Dev12 also requires legacy interaction parity in the Rust TUI: keyboard
+shortcuts, panel scrolling, settings toggles, F5 log copy, root prompt retries,
+session log behavior and post-action status refresh belong to `c420ui-tui`.
+Do not bring the TypeScript/Blessed TUI back as a runtime backend.
+
+Dev12 stabilizes the Rust TUI behavior after the visual parity port. The session
+log now belongs to c420ui under `/tmp/c420ui`, Doctor / Host Tools is restored
+through `c420ui-host`, running actions lock the menu and expose an interruption
+confirmation modal, progress states use strict success/warning/error colors,
+scroll/wrapping is restored for overview/logs/artifact panels, and status
+panels now color only values while preserving label colors.
+
+Dev12 test coverage now protects c420ui-host, c420ui-tui, the TypeScript Action
+Engine bridge, and the dependent-project boundary. Do not restore tests that
+expect the removed Blessed/spawnSync/sudo runner paths as the maintained
+architecture.
+
+Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is
+the only terminal UI runtime. Keep TypeScript responsible for Action Engine,
+bridge contracts, settings, clipboard and project integration, but do not
+restore `terminal/app.ts`, `terminal/blessed-widgets.ts`, `terminal/modal.ts`,
+`createApp`, or Blessed runtime dependencies.
+
+Dev12 moves c420ui clipboard writes to `c420ui-host`. Clipboard access is a
+c420ui-host responsibility. Do not reintroduce `spawnSync`, Bash, `command -v`
+or desktop-specific clipboard probing in TypeScript.
+
+Dev12 starts the Rust Action Engine migration. `c420ui-host` owns action
+resolution, lifecycle events, command execution, cancellation and root request
+orchestration through `action-run --json-lines`. Do not reintroduce TypeScript
+action execution; TypeScript may only marshal config, events, root responses and
+TUI integration until the remaining adapter/config migration removes the bridge.
+
 ## Dev11 ESM-only guardrails (FINALIZED)
 
 Dev11 finalized the TypeScript/ESM migration.
@@ -64,12 +132,27 @@ channel intercepted by `shell.ts` before navigation.
 ## Dev12 Rust c420ui boundary
 
 Dev12 Rust migration is c420ui-only.
+Phase 1-2 keep the TypeScript c420ui terminal UI while operational filesystem
+and process work moves to Rust. Phase 3-5 migrate `c420ui-tui` directly after
+final contracts are defined. There is no experimental terminal backend and no
+long-lived optional TypeScript/Rust toggle.
+
+Dev12 Phase 4 routes `runC420UITerminalApp()` through `c420ui-tui run
+--json-lines` as the official terminal runtime. Do not add a terminal backend
+environment switch. Action execution now belongs to `c420ui-host`, but do not
+migrate the workflow registry, dependent-project adapter, Electron runtime,
+toolbar, tabs or CLeyedropper into Rust.
 
 Rust may be introduced under:
 
 ```text
 build-resources/c420ui-rs/
 ```
+
+The first Rust commit may create build-resources/c420ui-rs/ only.
+Do not add Rust code under build-resources/canva-linux or build-resources/electron.
+Do not call Rust from Canva Linux runtime.
+Do not hardcode Canva Linux identity in Rust.
 
 Rust must not migrate, replace, wrap or own Canva Linux runtime code.
 
@@ -92,6 +175,33 @@ Canva Linux release policy.
 
 Rust should provide generic c420ui host-operation commands with stable JSON
 output and stable exit codes.
+
+Dependent projects declare host dependencies in their own config and adapter.
+c420ui resolves those declarations generically. Rust may probe Node.js and
+commands from JSON input, but it must not hardcode dependent-project dependency
+names, app identity, packaging policy, or runtime paths.
+
+Do not hardcode dependent-project dependencies in c420ui core or Rust. Dependent
+projects declare dependencies in their own config, and c420ui resolves them
+generically.
+
+Dev12 c420ui host process execution goes through `c420ui-host run-process
+--json-lines`. Do not reintroduce `spawnSync` as maintained c420ui generic
+process execution. TypeScript remains responsible for workflow policy,
+dependency policy, action execution and dependent-project boundaries; Rust owns
+terminal rendering and interaction through `c420ui-tui`.
+
+Maintenance targets belong to dependent-project config. Do not hardcode cleanup
+targets in c420ui TypeScript, do not reintroduce `fs.rmSync` maintenance
+deletion, and do not run direct `chown` from TypeScript maintenance operations.
+Generic filesystem maintenance belongs to `c420ui-host`.
+
+Install identity, native paths and artifact naming policy belong to the
+dependent project config. Do not hardcode those values in Rust. Do not
+reintroduce `build-resources/c420ui/host/preflight.ts`, Bash command probes, or
+TypeScript filesystem mutation for native install, icon install,
+`linux-unpacked` normalization, AppImage cleanup/find, or checksum sidecar
+writes. Generic mutable filesystem operations belong to `c420ui-host`.
 
 ## c420ui structural ownership and efficiency
 
@@ -416,17 +526,17 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Any `system`/`user` scope action must behave the same in c420ui and direct CLI.
 - Native and Flatpak install flows must expose `system` and `user` scopes.
 - Flatpak user scope must always show a duplication warning.
-- c420ui and CLI must share the same TypeScript action contract.
-- Direct CLI and interactive c420ui actions already route through the c420ui Action Engine.
-- Action execution belongs to the c420ui Action Engine.
+- c420ui and CLI must share the same action contract.
+- Direct CLI and interactive c420ui actions already route through the Rust-backed c420ui Action Engine bridge.
+- Action execution belongs to `c420ui-host action-run --json-lines`.
 - Direct CLI execution belongs to the c420ui CLI bridge.
-- Command execution belongs to the c420ui Command Runner.
-- New action execution policy belongs to the c420ui Action Engine, Root Provider, Command Runner, and operational log policy.
+- Command execution for c420ui actions belongs to `c420ui-host`.
+- New action execution policy belongs to `c420ui-host`, the Root Provider bridge, and operational log policy.
 
 - c420ui owns generic action resolution by id and CLI flag.
 - c420ui owns planned-action and dry-run semantics.
-- Project adapters execute concrete actions but must not reimplement generic action-engine policy.
-- Generic command execution belongs to `build-resources/c420ui/src/command-runner.ts`.
+- Project adapters declare concrete actions but must not execute them or reimplement generic action-engine policy.
+- Generic action command execution belongs to `c420ui-host action-run --json-lines`.
 - c420ui operational command logs must pass through `createC420UIOperationalLogEvent()`.
 - Do not emit raw secrets from command stdout/stderr when using c420ui operational logs.
 - Project adapters must not reimplement stdout/stderr process handling.
@@ -435,8 +545,8 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Project adapters must not prepare action env after the Action Engine/root provider has prepared it.
 - Project adapters must not reimplement command cancellation.
 - Runtime app logs remain separate from c420ui operational command logs.
-- Direct CLI actions must pass through the c420ui CLI bridge.
-- Interactive c420ui actions and direct CLI actions must share the c420ui Action Engine.
+- Direct CLI actions must pass through the c420ui CLI bridge and Rust-backed Action Engine.
+- Interactive c420ui actions and direct CLI actions must share the Rust-backed c420ui Action Engine.
 - Do not bypass the c420ui Action Engine from `canva-linux-c420ui-builder`.
 - Do not reintroduce direct process execution from `build-resources/c420ui/src/terminal/app.ts`.
 - Do not import `./process-runner` from the interactive app after the Action Engine migration.
@@ -462,6 +572,11 @@ c420ui package metadata, the bootstrap hash helper, or the bootstrap builder mus
 - Detection refresh must not clear or override progress results.
 - Progress refresh must not convert a completed action into an error.
 - Installed-version detection must be updated whenever install layout changes.
+- Do not import Canva Linux adapters from c420ui generic operations.
+- Do not reintroduce `spawnSync`-based host runners.
+- Maintenance targets must be declared by the dependent project and passed into generic c420ui operations.
+- Legacy `host/command-runner.ts` and `host/sudo.ts` must not be reintroduced.
+- All maintenance operations must use Rust-based runners for filesystem/sudo tasks.
 
 ## Root/sudo
 

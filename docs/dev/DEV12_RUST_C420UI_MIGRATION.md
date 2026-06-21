@@ -2,25 +2,26 @@
 
 ## Status
 
-Planned.
+Phase 4 in progress. Project adapter config, status panels, bootstrap and
+metadata migration to Rust are active.
 
 ## Goal
 
-Dev12 migrates c420ui host-operation Shell logic to Rust.
+Dev12 moves c420ui host, filesystem, process and terminal ownership toward Rust
+without moving Canva Linux runtime code.
 
-This migration is c420ui-only.
+The boundary remains:
 
-Canva Linux remains ESM/TypeScript.
+- Canva Linux declares project identity, paths and policy.
+- c420ui validates and orchestrates generic workflows.
+- c420ui-host executes host filesystem and process primitives.
+- c420ui-tui becomes the direct terminal UI migration target after operational cleanup.
+- c420ui-host validates and normalizes declarative project adapter config.
+- c420ui-host generates semantic status panels for the Rust TUI.
+- c420ui-host generates bootstrap launchers, manifest metadata, source hashes,
+  settings and session log state.
 
-## Boundary Rule
-
-Rust may be introduced only under c420ui-owned boundaries, starting with:
-
-```text
-build-resources/c420ui-rs/
-```
-
-Rust must not migrate, replace, wrap or own Canva Linux Electron runtime code.
+## Permanent Boundary
 
 Canva Linux remains ESM/TypeScript for:
 
@@ -35,128 +36,226 @@ Canva Linux remains ESM/TypeScript for:
 - project-specific validation
 - Flatpak/AppImage/native integration policy
 
-TypeScript remains owner of:
+Rust must not hardcode Canva Linux identity, app id, Flatpak id, executable
+name, install paths, metadata paths, artifact naming policy or packaging policy.
 
-- c420ui terminal UI
-- Action Engine
-- workflow orchestration
-- workflow registry
-- dependent-project adapters
-- metadata policy
-- validation policy
-- Canva Linux integration boundary
+Rust must not touch Canva Linux runtime, Electron, toolbar, tabs or
+CLeyedropper code.
 
-## Rust May Own
+Do not reintroduce TypeScript project config validation as the source of truth.
+Dependent projects declare JSON; c420ui Rust validates and interprets it.
 
+Status/detection summaries are also a Rust responsibility. Do not reintroduce
+TypeScript status classification or terminal color tags in project adapters.
+
+Bootstrap and metadata are Rust responsibilities. Do not reintroduce heavy
+generated MJS bundles. Bootstrap and metadata belong to `c420ui-host`; MJS files
+are launchers only.
+
+## Roadmap
+
+### Phase 1 - Rust Operational Engine
+
+Build the generic Rust host foundation:
+
+- JSON command contracts
 - host dependency probes
 - command availability checks
-- filesystem probes
-- permission checks
-- safe process execution helpers
-- artifact filesystem inspection
-- install/uninstall execution primitives
-- maintenance operation primitives
+- safe process execution
+- sudo validation
+- maintenance primitives
+- Rust boundary checks
 
-## Rust Must Not Own
+TypeScript still owns the c420ui terminal UI in this phase.
 
-- Canva Linux Electron runtime
-- Canva Linux toolbar
-- Canva Linux tabs
-- Canva Linux CLeyedropper integration
-- Canva Linux project identity
-- Canva Linux packaging policy
-- Canva Linux metadata policy
-- Canva Linux adapter
-- c420ui terminal UI
-- c420ui Action Engine
-- c420ui workflow registry
+### Phase 2 - Remove Remaining TypeScript Operational Filesystem
 
-## Proposed Rust Layout
+Move mutable operational filesystem work out of TypeScript:
+
+- install copy/remove/symlink/chmod/write operations
+- icon installation
+- linux-unpacked normalization
+- AppImage cleanup/find/checksum sidecars
+- Flatpak bundle sidecars where practical
+- preflight command checks
+
+Dependent projects declare install identity and paths in their own config.
+c420ui validates and orders work. c420ui-host performs safe filesystem and
+process operations.
+
+TypeScript still owns the c420ui terminal UI in this phase.
+
+### Phase 3 - Final Rust TUI Contracts
+
+Define the final c420ui-tui contracts before migration:
+
+- terminal event model
+- action rendering contract
+- root prompt contract
+- log rendering contract
+- workflow progress contract
+- settings/state persistence boundary
+- TypeScript adapter boundary
+
+There is no experimental backend and no optional TypeScript/Rust toggle.
+The `c420ui-tui` binary is introduced in this phase as the direct migration
+target. It starts with JSON doctor/render smoke contracts only; the TypeScript
+terminal UI remains wired until direct replacement.
+
+### Phase 4 - Direct c420ui-tui Migration
+
+Move the c420ui terminal UI directly to Rust under the c420ui boundary.
+
+The TypeScript side keeps project adapters, workflow declarations and Canva
+Linux-specific policy. Rust owns the terminal rendering and interaction.
+`runC420UITerminalApp()` now routes through `c420ui-tui run --json-lines` as
+the official terminal runtime.
+
+### Phase 5 - Remove TypeScript TUI and Close Dev12
+
+Remove the old TypeScript terminal UI after c420ui-tui is complete and covered
+by contracts. Close Dev12 once c420ui host operations and terminal UI ownership
+are cleanly split from dependent project policy.
+
+## Active Rust Layout
 
 ```text
 build-resources/c420ui-rs/
   Cargo.toml
-  src/main.rs
+  src/bin/c420ui-host.rs
+  src/bin/c420ui-tui.rs
+  src/lib.rs
   src/commands/
+  src/project/
+  src/status/
   src/host/
-  src/json/
+  src/tui/
   tests/
 ```
 
-This layout is planned only. Dev11 must not create it.
+## Active Commands
 
-## Initial Binary
+- `c420ui-host project-config --json`
+- `c420ui-host status-panels --json`
+- `c420ui-host action-run --json-lines`
 
-```text
-c420ui-host
-```
+`project-config --json` reads `rootDir` and `projectConfigRoot` from stdin,
+loads `actions.json`, `host-dependencies.json`, `dependencies.json`,
+`install-native.json`, `maintenance.json` and `project-ui.json`, then returns
+normalized project metadata plus diagnostics. The command is generic and must
+not hardcode dependent-project identity.
 
-## Initial Commands
+`status-panels --json` reads `overviewStatus` from stdin and returns semantic
+panel lines for Detected Installations, Generated Artifacts, Linux Artifacts and
+Overview. The Rust TUI colors values by `state`; labels keep panel text color.
 
 ```text
 c420ui-host --version
 c420ui-host doctor --json
 c420ui-host host-info --json
+c420ui-host check-host-dependencies --json
+c420ui-host run-process --json-lines
+c420ui-host fix-permissions --json
+c420ui-host remove-paths --json
+c420ui-host fs-ops --json
+c420ui-host ensure-linux-unpacked --json
+c420ui-host artifact-file-ops --json
+c420ui-host clipboard-write --json
+c420ui-host action-run --json-lines
+c420ui-tui --version
+c420ui-tui doctor --json
+c420ui-tui render --json
+c420ui-tui run --json-lines
 ```
 
-## TypeScript Bridge
+## Phase 4 TUI Runtime Contract
 
-The bridge belongs to c420ui:
+Dev12 now starts the direct TUI migration. `runC420UITerminalApp()` routes
+through `c420ui-tui` as the official terminal runtime. There is no experimental
+backend switch and no TypeScript/Rust optional toggle.
 
-```text
-build-resources/c420ui/src/rust-host.ts
-```
+Dev12 now requires the Rust TUI to preserve the visual contract of the legacy
+TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it
+must match the legacy layout, theme, panels, focus behavior, footer, progress
+bar, logs, and root prompt before the TypeScript TUI can be removed.
 
-Responsibilities:
+Dev12 now also requires legacy interaction parity. The Rust TUI must keep the
+same keyboard shortcuts, panel scrolling, settings toggles, F5 log copy, root
+prompt retry behavior, session log behavior and post-action status refresh.
+`c420ui-tui` remains the official runtime; the TypeScript/Blessed TUI must not
+return as a backend.
 
-- locate the Rust binary
-- execute commands with timeout
-- parse JSON
-- normalize errors
-- keep stderr safe
-- preserve dry-run behavior
-- keep Canva Linux-specific policy outside Rust
+Dev12 stabilizes the Rust TUI behavior after the visual parity port. The session
+log now belongs to c420ui under `/tmp/c420ui`, Doctor / Host Tools is restored
+through `c420ui-host`, running actions lock the menu and expose an interruption
+confirmation modal, progress states use strict success/warning/error colors,
+scroll/wrapping is restored for overview/logs/artifact panels, and status
+panels now color only values while preserving label colors.
 
-## Migration Order
+Dev12 test coverage was reorganized after the Rust host/TUI migration. Tests now
+protect c420ui-host, c420ui-tui, the Rust Action Engine bridge, and the
+dependent-project boundary instead of the removed Blessed/spawnSync/sudo runner
+paths.
 
-1. Add Rust scaffold and JSON contracts.
-2. Add TypeScript bridge.
-3. Move host dependency probes.
-4. Move command/filesystem probes.
-5. Move artifact filesystem inspection.
-6. Move maintenance operation primitives.
-7. Move install/uninstall execution primitives.
-8. Remove remaining Shell ownership of c420ui operational logic.
+Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is
+now the only terminal UI runtime, while TypeScript remains responsible for
+Action Engine, bridge contracts, settings, clipboard and project integration.
 
-## Future Boundary Check
+Dev12 moves c420ui clipboard writes to `c420ui-host`. F5 Copy Logs now delegates
+host clipboard integration to Rust, removing shell-based clipboard probing from
+the TypeScript terminal bridge.
 
-Dev12 should add:
+Dev12 starts the Rust Action Engine migration. `c420ui-host` now owns action
+resolution, lifecycle events, command execution, cancellation and root request
+orchestration through `action-run --json-lines`. TypeScript remains only a thin
+bridge for TUI integration and project-provided contracts.
 
-```text
-check:c420ui-rs-boundary
-```
+Do not reintroduce TypeScript action execution. Action execution belongs to
+`c420ui-host`; TypeScript may only marshal config/events until the adapter and
+config migration removes the bridge.
 
-The check must fail if `build-resources/c420ui-rs/` contains hardcoded
-dependent-project fragments such as:
+The legacy TypeScript TUI remains only until Phase 5 removal.
 
-- Canva Linux
-- canva-linux
-- io.github.coletivo420.canva-linux
-- build-resources/electron
-- build-resources/canva-linux
-- CLeyedropper
-- toolbar
-- Electron runtime paths
-- Flatpak/AppImage project policy
+## Phase 2 Filesystem Contract
 
-Rust must remain generic c420ui infrastructure.
+Dev12 now continues Phase 2 by moving install and artifact filesystem
+operations to c420ui-host. Dependent projects declare install identity and
+paths; c420ui validates and orchestrates; Rust performs safe filesystem
+operations. The Dev12 roadmap now includes direct c420ui-tui migration after
+operational cleanup, with no experimental backend phase.
+
+Phase 2 acceptance:
+
+- `build-resources/c420ui/host/preflight.ts` is removed.
+- native install uses `rust-fs`.
+- icon install uses `rust-fs`.
+- linux-unpacked normalization uses Rust and preserves the selected architecture name.
+- AppImage cleanup/find/checksum sidecars use Rust host operations.
+- c420ui operations do not hardcode Canva Linux install identity.
+- Canva Linux declares install identity and paths in dependent config.
+- Rust contains no Canva Linux identity.
 
 ## Data Contract
 
-Rust must communicate with TypeScript through:
+Rust communicates with TypeScript through:
 
 - stdin/stdout JSON
+- JSON-lines for streaming process events
 - stable exit codes
 - safe stderr
+- no shell interpretation for structured commands
 - no project secrets
-- no hardcoded Canva Linux identity
+- no hardcoded dependent-project identity
+
+## Not In Dev12 Runtime Scope
+
+Do not migrate these Canva Linux runtime areas in Dev12:
+
+- Electron runtime
+- toolbar
+- tabs
+- CLeyedropper
+- Canva Linux adapter policy
+- Canva Linux packaging policy
+
+Do not remove the legacy TypeScript terminal UI before Phase 5.

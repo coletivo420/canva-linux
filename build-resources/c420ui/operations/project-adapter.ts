@@ -9,4 +9,5 @@ export type C420UIProjectOperationsAdapter = {
   flatpakManifestPath: string;
   flathubManifestPath: string;
   buildMetadataPath: string;
+  nativeInstallConfigPath: string;
 };

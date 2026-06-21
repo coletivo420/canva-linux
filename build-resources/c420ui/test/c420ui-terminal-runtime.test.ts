@@ -1,10 +1,14 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import test from "node:test";
 
 import type { c420uiProjectBridge } from "../src/index.js";
-import type { C420UIAppOptions } from "../src/terminal/app.js";
+import type { C420UIAppOptions } from "../src/terminal/app-options.js";
 import { formatC420UITerminalHelp } from "../src/terminal/help.js";
 import { runC420UITerminalApp } from "../src/terminal/runtime.js";
+
+const rootDir = process.env.CANVA_TEST_REPO_ROOT || process.cwd();
 
 function createRuntimeOptions(): C420UIAppOptions {
   const bridge: c420uiProjectBridge = {
@@ -47,8 +51,8 @@ function createRuntimeOptions(): C420UIAppOptions {
   };
 }
 
-test("runC420UITerminalApp blocks root before createApp", () => {
-  let created = false;
+test("runC420UITerminalApp blocks root before starting c420ui-tui", () => {
+  let started = false;
   let exitCode: number | undefined;
   const messages: string[] = [];
 
@@ -63,43 +67,34 @@ test("runC420UITerminalApp blocks root before createApp", () => {
           exitCode = code;
           throw new Error("exit");
         },
-        create() {
-          created = true;
-          throw new Error("createApp must not run");
-        },
-        onUncaughtException() {
-          throw new Error("uncaught handler must not be registered");
+        runRustTuiApp() {
+          started = true;
+          throw new Error("c420ui-tui must not start");
         },
       }),
     /exit/,
   );
 
-  assert.equal(created, false);
+  assert.equal(started, false);
   assert.equal(exitCode, 1);
   assert.match(messages[0] ?? "", /Example Project/);
 });
 
-test("runC420UITerminalApp creates the terminal UI for non-root launches", () => {
-  let created = false;
-  let uncaughtHandlerRegistered = false;
+test("runC420UITerminalApp starts the Rust TUI for non-root launches", () => {
+  let started = false;
 
   runC420UITerminalApp(createRuntimeOptions(), {
     getuid: () => 1000,
     exit(code) {
       throw new Error(`unexpected exit ${code}`);
     },
-    create() {
-      created = true;
-      return { destroy() {} } as never;
-    },
-    onUncaughtException() {
-      uncaughtHandlerRegistered = true;
-      return process;
+    runRustTuiApp(options) {
+      started = true;
+      assert.equal(options.config.project.projectName, "Example Project");
     },
   });
 
-  assert.equal(created, true);
-  assert.equal(uncaughtHandlerRegistered, true);
+  assert.equal(started, true);
 });
 
 test("formatC420UITerminalHelp includes the project name and launcher command", () => {
@@ -113,11 +108,10 @@ test("formatC420UITerminalHelp includes the project name and launcher command", 
   assert.match(help, /\.\/example-project\.sh --ui/);
 });
 
-test("runC420UITerminalApp uses injected error writer and exit for uncaught exceptions", () => {
-  let uncaughtHandler: ((error: Error) => void) | undefined;
-  let destroyed = false;
+test("runC420UITerminalApp passes error writer and exit to the Rust TUI runner", () => {
   const messages: string[] = [];
-  let exitCode: number | undefined;
+  let receivedWriteError: ((message: string) => void) | undefined;
+  let receivedExit: ((code: number) => never) | undefined;
 
   runC420UITerminalApp(createRuntimeOptions(), {
     getuid: () => 1000,
@@ -125,25 +119,59 @@ test("runC420UITerminalApp uses injected error writer and exit for uncaught exce
       messages.push(message);
     },
     exit(code) {
-      exitCode = code;
       throw new Error("exit");
     },
-    create() {
-      return {
-        destroy() {
-          destroyed = true;
-        },
-      } as never;
-    },
-    onUncaughtException(listener) {
-      uncaughtHandler = listener;
-      return process;
+    runRustTuiApp(options) {
+      receivedWriteError = options.writeError;
+      receivedExit = options.exit;
     },
   });
 
-  assert.ok(uncaughtHandler);
-  assert.throws(() => uncaughtHandler?.(new Error("boom")), /exit/);
-  assert.equal(destroyed, true);
-  assert.equal(exitCode, 1);
-  assert.match(messages[0] ?? "", /boom/);
+  receivedWriteError?.("boom");
+  assert.equal(messages[0], "boom");
+  assert.throws(() => receivedExit?.(1), /exit/);
+});
+
+test("legacy Blessed terminal runtime files are removed", () => {
+  for (const relativePath of [
+    "build-resources/c420ui/src/terminal/app.ts",
+    "build-resources/c420ui/src/terminal/blessed-widgets.ts",
+    "build-resources/c420ui/src/terminal/modal.ts",
+  ]) {
+    assert.equal(fs.existsSync(path.join(rootDir, relativePath)), false, `${relativePath} must not exist`);
+  }
+});
+
+test("terminal public index exposes Rust runtime types without createApp", () => {
+  const source = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/src/terminal/index.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /C420UIAppOptions/);
+  assert.match(source, /runC420UITerminalApp/);
+  assert.doesNotMatch(source, /createApp|HeaderLayout|\.\/app\.js/);
+});
+
+test("terminal build and bootstrap recipe do not externalize Blessed runtime packages", () => {
+  const packageJson = fs.readFileSync(path.join(rootDir, "package.json"), "utf8");
+  const bootstrapRecipe = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/bootstrap/build-recipe.ts"),
+    "utf8",
+  );
+
+  assert.doesNotMatch(packageJson, /--external:blessed/);
+  assert.doesNotMatch(bootstrapRecipe, /"blessed"|"term\.js"|"pty\.js"/);
+});
+
+test("node test wrapper forces exit after emitting the final summary", () => {
+  const source = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/scripts/run-node-tests.ts"),
+    "utf8",
+  );
+
+  assert.match(source, /"--test-concurrency=1"/);
+  assert.match(source, /"--test-force-exit"/);
+  assert.match(source, /arg !== "--test-force-exit"/);
+  assert.match(source, /!arg\.startsWith\("--test-concurrency"\)/);
 });

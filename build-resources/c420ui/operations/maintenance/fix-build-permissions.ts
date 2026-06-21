@@ -1,29 +1,35 @@
-import fs from "node:fs";
-import { parseDryRun } from "../../host/dry-run.js";
-import { c420uiSudoRun } from "../../host/sudo.js";
-import { ok, warn } from "../../host/ui.js";
-import { projectRoot } from "../../host/paths.js";
+import type { c420uiMaintenanceConfig } from "../../src/maintenance-config.js";
+import { info, ok } from "../../host/ui.js";
+import { runC420UIRustFixPermissions } from "../../src/rust-maintenance.js";
 
-const ALLOWED = [".build", "dist", "build-dir", "repo", ".flatpak-builder"];
+export async function runC420UIFixBuildPermissions(options: {
+  rootDir: string;
+  maintenance: c420uiMaintenanceConfig;
+  user: string;
+  group?: string | null;
+  dryRun?: boolean;
+  env?: NodeJS.ProcessEnv;
+}): Promise<void> {
+  const { rootDir, maintenance, user, group, dryRun, env } = options;
+  const targets = maintenance.permissionTargets ?? [];
 
-export function runFixBuildPermissions(argv: string[]): void {
-  const { dryRun } = parseDryRun(argv);
-  const rootDir = projectRoot();
-  const realUser = process.env.SUDO_USER || process.env.USER;
-  if (!realUser) throw new Error("Unable to resolve target user for ownership restoration");
+  const result = await runC420UIRustFixPermissions({
+    rootDir,
+    targets,
+    user,
+    group,
+    dryRun,
+    env,
+  });
 
-
-  for (const dir of ALLOWED) {
-    const absolute = `${rootDir}/${dir}`;
-    if (!fs.existsSync(absolute)) continue;
-    if (fs.lstatSync(absolute).isSymbolicLink()) {
-      warn(`Skipping symlink: ${dir}`);
-      continue;
+  for (const item of result.updated ?? []) {
+    if (item.status === "planned") {
+      info(`[dry-run] chown -R ${user} ${item.target}`);
+    } else if (item.status === "updated") {
+      ok(`Restored ownership: ${item.target}`);
+    } else if (item.status === "missing") {
+      info(`Skipping missing target: ${item.target}`);
     }
-
-    const status = c420uiSudoRun("chown", ["-R", `:`, absolute], { dryRun });
-    if (status !== 0) throw new Error(`Failed to restore ownership: ${dir}`);
-    ok(`Restored ownership: ${dir}`);
   }
 
   ok("Permission fix completed.");

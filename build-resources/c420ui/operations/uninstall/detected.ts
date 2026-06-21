@@ -5,7 +5,7 @@ import { detectInstallations } from "../detection/install-detection.js";
 import { runNativeUninstall } from "./native.js";
 import { runFlatpakUninstall } from "./flatpak.js";
 
-export function runDetectedUninstall(argv: string[]): void {
+export async function runDetectedUninstall(argv: string[]): Promise<void> {
   const rootDir = projectRoot();
   const { dryRun } = parseDryRun(argv);
   const detected = detectInstallations(rootDir);
@@ -23,25 +23,25 @@ export function runDetectedUninstall(argv: string[]): void {
   if (detected.DETECTED_NATIVE_SYSTEM) {
     const prev = process.env.CANVA_NATIVE_SCOPE;
     process.env.CANVA_NATIVE_SCOPE = "system";
-    runNativeUninstall(dryRun ? ["--dry-run"] : []);
+    await runNativeUninstall(dryRun ? ["--dry-run"] : []);
     process.env.CANVA_NATIVE_SCOPE = prev;
   }
   if (detected.DETECTED_NATIVE_USER) {
     const prev = process.env.CANVA_NATIVE_SCOPE;
     process.env.CANVA_NATIVE_SCOPE = "user";
-    runNativeUninstall(dryRun ? ["--dry-run"] : []);
+    await runNativeUninstall(dryRun ? ["--dry-run"] : []);
     process.env.CANVA_NATIVE_SCOPE = prev;
   }
   if (detected.DETECTED_FLATPAK_SYSTEM) {
     const prev = process.env.CANVA_FLATPAK_SCOPE;
     process.env.CANVA_FLATPAK_SCOPE = "system";
-    runFlatpakUninstall(dryRun ? ["--dry-run"] : []);
+    await runFlatpakUninstall(dryRun ? ["--dry-run"] : []);
     process.env.CANVA_FLATPAK_SCOPE = prev;
   }
   if (detected.DETECTED_FLATPAK_USER) {
     const prev = process.env.CANVA_FLATPAK_SCOPE;
     process.env.CANVA_FLATPAK_SCOPE = "user";
-    runFlatpakUninstall(dryRun ? ["--dry-run"] : []);
+    await runFlatpakUninstall(dryRun ? ["--dry-run"] : []);
     process.env.CANVA_FLATPAK_SCOPE = prev;
   }
 

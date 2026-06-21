@@ -3,9 +3,9 @@ import { runDetectedUninstall } from "../uninstall/detected.js";
 import { runResetUserData } from "./reset-user-data.js";
 import { ok } from "../../host/ui.js";
 
-export function runPurge(argv: string[]): void {
+export async function runPurge(argv: string[]): Promise<void> {
   const { dryRun } = parseDryRun(argv);
-  runDetectedUninstall(dryRun ? ["--dry-run"] : []);
-  runResetUserData(dryRun ? ["--dry-run"] : []);
+  await runDetectedUninstall(dryRun ? ["--dry-run"] : []);
+  await runResetUserData(dryRun ? ["--dry-run"] : []);
   ok("User data removed for Flatpak and Native paths");
 }

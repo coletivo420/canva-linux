@@ -1,0 +1,37 @@
+{
+  "node": {
+    "required": true,
+    "minimumMajor": 22
+  },
+  "commands": [
+    {
+      "id": "git",
+      "command": "git",
+      "required": true,
+      "requiredFor": ["development", "build", "release"],
+      "installHint": "Install git through your distribution package manager."
+    },
+    {
+      "id": "npm",
+      "command": "npm",
+      "required": true,
+      "requiredFor": ["terminal", "cli", "development", "build"],
+      "installHint": "Install npm with Node.js."
+    }
+  ],
+  "npm": {
+    "packageManager": "npm",
+    "lockfile": "package-lock.json",
+    "installStrategy": "auto",
+    "includeDev": true,
+    "requiredDevDependencies": [
+      "esbuild",
+      "typescript",
+      "electron",
+      "electron-builder",
+      "eslint",
+      "@typescript-eslint/parser",
+      "@typescript-eslint/eslint-plugin"
+    ]
+  }
+}

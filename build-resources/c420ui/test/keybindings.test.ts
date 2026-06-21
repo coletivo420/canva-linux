@@ -8,11 +8,13 @@ const terminalSourceDir = path.join(rootDir, "build-resources/c420ui/src/termina
 const terminalSources = fs.readdirSync(terminalSourceDir)
   .filter((file) => file.endsWith(".ts"))
   .map((file) => [file, fs.readFileSync(path.join(terminalSourceDir, file), "utf8")] as const);
-const appSource = terminalSources.find(([file]) => file === "app.ts")?.[1] ?? "";
+const rustContractsSource = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-tui-contracts.ts"), "utf8");
+const rustRunnerSource = fs.readFileSync(path.join(rootDir, "build-resources/c420ui/src/rust-tui-runner.ts"), "utf8");
+const rustInputSource = fs.readFileSync(path.join(rootDir, "build-resources/c420ui-rs/src/tui/input.rs"), "utf8");
 
-test("screen does not bind F6 to plain logs", () => {
-  assert.doesNotMatch(appSource, /screen\.key\(\["f6"\]/);
-  assert.doesNotMatch(appSource, /plain logs/i);
+test("Rust TUI input does not bind F6 to plain logs", () => {
+  assert.doesNotMatch(rustInputSource, /F\(6\)|f6/i);
+  assert.doesNotMatch(rustContractsSource, /plain logs/i);
 });
 
 test("plain logs mode is not referenced by c420ui terminal source", () => {
@@ -22,9 +24,10 @@ test("plain logs mode is not referenced by c420ui terminal source", () => {
 });
 
 test("copy logs remains available", () => {
-  assert.match(appSource, /"\{bold\}F5\{\/bold\} Copy Logs"/);
-  assert.match(appSource, /screen\.key\(\["f5"\]/);
-  assert.match(appSource, /copyTextToClipboard\(logHistory\.join/);
+  assert.match(rustContractsSource, /F5 Copy Logs/);
+  assert.match(rustInputSource, /KeyCode::F\(5\)/);
+  assert.match(rustRunnerSource, /event\.event === "copy-logs"/);
+  assert.match(rustRunnerSource, /copyTextToClipboard\(collectLogCopyText\(logHistory, sessionLogPath\)\)/);
 });
 
 test("docs do not mention F6 Plain Logs as supported", () => {

@@ -1,5 +1,4 @@
-export { createApp } from "./app.js";
-export type { C420UIAppOptions, HeaderLayout } from "./app.js";
+export type { C420UIAppOptions } from "./app-options.js";
 export {
   formatC420UITerminalHelp,
   printC420UITerminalHelp,

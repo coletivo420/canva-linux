@@ -386,13 +386,6 @@
     },
     {
       "type": "file",
-      "url": "https://registry.npmjs.org/@types/blessed/-/blessed-0.1.27.tgz",
-      "dest-filename": "@types-blessed-blessed-0.1.27.tgz",
-      "dest": "npm-cache",
-      "sha512": "64e4068cbbd60dc9405e9d2b5b98ae5015de0fa1abd4f922b4deed8fbfc6f050a84b34ec8a3e8e857bac3b330a870ad9f5894bd8f9aed1deb127dcd5be4f87b2"
-    },
-    {
-      "type": "file",
       "url": "https://registry.npmjs.org/@types/cacheable-request/-/cacheable-request-6.0.3.tgz",
       "dest-filename": "@types-cacheable-request-cacheable-request-6.0.3.tgz",
       "dest": "npm-cache",
@@ -719,13 +712,6 @@
       "dest-filename": "base64-js-1.5.1.tgz",
       "dest": "npm-cache",
       "sha512": "00aa5a6251e7f2de1255b3870b2f9be7e28a82f478bebb03f2f6efadb890269b3b7ca0d3923903af2ea38b4ad42630b49336cd78f2f0cf1abc8b2a68e35a9e58"
-    },
-    {
-      "type": "file",
-      "url": "https://registry.npmjs.org/blessed/-/blessed-0.1.81.tgz",
-      "dest-filename": "blessed-0.1.81.tgz",
-      "dest": "npm-cache",
-      "sha512": "2e817981a7be86599f391706d4ce7ee57662e0b066be55d3cf0256cd494faf237f4897527e566f44e3364f0913d06329abba2a4f8f0d45de064bb06254173939"
     },
     {
       "type": "file",

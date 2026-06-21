@@ -20,6 +20,26 @@ host-operation executor after the Dev11 merge.
 This Rust area is not for Canva Linux Electron runtime, toolbar, tabs,
 CLeyedropper, packaging policy or project-specific adapters.
 
+Dev12 Rust project config now lives under `build-resources/c420ui-rs/src/project`.
+`c420ui-host project-config --json` validates and normalizes dependent-project
+JSON declarations for actions, dependencies, install, maintenance and UI
+metadata. TypeScript wrappers may call the command, but must not duplicate that
+validation as the source of truth.
+
+Dev12 Rust status panel generation lives under `build-resources/c420ui-rs/src/status`.
+`c420ui-host status-panels --json` emits semantic Detected Installations,
+Generated Artifacts, Linux Artifacts and Overview panels. TypeScript wrappers
+may transport the response, but must not own status classification or terminal
+color tags.
+
+Dev12 Rust bootstrap and metadata handling lives under
+`build-resources/c420ui-rs/src/bootstrap`,
+`build-resources/c420ui-rs/src/settings`, and
+`build-resources/c420ui-rs/src/session_log`. `c420ui-host` generates bootstrap
+launchers, manifests, source hashes, settings state and session logs. Generated
+MJS artifacts under `build-resources/c420ui/bootstrap/generated` must remain
+thin launchers.
+
 ## Files
 
 - `.codex`
@@ -173,6 +193,5 @@ CLeyedropper, packaging policy or project-specific adapters.
 - `build-resources/config/typescript/tsconfig.build.json`
 - `build-resources/config/typescript/tsconfig.json`
 - `build-resources/config/typescript/tsconfig.strict.json`
-- `build-resources/c420ui/types/blessed.d.ts`
 
 - `build-resources/c420ui/scripts/c420ui-builder.ts`

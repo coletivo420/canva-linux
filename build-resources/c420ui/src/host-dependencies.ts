@@ -46,6 +46,8 @@ export type c420uiHostDependencyEnsureOptions = {
   rootDir: string;
   env?: NodeJS.ProcessEnv;
   dryRun?: boolean;
+  emitLog?: (event: import("./events.js").c420uiLogEvent) => void;
+  emitProgress?: (event: import("./events.js").c420uiProgressEvent) => void;
 };
 
 export type c420uiHostDependencyCheckStatus =

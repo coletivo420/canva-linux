@@ -17,9 +17,9 @@ test("detectInstallations includes source hashes when metadata is available", ()
   fs.writeFileSync(
     metadataPath,
     JSON.stringify({
-      baseVersion: "0.1.4-15.Dev.11",
-      baseDisplayVersion: "0.1.4-15.Dev.11",
-      basePhase: "0.1.4-15.Dev.11",
+      baseVersion: "0.1.4-15.Dev.12",
+      baseDisplayVersion: "0.1.4-15.Dev.12",
+      basePhase: "0.1.4-15.Dev.12",
       canvaLinuxSourceHash: testHash,
     }),
   );
@@ -30,13 +30,13 @@ test("detectInstallations includes source hashes when metadata is available", ()
 
   const distDir = path.join(tmpDir, "dist");
   fs.mkdirSync(distDir, { recursive: true });
-  const appImagePath = path.join(distDir, "canva-linux-0.1.4-15.Dev.11-x86_64.AppImage");
+  const appImagePath = path.join(distDir, "canva-linux-0.1.4-15.Dev.12-x86_64.AppImage");
   fs.writeFileSync(appImagePath, "fake appimage");
   fs.writeFileSync(`${appImagePath}.build-metadata.json`, JSON.stringify({
     canvaLinuxSourceHash: testHash,
-    baseVersion: "0.1.4-15.Dev.11",
-    baseDisplayVersion: "0.1.4-15.Dev.11",
-    basePhase: "0.1.4-15.Dev.11",
+    baseVersion: "0.1.4-15.Dev.12",
+    baseDisplayVersion: "0.1.4-15.Dev.12",
+    basePhase: "0.1.4-15.Dev.12",
   }));
 
   try {

@@ -27,5 +27,6 @@ export function createCanvaLinuxOperationsAdapter(
     flatpakManifestPath: "io.github.coletivo420.canva-linux.yml",
     flathubManifestPath: "build-resources/canva-linux/packaging/flathub/manifest.yml",
     buildMetadataPath: "build-resources/canva-linux/config/build-metadata.json",
+    nativeInstallConfigPath: "build-resources/canva-linux/config/install-native.json",
   };
 }

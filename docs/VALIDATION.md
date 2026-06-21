@@ -1,4 +1,98 @@
-# Validation Checklist (0.1.4-15.Dev.11)
+# Validation Checklist (0.1.4-15.Dev.12)
+
+## Dev12 Rust bootstrap and metadata contract
+
+`c420ui-host` owns bootstrap, manifest metadata, source hashes, settings and
+session log handling. Generated MJS artifacts are thin launchers for
+`c420ui-host`/`c420ui-tui`; they must not carry bundled Action Engine,
+adapter/config parser, TUI, status summaries, or manifest/hash builder logic.
+
+Do not reintroduce heavy generated MJS bundles. Bootstrap and metadata belong
+to `c420ui-host`; MJS files are launchers only.
+
+Focused gates:
+
+- `npm run build:c420ui-rs`
+- `npm run build:c420ui-bootstrap`
+- `npm run test:c420ui-rs`
+- `npm run test:c420ui`
+- `npm run check:c420ui-core`
+- `npm run check:c420ui-bootstrap-artifacts`
+- `npm run check:dev12-rust`
+
+## Dev12 Rust status panels contract
+
+`c420ui-host status-panels --json` owns overview/status/detection summaries.
+Rust generates semantic panels for Detected Installations, Generated Artifacts,
+Linux Artifacts and Overview content. `c420ui-tui` renders label/value state
+colors from semantic line state.
+
+Status/detection summaries are a Rust responsibility. Do not reintroduce
+TypeScript status classification or terminal color tags in project adapters.
+
+Focused gates:
+
+- `npm run test:c420ui-rs`
+- `npm run test:c420ui`
+- `npm run check:c420ui-core`
+- `npm run check:dev12-rust`
+
+## Dev12 Rust project config contract
+
+`c420ui-host project-config --json` is now the source of truth for declarative
+project adapter configuration. Canva Linux declares `actions.json`,
+`host-dependencies.json`, `dependencies.json`, `install-native.json`,
+`maintenance.json` and `project-ui.json`; c420ui Rust validates, normalizes and
+exposes those values to the Action Engine and TUI bridge.
+
+Do not reintroduce TypeScript project config validation as the source of truth.
+Dependent projects declare JSON; c420ui Rust validates and interprets it.
+
+Focused gates:
+
+- `npm run build:c420ui-rs`
+- `npm run test:c420ui-rs`
+- `npm run check:c420ui-rs-boundary`
+- `npm run check:c420ui-core`
+- `npm run test:c420ui`
+
+## Dev12 Rust TUI visual contract
+
+Dev12 now requires the Rust TUI to preserve the visual contract of the legacy
+TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it
+must match the legacy layout, theme, panels, focus behavior, footer, progress
+bar, logs, and root prompt before the TypeScript TUI can be removed.
+
+Dev12 continues the direct Rust TUI migration by restoring legacy interaction
+parity: full keyboard shortcuts, panel scrolling, settings toggles, log copy,
+root prompt retries, session log behavior and post-action status refresh.
+`c420ui-tui` remains the official runtime; the TypeScript/Blessed TUI must not
+return as a backend.
+
+Dev12 stabilizes the Rust TUI behavior after the visual parity port. The session
+log now belongs to c420ui under `/tmp/c420ui`, Doctor / Host Tools is restored
+through `c420ui-host`, running actions lock the menu and expose an interruption
+confirmation modal, progress states use strict success/warning/error colors,
+scroll/wrapping is restored for overview/logs/artifact panels, and status
+panels now color only values while preserving label colors.
+
+Dev12 test coverage was reorganized after the Rust host/TUI migration. Tests now
+protect c420ui-host, c420ui-tui, the Rust Action Engine bridge, and the
+dependent-project boundary instead of the removed Blessed/spawnSync/sudo runner
+paths.
+
+Dev12 removes the legacy Blessed/TypeScript terminal runtime. `c420ui-tui` is
+now the only terminal UI runtime, while TypeScript remains responsible for
+Action Engine, bridge contracts, settings, clipboard and project integration.
+
+Dev12 moves c420ui clipboard writes to `c420ui-host`. F5 Copy Logs now delegates
+host clipboard integration to Rust, removing shell-based clipboard probing from
+the TypeScript terminal bridge.
+
+Dev12 starts the Rust Action Engine migration. `c420ui-host` now owns action
+resolution, lifecycle events, command execution, cancellation and root request
+orchestration through `action-run --json-lines`. TypeScript remains only a thin
+bridge for TUI integration and project-provided contracts.
 
 ## Dev11 ESM-only validation policy (FINALIZED)
 
@@ -65,6 +159,17 @@ Dev12 or later.
 ## Dev12 Rust c420ui migration validation preview
 
 Dev12 introduces Rust only as the c420ui host-operation execution layer.
+The roadmap is direct: Phase 1-2 keep the TypeScript terminal UI while
+operational filesystem/process work moves to Rust; Phase 3-5 define and migrate
+`c420ui-tui` directly. There is no experimental backend phase and no optional
+TypeScript/Rust terminal toggle.
+
+Dev12 now starts Phase 4 of the direct TUI migration. `runC420UITerminalApp`
+routes through `c420ui-tui run --json-lines` as the official terminal runtime.
+There is no experimental backend switch and no TypeScript/Rust optional toggle.
+TypeScript remains the action/workflow/controller layer while Rust owns terminal
+rendering, interaction, action selection, visual logs/progress and the root
+prompt. The legacy TypeScript TUI remains only until Phase 5 removal.
 
 Canva Linux remains ESM/TypeScript for:
 
@@ -79,11 +184,54 @@ Canva Linux remains ESM/TypeScript for:
 - Flatpak/AppImage/native integration policy
 - project-specific validation
 
-Rust validation will start with:
+Rust validation starts with:
 
-- `cargo fmt`
-- `cargo clippy`
-- `cargo test`
+- `cargo fmt --manifest-path build-resources/c420ui-rs/Cargo.toml --check`
+- `cargo clippy --manifest-path build-resources/c420ui-rs/Cargo.toml -- -D warnings`
+- `cargo test --manifest-path build-resources/c420ui-rs/Cargo.toml`
+- `npm run build:c420ui-host`
+- `npm run build:c420ui-tui`
+- `npm run build:c420ui-terminal`
+- `npm run check:c420ui-tui`
+- `npm run check:c420ui-rs-boundary`
+- `npm run check:c420ui-rs`
+- `npm run check:dev12-rust`
+
+These checks are Dev12 Rust scaffold checks and are not yet part of the global validation chain until the Rust toolchain requirement is confirmed.
+
+Dependent projects now declare host dependencies through their adapter/config.
+c420ui resolves those dependencies and routes generic host probes through
+`c420ui-host`. Canva Linux only declares what it needs; it does not resolve host
+dependencies directly.
+
+Dev12 also routes generic c420ui host process execution through
+`c420ui-host run-process --json-lines`. TypeScript remains responsible for the
+terminal UI during Phase 1-2, plus workflow policy, dependency policy and
+dependent-project boundaries.
+Legacy synchronous host runners (`spawnSync`) and the `host/command-runner.ts`
+abstraction are removed in favor of the async Rust-based runners.
+
+Maintenance validation:
+
+```bash
+npm run maintenance:clean -- --dry-run
+npm run maintenance:fix-permissions -- --dry-run
+```
+
+Maintenance targets must come from dependent-project config. c420ui validates
+and orchestrates those targets; `c420ui-host` performs generic filesystem and
+sudo operations. Validation includes accurate reporting of missing, planned,
+removed and updated statuses.
+
+Install and artifact filesystem validation:
+
+- Native install identity and paths come from dependent-project config.
+- Native install filesystem writes and icon installation use `c420ui-host fs-ops`.
+- `linux-unpacked` normalization uses `c420ui-host ensure-linux-unpacked` and
+  preserves the generated directory name.
+- AppImage cleanup/find and checksum sidecar writes use Rust host commands.
+- `build-resources/c420ui/host/preflight.ts` must not exist.
+
 - TypeScript wrapper tests
 - JSON contract tests between TypeScript and Rust
 
@@ -180,8 +328,8 @@ c420ui bootstrap must be covered by the c420ui bootstrap source-hash input list.
 
 The c420ui input dialog must close via textbox cancel using setImmediate, keeping overlay Escape as fallback and avoiding redundant textbox Escape handlers.
 
-- Native User: detected v0.1.4-15.Dev.11+g...
-- AppImage: detected v0.1.4-15.Dev.11+g...
+- Native User: detected v0.1.4-15.Dev.12+g...
+- AppImage: detected v0.1.4-15.Dev.12+g...
 - Flatpak System/User continuam exibindo +gHASH.
 
 Verify metadata installation:
@@ -211,8 +359,8 @@ Check that c420ui renders generated artifacts from the registry, preferring effe
 
 ```text
 Generated Artifacts
-  Flatpak bundle: detected v0.1.4-15.Dev.11+g...
-  AppImage:       detected v0.1.4-15.Dev.11+g...
+  Flatpak bundle: detected v0.1.4-15.Dev.12+g...
+  AppImage:       detected v0.1.4-15.Dev.12+g...
 ```
 
 ## Dev.8 pinned home tab-strip guardrail
@@ -281,8 +429,8 @@ For the builder naming contract, see [c420ui Builder Alias Policy](c420ui/BUILDE
 
 Current target:
 
-- Version: `0.1.4-15.Dev.11 (Alpha)`
-- Release: `v0.1.4-15.Dev.11`
+- Version: `0.1.4-15.Dev.12 (Alpha)`
+- Release: `v0.1.4-15.Dev.12`
 - Versioning rule: `N.N.N-X` with optional `.Dev.N` development phase suffixes
 
 ## Detected Installations version visibility
@@ -300,11 +448,11 @@ The broken Plain Logs mode was removed from c420ui. The normal logs panel remain
 
 The validation baseline protects these release facts:
 
-- `package.json` version is `0.1.4-15.Dev.11`.
-- `package-lock.json` top-level version is `0.1.4-15.Dev.11`.
-- `package-lock.json` root package version is `0.1.4-15.Dev.11`.
+- `package.json` version is `0.1.4-15.Dev.12`.
+- `package-lock.json` top-level version is `0.1.4-15.Dev.12`.
+- `package-lock.json` root package version is `0.1.4-15.Dev.12`.
 - `build-resources/canva-linux/assets/metainfo/io.github.coletivo420.canva-linux.metainfo.xml` contains release `0.1.4-14`.
-- Active release docs point to `v0.1.4-15.Dev.11`.
+- Active release docs point to `v0.1.4-15.Dev.12`.
 - Forbidden release identities include `0.1.4-dev.14`, `0.1.4-rc.14`, and `0.1.4.14`.
 
 ## Validation tiers
@@ -450,7 +598,7 @@ Generated dependency source manifests may retain platform package names that con
 - Confirm `./canva-linux-c420ui-builder --canva-debug=1` is rejected because runtime flags belong to the compiled runtime app.
 - Confirm runtime `electron . --help` and `electron . --canva-debug=1` remain runtime-owned.
 - Confirm `flatpak run io.github.coletivo420.canva-linux --debug=1` fails with the reserved Electron/Node flag message before the runtime starts.
-- Confirm `Release: v0.1.4-15.Dev.11` appears in current release docs.
+- Confirm `Release: v0.1.4-15.Dev.12` appears in current release docs.
 - Confirm AppImage, Flatpak, tarball and checksum release docs preserve real generated file names.
 - Confirm root authentication prompts only for privileged actions.
 - Confirm Secret Service-backed persistent login and ephemeral session policy remain documented.

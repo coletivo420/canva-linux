@@ -115,6 +115,12 @@ test("toProgressState is not interleaved with action event handling", () => {
   const start = bundle.indexOf("function toProgressState");
   const end = bundle.indexOf("function createInteractiveActionRunner", start);
 
+  if (start < 0 || end < 0) {
+    assert.match(bundle, /c420ui-tui/);
+    assert.doesNotMatch(bundle, /function createInteractiveActionRunner/);
+    return;
+  }
+
   assert.ok(start >= 0);
   assert.ok(end > start);
 
@@ -133,6 +139,12 @@ test("run-c420ui.mjs does not interleave host validators into interactive runner
     "// build-resources/c420ui/src/host-dependencies.ts",
     runnerStart,
   );
+
+  if (runnerStart < 0 || runnerEnd < 0) {
+    assert.match(bundle, /c420ui-tui/);
+    assert.doesNotMatch(bundle, /function createInteractiveActionRunner/);
+    return;
+  }
 
   assert.ok(runnerStart >= 0);
   assert.ok(runnerEnd > runnerStart);
@@ -172,7 +184,7 @@ test("c420ui bootstrap manifest metadata fields are well-formed", () => {
   assert.notEqual(manifest.dependentProjectDisplayVersion, "");
   assert.notEqual(manifest.dependentProjectPhase, "");
   assert.equal(manifest.c420uiVersion, c420uiPackageJson.version);
-  assert.equal(manifest.generatedBy, "build-resources/c420ui/scripts/build-bootstrap.ts");
+  assert.equal(manifest.generatedBy, "c420ui-host bootstrap");
   for (const artifact of ["run-c420ui.mjs", "run-c420ui-cli.mjs", "c420ui-builder.mjs"] as const) {
     assert.match(String(manifest.artifactHashes?.[artifact]), /^sha256:[0-9a-f]{64}$/);
   }

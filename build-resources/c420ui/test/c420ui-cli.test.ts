@@ -1,17 +1,56 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 
 import {
   c420uiExitCodes,
   runC420UICli,
   type c420uiAction,
-  type c420uiActionResult,
-  type c420uiExecutionContext,
   type c420uiProjectBridge,
 } from "../src/index.js";
 
-function createFakeBridge(options?: { result?: c420uiActionResult }) {
-  const runCalls: Array<{ actionId: string; context: c420uiExecutionContext }> = [];
+function makeRustHostStub(capturePath: string): string {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), "c420ui-cli-host-"));
+  const binPath = path.join(rootDir, "c420ui-host");
+  fs.writeFileSync(
+    binPath,
+    `#!/bin/sh
+read input
+printf '%s\\n' "$input" >> ${JSON.stringify(capturePath)}
+if printf '%s' "$input" | grep -q '"actionId":"bundle-deb"' && printf '%s' "$input" | grep -q '"dryRun":true'; then
+  printf '%s\\n' '{"event":"action:finish","actionId":"bundle-deb","status":"success","code":0}'
+elif printf '%s' "$input" | grep -q '"actionId":"bundle-deb"'; then
+  printf '%s\\n' '{"event":"action:finish","actionId":"bundle-deb","status":"planned","code":${c420uiExitCodes.plannedAction}}'
+elif printf '%s' "$input" | grep -q '"actionId":"purge"' && ! printf '%s' "$input" | grep -q '"yes":true'; then
+  printf '%s\\n' '{"event":"action:finish","actionId":"purge","status":"failed","code":${c420uiExitCodes.generalError}}'
+elif printf '%s' "$input" | grep -q '"actionId":"custom"'; then
+  printf '%s\\n' '{"event":"action:finish","actionId":"custom","status":"success","code":0}'
+elif printf '%s' "$input" | grep -q '"actionId":"legacy"'; then
+  printf '%s\\n' '{"event":"action:finish","actionId":"legacy","status":"success","code":0}'
+elif printf '%s' "$input" | grep -q '"actionId":"purge"'; then
+  printf '%s\\n' '{"event":"action:finish","actionId":"purge","status":"success","code":0}'
+else
+  printf '%s\\n' '{"event":"action:finish","actionId":"doctor","status":"success","code":0}'
+fi
+`,
+  );
+  fs.chmodSync(binPath, 0o755);
+  return binPath;
+}
+
+function readRunCalls(capturePath: string): Array<Record<string, unknown>> {
+  if (!fs.existsSync(capturePath)) return [];
+  return fs
+    .readFileSync(capturePath, "utf8")
+    .trim()
+    .split(/\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as Record<string, unknown>);
+}
+
+function createFakeBridge() {
   const actions: Array<c420uiAction | (c420uiAction & { cli: string[] })> = [
     {
       id: "doctor",
@@ -64,28 +103,29 @@ function createFakeBridge(options?: { result?: c420uiActionResult }) {
     artifactWorkflows() {
       return [];
     },
-    async runAction(actionId, context) {
-      runCalls.push({ actionId, context });
-      return options?.result ?? {
-        code: c420uiExitCodes.success,
-        status: "success",
-        message: "ok",
-      };
+    async runAction() {
+      throw new Error("legacy TypeScript action execution must not be used by c420ui CLI");
     },
   };
 
-  return { bridge, runCalls };
+  return { bridge };
 }
 
 async function runCli(argv: string[]) {
   const stdout: string[] = [];
   const stderr: string[] = [];
-  const { bridge, runCalls } = createFakeBridge();
+  const capturePath = path.join(os.tmpdir(), `c420ui-cli-${process.pid}-${Math.random()}.jsonl`);
+  const rustHostBin = makeRustHostStub(capturePath);
+  const { bridge } = createFakeBridge();
   const result = await runC420UICli({
     bridge,
     rootDir: "/repo",
     argv,
-    env: { TEST_ENV: "1" } as NodeJS.ProcessEnv,
+    env: {
+      C420UI_HOST_BIN: rustHostBin,
+      PATH: process.env.PATH,
+      TEST_ENV: "1",
+    } as NodeJS.ProcessEnv,
     writeStdout(line) {
       stdout.push(line);
     },
@@ -93,7 +133,7 @@ async function runCli(argv: string[]) {
       stderr.push(line);
     },
   });
-  return { result, stdout, stderr, runCalls };
+  return { result, stdout, stderr, runCalls: readRunCalls(capturePath) };
 }
 
 test("c420ui CLI --help returns success", async () => {
@@ -108,7 +148,7 @@ test("c420ui CLI resolves actions by cliFlags", async () => {
   const { result, stdout, runCalls } = await runCli(["--doctor"]);
 
   assert.equal(result.exitCode, c420uiExitCodes.success);
-  assert.deepEqual(stdout, ["ok"]);
+  assert.deepEqual(stdout, []);
   assert.equal(runCalls[0]?.actionId, "doctor");
 });
 
@@ -140,10 +180,9 @@ test("c420ui CLI blocks dangerous actions without --yes", async () => {
   const { result, stderr, runCalls } = await runCli(["--purge"]);
 
   assert.equal(result.exitCode, c420uiExitCodes.generalError);
-  assert.deepEqual(stderr, [
-    "[error] Action requires confirmation: Purge\n[info] Re-run with --yes after confirming intent.",
-  ]);
-  assert.equal(runCalls.length, 0);
+  assert.deepEqual(stderr, []);
+  assert.equal(runCalls[0]?.actionId, "purge");
+  assert.equal(runCalls[0]?.yes, false);
 });
 
 test("c420ui CLI allows dangerous actions with --yes", async () => {
@@ -151,37 +190,38 @@ test("c420ui CLI allows dangerous actions with --yes", async () => {
 
   assert.equal(result.exitCode, c420uiExitCodes.success);
   assert.equal(runCalls[0]?.actionId, "purge");
-  assert.equal(runCalls[0]?.context.yes, true);
+  assert.equal(runCalls[0]?.yes, true);
 });
 
 test("c420ui CLI preserves planned action exit code", async () => {
   const { result, stdout, runCalls } = await runCli(["--bundle-deb"]);
 
   assert.equal(result.exitCode, c420uiExitCodes.plannedAction);
-  assert.deepEqual(stdout, ["planned package"]);
-  assert.equal(runCalls.length, 0);
+  assert.deepEqual(stdout, []);
+  assert.equal(runCalls[0]?.actionId, "bundle-deb");
 });
 
 test("c420ui CLI planned action dry-runs return success", async () => {
   const { result, stdout, runCalls } = await runCli(["--bundle-deb", "--dry-run"]);
 
   assert.equal(result.exitCode, c420uiExitCodes.success);
-  assert.deepEqual(stdout, ["dry-run"]);
-  assert.equal(runCalls.length, 0);
+  assert.deepEqual(stdout, []);
+  assert.equal(runCalls[0]?.actionId, "bundle-deb");
+  assert.equal(runCalls[0]?.dryRun, true);
 });
 
 test("c420ui CLI propagates --yes", async () => {
   const { result, runCalls } = await runCli(["--doctor", "--yes"]);
 
   assert.equal(result.exitCode, c420uiExitCodes.success);
-  assert.equal(runCalls[0]?.context.yes, true);
+  assert.equal(runCalls[0]?.yes, true);
 });
 
 test("c420ui CLI propagates --force as yes", async () => {
   const { result, runCalls } = await runCli(["--doctor", "--force"]);
 
   assert.equal(result.exitCode, c420uiExitCodes.success);
-  assert.equal(runCalls[0]?.context.yes, true);
+  assert.equal(runCalls[0]?.yes, true);
 });
 
 test("generic c420ui CLI uses bridge actions instead of hardcoded Canva Linux flags", async () => {
@@ -194,7 +234,8 @@ test("generic c420ui CLI uses bridge actions instead of hardcoded Canva Linux fl
     kind: "command",
     cliFlags: ["--project-custom"],
   };
-  const runCalls: string[] = [];
+  const capturePath = path.join(os.tmpdir(), `c420ui-cli-custom-${process.pid}.jsonl`);
+  const rustHostBin = makeRustHostStub(capturePath);
   const bridge: c420uiProjectBridge = {
     id: "custom-project",
     projectInfo() {
@@ -206,9 +247,8 @@ test("generic c420ui CLI uses bridge actions instead of hardcoded Canva Linux fl
     artifactWorkflows() {
       return [];
     },
-    async runAction(actionId) {
-      runCalls.push(actionId);
-      return { code: 0, status: "success", message: "custom ok" };
+    async runAction() {
+      throw new Error("legacy TypeScript action execution must not be used by c420ui CLI");
     },
   };
 
@@ -216,12 +256,13 @@ test("generic c420ui CLI uses bridge actions instead of hardcoded Canva Linux fl
     bridge,
     rootDir: "/custom",
     argv: ["--project-custom"],
+    env: { C420UI_HOST_BIN: rustHostBin, PATH: process.env.PATH },
     writeStdout: (line) => stdout.push(line),
     writeStderr: (line) => stderr.push(line),
   });
 
   assert.equal(result.exitCode, 0);
-  assert.deepEqual(runCalls, ["custom"]);
-  assert.deepEqual(stdout, ["custom ok"]);
+  assert.deepEqual(readRunCalls(capturePath).map((call) => call.actionId), ["custom"]);
+  assert.deepEqual(stdout, []);
   assert.deepEqual(stderr, []);
 });

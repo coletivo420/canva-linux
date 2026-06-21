@@ -1,22 +1,26 @@
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import type { c420uiLogEvent, c420uiProgressEvent } from "./events.js";
 import type {
   c420uiHostDependency,
   c420uiHostDependencyCheckResult,
   c420uiNpmDependencyConfig,
   c420uiPlannedHostDependencyCommand,
 } from "./host-dependencies.js";
+import { runC420UIRustProcess } from "./rust-process-runner.js";
 
 export type c420uiNpmCommandRunner = (
-  command: string,
-  args: string[],
   options: {
+    rootDir: string;
+    command: string;
+    args: string[];
     cwd: string;
     env: NodeJS.ProcessEnv;
-    stdio?: "inherit" | "pipe";
+    label: string;
+    emitLog?: (event: c420uiLogEvent) => void;
+    emitProgress?: (event: c420uiProgressEvent) => void;
   },
-) => { status: number | null; error?: Error };
+) => Promise<c420uiHostDependencyCheckResult>;
 
 type PackageJson = {
   scripts?: Record<string, unknown>;
@@ -206,22 +210,39 @@ export function checkC420UINpmDependencies(
   });
 }
 
-const defaultNpmCommandRunner: c420uiNpmCommandRunner = (command, args, options) =>
-  spawnSync(command, args, {
+const defaultNpmCommandRunner: c420uiNpmCommandRunner = async (options) => {
+  const result = await runC420UIRustProcess({
+    rootDir: options.rootDir,
+    command: options.command,
+    args: options.args,
     cwd: options.cwd,
     env: options.env,
-    stdio: options.stdio ?? "inherit",
-    shell: false,
+    label: options.label,
+    emitLog: options.emitLog ?? (() => {}),
+    emitProgress: options.emitProgress ?? (() => {}),
   });
 
-export function ensureC420UINpmDependencies(
+  if (result.status === "success") {
+    return { status: "available", message: `${options.label} completed successfully.` };
+  }
+
+  return {
+    status: "failed",
+    exitCode: result.code,
+    message: result.message ?? `${options.label} failed.`,
+  };
+};
+
+export async function ensureC420UINpmDependencies(
   config: c420uiNpmDependencyConfig | undefined,
   options: {
     rootDir: string;
     env?: NodeJS.ProcessEnv;
     runCommand?: c420uiNpmCommandRunner;
+    emitLog?: (event: c420uiLogEvent) => void;
+    emitProgress?: (event: c420uiProgressEvent) => void;
   },
-): c420uiHostDependencyCheckResult {
+): Promise<c420uiHostDependencyCheckResult> {
   if (!config) {
     return { status: "skipped", message: "No npm dependencies were declared." };
   }
@@ -245,21 +266,21 @@ export function ensureC420UINpmDependencies(
   const args = installArgs(config, options.rootDir);
   const runCommand = options.runCommand ?? defaultNpmCommandRunner;
   const repairMessage = env.C420UI_DEPENDENCY_REPAIR === "clean" ? " after clean repair was requested" : "";
-  const commandResult = runCommand("npm", args, {
+  const commandResult = await runCommand({
+    rootDir: options.rootDir,
+    command: "npm",
+    args,
     cwd: options.rootDir,
     env,
-    stdio: "inherit",
+    label: `npm ${args.join(" ")}`,
+    emitLog: options.emitLog,
+    emitProgress: options.emitProgress,
   });
 
-  if (commandResult.error) {
-    return { status: "failed", exitCode: 1, message: commandResult.error.message };
-  }
-
-  const status = commandResult.status ?? 1;
-  if (status !== 0) {
+  if (commandResult.status === "failed") {
     return {
       status: "failed",
-      exitCode: status,
+      exitCode: commandResult.exitCode ?? 1,
       message: `npm ${args.join(" ")} failed${repairMessage}.`,
     };
   }

@@ -8,9 +8,6 @@ export const C420UI_BOOTSTRAP_ENTRYPOINTS = [
 
 export const C420UI_BOOTSTRAP_EXTERNALS = [
   "electron",
-  "blessed",
-  "term.js",
-  "pty.js",
 ] as const;
 
 export const C420UI_BOOTSTRAP_BUILD_RECIPE = "build-resources/c420ui/scripts/build-bootstrap.ts";
@@ -18,14 +15,6 @@ export const C420UI_BOOTSTRAP_BUILD_TOOL = "esbuild";
 export const C420UI_BOOTSTRAP_BUILD_TARGET = "node22";
 export const C420UI_BOOTSTRAP_BUNDLE_FORMAT = "esm";
 export const C420UI_BOOTSTRAP_MODULE_FORMAT = "esm";
-export const C420UI_BOOTSTRAP_BLESSED_RUNTIME_ASSETS = [
-  "linux",
-  "windows-ansi",
-  "xterm",
-  "xterm-256color",
-  "xterm.termcap",
-  "xterm.terminfo",
-] as const;
 
 export function createC420UIBootstrapBuildOptions(rootDir: string, outdir: string): esbuild.BuildOptions {
   return {

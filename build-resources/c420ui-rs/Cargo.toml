@@ -1,0 +1,19 @@
+[package]
+name = "c420ui-rs"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "c420ui-host"
+path = "src/bin/c420ui-host.rs"
+
+[[bin]]
+name = "c420ui-tui"
+path = "src/bin/c420ui-tui.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+ratatui = "0.26"
+crossterm = "0.27"

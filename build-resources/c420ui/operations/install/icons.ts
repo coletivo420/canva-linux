@@ -1,38 +1,39 @@
-import fs from "node:fs";
 import path from "node:path";
-import { c420uiSudoInstall } from "../../host/sudo.js";
 import { info, warn } from "../../host/ui.js";
+import { exists as pathExists, projectRoot } from "../../host/paths.js";
+import { runC420UIRustFsOps, type c420uiRustFsOperation } from "../../src/rust-fs.js";
 
-const APP_ID = "io.github.coletivo420.canva-linux";
-
-export function installIconFile(
+export async function installIconFile(
   scope: "system" | "user",
   src: string,
   dst: string,
   options: { dryRun?: boolean } = {},
-): void {
+): Promise<void> {
   const dryRun = options.dryRun ?? false;
-  const dstDir = path.dirname(dst);
-
-  if (scope === "system") {
-    c420uiSudoInstall(["-Dm644", src, dst], { dryRun });
-  } else {
-    if (dryRun) {
-      console.log(`[dry-run] install -Dm644 ${src} ${dst}`);
-    } else {
-      fs.mkdirSync(dstDir, { recursive: true });
-      fs.copyFileSync(src, dst);
-      fs.chmodSync(dst, 0o644);
-    }
-  }
+  const rootDir = projectRoot();
+  await runC420UIRustFsOps({
+    rootDir,
+    operations: [
+      {
+        kind: scope === "system" ? "install-file" : "copy-file",
+        from: src,
+        to: dst,
+        mode: 0o644,
+      },
+    ],
+    dryRun,
+    allowSudo: scope === "system",
+    env: process.env,
+  });
 }
 
-export function installIcons(
+export async function installIcons(
   scope: "system" | "user",
+  appId: string,
   srcRoot: string,
   targetIconRoot: string,
   options: { dryRun?: boolean } = {},
-): void {
+): Promise<void> {
   const sizes = [
     "16x16",
     "24x24",
@@ -44,21 +45,28 @@ export function installIcons(
     "512x512",
   ];
   let installedCount = 0;
+  const rootDir = projectRoot();
+  const operations: c420uiRustFsOperation[] = [];
 
   for (const size of sizes) {
     let src = "";
     const sizePath = path.join(srcRoot, `${size}.png`);
-    const sizeAppsPath = path.join(srcRoot, `${size}/apps/${APP_ID}.png`);
+    const sizeAppsPath = path.join(srcRoot, `${size}/apps/${appId}.png`);
 
-    if (fs.existsSync(sizePath)) {
+    if (pathExists(sizePath)) {
       src = sizePath;
-    } else if (fs.existsSync(sizeAppsPath)) {
+    } else if (pathExists(sizeAppsPath)) {
       src = sizeAppsPath;
     }
 
     if (src) {
-      const dst = path.join(targetIconRoot, `${size}/apps/${APP_ID}.png`);
-      installIconFile(scope, src, dst, options);
+      const dst = path.join(targetIconRoot, `${size}/apps/${appId}.png`);
+      operations.push({
+        kind: scope === "system" ? "install-file" : "copy-file",
+        from: src,
+        to: dst,
+        mode: 0o644,
+      });
       installedCount++;
     }
   }
@@ -68,6 +76,13 @@ export function installIcons(
       `No native icon sources found under ${srcRoot}; continuing without installing icons.`,
     );
   } else {
+    await runC420UIRustFsOps({
+      rootDir,
+      operations,
+      dryRun: options.dryRun,
+      allowSudo: scope === "system",
+      env: process.env,
+    });
     info(`Installed ${installedCount} icons to ${targetIconRoot}`);
   }
 }

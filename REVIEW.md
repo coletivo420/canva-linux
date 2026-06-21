@@ -71,6 +71,10 @@ Confirm:
 
 ## c420ui package refactor and structural ownership
 
+- Dev12 bootstrap/metadata review rule: request changes if generated
+  `run-c420ui.mjs`, `run-c420ui-cli.mjs`, or `c420ui-builder.mjs` regain heavy
+  bundled c420ui logic. Bootstrap, manifest, source hashes, settings and
+  session log handling belong to `c420ui-host`; MJS files are launchers only.
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
 - All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
 - Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.
@@ -78,6 +82,79 @@ Confirm:
 - Doctor runs from `build-resources/canva-linux/validation/doctor.ts` via `validate:doctor`.
 - Flatpak and Flathub policy checks run from TypeScript entrypoints.
 - Install, uninstall, maintenance, packaging, build, artifact and versioning mechanics are c420ui-owned and now live under `build-resources/c420ui/*`.
+
+## Dev12 Rust project config review
+
+Request changes if a PR:
+
+- reintroduces TypeScript project config validation as the source of truth;
+- removes `c420ui-host project-config --json`;
+- makes the Rust Action Engine require inline `actions` instead of preferring `projectConfigRoot`;
+- hardcodes Canva Linux identity, app id, Flatpak id or executable names in `build-resources/c420ui-rs`;
+- adds `C420UI_ADAPTER_BACKEND` or `C420UI_ACTION_ENGINE_BACKEND`;
+- duplicates Rust-owned host dependency, install or maintenance validation in the Canva Linux adapter.
+
+## Dev12 Rust status panels review
+
+Request changes if a PR:
+
+- removes `c420ui-host status-panels --json`;
+- reintroduces TypeScript status classification as the source of truth;
+- adds Blessed-style tags such as `{green-fg}` or `{orange-fg}` to status summaries;
+- turns Linux Artifacts back into one comma-joined Electron/Node/npm/Linux unpacked line;
+- colors status labels instead of semantic values in the Rust renderer;
+- adds `C420UI_STATUS_BACKEND`.
+
+## Dev12 Rust host-operation review
+
+Request changes if a PR:
+
+- reintroduces `build-resources/c420ui/host/preflight.ts`;
+- reintroduces `spawnSync` or Bash command probing for maintained c420ui preflight;
+- performs native install filesystem writes without `runC420UIRustFsOps`;
+- installs icons without passing the dependent project `appId` from config;
+- normalizes `linux-unpacked` in TypeScript instead of `c420ui-host`;
+- cleans/selects AppImage artifacts or writes checksum sidecars without Rust host commands;
+- hardcodes Canva Linux install identity or native paths inside Rust.
+- hardcodes Canva Linux install identity or native paths inside
+  `build-resources/c420ui/operations`;
+- treats the future `c420ui-tui` migration as an optional backend toggle instead
+  of the direct Dev12 Phase 3-5 roadmap.
+- bypasses `c420ui-tui run --json-lines` for the official c420ui terminal runtime;
+- introduces a terminal backend environment switch;
+- reintroduces TypeScript action execution instead of routing action lifecycle,
+  command execution, cancellation and root request orchestration through
+  `c420ui-host action-run --json-lines`.
+- executes project actions directly inside `c420ui-tui` instead of emitting
+  `action-selected` for the Rust Action Engine bridge.
+- treats Rust TUI visuals as cosmetic instead of preserving the legacy
+  TypeScript/Blessed visual contract. `c420ui-tui` is not a simplified terminal
+  frontend; it must match the legacy layout, theme, panels, focus behavior,
+  footer, progress bar, logs, and root prompt before the TypeScript TUI can be
+  removed.
+- drops Rust TUI interaction parity with the legacy TypeScript/Blessed TUI:
+  keyboard shortcuts, panel scrolling, settings toggles, F5 log copy, root
+  prompt retry behavior, session log persistence and post-action panel refresh
+  are required before the TypeScript TUI can be removed.
+- regresses Rust TUI stabilization work: Doctor / Host Tools must execute
+  through `c420ui-host`, session logs must default to `/tmp/c420ui`, running
+  actions must lock the menu behind an interruption confirmation modal, progress
+  warning/error/success colors must stay distinct, artifact/log/overview panels
+  must wrap and scroll, and status panels must color only values.
+- restores tests that protect the removed Blessed/spawnSync/sudo runner paths
+  instead of the current c420ui-host, c420ui-tui, Rust Action Engine
+  bridge, and dependent-project boundary contracts.
+- reintroduces the legacy Blessed/TypeScript terminal runtime, exports
+  `createApp`, restores `terminal/app.ts`, `terminal/blessed-widgets.ts` or
+  `terminal/modal.ts`.
+- reintroduces TypeScript clipboard probing. Clipboard access is a c420ui-host
+  responsibility; do not reintroduce `spawnSync`, Bash, `command -v` or
+  desktop-specific clipboard probing in TypeScript.
+- reintroduces a TypeScript Action Engine fallback or an action-engine backend
+  switch. Action execution belongs to `c420ui-host`; TypeScript may only marshal
+  config, events, root responses and TUI integration until the remaining adapter
+  contracts move.
+- makes Blessed an external/dependency again.
 
 ## c420ui version/hash review
 
@@ -173,7 +250,7 @@ See [c420ui Builder Alias Policy](docs/c420ui/BUILDER_ALIAS.md).
 
 ## Dev.7 OAuth completion review
 
-Request changes if a PR preparing `0.1.4-15.Dev.11` OAuth completion:
+Request changes if a PR preparing `0.1.4-15.Dev.12` OAuth completion:
 
 - reloads a generic active tab instead of resolving the tab that opened the OAuth popup by `sourceWebContentsId`;
 - closes the popup or reloads the source tab before an authorized Canva callback is finalized by callback type, the
@@ -191,7 +268,7 @@ Request changes if a PR preparing `0.1.4-15.Dev.11` OAuth completion:
 
 ## Dev.6 cleanup handoff review
 
-Request changes if a PR closing `0.1.4-15.Dev.11`:
+Request changes if a PR closing `0.1.4-15.Dev.12`:
 
 - describes Dev.6 as feature expansion instead of post-migration cleanup;
 - omits the dead-code audit, obsolete validation-contract cleanup, streamlined smoke tests, runtime CLI diagnostics cleanup,
@@ -223,12 +300,12 @@ Request changes if a PR:
 
 ## RC validation matrix review
 
-Request changes if a PR preparing `0.1.4-15.Dev.11` for cleanup handoff validation:
+Request changes if a PR preparing `0.1.4-15.Dev.12` for cleanup handoff validation:
 
 - removes `docs/internal/RC_VALIDATION_MATRIX.md`;
 - fails to link the RC validation matrix from maintained release or validation documentation;
 - omits any required command, manual RC validation, expected result, owner domain, or release blocker from the matrix;
-- marks `v0.1.4-15.Dev.11` ready while a release blocker remains open.
+- marks `v0.1.4-15.Dev.12` ready while a release blocker remains open.
 
 ## Standalone c420ui bootstrap validation
 
@@ -266,7 +343,7 @@ Runtime diagnostics are exposed through the compiled Canva Linux CLI only. The c
 
 Request changes if a PR:
 
-- changes version `0.1.4-15.Dev.11` without an explicit maintainer request;
+- changes version `0.1.4-15.Dev.12` without an explicit maintainer request;
 - introduces `0.1.4-dev.15`, `0.1.4-rc.15`, `0.1.4.15`, `0.1.4-15.dev.1`, or `0.1.4-15.Dev.01`;
 - publishes four-number dotted release identities instead of the npm-compatible package version;
 - hardcodes release asset architecture names instead of preserving generated names such as `x86_64` or `X86_64`.
@@ -637,10 +714,56 @@ Request changes if a PR:
 Request changes if a PR:
 
 - hardcodes Canva Linux dependency names inside `build-resources/c420ui/src`;
+- hardcodes dependent-project dependency names inside `build-resources/c420ui-rs`;
 - calls `scripts/ensure-npm-dependencies.sh` directly from project launchers or generic c420ui code;
 - runs `npm ci` or `npm install` directly from project launchers;
 - moves project dependency lists into c420ui core instead of project config;
 - moves npm dependency policy back into project shell helpers.
+- resolves host dependencies inside the Canva Linux adapter instead of passing
+  declarations to c420ui.
+- reintroduces `child_process.spawn` or `spawnSync` as maintained generic c420ui
+  process execution.
+- bypasses `c420ui-host run-process --json-lines` for generic host commands.
+- reintroduces `fs.rmSync` maintenance deletion or hardcoded maintenance targets
+  in c420ui TypeScript instead of dependent-project maintenance config.
+
+Dependent projects declare host dependencies through their adapter/config.
+c420ui resolves those dependencies and routes generic host probes through
+`c420ui-host`. Canva Linux only declares what it needs; it does not resolve host
+dependencies directly.
+
+## Dev12 Rust migration review rules
+
+Request changes if a PR:
+
+- reintroduces `spawnSync`-based host runners in c420ui or Canva Linux adapters;
+- reintroduces `build-resources/c420ui/host/command-runner.ts` or `build-resources/c420ui/host/sudo.ts`;
+- imports Canva Linux adapters or config from generic c420ui operations;
+- hardcodes maintenance targets in c420ui operations instead of receiving them via injection;
+- bypasses `c420ui-host` for privileged host operations;
+- removes security hardening in Rust maintenance operations (relative paths, symlink checks, rootDir canonicalization);
+- introduces project-specific identity (Canva Linux) in the generic Rust `c420ui-host`.
+
+Dev12 routes c420ui host process execution through `c420ui-host`. Dependent
+projects still declare actions and dependencies; c420ui decides what to run;
+Rust executes generic host processes without hardcoding Canva Linux policy.
+Maintenance targets follow the same boundary: dependent projects declare them,
+c420ui validates and orchestrates, and Rust performs generic filesystem/sudo
+operations.
+
+## Dev12 final handoff
+
+Dev12 is ready to merge when:
+
+- `npm run build:c420ui-rs` passes.
+- `npm run test:c420ui-rs` passes.
+- `npm run check:c420ui-rs-boundary` passes.
+- `npm run check:dev12-rust` passes.
+- `npm run build:scripts` passes.
+- `npm test` passes.
+- `npm run check:c420ui-core` passes.
+- `npm run check:canva-linux` passes.
+- manual validation of `maintenance:clean` and `maintenance:fix-permissions` with `--dry-run` confirms accurate status reporting.
 
 
 Canva Linux Builder powered by c420ui is the primary builder, installer, validation, packaging,
@@ -660,7 +783,7 @@ while runtime flags belong to the compiled `canva-linux` app.
 
 ## Dev.7 review note: effective versions and OAuth fallback
 
-- Source identity remains `0.1.4-15.Dev.11` / `0.1.4-15.Dev` / `0.1.4-15.Dev.11`.
+- Source identity remains `0.1.4-15.Dev.12` / `0.1.4-15.Dev` / `0.1.4-15.Dev.12`.
 - Effective runtime identity appends deterministic `+g<short-hash>` metadata generated during builds.
 - The OAuth post-login reload preserves the source tab URL by default; canonical home is only a one-shot fallback after localized public landing detection.
 - Runtime metadata must fail clearly when generated, source, and committed metadata are all unavailable; request changes if

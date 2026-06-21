@@ -1,9 +1,11 @@
 import {
   printC420UITerminalHelp,
+} from "../../c420ui/src/terminal/help.js";
+import {
   runC420UITerminalApp,
-} from "../../c420ui/src/terminal/index.js";
+} from "../../c420ui/src/terminal/runtime.js";
+import { runC420UIHostDependencyEnsure } from "../../c420ui/src/index.js";
 import { createCanvaLinuxC420UIAdapter } from "./adapter.js";
-import { ensureCanvaLinuxHostDependencies } from "./dependencies.js";
 import { createCanvaLinuxRootProvider } from "./root-provider.js";
 
 export type RunCanvaLinuxC420UIOptions = {
@@ -37,7 +39,7 @@ export function runCanvaLinuxC420UI(
         id: "host-dependencies",
         label: "Checking dependent project dependencies",
         run: () =>
-          ensureCanvaLinuxHostDependencies({
+          runC420UIHostDependencyEnsure(config.hostDependencies ?? {}, {
             rootDir,
             env: options.env,
           }),

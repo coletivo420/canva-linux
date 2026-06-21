@@ -1,2 +1,2 @@
 import { runNativeUninstall } from "../operations/uninstall/native.js";
-runNativeUninstall(process.argv.slice(2));
+await runNativeUninstall(process.argv.slice(2));

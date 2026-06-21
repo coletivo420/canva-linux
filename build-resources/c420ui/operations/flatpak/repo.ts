@@ -1,18 +1,25 @@
 import fs from "node:fs";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
-import { info, ok, warn } from "../../host/ui.js";
-import { c420uiSudoRm, c420uiSudoRun } from "../../host/sudo.js";
+import { info, ok, warn, error } from "../../host/ui.js";
+import { runC420UIRustRemovePaths } from "../../src/rust-maintenance.js";
+import { runC420UIRustProcess } from "../../src/rust-process-runner.js";
 import { type FlatpakScope, flatpakScopeArg } from "./scope.js";
+import type { c420uiLogEvent } from "../../src/events.js";
 
 const FLATPAK_APP_ID = "io.github.coletivo420.canva-linux";
 const LOCAL_FLATPAK_REMOTE = "canva-linux-local";
 
-export function removeFlatpakBuildArtifacts(
+function emitLog(event: c420uiLogEvent): void {
+  if (event.level === "error") error(event.line);
+  else if (event.level === "warning") warn(event.line);
+  else info(event.line);
+}
+
+export async function removeFlatpakBuildArtifacts(
   rootDir: string,
   scope: FlatpakScope,
   options: { dryRun?: boolean } = {},
-): void {
+): Promise<void> {
   const { dryRun } = options;
   const paths = ["build-dir", "repo", ".flatpak-builder"];
 
@@ -22,14 +29,20 @@ export function removeFlatpakBuildArtifacts(
 
     try {
       if (dryRun) {
-        console.log(`[dry-run] rm -rf ${absPath}`);
+        info(`[dry-run] rm -rf ${absPath}`);
       } else {
         fs.rmSync(absPath, { recursive: true, force: true });
       }
     } catch {
       if (scope === "system") {
         warn(`Could not remove ${p} as current user; retrying with sudo`);
-        c420uiSudoRm(absPath, { dryRun });
+        await runC420UIRustRemovePaths({
+          rootDir,
+          targets: [p],
+          dryRun,
+          allowSudo: true,
+          env: process.env,
+        });
       } else {
         throw new Error(`Could not remove ${p} and sudo is disabled in user scope`);
       }
@@ -37,16 +50,16 @@ export function removeFlatpakBuildArtifacts(
   }
 }
 
-export function buildFlatpakRepo(
+export async function buildFlatpakRepo(
   rootDir: string,
   scope: FlatpakScope,
   options: { dryRun?: boolean } = {},
-): void {
+): Promise<void> {
   const { dryRun } = options;
   const scopeArg = flatpakScopeArg(scope);
 
   info("Cleaning previous Flatpak build artifacts");
-  removeFlatpakBuildArtifacts(rootDir, scope, { dryRun });
+  await removeFlatpakBuildArtifacts(rootDir, scope, { dryRun });
 
   if (dryRun) {
     info(`[dry-run] flatpak-builder --force-clean ${scopeArg} --install-deps-from=flathub --repo=repo build-dir io.github.coletivo420.canva-linux.yml`);
@@ -55,9 +68,10 @@ export function buildFlatpakRepo(
   }
 
   info(`Building Flatpak repository using ${scope} dependency scope`);
-  const result = spawnSync(
-    "flatpak-builder",
-    [
+  const result = await runC420UIRustProcess({
+    rootDir,
+    command: "flatpak-builder",
+    args: [
       "--force-clean",
       scopeArg,
       "--install-deps-from=flathub",
@@ -65,21 +79,30 @@ export function buildFlatpakRepo(
       "build-dir",
       "io.github.coletivo420.canva-linux.yml",
     ],
-    { cwd: rootDir, stdio: "inherit" },
-  );
+    cwd: rootDir,
+    env: process.env,
+    label: "flatpak-builder",
+    emitLog,
+    emitProgress: () => {},
+  });
 
-  if (result.status !== 0) {
-    throw new Error(`flatpak-builder failed with status ${result.status}`);
+  if (result.code !== 0) {
+    throw new Error(`flatpak-builder failed with status ${result.code}`);
   }
 
   info("Generating repository summary");
-  const updateResult = spawnSync(
-    "flatpak",
-    ["build-update-repo", "--generate-static-deltas", "repo"],
-    { cwd: rootDir, stdio: "inherit" },
-  );
-  if (updateResult.status !== 0) {
-    throw new Error(`flatpak build-update-repo failed with status ${updateResult.status}`);
+  const updateResult = await runC420UIRustProcess({
+    rootDir,
+    command: "flatpak",
+    args: ["build-update-repo", "--generate-static-deltas", "repo"],
+    cwd: rootDir,
+    env: process.env,
+    label: "flatpak build-update-repo",
+    emitLog,
+    emitProgress: () => {},
+  });
+  if (updateResult.code !== 0) {
+    throw new Error(`flatpak build-update-repo failed with status ${updateResult.code}`);
   }
 }
 
@@ -107,22 +130,22 @@ export function repoHasAppRef(rootDir: string): boolean {
   return findRef(refsDir);
 }
 
-export function installFlatpakDirect(
+export async function installFlatpakDirect(
   rootDir: string,
   scope: FlatpakScope,
   options: { dryRun?: boolean } = {},
-): void {
+): Promise<void> {
   const { dryRun } = options;
   const scopeArg = flatpakScopeArg(scope);
 
   if (scope === "system") {
-    buildFlatpakRepo(rootDir, scope, options);
-    installSystemFlatpakFromRepo(rootDir, options);
+    await buildFlatpakRepo(rootDir, scope, options);
+    await installSystemFlatpakFromRepo(rootDir, options);
     return;
   }
 
   info("Cleaning previous Flatpak build artifacts");
-  removeFlatpakBuildArtifacts(rootDir, scope, options);
+  await removeFlatpakBuildArtifacts(rootDir, scope, options);
 
   info(`Building and installing Flatpak directly in ${scope} scope`);
   if (dryRun) {
@@ -130,9 +153,10 @@ export function installFlatpakDirect(
     ok(`Direct local Flatpak install completed in ${scope} scope`);
     return;
   }
-  const result = spawnSync(
-    "flatpak-builder",
-    [
+  const result = await runC420UIRustProcess({
+    rootDir,
+    command: "flatpak-builder",
+    args: [
       "--force-clean",
       scopeArg,
       "--install",
@@ -140,51 +164,96 @@ export function installFlatpakDirect(
       "build-dir",
       "io.github.coletivo420.canva-linux.yml",
     ],
-    { cwd: rootDir, stdio: "inherit" },
-  );
+    cwd: rootDir,
+    env: process.env,
+    label: "flatpak-builder-install",
+    emitLog,
+    emitProgress: () => {},
+  });
 
-  if (result.status !== 0) {
-    throw new Error(`flatpak-builder failed with status ${result.status}`);
+  if (result.code !== 0) {
+    throw new Error(`flatpak-builder failed with status ${result.code}`);
   }
 
   ok(`Direct local Flatpak install completed in ${scope} scope`);
 }
 
-function installSystemFlatpakFromRepo(
+async function installSystemFlatpakFromRepo(
   rootDir: string,
   options: { dryRun?: boolean } = {},
-) {
+): Promise<void> {
   const { dryRun } = options;
   const repoPath = path.join(rootDir, "repo");
   const repoUri = `file://${repoPath}`;
 
   info(`Configuring local system Flatpak remote: ${LOCAL_FLATPAK_REMOTE}`);
-  const remotes = spawnSync("flatpak", ["remotes", "--system"], {
-    encoding: "utf8",
+
+  let remotesOutput = "";
+  await runC420UIRustProcess({
+    rootDir,
+    command: "flatpak",
+    args: ["remotes", "--system"],
+    cwd: rootDir,
+    env: process.env,
+    label: "flatpak-remotes",
+    emitLog: (event) => {
+      if (event.source === "stdout") remotesOutput += event.line + "\n";
+    },
+    emitProgress: () => {},
   });
-  const hasRemote = remotes.stdout.split("\n").some((line) => line.startsWith(LOCAL_FLATPAK_REMOTE));
 
-  const remoteStatus = hasRemote
-    ? c420uiSudoRun(
-        "flatpak",
-        ["remote-modify", "--system", "--no-gpg-verify", `--url=${repoUri}`, LOCAL_FLATPAK_REMOTE],
-        { dryRun },
-      )
-    : c420uiSudoRun(
-        "flatpak",
-        ["remote-add", "--system", "--no-gpg-verify", "--if-not-exists", LOCAL_FLATPAK_REMOTE, repoUri],
-        { dryRun },
-      );
+  const hasRemote = remotesOutput.split("\n").some((line) => line.startsWith(LOCAL_FLATPAK_REMOTE));
 
-  if (remoteStatus !== 0) throw new Error("Failed to configure local system Flatpak remote");
+  if (hasRemote) {
+    if (dryRun) {
+      info(`[dry-run] sudo flatpak remote-modify --system --no-gpg-verify --url=${repoUri} ${LOCAL_FLATPAK_REMOTE}`);
+    } else {
+      const result = await runC420UIRustProcess({
+        rootDir,
+        command: "sudo",
+        args: ["flatpak", "remote-modify", "--system", "--no-gpg-verify", `--url=${repoUri}`, LOCAL_FLATPAK_REMOTE],
+        cwd: rootDir,
+        env: process.env,
+        label: "flatpak-remote-modify",
+        emitLog,
+        emitProgress: () => {},
+      });
+      if (result.code !== 0) throw new Error("Failed to configure local system Flatpak remote");
+    }
+  } else {
+    if (dryRun) {
+      info(`[dry-run] sudo flatpak remote-add --system --no-gpg-verify --if-not-exists ${LOCAL_FLATPAK_REMOTE} ${repoUri}`);
+    } else {
+      const result = await runC420UIRustProcess({
+        rootDir,
+        command: "sudo",
+        args: ["flatpak", "remote-add", "--system", "--no-gpg-verify", "--if-not-exists", LOCAL_FLATPAK_REMOTE, repoUri],
+        cwd: rootDir,
+        env: process.env,
+        label: "flatpak-remote-add",
+        emitLog,
+        emitProgress: () => {},
+      });
+      if (result.code !== 0) throw new Error("Failed to configure local system Flatpak remote");
+    }
+  }
 
   info("Installing Canva Linux from local repo into system Flatpak scope");
-  const installStatus = c420uiSudoRun(
-    "flatpak",
-    ["install", "-y", "--system", "--reinstall", LOCAL_FLATPAK_REMOTE, FLATPAK_APP_ID],
-    { dryRun },
-  );
-  if (installStatus !== 0) throw new Error("Failed to install system Flatpak from local repo");
+  if (dryRun) {
+    info(`[dry-run] sudo flatpak install -y --system --reinstall ${LOCAL_FLATPAK_REMOTE} ${FLATPAK_APP_ID}`);
+  } else {
+    const installResult = await runC420UIRustProcess({
+      rootDir,
+      command: "sudo",
+      args: ["flatpak", "install", "-y", "--system", "--reinstall", LOCAL_FLATPAK_REMOTE, FLATPAK_APP_ID],
+      cwd: rootDir,
+      env: process.env,
+      label: "flatpak-install-system",
+      emitLog,
+      emitProgress: () => {},
+    });
+    if (installResult.code !== 0) throw new Error("Failed to install system Flatpak from local repo");
+  }
 
   ok("Direct local Flatpak install completed in system scope");
 }

@@ -1,2 +1,2 @@
 import { runDetectedUninstall } from "../operations/uninstall/detected.js";
-runDetectedUninstall(process.argv.slice(2));
+await runDetectedUninstall(process.argv.slice(2));
