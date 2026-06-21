@@ -1,5 +1,25 @@
 # Validation Checklist (0.1.4-15.Dev.12)
 
+## Dev12 Rust bootstrap and metadata contract
+
+`c420ui-host` owns bootstrap, manifest metadata, source hashes, settings and
+session log handling. Generated MJS artifacts are thin launchers for
+`c420ui-host`/`c420ui-tui`; they must not carry bundled Action Engine,
+adapter/config parser, TUI, status summaries, or manifest/hash builder logic.
+
+Do not reintroduce heavy generated MJS bundles. Bootstrap and metadata belong
+to `c420ui-host`; MJS files are launchers only.
+
+Focused gates:
+
+- `npm run build:c420ui-rs`
+- `npm run build:c420ui-bootstrap`
+- `npm run test:c420ui-rs`
+- `npm run test:c420ui`
+- `npm run check:c420ui-core`
+- `npm run check:c420ui-bootstrap-artifacts`
+- `npm run check:dev12-rust`
+
 ## Dev12 Rust status panels contract
 
 `c420ui-host status-panels --json` owns overview/status/detection summaries.

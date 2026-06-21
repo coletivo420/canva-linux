@@ -964,6 +964,109 @@ function checkRustStatusPanelsContract(failures: string[]): void {
   }
 }
 
+function checkRustBootstrapMetadataContract(failures: string[]): void {
+  const rootDir = process.cwd();
+  const requiredWrappers = [
+    "build-resources/c420ui/src/rust-bootstrap.ts",
+    "build-resources/c420ui/src/rust-source-hash.ts",
+    "build-resources/c420ui/src/rust-settings.ts",
+    "build-resources/c420ui/src/rust-session-log.ts",
+  ];
+  for (const wrapperPath of requiredWrappers) {
+    if (!fs.existsSync(path.join(rootDir, wrapperPath))) {
+      failures.push(`${wrapperPath}: required Rust bootstrap/metadata wrapper is missing`);
+    }
+  }
+
+  const hostSource = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui-rs/src/bin/c420ui-host.rs"),
+    "utf8",
+  );
+  for (const command of [
+    "bootstrap --json",
+    "bootstrap-check --json",
+    "bootstrap-manifest --json",
+    "source-hash --json",
+    "build-metadata --json",
+    "settings-get --json",
+    "settings-set --json",
+    "session-log-read --json",
+    "session-log-write --json",
+    "session-log-clear --json",
+  ]) {
+    if (!hostSource.includes(command)) {
+      failures.push(`build-resources/c420ui-rs/src/bin/c420ui-host.rs: c420ui-host must expose ${command}`);
+    }
+  }
+
+  const buildBootstrap = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/scripts/build-bootstrap.ts"),
+    "utf8",
+  );
+  const checkBootstrap = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/checks/check-bootstrap.ts"),
+    "utf8",
+  );
+  const artifactGate = fs.readFileSync(
+    path.join(rootDir, "build-resources/c420ui/checks/check-artifact-gate.ts"),
+    "utf8",
+  );
+  if (!buildBootstrap.includes("runC420UIRustBootstrap")) {
+    failures.push("build-resources/c420ui/scripts/build-bootstrap.ts must delegate to Rust");
+  }
+  if (!checkBootstrap.includes("runC420UIRustBootstrapCheck")) {
+    failures.push("build-resources/c420ui/checks/check-bootstrap.ts must delegate to Rust bootstrap-check");
+  }
+  if (!artifactGate.includes("runC420UIRustBootstrapCheck")) {
+    failures.push("build-resources/c420ui/checks/check-artifact-gate.ts must delegate to Rust bootstrap-check");
+  }
+  for (const forbidden of ["createC420UIBootstrapBuildOptions", "calculateC420UISourceHash", "C420UI_BOOTSTRAP_BACKEND", "C420UI_METADATA_BACKEND"]) {
+    if (buildBootstrap.includes(forbidden) || checkBootstrap.includes(forbidden) || artifactGate.includes(forbidden)) {
+      failures.push(`c420ui bootstrap TS wrappers must not reintroduce ${forbidden}`);
+    }
+  }
+
+  const generatedDir = path.join(rootDir, "build-resources/c420ui/bootstrap/generated");
+  for (const artifact of ["run-c420ui.mjs", "run-c420ui-cli.mjs", "c420ui-builder.mjs"]) {
+    const artifactPath = path.join(generatedDir, artifact);
+    const source = fs.existsSync(artifactPath) ? fs.readFileSync(artifactPath, "utf8") : "";
+    if (!source) {
+      failures.push(`build-resources/c420ui/bootstrap/generated/${artifact}: generated MJS must exist`);
+      continue;
+    }
+    if (source.length > 6000) {
+      failures.push(`build-resources/c420ui/bootstrap/generated/${artifact}: generated MJS must remain a thin launcher`);
+    }
+    for (const forbidden of [
+      "createInteractiveActionRunner",
+      "createCanvaLinuxC420UIAdapter",
+      "project-config",
+      "status-panels",
+      "createC420UIBootstrapBuildOptions",
+      "calculateC420UISourceHash",
+      "blessed-widgets",
+    ]) {
+      if (source.includes(forbidden)) {
+        failures.push(`build-resources/c420ui/bootstrap/generated/${artifact}: generated MJS must not include ${forbidden}`);
+      }
+    }
+  }
+
+  for (const source of [buildBootstrap, checkBootstrap, artifactGate, hostSource]) {
+    for (const forbiddenBackend of [
+      "C420UI_BOOTSTRAP_BACKEND",
+      "C420UI_METADATA_BACKEND",
+      "C420UI_STATUS_BACKEND",
+      "C420UI_ADAPTER_BACKEND",
+      "C420UI_ACTION_ENGINE_BACKEND",
+    ]) {
+      if (source.includes(forbiddenBackend)) {
+        failures.push(`c420ui bootstrap/metadata path must not reintroduce ${forbiddenBackend}`);
+      }
+    }
+  }
+}
+
 
 
 function assertC420UIIncludes(
@@ -1985,6 +2088,7 @@ export function main(): number {
   runInteractiveActionEngineContract(failures);
   checkRustProjectConfigContract(failures);
   checkRustStatusPanelsContract(failures);
+  checkRustBootstrapMetadataContract(failures);
   checkSettingsContract(failures);
   checkDevelopmentProviderContract(failures);
   checkLinuxHostSudoContract(failures);

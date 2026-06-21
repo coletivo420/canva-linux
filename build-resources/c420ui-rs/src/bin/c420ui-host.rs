@@ -17,6 +17,16 @@ fn print_usage() {
     eprintln!("  fs-ops --json");
     eprintln!("  ensure-linux-unpacked --json");
     eprintln!("  artifact-file-ops --json");
+    eprintln!("  bootstrap --json");
+    eprintln!("  bootstrap-check --json");
+    eprintln!("  bootstrap-manifest --json");
+    eprintln!("  source-hash --json");
+    eprintln!("  build-metadata --json");
+    eprintln!("  settings-get --json");
+    eprintln!("  settings-set --json");
+    eprintln!("  session-log-read --json");
+    eprintln!("  session-log-write --json");
+    eprintln!("  session-log-clear --json");
     eprintln!("Options:");
     eprintln!("  --version");
 }
@@ -234,7 +244,65 @@ fn main() {
         }
     }
 
+    if cmd == "bootstrap" {
+        require_json(&args, "bootstrap");
+        exit_result(commands::bootstrap::execute());
+    }
+    if cmd == "bootstrap-check" {
+        require_json(&args, "bootstrap-check");
+        exit_result(commands::bootstrap_check::execute());
+    }
+    if cmd == "bootstrap-manifest" {
+        require_json(&args, "bootstrap-manifest");
+        exit_result(commands::bootstrap_manifest::execute());
+    }
+    if cmd == "source-hash" {
+        require_json(&args, "source-hash");
+        exit_result(commands::source_hash::execute());
+    }
+    if cmd == "build-metadata" {
+        require_json(&args, "build-metadata");
+        exit_result(commands::build_metadata::execute());
+    }
+    if cmd == "settings-get" {
+        require_json(&args, "settings-get");
+        exit_result(commands::settings_get::execute());
+    }
+    if cmd == "settings-set" {
+        require_json(&args, "settings-set");
+        exit_result(commands::settings_set::execute());
+    }
+    if cmd == "session-log-read" {
+        require_json(&args, "session-log-read");
+        exit_result(commands::session_log_read::execute());
+    }
+    if cmd == "session-log-write" {
+        require_json(&args, "session-log-write");
+        exit_result(commands::session_log_write::execute());
+    }
+    if cmd == "session-log-clear" {
+        require_json(&args, "session-log-clear");
+        exit_result(commands::session_log_clear::execute());
+    }
+
     eprintln!("Error: unknown command '{}'", cmd);
     print_usage();
     std::process::exit(exit_codes::INVALID_USAGE);
+}
+
+fn require_json(args: &[String], command: &str) {
+    if !args.iter().any(|arg| arg == "--json") {
+        eprintln!("Error: {} command requires --json", command);
+        std::process::exit(exit_codes::INVALID_USAGE);
+    }
+}
+
+fn exit_result(result: Result<(), String>) -> ! {
+    match result {
+        Ok(_) => std::process::exit(exit_codes::SUCCESS),
+        Err(error) => {
+            eprintln!("Error: {}", error);
+            std::process::exit(exit_codes::INVALID_USAGE);
+        }
+    }
 }

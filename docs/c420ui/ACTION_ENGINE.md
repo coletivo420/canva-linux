@@ -10,6 +10,11 @@ Dev12 moves the action registry source toward Rust project config. When
 `actions.json` through the Rust `project` module and resolves the action there.
 Inline `actions` remain only a transitional fallback.
 
+Dev12 also moves bootstrap and metadata to `c420ui-host`. Generated
+`run-c420ui-cli.mjs` is a thin launcher that locates `c420ui-host` and passes
+CLI arguments through; it must not embed Action Engine, adapter/config parser,
+status panel, or bootstrap manifest logic.
+
 ## Controls
 
 - Action lookup by id and CLI flags.
@@ -68,7 +73,9 @@ The ordering is intentional:
 
 - `build-resources/c420ui/src/action-engine.ts`
 - `build-resources/c420ui/src/rust-action-engine.ts`
+- `build-resources/c420ui/src/rust-bootstrap.ts`
 - `build-resources/c420ui-rs/src/action/`
+- `build-resources/c420ui-rs/src/bootstrap/`
 - `build-resources/c420ui-rs/src/commands/action_run.rs`
 - `build-resources/c420ui/src/terminal/interactive-action-runner.ts`
 - `build-resources/c420ui/src/cli.ts`

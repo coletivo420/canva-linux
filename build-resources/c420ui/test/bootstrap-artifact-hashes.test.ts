@@ -62,6 +62,32 @@ function copyBootstrapToTemp(tempDir: string): string {
   return tempRoot;
 }
 
+function writeMinimalBootstrapRoot(tempRoot: string): void {
+  fs.mkdirSync(path.join(tempRoot, "build-resources", "c420ui"), { recursive: true });
+  fs.mkdirSync(path.join(tempRoot, "build-resources", "canva-linux", "config"), { recursive: true });
+  fs.writeFileSync(path.join(tempRoot, "package.json"), `${JSON.stringify({ version: "1.0.0" })}\n`);
+  fs.writeFileSync(
+    path.join(tempRoot, "build-resources", "c420ui", "package.json"),
+    `${JSON.stringify({ version: "0.1.0" })}\n`,
+  );
+  fs.writeFileSync(path.join(tempRoot, "build-resources", "c420ui", "source.ts"), "export const value = 1;\n");
+  fs.writeFileSync(
+    path.join(tempRoot, "build-resources", "canva-linux", "config", "project-ui.json"),
+    `${JSON.stringify({ stateDirectoryName: "example-project" })}\n`,
+  );
+  fs.writeFileSync(
+    path.join(tempRoot, "build-resources", "canva-linux", "config", "build-metadata.json"),
+    `${JSON.stringify({
+      buildRevision: "unknown",
+      fullVersion: "1.0.0",
+      displayVersion: "1.0.0",
+      phase: "Dev",
+      dependentProjectSourceHash: "sha256:bbbb",
+      combinedSourceHash: "sha256:cccc",
+    })}\n`,
+  );
+}
+
 function compileBootstrapBuilder(tempDir: string): string {
   const outfile = path.join(tempDir, "build-bootstrap.mjs");
   const result = spawnSync(
@@ -96,7 +122,7 @@ test("manifest artifact hashes match committed bootstrap artifacts", () => {
     C420UI_BOOTSTRAP_MANIFEST_PATH,
   );
 
-  assert.equal(manifest.generatedBy, "build-resources/c420ui/scripts/build-bootstrap.ts");
+  assert.equal(manifest.generatedBy, "c420ui-host bootstrap");
   assert.ok(manifest.artifactHashes);
 
   for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
@@ -134,12 +160,14 @@ test("build:c420ui-bootstrap cleans output directory before writing", () => {
   const tempDir = makeTempDir("c420ui-clean-build-");
 
   try {
+    const tempRoot = path.join(tempDir, "root");
+    writeMinimalBootstrapRoot(tempRoot);
     const outDir = path.join(
-      tempDir,
+      tempRoot,
       "build-resources",
       "c420ui",
       "bootstrap",
-      "c420ui-generated",
+      "generated",
     );
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, "stale-file.txt"), "stale\n");
@@ -150,8 +178,10 @@ test("build:c420ui-bootstrap cleans output directory before writing", () => {
       encoding: "utf8",
       env: {
         ...process.env,
-        CANVA_SCRIPT_REPO_ROOT: rootDir,
-        C420UI_BOOTSTRAP_OUT_DIR: outDir,
+        CANVA_SCRIPT_REPO_ROOT: tempRoot,
+        C420UI_HOST_BIN:
+          process.env.C420UI_HOST_BIN ??
+          path.join(rootDir, "build-resources", "c420ui-rs", "target", "debug", "c420ui-host"),
       },
       shell: false,
     });
@@ -164,7 +194,7 @@ test("build:c420ui-bootstrap cleans output directory before writing", () => {
     assert.equal(fs.existsSync(path.join(outDir, "stale-file.txt")), false);
 
     const manifest = readJson<BootstrapManifest>(path.join(outDir, "manifest.json"));
-    assert.equal(manifest.generatedBy, "build-resources/c420ui/scripts/build-bootstrap.ts");
+    assert.equal(manifest.generatedBy, "c420ui-host bootstrap");
     for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
       assert.equal(manifest.artifactHashes?.[artifact], sha256(path.join(outDir, artifact)));
     }

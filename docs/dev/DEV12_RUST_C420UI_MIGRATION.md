@@ -2,8 +2,8 @@
 
 ## Status
 
-Phase 4 in progress. Project adapter config and status panel migration to Rust
-are active.
+Phase 4 in progress. Project adapter config, status panels, bootstrap and
+metadata migration to Rust are active.
 
 ## Goal
 
@@ -18,6 +18,8 @@ The boundary remains:
 - c420ui-tui becomes the direct terminal UI migration target after operational cleanup.
 - c420ui-host validates and normalizes declarative project adapter config.
 - c420ui-host generates semantic status panels for the Rust TUI.
+- c420ui-host generates bootstrap launchers, manifest metadata, source hashes,
+  settings and session log state.
 
 ## Permanent Boundary
 
@@ -45,6 +47,10 @@ Dependent projects declare JSON; c420ui Rust validates and interprets it.
 
 Status/detection summaries are also a Rust responsibility. Do not reintroduce
 TypeScript status classification or terminal color tags in project adapters.
+
+Bootstrap and metadata are Rust responsibilities. Do not reintroduce heavy
+generated MJS bundles. Bootstrap and metadata belong to `c420ui-host`; MJS files
+are launchers only.
 
 ## Roadmap
 

@@ -1,31 +1,7 @@
-import * as esbuild from "esbuild";
-import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-import {
-  C420UI_BOOTSTRAP_ARTIFACT_FILES,
-  c420uiBootstrapArtifactPath,
-} from "../checks/bootstrap-check-helpers.js";
-import {
-  C420UI_BOOTSTRAP_BUILD_RECIPE,
-  C420UI_BOOTSTRAP_BUILD_TARGET,
-  C420UI_BOOTSTRAP_BUILD_TOOL,
-  C420UI_BOOTSTRAP_BUNDLE_FORMAT,
-  createC420UIBootstrapBuildOptions,
-  C420UI_BOOTSTRAP_MODULE_FORMAT,
-} from "../bootstrap/build-recipe.js";
-import {
-  calculateC420UISourceHash,
-  C420UI_SOURCE_HASH_ALGORITHM,
-  C420UI_SOURCE_HASH_INPUTS,
-} from "../bootstrap/source-hash.js";
-import { assertSafeBootstrapOutputDir } from "../src/bootstrap-output-dir-safety.js";
-import { loadCommittedBuildMetadata } from "../../canva-linux/c420ui-adapter/build-metadata-loader.js";
-
-type PackageJson = {
-  version?: string;
-};
+import { runC420UIRustBootstrap } from "../src/rust-bootstrap.js";
 
 function findProjectRoot(): string {
   let current = process.env.CANVA_SCRIPT_REPO_ROOT || process.cwd();
@@ -37,93 +13,26 @@ function findProjectRoot(): string {
   }
 }
 
-function readJson<T>(rootDir: string, relativePath: string): T {
-  return JSON.parse(fs.readFileSync(path.join(rootDir, relativePath), "utf8")) as T;
-}
-
-function requirePackageVersion(packageJson: PackageJson, relativePath: string): string {
-  if (typeof packageJson.version !== "string" || packageJson.version.length === 0) {
-    throw new Error(`${relativePath}: missing required version`);
-  }
-  return packageJson.version;
-}
-
-function resolveBootstrapDir(rootDir: string): string {
-  return process.env.C420UI_BOOTSTRAP_OUT_DIR
-    ? path.resolve(rootDir, process.env.C420UI_BOOTSTRAP_OUT_DIR)
-    : path.join(rootDir, "build-resources", "c420ui", "bootstrap", "generated");
-}
-
-function cleanBootstrapOutput(bootstrapDir: string): void {
-  fs.rmSync(bootstrapDir, { recursive: true, force: true });
-  fs.mkdirSync(bootstrapDir, { recursive: true });
-}
-
-function calculateArtifactHashes(bootstrapDir: string): Record<string, string> {
-  const hashes: Record<string, string> = {};
-  for (const artifact of C420UI_BOOTSTRAP_ARTIFACT_FILES) {
-    hashes[artifact] = `sha256:${createHash("sha256")
-      .update(fs.readFileSync(path.join(bootstrapDir, artifact)))
-      .digest("hex")}`;
-  }
-  return hashes;
-}
-
 async function main(): Promise<void> {
   const rootDir = findProjectRoot();
-  const bootstrapDir = resolveBootstrapDir(rootDir);
-  assertSafeBootstrapOutputDir(rootDir, bootstrapDir);
-  cleanBootstrapOutput(bootstrapDir);
-
-  const rootPackageJson = readJson<PackageJson>(rootDir, "package.json");
-  const c420uiPackageJson = readJson<PackageJson>(rootDir, "build-resources/c420ui/package.json");
-  const buildMetadata = loadCommittedBuildMetadata(rootDir);
-  const dependentProjectVersion = requirePackageVersion(rootPackageJson, "package.json");
-  const c420uiVersion = requirePackageVersion(c420uiPackageJson, "build-resources/c420ui/package.json");
-
-  await esbuild.build(createC420UIBootstrapBuildOptions(rootDir, bootstrapDir));
-
-  const c420uiSourceHash = calculateC420UISourceHash(rootDir);
-  const artifactHashes = calculateArtifactHashes(bootstrapDir);
-
-  const manifest = {
-    kind: "c420ui-bootstrap",
-    generatedBy: C420UI_BOOTSTRAP_BUILD_RECIPE,
-    c420uiVersion,
-    dependentProject: "canva-linux",
-    dependentProjectVersion,
-    dependentProjectBuildRevision: buildMetadata.buildRevision ?? "unknown",
-    dependentProjectFullVersion: buildMetadata.fullVersion ?? dependentProjectVersion,
-    dependentProjectDisplayVersion:
-      buildMetadata.displayVersion ?? dependentProjectVersion,
-    dependentProjectPhase: buildMetadata.phase ?? dependentProjectVersion,
-    entrypoint: "run-c420ui.mjs",
-    cliEntrypoint: "run-c420ui-cli.mjs",
-    entrypoints: {
-      ui: c420uiBootstrapArtifactPath("run-c420ui.mjs"),
-      cli: c420uiBootstrapArtifactPath("run-c420ui-cli.mjs"),
-      builder: c420uiBootstrapArtifactPath("c420ui-builder.mjs"),
-    },
-    requiresNode: ">=22.0.0",
-    buildRecipe: C420UI_BOOTSTRAP_BUILD_RECIPE,
-    buildTool: C420UI_BOOTSTRAP_BUILD_TOOL,
-    buildTarget: C420UI_BOOTSTRAP_BUILD_TARGET,
-    bundleFormat: C420UI_BOOTSTRAP_BUNDLE_FORMAT,
-    moduleFormat: C420UI_BOOTSTRAP_MODULE_FORMAT,
-    typescriptFirst: true,
-    ownsFullDependencyPolicy: true,
-    c420uiSourceHashAlgorithm: C420UI_SOURCE_HASH_ALGORITHM,
-    c420uiSourceHash,
-    canvaLinuxSourceHash: buildMetadata.canvaLinuxSourceHash ?? "unknown",
-    combinedSourceHash: buildMetadata.combinedSourceHash ?? "unknown",
-    c420uiSourceHashInputs: [...C420UI_SOURCE_HASH_INPUTS],
-    artifactHashes,
-  };
-
-  fs.writeFileSync(
-    path.join(bootstrapDir, "manifest.json"),
-    `${JSON.stringify(manifest, null, 2)}\n`,
-  );
+  const output = await runC420UIRustBootstrap({
+    rootDir,
+    bootstrapOutDir:
+      process.env.C420UI_BOOTSTRAP_OUT_DIR ??
+      "build-resources/c420ui/bootstrap/generated",
+    projectConfigRoot:
+      process.env.C420UI_PROJECT_CONFIG_ROOT ??
+      "build-resources/canva-linux/config",
+    buildMetadataPath:
+      process.env.C420UI_BUILD_METADATA_PATH ??
+      "build-resources/canva-linux/config/build-metadata.json",
+  });
+  if (!output.ok) {
+    throw new Error(
+      output.diagnostics.map((item) => `${item.code}: ${item.message}`).join("\n") ||
+        "c420ui-host bootstrap failed",
+    );
+  }
 }
 
 if (/build-bootstrap\.(mjs|js|ts)$/.test(process.argv[1] || "")) {

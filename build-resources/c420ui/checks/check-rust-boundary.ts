@@ -71,6 +71,29 @@ export function main(): number {
     "src/status/overview.rs",
     "src/status/panels.rs",
     "src/status/classify.rs",
+    "src/bootstrap/mod.rs",
+    "src/bootstrap/contracts.rs",
+    "src/bootstrap/manifest.rs",
+    "src/bootstrap/source_hash.rs",
+    "src/bootstrap/artifacts.rs",
+    "src/bootstrap/launchers.rs",
+    "src/bootstrap/validation.rs",
+    "src/commands/bootstrap.rs",
+    "src/commands/bootstrap_check.rs",
+    "src/commands/bootstrap_manifest.rs",
+    "src/commands/source_hash.rs",
+    "src/commands/build_metadata.rs",
+    "src/settings/mod.rs",
+    "src/settings/contracts.rs",
+    "src/settings/store.rs",
+    "src/session_log/mod.rs",
+    "src/session_log/contracts.rs",
+    "src/session_log/store.rs",
+    "src/commands/settings_get.rs",
+    "src/commands/settings_set.rs",
+    "src/commands/session_log_read.rs",
+    "src/commands/session_log_write.rs",
+    "src/commands/session_log_clear.rs",
   ];
   for (const required of requiredRustFiles) {
     if (!fs.existsSync(path.join(rustDir, required))) {
@@ -95,6 +118,22 @@ export function main(): number {
     failures.push(
       "build-resources/c420ui-rs/src/bin/c420ui-host.rs: c420ui-host must expose status-panels --json",
     );
+  }
+  for (const command of [
+    "bootstrap --json",
+    "bootstrap-check --json",
+    "bootstrap-manifest --json",
+    "source-hash --json",
+    "build-metadata --json",
+    "settings-get --json",
+    "settings-set --json",
+    "session-log-read --json",
+    "session-log-write --json",
+    "session-log-clear --json",
+  ]) {
+    if (!hostSource.includes(command)) {
+      failures.push(`build-resources/c420ui-rs/src/bin/c420ui-host.rs: c420ui-host must expose ${command}`);
+    }
   }
 
   const actionContracts = fs.readFileSync(path.join(rustDir, "src/action/contracts.rs"), "utf8");

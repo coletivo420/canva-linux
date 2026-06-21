@@ -32,6 +32,14 @@ Generated Artifacts, Linux Artifacts and Overview panels. TypeScript wrappers
 may transport the response, but must not own status classification or terminal
 color tags.
 
+Dev12 Rust bootstrap and metadata handling lives under
+`build-resources/c420ui-rs/src/bootstrap`,
+`build-resources/c420ui-rs/src/settings`, and
+`build-resources/c420ui-rs/src/session_log`. `c420ui-host` generates bootstrap
+launchers, manifests, source hashes, settings state and session logs. Generated
+MJS artifacts under `build-resources/c420ui/bootstrap/generated` must remain
+thin launchers.
+
 ## Files
 
 - `.codex`

@@ -1,5 +1,15 @@
 # AI Guardrails
 
+## Dev12 Rust bootstrap and metadata guardrail
+
+Dev12 migrates c420ui bootstrap, metadata, source hashes, settings and session
+log handling to `c420ui-host`. Generated MJS artifacts are launchers for
+`c420ui-host`/`c420ui-tui` only.
+
+Do not reintroduce heavy generated MJS bundles. Bootstrap and metadata belong to
+`c420ui-host`; MJS files must not carry Action Engine, adapter/config parser,
+TUI, status summaries, or manifest/hash builder logic.
+
 ## Dev12 Rust status panels guardrail
 
 Status/detection summaries are a Rust responsibility. `c420ui-host

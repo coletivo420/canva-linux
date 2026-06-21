@@ -71,6 +71,10 @@ Confirm:
 
 ## c420ui package refactor and structural ownership
 
+- Dev12 bootstrap/metadata review rule: request changes if generated
+  `run-c420ui.mjs`, `run-c420ui-cli.mjs`, or `c420ui-builder.mjs` regain heavy
+  bundled c420ui logic. Bootstrap, manifest, source hashes, settings and
+  session log handling belong to `c420ui-host`; MJS files are launchers only.
 - All maintained build, runtime-build, packaging, install, detection, versioning and operation tooling now lives under `build-resources/c420ui`.
 - All Canva Linux-specific adapters, assets, validation policies, checks and packaging policies now live under `build-resources/canva-linux`.
 - Shell is allowed only for unavoidable POSIX/runtime boundaries or external tool contracts. Shell must not own JSON parsing, version detection, packaging orchestration, installation logic, artifact metadata, or validation policy.

@@ -2,6 +2,7 @@
 
 ## Dev12 Rust TUI legacy visual parity
 
+- Dev12 migrates c420ui bootstrap, metadata, source hashes, settings and session log handling to `c420ui-host`. Generated MJS artifacts are now thin launchers for `c420ui-host`/`c420ui-tui` instead of carrying bundled c420ui logic.
 - Dev12 migrates c420ui overview/status/detection summaries to Rust. `c420ui-host status-panels --json` now generates semantic status panels for Detected Installations, Generated Artifacts and Linux Artifacts, while `c420ui-tui` renders label/value state colors. TypeScript no longer owns status classification or Blessed-style color tags.
 - Dev12 migrates project adapter config handling to `c420ui-host project-config --json`. Canva Linux now declares c420ui configuration through JSON files, while Rust validates, normalizes and exposes actions, dependencies, install, maintenance and UI metadata to the Action Engine and TUI bridge.
 - Dev12 now requires the Rust TUI to preserve the visual contract of the legacy TypeScript/Blessed TUI. `c420ui-tui` is not a simplified terminal frontend; it must match the legacy layout, theme, panels, focus behavior, footer, progress bar, logs, and root prompt before the TypeScript TUI can be removed.

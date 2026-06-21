@@ -32,6 +32,10 @@ agents. The formal release-candidate checklist is maintained in [RC Validation M
 - c420ui overview/status/detection summaries belong to Rust through
   `c420ui-host status-panels --json`; TypeScript must not classify statuses or
   inject terminal color tags as the source of truth.
+- c420ui bootstrap, manifest metadata, source hashes, settings and session log
+  handling belong to Rust through `c420ui-host`. Generated MJS files must remain
+  launchers only and must not carry Action Engine, adapter/config parser, TUI,
+  status summaries, or manifest/hash builder logic.
 - Canva Linux does not install dependencies directly from launchers, except for the documented Stage 0 c420ui bootstrap
   that starts the generated `bootstrap/c420ui` bundle without npm dependencies.
 - Canva Linux does not validate generic artifact recipes; c420ui does.
@@ -101,11 +105,11 @@ regressions. Placeholder docs are not acceptable.
 
 ## c420ui bootstrap validation policy
 
-Every release validation must confirm that `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs`, `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs`, `build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs`, and `build-resources/c420ui/bootstrap/generated/manifest.json` exist. The manifest must remain `kind: c420ui-bootstrap`, `moduleFormat: esm`, and `bundleFormat: esm`.
+Every release validation must confirm that `build-resources/c420ui/bootstrap/generated/run-c420ui.mjs`, `build-resources/c420ui/bootstrap/generated/run-c420ui-cli.mjs`, `build-resources/c420ui/bootstrap/generated/c420ui-builder.mjs`, and `build-resources/c420ui/bootstrap/generated/manifest.json` exist. The manifest must remain `kind: c420ui-bootstrap`, `moduleFormat: esm`, and `bundleFormat: thin-launcher`.
 
-RC validation is blocked when `build-resources/c420ui/bootstrap/generated/manifest.json` source hashes or artifact hashes do not match the current bootstrap source-hash inputs, including the bootstrap hash helper and bootstrap builder. Rebuild with `npm run build:c420ui-bootstrap`, then run `npm run check:c420ui-bootstrap`; the check must pass without requiring additional generated-file changes. The check must also prove that committed bootstrap `.mjs` artifacts are valid JavaScript and match a temporary rebuild from the shared build recipe.
+RC validation is blocked when `build-resources/c420ui/bootstrap/generated/manifest.json` source hashes or artifact hashes do not match `c420ui-host bootstrap-manifest --json`. Rebuild with `npm run build:c420ui-bootstrap`, then run `npm run check:c420ui-bootstrap`; the check must pass without requiring additional generated-file changes. The check must also prove that committed bootstrap `.mjs` artifacts are valid JavaScript and remain thin launchers.
 
-A clean release checkout must be able to start c420ui from the bootstrap bundle without `node_modules`, local `esbuild`, or a prior npm install. The launcher must not install npm dependencies; after startup, c420ui owns full host dependency validation, repair, and workflow execution.
+A clean release checkout must be able to start c420ui from the bootstrap launchers without carrying a generated TypeScript bundle. The launcher must not install npm dependencies; after startup, c420ui owns full host dependency validation, repair, and workflow execution.
 
 
 The c420ui bootstrap manifest must keep engine identity and dependent-project identity separate:

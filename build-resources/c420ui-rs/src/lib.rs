@@ -1,9 +1,12 @@
 pub mod action;
+pub mod bootstrap;
 pub mod commands;
 pub mod exit_codes;
 pub mod host;
 pub mod input;
 pub mod json;
 pub mod project;
+pub mod session_log;
+pub mod settings;
 pub mod status;
 pub mod tui;
